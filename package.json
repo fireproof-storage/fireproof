@@ -1,0 +1,34 @@
+{
+  "name": "pail",
+  "version": "0.0.0",
+  "description": "DAG based key value store.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [
+    "bucket",
+    "KV",
+    "DAG",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "author": "Alan Shaw",
+  "license": "Apache-2.0 OR MIT",
+  "dependencies": {
+    "@ipld/dag-cbor": "^8.0.0",
+    "multiformats": "^10.0.3"
+  },
+  "devDependencies": {
+    "standard": "^17.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alanshaw/pail.git"
+  },
+  "bugs": {
+    "url": "https://github.com/alanshaw/pail/issues"
+  },
+  "homepage": "https://github.com/alanshaw/pail#readme"
+}
