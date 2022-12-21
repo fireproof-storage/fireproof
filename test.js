@@ -24,13 +24,18 @@ async function randomBytes (size) {
   return bytes
 }
 
-describe('pail', () => {
-  it('puts a new entry', async () => {
+describe('put', () => {
+  it('put to empty shard', async () => {
     const root = await ShardBlock.create()
     const blocks = { get: async () => root }
     const dataCID = await randomCID(32)
     const result = await put(blocks, root.cid, 'test', dataCID)
-    console.log('GOT A RESULT', result)
-    assert(false)
+
+    assert.equal(result.removals.length, 1)
+    assert.equal(result.removals[0].cid.toString(), root.cid.toString())
+    assert.equal(result.additions.length, 1)
+    assert.equal(result.additions[0].value.length, 1)
+    assert.equal(result.additions[0].value[0][0], 'test')
+    assert.equal(result.additions[0].value[0][1].toString(), dataCID.toString())
   })
 })
