@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "description": "DAG based key value store.",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "standard"
   },
   "keywords": [
     "bucket",

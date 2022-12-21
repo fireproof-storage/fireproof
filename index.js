@@ -108,7 +108,7 @@ export async function put (blocks, root, key, value) {
     additions.push(replacement)
   }
 
-  return { root, additions, removals }
+  return { root: additions.at(-1)?.cid, additions, removals }
 }
 
 /**
@@ -148,7 +148,7 @@ function toShardFetcher (blocks) {
       if (!Array.isArray(value)) throw new Error(`invalid shard: ${link}`)
 
       // @ts-expect-error
-      return new ShardBlock({ cid, value, bytes: block.bytes, prefix })
+      return new ShardBlock({ cid: block.cid, value, bytes: block.bytes, prefix })
     }
   }
 }
