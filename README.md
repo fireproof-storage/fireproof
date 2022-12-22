@@ -2,6 +2,8 @@
 
 DAG based key value store. Sharded DAG that minimises traversals and work to build shards.
 
+## Background
+
 * Max block size = 512KiB
 * Max key length is 64
 * Represenation dag-cbor `[[key, CID],…]`
@@ -9,7 +11,7 @@ DAG based key value store. Sharded DAG that minimises traversals and work to bui
     * `Object.entries` from serialization form is easy
     * Keys are sorted lexicographically
 
-## Lazy sharding
+### Lazy sharding
 
 Do the minimum amount of work to make the block fit in the size limit.
 
@@ -17,7 +19,7 @@ Still deterministic.
 
 Minimises traversals.
 
-### Sharding algorithm:
+#### Sharding algorithm:
 
 1. Find longest common prefix using insert key as base
 2. If common prefix for > 1 entries exists
@@ -30,7 +32,37 @@ Minimises traversals.
     a. Find longest common prefix using adjacent key as base
     b. TODO FINISH
 
-## Worked Example
+## Install
+
+```
+npm install @alanshaw/pail
+```
+
+## Usage
+
+```js
+import { ShardBlock, put, get, del } from '@alanshaw/pail'
+
+// Initialize a new bucket
+const blocks = new Blockstore() // like https://npm.im/blockstore-core
+const init = await ShardBlock.create() // empty root shard
+await blocks.put(init.cid, init.bytes)
+
+// Add a key and value to the bucket
+const { root, additions, removals } = await put(blocks, init.cid, 'path/to/data0', dataCID0)
+
+console.log(`new root: ${root}`)
+
+// Process the diff
+for (const block of additions) {
+  await blocks.put(block.cid, block.bytes)
+}
+for (const block of removals) {
+  await blocks.delete(block.cid)
+}
+```
+
+### Worked Example
 
 ⚠️ max key length 16, max block size X - indicated when met.
 

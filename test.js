@@ -4,7 +4,7 @@ import assert from 'assert'
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { ShardBlock, put } from './index.js'
+import { ShardBlock, put, MaxKeyLength } from './index.js'
 
 /** @param {number} size */
 async function randomCID (size) {
@@ -37,5 +37,23 @@ describe('put', () => {
     assert.equal(result.additions[0].value.length, 1)
     assert.equal(result.additions[0].value[0][0], 'test')
     assert.equal(result.additions[0].value[0][1].toString(), dataCID.toString())
+  })
+
+  it('auto-shards on long key', async () => {
+    const root = await ShardBlock.create()
+    const blocks = { get: async () => root }
+    const dataCID = await randomCID(32)
+    const key = Array(MaxKeyLength + 1).fill('a').join('')
+    const result = await put(blocks, root.cid, key, dataCID)
+
+    assert.equal(result.removals.length, 1)
+    assert.equal(result.removals[0].cid.toString(), root.cid.toString())
+    assert.equal(result.additions.length, 2)
+    assert.equal(result.additions[0].value.length, 1)
+    assert.equal(result.additions[0].value[0][0], key.slice(-1))
+    assert.equal(result.additions[0].value[0][1].toString(), dataCID.toString())
+    assert.equal(result.additions[1].value.length, 1)
+    assert.equal(result.additions[1].value[0][0], key.slice(0, -1))
+    assert.equal(result.additions[1].value[0][1][0].toString(), result.additions[0].cid.toString())
   })
 })
