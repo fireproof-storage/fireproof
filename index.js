@@ -14,6 +14,8 @@ import * as cbor from '@ipld/dag-cbor'
  * @typedef {{ additions: ShardBlockView[], removals: ShardBlockView[] }} ShardDiff
  */
 
+export const MaxKeyLength = 64
+
 /** @implements {ShardBlockView} */
 export class ShardBlock extends Block {
   /**
@@ -29,15 +31,18 @@ export class ShardBlock extends Block {
     this.prefix = prefix
   }
 
-  /**
-   * @param {string} [prefix]
-   * @returns {Promise<ShardBlock>}
-   */
-  static async create (prefix) {
-    const value = []
-    const { cid, bytes } = await encode({ value, codec: cbor, hasher: sha256 })
-    return new ShardBlock({ cid, value, bytes, prefix: prefix ?? '' })
+  static create () {
+    return newShardBlock([])
   }
+}
+
+/**
+ * @param {Shard} value
+ * @param {string} [prefix]
+ */
+async function newShardBlock (value, prefix) {
+  const { cid, bytes } = await encode({ value, codec: cbor, hasher: sha256 })
+  return new ShardBlock({ cid, value, bytes, prefix: prefix ?? '' })
 }
 
 /**
@@ -52,40 +57,45 @@ export async function put (blocks, root, key, value) {
   const rshard = await shards.get(root)
   const path = await traverse(shards, rshard, key)
   const target = path[path.length - 1]
-  const suffix = key.slice(target.prefix.length)
+
+  let skey = key.slice(target.prefix.length) // key within the shard
+  /** @type {ShardEntry} */
+  let entry = [skey, value]
+
+  /** @type {ShardBlock[]} */
+  const additions = []
+
+  // if the key in this shard is longer than allowed, then we need to make some
+  // intermediate shards.
+  if (skey.length > MaxKeyLength) {
+    const pfxskeys = Array.from(Array(Math.ceil(skey.length / MaxKeyLength)), (_, i) => {
+      const start = i * MaxKeyLength
+      return {
+        prefix: target.prefix + skey.slice(0, start),
+        skey: skey.slice(start, start + MaxKeyLength)
+      }
+    })
+
+    let child = await newShardBlock([[pfxskeys[pfxskeys.length - 1].skey, value]], pfxskeys[pfxskeys.length - 1].prefix)
+    additions.push(child)
+
+    for (let i = pfxskeys.length - 2; i > 0; i--) {
+      child = await newShardBlock([[pfxskeys[i].skey, [child.cid]]], pfxskeys[i].prefix)
+      additions.push(child)
+    }
+
+    skey = pfxskeys[0].skey
+    entry = [skey, [child.cid]]
+  }
 
   /** @type {Shard} */
-  const shard = []
-  if (target.value.length) {
-    for (const [i, [k, v]] of target.value.entries()) {
-      if (suffix === k) {
-        // shard as well as value?
-        /** @type {ShardEntry} */
-        const newEntry = Array.isArray(v) ? [k, [v[0], value]] : [k, value]
-        shard.push(newEntry, ...target.value.slice(i + 1))
-        break
-      }
-      if (i === 0 && suffix < k) {
-        shard.push([suffix, value], ...target.value.slice(i))
-        break
-      }
-      if (i > 0 && suffix > target.value[i][0] && suffix < k) {
-        shard.push([suffix, value], ...target.value.slice(i))
-        break
-      }
-      shard.push([k, v])
-    }
-  } else {
-    shard.push([key, value])
-  }
+  const shard = putEntry(target.value, entry)
 
   // TODO: check if too big
 
-  const { cid, bytes } = await encode({ value, codec: cbor, hasher: sha256 })
-  let child = new ShardBlock({ cid, value: shard, bytes, prefix: target.prefix })
-
+  let child = await newShardBlock(shard, target.prefix)
   /** @type {[ShardBlock, ...ShardBlock[]]} */
-  const additions = [child]
+  additions.push(child)
 
   // path is root -> shard, so work backwards, propagating the new shard CID
   for (let i = path.length - 2; i >= 0; i--) {
@@ -98,12 +108,56 @@ export async function put (blocks, root, key, value) {
       return /** @type {ShardEntry} */(v[1] == null ? [k, [child.cid]] : [k, [child.cid, v[1]]])
     })
 
-    const { cid, bytes } = await encode({ value, codec: cbor, hasher: sha256 })
-    child = new ShardBlock({ cid, value, bytes, prefix: parent.prefix })
+    child = await newShardBlock(value, parent.prefix)
     additions.push(child)
   }
 
   return { root: additions[additions.length - 1].cid, additions, removals: path }
+}
+
+/**
+ * @param {Shard} target Shard to put to.
+ * @param {ShardEntry} entry
+ * @returns {Shard}
+ */
+function putEntry (target, entry) {
+  if (!target.length) return [entry]
+
+  /** @type {Shard} */
+  const shard = []
+  for (const [i, [k, v]] of target.entries()) {
+    if (entry[0] === k) {
+      // if new value is link to shard...
+      if (Array.isArray(entry[1])) {
+        // and old value is link to shard
+        // and old value is _also_ link to data
+        // and new value does not have link to data
+        // then preserve old data
+        if (Array.isArray(v) && v[1] != null && entry[1][1] == null) {
+          shard.push([k, [entry[1][0], v[1]]], ...target.slice(i + 1))
+        } else {
+          shard.push(entry, ...target.slice(i + 1))
+        }
+      } else {
+        // shard as well as value?
+        /** @type {ShardEntry} */
+        const newEntry = Array.isArray(v) ? [k, [v[0], entry[1]]] : entry
+        shard.push(newEntry, ...target.slice(i + 1))
+      }
+      break
+    }
+    if (i === 0 && entry[0] < k) {
+      shard.push(entry, ...target.slice(i))
+      break
+    }
+    if (i > 0 && entry[0] > target[i][0] && entry[0] < k) {
+      shard.push(entry, ...target.slice(i))
+      break
+    }
+    shard.push([k, v])
+  }
+
+  return shard
 }
 
 /**
