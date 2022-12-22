@@ -23,14 +23,14 @@ Minimises traversals.
 
 1. Find longest common prefix using insert key as base
 2. If common prefix for > 1 entries exists
-    a. Create new shard with suffixes for entries that match common prefix
-    b. Remove entries with common prefix from shard
-    c. Add entry for common prefix, linking new shard
-    d. If size of shard is < max shard size -> FINISH
-    e. GOTO 3
+    1. Create new shard with suffixes for entries that match common prefix
+    1. Remove entries with common prefix from shard
+    1. Add entry for common prefix, linking new shard
+    1. If size of shard is < max shard size -> FINISH
+    1. GOTO 3
 3. Else
-    a. Find longest common prefix using adjacent key as base
-    b. TODO FINISH
+    1. Find longest common prefix using adjacent key as base
+    1. TODO FINISH
 
 ## Install
 
