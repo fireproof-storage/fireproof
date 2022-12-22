@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "coverage": "c8 npm test",
+    "coverage": "c8 -r html -r text npm test",
     "lint": "standard"
   },
   "keywords": [
