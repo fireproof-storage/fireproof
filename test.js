@@ -1,6 +1,6 @@
-/* global crypto */
 import { describe, it } from 'node:test'
-import assert from 'assert'
+import crypto from 'node:crypto'
+import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
