@@ -15,6 +15,7 @@ import * as cbor from '@ipld/dag-cbor'
  */
 
 export const MaxKeyLength = 64
+export const MaxShardSize = 512 * 1024
 
 /** @implements {ShardBlockView} */
 export class ShardBlock extends Block {
@@ -91,9 +92,12 @@ export async function put (blocks, root, key, value) {
   /** @type {Shard} */
   const shard = putEntry(target.value, entry)
 
-  // TODO: check if too big
-
   let child = await newShardBlock(shard, target.prefix)
+
+  if (child.bytes.length > MaxShardSize) {
+    // TODO: check if too big
+  }
+
   /** @type {[ShardBlock, ...ShardBlock[]]} */
   additions.push(child)
 
