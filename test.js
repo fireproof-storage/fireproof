@@ -4,7 +4,7 @@ import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { ShardBlock, put, MaxKeyLength } from './index.js'
+import { ShardBlock, put, MaxKeyLength, get } from './index.js'
 
 /** @param {number} size */
 async function randomCID (size) {
@@ -24,10 +24,35 @@ async function randomBytes (size) {
   return bytes
 }
 
+class Blockstore {
+  /** @type {Map<string, Uint8Array>} */
+  #blocks = new Map()
+
+  /**
+   * @param {import('./index').AnyLink} cid
+   * @returns {Promise<import('./index').AnyBlock | undefined>}
+   */
+  async get (cid) {
+    const bytes = this.#blocks.get(cid.toString())
+    if (!bytes) return
+    return { cid, bytes }
+  }
+
+  /**
+   * @param {import('./index').AnyLink} cid
+   * @param {Uint8Array} bytes
+   */
+  async put (cid, bytes) {
+    this.#blocks.set(cid.toString(), bytes)
+  }
+}
+
 describe('put', () => {
   it('put to empty shard', async () => {
     const root = await ShardBlock.create()
-    const blocks = { get: async () => root }
+    const blocks = new Blockstore()
+    await blocks.put(root.cid, root.bytes)
+
     const dataCID = await randomCID(32)
     const result = await put(blocks, root.cid, 'test', dataCID)
 
@@ -41,7 +66,9 @@ describe('put', () => {
 
   it('auto-shards on long key', async () => {
     const root = await ShardBlock.create()
-    const blocks = { get: async () => root }
+    const blocks = new Blockstore()
+    await blocks.put(root.cid, root.bytes)
+
     const dataCID = await randomCID(32)
     const key = Array(MaxKeyLength + 1).fill('a').join('')
     const result = await put(blocks, root.cid, key, dataCID)
@@ -59,7 +86,9 @@ describe('put', () => {
 
   it('auto-shards on super long key', async () => {
     const root = await ShardBlock.create()
-    const blocks = { get: async () => root }
+    const blocks = new Blockstore()
+    await blocks.put(root.cid, root.bytes)
+
     const dataCID = await randomCID(32)
     const key = Array(MaxKeyLength * 2 + 1).fill('b').join('')
     const result = await put(blocks, root.cid, key, dataCID)
@@ -77,4 +106,26 @@ describe('put', () => {
     assert.equal(result.additions[2].value[0][0], key.slice(0, MaxKeyLength))
     assert.equal(result.additions[2].value[0][1][0].toString(), result.additions[1].cid.toString())
   })
+})
+
+describe('get', () => {
+  it('get from root shard', async () => {
+    const emptyShard = await ShardBlock.create()
+    const blocks = new Blockstore()
+    await blocks.put(emptyShard.cid, emptyShard.bytes)
+
+    const dataCID = await randomCID(32)
+    const { root, additions } = await put(blocks, emptyShard.cid, 'test', dataCID)
+
+    for (const b of additions) {
+      await blocks.put(b.cid, b.bytes)
+    }
+
+    const res = await get(blocks, root, 'test')
+
+    assert(res)
+    assert(res.toString(), dataCID.toString())
+  })
+
+  // TODO: test get when key is also shard link
 })
