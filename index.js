@@ -165,6 +165,23 @@ function putEntry (target, entry) {
 }
 
 /**
+ * @param {BlockFetcher} blocks
+ * @param {ShardLink} root
+ * @param {string} key
+ * @returns {Promise<AnyLink | undefined>}
+ */
+export async function get (blocks, root, key) {
+  const shards = new ShardFetcher(blocks)
+  const rshard = await shards.get(root)
+  const path = await traverse(shards, rshard, key)
+  const target = path[path.length - 1]
+  const skey = key.slice(target.prefix.length) // key within the shard
+  const entry = target.value.find(([k]) => k === skey)
+  if (!entry) return
+  return Array.isArray(entry[1]) ? entry[1][1] : entry[1]
+}
+
+/**
  * Traverse from the passed shard block to the target shard block using the
  * passed key. All traversed shards are returned, starting with the passed
  * shard and ending with the target.
