@@ -32,6 +32,57 @@ Minimises traversals.
     1. Find longest common prefix using adjacent key as base
     1. TODO FINISH
 
+e.g.
+```
+abelllllll
+foobarbaz
+foobarwooz
+food
+somethingelse
+```
+
+Put "foobarboz" and exceed shard size limit:
+```
+abelllllll
+foobarbaz
+<- foobarboz
+foobarwooz
+food
+somethingelse
+```
+
+Find "foobar" as longest common prefix, create shard:
+```
+abelllllll
+foobar -> baz
+          boz
+          wooz
+food
+somethingelse
+```
+
+Put "foopey":
+```
+abelllllll
+foobar -> baz
+          boz
+          wooz
+food
+<- foopey
+somethingelse
+```
+
+Find "foo" as longest common prefix, create shard:
+```
+abelllllll
+foo -> bar -> baz
+              boz
+              wooz
+       d
+       pey
+somethingelse
+```
+
 ## Install
 
 ```

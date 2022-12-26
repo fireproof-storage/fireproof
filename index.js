@@ -1,57 +1,20 @@
-import { Block, encode } from 'multiformats/block'
-import { sha256 } from 'multiformats/hashes/sha2'
-import * as cbor from '@ipld/dag-cbor'
+import { ShardFetcher, ShardBlock, encodeShardBlock, decodeShardBlock } from './shard.js'
+
+export { ShardFetcher, ShardBlock, encodeShardBlock, decodeShardBlock }
 
 /**
- * @typedef {import('multiformats').Link<unknown, number, number, 1|0>} AnyLink
- * @typedef {{ cid: AnyLink, bytes: Uint8Array }} AnyBlock
- * @typedef {{ get: (link: AnyLink) => Promise<AnyBlock | undefined> }} BlockFetcher
- * @typedef {[key: string, value: AnyLink | ShardLinkValue ]} ShardEntry
- * @typedef {ShardEntry[]} Shard
- * @typedef {import('multiformats').Link<Shard, typeof cbor.code, typeof sha256.code, 1>} ShardLink
- * @typedef {[ShardLink] | [ShardLink, AnyLink]} ShardLinkValue
- * @typedef {import('multiformats').BlockView<Shard, typeof cbor.code, typeof sha256.code, 1> & { prefix: string }} ShardBlockView
- * @typedef {{ additions: ShardBlockView[], removals: ShardBlockView[] }} ShardDiff
+ * @typedef {{ additions: import('./shard').ShardBlockView[], removals: import('./shard').ShardBlockView[] }} ShardDiff
  */
 
 export const MaxKeyLength = 64
 export const MaxShardSize = 512 * 1024
 
-/** @implements {ShardBlockView} */
-export class ShardBlock extends Block {
-  /**
-   * @param {object} config
-   * @param {ShardLink} config.cid
-   * @param {Shard} config.value
-   * @param {Uint8Array} config.bytes
-   * @param {string} config.prefix
-   */
-  constructor ({ cid, value, bytes, prefix }) {
-    // @ts-expect-error
-    super({ cid, value, bytes })
-    this.prefix = prefix
-  }
-
-  static create () {
-    return newShardBlock([])
-  }
-}
-
 /**
- * @param {Shard} value
- * @param {string} [prefix]
- */
-async function newShardBlock (value, prefix) {
-  const { cid, bytes } = await encode({ value, codec: cbor, hasher: sha256 })
-  return new ShardBlock({ cid, value, bytes, prefix: prefix ?? '' })
-}
-
-/**
- * @param {BlockFetcher} blocks
- * @param {ShardLink} root
+ * @param {import('./shard').BlockFetcher} blocks
+ * @param {import('./shard').ShardLink} root
  * @param {string} key
- * @param {AnyLink} value
- * @returns {Promise<{ root: ShardLink } & ShardDiff>}
+ * @param {import('./shard').AnyLink} value
+ * @returns {Promise<{ root: import('./shard').ShardLink } & ShardDiff>}
  */
 export async function put (blocks, root, key, value) {
   const shards = new ShardFetcher(blocks)
@@ -60,7 +23,7 @@ export async function put (blocks, root, key, value) {
   const target = path[path.length - 1]
 
   let skey = key.slice(target.prefix.length) // key within the shard
-  /** @type {ShardEntry} */
+  /** @type {import('./shard').ShardEntry} */
   let entry = [skey, value]
 
   /** @type {ShardBlock[]} */
@@ -77,11 +40,11 @@ export async function put (blocks, root, key, value) {
       }
     })
 
-    let child = await newShardBlock([[pfxskeys[pfxskeys.length - 1].skey, value]], pfxskeys[pfxskeys.length - 1].prefix)
+    let child = await encodeShardBlock([[pfxskeys[pfxskeys.length - 1].skey, value]], pfxskeys[pfxskeys.length - 1].prefix)
     additions.push(child)
 
     for (let i = pfxskeys.length - 2; i > 0; i--) {
-      child = await newShardBlock([[pfxskeys[i].skey, [child.cid]]], pfxskeys[i].prefix)
+      child = await encodeShardBlock([[pfxskeys[i].skey, [child.cid]]], pfxskeys[i].prefix)
       additions.push(child)
     }
 
@@ -89,13 +52,21 @@ export async function put (blocks, root, key, value) {
     entry = [skey, [child.cid]]
   }
 
-  /** @type {Shard} */
-  const shard = putEntry(target.value, entry)
-
-  let child = await newShardBlock(shard, target.prefix)
+  /** @type {import('./shard').Shard} */
+  let shard = putEntry(target.value, entry)
+  let child = await encodeShardBlock(shard, target.prefix)
 
   if (child.bytes.length > MaxShardSize) {
-    // TODO: check if too big
+    const common = findCommonPrefix(shard, entry[0])
+    if (!common) throw new Error('shard limit reached')
+    const { prefix, matches } = common
+    const block = await encodeShardBlock(
+      matches.map(([k, v]) => [k.slice(prefix.length), v]),
+      target.prefix + prefix
+    )
+    shard = shard.filter(e => matches.some(m => e[0] !== m[0]))
+    shard = putEntry(shard, [prefix, block.cid])
+    child = await encodeShardBlock(shard, target.prefix)
   }
 
   /** @type {[ShardBlock, ...ShardBlock[]]} */
@@ -109,10 +80,10 @@ export async function put (blocks, root, key, value) {
       const [k, v] = entry
       if (k !== key) return entry
       if (!Array.isArray(v)) throw new Error(`"${key}" is not a shard link in: ${parent.cid}`)
-      return /** @type {ShardEntry} */(v[1] == null ? [k, [child.cid]] : [k, [child.cid, v[1]]])
+      return /** @type {import('./shard').ShardEntry} */(v[1] == null ? [k, [child.cid]] : [k, [child.cid, v[1]]])
     })
 
-    child = await newShardBlock(value, parent.prefix)
+    child = await encodeShardBlock(value, parent.prefix)
     additions.push(child)
   }
 
@@ -120,14 +91,43 @@ export async function put (blocks, root, key, value) {
 }
 
 /**
- * @param {Shard} target Shard to put to.
- * @param {ShardEntry} entry
- * @returns {Shard}
+ * @param {import('./shard').Shard} shard
+ * @param {string} skey Shard key to use as a base.
+ */
+function findCommonPrefix (shard, skey) {
+  const startidx = shard.findIndex(([k]) => skey === k)
+  if (startidx === -1) throw new Error(`key not found in shard: ${skey}`)
+  let i = startidx
+  let pfx
+  while (true) {
+    pfx = shard[i][0].slice(0, -1)
+    if (pfx.length) {
+      while (true) {
+        const matches = shard.filter(entry => entry[0].startsWith(pfx))
+        if (matches.length > 1) return { prefix: pfx, matches }
+        pfx = pfx.slice(0, -1)
+        if (!pfx.length) break
+      }
+    }
+    i++
+    if (i >= shard.length) {
+      i = 0
+    }
+    if (i === startidx) {
+      return
+    }
+  }
+}
+
+/**
+ * @param {import('./shard').Shard} target Shard to put to.
+ * @param {import('./shard').ShardEntry} entry
+ * @returns {import('./shard').Shard}
  */
 function putEntry (target, entry) {
   if (!target.length) return [entry]
 
-  /** @type {Shard} */
+  /** @type {import('./shard').Shard} */
   const shard = []
   for (const [i, [k, v]] of target.entries()) {
     if (entry[0] === k) {
@@ -144,7 +144,7 @@ function putEntry (target, entry) {
         }
       } else {
         // shard as well as value?
-        /** @type {ShardEntry} */
+        /** @type {import('./shard').ShardEntry} */
         const newEntry = Array.isArray(v) ? [k, [v[0], entry[1]]] : entry
         shard.push(newEntry, ...target.slice(i + 1))
       }
@@ -165,10 +165,10 @@ function putEntry (target, entry) {
 }
 
 /**
- * @param {BlockFetcher} blocks
- * @param {ShardLink} root
+ * @param {import('./shard').BlockFetcher} blocks
+ * @param {import('./shard').ShardLink} root
  * @param {string} key
- * @returns {Promise<AnyLink | undefined>}
+ * @returns {Promise<import('./shard').AnyLink | undefined>}
  */
 export async function get (blocks, root, key) {
   const shards = new ShardFetcher(blocks)
@@ -187,9 +187,9 @@ export async function get (blocks, root, key) {
  * shard and ending with the target.
  *
  * @param {ShardFetcher} shards
- * @param {ShardBlockView} shard
+ * @param {import('./shard').ShardBlockView} shard
  * @param {string} key
- * @returns {Promise<[ShardBlockView, ...Array<ShardBlockView>]>}
+ * @returns {Promise<[import('./shard').ShardBlockView, ...Array<import('./shard').ShardBlockView>]>}
  */
 async function traverse (shards, shard, key) {
   for (const [k, v] of shard.value) {
@@ -201,30 +201,4 @@ async function traverse (shards, shard, key) {
     }
   }
   return [shard]
-}
-
-class ShardFetcher {
-  /**
-   * @param {BlockFetcher} blocks
-   */
-  constructor (blocks) {
-    this._blocks = blocks
-  }
-
-  /**
-   * @param {ShardLink} link
-   * @param {string} [prefix]
-   * @returns {Promise<ShardBlockView>}
-   */
-  async get (link, prefix = '') {
-    const block = await this._blocks.get(link)
-    if (!block) throw new Error(`missing block: ${link}`)
-
-    /** @type {Shard} */
-    const value = cbor.decode(block.bytes)
-    if (!Array.isArray(value)) throw new Error(`invalid shard: ${link}`)
-
-    // @ts-expect-error
-    return new ShardBlock({ cid: block.cid, value, bytes: block.bytes, prefix })
-  }
 }
