@@ -4,7 +4,8 @@ import assert from 'node:assert'
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { ShardBlock, put, MaxKeyLength, get } from './index.js'
+import { nanoid } from 'nanoid'
+import { ShardBlock, put, MaxKeyLength, get, MaxShardSize, encodeShardBlock, decodeShardBlock } from './index.js'
 
 /** @param {number} size */
 async function randomCID (size) {
@@ -29,8 +30,8 @@ class Blockstore {
   #blocks = new Map()
 
   /**
-   * @param {import('./index').AnyLink} cid
-   * @returns {Promise<import('./index').AnyBlock | undefined>}
+   * @param {import('./shard').AnyLink} cid
+   * @returns {Promise<import('./shard').AnyBlock | undefined>}
    */
   async get (cid) {
     const bytes = this.#blocks.get(cid.toString())
@@ -39,11 +40,39 @@ class Blockstore {
   }
 
   /**
-   * @param {import('./index').AnyLink} cid
+   * @param {import('./shard').ShardLink} cid
+   * @param {string} [prefix]
+   */
+  async getShardBlock (cid, prefix) {
+    const blk = await this.get(cid)
+    assert(blk)
+    return await decodeShardBlock(blk.bytes, prefix)
+  }
+
+  /**
+   * @param {import('./shard').AnyLink} cid
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
     this.#blocks.set(cid.toString(), bytes)
+  }
+}
+
+/**
+ * Fill a shard until it exceeds the size limit.
+ *
+ * @param {import('./shard').Shard} shard
+ * @param {(i: number) => Promise<import('./shard').ShardEntry>} [mkentry]
+ */
+async function fillShard (shard, mkentry) {
+  mkentry = mkentry || (async () => [nanoid(), await randomCID(32)])
+  let i = 0
+  while (true) {
+    const entry = await mkentry(i)
+    shard.push(entry)
+    const blk = await encodeShardBlock(shard)
+    if (blk.bytes.length > MaxShardSize) return shard
+    i++
   }
 }
 
@@ -105,6 +134,40 @@ describe('put', () => {
     assert.equal(result.additions[2].value.length, 1)
     assert.equal(result.additions[2].value[0][0], key.slice(0, MaxKeyLength))
     assert.equal(result.additions[2].value[0][1][0].toString(), result.additions[1].cid.toString())
+  })
+
+  // TODO: deep shard propagates to root
+
+  it('shards at size limit', async () => {
+    const blocks = new Blockstore()
+    const commonpfx = 'test/'
+
+    const mkentry = async () => {
+      /** @type {import('./shard').ShardValueEntry} */
+      const entry = [commonpfx + nanoid(), await randomCID(1)]
+      return entry
+    }
+
+    const shard = await fillShard([], mkentry)
+    let rootblk = await encodeShardBlock(shard)
+    await blocks.put(rootblk.cid, rootblk.bytes)
+
+    const entry = await mkentry()
+    const { root, additions, removals } = await put(blocks, rootblk.cid, entry[0], entry[1])
+
+    assert.notEqual(root.toString(), rootblk.cid.toString())
+    assert.equal(removals.length, 1)
+    assert.equal(removals[0].cid.toString(), rootblk.cid.toString())
+
+    for (const b of additions) {
+      await blocks.put(b.cid, b.bytes)
+    }
+
+    rootblk = await blocks.getShardBlock(root)
+
+    // all of commonpfx should have moved into a new shard
+    assert.equal(rootblk.value.length, 1)
+    assert(Array.isArray(rootblk.value[1][1]))
   })
 })
 
