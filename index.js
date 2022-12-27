@@ -1,6 +1,13 @@
-import { ShardFetcher, ShardBlock, encodeShardBlock, decodeShardBlock } from './shard.js'
+import {
+  ShardFetcher,
+  ShardBlock,
+  encodeShardBlock,
+  decodeShardBlock,
+  putEntry,
+  findCommonPrefix
+} from './shard.js'
 
-export { ShardFetcher, ShardBlock, encodeShardBlock, decodeShardBlock }
+export { ShardBlock, encodeShardBlock, decodeShardBlock }
 
 /**
  * @typedef {{ additions: import('./shard').ShardBlockView[], removals: import('./shard').ShardBlockView[] }} ShardDiff
@@ -10,13 +17,15 @@ export const MaxKeyLength = 64
 export const MaxShardSize = 512 * 1024
 
 /**
- * @param {import('./shard').BlockFetcher} blocks
- * @param {import('./shard').ShardLink} root
+ * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
  * @param {string} key
  * @param {import('./shard').AnyLink} value
+ * @param {object} [options]
+ * @param {number} [options.maxShardSize] Maximum shard size in bytes.
  * @returns {Promise<{ root: import('./shard').ShardLink } & ShardDiff>}
  */
-export async function put (blocks, root, key, value) {
+export async function put (blocks, root, key, value, options = {}) {
   const shards = new ShardFetcher(blocks)
   const rshard = await shards.get(root)
   const path = await traverse(shards, rshard, key)
@@ -26,7 +35,7 @@ export async function put (blocks, root, key, value) {
   /** @type {import('./shard').ShardEntry} */
   let entry = [skey, value]
 
-  /** @type {ShardBlock[]} */
+  /** @type {import('./shard.js').ShardBlockView[]} */
   const additions = []
 
   // if the key in this shard is longer than allowed, then we need to make some
@@ -56,7 +65,7 @@ export async function put (blocks, root, key, value) {
   let shard = putEntry(target.value, entry)
   let child = await encodeShardBlock(shard, target.prefix)
 
-  if (child.bytes.length > MaxShardSize) {
+  if (child.bytes.length > (options.maxShardSize ?? MaxShardSize)) {
     const common = findCommonPrefix(shard, entry[0])
     if (!common) throw new Error('shard limit reached')
     const { prefix, matches } = common
@@ -64,12 +73,13 @@ export async function put (blocks, root, key, value) {
       matches.map(([k, v]) => [k.slice(prefix.length), v]),
       target.prefix + prefix
     )
-    shard = shard.filter(e => matches.some(m => e[0] !== m[0]))
-    shard = putEntry(shard, [prefix, block.cid])
+    additions.push(block)
+
+    shard = shard.filter(e => matches.every(m => e[0] !== m[0]))
+    shard = putEntry(shard, [prefix, [block.cid]])
     child = await encodeShardBlock(shard, target.prefix)
   }
 
-  /** @type {[ShardBlock, ...ShardBlock[]]} */
   additions.push(child)
 
   // path is root -> shard, so work backwards, propagating the new shard CID
@@ -88,80 +98,6 @@ export async function put (blocks, root, key, value) {
   }
 
   return { root: additions[additions.length - 1].cid, additions, removals: path }
-}
-
-/**
- * @param {import('./shard').Shard} shard
- * @param {string} skey Shard key to use as a base.
- */
-function findCommonPrefix (shard, skey) {
-  const startidx = shard.findIndex(([k]) => skey === k)
-  if (startidx === -1) throw new Error(`key not found in shard: ${skey}`)
-  let i = startidx
-  let pfx
-  while (true) {
-    pfx = shard[i][0].slice(0, -1)
-    if (pfx.length) {
-      while (true) {
-        const matches = shard.filter(entry => entry[0].startsWith(pfx))
-        if (matches.length > 1) return { prefix: pfx, matches }
-        pfx = pfx.slice(0, -1)
-        if (!pfx.length) break
-      }
-    }
-    i++
-    if (i >= shard.length) {
-      i = 0
-    }
-    if (i === startidx) {
-      return
-    }
-  }
-}
-
-/**
- * @param {import('./shard').Shard} target Shard to put to.
- * @param {import('./shard').ShardEntry} entry
- * @returns {import('./shard').Shard}
- */
-function putEntry (target, entry) {
-  if (!target.length) return [entry]
-
-  /** @type {import('./shard').Shard} */
-  const shard = []
-  for (const [i, [k, v]] of target.entries()) {
-    if (entry[0] === k) {
-      // if new value is link to shard...
-      if (Array.isArray(entry[1])) {
-        // and old value is link to shard
-        // and old value is _also_ link to data
-        // and new value does not have link to data
-        // then preserve old data
-        if (Array.isArray(v) && v[1] != null && entry[1][1] == null) {
-          shard.push([k, [entry[1][0], v[1]]], ...target.slice(i + 1))
-        } else {
-          shard.push(entry, ...target.slice(i + 1))
-        }
-      } else {
-        // shard as well as value?
-        /** @type {import('./shard').ShardEntry} */
-        const newEntry = Array.isArray(v) ? [k, [v[0], entry[1]]] : entry
-        shard.push(newEntry, ...target.slice(i + 1))
-      }
-      break
-    }
-    if (i === 0 && entry[0] < k) {
-      shard.push(entry, ...target.slice(i))
-      break
-    }
-    if (i > 0 && entry[0] > target[i][0] && entry[0] < k) {
-      shard.push(entry, ...target.slice(i))
-      break
-    }
-    shard.push([k, v])
-  }
-
-  return shard
 }
 
 /**
@@ -194,8 +130,7 @@ export async function get (blocks, root, key) {
 async function traverse (shards, shard, key) {
   for (const [k, v] of shard.value) {
     if (key === k) return [shard]
-    if (key.startsWith(k)) {
-      if (!Array.isArray(v)) return [shard]
+    if (key.startsWith(k) && Array.isArray(v)) {
       const path = await traverse(shards, await shards.get(v[0], shard.prefix + k), key.slice(k.length))
       return [shard, ...path]
     }
