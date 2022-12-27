@@ -7,13 +7,14 @@ import sade from 'sade'
 import { CID } from 'multiformats/cid'
 import { CarIndexedReader, CarReader, CarWriter } from '@ipld/car'
 import clc from 'cli-color'
-import { MaxShardSize, put, ShardBlock, get } from './index.js'
+import { MaxShardSize, put, ShardBlock, get, del } from './index.js'
 import { tree } from './vis.js'
 
 const cli = sade('pail')
 
 cli.command('put <key> <value>')
-  .describe('Put a key to the bucket')
+  .describe('Put a value (a CID) for the given key. If the key exists it\'s value is overwritten.')
+  .alias('set')
   .option('--max-shard-size', 'Maximum shard size in bytes.', MaxShardSize)
   .action(async (key, value, opts) => {
     const blocks = await openBucket()
@@ -35,12 +36,33 @@ cli.command('put <key> <value>')
   })
 
 cli.command('get <key>')
-  .describe('Get a value from the bucket')
+  .describe('Get the stored value for the given key from the bucket. If the key is not found, `undefined` is returned.')
   .action(async (key) => {
     const blocks = await openBucket()
     // @ts-expect-error
     const value = await get(blocks, (await blocks.getRoots())[0], key)
     if (value) console.log(value.toString())
+  })
+
+cli.command('del <key>')
+  .describe('Delete the value for the given key from the bucket. If the key is not found no operation occurs.')
+  .alias('delete', 'rm', 'remove')
+  .action(async (key) => {
+    const blocks = await openBucket()
+    // @ts-expect-error
+    const { root, additions, removals } = await del(blocks, (await blocks.getRoots())[0], key)
+    await updateBucket(blocks, root, { additions, removals })
+
+    console.log('Root:')
+    console.log(clc.cyan(`  ${root}`))
+    console.log('Additions:')
+    additions.forEach(b => console.log(clc.green(`  ${b.cid}`)))
+    console.log('Removals:')
+    removals.forEach(b => console.log(clc.red(`  ${b.cid}`)))
+    console.log('\n---\n')
+
+    // @ts-expect-error
+    await tree(root, await openBucket(), additions)
   })
 
 cli.command('vis')

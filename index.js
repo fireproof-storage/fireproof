@@ -17,10 +17,13 @@ export const MaxKeyLength = 64
 export const MaxShardSize = 512 * 1024
 
 /**
+ * Put a value (a CID) for the given key. If the key exists it's value is
+ * overwritten.
+ *
  * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
  * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
- * @param {string} key
- * @param {import('./shard').AnyLink} value
+ * @param {string} key The key of the value to put.
+ * @param {import('./shard').AnyLink} value The value to put.
  * @param {object} [options]
  * @param {number} [options.maxShardSize] Maximum shard size in bytes.
  * @returns {Promise<{ root: import('./shard').ShardLink } & ShardDiff>}
@@ -30,12 +33,12 @@ export async function put (blocks, root, key, value, options = {}) {
   const rshard = await shards.get(root)
   const path = await traverse(shards, rshard, key)
   const target = path[path.length - 1]
+  const skey = key.slice(target.prefix.length) // key within the shard
 
-  let skey = key.slice(target.prefix.length) // key within the shard
   /** @type {import('./shard').ShardEntry} */
   let entry = [skey, value]
 
-  /** @type {import('./shard.js').ShardBlockView[]} */
+  /** @type {import('./shard').ShardBlockView[]} */
   const additions = []
 
   // if the key in this shard is longer than allowed, then we need to make some
@@ -57,8 +60,7 @@ export async function put (blocks, root, key, value, options = {}) {
       additions.push(child)
     }
 
-    skey = pfxskeys[0].skey
-    entry = [skey, [child.cid]]
+    entry = [pfxskeys[0].skey, [child.cid]]
   }
 
   /** @type {import('./shard').Shard} */
@@ -101,9 +103,12 @@ export async function put (blocks, root, key, value, options = {}) {
 }
 
 /**
- * @param {import('./shard').BlockFetcher} blocks
- * @param {import('./shard').ShardLink} root
- * @param {string} key
+ * Get the stored value for the given key from the bucket. If the key is not
+ * found, `undefined` is returned.
+ *
+ * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
+ * @param {string} key The key of the value to get.
  * @returns {Promise<import('./shard').AnyLink | undefined>}
  */
 export async function get (blocks, root, key) {
@@ -115,6 +120,75 @@ export async function get (blocks, root, key) {
   const entry = target.value.find(([k]) => k === skey)
   if (!entry) return
   return Array.isArray(entry[1]) ? entry[1][1] : entry[1]
+}
+
+/**
+ * Delete the value for the given key from the bucket. If the key is not found
+ * no operation occurs.
+ *
+ * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
+ * @param {string} key The key of the value to delete.
+ * @returns {Promise<{ root: import('./shard').ShardLink } & ShardDiff>}
+ */
+export async function del (blocks, root, key) {
+  const shards = new ShardFetcher(blocks)
+  const rshard = await shards.get(root)
+  const path = await traverse(shards, rshard, key)
+  const target = path[path.length - 1]
+  const skey = key.slice(target.prefix.length) // key within the shard
+
+  const entryidx = target.value.findIndex(([k]) => k === skey)
+  if (entryidx === -1) return { root, additions: [], removals: [] }
+
+  const entry = target.value[entryidx]
+  // cannot delete a shard (without data)
+  if (Array.isArray(entry[1]) && entry[1][1] == null) return { root, additions: [], removals: [] }
+
+  /** @type {import('./shard').ShardBlockView[]} */
+  const additions = []
+  /** @type {import('./shard').ShardBlockView[]} */
+  const removals = [...path]
+
+  let shard = [...target.value]
+
+  if (Array.isArray(entry[1])) {
+    // remove the value from this link+value
+    shard[entryidx] = [entry[0], [entry[1][0]]]
+  } else {
+    shard.splice(entryidx, 1)
+    // if now empty, remove from parent
+    while (!shard.length) {
+      const child = path[path.length - 1]
+      const parent = path[path.length - 2]
+      if (!parent) break
+      path.pop()
+      shard = parent.value.filter(e => {
+        if (!Array.isArray(e[1])) return true
+        return e[1][0].toString() !== child.cid.toString()
+      })
+    }
+  }
+
+  let child = await encodeShardBlock(shard, path[path.length - 1].prefix)
+  additions.push(child)
+
+  // path is root -> shard, so work backwards, propagating the new shard CID
+  for (let i = path.length - 2; i >= 0; i--) {
+    const parent = path[i]
+    const key = child.prefix.slice(parent.prefix.length)
+    const value = parent.value.map((entry) => {
+      const [k, v] = entry
+      if (k !== key) return entry
+      if (!Array.isArray(v)) throw new Error(`"${key}" is not a shard link in: ${parent.cid}`)
+      return /** @type {import('./shard').ShardEntry} */(v[1] == null ? [k, [child.cid]] : [k, [child.cid, v[1]]])
+    })
+
+    child = await encodeShardBlock(value, parent.prefix)
+    additions.push(child)
+  }
+
+  return { root: additions[additions.length - 1].cid, additions, removals }
 }
 
 /**
