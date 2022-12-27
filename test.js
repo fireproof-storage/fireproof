@@ -5,7 +5,10 @@ import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { nanoid } from 'nanoid'
-import { ShardBlock, put, MaxKeyLength, get, MaxShardSize, encodeShardBlock, decodeShardBlock } from './index.js'
+import { ShardBlock, put, MaxKeyLength, get, encodeShardBlock, decodeShardBlock } from './index.js'
+import { putEntry } from './shard.js'
+
+const maxShardSize = 1024 // tiny shard size for testing
 
 /** @param {number} size */
 async function randomCID (size) {
@@ -46,7 +49,7 @@ class Blockstore {
   async getShardBlock (cid, prefix) {
     const blk = await this.get(cid)
     assert(blk)
-    return await decodeShardBlock(blk.bytes, prefix)
+    return decodeShardBlock(blk.bytes, prefix)
   }
 
   /**
@@ -59,19 +62,21 @@ class Blockstore {
 }
 
 /**
- * Fill a shard until it exceeds the size limit.
+ * Fill a shard until it exceeds the size limit. Returns the entry that will
+ * cause the limit to exceed.
  *
  * @param {import('./shard').Shard} shard
- * @param {(i: number) => Promise<import('./shard').ShardEntry>} [mkentry]
+ * @param {number} size
+ * @param {(i: number) => Promise<import('./shard').ShardValueEntry>} [mkentry]
  */
-async function fillShard (shard, mkentry) {
-  mkentry = mkentry || (async () => [nanoid(), await randomCID(32)])
+async function fillShard (shard, size, mkentry) {
+  mkentry = mkentry ?? (async () => [nanoid(), await randomCID(32)])
   let i = 0
   while (true) {
     const entry = await mkentry(i)
-    shard.push(entry)
-    const blk = await encodeShardBlock(shard)
-    if (blk.bytes.length > MaxShardSize) return shard
+    const blk = await encodeShardBlock(putEntry(shard, entry))
+    if (blk.bytes.length > size) return { shard, entry }
+    shard = putEntry(shard, entry)
     i++
   }
 }
@@ -140,34 +145,34 @@ describe('put', () => {
 
   it('shards at size limit', async () => {
     const blocks = new Blockstore()
-    const commonpfx = 'test/'
+    const pfx = 'test/'
+    const { shard, entry: [k, v] } = await fillShard([], maxShardSize, async () => {
+      return [pfx + nanoid(), await randomCID(1)]
+    })
+    const rootblk0 = await encodeShardBlock(shard)
+    await blocks.put(rootblk0.cid, rootblk0.bytes)
 
-    const mkentry = async () => {
-      /** @type {import('./shard').ShardValueEntry} */
-      const entry = [commonpfx + nanoid(), await randomCID(1)]
-      return entry
-    }
+    const { root, additions, removals } = await put(blocks, rootblk0.cid, k, v, { maxShardSize })
 
-    const shard = await fillShard([], mkentry)
-    let rootblk = await encodeShardBlock(shard)
-    await blocks.put(rootblk.cid, rootblk.bytes)
-
-    const entry = await mkentry()
-    const { root, additions, removals } = await put(blocks, rootblk.cid, entry[0], entry[1])
-
-    assert.notEqual(root.toString(), rootblk.cid.toString())
+    assert.notEqual(root.toString(), rootblk0.cid.toString())
     assert.equal(removals.length, 1)
-    assert.equal(removals[0].cid.toString(), rootblk.cid.toString())
+    assert.equal(removals[0].cid.toString(), rootblk0.cid.toString())
 
     for (const b of additions) {
       await blocks.put(b.cid, b.bytes)
     }
 
-    rootblk = await blocks.getShardBlock(root)
+    const rootblk1 = await blocks.getShardBlock(root)
 
-    // all of commonpfx should have moved into a new shard
-    assert.equal(rootblk.value.length, 1)
-    assert(Array.isArray(rootblk.value[1][1]))
+    const entry = rootblk1.value.find(([, v]) => Array.isArray(v))
+    assert(entry, 'should find a shard entry')
+    assert(entry[0].startsWith(pfx))
+
+    for (const [k, v] of rootblk0.value) {
+      const value = await get(blocks, rootblk1.cid, k)
+      assert(value)
+      assert.equal(value.toString(), v.toString())
+    }
   })
 })
 

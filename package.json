@@ -4,6 +4,9 @@
   "description": "DAG based key value store.",
   "main": "index.js",
   "type": "module",
+  "bin": {
+    "pail": "node ./cli.js"
+  },
   "scripts": {
     "test": "node --test",
     "coverage": "c8 -r html -r text npm test",
@@ -20,8 +23,12 @@
   "author": "Alan Shaw",
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
+    "@ipld/car": "^5.0.1",
     "@ipld/dag-cbor": "^8.0.0",
-    "multiformats": "^10.0.3"
+    "archy": "^1.0.0",
+    "cli-color": "^2.0.3",
+    "multiformats": "^10.0.3",
+    "sade": "^1.8.1"
   },
   "devDependencies": {
     "c8": "^7.12.0",
