@@ -8,7 +8,7 @@ import { CID } from 'multiformats/cid'
 import { CarIndexedReader, CarReader, CarWriter } from '@ipld/car'
 import clc from 'cli-color'
 import archy from 'archy'
-import { MaxShardSize, put, ShardBlock, get, del } from './index.js'
+import { MaxShardSize, put, ShardBlock, get, del, entries } from './index.js'
 import { ShardFetcher } from './shard.js'
 
 const cli = sade('pail')
@@ -61,8 +61,23 @@ cli.command('del <key>')
     await closeBucket(blocks)
   })
 
-cli.command('vis')
-  .describe('Visualise the bucket')
+cli.command('ls')
+  .describe('List entries in the bucket.')
+  .alias('list')
+  .option('-p, --prefix', 'Key prefix to filter by.')
+  .option('--json', 'Format as newline delimted JSON.')
+  .action(async (opts) => {
+    const blocks = await openBucket()
+    const root = (await blocks.getRoots())[0]
+    // @ts-expect-error
+    for await (const [k, v] of entries(blocks, root, { prefix: opts.prefix })) {
+      console.log(opts.json ? JSON.stringify({ key: k, value: v.toString() }) : `${k}\t${v}`)
+    }
+    await closeBucket(blocks)
+  })
+
+cli.command('tree')
+  .describe('Visualise the bucket.')
   .action(async () => {
     const blocks = await openBucket()
     const root = (await blocks.getRoots())[0]
