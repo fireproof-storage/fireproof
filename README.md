@@ -26,11 +26,10 @@ Minimises traversals.
     1. Create new shard with suffixes for entries that match common prefix
     1. Remove entries with common prefix from shard
     1. Add entry for common prefix, linking new shard
-    1. If size of shard is < max shard size -> FINISH
-    1. GOTO 3
+    1. FINISH
 3. Else
     1. Find longest common prefix using adjacent key as base
-    1. TODO FINISH
+    1. GOTO 2
 
 e.g.
 ```
