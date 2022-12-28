@@ -7,8 +7,9 @@ import sade from 'sade'
 import { CID } from 'multiformats/cid'
 import { CarIndexedReader, CarReader, CarWriter } from '@ipld/car'
 import clc from 'cli-color'
+import archy from 'archy'
 import { MaxShardSize, put, ShardBlock, get, del } from './index.js'
-import { tree } from './vis.js'
+import { ShardFetcher } from './shard.js'
 
 const cli = sade('pail')
 
@@ -29,10 +30,7 @@ cli.command('put <key> <value>')
     additions.forEach(b => console.log(clc.green(`  ${b.cid}`)))
     console.log('Removals:')
     removals.forEach(b => console.log(clc.red(`  ${b.cid}`)))
-    console.log('\n---\n')
-
-    // @ts-expect-error
-    await tree(root, await openBucket(), additions)
+    await closeBucket(blocks)
   })
 
 cli.command('get <key>')
@@ -42,6 +40,7 @@ cli.command('get <key>')
     // @ts-expect-error
     const value = await get(blocks, (await blocks.getRoots())[0], key)
     if (value) console.log(value.toString())
+    await closeBucket(blocks)
   })
 
 cli.command('del <key>')
@@ -59,18 +58,44 @@ cli.command('del <key>')
     additions.forEach(b => console.log(clc.green(`  ${b.cid}`)))
     console.log('Removals:')
     removals.forEach(b => console.log(clc.red(`  ${b.cid}`)))
-    console.log('\n---\n')
-
-    // @ts-expect-error
-    await tree(root, await openBucket(), additions)
+    await closeBucket(blocks)
   })
 
 cli.command('vis')
   .describe('Visualise the bucket')
   .action(async () => {
     const blocks = await openBucket()
+    const root = (await blocks.getRoots())[0]
     // @ts-expect-error
-    await tree((await blocks.getRoots())[0], blocks)
+    const shards = new ShardFetcher(blocks)
+    // @ts-expect-error
+    const rshard = await shards.get(root)
+
+    /** @type {archy.Data} */
+    const archyRoot = { label: `${clc.cyan(rshard.cid.toString())} ${rshard.bytes.length + 'b'}`, nodes: [] }
+
+    /** @param {import('./shard').ShardEntry} entry */
+    const getData = async ([k, v]) => {
+      if (!Array.isArray(v)) {
+        return { label: `Key(${clc.magenta(k)})`, nodes: [{ label: `Value(${clc.blue(v)})` }] }
+      }
+      /** @type {archy.Data} */
+      const data = { label: `Key(${clc.magenta(k)})`, nodes: [] }
+      if (v[1]) data.nodes?.push({ label: `Value(${clc.blue(v[1])})` })
+      const blk = await shards.get(v[0])
+      data.nodes?.push({
+        label: `Shard(${clc.yellow(v[0])}) ${blk.bytes.length + 'b'}`,
+        nodes: await Promise.all(blk.value.map(e => getData(e)))
+      })
+      return data
+    }
+
+    for (const entry of rshard.value) {
+      archyRoot.nodes?.push(await getData(entry))
+    }
+
+    console.log(archy(archyRoot))
+    await closeBucket(blocks)
   })
 
 cli.parse(process.argv)
@@ -86,6 +111,13 @@ async function openBucket () {
     writer.put(rootblk)
     writer.close()
     return CarReader.fromIterable(out)
+  }
+}
+
+/** @param {import('@ipld/car/api').CarReader} reader */
+async function closeBucket (reader) {
+  if (reader instanceof CarIndexedReader) {
+    await reader.close()
   }
 }
 
