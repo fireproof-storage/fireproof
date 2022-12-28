@@ -19,7 +19,9 @@ Still deterministic.
 
 Minimises traversals.
 
-#### Sharding algorithm:
+#### Sharding algorithm
+
+Shard when block size exceeds 512KiB or a key is put that exceeds 64 characters.
 
 1. Find longest common prefix using insert key as base
 2. If common prefix for > 1 entries exists
@@ -50,22 +52,22 @@ food
 somethingelse
 ```
 
-Find "foobar" as longest common prefix, create shard:
+Find "foobarb" as longest common prefix, create shard:
 ```
 abelllllll
-foobar -> baz
-          boz
-          wooz
+foobarb -> az
+           oz
+foobarwooz
 food
 somethingelse
 ```
 
-Put "foopey":
+Put "foopey", exceeding shard size:
 ```
 abelllllll
-foobar -> baz
-          boz
-          wooz
+foobarb -> az
+           oz
+foobarwooz
 food
 <- foopey
 somethingelse
@@ -74,9 +76,9 @@ somethingelse
 Find "foo" as longest common prefix, create shard:
 ```
 abelllllll
-foo -> bar -> baz
-              boz
-              wooz
+foo -> barb -> az
+               oz
+       barwooz
        d
        pey
 somethingelse
