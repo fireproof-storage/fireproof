@@ -195,5 +195,14 @@ describe('get', () => {
     assert(res.toString(), dataCID.toString())
   })
 
+  it('returns undefined when not found', async () => {
+    const emptyShard = await ShardBlock.create()
+    const blocks = new Blockstore()
+    await blocks.put(emptyShard.cid, emptyShard.bytes)
+
+    const res = await get(blocks, emptyShard.cid, 'test')
+    assert.strictEqual(res, undefined)
+  })
+
   // TODO: test get when key is also shard link
 })
