@@ -72,13 +72,27 @@ export async function put (blocks, root, key, value, options = {}) {
     if (!common) throw new Error('shard limit reached')
     const { prefix, matches } = common
     const block = await encodeShardBlock(
-      matches.map(([k, v]) => [k.slice(prefix.length), v]),
+      matches.filter(([k]) => k !== prefix).map(([k, v]) => [k.slice(prefix.length), v]),
       target.prefix + prefix
     )
     additions.push(block)
 
+    /** @type {import('./shard').ShardEntryLinkValue | import('./shard').ShardEntryLinkAndValueValue} */
+    let value
+    const pfxmatch = matches.find(([k]) => k === prefix)
+    if (pfxmatch) {
+      if (Array.isArray(pfxmatch[1])) {
+        // should not happen! all entries with this prefix should have been
+        // placed within this shard already.
+        throw new Error(`expected "${prefix}" to be a shard value but found a shard link`)
+      }
+      value = [block.cid, pfxmatch[1]]
+    } else {
+      value = [block.cid]
+    }
+
     shard = shard.filter(e => matches.every(m => e[0] !== m[0]))
-    shard = putEntry(shard, [prefix, [block.cid]])
+    shard = putEntry(shard, [prefix, value])
     child = await encodeShardBlock(shard, target.prefix)
   }
 
