@@ -206,6 +206,31 @@ export async function del (blocks, root, key) {
 }
 
 /**
+ * List entries in the bucket.
+ *
+ * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
+ * @param {object} [options]
+ * @param {string} [options.prefix]
+ * @returns {AsyncIterableIterator<import('./shard').ShardEntry>}
+ */
+export async function * entries (blocks, root, options) {
+  const shards = new ShardFetcher(blocks)
+  const rshard = await shards.get(root)
+  yield * (async function * ents (shard) {
+    for (const entry of shard.value) {
+      if (Array.isArray(entry[1])) {
+        if (entry[1][1]) yield [shard.prefix + entry[0], entry[1][1]]
+        shard = await shards.get(entry[1][0], shard.prefix + entry[0])
+        yield * ents(shard)
+      } else {
+        yield [shard.prefix + entry[0], entry[1]]
+      }
+    }
+  })(rshard)
+}
+
+/**
  * Traverse from the passed shard block to the target shard block using the
  * passed key. All traversed shards are returned, starting with the passed
  * shard and ending with the target.

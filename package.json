@@ -8,7 +8,7 @@
     "pail": "node ./cli.js"
   },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
     "coverage": "c8 -r html -r text npm test",
     "lint": "standard"
   },
