@@ -214,17 +214,37 @@ export async function del (blocks, root, key) {
  * @param {string} [options.prefix]
  * @returns {AsyncIterableIterator<import('./shard').ShardEntry>}
  */
-export async function * entries (blocks, root, options) {
+export async function * entries (blocks, root, options = {}) {
+  const { prefix } = options
   const shards = new ShardFetcher(blocks)
   const rshard = await shards.get(root)
+
   yield * (async function * ents (shard) {
     for (const entry of shard.value) {
+      const key = shard.prefix + entry[0]
+
       if (Array.isArray(entry[1])) {
-        if (entry[1][1]) yield [shard.prefix + entry[0], entry[1][1]]
-        shard = await shards.get(entry[1][0], shard.prefix + entry[0])
+        if (entry[1][1]) {
+          if (!prefix || (prefix && key.startsWith(prefix))) {
+            yield [key, entry[1][1]]
+          }
+        }
+
+        if (prefix) {
+          if (prefix.length <= key.length && !key.startsWith(prefix)) {
+            continue
+          }
+          if (prefix.length > key.length && !prefix.startsWith(key)) {
+            continue
+          }
+        }
+        shard = await shards.get(entry[1][0], key)
         yield * ents(shard)
       } else {
-        yield [shard.prefix + entry[0], entry[1]]
+        if (prefix && !key.startsWith(prefix)) {
+          continue
+        }
+        yield [key, entry[1]]
       }
     }
   })(rshard)
