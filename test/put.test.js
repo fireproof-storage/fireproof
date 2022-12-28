@@ -1,73 +1,19 @@
 import { describe, it } from 'node:test'
-import crypto from 'node:crypto'
 import assert from 'node:assert'
-import { CID } from 'multiformats/cid'
-import * as raw from 'multiformats/codecs/raw'
-import { sha256 } from 'multiformats/hashes/sha2'
 import { nanoid } from 'nanoid'
-import { ShardBlock, put, MaxKeyLength, get, encodeShardBlock, decodeShardBlock } from './index.js'
-import { putEntry } from './shard.js'
+import { ShardBlock, put, MaxKeyLength, get, encodeShardBlock } from '../index.js'
+import { putEntry } from '../shard.js'
+import { Blockstore, randomCID } from './helpers.js'
 
 const maxShardSize = 1024 // tiny shard size for testing
-
-/** @param {number} size */
-async function randomCID (size) {
-  const hash = await sha256.digest(await randomBytes(size))
-  return CID.create(1, raw.code, hash)
-}
-
-/** @param {number} size */
-async function randomBytes (size) {
-  const bytes = new Uint8Array(size)
-  while (size) {
-    const chunk = new Uint8Array(Math.min(size, 65_536))
-    crypto.getRandomValues(chunk)
-    size -= bytes.length
-    bytes.set(chunk, size)
-  }
-  return bytes
-}
-
-class Blockstore {
-  /** @type {Map<string, Uint8Array>} */
-  #blocks = new Map()
-
-  /**
-   * @param {import('./shard').AnyLink} cid
-   * @returns {Promise<import('./shard').AnyBlock | undefined>}
-   */
-  async get (cid) {
-    const bytes = this.#blocks.get(cid.toString())
-    if (!bytes) return
-    return { cid, bytes }
-  }
-
-  /**
-   * @param {import('./shard').ShardLink} cid
-   * @param {string} [prefix]
-   */
-  async getShardBlock (cid, prefix) {
-    const blk = await this.get(cid)
-    assert(blk)
-    return decodeShardBlock(blk.bytes, prefix)
-  }
-
-  /**
-   * @param {import('./shard').AnyLink} cid
-   * @param {Uint8Array} bytes
-   */
-  async put (cid, bytes) {
-    this.#blocks.set(cid.toString(), bytes)
-  }
-}
 
 /**
  * Fill a shard until it exceeds the size limit. Returns the entry that will
  * cause the limit to exceed.
  *
- * @param {import('./shard').Shard} shard
+ * @param {import('../shard').Shard} shard
  * @param {number} size
- * @param {(i: number) => Promise<import('./shard').ShardValueEntry>} [mkentry]
+ * @param {(i: number) => Promise<import('../shard').ShardValueEntry>} [mkentry]
  */
 async function fillShard (shard, size, mkentry) {
   mkentry = mkentry ?? (async () => [nanoid(), await randomCID(32)])
@@ -174,35 +120,4 @@ describe('put', () => {
       assert.equal(value.toString(), v.toString())
     }
   })
-})
-
-describe('get', () => {
-  it('get from root shard', async () => {
-    const emptyShard = await ShardBlock.create()
-    const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
-
-    const dataCID = await randomCID(32)
-    const { root, additions } = await put(blocks, emptyShard.cid, 'test', dataCID)
-
-    for (const b of additions) {
-      await blocks.put(b.cid, b.bytes)
-    }
-
-    const res = await get(blocks, root, 'test')
-
-    assert(res)
-    assert(res.toString(), dataCID.toString())
-  })
-
-  it('returns undefined when not found', async () => {
-    const emptyShard = await ShardBlock.create()
-    const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
-
-    const res = await get(blocks, emptyShard.cid, 'test')
-    assert.strictEqual(res, undefined)
-  })
-
-  // TODO: test get when key is also shard link
 })
