@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'fs'
 import os from 'os'
-import path from 'path'
+import { join } from 'path'
 import { Readable } from 'stream'
 import sade from 'sade'
 import { CID } from 'multiformats/cid'
@@ -12,18 +12,19 @@ import { MaxShardSize, put, ShardBlock, get, del, entries } from './index.js'
 import { ShardFetcher } from './shard.js'
 
 const cli = sade('pail')
+  .option('--path', 'Path to data store.', './pail.car')
 
 cli.command('put <key> <value>')
   .describe('Put a value (a CID) for the given key. If the key exists it\'s value is overwritten.')
   .alias('set')
   .option('--max-shard-size', 'Maximum shard size in bytes.', MaxShardSize)
   .action(async (key, value, opts) => {
-    const blocks = await openBucket()
+    const blocks = await openBucket(opts.path)
     const roots = await blocks.getRoots()
     const maxShardSize = opts['max-shard-size'] ?? MaxShardSize
     // @ts-expect-error
     const { root, additions, removals } = await put(blocks, roots[0], key, CID.parse(value), { maxShardSize })
-    await updateBucket(blocks, root, { additions, removals })
+    await updateBucket(opts.path, blocks, root, { additions, removals })
 
     console.log(clc.red(`--- ${roots[0]}`))
     console.log(clc.green(`+++ ${root}`))
@@ -35,8 +36,8 @@ cli.command('put <key> <value>')
 
 cli.command('get <key>')
   .describe('Get the stored value for the given key from the bucket. If the key is not found, `undefined` is returned.')
-  .action(async (key) => {
-    const blocks = await openBucket()
+  .action(async (key, opts) => {
+    const blocks = await openBucket(opts.path)
     // @ts-expect-error
     const value = await get(blocks, (await blocks.getRoots())[0], key)
     if (value) console.log(value.toString())
@@ -46,12 +47,12 @@ cli.command('get <key>')
 cli.command('del <key>')
   .describe('Delete the value for the given key from the bucket. If the key is not found no operation occurs.')
   .alias('delete', 'rm', 'remove')
-  .action(async (key) => {
-    const blocks = await openBucket()
+  .action(async (key, opts) => {
+    const blocks = await openBucket(opts.path)
     const roots = await blocks.getRoots()
     // @ts-expect-error
     const { root, additions, removals } = await del(blocks, roots[0], key)
-    await updateBucket(blocks, root, { additions, removals })
+    await updateBucket(opts.path, blocks, root, { additions, removals })
 
     console.log(clc.red(`--- ${roots[0]}`))
     console.log(clc.green(`+++ ${root}`))
@@ -67,19 +68,22 @@ cli.command('ls')
   .option('-p, --prefix', 'Key prefix to filter by.')
   .option('--json', 'Format output as newline delimted JSON.')
   .action(async (opts) => {
-    const blocks = await openBucket()
+    const blocks = await openBucket(opts.path)
     const root = (await blocks.getRoots())[0]
+    let n = 0
     // @ts-expect-error
     for await (const [k, v] of entries(blocks, root, { prefix: opts.prefix })) {
       console.log(opts.json ? JSON.stringify({ key: k, value: v.toString() }) : `${k}\t${v}`)
+      n++
     }
+    if (!opts.json) console.log(`total ${n}`)
     await closeBucket(blocks)
   })
 
 cli.command('tree')
   .describe('Visualise the bucket.')
-  .action(async () => {
-    const blocks = await openBucket()
+  .action(async (opts) => {
+    const blocks = await openBucket(opts.path)
     const root = (await blocks.getRoots())[0]
     // @ts-expect-error
     const shards = new ShardFetcher(blocks)
@@ -115,10 +119,13 @@ cli.command('tree')
 
 cli.parse(process.argv)
 
-/** @returns {Promise<import('@ipld/car/api').CarReader>} */
-async function openBucket () {
+/**
+ * @param {string} path
+ * @returns {Promise<import('@ipld/car/api').CarReader>}
+ */
+async function openBucket (path) {
   try {
-    return await CarIndexedReader.fromFile('./pail.car')
+    return await CarIndexedReader.fromFile(path)
   } catch (err) {
     if (err.code !== 'ENOENT') throw new Error('failed to open bucket', { cause: err })
     const rootblk = await ShardBlock.create()
@@ -137,14 +144,15 @@ async function closeBucket (reader) {
 }
 
 /**
+ * @param {string} path
  * @param {import('@ipld/car/api').CarReader} reader
  * @param {import('./shard').ShardLink} root
  * @param {import('.').ShardDiff} diff
  */
-async function updateBucket (reader, root, { additions, removals }) {
+async function updateBucket (path, reader, root, { additions, removals }) {
   // @ts-expect-error
   const { writer, out } = CarWriter.create(root)
-  const tmp = path.join(os.tmpdir(), `pail${Date.now()}.car`)
+  const tmp = join(os.tmpdir(), `pail${Date.now()}.car`)
 
   const finishPromise = new Promise(resolve => {
     Readable.from(out).pipe(fs.createWriteStream(tmp)).on('finish', resolve)
@@ -164,13 +172,13 @@ async function updateBucket (reader, root, { additions, removals }) {
   await writer.close()
   await finishPromise
 
-  const old = `./pail.car-${new Date().toISOString()}`
+  const old = `${path}-${new Date().toISOString()}`
   try {
-    await fs.promises.rename('./pail.car', old)
+    await fs.promises.rename(path, old)
   } catch (err) {
     if (err.code !== 'ENOENT') throw err
   }
-  await fs.promises.rename(tmp, './pail.car')
+  await fs.promises.rename(tmp, path)
   try {
     await fs.promises.rm(old)
   } catch (err) {
