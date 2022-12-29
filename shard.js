@@ -97,24 +97,33 @@ export function putEntry (target, entry) {
         // and new value does not have link to data
         // then preserve old data
         if (Array.isArray(v) && v[1] != null && entry[1][1] == null) {
-          shard.push([k, [entry[1][0], v[1]]], ...target.slice(i + 1))
+          shard.push([k, [entry[1][0], v[1]]])
         } else {
-          shard.push(entry, ...target.slice(i + 1))
+          shard.push(entry)
         }
       } else {
         // shard as well as value?
         /** @type {ShardEntry} */
         const newEntry = Array.isArray(v) ? [k, [v[0], entry[1]]] : entry
-        shard.push(newEntry, ...target.slice(i + 1))
+        shard.push(newEntry)
+      }
+      for (let j = i + 1; j < target.length; j++) {
+        shard.push(target[j])
       }
       return shard
     }
     if (i === 0 && entry[0] < k) {
-      shard.push(entry, ...target.slice(i))
+      shard.push(entry)
+      for (let j = i; j < target.length; j++) {
+        shard.push(target[j])
+      }
       return shard
     }
     if (i > 0 && entry[0] > target[i - 1][0] && entry[0] < k) {
-      shard.push(entry, ...target.slice(i))
+      shard.push(entry)
+      for (let j = i; j < target.length; j++) {
+        shard.push(target[j])
+      }
       return shard
     }
     shard.push([k, v])

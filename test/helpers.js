@@ -4,6 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { decodeShardBlock } from '../index.js'
+import { MemoryBlockstore } from '../util.js'
 
 /** @param {number} size */
 export async function randomCID (size) {
@@ -23,20 +24,7 @@ export async function randomBytes (size) {
   return bytes
 }
 
-export class Blockstore {
-  /** @type {Map<string, Uint8Array>} */
-  #blocks = new Map()
-
-  /**
-   * @param {import('../shard').AnyLink} cid
-   * @returns {Promise<import('../shard').AnyBlock | undefined>}
-   */
-  async get (cid) {
-    const bytes = this.#blocks.get(cid.toString())
-    if (!bytes) return
-    return { cid, bytes }
-  }
-
+export class Blockstore extends MemoryBlockstore {
   /**
    * @param {import('../shard').ShardLink} cid
    * @param {string} [prefix]
@@ -45,13 +33,5 @@ export class Blockstore {
     const blk = await this.get(cid)
     assert(blk)
     return decodeShardBlock(blk.bytes, prefix)
-  }
-
-  /**
-   * @param {import('../shard').AnyLink} cid
-   * @param {Uint8Array} bytes
-   */
-  async put (cid, bytes) {
-    this.#blocks.set(cid.toString(), bytes)
   }
 }
