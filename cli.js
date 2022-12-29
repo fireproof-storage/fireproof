@@ -19,17 +19,17 @@ cli.command('put <key> <value>')
   .option('--max-shard-size', 'Maximum shard size in bytes.', MaxShardSize)
   .action(async (key, value, opts) => {
     const blocks = await openBucket()
+    const roots = await blocks.getRoots()
     const maxShardSize = opts['max-shard-size'] ?? MaxShardSize
     // @ts-expect-error
-    const { root, additions, removals } = await put(blocks, (await blocks.getRoots())[0], key, CID.parse(value), { maxShardSize })
+    const { root, additions, removals } = await put(blocks, roots[0], key, CID.parse(value), { maxShardSize })
     await updateBucket(blocks, root, { additions, removals })
 
-    console.log('Root:')
-    console.log(clc.cyan(`  ${root}`))
-    console.log('Additions:')
-    additions.forEach(b => console.log(clc.green(`  ${b.cid}`)))
-    console.log('Removals:')
-    removals.forEach(b => console.log(clc.red(`  ${b.cid}`)))
+    console.log(clc.red(`--- ${roots[0]}`))
+    console.log(clc.green(`+++ ${root}`))
+    console.log(clc.magenta('@@ -1 +1 @@'))
+    additions.forEach(b => console.log(clc.green(`+${b.cid}`)))
+    removals.forEach(b => console.log(clc.red(`-${b.cid}`)))
     await closeBucket(blocks)
   })
 
@@ -48,16 +48,16 @@ cli.command('del <key>')
   .alias('delete', 'rm', 'remove')
   .action(async (key) => {
     const blocks = await openBucket()
+    const roots = await blocks.getRoots()
     // @ts-expect-error
-    const { root, additions, removals } = await del(blocks, (await blocks.getRoots())[0], key)
+    const { root, additions, removals } = await del(blocks, roots[0], key)
     await updateBucket(blocks, root, { additions, removals })
 
-    console.log('Root:')
-    console.log(clc.cyan(`  ${root}`))
-    console.log('Additions:')
-    additions.forEach(b => console.log(clc.green(`  ${b.cid}`)))
-    console.log('Removals:')
-    removals.forEach(b => console.log(clc.red(`  ${b.cid}`)))
+    console.log(clc.red(`--- ${roots[0]}`))
+    console.log(clc.green(`+++ ${root}`))
+    console.log(clc.magenta('@@ -1 +1 @@'))
+    additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
+    removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
     await closeBucket(blocks)
   })
 
@@ -65,7 +65,7 @@ cli.command('ls')
   .describe('List entries in the bucket.')
   .alias('list')
   .option('-p, --prefix', 'Key prefix to filter by.')
-  .option('--json', 'Format as newline delimted JSON.')
+  .option('--json', 'Format output as newline delimted JSON.')
   .action(async (opts) => {
     const blocks = await openBucket()
     const root = (await blocks.getRoots())[0]
