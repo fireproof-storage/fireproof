@@ -238,8 +238,7 @@ export async function * entries (blocks, root, options = {}) {
             continue
           }
         }
-        shard = await shards.get(entry[1][0], key)
-        yield * ents(shard)
+        yield * ents(await shards.get(entry[1][0], key))
       } else {
         if (prefix && !key.startsWith(prefix)) {
           continue
