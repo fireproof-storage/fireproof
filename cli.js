@@ -91,16 +91,16 @@ cli.command('tree')
     const rshard = await shards.get(root)
 
     /** @type {archy.Data} */
-    const archyRoot = { label: `${clc.cyan(rshard.cid.toString())} ${rshard.bytes.length + 'b'}`, nodes: [] }
+    const archyRoot = { label: `Shard(${clc.yellow(rshard.cid.toString())}) ${rshard.bytes.length + 'b'}`, nodes: [] }
 
     /** @param {import('./shard').ShardEntry} entry */
     const getData = async ([k, v]) => {
       if (!Array.isArray(v)) {
-        return { label: `Key(${clc.magenta(k)})`, nodes: [{ label: `Value(${clc.blue(v)})` }] }
+        return { label: `Key(${clc.magenta(k)})`, nodes: [{ label: `Value(${clc.cyan(v)})` }] }
       }
       /** @type {archy.Data} */
       const data = { label: `Key(${clc.magenta(k)})`, nodes: [] }
-      if (v[1]) data.nodes?.push({ label: `Value(${clc.blue(v[1])})` })
+      if (v[1]) data.nodes?.push({ label: `Value(${clc.cyan(v[1])})` })
       const blk = await shards.get(v[0])
       data.nodes?.push({
         label: `Shard(${clc.yellow(v[0])}) ${blk.bytes.length + 'b'}`,
