@@ -5,8 +5,8 @@ import { CarWriter } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { ShardBlock, put } from '../index.js'
-import { MemoryBlockstore } from '../util.js'
+import { ShardBlock, put } from '../../index.js'
+import { MemoryBlockstore } from '../../util.js'
 
 async function randomCID () {
   const bytes = crypto.webcrypto.getRandomValues(new Uint8Array(32))
@@ -23,7 +23,7 @@ async function main () {
   blocks.putSync(rootblk.cid, rootblk.bytes)
 
   console.time(`put x${words.length}`)
-  /** @type {import('../shard').ShardLink} */
+  /** @type {import('../../shard').ShardLink} */
   let root = rootblk.cid
   for (const [i, word] of words.entries()) {
     const res = await put(blocks, root, word, cids[i])
