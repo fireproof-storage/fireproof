@@ -5,12 +5,12 @@ import { Blockstore, randomCID } from './helpers.js'
 
 describe('get', () => {
   it('get from root shard', async () => {
-    const emptyShard = await ShardBlock.create()
+    const empty = await ShardBlock.create()
     const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
+    await blocks.put(empty.cid, empty.bytes)
 
     const dataCID = await randomCID(32)
-    const { root, additions } = await put(blocks, emptyShard.cid, 'test', dataCID)
+    const { root, additions } = await put(blocks, empty.cid, 'test', dataCID)
 
     for (const b of additions) {
       await blocks.put(b.cid, b.bytes)
@@ -23,11 +23,11 @@ describe('get', () => {
   })
 
   it('returns undefined when not found', async () => {
-    const emptyShard = await ShardBlock.create()
+    const empty = await ShardBlock.create()
     const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
+    await blocks.put(empty.cid, empty.bytes)
 
-    const res = await get(blocks, emptyShard.cid, 'test')
+    const res = await get(blocks, empty.cid, 'test')
     assert.strictEqual(res, undefined)
   })
 

@@ -10,6 +10,7 @@ import clc from 'cli-color'
 import archy from 'archy'
 import { MaxShardSize, put, ShardBlock, get, del, entries } from './index.js'
 import { ShardFetcher } from './shard.js'
+import { difference } from './diff.js'
 
 const cli = sade('pail')
   .option('--path', 'Path to data store.', './pail.car')
@@ -115,6 +116,33 @@ cli.command('tree')
 
     console.log(archy(archyRoot))
     await closeBucket(blocks)
+  })
+
+cli.command('diff <pathA> <pathB>')
+  .describe('Diff two pails.')
+  .action(async (apath, bpath) => {
+    const [ablocks, bblocks] = await Promise.all([openBucket(apath), openBucket(bpath)])
+    const [aroot, broot] = await Promise.all([ablocks, bblocks].map(async blocks => {
+      return /** @type {import('./shard').ShardLink} */((await blocks.getRoots())[0])
+    }))
+    if (aroot.toString() === broot.toString()) return
+
+    const fetcher = {
+      async get (cid) {
+        const blk = await ablocks.get(cid)
+        if (blk) return blk
+        return bblocks.get(cid)
+      }
+    }
+    const { additions, removals } = await difference(fetcher, aroot, broot)
+
+    console.log(clc.red(`--- ${aroot}`))
+    console.log(clc.green(`+++ ${broot}`))
+    console.log(clc.magenta('@@ -1 +1 @@'))
+    additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
+    removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
+
+    await Promise.all([closeBucket(ablocks), closeBucket(bblocks)])
   })
 
 cli.parse(process.argv)

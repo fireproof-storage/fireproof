@@ -5,9 +5,9 @@ import { Blockstore, randomCID } from './helpers.js'
 
 describe('entries', () => {
   it('lists entries in lexicographical order', async () => {
-    const emptyShard = await ShardBlock.create()
+    const empty = await ShardBlock.create()
     const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
+    await blocks.put(empty.cid, empty.bytes)
 
     /** @type {Array<[string, import('../shard').AnyLink]>} */
     const testdata = [
@@ -18,7 +18,7 @@ describe('entries', () => {
     ]
 
     /** @type {import('../shard').ShardLink} */
-    let root = emptyShard.cid
+    let root = empty.cid
     for (const [k, v] of testdata) {
       const res = await put(blocks, root, k, v)
       for (const b of res.additions) {
@@ -38,9 +38,9 @@ describe('entries', () => {
   })
 
   it('lists entries by prefix', async () => {
-    const emptyShard = await ShardBlock.create()
+    const empty = await ShardBlock.create()
     const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
+    await blocks.put(empty.cid, empty.bytes)
 
     /** @type {Array<[string, import('../shard').AnyLink]>} */
     const testdata = [
@@ -51,7 +51,7 @@ describe('entries', () => {
     ]
 
     /** @type {import('../shard').ShardLink} */
-    let root = emptyShard.cid
+    let root = empty.cid
     for (const [k, v] of testdata) {
       const res = await put(blocks, root, k, v)
       for (const b of res.additions) {
