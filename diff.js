@@ -6,7 +6,7 @@ import { ShardFetcher } from './shard.js'
  * @param {import('./shard').ShardLink} b Comparison DAG.
  * @returns {Promise<import('./index').ShardDiff>}
  */
-export async function diff (blocks, a, b) {
+export async function difference (blocks, a, b) {
   if (isEqual(a, b)) return { additions: [], removals: [] }
 
   const shards = new ShardFetcher(blocks)
@@ -19,23 +19,23 @@ export async function diff (blocks, a, b) {
   const removals = new Map([[ashard.cid.toString(), ashard]])
 
   // find shards removed in B
-  for (const aent of ashard.value) {
-    const bent = bents.get(aent[0])
-    if (bent) continue
-    if (!Array.isArray(aent[1])) continue
-    for await (const shard of collect(shards, aent[1][0])) {
+  for (const [akey, aval] of ashard.value) {
+    const bval = bents.get(akey)
+    if (bval) continue
+    if (!Array.isArray(aval)) continue
+    for await (const shard of collect(shards, aval[0])) {
       removals.set(shard.cid.toString(), shard)
     }
   }
 
   // find shards added or updated in B
-  for (const bent of bshard.value) {
-    if (!Array.isArray(bent)) continue
+  for (const [bkey, bval] of bshard.value) {
+    if (!Array.isArray(bval)) continue
 
-    const aent = aents.get(bent[0])
-    if (aent) { // updated in B
-      if (isEqual(aent[1][0], bent[1][0])) continue // updated value?
-      const res = await diff(blocks, aent[1][0], bent[1][0])
+    const aval = aents.get(bkey)
+    if (aval) { // updated in B
+      if (isEqual(aval[0], bval[0])) continue // updated value?
+      const res = await difference(blocks, aval[0], bval[0])
       for (const shard of res.additions) {
         additions.set(shard.cid.toString(), shard)
       }
@@ -43,16 +43,21 @@ export async function diff (blocks, a, b) {
         removals.set(shard.cid.toString(), shard)
       }
     } else { // added in B
-      for await (const shard of collect(shards, bent[1][0])) {
+      for await (const shard of collect(shards, bval[0])) {
         additions.set(shard.cid.toString(), shard)
       }
     }
   }
 
-  return {
-    additions: Array.from(additions.values()),
-    removals: Array.from(removals.values()).filter(shard => !additions.has(shard.cid.toString()))
+  // filter blocks that were added _and_ removed from B
+  for (const k of removals.keys()) {
+    if (additions.has(k)) {
+      additions.delete(k)
+      removals.delete(k)
+    }
   }
+
+  return { additions: [...additions.values()], removals: [...removals.values()] }
 }
 
 /**

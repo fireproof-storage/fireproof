@@ -5,13 +5,13 @@ import { Blockstore, randomCID } from './helpers.js'
 
 describe('del', () => {
   it('deletes a value', async () => {
-    const emptyShard = await ShardBlock.create()
+    const empty = await ShardBlock.create()
     const blocks = new Blockstore()
-    await blocks.put(emptyShard.cid, emptyShard.bytes)
+    await blocks.put(empty.cid, empty.bytes)
 
     const dataCID = await randomCID(32)
 
-    const { root: root0, additions: additions0 } = await put(blocks, emptyShard.cid, 'test', dataCID)
+    const { root: root0, additions: additions0 } = await put(blocks, empty.cid, 'test', dataCID)
     for (const b of additions0) {
       await blocks.put(b.cid, b.bytes)
     }
