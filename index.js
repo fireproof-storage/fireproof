@@ -20,10 +20,10 @@ export const MaxShardSize = 512 * 1024
  * Put a value (a CID) for the given key. If the key exists it's value is
  * overwritten.
  *
- * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
  * @param {string} key The key of the value to put.
- * @param {import('./shard').AnyLink} value The value to put.
+ * @param {import('./link').AnyLink} value The value to put.
  * @param {object} [options]
  * @param {number} [options.maxShardSize] Maximum shard size in bytes.
  * @returns {Promise<{ root: import('./shard').ShardLink } & ShardDiff>}
@@ -120,10 +120,10 @@ export async function put (blocks, root, key, value, options = {}) {
  * Get the stored value for the given key from the bucket. If the key is not
  * found, `undefined` is returned.
  *
- * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
  * @param {string} key The key of the value to get.
- * @returns {Promise<import('./shard').AnyLink | undefined>}
+ * @returns {Promise<import('./link').AnyLink | undefined>}
  */
 export async function get (blocks, root, key) {
   const shards = new ShardFetcher(blocks)
@@ -140,7 +140,7 @@ export async function get (blocks, root, key) {
  * Delete the value for the given key from the bucket. If the key is not found
  * no operation occurs.
  *
- * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
  * @param {string} key The key of the value to delete.
  * @returns {Promise<{ root: import('./shard').ShardLink } & ShardDiff>}
@@ -208,7 +208,7 @@ export async function del (blocks, root, key) {
 /**
  * List entries in the bucket.
  *
- * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./shard').ShardLink} root CID of the root node of the bucket.
  * @param {object} [options]
  * @param {string} [options.prefix]
