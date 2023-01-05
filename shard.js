@@ -3,12 +3,9 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as cbor from '@ipld/dag-cbor'
 
 /**
- * @typedef {import('multiformats').Link<unknown, number, number, 1|0>} AnyLink
- * @typedef {{ cid: AnyLink, bytes: Uint8Array }} AnyBlock
- * @typedef {{ get: (link: AnyLink) => Promise<AnyBlock | undefined> }} BlockFetcher
- * @typedef {AnyLink} ShardEntryValueValue
+ * @typedef {import('./link').AnyLink} ShardEntryValueValue
  * @typedef {[ShardLink]} ShardEntryLinkValue
- * @typedef {[ShardLink, AnyLink]} ShardEntryLinkAndValueValue
+ * @typedef {[ShardLink, import('./link').AnyLink]} ShardEntryLinkAndValueValue
  * @typedef {[key: string, value: ShardEntryValueValue]} ShardValueEntry
  * @typedef {[key: string, value: ShardEntryLinkValue | ShardEntryLinkAndValueValue]} ShardLinkEntry
  * @typedef {[key: string, value: ShardEntryValueValue | ShardEntryLinkValue | ShardEntryLinkAndValueValue]} ShardEntry
@@ -59,9 +56,7 @@ export async function decodeShardBlock (bytes, prefix) {
 }
 
 export class ShardFetcher {
-  /**
-   * @param {BlockFetcher} blocks
-   */
+  /** @param {import('./block').BlockFetcher} blocks */
   constructor (blocks) {
     this._blocks = blocks
   }

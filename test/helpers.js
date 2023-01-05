@@ -4,7 +4,7 @@ import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { decodeShardBlock } from '../index.js'
-import { MemoryBlockstore } from '../util.js'
+import { MemoryBlockstore } from '../block.js'
 
 /** @param {number} size */
 export async function randomCID (size) {

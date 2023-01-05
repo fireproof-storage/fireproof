@@ -11,6 +11,7 @@ import archy from 'archy'
 import { MaxShardSize, put, ShardBlock, get, del, entries } from './index.js'
 import { ShardFetcher } from './shard.js'
 import { difference } from './diff.js'
+import { merge } from './merge.js'
 
 const cli = sade('pail')
   .option('--path', 'Path to data store.', './pail.car')
@@ -20,56 +21,56 @@ cli.command('put <key> <value>')
   .alias('set')
   .option('--max-shard-size', 'Maximum shard size in bytes.', MaxShardSize)
   .action(async (key, value, opts) => {
-    const blocks = await openBucket(opts.path)
+    const blocks = await openPail(opts.path)
     const roots = await blocks.getRoots()
     const maxShardSize = opts['max-shard-size'] ?? MaxShardSize
     // @ts-expect-error
     const { root, additions, removals } = await put(blocks, roots[0], key, CID.parse(value), { maxShardSize })
-    await updateBucket(opts.path, blocks, root, { additions, removals })
+    await updatePail(opts.path, blocks, root, { additions, removals })
 
     console.log(clc.red(`--- ${roots[0]}`))
     console.log(clc.green(`+++ ${root}`))
     console.log(clc.magenta('@@ -1 +1 @@'))
     additions.forEach(b => console.log(clc.green(`+${b.cid}`)))
     removals.forEach(b => console.log(clc.red(`-${b.cid}`)))
-    await closeBucket(blocks)
+    await closePail(blocks)
   })
 
 cli.command('get <key>')
-  .describe('Get the stored value for the given key from the bucket. If the key is not found, `undefined` is returned.')
+  .describe('Get the stored value for the given key from the pail. If the key is not found, `undefined` is returned.')
   .action(async (key, opts) => {
-    const blocks = await openBucket(opts.path)
+    const blocks = await openPail(opts.path)
     // @ts-expect-error
     const value = await get(blocks, (await blocks.getRoots())[0], key)
     if (value) console.log(value.toString())
-    await closeBucket(blocks)
+    await closePail(blocks)
   })
 
 cli.command('del <key>')
-  .describe('Delete the value for the given key from the bucket. If the key is not found no operation occurs.')
+  .describe('Delete the value for the given key from the pail. If the key is not found no operation occurs.')
   .alias('delete', 'rm', 'remove')
   .action(async (key, opts) => {
-    const blocks = await openBucket(opts.path)
+    const blocks = await openPail(opts.path)
     const roots = await blocks.getRoots()
     // @ts-expect-error
     const { root, additions, removals } = await del(blocks, roots[0], key)
-    await updateBucket(opts.path, blocks, root, { additions, removals })
+    await updatePail(opts.path, blocks, root, { additions, removals })
 
     console.log(clc.red(`--- ${roots[0]}`))
     console.log(clc.green(`+++ ${root}`))
     console.log(clc.magenta('@@ -1 +1 @@'))
     additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
     removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
-    await closeBucket(blocks)
+    await closePail(blocks)
   })
 
 cli.command('ls')
-  .describe('List entries in the bucket.')
+  .describe('List entries in the pail.')
   .alias('list')
   .option('-p, --prefix', 'Key prefix to filter by.')
   .option('--json', 'Format output as newline delimted JSON.')
   .action(async (opts) => {
-    const blocks = await openBucket(opts.path)
+    const blocks = await openPail(opts.path)
     const root = (await blocks.getRoots())[0]
     let n = 0
     // @ts-expect-error
@@ -78,13 +79,13 @@ cli.command('ls')
       n++
     }
     if (!opts.json) console.log(`total ${n}`)
-    await closeBucket(blocks)
+    await closePail(blocks)
   })
 
 cli.command('tree')
-  .describe('Visualise the bucket.')
+  .describe('Visualise the pail.')
   .action(async (opts) => {
-    const blocks = await openBucket(opts.path)
+    const blocks = await openPail(opts.path)
     const root = (await blocks.getRoots())[0]
     // @ts-expect-error
     const shards = new ShardFetcher(blocks)
@@ -115,14 +116,14 @@ cli.command('tree')
     }
 
     console.log(archy(archyRoot))
-    await closeBucket(blocks)
+    await closePail(blocks)
   })
 
-cli.command('diff <pathA> <pathB>')
-  .describe('Diff two pails.')
+cli.command('diff <path>')
+  .describe('Find the differences between this pail and the passed pail.')
   .option('-k, --keys', 'Output key/value diff.')
-  .action(async (apath, bpath, opts) => {
-    const [ablocks, bblocks] = await Promise.all([openBucket(apath), openBucket(bpath)])
+  .action(async (path, opts) => {
+    const [ablocks, bblocks] = await Promise.all([openPail(opts.path), openPail(path)])
     const [aroot, broot] = await Promise.all([ablocks, bblocks].map(async blocks => {
       return /** @type {import('./shard').ShardLink} */((await blocks.getRoots())[0])
     }))
@@ -135,29 +136,52 @@ cli.command('diff <pathA> <pathB>')
         return bblocks.get(cid)
       }
     }
-    const {
-      shards: { additions, removals },
-      kvs: { puts, dels }
-    } = await difference(fetcher, aroot, broot)
+    const { shards: { additions, removals }, keys } = await difference(fetcher, aroot, broot)
 
     console.log(clc.red(`--- ${aroot}`))
     console.log(clc.green(`+++ ${broot}`))
     console.log(clc.magenta('@@ -1 +1 @@'))
 
     if (opts.keys) {
-      puts.forEach(([k, [v0, v1]]) => {
-        if (v0 != null) console.log(clc.red(`- ${k}: ${v0}`))
-        console.log(clc.green(`+ ${k}: ${v1}`))
-      })
-      dels.forEach(([k, [v]]) => {
-        console.log(clc.red(`- ${k}: ${v}`))
+      keys.forEach(([k, v]) => {
+        if (v[0] != null) console.log(clc.red(`- ${k}\t${v[0]}`))
+        if (v[1] != null) console.log(clc.green(`+ ${k}\t${v[1]}`))
       })
     } else {
       additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
       removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
     }
 
-    await Promise.all([closeBucket(ablocks), closeBucket(bblocks)])
+    await Promise.all([closePail(ablocks), closePail(bblocks)])
+  })
+
+cli.command('merge <path>')
+  .describe('Merge the passed pail into this pail.')
+  .action(async (path, opts) => {
+    const [ablocks, bblocks] = await Promise.all([openPail(opts.path), openPail(path)])
+    const [aroot, broot] = await Promise.all([ablocks, bblocks].map(async blocks => {
+      return /** @type {import('./shard').ShardLink} */((await blocks.getRoots())[0])
+    }))
+    if (aroot.toString() === broot.toString()) return
+
+    const fetcher = {
+      async get (cid) {
+        const blk = await ablocks.get(cid)
+        if (blk) return blk
+        return bblocks.get(cid)
+      }
+    }
+    const { root, additions, removals } = await merge(fetcher, aroot, [broot])
+
+    await updatePail(opts.path, ablocks, root, { additions, removals })
+
+    console.log(clc.red(`--- ${aroot}`))
+    console.log(clc.green(`+++ ${root}`))
+    console.log(clc.magenta('@@ -1 +1 @@'))
+    additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
+    removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
+
+    await Promise.all([closePail(ablocks), closePail(bblocks)])
   })
 
 cli.parse(process.argv)
@@ -166,7 +190,7 @@ cli.parse(process.argv)
  * @param {string} path
  * @returns {Promise<import('@ipld/car/api').CarReader>}
  */
-async function openBucket (path) {
+async function openPail (path) {
   try {
     return await CarIndexedReader.fromFile(path)
   } catch (err) {
@@ -180,7 +204,7 @@ async function openBucket (path) {
 }
 
 /** @param {import('@ipld/car/api').CarReader} reader */
-async function closeBucket (reader) {
+async function closePail (reader) {
   if (reader instanceof CarIndexedReader) {
     await reader.close()
   }
@@ -192,7 +216,7 @@ async function closeBucket (reader) {
  * @param {import('./shard').ShardLink} root
  * @param {import('.').ShardDiff} diff
  */
-async function updateBucket (path, reader, root, { additions, removals }) {
+async function updatePail (path, reader, root, { additions, removals }) {
   // @ts-expect-error
   const { writer, out } = CarWriter.create(root)
   const tmp = join(os.tmpdir(), `pail${Date.now()}.car`)

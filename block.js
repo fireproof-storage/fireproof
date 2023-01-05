@@ -1,12 +1,18 @@
 import { CID } from 'multiformats/cid'
 
+/**
+ * @typedef {{ cid: import('./link').AnyLink, bytes: Uint8Array }} AnyBlock
+ * @typedef {{ get: (link: import('./link').AnyLink) => Promise<AnyBlock | undefined> }} BlockFetcher
+ */
+
+/** @implements {BlockFetcher} */
 export class MemoryBlockstore {
   /** @type {Map<string, Uint8Array>} */
   #blocks = new Map()
 
   /**
-   * @param {import('./shard').AnyLink} cid
-   * @returns {Promise<import('./shard').AnyBlock | undefined>}
+   * @param {import('./link').AnyLink} cid
+   * @returns {Promise<AnyBlock | undefined>}
    */
   async get (cid) {
     const bytes = this.#blocks.get(cid.toString())
@@ -15,7 +21,7 @@ export class MemoryBlockstore {
   }
 
   /**
-   * @param {import('./shard').AnyLink} cid
+   * @param {import('./link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
@@ -23,19 +29,19 @@ export class MemoryBlockstore {
   }
 
   /**
-   * @param {import('./shard').AnyLink} cid
+   * @param {import('./link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
   putSync (cid, bytes) {
     this.#blocks.set(cid.toString(), bytes)
   }
 
-  /** @param {import('./shard').AnyLink} cid */
+  /** @param {import('./link').AnyLink} cid */
   async delete (cid) {
     this.#blocks.delete(cid.toString())
   }
 
-  /** @param {import('./shard').AnyLink} cid */
+  /** @param {import('./link').AnyLink} cid */
   deleteSync (cid) {
     this.#blocks.delete(cid.toString())
   }
