@@ -27,9 +27,17 @@ describe('diff', () => {
 
     const diff = await difference(blocks, empty.cid, root)
 
-    assert.equal(diff.removals.length, 1)
-    assert.equal(diff.removals[0].cid.toString(), empty.cid.toString())
-    assert.equal(diff.additions.length, 1)
-    assert.equal(diff.additions[0].cid.toString(), root.toString())
+    assert.equal(diff.shards.removals.length, 1)
+    assert.equal(diff.shards.removals[0].cid.toString(), empty.cid.toString())
+    assert.equal(diff.shards.additions.length, 1)
+    assert.equal(diff.shards.additions[0].cid.toString(), root.toString())
+
+    assert.equal(diff.kvs.puts.length, testdata.length)
+    for (const [k, v] of testdata) {
+      const d = diff.kvs.puts.find(p => p[0] === k)
+      assert(d)
+      assert.equal(d[1][0], null)
+      assert.equal(d[1][1]?.toString(), v.toString())
+    }
   })
 })
