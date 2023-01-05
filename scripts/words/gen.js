@@ -1,23 +1,22 @@
 import fs from 'node:fs'
-import crypto from 'node:crypto'
 import { Readable } from 'node:stream'
 import { CarWriter } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { ShardBlock, put } from '../../index.js'
-import { MemoryBlockstore } from '../../util.js'
+import { MemoryBlockstore } from '../../block.js'
 
-async function randomCID () {
-  const bytes = crypto.webcrypto.getRandomValues(new Uint8Array(32))
-  const hash = await sha256.digest(bytes)
+/** @param {string} str */
+async function stringToCID (str) {
+  const hash = await sha256.digest(new TextEncoder().encode(str))
   return CID.create(1, raw.code, hash)
 }
 
 async function main () {
   const data = await fs.promises.readFile('/usr/share/dict/words', 'utf8')
   const words = data.split(/\n/)
-  const cids = await Promise.all(words.map(randomCID))
+  const cids = await Promise.all(words.map(stringToCID))
   const blocks = new MemoryBlockstore()
   const rootblk = await ShardBlock.create()
   blocks.putSync(rootblk.cid, rootblk.bytes)
@@ -43,7 +42,7 @@ async function main () {
   // @ts-expect-error
   const { writer, out } = CarWriter.create(root)
   const finishPromise = new Promise(resolve => {
-    Readable.from(out).pipe(fs.createWriteStream('./words.car')).on('finish', resolve)
+    Readable.from(out).pipe(fs.createWriteStream('./pail.car')).on('finish', resolve)
   })
 
   for (const b of blocks.entries()) {
