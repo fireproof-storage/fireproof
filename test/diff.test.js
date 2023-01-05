@@ -10,7 +10,7 @@ describe('diff', () => {
     const blocks = new Blockstore()
     await blocks.put(empty.cid, empty.bytes)
 
-    /** @type {Array<[string, import('../shard').AnyLink]>} */
+    /** @type {Array<[string, import('../link').AnyLink]>} */
     const testdata = [
       ['a', await randomCID(32)]
     ]
@@ -32,9 +32,9 @@ describe('diff', () => {
     assert.equal(diff.shards.additions.length, 1)
     assert.equal(diff.shards.additions[0].cid.toString(), root.toString())
 
-    assert.equal(diff.kvs.puts.length, testdata.length)
+    assert.equal(diff.keys.length, testdata.length)
     for (const [k, v] of testdata) {
-      const d = diff.kvs.puts.find(p => p[0] === k)
+      const d = diff.keys.find(p => p[0] === k)
       assert(d)
       assert.equal(d[1][0], null)
       assert.equal(d[1][1]?.toString(), v.toString())
