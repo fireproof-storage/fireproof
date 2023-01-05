@@ -2,29 +2,30 @@ import { ShardFetcher } from './shard.js'
 
 /**
  * @typedef {string} K
- * @typedef {[before: import('./shard.js').AnyLink|null, after: import('./shard.js').AnyLink|null]} V
- * @typedef {[key: K, value: V]} KV
- * @typedef {{ puts: KV[], dels: KV[] }} KVDiff
- * @typedef {{ kvs: KVDiff, shards: import('./index').ShardDiff }} CombinedDiff
+ * @typedef {[before: null, after: import('./link').AnyLink]} AddV
+ * @typedef {[before: import('./link').AnyLink, after: import('./link').AnyLink]} UpdateV
+ * @typedef {[before: import('./link').AnyLink, after: null]} DeleteV
+ * @typedef {[key: K, value: AddV|UpdateV|DeleteV]} KV
+ * @typedef {KV[]} KeysDiff
+ * @typedef {{ keys: KeysDiff, shards: import('./index').ShardDiff }} CombinedDiff
  */
 
 /**
- * @param {import('./shard').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./shard').ShardLink} a Base DAG.
  * @param {import('./shard').ShardLink} b Comparison DAG.
  * @returns {Promise<CombinedDiff>}
  */
 export async function difference (blocks, a, b, prefix = '') {
-  if (isEqual(a, b)) return { kvs: { puts: [], dels: [] }, shards: { additions: [], removals: [] } }
+  if (isEqual(a, b)) return { keys: [], shards: { additions: [], removals: [] } }
 
   const shards = new ShardFetcher(blocks)
-  const [ashard, bshard] = await Promise.all([shards.get(a), shards.get(b)])
+  const [ashard, bshard] = await Promise.all([shards.get(a, prefix), shards.get(b, prefix)])
 
   const aents = new Map(ashard.value)
   const bents = new Map(bshard.value)
 
-  const puts = /** @type {Map<K, V>} */(new Map())
-  const dels = /** @type {Map<K, V>} */(new Map())
+  const keys = /** @type {Map<K, AddV|UpdateV|DeleteV>} */(new Map())
   const additions = new Map([[bshard.cid.toString(), bshard]])
   const removals = new Map([[ashard.cid.toString(), ashard]])
 
@@ -33,15 +34,22 @@ export async function difference (blocks, a, b, prefix = '') {
     const bval = bents.get(akey)
     if (bval) continue
     if (!Array.isArray(aval)) {
-      dels.set(`${prefix}${akey}`, [aval, null])
+      keys.set(`${ashard.prefix}${akey}`, [aval, null])
       continue
     }
     // if shard link _with_ value
     if (aval[1] != null) {
-      dels.set(`${prefix}${akey}`, [aval[1], null])
+      keys.set(`${ashard.prefix}${akey}`, [aval[1], null])
     }
-    for await (const shard of collect(shards, aval[0])) {
-      removals.set(shard.cid.toString(), shard)
+    for await (const s of collect(shards, aval[0], `${ashard.prefix}${akey}`)) {
+      for (const [k, v] of s.value) {
+        if (!Array.isArray(v)) {
+          keys.set(`${s.prefix}${k}`, [v, null])
+        } else if (v[1] != null) {
+          keys.set(`${s.prefix}${k}`, [v[1], null])
+        }
+      }
+      removals.set(s.cid.toString(), s)
     }
   }
 
@@ -50,47 +58,58 @@ export async function difference (blocks, a, b, prefix = '') {
     const aval = aents.get(bkey)
     if (!Array.isArray(bval)) {
       if (!aval) {
-        puts.set(`${prefix}${bkey}`, [null, bval])
+        keys.set(`${bshard.prefix}${bkey}`, [null, bval])
       } else if (Array.isArray(aval)) {
-        puts.set(`${prefix}${bkey}`, [aval[1] ?? null, bval])
+        keys.set(`${bshard.prefix}${bkey}`, [aval[1] ?? null, bval])
       } else if (!isEqual(aval, bval)) {
-        puts.set(`${prefix}${bkey}`, [aval, bval])
+        keys.set(`${bshard.prefix}${bkey}`, [aval, bval])
       }
       continue
     }
     if (aval && Array.isArray(aval)) { // updated in B
       if (isEqual(aval[0], bval[0])) {
         if (bval[1] != null && (aval[1] == null || !isEqual(aval[1], bval[1]))) {
-          puts.set(`${prefix}${bkey}`, [aval[1] ?? null, bval[1]])
+          keys.set(`${bshard.prefix}${bkey}`, [aval[1] ?? null, bval[1]])
         }
         continue // updated value?
       }
-      const res = await difference(blocks, aval[0], bval[0], `${prefix}${bkey}`)
+      const res = await difference(blocks, aval[0], bval[0], `${bshard.prefix}${bkey}`)
       for (const shard of res.shards.additions) {
         additions.set(shard.cid.toString(), shard)
       }
       for (const shard of res.shards.removals) {
         removals.set(shard.cid.toString(), shard)
       }
-      for (const [k, v] of res.kvs.puts) {
-        puts.set(k, v)
-      }
-      for (const [k, v] of res.kvs.dels) {
-        dels.set(k, v)
+      for (const [k, v] of res.keys) {
+        keys.set(k, v)
       }
     } else if (aval) { // updated in B value => link+value
       if (bval[1] == null) {
-        puts.set(`${prefix}${bkey}`, [aval, null])
+        keys.set(`${bshard.prefix}${bkey}`, [aval, null])
       } else if (!isEqual(aval, bval[1])) {
-        puts.set(`${prefix}${bkey}`, [aval, bval[1]])
+        keys.set(`${bshard.prefix}${bkey}`, [aval, bval[1]])
       }
-      for await (const shard of collect(shards, bval[0])) {
-        additions.set(shard.cid.toString(), shard)
+      for await (const s of collect(shards, bval[0], `${bshard.prefix}${bkey}`)) {
+        for (const [k, v] of s.value) {
+          if (!Array.isArray(v)) {
+            keys.set(`${s.prefix}${k}`, [null, v])
+          } else if (v[1] != null) {
+            keys.set(`${s.prefix}${k}`, [null, v[1]])
+          }
+        }
+        additions.set(s.cid.toString(), s)
       }
     } else { // added in B
-      puts.set(`${prefix}${bkey}`, [null, bval[0]])
-      for await (const shard of collect(shards, bval[0])) {
-        additions.set(shard.cid.toString(), shard)
+      keys.set(`${bshard.prefix}${bkey}`, [null, bval[0]])
+      for await (const s of collect(shards, bval[0], `${bshard.prefix}${bkey}`)) {
+        for (const [k, v] of s.value) {
+          if (!Array.isArray(v)) {
+            keys.set(`${s.prefix}${k}`, [null, v])
+          } else if (v[1] != null) {
+            keys.set(`${s.prefix}${k}`, [null, v[1]])
+          }
+        }
+        additions.set(s.cid.toString(), s)
       }
     }
   }
@@ -104,14 +123,14 @@ export async function difference (blocks, a, b, prefix = '') {
   }
 
   return {
-    kvs: { puts: [...puts.entries()], dels: [...dels.entries()] },
+    keys: [...keys.entries()].sort((a, b) => a[0] < b[0] ? -1 : 1),
     shards: { additions: [...additions.values()], removals: [...removals.values()] }
   }
 }
 
 /**
- * @param {import('./shard').AnyLink} a
- * @param {import('./shard').AnyLink} b
+ * @param {import('./link').AnyLink} a
+ * @param {import('./link').AnyLink} b
  */
 const isEqual = (a, b) => a.toString() === b.toString()
 
@@ -120,11 +139,11 @@ const isEqual = (a, b) => a.toString() === b.toString()
  * @param {import('./shard').ShardLink} root
  * @returns {AsyncIterableIterator<import('./shard').ShardBlockView>}
  */
-async function * collect (shards, root) {
-  const shard = await shards.get(root)
+async function * collect (shards, root, prefix = '') {
+  const shard = await shards.get(root, prefix)
   yield shard
-  for (const [, v] of shard.value) {
+  for (const [k, v] of shard.value) {
     if (!Array.isArray(v)) continue
-    yield * collect(shards, v[0])
+    yield * collect(shards, v[0], `${prefix}${k}`)
   }
 }
