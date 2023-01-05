@@ -120,7 +120,8 @@ cli.command('tree')
 
 cli.command('diff <pathA> <pathB>')
   .describe('Diff two pails.')
-  .action(async (apath, bpath) => {
+  .option('-k, --keys', 'Output key/value diff.')
+  .action(async (apath, bpath, opts) => {
     const [ablocks, bblocks] = await Promise.all([openBucket(apath), openBucket(bpath)])
     const [aroot, broot] = await Promise.all([ablocks, bblocks].map(async blocks => {
       return /** @type {import('./shard').ShardLink} */((await blocks.getRoots())[0])
@@ -134,13 +135,27 @@ cli.command('diff <pathA> <pathB>')
         return bblocks.get(cid)
       }
     }
-    const { additions, removals } = await difference(fetcher, aroot, broot)
+    const {
+      shards: { additions, removals },
+      kvs: { puts, dels }
+    } = await difference(fetcher, aroot, broot)
 
     console.log(clc.red(`--- ${aroot}`))
     console.log(clc.green(`+++ ${broot}`))
     console.log(clc.magenta('@@ -1 +1 @@'))
-    additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
-    removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
+
+    if (opts.keys) {
+      puts.forEach(([k, [v0, v1]]) => {
+        if (v0 != null) console.log(clc.red(`- ${k}: ${v0}`))
+        console.log(clc.green(`+ ${k}: ${v1}`))
+      })
+      dels.forEach(([k, [v]]) => {
+        console.log(clc.red(`- ${k}: ${v}`))
+      })
+    } else {
+      additions.forEach(b => console.log(clc.green(`+ ${b.cid}`)))
+      removals.forEach(b => console.log(clc.red(`- ${b.cid}`)))
+    }
 
     await Promise.all([closeBucket(ablocks), closeBucket(bblocks)])
   })
