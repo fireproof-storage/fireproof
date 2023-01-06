@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "pail": "node ./cli.js"
+    "pail": "./cli.js"
   },
   "scripts": {
     "test": "node --test test/*.test.js",
