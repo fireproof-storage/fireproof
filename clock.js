@@ -3,24 +3,24 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as cbor from '@ipld/dag-cbor'
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @typedef {{ parents: EventLink<T>[], data: T }} EventView
  */
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @typedef {import('multiformats').BlockView<EventView<T>>} EventBlockView
  */
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @typedef {import('multiformats').Link<EventView<T>>} EventLink
  */
 
 /**
  * Advance the clock by adding an event.
  *
- * @template {import('./link').AnyLink} T
+ * @template T
  * @param {import('./block').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head The head of the clock.
  * @param {EventLink<T>} event The event to add.
@@ -54,7 +54,7 @@ export async function advance (blocks, head, event) {
 }
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @implements {EventBlockView<T>}
  */
 export class EventBlock extends Block {
@@ -72,7 +72,7 @@ export class EventBlock extends Block {
   }
 
   /**
-   * @template {import('./link').AnyLink} T
+   * @template T
    * @param {T} data
    * @param {EventLink<T>[]} [parents]
    */
@@ -81,7 +81,7 @@ export class EventBlock extends Block {
   }
 }
 
-/** @template {import('./link').AnyLink} T */
+/** @template T */
 export class EventFetcher {
   /** @param {import('./block').BlockFetcher} blocks */
   constructor (blocks) {
@@ -101,7 +101,7 @@ export class EventFetcher {
 }
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @param {EventView<T>} value
  * @returns {Promise<EventBlockView<T>>}
  */
@@ -113,7 +113,7 @@ export async function encodeEventBlock (value) {
 }
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @param {Uint8Array} bytes
  * @returns {Promise<EventBlockView<T>>}
  */
@@ -125,7 +125,7 @@ export async function decodeEventBlock (bytes) {
 
 /**
  * Returns true if event "a" contains event "b". Breadth first search.
- * @template {import('./link').AnyLink} T
+ * @template T
  * @param {EventFetcher} events
  * @param {EventLink<T>} a
  * @param {EventLink<T>} b
@@ -148,7 +148,7 @@ async function contains (events, a, b) {
 }
 
 /**
- * @template {import('./link').AnyLink} T
+ * @template T
  * @param {import('./block').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head
  */
@@ -161,10 +161,10 @@ export async function * vis (blocks, head) {
   const nodes = new Set()
   for (const e of hevents) {
     nodes.add(e.cid.toString())
-    yield `  node [shape=oval fontname="Courier"]; ${e.cid} [label="${shortLink(e.value.data)}"];`
-    yield `  head -> ${e.cid} [label="${shortLink(e.cid)}" fontname="Courier"];`
+    yield `  node [shape=oval fontname="Courier"]; ${e.cid} [label="${shortLink(e.cid)}"];`
+    yield `  head -> ${e.cid};`
     for (const p of e.value.parents) {
-      yield `  ${e.cid} -> ${p} [label="${shortLink(p)}" fontname="Courier"];`
+      yield `  ${e.cid} -> ${p};`
     }
     links.push(...e.value.parents)
   }
@@ -174,9 +174,9 @@ export async function * vis (blocks, head) {
     if (nodes.has(link.toString())) continue
     nodes.add(link.toString())
     const block = await events.get(link)
-    yield `  node [shape=oval]; ${link} [label="${shortLink(block.value.data)}" fontname="Courier"];`
+    yield `  node [shape=oval]; ${link} [label="${shortLink(block.cid)}" fontname="Courier"];`
     for (const p of block.value.parents) {
-      yield `  ${link} -> ${p} [label="${shortLink(p)}" fontname="Courier"];`
+      yield `  ${link} -> ${p};`
     }
     links.push(...block.value.parents)
   }
