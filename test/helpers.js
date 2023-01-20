@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
 import assert from 'node:assert'
-import { CID } from 'multiformats/cid'
+import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { decodeShardBlock } from '../index.js'
@@ -9,7 +9,7 @@ import { MemoryBlockstore } from '../block.js'
 /** @param {number} size */
 export async function randomCID (size) {
   const hash = await sha256.digest(await randomBytes(size))
-  return CID.create(1, raw.code, hash)
+  return Link.create(raw.code, hash)
 }
 
 /** @param {number} size */

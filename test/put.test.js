@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test'
+import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { nanoid } from 'nanoid'
 import { ShardBlock, put, MaxKeyLength, get, encodeShardBlock } from '../index.js'
