@@ -3,11 +3,18 @@ import assert from 'node:assert'
 import { advance, EventBlock, vis } from '../clock.js'
 import { Blockstore, randomCID } from './helpers.js'
 
+async function randomEventData () {
+  return {
+    type: 'put',
+    key: `test-${Date.now()}`,
+    value: await randomCID(32)
+  }
+}
+
 describe('clock', () => {
   it('create a new clock', async () => {
     const blocks = new Blockstore()
-    const dataCID = await randomCID(32)
-    const event = await EventBlock.create(dataCID)
+    const event = await EventBlock.create({})
 
     await blocks.put(event.cid, event.bytes)
     const head = await advance(blocks, [], event.cid)
@@ -19,13 +26,13 @@ describe('clock', () => {
 
   it('add an event', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await randomCID(32))
+    const root = await EventBlock.create(await randomEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
 
-    const event = await EventBlock.create(await randomCID(32), head)
+    const event = await EventBlock.create(await randomEventData(), head)
     await blocks.put(event.cid, event.bytes)
 
     head = await advance(blocks, head, event.cid)
@@ -37,18 +44,18 @@ describe('clock', () => {
 
   it('add two events with shared parents', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await randomCID(32))
+    const root = await EventBlock.create(await randomEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents = head
 
-    const event0 = await EventBlock.create(await randomCID(32), parents)
+    const event0 = await EventBlock.create(await randomEventData(), parents)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, parents, event0.cid)
 
-    const event1 = await EventBlock.create(await randomCID(32), parents)
+    const event1 = await EventBlock.create(await randomEventData(), parents)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
@@ -60,30 +67,30 @@ describe('clock', () => {
 
   it('add two events with some shared parents', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await randomCID(32))
+    const root = await EventBlock.create(await randomEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
-    const event0 = await EventBlock.create(await randomCID(32), parents0)
+    const event0 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, head, event0.cid)
 
-    const event1 = await EventBlock.create(await randomCID(32), parents0)
+    const event1 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
-    const event2 = await EventBlock.create(await randomCID(32), parents0)
+    const event2 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
 
-    const event3 = await EventBlock.create(await randomCID(32), [event0.cid, event1.cid])
+    const event3 = await EventBlock.create(await randomEventData(), [event0.cid, event1.cid])
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
 
-    const event4 = await EventBlock.create(await randomCID(32), [event2.cid])
+    const event4 = await EventBlock.create(await randomEventData(), [event2.cid])
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
@@ -95,38 +102,38 @@ describe('clock', () => {
 
   it('converge when multi-root', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await randomCID(32))
+    const root = await EventBlock.create(await randomEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
-    const event0 = await EventBlock.create(await randomCID(32), parents0)
+    const event0 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, head, event0.cid)
 
-    const event1 = await EventBlock.create(await randomCID(32), parents0)
+    const event1 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
     const parents1 = head
 
-    const event2 = await EventBlock.create(await randomCID(32), parents1)
+    const event2 = await EventBlock.create(await randomEventData(), parents1)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
 
-    const event3 = await EventBlock.create(await randomCID(32), parents1)
+    const event3 = await EventBlock.create(await randomEventData(), parents1)
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
 
-    const event4 = await EventBlock.create(await randomCID(32), parents1)
+    const event4 = await EventBlock.create(await randomEventData(), parents1)
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
     const parents2 = head
 
-    const event5 = await EventBlock.create(await randomCID(32), parents2)
+    const event5 = await EventBlock.create(await randomEventData(), parents2)
     await blocks.put(event5.cid, event5.bytes)
     head = await advance(blocks, head, event5.cid)
 
@@ -137,43 +144,43 @@ describe('clock', () => {
 
   it('add an old event', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await randomCID(32))
+    const root = await EventBlock.create(await randomEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
-    const event0 = await EventBlock.create(await randomCID(32), parents0)
+    const event0 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, head, event0.cid)
 
-    const event1 = await EventBlock.create(await randomCID(32), parents0)
+    const event1 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
     const parents1 = head
 
-    const event2 = await EventBlock.create(await randomCID(32), parents1)
+    const event2 = await EventBlock.create(await randomEventData(), parents1)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
 
-    const event3 = await EventBlock.create(await randomCID(32), parents1)
+    const event3 = await EventBlock.create(await randomEventData(), parents1)
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
 
-    const event4 = await EventBlock.create(await randomCID(32), parents1)
+    const event4 = await EventBlock.create(await randomEventData(), parents1)
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
     const parents2 = head
 
-    const event5 = await EventBlock.create(await randomCID(32), parents2)
+    const event5 = await EventBlock.create(await randomEventData(), parents2)
     await blocks.put(event5.cid, event5.bytes)
     head = await advance(blocks, head, event5.cid)
 
     // now very old one
-    const event6 = await EventBlock.create(await randomCID(32), parents0)
+    const event6 = await EventBlock.create(await randomEventData(), parents0)
     await blocks.put(event6.cid, event6.bytes)
     head = await advance(blocks, head, event6.cid)
 
@@ -185,16 +192,16 @@ describe('clock', () => {
 
   it('add an event with missing parents', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await randomCID(32))
+    const root = await EventBlock.create(await randomEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
 
-    const event0 = await EventBlock.create(await randomCID(32), head)
+    const event0 = await EventBlock.create(await randomEventData(), head)
     await blocks.put(event0.cid, event0.bytes)
 
-    const event1 = await EventBlock.create(await randomCID(32), [event0.cid])
+    const event1 = await EventBlock.create(await randomEventData(), [event0.cid])
     await blocks.put(event1.cid, event1.bytes)
 
     head = await advance(blocks, head, event1.cid)
