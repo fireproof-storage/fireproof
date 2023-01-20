@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test'
+import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { ShardBlock, put, get } from '../index.js'
 import { Blockstore, randomCID } from './helpers.js'

@@ -1,4 +1,4 @@
-import { CID } from 'multiformats/cid'
+import { parse } from 'multiformats/link'
 
 /**
  * @typedef {{ cid: import('./link').AnyLink, bytes: Uint8Array }} AnyBlock
@@ -48,7 +48,7 @@ export class MemoryBlockstore {
 
   * entries () {
     for (const [str, bytes] of this.#blocks) {
-      yield { cid: CID.parse(str), bytes }
+      yield { cid: parse(str), bytes }
     }
   }
 }

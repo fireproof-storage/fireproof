@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test'
+import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { ShardBlock, put, entries } from '../index.js'
 import { Blockstore, randomCID } from './helpers.js'
@@ -9,7 +9,7 @@ describe('entries', () => {
     const blocks = new Blockstore()
     await blocks.put(empty.cid, empty.bytes)
 
-    /** @type {Array<[string, import('../shard').AnyLink]>} */
+    /** @type {Array<[string, import('../link').AnyLink]>} */
     const testdata = [
       ['c', await randomCID(32)],
       ['d', await randomCID(32)],
@@ -42,7 +42,7 @@ describe('entries', () => {
     const blocks = new Blockstore()
     await blocks.put(empty.cid, empty.bytes)
 
-    /** @type {Array<[string, import('../shard').AnyLink]>} */
+    /** @type {Array<[string, import('../link').AnyLink]>} */
     const testdata = [
       ['cccc', await randomCID(32)],
       ['deee', await randomCID(32)],
