@@ -151,8 +151,11 @@ async function contains (events, a, b) {
  * @template T
  * @param {import('./block').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head
+ * @param {object} [options]
+ * @param {(b: EventBlockView<T>) => string} [options.renderNodeLabel]
  */
-export async function * vis (blocks, head) {
+export async function * vis (blocks, head, options = {}) {
+  const renderNodeLabel = options.renderNodeLabel ?? (b => shortLink(b.cid))
   const events = new EventFetcher(blocks)
   yield 'digraph clock {'
   yield '  node [shape=point fontname="Courier"]; head;'
@@ -161,7 +164,7 @@ export async function * vis (blocks, head) {
   const nodes = new Set()
   for (const e of hevents) {
     nodes.add(e.cid.toString())
-    yield `  node [shape=oval fontname="Courier"]; ${e.cid} [label="${shortLink(e.cid)}"];`
+    yield `  node [shape=oval fontname="Courier"]; ${e.cid} [label="${renderNodeLabel(e)}"];`
     yield `  head -> ${e.cid};`
     for (const p of e.value.parents) {
       yield `  ${e.cid} -> ${p};`
@@ -174,7 +177,7 @@ export async function * vis (blocks, head) {
     if (nodes.has(link.toString())) continue
     nodes.add(link.toString())
     const block = await events.get(link)
-    yield `  node [shape=oval]; ${link} [label="${shortLink(block.cid)}" fontname="Courier"];`
+    yield `  node [shape=oval]; ${link} [label="${renderNodeLabel(block)}" fontname="Courier"];`
     for (const p of block.value.parents) {
       yield `  ${link} -> ${p};`
     }

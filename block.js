@@ -52,3 +52,21 @@ export class MemoryBlockstore {
     }
   }
 }
+
+export class MultiBlockFetcher {
+  /** @type {BlockFetcher[]} */
+  #fetchers
+
+  /** @param {BlockFetcher[]} fetchers */
+  constructor (...fetchers) {
+    this.#fetchers = fetchers
+  }
+
+  /** @param {import('./link').AnyLink} link */
+  async get (link) {
+    for (const f of this.#fetchers) {
+      const v = await f.get(link)
+      if (v) return v
+    }
+  }
+}
