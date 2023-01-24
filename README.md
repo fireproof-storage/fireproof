@@ -1,88 +1,11 @@
 # pail
 
+[![Test](https://github.com/alanshaw/pail/actions/workflows/test.yml/badge.svg)](https://github.com/alanshaw/pail/actions/workflows/test.yml)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+
 DAG based key value store. Sharded DAG that minimises traversals and work to build shards.
 
-## Background
-
-* Max block size = 512KiB
-* Max key length is 64
-* Represenation dag-cbor `[[key, CID],…]`
-    * Array so mutations are easier - insert/remove elements at the right place with `Array.splice`
-    * `Object.entries` from serialization form is easy
-    * Keys are sorted lexicographically
-
-### Lazy sharding
-
-Do the minimum amount of work to make the block fit in the size limit.
-
-Still deterministic.
-
-Minimises traversals.
-
-#### Sharding algorithm
-
-Shard when block size exceeds 512KiB or a key is put that exceeds 64 characters.
-
-1. Find longest common prefix using insert key as base
-2. If common prefix for > 1 entries exists
-    1. Create new shard with suffixes for entries that match common prefix
-    1. Remove entries with common prefix from shard
-    1. Add entry for common prefix, linking new shard
-    1. FINISH
-3. Else
-    1. Find longest common prefix using adjacent key as base
-    1. GOTO 2
-
-e.g.
-```
-abelllllll
-foobarbaz
-foobarwooz
-food
-somethingelse
-```
-
-Put "foobarboz" and exceed shard size limit:
-```
-abelllllll
-foobarbaz
-<- foobarboz
-foobarwooz
-food
-somethingelse
-```
-
-Find "foobarb" as longest common prefix, create shard:
-```
-abelllllll
-foobarb -> az
-           oz
-foobarwooz
-food
-somethingelse
-```
-
-Put "foopey", exceeding shard size:
-```
-abelllllll
-foobarb -> az
-           oz
-foobarwooz
-food
-<- foopey
-somethingelse
-```
-
-Find "foo" as longest common prefix, create shard:
-```
-abelllllll
-foo -> barb -> az
-               oz
-       barwooz
-       d
-       pey
-somethingelse
-```
+[Read the SPEC](https://hackmd.io/@alanshaw/pail).
 
 ## Install
 
@@ -113,102 +36,10 @@ for (const block of removals) {
   await blocks.delete(block.cid)
 }
 ```
+# Contributing
 
-### Worked Example
+Feel free to join in. All welcome. [Open an issue](https://github.com/alanshaw/pail/issues)!
 
-⚠️ max key length 16, max block size X - indicated when met.
+# License
 
-1. Put `file.txt: CID<data0>`
-
-    Root:
-
-    ```js
-    [
-      ['file.txt', CID<data0>]
-    ]
-    ```
-
-2. Put `path/to/picture.jpg: CID<data1>`
-
-    Root:
-
-    ```js
-    [
-      ['file.txt', CID<data0>],
-      ['path/to/picture.', [CID<shard0>]],
-    ]
-    ```
-
-    Shard 0:
-
-    ```js
-    [
-      ['jpg', CID<data1>]
-    ]
-    ```
-    
-    Note: New key exceeds max length so forces a shard.
-    Note: Shards signaled by tuple `[CID]` for value (multiple elements invalid).
-
-2. Put `path/to/picture.highres.jpg: CID<data2>`
-
-    Root:
-
-    ```js
-    [
-      ['file.txt', CID<data0>],
-      ['path/to/picture.', [CID<shard0>]],
-    ]
-    ```
-
-    Shard 0:
-
-    ```js
-    [
-      ['highres.jpg', CID<data2>],
-      ['jpg', CID<data1>]
-    ]
-    ```
-    
-    Note: Traverse into matching subkey shard.
-    Note: Keys are sorted in shard.
-
-2. Put `path/to/picture.maxres.jpg: CID<data3>`
-    Put `path/to/picture.final.jpg: CID<data4>`
-    Put `path/to/picture.final-2.jpg: CID<data5>`
-
-    Root:
-
-    ```js
-    [
-      ['file.txt', CID<data0>],
-      ['path/to/picture.', [CID<shard0>]],
-    ]
-    ```
-
-    Shard 0:
-
-    ```js
-    [
-      ['final.jpg', CID<data4>],
-      ['final-2.jpg', CID<data5>],
-      ['highres.jpg', CID<data2>],
-      ['jpg', CID<data1>],
-      ['maxres.jpg', CID<data3>]
-    ]
-    ```
-    
-    Final put exceeds max block size in shard:
-    Put `path/to/final-3.jpg: CID<data6>`
-    
-    Shard 0 (invalid - too big):
-
-    ```js
-    [
-      ['final.jpg', CID<data4>],
-      ['final-2.jpg', CID<data5>],
-      ['final-3.jpg', CID<data6>],
-      ['highres.jpg', CID<data2>],
-      ['jpg', CID<data1>],
-      ['maxres.jpg', CID<data3>]
-    ]
+Dual-licensed under [MIT or Apache 2.0](https://github.com/alanshaw/pail/blob/main/LICENSE.md)

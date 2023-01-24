@@ -1,5 +1,5 @@
 {
-  "name": "pail",
+  "name": "@alanshaw/pail",
   "version": "0.0.0",
   "description": "DAG based key value store.",
   "main": "index.js",
@@ -24,10 +24,10 @@
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
     "@ipld/car": "^5.0.1",
-    "@ipld/dag-cbor": "^8.0.0",
+    "@ipld/dag-cbor": "^9.0.0",
     "archy": "^1.0.0",
     "cli-color": "^2.0.3",
-    "multiformats": "^10.0.3",
+    "multiformats": "^11.0.1",
     "sade": "^1.8.1"
   },
   "devDependencies": {
