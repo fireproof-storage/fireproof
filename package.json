@@ -1,6 +1,6 @@
 {
   "name": "@alanshaw/pail",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "DAG based key value store.",
   "main": "index.js",
   "type": "module",
