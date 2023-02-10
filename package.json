@@ -28,6 +28,7 @@
     "archy": "^1.0.0",
     "cli-color": "^2.0.3",
     "multiformats": "^11.0.1",
+    "prolly-trees": "^0.2.0",
     "sade": "^1.8.1"
   },
   "devDependencies": {
