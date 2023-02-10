@@ -1,12 +1,12 @@
 import * as Clock from './clock.js'
 import { EventFetcher, EventBlock } from './clock.js'
-import { create, load } from 'prolly-trees/src/db-index.js'
-import { nocache as cache } from 'prolly-trees/src/cache.js'
-import { bf } from 'prolly-trees/src/utils.js'
+import { create, load } from 'prolly-trees/db-index'
+import { nocache as cache } from 'prolly-trees/cache'
+import { bf } from 'prolly-trees/utils'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 
-import { Block, MemoryBlockstore, MultiBlockFetcher } from './block.js'
+import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
 
 /**
  * @typedef {{
@@ -35,24 +35,37 @@ const opts = { cache, chunker: bf(3), codec, hasher }
  * @param {object} [options]
  * @returns {Promise<Result>}
  */
-export async function put (blocks, head, key, value, options) {
+export async function put (inBlocks, head, key, value, options) {
   const mblocks = new MemoryBlockstore()
-  blocks = new MultiBlockFetcher(mblocks, blocks)
+  const blocks = new MultiBlockFetcher(mblocks, inBlocks)
+  const get = blocks.get.bind(blocks)
+  const put = inBlocks.put.bind(inBlocks)
 
   if (!head.length) {
     // create a new db-index with a list of key,value
-    const { get, put } = blocks
+
     let root
     const additions = []
     for await (const node of create({ get, list: [{ key, value }], ...opts })) {
       const block = await node.block
       await put(block.cid, block.bytes)
+
       mblocks.putSync(block.cid, block.bytes)
       additions.push(block)
       root = block
     }
+
     /** @type {EventData} */
-    const data = { type: 'put', root, key, value }
+    const data = {
+      type: 'put',
+      root: {
+        cid: root.cid,
+        bytes: root.bytes,
+        value: root.value
+      },
+      key,
+      value
+    }
     const event = await EventBlock.create(data, head)
     head = await Clock.advance(blocks, head, event.cid)
     return {
@@ -63,7 +76,7 @@ export async function put (blocks, head, key, value, options) {
       event
     }
   }
-
+  return
   const events = new EventFetcher(blocks)
   const ancestor = await findCommonAncestor(events, head)
   if (!ancestor) throw new Error('failed to find common ancestor event')
@@ -79,6 +92,7 @@ export async function put (blocks, head, key, value, options) {
     if (!['put', 'del'].includes(event.data.type)) {
       throw new Error(`unknown event type: ${event.data.type}`)
     }
+
     const result = event.data.type === 'put'
       ? await Pail.put(blocks, root, event.data.key, event.data.value)
       : await Pail.del(blocks, root, event.data.key)
@@ -135,7 +149,7 @@ export async function root (blocks, head) {
 
   const aevent = await events.get(ancestor)
   let { root } = aevent.value.data
-
+  return root
   const sorted = await findSortedEvents(events, head, ancestor)
   for (const { value: event } of sorted) {
     if (!['put', 'del'].includes(event.data.type)) {
