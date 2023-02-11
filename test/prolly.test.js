@@ -72,6 +72,7 @@ describe('Prolly', () => {
     // get item put to bob
     const avalue = await alice.get(data[1][0])
     assert(avalue)
+    console.log('avalue', avalue)
     assert.equal(avalue.toString(), data[1][1].toString())
 
     // get item put to alice
@@ -140,7 +141,6 @@ class TestPail {
 
   /** @param {string} key */
   async get (key) {
-    console.log('this.head', this.head)
     return get(this.blocks, this.head, key)
   }
 }
