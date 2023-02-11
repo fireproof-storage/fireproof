@@ -8,6 +8,8 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 
 import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
 
+import { create as createBlock } from 'multiformats/block'
+
 /**
  * @typedef {{
  *   type: 'put'|'del'
@@ -38,7 +40,13 @@ const opts = { cache, chunker: bf(3), codec, hasher }
 export async function put (inBlocks, head, key, value, options) {
   const mblocks = new MemoryBlockstore()
   const blocks = new MultiBlockFetcher(mblocks, inBlocks)
-  const get = blocks.get.bind(blocks)
+  // const get = blocks.get.bind(blocks)
+
+  const get = async (address) => {
+    const { cid, bytes } = await blocks.get(address)
+    return createBlock({ cid, bytes, hasher, codec })
+  }
+
   const put = inBlocks.put.bind(inBlocks)
 
   if (!head.length) {
@@ -76,54 +84,77 @@ export async function put (inBlocks, head, key, value, options) {
       event
     }
   }
-  return
+
   const events = new EventFetcher(blocks)
   const ancestor = await findCommonAncestor(events, head)
   if (!ancestor) throw new Error('failed to find common ancestor event')
 
   const aevent = await events.get(ancestor)
-  let { root } = aevent.value.data
+  const { root } = aevent.value.data
+  const prollyRootNode = await load({ cid: root.cid, get, ...opts })
+
+  // console.log('prollyRootNode', prollyRootNode.entryList, prollyRootNode.address)
 
   const sorted = await findSortedEvents(events, head, ancestor)
   const additions = new Map()
   const removals = new Map()
 
+  // todo optimize with bulk after tests pass
+  // const bulkOperation = sorted.map(({ value: { data: { type, value, key } } }) => {
+
+  // })
+  let prollyRootOut = prollyRootNode
   for (const { value: event } of sorted) {
     if (!['put', 'del'].includes(event.data.type)) {
       throw new Error(`unknown event type: ${event.data.type}`)
     }
 
-    const result = event.data.type === 'put'
-      ? await Pail.put(blocks, root, event.data.key, event.data.value)
-      : await Pail.del(blocks, root, event.data.key)
+    const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
+      ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
+      : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
 
-    root = result.root
-    for (const a of result.additions) {
+    // console.log('newBlocks', newProllyRootNode, newBlocks)
+
+    prollyRootOut = newProllyRootNode
+
+    for (const a of newBlocks) {
+      await put(a.cid, a.bytes)
       mblocks.putSync(a.cid, a.bytes)
       additions.set(a.cid.toString(), a)
     }
-    for (const r of result.removals) {
-      removals.set(r.cid.toString(), r)
-    }
+    // for (const r of result.removals) {
+    //   removals.set(r.cid.toString(), r)
+    // }
   }
+  // console.log('prollyRootOut.bulk', { key, value })
+  const { root: finalProllyRootNode, blocks: finalBlocks } = await prollyRootOut.bulk([{ key, value }])
 
-  const result = await Pail.put(blocks, root, key, value, options)
-  for (const a of result.additions) {
+  for (const a of finalBlocks) {
+    await put(a.cid, a.bytes)
     mblocks.putSync(a.cid, a.bytes)
     additions.set(a.cid.toString(), a)
   }
-  for (const r of result.removals) {
-    removals.set(r.cid.toString(), r)
-  }
-
+  // for (const r of result.removals) {
+  //   removals.set(r.cid.toString(), r)
+  // }
+  const finalProllyRootBlock = await finalProllyRootNode.block
   /** @type {EventData} */
-  const data = { type: 'put', root: result.root, key, value }
+  const data = {
+    type: 'put',
+    root: {
+      cid: finalProllyRootBlock.cid,
+      bytes: finalProllyRootBlock.bytes,
+      value: finalProllyRootBlock.value
+    },
+    key,
+    value
+  }
   const event = await EventBlock.create(data, head)
   mblocks.putSync(event.cid, event.bytes)
   head = await Clock.advance(blocks, head, event.cid)
 
   return {
-    root: result.root,
+    root: finalProllyRootBlock,
     additions: Array.from(additions.values()),
     removals: Array.from(removals.values()),
     head,
@@ -174,7 +205,11 @@ export async function root (blocks, head) {
  * @param {string} key The key of the value to retrieve.
  */
 export async function get (blocks, head, key) {
-  return Pail.get(blocks, await root(blocks, head), key)
+  const rootBlock = await root(blocks, head)
+  const prollyRootNode = await load({ cid: rootBlock.cid, get, ...opts })
+  const result = prollyRootNode.get(key)
+  console.log(result)
+  return result
 }
 
 /**
