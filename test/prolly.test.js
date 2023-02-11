@@ -93,25 +93,29 @@ class TestPail {
     this.root = null
   }
 
-  /** @param {import('../clock').EventLink<import('../crdt').EventData>} event */
-  async advance (event) {
-    this.head = await advance(this.blocks, this.head, event)
-    this.root = await root(this.blocks, this.head)
-    return this.head
-  }
-
   /**
    * @param {string} key
    * @param {import('../link').AnyLink} value
    */
   async put (key, value) {
+    // console.log('prolly put', key, value)
+    // for (const { cid } of this.blocks.entries()) {
+    //   console.log('bl', cid)
+    // }
     const result = await put(this.blocks, this.head, key, value)
-
+    if (!result) { console.log('failed', key, value) }
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach(a => this.blocks.putSync(a.cid, a.bytes))
     this.head = result.head
     this.root = await root(this.blocks, this.head)
     return result
+  }
+
+  /** @param {import('../clock').EventLink<import('../crdt').EventData>} event */
+  async advance (event) {
+    this.head = await advance(this.blocks, this.head, event)
+    this.root = await root(this.blocks, this.head)
+    return this.head
   }
 
   /**
@@ -136,6 +140,7 @@ class TestPail {
 
   /** @param {string} key */
   async get (key) {
+    console.log('this.head', this.head)
     return get(this.blocks, this.head, key)
   }
 }
