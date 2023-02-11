@@ -18,6 +18,11 @@ describe('Prolly', () => {
     assert.equal(event.value.data.value.toString(), value.toString())
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
+
+    const avalue = await alice.get('key')
+    assert(avalue)
+    console.log('prolly avalue', avalue)
+    assert.equal(avalue.toString(), value.toString())
   })
 
   it('linear put multiple values', async () => {
