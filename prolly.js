@@ -169,6 +169,8 @@ export async function put (inBlocks, head, key, value, options) {
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  */
 export async function root (blocks, head) {
+  console.log('root.head', head)
+
   if (!head.length) return
 
   const mblocks = new MemoryBlockstore()
@@ -205,10 +207,14 @@ export async function root (blocks, head) {
  * @param {string} key The key of the value to retrieve.
  */
 export async function get (blocks, head, key) {
+  const get = async (address) => {
+    const { cid, bytes } = await blocks.get(address)
+    return createBlock({ cid, bytes, hasher, codec })
+  }
   const rootBlock = await root(blocks, head)
   const prollyRootNode = await load({ cid: rootBlock.cid, get, ...opts })
-  const result = prollyRootNode.get(key)
-  console.log(result)
+  console.log('key', key)
+  const result = await prollyRootNode.get(key)
   return result
 }
 
