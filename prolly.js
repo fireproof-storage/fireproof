@@ -169,6 +169,10 @@ export async function put (inBlocks, head, key, value, options) {
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  */
 export async function root (blocks, head) {
+  const get = async (address) => {
+    const { cid, bytes } = await blocks.get(address)
+    return createBlock({ cid, bytes, hasher, codec })
+  }
   console.log('root.head', head)
 
   if (!head.length) return
@@ -181,24 +185,26 @@ export async function root (blocks, head) {
   if (!ancestor) throw new Error('failed to find common ancestor event')
 
   const aevent = await events.get(ancestor)
-  let { root } = aevent.value.data
-  return root
+  const { root } = aevent.value.data
+  const prollyRootNode = await load({ cid: root.cid, get, ...opts })
+
   const sorted = await findSortedEvents(events, head, ancestor)
+  let prollyRootOut = prollyRootNode
   for (const { value: event } of sorted) {
     if (!['put', 'del'].includes(event.data.type)) {
       throw new Error(`unknown event type: ${event.data.type}`)
     }
-    const result = event.data.type === 'put'
-      ? await Pail.put(blocks, root, event.data.key, event.data.value)
-      : await Pail.del(blocks, root, event.data.key)
 
-    root = result.root
-    for (const a of result.additions) {
+    const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
+      ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
+      : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
+    prollyRootOut = newProllyRootNode
+
+    for (const a of newBlocks) {
       mblocks.putSync(a.cid, a.bytes)
     }
   }
-
-  return root
+  return await prollyRootNode.address
 }
 
 /**
@@ -211,8 +217,8 @@ export async function get (blocks, head, key) {
     const { cid, bytes } = await blocks.get(address)
     return createBlock({ cid, bytes, hasher, codec })
   }
-  const rootBlock = await root(blocks, head)
-  const prollyRootNode = await load({ cid: rootBlock.cid, get, ...opts })
+  const rootCid = await root(blocks, head)
+  const prollyRootNode = await load({ cid: rootCid, get, ...opts })
   console.log('key', key)
   const result = await prollyRootNode.get(key)
   return result
