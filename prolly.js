@@ -204,7 +204,7 @@ export async function root (blocks, head) {
       mblocks.putSync(a.cid, a.bytes)
     }
   }
-  return await prollyRootNode.address
+  return await prollyRootOut.block.cid
 }
 
 /**
@@ -214,6 +214,7 @@ export async function root (blocks, head) {
  */
 export async function get (blocks, head, key) {
   const get = async (address) => {
+    console.log('address', address)
     const { cid, bytes } = await blocks.get(address)
     return createBlock({ cid, bytes, hasher, codec })
   }
