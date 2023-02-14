@@ -11,6 +11,7 @@ describe('Prolly', () => {
     const alice = new TestPail(blocks, [])
     const key = 'key'
     const value = await randomCID(32)
+    console.log('expexted', value)
     const { event, head } = await alice.putAndVis(key, value)
 
     assert.equal(event.value.data.type, 'put')
@@ -19,6 +20,10 @@ describe('Prolly', () => {
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
 
+    console.log('alive event', event)
+    // next steps to debug <- *****************************************************************
+    // log the CIDs and their values that are written by the putAndVis
+    // log the CIDs and their values that are read by the get
     const avalue = await alice.get('key')
     assert(avalue)
     console.log('prolly avalue', avalue)

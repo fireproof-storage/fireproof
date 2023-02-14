@@ -25,7 +25,7 @@ export class MemoryBlockstore {
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
-    console.log('put', cid)
+    // console.log('put', cid)
     this.#blocks.set(cid.toString(), bytes)
   }
 
