@@ -94,6 +94,8 @@ export async function put (inBlocks, head, key, value, options) {
   const aevent = await events.get(ancestor)
   const { root } = aevent.value.data
 
+  // TODO refactor the Prolly parts and the Pail parts so they can reuse the CRDT parts
+  // then anything that uses CRDTs can have indexes
   // todo instead of loading it every time, we should be able to just make it part of the THIS
   const prollyRootNode = await load({ cid: root.cid, get, ...opts })
 
@@ -104,13 +106,16 @@ export async function put (inBlocks, head, key, value, options) {
 
   const bulkOperations = sorted.map(({ value: event }) => {
     // console.log('event', event)
-    const { data: { type, value, key } } = event
+    const {
+      data: { type, value, key }
+    } = event
     return type === 'put' ? { key, value } : { key, del: true }
   })
   // use the bulk operation to update the prolly tree TODO
 
   let prollyRootOut = prollyRootNode
-  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootOut.bulk([...bulkOperations, { key, value }])
+  const { root: newProllyRootNode, blocks: newBlocks } =
+    await prollyRootOut.bulk([...bulkOperations, { key, value }])
 
   // for (const { value: event } of sorted) {
   //   if (!['put', 'del'].includes(event.data.type)) {
@@ -182,6 +187,7 @@ export async function put (inBlocks, head, key, value, options) {
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  */
 export async function root (blocks, head) {
+  // todo refactor this to be reused instead of copy pasted
   const get = async (address) => {
     const { cid, bytes } = await blocks.get(address)
     return createBlock({ cid, bytes, hasher, codec })
@@ -205,7 +211,9 @@ export async function root (blocks, head) {
 
   const bulkOperations = sorted.map(({ value: event }) => {
     // console.log('event', event)
-    const { data: { type, value, key } } = event
+    const {
+      data: { type, value, key }
+    } = event
     return type === 'put' ? { key, value } : { key, del: true }
   })
   const { root: newProllyRootNode } = await prollyRootNode.bulk(bulkOperations)
@@ -255,7 +263,7 @@ export async function get (blocks, head, key) {
  */
 async function findCommonAncestor (events, children) {
   if (!children.length) return
-  const candidates = children.map(c => [c])
+  const candidates = children.map((c) => [c])
   while (true) {
     let changed = false
     for (const c of candidates) {
@@ -287,13 +295,13 @@ async function findAncestorCandidate (events, root) {
  * @param  {Array<T[]>} arrays
  */
 function findCommonString (arrays) {
-  arrays = arrays.map(a => [...a])
+  arrays = arrays.map((a) => [...a])
   for (const arr of arrays) {
     for (const item of arr) {
       let matched = true
       for (const other of arrays) {
         if (arr === other) continue
-        matched = other.some(i => String(i) === String(item))
+        matched = other.some((i) => String(i) === String(item))
         if (!matched) break
       }
       if (matched) return item
@@ -311,7 +319,7 @@ async function findSortedEvents (events, head, tail) {
   // get weighted events - heavier events happened first
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
-  const all = await Promise.all(head.map(h => findEvents(events, h, tail)))
+  const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
   for (const arr of all) {
     for (const { event, depth } of arr) {
       const info = weights.get(event.cid.toString())
@@ -338,7 +346,9 @@ async function findSortedEvents (events, head, tail) {
   // sort by weight, and by CID within weight
   return Array.from(buckets)
     .sort((a, b) => b[0] - a[0])
-    .flatMap(([, es]) => es.sort((a, b) => String(a.cid) < String(b.cid) ? -1 : 1))
+    .flatMap(([, es]) =>
+      es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1))
+    )
 }
 
 /**
@@ -352,6 +362,8 @@ async function findEvents (events, start, end, depth = 0) {
   const acc = [{ event, depth }]
   const { parents } = event.value
   if (parents.length === 1 && String(parents[0]) === String(end)) return acc
-  const rest = await Promise.all(parents.map(p => findEvents(events, p, end, depth + 1)))
+  const rest = await Promise.all(
+    parents.map((p) => findEvents(events, p, end, depth + 1))
+  )
   return acc.concat(...rest)
 }
