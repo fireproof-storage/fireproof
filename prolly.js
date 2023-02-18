@@ -93,6 +93,8 @@ export async function put (inBlocks, head, key, value, options) {
 
   const aevent = await events.get(ancestor)
   const { root } = aevent.value.data
+
+  // todo instead of loading it every time, we should be able to just make it part of the THIS
   const prollyRootNode = await load({ cid: root.cid, get, ...opts })
 
   const sorted = await findSortedEvents(events, head, ancestor)
@@ -162,7 +164,8 @@ export async function put (inBlocks, head, key, value, options) {
   const event = await EventBlock.create(data, head)
   mblocks.putSync(event.cid, event.bytes)
   head = await Clock.advance(blocks, head, event.cid)
-  console.log('additions', additions.size)
+  // console.log('additions', additions.size, Array.from(additions.values()).map(v => v.cid.toString()).sort())
+  // console.log('additions', additions.size)
   return {
     root: finalProllyRootBlock,
     additions: Array.from(additions.values()),
