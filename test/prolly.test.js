@@ -11,7 +11,6 @@ describe('Prolly', () => {
     const alice = new TestPail(blocks, [])
     const key = 'key'
     const value = await randomCID(32)
-    console.log('expected value, not in blocks', value)
     const { event, head } = await alice.putAndVis(key, value)
 
     assert.equal(event.value.data.type, 'put')
@@ -20,18 +19,8 @@ describe('Prolly', () => {
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
 
-    console.log('alive event', event.cid)
-    // next steps to debug <- *****************************************************************
-    // log the CIDs and their values that are written by the putAndVis
-    // log the CIDs and their values that are read by the get
     const avalue = await alice.get('key')
     assert(avalue)
-    console.log('prolly avalue', avalue)
-
-    for (const entry of blocks.entries()) {
-      console.log('entry', entry.cid)
-    }
-
     assert.equal(JSON.stringify(avalue), JSON.stringify(value))
   })
 
@@ -87,7 +76,6 @@ describe('Prolly', () => {
     // get item put to bob
     const avalue = await alice.get(data[1][0])
     assert(avalue)
-    console.log('avalue', avalue)
     assert.equal(avalue.toString(), data[1][1].toString())
 
     // get item put to alice
@@ -95,6 +83,23 @@ describe('Prolly', () => {
     assert(bvalue)
     assert.equal(bvalue.toString(), data[0][1].toString())
   })
+
+  it('linear put hundreds of values', async () => {
+    const blocks = new Blockstore()
+    const alice = new TestPail(blocks, [])
+
+    // generate an array of 1000 random cids
+    const cids = (await Promise.all(Array.from({ length: 100 }, () => randomCID(32)))).map((cid, i) => [`key${i}`, cid])
+
+    for (const [key, value] of cids) {
+      await alice.put(key, value)
+    }
+
+    for (const [key, value] of cids) {
+      const vx = await alice.get(key)
+      assert.equal(vx.toString(), value.toString())
+    }
+  }).timeout(10000)
 })
 
 class TestPail {
@@ -114,16 +119,13 @@ class TestPail {
    * @param {import('../link').AnyLink} value
    */
   async put (key, value) {
-    // for (const { cid } of this.blocks.entries()) {
-    //   console.log('bl', cid)
-    // }
     const result = await put(this.blocks, this.head, key, value)
     if (!result) { console.log('failed', key, value) }
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach(a => this.blocks.putSync(a.cid, a.bytes))
     this.head = result.head
     this.root = await root(this.blocks, this.head)
-    console.log('prolly PUT', key, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })
+    // console.log('prolly PUT', key, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })
     return result
   }
 

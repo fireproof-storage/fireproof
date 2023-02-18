@@ -58,7 +58,6 @@ export async function put (inBlocks, head, key, value, options) {
     const additions = []
     for await (const node of create({ get, list: [{ key, value }], ...opts })) {
       const block = await node.block
-      console.log('save block', block.cid)
       await put(block.cid, block.bytes)
 
       mblocks.putSync(block.cid, block.bytes)
@@ -96,8 +95,6 @@ export async function put (inBlocks, head, key, value, options) {
   const { root } = aevent.value.data
   const prollyRootNode = await load({ cid: root.cid, get, ...opts })
 
-  // console.log('prollyRootNode', prollyRootNode.entryList, prollyRootNode.address)
-
   const sorted = await findSortedEvents(events, head, ancestor)
   const additions = new Map()
   const removals = new Map()
@@ -116,12 +113,9 @@ export async function put (inBlocks, head, key, value, options) {
       ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
       : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
 
-    // console.log('newBlocks', newProllyRootNode, newBlocks)
-
     prollyRootOut = newProllyRootNode
 
     for (const a of newBlocks) {
-      console.log('newBlocks', a.cid)
       await put(a.cid, a.bytes)
       mblocks.putSync(a.cid, a.bytes)
       additions.set(a.cid.toString(), a)
@@ -130,7 +124,6 @@ export async function put (inBlocks, head, key, value, options) {
     //   removals.set(r.cid.toString(), r)
     // }
   }
-  // console.log('prollyRootOut.bulk', { key, value })
   const { root: finalProllyRootNode, blocks: finalBlocks } = await prollyRootOut.bulk([{ key, value }])
 
   for (const a of finalBlocks) {
@@ -177,7 +170,6 @@ export async function root (blocks, head) {
     const { cid, bytes } = await blocks.get(address)
     return createBlock({ cid, bytes, hasher, codec })
   }
-  console.log('root.head', head)
 
   if (!head.length) return
 
@@ -218,18 +210,13 @@ export async function root (blocks, head) {
  */
 export async function get (blocks, head, key) {
   const get = async (address) => {
-    console.log('address', address)
     const { cid, bytes } = await blocks.get(address)
-    console.log('{ cid, bytes } ', { cid, bytes: bytes.toString() })
     const blk = await createBlock({ cid, bytes, hasher, codec })
-    console.log('blk.value', blk.value)
     return blk
   }
   const rootCid = await root(blocks, head)
   const prollyRootNode = await load({ cid: rootCid, get, ...opts })
-  console.log('key', key)
   const result = await prollyRootNode.get(key)
-  console.log('result', result)
   return result.result
 }
 
