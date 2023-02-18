@@ -1,8 +1,9 @@
 import * as Clock from './clock.js'
 import { EventFetcher, EventBlock } from './clock.js'
-import { create, load } from 'prolly-trees/db-index'
+import { create, load } from 'prolly-trees/map'
 import { nocache as cache } from 'prolly-trees/cache'
-import { bf } from 'prolly-trees/utils'
+import { bf, simpleCompare as compare } from 'prolly-trees/utils'
+
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 
@@ -24,7 +25,7 @@ import { create as createBlock } from 'multiformats/block'
  * } & import('./index').ShardDiff} Result
  */
 
-const opts = { cache, chunker: bf(3), codec, hasher }
+const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
 /**
  * Put a value (a CID) for the given key. If the key exists it's value is
@@ -38,6 +39,7 @@ const opts = { cache, chunker: bf(3), codec, hasher }
  * @returns {Promise<Result>}
  */
 export async function put (inBlocks, head, key, value, options) {
+  // key = [key, 1]
   const mblocks = new MemoryBlockstore()
   const blocks = new MultiBlockFetcher(mblocks, inBlocks)
   // const get = blocks.get.bind(blocks)
@@ -56,6 +58,7 @@ export async function put (inBlocks, head, key, value, options) {
     const additions = []
     for await (const node of create({ get, list: [{ key, value }], ...opts })) {
       const block = await node.block
+      console.log('save block', block.cid)
       await put(block.cid, block.bytes)
 
       mblocks.putSync(block.cid, block.bytes)
@@ -118,6 +121,7 @@ export async function put (inBlocks, head, key, value, options) {
     prollyRootOut = newProllyRootNode
 
     for (const a of newBlocks) {
+      console.log('newBlocks', a.cid)
       await put(a.cid, a.bytes)
       mblocks.putSync(a.cid, a.bytes)
       additions.set(a.cid.toString(), a)
@@ -216,13 +220,17 @@ export async function get (blocks, head, key) {
   const get = async (address) => {
     console.log('address', address)
     const { cid, bytes } = await blocks.get(address)
-    return createBlock({ cid, bytes, hasher, codec })
+    console.log('{ cid, bytes } ', { cid, bytes: bytes.toString() })
+    const blk = await createBlock({ cid, bytes, hasher, codec })
+    console.log('blk.value', blk.value)
+    return blk
   }
   const rootCid = await root(blocks, head)
   const prollyRootNode = await load({ cid: rootCid, get, ...opts })
   console.log('key', key)
   const result = await prollyRootNode.get(key)
-  return result
+  console.log('result', result)
+  return result.result
 }
 
 /**

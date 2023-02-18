@@ -11,7 +11,7 @@ describe('Prolly', () => {
     const alice = new TestPail(blocks, [])
     const key = 'key'
     const value = await randomCID(32)
-    console.log('expexted', value)
+    console.log('expected value, not in blocks', value)
     const { event, head } = await alice.putAndVis(key, value)
 
     assert.equal(event.value.data.type, 'put')
@@ -20,14 +20,19 @@ describe('Prolly', () => {
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
 
-    console.log('alive event', event)
+    console.log('alive event', event.cid)
     // next steps to debug <- *****************************************************************
     // log the CIDs and their values that are written by the putAndVis
     // log the CIDs and their values that are read by the get
     const avalue = await alice.get('key')
     assert(avalue)
     console.log('prolly avalue', avalue)
-    assert.equal(avalue.toString(), value.toString())
+
+    for (const entry of blocks.entries()) {
+      console.log('entry', entry.cid)
+    }
+
+    assert.equal(JSON.stringify(avalue), JSON.stringify(value))
   })
 
   it('linear put multiple values', async () => {
@@ -109,7 +114,6 @@ class TestPail {
    * @param {import('../link').AnyLink} value
    */
   async put (key, value) {
-    // console.log('prolly put', key, value)
     // for (const { cid } of this.blocks.entries()) {
     //   console.log('bl', cid)
     // }
@@ -119,6 +123,7 @@ class TestPail {
     result.additions.forEach(a => this.blocks.putSync(a.cid, a.bytes))
     this.head = result.head
     this.root = await root(this.blocks, this.head)
+    console.log('prolly PUT', key, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })
     return result
   }
 
