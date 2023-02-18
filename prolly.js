@@ -96,45 +96,58 @@ export async function put (inBlocks, head, key, value, options) {
   const prollyRootNode = await load({ cid: root.cid, get, ...opts })
 
   const sorted = await findSortedEvents(events, head, ancestor)
+  // console.log('sorted', sorted.length)
   const additions = new Map()
   const removals = new Map()
 
-  // todo optimize with bulk after tests pass
-  // const bulkOperation = sorted.map(({ value: { data: { type, value, key } } }) => {
+  const bulkOperations = sorted.map(({ value: event }) => {
+    // console.log('event', event)
+    const { data: { type, value, key } } = event
+    return type === 'put' ? { key, value } : { key, del: true }
+  })
+  // use the bulk operation to update the prolly tree TODO
 
-  // })
   let prollyRootOut = prollyRootNode
-  for (const { value: event } of sorted) {
-    if (!['put', 'del'].includes(event.data.type)) {
-      throw new Error(`unknown event type: ${event.data.type}`)
-    }
+  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootOut.bulk([...bulkOperations, { key, value }])
 
-    const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
-      ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
-      : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
+  // for (const { value: event } of sorted) {
+  //   if (!['put', 'del'].includes(event.data.type)) {
+  //     throw new Error(`unknown event type: ${event.data.type}`)
+  //   }
 
-    prollyRootOut = newProllyRootNode
+  //   const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
+  //     ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
+  //     : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
 
-    for (const a of newBlocks) {
-      await put(a.cid, a.bytes)
-      mblocks.putSync(a.cid, a.bytes)
-      additions.set(a.cid.toString(), a)
-    }
-    // for (const r of result.removals) {
-    //   removals.set(r.cid.toString(), r)
-    // }
-  }
-  const { root: finalProllyRootNode, blocks: finalBlocks } = await prollyRootOut.bulk([{ key, value }])
+  prollyRootOut = newProllyRootNode
 
-  for (const a of finalBlocks) {
+  //   for (const a of newBlocks) {
+  //     await put(a.cid, a.bytes)
+  //     mblocks.putSync(a.cid, a.bytes)
+  //     additions.set(a.cid.toString(), a)
+  //   }
+  //   // for (const r of result.removals) {
+  //   //   removals.set(r.cid.toString(), r)
+  //   // }
+  // }
+
+  for (const a of newBlocks) {
     await put(a.cid, a.bytes)
     mblocks.putSync(a.cid, a.bytes)
     additions.set(a.cid.toString(), a)
   }
+
+  // const { root: finalProllyRootNode, blocks: finalBlocks } = await prollyRootOut.bulk([{ key, value }])
+
+  // for (const a of finalBlocks) {
+  //   await put(a.cid, a.bytes)
+  //   mblocks.putSync(a.cid, a.bytes)
+  //   additions.set(a.cid.toString(), a)
+  // }
   // for (const r of result.removals) {
   //   removals.set(r.cid.toString(), r)
   // }
-  const finalProllyRootBlock = await finalProllyRootNode.block
+  const finalProllyRootBlock = await prollyRootOut.block
   /** @type {EventData} */
   const data = {
     type: 'put',
@@ -149,7 +162,7 @@ export async function put (inBlocks, head, key, value, options) {
   const event = await EventBlock.create(data, head)
   mblocks.putSync(event.cid, event.bytes)
   head = await Clock.advance(blocks, head, event.cid)
-
+  console.log('additions', additions.size)
   return {
     root: finalProllyRootBlock,
     additions: Array.from(additions.values()),
@@ -185,22 +198,32 @@ export async function root (blocks, head) {
   const prollyRootNode = await load({ cid: root.cid, get, ...opts })
 
   const sorted = await findSortedEvents(events, head, ancestor)
-  let prollyRootOut = prollyRootNode
-  for (const { value: event } of sorted) {
-    if (!['put', 'del'].includes(event.data.type)) {
-      throw new Error(`unknown event type: ${event.data.type}`)
-    }
+  // console.log('sorted root', sorted.length)
 
-    const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
-      ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
-      : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
-    prollyRootOut = newProllyRootNode
+  const bulkOperations = sorted.map(({ value: event }) => {
+    // console.log('event', event)
+    const { data: { type, value, key } } = event
+    return type === 'put' ? { key, value } : { key, del: true }
+  })
+  const { root: newProllyRootNode } = await prollyRootNode.bulk(bulkOperations)
 
-    for (const a of newBlocks) {
-      mblocks.putSync(a.cid, a.bytes)
-    }
-  }
-  return await prollyRootOut.block.cid
+  return await newProllyRootNode.block.cid
+
+  // for (const { value: event } of sorted) {
+  //   if (!['put', 'del'].includes(event.data.type)) {
+  //     throw new Error(`unknown event type: ${event.data.type}`)
+  //   }
+
+  //   const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
+  //     ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
+  //     : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
+  //   prollyRootOut = newProllyRootNode
+
+  //   for (const a of newBlocks) {
+  //     mblocks.putSync(a.cid, a.bytes)
+  //   }
+  // }
+  // return await prollyRootOut.block.cid
 }
 
 /**

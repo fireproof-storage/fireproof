@@ -99,6 +99,11 @@ describe('Prolly', () => {
       const vx = await alice.get(key)
       assert.equal(vx.toString(), value.toString())
     }
+    let count = 0
+    for (const _entry of blocks.entries()) {
+      count++
+    }
+    console.log('blocks', count)
   }).timeout(10000)
 })
 
