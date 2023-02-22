@@ -52,8 +52,6 @@ export async function put (inBlocks, head, key, value, options) {
   const put = inBlocks.put.bind(inBlocks)
 
   if (!head.length) {
-    // create a new db-index with a list of key,value
-
     let root
     const additions = []
     for await (const node of create({ get, list: [{ key, value }], ...opts })) {
@@ -188,29 +186,39 @@ export async function put (inBlocks, head, key, value, options) {
  */
 export async function root (blocks, head) {
   // todo refactor this to be reused instead of copy pasted
-  const get = async (address) => {
+  const getBlock = async (address) => {
     const { cid, bytes } = await blocks.get(address)
     return createBlock({ cid, bytes, hasher, codec })
   }
 
-  if (!head.length) return
+  if (!head.length) {
+    return
+  }
 
+  // Use MemoryBlockstore to store blocks temporarily
   const mblocks = new MemoryBlockstore()
+  // Use MultiBlockFetcher to fetch blocks
   blocks = new MultiBlockFetcher(mblocks, blocks)
-
   const events = new EventFetcher(blocks)
-  const ancestor = await findCommonAncestor(events, head)
-  if (!ancestor) throw new Error('failed to find common ancestor event')
 
+  // Find the common ancestor of the merkle clock head events
+  const ancestor = await findCommonAncestor(events, head)
+  if (!ancestor) {
+    throw new Error('failed to find common ancestor event')
+  }
+
+  // Get the value of the root from the ancestor event
   const aevent = await events.get(ancestor)
   const { root } = aevent.value.data
-  const prollyRootNode = await load({ cid: root.cid, get, ...opts })
 
+  // Load the root node of the ProllyTree with the given root CID
+  const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
+
+  // Sort the events by their sequence number
   const sorted = await findSortedEvents(events, head, ancestor)
-  // console.log('sorted root', sorted.length)
 
+  // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = sorted.map(({ value: event }) => {
-    // console.log('event', event)
     const {
       data: { type, value, key }
     } = event
@@ -219,22 +227,6 @@ export async function root (blocks, head) {
   const { root: newProllyRootNode } = await prollyRootNode.bulk(bulkOperations)
 
   return await newProllyRootNode.block.cid
-
-  // for (const { value: event } of sorted) {
-  //   if (!['put', 'del'].includes(event.data.type)) {
-  //     throw new Error(`unknown event type: ${event.data.type}`)
-  //   }
-
-  //   const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
-  //     ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
-  //     : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
-  //   prollyRootOut = newProllyRootNode
-
-  //   for (const a of newBlocks) {
-  //     mblocks.putSync(a.cid, a.bytes)
-  //   }
-  // }
-  // return await prollyRootOut.block.cid
 }
 
 /**
