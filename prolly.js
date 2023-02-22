@@ -26,6 +26,10 @@ import { create as createBlock } from 'multiformats/block'
  */
 
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
+const makeGetBlock = (blocks) => async (address) => {
+  const { cid, bytes } = await blocks.get(address)
+  return createBlock({ cid, bytes, hasher, codec })
+}
 
 /**
  * Put a value (a CID) for the given key. If the key exists it's value is
@@ -44,17 +48,14 @@ export async function put (inBlocks, head, key, value, options) {
   const blocks = new MultiBlockFetcher(mblocks, inBlocks)
   // const get = blocks.get.bind(blocks)
 
-  const get = async (address) => {
-    const { cid, bytes } = await blocks.get(address)
-    return createBlock({ cid, bytes, hasher, codec })
-  }
+  const getBlock = makeGetBlock(blocks)
 
   const put = inBlocks.put.bind(inBlocks)
 
   if (!head.length) {
     let root
     const additions = []
-    for await (const node of create({ get, list: [{ key, value }], ...opts })) {
+    for await (const node of create({ get: getBlock, list: [{ key, value }], ...opts })) {
       const block = await node.block
       await put(block.cid, block.bytes)
 
@@ -95,7 +96,7 @@ export async function put (inBlocks, head, key, value, options) {
   // TODO refactor the Prolly parts and the Pail parts so they can reuse the CRDT parts
   // then anything that uses CRDTs can have indexes
   // todo instead of loading it every time, we should be able to just make it part of the THIS
-  const prollyRootNode = await load({ cid: root.cid, get, ...opts })
+  const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
 
   const sorted = await findSortedEvents(events, head, ancestor)
   // console.log('sorted', sorted.length)
@@ -109,32 +110,12 @@ export async function put (inBlocks, head, key, value, options) {
     } = event
     return type === 'put' ? { key, value } : { key, del: true }
   })
-  // use the bulk operation to update the prolly tree TODO
 
   let prollyRootOut = prollyRootNode
   const { root: newProllyRootNode, blocks: newBlocks } =
     await prollyRootOut.bulk([...bulkOperations, { key, value }])
 
-  // for (const { value: event } of sorted) {
-  //   if (!['put', 'del'].includes(event.data.type)) {
-  //     throw new Error(`unknown event type: ${event.data.type}`)
-  //   }
-
-  //   const { root: newProllyRootNode, blocks: newBlocks } = event.data.type === 'put'
-  //     ? await prollyRootOut.bulk([{ key: event.data.key, value: event.data.value }])
-  //     : await prollyRootOut.bulk([{ key: event.data.key, del: true }])
-
   prollyRootOut = newProllyRootNode
-
-  //   for (const a of newBlocks) {
-  //     await put(a.cid, a.bytes)
-  //     mblocks.putSync(a.cid, a.bytes)
-  //     additions.set(a.cid.toString(), a)
-  //   }
-  //   // for (const r of result.removals) {
-  //   //   removals.set(r.cid.toString(), r)
-  //   // }
-  // }
 
   for (const a of newBlocks) {
     await put(a.cid, a.bytes)
@@ -142,16 +123,6 @@ export async function put (inBlocks, head, key, value, options) {
     additions.set(a.cid.toString(), a)
   }
 
-  // const { root: finalProllyRootNode, blocks: finalBlocks } = await prollyRootOut.bulk([{ key, value }])
-
-  // for (const a of finalBlocks) {
-  //   await put(a.cid, a.bytes)
-  //   mblocks.putSync(a.cid, a.bytes)
-  //   additions.set(a.cid.toString(), a)
-  // }
-  // for (const r of result.removals) {
-  //   removals.set(r.cid.toString(), r)
-  // }
   const finalProllyRootBlock = await prollyRootOut.block
   /** @type {EventData} */
   const data = {
@@ -168,7 +139,6 @@ export async function put (inBlocks, head, key, value, options) {
   mblocks.putSync(event.cid, event.bytes)
   head = await Clock.advance(blocks, head, event.cid)
   // console.log('additions', additions.size, Array.from(additions.values()).map(v => v.cid.toString()).sort())
-  // console.log('additions', additions.size)
   return {
     root: finalProllyRootBlock,
     additions: Array.from(additions.values()),
@@ -185,15 +155,11 @@ export async function put (inBlocks, head, key, value, options) {
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  */
 export async function root (blocks, head) {
-  // todo refactor this to be reused instead of copy pasted
-  const getBlock = async (address) => {
-    const { cid, bytes } = await blocks.get(address)
-    return createBlock({ cid, bytes, hasher, codec })
+  if (!head.length) {
+    throw new Error('no head')
   }
 
-  if (!head.length) {
-    return
-  }
+  const getBlock = makeGetBlock(blocks)
 
   // Use MemoryBlockstore to store blocks temporarily
   const mblocks = new MemoryBlockstore()
@@ -227,6 +193,74 @@ export async function root (blocks, head) {
   const { root: newProllyRootNode } = await prollyRootNode.bulk(bulkOperations)
 
   return await newProllyRootNode.block.cid
+}
+
+export async function eventsSince (blocks, head, since) {
+  // todo refactor this to be reused instead of copy pasted
+  // const getBlock = async (address) => {
+  //   const { cid, bytes } = await blocks.get(address)
+  //   return createBlock({ cid, bytes, hasher, codec })
+  // }
+
+  if (!head.length) {
+    throw new Error('no head')
+  }
+
+  // Use MemoryBlockstore to store blocks temporarily
+  const mblocks = new MemoryBlockstore()
+  // Use MultiBlockFetcher to fetch blocks
+  blocks = new MultiBlockFetcher(mblocks, blocks)
+  const events = new EventFetcher(blocks)
+
+  // Find the common ancestor of the merkle clock head events
+  const ancestor = await findCommonAncestor(events, head)
+  if (!ancestor) {
+    throw new Error('failed to find common ancestor event')
+  }
+
+  // Get the value of the root from the ancestor event
+  // const aevent = await events.get(ancestor)
+  // const { root } = aevent.value.data
+
+  // // Load the root node of the ProllyTree with the given root CID
+  // const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
+
+  // Sort the events by their sequence number
+  const sorted = await findSortedEvents(events, head, ancestor)
+  const putEvents = sorted.filter(({ value: event }) => {
+    const {
+      data: { type }
+    } = event
+    return type === 'put'
+  }).map(({ value: event }) => {
+    const {
+      data: { value }
+    } = event
+    return value
+  })
+  return putEvents
+}
+
+/**
+ *
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
+ *
+ * @returns {Promise<import('./prolly').Entry[]>}
+ *
+ */
+export async function getAll (blocks, head) {
+  // todo refactor this to be reused instead of copy pasted
+  const getBlock = makeGetBlock(blocks)
+
+  console.log('preload')
+  const rootCid = await root(blocks, head)
+  console.log('load')
+
+  // // Load the root node of the ProllyTree with the given root CID
+  const prollyRootNode = await load({ cid: rootCid, get: getBlock, ...opts })
+
+  return prollyRootNode.getAllEntries()
 }
 
 /**

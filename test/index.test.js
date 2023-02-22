@@ -5,7 +5,7 @@ import Fireproof from '../fireproof.js'
 import Index from '../index.js'
 
 describe('Index query', () => {
-  it('define index', async () => {
+  it('define index', async (done) => {
     const people = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
     const docs = [
       { _id: 'b3s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'bob', age: 40 },
@@ -24,7 +24,8 @@ describe('Index query', () => {
     })
     const result = await index.query(43)
     assert(result, 'did return result')
+    console.log('result', result)
     assert(result.rows && result.rows.length === 1, 'one row matched')
-    console.log(result)
+    done()
   })
 })
