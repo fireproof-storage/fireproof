@@ -1,15 +1,19 @@
 import * as Clock from './clock.js'
 import { EventFetcher, EventBlock } from './clock.js'
 import { create, load } from 'prolly-trees/map'
-import { nocache as cache } from 'prolly-trees/cache'
-import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
-
 import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
 
+import { nocache as cache } from 'prolly-trees/cache'
+import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 import { create as createBlock } from 'multiformats/block'
+const opts = { cache, chunker: bf(3), codec, hasher, compare }
+const makeGetBlock = (blocks) => async (address) => {
+  const { cid, bytes } = await blocks.get(address)
+  return createBlock({ cid, bytes, hasher, codec })
+}
 
 /**
  * @typedef {{
@@ -24,12 +28,6 @@ import { create as createBlock } from 'multiformats/block'
  *   event: import('./clock').EventBlockView<EventData>
  * } & import('./index').ShardDiff} Result
  */
-
-const opts = { cache, chunker: bf(3), codec, hasher, compare }
-const makeGetBlock = (blocks) => async (address) => {
-  const { cid, bytes } = await blocks.get(address)
-  return createBlock({ cid, bytes, hasher, codec })
-}
 
 /**
  * Put a value (a CID) for the given key. If the key exists it's value is
@@ -195,7 +193,7 @@ export async function root (blocks, head) {
   return await newProllyRootNode.block.cid
 }
 
-export async function eventsSince (blocks, head, since) {
+export async function eventsSince (blocks, head) {
   // todo refactor this to be reused instead of copy pasted
   // const getBlock = async (address) => {
   //   const { cid, bytes } = await blocks.get(address)
@@ -253,11 +251,7 @@ export async function getAll (blocks, head) {
   // todo refactor this to be reused instead of copy pasted
   const getBlock = makeGetBlock(blocks)
 
-  console.log('preload')
   const rootCid = await root(blocks, head)
-  console.log('load')
-
-  // // Load the root node of the ProllyTree with the given root CID
   const prollyRootNode = await load({ cid: rootCid, get: getBlock, ...opts })
 
   return prollyRootNode.getAllEntries()
