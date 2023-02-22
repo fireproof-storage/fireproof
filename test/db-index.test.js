@@ -2,7 +2,7 @@ import { describe, it, before } from 'mocha'
 import assert from 'node:assert'
 import { Blockstore } from './helpers.js'
 import Fireproof from '../fireproof.js'
-import Index from '../index.js'
+import Index from '../db-index.js'
 
 let database, index
 

@@ -26,7 +26,7 @@ const makeGetBlock = (blocks) => async (address) => {
  *   root: import('./shard').ShardLink
  *   head: import('./clock').EventLink<EventData>[]
  *   event: import('./clock').EventBlockView<EventData>
- * } & import('./index').ShardDiff} Result
+ * } & import('./db-index').ShardDiff} Result
  */
 
 /**

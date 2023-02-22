@@ -7,12 +7,11 @@ let seq = 0
 async function randomEventData () {
   return {
     type: 'put',
-    key: `test-${Date.now()}`,
     value: `value-${seq++}`
   }
 }
 
-describe('clock', () => {
+describe('Clock', () => {
   it('create a new clock', async () => {
     const blocks = new Blockstore()
     const event = await EventBlock.create({})
@@ -20,7 +19,7 @@ describe('clock', () => {
     await blocks.put(event.cid, event.bytes)
     const head = await advance(blocks, [], event.cid)
 
-    for await (const line of vis(blocks, head)) console.log(line)
+    // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
   })
@@ -38,7 +37,7 @@ describe('clock', () => {
 
     head = await advance(blocks, head, event.cid)
 
-    for await (const line of vis(blocks, head)) console.log(line)
+    // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
   })
@@ -60,7 +59,7 @@ describe('clock', () => {
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
-    for await (const line of vis(blocks, head)) console.log(line)
+    // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 2)
     assert.equal(head[0].toString(), event0.cid.toString())
     assert.equal(head[1].toString(), event1.cid.toString())
@@ -95,6 +94,7 @@ describe('clock', () => {
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
+    console.log('add two events with some shared parents')
     for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 2)
     assert.equal(head[0].toString(), event3.cid.toString())
@@ -137,7 +137,7 @@ describe('clock', () => {
     const event5 = await EventBlock.create(await randomEventData(), parents2)
     await blocks.put(event5.cid, event5.bytes)
     head = await advance(blocks, head, event5.cid)
-
+    console.log('converge when multi-root')
     for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event5.cid.toString())
@@ -185,7 +185,7 @@ describe('clock', () => {
     await blocks.put(event6.cid, event6.bytes)
     head = await advance(blocks, head, event6.cid)
 
-    for await (const line of vis(blocks, head)) console.log(line)
+    // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 2)
     assert.equal(head[0].toString(), event5.cid.toString())
     assert.equal(head[1].toString(), event6.cid.toString())
@@ -207,7 +207,7 @@ describe('clock', () => {
 
     head = await advance(blocks, head, event1.cid)
 
-    for await (const line of vis(blocks, head)) console.log(line)
+    // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event1.cid.toString())
   })
