@@ -1,5 +1,5 @@
 import * as Clock from './clock.js'
-import { EventFetcher, EventBlock } from './clock.js'
+import { EventFetcher, EventBlock, findCommonAncestor, findSortedEvents } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 
 import * as codec from '@ipld/dag-cbor'
@@ -74,6 +74,10 @@ export async function put (inBlocks, head, key, value, options) {
       value
     }
     const event = await EventBlock.create(data, head)
+    // is this save needed?
+    await put(event.cid, event.bytes)
+    mblocks.putSync(event.cid, event.bytes)
+
     head = await Clock.advance(blocks, head, event.cid)
     return {
       root,
@@ -275,118 +279,4 @@ export async function get (blocks, head, key) {
   const prollyRootNode = await load({ cid: rootCid, get, ...opts })
   const result = await prollyRootNode.get(key)
   return result.result
-}
-
-/**
- * Find the common ancestor event of the passed children. A common ancestor is
- * the first single event in the DAG that _all_ paths from children lead to.
- *
- * @param {import('./clock').EventFetcher} events
- * @param  {import('./clock').EventLink<EventData>[]} children
- */
-async function findCommonAncestor (events, children) {
-  if (!children.length) return
-  const candidates = children.map((c) => [c])
-  while (true) {
-    let changed = false
-    for (const c of candidates) {
-      const candidate = await findAncestorCandidate(events, c[c.length - 1])
-      if (!candidate) continue
-      changed = true
-      c.push(candidate)
-      const ancestor = findCommonString(candidates)
-      if (ancestor) return ancestor
-    }
-    if (!changed) return
-  }
-}
-
-/**
- * @param {import('./clock').EventFetcher} events
- * @param {import('./clock').EventLink<EventData>} root
- */
-async function findAncestorCandidate (events, root) {
-  const { value: event } = await events.get(root)
-  if (!event.parents.length) return root
-  return event.parents.length === 1
-    ? event.parents[0]
-    : findCommonAncestor(events, event.parents)
-}
-
-/**
- * @template {{ toString: () => string }} T
- * @param  {Array<T[]>} arrays
- */
-function findCommonString (arrays) {
-  arrays = arrays.map((a) => [...a])
-  for (const arr of arrays) {
-    for (const item of arr) {
-      let matched = true
-      for (const other of arrays) {
-        if (arr === other) continue
-        matched = other.some((i) => String(i) === String(item))
-        if (!matched) break
-      }
-      if (matched) return item
-    }
-  }
-}
-
-/**
- * Find and sort events between the head(s) and the tail.
- * @param {import('./clock').EventFetcher} events
- * @param {import('./clock').EventLink<EventData>[]} head
- * @param {import('./clock').EventLink<EventData>} tail
- */
-async function findSortedEvents (events, head, tail) {
-  // get weighted events - heavier events happened first
-  /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
-  const weights = new Map()
-  const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
-  for (const arr of all) {
-    for (const { event, depth } of arr) {
-      const info = weights.get(event.cid.toString())
-      if (info) {
-        info.weight += depth
-      } else {
-        weights.set(event.cid.toString(), { event, weight: depth })
-      }
-    }
-  }
-
-  // group events into buckets by weight
-  /** @type {Map<number, import('./clock').EventBlockView<EventData>[]>} */
-  const buckets = new Map()
-  for (const { event, weight } of weights.values()) {
-    const bucket = buckets.get(weight)
-    if (bucket) {
-      bucket.push(event)
-    } else {
-      buckets.set(weight, [event])
-    }
-  }
-
-  // sort by weight, and by CID within weight
-  return Array.from(buckets)
-    .sort((a, b) => b[0] - a[0])
-    .flatMap(([, es]) =>
-      es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1))
-    )
-}
-
-/**
- * @param {import('./clock').EventFetcher} events
- * @param {import('./clock').EventLink<EventData>} start
- * @param {import('./clock').EventLink<EventData>} end
- * @returns {Promise<Array<{ event: import('./clock').EventBlockView<EventData>, depth: number }>>}
- */
-async function findEvents (events, start, end, depth = 0) {
-  const event = await events.get(start)
-  const acc = [{ event, depth }]
-  const { parents } = event.value
-  if (parents.length === 1 && String(parents[0]) === String(end)) return acc
-  const rest = await Promise.all(
-    parents.map((p) => findEvents(events, p, end, depth + 1))
-  )
-  return acc.concat(...rest)
 }
