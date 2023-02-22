@@ -225,6 +225,16 @@ export async function * since (blocks, head, lastSeen) {
   }
 }
 
+export async function findCommonAncestorWithSortedEvents (events, children) {
+  const ancestor = await findCommonAncestor(events, children)
+  if (!ancestor) {
+    throw new Error('failed to find common ancestor event')
+  }
+  // Sort the events by their sequence number
+  const sorted = await findSortedEvents(events, children, ancestor)
+  return { ancestor, sorted }
+}
+
 /**
  * Find the common ancestor event of the passed children. A common ancestor is
  * the first single event in the DAG that _all_ paths from children lead to.
@@ -232,7 +242,7 @@ export async function * since (blocks, head, lastSeen) {
  * @param {import('./clock').EventFetcher} events
  * @param  {import('./clock').EventLink<EventData>[]} children
  */
-export async function findCommonAncestor (events, children) {
+async function findCommonAncestor (events, children) {
   if (!children.length) return
   const candidates = children.map((c) => [c])
   while (true) {
@@ -286,7 +296,7 @@ function findCommonString (arrays) {
  * @param {import('./clock').EventLink<EventData>[]} head
  * @param {import('./clock').EventLink<EventData>} tail
  */
-export async function findSortedEvents (events, head, tail) {
+async function findSortedEvents (events, head, tail) {
   // get weighted events - heavier events happened first
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
