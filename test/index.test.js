@@ -2,8 +2,7 @@ import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { Blockstore } from './helpers.js'
 import Fireproof from '../fireproof.js'
-// import Index from '../index.js'
-class Index {}
+import Index from '../index.js'
 
 describe('Index query', () => {
   it('define index', async () => {
@@ -14,7 +13,6 @@ describe('Index query', () => {
       { _id: 'd5s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'dave', age: 48 }
     ]
     for (const doc of docs) {
-      console.log(doc)
       const id = doc._id
       const response = await people.put(doc)
       assert(response)
@@ -25,6 +23,8 @@ describe('Index query', () => {
       map(doc.age, doc.name)
     })
     const result = await index.query(43)
+    assert(result, 'did return result')
+    assert(result.rows && result.rows.length === 1, 'one row matched')
     console.log(result)
   })
 })

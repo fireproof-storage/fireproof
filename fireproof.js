@@ -15,8 +15,8 @@ export default class Fireproof {
   }
 
   /**
-   * @param {string} id
-   * @param {import('../link').AnyLink} value
+   * @param {Object} doc
+   * @returns {Promise<import('./prolly').PutResult>}
    */
   async put (doc) {
     const id = doc._id || Math.random().toString(36).slice(2)
