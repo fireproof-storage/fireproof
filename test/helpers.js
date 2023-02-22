@@ -26,3 +26,11 @@ export async function randomBytes (size) {
 export class Blockstore extends MemoryBlockstore {
 
 }
+
+let seq = 0
+export function seqEventData () {
+  return {
+    type: 'put',
+    value: `value-${seq++}`
+  }
+}
