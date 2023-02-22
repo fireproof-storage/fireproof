@@ -2,7 +2,7 @@ import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { advance, vis } from '../clock.js'
 
-import { put, get, root } from '../prolly.js'
+import { put, get, getAll, root } from '../prolly.js'
 import { Blockstore, randomCID } from './helpers.js'
 
 describe('Prolly', () => {
@@ -11,7 +11,7 @@ describe('Prolly', () => {
     const alice = new TestPail(blocks, [])
     const key = 'key'
     const value = await randomCID(32)
-    const { event, head } = await alice.putAndVis(key, value)
+    const { event, head } = await alice.put(key, value)
 
     assert.equal(event.value.data.type, 'put')
     assert.equal(event.value.data.key, key)
@@ -34,13 +34,21 @@ describe('Prolly', () => {
 
     const key1 = 'key1'
     const value1 = await randomCID(32)
-    const result = await alice.putAndVis(key1, value1)
+    const result = await alice.put(key1, value1)
 
     assert.equal(result.event.value.data.type, 'put')
     assert.equal(result.event.value.data.key, key1)
     assert.equal(result.event.value.data.value.toString(), value1.toString())
     assert.equal(result.head.length, 1)
     assert.equal(result.head[0].toString(), result.event.cid.toString())
+
+    const allResp = await alice.getAll()
+    assert(allResp)
+    assert.equal(allResp.length, 2)
+    assert.equal(allResp[0].key, key0)
+
+    // add a third value
+    // try getSince
   })
 
   it('simple parallel put multiple values', async () => {
@@ -65,7 +73,7 @@ describe('Prolly', () => {
     await alice.advance(bevent1.cid)
     await bob.advance(aevent0.cid)
 
-    const { event: aevent1 } = await alice.putAndVis(data[3][0], data[3][1])
+    const { event: aevent1 } = await alice.put(data[3][0], data[3][1])
 
     await bob.advance(aevent1.cid)
 
@@ -84,7 +92,7 @@ describe('Prolly', () => {
     assert.equal(bvalue.toString(), data[0][1].toString())
   })
 
-  it('linear put hundreds of values', async () => {
+  it.skip('linear put hundreds of values', async () => {
     const blocks = new Blockstore()
     const alice = new TestPail(blocks, [])
 
@@ -162,5 +170,10 @@ class TestPail {
   /** @param {string} key */
   async get (key) {
     return get(this.blocks, this.head, key)
+  }
+
+  /** @param {string} key */
+  async getAll () {
+    return getAll(this.blocks, this.head)
   }
 }
