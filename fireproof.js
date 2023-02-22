@@ -1,6 +1,6 @@
 // add needed imports
 import { advance, vis } from './clock.js'
-import { put, get, root } from './prolly.js'
+import { put, get, getAll, root, eventsSince } from './prolly.js'
 
 export default class Fireproof {
   /**
@@ -20,7 +20,7 @@ export default class Fireproof {
    */
   async put (doc) {
     const id = doc._id || Math.random().toString(36).slice(2)
-    delete doc._id
+    // delete doc._id
     const result = await put(this.blocks, this.head, id, doc)
     if (!result) {
       console.log('failed', id, doc)
@@ -41,6 +41,16 @@ export default class Fireproof {
     this.head = await advance(this.blocks, this.head, event)
     this.root = await root(this.blocks, this.head)
     return this.head
+  }
+
+  async docsSince (event) {
+    if (!event) {
+      const { result: entries } = await getAll(this.blocks, this.head)
+      return entries.map(({ value }) => value)
+    } else {
+      const events = await eventsSince(this.blocks, this.head, event)
+      console.log('events', events)
+    }
   }
 
   /**
