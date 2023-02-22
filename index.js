@@ -23,7 +23,9 @@ export default class Index {
    *
    */
   async query (query) {
-    if (!this.indexRoot) { await this.#updateIndex() }
+    if (!this.indexRoot) {
+      await this.#updateIndex()
+    }
     const response = await queryIndexRange(this.database.blocks, this.indexRoot, query)
     return {
       // TODO fix this naming upstream in prolly/db-index

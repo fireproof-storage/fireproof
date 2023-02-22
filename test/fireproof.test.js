@@ -23,4 +23,5 @@ describe('Fireproof', () => {
     assert.equal(avalue.age, value.age)
     assert.equal(avalue._id, value.aKey)
   })
+  it('provides docs since', async () => {})
 })
