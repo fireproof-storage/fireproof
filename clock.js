@@ -70,12 +70,10 @@ export class EventBlock extends Block {
    * @param {EventLink<T>} config.cid
    * @param {Event} config.value
    * @param {Uint8Array} config.bytes
-   * @param {string} config.prefix
    */
-  constructor ({ cid, value, bytes, prefix }) {
+  constructor ({ cid, value, bytes }) {
     // @ts-expect-error
     super({ cid, value, bytes })
-    this.prefix = prefix
   }
 
   /**
