@@ -1,5 +1,5 @@
 import * as Clock from './clock.js'
-import { EventFetcher, EventBlock, findCommonAncestor, findSortedEvents } from './clock.js'
+import { EventFetcher, EventBlock, findCommonAncestorWithSortedEvents } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 
 import * as codec from '@ipld/dag-cbor'
@@ -89,18 +89,13 @@ export async function put (inBlocks, head, key, value, options) {
   }
 
   const events = new EventFetcher(blocks)
-  const ancestor = await findCommonAncestor(events, head)
-  if (!ancestor) throw new Error('failed to find common ancestor event')
 
+  const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   const aevent = await events.get(ancestor)
   const { root } = aevent.value.data
-
-  // TODO refactor the Prolly parts and the Pail parts so they can reuse the CRDT parts
-  // then anything that uses CRDTs can have indexes
   // todo instead of loading it every time, we should be able to just make it part of the THIS
   const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
 
-  const sorted = await findSortedEvents(events, head, ancestor)
   // console.log('sorted', sorted.length)
   const additions = new Map()
   const removals = new Map()
@@ -170,10 +165,8 @@ export async function root (blocks, head) {
   const events = new EventFetcher(blocks)
 
   // Find the common ancestor of the merkle clock head events
-  const ancestor = await findCommonAncestor(events, head)
-  if (!ancestor) {
-    throw new Error('failed to find common ancestor event')
-  }
+
+  const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
 
   // Get the value of the root from the ancestor event
   const aevent = await events.get(ancestor)
@@ -181,9 +174,6 @@ export async function root (blocks, head) {
 
   // Load the root node of the ProllyTree with the given root CID
   const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
-
-  // Sort the events by their sequence number
-  const sorted = await findSortedEvents(events, head, ancestor)
 
   // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = sorted.map(({ value: event }) => {
@@ -215,11 +205,6 @@ export async function eventsSince (blocks, head) {
   const events = new EventFetcher(blocks)
 
   // Find the common ancestor of the merkle clock head events
-  const ancestor = await findCommonAncestor(events, head)
-  if (!ancestor) {
-    throw new Error('failed to find common ancestor event')
-  }
-  console.log('ancestor', ancestor)
   // Get the value of the root from the ancestor event
   // const aevent = await events.get(ancestor)
   // const { root } = aevent.value.data
@@ -228,7 +213,9 @@ export async function eventsSince (blocks, head) {
   // const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
 
   // Sort the events by their sequence number
-  const sorted = await findSortedEvents(events, head, ancestor)
+  const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
+  console.log('ancestor', ancestor)
+
   const putEvents = sorted.filter(({ value: event }) => {
     const {
       data: { type }
