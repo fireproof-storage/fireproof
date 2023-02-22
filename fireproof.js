@@ -1,6 +1,6 @@
 // add needed imports
-import { advance, vis } from '../clock.js'
-import { put, get, root } from '../prolly.js'
+import { advance, vis } from './clock.js'
+import { put, get, root } from './prolly.js'
 
 export default class Fireproof {
   /**
@@ -15,13 +15,15 @@ export default class Fireproof {
   }
 
   /**
-   * @param {string} key
+   * @param {string} id
    * @param {import('../link').AnyLink} value
    */
-  async put (key, value) {
-    const result = await put(this.blocks, this.head, key, value)
+  async put (doc) {
+    const id = doc._id || Math.random().toString(36).slice(2)
+    delete doc._id
+    const result = await put(this.blocks, this.head, id, doc)
     if (!result) {
-      console.log('failed', key, value)
+      console.log('failed', id, doc)
     }
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach((a) => this.blocks.putSync(a.cid, a.bytes))
@@ -29,7 +31,8 @@ export default class Fireproof {
     this.root = result.root.cid
     // this difference probably matters, but we need to test it
     // this.root = await root(this.blocks, this.head)
-    // console.log('prolly PUT', key, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })
+    // console.log('prolly PUT', id, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })
+    result.id = id
     return result
   }
 

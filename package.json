@@ -1,11 +1,11 @@
 {
-  "name": "@alanshaw/pail",
-  "version": "0.1.0",
-  "description": "DAG based key value store.",
-  "main": "index.js",
+  "name": "@jchris/fireproof",
+  "version": "0.0.1",
+  "description": "Realtime database for IPFS",
+  "main": "fireproof.js",
   "type": "module",
   "bin": {
-    "pail": "./cli.js"
+    "fireproof": "./cli.js"
   },
   "scripts": {
     "test": "mocha test/*.test.js",
@@ -13,14 +13,14 @@
     "lint": "standard"
   },
   "keywords": [
-    "bucket",
-    "KV",
-    "DAG",
+    "database",
+    "JSON",
+    "document",
     "IPLD",
     "CID",
     "IPFS"
   ],
-  "author": "Alan Shaw",
+  "contributors": ["J Chris Anderson", "Alan Shaw"],
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
     "@ipld/car": "^5.0.1",
@@ -39,10 +39,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alanshaw/pail.git"
+    "url": "git+https://github.com/jchris/fireproof.git"
   },
   "bugs": {
-    "url": "https://github.com/alanshaw/pail/issues"
+    "url": "https://github.com/jchris/fireproof/issues"
   },
-  "homepage": "https://github.com/alanshaw/pail#readme"
+  "homepage": "https://github.com/jchris/fireproof#readme"
 }
