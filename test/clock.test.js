@@ -1,13 +1,14 @@
 import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { advance, EventBlock, vis } from '../clock.js'
-import { Blockstore, randomCID } from './helpers.js'
+import { Blockstore } from './helpers.js'
 
+let seq = 0
 async function randomEventData () {
   return {
     type: 'put',
     key: `test-${Date.now()}`,
-    value: await randomCID(32)
+    value: `value-${seq++}`
   }
 }
 
