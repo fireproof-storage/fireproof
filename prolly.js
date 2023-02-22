@@ -215,7 +215,7 @@ export async function eventsSince (blocks, head) {
   if (!ancestor) {
     throw new Error('failed to find common ancestor event')
   }
-
+  console.log('ancestor', ancestor)
   // Get the value of the root from the ancestor event
   // const aevent = await events.get(ancestor)
   // const { root } = aevent.value.data
@@ -254,7 +254,10 @@ export async function getAll (blocks, head) {
   const rootCid = await root(blocks, head)
   const prollyRootNode = await load({ cid: rootCid, get: getBlock, ...opts })
 
-  return prollyRootNode.getAllEntries()
+  const { result } = await prollyRootNode.getAllEntries()
+
+  // TODO should we include the key and value
+  return result.map(({ key, value }) => ({ key, value }))
 }
 
 /**
