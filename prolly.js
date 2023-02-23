@@ -1,5 +1,5 @@
 import * as Clock from './clock.js'
-import { EventFetcher, EventBlock, findCommonAncestorWithSortedEvents } from './clock.js'
+import { EventFetcher, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 
 import * as codec from '@ipld/dag-cbor'
@@ -187,13 +187,7 @@ export async function root (blocks, head) {
   return await newProllyRootNode.block.cid
 }
 
-export async function eventsSince (blocks, head) {
-  // todo refactor this to be reused instead of copy pasted
-  // const getBlock = async (address) => {
-  //   const { cid, bytes } = await blocks.get(address)
-  //   return createBlock({ cid, bytes, hasher, codec })
-  // }
-
+export async function eventsSince (blocks, head, since) {
   if (!head.length) {
     throw new Error('no head')
   }
@@ -202,7 +196,7 @@ export async function eventsSince (blocks, head) {
   const mblocks = new MemoryBlockstore()
   // Use MultiBlockFetcher to fetch blocks
   blocks = new MultiBlockFetcher(mblocks, blocks)
-  const events = new EventFetcher(blocks)
+  // const events = new EventFetcher(blocks)
 
   // Find the common ancestor of the merkle clock head events
   // Get the value of the root from the ancestor event
@@ -212,11 +206,14 @@ export async function eventsSince (blocks, head) {
   // // Load the root node of the ProllyTree with the given root CID
   // const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
 
-  // Sort the events by their sequence number
-  const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
-  console.log('ancestor sorted', ancestor, sorted.length)
+  const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, [...head, since])
+  const unknownSorted3 = await findUnknownSortedEvents(blocks, [...head, since], ancestorWithSorted2)
 
-  const putEvents = sorted.filter(({ value: event }) => {
+  // Sort the events by their sequence number
+  // const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
+  // console.log('unknownSorted3', unknownSorted3.map(({ cid, value }) => ({ cid, data: value.data })))
+
+  const putEvents = unknownSorted3.filter(({ value: event }) => {
     const {
       data: { type }
     } = event
@@ -225,6 +222,7 @@ export async function eventsSince (blocks, head) {
     const {
       data: { value }
     } = event
+    // should we return the key on the value as _id?
     return value
   })
   return putEvents

@@ -38,8 +38,7 @@ describe('Fireproof', () => {
     const result2 = await database.docsSince(result.head)
     assert(result2)
     assert(result2.rows)
-    console.log('result2', result2.rows.length)
-    // assert.equal(result2.rows.length, 0)
+    assert.equal(result2.rows.length, 0)
 
     const bKey = 'befbef-3c3a-4b5e-9c1c-bbbbbb'
     const bvalue = {
@@ -55,13 +54,12 @@ describe('Fireproof', () => {
     const res3 = await database.docsSince(result2.head)
     assert(res3)
     assert(res3.rows)
-    console.log('res3', res3.rows.length)
+    assert.equal(res3.rows.length, 1)
 
     const res4 = await database.docsSince(res3.head)
     assert(res4)
     assert(res4.rows)
-    console.log('res4', res4.rows.length)
-
+    assert.equal(res4.rows.length, 0)
     assert.equal(res4.head[0], res3.head[0])
     assert.equal(res4.head.length, res3.head.length)
 
@@ -79,7 +77,12 @@ describe('Fireproof', () => {
     const res5 = await database.docsSince(res3.head) // res3
     assert(res5)
     assert(res5.rows)
-    console.log('res5', res5.rows.length)
+    assert.equal(res5.rows.length, 1)
+
+    const res6 = await database.docsSince(result2.head) // res3
+    assert(res6)
+    assert(res6.rows)
+    assert.equal(res6.rows.length, 2)
 
     const resultAll = await database.docsSince()
     assert(resultAll)
@@ -87,9 +90,9 @@ describe('Fireproof', () => {
     assert.equal(resultAll.rows.length, 3)
     assert.equal(resultAll.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
-    const res6 = await database.docsSince(resultAll.head) // res3
-    assert(res6)
-    assert(res6.rows)
-    console.log('res6', res6.rows.length)
+    const res7 = await database.docsSince(resultAll.head) // res3
+    assert(res7)
+    assert(res7.rows)
+    assert.equal(res7.rows.length, 0)
   })
 })

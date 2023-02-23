@@ -2,7 +2,7 @@ import { describe, it } from 'mocha'
 import assert from 'node:assert'
 import { advance, vis } from '../clock.js'
 
-import { put, get, getAll, root } from '../prolly.js'
+import { put, get, getAll, root, eventsSince } from '../prolly.js'
 import { Blockstore, seqEventData } from './helpers.js'
 
 describe('Prolly', () => {
@@ -30,7 +30,7 @@ describe('Prolly', () => {
 
     const key0 = 'key0'
     const value0 = seqEventData()
-    await alice.put(key0, value0)
+    const { head: oldHead } = await alice.put(key0, value0)
 
     const key1 = 'key1'
     const value1 = seqEventData()
@@ -49,6 +49,10 @@ describe('Prolly', () => {
 
     // add a third value
     // try getSince
+    const sinceResp = await alice.getSince(oldHead)
+    console.log('sinceResp', sinceResp)
+    assert.equal(sinceResp.length, 1)
+    assert.equal(sinceResp[0].value, 'event1')
   })
 
   it('simple parallel put multiple values', async () => {
@@ -174,5 +178,9 @@ class TestPail {
   /** @param {string} key */
   async getAll () {
     return getAll(this.blocks, this.head)
+  }
+
+  async getSince (since) {
+    return eventsSince(this.blocks, this.head, since)
   }
 }
