@@ -52,7 +52,7 @@ describe('Prolly', () => {
     // try getSince
     const sinceResp = await alice.getSince(oldHead)
     assert.equal(sinceResp.length, 1)
-    assert.equal(sinceResp[0].value, 'event0')
+    assert.equal(sinceResp[0].value.value, 'event0')
   })
 
   it('simple parallel put multiple values', async () => {

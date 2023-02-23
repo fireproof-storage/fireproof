@@ -1,30 +1,28 @@
-import { describe, it, before } from 'mocha'
+import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Blockstore } from './helpers.js'
 import Fireproof from '../fireproof.js'
 
-let database
+let database, resp0
 
 describe('Fireproof', () => {
-  before(async () => {
+  beforeEach(async () => {
     database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
+    resp0 = await database.put({
+      _id: '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c',
+      name: 'alice',
+      age: 42
+    })
   })
 
   it('put and get document', async () => {
-    const aKey = '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
-    const value = {
-      _id: aKey,
-      name: 'alice',
-      age: 42
-    }
-    const response = await database.put(value)
-    assert(response.id, 'should have id')
-    assert.equal(response.id, aKey)
+    assert(resp0.id, 'should have id')
+    assert.equal(resp0.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
-    const avalue = await database.get(aKey)
-    assert.equal(avalue.name, value.name)
-    assert.equal(avalue.age, value.age)
-    assert.equal(avalue._id, aKey)
+    const avalue = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.equal(avalue.name, 'alice')
+    assert.equal(avalue.age, 42)
+    assert.equal(avalue._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
   })
   it('update existing document', async () => {
     const dogKey = 'aster-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
@@ -36,14 +34,16 @@ describe('Fireproof', () => {
     const response = await database.put(value)
     assert(response.id, 'should have id')
     assert.equal(response.id, dogKey)
+    assert.equal(value._id, dogKey)
 
     const avalue = await database.get(dogKey)
     assert.equal(avalue.name, value.name)
     assert.equal(avalue.age, value.age)
     assert.equal(avalue._id, dogKey)
 
-    value.age = 3
-    const response2 = await database.put(value)
+    avalue.age = 3
+    // console.log('update value', avalue)
+    const response2 = await database.put(avalue)
     assert(response2.id, 'should have id')
     assert.equal(response2.id, dogKey)
 
@@ -53,8 +53,9 @@ describe('Fireproof', () => {
     assert.equal(bvalue._id, dogKey)
   })
   it('provides docs since', async () => {
+    console.log('provides docs since')
     const result = await database.docsSince()
-    assert.equal(result.rows.length, 2)
+    assert.equal(result.rows.length, 1)
     assert.equal(result.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
     const result2 = await database.docsSince(result.head)
@@ -78,6 +79,8 @@ describe('Fireproof', () => {
     assert.equal(res4.head[0], res3.head[0])
     assert.equal(res4.head.length, res3.head.length)
 
+    console.log('add carol')
+
     const cKey = 'cefecef-3c3a-4b5e-9c1c-bbbbbb'
     const value = {
       _id: cKey,
@@ -88,8 +91,8 @@ describe('Fireproof', () => {
     assert(response2.id, 'should have id')
     assert.equal(response2.id, cKey)
 
-    const res5 = await database.docsSince(res3.head)
-    console.log('result', res5.rows)
+    const res5 = await database.docsSince(res4.head)
+    console.log('res5', res5.rows)
     assert.equal(res5.rows.length, 1)
 
     const res6 = await database.docsSince(result2.head)
@@ -101,6 +104,8 @@ describe('Fireproof', () => {
 
     const res7 = await database.docsSince(resultAll.head)
     assert.equal(res7.rows.length, 0)
+
+    console.log('update carol')
 
     const valueCupdate = {
       _id: cKey,
