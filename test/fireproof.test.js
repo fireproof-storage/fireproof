@@ -93,6 +93,9 @@ describe('Fireproof', () => {
 
     const res5 = await database.docsSince(res4.head)
     console.log('res5', res5.rows)
+
+    await database.visClock()
+
     assert.equal(res5.rows.length, 1)
 
     const res6 = await database.docsSince(result2.head)

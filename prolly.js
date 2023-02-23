@@ -202,7 +202,7 @@ export async function eventsSince (blocks, head, since) {
 
   // // Load the root node of the ProllyTree with the given root CID
   // const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
-  const sinceHead = [...head, ...since]
+  const sinceHead = [...since, ...head]
   const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
   const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead, ancestorWithSorted2)
   console.log('insideEventsSince', {
