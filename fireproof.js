@@ -18,10 +18,9 @@ export default class Fireproof {
    * @param {Object} doc
    * @returns {Promise<import('./prolly').PutResult>}
    */
-  async put (doc) {
-    const id = doc._id || Math.random().toString(36).slice(2)
-    // delete doc._id
-    console.log('put', id)
+  async put ({ _id, ...doc }) {
+    const id = _id || Math.random().toString(36).slice(2)
+    console.log('fireproof put', id)
     const result = await put(this.blocks, this.head, id, doc)
     if (!result) {
       console.log('failed', id, doc)
@@ -45,8 +44,19 @@ export default class Fireproof {
   }
 
   async docsSince (event) {
-    const rows = event ? await eventsSince(this.blocks, this.head, event) : (await getAll(this.blocks, this.head)).map(({ value }) => value)
-    console.log('docsSince', event, rows)
+    let rows
+    if (event) {
+      console.log('callEventsSince', { since: event })
+      const resp = await eventsSince(this.blocks, this.head, event)
+      const docsMap = new Map()
+      for (const event of resp) {
+        docsMap.set(event.key, { _id: event.key, ...event.value })
+      }
+      rows = Array.from(docsMap.values())
+    } else {
+      rows = (await getAll(this.blocks, this.head)).map(({ key, value }) => ({ _id: key, ...value }))
+    }
+    console.log('docsSince', rows)
     return { rows, head: this.head }
   }
 
@@ -76,6 +86,8 @@ export default class Fireproof {
 
   /** @param {string} key */
   async get (key) {
-    return get(this.blocks, this.head, key)
+    const got = await get(this.blocks, this.head, key)
+    got._id = key
+    return got
   }
 }
