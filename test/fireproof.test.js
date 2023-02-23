@@ -79,7 +79,7 @@ describe('Fireproof', () => {
     assert(res5.rows)
     assert.equal(res5.rows.length, 1)
 
-    const res6 = await database.docsSince(result2.head) // res3
+    const res6 = await database.docsSince(result2.head)
     assert(res6)
     assert(res6.rows)
     assert.equal(res6.rows.length, 2)

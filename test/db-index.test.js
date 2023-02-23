@@ -13,7 +13,8 @@ describe('Index query', () => {
       { _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 },
       { _id: 'b2s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'bob', age: 40 },
       { _id: 'c3s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'carol', age: 43 },
-      { _id: 'd4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'dave', age: 48 }
+      { _id: 'd4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'dave', age: 48 },
+      { _id: 'd4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'emily', age: 4 }
     ]
     for (const doc of docs) {
       const id = doc._id
@@ -46,19 +47,25 @@ describe('Index query', () => {
     const result = await index.query({ range: [39, 41] })
     assert(result, 'did return result')
     assert(result.rows)
-    assert.equal(result.rows.length, 2, '2 row matched')
+    assert.equal(result.rows.length, 2, '2 row matched') // TODO fix this is currently collating as strings
     assert(result.rows[0].key === 40, 'correct key')
     assert(result.rows[0].value === 'alice', 'correct value')
   })
   it('update index', async () => {
-    await index.query({ range: [39, 41] })
+    // const bresult = await index.query({ range: [39, 41] })
+    const bresult = await index.query({ range: [2, 60] })
+    assert(bresult, 'did return bresult')
+    assert(bresult.rows)
+    console.log('bresult.rows', bresult.rows)
 
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
     assert(response.id, 'should have id')
-    const result = await index.query({ range: [51, 54] })
+    // const result = await index.query({ range: [51, 54] })
+    const result = await index.query({ range: [1, 100] })
     assert(result, 'did return result')
     assert(result.rows)
+    console.log('result.rows', result.rows)
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
   })

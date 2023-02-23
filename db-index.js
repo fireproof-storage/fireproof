@@ -57,6 +57,7 @@ export default class Index {
     const rootNode = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.indexRoot = rootNode
     console.log('new indexRoot', this.indexRoot)
+    console.log('new dbHead', result.head)
     this.dbHead = result.head
   }
 
@@ -77,6 +78,8 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
   const getBlock = makeGetBlock(blocks)
   if (!inRoot) {
     // make a new index
+    console.log('new index', indexEntries.length)
+
     for await (const node of await create({ get: getBlock, list: indexEntries, ...opts })) {
       const block = await node.block
       await putBlock(block.cid, block.bytes)
