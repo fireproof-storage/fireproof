@@ -59,15 +59,27 @@ describe('Clock', () => {
     const sinceHead2 = [...head1, ...headRoot]
     const unknownSorted2 = await findUnknownSortedEvents(blocks, sinceHead2, await findCommonAncestorWithSortedEvents(blocks, sinceHead2))
     assert.equal(unknownSorted2.length, 2)
-    assert.equal(unknownSorted2[0].cid.toString(), event0.cid.toString())
-    assert.equal(unknownSorted2[1].cid.toString(), event1.cid.toString())
+    assert.equal(unknownSorted2[0].value.data.value, 'event1bob')
+    assert.equal(unknownSorted2[1].value.data.value, 'event2carol')
 
-    // const event1 = await EventBlock.create(seqEventData('carol'), head0)
-    // await blocks.put(event1.cid, event1.bytes)
-    // const head1 = await advance(blocks, head0, event1.cid)
-    // assert.equal(head1.length, 1)
-    // assert.equal(head1[0].toString(), event1.cid.toString())
+    const event2 = await EventBlock.create(seqEventData('dave'), head1)
+    await blocks.put(event2.cid, event2.bytes)
+    const head2 = await advance(blocks, head1, event2.cid)
+    assert.equal(head2.length, 1)
+    assert.equal(head2[0].toString(), event2.cid.toString())
 
+    const sinceHead3 = [...head2, ...headRoot]
+    const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead3, await findCommonAncestorWithSortedEvents(blocks, sinceHead3))
+    assert.equal(unknownSorted3.length, 3)
+    assert.equal(unknownSorted3[0].value.data.value, 'event1bob')
+    assert.equal(unknownSorted3[1].value.data.value, 'event2carol')
+    assert.equal(unknownSorted3[2].value.data.value, 'event3dave')
+
+    const sinceHead3B = [...head2, ...head0]
+    const unknownSorted3B = await findUnknownSortedEvents(blocks, sinceHead3B, await findCommonAncestorWithSortedEvents(blocks, sinceHead3B))
+    assert.equal(unknownSorted3B.length, 2)
+    assert.equal(unknownSorted3B[0].value.data.value, 'event2carol')
+    assert.equal(unknownSorted3B[1].value.data.value, 'event3dave')
     // for await (const line of vis(blocks, head)) console.log(line)
   })
 
