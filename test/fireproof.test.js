@@ -28,10 +28,41 @@ describe('Fireproof', () => {
     assert.equal(avalue.age, value.age)
     assert.equal(avalue._id, aKey)
   })
+  it('update existing document', async () => {
+    const dogKey = 'aster-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const value = {
+      _id: dogKey,
+      name: 'aster',
+      age: 2
+    }
+    const response = await database.put(value)
+    assert(response)
+    assert(response.id, 'should have id')
+    assert.equal(response.id, dogKey)
+
+    const avalue = await database.get(dogKey)
+    assert(avalue)
+    assert.equal(avalue.name, value.name)
+    assert.equal(avalue.age, value.age)
+    assert.equal(avalue._id, dogKey)
+
+    value.age = 3
+    const response2 = await database.put(value)
+    assert(response2)
+    assert(response2.id, 'should have id')
+    assert.equal(response2.id, dogKey)
+
+    const bvalue = await database.get(dogKey)
+    assert(bvalue)
+    assert.equal(bvalue.name, value.name)
+    assert.equal(bvalue.age, 3)
+    assert.equal(bvalue._id, dogKey)
+  })
   it('provides docs since', async () => {
     const result = await database.docsSince()
     assert(result)
     assert(result.rows)
+    console.log('result', result.rows)
     assert.equal(result.rows.length, 1)
     assert.equal(result.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
@@ -74,7 +105,7 @@ describe('Fireproof', () => {
     assert(response2.id, 'should have id')
     assert.equal(response2.id, cKey)
 
-    const res5 = await database.docsSince(res3.head) // res3
+    const res5 = await database.docsSince(res3.head)
     assert(res5)
     assert(res5.rows)
     assert.equal(res5.rows.length, 1)
@@ -90,9 +121,25 @@ describe('Fireproof', () => {
     assert.equal(resultAll.rows.length, 3)
     assert.equal(resultAll.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
-    const res7 = await database.docsSince(resultAll.head) // res3
+    const res7 = await database.docsSince(resultAll.head)
     assert(res7)
     assert(res7.rows)
     assert.equal(res7.rows.length, 0)
+
+    const valueCupdate = {
+      _id: cKey,
+      name: 'carol update',
+      age: 45
+    }
+    const responseUpdate = await database.put(valueCupdate)
+    assert(responseUpdate.id)
+
+    const res8 = await database.docsSince(resultAll.head)
+    console.log('res8', res8)
+    // assert.equal(res8.rows.length, 1)
+
+    const res9 = await database.docsSince(res8.head)
+    console.log('res9', res9)
+    assert.equal(res9.rows.length, 0)
   })
 })
