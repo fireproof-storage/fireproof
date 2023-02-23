@@ -205,13 +205,11 @@ export async function eventsSince (blocks, head, since) {
 
   // // Load the root node of the ProllyTree with the given root CID
   // const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
-
-  const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, [...head, since])
-  const unknownSorted3 = await findUnknownSortedEvents(blocks, [...head, since], ancestorWithSorted2)
-
-  // Sort the events by their sequence number
-  // const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
-  // console.log('unknownSorted3', unknownSorted3.map(({ cid, value }) => ({ cid, data: value.data })))
+  const sinceHead = [...head, ...since]
+  // const sinceHead = [...head]
+  console.log('sinceHead', sinceHead)
+  const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+  const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead, ancestorWithSorted2)
 
   const putEvents = unknownSorted3.filter(({ value: event }) => {
     const {
@@ -260,7 +258,7 @@ export async function get (blocks, head, key) {
     const blk = await createBlock({ cid, bytes, hasher, codec })
     return blk
   }
-  const rootCid = await root(blocks, head)
+  const rootCid = await root(blocks, head) // instead pass root from db? and always update on change
   const prollyRootNode = await load({ cid: rootCid, get, ...opts })
   const result = await prollyRootNode.get(key)
   return result.result
