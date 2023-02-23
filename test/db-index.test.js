@@ -74,7 +74,6 @@ describe('Index query', () => {
     const result = await index.query({ range: [51, 54] })
     assert(result, 'did return result')
     assert(result.rows)
-    console.log('result.rows', result.rows)
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
   })
