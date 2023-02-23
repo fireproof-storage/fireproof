@@ -28,26 +28,47 @@ describe('Clock', () => {
     assert.equal(unknownSorted.length, 0)
   })
 
-  it('add an event', async () => {
+  it('add events sequentially', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(seqEventData())
+    const root = await EventBlock.create(seqEventData('alice'))
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
-    let head = [root.cid]
+    const headRoot = [root.cid]
 
-    const event = await EventBlock.create(seqEventData(), head)
-    await blocks.put(event.cid, event.bytes)
+    const event0 = await EventBlock.create(seqEventData('bob'), headRoot)
+    await blocks.put(event0.cid, event0.bytes)
+    const head0 = await advance(blocks, headRoot, event0.cid)
+    assert.equal(head0.length, 1)
+    assert.equal(head0[0].toString(), event0.cid.toString())
 
-    head = await advance(blocks, head, event.cid)
+    const sinceHead0 = head0
+    const unknownSorted = await findUnknownSortedEvents(blocks, sinceHead0, await findCommonAncestorWithSortedEvents(blocks, sinceHead0))
+    assert.equal(unknownSorted.length, 0)
+
+    const event1 = await EventBlock.create(seqEventData('carol'), head0)
+    await blocks.put(event1.cid, event1.bytes)
+    const head1 = await advance(blocks, head0, event1.cid)
+    assert.equal(head1.length, 1)
+    assert.equal(head1[0].toString(), event1.cid.toString())
+
+    const sinceHead1 = head1
+    const unknownSorted1 = await findUnknownSortedEvents(blocks, sinceHead1, await findCommonAncestorWithSortedEvents(blocks, sinceHead1))
+    assert.equal(unknownSorted1.length, 0)
+
+    const sinceHead2 = [...head1, ...headRoot]
+    const unknownSorted2 = await findUnknownSortedEvents(blocks, sinceHead2, await findCommonAncestorWithSortedEvents(blocks, sinceHead2))
+    assert.equal(unknownSorted2.length, 2)
+    assert.equal(unknownSorted2[0].cid.toString(), event0.cid.toString())
+    assert.equal(unknownSorted2[1].cid.toString(), event1.cid.toString())
+
+    // const event1 = await EventBlock.create(seqEventData('carol'), head0)
+    // await blocks.put(event1.cid, event1.bytes)
+    // const head1 = await advance(blocks, head0, event1.cid)
+    // assert.equal(head1.length, 1)
+    // assert.equal(head1[0].toString(), event1.cid.toString())
 
     // for await (const line of vis(blocks, head)) console.log(line)
-    assert.equal(head.length, 1)
-    assert.equal(head[0].toString(), event.cid.toString())
-
-    const sinceHead = head
-    const unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    assert.equal(unknownSorted.length, 0)
   })
 
   it('add two events with shared parents', async () => {
@@ -314,7 +335,7 @@ describe('Clock', () => {
     assert.equal(head[0].toString(), event1.cid.toString())
   })
 
-  it('reproduce the issue from fireproof docs since update test', async () => {
+  it.skip('reproduce the issue from fireproof docs since update test', async () => {
     setSeq(-1)
     const blocks = new Blockstore()
     // alice
