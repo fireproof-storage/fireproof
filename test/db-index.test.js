@@ -14,7 +14,8 @@ describe('Index query', () => {
       { _id: 'b2s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'bob', age: 40 },
       { _id: 'c3s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'carol', age: 43 },
       { _id: 'd4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'dave', age: 48 },
-      { _id: 'd4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'emily', age: 4 }
+      { _id: 'e4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'emily', age: 4 },
+      { _id: 'f4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'frank', age: 7 }
     ]
     for (const doc of docs) {
       const id = doc._id
@@ -43,7 +44,7 @@ describe('Index query', () => {
     assert(result.rows[0].key === 43, 'correct key')
     assert(result.rows[0].value === 'carol', 'correct value')
   })
-  it.skip('query two rows', async () => {
+  it.skip('query two rows oops', async () => {
     const result = await index.query({ range: [39, 41] })
     assert(result, 'did return result')
     assert(result.rows)
@@ -60,16 +61,22 @@ describe('Index query', () => {
     assert(result.rows[0].value === 'alice', 'correct value')
   })
   it('update index', async () => {
-    const bresult = await index.query({ range: [2, 60] })
+    // const dave = database.get('d4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+
+    // console.log()
+
+    const bresult = await index.query({ range: [2, 90] })
     assert(bresult, 'did return bresult')
     assert(bresult.rows)
+    console.log('bresult.rows', bresult.rows)
     assert.equal(bresult.rows.length, 4, 'all row matched')
 
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
     assert(response.id, 'should have id')
-    const allresult = await index.query({ range: [2, 60] })
-    assert.equal(allresult.rows.length, 5, 'all row matched')
+    const allresult = await index.query({ range: [2, 90] })
+    console.log('allresult.rows 6', allresult.rows)
+    assert.equal(allresult.rows.length, 6, 'all row matched')
 
     const result = await index.query({ range: [51, 54] })
     assert(result, 'did return result')
@@ -77,4 +84,29 @@ describe('Index query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
   })
+  it('update index with document update to different key', async () => {
+    const r1 = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
+    assert(r1.id, 'should have id')
+
+    const result = await index.query({ range: [51, 54] })
+    assert(result, 'did return result')
+    assert(result.rows)
+    console.log('result.rows', result.rows)
+    // assert.equal(result.rows.length, 1, '1 row matched')
+    assert(result.rows[0].key === 53, 'correct key')
+
+    const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 63 })
+    assert(response)
+    assert(response.id, 'should have id')
+    const allresult = await index.query({ range: [2, 90] })
+    console.log('allresult.rows', allresult.rows)
+    assert.equal(allresult.rows.length, 6, 'all row matched')
+
+    const result2 = await index.query({ range: [61, 64] })
+    assert(result2, 'did return result')
+    assert(result2.rows)
+    assert.equal(result2.rows.length, 1, '1 row matched')
+    assert(result2.rows[0].key === 63, 'correct key')
+  })
+  it.skip('update index with document deletion', async () => {})
 })
