@@ -57,7 +57,10 @@ describe('Clock', () => {
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
-    let head = [root.cid]
+    let head = await advance(blocks, [], root.cid)
+    assert.equal(head.length, 1)
+    assert.equal(head[0], root.cid)
+
     const parents = head
 
     const event0 = await EventBlock.create(seqEventData(), parents)
