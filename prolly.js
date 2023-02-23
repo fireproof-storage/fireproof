@@ -205,7 +205,7 @@ export async function eventsSince (blocks, head, since) {
   const sinceHead = [...head, ...since]
   const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
   const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead, ancestorWithSorted2)
-
+  console.log('unknownSorted3', unknownSorted3.map(({ value }) => value.data.value))
   const putEvents = unknownSorted3.filter(({ value: event }) => {
     const {
       data: { type }
