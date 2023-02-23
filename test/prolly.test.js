@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import { advance, vis } from '../clock.js'
 
 import { put, get, getAll, root, eventsSince } from '../prolly.js'
-import { Blockstore, seqEventData } from './helpers.js'
+import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
 describe('Prolly', () => {
   it('put a value to a new clock', async () => {
@@ -25,6 +25,7 @@ describe('Prolly', () => {
   })
 
   it('linear put multiple values', async () => {
+    setSeq(-1)
     const blocks = new Blockstore()
     const alice = new TestPail(blocks, [])
 
@@ -50,9 +51,8 @@ describe('Prolly', () => {
     // add a third value
     // try getSince
     const sinceResp = await alice.getSince(oldHead)
-    console.log('sinceResp', sinceResp)
     assert.equal(sinceResp.length, 1)
-    assert.equal(sinceResp[0].value, 'event1')
+    assert.equal(sinceResp[0].value, 'event0')
   })
 
   it('simple parallel put multiple values', async () => {

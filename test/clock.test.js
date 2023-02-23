@@ -8,7 +8,7 @@ async function visHead (blocks, head) {
     const block = await blocks.get(cid)
     return (await decodeEventBlock(block.bytes)).value?.data?.value
   })
-  console.log('visHead', head, await Promise.all(values))
+  // console.log('visHead', head, await Promise.all(values))
 }
 
 describe('Clock', () => {
@@ -89,23 +89,23 @@ describe('Clock', () => {
     const event3 = await EventBlock.create(await seqEventData(), [event0.cid, event1.cid])
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
-    const parentz = head
+    // const parentz = head
 
     const event4 = await EventBlock.create(await seqEventData(), [event2.cid])
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
-    console.log('add two events with some shared parents')
-    for await (const line of vis(blocks, head)) console.log(line)
+    // console.log('add two events with some shared parents')
+    // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 2)
     assert.equal(head[0].toString(), event3.cid.toString())
     assert.equal(head[1].toString(), event4.cid.toString())
-    console.log('since', parentz)
-    for await (const block of since(blocks, parentz)) {
-      if (block?.value) console.log(block.value.data)
-    }
-    const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(blocks, parentz)
-    console.log('findCommonAncestorWithSortedEvents', ancestor, sorted.map(b => b.value.data))
+    // console.log('since', parentz)
+    // for await (const block of since(blocks, parentz)) {
+    //   if (block?.value) console.log(block.value.data)
+    // }
+    // const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(blocks, parentz)
+    // console.log('findCommonAncestorWithSortedEvents', ancestor, sorted.map(b => b.value.data))
   })
 
   it('converge when multi-root', async () => {
@@ -142,49 +142,42 @@ describe('Clock', () => {
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
     const event4head = head
-    console.log('event4', event4.cid)
     await visHead(blocks, event4head)
 
     const event5 = await EventBlock.create(await seqEventData(), event3head)
     await blocks.put(event5.cid, event5.bytes)
     head = await advance(blocks, head, event5.cid)
     const event5head = head
-    console.log('event5', event5.cid)
     await visHead(blocks, event5head)
 
     const event6 = await EventBlock.create(await seqEventData(), event5head)
     await blocks.put(event6.cid, event6.bytes)
     head = await advance(blocks, head, event6.cid)
     const event6head = head
-    console.log('event6', event6.cid)
     await visHead(blocks, event6head)
 
     const event7 = await EventBlock.create(await seqEventData(), event6head)
     await blocks.put(event7.cid, event7.bytes)
     head = await advance(blocks, head, event7.cid)
     const event7head = head
-    console.log('event7', event7.cid)
     await visHead(blocks, event7head)
 
     const event8 = await EventBlock.create(await seqEventData(), event7head)
     await blocks.put(event8.cid, event8.bytes)
     head = await advance(blocks, head, event8.cid)
     const event8head = head
-    console.log('event8', event8.cid)
     await visHead(blocks, event8head)
 
     const event9 = await EventBlock.create(await seqEventData(), event7head)
     await blocks.put(event9.cid, event9.bytes)
     head = await advance(blocks, head, event9.cid)
     const event9head = head
-    console.log('event9', event9.cid)
     await visHead(blocks, event9head)
 
     const event10 = await EventBlock.create(await seqEventData(), event9head)
     await blocks.put(event10.cid, event10.bytes)
     head = await advance(blocks, head, event10.cid)
     const event10head = head
-    console.log('event10', event10.cid)
     await visHead(blocks, event10head)
 
     console.log('converge when multi-root')
@@ -195,25 +188,19 @@ describe('Clock', () => {
 
     const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(blocks, [event5.cid, event2.cid])
     const unknownSorted = await findUnknownSortedEvents(blocks, [event5.cid, event2.cid], { ancestor, sorted })
-    // console.log('unknownSorted', unknownSorted.map(({ cid, value }) => ({ cid, seq: value.data.value })))
     assert.equal(unknownSorted[0].value.data.value, 'event3')
     assert.equal(unknownSorted[1].value.data.value, 'event5')
 
     const ancestorWithSorted = await findCommonAncestorWithSortedEvents(blocks, [event6.cid, event2.cid])
     const unknownSorted2 = await findUnknownSortedEvents(blocks, [event6.cid, event2.cid], ancestorWithSorted)
-    // console.log('unknownSorted2', unknownSorted2.map(({ cid, value }) => ({ cid, seq: value.data.value })))
     assert.equal(unknownSorted2[0].value.data.value, 'event3')
     assert.equal(unknownSorted2[1].value.data.value, 'event5')
     assert.equal(unknownSorted2[2].value.data.value, 'event4')
     assert.equal(unknownSorted2[3].value.data.value, 'event6')
-    // console.log('ancestor', ancestor)
     // const ancestorBlock = await blocks.get(ancestor)
     // const ancestorDecoded = await decodeEventBlock(ancestorBlock.bytes)
-    // console.log('findCommonAncestorWithSortedEvents', ancestor, ancestorDecoded.value.data)
-    // console.log('sorted', sorted.map(({ cid, value }) => ({ cid, seq: value.data.value })))
     const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, [event7.cid, event10.cid])
     const unknownSorted3 = await findUnknownSortedEvents(blocks, [event7.cid, event10.cid], ancestorWithSorted2)
-    // console.log('unknownSorted3', unknownSorted3.map(({ cid, value }) => ({ cid, seq: value.data.value })))
     assert.equal(unknownSorted3[0].value.data.value, 'event9')
     assert.equal(unknownSorted3[1].value.data.value, 'event8')
     assert.equal(unknownSorted3[2].value.data.value, 'event10')
