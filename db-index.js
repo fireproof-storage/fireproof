@@ -51,12 +51,12 @@ export default class Index {
         })
       })
     })
-    console.log('old indexRoot', this.indexRoot)
+    console.log('old indexRoot', this.indexRoot?.cid)
     // TODO we need removals for when documents change, does that mean we need to index the entries by doc id?
-    console.log('index entries', indexEntries.length)
+    console.log('index entries', indexEntries)
     const rootNode = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.indexRoot = rootNode
-    console.log('new indexRoot', this.indexRoot)
+    console.log('new indexRoot', this.indexRoot?.cid)
     console.log('new dbHead', result.head)
     this.dbHead = result.head
   }
@@ -105,10 +105,10 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
  * @param {import('prolly-trees/db-index').Query} query
  * @returns {Promise<import('prolly-trees/db-index').QueryResult>}
  **/
-async function queryIndexRange (blocks, inRoot, query) {
+async function queryIndexRange (blocks, { cid, value }, query) {
   const getBlock = makeGetBlock(blocks)
-  console.log('queryIndexRange', inRoot)
+  console.log('queryIndexRange', { cid, value })
 
-  const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
+  const index = await load({ cid, get: getBlock, ...opts })
   return index.range(...query.range)
 }
