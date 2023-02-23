@@ -21,6 +21,7 @@ export default class Fireproof {
   async put (doc) {
     const id = doc._id || Math.random().toString(36).slice(2)
     // delete doc._id
+    console.log('put', id)
     const result = await put(this.blocks, this.head, id, doc)
     if (!result) {
       console.log('failed', id, doc)
@@ -44,13 +45,9 @@ export default class Fireproof {
   }
 
   async docsSince (event) {
-    if (!event) {
-      const entries = await getAll(this.blocks, this.head)
-      return { rows: entries.map(({ value }) => value), head: this.head }
-    } else {
-      const events = await eventsSince(this.blocks, this.head, event)
-      return { rows: events, head: this.head }
-    }
+    const rows = event ? await eventsSince(this.blocks, this.head, event) : (await getAll(this.blocks, this.head)).map(({ value }) => value)
+    console.log('docsSince', event, rows)
+    return { rows, head: this.head }
   }
 
   /**
