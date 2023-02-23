@@ -23,9 +23,9 @@ export default class Index {
    *
    */
   async query (query) {
-    if (!this.indexRoot) {
-      await this.#updateIndex()
-    }
+    // if (!this.indexRoot) {
+    await this.#updateIndex()
+    // }
     const response = await queryIndexRange(this.database.blocks, this.indexRoot, query)
     return {
       // TODO fix this naming upstream in prolly/db-index
@@ -39,7 +39,9 @@ export default class Index {
    * @returns {Promise<void>}
    */
   async #updateIndex () {
+    console.log('this.dbHead', this.dbHead)
     const result = await this.database.docsSince(this.dbHead)
+    console.log('docs since', result.rows)
     const indexEntries = []
     result.rows.forEach(doc => {
       this.mapFun(doc, (k, v) => {
@@ -49,8 +51,12 @@ export default class Index {
         })
       })
     })
+    console.log('old indexRoot', this.indexRoot)
     // TODO we need removals for when documents change, does that mean we need to index the entries by doc id?
-    this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
+    console.log('index entries', indexEntries.length)
+    const rootNode = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
+    this.indexRoot = rootNode
+    console.log('new indexRoot', this.indexRoot)
     this.dbHead = result.head
   }
 
@@ -85,7 +91,7 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    return root
+    return root.block
   }
 }
 
@@ -98,6 +104,8 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
  **/
 async function queryIndexRange (blocks, inRoot, query) {
   const getBlock = makeGetBlock(blocks)
+  console.log('queryIndexRange', inRoot)
+
   const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
   return index.range(...query.range)
 }

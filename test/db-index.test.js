@@ -51,6 +51,8 @@ describe('Index query', () => {
     assert(result.rows[0].value === 'alice', 'correct value')
   })
   it('update index', async () => {
+    await index.query({ range: [39, 41] })
+
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
     assert(response.id, 'should have id')

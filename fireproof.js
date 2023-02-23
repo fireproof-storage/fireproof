@@ -48,9 +48,7 @@ export default class Fireproof {
       const entries = await getAll(this.blocks, this.head)
       return { rows: entries.map(({ value }) => value), head: this.head }
     } else {
-      console.log('getting events since', event)
-      const events = await eventsSince(this.blocks, event)
-      console.log('events', events)
+      const events = await eventsSince(this.blocks, this.head, event)
       return { rows: events, head: this.head }
     }
   }
