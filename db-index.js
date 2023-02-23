@@ -10,7 +10,7 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-export default class DbIndex {
+export default class Index {
   constructor (database, mapFun) {
     this.database = database
     this.mapFun = mapFun
@@ -50,8 +50,7 @@ export default class DbIndex {
       })
     })
     // TODO we need removals for when documents change, does that mean we need to index the entries by doc id?
-    const rootNode = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
-    this.indexRoot = rootNode
+    this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.dbHead = result.head
   }
 
@@ -68,6 +67,7 @@ export default class DbIndex {
  * @param {import('prolly-trees/db-index').IndexEntry[]} indexEntries
  */
 async function bulkIndex (blocks, inRoot, indexEntries) {
+  if (!indexEntries.length) return inRoot
   const putBlock = blocks.put.bind(blocks)
   const getBlock = makeGetBlock(blocks)
   if (!inRoot) {
@@ -97,7 +97,8 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
  * @param {import('prolly-trees/db-index').Query} query
  * @returns {Promise<import('prolly-trees/db-index').QueryResult>}
  **/
-async function queryIndexRange (blocks, { cid, value }, query) {
+async function queryIndexRange (blocks, { cid }, query) {
+  if (!cid) return { result: [] }
   const getBlock = makeGetBlock(blocks)
   const index = await load({ cid, get: getBlock, ...opts })
   return index.range(...query.range)
