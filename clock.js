@@ -225,13 +225,40 @@ export async function * since (blocks, head, lastSeen) {
   }
 }
 
-export async function findCommonAncestorWithSortedEvents (events, children) {
+export async function findUnknownSortedEvents (blocks, children, { ancestor, sorted }) {
+  const events = new EventFetcher(blocks)
+
+  // find the ancestors of the lowest sorted event
+  const childrenCids = children.map(c => c.toString())
+  const lowerEvent = sorted.find(({ cid }) => childrenCids.includes(cid.toString()))
+  // console.log('lowerEvent', lowerEvent.value)
+  const knownAncestor = await findCommonAncestor(events, [ancestor, lowerEvent.cid]) // should this be [lowerEvent.cid] ?
+  const knownSorted = await findSortedEvents(events, [lowerEvent.cid], knownAncestor)
+
+  // console.log('knownAncestor', knownAncestor)
+  // const kbytes = (await blocks.get(knownAncestor)).bytes
+  // const kancestorDecoded = await decodeEventBlock(kbytes)
+  // console.log('kancestorDecoded', kancestorDecoded.value.data)
+
+  // console.log('knownSorted', knownSorted.map(({ cid, value }) => ({ cid, seq: value.data.value })))
+
+  const knownSortedCids = knownSorted.map(({ cid }) => cid.toString())
+  // console.log('knownSortedCids', knownSortedCids)
+  const unknownSorted = sorted.filter(({ cid }) => !knownSortedCids.includes(cid.toString()))
+  // console.log('unknownSorted', unknownSorted.map(({ cid, value }) => ({ cid, seq: value.data.value })))
+  return unknownSorted
+}
+
+export async function findCommonAncestorWithSortedEvents (blocks, children) {
+  const events = new EventFetcher(blocks)
+
   const ancestor = await findCommonAncestor(events, children)
   if (!ancestor) {
     throw new Error('failed to find common ancestor event')
   }
   // Sort the events by their sequence number
   const sorted = await findSortedEvents(events, children, ancestor)
+
   return { ancestor, sorted }
 }
 

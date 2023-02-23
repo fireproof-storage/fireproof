@@ -103,7 +103,7 @@ describe('Prolly', () => {
     for (let i = 0; i < 100; i++) {
       const vx = await alice.get('key' + i)
       assert(vx)
-      console.log('vx', vx)
+      // console.log('vx', vx)
       // assert.equal(vx.toString(), value.toString())
     }
     console.log('blocks', Array.from(blocks.entries()).length)

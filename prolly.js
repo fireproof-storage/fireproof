@@ -214,7 +214,7 @@ export async function eventsSince (blocks, head) {
 
   // Sort the events by their sequence number
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
-  console.log('ancestor', ancestor)
+  console.log('ancestor sorted', ancestor, sorted.length)
 
   const putEvents = sorted.filter(({ value: event }) => {
     const {
