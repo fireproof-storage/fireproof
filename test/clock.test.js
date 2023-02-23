@@ -323,6 +323,8 @@ describe('Clock', () => {
     head = await advance(blocks, head, event2.cid)
     const event2head = head
 
+    for await (const line of vis(blocks, head)) console.log(line)
+
     sinceHead = [...event2head, ...event0head]
     unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
     assert.equal(unknownSorted.length, 2)

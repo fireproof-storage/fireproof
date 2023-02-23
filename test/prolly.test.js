@@ -150,25 +150,25 @@ class TestPail {
     return this.head
   }
 
-  /**
-   * @param {string} key
-   * @param {import('../link.js').AnyLink} value
-   */
-  async putAndVis (key, value) {
-    const result = await this.put(key, value)
-    /** @param {import('../link').AnyLink} l */
-    const shortLink = l => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-    /** @type {(e: import('../clock').EventBlockView<import('../crdt').EventData>) => string} */
-    const renderNodeLabel = event => {
-      return event.value.data.type === 'put'
-        ? `${shortLink(event.cid)}\\nput(${event.value.data.key}, ${shortLink(event.value.data.value)})`
-        : `${shortLink(event.cid)}\\ndel(${event.value.data.key})`
-    }
-    for await (const line of vis(this.blocks, result.head, { renderNodeLabel })) {
-      console.log(line)
-    }
-    return result
-  }
+  // /**
+  //  * @param {string} key
+  //  * @param {import('../link.js').AnyLink} value
+  //  */
+  // async putAndVis (key, value) {
+  //   const result = await this.put(key, value)
+  //   /** @param {import('../link').AnyLink} l */
+  //   const shortLink = l => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
+  //   /** @type {(e: import('../clock').EventBlockView<import('../crdt').EventData>) => string} */
+  //   const renderNodeLabel = event => {
+  //     return event.value.data.type === 'put'
+  //       ? `${shortLink(event.cid)}\\nput(${event.value.data.key}, ${shortLink(event.value.data.value)})`
+  //       : `${shortLink(event.cid)}\\ndel(${event.value.data.key})`
+  //   }
+  //   for await (const line of vis(this.blocks, result.head, { renderNodeLabel })) {
+  //     console.log(line)
+  //   }
+  //   return result
+  // }
 
   /** @param {string} key */
   async get (key) {
