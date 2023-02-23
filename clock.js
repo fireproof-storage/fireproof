@@ -196,6 +196,7 @@ export async function findUnknownSortedEvents (blocks, children, { ancestor, sor
   const childrenCids = children.map(c => c.toString())
   const lowerEvent = sorted.find(({ cid }) => childrenCids.includes(cid.toString()))
   const knownAncestor = await findCommonAncestor(events, [ancestor, lowerEvent.cid]) // should this be [lowerEvent.cid] ?
+  // const knownAncestor = await findCommonAncestor(events, [ancestor, ...children]) // should this be [lowerEvent.cid] ?
   const knownSorted = await findSortedEvents(events, [lowerEvent.cid], knownAncestor)
   const knownSortedCids = knownSorted.map(({ cid }) => cid.toString())
   const unknownSorted = sorted.filter(({ cid }) => !knownSortedCids.includes(cid.toString()))
