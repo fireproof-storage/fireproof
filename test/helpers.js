@@ -28,10 +28,10 @@ export class Blockstore extends MemoryBlockstore {
 }
 
 let seq = 0
-export function seqEventData () {
+export function seqEventData (tag = '') {
   return {
     type: 'put',
-    value: `event${seq++}`
+    value: `event${seq++}${tag}`
   }
 }
 export function setSeq (n) {
