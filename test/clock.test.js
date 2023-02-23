@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, EventBlock, vis, since, findCommonAncestorWithSortedEvents, findUnknownSortedEvents, decodeEventBlock } from '../clock.js'
+import { advance, EventBlock, vis, findCommonAncestorWithSortedEvents, findUnknownSortedEvents, decodeEventBlock } from '../clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
 async function visHead (blocks, head) {

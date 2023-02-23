@@ -10,7 +10,7 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-export default class Index {
+export default class DbIndex {
   constructor (database, mapFun) {
     this.database = database
     this.mapFun = mapFun

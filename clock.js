@@ -191,40 +191,6 @@ export async function * vis (blocks, head, options = {}) {
   yield '}'
 }
 
-/**
- * @template T
- * @param {import('./block').BlockFetcher} blocks Block storage.
- * @param {EventLink<T>[]} head
- * @param {object} [options]
- * @param {(b: EventBlockView<T>) => string} [options.renderNodeLabel]
- */
-export async function * since (blocks, head, lastSeen) {
-  const events = new EventFetcher(blocks)
-  const hevents = await Promise.all(head.map(link => events.get(link)))
-  const links = []
-  const nodes = new Set()
-  for (const e of hevents) {
-    nodes.add(e.cid.toString())
-    yield e
-    for (const p of e.value.parents) {
-      yield p
-    }
-    links.push(...e.value.parents)
-  }
-  while (links.length) {
-    const link = links.shift()
-    if (!link) break
-    if (nodes.has(link.toString())) continue
-    nodes.add(link.toString())
-    const block = await events.get(link)
-    yield block
-    for (const p of block.value.parents) {
-      yield p
-    }
-    links.push(...block.value.parents)
-  }
-}
-
 export async function findUnknownSortedEvents (blocks, children, { ancestor, sorted }) {
   const events = new EventFetcher(blocks)
   const childrenCids = children.map(c => c.toString())
