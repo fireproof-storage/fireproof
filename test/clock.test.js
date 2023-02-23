@@ -30,13 +30,13 @@ describe('Clock', () => {
 
   it('add an event', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await seqEventData())
+    const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
 
-    const event = await EventBlock.create(await seqEventData(), head)
+    const event = await EventBlock.create(seqEventData(), head)
     await blocks.put(event.cid, event.bytes)
 
     head = await advance(blocks, head, event.cid)
@@ -53,20 +53,20 @@ describe('Clock', () => {
   it('add two events with shared parents', async () => {
     setSeq(-1)
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await seqEventData('root'))
+    const root = await EventBlock.create(seqEventData('root'))
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents = head
 
-    const event0 = await EventBlock.create(await seqEventData(), parents)
+    const event0 = await EventBlock.create(seqEventData(), parents)
     await blocks.put(event0.cid, event0.bytes)
 
     head = await advance(blocks, parents, event0.cid)
     const head0 = head
 
-    const event1 = await EventBlock.create(await seqEventData(), parents)
+    const event1 = await EventBlock.create(seqEventData(), parents)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
     const head1 = head
@@ -81,7 +81,7 @@ describe('Clock', () => {
     assert.equal(unknownSorted.length, 1)
     assert.equal(unknownSorted[0].cid.toString(), event0.cid.toString())
 
-    const event2 = await EventBlock.create(await seqEventData(), head1)
+    const event2 = await EventBlock.create(seqEventData(), head1)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
     const head2 = head
@@ -102,31 +102,31 @@ describe('Clock', () => {
 
   it('add two events with some shared parents', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await seqEventData())
+    const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
-    const event0 = await EventBlock.create(await seqEventData(), parents0)
+    const event0 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, head, event0.cid)
 
-    const event1 = await EventBlock.create(await seqEventData(), parents0)
+    const event1 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
-    const event2 = await EventBlock.create(await seqEventData(), parents0)
+    const event2 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
 
-    const event3 = await EventBlock.create(await seqEventData(), [event0.cid, event1.cid])
+    const event3 = await EventBlock.create(seqEventData(), [event0.cid, event1.cid])
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
     // const parentz = head
 
-    const event4 = await EventBlock.create(await seqEventData(), [event2.cid])
+    const event4 = await EventBlock.create(seqEventData(), [event2.cid])
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
@@ -146,70 +146,70 @@ describe('Clock', () => {
   it('converge when multi-root', async () => {
     setSeq(-1)
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await seqEventData())
+    const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
-    const event0 = await EventBlock.create(await seqEventData(), parents0)
+    const event0 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, head, event0.cid)
 
-    const event1 = await EventBlock.create(await seqEventData(), parents0)
+    const event1 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
     const event1head = head
 
-    const event2 = await EventBlock.create(await seqEventData(), event1head)
+    const event2 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
 
-    const event3 = await EventBlock.create(await seqEventData(), event1head)
+    const event3 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
 
     const event3head = head
 
-    const event4 = await EventBlock.create(await seqEventData(), event1head)
+    const event4 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
     const event4head = head
     await visHead(blocks, event4head)
 
-    const event5 = await EventBlock.create(await seqEventData(), event3head)
+    const event5 = await EventBlock.create(seqEventData(), event3head)
     await blocks.put(event5.cid, event5.bytes)
     head = await advance(blocks, head, event5.cid)
     const event5head = head
     await visHead(blocks, event5head)
 
-    const event6 = await EventBlock.create(await seqEventData(), event5head)
+    const event6 = await EventBlock.create(seqEventData(), event5head)
     await blocks.put(event6.cid, event6.bytes)
     head = await advance(blocks, head, event6.cid)
     const event6head = head
     await visHead(blocks, event6head)
 
-    const event7 = await EventBlock.create(await seqEventData(), event6head)
+    const event7 = await EventBlock.create(seqEventData(), event6head)
     await blocks.put(event7.cid, event7.bytes)
     head = await advance(blocks, head, event7.cid)
     const event7head = head
     await visHead(blocks, event7head)
 
-    const event8 = await EventBlock.create(await seqEventData(), event7head)
+    const event8 = await EventBlock.create(seqEventData(), event7head)
     await blocks.put(event8.cid, event8.bytes)
     head = await advance(blocks, head, event8.cid)
     const event8head = head
     await visHead(blocks, event8head)
 
-    const event9 = await EventBlock.create(await seqEventData(), event7head)
+    const event9 = await EventBlock.create(seqEventData(), event7head)
     await blocks.put(event9.cid, event9.bytes)
     head = await advance(blocks, head, event9.cid)
     const event9head = head
     await visHead(blocks, event9head)
 
-    const event10 = await EventBlock.create(await seqEventData(), event9head)
+    const event10 = await EventBlock.create(seqEventData(), event9head)
     await blocks.put(event10.cid, event10.bytes)
     head = await advance(blocks, head, event10.cid)
     const event10head = head
@@ -243,43 +243,43 @@ describe('Clock', () => {
 
   it('add an old event', async () => {
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await seqEventData())
+    const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
-    const event0 = await EventBlock.create(await seqEventData(), parents0)
+    const event0 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
     head = await advance(blocks, head, event0.cid)
 
-    const event1 = await EventBlock.create(await seqEventData(), parents0)
+    const event1 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
 
     const event1head = head
 
-    const event2 = await EventBlock.create(await seqEventData(), event1head)
+    const event2 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event2.cid, event2.bytes)
     head = await advance(blocks, head, event2.cid)
 
-    const event3 = await EventBlock.create(await seqEventData(), event1head)
+    const event3 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event3.cid, event3.bytes)
     head = await advance(blocks, head, event3.cid)
 
-    const event4 = await EventBlock.create(await seqEventData(), event1head)
+    const event4 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event4.cid, event4.bytes)
     head = await advance(blocks, head, event4.cid)
 
     const parents2 = head
 
-    const event5 = await EventBlock.create(await seqEventData(), parents2)
+    const event5 = await EventBlock.create(seqEventData(), parents2)
     await blocks.put(event5.cid, event5.bytes)
     head = await advance(blocks, head, event5.cid)
 
     // now very old one
-    const event6 = await EventBlock.create(await seqEventData(), parents0)
+    const event6 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event6.cid, event6.bytes)
     head = await advance(blocks, head, event6.cid)
 
@@ -292,16 +292,16 @@ describe('Clock', () => {
   it('add an event with missing parents', async () => {
     setSeq(-1)
     const blocks = new Blockstore()
-    const root = await EventBlock.create(await seqEventData())
+    const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../clock').EventLink<any>[]} */
     let head = [root.cid]
 
-    const event0 = await EventBlock.create(await seqEventData(), head)
+    const event0 = await EventBlock.create(seqEventData(), head)
     await blocks.put(event0.cid, event0.bytes)
 
-    const event1 = await EventBlock.create(await seqEventData(), [event0.cid])
+    const event1 = await EventBlock.create(seqEventData(), [event0.cid])
     await blocks.put(event1.cid, event1.bytes)
 
     head = await advance(blocks, head, event1.cid)
@@ -315,7 +315,7 @@ describe('Clock', () => {
     setSeq(-1)
     const blocks = new Blockstore()
     // alice
-    const root = await EventBlock.create(await seqEventData('alice'))
+    const root = await EventBlock.create(seqEventData('alice'))
     await blocks.put(root.cid, root.bytes)
     let head = await advance(blocks, [], root.cid)
     const roothead = head
@@ -325,7 +325,7 @@ describe('Clock', () => {
     assert.equal(unknownSorted.length, 0) // we use all docs for first query in Fireproof
 
     // create bob
-    const event0 = await EventBlock.create(await seqEventData('bob'), head)
+    const event0 = await EventBlock.create(seqEventData('bob'), head)
     await blocks.put(event0.cid, event0.bytes)
     console.log('new event0', event0.cid)
 
@@ -343,7 +343,7 @@ describe('Clock', () => {
     assert.equal(unknownSorted.length, 1)
 
     // create carol
-    const event1 = await EventBlock.create(await seqEventData('carol'), head)
+    const event1 = await EventBlock.create(seqEventData('carol'), head)
     await blocks.put(event1.cid, event1.bytes)
     head = await advance(blocks, head, event1.cid)
     const event1head = head
@@ -364,7 +364,7 @@ describe('Clock', () => {
     console.log('unknownSortedc', unknownSorted.map(e => e.value.data.value))
     assert.equal(unknownSorted.length, 1)
 
-    // const event2 = await EventBlock.create(await seqEventData('xxx'), head)
+    // const event2 = await EventBlock.create(seqEventData('xxx'), head)
     // await blocks.put(event2.cid, event2.bytes)
     // head = await advance(blocks, head, event2.cid)
     // const event2head = head
