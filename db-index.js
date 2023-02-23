@@ -49,6 +49,7 @@ export default class Index {
         })
       })
     })
+    // TODO we need removals for when documents change, does that mean we need to index the entries by doc id?
     this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.dbHead = result.head
   }

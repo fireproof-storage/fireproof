@@ -31,6 +31,9 @@ let seq = 0
 export function seqEventData () {
   return {
     type: 'put',
-    value: `value-${seq++}`
+    value: `event${seq++}`
   }
+}
+export function setSeq (n) {
+  seq = n
 }
