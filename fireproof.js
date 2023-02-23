@@ -11,7 +11,7 @@ export default class Fireproof {
     this.blocks = blocks
     this.head = head
     /** @type {import('../shard.js').ShardLink?} */
-    this.rootCid = null
+    // this.rootCid = null
   }
 
   /**
@@ -28,7 +28,7 @@ export default class Fireproof {
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach((a) => this.blocks.putSync(a.cid, a.bytes))
     this.head = result.head
-    this.rootCid = result.root.cid
+    // this.rootCid = result.root.cid
     // this difference probably matters, but we need to test it
     // this.rootCid = await root(this.blocks, this.head)
     // console.log('prolly PUT', id, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })
@@ -36,12 +36,12 @@ export default class Fireproof {
     return result
   }
 
-  /** @param {import('../clock').EventLink<import('../crdt').EventData>} event */
-  async advance (event) {
-    this.head = await advance(this.blocks, this.head, event)
-    this.rootCid = await root(this.blocks, this.head)
-    return this.head
-  }
+  //   /** @param {import('../clock').EventLink<import('../crdt').EventData>} event */
+  //   async advance (event) {
+  //     this.head = await advance(this.blocks, this.head, event)
+  //     this.rootCid = await root(this.blocks, this.head)
+  //     return this.head
+  //   }
 
   async docsSince (event) {
     let rows
