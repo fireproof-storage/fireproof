@@ -29,10 +29,10 @@ const indexEntriesForChanges = (changes, mapFun) => {
 const indexEntriesForOldChanges = (docs, mapFun) => {
   const indexEntries = []
   docs.forEach((doc) => {
-    mapFun(doc, (k, v) => {
+    mapFun(doc, (k) => {
       indexEntries.push({
         key: [k, doc._id],
-        value: v
+        del: true
       })
     })
   })
@@ -85,11 +85,9 @@ export default class Index {
 
     if (this.dbHead) {
       const oldDocs = await oldDocsBeforeChanges(result.rows, this.database.snapshot(this.dbHead))
-      console.log('old docs', oldDocs)
-      // const oldIndexEntries = indexEntriesForChanges(oldDocs, this.mapFun)
+      const oldIndexEntries = indexEntriesForOldChanges(oldDocs, this.mapFun)
+      this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, oldIndexEntries, opts)
     }
-
-    // TODO we need removals for when documents change, does that mean we need to index the entries by doc id?
     this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.dbHead = result.head
   }

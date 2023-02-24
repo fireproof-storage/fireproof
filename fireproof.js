@@ -24,7 +24,7 @@ export default class Fireproof {
    */
   async put ({ _id, ...doc }) {
     const id = _id || Math.random().toString(36).slice(2)
-    // console.log('fireproof put', id)
+    // console.log('fireproof put', id, doc)
     const result = await put(this.blocks, this.clock, id, doc)
     if (!result) {
       console.log('failed', id, doc)

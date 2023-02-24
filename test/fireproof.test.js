@@ -54,12 +54,16 @@ describe('Fireproof', () => {
 
     const snapshot = database.snapshot(oldClock)
     const snapdoc = await snapshot.get(dogKey)
-    console.log('snapdoc', snapdoc)
+    // console.log('snapdoc', snapdoc)
     // assert(snapdoc.id, 'should have id')
     assert.equal(snapdoc._id, dogKey)
     assert.equal(snapdoc.age, 2)
   })
-  it.skip('get missing document', async () => {})
+  it.skip('get missing document', async () => {
+    const avalue = await database.get('missing')
+    // console.log('missing value', avalue)
+    assert.equal(avalue, null)
+  })
   it('provides docs since', async () => {
     const result = await database.changesSince()
     assert.equal(result.rows.length, 1)
