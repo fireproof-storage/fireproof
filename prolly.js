@@ -205,13 +205,6 @@ export async function eventsSince (blocks, head, since) {
   const sinceHead = [...since, ...head]
   const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
   const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead, ancestorWithSorted2)
-  console.log('insideEventsSince', {
-    since,
-    unknown: unknownSorted3.map(({ value }) => ({
-      _id: value.data.key,
-      ...value.data.value
-    }))
-  })
   // const putEvents = unknownSorted3.filter(({ value: { data: { type } } }) => type === 'put')
   const putEvents = unknownSorted3
     .map(({ value: { data } }) => data)
