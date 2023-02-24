@@ -42,7 +42,6 @@ describe('Fireproof', () => {
     assert.equal(avalue._id, dogKey)
 
     avalue.age = 3
-    // console.log('update value', avalue)
     const response2 = await database.put(avalue)
     assert(response2.id, 'should have id')
     assert.equal(response2.id, dogKey)
@@ -53,7 +52,6 @@ describe('Fireproof', () => {
     assert.equal(bvalue._id, dogKey)
   })
   it('provides docs since', async () => {
-    console.log('provides docs since')
     const result = await database.docsSince()
     assert.equal(result.rows.length, 1)
     assert.equal(result.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
@@ -79,8 +77,6 @@ describe('Fireproof', () => {
     assert.equal(res4.head[0], res3.head[0])
     assert.equal(res4.head.length, res3.head.length)
 
-    console.log('add carol')
-
     const cKey = 'cefecef-3c3a-4b5e-9c1c-bbbbbb'
     const value = {
       _id: cKey,
@@ -92,7 +88,6 @@ describe('Fireproof', () => {
     assert.equal(response2.id, cKey)
 
     const res5 = await database.docsSince(res4.head)
-    console.x('res5', res5.rows)
 
     await database.visClock()
 
@@ -108,8 +103,6 @@ describe('Fireproof', () => {
     const res7 = await database.docsSince(resultAll.head)
     assert.equal(res7.rows.length, 0)
 
-    console.log('update carol')
-
     const valueCupdate = {
       _id: cKey,
       name: 'carol update',
@@ -119,11 +112,9 @@ describe('Fireproof', () => {
     assert(responseUpdate.id)
 
     const res8 = await database.docsSince(resultAll.head)
-    console.log('res8', res8)
     assert.equal(res8.rows.length, 1)
 
     const res9 = await database.docsSince(res8.head)
-    console.log('res9', res9)
     assert.equal(res9.rows.length, 0)
   })
 })
