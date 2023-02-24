@@ -41,12 +41,15 @@ const indexEntriesForOldChanges = (docs, mapFun) => {
 
 const oldDocsBeforeChanges = async (changes, snapshot) => {
   const oldDocs = new Map()
-  for (const { key, value, del } of changes) {
-    if (oldDocs[key]) continue
-    console.log('get change', key)
-    oldDocs[key] = await snapshot.get(key) // do we want it to come back as {key, value} or {_id, ...value}?
-    console.log('got change', oldDocs[key])
-    oldDocs.set(key, makeDoc({ key, value }))
+  for (const { key } of changes) {
+    if (oldDocs.has(key)) continue
+    try {
+      const change = await snapshot.get(key)
+      oldDocs.set(key, change)
+    } catch (e) {
+      console.log('olddocs e', key, e.message)
+      if (e.message !== 'Not found') throw e
+    }
   }
   return Array.from(oldDocs.values())
 }
@@ -63,11 +66,12 @@ export default class Index {
    * Query object can have {range}
    *
    */
-  async query (query) {
-    // if (!this.indexRoot) {
-    await this.#updateIndex()
-    // }
-    const response = await queryIndexRange(this.database.blocks, this.indexRoot, query)
+  async query (query, root = null) {
+    if (!root) {
+      await this.#updateIndex()
+    }
+    root = root || this.indexRoot
+    const response = await queryIndexRange(this.database.blocks, root, query)
     return {
       // TODO fix this naming upstream in prolly/db-index
       rows: response.result.map(({ id, key, row }) => ({ id: key, key: id, value: row }))
@@ -80,14 +84,18 @@ export default class Index {
    * @returns {Promise<void>}
    */
   async #updateIndex () {
+    this.dbHead = null
+    this.indexRoot = null
     const result = await this.database.changesSince(this.dbHead)
-    const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
-
     if (this.dbHead) {
       const oldDocs = await oldDocsBeforeChanges(result.rows, this.database.snapshot(this.dbHead))
       const oldIndexEntries = indexEntriesForOldChanges(oldDocs, this.mapFun)
+      console.log('oldIndexEntries', oldIndexEntries) // { key: [55, 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c'], del: true }
       this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, oldIndexEntries, opts)
+      this.removalRoot = this.indexRoot
     }
+    const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
+    console.log('indexEntries', indexEntries)
     this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.dbHead = result.head
   }
@@ -116,15 +124,19 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
       await putBlock(block.cid, block.bytes)
       inRoot = block
     }
+    console.log('created index', inRoot.cid)
     return inRoot
   } else {
     // load existing index
+    console.log('loading index', inRoot.cid)
     const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
     const { root, blocks } = await index.bulk(indexEntries)
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    return root.block
+    console.log('updated index', root.block.cid)
+
+    return root.block // if we hold the root we won't have to load every time
   }
 }
 
