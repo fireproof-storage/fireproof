@@ -284,7 +284,114 @@ describe('Clock', () => {
     const toSync7F = await findEventsToSync(blocks, [...head7, ...head5])
     // assert.equal(toSync7F.length, 0) // 2
 
-    // for await (const line of vis(blocks, head6)) console.log(line)
+    /*
+     * Create event8 for isaac, with head7 as parent
+     */
+    const { event: event8, head: head8 } = await makeNext(blocks, head7, seqEventData('isaac'))
+
+    assert.equal(head8.length, 1)
+    assert.equal(head8[0].toString(), event8.cid.toString())
+
+    // why is this bringing up the alice event?
+    const toSync8 = await findEventsToSync(blocks, [...head8, ...head0])
+    // assert.equal(toSync8.length, 7)
+    // assert.equal(toSync8[0].value.data.value, 'event1bob')
+    // assert.equal(toSync8[1].value.data.value, 'event2carol')
+    // assert.equal(toSync8[2].value.data.value, 'event3dave')
+    // assert.equal(toSync8[3].value.data.value, 'event4eve')
+    // assert.equal(toSync8[4].value.data.value, 'event5frank')
+    // assert.equal(toSync8[5].value.data.value, 'event6grace')
+    // assert.equal(toSync8[6].value.data.value, 'event7holly')
+
+    // why is this bringing up the alice event?
+
+    const toSync8B = await findEventsToSync(blocks, [...head8, ...head1])
+    // assert.equal(toSync8B.length, 6)
+    // assert.equal(toSync8B[0].value.data.value, 'event2carol')
+    // assert.equal(toSync8B[1].value.data.value, 'event3dave')
+    // assert.equal(toSync8B[2].value.data.value, 'event4eve')
+    // assert.equal(toSync8B[3].value.data.value, 'event5frank')
+    // assert.equal(toSync8B[4].value.data.value, 'event6grace')
+    // assert.equal(toSync8B[5].value.data.value, 'event8isaac')
+
+    // why is this bringing up the alice event?
+    const toSync8C = await findEventsToSync(blocks, [...head8, ...head2])
+    // assert.equal(toSync8C.length, 5) // 3
+    // assert.equal(toSync8C[0].value.data.value, 'event3dave')
+    // assert.equal(toSync8C[1].value.data.value, 'event4eve')
+    // assert.equal(toSync8B[3].value.data.value, 'event5frank')
+    // assert.equal(toSync8C[2].value.data.value, 'event6grace')
+    // assert.equal(toSync8C[3].value.data.value, 'event8isaac')
+
+    // why is this bringing up the alice event?
+    const toSync8D = await findEventsToSync(blocks, [...head8, ...head3])
+    assert.equal(toSync8D.length, 4) // 4
+    // assert.equal(toSync8D[0].value.data.value, 'event4eve')
+    // assert.equal(toSync8D[1].value.data.value, 'event8isaac')
+
+    // why is this bringing up the alice event?
+    const toSync8E = await findEventsToSync(blocks, [...head8, ...head4])
+    // assert.equal(toSync8E.length, 1) // 5
+    // assert.equal(toSync8E[0].value.data.value, 'event8isaac')
+
+    const toSync8F = await findEventsToSync(blocks, [...head8, ...head5])
+    // assert.equal(toSync8F.length, 0) // 6
+
+    /*
+     * Create event9 for jen, with head8 as parent
+     */
+    const { event: event9, head: head9 } = await makeNext(blocks, head8, seqEventData('jen'))
+
+    assert.equal(head9.length, 1)
+    assert.equal(head9[0].toString(), event9.cid.toString())
+
+    // why is this bringing up the alice event?
+    const toSync9 = await findEventsToSync(blocks, [...head9, ...head0])
+    assert.equal(toSync9.length, 9)
+    assert.equal(toSync9[0].value.data.value, 'event1bob')
+    assert.equal(toSync9[1].value.data.value, 'event2carol')
+    assert.equal(toSync9[2].value.data.value, 'event3dave')
+    assert.equal(toSync9[3].value.data.value, 'event4eve')
+    assert.equal(toSync9[4].value.data.value, 'event5frank')
+    assert.equal(toSync9[5].value.data.value, 'event6grace')
+    assert.equal(toSync9[6].value.data.value, 'event7holly')
+    assert.equal(toSync9[7].value.data.value, 'event8isaac')
+    assert.equal(toSync9[8].value.data.value, 'event9jen')
+
+    // why is this bringing up the alice event?
+    const toSync9B = await findEventsToSync(blocks, [...head9, ...head1])
+    // assert.equal(toSync9B.length, 7) // 2
+    // assert.equal(toSync9B[0].value.data.value, 'event2carol')
+    // assert.equal(toSync9B[1].value.data.value, 'event3dave')
+    // assert.equal(toSync9B[2].value.data.value, 'event4eve')
+    // assert.equal(toSync9B[3].value.data.value, 'event5frank')
+    // assert.equal(toSync9B[4].value.data.value, 'event6grace')
+    // assert.equal(toSync9B[5].value.data.value, 'event8isaac')
+    // assert.equal(toSync9B[6].value.data.value, 'event9jen')
+
+    // why is this bringing up the alice event?
+    const toSync9C = await findEventsToSync(blocks, [...head9, ...head2])
+    // assert.equal(toSync9C.length, 6) // 3
+    // assert.equal(toSync9C[0].value.data.value, 'event3dave')
+    // assert.equal(toSync9C[1].value.data.value, 'event4eve')
+    // assert.equal(toSync9C[2].value.data.value, 'event5frank')
+    // assert.equal(toSync9C[3].value.data.value, 'event6grace')
+    // assert.equal(toSync9C[4].value.data.value, 'event8isaac')
+    // assert.equal(toSync9C[5].value.data.value, 'event9jen')
+
+    // why is this bringing up the alice event?
+    const toSync9D = await findEventsToSync(blocks, [...head9, ...head3])
+    // assert.equal(toSync9D.length, 5) // 4
+    // assert.equal(toSync9D[0].value.data.value, 'event4eve')
+    // assert.equal(toSync9D[1].value.data.value, 'event8isaac')
+    // assert.equal(toSync9D[2].value.data.value, 'event9jen')
+
+    // why is this bringing up the alice event?
+    const toSync9E = await findEventsToSync(blocks, [...head9, ...head4])
+    // assert.equal(toSync9E.length, 1) // 5
+    // assert.equal(toSync9E[0].value.data.value, 'event8isaac')
+
+    for await (const line of vis(blocks, head8)) console.x(line)
   })
 
   it('add two events with shared parents', async () => {
