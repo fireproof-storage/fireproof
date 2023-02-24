@@ -35,6 +35,7 @@ describe('Fireproof', () => {
     assert(response.id, 'should have id')
     assert.equal(response.id, dogKey)
     assert.equal(value._id, dogKey)
+    const oldClock = database.clock
 
     const avalue = await database.get(dogKey)
     assert.equal(avalue.name, value.name)
@@ -50,13 +51,21 @@ describe('Fireproof', () => {
     assert.equal(bvalue.name, value.name)
     assert.equal(bvalue.age, 3)
     assert.equal(bvalue._id, dogKey)
-  })
-  it('provides docs since', async () => {
-    const result = await database.docsSince()
-    assert.equal(result.rows.length, 1)
-    assert.equal(result.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
-    const result2 = await database.docsSince(result.head)
+    const snapshot = database.snapshot(oldClock)
+    const snapdoc = await snapshot.get(dogKey)
+    console.log('snapdoc', snapdoc)
+    // assert(snapdoc.id, 'should have id')
+    assert.equal(snapdoc._id, dogKey)
+    assert.equal(snapdoc.age, 2)
+  })
+  it.skip('get missing document', async () => {})
+  it('provides docs since', async () => {
+    const result = await database.changesSince()
+    assert.equal(result.rows.length, 1)
+    assert.equal(result.rows[0].key, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+
+    const result2 = await database.changesSince(result.head)
     assert.equal(result2.rows.length, 0)
 
     const bKey = 'befbef-3c3a-4b5e-9c1c-bbbbbb'
@@ -69,10 +78,10 @@ describe('Fireproof', () => {
     assert(response.id, 'should have id')
     assert.equal(response.id, bKey)
 
-    const res3 = await database.docsSince(result2.head)
+    const res3 = await database.changesSince(result2.head)
     assert.equal(res3.rows.length, 1)
 
-    const res4 = await database.docsSince(res3.head)
+    const res4 = await database.changesSince(res3.head)
     assert.equal(res4.rows.length, 0)
     assert.equal(res4.head[0], res3.head[0])
     assert.equal(res4.head.length, res3.head.length)
@@ -87,20 +96,20 @@ describe('Fireproof', () => {
     assert(response2.id, 'should have id')
     assert.equal(response2.id, cKey)
 
-    const res5 = await database.docsSince(res4.head)
+    const res5 = await database.changesSince(res4.head)
 
     await database.visClock()
 
     assert.equal(res5.rows.length, 1)
 
-    const res6 = await database.docsSince(result2.head)
+    const res6 = await database.changesSince(result2.head)
     assert.equal(res6.rows.length, 2)
 
-    const resultAll = await database.docsSince()
+    const resultAll = await database.changesSince()
     assert.equal(resultAll.rows.length, 3)
-    assert.equal(resultAll.rows[0]._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.equal(resultAll.rows[0].key, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
 
-    const res7 = await database.docsSince(resultAll.head)
+    const res7 = await database.changesSince(resultAll.head)
     assert.equal(res7.rows.length, 0)
 
     const valueCupdate = {
@@ -111,10 +120,10 @@ describe('Fireproof', () => {
     const responseUpdate = await database.put(valueCupdate)
     assert(responseUpdate.id)
 
-    const res8 = await database.docsSince(resultAll.head)
+    const res8 = await database.changesSince(resultAll.head)
     assert.equal(res8.rows.length, 1)
 
-    const res9 = await database.docsSince(res8.head)
+    const res9 = await database.changesSince(res8.head)
     assert.equal(res9.rows.length, 0)
   })
 })
