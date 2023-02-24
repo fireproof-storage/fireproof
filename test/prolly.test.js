@@ -55,6 +55,20 @@ describe('Prolly', () => {
     assert.equal(sinceResp[0].value.value, 'event0')
   })
 
+  it('get missing', async () => {
+    const blocks = new Blockstore()
+    const alice = new TestPail(blocks, [])
+    const key = 'key'
+    const value = seqEventData('test-missing-root')
+    const { event, head } = await alice.put(key, value)
+
+    await alice.get('missing').then((value) => {
+      assert('false', 'should not get here')
+    }).catch((err) => {
+      assert.equal(err.message, 'Not found')
+    })
+  })
+
   it('simple parallel put multiple values', async () => {
     const blocks = new Blockstore()
     const alice = new TestPail(blocks, [])

@@ -62,16 +62,28 @@ describe('Index query', () => {
     assert(result.rows[0].value === 'alice', 'correct value')
   })
   it('update index', async () => {
-    // const dave = database.get('d4s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
-
     const bresult = await index.query({ range: [2, 90] })
     assert(bresult, 'did return bresult')
     // console.log('bresult.rows', bresult.rows)
     assert.equal(bresult.rows.length, 6, 'all row matched')
 
+    const oldHead = bresult.head
+
+    const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+
+    console.log('initial Xander 53', notYet)
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
     assert(response.id, 'should have id')
+
+    const gotX = await database.get(response.id)
+    assert(gotX)
+    assert(gotX.name === 'Xander', 'got Xander')
+    console.log('got X')
+    const snap = database.snapshot(oldHead)
+    const noX = await snap.get(response.id)
+    console.log('noX', noX)
+
     const allresult = await index.query({ range: [2, 90] })
     assert.equal(allresult.rows.length, 7, 'all row matched')
 
@@ -82,6 +94,7 @@ describe('Index query', () => {
     assert(result.rows[0].key === 53, 'correct key')
   })
   it('update index with document update to different key', async () => {
+    console.log('make Xander 53')
     const r1 = await database.put({ _id: 'dxxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(r1.id, 'should have id')
 
@@ -91,8 +104,7 @@ describe('Index query', () => {
     // console.log('result.rows', result.rows)
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
-    // assert(false, 'todo')
-
+    console.log('make Xander 63')
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 63 })
     assert(response)
     assert(response.id, 'should have id')
