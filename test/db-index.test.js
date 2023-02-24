@@ -67,10 +67,10 @@ describe('Index query', () => {
     // console.log('bresult.rows', bresult.rows)
     assert.equal(bresult.rows.length, 6, 'all row matched')
 
-    const oldHead = bresult.head
+    const oldHead = database.clock
 
-    const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
-
+    const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c').catch((e) => e)
+    assert.equal(notYet.message, 'Not found', 'not yet there')
     console.log('initial Xander 53', notYet)
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
@@ -80,9 +80,15 @@ describe('Index query', () => {
     assert(gotX)
     assert(gotX.name === 'Xander', 'got Xander')
     console.log('got X')
+
     const snap = database.snapshot(oldHead)
-    const noX = await snap.get(response.id)
-    console.log('noX', noX)
+
+    const aliceOld = await snap.get('a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')// .catch((e) => e)
+    console.log('aliceOld', aliceOld)
+    assert.equal(aliceOld.name, 'alice', 'alice old')
+
+    const noX = await snap.get(response.id).catch((e) => e)
+    assert.equal(noX.message, 'Not found', 'not yet there')
 
     const allresult = await index.query({ range: [2, 90] })
     assert.equal(allresult.rows.length, 7, 'all row matched')
@@ -94,20 +100,35 @@ describe('Index query', () => {
     assert(result.rows[0].key === 53, 'correct key')
   })
   it('update index with document update to different key', async () => {
-    console.log('make Xander 53')
-    const r1 = await database.put({ _id: 'dxxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
+    await index.query({ range: [51, 54] })
+
+    console.log('--- make Xander 53')
+    const DOCID = 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const r1 = await database.put({ _id: DOCID, name: 'Xander', age: 53 })
     assert(r1.id, 'should have id')
 
     const result = await index.query({ range: [51, 54] })
     assert(result, 'did return result')
     assert(result.rows)
-    // console.log('result.rows', result.rows)
+    console.log('result.rows', result.rows)
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
-    console.log('make Xander 63')
-    const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 63 })
+
+    const snap = database.snapshot(database.clock)
+
+    console.log('--- make Xander 63')
+    const response = await database.put({ _id: DOCID, name: 'Xander', age: 63 })
     assert(response)
     assert(response.id, 'should have id')
+
+    const oldXander = await snap.get(r1.id)
+    assert.equal(oldXander.age, 53, 'old xander')
+    // console.log('--- test snapshot', snap.clock)
+
+    const newZander = await database.get(r1.id)
+    assert.equal(newZander.age, 63, 'new xander')
+
+    // console.log('--- test liveshot', database.clock)
 
     const result2 = await index.query({ range: [61, 64] })
     assert(result2, 'did return result')
@@ -115,10 +136,16 @@ describe('Index query', () => {
     assert.equal(result2.rows.length, 1, '1 row matched')
     assert(result2.rows[0].key === 63, 'correct key')
 
+    /// see whats in the removalIndex
+    // const removalRoot = index.removalRoot
+    // console.log('removalIndex', removalRoot.cid)
+    // const remres = await index.query({ range: [1, 90] }, removalRoot)
+    // console.log('remres', remres)
+
     const resultempty = await index.query({ range: [51, 54] })
     assert(resultempty, 'did return resultempty')
     assert(resultempty.rows)
-    // console.log('resultempty.rows', resultempty.rows)
+    console.log('resultempty.rows', resultempty.rows)
     assert(resultempty.rows.length === 0, 'old Xander should be gone')
 
     const allresult = await index.query({ range: [2, 90] })
