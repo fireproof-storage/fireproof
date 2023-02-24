@@ -85,8 +85,8 @@ export default class Index {
    */
   async #updateIndex () {
     // todo remove this hack
-    this.dbHead = null
-    this.indexRoot = null
+    this.dbHead = null // hack
+    this.indexRoot = null // hack
     const result = await this.database.changesSince(this.dbHead)
     if (this.dbHead) {
       const oldDocs = await oldDocsBeforeChanges(result.rows, this.database.snapshot(this.dbHead))

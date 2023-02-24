@@ -59,6 +59,34 @@ describe('Fireproof', () => {
     assert.equal(snapdoc._id, dogKey)
     assert.equal(snapdoc.age, 2)
   })
+  it("update document with validation function that doesn't allow it", async () => {
+    const validationDatabase = new Fireproof(new Blockstore(), [], {
+      validateChange: (newDoc, oldDoc, authCtx) => {
+        if (newDoc.name === 'bob') {
+          throw new Error('no bobs allowed')
+        }
+      }
+    })
+    const validResp = await validationDatabase.put({
+      _id: '111-alice',
+      name: 'alice',
+      age: 42
+    })
+    const getResp = await validationDatabase.get(validResp.id)
+    assert.equal(getResp.name, 'alice')
+
+    let e = await validationDatabase.put({
+      _id: '222-bob',
+      name: 'bob',
+      age: 11
+    }).catch(e => e)
+    assert.equal(e.message, 'no bobs allowed')
+
+    e = await validationDatabase.get('222-bob').catch(e => e)
+    assert.equal(e.message, 'Not found')
+    // assert.equal(getResp.name, 'alice')
+  })
+
   it.skip('get missing document', async () => {
     const avalue = await database.get('missing')
     // console.log('missing value', avalue)
