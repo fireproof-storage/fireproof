@@ -191,6 +191,11 @@ export async function * vis (blocks, head, options = {}) {
   yield '}'
 }
 
+export async function findEventsToSync (blocks, head) {
+  const toSync = await findUnknownSortedEvents(blocks, head, await findCommonAncestorWithSortedEvents(blocks, head))
+  return toSync
+}
+
 export async function findUnknownSortedEvents (blocks, children, { ancestor, sorted }) {
   const events = new EventFetcher(blocks)
   const childrenCids = children.map(c => c.toString())
@@ -215,7 +220,8 @@ export async function findCommonAncestorWithSortedEvents (blocks, children) {
   }
   // Sort the events by their sequence number
   const sorted = await findSortedEvents(events, children, ancestor)
-
+  console.x('ancstor', ancestor, (await decodeEventBlock((await blocks.get(ancestor)).bytes)).value.data)
+  sorted.forEach(({ cid, value }) => console.x('xsorted', cid, value.data.value))
   return { ancestor, sorted }
 }
 
