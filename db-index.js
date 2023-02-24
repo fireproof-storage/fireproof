@@ -10,6 +10,47 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
+const makeDoc = ({ key, value }) => ({ _id: key, ...value })
+
+const indexEntriesForChanges = (changes, mapFun) => {
+  const indexEntries = []
+  changes.forEach(({ key, value, del }) => {
+    if (del) return
+    mapFun(makeDoc({ key, value }), (k, v) => {
+      indexEntries.push({
+        key: [k, key],
+        value: v
+      })
+    })
+  })
+  return indexEntries
+}
+
+const indexEntriesForOldChanges = (docs, mapFun) => {
+  const indexEntries = []
+  docs.forEach((doc) => {
+    mapFun(doc, (k, v) => {
+      indexEntries.push({
+        key: [k, doc._id],
+        value: v
+      })
+    })
+  })
+  return indexEntries
+}
+
+const oldDocsBeforeChanges = async (changes, snapshot) => {
+  const oldDocs = new Map()
+  for (const { key, value, del } of changes) {
+    if (oldDocs[key]) continue
+    console.log('get change', key)
+    oldDocs[key] = await snapshot.get(key) // do we want it to come back as {key, value} or {_id, ...value}?
+    console.log('got change', oldDocs[key])
+    oldDocs.set(key, makeDoc({ key, value }))
+  }
+  return Array.from(oldDocs.values())
+}
+
 export default class Index {
   constructor (database, mapFun) {
     this.database = database
@@ -39,16 +80,15 @@ export default class Index {
    * @returns {Promise<void>}
    */
   async #updateIndex () {
-    const result = await this.database.docsSince(this.dbHead)
-    const indexEntries = []
-    result.rows.forEach(doc => {
-      this.mapFun(doc, (k, v) => {
-        indexEntries.push({
-          key: [k, doc._id],
-          value: v
-        })
-      })
-    })
+    const result = await this.database.changesSince(this.dbHead)
+    const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
+
+    if (this.dbHead) {
+      const oldDocs = await oldDocsBeforeChanges(result.rows, this.database.snapshot(this.dbHead))
+      console.log('old docs', oldDocs)
+      // const oldIndexEntries = indexEntriesForChanges(oldDocs, this.mapFun)
+    }
+
     // TODO we need removals for when documents change, does that mean we need to index the entries by doc id?
     this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
     this.dbHead = result.head

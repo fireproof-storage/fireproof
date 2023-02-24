@@ -14,6 +14,10 @@ export default class Fireproof {
     // this.rootCid = null
   }
 
+  snapshot (clock) {
+    return new Fireproof(this.blocks, clock)
+  }
+
   /**
    * @param {Object} doc
    * @returns {Promise<import('./prolly').PutResult>}
@@ -43,17 +47,24 @@ export default class Fireproof {
   //     return this.clock
   //   }
 
-  async docsSince (event) {
+  async changesSince (event) {
     let rows
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
-      for (const event of resp) {
-        docsMap.set(event.key, { _id: event.key, ...event.value })
+      for (const { key, type, value } of resp) {
+        console.log('event', key, type, value)
+        if (type === 'del') {
+          docsMap.set(key, { key, del: true })
+        } else {
+          docsMap.set(key, { key, value })
+        }
       }
       rows = Array.from(docsMap.values())
+      console.log('rows length', rows.length)
     } else {
-      rows = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ _id: key, ...value }))
+      // todo old format
+      rows = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value }))
     }
     return { rows, head: this.clock }
   }
@@ -79,7 +90,9 @@ export default class Fireproof {
 
   /** @param {string} key */
   async get (key) {
+    // console.log('fireproof get', key)
     const got = await get(this.blocks, this.clock, key)
+    // console.log('fireproof got', key, got)
     got._id = key
     return got
   }
