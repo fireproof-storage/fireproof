@@ -84,6 +84,7 @@ export default class Index {
    * @returns {Promise<void>}
    */
   async #updateIndex () {
+    // todo remove this hack
     this.dbHead = null
     this.indexRoot = null
     const result = await this.database.changesSince(this.dbHead)
