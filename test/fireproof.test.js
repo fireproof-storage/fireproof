@@ -92,7 +92,7 @@ describe('Fireproof', () => {
     assert.equal(response2.id, cKey)
 
     const res5 = await database.docsSince(res4.head)
-    console.log('res5', res5.rows)
+    console.x('res5', res5.rows)
 
     await database.visClock()
 

@@ -5,6 +5,12 @@ import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { MemoryBlockstore } from '../block.js'
 
+console.x = console.log
+console.log = function (...args) {
+  // window.mutedLog = window.mutedLog || []
+  // window.mutedLog.push(args)
+}
+
 /** @param {number} size */
 export async function randomCID (size) {
   const hash = await sha256.digest(await randomBytes(size))
