@@ -203,7 +203,7 @@ export async function findUnknownSortedEvents (blocks, children, { ancestor, sor
   const knownAncestor = await findCommonAncestor(events, [lowerEvent.cid]) // should this be [lowerEvent.cid] ?
   // const knownAncestor = await findCommonAncestor(events, [...children]) // should this be [lowerEvent.cid] ?
   console.x('already knownAncestor', knownAncestor.toString() === ancestor.toString(),
-    (await (await decodeEventBlock((await blocks.get(knownAncestor)).bytes)).value.data), knownAncestor
+    (await (await decodeEventBlock((await blocks.get(knownAncestor)).bytes)).value.data?.value), knownAncestor
   )
   if (knownAncestor.toString() === ancestor.toString()) {
     // console.x('true case vis')
@@ -213,14 +213,34 @@ export async function findUnknownSortedEvents (blocks, children, { ancestor, sor
     console.log('knownSortedCids', knownSortedCids)
     const unknownSorted = sorted.filter(({ cid }) => !knownSortedCids.includes(cid.toString()))
     console.log('unknownSorted', unknownSorted.map(({ cid }) => cid.toString()))
+    console.x('unknownSorted easy con', unknownSorted.length, sorted.length)
     return unknownSorted
   } else {
     // console.x('false case vis')
+
     // for await (const line of vis(blocks, children)) console.x(line)
     // throw new Error('failed to find common ancestor event')
-    return sorted
+    //
+    // todo - figure out how to get this right
+    //
+    //
+    //
+    const matchHead = [ancestor]
+    const unknownSorted = await asyncFilter(sorted, async (uks) => {
+      for (const ev of matchHead) {
+        const isIn = await contains(events, ev, uks.cid)
+        console.x('contains', isIn, ev, uks.cid)
+        if (isIn) return false
+      }
+      return true
+    })
+    console.x('------------> unknownSorted contains', unknownSorted.length, sorted.length)
+    return unknownSorted
   }
 }
+
+const asyncFilter = async (arr, predicate) => Promise.all(arr.map(predicate))
+  .then((results) => arr.filter((_v, index) => results[index]))
 
 export async function findCommonAncestorWithSortedEvents (blocks, children) {
   const events = new EventFetcher(blocks)
@@ -231,7 +251,7 @@ export async function findCommonAncestorWithSortedEvents (blocks, children) {
   }
   // Sort the events by their sequence number
   const sorted = await findSortedEvents(events, children, ancestor)
-  console.x('ancstor', ancestor, (await decodeEventBlock((await blocks.get(ancestor)).bytes)).value.data)
+  console.x('ancstor', ancestor, (await decodeEventBlock((await blocks.get(ancestor)).bytes)).value.data?.value)
   // sorted.forEach(({ cid, value }) => console.x('xsorted', cid, value.data.value))
   return { ancestor, sorted }
 }

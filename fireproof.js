@@ -46,7 +46,7 @@ export default class Fireproof {
   async docsSince (event) {
     let rows
     if (event) {
-      console.log('callEventsSince', { since: event })
+      console.x('callEventsSince', { since: event })
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
       for (const event of resp) {
