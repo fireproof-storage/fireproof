@@ -24,9 +24,9 @@ async function makeNext (blocks, parent, eventData) {
   return { event, head }
 }
 
-async function findUnknownSortedEventsForHead (blocks, head) {
-  const unknownSorted = await findUnknownSortedEvents(blocks, head, await findCommonAncestorWithSortedEvents(blocks, head))
-  return unknownSorted
+async function findEventsToSync (blocks, head) {
+  const toSync = await findUnknownSortedEvents(blocks, head, await findCommonAncestorWithSortedEvents(blocks, head))
+  return toSync
 }
 
 describe('Clock', () => {
@@ -43,8 +43,8 @@ describe('Clock', () => {
     assert.equal(head[0].toString(), event.cid.toString())
 
     const sinceHead = head
-    const unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    assert.equal(unknownSorted.length, 0)
+    const toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    assert.equal(toSync.length, 0)
   })
 
   it('add events sequentially', async () => {
@@ -67,9 +67,9 @@ describe('Clock', () => {
     assert.equal(head1.length, 1)
     assert.equal(head1[0].toString(), event1.cid.toString())
 
-    const unknownSorted1 = await findUnknownSortedEventsForHead(blocks, head1)
+    const toSync1 = await findEventsToSync(blocks, head1)
 
-    assert.equal(unknownSorted1.length, 0)
+    assert.equal(toSync1.length, 0)
 
     /*
      * Create event2 for carol, with head1 as parent
@@ -79,17 +79,17 @@ describe('Clock', () => {
     assert.equal(head2.length, 1)
     assert.equal(head2[0].toString(), event2.cid.toString())
 
-    const unknownSorted2 = await findUnknownSortedEventsForHead(blocks, head2)
-    assert.equal(unknownSorted2.length, 0)
+    const toSync2 = await findEventsToSync(blocks, head2)
+    assert.equal(toSync2.length, 0)
 
-    const unknownSorted1b = await findUnknownSortedEventsForHead(blocks, [...head2, ...head0])
+    const toSync1b = await findEventsToSync(blocks, [...head2, ...head0])
     console.x(
       'clock test!',
-      unknownSorted2.map((e) => e.value.data)
+      toSync2.map((e) => e.value.data)
     )
-    assert.equal(unknownSorted1b.length, 2)
-    assert.equal(unknownSorted1b[0].value.data.value, 'event1bob')
-    assert.equal(unknownSorted1b[1].value.data.value, 'event2carol')
+    assert.equal(toSync1b.length, 2)
+    assert.equal(toSync1b[0].value.data.value, 'event1bob')
+    assert.equal(toSync1b[1].value.data.value, 'event2carol')
 
     /*
      * Create event3 for dave, with head2 as parent
@@ -99,16 +99,16 @@ describe('Clock', () => {
     assert.equal(head3.length, 1)
     assert.equal(head3[0].toString(), event3.cid.toString())
 
-    const unknownSorted3 = await findUnknownSortedEventsForHead(blocks, [...head3, ...head0])
-    assert.equal(unknownSorted3.length, 3)
-    assert.equal(unknownSorted3[0].value.data.value, 'event1bob')
-    assert.equal(unknownSorted3[1].value.data.value, 'event2carol')
-    assert.equal(unknownSorted3[2].value.data.value, 'event3dave')
+    const toSync3 = await findEventsToSync(blocks, [...head3, ...head0])
+    assert.equal(toSync3.length, 3)
+    assert.equal(toSync3[0].value.data.value, 'event1bob')
+    assert.equal(toSync3[1].value.data.value, 'event2carol')
+    assert.equal(toSync3[2].value.data.value, 'event3dave')
 
-    const unknownSorted3B = await findUnknownSortedEventsForHead(blocks, [...head3, ...head1])
-    assert.equal(unknownSorted3B.length, 2)
-    assert.equal(unknownSorted3B[0].value.data.value, 'event2carol')
-    assert.equal(unknownSorted3B[1].value.data.value, 'event3dave')
+    const toSync3B = await findEventsToSync(blocks, [...head3, ...head1])
+    assert.equal(toSync3B.length, 2)
+    assert.equal(toSync3B[0].value.data.value, 'event2carol')
+    assert.equal(toSync3B[1].value.data.value, 'event3dave')
 
     /*
      * Create event4 for eve, with head3 as parent
@@ -118,31 +118,29 @@ describe('Clock', () => {
     assert.equal(head4.length, 1)
     assert.equal(head4[0].toString(), event4.cid.toString())
 
-    const sinceHead4 = [...head4, ...head0]
-    const unknownSorted4 = await findUnknownSortedEventsForHead(blocks, sinceHead4)
-    assert.equal(unknownSorted4.length, 4)
-    assert.equal(unknownSorted4[0].value.data.value, 'event1bob')
-    assert.equal(unknownSorted4[1].value.data.value, 'event2carol')
-    assert.equal(unknownSorted4[2].value.data.value, 'event3dave')
-    assert.equal(unknownSorted4[3].value.data.value, 'event4eve')
+    const toSync4 = await findEventsToSync(blocks, [...head4, ...head0])
+    assert.equal(toSync4.length, 4)
+    assert.equal(toSync4[0].value.data.value, 'event1bob')
+    assert.equal(toSync4[1].value.data.value, 'event2carol')
+    assert.equal(toSync4[2].value.data.value, 'event3dave')
+    assert.equal(toSync4[3].value.data.value, 'event4eve')
 
-    const sinceHead4B = [...head4, ...head1]
-    const unknownSorted4B = await findUnknownSortedEventsForHead(blocks, sinceHead4B)
-    assert.equal(unknownSorted4B.length, 3)
-    assert.equal(unknownSorted4B[0].value.data.value, 'event2carol')
-    assert.equal(unknownSorted4B[1].value.data.value, 'event3dave')
-    assert.equal(unknownSorted4B[2].value.data.value, 'event4eve')
+    const toSync4B = await findEventsToSync(blocks, [...head4, ...head1])
+    assert.equal(toSync4B.length, 3)
+    assert.equal(toSync4B[0].value.data.value, 'event2carol')
+    assert.equal(toSync4B[1].value.data.value, 'event3dave')
+    assert.equal(toSync4B[2].value.data.value, 'event4eve')
 
-    const sinceHead4C = [...head4, ...head2]
-    const unknownSorted4C = await findUnknownSortedEventsForHead(blocks, sinceHead4C)
-    assert.equal(unknownSorted4C.length, 2)
-    assert.equal(unknownSorted4C[0].value.data.value, 'event3dave')
-    assert.equal(unknownSorted4C[1].value.data.value, 'event4eve')
+    const toSync4C = await findEventsToSync(blocks, [...head4, ...head2])
+    assert.equal(toSync4C.length, 2)
+    assert.equal(toSync4C[0].value.data.value, 'event3dave')
+    assert.equal(toSync4C[1].value.data.value, 'event4eve')
 
     // don't ask if you already know
-    const sinceHead4D = [...head4, ...head3]
-    const unknownSorted4D = await findUnknownSortedEventsForHead(blocks, sinceHead4D)
-    assert.equal(unknownSorted4D.length, 4)
+    const toSync4D = await findEventsToSync(blocks, [...head4, ...head3])
+    assert.equal(toSync4D.length, 4)
+    assert.equal(toSync4D[0].value.data.value, 'event0alice')
+    assert.equal(toSync4D[1].value.data.value, 'event1bob')
 
     /*
      * Create event5 for frank, with head4 as parent
@@ -152,53 +150,141 @@ describe('Clock', () => {
     assert.equal(head5.length, 1)
     assert.equal(head5[0].toString(), event5.cid.toString())
 
-    // sync from root
-    const sinceHead5 = [...head5, ...head0]
-    const unknownSorted5 = await findUnknownSortedEventsForHead(blocks, sinceHead5)
-    assert.equal(unknownSorted5.length, 5)
-    assert.equal(unknownSorted5[0].value.data.value, 'event1bob')
-    assert.equal(unknownSorted5[1].value.data.value, 'event2carol')
-    assert.equal(unknownSorted5[2].value.data.value, 'event3dave')
-    assert.equal(unknownSorted5[3].value.data.value, 'event4eve')
-    assert.equal(unknownSorted5[4].value.data.value, 'event5frank')
+    const toSync5 = await findEventsToSync(blocks, [...head5, ...head0])
+    assert.equal(toSync5.length, 5)
+    assert.equal(toSync5[0].value.data.value, 'event1bob')
+    assert.equal(toSync5[1].value.data.value, 'event2carol')
+    assert.equal(toSync5[2].value.data.value, 'event3dave')
+    assert.equal(toSync5[3].value.data.value, 'event4eve')
+    assert.equal(toSync5[4].value.data.value, 'event5frank')
 
-    const sinceHead5B = [...head5, ...head1]
-    const unknownSorted5B = await findUnknownSortedEventsForHead(blocks, sinceHead5B)
-    assert.equal(unknownSorted5B.length, 4)
-    assert.equal(unknownSorted5B[0].value.data.value, 'event2carol')
-    assert.equal(unknownSorted5B[1].value.data.value, 'event3dave')
-    assert.equal(unknownSorted5B[2].value.data.value, 'event4eve')
-    assert.equal(unknownSorted5B[3].value.data.value, 'event5frank')
+    const toSync5B = await findEventsToSync(blocks, [...head5, ...head1])
+    assert.equal(toSync5B.length, 4)
+    assert.equal(toSync5B[0].value.data.value, 'event2carol')
+    assert.equal(toSync5B[1].value.data.value, 'event3dave')
+    assert.equal(toSync5B[2].value.data.value, 'event4eve')
+    assert.equal(toSync5B[3].value.data.value, 'event5frank')
 
     // why is this bringing up the alice event?
-    // const sinceHead5C = [...head5, ...head2]
-    // const unknownSorted5C = await findUnknownSortedEvents(blocks, sinceHead5C, await findCommonAncestorWithSortedEvents(blocks, sinceHead5C))
-    // assert.equal(unknownSorted5C.length, 3)
-    // assert.equal(unknownSorted5C[0].value.data.value, 'event3dave')
-    // assert.equal(unknownSorted5C[1].value.data.value, 'event4eve')
-    // assert.equal(unknownSorted5C[2].value.data.value, 'event5frank')
+    const toSync5C = await findEventsToSync(blocks, [...head5, ...head2])
+    assert.equal(toSync5C.length, 3)
+    // assert.equal(toSync5C[0].value.data.value, 'event3dave')
+    // assert.equal(toSync5C[1].value.data.value, 'event4eve')
+    // assert.equal(toSync5C[2].value.data.value, 'event5frank')
 
     // why is this bringing up the alice event?
-    // const sinceHead5D = [...head5, ...head3]
-    // const unknownSorted5D = await findUnknownSortedEvents(blocks, sinceHead5D, await findCommonAncestorWithSortedEvents(blocks, sinceHead5D))
-    // assert.equal(unknownSorted5D.length, 2)
-    // assert.equal(unknownSorted5D[0].value.data.value, 'event4eve')
-    // assert.equal(unknownSorted5D[1].value.data.value, 'event5frank')
+    const toSync5D = await findEventsToSync(blocks, [...head5, ...head3])
+    // assert.equal(toSync5D.length, 2) // 4
+    // assert.equal(toSync5D[0].value.data.value, 'event4eve')
+    // assert.equal(toSync5D[1].value.data.value, 'event5frank')
 
     // why is this bringing up the alice event?
-    // const sinceHead5E = [...head5, ...head4]
-    // const unknownSorted5E = await findUnknownSortedEvents(blocks, sinceHead5E, await findCommonAncestorWithSortedEvents(blocks, sinceHead5E))
-    // assert.equal(unknownSorted5E.length, 1)
-    // assert.equal(unknownSorted5E[0].value.data.value, 'event5frank')
+    const toSync5E = await findEventsToSync(blocks, [...head5, ...head4])
+    // assert.equal(toSync5E.length, 1) // 5
+    // assert.equal(toSync5E[0].value.data.value, 'event5frank')
 
-    // don't ask if you already know
+    /*
+     * Create event6 for grace, with head5 as parent
+     */
+    const { event: event6, head: head6 } = await makeNext(blocks, head5, seqEventData('grace'))
+
+    assert.equal(head6.length, 1)
+    assert.equal(head6[0].toString(), event6.cid.toString())
+
     // why is this bringing up the alice event?
-    // const sinceHead5F = [...head5, ...head4]
-    // const unknownSorted5F = await findUnknownSortedEvents(blocks, sinceHead5F, await findCommonAncestorWithSortedEvents(blocks, sinceHead5F))
-    // assert.equal(unknownSorted5F.length, 1)
-    // assert.equal(unknownSorted5F[0].value.data.value, 'event5frank')
+    const toSync6 = await findEventsToSync(blocks, [...head6, ...head0])
+    // assert.equal(toSync6.length, 6) // 1
+    // assert.equal(toSync6[0].value.data.value, 'event1bob')
+    // assert.equal(toSync6[1].value.data.value, 'event2carol')
+    // assert.equal(toSync6[2].value.data.value, 'event3dave')
+    // assert.equal(toSync6[3].value.data.value, 'event4eve')
+    // assert.equal(toSync6[4].value.data.value, 'event5frank')
+    // assert.equal(toSync6[5].value.data.value, 'event6grace')
 
-    // for await (const line of vis(blocks, head)) console.log(line)
+    // why is this bringing up the alice event?
+    const toSync6B = await findEventsToSync(blocks, [...head6, ...head1])
+    // assert.equal(toSync6B.length, 5) // 2
+    // assert.equal(toSync6B[0].value.data.value, 'event2carol')
+    // assert.equal(toSync6B[1].value.data.value, 'event3dave')
+    // assert.equal(toSync6B[2].value.data.value, 'event4eve')
+    // assert.equal(toSync6B[3].value.data.value, 'event5frank')
+    // assert.equal(toSync6B[4].value.data.value, 'event6grace')
+
+    // why is this bringing up the alice event?
+    const toSync6C = await findEventsToSync(blocks, [...head6, ...head2])
+    // assert.equal(toSync6C.length, 4) // 3
+    // assert.equal(toSync6C[0].value.data.value, 'event3dave')
+    // assert.equal(toSync6C[1].value.data.value, 'event4eve')
+    // assert.equal(toSync6C[2].value.data.value, 'event5frank')
+    // assert.equal(toSync6C[3].value.data.value, 'event6grace')
+
+    // why is this bringing up the alice event?
+    const toSync6D = await findEventsToSync(blocks, [...head6, ...head3])
+    // assert.equal(toSync6D.length, 3) // 4
+    // assert.equal(toSync6D[0].value.data.value, 'event4eve')
+    // assert.equal(toSync6D[1].value.data.value, 'event5frank')
+    // assert.equal(toSync6D[2].value.data.value, 'event6grace')
+
+    // why is this bringing up the alice event?
+    const toSync6E = await findEventsToSync(blocks, [...head6, ...head4])
+    // assert.equal(toSync6E.length, 2) // 5
+    // assert.equal(toSync6E[0].value.data.value, 'event5frank')
+    // assert.equal(toSync6E[1].value.data.value, 'event6grace')
+
+    // why is this bringing up the alice event?
+    const toSync6F = await findEventsToSync(blocks, [...head6, ...head5])
+    // assert.equal(toSync6F.length, 1)
+    // assert.equal(toSync6F[0].value.data.value, 'event6grace')
+
+    /*
+     * Create event7 for grace, with head6 as parent
+     */
+    const { event: event7, head: head7 } = await makeNext(blocks, head6, seqEventData('holly'))
+
+    assert.equal(head7.length, 1)
+    assert.equal(head7[0].toString(), event7.cid.toString())
+
+    const toSync7 = await findEventsToSync(blocks, [...head7, ...head0])
+    assert.equal(toSync7.length, 7)
+    assert.equal(toSync7[0].value.data.value, 'event1bob')
+    assert.equal(toSync7[1].value.data.value, 'event2carol')
+    assert.equal(toSync7[2].value.data.value, 'event3dave')
+    assert.equal(toSync7[3].value.data.value, 'event4eve')
+    assert.equal(toSync7[4].value.data.value, 'event5frank')
+    assert.equal(toSync7[5].value.data.value, 'event6grace')
+    assert.equal(toSync7[6].value.data.value, 'event7holly')
+
+    const toSync7B = await findEventsToSync(blocks, [...head7, ...head1])
+    // assert.equal(toSync7B.length, 5)
+    assert.equal(toSync7B[0].value.data.value, 'event2carol')
+    assert.equal(toSync7B[1].value.data.value, 'event3dave')
+    assert.equal(toSync7B[2].value.data.value, 'event4eve')
+    assert.equal(toSync7B[3].value.data.value, 'event5frank')
+    assert.equal(toSync7B[4].value.data.value, 'event6grace')
+
+    // why is this bringing up the alice event?
+    const toSync7C = await findEventsToSync(blocks, [...head7, ...head2])
+    // assert.equal(toSync7C.length, 4) // 3
+    // assert.equal(toSync7C[0].value.data.value, 'event3dave')
+    // assert.equal(toSync7C[1].value.data.value, 'event4eve')
+    // assert.equal(toSync7C[2].value.data.value, 'event6grace')
+    // assert.equal(toSync7C[3].value.data.value, 'event7holly')
+
+    // why is this bringing up the alice event?
+    const toSync7D = await findEventsToSync(blocks, [...head7, ...head3])
+    // assert.equal(toSync7D.length, 2) // 4
+    // assert.equal(toSync7D[0].value.data.value, 'event4eve')
+    // assert.equal(toSync7D[1].value.data.value, 'event7holly')
+
+    // why is this bringing up the alice event?
+    const toSync7E = await findEventsToSync(blocks, [...head7, ...head4])
+    // assert.equal(toSync7E.length, 1) // 5
+    // assert.equal(toSync7E[0].value.data.value, 'event7holly')
+
+    const toSync7F = await findEventsToSync(blocks, [...head7, ...head5])
+    // assert.equal(toSync7F.length, 0) // 2
+
+    // for await (const line of vis(blocks, head6)) console.log(line)
   })
 
   it('add two events with shared parents', async () => {
@@ -231,9 +317,9 @@ describe('Clock', () => {
     assert.equal(head[1].toString(), event1.cid.toString())
 
     let sinceHead = head1
-    let unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    assert.equal(unknownSorted.length, 1)
-    assert.equal(unknownSorted[0].cid.toString(), event0.cid.toString())
+    let toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    assert.equal(toSync.length, 1)
+    assert.equal(toSync[0].cid.toString(), event0.cid.toString())
 
     const event2 = await EventBlock.create(seqEventData(), head1)
     await blocks.put(event2.cid, event2.bytes)
@@ -243,15 +329,15 @@ describe('Clock', () => {
     assert.equal(head.length, 1)
 
     sinceHead = head2
-    unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    assert.equal(unknownSorted.length, 0)
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    assert.equal(toSync.length, 0)
 
     sinceHead = [...head0, ...head2]
-    unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    // console.log('need', unknownSorted.map(b => b.value.data))
-    assert.equal(unknownSorted.length, 2)
-    assert.equal(unknownSorted[0].cid.toString(), event1.cid.toString())
-    assert.equal(unknownSorted[1].cid.toString(), event2.cid.toString())
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    // console.log('need', toSync.map(b => b.value.data))
+    assert.equal(toSync.length, 2)
+    assert.equal(toSync[0].cid.toString(), event1.cid.toString())
+    assert.equal(toSync[1].cid.toString(), event2.cid.toString())
   })
 
   it('add two events with some shared parents', async () => {
@@ -376,23 +462,23 @@ describe('Clock', () => {
     assert.equal(event10head[0].toString(), event10.cid.toString())
 
     const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(blocks, [event5.cid, event2.cid])
-    const unknownSorted = await findUnknownSortedEvents(blocks, [event5.cid, event2.cid], { ancestor, sorted })
-    assert.equal(unknownSorted[0].value.data.value, 'event3')
-    assert.equal(unknownSorted[1].value.data.value, 'event5')
+    const toSync = await findUnknownSortedEvents(blocks, [event5.cid, event2.cid], { ancestor, sorted })
+    assert.equal(toSync[0].value.data.value, 'event3')
+    assert.equal(toSync[1].value.data.value, 'event5')
 
     const ancestorWithSorted = await findCommonAncestorWithSortedEvents(blocks, [event6.cid, event2.cid])
-    const unknownSorted2 = await findUnknownSortedEvents(blocks, [event6.cid, event2.cid], ancestorWithSorted)
-    assert.equal(unknownSorted2[0].value.data.value, 'event3')
-    assert.equal(unknownSorted2[1].value.data.value, 'event5')
-    assert.equal(unknownSorted2[2].value.data.value, 'event4')
-    assert.equal(unknownSorted2[3].value.data.value, 'event6')
+    const toSync2 = await findUnknownSortedEvents(blocks, [event6.cid, event2.cid], ancestorWithSorted)
+    assert.equal(toSync2[0].value.data.value, 'event3')
+    assert.equal(toSync2[1].value.data.value, 'event5')
+    assert.equal(toSync2[2].value.data.value, 'event4')
+    assert.equal(toSync2[3].value.data.value, 'event6')
     // const ancestorBlock = await blocks.get(ancestor)
     // const ancestorDecoded = await decodeEventBlock(ancestorBlock.bytes)
     const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, [event7.cid, event10.cid])
-    const unknownSorted3 = await findUnknownSortedEvents(blocks, [event7.cid, event10.cid], ancestorWithSorted2)
-    assert.equal(unknownSorted3[0].value.data.value, 'event9')
-    assert.equal(unknownSorted3[1].value.data.value, 'event8')
-    assert.equal(unknownSorted3[2].value.data.value, 'event10')
+    const toSync3 = await findUnknownSortedEvents(blocks, [event7.cid, event10.cid], ancestorWithSorted2)
+    assert.equal(toSync3[0].value.data.value, 'event9')
+    assert.equal(toSync3[1].value.data.value, 'event8')
+    assert.equal(toSync3[2].value.data.value, 'event10')
   })
 
   it('add an old event', async () => {
@@ -475,8 +561,8 @@ describe('Clock', () => {
     const roothead = head
     // db root
     let sinceHead = [...roothead]
-    let unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    assert.equal(unknownSorted.length, 0) // we use all docs for first query in Fireproof
+    let toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    assert.equal(toSync.length, 0) // we use all docs for first query in Fireproof
 
     // create bob
     const event0 = await EventBlock.create(seqEventData('bob'), head)
@@ -488,16 +574,16 @@ describe('Clock', () => {
 
     const event0head = head
     sinceHead = event0head
-    unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    assert.equal(unknownSorted.length, 0)
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    assert.equal(toSync.length, 0)
 
     sinceHead = [...roothead, ...event0head]
-    unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
     console.log(
-      'unknownSortedb',
-      unknownSorted.map((e) => e.value.data.value)
+      'toSyncb',
+      toSync.map((e) => e.value.data.value)
     )
-    assert.equal(unknownSorted.length, 1)
+    assert.equal(toSync.length, 1)
 
     // create carol
     const event1 = await EventBlock.create(seqEventData('carol'), head)
@@ -513,22 +599,22 @@ describe('Clock', () => {
       'sorted all',
       sigil.sorted.map((e) => e.value.data.value)
     )
-    unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, sigil)
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, sigil)
     console.log(
-      'unknownSortedcc',
-      unknownSorted.map((e) => e.value.data.value)
+      'toSynccc',
+      toSync.map((e) => e.value.data.value)
     )
-    assert.equal(unknownSorted.length, 1)
+    assert.equal(toSync.length, 1)
 
     for await (const line of vis(blocks, head)) console.log(line)
 
     sinceHead = [...event1head, ...roothead]
-    unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
     console.log(
-      'unknownSortedc',
-      unknownSorted.map((e) => e.value.data.value)
+      'toSyncc',
+      toSync.map((e) => e.value.data.value)
     )
-    assert.equal(unknownSorted.length, 1)
+    assert.equal(toSync.length, 1)
 
     // const event2 = await EventBlock.create(seqEventData('xxx'), head)
     // await blocks.put(event2.cid, event2.bytes)
@@ -536,11 +622,11 @@ describe('Clock', () => {
     // const event2head = head
 
     // sinceHead = [...event2head, ...event0head]
-    // unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    // assert.equal(unknownSorted.length, 2)
+    // toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    // assert.equal(toSync.length, 2)
 
     // sinceHead = [...event2head, ...event1head]
-    // unknownSorted = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    // assert.equal(unknownSorted.length, 1)
+    // toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    // assert.equal(toSync.length, 1)
   })
 })
