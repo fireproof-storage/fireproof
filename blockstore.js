@@ -4,6 +4,7 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as Block from 'multiformats/block'
 import { CID } from 'multiformats/cid'
 import * as CBW from '@ipld/car/buffer-writer'
+import { CarReader } from '@ipld/car'
 
 /**
  * @typedef {Object} AnyBlock
@@ -32,7 +33,8 @@ export default class TransactionBlockstore {
    */
   async get (cid) {
     const key = cid.toString()
-    const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key)
+    const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
+    // const bytes = this.#blocks.get(key) || await this.#valetGet(key)
     if (!bytes) return
     return { cid, bytes }
   }
@@ -95,6 +97,16 @@ export default class TransactionBlockstore {
     }
     const newCar = await blocksToCarBlock(this.lastCid, this.#blocks)
     this.#valet.set(newCar.cid.toString(), newCar.bytes)
+  }
+
+  #valetGet = async (cid) => {
+    for (const [, carBytes] of this.#valet) {
+      const reader = await CarReader.fromBytes(carBytes)
+      const gotBlock = await reader.get(CID.parse(cid))
+      if (gotBlock) {
+        return gotBlock.bytes
+      }
+    }
   }
 
   /**
