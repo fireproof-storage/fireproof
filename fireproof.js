@@ -55,7 +55,6 @@ export default class Fireproof {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
       for (const { key, type, value } of resp) {
-        console.log('event', key, type, value)
         if (type === 'del') {
           docsMap.set(key, { key, del: true })
         } else {
