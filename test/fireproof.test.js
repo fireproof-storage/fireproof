@@ -84,7 +84,6 @@ describe('Fireproof', () => {
 
     e = await validationDatabase.get('222-bob').catch(e => e)
     assert.equal(e.message, 'Not found')
-    // assert.equal(getResp.name, 'alice')
   })
 
   it.skip('get missing document', async () => {
