@@ -1,5 +1,4 @@
-import * as Clock from './clock.js'
-import { EventFetcher, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents } from './clock.js'
+import { advance, EventFetcher, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
@@ -34,7 +33,7 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root,
 
   const event = await EventBlock.create(data, head)
   await bigPut(event)
-  head = await Clock.advance(inBlocks, head, event.cid)
+  head = await advance(inBlocks, head, event.cid)
 
   return {
     root,
@@ -61,12 +60,13 @@ const makeGetAndPutBlock = (inBlocks) => {
   return { getBlock, put, bigPut, mblocks, blocks }
 }
 
-const bulkFromEvents = (sorted) => sorted.map(({ value: event }) => {
-  const {
-    data: { type, value, key }
-  } = event
-  return type === 'put' ? { key, value } : { key, del: true }
-})
+const bulkFromEvents = (sorted) =>
+  sorted.map(({ value: event }) => {
+    const {
+      data: { type, value, key }
+    } = event
+    return type === 'put' ? { key, value } : { key, del: true }
+  })
 
 // Get the value of the root from the ancestor event
 const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
@@ -112,8 +112,8 @@ export async function put (inBlocks, head, event, options) {
     await bigPut(nb, additions)
   }
 
-  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, await newProllyRootNode.block,
-    event, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
+  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut,
+    await newProllyRootNode.block, event, head, Array.from(additions.values()) /*, Array.from(removals.values()) */)
 }
 
 /**
@@ -137,6 +137,13 @@ export async function root (inBlocks, head) {
   return await newProllyRootNode.block.cid
 }
 
+/**
+ * Get the list of events not known by the `since` event
+ * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
+ * @param {import('./clock').EventLink<EventData>} since Event to compare against.
+ * @returns {Promise<import('./clock').EventLink<EventData>[]>}
+ */
 export async function eventsSince (blocks, head, since) {
   if (!head.length) {
     throw new Error('no head')
@@ -181,15 +188,15 @@ export async function get (blocks, head, key) {
 
 /**
  * @typedef {{
-*   type: 'put'|'del'
-*   key: string
-*   value: import('./link').AnyLink
-*   root: import('./shard').ShardLink
-* }} EventData
-*
-* @typedef {{
-*   root: import('./shard').ShardLink
-*   head: import('./clock').EventLink<EventData>[]
-*   event: import('./clock').EventBlockView<EventData>
-* } & import('./db-index').ShardDiff} Result
-*/
+ *   type: 'put'|'del'
+ *   key: string
+ *   value: import('./link').AnyLink
+ *   root: import('./shard').ShardLink
+ * }} EventData
+ *
+ * @typedef {{
+ *   root: import('./shard').ShardLink
+ *   head: import('./clock').EventLink<EventData>[]
+ *   event: import('./clock').EventBlockView<EventData>
+ * } & import('./db-index').ShardDiff} Result
+ */

@@ -1,4 +1,4 @@
-import { vis } from './clock.js'
+// import { vis } from './clock.js'
 import { put, get, getAll, eventsSince } from './prolly.js'
 import { doTransaction } from './blockstore.js'
 
@@ -95,6 +95,11 @@ export default class Fireproof {
     return await this.#doPut({ key: id, value: doc })
   }
 
+  /**
+   * Deletes a document from the database
+   * @param {string} id - the document ID
+   * @returns {Promise<import('./prolly').PutResult>} - the result of deleting the document
+   */
   async del (id) {
     // return await this.#doPut({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
@@ -102,10 +107,7 @@ export default class Fireproof {
   }
 
   async #doPut (event) {
-    const result = await doTransaction(this.blocks, async (blocks) =>
-      await put(blocks, this.clock, event)
-    )
-
+    const result = await doTransaction(this.blocks, async (blocks) => await put(blocks, this.clock, event))
     if (!result) {
       console.log('failed', event)
     }
@@ -129,16 +131,16 @@ export default class Fireproof {
   /**
    * Displays a visualization of the current clock in the console
    */
-  async visClock () {
-    const shortLink = (l) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-    const renderNodeLabel = (event) => {
-      return event.value.data.type === 'put'
-        ? `${shortLink(event.cid)}\\nput(${shortLink(event.value.data.key)}, 
-        {${Object.values(event.value.data.value)}})`
-        : `${shortLink(event.cid)}\\ndel(${event.value.data.key})`
-    }
-    for await (const line of vis(this.blocks, this.clock, { renderNodeLabel })) console.log(line)
-  }
+  //   async visClock () {
+  //     const shortLink = (l) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
+  //     const renderNodeLabel = (event) => {
+  //       return event.value.data.type === 'put'
+  //         ? `${shortLink(event.cid)}\\nput(${shortLink(event.value.data.key)},
+  //         {${Object.values(event.value.data.value)}})`
+  //         : `${shortLink(event.cid)}\\ndel(${event.value.data.key})`
+  //     }
+  //     for await (const line of vis(this.blocks, this.clock, { renderNodeLabel })) console.log(line)
+  //   }
 
   /**
    * Retrieves the document with the specified ID from the database
@@ -149,7 +151,9 @@ export default class Fireproof {
   async get (key) {
     const got = await get(this.blocks, this.clock, key)
     // this tombstone is temporary until we can get the prolly tree to delete
-    if (got === null) { throw new Error('Not found') }
+    if (got === null) {
+      throw new Error('Not found')
+    }
     got._id = key
     return got
   }

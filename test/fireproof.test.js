@@ -143,7 +143,7 @@ describe('Fireproof', () => {
 
     const res5 = await database.changesSince(res4.head)
 
-    await database.visClock()
+    // await database.visClock()
 
     assert.equal(res5.rows.length, 1)
 
