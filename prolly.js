@@ -1,10 +1,5 @@
 import * as Clock from './clock.js'
-import {
-  EventFetcher,
-  EventBlock,
-  findCommonAncestorWithSortedEvents,
-  findUnknownSortedEvents
-} from './clock.js'
+import { EventFetcher, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
@@ -16,6 +11,32 @@ const opts = { cache, chunker: bf(3), codec, hasher, compare }
 const makeGetBlock = (blocks) => async (address) => {
   const { cid, bytes } = await blocks.get(address)
   return createBlock({ cid, bytes, hasher, codec })
+}
+
+async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, put, root, key, value, head, additions, removals) {
+  /** @type {EventData} */
+  const data = {
+    type: 'put',
+    root: {
+      cid: root.cid,
+      bytes: root.bytes,
+      value: root.value
+    },
+    key,
+    value
+  }
+  const event = await EventBlock.create(data, head)
+  await put(event.cid, event.bytes) // is this save needed?
+  mblocks.putSync(event.cid, event.bytes)
+  head = await Clock.advance(inBlocks, head, event.cid)
+
+  return {
+    root,
+    additions,
+    removals: [],
+    head,
+    event
+  }
 }
 
 /**
@@ -62,31 +83,7 @@ export async function put (inBlocks, head, key, value, options) {
       root = block
     }
 
-    /** @type {EventData} */
-    const data = {
-      type: 'put',
-      root: {
-        cid: root.cid,
-        bytes: root.bytes,
-        value: root.value
-      },
-      key,
-      value
-    }
-
-    const event = await EventBlock.create(data, head)
-    // is this save needed?
-    await put(event.cid, event.bytes)
-    mblocks.putSync(event.cid, event.bytes)
-    head = await Clock.advance(blocks, head, event.cid)
-
-    return {
-      root,
-      additions,
-      removals: [],
-      head,
-      event
-    }
+    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, put, root, key, value, head, additions)
   }
 
   // Otherwise, we find the common ancestor and update the root and other blocks
@@ -100,13 +97,14 @@ export async function put (inBlocks, head, key, value, options) {
   const additions = new Map()
   const removals = new Map()
   const bulkOperations = sorted.map(({ value: event }) => {
-    const { data: { type, value, key } } = event
+    const {
+      data: { type, value, key }
+    } = event
     return type === 'put' ? { key, value } : { key, del: true }
   })
 
   let prollyRootOut = prollyRootNode
-  const { root: newProllyRootNode, blocks: newBlocks } =
-    await prollyRootOut.bulk([...bulkOperations, { key, value }])
+  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootOut.bulk([...bulkOperations, { key, value }])
 
   prollyRootOut = newProllyRootNode
 
@@ -117,29 +115,8 @@ export async function put (inBlocks, head, key, value, options) {
   }
 
   const finalProllyRootBlock = await prollyRootOut.block
-  /** @type {EventData} */
-  const data = {
-    type: 'put',
-    root: {
-      cid: finalProllyRootBlock.cid,
-      bytes: finalProllyRootBlock.bytes,
-      value: finalProllyRootBlock.value
-    },
-    key,
-    value
-  }
 
-  const event = await EventBlock.create(data, head)
-  mblocks.putSync(event.cid, event.bytes)
-  head = await Clock.advance(blocks, head, event.cid)
-
-  return {
-    root: finalProllyRootBlock,
-    additions: Array.from(additions.values()),
-    removals: Array.from(removals.values()),
-    head,
-    event
-  }
+  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, put, finalProllyRootBlock, key, value, head, Array.from(additions.values()), Array.from(removals.values()))
 }
 
 /**
@@ -206,8 +183,7 @@ export async function eventsSince (blocks, head, since) {
   const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
   const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead, ancestorWithSorted2)
   // const putEvents = unknownSorted3.filter(({ value: { data: { type } } }) => type === 'put')
-  const putEvents = unknownSorted3
-    .map(({ value: { data } }) => data)
+  const putEvents = unknownSorted3.map(({ value: { data } }) => data)
   return putEvents
 }
 
