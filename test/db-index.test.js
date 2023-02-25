@@ -136,12 +136,6 @@ describe('Index query', () => {
     assert.equal(result2.rows.length, 1, '1 row matched')
     assert(result2.rows[0].key === 63, 'correct key')
 
-    /// see whats in the removalIndex
-    // const removalRoot = index.removalRoot
-    // console.log('removalIndex', removalRoot.cid)
-    // const remres = await index.query({ range: [1, 90] }, removalRoot)
-    // console.log('remres', remres)
-
     const resultempty = await index.query({ range: [51, 54] })
     assert(resultempty, 'did return resultempty')
     assert(resultempty.rows)
