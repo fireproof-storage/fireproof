@@ -135,7 +135,10 @@ export default class Index {
     const result = await this.database.changesSince(this.dbHead) // {key, value, del}
     if (this.dbHead) {
       const oldIndexEntries = (await indexEntriesForOldChanges(this.database.blocks, this.byIDindexRoot, result.rows.map(({ key }) => key), this.mapFun))
+        // .map((key) => ({ key, value: null })) // tombstone just adds more rows...
+        // .map((key) => ({ key, del: true })) // should be this
         .map((key) => ({ key: undefined, del: true })) // todo why does this work?
+
       this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, oldIndexEntries, opts)
       console.log('oldIndexEntries', oldIndexEntries)
       // [ { key: ['b', 1], del: true } ]
