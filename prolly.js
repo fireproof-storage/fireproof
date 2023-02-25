@@ -13,7 +13,7 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, key, value, head, additions, removals) {
+async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, key, value, head, additions, removals = []) {
   /** @type {EventData} */
   const data = {
     type: 'put',
@@ -32,35 +32,24 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root,
   return {
     root,
     additions,
-    removals: [],
+    removals,
     head,
     event
   }
 }
-
-/**
- * @typedef {{
- *   type: 'put'|'del'
- *   key: string
- *   value: import('./link').AnyLink
- *   root: import('./shard').ShardLink
- * }} EventData
- *
- * @typedef {{
- *   root: import('./shard').ShardLink
- *   head: import('./clock').EventLink<EventData>[]
- *   event: import('./clock').EventBlockView<EventData>
- * } & import('./db-index').ShardDiff} Result
- */
 
 const makeGetAndPutBlock = (inBlocks) => {
   const mblocks = new MemoryBlockstore()
   const blocks = new MultiBlockFetcher(mblocks, inBlocks)
   const getBlock = makeGetBlock(blocks)
   const put = inBlocks.put.bind(inBlocks)
-  const bigPut = async ({ cid, bytes }) => {
+  const bigPut = async (block, additions) => {
+    const { cid, bytes } = block
     await put(cid, bytes)
     mblocks.putSync(cid, bytes)
+    if (additions) {
+      additions.set(cid.toString(), block)
+    }
   }
   return { getBlock, put, bigPut, mblocks, blocks }
 }
@@ -94,15 +83,12 @@ export async function put (inBlocks, head, key, value, options) {
 
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
-    let root
     const additions = new Map()
+    let root
     for await (const node of create({ get: getBlock, list: [{ key, value }], ...opts })) {
-      const block = await node.block
-      await bigPut(block)
-      additions.set(block.cid.toString(), block)
-      root = block
+      root = await node.block
+      await bigPut(root, additions)
     }
-
     return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, key, value, head, Array.from(additions.values()))
   }
 
@@ -114,16 +100,12 @@ export async function put (inBlocks, head, key, value, options) {
   const bulkOperations = bulkFromEvents(sorted)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk([...bulkOperations, { key, value }]) // ading delete support here
 
-  const additions = new Map()
-  // const removals = new Map()
+  const additions = new Map() // ; const removals = new Map()
   for (const nb of newBlocks) {
-    await bigPut(nb)
-    additions.set(nb.cid.toString(), nb)
+    await bigPut(nb, additions)
   }
 
-  const finalProllyRootBlock = await newProllyRootNode.block
-
-  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, finalProllyRootBlock,
+  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, await newProllyRootNode.block,
     key, value, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
 }
 
@@ -139,7 +121,6 @@ export async function root (inBlocks, head) {
   }
   const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
   const events = new EventFetcher(blocks)
-
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
 
@@ -190,3 +171,18 @@ export async function get (blocks, head, key) {
   const { result } = await prollyRootNode.get(key)
   return result
 }
+
+/**
+ * @typedef {{
+*   type: 'put'|'del'
+*   key: string
+*   value: import('./link').AnyLink
+*   root: import('./shard').ShardLink
+* }} EventData
+*
+* @typedef {{
+*   root: import('./shard').ShardLink
+*   head: import('./clock').EventLink<EventData>[]
+*   event: import('./clock').EventBlockView<EventData>
+* } & import('./db-index').ShardDiff} Result
+*/
