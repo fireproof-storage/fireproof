@@ -5,15 +5,18 @@ import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 import * as codec from '@ipld/dag-cbor'
 import { create as createBlock } from 'multiformats/block'
 import { doTransaction } from './blockstore.js'
+import charwise from 'charwise'
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
-const ALWAYS_REBUILD = false
+const ALWAYS_REBUILD = true // todo: remove this
 
 const makeGetBlock = (blocks) => async (address) => {
   const { cid, bytes } = await blocks.get(address)
   return createBlock({ cid, bytes, hasher, codec })
 }
 const makeDoc = ({ key, value }) => ({ _id: key, ...value })
+
+console.x = function () {}
 
 /**
  * Transforms a set of changes to index entries using a map function.
@@ -29,7 +32,7 @@ const indexEntriesForChanges = (changes, mapFun) => {
     if (del) return
     mapFun(makeDoc({ key, value }), (k, v) => {
       indexEntries.push({
-        key: [k, key],
+        key: [charwise.encode(k), key],
         value: v
       })
     })
@@ -42,7 +45,6 @@ const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => 
   const byIDindex = await load({ cid: byIDindexRoot.cid, get: getBlock, ...opts })
   // console.trace('ids', ids)
   const result = await byIDindex.getMany(ids)
-  console.log('indexEntriesForOldChanges', result.result)
   return result.result
 }
 
@@ -92,7 +94,7 @@ export default class Index {
     return {
       // TODO fix this naming upstream in prolly/db-index
       // todo maybe this is a hint about why deletes arent working?
-      rows: response.result.map(({ id, key, row }) => ({ id: key, key: id, value: row }))
+      rows: response.result.map(({ id, key, row }) => ({ id: key, key: charwise.decode(id), value: row }))
     }
   }
 
@@ -111,11 +113,11 @@ export default class Index {
     if (this.dbHead) {
       const oldIndexEntries = (await indexEntriesForOldChanges(blocks, this.byIDindexRoot, result.rows.map(({ key }) => key), this.mapFun))
         // .map((key) => ({ key, value: null })) // tombstone just adds more rows...
-        // .map((key) => ({ key, del: true })) // should be this
-        .map((key) => ({ key: undefined, del: true })) // todo why does this work?
+        .map((key) => ({ key, del: true })) // should be this
+        // .map((key) => ({ key: undefined, del: true })) // todo why does this work?
 
       this.indexRoot = await bulkIndex(blocks, this.indexRoot, oldIndexEntries, opts)
-      console.log('oldIndexEntries', oldIndexEntries)
+      console.x('oldIndexEntries', oldIndexEntries)
       // [ { key: ['b', 1], del: true } ]
       // [ { key: [ 5, 'x' ], del: true } ]
       // for now we just let the by id index grow and then don't use the results...
@@ -154,18 +156,18 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
       await putBlock(block.cid, block.bytes)
       inRoot = block
     }
-    console.log('created index', inRoot.cid)
+    console.x('created index', inRoot.cid)
     return inRoot
   } else {
     // load existing index
-    console.log('loading index', inRoot.cid)
+    console.x('loading index', inRoot.cid)
     const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    console.log('new indexEntries', indexEntries)
+    console.x('new indexEntries', indexEntries)
     const { root, blocks } = await index.bulk(indexEntries)
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    console.log('updated index', root.block.cid)
+    console.x('updated index', root.block.cid)
 
     return root.block // if we hold the root we won't have to load every time
   }
@@ -182,5 +184,6 @@ async function queryIndexRange (blocks, { cid }, query) {
   if (!cid) return { result: [] }
   const getBlock = makeGetBlock(blocks)
   const index = await load({ cid, get: getBlock, ...opts })
-  return index.range(...query.range)
+  const encodedRange = query.range.map((key) => charwise.encode(key))
+  return index.range(...encodedRange)
 }
