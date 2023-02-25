@@ -140,6 +140,7 @@ export default class Index {
       console.log('oldIndexEntries', oldIndexEntries)
       // [ { key: ['b', 1], del: true } ]
       // [ { key: [ 5, 'x' ], del: true } ]
+      // for now we just let the by id index grow and then don't use the results...
       // const removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
       // this.byIDindexRoot = await bulkIndex(this.database.blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
     }
