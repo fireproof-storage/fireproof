@@ -64,7 +64,7 @@ export default class Fireproof {
    */
   runValidation (doc) {
     const oldDoc = this.get(doc._id).catch(() => null)
-    const ok = this.config.validateChange(doc, oldDoc, this.authCtx)
+    this.config.validateChange(doc, oldDoc, this.authCtx)
   }
 
   /**
