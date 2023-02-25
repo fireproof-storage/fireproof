@@ -672,7 +672,7 @@ describe('Clock', () => {
     // create bob
     const event0 = await EventBlock.create(seqEventData('bob'), head)
     await blocks.put(event0.cid, event0.bytes)
-    console.log('new event0', event0.cid)
+    // console.log('new event0', event0.cid)
 
     head = await advance(blocks, head, event0.cid)
     console.log('new head', head)

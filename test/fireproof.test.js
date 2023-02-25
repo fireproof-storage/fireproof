@@ -108,6 +108,41 @@ describe('Fireproof', () => {
     assert.equal(e.message, 'Not found')
   })
 
+  it("delete a document with validation function that doesn't allow it", async () => {
+    const validationDatabase = new Fireproof(new Blockstore(), [], {
+      validateChange: (newDoc, oldDoc, authCtx) => {
+        if (oldDoc.name === 'bob') {
+          throw new Error('no changing bob')
+        }
+      }
+    })
+    const validResp = await validationDatabase.put({
+      _id: '222-bob',
+      name: 'bob',
+      age: 11
+    })
+    const getResp = await validationDatabase.get(validResp.id)
+    assert.equal(getResp.name, 'bob')
+
+    const e = await validationDatabase.put({
+      _id: '222-bob',
+      name: 'bob',
+      age: 12
+    }).catch(e => e)
+    assert.equal(e.message, 'no changing bob')
+
+    let prevBob = await validationDatabase.get('222-bob')
+    assert.equal(prevBob.name, 'bob')
+    assert.equal(prevBob.age, 11)
+
+    const e2 = await validationDatabase.del('222-bob').catch(e => e)
+    assert.equal(e2.message, 'no changing bob')
+
+    prevBob = await validationDatabase.get('222-bob')
+    assert.equal(prevBob.name, 'bob')
+    assert.equal(prevBob.age, 11)
+  })
+
   it('provides docs since', async () => {
     const result = await database.changesSince()
     assert.equal(result.rows.length, 1)
