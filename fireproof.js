@@ -1,5 +1,5 @@
-import { advance, vis } from './clock.js'
-import { put, get, getAll, root, eventsSince } from './prolly.js'
+import { vis } from './clock.js'
+import { put, get, getAll, eventsSince } from './prolly.js'
 
 /**
  * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
@@ -35,8 +35,7 @@ export default class Fireproof {
    *    A new Fireproof instance representing the snapshot.
    */
   snapshot (clock) {
-    if (!clock) clock = this.clock
-    return new Fireproof(this.blocks, clock)
+    return new Fireproof(this.blocks, clock || this.clock)
   }
 
   /**
@@ -89,11 +88,9 @@ export default class Fireproof {
    */
   async put ({ _id, ...doc }) {
     const id = _id || Math.random().toString(36).slice(2)
-
     if (this.config && this.config.validateChange) {
       this.runValidation({ _id: id, ...doc })
     }
-
     return await this.#doPut({ key: id, value: doc })
   }
 
