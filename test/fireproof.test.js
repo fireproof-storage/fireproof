@@ -96,7 +96,12 @@ describe('Fireproof', () => {
     assert.equal(found._id, id)
     const deleted = await database.del(id)
     assert.equal(deleted.id, id)
-    const e = await database.get(id).then((doc) => assert.equal('should be deleted', JSON.stringify(doc))).catch(e => e)
+    const e = await database.get(id).then((doc) => assert.equal('should be deleted', JSON.stringify(doc))).catch(e => {
+      if (e.message !== 'Not found') {
+        throw (e)
+      }
+      return e
+    })
     assert.equal(e.message, 'Not found')
   })
 

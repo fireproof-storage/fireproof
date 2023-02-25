@@ -13,8 +13,7 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, { key, value }, head, additions, removals = []) {
-  /** @type {EventData} */
+async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, { key, value, del }, head, additions, removals = []) {
   const data = {
     type: 'put',
     root: {
@@ -22,9 +21,17 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root,
       bytes: root.bytes,
       value: root.value
     },
-    key,
-    value
+    key
   }
+
+  if (del) {
+    data.value = null
+    data.type = 'del'
+  } else {
+    data.value = value
+  }
+  /** @type {EventData} */
+
   const event = await EventBlock.create(data, head)
   await bigPut(event)
   head = await Clock.advance(inBlocks, head, event.cid)
@@ -78,18 +85,18 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
  * @param {object} [options]
  * @returns {Promise<Result>}
  */
-export async function put (inBlocks, head, { key, value }, options) {
+export async function put (inBlocks, head, event, options) {
   const { getBlock, bigPut, mblocks, blocks } = makeGetAndPutBlock(inBlocks)
 
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
     const additions = new Map()
     let root
-    for await (const node of create({ get: getBlock, list: [{ key, value }], ...opts })) {
+    for await (const node of create({ get: getBlock, list: [event], ...opts })) {
       root = await node.block
       await bigPut(root, additions)
     }
-    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, { key, value }, head, Array.from(additions.values()))
+    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, event, head, Array.from(additions.values()))
   }
 
   // Otherwise, we find the common ancestor and update the root and other blocks
@@ -98,7 +105,7 @@ export async function put (inBlocks, head, { key, value }, options) {
   const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
 
   const bulkOperations = bulkFromEvents(sorted)
-  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk([...bulkOperations, { key, value }]) // ading delete support here
+  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk([...bulkOperations, event]) // ading delete support here
 
   const additions = new Map() // ; const removals = new Map()
   for (const nb of newBlocks) {
@@ -106,7 +113,7 @@ export async function put (inBlocks, head, { key, value }, options) {
   }
 
   return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, await newProllyRootNode.block,
-    { key, value }, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
+    event, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
 }
 
 /**

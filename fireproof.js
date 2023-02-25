@@ -95,23 +95,25 @@ export default class Fireproof {
       this.runValidation({ _id: id, ...doc })
     }
 
-    return await this.#doPut(id, doc)
+    return await this.#doPut({ key: id, value: doc })
   }
 
   async del (id) {
-    return await this.#doPut(id, { del: true })
+    // return await this.#doPut({ key: id, del: true }) // not working at prolly tree layer?
+    // this tombstone is temporary until we can get the prolly tree to delete
+    return await this.#doPut({ key: id, value: null })
   }
 
-  async #doPut (id, doc) {
-    const result = await put(this.blocks, this.clock, { key: id, value: doc })
+  async #doPut (event) {
+    const result = await put(this.blocks, this.clock, event)
     if (!result) {
-      console.log('failed', id, doc)
+      console.log('failed', event)
     }
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach((a) => this.blocks.putSync(a.cid, a.bytes))
     this.clock = result.head
-    result.id = id
-    return result
+    result.id = event.key
+    return result // todo what if these returned the EventData?
   }
 
   /**
@@ -166,6 +168,10 @@ export default class Fireproof {
    */
   async get (key) {
     const got = await get(this.blocks, this.clock, key)
+    // this tombstone is temporary until we can get the prolly tree to delete
+    if (got === null) {
+      throw new Error('Not found')
+    }
     got._id = key
     return got
   }
