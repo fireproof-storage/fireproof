@@ -1,16 +1,29 @@
 import { advance, vis } from './clock.js'
 import { put, get, getAll, root, eventsSince } from './prolly.js'
 
+/**
+ * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
+ *
+ * @class
+ * @classdesc A Fireproof instance can be used to store and retrieve values from a ProllyDB instance.
+ *
+ * @param {Blockstore} blocks - The block storage instance to use for the underlying ProllyDB instance.
+ * @param {import('../clock').EventLink<import('../crdt').EventData>[]} clock - The Merkle clock head to use for the Fireproof instance.
+ * @param {object} [config] - Optional configuration options for the Fireproof instance.
+ * @param {object} [authCtx] - Optional authorization context object to use for any authentication checks.
+ *
+ */
+
 export default class Fireproof {
   /**
    * @param {Blockstore} blocks
    * @param {import('../clock').EventLink<import('../crdt').EventData>[]} clock
    */
-  constructor (blocks, clock, config) {
+  constructor (blocks, clock, config = {}, authCtx = {}) {
     this.blocks = blocks
     this.clock = clock
     this.config = config
-    this.authCtx = {}
+    this.authCtx = authCtx
   }
 
   /**
@@ -34,7 +47,7 @@ export default class Fireproof {
    * @returns {Promise<{
    *   rows: { key: string, value?: any, del?: boolean }[],
    *   head: import('../clock').EventLink<import('../crdt').EventData>[]
-   * }>} - An object containing the rows and the head of the instance's clock.
+   * }>} - An object `{rows : [...{key, value, del}], head}` containing the rows and the head of the instance's clock.
    */
   async changesSince (event) {
     let rows
