@@ -69,7 +69,7 @@ const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => 
   const byIDindex = await load({ cid: byIDindexRoot.cid, get: getBlock, ...opts })
   // console.trace('ids', ids)
   const result = await byIDindex.getMany(ids)
-  // console.log('indexEntriesForOldChanges', result)
+  console.log('indexEntriesForOldChanges', result.result)
   return result.result
 }
 
@@ -135,10 +135,13 @@ export default class Index {
     const result = await this.database.changesSince(this.dbHead) // {key, value, del}
     if (this.dbHead) {
       const oldIndexEntries = (await indexEntriesForOldChanges(this.database.blocks, this.byIDindexRoot, result.rows.map(({ key }) => key), this.mapFun))
-        .map(({ key }) => ({ key, del: true }))
+        .map((key) => ({ key: undefined, del: true })) // todo why does this work?
       this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, oldIndexEntries, opts)
-      // const removeByIdIndexEntries = result.rows.map(({ key }) => ({ key, del: true }))
-      // this.byIDindexRoot = await bulkIndex(this.database.blocks, this.byIDindexRoot, byIdIndexEntries, opts)
+      console.log('oldIndexEntries', oldIndexEntries)
+      // [ { key: ['b', 1], del: true } ]
+      // [ { key: [ 5, 'x' ], del: true } ]
+      // const removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
+      // this.byIDindexRoot = await bulkIndex(this.database.blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
     }
     const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
     const byIdIndexEntries = indexEntries.map(({ key, value }) => ({ key: key[1], value: key }))
@@ -178,7 +181,7 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
     // load existing index
     console.log('loading index', inRoot.cid)
     const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    console.log('indexEntries', indexEntries)
+    console.log('new indexEntries', indexEntries)
     const { root, blocks } = await index.bulk(indexEntries)
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
