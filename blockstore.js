@@ -1,4 +1,5 @@
 import { parse } from 'multiformats/link'
+import Transaction from 'car-transaction'
 
 /**
  * @typedef {Object} AnyBlock
@@ -15,6 +16,7 @@ import { parse } from 'multiformats/link'
 export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   #blocks = new Map()
+  #oldBlocks = new Map()
 
   /**
    * Get a block from the store.
@@ -23,7 +25,8 @@ export default class TransactionBlockstore {
    * @returns {Promise<AnyBlock | undefined>}
    */
   async get (cid) {
-    const bytes = this.#blocks.get(cid.toString())
+    const key = cid.toString()
+    const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key)
     if (!bytes) return
     return { cid, bytes }
   }
@@ -49,5 +52,47 @@ export default class TransactionBlockstore {
     for (const [str, bytes] of this.#blocks) {
       yield { cid: parse(str), bytes }
     }
+    for (const [str, bytes] of this.#oldBlocks) {
+      yield { cid: parse(str), bytes }
+    }
+  }
+
+  /**
+     * Begin a transaction. Ensures the uncommited blocks are empty at the begining.
+     * Returns the blocks to read and write during the transaction.
+     * @returns {Blockstore}
+     * @memberof TransactionBlockstore
+     */
+  begin () {
+    if (this.#blocks.size > 0) {
+      throw new Error('Transaction already in progress')
+    }
+    this.#blocks = new Map()
+    return this
+  }
+
+  /**
+     * Commit the transaction. Writes the blocks to the store.
+     * @returns {Promise<void>}
+     * @memberof TransactionBlockstore
+     */
+  async commit () {
+    this.#doCommit()
+    this.#blocks = new Map()
+  }
+
+  #doCommit = async () => {
+    for (const [str, bytes] of this.#blocks) {
+      this.#oldBlocks.set(str, bytes)
+    }
+  }
+
+  /**
+     * Rollback the transaction. Clears the uncommited blocks.
+     * @returns {void}
+     * @memberof TransactionBlockstore
+     */
+  rollback () {
+    this.#blocks = new Map()
   }
 }

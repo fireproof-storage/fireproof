@@ -20,12 +20,16 @@
     "CID",
     "IPFS"
   ],
-  "contributors": ["J Chris Anderson", "Alan Shaw"],
+  "contributors": [
+    "J Chris Anderson",
+    "Alan Shaw"
+  ],
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
     "@ipld/car": "^5.0.1",
     "@ipld/dag-cbor": "^9.0.0",
     "archy": "^1.0.0",
+    "car-transaction": "^1.0.1",
     "cli-color": "^2.0.3",
     "multiformats": "^11.0.1",
     "prolly-trees": "^0.2.0",
