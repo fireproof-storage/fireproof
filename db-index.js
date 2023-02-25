@@ -4,6 +4,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 import * as codec from '@ipld/dag-cbor'
 import { create as createBlock } from 'multiformats/block'
+import { doTransaction } from './blockstore.js'
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
 const ALWAYS_REBUILD = false
@@ -34,34 +35,6 @@ const indexEntriesForChanges = (changes, mapFun) => {
     })
   })
   return indexEntries
-}
-
-// const OLDindexEntriesForOldChanges = (docs, mapFun) => {
-//   const indexEntries = []
-//   docs.forEach((doc) => {
-//     mapFun(doc, (k) => {
-//       indexEntries.push({
-//         key: [k, doc._id],
-//         del: true
-//       })
-//     })
-//   })
-//   return indexEntries
-// }
-
-const oldDocsBeforeChanges = async (changes, snapshot) => {
-  const oldDocs = new Map()
-  for (const { key } of changes) {
-    if (oldDocs.has(key)) continue
-    try {
-      const change = await snapshot.get(key)
-      oldDocs.set(key, change)
-    } catch (e) {
-      console.log('olddocs e', key, e.message)
-      if (e.message !== 'Not found') throw e
-    }
-  }
-  return Array.from(oldDocs.values())
 }
 
 const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => {
@@ -110,11 +83,12 @@ export default class Index {
    *
    */
   async query (query, root = null) {
-    if (!root) {
-      await this.#updateIndex()
+    if (!root) { // pass a root to query a snapshot
+      await doTransaction(this.database.blocks, async (blocks) => {
+        await this.#updateIndex(blocks)
+      })
     }
-    root = root || this.indexRoot
-    const response = await queryIndexRange(this.database.blocks, root, query)
+    const response = await queryIndexRange(this.database.blocks, root || this.indexRoot, query)
     return {
       // TODO fix this naming upstream in prolly/db-index
       // todo maybe this is a hint about why deletes arent working?
@@ -127,7 +101,7 @@ export default class Index {
    * @private
    * @returns {Promise<void>}
    */
-  async #updateIndex () {
+  async #updateIndex (blocks) {
     // todo remove this hack
     if (ALWAYS_REBUILD) {
       this.dbHead = null // hack
@@ -135,24 +109,24 @@ export default class Index {
     }
     const result = await this.database.changesSince(this.dbHead) // {key, value, del}
     if (this.dbHead) {
-      const oldIndexEntries = (await indexEntriesForOldChanges(this.database.blocks, this.byIDindexRoot, result.rows.map(({ key }) => key), this.mapFun))
+      const oldIndexEntries = (await indexEntriesForOldChanges(blocks, this.byIDindexRoot, result.rows.map(({ key }) => key), this.mapFun))
         // .map((key) => ({ key, value: null })) // tombstone just adds more rows...
         // .map((key) => ({ key, del: true })) // should be this
         .map((key) => ({ key: undefined, del: true })) // todo why does this work?
 
-      this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, oldIndexEntries, opts)
+      this.indexRoot = await bulkIndex(blocks, this.indexRoot, oldIndexEntries, opts)
       console.log('oldIndexEntries', oldIndexEntries)
       // [ { key: ['b', 1], del: true } ]
       // [ { key: [ 5, 'x' ], del: true } ]
       // for now we just let the by id index grow and then don't use the results...
       // const removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
-      // this.byIDindexRoot = await bulkIndex(this.database.blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
+      // this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
     }
     const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
     const byIdIndexEntries = indexEntries.map(({ key, value }) => ({ key: key[1], value: key }))
     // [{key:  'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', value : [ 53, 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c' ]}]
-    this.byIDindexRoot = await bulkIndex(this.database.blocks, this.byIDindexRoot, byIdIndexEntries, opts)
-    this.indexRoot = await bulkIndex(this.database.blocks, this.indexRoot, indexEntries, opts)
+    this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, byIdIndexEntries, opts)
+    this.indexRoot = await bulkIndex(blocks, this.indexRoot, indexEntries, opts)
     this.dbHead = result.head
   }
 
