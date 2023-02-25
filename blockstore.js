@@ -1,5 +1,9 @@
 import { parse } from 'multiformats/link'
-import Transaction from 'car-transaction'
+import * as raw from 'multiformats/codecs/raw'
+import { sha256 } from 'multiformats/hashes/sha2'
+import * as Block from 'multiformats/block'
+import { CID } from 'multiformats/cid'
+import * as CBW from '@ipld/car/buffer-writer'
 
 /**
  * @typedef {Object} AnyBlock
@@ -17,6 +21,8 @@ export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   #blocks = new Map()
   #oldBlocks = new Map()
+
+  #valet = new Map() // cars by cid
 
   /**
    * Get a block from the store.
@@ -40,6 +46,7 @@ export default class TransactionBlockstore {
   async put (cid, bytes) {
     // console.log('put', cid)
     this.#blocks.set(cid.toString(), bytes)
+    this.lastCid = cid
   }
 
   /**
@@ -65,9 +72,10 @@ export default class TransactionBlockstore {
      */
   begin () {
     if (this.#blocks.size > 0) {
+    //   console.trace('Transaction already in progress, blocks:', this.#blocks.size)
       throw new Error('Transaction already in progress')
+      // this.#blocks = new Map()
     }
-    this.#blocks = new Map()
     return this
   }
 
@@ -77,15 +85,16 @@ export default class TransactionBlockstore {
      * @memberof TransactionBlockstore
      */
   async commit () {
-    this.#doCommit()
+    await this.#doCommit()
     this.#blocks = new Map()
   }
 
   #doCommit = async () => {
-    // todo this should use car-transaction
     for (const [str, bytes] of this.#blocks) {
       this.#oldBlocks.set(str, bytes)
     }
+    const newCar = await blocksToCarBlock(this.lastCid, this.#blocks)
+    this.#valet.set(newCar.cid.toString(), newCar.bytes)
   }
 
   /**
@@ -100,14 +109,33 @@ export default class TransactionBlockstore {
 
 export const doTransaction = async (blockstore, doFun) => {
   if (!blockstore.commit) return doFun(blockstore)
-  blockstore.begin()
   try {
     const blocks = blockstore.begin()
     const result = await doFun(blocks)
-    blockstore.commit()
+    await blockstore.commit()
     return result
   } catch (e) {
+    console.trace('Transaction failed', e)
     blockstore.rollback()
     throw e
   }
+}
+
+const blocksToCarBlock = async (lastCid, blocks) => {
+  let size = 0
+  const headerSize = CBW.headerLength({ roots: [lastCid] })
+  size += headerSize
+  for (const [cid, bytes] of blocks) {
+    size += CBW.blockLength({ cid: CID.parse(cid), bytes })
+  }
+  const buffer = new Uint8Array(size)
+  const writer = await CBW.createWriter(buffer, { headerSize })
+
+  writer.addRoot(lastCid)
+
+  for (const [cid, bytes] of blocks) {
+    writer.write({ cid: CID.parse(cid), bytes })
+  }
+  await writer.close()
+  return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
 }
