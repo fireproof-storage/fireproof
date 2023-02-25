@@ -73,8 +73,8 @@ export default class Fireproof {
    *
    * @param {Object} doc - The document to validate.
    */
-  runValidation (doc) {
-    const oldDoc = this.get(doc._id).catch(() => null)
+  async runValidation (doc) {
+    const oldDoc = await this.get(doc._id).then((doc) => doc).catch(() => ({}))
     this.config.validateChange(doc, oldDoc, this.authCtx)
   }
 
@@ -89,7 +89,7 @@ export default class Fireproof {
   async put ({ _id, ...doc }) {
     const id = _id || Math.random().toString(36).slice(2)
     if (this.config && this.config.validateChange) {
-      this.runValidation({ _id: id, ...doc })
+      await this.runValidation({ _id: id, ...doc })
     }
     return await this.#doPut({ key: id, value: doc })
   }
@@ -100,6 +100,9 @@ export default class Fireproof {
    * @returns {Promise<import('./prolly').PutResult>} - the result of deleting the document
    */
   async del (id) {
+    if (this.config && this.config.validateChange) {
+      await this.runValidation({ _id: id, _deleted: true })
+    }
     // return await this.#doPut({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
     return await this.#doPut({ key: id, value: null })
