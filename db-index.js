@@ -117,6 +117,7 @@ export default class Index {
     const response = await queryIndexRange(this.database.blocks, root, query)
     return {
       // TODO fix this naming upstream in prolly/db-index
+      // todo maybe this is a hint about why deletes arent working?
       rows: response.result.map(({ id, key, row }) => ({ id: key, key: id, value: row }))
     }
   }

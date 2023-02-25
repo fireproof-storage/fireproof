@@ -63,7 +63,6 @@ export default class Fireproof {
         }
       }
       rows = Array.from(docsMap.values())
-      console.log('rows length', rows.length)
     } else {
       rows = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value }))
     }
@@ -109,55 +108,35 @@ export default class Fireproof {
     if (!result) {
       console.log('failed', event)
     }
-    this.blocks.putSync(result.event.cid, result.event.bytes)
-    result.additions.forEach((a) => this.blocks.putSync(a.cid, a.bytes))
     this.clock = result.head
     result.id = event.key
     return result // todo what if these returned the EventData?
   }
 
-  /**
-   * Advances the clock to the specified event and updates the root CID
-   *
-   * @param {import('../clock').EventLink<import('../crdt').EventData>} event - the event to advance to
-   * @returns {import('../clock').EventLink<import('../crdt').EventData>[]} - the new clock after advancing
-   */
-  //   async advance (event) {
-  //     this.clock = await advance(this.blocks, this.clock, event)
-  //     this.rootCid = await root(this.blocks, this.clock)
-  //     return this.clock
-  //   }
+  //   /**
+  //    * Advances the clock to the specified event and updates the root CID
+  //    *
+  //    * @param {import('../clock').EventLink<import('../crdt').EventData>} event - the event to advance to
+  //    * @returns {import('../clock').EventLink<import('../crdt').EventData>[]} - the new clock after advancing
+  //    */
+  //     async advance (event) {
+  //       this.clock = await advance(this.blocks, this.clock, event)
+  //       this.rootCid = await root(this.blocks, this.clock)
+  //       return this.clock
+  //     }
 
   /**
    * Displays a visualization of the current clock in the console
    */
   async visClock () {
-    /**
-     * A function that returns a shortened link string
-     *
-     * @param {import('../link').AnyLink} l - the link to be shortened
-     * @returns {string} - the shortened link string
-     */
     const shortLink = (l) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-
-    /**
-     * A function that returns a label for an event in the visualization
-     *
-     * @param {import('../clock').EventBlockView<import('../crdt').EventData>} event - the event to label
-     * @returns {string} - the label for the event
-     */
     const renderNodeLabel = (event) => {
       return event.value.data.type === 'put'
         ? `${shortLink(event.cid)}\\nput(${shortLink(event.value.data.key)}, 
         {${Object.values(event.value.data.value)}})`
         : `${shortLink(event.cid)}\\ndel(${event.value.data.key})`
     }
-
-    for await (const line of vis(this.blocks, this.clock, {
-      renderNodeLabel
-    })) {
-      console.log(line)
-    }
+    for await (const line of vis(this.blocks, this.clock, { renderNodeLabel })) console.log(line)
   }
 
   /**
@@ -169,9 +148,7 @@ export default class Fireproof {
   async get (key) {
     const got = await get(this.blocks, this.clock, key)
     // this tombstone is temporary until we can get the prolly tree to delete
-    if (got === null) {
-      throw new Error('Not found')
-    }
+    if (got === null) { throw new Error('Not found') }
     got._id = key
     return got
   }
