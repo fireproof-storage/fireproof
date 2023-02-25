@@ -99,6 +99,15 @@ export default class TransactionBlockstore {
     this.#valet.set(newCar.cid.toString(), newCar.bytes)
   }
 
+  /**
+   * Internal function to load blocks from persistent storage.
+   * Currently it just searches all the cars for the block, but in the future
+   * we need to index the block CIDs to the cars, and reference that to find the block.
+   * This index will also allow us to use accelerator links for the gateway when needed.
+   * It can itself be a prolly tree...
+   * @param {string} cid
+   * @returns {Promise<Uint8Array|undefined>}
+   */
   #valetGet = async (cid) => {
     for (const [, carBytes] of this.#valet) {
       const reader = await CarReader.fromBytes(carBytes)
