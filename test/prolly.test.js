@@ -145,7 +145,7 @@ class TestPail {
    * @param {import('../link').AnyLink} value
    */
   async put (key, value) {
-    const result = await put(this.blocks, this.head, key, value)
+    const result = await put(this.blocks, this.head, { key, value })
     if (!result) { console.log('failed', key, value) }
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach(a => this.blocks.putSync(a.cid, a.bytes))

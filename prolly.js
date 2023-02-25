@@ -13,7 +13,7 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, key, value, head, additions, removals = []) {
+async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, { key, value }, head, additions, removals = []) {
   /** @type {EventData} */
   const data = {
     type: 'put',
@@ -78,7 +78,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
  * @param {object} [options]
  * @returns {Promise<Result>}
  */
-export async function put (inBlocks, head, key, value, options) {
+export async function put (inBlocks, head, { key, value }, options) {
   const { getBlock, bigPut, mblocks, blocks } = makeGetAndPutBlock(inBlocks)
 
   // If the head is empty, we create a new event and return the root and addition blocks
@@ -89,7 +89,7 @@ export async function put (inBlocks, head, key, value, options) {
       root = await node.block
       await bigPut(root, additions)
     }
-    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, key, value, head, Array.from(additions.values()))
+    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, { key, value }, head, Array.from(additions.values()))
   }
 
   // Otherwise, we find the common ancestor and update the root and other blocks
@@ -106,7 +106,7 @@ export async function put (inBlocks, head, key, value, options) {
   }
 
   return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, await newProllyRootNode.block,
-    key, value, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
+    { key, value }, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
 }
 
 /**

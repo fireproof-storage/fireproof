@@ -103,7 +103,7 @@ export default class Fireproof {
   }
 
   async #doPut (id, doc) {
-    const result = await put(this.blocks, this.clock, id, doc)
+    const result = await put(this.blocks, this.clock, { key: id, value: doc })
     if (!result) {
       console.log('failed', id, doc)
     }
