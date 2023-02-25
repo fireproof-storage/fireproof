@@ -96,3 +96,17 @@ export default class TransactionBlockstore {
     this.#blocks = new Map()
   }
 }
+
+export const doTransaction = async (blockstore, doFun) => {
+  if (!blockstore.commit) return doFun(blockstore)
+  blockstore.begin()
+  try {
+    const blocks = blockstore.begin()
+    const result = await doFun(blocks)
+    blockstore.commit()
+    return result
+  } catch (e) {
+    blockstore.rollback()
+    throw e
+  }
+}
