@@ -1,6 +1,5 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-// import { Blockstore } from './helpers.js'
 import Blockstore from '../blockstore.js'
 import Fireproof from '../fireproof.js'
 

@@ -1,5 +1,6 @@
 import { vis } from './clock.js'
 import { put, get, getAll, eventsSince } from './prolly.js'
+import { doTransaction } from './blockstore.js'
 
 /**
  * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
@@ -101,7 +102,7 @@ export default class Fireproof {
   }
 
   async #doPut (event) {
-    const result = await this.#doTransaction(async (blocks) =>
+    const result = await doTransaction(this.blocks, async (blocks) =>
       await put(blocks, this.clock, event)
     )
 
@@ -111,20 +112,6 @@ export default class Fireproof {
     this.clock = result.head
     result.id = event.key
     return result // todo what if these returned the EventData?
-  }
-
-  async #doTransaction (doFun) {
-    if (!this.blocks.commit) return doFun(this.blocks)
-    this.blocks.begin()
-    try {
-      const blocks = this.blocks.begin()
-      const result = await doFun(blocks)
-      this.blocks.commit()
-      return result
-    } catch (e) {
-      this.blocks.rollback()
-      throw e
-    }
   }
 
   //   /**
