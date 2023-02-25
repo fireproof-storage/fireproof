@@ -95,6 +95,14 @@ export default class Fireproof {
       this.runValidation({ _id: id, ...doc })
     }
 
+    return await this.#doPut(id, doc)
+  }
+
+  async del (id) {
+    return await this.#doPut(id, { del: true })
+  }
+
+  async #doPut (id, doc) {
     const result = await put(this.blocks, this.clock, id, doc)
     if (!result) {
       console.log('failed', id, doc)

@@ -13,7 +13,7 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, put, root, key, value, head, additions, removals) {
+async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, key, value, head, additions, removals) {
   /** @type {EventData} */
   const data = {
     type: 'put',
@@ -26,8 +26,7 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, put, root, ke
     value
   }
   const event = await EventBlock.create(data, head)
-  await put(event.cid, event.bytes) // is this save needed?
-  mblocks.putSync(event.cid, event.bytes)
+  await bigPut(event)
   head = await Clock.advance(inBlocks, head, event.cid)
 
   return {
@@ -54,6 +53,32 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, put, root, ke
  * } & import('./db-index').ShardDiff} Result
  */
 
+const makeGetAndPutBlock = (inBlocks) => {
+  const mblocks = new MemoryBlockstore()
+  const blocks = new MultiBlockFetcher(mblocks, inBlocks)
+  const getBlock = makeGetBlock(blocks)
+  const put = inBlocks.put.bind(inBlocks)
+  const bigPut = async ({ cid, bytes }) => {
+    await put(cid, bytes)
+    mblocks.putSync(cid, bytes)
+  }
+  return { getBlock, put, bigPut, mblocks, blocks }
+}
+
+const bulkFromEvents = (sorted) => sorted.map(({ value: event }) => {
+  const {
+    data: { type, value, key }
+  } = event
+  return type === 'put' ? { key, value } : { key, del: true }
+})
+
+// Get the value of the root from the ancestor event
+const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
+  const event = await events.get(ancestor)
+  const { root } = event.value.data
+  return load({ cid: root.cid, get: getBlock, ...opts })
+}
+
 /**
  * Put a value (a CID) for the given key. If the key exists it's value is overwritten.
  *
@@ -65,99 +90,62 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, put, root, ke
  * @returns {Promise<Result>}
  */
 export async function put (inBlocks, head, key, value, options) {
-  const mblocks = new MemoryBlockstore()
-  const blocks = new MultiBlockFetcher(mblocks, inBlocks)
-  const getBlock = makeGetBlock(blocks)
-  const put = inBlocks.put.bind(inBlocks)
+  const { getBlock, bigPut, mblocks, blocks } = makeGetAndPutBlock(inBlocks)
 
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
     let root
-    const additions = []
-
+    const additions = new Map()
     for await (const node of create({ get: getBlock, list: [{ key, value }], ...opts })) {
       const block = await node.block
-      await put(block.cid, block.bytes)
-      mblocks.putSync(block.cid, block.bytes)
-      additions.push(block)
+      await bigPut(block)
+      additions.set(block.cid.toString(), block)
       root = block
     }
 
-    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, put, root, key, value, head, additions)
+    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, key, value, head, Array.from(additions.values()))
   }
 
   // Otherwise, we find the common ancestor and update the root and other blocks
   const events = new EventFetcher(blocks)
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
-  const aevent = await events.get(ancestor)
-  const { root } = aevent.value.data
-  // todo instead of loading it every time, we should be able to just make it part of the THIS
-  const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
+  const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
+
+  const bulkOperations = bulkFromEvents(sorted)
+  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk([...bulkOperations, { key, value }]) // ading delete support here
 
   const additions = new Map()
-  const removals = new Map()
-  const bulkOperations = sorted.map(({ value: event }) => {
-    const {
-      data: { type, value, key }
-    } = event
-    return type === 'put' ? { key, value } : { key, del: true }
-  })
-
-  let prollyRootOut = prollyRootNode
-  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootOut.bulk([...bulkOperations, { key, value }])
-
-  prollyRootOut = newProllyRootNode
-
-  for (const a of newBlocks) {
-    await put(a.cid, a.bytes)
-    mblocks.putSync(a.cid, a.bytes)
-    additions.set(a.cid.toString(), a)
+  // const removals = new Map()
+  for (const nb of newBlocks) {
+    await bigPut(nb)
+    additions.set(nb.cid.toString(), nb)
   }
 
-  const finalProllyRootBlock = await prollyRootOut.block
+  const finalProllyRootBlock = await newProllyRootNode.block
 
-  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, put, finalProllyRootBlock, key, value, head, Array.from(additions.values()), Array.from(removals.values()))
+  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, finalProllyRootBlock,
+    key, value, head, Array.from(additions.values())/*, Array.from(removals.values()) */)
 }
 
 /**
- * Determine the effective pail root given the current merkle clock head.
+ * Determine the effective prolly root given the current merkle clock head.
  *
  * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  */
-export async function root (blocks, head) {
+export async function root (inBlocks, head) {
   if (!head.length) {
     throw new Error('no head')
   }
-
-  const getBlock = makeGetBlock(blocks)
-
-  // Use MemoryBlockstore to store blocks temporarily
-  const mblocks = new MemoryBlockstore()
-  // Use MultiBlockFetcher to fetch blocks
-  blocks = new MultiBlockFetcher(mblocks, blocks)
+  const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
   const events = new EventFetcher(blocks)
 
-  // Find the common ancestor of the merkle clock head events
-
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
-
-  // Get the value of the root from the ancestor event
-  const aevent = await events.get(ancestor)
-  const { root } = aevent.value.data
-
-  // Load the root node of the ProllyTree with the given root CID
-  const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
+  const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
 
   // Perform bulk operations (put or delete) for each event in the sorted array
-  const bulkOperations = sorted.map(({ value: event }) => {
-    const {
-      data: { type, value, key }
-    } = event
-    return type === 'put' ? { key, value } : { key, del: true }
-  })
+  const bulkOperations = bulkFromEvents(sorted)
   const { root: newProllyRootNode } = await prollyRootNode.bulk(bulkOperations)
-
   return await newProllyRootNode.block.cid
 }
 
@@ -165,26 +153,10 @@ export async function eventsSince (blocks, head, since) {
   if (!head.length) {
     throw new Error('no head')
   }
-
-  // Use MemoryBlockstore to store blocks temporarily
-  const mblocks = new MemoryBlockstore()
-  // Use MultiBlockFetcher to fetch blocks
-  blocks = new MultiBlockFetcher(mblocks, blocks)
-  // const events = new EventFetcher(blocks)
-
-  // Find the common ancestor of the merkle clock head events
-  // Get the value of the root from the ancestor event
-  // const aevent = await events.get(ancestor)
-  // const { root } = aevent.value.data
-
-  // // Load the root node of the ProllyTree with the given root CID
-  // const prollyRootNode = await load({ cid: root.cid, get: getBlock, ...opts })
   const sinceHead = [...since, ...head]
-  const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
-  const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead, ancestorWithSorted2)
-  // const putEvents = unknownSorted3.filter(({ value: { data: { type } } }) => type === 'put')
-  const putEvents = unknownSorted3.map(({ value: { data } }) => data)
-  return putEvents
+  const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead,
+    await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+  return unknownSorted3.map(({ value: { data } }) => data)
 }
 
 /**
@@ -196,15 +168,14 @@ export async function eventsSince (blocks, head, since) {
  *
  */
 export async function getAll (blocks, head) {
-  // todo refactor this to be reused instead of copy pasted
-  const getBlock = makeGetBlock(blocks)
-
-  const rootCid = await root(blocks, head)
-  const prollyRootNode = await load({ cid: rootCid, get: getBlock, ...opts })
-
+  // todo use the root node left around from put, etc
+  // move load to a central place
+  const prollyRootNode = await load({
+    cid: await root(blocks, head),
+    get: makeGetBlock(blocks),
+    ...opts
+  })
   const { result } = await prollyRootNode.getAllEntries()
-
-  // TODO should we include the key and value
   return result.map(({ key, value }) => ({ key, value }))
 }
 
@@ -214,13 +185,8 @@ export async function getAll (blocks, head) {
  * @param {string} key The key of the value to retrieve.
  */
 export async function get (blocks, head, key) {
-  const get = async (address) => {
-    const { cid, bytes } = await blocks.get(address)
-    const blk = await createBlock({ cid, bytes, hasher, codec })
-    return blk
-  }
-  const rootCid = await root(blocks, head) // instead pass root from db? and always update on change
-  const prollyRootNode = await load({ cid: rootCid, get, ...opts })
-  const result = await prollyRootNode.get(key)
-  return result.result
+  // instead pass root from db? and always update on change
+  const prollyRootNode = await load({ cid: await root(blocks, head), get: makeGetBlock(blocks), ...opts })
+  const { result } = await prollyRootNode.get(key)
+  return result
 }

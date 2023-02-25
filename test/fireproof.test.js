@@ -86,11 +86,20 @@ describe('Fireproof', () => {
     assert.equal(e.message, 'Not found')
   })
 
-  it.skip('get missing document', async () => {
-    const avalue = await database.get('missing')
-    // console.log('missing value', avalue)
-    assert.equal(avalue, null)
+  it('get missing document', async () => {
+    const e = await database.get('missing').catch(e => e)
+    assert.equal(e.message, 'Not found')
   })
+  it('delete a document', async () => {
+    const id = '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const found = await database.get(id)
+    assert.equal(found._id, id)
+    const deleted = await database.del(id)
+    assert.equal(deleted.id, id)
+    const e = await database.get(id).then((doc) => assert.equal('should be deleted', JSON.stringify(doc))).catch(e => e)
+    assert.equal(e.message, 'Not found')
+  })
+
   it('provides docs since', async () => {
     const result = await database.changesSince()
     assert.equal(result.rows.length, 1)
