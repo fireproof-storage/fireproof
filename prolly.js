@@ -1,11 +1,14 @@
 import * as Clock from './clock.js'
-import { EventFetcher, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents } from './clock.js'
+import {
+  EventFetcher,
+  EventBlock,
+  findCommonAncestorWithSortedEvents,
+  findUnknownSortedEvents
+} from './clock.js'
 import { create, load } from 'prolly-trees/map'
-
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
-
 import { nocache as cache } from 'prolly-trees/cache'
 import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 import { create as createBlock } from 'multiformats/block'
@@ -22,6 +25,7 @@ const makeGetBlock = (blocks) => async (address) => {
  *   value: import('./link').AnyLink
  *   root: import('./shard').ShardLink
  * }} EventData
+ *
  * @typedef {{
  *   root: import('./shard').ShardLink
  *   head: import('./clock').EventLink<EventData>[]
@@ -30,8 +34,7 @@ const makeGetBlock = (blocks) => async (address) => {
  */
 
 /**
- * Put a value (a CID) for the given key. If the key exists it's value is
- * overwritten.
+ * Put a value (a CID) for the given key. If the key exists it's value is overwritten.
  *
  * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
@@ -41,22 +44,19 @@ const makeGetBlock = (blocks) => async (address) => {
  * @returns {Promise<Result>}
  */
 export async function put (inBlocks, head, key, value, options) {
-  // key = [key, 1]
   const mblocks = new MemoryBlockstore()
   const blocks = new MultiBlockFetcher(mblocks, inBlocks)
-  // const get = blocks.get.bind(blocks)
-
   const getBlock = makeGetBlock(blocks)
-
   const put = inBlocks.put.bind(inBlocks)
 
+  // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
     let root
     const additions = []
+
     for await (const node of create({ get: getBlock, list: [{ key, value }], ...opts })) {
       const block = await node.block
       await put(block.cid, block.bytes)
-
       mblocks.putSync(block.cid, block.bytes)
       additions.push(block)
       root = block
@@ -73,12 +73,13 @@ export async function put (inBlocks, head, key, value, options) {
       key,
       value
     }
+
     const event = await EventBlock.create(data, head)
     // is this save needed?
     await put(event.cid, event.bytes)
     mblocks.putSync(event.cid, event.bytes)
-
     head = await Clock.advance(blocks, head, event.cid)
+
     return {
       root,
       additions,
@@ -88,8 +89,8 @@ export async function put (inBlocks, head, key, value, options) {
     }
   }
 
+  // Otherwise, we find the common ancestor and update the root and other blocks
   const events = new EventFetcher(blocks)
-
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   const aevent = await events.get(ancestor)
   const { root } = aevent.value.data
@@ -98,11 +99,8 @@ export async function put (inBlocks, head, key, value, options) {
 
   const additions = new Map()
   const removals = new Map()
-
   const bulkOperations = sorted.map(({ value: event }) => {
-    const {
-      data: { type, value, key }
-    } = event
+    const { data: { type, value, key } } = event
     return type === 'put' ? { key, value } : { key, del: true }
   })
 
@@ -130,9 +128,11 @@ export async function put (inBlocks, head, key, value, options) {
     key,
     value
   }
+
   const event = await EventBlock.create(data, head)
   mblocks.putSync(event.cid, event.bytes)
   head = await Clock.advance(blocks, head, event.cid)
+
   return {
     root: finalProllyRootBlock,
     additions: Array.from(additions.values()),
