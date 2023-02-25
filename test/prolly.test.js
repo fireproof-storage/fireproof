@@ -157,6 +157,9 @@ class TestPail {
     return result
   }
 
+  // todo make bulk ops which should be easy at the prolly layer by passing a list of events instead of one
+  // async bulk() {}
+
   /** @param {import('../clock').EventLink<import('../crdt').EventData>} event */
   async advance (event) {
     this.head = await advance(this.blocks, this.head, event)
