@@ -25,6 +25,9 @@ describe('Fireproof', () => {
     assert.equal(avalue._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
   })
   it('update existing document', async () => {
+    // const alice = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    // assert.equal(alice.name, 'alice')
+
     const dogKey = 'aster-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
     const value = {
       _id: dogKey,
