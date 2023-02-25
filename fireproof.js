@@ -101,13 +101,30 @@ export default class Fireproof {
   }
 
   async #doPut (event) {
-    const result = await put(this.blocks, this.clock, event)
+    const result = await this.#doTransaction(async (blocks) =>
+      await put(blocks, this.clock, event)
+    )
+
     if (!result) {
       console.log('failed', event)
     }
     this.clock = result.head
     result.id = event.key
     return result // todo what if these returned the EventData?
+  }
+
+  async #doTransaction (doFun) {
+    if (!this.blocks.commit) return doFun(this.blocks)
+    this.blocks.begin()
+    try {
+      const blocks = this.blocks.begin()
+      const result = await doFun(blocks)
+      this.blocks.commit()
+      return result
+    } catch (e) {
+      this.blocks.rollback()
+      throw e
+    }
   }
 
   //   /**
