@@ -82,6 +82,7 @@ export default class TransactionBlockstore {
   }
 
   #doCommit = async () => {
+    // todo this should use car-transaction
     for (const [str, bytes] of this.#blocks) {
       this.#oldBlocks.set(str, bytes)
     }

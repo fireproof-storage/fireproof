@@ -3,6 +3,7 @@ import assert from 'node:assert'
 import Blockstore from '../blockstore.js'
 import Fireproof from '../fireproof.js'
 import Index from '../db-index.js'
+console.x = function () {}
 
 let database, index
 
@@ -33,7 +34,7 @@ describe('Index query', () => {
     assert(result, 'did return result')
     assert(result.rows)
     assert.equal(result.rows.length, 1, 'one row matched')
-    assert(result.rows[0].key === 43, 'correct key')
+    assert.equal(result.rows[0].key, 43)
     assert(result.rows[0].value === 'carol', 'correct value')
   })
   it('query twice', async () => {
@@ -45,7 +46,7 @@ describe('Index query', () => {
     assert(result.rows[0].key === 43, 'correct key')
     assert(result.rows[0].value === 'carol', 'correct value')
   })
-  it.skip('query two rows oops', async () => {
+  it('query two rows oops', async () => {
     const result = await index.query({ range: [39, 41] })
     assert(result, 'did return result')
     assert(result.rows)
@@ -64,14 +65,14 @@ describe('Index query', () => {
   it('update index', async () => {
     const bresult = await index.query({ range: [2, 90] })
     assert(bresult, 'did return bresult')
-    // console.log('bresult.rows', bresult.rows)
+    // console.x('bresult.rows', bresult.rows)
     assert.equal(bresult.rows.length, 6, 'all row matched')
 
     const oldHead = database.clock
 
     const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c').catch((e) => e)
     assert.equal(notYet.message, 'Not found', 'not yet there')
-    console.log('initial Xander 53', notYet)
+    console.x('initial Xander 53', notYet)
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
     assert(response.id, 'should have id')
@@ -79,12 +80,12 @@ describe('Index query', () => {
     const gotX = await database.get(response.id)
     assert(gotX)
     assert(gotX.name === 'Xander', 'got Xander')
-    console.log('got X')
+    console.x('got X')
 
     const snap = database.snapshot(oldHead)
 
     const aliceOld = await snap.get('a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')// .catch((e) => e)
-    console.log('aliceOld', aliceOld)
+    console.x('aliceOld', aliceOld)
     assert.equal(aliceOld.name, 'alice', 'alice old')
 
     const noX = await snap.get(response.id).catch((e) => e)
@@ -102,7 +103,7 @@ describe('Index query', () => {
   it('update index with document update to different key', async () => {
     await index.query({ range: [51, 54] })
 
-    console.log('--- make Xander 53')
+    console.x('--- make Xander 53')
     const DOCID = 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
     const r1 = await database.put({ _id: DOCID, name: 'Xander', age: 53 })
     assert(r1.id, 'should have id')
@@ -110,25 +111,25 @@ describe('Index query', () => {
     const result = await index.query({ range: [51, 54] })
     assert(result, 'did return result')
     assert(result.rows)
-    console.log('result.rows', result.rows)
+    console.x('result.rows', result.rows)
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
     const snap = database.snapshot(database.clock)
 
-    console.log('--- make Xander 63')
+    console.x('--- make Xander 63')
     const response = await database.put({ _id: DOCID, name: 'Xander', age: 63 })
     assert(response)
     assert(response.id, 'should have id')
 
     const oldXander = await snap.get(r1.id)
     assert.equal(oldXander.age, 53, 'old xander')
-    // console.log('--- test snapshot', snap.clock)
+    // console.x('--- test snapshot', snap.clock)
 
     const newZander = await database.get(r1.id)
     assert.equal(newZander.age, 63, 'new xander')
 
-    // console.log('--- test liveshot', database.clock)
+    // console.x('--- test liveshot', database.clock)
 
     const result2 = await index.query({ range: [61, 64] })
     assert(result2, 'did return result')
@@ -139,11 +140,11 @@ describe('Index query', () => {
     const resultempty = await index.query({ range: [51, 54] })
     assert(resultempty, 'did return resultempty')
     assert(resultempty.rows)
-    console.log('resultempty.rows', resultempty.rows)
+    console.x('resultempty.rows', resultempty.rows)
     assert(resultempty.rows.length === 0, 'old Xander should be gone')
 
     const allresult = await index.query({ range: [2, 90] })
-    console.log('allresult.rows', allresult.rows)
+    console.x('allresult.rows', allresult.rows)
     // todo
     assert.equal(allresult.rows.length, 7, 'all row matched')
   })
