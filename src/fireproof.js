@@ -79,7 +79,7 @@ export default class Fireproof {
   }
 
   /**
-   * Adds a new document to the database
+   * Adds a new document to the database, or updates an existing document.
    *
    * @param {Object} doc - the document to be added
    * @param {string} doc._id - the document ID. If not provided, a random ID will be generated.
