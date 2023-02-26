@@ -35,7 +35,7 @@ main();
 A simple put, get, and delete interface for keeping track of all your JSON documents. Once your data is in Fireproof you can access it from any app or website. Fireproof document store uses MVCC versioning and Merkle clocks so you can always recover the version you are looking for.
 
 ```js
-const {id, ref} = await database.put({
+const { id, ref } = await database.put({
     _id: 'three-thousand'
     name: 'André',
     age: 47
