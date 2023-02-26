@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import Blockstore from '../blockstore.js'
-import Fireproof from '../fireproof.js'
+import Blockstore from '../src/blockstore.js'
+import Fireproof from '../src/fireproof.js'
 
 let database, resp0
 

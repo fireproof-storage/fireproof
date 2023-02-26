@@ -1,8 +1,8 @@
 import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, vis } from '../clock.js'
+import { advance, vis } from '../src/clock.js'
 
-import { put, get, getAll, root, eventsSince } from '../prolly.js'
+import { put, get, getAll, root, eventsSince } from '../src/prolly.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
 describe('Prolly', () => {
@@ -75,7 +75,7 @@ describe('Prolly', () => {
     await alice.put('key0', seqEventData())
     const bob = new TestPail(blocks, alice.head)
 
-    /** @type {Array<[string, import('../link').AnyLink]>} */
+    /** @type {Array<[string, import('../src/link').AnyLink]>} */
     const data = [
       ['key1', seqEventData()],
       ['key2', seqEventData()],
@@ -131,18 +131,18 @@ describe('Prolly', () => {
 class TestPail {
   /**
    * @param {Blockstore} blocks
-   * @param {import('../clock').EventLink<import('../crdt').EventData>[]} head
+   * @param {import('../src/clock').EventLink<import('../src/crdt').EventData>[]} head
    */
   constructor (blocks, head) {
     this.blocks = blocks
     this.head = head
-    /** @type {import('../shard.js').ShardLink?} */
+    /** @type {import('../src/shard.js').ShardLink?} */
     this.root = null
   }
 
   /**
    * @param {string} key
-   * @param {import('../link').AnyLink} value
+   * @param {import('../src/link').AnyLink} value
    */
   async put (key, value) {
     const result = await put(this.blocks, this.head, { key, value })
@@ -160,7 +160,7 @@ class TestPail {
   // todo make bulk ops which should be easy at the prolly layer by passing a list of events instead of one
   // async bulk() {}
 
-  /** @param {import('../clock').EventLink<import('../crdt').EventData>} event */
+  /** @param {import('../src/clock').EventLink<import('../src/crdt').EventData>} event */
   async advance (event) {
     this.head = await advance(this.blocks, this.head, event)
     this.root = await root(this.blocks, this.head)
@@ -169,13 +169,13 @@ class TestPail {
 
   // /**
   //  * @param {string} key
-  //  * @param {import('../link.js').AnyLink} value
+  //  * @param {import('../src/link.js').AnyLink} value
   //  */
   // async putAndVis (key, value) {
   //   const result = await this.put(key, value)
-  //   /** @param {import('../link').AnyLink} l */
+  //   /** @param {import('../src/link').AnyLink} l */
   //   const shortLink = l => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-  //   /** @type {(e: import('../clock').EventBlockView<import('../crdt').EventData>) => string} */
+  //   /** @type {(e: import('../src/clock').EventBlockView<import('../src/crdt').EventData>) => string} */
   //   const renderNodeLabel = event => {
   //     return event.value.data.type === 'put'
   //       ? `${shortLink(event.cid)}\\nput(${event.value.data.key}, ${shortLink(event.value.data.value)})`

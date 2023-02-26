@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, EventBlock, vis, findCommonAncestorWithSortedEvents, findUnknownSortedEvents, decodeEventBlock, findEventsToSync } from '../clock.js'
+import { advance, EventBlock, vis, findCommonAncestorWithSortedEvents, findUnknownSortedEvents, decodeEventBlock, findEventsToSync } from '../src/clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
 async function visHead (blocks, head) {
@@ -392,7 +392,7 @@ describe('Clock', () => {
     const root = await EventBlock.create(seqEventData('root'))
     await blocks.put(root.cid, root.bytes)
 
-    /** @type {import('../clock').EventLink<any>[]} */
+    /** @type {import('../src/clock').EventLink<any>[]} */
     let head = await advance(blocks, [], root.cid)
     assert.equal(head.length, 1)
     assert.equal(head[0], root.cid)
@@ -445,7 +445,7 @@ describe('Clock', () => {
     const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
-    /** @type {import('../clock').EventLink<any>[]} */
+    /** @type {import('../src/clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
@@ -489,7 +489,7 @@ describe('Clock', () => {
     const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
-    /** @type {import('../clock').EventLink<any>[]} */
+    /** @type {import('../src/clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
@@ -591,7 +591,7 @@ describe('Clock', () => {
     const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
-    /** @type {import('../clock').EventLink<any>[]} */
+    /** @type {import('../src/clock').EventLink<any>[]} */
     let head = [root.cid]
     const parents0 = head
 
@@ -640,7 +640,7 @@ describe('Clock', () => {
     const root = await EventBlock.create(seqEventData())
     await blocks.put(root.cid, root.bytes)
 
-    /** @type {import('../clock').EventLink<any>[]} */
+    /** @type {import('../src/clock').EventLink<any>[]} */
     let head = [root.cid]
 
     const event0 = await EventBlock.create(seqEventData(), head)
