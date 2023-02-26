@@ -1,10 +1,15 @@
 import crypto from 'node:crypto'
-import assert from 'node:assert'
+// import assert from 'node:assert'
 import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { decodeShardBlock } from '../index.js'
-import { MemoryBlockstore } from '../block.js'
+import { MemoryBlockstore } from '../src/block.js'
+
+// console.x = console.log
+// console.log = function (...args) {
+//   // window.mutedLog = window.mutedLog || []
+//   // window.mutedLog.push(args)
+// }
 
 /** @param {number} size */
 export async function randomCID (size) {
@@ -25,13 +30,16 @@ export async function randomBytes (size) {
 }
 
 export class Blockstore extends MemoryBlockstore {
-  /**
-   * @param {import('../shard').ShardLink} cid
-   * @param {string} [prefix]
-   */
-  async getShardBlock (cid, prefix) {
-    const blk = await this.get(cid)
-    assert(blk)
-    return decodeShardBlock(blk.bytes, prefix)
+
+}
+
+let seq = 0
+export function seqEventData (tag = '') {
+  return {
+    type: 'put',
+    value: `event${seq++}${tag}`
   }
+}
+export function setSeq (n) {
+  seq = n
 }

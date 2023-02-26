@@ -25,6 +25,7 @@ export class MemoryBlockstore {
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
+    // console.log('put', cid)
     this.#blocks.set(cid.toString(), bytes)
   }
 
@@ -66,7 +67,9 @@ export class MultiBlockFetcher {
   async get (link) {
     for (const f of this.#fetchers) {
       const v = await f.get(link)
-      if (v) return v
+      if (v) {
+        return v
+      }
     }
   }
 }
