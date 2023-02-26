@@ -1,6 +1,6 @@
 import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, vis } from '../src/clock.js'
+import { advance } from '../src/clock.js'
 
 import { put, get, getAll, root, eventsSince } from '../src/prolly.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
@@ -60,7 +60,7 @@ describe('Prolly', () => {
     const alice = new TestPail(blocks, [])
     const key = 'key'
     const value = seqEventData('test-missing-root')
-    const { event, head } = await alice.put(key, value)
+    await alice.put(key, value)
 
     await alice.get('missing').then((value) => {
       assert('false', 'should not get here')

@@ -148,5 +148,44 @@ describe('Index query', () => {
     // todo
     assert.equal(allresult.rows.length, 7, 'all row matched')
   })
-  it.skip('update index with document deletion', async () => {})
+  it('update index with document deletion', async () => {
+    await index.query({ range: [51, 54] })
+
+    console.x('--- make Xander 53')
+    const DOCID = 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const r1 = await database.put({ _id: DOCID, name: 'Xander', age: 53 })
+    assert(r1.id, 'should have id')
+
+    const result = await index.query({ range: [51, 54] })
+    assert(result, 'did return result')
+    assert(result.rows)
+    console.x('result.rows', result.rows)
+    assert.equal(result.rows.length, 1, '1 row matched')
+    assert(result.rows[0].key === 53, 'correct key')
+
+    const snap = database.snapshot(database.clock)
+
+    console.x('--- delete Xander 53')
+    const response = await database.del(DOCID)
+    assert(response)
+    assert(response.id, 'should have id')
+
+    const oldXander = await snap.get(r1.id)
+    assert.equal(oldXander.age, 53, 'old xander')
+    // console.x('--- test snapshot', snap.clock)
+
+    const newZander = await database.get(r1.id).catch((e) => e)
+    assert.equal(newZander.message, 'Not found', 'new xander')
+    // console.x('--- test liveshot', database.clock)
+
+    const allresult = await index.query({ range: [2, 90] })
+    console.x('allresult.rows', allresult.rows)
+    // todo
+    assert.equal(allresult.rows.length, 6, 'all row matched')
+
+    const result2 = await index.query({ range: [51, 54] })
+    assert(result2, 'did return result')
+    assert(result2.rows)
+    assert.equal(result2.rows.length, 0, '0 row matched')
+  })
 })

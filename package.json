@@ -5,7 +5,7 @@
   "main": "fireproof.js",
   "type": "module",
   "bin": {
-    "fireproof": "./cli.js"
+    "fireproof": "./src/cli.js"
   },
   "scripts": {
     "test": "mocha test/*.test.js",
