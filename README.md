@@ -59,7 +59,7 @@ Fireproof indexes are defined by custom JavaScript functions that you write, all
 const index = new Index(database, function (doc, map) {
   map(doc.age, doc.name)
 })
-const { rows } = await index.query({ range: [40, 52] })
+const { rows, ref } = await index.query({ range: [40, 52] })
 // [ { key: 42, value: 'alice', id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c' },
 //   { key: 47, value: 'André', id: 'three-thousand' } ]
 ```
@@ -106,8 +106,8 @@ npm install @fireproof-storage/fireproof
 
 # Contributing
 
-Feel free to join in. All welcome. [Open an issue](https://github.com/alanshaw/pail/issues)!
+Feel free to join in. All welcome. [Open an issue](https://github.com/jchris/fireproof/issues)!
 
 # License
 
-Dual-licensed under [MIT or Apache 2.0](https://github.com/alanshaw/pail/blob/main/LICENSE.md)
+Dual-licensed under [MIT or Apache 2.0](https://github.com/jchris/fireproof/blob/main/LICENSE.md)
