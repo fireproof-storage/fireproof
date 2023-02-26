@@ -3,7 +3,7 @@ import crypto from 'node:crypto'
 import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { MemoryBlockstore } from '../block.js'
+import { MemoryBlockstore } from '../src/block.js'
 
 // console.x = console.log
 // console.log = function (...args) {
