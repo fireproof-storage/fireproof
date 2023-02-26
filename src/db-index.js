@@ -29,7 +29,7 @@ console.x = function () {}
 const indexEntriesForChanges = (changes, mapFun) => {
   const indexEntries = []
   changes.forEach(({ key, value, del }) => {
-    if (del) return
+    if (del || !value) return
     mapFun(makeDoc({ key, value }), (k, v) => {
       indexEntries.push({
         key: [charwise.encode(k), key],

@@ -4,7 +4,8 @@ import { advance, EventBlock, vis, findCommonAncestorWithSortedEvents, findUnkno
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
 async function visHead (blocks, head) {
-  const values = head.map(async (cid) => {
+  // const values =
+  head.map(async (cid) => {
     const block = await blocks.get(cid)
     return (await decodeEventBlock(block.bytes)).value?.data?.value
   })
@@ -383,7 +384,7 @@ describe('Clock', () => {
     assert.equal(toSync9E[3].value.data.value, 'event8isaac')
     assert.equal(toSync9E[4].value.data.value, 'event9jen')
 
-    for await (const line of vis(blocks, head8)) console.log(line)
+    // for await (const line of vis(blocks, head8)) console.log(line)
   })
 
   it('add two events with shared parents', async () => {
@@ -555,22 +556,22 @@ describe('Clock', () => {
     const event10head = head
     await visHead(blocks, event10head)
 
-    console.log('converge when multi-root')
-    for await (const line of vis(blocks, event10head)) console.log(line)
+    // console.log('converge when multi-root')
+    // for await (const line of vis(blocks, event10head)) console.log(line)
 
     assert.equal(event10head.length, 1)
     assert.equal(event10head[0].toString(), event10.cid.toString())
 
     // todo do these roots make sense?
-    const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(blocks, [event5.cid, event2.cid])
-    const toSync = await findUnknownSortedEvents(blocks, [event5.cid, event2.cid], { ancestor, sorted })
+    // const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(blocks, [event5.cid, event2.cid])
+    // const toSync = await findUnknownSortedEvents(blocks, [event5.cid, event2.cid], { ancestor, sorted })
     // assert.equal(toSync.length, 0)
     // assert.equal(toSync[0].value.data.value, 'event3')
     // assert.equal(toSync[1].value.data.value, 'event5')
 
     // todo do these roots make sense?
-    const ancestorWithSorted = await findCommonAncestorWithSortedEvents(blocks, [event6.cid, event2.cid])
-    const toSync2 = await findUnknownSortedEvents(blocks, [event6.cid, event2.cid], ancestorWithSorted)
+    // const ancestorWithSorted = await findCommonAncestorWithSortedEvents(blocks, [event6.cid, event2.cid])
+    // const toSync2 = await findUnknownSortedEvents(blocks, [event6.cid, event2.cid], ancestorWithSorted)
     // assert.equal(toSync2.length, 0)
 
     // assert.equal(toSync2[0].value.data.value, 'event3')
@@ -656,7 +657,7 @@ describe('Clock', () => {
     assert.equal(head[0].toString(), event1.cid.toString())
   })
 
-  it.skip('reproduce the issue from fireproof docs since update test', async () => {
+  it('reproduce the issue from fireproof docs since update test', async () => {
     setSeq(-1)
     const blocks = new Blockstore()
     // alice
@@ -675,7 +676,6 @@ describe('Clock', () => {
     // console.log('new event0', event0.cid)
 
     head = await advance(blocks, head, event0.cid)
-    console.log('new head', head)
 
     const event0head = head
     sinceHead = event0head
@@ -684,10 +684,6 @@ describe('Clock', () => {
 
     sinceHead = [...roothead, ...event0head]
     toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    console.log(
-      'toSyncb',
-      toSync.map((e) => e.value.data.value)
-    )
     assert.equal(toSync.length, 1)
 
     // create carol
@@ -699,39 +695,30 @@ describe('Clock', () => {
     sinceHead = [...event0head, ...event1head]
     // sinceHead = event0head
     const sigil = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
-    console.log('ancestor', (await decodeEventBlock((await blocks.get(sigil.ancestor)).bytes)).value)
-    console.log(
-      'sorted all',
-      sigil.sorted.map((e) => e.value.data.value)
-    )
+    // console.log('ancestor', (await decodeEventBlock((await blocks.get(sigil.ancestor)).bytes)).value)
+
     toSync = await findUnknownSortedEvents(blocks, sinceHead, sigil)
-    console.log(
-      'toSynccc',
-      toSync.map((e) => e.value.data.value)
-    )
+
     assert.equal(toSync.length, 1)
 
-    for await (const line of vis(blocks, head)) console.log(line)
+    // for await (const line of vis(blocks, head)) console.log(line)
 
     sinceHead = [...event1head, ...roothead]
     toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    console.log(
-      'toSyncc',
-      toSync.map((e) => e.value.data.value)
-    )
+
+    assert.equal(toSync.length, 2)
+
+    const event2 = await EventBlock.create(seqEventData('xxx'), head)
+    await blocks.put(event2.cid, event2.bytes)
+    head = await advance(blocks, head, event2.cid)
+    const event2head = head
+
+    sinceHead = [...event2head, ...event0head]
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    assert.equal(toSync.length, 2)
+
+    sinceHead = [...event2head, ...event1head]
+    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
     assert.equal(toSync.length, 1)
-
-    // const event2 = await EventBlock.create(seqEventData('xxx'), head)
-    // await blocks.put(event2.cid, event2.bytes)
-    // head = await advance(blocks, head, event2.cid)
-    // const event2head = head
-
-    // sinceHead = [...event2head, ...event0head]
-    // toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    // assert.equal(toSync.length, 2)
-
-    // sinceHead = [...event2head, ...event1head]
-    // toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-    // assert.equal(toSync.length, 1)
   })
 })
