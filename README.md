@@ -12,7 +12,7 @@ Learn more about the concepts and architecture behind Fireproof on our website.
 ## Usage
 
 ```js
-import { Fireproof } from 'fireproof';
+import Fireproof from 'fireproof';
 
 async function main() {
   const database = new Fireproof();
