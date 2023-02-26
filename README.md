@@ -8,6 +8,8 @@ to offer a new kind of database that:
 
 Learn more about the concepts and architecture behind Fireproof on our website.
 
+[![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## Usage
 
@@ -92,11 +94,6 @@ Documents changes are persisted to Filecoin via web3.storage, and made available
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VScode all this would have taken so much longer. But the distinguishing work on immutable datastructures came from the years of consideration IPFS, IPLD, and the Filecoin APIs have enjoyed.
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
-
-
-[![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
 
 ## Install
 
