@@ -16,12 +16,12 @@ import { Fireproof } from 'fireproof';
 
 async function main() {
   const database = new Fireproof();
-  await database.put({
-    _id: '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c',
+  const ok = await database.put({
     name: 'alice',
     age: 42
   });
-  const doc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c');
+  
+  const doc = await database.get(ok.id);
   console.log(doc.name); // 'alice'
 }
 
