@@ -1,5 +1,5 @@
 import { useState, createContext, useContext, useEffect } from 'react'
-import { Fireproof } from 'fireproof'
+import { Fireproof } from '../../../'
 import useFireproof from './hooks/useFireproof'
 import reactLogo from './assets/react.svg'
 import './App.css'
@@ -42,7 +42,7 @@ function Login() {
 
 function AllLists() {
   const { lists, isLoading, addList, load } = useContext(FireproofCtx)
-  const onSubmit = (title: String) => load(addList(title))
+  const onSubmit = (title: string) => load(addList(title))
   return (
     <div>
       <div className='listNav'>

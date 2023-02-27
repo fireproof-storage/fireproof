@@ -42,6 +42,11 @@
     "nanoid": "^4.0.0",
     "standard": "^17.0.0"
   },
+  "standard": {
+    "ignore": [
+      "examples/**/*.tsx"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jchris/fireproof.git"
