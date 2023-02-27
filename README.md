@@ -97,7 +97,7 @@ Until encryption support is enabled, all data written to Fireproof is public. Th
 
 ### Persistence
 
-Currently Fireproof writes transactions and proofs to [in-memory CAR files](https://ipld.io/specs/transport/car/carv2/) which are well suited for peer and cloud replication. Coming soon.
+Currently Fireproof writes transactions and proofs to in-memory [CAR files](https://ipld.io/specs/transport/car/carv2/) which are well suited for peer and cloud replication. Durability coming soon.
 
 ### Pre-beta Software
 
