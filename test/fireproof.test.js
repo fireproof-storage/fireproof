@@ -234,7 +234,7 @@ describe('Fireproof', () => {
       })
       assert(resp.id)
       doc = await database.get(resp.id).catch(e => {
-        console.trace('42', e)
+        console.trace('failed', e)
         assert.equal(e.message, 'get failed on _id: ' + id)
       })
       assert.equal(doc.index, index)

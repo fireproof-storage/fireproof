@@ -3,20 +3,35 @@ import { useEffect, useState } from 'react'
 
 import { Fireproof, Index } from '../../../../'
 
+function mulberry32 (a) {
+  return function () {
+    let t = a += 0x6D2B79F5
+    t = Math.imul(t ^ t >>> 15, t | 1)
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61)
+    return ((t ^ t >>> 14) >>> 0) / 4294967296
+  }
+}
+
+const rand = mulberry32(42) // determinstic fixtures
+
 const loadFixtures = async (database) => {
-  console.log('loading fixtures', database.instanceId)
+  const nextId = () => rand().toString(36).slice(2)
+
   const listTitles = ['My Todo List', 'Another Todo List']
-  return Promise.all(listTitles.map(async (title) => {
-    const ok = await database.put({ title, type: 'list' })
-    console.log('list', ok.id, title, database.instanceId)
-    return Promise.all([...Array(Math.ceil(Math.random() * 10))].map(async () =>
+  for (const title of listTitles) {
+    const ok = await database.put({ title, type: 'list', _id: nextId() })
+    const numTodos = Math.ceil(rand() * 10)
+    for (let i = 0; i < numTodos; i++) {
       await database.put({
-        title: 'Todo ' + Math.random(),
+        _id: nextId(),
+        title: 'Todo ' + rand().toString(36).slice(2, 8),
         listId: ok.id,
-        completed: Math.random() > 0.5,
-        type: 'todo'
-      })))
-  }))
+        completed: rand() > 0.75,
+        type: 'todo',
+        createdAt: new Date().toISOString()
+      })
+    }
+  }
 }
 
 const defineDatabase = async () => {
@@ -26,7 +41,7 @@ const defineDatabase = async () => {
   })
   database.todosbyList = new Index(database, function (doc, map) {
     if (doc.type === 'todo' && doc.listId) {
-      map(doc.listId, doc)
+      map([doc.listId, doc.createdAt], doc)
     }
   })
   window.database = database
@@ -43,9 +58,7 @@ export default function useFireproof (options) {
       const db = await defineDatabase()
       await loadFixtures(db)
       setDatabase(db)
-      console.log('db docs', db.instanceId)
       // await sleep(1000)
-      console.log('db docs', await db.changesSince())
       setReady(true)
     }
     doSetup()
@@ -58,15 +71,13 @@ export default function useFireproof (options) {
   }
 
   const fetchAllLists = async () => {
-    console.log('fetchAllLists', database.instanceId)
     const lists = await database.allLists.query({ range: ['list', 'listx'] })
-    console.log('lists', lists)
     return lists.rows.map((row) => row.value)
   }
 
   const fetchListWithTodos = async (_id) => {
     const list = await database.get(_id)
-    const todos = await database.todosbyList.query({ range: [_id, _id + 'x'] })
+    const todos = await database.todosbyList.query({ range: [[_id, '0'], [_id, '9']] })
     return { list, todos: todos.rows.map((row) => row.value) }
   }
 
@@ -75,7 +86,7 @@ export default function useFireproof (options) {
   }
 
   const addTodo = withRefresh(async (listId, title) => {
-    return await database.put({ completed: false, title, listId, type: 'todo' })
+    return await database.put({ completed: false, title, listId, type: 'todo', createdAt: new Date().toISOString() })
   })
 
   const toggle = withRefresh(async ({ completed, ...doc }) => {
@@ -87,14 +98,14 @@ export default function useFireproof (options) {
   })
 
   const updateTitle = withRefresh(async (doc, title) => {
-    console.log('updateTitle', doc, title)
-    return await database.put({ title, ...doc })
+    doc.title = title
+    return await database.put(doc)
   })
 
   const clearCompleted = async (listId) => {
-    const todos = await database.todosbyList.get(listId)
+    const todos = (await database.todosbyList.query({ range: [listId, listId + 'x'] })).rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
-    todosToDelete.forEach(async (todoToDelete) => {
+    await todosToDelete.forEach(async (todoToDelete) => {
       await database.del(todoToDelete._id)
     })
   }

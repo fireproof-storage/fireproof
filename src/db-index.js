@@ -86,7 +86,7 @@ export default class Index {
    */
   async query (query, root = null) {
     if (!root) { // pass a root to query a snapshot
-      await doTransaction(this.database.blocks, async (blocks) => {
+      await doTransaction('#updateIndex', this.database.blocks, async (blocks) => {
         await this.#updateIndex(blocks)
       })
     }
