@@ -14,7 +14,7 @@ describe('Prolly', () => {
     const { event, head } = await alice.put(key, value)
 
     assert.equal(event.value.data.type, 'put')
-    // assert.equal(event.value.data.key, key)
+    assert.equal(event.value.data.key, key)
     assert.equal(event.value.data.value.toString(), value.toString())
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
@@ -38,7 +38,7 @@ describe('Prolly', () => {
     const result = await alice.put(key1, value1)
 
     assert.equal(result.event.value.data.type, 'put')
-    // assert.equal(result.event.value.data.key, key1)
+    assert.equal(result.event.value.data.key, key1)
     assert.equal(result.event.value.data.value.toString(), value1.toString())
     assert.equal(result.head.length, 1)
     assert.equal(result.head[0].toString(), result.event.cid.toString())

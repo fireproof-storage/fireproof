@@ -10,9 +10,6 @@ import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 import { create as createBlock } from 'multiformats/block'
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
-const internalKey = (key) => '_' + key
-const decodeKey = (key) => key.slice(1)
-
 const withLog = async (label, fn) => {
   const resp = await fn()
   // console.log('withLog', label, !!resp)
@@ -98,11 +95,9 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
  * @param {object} [options]
  * @returns {Promise<Result>}
  */
-export async function put (inBlocks, head, inEvent, options) {
+export async function put (inBlocks, head, event, options) {
   const { getBlock, bigPut, mblocks, blocks } = makeGetAndPutBlock(inBlocks)
 
-  const event = { ...inEvent, key: internalKey(inEvent.key) }
-  // console.log('event', event, internalKey(inEvent.key))
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
     const additions = new Map()
@@ -149,7 +144,6 @@ export async function root (inBlocks, head) {
 
   // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = bulkFromEvents(sorted)
-  // console.log('bulkOperations', bulkOperations)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
 
   // console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
@@ -176,7 +170,7 @@ export async function eventsSince (blocks, head, since) {
   const sinceHead = [...since, ...head]
   const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead,
     await findCommonAncestorWithSortedEvents(blocks, sinceHead))
-  return unknownSorted3.map(({ value: { data: { key, ...event } } }) => ({ key: decodeKey(key), ...event }))
+  return unknownSorted3.map(({ value: { data } }) => data)
 }
 
 /**
@@ -196,7 +190,7 @@ export async function getAll (blocks, head) {
     ...opts
   })
   const { result } = await prollyRootNode.getAllEntries()
-  return result.map(({ key, value }) => ({ key: decodeKey(key), value }))
+  return result.map(({ key, value }) => ({ key, value }))
 }
 
 /**
@@ -207,7 +201,7 @@ export async function getAll (blocks, head) {
 export async function get (blocks, head, key) {
   // instead pass root from db? and always update on change
   const prollyRootNode = await load({ cid: await root(blocks, head), get: makeGetBlock(blocks), ...opts })
-  const { result } = await prollyRootNode.get(internalKey(key))
+  const { result } = await prollyRootNode.get(key)
   return result
 }
 
