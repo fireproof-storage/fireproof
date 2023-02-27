@@ -9,13 +9,15 @@ import styles from './AppHeader.css?inline' // eslint-disable-line
  */
 const AppHeader = (props) => {
   return (
-    <header className="app-header">
-      <div className="app-title-wrapper">
-        <div className="app-title-wrapper">
-          <div className="app-left-nav">
-            <img src={logo} className="app-logo" alt="Fireproof Storage" />
-            <div className="app-title-text">
-              <h1 className="app-title">TodoMVC</h1>
+    <header className='app-header'>
+      <div className='app-title-wrapper'>
+        <div className='app-title-wrapper'>
+          <div className='app-left-nav'>
+            <a href='/'>
+              <img src={logo} className='app-logo' alt='Fireproof Storage' />
+            </a>
+            <div className='app-title-text'>
+              <h1 className='app-title'>TodoMVC</h1>
             </div>
           </div>
         </div>

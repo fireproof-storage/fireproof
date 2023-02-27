@@ -3,7 +3,12 @@ import { Fireproof } from '../../../'
 import useFireproof from './hooks/useFireproof'
 import reactLogo from './assets/react.svg'
 import './App.css'
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import {
+  Route, Link, RouterProvider, createBrowserRouter,
+  createRoutesFromElements, useNavigate, useParams, useLoaderData
+} from "react-router-dom";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
+import AppHeader from './components/AppHeader/index.jsx';
 import Footer from './components/Footer'
 import Spinner from './components/Spinner'
 import InputArea from './components/InputArea'
@@ -41,22 +46,23 @@ function Login() {
 }
 
 function AllLists() {
-  const { lists, isLoading, addList, load } = useContext(FireproofCtx)
-  const onSubmit = (title: string) => load(addList(title))
+  // const {  addList } = useContext(FireproofCtx)
+  let lists = useLoaderData() as ListDoc[];
+
+  const onSubmit = (title: string) => { }
   return (
     <div>
       <div className='listNav'>
         <label>Choose a list.</label>
       </div>
       <section className='main'>
-        {isLoading && <Spinner />}
         <ul className='todo-list'>
-          {lists.map(({ data, _id }) => {
+          {lists.map(({ title, _id }) => {
             return (
               <li key={_id}>
                 {/* <label onClick={() => alert('go')}>{data.title}</label> */}
                 <label>
-                  <Link to={`/list/${_id}`}>{data.title}</Link>
+                  <Link to={`/list/${_id}`}>{title}</Link>
                 </label>
               </li>
             )
@@ -78,9 +84,12 @@ interface Doc {
 interface TodoDoc extends Doc {
   completed: boolean
   title: string
+  listId: string
+  type: "todo"
 }
 interface ListDoc extends Doc {
   title: string
+  type: "list"
 }
 
 
@@ -90,7 +99,7 @@ interface AppState {
   err: Error | null
 }
 
-function List(props) {
+function List(props: { path?: string; listId?: any; uri?: any }) {
   const {
     fetchList,
     isLoading,
@@ -101,33 +110,33 @@ function List(props) {
     clearCompleted,
     save
   } = useContext(FireproofCtx)
-  const [state, realsetState] = useState<AppState>({ list: { _id: 'chillout-typescript', title: "Loading..." }, todos: [], err: null })
+
+  let params = useParams();
+  let data = useLoaderData() as ListDoc;
+  console.log('load data', { params, data })
+  const [state, realsetState] = useState<AppState>({
+    list: {
+      _id: 'chillout-typescript',
+      type: "list",
+      title: "Loading..."
+    }, todos: [], err: null
+  })
   function setState(state) {
     console.log('setStatenew', state)
     return realsetState(state)
   }
   const { listId, uri } = props
-  console.log('list', props)
-  const pathFlag = props.path.split('/')[1] || 'all'
-  // console.log({ pathFlag, uri, listId, state })
-  const shownTodos =
-    state &&
-    state.todos &&
-    {
-      all: state.todos,
-      active: state.todos.filter((todo) => !todo.completed),
-      completed: state.todos.filter((todo) => todo.completed)
-    }[pathFlag]
-  useEffect(
-    () =>
-      void fetchList(listId)
-        .then(setState)
-        .catch((err) => {
-          console.log('fetcList err', { err })
-          setState({ err })
-        }),
-    []
-  )
+  // console.log('list', props)
+  // const pathFlag = props.path?.split('/')[1] || 'all'
+  const pathFlag = 'all'
+  console.log({ pathFlag, uri, listId, state })
+  const shownTodos = {
+    all: state.todos,
+    active: state.todos.filter((todo) => !todo.completed),
+    completed: state.todos.filter((todo) => todo.completed)
+  }[pathFlag]
+
+
   const [editing, setEditing] = useState(null)
   const navigate = useNavigate()
   const edit = (todo) => () => setEditing(todo._id)
@@ -178,7 +187,7 @@ function List(props) {
           }
           onClearCompleted={onClearCompleted}
           nowShowing={pathFlag}
-          uri={uri.split('/').slice(0, 3).join('/')}
+          uri={uri && uri.split('/').slice(0, 3).join('/')}
         />
       )}
     </div>
@@ -193,24 +202,41 @@ const NotFound = () => (
   </div>
 )
 
+
+
 function App() {
   const fireproof = useFireproof()
-  const [count, setCount] = useState(0)
+  const { fetchList, fetchAllLists, ready } = fireproof
+
+  async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListDoc> {
+    return await fetchList(listId)
+  }
+
+  async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {
+    return await fetchAllLists()
+  }
+
+  let router = createBrowserRouter(
+    createRoutesFromElements(
+      <>
+        <Route path='/' loader={allListLoader} element={<AllLists />} />
+        <Route path='list'>
+          <Route path=':listId' loader={listLoader} element={<List />} >
+            <Route path='active' element={<List />} />
+            <Route path='completed' element={<List />} />
+          </Route>
+        </Route>
+      </>
+    )
+  );
+
   return (
     <FireproofCtx.Provider value={fireproof}>
+      <AppHeader />
       <div>
         <header className='header'>
           <Login />
-          <Routes>
-            <Route path='/' element={<AllLists />} />
-            <Route path='list'>
-              <Route path=':listId' element={<List />} />
-              <Route path=':listId/active' element={<List />} />
-              <Route path=':listId/completed' element={<List />} />
-              <Route path='*' element={<NotFound />} />
-            </Route>
-            <Route path='*' element={<NotFound />} />
-          </Routes>
+          {ready && <RouterProvider router={router} fallbackElement={<NotFound />} />}
         </header>
       </div>
     </FireproofCtx.Provider>

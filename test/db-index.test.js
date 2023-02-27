@@ -29,8 +29,16 @@ describe('Index query', () => {
       map(doc.age, doc.name)
     })
   })
-  it('query index', async () => {
+  it('query index range', async () => {
     const result = await index.query({ range: [41, 44] })
+    assert(result, 'did return result')
+    assert(result.rows)
+    assert.equal(result.rows.length, 1, 'one row matched')
+    assert.equal(result.rows[0].key, 43)
+    assert(result.rows[0].value === 'carol', 'correct value')
+  })
+  it('query exact key', async () => {
+    const result = await index.query({ key: 43 })
     assert(result, 'did return result')
     assert(result.rows)
     assert.equal(result.rows.length, 1, 'one row matched')
