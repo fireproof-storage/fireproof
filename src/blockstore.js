@@ -6,6 +6,8 @@ import { CID } from 'multiformats/cid'
 import * as CBW from '@ipld/car/buffer-writer'
 import { CarReader } from '@ipld/car'
 
+// const sleep = ms => new Promise(r => setTimeout(r, ms))
+
 /**
  * @typedef {Object} AnyBlock
  * @property {import('./link').AnyLink} cid - The CID of the block
@@ -24,6 +26,8 @@ export default class TransactionBlockstore {
   #oldBlocks = new Map()
 
   #valet = new Map() // cars by cid
+
+  #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
 
   /**
    * Get a block from the store.
@@ -133,6 +137,7 @@ export const doTransaction = async (blockstore, doFun) => {
   try {
     const blocks = blockstore.begin()
     const result = await doFun(blocks)
+    // await sleep(1000)
     await blockstore.commit()
     return result
   } catch (e) {

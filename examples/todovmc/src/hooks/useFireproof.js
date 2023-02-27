@@ -3,8 +3,6 @@ import { useEffect, useState } from 'react'
 
 import { Fireproof, Index } from '../../../../'
 
-const sleep = ms => new Promise(r => setTimeout(r, ms))
-
 const loadFixtures = async (database) => {
   console.log('loading fixtures', database.instanceId)
   const listTitles = ['My Todo List', 'Another Todo List']
