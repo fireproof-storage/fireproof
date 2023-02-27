@@ -6,7 +6,7 @@ to offer a new kind of database that:
 - scales without incurring developer costs, thanks to Filecoin
 - uses cryptographically verifiable protocols (what plants crave)
 
-Learn more about the concepts and architecture behind Fireproof on our website.
+Learn more about the concepts and architecture behind Fireproof [in our plan.](https://hackmd.io/@j-chris/SyoE-Plpj)
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -66,7 +66,7 @@ const { rows, ref } = await index.query({ range: [40, 52] })
 //   { key: 47, value: 'André', id: 'three-thousand' } ]
 ```
 
-### Realtime Updates
+### Realtime Updates 🚧 (coming soon)
 
 Subscribe to query changes in your application, so your UI updates automatically. Use the supplied React hooks, our Redux connector, or simple function calls to be notified of relevant changes.
 
@@ -83,11 +83,25 @@ listener.on('new-member', (doc) => {
 
 ### Self-soverign Identity
 
-Fireproof is so easy to integrate with any site or app because you can get started right away, and set up an account later. By default users write to their own database copy, so you can get pretty far before you even have to think about API keys.
+Fireproof is so easy to integrate with any site or app because you can get started right away, and set up an account later. By default users write to their own database copy, so you can get pretty far before you even have to think about API keys. [Authorization is via non-extractable keypair](https://ucan.xyz), like TouchID / FaceID.
 
 ### Automatic Replication
 
 Documents changes are persisted to Filecoin via web3.storage, and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.]()
+
+## Limitations 💣
+
+### Security
+
+Until encryption support is enabled, all data written to Fireproof is public. There are no big hurdles for this feature but it's not ready yet.
+
+### Persistence
+
+Currently Fireproof writes transactions and proofs to [in-memory CAR files](https://ipld.io/specs/transport/car/carv2/) which are well suited for peer and cloud replication. Coming soon.
+
+### Pre-beta Software
+
+While the underlying data structures and libraries Fireproof uses are trusted with billions of dollars worth of data, Fireproof started in February of 2023. Results may vary.
 
 ## Thanks
 
