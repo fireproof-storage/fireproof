@@ -25,7 +25,7 @@ export default class Fireproof {
     this.clock = clock
     this.config = config
     this.authCtx = authCtx
-    this.instanceId = Math.random().toString(36).substring(2, 7)
+    this.instanceId = 'db.' + Math.random().toString(36).substring(2, 7)
   }
 
   /**

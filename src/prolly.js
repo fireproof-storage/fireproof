@@ -12,7 +12,7 @@ const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
 const withLog = async (label, fn) => {
   const resp = await fn()
-  console.log('withLog', label, !!resp)
+  // console.log('withLog', label, !!resp)
   return resp
 }
 
@@ -59,7 +59,7 @@ const makeGetAndPutBlock = (inBlocks) => {
   const getBlock = makeGetBlock(blocks)
   const put = inBlocks.put.bind(inBlocks)
   const bigPut = async (block, additions) => {
-    console.log('bigPut', block.cid.toString())
+    // console.log('bigPut', block.cid.toString())
     const { cid, bytes } = block
     await put(cid, bytes)
     mblocks.putSync(cid, bytes)
@@ -146,8 +146,8 @@ export async function root (inBlocks, head) {
   const bulkOperations = bulkFromEvents(sorted)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
 
-  console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
-  doTransaction(inBlocks, async () => {
+  // console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
+  await doTransaction(inBlocks, async () => {
     for (const nb of newBlocks) {
       await bigPut(nb)
     }
