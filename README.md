@@ -87,7 +87,7 @@ Fireproof is so easy to integrate with any site or app because you can get start
 
 ### Automatic Replication
 
-Documents changes are persisted to Filecoin via web3.storage, and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.]()
+Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.]()
 
 ## Limitations 💣
 
