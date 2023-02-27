@@ -6,7 +6,7 @@ to offer a new kind of database that:
 - scales without incurring developer costs, thanks to Filecoin
 - uses cryptographically verifiable protocols (what plants crave)
 
-Learn more about the concepts and architecture behind Fireproof [in our plan.](https://hackmd.io/@j-chris/SyoE-Plpj)
+Learn more about the concepts and architecture behind Fireproof [in our plan,](https://hackmd.io/@j-chris/SyoE-Plpj) or jump to the [quick start](#quick-start) for React and server-side examples.
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -105,11 +105,15 @@ While the underlying data structures and libraries Fireproof uses are trusted wi
 
 ## Thanks 🙏
 
-Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VScode all this would have taken so much longer. But the distinguishing work on immutable datastructures came from the years of consideration IPFS, IPLD, and the Filecoin APIs have enjoyed.
+Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. The API is inspired by my familiarity with Apache CouchDB, one of the original document databases. But the distinguishing work on immutable datastructures came from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
 
-## Install
+## Quick Start
+
+Look in the `examples/` directory for projects using the database. It's not picky how you use it, but we want to provide convenient jumping off places. Think of the examples a great to fork for you next project.
+
+If are adding Fireproof to an existing page, just install it and [paste the code from the usage example above](#usage) into your app where it will run.
 
 ```
 npm install @fireproof-storage/fireproof
