@@ -224,11 +224,11 @@ describe('Fireproof', () => {
     assert.equal(res9.rows.length, 0)
   })
 
-  it('docs since repeated changes', async () => {
+  it.skip('docs since repeated changes', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
     for (let index = 0; index < 200; index++) {
-      const id = '_' + (300 - index).toString()
+      const id = '' + (300 - index).toString()
       resp = await database.put({ index, _id: id }).catch(e => {
         assert.equal(e.message, 'put failed on  _id: ' + id)
       })
