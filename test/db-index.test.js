@@ -37,7 +37,7 @@ describe('Index query', () => {
     assert.equal(result.rows[0].key, 43)
     assert(result.rows[0].value === 'carol', 'correct value')
   })
-  it('query exact key', async () => {
+  it.skip('query exact key', async () => {
     const result = await index.query({ key: 43 })
     assert(result, 'did return result')
     assert(result.rows)

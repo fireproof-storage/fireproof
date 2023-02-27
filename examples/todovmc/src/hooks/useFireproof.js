@@ -26,15 +26,18 @@ const defineDatabase = async () => {
   })
   database.todosbyList = new Index(database, function (doc, map) {
     if (doc.type === 'todo' && doc.listId) {
-      map(doc.listId, null)
+      map(doc.listId, doc)
     }
   })
+  window.database = database
   return database
 }
 
-export default function useFireproof () {
+export default function useFireproof (options) {
   const [database, setDatabase] = useState(null)
   const [ready, setReady] = useState(false)
+  const refresh = options.refresh || (() => {})
+
   useEffect(() => {
     const doSetup = async () => {
       const db = await defineDatabase()
@@ -48,6 +51,12 @@ export default function useFireproof () {
     doSetup()
   }, [])
 
+  const withRefresh = (fn) => async (...args) => {
+    const result = await fn(...args)
+    refresh()
+    return result
+  }
+
   const fetchAllLists = async () => {
     console.log('fetchAllLists', database.instanceId)
     const lists = await database.allLists.query({ range: ['list', 'listx'] })
@@ -55,32 +64,32 @@ export default function useFireproof () {
     return lists.rows.map((row) => row.value)
   }
 
-  const fetchList = async (_id) => {
-    console.log('list', _id, database.instanceId)
+  const fetchListWithTodos = async (_id) => {
     const list = await database.get(_id)
-    console.log('list', list, database.instanceId)
     const todos = await database.todosbyList.query({ range: [_id, _id + 'x'] })
-    return { list, todos }
+    return { list, todos: todos.rows.map((row) => row.value) }
   }
 
   const addList = async (title) => {
     return await database.put({ title, type: 'list' })
   }
 
-  const addTodo = async (listId) => async (title) => {
+  const addTodo = withRefresh(async (listId, title) => {
     return await database.put({ completed: false, title, listId, type: 'todo' })
-  }
+  })
 
-  const toggle = async ({ completed, ...doc }) => {
+  const toggle = withRefresh(async ({ completed, ...doc }) => {
     return await database.put({ completed: !completed, ...doc })
-  }
-  const destroy = async (todo, _id) => {
-    return await database.del(todo._id)
-  }
+  })
 
-  const save = async (title) => async (todoToSave) => {
-    return await database.put({ title, ...todoToSave })
-  }
+  const destroy = withRefresh(async ({ _id }) => {
+    return await database.del(_id)
+  })
+
+  const updateTitle = withRefresh(async (doc, title) => {
+    console.log('updateTitle', doc, title)
+    return await database.put({ title, ...doc })
+  })
 
   const clearCompleted = async (listId) => {
     const todos = await database.todosbyList.get(listId)
@@ -92,7 +101,7 @@ export default function useFireproof () {
 
   return {
     fetchAllLists,
-    fetchList,
+    fetchListWithTodos,
 
     addList,
     addTodo,
@@ -100,7 +109,7 @@ export default function useFireproof () {
     // load,
     toggle,
     destroy,
-    save,
+    updateTitle,
     clearCompleted,
     // onAuthChange
     // isLoading
