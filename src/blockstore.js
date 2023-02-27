@@ -33,8 +33,8 @@ export default class TransactionBlockstore {
    */
   async get (cid) {
     const key = cid.toString()
-    const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
-    // const bytes = this.#blocks.get(key) || await this.#valetGet(key)
+    // const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
+    const bytes = this.#blocks.get(key) || await this.#valetGet(key)
     if (!bytes) return
     return { cid, bytes }
   }
@@ -129,7 +129,7 @@ export default class TransactionBlockstore {
 }
 
 export const doTransaction = async (blockstore, doFun) => {
-  if (!blockstore.commit) return doFun(blockstore)
+  if (!blockstore.commit) return await doFun(blockstore)
   try {
     const blocks = blockstore.begin()
     const result = await doFun(blocks)

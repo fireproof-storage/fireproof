@@ -90,7 +90,7 @@ export default class Index {
         await this.#updateIndex(blocks)
       })
     }
-    const response = await queryIndexRange(this.database.blocks, root || this.indexRoot, query)
+    const response = await doIndexQuery(this.database.blocks, root || this.indexRoot, query)
     return {
       // TODO fix this naming upstream in prolly/db-index
       // todo maybe this is a hint about why deletes arent working?
@@ -117,7 +117,7 @@ export default class Index {
         // .map((key) => ({ key: undefined, del: true })) // todo why does this work?
 
       this.indexRoot = await bulkIndex(blocks, this.indexRoot, oldIndexEntries, opts)
-      console.x('oldIndexEntries', oldIndexEntries)
+      // console.x('oldIndexEntries', oldIndexEntries)
       // [ { key: ['b', 1], del: true } ]
       // [ { key: [ 5, 'x' ], del: true } ]
       // for now we just let the by id index grow and then don't use the results...
@@ -125,10 +125,12 @@ export default class Index {
       // this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
     }
     const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
-    const byIdIndexEntries = indexEntries.map(({ key, value }) => ({ key: key[1], value: key }))
+    const byIdIndexEntries = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
     // [{key:  'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', value : [ 53, 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c' ]}]
     this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, byIdIndexEntries, opts)
+    console.log('indexEntries', indexEntries)
     this.indexRoot = await bulkIndex(blocks, this.indexRoot, indexEntries, opts)
+    // console.log('did index', this.indexRoot)
     this.dbHead = result.head
   }
 
@@ -162,14 +164,14 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
     // load existing index
     console.x('loading index', inRoot.cid)
     const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    console.x('new indexEntries', indexEntries)
+    console.log('new indexEntries', indexEntries)
     const { root, blocks } = await index.bulk(indexEntries)
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
     console.x('updated index', root.block.cid)
 
-    return root.block // if we hold the root we won't have to load every time
+    return await root.block // if we hold the root we won't have to load every time
   }
 }
 
@@ -180,10 +182,16 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
  * @param {import('prolly-trees/db-index').Query} query
  * @returns {Promise<import('prolly-trees/db-index').QueryResult>}
  **/
-async function queryIndexRange (blocks, { cid }, query) {
+async function doIndexQuery (blocks, root, query) {
+  const cid = root && root.cid
   if (!cid) return { result: [] }
   const getBlock = makeGetBlock(blocks)
   const index = await load({ cid, get: getBlock, ...opts })
-  const encodedRange = query.range.map((key) => charwise.encode(key))
-  return index.range(...encodedRange)
+  if (query.range) {
+    const encodedRange = query.range.map((key) => charwise.encode(key))
+    return index.range(...encodedRange)
+  } else if (query.key) {
+    const encodedKey = charwise.encode(query.key)
+    return index.get(encodedKey)
+  }
 }

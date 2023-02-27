@@ -50,6 +50,7 @@ const makeGetAndPutBlock = (inBlocks) => {
   const getBlock = makeGetBlock(blocks)
   const put = inBlocks.put.bind(inBlocks)
   const bigPut = async (block, additions) => {
+    // console.log('bigPut', block.cid.toString())
     const { cid, bytes } = block
     await put(cid, bytes)
     mblocks.putSync(cid, bytes)
