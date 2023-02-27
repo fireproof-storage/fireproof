@@ -1,4 +1,4 @@
-# Fireproof
+# 🔥 Fireproof
 
 Fireproof is a realtime database for today's interactive applications. It uses immutable data and distributed protocols 
 to offer a new kind of database that:
