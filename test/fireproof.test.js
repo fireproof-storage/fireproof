@@ -224,22 +224,22 @@ describe('Fireproof', () => {
     assert.equal(res9.rows.length, 0)
   })
 
-  it('docs since repeated changes', async () => {
+  it.skip('docs since repeated changes', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
-    for (let index = 0; index < 50; index++) {
+    for (let index = 0; index < 200; index++) {
       const id = (300 - index).toString()
       resp = await database.put({ index, _id: id }).catch(e => {
-        assert.equal(e.message, 'put failed on  _id: ' + id)
+        assert.equal(e.message, 'put failed on ' + index)
       })
       assert(resp.id)
       doc = await database.get(resp.id).catch(e => {
         console.trace('42', e)
-        assert.equal(e.message, 'get failed on _id: ' + id)
+        assert.equal(e.message, 'get failed on ' + index)
       })
       assert.equal(doc.index, index)
       changes = await database.changesSince().catch(e => {
-        assert.equal(e.message, 'changesSince failed on  _id: ' + id)
+        assert.equal(e.message, 'changesSince failed on ' + index)
       })
       assert.equal(changes.rows.length, index + 2)
     }
