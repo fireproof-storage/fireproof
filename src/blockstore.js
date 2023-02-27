@@ -28,6 +28,7 @@ export default class TransactionBlockstore {
   #valet = new Map() // cars by cid
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
+  #transactionLabel = ''
 
   /**
    * Get a block from the store.
@@ -81,10 +82,11 @@ export default class TransactionBlockstore {
   begin (label = '') {
     if (this.#blocks.size > 0) {
       const cids = Array.from(this.#blocks.entries()).map(([cid]) => (cid)).join(', ')
-      console.trace(`Transaction ${label} already in progress, blocks:`, cids)
-      throw new Error(`Transaction ${label} already in progress: ${cids}`)
+      console.trace(`Can't start new transaction ${label} b/c ${this.#transactionLabel} already in progress, blocks:`, cids)
+      throw new Error(`Transaction ${this.#transactionLabel} already in progress: ${cids}`)
       // this.#blocks = new Map()
     }
+    this.#transactionLabel = label
     return this
   }
 
@@ -135,15 +137,15 @@ export default class TransactionBlockstore {
   }
 }
 
-export const doTransaction = async (blockstore, doFun) => {
+export const doTransaction = async (label, blockstore, doFun) => {
   if (!blockstore.commit) return await doFun(blockstore)
   try {
-    const blocks = blockstore.begin()
+    const blocks = blockstore.begin(label)
     const result = await doFun(blocks)
-    await blockstore.commit()
+    await blockstore.commit(label)
     return result
   } catch (e) {
-    console.trace('Transaction failed', e)
+    console.trace(`Transaction ${label} failed`, e)
     blockstore.rollback()
     throw e
   }

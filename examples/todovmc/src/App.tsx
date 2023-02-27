@@ -114,7 +114,6 @@ function List() {
 
 
   let { list, todos } = useLoaderData() as ListLoaderData;
-  console.log('load data', { params, list, todos })
   const pathFlag = 'all'
   const uri = window.location.pathname
   const filteredTodos = {
@@ -154,11 +153,9 @@ function List() {
         })}
       </ul>
       <InputArea
-        onSubmit={async (title: string) => {
-          const ok = await addTodo(list._id, title)
-          console.log('add todo', ok.id)
-          setHack(hack + 1)
-        }}
+        onSubmit={async (title: string) =>
+          await addTodo(list._id, title)
+        }
         placeholder='Add a new item to your list.'
       />
 
@@ -199,7 +196,6 @@ function App() {
   const { fetchListWithTodos, fetchAllLists, ready } = fireproof
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
-    console.log('list loader', listId)
     return await fetchListWithTodos(listId)
   }
 

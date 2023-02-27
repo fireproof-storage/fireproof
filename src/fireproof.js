@@ -91,7 +91,7 @@ export default class Fireproof {
    * @returns {Promise<import('./prolly').PutResult>} - the result of adding the document
    */
   async put ({ _id, ...doc }) {
-    const id = _id || Math.random().toString(36).slice(2)
+    const id = _id || 'f' + Math.random().toString(36).slice(2)
     if (this.config && this.config.validateChange) {
       await this.runValidation({ _id: id, ...doc })
     }
@@ -113,7 +113,7 @@ export default class Fireproof {
   }
 
   async doPut (event) {
-    const result = await doTransaction(this.blocks, async (blocks) => await put(blocks, this.clock, event))
+    const result = await doTransaction('doPut', this.blocks, async (blocks) => await put(blocks, this.clock, event))
     if (!result) {
       console.log('failed', event)
     }

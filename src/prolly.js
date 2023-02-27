@@ -145,12 +145,13 @@ export async function root (inBlocks, head) {
   // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = bulkFromEvents(sorted)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
-
+  const prollyRootBlock = await newProllyRootNode.block
   // console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
-  await doTransaction(inBlocks, async () => {
+  await doTransaction('root', inBlocks, async () => {
     for (const nb of newBlocks) {
       await bigPut(nb)
     }
+    bigPut(prollyRootBlock)
   })
 
   return (await newProllyRootNode.block).cid

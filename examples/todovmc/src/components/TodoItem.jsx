@@ -67,7 +67,6 @@ class TodoItem extends Component {
   }
 
   render () {
-    console.log(this.props.todo)
     return (
       <li
         className={classNames({
