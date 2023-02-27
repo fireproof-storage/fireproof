@@ -2,7 +2,7 @@
   "name": "@jchris/fireproof",
   "version": "0.0.1",
   "description": "Realtime database for IPFS",
-  "main": "fireproof.js",
+  "main": "index.js",
   "type": "module",
   "bin": {
     "fireproof": "./src/cli.js"

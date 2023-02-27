@@ -1,6 +1,6 @@
 // import { vis } from './clock.js'
 import { put, get, getAll, eventsSince } from './prolly.js'
-import { doTransaction } from './blockstore.js'
+import Blockstore, { doTransaction } from './blockstore.js'
 
 /**
  * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
@@ -91,7 +91,7 @@ export default class Fireproof {
     if (this.config && this.config.validateChange) {
       await this.runValidation({ _id: id, ...doc })
     }
-    return await this.#doPut({ key: id, value: doc })
+    return await this.doPut({ key: id, value: doc })
   }
 
   /**
@@ -103,12 +103,12 @@ export default class Fireproof {
     if (this.config && this.config.validateChange) {
       await this.runValidation({ _id: id, _deleted: true })
     }
-    // return await this.#doPut({ key: id, del: true }) // not working at prolly tree layer?
+    // return await this.doPut({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
-    return await this.#doPut({ key: id, value: null })
+    return await this.doPut({ key: id, value: null })
   }
 
-  async #doPut (event) {
+  async doPut (event) {
     const result = await doTransaction(this.blocks, async (blocks) => await put(blocks, this.clock, event))
     if (!result) {
       console.log('failed', event)
@@ -159,4 +159,8 @@ export default class Fireproof {
     got._id = key
     return got
   }
+}
+
+Fireproof.storage = async (_email) => {
+  return new Fireproof(new Blockstore(), [])
 }
