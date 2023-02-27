@@ -10,7 +10,8 @@
   "scripts": {
     "test": "mocha test/*.test.js",
     "coverage": "c8 -r html -r text npm test",
-    "lint": "standard"
+    "lint": "standard",
+    "lint:fix": "standard --fix"
   },
   "keywords": [
     "database",
