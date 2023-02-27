@@ -37,9 +37,10 @@ export default class TransactionBlockstore {
    */
   async get (cid) {
     const key = cid.toString()
-    // const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
-    const bytes = this.#blocks.get(key) || await this.#valetGet(key)
-    if (!bytes) return
+    const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
+    // const bytes = this.#blocks.get(key) || await this.#valetGet(key)
+    // console.log('bytes', typeof bytes)
+    if (!bytes) throw new Error('Missing block: ' + key)
     return { cid, bytes }
   }
 
@@ -50,10 +51,10 @@ export default class TransactionBlockstore {
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
-    // console.log('put', cid)
+    // console.log('put', cid.toString())
     this.#blocks.set(cid.toString(), bytes)
     this.lastCid = cid
-    await sleep(1000)
+    // await sleep(5)
   }
 
   /**
@@ -79,7 +80,7 @@ export default class TransactionBlockstore {
      */
   begin () {
     if (this.#blocks.size > 0) {
-    //   console.trace('Transaction already in progress, blocks:', this.#blocks.size)
+      console.trace('Transaction already in progress, blocks:', Array.from(this.#blocks.entries()).map(([cid]) => (cid)))
       throw new Error('Transaction already in progress')
       // this.#blocks = new Map()
     }

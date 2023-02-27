@@ -46,10 +46,13 @@ function Login() {
 }
 
 function AllLists() {
-  // const {  addList } = useContext(FireproofCtx)
+  const { addList } = useContext(FireproofCtx)
+  const navigate = useNavigate()
   let lists = useLoaderData() as ListDoc[];
-
-  const onSubmit = (title: string) => { }
+  const onSubmit = async (title: string) => {
+    const { id } = await addList(title)
+    navigate(`/list/${id}`)
+  }
   return (
     <div>
       <div className='listNav'>
@@ -60,7 +63,6 @@ function AllLists() {
           {lists.map(({ title, _id }) => {
             return (
               <li key={_id}>
-                {/* <label onClick={() => alert('go')}>{data.title}</label> */}
                 <label>
                   <Link to={`/list/${_id}`}>{title}</Link>
                 </label>
@@ -99,97 +101,76 @@ interface AppState {
   err: Error | null
 }
 
-function List(props: { path?: string; listId?: any; uri?: any }) {
+function List() {
   const {
-    fetchList,
-    isLoading,
     addTodo,
     toggle,
     destroy,
-    load,
     clearCompleted,
-    save
+    updateTitle
   } = useContext(FireproofCtx)
-
   let params = useParams();
-  let data = useLoaderData() as ListDoc;
-  console.log('load data', { params, data })
-  const [state, realsetState] = useState<AppState>({
-    list: {
-      _id: 'chillout-typescript',
-      type: "list",
-      title: "Loading..."
-    }, todos: [], err: null
-  })
-  function setState(state) {
-    console.log('setStatenew', state)
-    return realsetState(state)
-  }
-  const { listId, uri } = props
-  // console.log('list', props)
-  // const pathFlag = props.path?.split('/')[1] || 'all'
+  const [hack, setHack] = useState(0)
+
+
+  let { list, todos } = useLoaderData() as ListLoaderData;
+  console.log('load data', { params, list, todos })
   const pathFlag = 'all'
-  console.log({ pathFlag, uri, listId, state })
-  const shownTodos = {
-    all: state.todos,
-    active: state.todos.filter((todo) => !todo.completed),
-    completed: state.todos.filter((todo) => todo.completed)
-  }[pathFlag]
+  const uri = window.location.pathname
+  const filteredTodos = {
+    all: todos,
+    active: todos.filter((todo) => !todo.completed),
+    completed: todos.filter((todo) => todo.completed)
+  }
+  const shownTodos = filteredTodos[pathFlag]
 
 
-  const [editing, setEditing] = useState(null)
+  const [editing, setEditing] = useState("")
   const navigate = useNavigate()
-  const edit = (todo) => () => setEditing(todo._id)
-  const onClearCompleted = () =>
-    load(clearCompleted(state.list, listId).then(setState))
+  const edit = (todo: TodoDoc) => () => setEditing(todo._id)
+  const onClearCompleted = async () => await clearCompleted(list._id)
+
   return (
     <div>
-      {(isLoading) && <Spinner />}
       <div className='listNav'>
-        <label>List: {state.list.title}</label>
         <button onClick={() => navigate('/')}>back to all lists</button>
+        <label>List: {list.title}</label>
       </div>
       <ul className='todo-list'>
-        {state.err
-          ? (
-            <div>{JSON.stringify(state.err, null, 2)} </div>
+        {shownTodos.map((todo) => {
+          const handle = (fn: (arg0: TodoDoc, arg1: string) => any) => (val: string) => fn(todo, val)
+          return (
+            <TodoItem
+              key={todo._id}
+              todo={todo}
+              onToggle={handle(toggle)}
+              onDestroy={handle(destroy)}
+              onSave={handle(updateTitle)}
+              onEdit={edit(todo)}
+              editing={editing === todo._id}
+              onCancel={console.log}
+            />
           )
-          : (
-            shownTodos &&
-            shownTodos.map((todo) => {
-              const handle = (fn) => () => load(fn(todo, listId).then(setState))
-              return (
-                <TodoItem
-                  key={todo._id}
-                  todo={todo}
-                  onToggle={handle(toggle)}
-                  onDestroy={handle(destroy)}
-                  onEdit={edit(todo)}
-                  editing={editing === todo._id}
-                  onSave={(val) => handle(save(val))()}
-                  onCancel={console.log}
-                />
-              )
-            })
-          )}
+        })}
       </ul>
       <InputArea
-        onSubmit={(title) =>
-          load(addTodo(state.list, listId)(title).then(setState))}
+        onSubmit={async (title: string) => {
+          const ok = await addTodo(list._id, title)
+          console.log('add todo', ok.id)
+          setHack(hack + 1)
+        }}
         placeholder='Add a new item to your list.'
       />
 
-      {state.todos && (
-        <Footer
-          count={shownTodos.length}
-          completedCount={
-            state.todos.filter((todo) => todo.completed).length
-          }
-          onClearCompleted={onClearCompleted}
-          nowShowing={pathFlag}
-          uri={uri && uri.split('/').slice(0, 3).join('/')}
-        />
-      )}
+      <Footer
+        count={shownTodos.length}
+        completedCount={
+          filteredTodos['completed'].length
+        }
+        onClearCompleted={onClearCompleted}
+        nowShowing={pathFlag}
+        uri={uri && uri.split('/').slice(0, 3).join('/')}
+      />
     </div>
   )
 }
@@ -202,14 +183,24 @@ const NotFound = () => (
   </div>
 )
 
+interface ListLoaderData {
+  list: ListDoc
+  todos: TodoDoc[]
+}
 
 
 function App() {
-  const fireproof = useFireproof()
-  const { fetchList, fetchAllLists, ready } = fireproof
+  const [hack, setHack] = useState(0)
+  const fireproof = useFireproof({
+    refresh: () => {
+      setHack(hack + 1)
+    }
+  })
+  const { fetchListWithTodos, fetchAllLists, ready } = fireproof
 
-  async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListDoc> {
-    return await fetchList(listId)
+  async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
+    console.log('list loader', listId)
+    return await fetchListWithTodos(listId)
   }
 
   async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {

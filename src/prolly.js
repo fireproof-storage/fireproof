@@ -3,12 +3,21 @@ import { create, load } from 'prolly-trees/map'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
+import { doTransaction } from './blockstore.js'
+
 import { nocache as cache } from 'prolly-trees/cache'
 import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 import { create as createBlock } from 'multiformats/block'
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
+
+const withLog = async (label, fn) => {
+  const resp = await fn()
+  console.log('withLog', label, !!resp)
+  return resp
+}
+
 const makeGetBlock = (blocks) => async (address) => {
-  const { cid, bytes } = await blocks.get(address)
+  const { cid, bytes } = await withLog(address, () => blocks.get(address))
   return createBlock({ cid, bytes, hasher, codec })
 }
 
@@ -50,7 +59,7 @@ const makeGetAndPutBlock = (inBlocks) => {
   const getBlock = makeGetBlock(blocks)
   const put = inBlocks.put.bind(inBlocks)
   const bigPut = async (block, additions) => {
-    // console.log('bigPut', block.cid.toString())
+    console.log('bigPut', block.cid.toString())
     const { cid, bytes } = block
     await put(cid, bytes)
     mblocks.putSync(cid, bytes)
@@ -58,7 +67,7 @@ const makeGetAndPutBlock = (inBlocks) => {
       additions.set(cid.toString(), block)
     }
   }
-  return { getBlock, put, bigPut, mblocks, blocks }
+  return { getBlock, bigPut, mblocks, blocks }
 }
 
 const bulkFromEvents = (sorted) =>
@@ -107,14 +116,15 @@ export async function put (inBlocks, head, event, options) {
 
   const bulkOperations = bulkFromEvents(sorted)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk([...bulkOperations, event]) // ading delete support here
-
+  const prollyRootBlock = await newProllyRootNode.block
   const additions = new Map() // ; const removals = new Map()
+  await bigPut(prollyRootBlock, additions)
   for (const nb of newBlocks) {
     await bigPut(nb, additions)
   }
 
   return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut,
-    await newProllyRootNode.block, event, head, Array.from(additions.values()) /*, Array.from(removals.values()) */)
+    prollyRootBlock, event, head, Array.from(additions.values()) /*, Array.from(removals.values()) */)
 }
 
 /**
@@ -127,15 +137,23 @@ export async function root (inBlocks, head) {
   if (!head.length) {
     throw new Error('no head')
   }
-  const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
+  const { getBlock, blocks, bigPut } = makeGetAndPutBlock(inBlocks)
   const events = new EventFetcher(blocks)
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
 
   // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = bulkFromEvents(sorted)
-  const { root: newProllyRootNode } = await prollyRootNode.bulk(bulkOperations)
-  return await newProllyRootNode.block.cid
+  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
+
+  console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
+  doTransaction(inBlocks, async () => {
+    for (const nb of newBlocks) {
+      await bigPut(nb)
+    }
+  })
+
+  return (await newProllyRootNode.block).cid
 }
 
 /**

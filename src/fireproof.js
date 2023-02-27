@@ -51,7 +51,7 @@ export default class Fireproof {
    * }>} - An object `{rows : [...{key, value, del}], head}` containing the rows and the head of the instance's clock.
    */
   async changesSince (event) {
-    console.log('changesSince', this.instanceId, event, this.clock)
+    // console.log('changesSince', this.instanceId, event, this.clock)
     let rows
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
@@ -64,10 +64,10 @@ export default class Fireproof {
         }
       }
       rows = Array.from(docsMap.values())
-      console.log('new rows', this.instanceId, rows)
+      // console.log('change rows', this.instanceId, rows)
     } else {
       rows = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value }))
-      console.log('all rows', this.instanceId, rows)
+      // console.log('dbdoc rows', this.instanceId, rows)
     }
     return { rows, head: this.clock }
   }

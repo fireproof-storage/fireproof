@@ -5,6 +5,8 @@ import Fireproof from '../src/fireproof.js'
 
 let database, resp0
 
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
 describe('Fireproof', () => {
   beforeEach(async () => {
     database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
@@ -214,4 +216,21 @@ describe('Fireproof', () => {
     const res9 = await database.changesSince(res8.head)
     assert.equal(res9.rows.length, 0)
   })
+
+  it('docs since rapid changes', async () => {
+    // const changes = await database.changesSince()
+    // assert.equal(changes.rows.length, 1)
+    let resp, doc
+    for (let index = 0; index < 50; index++) {
+      console.log('since rapid changes', index)
+      resp = await database.put({ index })
+      assert(resp.id)
+      console.log('resp', resp.id)
+      doc = await database.get(resp.id)
+      assert.equal(doc.index, index)
+      // await sleep(200)
+      // changes = await database.changesSince()
+      // assert.equal(changes.rows.length, index + 2)
+    }
+  }).timeout(20000)
 })

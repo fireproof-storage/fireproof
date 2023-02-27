@@ -128,7 +128,7 @@ export default class Index {
     const byIdIndexEntries = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
     // [{key:  'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', value : [ 53, 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c' ]}]
     this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, byIdIndexEntries, opts)
-    console.log('indexEntries', indexEntries)
+    // console.log('indexEntries', indexEntries)
     this.indexRoot = await bulkIndex(blocks, this.indexRoot, indexEntries, opts)
     // console.log('did index', this.indexRoot)
     this.dbHead = result.head
@@ -158,19 +158,18 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
       await putBlock(block.cid, block.bytes)
       inRoot = block
     }
-    console.x('created index', inRoot.cid)
+    // console.x('created index', inRoot.cid)
     return inRoot
   } else {
     // load existing index
-    console.x('loading index', inRoot.cid)
+    // console.x('loading index', inRoot.cid)
     const index = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    console.log('new indexEntries', indexEntries)
+    // console.log('new indexEntries', indexEntries)
     const { root, blocks } = await index.bulk(indexEntries)
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    console.x('updated index', root.block.cid)
-
+    // console.x('updated index', root.block.cid)
     return await root.block // if we hold the root we won't have to load every time
   }
 }
