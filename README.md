@@ -103,7 +103,7 @@ Currently Fireproof writes transactions and proofs to in-memory [CAR files](http
 
 While the underlying data structures and libraries Fireproof uses are trusted with billions of dollars worth of data, Fireproof started in February of 2023. Results may vary.
 
-## Thanks
+## Thanks 🙏
 
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VScode all this would have taken so much longer. But the distinguishing work on immutable datastructures came from the years of consideration IPFS, IPLD, and the Filecoin APIs have enjoyed.
 
