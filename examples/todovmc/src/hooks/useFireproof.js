@@ -10,14 +10,14 @@ const lists = [
     data: {
       title: 'My Todo List',
       owner: 'did:github:jchris'
-    },
+    }
   },
   {
     _id: '3722a2a2-025d-44b9-a0cc-ec43b9d15422',
     data: {
       title: 'Another Todo List',
       owner: 'did:github:jchris'
-    },
+    }
   }
 ]
 
@@ -28,7 +28,7 @@ const todos = [
       title: 'My Todo',
       list: 'bc6c751d-5461-4a32-b6e1-6e76b39107d5',
       completed: false
-    },
+    }
   },
   {
     _id: '1d5e5dc5-c5a4-4c7f-90ba-1ad8d3636b21',
@@ -36,7 +36,7 @@ const todos = [
       title: 'Another Todo',
       list: 'bc6c751d-5461-4a32-b6e1-6e76b39107d5',
       completed: true
-    },
+    }
   },
   {
     _id: '87a0d3a3-57c3-42b1-8a87-c56b2627f78d',
@@ -44,7 +44,7 @@ const todos = [
       title: 'Yet Another Todo',
       list: '3722a2a2-025d-44b9-a0cc-ec43b9d15422',
       completed: false
-    },
+    }
   }
 ]
 
@@ -81,7 +81,7 @@ export default function useFireproof () {
         data: {
           title: 'Default Todo List',
           owner: me
-        },
+        }
       }
       listsState.push(defaultList)
       await addTodo(defaultList, defaultList._id)('Default Todo')
@@ -107,7 +107,7 @@ export default function useFireproof () {
       data: {
         title,
         owner: 'did:github:jchris'
-      },
+      }
     }
     // Simulate a delay
     await new Promise((resolve) => setTimeout(resolve, 100))
@@ -124,7 +124,7 @@ export default function useFireproof () {
         title,
         list: list._id,
         completed: false
-      },
+      }
     }
     // Simulate a delay
     await new Promise((resolve) => setTimeout(resolve, 100))
