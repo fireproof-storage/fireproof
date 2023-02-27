@@ -1,6 +1,6 @@
 import React from 'react'
 import logo from '../../assets/logo.svg'
-import styles from './AppHeader.css?inline' // eslint-disable-line
+import styles from './AppHeader.css' // eslint-disable-line
 
 /**
  * AppHeader component
