@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import * as CBW from '@ipld/car/buffer-writer'
 import { CarReader } from '@ipld/car'
 
-// const sleep = ms => new Promise(r => setTimeout(r, ms))
+const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 /**
  * @typedef {Object} AnyBlock
@@ -53,6 +53,7 @@ export default class TransactionBlockstore {
     // console.log('put', cid)
     this.#blocks.set(cid.toString(), bytes)
     this.lastCid = cid
+    await sleep(1000)
   }
 
   /**
@@ -137,7 +138,6 @@ export const doTransaction = async (blockstore, doFun) => {
   try {
     const blocks = blockstore.begin()
     const result = await doFun(blocks)
-    // await sleep(1000)
     await blockstore.commit()
     return result
   } catch (e) {

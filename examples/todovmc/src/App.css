@@ -1,42 +1,28 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.fbLogin {
+  margin-left: 4px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.Login {
+  background: #4c69ba;
+  background: linear-gradient(#4c69ba, #3b55a0);
+  color: white;
+  padding: 10px;
+  /*margin-bottom: 10px;*/
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.listNav {
+  background: #44568a;
+  background: linear-gradient(#737681, #666a7a);
+  color: white;
+  padding: 10px;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.listNav button {
+  float: right;
 }
-
-.card {
-  padding: 2em;
+.Login a {
+  color: white;
 }
-
-.read-the-docs {
-  color: #888;
+.Login form input,
+.Login form button {
+  margin: 0 5px;
 }
