@@ -6,7 +6,7 @@ import { CID } from 'multiformats/cid'
 import * as CBW from '@ipld/car/buffer-writer'
 import { CarReader } from '@ipld/car'
 
-const sleep = ms => new Promise(r => setTimeout(r, ms))
+// const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 /**
  * @typedef {Object} AnyBlock
@@ -78,10 +78,11 @@ export default class TransactionBlockstore {
      * @returns {Blockstore}
      * @memberof TransactionBlockstore
      */
-  begin () {
+  begin (label = '') {
     if (this.#blocks.size > 0) {
-      console.trace('Transaction already in progress, blocks:', Array.from(this.#blocks.entries()).map(([cid]) => (cid)))
-      throw new Error('Transaction already in progress')
+      const cids = Array.from(this.#blocks.entries()).map(([cid]) => (cid)).join(', ')
+      console.trace(`Transaction ${label} already in progress, blocks:`, cids)
+      throw new Error(`Transaction ${label} already in progress: ${cids}`)
       // this.#blocks = new Map()
     }
     return this

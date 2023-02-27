@@ -5,7 +5,7 @@ import Fireproof from '../src/fireproof.js'
 
 let database, resp0
 
-const sleep = ms => new Promise(r => setTimeout(r, ms))
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 describe('Fireproof', () => {
   beforeEach(async () => {
@@ -85,19 +85,21 @@ describe('Fireproof', () => {
     const getResp = await validationDatabase.get(validResp.id)
     assert.equal(getResp.name, 'alice')
 
-    let e = await validationDatabase.put({
-      _id: '222-bob',
-      name: 'bob',
-      age: 11
-    }).catch(e => e)
+    let e = await validationDatabase
+      .put({
+        _id: '222-bob',
+        name: 'bob',
+        age: 11
+      })
+      .catch((e) => e)
     assert.equal(e.message, 'no bobs allowed')
 
-    e = await validationDatabase.get('222-bob').catch(e => e)
+    e = await validationDatabase.get('222-bob').catch((e) => e)
     assert.equal(e.message, 'Not found')
   })
 
   it('get missing document', async () => {
-    const e = await database.get('missing').catch(e => e)
+    const e = await database.get('missing').catch((e) => e)
     assert.equal(e.message, 'Not found')
   })
   it('delete a document', async () => {
@@ -106,12 +108,15 @@ describe('Fireproof', () => {
     assert.equal(found._id, id)
     const deleted = await database.del(id)
     assert.equal(deleted.id, id)
-    const e = await database.get(id).then((doc) => assert.equal('should be deleted', JSON.stringify(doc))).catch(e => {
-      if (e.message !== 'Not found') {
-        throw (e)
-      }
-      return e
-    })
+    const e = await database
+      .get(id)
+      .then((doc) => assert.equal('should be deleted', JSON.stringify(doc)))
+      .catch((e) => {
+        if (e.message !== 'Not found') {
+          throw e
+        }
+        return e
+      })
     assert.equal(e.message, 'Not found')
   })
 
@@ -131,18 +136,20 @@ describe('Fireproof', () => {
     const getResp = await validationDatabase.get(validResp.id)
     assert.equal(getResp.name, 'bob')
 
-    const e = await validationDatabase.put({
-      _id: '222-bob',
-      name: 'bob',
-      age: 12
-    }).catch(e => e)
+    const e = await validationDatabase
+      .put({
+        _id: '222-bob',
+        name: 'bob',
+        age: 12
+      })
+      .catch((e) => e)
     assert.equal(e.message, 'no changing bob')
 
     let prevBob = await validationDatabase.get('222-bob')
     assert.equal(prevBob.name, 'bob')
     assert.equal(prevBob.age, 11)
 
-    const e2 = await validationDatabase.del('222-bob').catch(e => e)
+    const e2 = await validationDatabase.del('222-bob').catch((e) => e)
     assert.equal(e2.message, 'no changing bob')
 
     prevBob = await validationDatabase.get('222-bob')
@@ -217,20 +224,24 @@ describe('Fireproof', () => {
     assert.equal(res9.rows.length, 0)
   })
 
-  it('docs since rapid changes', async () => {
-    // const changes = await database.changesSince()
-    // assert.equal(changes.rows.length, 1)
-    let resp, doc
-    for (let index = 0; index < 50; index++) {
-      console.log('since rapid changes', index)
-      resp = await database.put({ index })
+  it('docs since repeated changes', async () => {
+    assert.equal((await database.changesSince()).rows.length, 1)
+    let resp, doc, changes
+    for (let index = 0; index < 200; index++) {
+      const id = (300 - index).toString()
+      resp = await database.put({ index, _id: id }).catch(e => {
+        assert.equal(e.message, 'put failed on ' + index)
+      })
       assert(resp.id)
-      console.log('resp', resp.id)
-      doc = await database.get(resp.id)
+      doc = await database.get(resp.id).catch(e => {
+        console.trace('42', e)
+        assert.equal(e.message, 'get failed on ' + index)
+      })
       assert.equal(doc.index, index)
-      // await sleep(200)
-      // changes = await database.changesSince()
-      // assert.equal(changes.rows.length, index + 2)
+      changes = await database.changesSince().catch(e => {
+        assert.equal(e.message, 'changesSince failed on ' + index)
+      })
+      assert.equal(changes.rows.length, index + 2)
     }
   }).timeout(20000)
 })
