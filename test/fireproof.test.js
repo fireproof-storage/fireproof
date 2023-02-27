@@ -24,6 +24,11 @@ describe('Fireproof', () => {
     assert.equal(avalue.age, 42)
     assert.equal(avalue._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
   })
+  it('has a factory for making new instances with default settings', async () => {
+    // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
+    const db = await Fireproof.storage({ email: 'jchris@gmail.com' })
+    assert(db instanceof Fireproof)
+  })
   it('update existing document', async () => {
     // const alice = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     // assert.equal(alice.name, 'alice')

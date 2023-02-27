@@ -1,0 +1,97 @@
+.app-logo {
+  height: 95px;
+  margin-top: -20px;
+  margin-right: 40px;
+}
+.app-title-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-title-text {
+  flex-grow: 1;
+}
+.app-header {
+  background-color: #222;
+  height: 105px;
+  padding: 20px;
+  color: white;
+  /* padding-left: 60px; */
+}
+.app-left-nav {
+  display: flex;
+}
+.app-title {
+  /* font-size: 32px; */
+  line-height: 2rem;
+  margin: 0px;
+  margin-top: 10px;
+}
+.app-intro {
+  font-size: large;
+}
+.deploy-button-wrapper {
+  margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.deploy-button {
+  width: 200px;
+}
+.view-src {
+  margin-top: 15px;
+  text-align: center;
+}
+.view-src img {
+  margin-right: 10px;
+}
+.view-src a {
+  text-decoration: none;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.github-icon {
+  width: 25px;
+  fill: white;
+}
+
+.todo-list li a {
+  text-decoration: none;
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+  .app-title-wrapper {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .app-title {
+    font-size: 23px;
+    margin-top: 0px;
+  }
+  .app-intro {
+    font-size: 14px;
+  }
+  .app-header {
+    padding-left: 20px;
+    height: auto;
+  }
+  .app-logo {
+    height: 60px;
+    margin-right: 20px;
+    animation: none;
+  }
+  .deploy-button-wrapper {
+    margin-left: 80px;
+    margin-top: 5px;
+  }
+  .deploy-button {
+    width: 150px;
+  }
+  .view-src {
+    display: none;
+  }
+}
