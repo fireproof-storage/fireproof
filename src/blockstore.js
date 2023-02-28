@@ -104,8 +104,10 @@ export default class TransactionBlockstore {
     for (const [str, bytes] of this.#blocks) {
       this.#oldBlocks.set(str, bytes)
     }
-    const newCar = await blocksToCarBlock(this.lastCid, this.#blocks)
-    this.#valet.set(newCar.cid.toString(), newCar.bytes)
+    if (this.lastCid) {
+      const newCar = await blocksToCarBlock(this.lastCid, this.#blocks)
+      this.#valet.set(newCar.cid.toString(), newCar.bytes)
+    }
   }
 
   /**
