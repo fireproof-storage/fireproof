@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "preinstall" : "cd ../.. && npm install",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
