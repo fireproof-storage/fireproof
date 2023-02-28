@@ -61,7 +61,7 @@ export default function useFireproof (options) {
 
   useEffect(() => {
     const doSetup = async () => {
-      // await loadFixtures(db)
+      await loadFixtures(database)
       setReady(true)
     }
     doSetup()
