@@ -31,6 +31,10 @@
 .app-header .app-title {
   margin-top: 12px;
 }
+.app-header .app-logo {
+  height:77px;
+  margin-top:-7px
+}
 .app-left-nav {
   margin: 30px;
 }
