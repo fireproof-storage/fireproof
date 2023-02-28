@@ -10,7 +10,7 @@ Learn more about the concepts and architecture behind Fireproof [in our plan,](h
 
 ### Status
 
-Fireproof is alpha software, you should only use it if you are planning to contribute. For now, For now, [check out our React TodoMVC implementation running in ephemeral mode.](https://main--lucky-naiad-5aa507.netlify.app/)
+Fireproof is alpha software, you should only use it if you are planning to contribute. For now, [check out our React TodoMVC implementation running in ephemeral mode.](https://main--lucky-naiad-5aa507.netlify.app/)
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -70,18 +70,19 @@ const { rows, ref } = await index.query({ range: [40, 52] })
 //   { key: 47, value: 'André', id: 'three-thousand' } ]
 ```
 
-### Realtime Updates 🚧 (coming soon)
+### Realtime Updates
 
 Subscribe to query changes in your application, so your UI updates automatically. Use the supplied React hooks, our Redux connector, or simple function calls to be notified of relevant changes.
 
 ```js
-const listener = new Listener(database, function(doc, oldDoc, send) {
-  if (doc.type == 'member' && !oldDoc) {
-    send('new-member', id)
+const listener = new Listener(database, function(doc, emit) {
+  if (doc.type == 'member') {
+    emit('member')
   }
 })
-listener.on('new-member', (doc) => {
-  alert(`New member ${doc.name}`)
+listener.on('member', (id) => {
+  const doc = db.get(id)
+  alert(`Member update ${doc.name}`)
 })
 ```
 
