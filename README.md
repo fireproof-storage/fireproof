@@ -55,7 +55,7 @@ const doc = await database.get('three-thousand')
 // }
 ```
 
-The `_ref` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data.
+The `_ref` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/":"bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
 
 ### Flexible Indexes
 
