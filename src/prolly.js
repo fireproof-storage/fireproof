@@ -185,6 +185,9 @@ export async function eventsSince (blocks, head, since) {
 export async function getAll (blocks, head) {
   // todo use the root node left around from put, etc
   // move load to a central place
+  if (!head.length) {
+    return []
+  }
   const prollyRootNode = await load({
     cid: await root(blocks, head),
     get: makeGetBlock(blocks),
@@ -201,6 +204,9 @@ export async function getAll (blocks, head) {
  */
 export async function get (blocks, head, key) {
   // instead pass root from db? and always update on change
+  if (!head.length) {
+    return null
+  }
   const prollyRootNode = await load({ cid: await root(blocks, head), get: makeGetBlock(blocks), ...opts })
   const { result } = await prollyRootNode.get(key)
   return result
