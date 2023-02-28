@@ -45,7 +45,8 @@
   },
   "standard": {
     "ignore": [
-      "examples/**/*.tsx"
+      "examples/**/*.tsx",
+      "examples/**/dist"
     ]
   },
   "repository": {

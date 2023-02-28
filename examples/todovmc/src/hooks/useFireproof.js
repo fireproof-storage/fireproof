@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 import { Fireproof, Index } from '../../../../'
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 function mulberry32 (a) {
   return function () {
