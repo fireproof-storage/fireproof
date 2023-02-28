@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 
 import { Fireproof, Index } from '../../../../'
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 function mulberry32 (a) {
   return function () {
     let t = a += 0x6D2B79F5
@@ -58,7 +60,6 @@ export default function useFireproof (options) {
       const db = await defineDatabase()
       await loadFixtures(db)
       setDatabase(db)
-      // await sleep(1000)
       setReady(true)
     }
     doSetup()
@@ -66,6 +67,7 @@ export default function useFireproof (options) {
 
   const withRefresh = (fn) => async (...args) => {
     const result = await fn(...args)
+    // await sleep(1000)
     refresh()
     return result
   }
