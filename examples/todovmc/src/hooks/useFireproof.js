@@ -105,13 +105,13 @@ export default function useFireproof (options) {
     return await database.put(doc)
   })
 
-  const clearCompleted = async (listId) => {
-    const todos = (await database.todosbyList.query({ range: [listId, listId + 'x'] })).rows.map((row) => row.value)
+  const clearCompleted = withRefresh(async (listId) => {
+    const todos = (await database.todosbyList.query({ range: [[listId, '0'], [listId, '9']] })).rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
-    await todosToDelete.forEach(async (todoToDelete) => {
+    for (const todoToDelete of todosToDelete) {
       await database.del(todoToDelete._id)
-    })
-  }
+    }
+  })
 
   return {
     fetchAllLists,
