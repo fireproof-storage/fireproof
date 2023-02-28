@@ -165,6 +165,6 @@ export default class Fireproof {
   }
 }
 
-Fireproof.storage = async (_email) => {
+Fireproof.storage = (_email) => {
   return new Fireproof(new Blockstore(), [])
 }

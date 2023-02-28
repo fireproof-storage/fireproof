@@ -28,8 +28,16 @@ describe('Fireproof', () => {
   })
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
-    const db = await Fireproof.storage({ email: 'jchris@gmail.com' })
+    const db = Fireproof.storage({ email: 'jchris@gmail.com' })
     assert(db instanceof Fireproof)
+  })
+  it('an empty database has no documents', async () => {
+    const db = Fireproof.storage()
+    assert(db instanceof Fireproof)
+    const e = await db.get('8c5c0c5c0c5c').catch((err) => err)
+    assert.equal(e.message, 'Not found')
+    const changes = await db.changesSince()
+    assert.equal(changes.rows.length, 0)
   })
   it('update existing document', async () => {
     // const alice = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
