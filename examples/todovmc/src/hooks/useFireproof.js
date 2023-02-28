@@ -60,6 +60,7 @@ export default function useFireproof (options) {
       const db = await defineDatabase()
       await loadFixtures(db)
       setDatabase(db)
+      console.log('setReady(true)')
       setReady(true)
     }
     doSetup()

@@ -56,7 +56,8 @@ function AllLists() {
   return (
     <div>
       <div className='listNav'>
-        <label>Choose a list.</label>
+        <button>Choose a list.</button>
+        <label></label>
       </div>
       <section className='main'>
         <ul className='todo-list'>
@@ -132,8 +133,8 @@ function List() {
   return (
     <div>
       <div className='listNav'>
-        <button onClick={() => navigate('/')}>back to all lists</button>
-        <label>List: {list.title}</label>
+        <button onClick={() => navigate('/')}>Back to all lists</button>
+        <label>{list.title}</label>
       </div>
       <ul className='todo-list'>
         {shownTodos.map((todo) => {
@@ -224,7 +225,7 @@ function App() {
       <AppHeader />
       <div>
         <header className='header'>
-          <Login />
+          {/* <Login /> */}
           <RouterProvider router={router} fallbackElement={<NotFound />} />
         </header>
       </div>

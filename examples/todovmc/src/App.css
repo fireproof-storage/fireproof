@@ -15,10 +15,15 @@
   background: linear-gradient(#737681, #666a7a);
   color: white;
   padding: 10px;
+  
+
 }
-.listNav button {
+.listNav label {
   float: right;
+  display: block;
+  clear: both;
 }
+
 .Login a {
   color: white;
 }
