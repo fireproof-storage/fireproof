@@ -11,17 +11,14 @@
 }
 
 .listNav {
-  background: #44568a;
-  background: linear-gradient(#737681, #666a7a);
+  /* background: #44568a; */
+  /* background: linear-gradient(#737681, #666a7a); */
   color: white;
   padding: 10px;
-  
-
 }
 .listNav label {
   float: right;
   display: block;
-  clear: both;
 }
 
 .Login a {
@@ -30,4 +27,36 @@
 .Login form input,
 .Login form button {
   margin: 0 5px;
+}
+.app-header .app-title {
+  margin-top: 12px;
+}
+.app-left-nav {
+  margin: 30px;
+}
+.listNav {
+  /* background: linear-gradient(45deg, #000000, #ffa700); */
+
+  /* background: linear-gradient(217deg, rgba(255,160,0,.8), rgba(255,111,0,0) 70.71%),            linear-gradient(127deg, rgba(200,50,0,.8), rgba(0,0,0,0) 70.71%),            linear-gradient(336deg, rgba(255,0,0,.8), rgba(255,111,0,0) 70.71%); */
+}
+
+
+.listNav {
+	background: linear-gradient(-45deg, #000000, #ff6f00, #ffa000, #000, #ff8200);
+	background-size: 400% 400%;
+	animation: gradient 30s ease infinite;
+}
+
+@keyframes gradient {
+	0% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+    background-rotate: 180deg;
+	}
+	100% {
+		background-position: 0% 50%;
+    background-rotate: 270deg;
+	}
 }
