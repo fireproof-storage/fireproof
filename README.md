@@ -10,7 +10,7 @@ Learn more about the concepts and architecture behind Fireproof [in our plan,](h
 
 ### Status
 
-Fireproof is alpha software, you should only use it if you are planning to contribute. [For now, check out our React TodoMVC implementation running in ephemeral mode.](https://main--lucky-naiad-5aa507.netlify.app/)
+Fireproof is alpha software, you should only use it if you are planning to contribute. For now, For now, [check out our React TodoMVC implementation running in ephemeral mode.](https://main--lucky-naiad-5aa507.netlify.app/)
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -92,6 +92,10 @@ Fireproof is so easy to integrate with any site or app because you can get start
 ### Automatic Replication
 
 Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.]()
+
+### Cryptographic Proofs
+
+The UCAN protocol verifably links Fireproof updates to authorized agents via cryptographic proof chains. These proofs are portable like bearer tokens, but because invocations are signed by end-user device keys, UCAN proofs don't need to be hidden to be secure, allowing for delegation of service capabilities across devices and parties. Additionally, Fireproof's Merkle clocks and hash trees are immutable self-validating, making merging changes safe and efficient. Fireproof makes crpytographic proofs available for all of it's operations, making it an ideal verfiable document database for smart contracts and other applications running in trustless environments. Proof chains provide performance benefits as well, by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
 
 ## Limitations 💣
 
