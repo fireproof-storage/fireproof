@@ -128,7 +128,7 @@ export default function useFireproof (options) {
     clearCompleted,
     // onAuthChange
     // isLoading
-    ready,
-    database
+    database,
+    ready
   }
 }
