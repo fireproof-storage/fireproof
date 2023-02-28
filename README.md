@@ -91,11 +91,11 @@ Fireproof is so easy to integrate with any site or app because you can get start
 
 ### Automatic Replication
 
-Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.]()
+Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over [IPFS] and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.](#status)
 
 ### Cryptographic Proofs
 
-The UCAN protocol verifably links Fireproof updates to authorized agents via cryptographic proof chains. These proofs are portable like bearer tokens, but because invocations are signed by end-user device keys, UCAN proofs don't need to be hidden to be secure, allowing for delegation of service capabilities across devices and parties. Additionally, Fireproof's Merkle clocks and hash trees are immutable self-validating, making merging changes safe and efficient. Fireproof makes crpytographic proofs available for all of it's operations, making it an ideal verfiable document database for smart contracts and other applications running in trustless environments. Proof chains provide performance benefits as well, by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
+The [UCAN protocol](https://ucan.xyz) verifably links Fireproof updates to authorized agents via cryptographic proof chains. These proofs are portable like bearer tokens, but because invocations are signed by end-user device keys, UCAN proofs don't need to be hidden to be secure, allowing for delegation of service capabilities across devices and parties. Additionally, Fireproof's Merkle clocks and hash trees are immutable and self-validating, making merging changes safe and efficient. Fireproof makes cryptographic proofs available for all of it's operations, making it an ideal verfiable document database for smart contracts and other applications running in trustless environments. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
 
 ## Limitations 💣
 
