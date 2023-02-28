@@ -4,7 +4,7 @@ import useFireproof from './hooks/useFireproof'
 import reactLogo from './assets/react.svg'
 import './App.css'
 import {
-  Route, Link, RouterProvider, createBrowserRouter,
+  Route, Link, Outlet, RouterProvider, createBrowserRouter,
   createRoutesFromElements, useNavigate, useParams, useLoaderData
 } from "react-router-dom";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
@@ -176,16 +176,32 @@ function List() {
 const NotFound = () => {
   console.log('rendering not found')
   return (
-  <div>
-    <h2>Not found</h2>
-    <p>Sorry, nothing here.</p>
-    <Link to='/'>Go back to the main page.</Link>
-  </div>
-)}
+    <div>
+      <h2>Not found</h2>
+      <p>Sorry, nothing here.</p>
+      <Link to='/'>Go back to the main page.</Link>
+    </div>
+  )
+}
 
 interface ListLoaderData {
   list: ListDoc
   todos: TodoDoc[]
+}
+
+
+function Layout() {
+  return (
+    <>
+      <AppHeader />
+      <div>
+        <header className='header'>
+          {/* <Login /> */}
+          <Outlet />
+        </header>
+      </div>
+    </>
+  );
 }
 
 
@@ -208,7 +224,7 @@ function App() {
 
   let router = createBrowserRouter(
     createRoutesFromElements(
-      <>
+      <Route element={<Layout />}>
         <Route path='/' loader={allListLoader} element={<AllLists />} />
         <Route path='list'>
           <Route path=':listId' loader={listLoader} element={<List />} >
@@ -216,19 +232,12 @@ function App() {
             <Route path='completed' element={<List />} />
           </Route>
         </Route>
-      </>
-    )
-  );
+      </Route>
+    ));
 
   return (
     <FireproofCtx.Provider value={fireproof}>
-      <AppHeader />
-      <div>
-        <header className='header'>
-          {/* <Login /> */}
-          <RouterProvider router={router} fallbackElement={<NotFound />} />
-        </header>
-      </div>
+      <RouterProvider router={router} fallbackElement={<NotFound />} />
     </FireproofCtx.Provider>
   )
 }

@@ -1,7 +1,7 @@
 import React from 'react'
 import logo from '../../assets/logo.svg'
 import styles from './AppHeader.css' // eslint-disable-line
-
+import { Link } from 'react-router-dom'
 /**
  * AppHeader component
  * @param {Object} props
@@ -13,9 +13,9 @@ const AppHeader = (props) => {
       <div className='app-title-wrapper'>
         <div className='app-title-wrapper'>
           <div className='app-left-nav'>
-            <a href='/'>
+            <Link to='/'>
               <img src={logo} className='app-logo' alt='Fireproof Storage' />
-            </a>
+            </Link>
             <div className='app-title-text'>
               <h1 className='app-title'>TodoMVC</h1>
             </div>
