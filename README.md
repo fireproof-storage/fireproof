@@ -81,7 +81,7 @@ const listener = new Listener(database, function(doc, emit) {
   }
 })
 listener.on('member', (id) => {
-  const doc = db.get(id)
+  const doc = await db.get(id)
   alert(`Member update ${doc.name}`)
 })
 ```
