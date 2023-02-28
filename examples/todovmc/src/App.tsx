@@ -172,13 +172,15 @@ function List() {
   )
 }
 
-const NotFound = () => (
+const NotFound = () => {
+  console.log('rendering not found')
+  return (
   <div>
     <h2>Not found</h2>
     <p>Sorry, nothing here.</p>
     <Link to='/'>Go back to the main page.</Link>
   </div>
-)
+)}
 
 interface ListLoaderData {
   list: ListDoc
@@ -223,7 +225,7 @@ function App() {
       <div>
         <header className='header'>
           <Login />
-          {ready && <RouterProvider router={router} fallbackElement={<NotFound />} />}
+          <RouterProvider router={router} fallbackElement={<NotFound />} />
         </header>
       </div>
     </FireproofCtx.Provider>
