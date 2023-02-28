@@ -10,10 +10,10 @@ Learn more about the concepts and architecture behind Fireproof [in our plan,](h
 
 ### Status
 
+Fireproof is alpha software, you should only use it if you are planning to contribute. [For now, check out our React TodoMVC implementation running in ephemeral mode.](https://main--lucky-naiad-5aa507.netlify.app/)
+
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
-It's time to get excited about Fireproof, but there are a few code sprints remaining before it's ready for your next app. [Check out our React TodoMVC implementation running in ephemeral mode.](https://main--lucky-naiad-5aa507.netlify.app/)
 
 ## Usage
 
