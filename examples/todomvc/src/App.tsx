@@ -46,7 +46,7 @@ function Login() {
 }
 
 function AllLists() {
-  const { addList } = useContext(FireproofCtx)
+  const { addList, database } = useContext(FireproofCtx)
   const navigate = useNavigate()
   let lists = useLoaderData() as ListDoc[];
   const onSubmit = async (title: string) => {
@@ -56,7 +56,10 @@ function AllLists() {
   return (
     <div>
       <div className='listNav'>
-        <button>Choose a list.</button>
+        <button onClick={async () => {
+          const allDocs = await database.changesSince()
+          console.log('allDocs', allDocs.rows)
+        }}>Choose a list.</button>
         <label></label>
       </div>
       <section className='main'>
@@ -174,7 +177,7 @@ function List() {
 }
 
 const NotFound = () => {
-  console.log('rendering not found')
+  console.log('rendering NotFound')
   return (
     <div>
       <h2>Not found</h2>
