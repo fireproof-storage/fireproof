@@ -20,6 +20,8 @@ export default class Fireproof {
    * @param {Blockstore} blocks
    * @param {import('../clock').EventLink<import('../crdt').EventData>[]} clock
    */
+  #listeners = new Set()
+
   constructor (blocks, clock, config = {}, authCtx = {}) {
     this.blocks = blocks
     this.clock = clock
@@ -73,13 +75,34 @@ export default class Fireproof {
   }
 
   /**
+   * Registers a Listener to be called when the Fireproof instance's clock is updated.
+   * Recieves live changes from the database after they are committed.
+   * @param {Function} listener - The listener to be called when the clock is updated.
+   * @returns {Function} - A function that can be called to unregister the listener.
+   */
+  registerListener (listener) {
+    this.#listeners.add(listener)
+    return () => {
+      this.#listeners.delete(listener)
+    }
+  }
+
+  #notifyListeners (changes) {
+    this.#listeners.forEach((listener) => listener(changes))
+  }
+
+  /**
    * Runs validation on the specified document using the Fireproof instance's configuration.
    *
    * @param {Object} doc - The document to validate.
    */
   async runValidation (doc) {
-    const oldDoc = await this.get(doc._id).then((doc) => doc).catch(() => ({}))
-    this.config.validateChange(doc, oldDoc, this.authCtx)
+    if (this.config && this.config.validateChange) {
+      const oldDoc = await this.get(doc._id)
+        .then((doc) => doc)
+        .catch(() => ({}))
+      this.config.validateChange(doc, oldDoc, this.authCtx)
+    }
   }
 
   /**
@@ -92,9 +115,7 @@ export default class Fireproof {
    */
   async put ({ _id, ...doc }) {
     const id = _id || 'f' + Math.random().toString(36).slice(2)
-    if (this.config && this.config.validateChange) {
-      await this.runValidation({ _id: id, ...doc })
-    }
+    await this.runValidation({ _id: id, ...doc })
     return await this.doPut({ key: id, value: doc })
   }
 
@@ -104,9 +125,7 @@ export default class Fireproof {
    * @returns {Promise<import('./prolly').PutResult>} - the result of deleting the document
    */
   async del (id) {
-    if (this.config && this.config.validateChange) {
-      await this.runValidation({ _id: id, _deleted: true })
-    }
+    await this.runValidation({ _id: id, _deleted: true })
     // return await this.doPut({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
     return await this.doPut({ key: id, value: null })
@@ -119,12 +138,13 @@ export default class Fireproof {
     }
     this.clock = result.head
     result.id = event.key
-    return result // todo what if these returned the EventData?
+    this.#notifyListeners([event])
+    return result
   }
 
   //   /**
   //    * Advances the clock to the specified event and updates the root CID
-  //    *
+  //    *   Will be used by replication
   //    * @param {import('../clock').EventLink<import('../crdt').EventData>} event - the event to advance to
   //    * @returns {import('../clock').EventLink<import('../crdt').EventData>[]} - the new clock after advancing
   //    */
