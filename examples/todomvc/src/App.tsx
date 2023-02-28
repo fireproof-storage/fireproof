@@ -212,7 +212,7 @@ function App() {
       setHack(hack + 1)
     }
   })
-  const { fetchListWithTodos, fetchAllLists, ready } = fireproof
+  const { fetchListWithTodos, fetchAllLists } = fireproof
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
     return await fetchListWithTodos(listId)

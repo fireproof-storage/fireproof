@@ -17,16 +17,20 @@ function mulberry32 (a) {
 const rand = mulberry32(42) // determinstic fixtures
 
 const loadFixtures = async (database) => {
-  const nextId = () => rand().toString(36).slice(2)
+  const nextId = () => rand().toString(35).slice(2)
 
-  const listTitles = ['My Todo List', 'Another Todo List']
-  for (const title of listTitles) {
-    const ok = await database.put({ title, type: 'list', _id: nextId() })
-    const numTodos = Math.ceil(rand() * 10)
-    for (let i = 0; i < numTodos; i++) {
+  const listTitles = ['Building Apps', 'Having Fun', 'Making Breakfast']
+  const todoTitles = [['In the browser', 'On the phone', 'With or without Redux', 'Login components', 'GraphQL queries', 'Automatic replication and versioning'],
+    ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
+    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad', 'Yogurt', 'Muesli', 'Smoothie', 'Oatmeal', 'Cereal',
+      'Pancakes', 'Waffles', 'French toast', 'Baked beans', 'Hash browns', 'Poached eggs', 'Egg and tomato sandwich']]
+  for (let j = 0; j < 3; j++) {
+    const ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
+    for (let i = 0; i < todoTitles[j].length; i++) {
+      console.log('db', ok.id, listTitles[j], todoTitles[j][i])
       await database.put({
         _id: nextId(),
-        title: 'Todo ' + rand().toString(36).slice(2, 8),
+        title: todoTitles[j][i],
         listId: ok.id,
         completed: rand() > 0.75,
         type: 'todo',
@@ -127,7 +131,7 @@ export default function useFireproof (options) {
     clearCompleted,
     // onAuthChange
     // isLoading
-    // client,
+    database,
     ready
   }
 }
