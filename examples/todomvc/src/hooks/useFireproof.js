@@ -40,8 +40,8 @@ const loadFixtures = async (database) => {
   }
 }
 
-const defineDatabase = async () => {
-  const database = await Fireproof.storage()
+const defineDatabase = () => {
+  const database = Fireproof.storage()
   database.allLists = new Index(database, function (doc, map) {
     if (doc.type === 'list') map(doc.type, doc)
   })
@@ -53,17 +53,15 @@ const defineDatabase = async () => {
   window.fireproof = database
   return database
 }
+const database = defineDatabase()
 
 export default function useFireproof (options) {
-  const [database, setDatabase] = useState(null)
   const [ready, setReady] = useState(false)
   const refresh = options.refresh || (() => {})
 
   useEffect(() => {
     const doSetup = async () => {
-      const db = await defineDatabase()
-      await loadFixtures(db)
-      setDatabase(db)
+      await loadFixtures(database)
       setReady(true)
     }
     doSetup()
