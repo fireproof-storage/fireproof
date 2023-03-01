@@ -2,9 +2,9 @@ import { parse } from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as Block from 'multiformats/block'
-import { CID } from 'multiformats/cid'
 import * as CBW from '@ipld/car/buffer-writer'
-import { CarReader } from '@ipld/car'
+
+import Valet from './valet.js'
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -24,7 +24,7 @@ export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   #oldBlocks = new Map()
 
-  #valet = new Map() // cars by cid
+  #valet = new Valet() // cars by cid
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
   #inflightTransactions = new Set()
@@ -38,9 +38,9 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    // const bytes = this.#oldBlocks.get(key) || await this.#valetGet(key)
+    // const bytes = this.#oldBlocks.get(key) || await this.#valet.getBlock(key)
     const bytes = await this.#transactionsGet(key) || await this.commitedGet(key)
-    // const bytes = this.#blocks.get(key) || await this.#valetGet(key)
+    // const bytes = this.#blocks.get(key) || await this.#valet.getBlock(key)
     // console.log('bytes', typeof bytes)
     if (!bytes) throw new Error('Missing block: ' + key)
     return { cid, bytes }
@@ -56,7 +56,7 @@ export default class TransactionBlockstore {
   }
 
   async commitedGet (key) {
-    return this.#oldBlocks.get(key) || await this.#valetGet(key)
+    return this.#oldBlocks.get(key) || await this.#valet.getBlocket(key)
   }
 
   /**
@@ -132,26 +132,7 @@ export default class TransactionBlockstore {
   #valetWriteTransaction = async (innerBlockstore) => {
     if (innerBlockstore.lastCid) {
       const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-      this.#valet.set(newCar.cid.toString(), newCar.bytes)
-    }
-  }
-
-  /**
-   * Internal function to load blocks from persistent storage.
-   * Currently it just searches all the cars for the block, but in the future
-   * we need to index the block CIDs to the cars, and reference that to find the block.
-   * This index will also allow us to use accelerator links for the gateway when needed.
-   * It can itself be a prolly tree...
-   * @param {string} cid
-   * @returns {Promise<Uint8Array|undefined>}
-   */
-  #valetGet = async (cid) => {
-    for (const [, carBytes] of this.#valet) {
-      const reader = await CarReader.fromBytes(carBytes)
-      const gotBlock = await reader.get(CID.parse(cid))
-      if (gotBlock) {
-        return gotBlock.bytes
-      }
+      this.#valet.parkCar(newCar.cid.toString(), newCar.bytes)
     }
   }
 
@@ -209,7 +190,7 @@ const blocksToCarBlock = async (lastCid, blocks) => {
 }
 
 /** @implements {BlockFetcher} */
-export class InnerBlockstore { // if there are no further changes, just use MemoryBlockstore from ./block.js
+export class InnerBlockstore {
   /** @type {Map<string, Uint8Array>} */
   #blocks = new Map()
   lastCid = null
