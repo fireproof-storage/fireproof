@@ -5,9 +5,8 @@ import Fireproof from '../src/fireproof.js'
 import Index from '../src/db-index.js'
 console.x = function () {}
 
-let database, index
-
 describe('Index query', () => {
+  let database, index
   beforeEach(async () => {
     database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
     const docs = [
@@ -195,5 +194,21 @@ describe('Index query', () => {
     assert(result2, 'did return result')
     assert(result2.rows)
     assert.equal(result2.rows.length, 0, '0 row matched')
+  })
+})
+
+describe('Index query with bad index definition', () => {
+  let database, index
+  beforeEach(async () => {
+    database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
+    await database.put({ _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 })
+    index = new Index(database, function (doc, map) {
+      map(doc.oops.missingField, doc.name)
+    })
+  })
+  it('query index range', async () => {
+    await index.query({ range: [41, 44] }).catch((e) => {
+      assert(/missingField/.test(e.message))
+    })
   })
 })
