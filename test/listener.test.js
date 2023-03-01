@@ -40,7 +40,6 @@ describe('Listener', () => {
   it('shares all events if asked', async () => {
     let people = 0
     listener.on('person', (key) => {
-      console.log('person', key)
       people++
     }, null)
     await sleep(1)
