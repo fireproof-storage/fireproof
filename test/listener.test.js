@@ -42,7 +42,9 @@ describe('Listener', () => {
     listener.on('person', (key) => {
       people++
     }, null)
-    await sleep(1)
+    // this has to take longer than the database save operation
+    // it's safe to make this number longer if it start failing
+    await sleep(50)
     assert.equal(people, 6)
   }).timeout(200)
   it('shares events since db.clock', (done) => {
