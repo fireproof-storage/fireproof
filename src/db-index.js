@@ -131,7 +131,7 @@ export default class Index {
     // console.log('indexEntries', indexEntries)
     this.indexRoot = await bulkIndex(blocks, this.indexRoot, indexEntries, opts)
     // console.log('did index', this.indexRoot)
-    this.dbHead = result.head
+    this.dbHead = result.clock
   }
 
   // todo use the index from other peers?

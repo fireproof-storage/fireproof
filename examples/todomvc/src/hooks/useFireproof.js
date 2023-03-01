@@ -70,6 +70,7 @@ export default function useFireproof (options) {
   const withRefresh = (fn) => async (...args) => {
     const result = await fn(...args)
     // await sleep(1000)
+    console.log('refresh', database.instanceId)
     refresh()
     return result
   }
