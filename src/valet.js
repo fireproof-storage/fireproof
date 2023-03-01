@@ -38,7 +38,7 @@ export default class Valet {
     await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
       await tx.objectStore('cars').put(value, carCid)
-      await tx.objectStore('cidToCar').put({ car: carCid, cids })
+      await tx.objectStore('cidToCar').put({ car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
   }
@@ -59,10 +59,10 @@ export default class Valet {
 
     return await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
-      let carCid = await tx.objectStore('cidToCar').index('cids').get(dataCID)
+      const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
+      const carCid = indexResp?.car
       if (!carCid) {
-        carCid = MEMcarCid
-        console.log('index failed, using MEMcid', carCid)
+        return
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
