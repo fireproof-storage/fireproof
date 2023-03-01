@@ -27,7 +27,7 @@ const loadFixtures = async (database) => {
   for (let j = 0; j < 3; j++) {
     const ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
     for (let i = 0; i < todoTitles[j].length; i++) {
-      console.log('db', ok.id, listTitles[j], todoTitles[j][i])
+      console.log('db', database.instanceId, ok.id, listTitles[j], todoTitles[j][i])
       await database.put({
         _id: nextId(),
         title: todoTitles[j][i],
