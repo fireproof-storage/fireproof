@@ -35,18 +35,43 @@ export default class Valet {
       this.#cidToCar.set(cid, carCid)
     }
 
-    await sleep(10)
-
-    // const resp = await this.withDB(async (db) => {
-    //   const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
-    //   await tx.objectStore('cars').put(value, carCid)
-    //   const did = await tx.objectStore('cidToCar').put({ car: carCid, cids })
-    //   return await tx.done
-    // })
+    await this.withDB(async (db) => {
+      const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
+      await tx.objectStore('cars').put(value, carCid)
+      //   await tx.objectStore('cidToCar').put({ car: carCid, cids })
+      return await tx.done
+    })
   }
 
   async getBlock (dataCID) {
-    return await this.#valetGet(dataCID)
+    // return await this.#valetGet(dataCID)
+    const carCid = this.#cidToCar.get(dataCID)
+
+    return await this.withDB(async (db) => {
+      const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
+      console.log('carCid', carCid)
+      const carBytes = await tx.objectStore('cars').get(carCid)
+      const reader = await CarReader.fromBytes(carBytes)
+      const gotBlock = await reader.get(CID.parse(dataCID))
+      if (gotBlock) {
+        return gotBlock.bytes
+      }
+    })
+
+    // return await this.withDB(async (db) => {
+    //   const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
+    //   const carCid = await tx.objectStore('cidToCar').index('cids').get(dataCID)
+    //   if (!carCid) {
+    //     return
+    //   }
+    //   console.log('carCid', carCid)
+    //   const carBytes = await tx.objectStore('cars').get(carCid)
+    //   const reader = await CarReader.fromBytes(carBytes)
+    //   const gotBlock = await reader.get(CID.parse(dataCID))
+    //   if (gotBlock) {
+    //     return gotBlock.bytes
+    //   }
+    // })
   }
 
   /**
