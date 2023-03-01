@@ -22,7 +22,6 @@ import { CarReader } from '@ipld/car'
  */
 export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
-  #blocks = new Map()
   #oldBlocks = new Map()
 
   #valet = new Map() // cars by cid
@@ -40,7 +39,7 @@ export default class TransactionBlockstore {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
     // const bytes = this.#oldBlocks.get(key) || await this.#valetGet(key)
-    const bytes = this.#transactionsGet(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
+    const bytes = await this.#transactionsGet(key) || await this.commitedGet(key)
     // const bytes = this.#blocks.get(key) || await this.#valetGet(key)
     // console.log('bytes', typeof bytes)
     if (!bytes) throw new Error('Missing block: ' + key)
@@ -49,8 +48,15 @@ export default class TransactionBlockstore {
 
   // this iterates over the in-flight transactions
   // and returns the first matching block it finds
-  #transactionsGet (key) {
-    return this.#blocks.get(key)
+  async #transactionsGet (key) {
+    for (const transaction of this.#inflightTransactions) {
+      const got = await transaction.get(key)
+      if (got && got.bytes) return got.bytes
+    }
+  }
+
+  async commitedGet (key) {
+    return this.#oldBlocks.get(key) || await this.#valetGet(key)
   }
 
   /**
@@ -75,9 +81,9 @@ export default class TransactionBlockstore {
    */
   * entries () {
     // todo needs transaction blocks?
-    for (const [str, bytes] of this.#blocks) {
-      yield { cid: parse(str), bytes }
-    }
+    // for (const [str, bytes] of this.#blocks) {
+    //   yield { cid: parse(str), bytes }
+    // }
     for (const [str, bytes] of this.#oldBlocks) {
       yield { cid: parse(str), bytes }
     }
@@ -90,7 +96,7 @@ export default class TransactionBlockstore {
      * @memberof TransactionBlockstore
      */
   begin (label = '') {
-    const innerTransactionBlockstore = new InnerBlockstore(label)
+    const innerTransactionBlockstore = new InnerBlockstore(label, this)
     this.#inflightTransactions.add(innerTransactionBlockstore)
     return innerTransactionBlockstore
   }
@@ -150,12 +156,12 @@ export default class TransactionBlockstore {
   }
 
   /**
-     * Rollback the transaction. Clears the uncommited blocks.
+     * Retire the transaction. Clears the uncommited blocks.
      * @returns {void}
      * @memberof TransactionBlockstore
      */
-  rollback () {
-    this.#blocks = new Map()
+  retire (innerBlockstore) {
+    this.#inflightTransactions.delete(innerBlockstore)
   }
 }
 
@@ -170,15 +176,16 @@ export default class TransactionBlockstore {
  */
 export const doTransaction = async (label, blockstore, doFun) => {
   if (!blockstore.commit) return await doFun(blockstore)
+  const innerBlockstore = blockstore.begin(label)
   try {
-    const innerBlockstore = blockstore.begin(label)
     const result = await doFun(innerBlockstore)
     await blockstore.commit(innerBlockstore)
     return result
   } catch (e) {
     console.trace(`Transaction ${label} failed`, e)
-    blockstore.rollback()
     throw e
+  } finally {
+    blockstore.retire(innerBlockstore)
   }
 }
 
@@ -206,14 +213,26 @@ export class InnerBlockstore { // if there are no further changes, just use Memo
   /** @type {Map<string, Uint8Array>} */
   #blocks = new Map()
   lastCid = null
+  label = ''
+  parentBlockstore = null
+
+  constructor (label, parentBlockstore) {
+    this.label = label
+    this.parentBlockstore = parentBlockstore
+  }
+
   /**
    * @param {import('./link').AnyLink} cid
    * @returns {Promise<AnyBlock | undefined>}
    */
   async get (cid) {
-    const bytes = this.#blocks.get(cid.toString())
-    if (!bytes) return
-    return { cid, bytes }
+    const key = cid.toString()
+    let bytes = this.#blocks.get(key)
+    if (bytes) { return { cid, bytes } }
+    bytes = await this.parentBlockstore.commitedGet(key)
+    if (bytes) {
+      return { cid, bytes }
+    }
   }
 
   /**
