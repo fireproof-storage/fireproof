@@ -9,9 +9,13 @@ export default class Valet {
      * @param {string} carCid
      * @param {*} value
      */
-  parkCar (carCid, value) {}
+  parkCar (carCid, value) {
+    this.#cars.set(carCid, value)
+  }
 
-  getBlock (dataCID) {}
+  getBlock (dataCID) {
+    return this.#valetGet(dataCID)
+  }
 
   /**
    * Internal function to load blocks from persistent storage.
