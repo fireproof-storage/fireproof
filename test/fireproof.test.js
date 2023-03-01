@@ -263,13 +263,11 @@ describe('Fireproof', () => {
       }).then(r => {
         if (r.id) {
           database.get(resp.id).catch(e => {
-            // console.trace('failed', e)
             assert.equal(e.message, 'get failed on _id: ' + id)
           }).then(d => { assert.equal(d.index, index) })
         }
       }))
       promises.push(database.changesSince().catch(e => {
-        // console.trace('failed', e)
         assert.equal(e.message, 'changesSince failed on  _id: ' + id)
       }).then(c => { assert.equal(c.rows.length, index + 2) }))
     }
