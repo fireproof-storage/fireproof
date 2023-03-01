@@ -119,7 +119,7 @@ export default class TransactionBlockstore {
     for (const { cid, bytes } of innerBlockstore.entries()) {
       this.#oldBlocks.set(cid.toString(), bytes) // unnecessary string conversion
     }
-    // await this.#valetWriteTransaction(innerBlockstore)
+    await this.#valetWriteTransaction(innerBlockstore)
   }
 
   /**
@@ -131,7 +131,7 @@ export default class TransactionBlockstore {
    */
   #valetWriteTransaction = async (innerBlockstore) => {
     if (innerBlockstore.lastCid) {
-      const newCar = await blocksToCarBlock(this.lastCid, innerBlockstore)
+      const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
       this.#valet.set(newCar.cid.toString(), newCar.bytes)
     }
   }
@@ -193,16 +193,16 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   let size = 0
   const headerSize = CBW.headerLength({ roots: [lastCid] })
   size += headerSize
-  for (const [cid, bytes] of blocks) {
-    size += CBW.blockLength({ cid: CID.parse(cid), bytes })
+  for (const { cid, bytes } of blocks.entries()) {
+    size += CBW.blockLength({ cid, bytes })
   }
   const buffer = new Uint8Array(size)
   const writer = await CBW.createWriter(buffer, { headerSize })
 
   writer.addRoot(lastCid)
 
-  for (const [cid, bytes] of blocks) {
-    writer.write({ cid: CID.parse(cid), bytes })
+  for (const { cid, bytes } of blocks.entries()) {
+    writer.write({ cid, bytes })
   }
   await writer.close()
   return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
