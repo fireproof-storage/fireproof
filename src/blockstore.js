@@ -137,7 +137,7 @@ export default class TransactionBlockstore {
   #valetWriteTransaction = async (innerBlockstore, cids) => {
     if (innerBlockstore.lastCid) {
       const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-      this.#valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
+      await this.#valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
     }
   }
 
