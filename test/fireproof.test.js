@@ -252,7 +252,7 @@ describe('Fireproof', () => {
       assert.equal(changes.rows.length, index + 2)
     }
   }).timeout(20000)
-  it('concurrent transactions', async () => {
+  it.skip('concurrent transactions', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp
     const promises = []

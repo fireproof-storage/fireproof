@@ -28,7 +28,7 @@ export default class TransactionBlockstore {
   #valet = new Map() // cars by cid
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
-  #transactionLabel = ''
+  #inflightTransactions = new Set()
 
   /**
    * Get a block from the store.
@@ -64,10 +64,7 @@ export default class TransactionBlockstore {
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
-    // console.log('put', cid.toString())
-    this.#blocks.set(cid.toString(), bytes)
-    this.lastCid = cid
-    // await sleep(5)
+    throw new Error('use a transaction to put')
   }
 
   /**
@@ -77,6 +74,7 @@ export default class TransactionBlockstore {
    * @returns {AsyncGenerator<AnyBlock>}
    */
   * entries () {
+    // todo needs transaction blocks?
     for (const [str, bytes] of this.#blocks) {
       yield { cid: parse(str), bytes }
     }
@@ -88,22 +86,13 @@ export default class TransactionBlockstore {
   /**
      * Begin a transaction. Ensures the uncommited blocks are empty at the begining.
      * Returns the blocks to read and write during the transaction.
-     * @returns {Blockstore}
+     * @returns {InnerBlockstore}
      * @memberof TransactionBlockstore
      */
   begin (label = '') {
-    if (this.#blocks.size > 0) {
-      const cids = Array.from(this.#blocks.entries()).map(([cid]) => (cid)).join(', ')
-      console.trace(`Can't start new transaction ${label} b/c ${this.#transactionLabel} already in progress, blocks:`, cids)
-      throw new Error(`Transaction ${this.#transactionLabel} already in progress: ${cids}`)
-      // this.#blocks = new Map()
-    }
-    this.#transactionLabel = label
-    return {
-      transactionLabel: label,
-      get: this.get.bind(this),
-      put: this.put.bind(this)
-    }
+    const innerTransactionBlockstore = new InnerBlockstore(label)
+    this.#inflightTransactions.add(innerTransactionBlockstore)
+    return innerTransactionBlockstore
   }
 
   /**
@@ -111,9 +100,8 @@ export default class TransactionBlockstore {
      * @returns {Promise<void>}
      * @memberof TransactionBlockstore
      */
-  async commit () {
-    await this.#doCommit()
-    this.#blocks = new Map()
+  async commit (innerBlockstore) {
+    await this.#doCommit(innerBlockstore)
   }
 
   // first get the transaction blockstore from the map of transaction blockstores
@@ -121,16 +109,23 @@ export default class TransactionBlockstore {
   // then write the transaction blockstore to a car
   // then write the car to the valet
   // then remove the transaction blockstore from the map of transaction blockstores
-  #doCommit = async () => {
-    for (const [str, bytes] of this.#blocks) {
-      this.#oldBlocks.set(str, bytes)
+  #doCommit = async (innerBlockstore) => {
+    for (const { cid, bytes } of innerBlockstore.entries()) {
+      this.#oldBlocks.set(cid.toString(), bytes) // unnecessary string conversion
     }
-    await this.#valetWriteTransaction()
+    // await this.#valetWriteTransaction(innerBlockstore)
   }
 
-  #valetWriteTransaction = async () => {
-    if (this.lastCid) {
-      const newCar = await blocksToCarBlock(this.lastCid, this.#blocks)
+  /**
+   * Group the blocks into a car and write it to the valet.
+   * @param {InnerBlockstore} innerBlockstore
+   * @returns {Promise<void>}
+   * @memberof TransactionBlockstore
+   * @private
+   */
+  #valetWriteTransaction = async (innerBlockstore) => {
+    if (innerBlockstore.lastCid) {
+      const newCar = await blocksToCarBlock(this.lastCid, innerBlockstore)
       this.#valet.set(newCar.cid.toString(), newCar.bytes)
     }
   }
@@ -164,12 +159,21 @@ export default class TransactionBlockstore {
   }
 }
 
+/**
+ * Runs a function on an inner blockstore, then persists the change to a car writer
+ * or other outer blockstore.
+ * @param {string} label
+ * @param {TransactionBlockstore} blockstore
+ * @param {(innerBlockstore: Blockstore) => Promise<any>} doFun
+ * @returns {Promise<any>}
+ * @memberof TransactionBlockstore
+ */
 export const doTransaction = async (label, blockstore, doFun) => {
   if (!blockstore.commit) return await doFun(blockstore)
   try {
-    const blocks = blockstore.begin(label)
-    const result = await doFun(blocks)
-    await blockstore.commit(label)
+    const innerBlockstore = blockstore.begin(label)
+    const result = await doFun(innerBlockstore)
+    await blockstore.commit(innerBlockstore)
     return result
   } catch (e) {
     console.trace(`Transaction ${label} failed`, e)
@@ -201,7 +205,7 @@ const blocksToCarBlock = async (lastCid, blocks) => {
 export class InnerBlockstore { // if there are no further changes, just use MemoryBlockstore from ./block.js
   /** @type {Map<string, Uint8Array>} */
   #blocks = new Map()
-
+  lastCid = null
   /**
    * @param {import('./link').AnyLink} cid
    * @returns {Promise<AnyBlock | undefined>}
@@ -219,6 +223,7 @@ export class InnerBlockstore { // if there are no further changes, just use Memo
   async put (cid, bytes) {
     // console.log('put', cid)
     this.#blocks.set(cid.toString(), bytes)
+    this.lastCid = cid
   }
 
   * entries () {
