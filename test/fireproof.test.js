@@ -279,6 +279,7 @@ describe('Fireproof', () => {
       }))
     }
     const got = await Promise.all(promises)
+    assert.equal(got.length, putYes * 2)
     // console.log('putYes', putYes)
     // await sleep(1000)
     assert.equal((await database.changesSince()).rows.length, 2)
