@@ -57,7 +57,7 @@ export default class TransactionBlockstore {
 
   async commitedGet (key) {
     // return this.#oldBlocks.get(key) || await this.#valet.getBlocket(key)
-    return await this.#valet.getBlock(key)
+    return await this.#valet.getBlock(key) // todo this is just for testing
   }
 
   /**
@@ -117,23 +117,27 @@ export default class TransactionBlockstore {
   // then write the car to the valet
   // then remove the transaction blockstore from the map of transaction blockstores
   #doCommit = async (innerBlockstore) => {
+    const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
-      this.#oldBlocks.set(cid.toString(), bytes) // unnecessary string conversion
+      const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
+      this.#oldBlocks.set(stringCid, bytes)
+      cids.add(stringCid)
     }
-    await this.#valetWriteTransaction(innerBlockstore)
+    await this.#valetWriteTransaction(innerBlockstore, cids)
   }
 
   /**
    * Group the blocks into a car and write it to the valet.
    * @param {InnerBlockstore} innerBlockstore
+   * @param {Set<string>} cids
    * @returns {Promise<void>}
    * @memberof TransactionBlockstore
    * @private
    */
-  #valetWriteTransaction = async (innerBlockstore) => {
+  #valetWriteTransaction = async (innerBlockstore, cids) => {
     if (innerBlockstore.lastCid) {
       const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-      this.#valet.parkCar(newCar.cid.toString(), newCar.bytes)
+      this.#valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
     }
   }
 
