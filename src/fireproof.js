@@ -139,7 +139,7 @@ export default class Fireproof {
     this.clock = result.head
     result.id = event.key
     this.#notifyListeners([event])
-    return result
+    return { id: result.id } // todo add _ref
   }
 
   //   /**
