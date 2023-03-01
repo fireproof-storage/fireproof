@@ -137,7 +137,7 @@ export async function root (inBlocks, head) {
   if (!head.length) {
     throw new Error('no head')
   }
-  const { getBlock, blocks, bigPut } = makeGetAndPutBlock(inBlocks)
+  const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
   const events = new EventFetcher(blocks)
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
@@ -147,7 +147,9 @@ export async function root (inBlocks, head) {
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
   const prollyRootBlock = await newProllyRootNode.block
   // console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
-  await doTransaction('root', inBlocks, async () => {
+  // todo maybe these should go to a temp blockstore?
+  await doTransaction('root', inBlocks, async (transactionBlockstore) => {
+    const { bigPut } = makeGetAndPutBlock(transactionBlockstore)
     for (const nb of newBlocks) {
       await bigPut(nb)
     }
