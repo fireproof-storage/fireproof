@@ -38,18 +38,32 @@ export default class Valet {
     await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
       await tx.objectStore('cars').put(value, carCid)
-      //   await tx.objectStore('cidToCar').put({ car: carCid, cids })
+      await tx.objectStore('cidToCar').put({ car: carCid, cids })
       return await tx.done
     })
   }
 
   async getBlock (dataCID) {
     // return await this.#valetGet(dataCID)
-    const carCid = this.#cidToCar.get(dataCID)
+    const MEMcarCid = this.#cidToCar.get(dataCID)
+
+    // return await this.withDB(async (db) => {
+    //   const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
+    //   const carBytes = await tx.objectStore('cars').get(MEMcarCid)
+    //   const reader = await CarReader.fromBytes(carBytes)
+    //   const gotBlock = await reader.get(CID.parse(dataCID))
+    //   if (gotBlock) {
+    //     return gotBlock.bytes
+    //   }
+    // })
 
     return await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
-      console.log('carCid', carCid)
+      let carCid = await tx.objectStore('cidToCar').index('cids').get(dataCID)
+      if (!carCid) {
+        carCid = MEMcarCid
+        console.log('index failed, using MEMcid', carCid)
+      }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
       const gotBlock = await reader.get(CID.parse(dataCID))
@@ -57,21 +71,6 @@ export default class Valet {
         return gotBlock.bytes
       }
     })
-
-    // return await this.withDB(async (db) => {
-    //   const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
-    //   const carCid = await tx.objectStore('cidToCar').index('cids').get(dataCID)
-    //   if (!carCid) {
-    //     return
-    //   }
-    //   console.log('carCid', carCid)
-    //   const carBytes = await tx.objectStore('cars').get(carCid)
-    //   const reader = await CarReader.fromBytes(carBytes)
-    //   const gotBlock = await reader.get(CID.parse(dataCID))
-    //   if (gotBlock) {
-    //     return gotBlock.bytes
-    //   }
-    // })
   }
 
   /**
