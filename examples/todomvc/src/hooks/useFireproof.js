@@ -58,6 +58,7 @@ const database = defineDatabase()
 export default function useFireproof (options) {
   const [ready, setReady] = useState(false)
   const refresh = options.refresh || (() => {})
+  window.refresh = refresh
 
   useEffect(() => {
     const doSetup = async () => {
@@ -70,7 +71,7 @@ export default function useFireproof (options) {
   const withRefresh = (fn) => async (...args) => {
     const result = await fn(...args)
     // await sleep(1000)
-    console.log('refresh', database.instanceId)
+    console.log('new root', database.instanceId, JSON.stringify(database.clock))
     refresh()
     return result
   }

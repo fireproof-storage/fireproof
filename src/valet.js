@@ -1,9 +1,8 @@
-/* eslint-disable no-unused-vars */
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
-import { openDB, deleteDB, wrap, unwrap } from 'idb'
+import { openDB } from 'idb'
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default class Valet {
   #cars = new Map() // cars by cid
@@ -15,7 +14,7 @@ export default class Valet {
     if (!this.#db) {
       this.#db = await openDB('valet', 1, {
         upgrade (db) {
-          const cars = db.createObjectStore('cars')
+          db.createObjectStore('cars') // todo use database name
           const cidToCar = db.createObjectStore('cidToCar', { keyPath: 'car' })
           cidToCar.createIndex('cids', 'cids', { multiEntry: true })
         }
@@ -45,7 +44,7 @@ export default class Valet {
 
   async getBlock (dataCID) {
     // return await this.#valetGet(dataCID)
-    const MEMcarCid = this.#cidToCar.get(dataCID)
+    // const MEMcarCid = this.#cidToCar.get(dataCID)
 
     // return await this.withDB(async (db) => {
     //   const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
