@@ -4,13 +4,18 @@ import { CID } from 'multiformats/cid'
 export default class Valet {
   #cars = new Map() // cars by cid
 
+  #cidToCar = new Map() // cid to car
+
   /**
      *
      * @param {string} carCid
      * @param {*} value
      */
-  parkCar (carCid, value) {
+  parkCar (carCid, value, cids) {
     this.#cars.set(carCid, value)
+    for (const cid of cids) {
+      this.#cidToCar.set(cid, carCid)
+    }
   }
 
   getBlock (dataCID) {
@@ -27,7 +32,9 @@ export default class Valet {
    * @returns {Promise<Uint8Array|undefined>}
    */
   #valetGet = async (cid) => {
-    for (const [, carBytes] of this.#cars) {
+    const carCid = this.#cidToCar.get(cid)
+    if (carCid) {
+      const carBytes = this.#cars.get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
       const gotBlock = await reader.get(CID.parse(cid))
       if (gotBlock) {

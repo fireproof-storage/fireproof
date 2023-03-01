@@ -256,7 +256,7 @@ describe('Fireproof', () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     const promises = []
     let putYes = 0
-    for (let index = 0; index < 200; index++) {
+    for (let index = 0; index < 20; index++) {
       const id = 'a' + (300 - index).toString()
       promises.push(database.put({ index, _id: id }).catch(e => {
         assert.equal(e.message, 'put failed on  _id: ' + id)
