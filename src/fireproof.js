@@ -42,6 +42,10 @@ export default class Fireproof {
     return new Fireproof(this.blocks, clock || this.clock)
   }
 
+  toJSON () {
+    return { instanceId: this.instanceId, clock: this.clock }
+  }
+
   /**
    * Returns the changes made to the Fireproof instance since the specified event.
    *
@@ -71,7 +75,7 @@ export default class Fireproof {
       rows = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value }))
       // console.log('dbdoc rows', this.instanceId, rows)
     }
-    return { rows, head: this.clock }
+    return { rows, clock: this.clock }
   }
 
   /**
