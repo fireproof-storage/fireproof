@@ -1,4 +1,4 @@
-/* eslint no-undef: "warn" */
+/* global indexedDB, IDBKeyRange */
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 
