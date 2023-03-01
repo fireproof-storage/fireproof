@@ -252,4 +252,27 @@ describe('Fireproof', () => {
       assert.equal(changes.rows.length, index + 2)
     }
   }).timeout(20000)
+  it('concurrent transactions', async () => {
+    assert.equal((await database.changesSince()).rows.length, 1)
+    let resp
+    const promises = []
+    for (let index = 0; index < 200; index++) {
+      const id = 'a' + (300 - index).toString()
+      promises.push(database.put({ index, _id: id }).catch(e => {
+        assert.equal(e.message, 'put failed on  _id: ' + id)
+      }).then(r => {
+        if (r.id) {
+          database.get(resp.id).catch(e => {
+            // console.trace('failed', e)
+            assert.equal(e.message, 'get failed on _id: ' + id)
+          }).then(d => { assert.equal(d.index, index) })
+        }
+      }))
+      promises.push(database.changesSince().catch(e => {
+        // console.trace('failed', e)
+        assert.equal(e.message, 'changesSince failed on  _id: ' + id)
+      }).then(c => { assert.equal(c.rows.length, index + 2) }))
+    }
+    return await Promise.all(promises)
+  }).timeout(20000)
 })
