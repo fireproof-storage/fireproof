@@ -56,7 +56,8 @@ export default class TransactionBlockstore {
   }
 
   async commitedGet (key) {
-    return this.#oldBlocks.get(key) || await this.#valet.getBlocket(key)
+    // return this.#oldBlocks.get(key) || await this.#valet.getBlocket(key)
+    return await this.#valet.getBlock(key)
   }
 
   /**
