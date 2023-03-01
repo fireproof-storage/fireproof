@@ -38,15 +38,27 @@ export default class TransactionBlockstore {
    */
   async get (cid) {
     const key = cid.toString()
-    const bytes = this.#blocks.get(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
+    // it is safe to read from the in-flight transactions becauase they are immutable
+    // const bytes = this.#oldBlocks.get(key) || await this.#valetGet(key)
+    const bytes = this.#transactionsGet(key) || this.#oldBlocks.get(key) || await this.#valetGet(key)
     // const bytes = this.#blocks.get(key) || await this.#valetGet(key)
     // console.log('bytes', typeof bytes)
     if (!bytes) throw new Error('Missing block: ' + key)
     return { cid, bytes }
   }
 
+  // this iterates over the in-flight transactions
+  // and returns the first matching block it finds
+  #transactionsGet (key) {
+    return this.#blocks.get(key)
+  }
+
   /**
-   * Add a block to the store.
+   * Add a block to the store. Usually bound to a transaction by a closure.
+   * It sets the lastCid property to the CID of the block that was put.
+   * This is used by the transaction as the head of the car when written to the valet.
+   * We don't have to worry about which transaction we are when we are here because
+   * we are the transactionBlockstore.
    *
    * @param {import('./link').AnyLink} cid
    * @param {Uint8Array} bytes
@@ -87,7 +99,11 @@ export default class TransactionBlockstore {
       // this.#blocks = new Map()
     }
     this.#transactionLabel = label
-    return this
+    return {
+      transactionLabel: label,
+      get: this.get.bind(this),
+      put: this.put.bind(this)
+    }
   }
 
   /**
@@ -100,10 +116,19 @@ export default class TransactionBlockstore {
     this.#blocks = new Map()
   }
 
+  // first get the transaction blockstore from the map of transaction blockstores
+  // then copy it to oldBlocks
+  // then write the transaction blockstore to a car
+  // then write the car to the valet
+  // then remove the transaction blockstore from the map of transaction blockstores
   #doCommit = async () => {
     for (const [str, bytes] of this.#blocks) {
       this.#oldBlocks.set(str, bytes)
     }
+    await this.#valetWriteTransaction()
+  }
+
+  #valetWriteTransaction = async () => {
     if (this.lastCid) {
       const newCar = await blocksToCarBlock(this.lastCid, this.#blocks)
       this.#valet.set(newCar.cid.toString(), newCar.bytes)
@@ -170,4 +195,35 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   }
   await writer.close()
   return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
+}
+
+/** @implements {BlockFetcher} */
+export class InnerBlockstore { // if there are no further changes, just use MemoryBlockstore from ./block.js
+  /** @type {Map<string, Uint8Array>} */
+  #blocks = new Map()
+
+  /**
+   * @param {import('./link').AnyLink} cid
+   * @returns {Promise<AnyBlock | undefined>}
+   */
+  async get (cid) {
+    const bytes = this.#blocks.get(cid.toString())
+    if (!bytes) return
+    return { cid, bytes }
+  }
+
+  /**
+   * @param {import('./link').AnyLink} cid
+   * @param {Uint8Array} bytes
+   */
+  async put (cid, bytes) {
+    // console.log('put', cid)
+    this.#blocks.set(cid.toString(), bytes)
+  }
+
+  * entries () {
+    for (const [str, bytes] of this.#blocks) {
+      yield { cid: parse(str), bytes }
+    }
+  }
 }
