@@ -5,7 +5,7 @@ import Fireproof from '../src/fireproof.js'
 
 let database, resp0
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+// const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
 describe('Fireproof', () => {
   beforeEach(async () => {
