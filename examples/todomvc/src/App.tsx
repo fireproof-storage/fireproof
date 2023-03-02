@@ -253,6 +253,7 @@ function Layout() {
   );
 }
 
+const pageBase = document.location.pathname.split('/list')[0] || ''
 
 function App() {
   const fireproof = useFireproof()
@@ -268,7 +269,7 @@ function App() {
 
   let router = createBrowserRouter(
     createRoutesFromElements(
-      <Route element={<Layout />}>
+      <Route element={<Layout />} >
         <Route path='/' loader={allListLoader} element={<AllLists />} />
         <Route path='list'>
           <Route path=':listId' loader={listLoader} element={<List />} >
@@ -277,10 +278,10 @@ function App() {
           </Route>
         </Route>
       </Route>
-    ));
+    ),{basename: pageBase});
   return (
     <FireproofCtx.Provider value={fireproof}>
-      <RouterProvider router={router} fallbackElement={<NotFound />} />
+      <RouterProvider router={router} fallbackElement={<NotFound />}  />
     </FireproofCtx.Provider>
   )
 }
