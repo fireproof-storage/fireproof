@@ -120,10 +120,17 @@ export default class TransactionBlockstore {
     const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
       const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
-      this.#oldBlocks.set(stringCid, bytes)
-      cids.add(stringCid)
+      if (this.#oldBlocks.has(stringCid)) {
+        // console.log('Duplicate block: ' + stringCid)
+      } else {
+        this.#oldBlocks.set(stringCid, bytes)
+        cids.add(stringCid)
+      }
     }
-    await this.#valetWriteTransaction(innerBlockstore, cids)
+    if (cids.size > 0) {
+      console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
+      await this.#valetWriteTransaction(innerBlockstore, cids)
+    }
   }
 
   /**

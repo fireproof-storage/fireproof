@@ -56,6 +56,7 @@ export default class Fireproof {
   }
 
   toJSON () {
+    // todo this also needs to return the index roots...
     return { clock: this.clock }
   }
 
