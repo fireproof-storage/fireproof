@@ -15,16 +15,23 @@ export default class Valet {
   #cidToCar = new Map() // cid to car
   #db = null
   #uploadQueue = null
+  #alreadyEnqueued = new Set()
 
-  #uploadFunction = (carCid, value) => { // todo make start as null
-    console.log('uploading', carCid, value.length)
-  }
+  /**
+   * Function installed by the database to upload car files
+   * @type {null|function(string, Uint8Array):Promise<void>}
+   */
+  uploadFunction = null
 
   constructor () {
     console.log('new Valet')
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log('queue worker', tasks.length, tasks.reduce((acc, t) => acc + t.value.length, 0))
-      await sleep(1000)
+      if (this.uploadFunction) {
+        for (const task of tasks) {
+          await this.uploadFunction(task.carCid, task.value)
+        }
+      }
       callback()
     })
     this.#uploadQueue.drain(function () {
@@ -65,9 +72,17 @@ export default class Valet {
     })
 
     // upload to web3.storage if we have credentials
-    if (this.#uploadFunction) {
+    if (this.uploadFunction) {
+      if (this.#alreadyEnqueued.has(carCid)) {
+        console.log('already enqueued', carCid)
+        return
+      }
       // don't await this, it will be done in the queue
+      console.log('add to queue', carCid, value.length)
       this.#uploadQueue.push({ carCid, value })
+      this.#alreadyEnqueued.add(carCid)
+    } else {
+      console.log('no upload function', carCid, value.length, this.uploadFunction)
     }
   }
 
