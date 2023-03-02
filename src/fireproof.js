@@ -2,7 +2,7 @@
 import { put, get, getAll, eventsSince } from './prolly.js'
 import Blockstore, { doTransaction } from './blockstore.js'
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 /**
  * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
@@ -106,7 +106,7 @@ export default class Fireproof {
   }
 
   async #notifyListeners (changes) {
-    await sleep(0)
+    // await sleep(0)
     this.#listeners.forEach((listener) => listener(changes))
   }
 
@@ -135,7 +135,7 @@ export default class Fireproof {
   async put ({ _id, ...doc }) {
     const id = _id || 'f' + Math.random().toString(36).slice(2)
     await this.runValidation({ _id: id, ...doc })
-    return await this.doPut({ key: id, value: doc })
+    return await this.putToProllyTree({ key: id, value: doc })
   }
 
   /**
@@ -145,13 +145,13 @@ export default class Fireproof {
    */
   async del (id) {
     await this.runValidation({ _id: id, _deleted: true })
-    // return await this.doPut({ key: id, del: true }) // not working at prolly tree layer?
+    // return await this.putToProllyTree({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
-    return await this.doPut({ key: id, value: null })
+    return await this.putToProllyTree({ key: id, value: null })
   }
 
-  async doPut (event) {
-    const result = await doTransaction('doPut', this.blocks, async (blocks) => await put(blocks, this.clock, event))
+  async putToProllyTree (event) {
+    const result = await doTransaction('putToProllyTree', this.blocks, async (blocks) => await put(blocks, this.clock, event))
     if (!result) {
       console.log('failed', event)
     }
