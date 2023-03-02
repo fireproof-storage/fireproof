@@ -16,31 +16,39 @@ function mulberry32 (a) {
   }
 }
 
-const rand = mulberry32(42) // determinstic fixtures
+const rand = mulberry32(1) // determinstic fixtures
 
 const loadFixtures = async (database) => {
   const nextId = () => rand().toString(35).slice(2)
 
-  const listTitles = ['Building Apps', 'Having Fun', 'Making Breakfast']
+  const listTitles = ['Building Apps', 'Having Fun', 'Making Breakfast', 'Pet Stuff', 'Other']
   const todoTitles = [
     ['In the browser', 'On the phone', 'With or without Redux', 'Login components', 'GraphQL queries', 'Automatic replication and versioning'],
     ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
-    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad', 'Yogurt', 'Muesli', 'Smoothie', 'Oatmeal', 'Cereal', 'Pancakes', 'Waffles', 'French toast', 'Baked beans', 'Hash browns', 'Poached eggs', 'Egg and tomato sandwich']
+    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad', 'Yogurt', 'Muesli', 'Smoothie', 'Oatmeal', 'Cereal', 'Pancakes', 'Waffles', 'French toast', 'Baked beans', 'Hash browns', 'Poached eggs', 'Egg and tomato sandwich'],
+    ['Kibble', 'Squeakers', 'Treats', 'Leash', 'Collar', 'Poop bags', 'Dog bed']
   ]
-  for (let j = 0; j < 3; j++) {
+  for (let j = 0; j < 4; j++) {
     const ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
+    const lz = await database.get(ok.id)
+    console.log('db', database.instanceId, 'got', lz)
+
     for (let i = 0; i < todoTitles[j].length; i++) {
-      console.log('db', database.instanceId, ok.id, listTitles[j], todoTitles[j][i])
-      await database.put({
+      const to = await database.put({
         _id: nextId(),
         title: todoTitles[j][i],
         listId: ok.id,
         completed: rand() > 0.75,
         type: 'todo',
-        createdAt: new Date().toISOString()
+        createdAt: '2023-03-02T00:58:06.427Z'
       })
+      console.log('db', database.instanceId, ok.id, to.id, listTitles[j], todoTitles[j][i])
+      const got = await database.get(to.id)
+      console.log('db', database.instanceId, 'got', got)
     }
   }
+  const all = await database.todosbyList.query({ range: [['0'], ['x']] })
+  console.log('db', database.instanceId, 'all', all.rows.map((row) => row.key))
 }
 
 const defineDatabase = () => {
@@ -123,7 +131,7 @@ export default function useFireproof () {
   })
 
   const clearCompleted = withLogging(async (listId) => {
-    const todos = (await database.todosbyList.query({ range: [[listId, '0'], [listId, '9']] })).rows.map((row) => row.value)
+    const todos = (await database.todosbyList.query({ range: [[listId, '1'], [listId, 'x']] })).rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
     for (const todoToDelete of todosToDelete) {
       await database.del(todoToDelete._id)
