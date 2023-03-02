@@ -87,8 +87,10 @@ const bulkFromEvents = (sorted) =>
  * @returns
  */
 const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
+  // console.log('prollyRootFromAncestor', ancestor)
   const event = await events.get(ancestor)
   const { root } = event.value.data
+  // console.log('prollyRootFromAncestor', root.cid, JSON.stringify(root.value))
   return load({ cid: root.cid, get: getBlock, ...opts })
 }
 
