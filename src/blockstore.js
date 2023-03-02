@@ -70,7 +70,7 @@ export default class TransactionBlockstore {
    * @param {import('./link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
-  async put (cid, bytes) {
+  put (cid, bytes) {
     throw new Error('use a transaction to put')
   }
 
@@ -232,7 +232,7 @@ export class InnerBlockstore {
    * @param {import('./link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
-  async put (cid, bytes) {
+  put (cid, bytes) {
     // console.log('put', cid)
     this.#blocks.set(cid.toString(), bytes)
     this.lastCid = cid

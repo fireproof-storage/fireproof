@@ -41,7 +41,7 @@ async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root,
   /** @type {EventData} */
 
   const event = await EventBlock.create(data, head)
-  await bigPut(event)
+  bigPut(event)
   head = await advance(inBlocks, head, event.cid)
 
   return {
@@ -61,7 +61,7 @@ const makeGetAndPutBlock = (inBlocks) => {
   const bigPut = async (block, additions) => {
     // console.log('bigPut', block.cid.toString())
     const { cid, bytes } = block
-    await put(cid, bytes)
+    put(cid, bytes)
     mblocks.putSync(cid, bytes)
     if (additions) {
       additions.set(cid.toString(), block)
@@ -113,7 +113,7 @@ export async function put (inBlocks, head, event, options) {
     let root
     for await (const node of create({ get: getBlock, list: [event], ...opts })) {
       root = await node.block
-      await bigPut(root, additions)
+      bigPut(root, additions)
     }
     return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, event, head, Array.from(additions.values()))
   }
@@ -127,9 +127,9 @@ export async function put (inBlocks, head, event, options) {
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk([...bulkOperations, event]) // ading delete support here
   const prollyRootBlock = await newProllyRootNode.block
   const additions = new Map() // ; const removals = new Map()
-  await bigPut(prollyRootBlock, additions)
+  bigPut(prollyRootBlock, additions)
   for (const nb of newBlocks) {
-    await bigPut(nb, additions)
+    bigPut(nb, additions)
   }
 
   return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut,
@@ -160,7 +160,7 @@ export async function root (inBlocks, head) {
   await doTransaction('root', inBlocks, async (transactionBlockstore) => {
     const { bigPut } = makeGetAndPutBlock(transactionBlockstore)
     for (const nb of newBlocks) {
-      await bigPut(nb)
+      bigPut(nb)
     }
     bigPut(prollyRootBlock)
   })
