@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-// import { useProduceState } from '../hooks'
+import throttle from 'lodash.throttle'
 
-import { Fireproof, Index } from '../../../../'
+import {
+  Fireproof, Index, Listener
+} from '../../../../'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 function mulberry32 (a) {
   return function () {
-    let t = a += 0x6D2B79F5
-    t = Math.imul(t ^ t >>> 15, t | 1)
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61)
-    return ((t ^ t >>> 14) >>> 0) / 4294967296
+    let t = (a += 0x6d2b79f5)
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
 
@@ -20,10 +22,11 @@ const loadFixtures = async (database) => {
   const nextId = () => rand().toString(35).slice(2)
 
   const listTitles = ['Building Apps', 'Having Fun', 'Making Breakfast']
-  const todoTitles = [['In the browser', 'On the phone', 'With or without Redux', 'Login components', 'GraphQL queries', 'Automatic replication and versioning'],
+  const todoTitles = [
+    ['In the browser', 'On the phone', 'With or without Redux', 'Login components', 'GraphQL queries', 'Automatic replication and versioning'],
     ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
-    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad', 'Yogurt', 'Muesli', 'Smoothie', 'Oatmeal', 'Cereal',
-      'Pancakes', 'Waffles', 'French toast', 'Baked beans', 'Hash browns', 'Poached eggs', 'Egg and tomato sandwich']]
+    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad', 'Yogurt', 'Muesli', 'Smoothie', 'Oatmeal', 'Cereal', 'Pancakes', 'Waffles', 'French toast', 'Baked beans', 'Hash browns', 'Poached eggs', 'Egg and tomato sandwich']
+  ]
   for (let j = 0; j < 3; j++) {
     const ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
     for (let i = 0; i < todoTitles[j].length; i++) {
@@ -54,27 +57,38 @@ const defineDatabase = () => {
   return database
 }
 const database = defineDatabase()
+const listener = new Listener(database)
+const inboundSubscriberQueue = new Map()
 
-export default function useFireproof (options) {
+export default function useFireproof () {
   const [ready, setReady] = useState(false)
-  const refresh = options.refresh || (() => {})
-  window.refresh = refresh
+
+  const addSubscriber = (label, fn) => {
+    inboundSubscriberQueue.set('label', fn)
+    console.log('addSubscriber', label, inboundSubscriberQueue.size)
+  }
+
+  const listenerCallback = () => {
+    console.log('listener fired', inboundSubscriberQueue.size)
+    for (const [, fn] of inboundSubscriberQueue) fn()
+  }
 
   useEffect(() => {
     const doSetup = async () => {
       await loadFixtures(database)
+      listener.on('*', throttle(listenerCallback, 250))
       setReady(true)
     }
     doSetup()
   }, [])
 
-  const withRefresh = (fn) => async (...args) => {
-    const result = await fn(...args)
-    // await sleep(1000)
-    console.log('new root', database.instanceId, JSON.stringify(database.clock))
-    refresh()
-    return result
-  }
+  const withLogging =
+    (fn) =>
+      async (...args) => {
+        const result = await fn(...args)
+        console.log('new root', database.clock.join())
+        return result
+      }
 
   const fetchAllLists = async () => {
     const lists = await database.allLists.query({ range: ['list', 'listx'] })
@@ -91,24 +105,24 @@ export default function useFireproof (options) {
     return await database.put({ title, type: 'list' })
   }
 
-  const addTodo = withRefresh(async (listId, title) => {
+  const addTodo = withLogging(async (listId, title) => {
     return await database.put({ completed: false, title, listId, type: 'todo', createdAt: new Date().toISOString() })
   })
 
-  const toggle = withRefresh(async ({ completed, ...doc }) => {
+  const toggle = withLogging(async ({ completed, ...doc }) => {
     return await database.put({ completed: !completed, ...doc })
   })
 
-  const destroy = withRefresh(async ({ _id }) => {
+  const destroy = withLogging(async ({ _id }) => {
     return await database.del(_id)
   })
 
-  const updateTitle = withRefresh(async (doc, title) => {
+  const updateTitle = withLogging(async (doc, title) => {
     doc.title = title
     return await database.put(doc)
   })
 
-  const clearCompleted = withRefresh(async (listId) => {
+  const clearCompleted = withLogging(async (listId) => {
     const todos = (await database.todosbyList.query({ range: [[listId, '0'], [listId, '9']] })).rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
     for (const todoToDelete of todosToDelete) {
@@ -130,6 +144,7 @@ export default function useFireproof (options) {
     clearCompleted,
     // onAuthChange
     // isLoading
+    addSubscriber,
     database,
     ready
   }

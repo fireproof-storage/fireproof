@@ -2,6 +2,8 @@
 import { put, get, getAll, eventsSince } from './prolly.js'
 import Blockstore, { doTransaction } from './blockstore.js'
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 /**
  * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
  *
@@ -39,11 +41,22 @@ export default class Fireproof {
    *    A new Fireproof instance representing the snapshot.
    */
   snapshot (clock) {
+    // how to handle listeners, views, and config?
+    // todo needs a test for that
     return new Fireproof(this.blocks, clock || this.clock)
   }
 
+  /**
+   * This triggers a notification to all listeners of the Fireproof instance.
+   */
+  async setClock (clock) {
+    console.log('setClock', this.instanceId, clock)
+    this.clock = clock
+    await this.#notifyListeners({ reset: true, clock })
+  }
+
   toJSON () {
-    return { instanceId: this.instanceId, clock: this.clock }
+    return { clock: this.clock }
   }
 
   /**
@@ -91,7 +104,8 @@ export default class Fireproof {
     }
   }
 
-  #notifyListeners (changes) {
+  async #notifyListeners (changes) {
+    await sleep(0)
     this.#listeners.forEach((listener) => listener(changes))
   }
 
@@ -140,10 +154,10 @@ export default class Fireproof {
     if (!result) {
       console.log('failed', event)
     }
-    this.clock = result.head
+    this.clock = result.head // do we want to do this as a finally block
     result.id = event.key
-    this.#notifyListeners([event])
-    return { id: result.id } // todo add _ref
+    await this.#notifyListeners([event])
+    return { id: result.id, clock: this.clock } // todo add clock
   }
 
   //   /**

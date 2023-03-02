@@ -1,4 +1,3 @@
-
 /**
  * A Fireproof database Listener allows you to react to events in the database.
  *
@@ -10,12 +9,6 @@
  *
  */
 export default class Listener {
-  /**
-     * Creates a new index with the given map function and database.
-     * @param {import('./fireproof').Fireproof} database - The Fireproof database instance to index.
-     * @param {Function} eventFun - The event function to apply to each current change to the database.
-     */
-
   #subcribers = new Map()
 
   // todo code review if there is a better way that doesn't create a circular reference
@@ -25,18 +18,23 @@ export default class Listener {
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef
   #doStopListening = null
 
+  /**
+   * Creates a new index with the given map function and database.
+   * @param {import('./fireproof').Fireproof} database - The Fireproof database instance to index.
+   * @param {Function} eventFun - The event function to apply to each current change to the database.
+   */
   constructor (database, eventFun) {
     /** eventFun
-       * The database instance to index.
-       * @type {import('./fireproof').Fireproof}
-       */
+     * The database instance to index.
+     * @type {import('./fireproof').Fireproof}
+     */
     this.database = database
     this.#doStopListening = database.registerListener((changes) => this.#onChanges(changes))
     /**
-       * The map function to apply to each entry in the database.
-       * @type {Function}
-       */
-    this.eventFun = eventFun
+     * The map function to apply to each entry in the database.
+     * @type {Function}
+     */
+    this.eventFun = eventFun || function (_, emit) { emit('*') }
     this.dbHead = null
   }
 
@@ -47,7 +45,7 @@ export default class Listener {
    * @returns {Function} A function to unsubscribe from the topic.
    */
   on (topic, subscriber, since) {
-    const listOfTopicSubscribers = getTopic(this.#subcribers, topic)
+    const listOfTopicSubscribers = getTopicList(this.#subcribers, topic)
     listOfTopicSubscribers.push(subscriber)
     if (typeof since !== 'undefined') {
       this.database.changesSince(since).then(({ rows: changes }) => {
@@ -62,21 +60,32 @@ export default class Listener {
   }
 
   #onChanges (changes) {
-    const seenTopics = topicsForChanges(changes, this.eventFun)
-    for (const [topic, keys] of seenTopics) {
-      const listOfTopicSubscribers = getTopic(this.#subcribers, topic)
-      listOfTopicSubscribers.forEach((subscriber) => keys.forEach((key) => subscriber(key)))
+    if (Array.isArray(changes)) {
+      const seenTopics = topicsForChanges(changes, this.eventFun)
+      for (const [topic, keys] of seenTopics) {
+        const listOfTopicSubscribers = getTopicList(this.#subcribers, topic)
+        listOfTopicSubscribers.forEach((subscriber) => keys.forEach((key) => subscriber(key)))
+      }
+    } else {
+      // reset event
+      if (changes.reset) {
+        for (const [, listOfTopicSubscribers] of this.#subcribers) {
+          listOfTopicSubscribers.forEach((subscriber) => subscriber(changes))
+        }
+      }
     }
+    // if changes is special, notify all listeners?
+    // first make the example app use listeners
   }
 }
 
-function getTopic (map, name) {
-  let topic = map.get(name)
-  if (!topic) {
-    topic = []
-    map.set(name, topic)
+function getTopicList (subscribersMap, name) {
+  let topicList = subscribersMap.get(name)
+  if (!topicList) {
+    topicList = []
+    subscribersMap.set(name, topicList)
   }
-  return topic
+  return topicList
 }
 
 // copied from src/db-index.js
@@ -94,7 +103,7 @@ const topicsForChanges = (changes, eventFun) => {
   changes.forEach(({ key, value, del }) => {
     if (del || !value) value = { _deleted: true }
     eventFun(makeDoc({ key, value }), (t) => {
-      const topicList = getTopic(seenTopics, t)
+      const topicList = getTopicList(seenTopics, t)
       topicList.push(key)
     })
   })

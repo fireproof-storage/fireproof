@@ -4,7 +4,7 @@ import useFireproof from './hooks/useFireproof'
 import reactLogo from './assets/react.svg'
 import './App.css'
 import {
-  Route, Link, Outlet, RouterProvider, createBrowserRouter,
+  Route, Link, Outlet, RouterProvider, createBrowserRouter, useRevalidator,
   createRoutesFromElements, useNavigate, useParams, useLoaderData
 } from "react-router-dom";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router-dom";
@@ -46,13 +46,20 @@ function Login() {
 }
 
 function AllLists() {
-  const { addList, database } = useContext(FireproofCtx)
+  const { addList, database, addSubscriber } = useContext(FireproofCtx)
   const navigate = useNavigate()
   let lists = useLoaderData() as ListDoc[];
+  const revalidator = useRevalidator()
+  addSubscriber('AllLists', () => {
+    console.log('AllLists revalidator')
+    revalidator.revalidate();
+  })
+
+
   const onSubmit = async (title: string) => {
     const { id } = await addList(title)
-    navigate(`/list/${id}`)
   }
+  console.log('repaint AllLists', database.clock.toString())
   return (
     <div>
       <div className='listNav'>
@@ -79,6 +86,8 @@ function AllLists() {
         onSubmit={onSubmit}
         placeholder='Create a new list or choose from above.'
       />
+      <TimeTravel database={database} />
+
     </div>
   )
 }
@@ -111,13 +120,16 @@ function List() {
     toggle,
     destroy,
     clearCompleted,
-    updateTitle
+    updateTitle, database, addSubscriber
   } = useContext(FireproofCtx)
-  let params = useParams();
-  const [hack, setHack] = useState(0)
-
-
   let { list, todos } = useLoaderData() as ListLoaderData;
+
+  const revalidator = useRevalidator()
+  addSubscriber('one List',() => {
+    console.log('List revalidator')
+    revalidator.revalidate();
+  })
+
   const pathFlag = 'all'
   const uri = window.location.pathname
   const filteredTodos = {
@@ -132,6 +144,8 @@ function List() {
   const navigate = useNavigate()
   const edit = (todo: TodoDoc) => () => setEditing(todo._id)
   const onClearCompleted = async () => await clearCompleted(list._id)
+
+
 
   return (
     <div>
@@ -161,6 +175,7 @@ function List() {
           await addTodo(list._id, title)
         }
         placeholder='Add a new item to your list.'
+        
       />
 
       <Footer
@@ -172,8 +187,28 @@ function List() {
         nowShowing={pathFlag}
         uri={uri && uri.split('/').slice(0, 3).join('/')}
       />
+      <TimeTravel database={database} />
+
     </div>
   )
+}
+
+const TimeTravel = ({ database }) => {
+  return (<div className='timeTravel'>
+    <h3>Time Travel</h3>
+    <p>Copy and paste a Fireproof clock value to your friend to share application state, seperate them with commas to merge state.</p>
+    <p>Current clock: </p>
+    <pre>{database.clock && database.clock.toString()}</pre>
+    <InputArea
+      onSubmit={
+        async (tex: string) => {
+          await database.setClock(tex.split(','))
+        }
+      }
+      placeholder='Enter a comma-separated list of clock root cids.'
+      autoFocus={false}
+    />
+  </div>)
 }
 
 const NotFound = () => {
@@ -209,12 +244,7 @@ function Layout() {
 
 
 function App() {
-  const [hack, setHack] = useState(0)
-  const fireproof = useFireproof({
-    refresh: () => {
-      setHack(hack + 1)
-    }
-  })
+  const fireproof = useFireproof()
   const { fetchListWithTodos, fetchAllLists } = fireproof
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
@@ -237,7 +267,7 @@ function App() {
         </Route>
       </Route>
     ));
-
+  console.log("app render")
   return (
     <FireproofCtx.Provider value={fireproof}>
       <RouterProvider router={router} fallbackElement={<NotFound />} />
