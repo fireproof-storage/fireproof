@@ -208,7 +208,7 @@ const TimeTravel = ({ database }) => {
       placeholder='Copy a CID from below to rollback in time.'
       autoFocus={false}
     /> */}
-    <p>Click a <b>Fireproof clock value</b> from below to rollback in time.</p>
+    <p>Click a <b>Fireproof clock value</b> below to rollback in time.</p>
     <p>Clock log (newest first): </p>
     <ol type={"1"}>
       {diplayClocklog.map((entry) => (
