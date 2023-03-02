@@ -65,3 +65,20 @@
     background-rotate: 270deg;
 	}
 }
+
+.timeTravel {
+  /* float:right; */
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20%;
+
+  padding:40px;
+  float:right;
+  background: radial-gradient(ellipse at top, #fdd, transparent), radial-gradient(ellipse at bottom, #efd, transparent);
+  background-size: 400% 400%;
+}
+
+html {
+  animation: gradient 20s ease infinite;
+}
