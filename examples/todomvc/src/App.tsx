@@ -125,7 +125,7 @@ function List() {
   let { list, todos } = useLoaderData() as ListLoaderData;
 
   const revalidator = useRevalidator()
-  addSubscriber('one List',() => {
+  addSubscriber('one List', () => {
     console.log('List revalidator')
     revalidator.revalidate();
   })
@@ -175,7 +175,7 @@ function List() {
           await addTodo(list._id, title)
         }
         placeholder='Add a new item to your list.'
-        
+
       />
 
       <Footer
@@ -192,14 +192,17 @@ function List() {
   )
 }
 
-const clockLog = new Set()
+
+const shortLink = l => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
+const clockLog = new Set<string>()
 
 const TimeTravel = ({ database }) => {
-  clockLog.add(database.clock)
+  database.clock && clockLog.add(database.clock.toString())
+  const diplayClocklog = Array.from(clockLog).reverse()
   return (<div className='timeTravel'>
     <h2>Time Travel</h2>
-    <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p>
-    <InputArea
+    {/* <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p> */}
+    {/* <InputArea
       onSubmit={
         async (tex: string) => {
           await database.setClock(tex.split(','))
@@ -207,9 +210,18 @@ const TimeTravel = ({ database }) => {
       }
       placeholder='Copy a CID from below to rollback in time.'
       autoFocus={false}
-    />
+    /> */}
+    <p>Click a <b>Fireproof clock value</b> from below to rollback in time.</p>
     <p>Clock log (newest first): </p>
-    <pre>{Array.from(clockLog).reverse().join('\n')}</pre>
+    <ol type={"1"}>
+      {diplayClocklog.map((entry) => (
+        <li key={entry}>
+          <button onClick={async () => { 
+            await database.setClock([entry]) 
+            }} >{shortLink(entry)}</button>
+        </li>
+      ))}
+    </ol>
   </div>)
 }
 

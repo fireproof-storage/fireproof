@@ -30,11 +30,8 @@ const loadFixtures = async (database) => {
   ]
   for (let j = 0; j < 4; j++) {
     const ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
-    const lz = await database.get(ok.id)
-    console.log('db', database.instanceId, 'got', lz)
-
     for (let i = 0; i < todoTitles[j].length; i++) {
-      const to = await database.put({
+      await database.put({
         _id: nextId(),
         title: todoTitles[j][i],
         listId: ok.id,
@@ -42,13 +39,8 @@ const loadFixtures = async (database) => {
         type: 'todo',
         createdAt: '2023-03-02T00:58:06.427Z'
       })
-      console.log('db', database.instanceId, ok.id, to.id, listTitles[j], todoTitles[j][i])
-      const got = await database.get(to.id)
-      console.log('db', database.instanceId, 'got', got)
     }
   }
-  const all = await database.todosbyList.query({ range: [['0'], ['x']] })
-  console.log('db', database.instanceId, 'all', all.rows.map((row) => row.key))
 }
 
 const defineDatabase = () => {
