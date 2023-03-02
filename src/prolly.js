@@ -79,6 +79,13 @@ const bulkFromEvents = (sorted) =>
   })
 
 // Get the value of the root from the ancestor event
+/**
+ *
+ * @param {EventFetcher} events
+ * @param {Link} ancestor
+ * @param {*} getBlock
+ * @returns
+ */
 const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   const event = await events.get(ancestor)
   const { root } = event.value.data
@@ -156,7 +163,7 @@ export async function root (inBlocks, head) {
     bigPut(prollyRootBlock)
   })
 
-  return (await newProllyRootNode.block).cid
+  return newProllyRootNode // .block).cid // todo return live object not cid
 }
 
 /**
@@ -190,11 +197,7 @@ export async function getAll (blocks, head) {
   if (!head.length) {
     return []
   }
-  const prollyRootNode = await load({
-    cid: await root(blocks, head),
-    get: makeGetBlock(blocks),
-    ...opts
-  })
+  const prollyRootNode = await root(blocks, head)
   const { result } = await prollyRootNode.getAllEntries()
   return result.map(({ key, value }) => ({ key, value }))
 }
@@ -209,7 +212,7 @@ export async function get (blocks, head, key) {
   if (!head.length) {
     return null
   }
-  const prollyRootNode = await load({ cid: await root(blocks, head), get: makeGetBlock(blocks), ...opts })
+  const prollyRootNode = await root(blocks, head)
   const { result } = await prollyRootNode.get(key)
   return result
 }

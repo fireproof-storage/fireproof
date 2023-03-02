@@ -34,8 +34,9 @@ const loadFixtures = async (database) => {
     ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad'],
     ['Kibble', 'Squeakers', 'Treats', 'Leash', 'Collar', 'Poop bags', 'Dog bed']
   ]
+  let ok
   for (let j = 0; j < 4; j++) {
-    const ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
+    ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
     for (let i = 0; i < todoTitles[j].length; i++) {
       await database.put({
         _id: nextId(),
@@ -47,6 +48,9 @@ const loadFixtures = async (database) => {
       })
     }
   }
+  await database.allLists.query().then(console.log).catch(console.log) // this will make the second run faster
+  await database.todosbyList.query().then(console.log).catch(console.log) // this will make the second run faster
+  localStorage && localStorage.setItem('fireproof', JSON.stringify(database))
 }
 
 const defineDatabase = () => {
@@ -74,6 +78,7 @@ export default function useFireproof () {
   }
 
   const listenerCallback = () => {
+    console.log('listenerCallback', database.clock)
     localStorage && localStorage.setItem('fireproof', JSON.stringify(database))
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
