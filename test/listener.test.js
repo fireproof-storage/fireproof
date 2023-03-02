@@ -4,7 +4,7 @@ import Blockstore from '../src/blockstore.js'
 import Fireproof from '../src/fireproof.js'
 import Listener from '../src/listener.js'
 
-let database, listener
+let database, listener, star
 
 describe('Listener', () => {
   beforeEach(async () => {
@@ -27,6 +27,36 @@ describe('Listener', () => {
     listener = new Listener(database, function (doc, emit) {
       if (doc.name) { emit('person') }
     })
+    star = new Listener(database)
+  })
+  it('all listeners get the reset event', (done) => {
+    let count = 0
+    const check = () => {
+      console.log('increment check count')
+      count++
+      if (count === 3) done()
+    }
+    const startClock = database.clock
+    database.put({ _id: 'k645-87tk', name: 'karl' }).then((ok) => {
+      listener.on('person', check)
+      listener.on('not-found', check)
+      star.on('*', check)
+      database.put({ _id: 'k645-87tk', name: 'karl2' }).then((ok) => {
+        assert(ok.id)
+        assert.notEqual(database.clock, startClock)
+        database.setClock(startClock)
+      }).catch(done)
+    })
+  })
+
+  it('can listen to all events', (done) => {
+    star.on('*', (key) => {
+      assert.equal(key, 'i645-87ti')
+      done()
+    })
+    database.put({ _id: 'i645-87ti', name: 'isaac' }).then((ok) => {
+      assert(ok.id)
+    }).catch(done)
   })
   it('shares only new events by default', (done) => {
     listener.on('person', (key) => {

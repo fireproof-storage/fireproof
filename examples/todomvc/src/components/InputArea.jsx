@@ -1,8 +1,11 @@
 import React from 'react'
 import { useInput } from '../hooks'
 
-export default function InputArea ({ onSubmit, placeholder }) {
+export default function InputArea ({ onSubmit, placeholder, autoFocus = true }) {
   const { setValue, resetValue, ...inputProps } = useInput('', { controlled: true })
+  if (autoFocus) {
+    inputProps.autoFocus = true
+  }
   const handleNewTodoKeyDown = (event) => {
     if (event.keyCode !== 13) return
     event.preventDefault()
@@ -15,7 +18,7 @@ export default function InputArea ({ onSubmit, placeholder }) {
   return (
     <input
       className='new-todo' placeholder={placeholder}
-      onKeyDown={handleNewTodoKeyDown} {...inputProps} autoFocus
+      onKeyDown={handleNewTodoKeyDown} {...inputProps}
     />
   )
 }
