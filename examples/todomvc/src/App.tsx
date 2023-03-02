@@ -188,26 +188,28 @@ function List() {
         uri={uri && uri.split('/').slice(0, 3).join('/')}
       />
       <TimeTravel database={database} />
-
     </div>
   )
 }
 
+const clockLog = new Set()
+
 const TimeTravel = ({ database }) => {
+  clockLog.add(database.clock)
   return (<div className='timeTravel'>
-    <h3>Time Travel</h3>
-    <p>Copy and paste a Fireproof clock value to your friend to share application state, seperate them with commas to merge state.</p>
-    <p>Current clock: </p>
-    <pre>{database.clock && database.clock.toString()}</pre>
+    <h2>Time Travel</h2>
+    <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p>
     <InputArea
       onSubmit={
         async (tex: string) => {
           await database.setClock(tex.split(','))
         }
       }
-      placeholder='Enter a comma-separated list of clock root cids.'
+      placeholder='Copy a CID from below to rollback in time.'
       autoFocus={false}
     />
+    <p>Clock log (newest first): </p>
+    <pre>{Array.from(clockLog).reverse().join('\n')}</pre>
   </div>)
 }
 
