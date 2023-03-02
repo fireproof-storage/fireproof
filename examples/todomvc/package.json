@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@w3ui/react-keyring": "^3.0.1",
+    "@web3-storage/upload-client": "^6.0.0",
+    "async": "^3.2.4",
     "classnames": "^2.3.2",
     "debounce": "^1.2.1",
     "immer": "^9.0.19",

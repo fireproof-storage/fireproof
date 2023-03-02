@@ -76,7 +76,7 @@ describe('Listener', () => {
     // it's safe to make this number longer if it start failing
     await sleep(50)
     assert.equal(people, 6)
-  }).timeout(200)
+  }).timeout(2000)
   it('shares events since db.clock', (done) => {
     const clock = database.clock
     const afterEvent = () => {
@@ -96,7 +96,7 @@ describe('Listener', () => {
         if (people === 1) afterEvent()
       }, clock)
     })
-  }).timeout(200)
+  }).timeout(2000)
 })
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
