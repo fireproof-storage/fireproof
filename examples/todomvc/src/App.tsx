@@ -120,17 +120,11 @@ function SpaceRegistrar(): JSX.Element {
 
 
 
-async function uploadCarBytes(agent, carBytes: Uint8Array) {
-  const conf = {
-    issuer: agent.issuer,
-    with: agent.currentSpace(),
-    proofs: await agent.proofs([store]),
-  }
-  const carCID = await Store.add(conf, carBytes)
-  console.log('carCID', carCID)
+async function uploadCarBytes(conf, carCID, carBytes: Uint8Array) {
+  console.log('storing carCID', carCID)
+  const storedCarCID = await Store.add(conf, new Blob([carBytes]))
+  console.log('storedDarCID', storedCarCID)
 }
-
-
 
 function AllLists() {
   const { addList, database, addSubscriber } = useContext(FireproofCtx)
@@ -144,18 +138,28 @@ function AllLists() {
     lists = [{ title: '', _id: '', type: 'list' }, { title: '', _id: '', type: 'list' }, { title: '', _id: '', type: 'list' }]
   }
 
-  const [{ agent, space }] = useKeyring()
+  const [{ agent, space }, {getProofs}] = useKeyring()
   const registered = Boolean(space?.registered())
 
   const onSubmit = async (title: string) => {
     const { id } = await addList(title)
   }
 
-  
+
   useEffect(() => {
     console.log('all lists registered', registered)
     if (registered) {
-      
+      const setUploader = async () => { // todo move this outside of routed components?
+        const conf = {
+          issuer: agent.did,
+          with: space.did(),
+          proofs: await getProofs([store]),
+        }
+        database.setCarUploader((carCid, carBytes) => {
+          uploadCarBytes(conf, carCid, carBytes)
+        })
+      }
+      setUploader()
     }
   }, [registered])
 

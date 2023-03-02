@@ -202,6 +202,13 @@ export default class Fireproof {
     got._id = key
     return got
   }
+
+  setCarUploader (carUploaderFn) {
+    console.log('registering car uploader')
+    // console.log('registering car uploader', this.blocks.valet)
+    // https://en.wikipedia.org/wiki/Law_of_Demeter - this is a violation of the law of demeter
+    this.blocks.valet.uploadFunction = carUploaderFn
+  }
 }
 
 Fireproof.storage = (_email) => {
