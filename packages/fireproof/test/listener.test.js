@@ -32,7 +32,6 @@ describe('Listener', () => {
   it('all listeners get the reset event', (done) => {
     let count = 0
     const check = () => {
-      console.log('increment check count')
       count++
       if (count === 3) done()
     }
