@@ -65,11 +65,9 @@ export default function useFireproof () {
 
   const addSubscriber = (label, fn) => {
     inboundSubscriberQueue.set('label', fn)
-    console.log('addSubscriber', label, inboundSubscriberQueue.size)
   }
 
   const listenerCallback = () => {
-    console.log('listener fired', inboundSubscriberQueue.size)
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 
@@ -81,14 +79,6 @@ export default function useFireproof () {
     }
     doSetup()
   }, [])
-
-  const withLogging =
-    (fn) =>
-      async (...args) => {
-        const result = await fn(...args)
-        console.log('new root', database.clock.join())
-        return result
-      }
 
   const fetchAllLists = async () => {
     const lists = await database.allLists.query({ range: ['list', 'listx'] })
@@ -105,30 +95,30 @@ export default function useFireproof () {
     return await database.put({ title, type: 'list' })
   }
 
-  const addTodo = withLogging(async (listId, title) => {
+  const addTodo = async (listId, title) => {
     return await database.put({ completed: false, title, listId, type: 'todo', createdAt: new Date().toISOString() })
-  })
+  }
 
-  const toggle = withLogging(async ({ completed, ...doc }) => {
+  const toggle = async ({ completed, ...doc }) => {
     return await database.put({ completed: !completed, ...doc })
-  })
+  }
 
-  const destroy = withLogging(async ({ _id }) => {
+  const destroy = async ({ _id }) => {
     return await database.del(_id)
-  })
+  }
 
-  const updateTitle = withLogging(async (doc, title) => {
+  const updateTitle = async (doc, title) => {
     doc.title = title
     return await database.put(doc)
-  })
+  }
 
-  const clearCompleted = withLogging(async (listId) => {
+  const clearCompleted = async (listId) => {
     const todos = (await database.todosbyList.query({ range: [[listId, '1'], [listId, 'x']] })).rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
     for (const todoToDelete of todosToDelete) {
       await database.del(todoToDelete._id)
     }
-  })
+  }
 
   return {
     fetchAllLists,

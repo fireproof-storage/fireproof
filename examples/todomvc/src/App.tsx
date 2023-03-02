@@ -51,7 +51,6 @@ function AllLists() {
   let lists = useLoaderData() as ListDoc[];
   const revalidator = useRevalidator()
   addSubscriber('AllLists', () => {
-    console.log('AllLists revalidator')
     revalidator.revalidate();
   })
 
@@ -59,7 +58,6 @@ function AllLists() {
   const onSubmit = async (title: string) => {
     const { id } = await addList(title)
   }
-  console.log('repaint AllLists', database.clock.toString())
   return (
     <div>
       <div className='listNav'>
@@ -126,7 +124,6 @@ function List() {
 
   const revalidator = useRevalidator()
   addSubscriber('one List', () => {
-    console.log('List revalidator')
     revalidator.revalidate();
   })
 
@@ -281,7 +278,6 @@ function App() {
         </Route>
       </Route>
     ));
-  console.log("app render")
   return (
     <FireproofCtx.Provider value={fireproof}>
       <RouterProvider router={router} fallbackElement={<NotFound />} />
