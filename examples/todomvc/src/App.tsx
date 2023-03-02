@@ -1,6 +1,7 @@
 import { useState, createContext, useContext, useEffect } from 'react'
 import { Fireproof } from '@fireproof/core'
 import useFireproof from './hooks/useFireproof'
+import { useKeyring } from '@w3ui/react-keyring'
 import reactLogo from './assets/react.svg'
 import './App.css'
 import {
@@ -13,6 +14,8 @@ import Footer from './components/Footer'
 import Spinner from './components/Spinner'
 import InputArea from './components/InputArea'
 import TodoItem from './components/TodoItem'
+import { W3APIProvider } from './components/W3API'
+import { Authenticator } from './components/Authenticator'
 
 export const FireproofCtx = createContext<Fireproof>(null)
 
@@ -44,6 +47,79 @@ function Login() {
     </div>
   )
 }
+
+
+
+// w3ui keyring
+
+function SpaceRegistrar(): JSX.Element {
+  const [, { registerSpace }] = useKeyring()
+  const [email, setEmail] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  function resetForm(): void {
+    setEmail('')
+  }
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
+    e.preventDefault()
+    setSubmitted(true)
+    try {
+      await registerSpace(email)
+    } catch (err) {
+      console.log(err)
+      throw new Error('failed to register', { cause: err })
+    } finally {
+      resetForm()
+      setSubmitted(false)
+    }
+  }
+  return (
+    <div className='flex flex-col items-center space-y-24 pt-12'>
+      <div className='flex flex-col items-center space-y-2'>
+        <h3 className='text-lg'>Verify your email address!</h3>
+        <p>
+          Click the link in the email we sent to start uploading to this space.
+        </p>
+      </div>
+      <div className='flex flex-col items-center space-y-4'>
+        <h5>Need a new verification email?</h5>
+        <form
+          className='flex flex-col items-center space-y-2'
+          onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+            void onSubmit(e)
+          }}
+        >
+          <input
+            className='text-black px-2 py-1 rounded'
+            type='email'
+            placeholder='Email'
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+            }}
+          />
+          <input
+            type='submit'
+            className='w3ui-button'
+            value='Re-send Verification Email'
+            disabled={email === ''}
+          />
+        </form>
+        {submitted && (
+          <p>
+            Verification re-sent, please check your email for a verification
+            email.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+
+
+
+
+
 
 function AllLists() {
   const { addList, database, addSubscriber } = useContext(FireproofCtx)
@@ -155,6 +231,8 @@ function List() {
   const edit = (todo: TodoDoc) => () => setEditing(todo._id)
   const onClearCompleted = async () => await clearCompleted(list._id)
 
+  const [{ space }] = useKeyring()
+  const registered = Boolean(space?.registered())
 
 
   return (
@@ -198,6 +276,7 @@ function List() {
         uri={uri && uri.split('/').slice(0, 3).join('/')}
       />
       <TimeTravel database={database} />
+      {!registered && <SpaceRegistrar />}
     </div>
   )
 }
@@ -312,7 +391,11 @@ function App() {
     ), { basename: pageBase });
   return (
     <FireproofCtx.Provider value={fireproof}>
-      <RouterProvider router={router} fallbackElement={<NotFound />} />
+      <W3APIProvider uploadsListPageSize={20}>
+        <Authenticator className='h-full'>
+          <RouterProvider router={router} fallbackElement={<NotFound />} />
+        </Authenticator>
+      </W3APIProvider>
     </FireproofCtx.Provider>
   )
 }
