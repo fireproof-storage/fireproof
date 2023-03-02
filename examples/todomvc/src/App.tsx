@@ -151,7 +151,7 @@ function AllLists() {
     if (registered) {
       const setUploader = async () => { // todo move this outside of routed components?
         const conf = {
-          issuer: agent.did,
+          issuer: agent,
           with: space.did(),
           proofs: await getProofs([store]),
         }
