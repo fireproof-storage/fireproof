@@ -1,3 +1,4 @@
+/* global localStorage */
 import { useEffect, useState } from 'react'
 import throttle from 'lodash.throttle'
 
@@ -19,6 +20,11 @@ function mulberry32 (a) {
 const rand = mulberry32(1) // determinstic fixtures
 
 const loadFixtures = async (database) => {
+  const fp = localStorage && localStorage.getItem('fireproof')
+  if (fp) {
+    const { clock } = JSON.parse(fp)
+    return await database.setClock(clock)
+  }
   const nextId = () => rand().toString(35).slice(2)
 
   const listTitles = ['Building Apps', 'Having Fun', 'Making Breakfast', 'Pet Stuff', 'Other']
@@ -68,6 +74,7 @@ export default function useFireproof () {
   }
 
   const listenerCallback = () => {
+    localStorage && localStorage.setItem('fireproof', JSON.stringify(database))
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 

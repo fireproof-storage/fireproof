@@ -50,8 +50,8 @@ export default class Fireproof {
    * This triggers a notification to all listeners of the Fireproof instance.
    */
   async setClock (clock) {
-    console.log('setClock', this.instanceId, clock)
-    this.clock = clock
+    // console.log('setClock', this.instanceId, clock)
+    this.clock = clock.map((item) => item['/'] ? item['/'] : item)
     await this.#notifyListeners({ reset: true, clock })
   }
 
