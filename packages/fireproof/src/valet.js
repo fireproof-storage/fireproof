@@ -30,7 +30,7 @@ export default class Valet {
         for (const task of tasks) {
           sleep(100)
           console.log('could upload', task.carCid, task.value.length)
-          // await this.uploadFunction(task.carCid, task.value)
+          await this.uploadFunction(task.carCid, task.value)
         }
       }
       callback()

@@ -18,6 +18,7 @@ import { W3APIProvider } from './components/W3API'
 import { Authenticator } from './components/Authenticator'
 import { Store } from '@web3-storage/upload-client'
 import { store } from '@web3-storage/capabilities/store'
+import { InvocationConfig } from '@web3-storage/upload-client/types'
 
 
 export const FireproofCtx = createContext<Fireproof>(null)
@@ -118,10 +119,8 @@ function SpaceRegistrar(): JSX.Element {
   )
 }
 
-
-
-async function uploadCarBytes(conf, carCID, carBytes: Uint8Array) {
-  console.log('storing carCID', carCID)
+async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
+  console.log('storing carCID', carCID, JSON.stringify(conf))
   const storedCarCID = await Store.add(conf, new Blob([carBytes]))
   console.log('storedDarCID', storedCarCID)
 }
@@ -138,7 +137,7 @@ function AllLists() {
     lists = [{ title: '', _id: '', type: 'list' }, { title: '', _id: '', type: 'list' }, { title: '', _id: '', type: 'list' }]
   }
 
-  const [{ agent, space }, {getProofs}] = useKeyring()
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
 
   const onSubmit = async (title: string) => {
@@ -150,10 +149,14 @@ function AllLists() {
     console.log('all lists registered', registered)
     if (registered) {
       const setUploader = async () => { // todo move this outside of routed components?
+        await loadAgent();
+        const withness = space.did()
+        const delegz = { with: withness, ...store}
+        delegz.can =  "store/*"
         const conf = {
           issuer: agent,
-          with: space.did(),
-          proofs: await getProofs([store]),
+          with: withness,
+          proofs: await getProofs([delegz]),
         }
         database.setCarUploader((carCid, carBytes) => {
           uploadCarBytes(conf, carCid, carBytes)
