@@ -3,6 +3,14 @@ import { CID } from 'multiformats/cid'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
 
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+// let storageSupported = false
+// try {
+//   storageSupported = window.localStorage && true
+// } catch (e) {}
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+// todo create an encrypted valet
 export default class Valet {
   idb = null
   #uploadQueue = null

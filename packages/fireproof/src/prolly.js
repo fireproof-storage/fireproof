@@ -14,7 +14,7 @@ import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { doTransaction } from './blockstore.js'
 import { create as createBlock } from 'multiformats/block'
-const opts = { cache, chunker: bf(3), codec, hasher, compare }
+const blockOpts = { cache, chunker: bf(3), codec, hasher, compare }
 
 const withLog = async (label, fn) => {
   const resp = await fn()
@@ -136,7 +136,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   const event = await events.get(ancestor)
   const { root } = event.value.data
   // console.log('prollyRootFromAncestor', root.cid, JSON.stringify(root.value))
-  return load({ cid: root.cid, get: getBlock, ...opts })
+  return load({ cid: root.cid, get: getBlock, ...blockOpts })
 }
 
 /**
@@ -156,7 +156,7 @@ export async function put (inBlocks, head, event, options) {
   if (!head.length) {
     const additions = new Map()
     let root
-    for await (const node of create({ get: getBlock, list: [event], ...opts })) {
+    for await (const node of create({ get: getBlock, list: [event], ...blockOpts })) {
       root = await node.block
       bigPut(root, additions)
     }
