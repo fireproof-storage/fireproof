@@ -139,7 +139,6 @@ function AllLists() {
 
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
-
   const onSubmit = async (title: string) => {
     const { id } = await addList(title)
   }
