@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer'
+// import { Buffer } from 'buffer'
 // globalThis.Buffer = Buffer
 // import { Readable, createWriteStream } from 'fs'
 // import { CarWriter } from '@ipld/car'
