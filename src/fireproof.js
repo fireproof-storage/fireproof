@@ -158,7 +158,7 @@ export default class Fireproof {
     this.clock = result.head // do we want to do this as a finally block
     result.id = event.key
     await this.#notifyListeners([event])
-    return { id: result.id, clock: this.clock } // todo add clock
+    return { id: result.id, clock: this.clock }
   }
 
   //   /**
