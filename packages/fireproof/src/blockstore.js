@@ -1,10 +1,12 @@
+import { Buffer } from 'buffer'
+// globalThis.Buffer = Buffer
 // import { Readable, createWriteStream } from 'fs'
 // import { CarWriter } from '@ipld/car'
 // import { randomBytes } from 'crypto'
-import { CID } from 'multiformats'
-import { encrypt } from './crypto.js'
+// import { CID } from 'multiformats'
+import { encrypt, decrypt } from './crypto.js'
 // import { blocksToCarBlock } from 'ipsql/utils'
-import { create } from 'prolly-trees/cid-set'
+// import { create } from 'prolly-trees/cid-set'
 
 import { parse } from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
@@ -14,6 +16,8 @@ import * as CBW from '@ipld/car/buffer-writer'
 import { CID } from 'multiformats'
 
 import Valet from './valet.js'
+
+const KEY_MATERIAL = typeof process !== 'undefined' ? process.env.KEY_MATERIAL : (import.meta && import.meta.env.VITE_KEY_MATERIAL)
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -54,6 +58,13 @@ export default class TransactionBlockstore {
   }
 
   #encryptionActive = false
+
+  constructor () {
+    if (KEY_MATERIAL) {
+      this.#encryptionActive = true
+    }
+  }
+
   /**
    * Get a block from the store.
    *
@@ -186,7 +197,9 @@ export default class TransactionBlockstore {
   #valetWriteTransaction = async (innerBlockstore, cids) => {
     if (innerBlockstore.lastCid) {
       if (this.#encryptionActive) {
+        console.log('encrypting car', innerBlockstore.label)
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
+        // todo we need to return the cid map from blocksToEncryptedCarBlock
         await this.#valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -249,31 +262,45 @@ const blocksToCarBlock = async (lastCid, blocks) => {
 }
 
 const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
-  const encryptionKey = Buffer.from(process.env.KEY_MATERIAL, 'hex')
+  const encryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
   const encryptedBlocks = []
+  const theCids = []
+  for (const { cid } of blocks.entries()) {
+    theCids.push(cid.toString())
+  }
+
+  let last
   for await (const block of encrypt({
-    cids: blocks.map(block => block.cid.toString()),
-    get: async cid => blocks.find(block => block.cid.toString() === cid.toString()),
+    cids: theCids,
+    get: async cid => blocks.get(cid), // maybe we can just use blocks.get
     key: encryptionKey,
+    hasher: 'sha2-256',
+    codec: 'dag-cbor',
+    root: lastCid
+  })) {
+    encryptedBlocks.push(block)
+    last = block
+  }
+
+  const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
+  return encryptedCar
+}
+
+const blocksFromEncryptedCarBlock = async (cid, get) => {
+  const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+  const cids = new Set()
+  const decryptedBlocks = []
+  for await (const block of decrypt({
+    root: cid,
+    get,
+    key: decryptionKey,
     hasher: 'sha2-256',
     codec: 'dag-cbor'
   })) {
-    encryptedBlocks.push(block)
+    decryptedBlocks.push(block)
+    cids.add(block.cid.toString())
   }
-
-  const cids = encryptedBlocks.map(block => block.cid.toString())
-  const list = cids.map(cid => CID.parse(cid))
-  const get = async cid => encryptedBlocks.find(block => block.cid.toString() === cid.toString())
-  const hasher = 'sha2-256'
-  const cache = () => {}
-  const chunker = null
-  const codec = 'dag-cbor'
-  for await (const node of create({ list, get, cache, chunker, hasher, codec })) {
-    encryptedBlocks.push(node.block)
-  }
-
-  const encryptedCar = await blocksToCarBlock(lastCid, encryptedBlocks)
-  return encryptedCar
+  return { blocks: decryptedBlocks, cids }
 }
 
 /** @implements {BlockFetcher} */

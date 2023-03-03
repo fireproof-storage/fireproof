@@ -15,6 +15,7 @@
     "@web3-storage/capabilities": "^3.2.0",
     "@web3-storage/upload-client": "^6.0.0",
     "async": "^3.2.4",
+    "buffer": "^6.0.3",
     "classnames": "^2.3.2",
     "crypto-browserify": "^3.12.0",
     "debounce": "^1.2.1",
