@@ -82,7 +82,7 @@ function AllLists() {
       </section>
       <InputArea
         onSubmit={onSubmit}
-        placeholder='Create a new list or choose from above.'
+        placeholder='Create a new list or choose one'
       />
       <TimeTravel database={database} />
 

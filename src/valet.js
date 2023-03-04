@@ -3,6 +3,10 @@ import { CID } from 'multiformats/cid'
 import { openDB } from 'idb'
 
 // const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+let storageSupported = false
+try {
+  storageSupported = (window.localStorage && true)
+} catch (e) { }
 
 export default class Valet {
   #cars = new Map() // cars by cid
@@ -11,6 +15,7 @@ export default class Valet {
   #db = null
 
   withDB = async (dbWorkFun) => {
+    if (!storageSupported) return
     if (!this.#db) {
       this.#db = await openDB('valet', 1, {
         upgrade (db) {

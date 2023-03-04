@@ -175,7 +175,7 @@ export const doTransaction = async (label, blockstore, doFun) => {
     await blockstore.commit(innerBlockstore)
     return result
   } catch (e) {
-    console.trace(`Transaction ${label} failed`, e)
+    console.error(`Transaction ${label} failed`, e, e.stack)
     throw e
   } finally {
     blockstore.retire(innerBlockstore)
