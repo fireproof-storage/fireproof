@@ -3,6 +3,12 @@
 import * as React from "react"
 import produce from "immer"
 
+let storageSupported = false
+try {
+    storageSupported = (window.localStorage && true);
+}
+catch (e) { }
+
 export type Props = { text: string }
 
 export function useProduceState<S>(
@@ -72,7 +78,7 @@ export function useInput(
     let _initialValue = initialValue
 
     // safely check localstorage and coerce the right types
-    if (typeof window !== "undefined" && window.localStorage && typeof localStorageName === "string") {
+    if (storageSupported && typeof localStorageName === "string") {
         let v = localStorage.getItem(localStorageName)
         if (v) {
             if (typeof initialValue === "number") _initialValue = Number(v)
@@ -91,7 +97,7 @@ export function useInput(
         }
         let val = typeof initialValue === "number" ? Number(e.target.value) : e.target.value
         setValue(val)
-        if (typeof window !== "undefined" && window.localStorage && typeof localStorageName === "string") {
+        if (storageSupported && typeof localStorageName === "string") {
             if (val !== initialValue) {
                 localStorage.setItem(localStorageName, String(Array.isArray(val) ? val.join(STRINGARRAYSERIALIZER) : val))
             } else {
@@ -134,7 +140,7 @@ export function useCheckInput(
     const { stateObserver, localStorageName, controlled } = options || noOptions
     let _initialValue = initialValue
     // safely check localstorage and coerce the right types
-    if (typeof window !== "undefined" && window.localStorage && typeof localStorageName === "string") {
+    if (storageSupported && typeof localStorageName === "string") {
         let v = localStorage.getItem(localStorageName)
         if (v) {
             _initialValue = v === "true" // dont cast strings with Boolean lol
@@ -149,7 +155,7 @@ export function useCheckInput(
         }
         const val = e.target.checked
         setValue(val)
-        if (typeof window !== "undefined" && window.localStorage && typeof localStorageName === "string") {
+        if (storageSupported && typeof localStorageName === "string") {
             if (val !== initialValue) {
                 localStorage.setItem(localStorageName, String(val))
             } else {
@@ -192,29 +198,6 @@ export function useKeydown(key: string, handler: Function) {
     }, [key, handler])
 }
 
-export function useLocalStorage(key: string, optionalCallback: any = noop) {
-    const [state, setState] = React.useState<any | null>(null)
-    React.useEffect(() => {
-        // chose to make this async
-        const existingValue = localStorage.getItem(key)
-        if (existingValue) {
-            const parsedValue = JSON.parse(existingValue)
-            setState(parsedValue)
-            optionalCallback(parsedValue)
-        }
-    }, [])
-    const removeItem = () => {
-        setState(null)
-        localStorage.removeItem(key)
-        optionalCallback(null)
-    }
-    const setItem = (obj: any) => {
-        setState(obj)
-        localStorage.setItem(key, JSON.stringify(obj))
-        optionalCallback(obj)
-    }
-    return [state, setItem, removeItem] as [(any | null), (obj: any) => void, () => void]
-}
 
 // utils
 

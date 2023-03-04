@@ -8,6 +8,23 @@ import {
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+let storageSupported = false
+try {
+  storageSupported = (window.localStorage && true)
+} catch (e) { }
+
+function localGet (key) {
+  if (storageSupported) {
+    return localStorage && localStorage.getItem(key)
+  }
+}
+
+function localSet (key, value) {
+  if (storageSupported) {
+    return localStorage && localStorage.setItem(key, value)
+  }
+}
+
 function mulberry32 (a) {
   return function () {
     let t = (a += 0x6d2b79f5)
@@ -20,23 +37,23 @@ function mulberry32 (a) {
 const rand = mulberry32(1) // determinstic fixtures
 
 const loadFixtures = async (database) => {
-  const fp = localStorage && localStorage.getItem('fireproof')
+  const fp = localGet('fireproof')
   if (fp) {
+    console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
     const { clock } = JSON.parse(fp)
     return await database.setClock(clock)
   }
-  const nextId = () => rand().toString(35).slice(2)
+  const nextId = (prefix = '') => prefix + rand().toString(32).slice(2)
 
-  const listTitles = ['Building Apps', 'Having Fun', 'Making Breakfast', 'Pet Stuff', 'Other']
+  const listTitles = ['Building Apps', 'Having Fun', 'Getting Groceries']
   const todoTitles = [
     ['In the browser', 'On the phone', 'With or without Redux', 'Login components', 'GraphQL queries', 'Automatic replication and versioning'],
     ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
-    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad'],
-    ['Kibble', 'Squeakers', 'Treats', 'Leash', 'Collar', 'Poop bags', 'Dog bed']
+    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad']
   ]
   let ok
-  for (let j = 0; j < 4; j++) {
-    ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId() })
+  for (let j = 0; j < 3; j++) {
+    ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId('' + j) })
     for (let i = 0; i < todoTitles[j].length; i++) {
       await database.put({
         _id: nextId(),
@@ -44,13 +61,13 @@ const loadFixtures = async (database) => {
         listId: ok.id,
         completed: rand() > 0.75,
         type: 'todo',
-        createdAt: '2023-03-02T00:58:06.427Z'
+        createdAt: '2' + i
       })
     }
   }
-  await database.allLists.query().then(console.log).catch(console.log) // this will make the second run faster
-  await database.todosbyList.query().then(console.log).catch(console.log) // this will make the second run faster
-  localStorage && localStorage.setItem('fireproof', JSON.stringify(database))
+  await database.allLists.query().then(console.log).catch(() => {}) // this will make the second run faster
+  await database.todosbyList.query().then(console.log).catch(() => {}) // this will make the second run faster
+  localSet('fireproof', JSON.stringify(database))
 }
 
 const defineDatabase = () => {
@@ -79,7 +96,7 @@ export default function useFireproof () {
 
   const listenerCallback = () => {
     console.log('listenerCallback', database.clock)
-    localStorage && localStorage.setItem('fireproof', JSON.stringify(database))
+    localSet('fireproof', JSON.stringify(database))
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 
