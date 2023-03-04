@@ -53,7 +53,9 @@ function AllLists() {
   addSubscriber('AllLists', () => {
     revalidator.revalidate();
   })
-
+  if (lists.length == 0) {
+    lists = [{ title: '', _id: '', type: 'list' }, { title: '', _id: '', type: 'list' }, { title: '', _id: '', type: 'list' }]
+  }
 
   const onSubmit = async (title: string) => {
     const { id } = await addList(title)
@@ -69,14 +71,25 @@ function AllLists() {
       </div>
       <section className='main'>
         <ul className='todo-list'>
-          {lists.map(({ title, _id }) => {
-            return (
-              <li key={_id}>
-                <label>
-                  <Link to={`/list/${_id}`}>{title}</Link>
-                </label>
-              </li>
-            )
+          {lists.map(({ title, _id }, i) => {
+            if (_id === '') {
+              return (
+                <li key={_id || i}>
+                  <label>
+                    &nbsp;
+                  </label>
+                </li>
+              )
+            } else {
+              return (
+                <li key={_id || i}>
+                  <label>
+                    <Link to={`/list/${_id}`}>{title}</Link>
+                  </label>
+                </li>
+              )
+            }
+
           })}
         </ul>
       </section>
