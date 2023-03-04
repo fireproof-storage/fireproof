@@ -213,9 +213,9 @@ const TimeTravel = ({ database }) => {
     <ol type={"1"}>
       {diplayClocklog.map((entry) => (
         <li key={entry}>
-          <button onClick={async () => { 
-            await database.setClock([entry]) 
-            }} >{shortLink(entry)}</button>
+          <button onClick={async () => {
+            await database.setClock([entry])
+          }} >{shortLink(entry)}</button>
         </li>
       ))}
     </ol>
@@ -223,13 +223,31 @@ const TimeTravel = ({ database }) => {
 }
 
 const NotFound = () => {
-  console.log('rendering NotFound')
+  console.log('fixme: rendering missing route screen')
   return (
-    <div>
-      <h2>Not found</h2>
-      <p>Sorry, nothing here.</p>
-      <Link to='/'>Go back to the main page.</Link>
-    </div>
+    <>
+      <AppHeader />
+      <div>
+        <header className='header'>
+          <div>
+            <div className='listNav'>
+              <button>Loading...</button>
+              <label></label>
+            </div>
+            <section className='main'>
+              <ul className='todo-list'>
+                <li><label>&nbsp;</label></li>
+                <li><label>&nbsp;</label></li>
+                <li><label>&nbsp;</label></li>
+              </ul>
+            </section>
+            <InputArea
+              placeholder='Create a new list or choose one'
+            />
+          </div>
+        </header>
+      </div>
+    </>
   )
 }
 
@@ -278,10 +296,10 @@ function App() {
           </Route>
         </Route>
       </Route>
-    ),{basename: pageBase});
+    ), { basename: pageBase });
   return (
     <FireproofCtx.Provider value={fireproof}>
-      <RouterProvider router={router} fallbackElement={<NotFound />}  />
+      <RouterProvider router={router} fallbackElement={<NotFound />} />
     </FireproofCtx.Provider>
   )
 }
