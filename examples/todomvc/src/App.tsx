@@ -1,5 +1,5 @@
 import { useState, createContext, useContext, useEffect } from 'react'
-import { Fireproof } from '../../../'
+import { Fireproof } from '@fireproof/core'
 import useFireproof from './hooks/useFireproof'
 import reactLogo from './assets/react.svg'
 import './App.css'

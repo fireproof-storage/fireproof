@@ -1,0 +1,71 @@
+{
+  "name": "@fireproof-storage/core",
+  "version": "0.0.1",
+  "description": "Realtime database for IPFS",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "fireproof": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "standard && mocha test/*.test.js",
+    "coverage": "c8 -r html -r text npm test",
+    "lint": "standard",
+    "lint:fix": "standard --fix"
+  },
+  "keywords": [
+    "database",
+    "JSON",
+    "document",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "contributors": [
+    "J Chris Anderson",
+    "Alan Shaw"
+  ],
+  "license": "Apache-2.0 OR MIT",
+  "dependencies": {
+    "@ipld/car": "^5.1.0",
+    "@ipld/dag-cbor": "^9.0.0",
+    "archy": "^1.0.0",
+    "car-transaction": "^1.0.1",
+    "charwise": "^3.0.1",
+    "cli-color": "^2.0.3",
+    "idb": "^7.1.1",
+    "multiformats": "^11.0.1",
+    "prolly-trees": "^0.2.2",
+    "sade": "^1.8.1"
+  },
+  "devDependencies": {
+    "c8": "^7.12.0",
+    "fake-indexeddb": "^4.0.1",
+    "mocha": "^10.2.0",
+    "nanoid": "^4.0.0",
+    "standard": "^17.0.0"
+  },
+  "mocha": {
+    "require": [
+      "fake-indexeddb/auto"
+    ]
+  },
+  "standard": {
+    "ignore": [
+      "examples/**/*.tsx",
+      "examples/**/dist"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jchris/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jchris/fireproof/issues"
+  },
+  "homepage": "https://github.com/jchris/fireproof#readme",
+  "workspaces": [
+    "examples/todomvc"
+  ]
+
+}

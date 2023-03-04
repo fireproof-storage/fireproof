@@ -1,12 +1,11 @@
 {
-  "name": "todovmc-fireproof",
+  "name": "@fireproof-storage/todovmc",
   "homepage": "./",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "preinstall": "cd ../.. && npm install",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
@@ -20,7 +19,8 @@
     "react-router": "^6.8.1",
     "react-router-dom": "^6.8.1",
     "todomvc-app-css": "^2.4.2",
-    "todomvc-common": "^1.0.5"
+    "todomvc-common": "^1.0.5",
+    "@fireproof-storage/core": "workspace:^"
   },
   "devDependencies": {
     "@types/react": "^18.0.27",

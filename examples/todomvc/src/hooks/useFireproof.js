@@ -4,7 +4,7 @@ import throttle from 'lodash.throttle'
 
 import {
   Fireproof, Index, Listener
-} from '../../../../'
+} from '@fireproof/core'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
