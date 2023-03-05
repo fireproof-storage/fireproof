@@ -16,65 +16,6 @@ export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: 
   })
 }
 
-export const UploadManager = ({ registered }: { registered: Boolean }) => {
-  if (registered) {
-    return <p>Your changes are being saved to the public IPFS network with web3.storage</p>
-  } else {
-    return <SpaceRegistrar />
-  }
-}
-
-function SpaceRegistrar(): JSX.Element {
-  const [, { registerSpace }] = useKeyring()
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  function resetForm(): void {
-    setEmail('')
-  }
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
-    e.preventDefault()
-    setSubmitted(true)
-    try {
-      await registerSpace(email)
-    } catch (err) {
-      console.log(err)
-      throw new Error('failed to register', { cause: err })
-    } finally {
-      resetForm()
-      setSubmitted(false)
-    }
-  }
-  return (
-    <div className="flex flex-col items-center space-y-24 pt-12">
-      <div className="flex flex-col items-center space-y-2">
-        <h3 className="text-lg">Verify your email address!</h3>
-        <p>web3.storage is sending you a verification email. Please click the link.</p>
-      </div>
-      <div className="flex flex-col items-center space-y-4">
-        <h5>Need a new verification email?</h5>
-        <form
-          className="flex flex-col items-center space-y-2"
-          onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
-            void onSubmit(e)
-          }}
-        >
-          <input
-            className="text-black px-2 py-1 rounded"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-            }}
-          />
-          <input type="submit" className="w3ui-button" value="Re-send Verification Email" disabled={email === ''} />
-        </form>
-        {submitted && <p>Verification re-sent, please check your email for a verification email.</p>}
-      </div>
-    </div>
-  )
-}
-
 const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
 const clockLog = new Set<string>()
 
@@ -139,31 +80,24 @@ declare global {
     fireproof: Fireproof
   }
 }
-const defineDatabase = () => {
-  const database = Fireproof.storage()
-  database.allLists = new Index(database, function (doc, map) {
-    if (doc.type === 'list') map(doc.type, doc)
-  })
-  database.todosbyList = new Index(database, function (doc, map) {
-    if (doc.type === 'todo' && doc.listId) {
-      map([doc.listId, doc.createdAt], doc)
-    }
-  })
-  window.fireproof = database
-  return database
-}
-const database = defineDatabase()
-const listener = new Listener(database)
+
 const inboundSubscriberQueue = new Map()
+const database = Fireproof.storage()
+const listener = new Listener(database)
 
-console.log('module fireproof loaded', database, database.allLists, database.todosbyList)
-
-export default function useFireproof(setupFunction: Function): {
+export function useFireproof(
+  defineDatabaseFn: Function,
+  setupFn: Function
+): {
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
   ready: boolean
 } {
   const [ready, setReady] = useState(false)
+
+  if (!ready) {
+    defineDatabaseFn(database)
+  }
 
   const addSubscriber = (label: String, fn: Function) => {
     inboundSubscriberQueue.set(label, fn)
@@ -174,22 +108,27 @@ export default function useFireproof(setupFunction: Function): {
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 
+  // const revalidator = useRevalidator()
+
   useEffect(() => {
     const doSetup = async () => {
+      if (ready) return
       const fp = localGet('fireproof')
       if (fp) {
         console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
         const { clock } = JSON.parse(fp)
         await database.setClock(clock)
+        // revalidator.revalidate()
       } else {
-        await setupFunction(database)
+        await setupFn(database)
         localSet('fireproof', JSON.stringify(database))
       }
       listener.on('*', throttle(listenerCallback, 250))
+      console.log('did setup', JSON.stringify(database), inboundSubscriberQueue)
       setReady(true)
     }
     doSetup()
-  }, [])
+  }, [ready])
 
   return {
     addSubscriber,

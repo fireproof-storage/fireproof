@@ -1,7 +1,7 @@
 import React from 'react'
 import { useState } from 'react'
-import useFireproof from './hooks/useFireproof'
-import { FireproofCtx } from './hooks/useFireproof'
+import { Index } from '@fireproof/core'
+import { useFireproof, FireproofCtx } from './hooks/useFireproof'
 import { makeQueryFunctions } from './makeQueryFunctions'
 import { useKeyring } from '@w3ui/react-keyring'
 import './App.css'
@@ -66,20 +66,42 @@ function Layout({ children }: LayoutProps): JSX.Element {
   )
 }
 
+const defineIndexes = (database) => {
+  console.log('defining indexes')
+  database.allLists = new Index(database, function (doc, map) {
+    if (doc.type === 'list') map(doc.type, doc)
+  })
+  database.todosbyList = new Index(database, function (doc, map) {
+    if (doc.type === 'todo' && doc.listId) {
+      map([doc.listId, doc.createdAt], doc)
+    }
+  })
+  window.fireproof = database
+  return database
+}
+
 /**
  * The root App component
  * @returns {JSX.Element}
  */
 function App(): JSX.Element {
-  const fireproof = useFireproof(loadFixtures)
-  const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fireproof.database) // .database confusing
+  const fp = useFireproof(defineIndexes, loadFixtures)
+  console.log('app render', fp.ready, JSON.stringify(fp.database))
+  const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp.database)
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
-    return await fetchListWithTodos(listId)
+    if (fp.ready) {
+      return await fetchListWithTodos(listId)
+    }
+    return { list: { title: '', type: 'list', _id: '' }, todos: [] } as ListLoaderData
   }
 
   async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {
-    return await fetchAllLists()
+    if (fp.ready) {
+      console.log('allListLoader', JSON.stringify(fp.database))
+      return await fetchAllLists()
+    }
+    return []
   }
 
   function defineRouter(): React.ReactNode {
@@ -97,7 +119,7 @@ function App(): JSX.Element {
 
   const pageBase = document.location.pathname.split('/list')[0] || ''
   return (
-    <FireproofCtx.Provider value={fireproof}>
+    <FireproofCtx.Provider value={fp}>
       <W3APIProvider uploadsListPageSize={20}>
         {/* <Authenticator className='h-full'> */}
         <RouterProvider

@@ -4,8 +4,8 @@ import { useNavigate, useParams, useLoaderData } from 'react-router-dom'
 import Footer from './components/Footer'
 import InputArea from './components/InputArea'
 import TodoItem from './components/TodoItem'
-import { FireproofCtx, UploadManager, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
-import { useUploader } from './hooks/useUploader'
+import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
+import { useUploader, UploadManager } from './hooks/useUploader'
 
 import { ListLoaderData, TodoDoc } from './interfaces'
 
