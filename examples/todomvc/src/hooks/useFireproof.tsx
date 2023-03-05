@@ -9,9 +9,12 @@ import { useRevalidator } from 'react-router-dom'
 
 export const FireproofCtx = createContext<Fireproof>(null)
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
   const revalidator = useRevalidator()
   addSubscriber(name, () => {
+    console.log('revalidating', name)
     revalidator.revalidate()
   })
 }
@@ -56,8 +59,6 @@ export const TimeTravel = ({ database }) => {
   )
 }
 
-// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
 let storageSupported = false
 try {
   storageSupported = window.localStorage && true
@@ -75,6 +76,12 @@ function localSet(key, value) {
   }
 }
 
+function localRemove(key) {
+  if (storageSupported) {
+    return localStorage && localStorage.removeItem(key)
+  }
+}
+
 declare global {
   interface Window {
     fireproof: Fireproof
@@ -89,6 +96,7 @@ export function useFireproof(
   defineDatabaseFn: Function,
   setupFn: Function
 ): {
+  rebuild: any
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
   ready: boolean
@@ -108,24 +116,27 @@ export function useFireproof(
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 
-  // const revalidator = useRevalidator()
+  function rebuild() {
+    console.log('rebuilding')
+    localRemove('fireproof')
+    setReady(false)
+  }
 
   useEffect(() => {
     const doSetup = async () => {
+      console.log('called doSetup')
       if (ready) return
       const fp = localGet('fireproof')
       if (fp) {
-        console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
         const { clock } = JSON.parse(fp)
+        console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
         await database.setClock(clock)
-        // revalidator.revalidate()
       } else {
         await setupFn(database)
         localSet('fireproof', JSON.stringify(database))
       }
-      listener.on('*', throttle(listenerCallback, 250))
-      console.log('did setup', JSON.stringify(database), inboundSubscriberQueue)
       setReady(true)
+      listener.on('*', throttle(listenerCallback, 250))
     }
     doSetup()
   }, [ready])
@@ -134,11 +145,10 @@ export function useFireproof(
     addSubscriber,
     database,
     ready,
+    rebuild,
   }
 }
 
 export async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
-  console.log('storing carCID', carCID, JSON.stringify(conf))
-  const storedCarCID = await Store.add(conf, new Blob([carBytes]))
-  console.log('storedCarCID', storedCarCID)
+  return await Store.add(conf, new Blob([carBytes]))
 }

@@ -66,7 +66,6 @@ function Layout({ children }: LayoutProps): JSX.Element {
 }
 
 const defineIndexes = (database) => {
-  console.log('defining indexes')
   database.allLists = new Index(database, function (doc, map) {
     if (doc.type === 'list') map(doc.type, doc)
   })
@@ -85,7 +84,6 @@ const defineIndexes = (database) => {
  */
 function App(): JSX.Element {
   const fp = useFireproof(defineIndexes, loadFixtures)
-  console.log('app render', fp.ready, JSON.stringify(fp.database))
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp.database)
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
@@ -97,8 +95,12 @@ function App(): JSX.Element {
 
   async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {
     if (fp.ready) {
-      console.log('allListLoader', JSON.stringify(fp.database))
-      return await fetchAllLists()
+      try {
+        return await fetchAllLists()
+      } catch (e) {
+        console.error('could not query', e)
+        fp.rebuild()
+      }
     }
     return []
   }
