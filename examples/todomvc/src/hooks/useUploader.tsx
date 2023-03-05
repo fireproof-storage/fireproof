@@ -18,9 +18,10 @@ export function useUploader(database: Fireproof) {
 
   useEffect(() => {
     console.log('use uploader set remote block reader', registered)
-    database.setRemoteBlockReader((cid: any) => {
-      console.log('looking for', cid)
-      throw 'not implemented'
+    database.setRemoteBlockReader(async (cid: any) => {
+      console.log('network block get', cid)
+      const resp = await fetch(`https://${cid}.ipfs.w3s.link/`)
+      return new Uint8Array(await resp.arrayBuffer())
     })
 
     if (registered) {
