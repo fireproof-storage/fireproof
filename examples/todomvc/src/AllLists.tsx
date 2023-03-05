@@ -5,7 +5,13 @@ import {
   useLoaderData
 } from 'react-router-dom';
 import InputArea from './components/InputArea';
-import { FireproofCtx, useUploader, useRevalidatorAndSubscriber, SpaceRegistrar } from './hooks/useFireproof'
+import {
+  FireproofCtx,
+  useUploader,
+  useRevalidatorAndSubscriber,
+  SpaceRegistrar,
+  TimeTravel,
+} from './hooks/useFireproof'
 
 import { ListDoc } from './interfaces'
 
