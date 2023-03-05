@@ -1,6 +1,4 @@
-import { localGet } from './hooks/useFireproof'
-
-function mulberry32(a) {
+function mulberry32(a: number) {
   return function () {
     let t = (a += 0x6d2b79f5)
     t = Math.imul(t ^ (t >>> 15), t | 1)
@@ -10,7 +8,11 @@ function mulberry32(a) {
 }
 const rand = mulberry32(1) // determinstic fixtures
 
-export default async function loadFixtures(database) {
+export default async function loadFixtures(database: {
+  put: (arg0: any) => any
+  allLists: { query: () => Promise<any> }
+  todosbyList: { query: () => Promise<any> }
+}) {
   const nextId = (prefix = '') => prefix + rand().toString(32).slice(2)
   const listTitles = ['Building Apps', 'Having Fun', 'Getting Groceries']
   const todoTitles = [
@@ -25,7 +27,7 @@ export default async function loadFixtures(database) {
     ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
     ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad'],
   ]
-  let ok
+  let ok: { id: any }
   for (let j = 0; j < 3; j++) {
     ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId('' + j) })
     for (let i = 0; i < todoTitles[j].length; i++) {
