@@ -2,7 +2,6 @@ import { Fireproof } from '@fireproof/core'
 
 export function makeQueryFunctions(database: Fireproof) {
   const fetchAllLists = async () => {
-    console.log('fetchAllLists', database.allLists)
     const lists = await database.allLists.query({ range: ['list', 'listx'] })
     return lists.rows.map((row) => row.value)
   }
