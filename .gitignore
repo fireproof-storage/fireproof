@@ -3,3 +3,4 @@ coverage
 pail.car
 
 .DS_Store
+out/
