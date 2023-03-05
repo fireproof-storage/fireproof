@@ -21,17 +21,17 @@ function TodoFooter ({ count, uri, completedCount, onClearCompleted, nowShowing 
       </span>
       <ul className='filters'>
         <li>
-          <Link to={uri} className={classNames({ selected: nowShowing === 'all' })}>
+          <Link to='' className={classNames({ selected: nowShowing === 'all' })}>
             All
           </Link>
         </li>{' '}
         <li>
-          <Link to={uri + '/active'} className={classNames({ selected: nowShowing === 'active' })}>
+          <Link to={`${uri ? uri + '/' : ''}active`} className={classNames({ selected: nowShowing === 'active' })}>
             Active
           </Link>
         </li>{' '}
         <li>
-          <Link to={uri + '/completed'} className={classNames({ selected: nowShowing === 'completed' })}>
+          <Link to={`${uri ? uri + '/' : ''}completed`} className={classNames({ selected: nowShowing === 'completed' })}>
             Completed
           </Link>
         </li>
