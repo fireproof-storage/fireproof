@@ -3,7 +3,7 @@ import { useContext } from 'react'
 import { Link, useLoaderData } from 'react-router-dom'
 import InputArea from './components/InputArea'
 import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
-import { useUploader, UploadManager } from './hooks/useUploader'
+import { UploadManager, UploaderCtx } from './hooks/useUploader'
 
 import { ListDoc } from './interfaces'
 import { makeQueryFunctions } from './makeQueryFunctions'
@@ -49,7 +49,7 @@ export function AllLists(): JSX.Element {
     lists = threeEmptyLists
   }
   // now upload stuff
-  const registered = useUploader(database)
+  const { registered } = useContext(UploaderCtx)
   return (
     <div>
       <div className="listNav">

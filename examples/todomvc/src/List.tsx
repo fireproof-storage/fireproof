@@ -5,7 +5,7 @@ import Footer from './components/Footer'
 import InputArea from './components/InputArea'
 import TodoItem from './components/TodoItem'
 import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
-import { useUploader, UploadManager } from './hooks/useUploader'
+import { UploadManager, UploaderCtx } from './hooks/useUploader'
 
 import { ListLoaderData, TodoDoc } from './interfaces'
 import { makeQueryFunctions } from './makeQueryFunctions'
@@ -18,7 +18,7 @@ export function List(): JSX.Element {
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
   // now upload stuff
-  const registered = useUploader(database)
+  const { registered } = useContext(UploaderCtx)
   // now route stuff
   const navigate = useNavigate()
   const { filter } = useParams()
