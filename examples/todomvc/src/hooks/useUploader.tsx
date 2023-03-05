@@ -45,7 +45,7 @@ export function useUploader(database: Fireproof) {
       }
       setUploader()
     }
-  }, [registered])
+  }, [space])
   return { registered, uploaderReady }
 }
 
