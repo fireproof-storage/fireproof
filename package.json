@@ -1,12 +1,9 @@
 {
-  "name": "@jchris/fireproof",
+  "name": "@fireproof/fireproof",
   "version": "0.0.1",
   "description": "Realtime database for IPFS",
-  "main": "index.js",
+  "main": "src/fireproof.js",
   "type": "module",
-  "bin": {
-    "fireproof": "./src/cli.js"
-  },
   "scripts": {
     "test": "standard && mocha test/*.test.js",
     "coverage": "c8 -r html -r text npm test",
@@ -16,7 +13,7 @@
   "keywords": [
     "database",
     "JSON",
-    "document",
+    "immutable",
     "IPLD",
     "CID",
     "IPFS"
