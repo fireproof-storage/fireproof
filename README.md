@@ -122,11 +122,22 @@ Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never
 
 Look in the `examples/` directory for projects using the database. It's not picky how you use it, but we want to provide convenient jumping off places. Think of the examples as great to fork when starting your next project.
 
-If are adding Fireproof to an existing page, just install it and [paste the code from the usage example above](#usage) into your app where it will run.
+If are adding Fireproof to an existing page, just install it and try some operations.
 
 ```
-npm install @fireproof-storage/fireproof
+npm install @fireproof/core
 ```
+
+In your `app.js` or `app.tsx` file:
+
+```
+import { Fireproof } from '@fireproof/core'
+const fireproof = Fireproof.storage()
+const ok = await fireproof.put({ hello: 'world' })
+const doc = await fireproof.get(ok.id)
+```
+
+🤫 I like to drop a `window.fireproof = fireproof` in there as a development aid.
 
 # Contributing
 
