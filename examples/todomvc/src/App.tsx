@@ -1,5 +1,5 @@
 import React from 'react'
-import { useState, createContext, useContext, useEffect, ReactNode } from 'react'
+import { useState, createContext, useEffect, ReactNode } from 'react'
 import { Fireproof } from '@fireproof/core'
 import useFireproof from './hooks/useFireproof'
 import { useKeyring } from '@w3ui/react-keyring'
@@ -7,31 +7,25 @@ import reactLogo from './assets/react.svg'
 import './App.css'
 import {
   Route,
-  Link,
   Outlet,
   RouterProvider,
   createBrowserRouter,
   useRevalidator,
   createRoutesFromElements,
-  useNavigate,
-  useParams,
-  useLoaderData,
 } from 'react-router-dom'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router-dom'
 import AppHeader from './components/AppHeader/index.jsx'
-import Footer from './components/Footer'
 import Spinner from './components/Spinner'
 import InputArea from './components/InputArea'
-import TodoItem from './components/TodoItem'
 import { W3APIProvider } from './components/W3API'
 import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from './components/Authenticator'
-import { Store } from '@web3-storage/upload-client'
-import { store } from '@web3-storage/capabilities/store'
-import { InvocationConfig } from '@web3-storage/upload-client/types'
+
+import { List } from './List'
+import { AllLists } from './AllLists'
 
 export const FireproofCtx = createContext<Fireproof>(null)
 
-interface ListLoaderData {
+export interface ListLoaderData {
   list: ListDoc
   todos: TodoDoc[]
 }
@@ -44,13 +38,13 @@ interface Doc {
   _id: string
 }
 
-interface TodoDoc extends Doc {
+export interface TodoDoc extends Doc {
   completed: boolean
   title: string
   listId: string
   type: 'todo'
 }
-interface ListDoc extends Doc {
+export interface ListDoc extends Doc {
   title: string
   type: 'list'
 }
@@ -61,7 +55,7 @@ interface AppState {
   err: Error | null
 }
 
-const threeEmptyLists: ListDoc[] = [
+export const threeEmptyLists: ListDoc[] = [
   { title: '', _id: '', type: 'list' },
   { title: '', _id: '', type: 'list' },
   { title: '', _id: '', type: 'list' },
@@ -69,7 +63,7 @@ const threeEmptyLists: ListDoc[] = [
 
 // w3ui keyring
 
-function SpaceRegistrar(): JSX.Element {
+export function SpaceRegistrar(): JSX.Element {
   const [, { registerSpace }] = useKeyring()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -120,16 +114,10 @@ function SpaceRegistrar(): JSX.Element {
   )
 }
 
-async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
-  console.log('storing carCID', carCID, JSON.stringify(conf))
-  const storedCarCID = await Store.add(conf, new Blob([carBytes]))
-  console.log('storedDarCID', storedCarCID)
-}
-
 const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
 const clockLog = new Set<string>()
 
-const TimeTravel = ({ database }) => {
+export const TimeTravel = ({ database }) => {
   database.clock && database.clock.length && clockLog.add(database.clock.toString())
   const diplayClocklog = Array.from(clockLog).reverse()
   return (
@@ -166,163 +154,13 @@ const TimeTravel = ({ database }) => {
   )
 }
 
-function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
+export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
   const revalidator = useRevalidator()
   addSubscriber(name, () => {
     revalidator.revalidate()
   })
 }
 
-
-const useUploader = (database: Fireproof) => {
-  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
-  const registered = Boolean(space?.registered())
-
-  useEffect(() => {
-    console.log('all lists registered', registered)
-    if (registered) {
-      const setUploader = async () => {
-        // todo move this outside of routed components?
-        await loadAgent()
-        const withness = space.did()
-        const delegz = { with: withness, ...store }
-        delegz.can = 'store/*'
-        const conf = {
-          issuer: agent,
-          with: withness,
-          proofs: await getProofs([delegz]),
-        }
-        database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
-          uploadCarBytes(conf, carCid, carBytes)
-        })
-      }
-      setUploader()
-    }
-  }, [registered])
-  return registered
-}
-
-/**
- * A React functional component that renders a list of todo lists.
- *
- * @returns {JSX.Element}
- *   A React element representing the rendered lists.
- */
-function AllLists(): JSX.Element {
-  // first data stuff
-  const { addList, database, addSubscriber } = useContext(FireproofCtx)
-  useRevalidatorAndSubscriber('AllLists', addSubscriber)
-  let lists = useLoaderData() as ListDoc[]
-  if (lists.length == 0) {
-    lists = threeEmptyLists
-  }
-
-  // now route stuff
-  const navigate = useNavigate()
-
-  // now upload stuff
-  const registered = useUploader(database)
-
-  // now action stuff
-  const onSubmit = async (title: string) => await addList(title)
-
-  return (
-    <div>
-      <div className="listNav">
-        <button
-          onClick={async () => {
-            const allDocs = await database.changesSince()
-            console.log('allDocs', allDocs.rows)
-          }}
-        >
-          Choose a list.
-        </button>
-        <label></label>
-      </div>
-      <ul className="todo-list">
-        {lists.map(({ title, _id }, i) => {
-          if (_id === '') {
-            return (
-              <li key={_id || i}>
-                <label>&nbsp;</label>
-              </li>
-            )
-          } else {
-            return (
-              <li key={_id || i}>
-                <label>
-                  <Link to={`/list/${_id}`}>{title}</Link>
-                </label>
-              </li>
-            )
-          }
-        })}
-      </ul>
-      <InputArea onSubmit={onSubmit} placeholder="Create a new list or choose one" />
-      <TimeTravel database={database} />
-      {!registered && <SpaceRegistrar />}
-    </div>
-  )
-}
-
-function List(): JSX.Element {
-  // first data stuff
-  const { addTodo, toggle, destroy, clearCompleted, updateTitle, database, addSubscriber } = useContext(FireproofCtx)
-  useRevalidatorAndSubscriber('one List', addSubscriber)
-  let { list, todos } = useLoaderData() as ListLoaderData
-  const [editing, setEditing] = useState('')
-  // now route stuff
-  const navigate = useNavigate()
-  const { filter } = useParams()
-  const nowShowing = filter || 'all'
-  const routeFilter = filter || ''
-  const filteredTodos = {
-    all: todos,
-    active: todos.filter((todo) => !todo.completed),
-    completed: todos.filter((todo) => todo.completed),
-  }
-  const shownTodos = filteredTodos[nowShowing]
-  // now action stuff
-  const edit = (todo: TodoDoc) => () => setEditing(todo._id)
-  const onClearCompleted = async () => await clearCompleted(list._id)
-  const onSubmit = async (title: string) => await addTodo(list._id, title)
-
-  return (
-    <div>
-      <div className="listNav">
-        <button onClick={() => navigate('/')}>Back to all lists</button>
-        <label>{list.title}</label>
-      </div>
-
-      <ul className="todo-list">
-        {shownTodos.map((todo: TodoDoc) => {
-          const handle = (fn: (arg0: TodoDoc, arg1: string) => any) => (val: string) => fn(todo, val)
-          return (
-            <TodoItem
-              key={todo._id}
-              todo={todo}
-              onToggle={handle(toggle)}
-              onDestroy={handle(destroy)}
-              onSave={handle(updateTitle)}
-              onEdit={edit(todo)}
-              editing={editing === todo._id}
-              onCancel={console.log}
-            />
-          )
-        })}
-      </ul>
-      <InputArea onSubmit={onSubmit} placeholder="Add a new item to your list." />
-      <Footer
-        count={shownTodos.length}
-        completedCount={filteredTodos['completed'].length}
-        onClearCompleted={onClearCompleted}
-        nowShowing={nowShowing}
-        uri={routeFilter}
-      />
-      <TimeTravel database={database} />
-    </div>
-  )
-}
 /**
  * A React functional component that renders a list.
  *

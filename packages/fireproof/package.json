@@ -52,7 +52,8 @@
   "standard": {
     "ignore": [
       "examples/**/*.tsx",
-      "examples/**/dist"
+      "examples/**/dist",
+      "out/**"
     ]
   },
   "repository": {

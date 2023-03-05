@@ -210,6 +210,11 @@ export default class Fireproof {
   }
 }
 
+/**
+ * Creates a new Fireproof instance.
+ *
+ * @returns {Fireproof} - a new Fireproof instance
+*/
 Fireproof.storage = (_email) => {
   return new Fireproof(new Blockstore(), [])
 }
