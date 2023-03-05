@@ -61,6 +61,12 @@ interface AppState {
   err: Error | null
 }
 
+const threeEmptyLists: ListDoc[] = [
+  { title: '', _id: '', type: 'list' },
+  { title: '', _id: '', type: 'list' },
+  { title: '', _id: '', type: 'list' },
+]
+
 // w3ui keyring
 
 function SpaceRegistrar(): JSX.Element {
@@ -167,33 +173,10 @@ function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string,
   })
 }
 
-/**
- * A React functional component that renders a list of todo lists.
- *
- * @returns {JSX.Element}
- *   A React element representing the rendered lists.
- */
-function AllLists(): JSX.Element {
-  const { addList, database, addSubscriber } = useContext(FireproofCtx)
-  const navigate = useNavigate()
-  let lists = useLoaderData() as ListDoc[]
-  useRevalidatorAndSubscriber('AllLists', addSubscriber)
-  if (lists.length == 0) {
-    lists = [
-      { title: '', _id: '', type: 'list' },
-      { title: '', _id: '', type: 'list' },
-      { title: '', _id: '', type: 'list' },
-    ]
-  }
 
-  // all we care about is if the space is registered
-  // extact to a function we can use in List()
-
+const useUploader = (database: Fireproof) => {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
-  const onSubmit = async (title: string) => {
-    const { id } = await addList(title)
-  }
 
   useEffect(() => {
     console.log('all lists registered', registered)
@@ -216,6 +199,32 @@ function AllLists(): JSX.Element {
       setUploader()
     }
   }, [registered])
+  return registered
+}
+
+/**
+ * A React functional component that renders a list of todo lists.
+ *
+ * @returns {JSX.Element}
+ *   A React element representing the rendered lists.
+ */
+function AllLists(): JSX.Element {
+  // first data stuff
+  const { addList, database, addSubscriber } = useContext(FireproofCtx)
+  useRevalidatorAndSubscriber('AllLists', addSubscriber)
+  let lists = useLoaderData() as ListDoc[]
+  if (lists.length == 0) {
+    lists = threeEmptyLists
+  }
+
+  // now route stuff
+  const navigate = useNavigate()
+
+  // now upload stuff
+  const registered = useUploader(database)
+
+  // now action stuff
+  const onSubmit = async (title: string) => await addList(title)
 
   return (
     <div>
@@ -230,27 +239,25 @@ function AllLists(): JSX.Element {
         </button>
         <label></label>
       </div>
-      <section className="main">
-        <ul className="todo-list">
-          {lists.map(({ title, _id }, i) => {
-            if (_id === '') {
-              return (
-                <li key={_id || i}>
-                  <label>&nbsp;</label>
-                </li>
-              )
-            } else {
-              return (
-                <li key={_id || i}>
-                  <label>
-                    <Link to={`/list/${_id}`}>{title}</Link>
-                  </label>
-                </li>
-              )
-            }
-          })}
-        </ul>
-      </section>
+      <ul className="todo-list">
+        {lists.map(({ title, _id }, i) => {
+          if (_id === '') {
+            return (
+              <li key={_id || i}>
+                <label>&nbsp;</label>
+              </li>
+            )
+          } else {
+            return (
+              <li key={_id || i}>
+                <label>
+                  <Link to={`/list/${_id}`}>{title}</Link>
+                </label>
+              </li>
+            )
+          }
+        })}
+      </ul>
       <InputArea onSubmit={onSubmit} placeholder="Create a new list or choose one" />
       <TimeTravel database={database} />
       {!registered && <SpaceRegistrar />}
@@ -259,33 +266,34 @@ function AllLists(): JSX.Element {
 }
 
 function List(): JSX.Element {
+  // first data stuff
   const { addTodo, toggle, destroy, clearCompleted, updateTitle, database, addSubscriber } = useContext(FireproofCtx)
-  let { list, todos } = useLoaderData() as ListLoaderData
-  const { filter } = useParams()
-  const navigate = useNavigate()
-
   useRevalidatorAndSubscriber('one List', addSubscriber)
+  let { list, todos } = useLoaderData() as ListLoaderData
+  const [editing, setEditing] = useState('')
+  // now route stuff
+  const navigate = useNavigate()
+  const { filter } = useParams()
   const nowShowing = filter || 'all'
   const routeFilter = filter || ''
-
   const filteredTodos = {
     all: todos,
     active: todos.filter((todo) => !todo.completed),
     completed: todos.filter((todo) => todo.completed),
   }
   const shownTodos = filteredTodos[nowShowing]
-
-  const [editing, setEditing] = useState('')
+  // now action stuff
   const edit = (todo: TodoDoc) => () => setEditing(todo._id)
   const onClearCompleted = async () => await clearCompleted(list._id)
-
   const onSubmit = async (title: string) => await addTodo(list._id, title)
+
   return (
     <div>
       <div className="listNav">
         <button onClick={() => navigate('/')}>Back to all lists</button>
         <label>{list.title}</label>
       </div>
+
       <ul className="todo-list">
         {shownTodos.map((todo) => {
           const handle = (fn: (arg0: TodoDoc, arg1: string) => any) => (val: string) => fn(todo, val)
@@ -303,10 +311,7 @@ function List(): JSX.Element {
           )
         })}
       </ul>
-      <InputArea
-        onSubmit={onSubmit}
-        placeholder="Add a new item to your list."
-      />
+      <InputArea onSubmit={onSubmit} placeholder="Add a new item to your list." />
       <Footer
         count={shownTodos.length}
         completedCount={filteredTodos['completed'].length}
