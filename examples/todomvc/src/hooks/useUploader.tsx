@@ -25,6 +25,7 @@ export function useUploader(database: Fireproof) {
     })
 
     if (registered) {
+      // on the branch that works, step through debugger to see when registered gets true
       const setUploader = async () => {
         if (uploaderReady) return
         await loadAgent()
