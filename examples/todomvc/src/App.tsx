@@ -13,6 +13,7 @@ import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from './co
 import { List } from './List'
 import { AllLists } from './AllLists'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
+import loadFixtures from './loadFixtures'
 
 /**
  * A React functional component that renders a list.
@@ -69,7 +70,7 @@ function Layout({ children }: LayoutProps): JSX.Element {
  * @returns {JSX.Element}
  */
 function App(): JSX.Element {
-  const fireproof = useFireproof()
+  const fireproof = useFireproof(loadFixtures)
   const { fetchListWithTodos, fetchAllLists } = fireproof
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {

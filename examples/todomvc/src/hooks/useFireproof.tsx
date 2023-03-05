@@ -130,7 +130,7 @@ try {
   storageSupported = window.localStorage && true
 } catch (e) {}
 
-function localGet(key) {
+export function localGet(key) {
   if (storageSupported) {
     return localStorage && localStorage.getItem(key)
   }
@@ -140,64 +140,6 @@ function localSet(key, value) {
   if (storageSupported) {
     return localStorage && localStorage.setItem(key, value)
   }
-}
-
-function mulberry32(a) {
-  return function () {
-    let t = (a += 0x6d2b79f5)
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
-const rand = mulberry32(1) // determinstic fixtures
-
-const loadFixtures = async (database) => {
-  const fp = localGet('fireproof')
-  if (fp) {
-    console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
-    const { clock } = JSON.parse(fp)
-    return await database.setClock(clock)
-  }
-  const nextId = (prefix = '') => prefix + rand().toString(32).slice(2)
-
-  const listTitles = ['Building Apps', 'Having Fun', 'Getting Groceries']
-  const todoTitles = [
-    [
-      'In the browser',
-      'On the phone',
-      'With or without Redux',
-      'Login components',
-      'GraphQL queries',
-      'Automatic replication and versioning',
-    ],
-    ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
-    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad'],
-  ]
-  let ok
-  for (let j = 0; j < 3; j++) {
-    ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId('' + j) })
-    for (let i = 0; i < todoTitles[j].length; i++) {
-      await database.put({
-        _id: nextId(),
-        title: todoTitles[j][i],
-        listId: ok.id,
-        completed: rand() > 0.75,
-        type: 'todo',
-        createdAt: '2' + i,
-      })
-    }
-  }
-  await database.allLists
-    .query()
-    .then(console.log)
-    .catch(() => {}) // this will make the second run faster
-  await database.todosbyList
-    .query()
-    .then(console.log)
-    .catch(() => {}) // this will make the second run faster
-  localSet('fireproof', JSON.stringify(database))
 }
 
 declare global {
@@ -222,7 +164,7 @@ const database = defineDatabase()
 const listener = new Listener(database)
 const inboundSubscriberQueue = new Map()
 
-export default function useFireproof() {
+export default function useFireproof(setupFunction) {
   const [ready, setReady] = useState(false)
 
   const addSubscriber = (label, fn) => {
@@ -237,7 +179,15 @@ export default function useFireproof() {
 
   useEffect(() => {
     const doSetup = async () => {
-      await loadFixtures(database)
+      const fp = localGet('fireproof')
+      if (fp) {
+        console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
+        const { clock } = JSON.parse(fp)
+        await database.setClock(clock)
+      } else {
+        await setupFunction(database) // todo this should be passed in from App.jsx
+        localSet('fireproof', JSON.stringify(database))
+      }
       listener.on('*', throttle(listenerCallback, 250))
       setReady(true)
     }
@@ -299,17 +249,12 @@ export default function useFireproof() {
   return {
     fetchAllLists,
     fetchListWithTodos,
-
     addList,
     addTodo,
-    // toggleAll,
-    // load,
     toggle,
     destroy,
     updateTitle,
     clearCompleted,
-    // onAuthChange
-    // isLoading
     addSubscriber,
     database,
     ready,
@@ -319,7 +264,7 @@ export default function useFireproof() {
 async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
   console.log('storing carCID', carCID, JSON.stringify(conf))
   const storedCarCID = await Store.add(conf, new Blob([carBytes]))
-  console.log('storedDarCID', storedCarCID)
+  console.log('storedCarCID', storedCarCID)
 }
 
 export const useUploader = (database: Fireproof) => {
@@ -327,10 +272,9 @@ export const useUploader = (database: Fireproof) => {
   const registered = Boolean(space?.registered())
 
   useEffect(() => {
-    console.log('all lists registered', registered)
+    console.log('registered', registered)
     if (registered) {
       const setUploader = async () => {
-        // todo move this outside of routed components?
         await loadAgent()
         const withness = space.did()
         const delegz = { with: withness, ...store }
