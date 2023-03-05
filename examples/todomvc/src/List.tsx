@@ -4,7 +4,13 @@ import { useNavigate, useParams, useLoaderData } from 'react-router-dom'
 import Footer from './components/Footer'
 import InputArea from './components/InputArea'
 import TodoItem from './components/TodoItem'
-import { FireproofCtx, useUploader, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
+import {
+  FireproofCtx,
+  useUploader,
+  SpaceRegistrar,
+  useRevalidatorAndSubscriber,
+  TimeTravel,
+} from './hooks/useFireproof'
 
 import { ListLoaderData, TodoDoc } from './interfaces'
 
@@ -64,6 +70,7 @@ export function List(): JSX.Element {
         uri={routeFilter}
       />
       <TimeTravel database={database} />
+      {!registered && <SpaceRegistrar />}
     </div>
   )
 }

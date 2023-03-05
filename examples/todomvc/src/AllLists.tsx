@@ -50,13 +50,8 @@ export function AllLists(): JSX.Element {
   if (lists.length == 0) {
     lists = threeEmptyLists
   }
-
   // now upload stuff
   const registered = useUploader(database)
-
-  // now action stuff
-  const onSubmit = async (title: string) => await addList(title)
-
   return (
     <div>
       <div className="listNav">
@@ -70,7 +65,7 @@ export function AllLists(): JSX.Element {
         <label></label>
       </div>
       <ul className="todo-list">{lists.map(todoItems)}</ul>
-      <InputArea onSubmit={onSubmit} placeholder="Create a new list or choose one" />
+      <InputArea onSubmit={addList} placeholder="Create a new list or choose one" />
       <TimeTravel database={database} />
       {!registered && <SpaceRegistrar />}
     </div>
