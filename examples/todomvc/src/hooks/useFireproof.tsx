@@ -1,31 +1,32 @@
 /* global localStorage */
 import { useEffect, useState } from 'react'
 import throttle from 'lodash.throttle'
-
-import {
-  Fireproof, Index, Listener
-} from '@fireproof/core'
+import { useKeyring } from '@w3ui/react-keyring'
+import { store } from '@web3-storage/capabilities/store'
+import { Store } from '@web3-storage/upload-client'
+import { InvocationConfig } from '@web3-storage/upload-client/types'
+import { Fireproof, Index, Listener } from '@fireproof/core'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 let storageSupported = false
 try {
-  storageSupported = (window.localStorage && true)
-} catch (e) { }
+  storageSupported = window.localStorage && true
+} catch (e) {}
 
-function localGet (key) {
+function localGet(key) {
   if (storageSupported) {
     return localStorage && localStorage.getItem(key)
   }
 }
 
-function localSet (key, value) {
+function localSet(key, value) {
   if (storageSupported) {
     return localStorage && localStorage.setItem(key, value)
   }
 }
 
-function mulberry32 (a) {
+function mulberry32(a) {
   return function () {
     let t = (a += 0x6d2b79f5)
     t = Math.imul(t ^ (t >>> 15), t | 1)
@@ -47,9 +48,16 @@ const loadFixtures = async (database) => {
 
   const listTitles = ['Building Apps', 'Having Fun', 'Getting Groceries']
   const todoTitles = [
-    ['In the browser', 'On the phone', 'With or without Redux', 'Login components', 'GraphQL queries', 'Automatic replication and versioning'],
+    [
+      'In the browser',
+      'On the phone',
+      'With or without Redux',
+      'Login components',
+      'GraphQL queries',
+      'Automatic replication and versioning',
+    ],
     ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
-    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad']
+    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad'],
   ]
   let ok
   for (let j = 0; j < 3; j++) {
@@ -61,15 +69,26 @@ const loadFixtures = async (database) => {
         listId: ok.id,
         completed: rand() > 0.75,
         type: 'todo',
-        createdAt: '2' + i
+        createdAt: '2' + i,
       })
     }
   }
-  await database.allLists.query().then(console.log).catch(() => {}) // this will make the second run faster
-  await database.todosbyList.query().then(console.log).catch(() => {}) // this will make the second run faster
+  await database.allLists
+    .query()
+    .then(console.log)
+    .catch(() => {}) // this will make the second run faster
+  await database.todosbyList
+    .query()
+    .then(console.log)
+    .catch(() => {}) // this will make the second run faster
   localSet('fireproof', JSON.stringify(database))
 }
 
+declare global {
+  interface Window {
+    fireproof: Fireproof
+  }
+}
 const defineDatabase = () => {
   const database = Fireproof.storage()
   database.allLists = new Index(database, function (doc, map) {
@@ -87,7 +106,7 @@ const database = defineDatabase()
 const listener = new Listener(database)
 const inboundSubscriberQueue = new Map()
 
-export default function useFireproof () {
+export default function useFireproof() {
   const [ready, setReady] = useState(false)
 
   const addSubscriber = (label, fn) => {
@@ -116,7 +135,12 @@ export default function useFireproof () {
 
   const fetchListWithTodos = async (_id) => {
     const list = await database.get(_id)
-    const todos = await database.todosbyList.query({ range: [[_id, '0'], [_id, '9']] })
+    const todos = await database.todosbyList.query({
+      range: [
+        [_id, '0'],
+        [_id, '9'],
+      ],
+    })
     return { list, todos: todos.rows.map((row) => row.value) }
   }
 
@@ -142,7 +166,14 @@ export default function useFireproof () {
   }
 
   const clearCompleted = async (listId) => {
-    const todos = (await database.todosbyList.query({ range: [[listId, '1'], [listId, 'x']] })).rows.map((row) => row.value)
+    const todos = (
+      await database.todosbyList.query({
+        range: [
+          [listId, '1'],
+          [listId, 'x'],
+        ],
+      })
+    ).rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
     for (const todoToDelete of todosToDelete) {
       await database.del(todoToDelete._id)
@@ -165,6 +196,40 @@ export default function useFireproof () {
     // isLoading
     addSubscriber,
     database,
-    ready
+    ready,
   }
+}
+
+async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
+  console.log('storing carCID', carCID, JSON.stringify(conf))
+  const storedCarCID = await Store.add(conf, new Blob([carBytes]))
+  console.log('storedDarCID', storedCarCID)
+}
+
+export const useUploader = (database: Fireproof) => {
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
+  const registered = Boolean(space?.registered())
+
+  useEffect(() => {
+    console.log('all lists registered', registered)
+    if (registered) {
+      const setUploader = async () => {
+        // todo move this outside of routed components?
+        await loadAgent()
+        const withness = space.did()
+        const delegz = { with: withness, ...store }
+        delegz.can = 'store/*'
+        const conf = {
+          issuer: agent,
+          with: withness,
+          proofs: await getProofs([delegz]),
+        }
+        database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
+          uploadCarBytes(conf, carCid, carBytes)
+        })
+      }
+      setUploader()
+    }
+  }, [registered])
+  return registered
 }
