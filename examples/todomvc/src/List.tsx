@@ -8,10 +8,12 @@ import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/u
 import { useUploader, UploadManager } from './hooks/useUploader'
 
 import { ListLoaderData, TodoDoc } from './interfaces'
+import { makeQueryFunctions } from './makeQueryFunctions'
 
 export function List(): JSX.Element {
   // first data stuff
-  const { addTodo, toggle, destroy, clearCompleted, updateTitle, database, addSubscriber } = useContext(FireproofCtx)
+  const { database, addSubscriber } = useContext(FireproofCtx)
+  const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions(database)
   useRevalidatorAndSubscriber('one List', addSubscriber)
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
