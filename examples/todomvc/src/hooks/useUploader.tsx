@@ -26,6 +26,10 @@ export function useUploader(database: Fireproof) {
         database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
           uploadCarBytes(conf, carCid, carBytes)
         })
+        database.setRemoteBlockReader((cid: any) => {
+          console.log('looking for', cid)
+          throw 'not implemented'
+        })
         setUploaderReady(true)
       }
       setUploader()

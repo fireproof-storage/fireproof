@@ -41,6 +41,8 @@ export default class Valet {
     })
     this.#uploadQueue.drain(function () {
       console.log('all items have been processed')
+
+      // todo upload backlog
     })
   }
 
@@ -58,7 +60,7 @@ export default class Valet {
             const cidToCar = transaction.objectStore('cidToCar')
             cidToCar.createIndex('uploaded', 'uploaded')
           }
-        },
+        }
       })
     }
     return await dbWorkFun(this.#db)
@@ -97,13 +99,15 @@ export default class Valet {
     }
   }
 
+  remoteBlockFunction = null
+
   async getBlock(dataCID) {
     return await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
       const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
       const carCid = indexResp?.car
       if (!carCid) {
-        return
+        throw new Error('Missing block: ' + dataCID)
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
