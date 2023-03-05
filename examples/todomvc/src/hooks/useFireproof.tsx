@@ -24,7 +24,15 @@ export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: 
   })
 }
 
-export function SpaceRegistrar(): JSX.Element {
+export const UploadManager = ({ registered }: { registered: Boolean }) => {
+  if (registered) {
+    return <p>Your changes are being saved to the public IPFS network with web3.storage</p>
+  } else {
+    return <SpaceRegistrar />
+  }
+}
+
+function SpaceRegistrar(): JSX.Element {
   const [, { registerSpace }] = useKeyring()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
