@@ -7,7 +7,7 @@ import { InvocationConfig } from '@web3-storage/upload-client/types'
 import { Fireproof, Index, Listener } from '@fireproof/core'
 import { useRevalidator } from 'react-router-dom'
 
-export const FireproofCtx = createContext<Fireproof>(null)
+export const FireproofCtx = createContext<Fireproof>(null) // todo bad type
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -124,7 +124,7 @@ export function useFireproof(
         console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
         await database.setClock(clock)
         try {
-          await database.changesSince()
+          //await database.changesSince()
         } catch (e) {
           console.error('Error loading previous database clock.', e)
           await database.setClock([])

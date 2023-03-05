@@ -14,6 +14,7 @@ import { List } from './List'
 import { AllLists } from './AllLists'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
 import loadFixtures from './loadFixtures'
+import { useUploader, UploaderCtx } from './hooks/useUploader'
 
 /**
  * A React functional component that renders a list.
@@ -86,6 +87,8 @@ function App(): JSX.Element {
   const fp = useFireproof(defineIndexes, loadFixtures)
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp.database)
 
+  const up = useUploader(fp.database)
+
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
     if (fp.ready && fp.database.todosByList) {
       return await fetchListWithTodos(listId)
@@ -117,12 +120,12 @@ function App(): JSX.Element {
   return (
     <FireproofCtx.Provider value={fp}>
       <W3APIProvider uploadsListPageSize={20}>
-        {/* <Authenticator className='h-full'> */}
-        <RouterProvider
-          router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
-          fallbackElement={<LoadingView />}
-        />
-        {/* </Authenticator> */}
+        <UploaderCtx.Provider value={up}>
+          <RouterProvider
+            router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
+            fallbackElement={<LoadingView />}
+          />
+        </UploaderCtx.Provider>
       </W3APIProvider>
     </FireproofCtx.Provider>
   )

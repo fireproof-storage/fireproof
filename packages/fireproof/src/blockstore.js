@@ -38,9 +38,12 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    const doGets = [this.#transactionsGet(key), this.commitedGet(key), this.networkGet(key)]
-    // console.log('doGets', doGets)
-    const bytes = await Promise.any(doGets)
+    // const doGets = [, this.networkGet(key)]
+
+    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch((err) => {
+      console.log('block not local', key, err)
+      return this.networkGet(key)
+    })
 
     if (!bytes) throw new Error('Missing block: ' + key)
     return { cid, bytes }

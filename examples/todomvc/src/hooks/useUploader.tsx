@@ -1,16 +1,28 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, createContext } from 'react'
 import { useKeyring } from '@w3ui/react-keyring'
 import { store } from '@web3-storage/capabilities/store'
 import { Fireproof } from '@fireproof/core'
 import { uploadCarBytes } from './useFireproof'
 import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../components/Authenticator'
 
+export const UploaderCtx = createContext<{ registered: Boolean; uploaderReady: Boolean }>({
+  registered: false,
+  uploaderReady: false,
+})
+
 export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
   const [uploaderReady, setUploaderReady] = useState(false)
+  console.log('use uploader called', { registered, uploaderReady, agent, space })
 
   useEffect(() => {
+    console.log('use uploader set remote block reader', registered)
+    database.setRemoteBlockReader((cid: any) => {
+      console.log('looking for', cid)
+      throw 'not implemented'
+    })
+
     if (registered) {
       const setUploader = async () => {
         if (uploaderReady) return
@@ -23,19 +35,18 @@ export function useUploader(database: Fireproof) {
           with: withness,
           proofs: await getProofs([delegz]),
         }
+        console.log('use uploader set remote block WRITER')
+
         database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
+          console.log('uploading', carCid)
           uploadCarBytes(conf, carCid, carBytes)
-        })
-        database.setRemoteBlockReader((cid: any) => {
-          console.log('looking for', cid)
-          throw 'not implemented'
         })
         setUploaderReady(true)
       }
       setUploader()
     }
   }, [registered])
-  return registered
+  return { registered, uploaderReady }
 }
 
 export const UploadManager = ({ registered }: { registered: Boolean }) => {
