@@ -1,12 +1,9 @@
 {
-  "name": "@fireproof-storage/core",
+  "name": "@fireproof/core",
   "version": "0.0.1",
   "description": "Realtime database for IPFS",
   "main": "index.js",
   "type": "module",
-  "bin": {
-    "fireproof": "./src/cli.js"
-  },
   "scripts": {
     "test": "standard && mocha test/*.test.js",
     "coverage": "c8 -r html -r text npm test",
@@ -23,7 +20,9 @@
   ],
   "contributors": [
     "J Chris Anderson",
-    "Alan Shaw"
+    "Alan Shaw",
+    "Travis Vachon",
+    "Mikeal Rogers"
   ],
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
