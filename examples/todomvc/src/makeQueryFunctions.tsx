@@ -8,7 +8,7 @@ export function makeQueryFunctions(database: Fireproof) {
 
   const fetchListWithTodos = async (_id) => {
     const list = await database.get(_id)
-    const todos = await database.todosbyList.query({
+    const todos = await database.todosByList.query({
       range: [
         [_id, '0'],
         [_id, '9'],
@@ -40,7 +40,7 @@ export function makeQueryFunctions(database: Fireproof) {
 
   const clearCompleted = async (listId) => {
     const todos = (
-      await database.todosbyList.query({
+      await database.todosByList.query({
         range: [
           [listId, '1'],
           [listId, 'x'],

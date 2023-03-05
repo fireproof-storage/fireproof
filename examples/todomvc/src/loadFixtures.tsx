@@ -11,7 +11,7 @@ const rand = mulberry32(1) // determinstic fixtures
 export default async function loadFixtures(database: {
   put: (arg0: any) => any
   allLists: { query: () => Promise<any> }
-  todosbyList: { query: () => Promise<any> }
+  todosByList: { query: () => Promise<any> }
 }) {
   const nextId = (prefix = '') => prefix + rand().toString(32).slice(2)
   const listTitles = ['Building Apps', 'Having Fun', 'Getting Groceries']
@@ -45,7 +45,7 @@ export default async function loadFixtures(database: {
     .query()
     .then(console.log)
     .catch(() => {}) // this will make the second run faster
-  await database.todosbyList
+  await database.todosByList
     .query()
     .then(console.log)
     .catch(() => {}) // this will make the second run faster

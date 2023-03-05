@@ -69,7 +69,7 @@ const defineIndexes = (database) => {
   database.allLists = new Index(database, function (doc, map) {
     if (doc.type === 'list') map(doc.type, doc)
   })
-  database.todosbyList = new Index(database, function (doc, map) {
+  database.todosByList = new Index(database, function (doc, map) {
     if (doc.type === 'todo' && doc.listId) {
       map([doc.listId, doc.createdAt], doc)
     }
@@ -87,14 +87,15 @@ function App(): JSX.Element {
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp.database)
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
-    if (fp.ready) {
+    if (fp.ready && fp.database.todosByList) {
       return await fetchListWithTodos(listId)
     }
     return { list: { title: '', type: 'list', _id: '' }, todos: [] } as ListLoaderData
   }
 
   async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {
-    if (fp.ready) {
+    console.log('fp', fp.ready, fp.database.allLists, JSON.stringify(fp.database))
+    if (fp.ready && fp.database.allLists) {
       try {
         return await fetchAllLists()
       } catch (e) {
