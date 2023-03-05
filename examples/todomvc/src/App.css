@@ -66,17 +66,24 @@
 	}
 }
 
-.timeTravel {
-  /* float:right; */
+.dbInfo {
   position: absolute;
   top: 0;
   right: 0;
-  width: 20%;
+  width: 12rem;
+  padding:20px;
 
-  padding:40px;
-  float:right;
   background: radial-gradient(ellipse at top, #fdd, transparent), radial-gradient(ellipse at bottom, #efd, transparent);
   background-size: 400% 400%;
+}
+
+.timeTravel {
+  height: 25rem;
+  overflow-y: scroll;
+}
+
+.uploadManager {
+  margin-top: 2rem;
 }
 
 html {
