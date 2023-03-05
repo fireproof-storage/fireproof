@@ -2,7 +2,8 @@ import React from 'react'
 import { useContext } from 'react'
 import { Link, useLoaderData } from 'react-router-dom'
 import InputArea from './components/InputArea'
-import { FireproofCtx, useUploader, useRevalidatorAndSubscriber, UploadManager, TimeTravel } from './hooks/useFireproof'
+import { FireproofCtx, useRevalidatorAndSubscriber, UploadManager, TimeTravel } from './hooks/useFireproof'
+import { useUploader } from './hooks/useUploader'
 
 import { ListDoc } from './interfaces'
 
