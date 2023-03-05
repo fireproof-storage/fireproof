@@ -5,9 +5,15 @@ import {
   useLoaderData
 } from 'react-router-dom';
 import InputArea from './components/InputArea';
-import { useUploader } from './hooks/useFireproof'
+import { FireproofCtx, useUploader, useRevalidatorAndSubscriber, SpaceRegistrar } from './hooks/useFireproof'
 
-import { FireproofCtx, useRevalidatorAndSubscriber, ListDoc, threeEmptyLists, TimeTravel, SpaceRegistrar } from './App';
+import { ListDoc } from './interfaces'
+
+const threeEmptyLists: ListDoc[] = [
+  { title: '', _id: '', type: 'list' },
+  { title: '', _id: '', type: 'list' },
+  { title: '', _id: '', type: 'list' },
+]
 
 /**
  * A React functional component that renders a list of todo lists.

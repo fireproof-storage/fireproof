@@ -1,11 +1,120 @@
 /* global localStorage */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, createContext } from 'react'
 import throttle from 'lodash.throttle'
 import { useKeyring } from '@w3ui/react-keyring'
 import { store } from '@web3-storage/capabilities/store'
 import { Store } from '@web3-storage/upload-client'
 import { InvocationConfig } from '@web3-storage/upload-client/types'
 import { Fireproof, Index, Listener } from '@fireproof/core'
+import {
+  Route,
+  Outlet,
+  RouterProvider,
+  createBrowserRouter,
+  useRevalidator,
+  createRoutesFromElements,
+} from 'react-router-dom'
+
+export const FireproofCtx = createContext<Fireproof>(null)
+
+export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
+  const revalidator = useRevalidator()
+  addSubscriber(name, () => {
+    revalidator.revalidate()
+  })
+}
+
+export function SpaceRegistrar(): JSX.Element {
+  const [, { registerSpace }] = useKeyring()
+  const [email, setEmail] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  function resetForm(): void {
+    setEmail('')
+  }
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
+    e.preventDefault()
+    setSubmitted(true)
+    try {
+      await registerSpace(email)
+    } catch (err) {
+      console.log(err)
+      throw new Error('failed to register', { cause: err })
+    } finally {
+      resetForm()
+      setSubmitted(false)
+    }
+  }
+  return (
+    <div className="flex flex-col items-center space-y-24 pt-12">
+      <div className="flex flex-col items-center space-y-2">
+        <h3 className="text-lg">Verify your email address!</h3>
+        <p>web3.storage is sending you a verification email. Please click the link.</p>
+      </div>
+      <div className="flex flex-col items-center space-y-4">
+        <h5>Need a new verification email?</h5>
+        <form
+          className="flex flex-col items-center space-y-2"
+          onSubmit={(e: React.FormEvent<HTMLFormElement>) => {
+            void onSubmit(e)
+          }}
+        >
+          <input
+            className="text-black px-2 py-1 rounded"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value)
+            }}
+          />
+          <input type="submit" className="w3ui-button" value="Re-send Verification Email" disabled={email === ''} />
+        </form>
+        {submitted && <p>Verification re-sent, please check your email for a verification email.</p>}
+      </div>
+    </div>
+  )
+}
+
+const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
+const clockLog = new Set<string>()
+
+export const TimeTravel = ({ database }) => {
+  database.clock && database.clock.length && clockLog.add(database.clock.toString())
+  const diplayClocklog = Array.from(clockLog).reverse()
+  return (
+    <div className="timeTravel">
+      <h2>Time Travel</h2>
+      {/* <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p> */}
+      {/* <InputArea
+      onSubmit={
+        async (tex: string) => {
+          await database.setClock(tex.split(','))
+        }
+      }
+      placeholder='Copy a CID from below to rollback in time.'
+      autoFocus={false}
+    /> */}
+      <p>
+        Click a <b>Fireproof clock value</b> below to rollback in time.
+      </p>
+      <p>Clock log (newest first): </p>
+      <ol type={'1'}>
+        {diplayClocklog.map((entry) => (
+          <li key={entry}>
+            <button
+              onClick={async () => {
+                await database.setClock([entry])
+              }}
+            >
+              {shortLink(entry)}
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 

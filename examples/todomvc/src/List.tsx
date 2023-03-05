@@ -8,9 +8,9 @@ import {
 import Footer from './components/Footer';
 import InputArea from './components/InputArea';
 import TodoItem from './components/TodoItem';
-import { useUploader } from './hooks/useFireproof'
+import { FireproofCtx, useUploader, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
 
-import { FireproofCtx, useRevalidatorAndSubscriber, ListLoaderData, TodoDoc, TimeTravel } from './App';
+import { ListLoaderData, TodoDoc } from './interfaces'
 
 export function List(): JSX.Element {
   // first data stuff
