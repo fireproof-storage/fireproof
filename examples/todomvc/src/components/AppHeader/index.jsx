@@ -1,6 +1,6 @@
 import React from 'react'
 import logo from '../../assets/logo.svg'
-import styles from './AppHeader.css' // eslint-disable-line
+import './AppHeader.css' // eslint-disable-line
 import { Link } from 'react-router-dom'
 /**
  * AppHeader component
