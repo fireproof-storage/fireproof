@@ -1,7 +1,8 @@
 import React from 'react'
 import { useState } from 'react'
 import useFireproof from './hooks/useFireproof'
-import { FireproofCtx, makeQueryFunctions } from './hooks/useFireproof'
+import { FireproofCtx } from './hooks/useFireproof'
+import { makeQueryFunctions } from './makeQueryFunctions'
 import { useKeyring } from '@w3ui/react-keyring'
 import './App.css'
 import { Route, Outlet, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
@@ -71,7 +72,7 @@ function Layout({ children }: LayoutProps): JSX.Element {
  */
 function App(): JSX.Element {
   const fireproof = useFireproof(loadFixtures)
-  const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fireproof.database) // this .database confusing
+  const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fireproof.database) // .database confusing
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
     return await fetchListWithTodos(listId)
