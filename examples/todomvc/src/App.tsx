@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, createContext, useContext, useEffect } from 'react'
 import { Fireproof } from '@fireproof/core'
 import useFireproof from './hooks/useFireproof'
@@ -15,43 +16,13 @@ import Spinner from './components/Spinner'
 import InputArea from './components/InputArea'
 import TodoItem from './components/TodoItem'
 import { W3APIProvider } from './components/W3API'
-import { Authenticator } from './components/Authenticator'
+import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from './components/Authenticator'
 import { Store } from '@web3-storage/upload-client'
 import { store } from '@web3-storage/capabilities/store'
 import { InvocationConfig } from '@web3-storage/upload-client/types'
 
 
 export const FireproofCtx = createContext<Fireproof>(null)
-
-function Login() {
-  // const { user, doLogin, doLogout } = useContext(UserCtx)
-  const user = null
-  const doLogin = () => { }
-  const doLogout = () => { }
-
-  const style = { cursor: 'pointer' }
-  const actionForm = (
-    <span>
-      <button style={style} onClick={doLogin}>
-        Login or Sign Up to sync your todos
-      </button>
-    </span>
-  )
-  return (
-    <div className='Login'>
-      {user
-        ? (
-          <button style={style} onClick={doLogout}>
-            Logout
-          </button>
-        )
-        : (
-          actionForm
-        )}
-    </div>
-  )
-}
-
 
 
 // w3ui keyring
@@ -81,7 +52,7 @@ function SpaceRegistrar(): JSX.Element {
       <div className='flex flex-col items-center space-y-2'>
         <h3 className='text-lg'>Verify your email address!</h3>
         <p>
-          Click the link in the email we sent to start uploading to this space.
+          web3.storage is sending you a verification email. Please click the link.
         </p>
       </div>
       <div className='flex flex-col items-center space-y-4'>
@@ -125,7 +96,74 @@ async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uin
   console.log('storedDarCID', storedCarCID)
 }
 
-function AllLists() {
+
+interface Doc {
+  _id: string
+}
+
+interface TodoDoc extends Doc {
+  completed: boolean
+  title: string
+  listId: string
+  type: "todo"
+}
+interface ListDoc extends Doc {
+  title: string
+  type: "list"
+}
+
+
+interface AppState {
+  list: ListDoc,
+  todos: TodoDoc[],
+  err: Error | null
+}
+
+
+
+const shortLink = l => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
+const clockLog = new Set<string>()
+
+const TimeTravel = ({ database }) => {
+  database.clock && database.clock.length && clockLog.add(database.clock.toString())
+  const diplayClocklog = Array.from(clockLog).reverse()
+  return (<div className='timeTravel'>
+    <h2>Time Travel</h2>
+    {/* <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p> */}
+    {/* <InputArea
+      onSubmit={
+        async (tex: string) => {
+          await database.setClock(tex.split(','))
+        }
+      }
+      placeholder='Copy a CID from below to rollback in time.'
+      autoFocus={false}
+    /> */}
+    <p>Click a <b>Fireproof clock value</b> below to rollback in time.</p>
+    <p>Clock log (newest first): </p>
+    <ol type={"1"}>
+      {diplayClocklog.map((entry) => (
+        <li key={entry}>
+          <button onClick={async () => {
+            await database.setClock([entry])
+          }} >{shortLink(entry)}</button>
+        </li>
+      ))}
+    </ol>
+  </div>)
+}
+
+
+
+
+
+/**
+ * A React functional component that renders a list of todo lists.
+ *
+ * @returns {JSX.Element}
+ *   A React element representing the rendered lists.
+ */
+function AllLists(): JSX.Element {
   const { addList, database, addSubscriber } = useContext(FireproofCtx)
   const navigate = useNavigate()
   let lists = useLoaderData() as ListDoc[];
@@ -208,29 +246,13 @@ function AllLists() {
   )
 }
 
-interface Doc {
-  _id: string
-}
-
-interface TodoDoc extends Doc {
-  completed: boolean
-  title: string
-  listId: string
-  type: "todo"
-}
-interface ListDoc extends Doc {
-  title: string
-  type: "list"
-}
-
-
-interface AppState {
-  list: ListDoc,
-  todos: TodoDoc[],
-  err: Error | null
-}
-
-function List() {
+/**
+ * A React functional component that renders a list.
+ *
+ * @returns {JSX.Element}
+ *   A React element representing the rendered list.
+ */
+function List(): JSX.Element {
   const {
     addTodo,
     toggle,
@@ -309,39 +331,13 @@ function List() {
 }
 
 
-const shortLink = l => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-const clockLog = new Set<string>()
-
-const TimeTravel = ({ database }) => {
-  database.clock && database.clock.length && clockLog.add(database.clock.toString())
-  const diplayClocklog = Array.from(clockLog).reverse()
-  return (<div className='timeTravel'>
-    <h2>Time Travel</h2>
-    {/* <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p> */}
-    {/* <InputArea
-      onSubmit={
-        async (tex: string) => {
-          await database.setClock(tex.split(','))
-        }
-      }
-      placeholder='Copy a CID from below to rollback in time.'
-      autoFocus={false}
-    /> */}
-    <p>Click a <b>Fireproof clock value</b> below to rollback in time.</p>
-    <p>Clock log (newest first): </p>
-    <ol type={"1"}>
-      {diplayClocklog.map((entry) => (
-        <li key={entry}>
-          <button onClick={async () => {
-            await database.setClock([entry])
-          }} >{shortLink(entry)}</button>
-        </li>
-      ))}
-    </ol>
-  </div>)
-}
-
-const NotFound = () => {
+/**
+ * A React functional component that runs when a route is loading.
+ *
+ * @returns {JSX.Element}
+ *   A React element representing the rendered list.
+ */
+const LoadingView = (): JSX.Element => {
   console.log('fixme: rendering missing route screen')
   return (
     <>
@@ -375,8 +371,13 @@ interface ListLoaderData {
   todos: TodoDoc[]
 }
 
-
-function Layout() {
+/**
+ * A React functional component that wraps around <List/> and <AllLists/>.
+ *
+ * @returns {JSX.Element}
+ *   A React element representing the rendered list.
+ */
+function Layout(): JSX.Element {
   return (
     <>
       <AppHeader />
@@ -420,7 +421,7 @@ function App() {
     <FireproofCtx.Provider value={fireproof}>
       <W3APIProvider uploadsListPageSize={20}>
         <Authenticator className='h-full'>
-          <RouterProvider router={router} fallbackElement={<NotFound />} />
+          <RouterProvider router={router} fallbackElement={<LoadingView />} />
         </Authenticator>
       </W3APIProvider>
     </FireproofCtx.Provider>
