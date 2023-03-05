@@ -96,7 +96,6 @@ export function useFireproof(
   defineDatabaseFn: Function,
   setupFn: Function
 ): {
-  rebuild: any
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
   ready: boolean
@@ -116,12 +115,6 @@ export function useFireproof(
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 
-  function rebuild() {
-    console.log('rebuilding')
-    localRemove('fireproof')
-    setReady(false)
-  }
-
   useEffect(() => {
     const doSetup = async () => {
       console.log('called doSetup')
@@ -131,6 +124,14 @@ export function useFireproof(
         const { clock } = JSON.parse(fp)
         console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
         await database.setClock(clock)
+        try {
+          await database.changesSince()
+        } catch (e) {
+          console.error('Error loading previous database clock.', e)
+          await database.setClock([])
+          await setupFn(database)
+          localSet('fireproof', JSON.stringify(database))
+        }
       } else {
         await setupFn(database)
         localSet('fireproof', JSON.stringify(database))
@@ -145,7 +146,6 @@ export function useFireproof(
     addSubscriber,
     database,
     ready,
-    rebuild,
   }
 }
 

@@ -99,7 +99,6 @@ function App(): JSX.Element {
         return await fetchAllLists()
       } catch (e) {
         console.error('could not query', e)
-        fp.rebuild()
       }
     }
     return []

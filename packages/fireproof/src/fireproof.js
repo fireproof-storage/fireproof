@@ -70,7 +70,7 @@ export default class Fireproof {
    * }>} - An object `{rows : [...{key, value, del}], head}` containing the rows and the head of the instance's clock.
    */
   async changesSince (event) {
-    console.log('changesSince', this.instanceId, event, this.clock)
+    // console.log('changesSince', this.instanceId, event, this.clock)
     let rows
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
