@@ -7,7 +7,7 @@ import Blockstore, { doTransaction } from './blockstore.js'
 /**
  * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
  *
- * @class
+ * @class Fireproof
  * @classdesc A Fireproof instance can be used to store and retrieve values from a ProllyDB instance.
  *
  * @param {Blockstore} blocks - The block storage instance to use for the underlying ProllyDB instance.
@@ -16,7 +16,6 @@ import Blockstore, { doTransaction } from './blockstore.js'
  * @param {object} [authCtx] - Optional authorization context object to use for any authentication checks.
  *
  */
-
 export default class Fireproof {
   /**
    * @param {Blockstore} blocks
