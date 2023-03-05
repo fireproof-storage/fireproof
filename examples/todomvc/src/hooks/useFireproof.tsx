@@ -164,15 +164,20 @@ const database = defineDatabase()
 const listener = new Listener(database)
 const inboundSubscriberQueue = new Map()
 
-export default function useFireproof(setupFunction) {
+console.log('module fireproof loaded', database, database.allLists, database.todosbyList)
+
+export default function useFireproof(setupFunction: Function): {
+  addSubscriber: (label: String, fn: Function) => void
+  database: Fireproof
+  ready: boolean
+} {
   const [ready, setReady] = useState(false)
 
-  const addSubscriber = (label, fn) => {
-    inboundSubscriberQueue.set('label', fn)
+  const addSubscriber = (label: String, fn: Function) => {
+    inboundSubscriberQueue.set(label, fn)
   }
 
   const listenerCallback = () => {
-    console.log('listenerCallback', database.clock)
     localSet('fireproof', JSON.stringify(database))
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
@@ -185,7 +190,7 @@ export default function useFireproof(setupFunction) {
         const { clock } = JSON.parse(fp)
         await database.setClock(clock)
       } else {
-        await setupFunction(database) // todo this should be passed in from App.jsx
+        await setupFunction(database)
         localSet('fireproof', JSON.stringify(database))
       }
       listener.on('*', throttle(listenerCallback, 250))
@@ -194,7 +199,16 @@ export default function useFireproof(setupFunction) {
     doSetup()
   }, [])
 
+  return {
+    addSubscriber,
+    database,
+    ready,
+  }
+}
+
+export function makeQueryFunctions(database: Fireproof) {
   const fetchAllLists = async () => {
+    console.log('fetchAllLists', database.allLists)
     const lists = await database.allLists.query({ range: ['list', 'listx'] })
     return lists.rows.map((row) => row.value)
   }
@@ -245,7 +259,6 @@ export default function useFireproof(setupFunction) {
       await database.del(todoToDelete._id)
     }
   }
-
   return {
     fetchAllLists,
     fetchListWithTodos,
@@ -255,9 +268,6 @@ export default function useFireproof(setupFunction) {
     destroy,
     updateTitle,
     clearCompleted,
-    addSubscriber,
-    database,
-    ready,
   }
 }
 
