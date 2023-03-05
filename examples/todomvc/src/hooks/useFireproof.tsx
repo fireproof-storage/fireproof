@@ -117,7 +117,6 @@ export function useFireproof(
 
   useEffect(() => {
     const doSetup = async () => {
-      console.log('called doSetup')
       if (ready) return
       const fp = localGet('fireproof')
       if (fp) {

@@ -94,13 +94,8 @@ function App(): JSX.Element {
   }
 
   async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {
-    console.log('fp', fp.ready, fp.database.allLists, JSON.stringify(fp.database))
     if (fp.ready && fp.database.allLists) {
-      try {
-        return await fetchAllLists()
-      } catch (e) {
-        console.error('could not query', e)
-      }
+      return await fetchAllLists()
     }
     return []
   }
