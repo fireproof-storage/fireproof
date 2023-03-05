@@ -3,6 +3,7 @@ import { useKeyring } from '@w3ui/react-keyring'
 import { store } from '@web3-storage/capabilities/store'
 import { Fireproof } from '@fireproof/core'
 import { uploadCarBytes } from './useFireproof'
+import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../components/Authenticator'
 
 export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
@@ -32,11 +33,16 @@ export function useUploader(database: Fireproof) {
 }
 
 export const UploadManager = ({ registered }: { registered: Boolean }) => {
-  if (registered) {
-    return <p>Your changes are being saved to the public IPFS network with web3.storage</p>
-  } else {
-    return <SpaceRegistrar />
-  }
+  const child = registered ? (
+    <p>Your changes are being saved to the public IPFS network with web3.storage</p>
+  ) : (
+    <SpaceRegistrar />
+  )
+  return (
+    <div className="uploadManager">
+      <Authenticator>{child}</Authenticator>
+    </div>
+  )
 }
 
 function SpaceRegistrar(): JSX.Element {

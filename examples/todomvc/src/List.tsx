@@ -66,8 +66,10 @@ export function List(): JSX.Element {
         nowShowing={nowShowing}
         uri={routeFilter}
       />
-      <TimeTravel database={database} />
-      <UploadManager registered={registered} />
+      <div className="dbInfo">
+        <TimeTravel database={database} />
+        <UploadManager registered={registered} />
+      </div>
     </div>
   )
 }

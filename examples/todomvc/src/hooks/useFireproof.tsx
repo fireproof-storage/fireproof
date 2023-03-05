@@ -39,7 +39,7 @@ export const TimeTravel = ({ database }) => {
         Click a <b>Fireproof clock value</b> below to rollback in time.
       </p>
       <p>Clock log (newest first): </p>
-      <ol type={'1'}>
+      <ul>
         {diplayClocklog.map((entry) => (
           <li key={entry}>
             <button
@@ -51,7 +51,7 @@ export const TimeTravel = ({ database }) => {
             </button>
           </li>
         ))}
-      </ol>
+      </ul>
     </div>
   )
 }
