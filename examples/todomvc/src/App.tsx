@@ -126,7 +126,7 @@ async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uin
   console.log('storedDarCID', storedCarCID)
 }
 
-const shortLink = (l) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
+const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
 const clockLog = new Set<string>()
 
 const TimeTravel = ({ database }) => {
@@ -192,7 +192,7 @@ const useUploader = (database: Fireproof) => {
           with: withness,
           proofs: await getProofs([delegz]),
         }
-        database.setCarUploader((carCid, carBytes) => {
+        database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
           uploadCarBytes(conf, carCid, carBytes)
         })
       }
@@ -295,7 +295,7 @@ function List(): JSX.Element {
       </div>
 
       <ul className="todo-list">
-        {shownTodos.map((todo) => {
+        {shownTodos.map((todo: TodoDoc) => {
           const handle = (fn: (arg0: TodoDoc, arg1: string) => any) => (val: string) => fn(todo, val)
           return (
             <TodoItem
