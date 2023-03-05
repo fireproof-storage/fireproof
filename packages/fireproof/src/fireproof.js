@@ -50,7 +50,7 @@ export default class Fireproof {
    */
   async setClock (clock) {
     // console.log('setClock', this.instanceId, clock)
-    this.clock = clock.map((item) => item['/'] ? item['/'] : item)
+    this.clock = clock.map((item) => (item['/'] ? item['/'] : item))
     await this.#notifyListeners({ reset: true, clock })
   }
 
@@ -152,7 +152,11 @@ export default class Fireproof {
   }
 
   async putToProllyTree (event) {
-    const result = await doTransaction('putToProllyTree', this.blocks, async (blocks) => await put(blocks, this.clock, event))
+    const result = await doTransaction(
+      'putToProllyTree',
+      this.blocks,
+      async (blocks) => await put(blocks, this.clock, event)
+    )
     if (!result) {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
@@ -210,6 +214,11 @@ export default class Fireproof {
     // console.log('registering car uploader', this.blocks.valet)
     // https://en.wikipedia.org/wiki/Law_of_Demeter - this is a violation of the law of demeter
     this.blocks.valet.uploadFunction = carUploaderFn
+  }
+
+  setRemoteBlockReader (remoteBlockReaderFn) {
+    console.log('registering remote block reader')
+    this.blocks.valet.remoteBlockFunction = remoteBlockReaderFn
   }
 }
 

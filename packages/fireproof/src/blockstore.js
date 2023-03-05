@@ -38,10 +38,10 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    // const bytes = this.#oldBlocks.get(key) || await this.valet.getBlock(key)
-    const bytes = await this.#transactionsGet(key) || await this.commitedGet(key)
-    // const bytes = this.#blocks.get(key) || await this.valet.getBlock(key)
-    // console.log('bytes', typeof bytes)
+    const doGets = [this.#transactionsGet(key), this.commitedGet(key), this.networkGet(key)]
+    // console.log('doGets', doGets)
+    const bytes = await Promise.any(doGets)
+
     if (!bytes) throw new Error('Missing block: ' + key)
     return { cid, bytes }
   }
@@ -53,11 +53,22 @@ export default class TransactionBlockstore {
       const got = await transaction.get(key)
       if (got && got.bytes) return got.bytes
     }
+    throw new Error('Missing block: ' + key)
   }
 
   async commitedGet (key) {
     return this.#oldBlocks.get(key) || await this.valet.getBlock(key)
     // return await this.valet.getBlock(key) // todo this is just for testing
+  }
+
+  async networkGet(key) {
+    console.log('networkGet', key)
+    if (this.valet.remoteBlockFunction) {
+      console.log('getting block from remote', key)
+      return await this.valet.remoteBlockFunction(key)
+    } else {
+      throw new Error('No remoteBlockFunction')
+    }
   }
 
   /**
