@@ -10,7 +10,6 @@ import AppHeader from './components/AppHeader/index.jsx'
 import InputArea from './components/InputArea'
 import { W3APIProvider } from './components/W3API'
 import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from './components/Authenticator'
-
 import { List } from './List'
 import { AllLists } from './AllLists'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
@@ -65,8 +64,6 @@ function Layout({ children }: LayoutProps): JSX.Element {
   )
 }
 
-const pageBase = document.location.pathname.split('/list')[0] || ''
-
 /**
  * The root App component
  * @returns {JSX.Element}
@@ -96,6 +93,7 @@ function App(): JSX.Element {
     )
   }
 
+  const pageBase = document.location.pathname.split('/list')[0] || ''
   return (
     <FireproofCtx.Provider value={fireproof}>
       <W3APIProvider uploadsListPageSize={20}>
