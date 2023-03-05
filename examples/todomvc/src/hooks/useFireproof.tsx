@@ -2,18 +2,10 @@
 import { useEffect, useState, createContext } from 'react'
 import throttle from 'lodash.throttle'
 import { useKeyring } from '@w3ui/react-keyring'
-import { store } from '@web3-storage/capabilities/store'
 import { Store } from '@web3-storage/upload-client'
 import { InvocationConfig } from '@web3-storage/upload-client/types'
 import { Fireproof, Index, Listener } from '@fireproof/core'
-import {
-  Route,
-  Outlet,
-  RouterProvider,
-  createBrowserRouter,
-  useRevalidator,
-  createRoutesFromElements,
-} from 'react-router-dom'
+import { useRevalidator } from 'react-router-dom'
 
 export const FireproofCtx = createContext<Fireproof>(null)
 
@@ -206,35 +198,8 @@ export default function useFireproof(setupFunction: Function): {
   }
 }
 
-async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
+export async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
   console.log('storing carCID', carCID, JSON.stringify(conf))
   const storedCarCID = await Store.add(conf, new Blob([carBytes]))
   console.log('storedCarCID', storedCarCID)
-}
-
-export const useUploader = (database: Fireproof) => {
-  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
-  const registered = Boolean(space?.registered())
-
-  useEffect(() => {
-    console.log('registered', registered)
-    if (registered) {
-      const setUploader = async () => {
-        await loadAgent()
-        const withness = space.did()
-        const delegz = { with: withness, ...store }
-        delegz.can = 'store/*'
-        const conf = {
-          issuer: agent,
-          with: withness,
-          proofs: await getProofs([delegz]),
-        }
-        database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
-          uploadCarBytes(conf, carCid, carBytes)
-        })
-      }
-      setUploader()
-    }
-  }, [registered])
-  return registered
 }
