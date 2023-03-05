@@ -2,13 +2,7 @@ import React from 'react'
 import { useContext } from 'react'
 import { Link, useLoaderData } from 'react-router-dom'
 import InputArea from './components/InputArea'
-import {
-  FireproofCtx,
-  useUploader,
-  useRevalidatorAndSubscriber,
-  SpaceRegistrar,
-  TimeTravel,
-} from './hooks/useFireproof'
+import { FireproofCtx, useUploader, useRevalidatorAndSubscriber, UploadManager, TimeTravel } from './hooks/useFireproof'
 
 import { ListDoc } from './interfaces'
 
@@ -67,7 +61,9 @@ export function AllLists(): JSX.Element {
       <ul className="todo-list">{lists.map(todoItems)}</ul>
       <InputArea onSubmit={addList} placeholder="Create a new list or choose one" />
       <TimeTravel database={database} />
-      {!registered && <SpaceRegistrar />}
+      <UploadManager registered={registered} />
     </div>
   )
 }
+
+
