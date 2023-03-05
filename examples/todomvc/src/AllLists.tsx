@@ -1,10 +1,7 @@
-import React from 'react';
-import { useContext } from 'react';
-import {
-  Link, useNavigate,
-  useLoaderData
-} from 'react-router-dom';
-import InputArea from './components/InputArea';
+import React from 'react'
+import { useContext } from 'react'
+import { Link, useLoaderData } from 'react-router-dom'
+import InputArea from './components/InputArea'
 import {
   FireproofCtx,
   useUploader,
@@ -21,6 +18,24 @@ const threeEmptyLists: ListDoc[] = [
   { title: '', _id: '', type: 'list' },
 ]
 
+const todoItems = ({ title, _id }: ListDoc, i: number) => {
+  if (_id === '') {
+    return (
+      <li key={_id || i}>
+        <label>&nbsp;</label>
+      </li>
+    )
+  } else {
+    return (
+      <li key={_id || i}>
+        <label>
+          <Link to={`/list/${_id}`}>{title}</Link>
+        </label>
+      </li>
+    )
+  }
+}
+
 /**
  * A React functional component that renders a list of todo lists.
  *
@@ -29,57 +44,35 @@ const threeEmptyLists: ListDoc[] = [
  */
 export function AllLists(): JSX.Element {
   // first data stuff
-  const { addList, database, addSubscriber } = useContext(FireproofCtx);
-  useRevalidatorAndSubscriber('AllLists', addSubscriber);
-  let lists = useLoaderData() as ListDoc[];
+  const { addList, database, addSubscriber } = useContext(FireproofCtx)
+  useRevalidatorAndSubscriber('AllLists', addSubscriber)
+  let lists = useLoaderData() as ListDoc[]
   if (lists.length == 0) {
-    lists = threeEmptyLists;
+    lists = threeEmptyLists
   }
 
-  // now route stuff
-  const navigate = useNavigate();
-
   // now upload stuff
-  const registered = useUploader(database);
+  const registered = useUploader(database)
 
   // now action stuff
-  const onSubmit = async (title: string) => await addList(title);
+  const onSubmit = async (title: string) => await addList(title)
 
   return (
     <div>
       <div className="listNav">
         <button
           onClick={async () => {
-            const allDocs = await database.changesSince();
-            console.log('allDocs', allDocs.rows);
+            console.log('await database.changesSince()', await database.changesSince())
           }}
         >
           Choose a list.
         </button>
         <label></label>
       </div>
-      <ul className="todo-list">
-        {lists.map(({ title, _id }, i) => {
-          if (_id === '') {
-            return (
-              <li key={_id || i}>
-                <label>&nbsp;</label>
-              </li>
-            );
-          } else {
-            return (
-              <li key={_id || i}>
-                <label>
-                  <Link to={`/list/${_id}`}>{title}</Link>
-                </label>
-              </li>
-            );
-          }
-        })}
-      </ul>
+      <ul className="todo-list">{lists.map(todoItems)}</ul>
       <InputArea onSubmit={onSubmit} placeholder="Create a new list or choose one" />
       <TimeTravel database={database} />
       {!registered && <SpaceRegistrar />}
     </div>
-  );
+  )
 }
