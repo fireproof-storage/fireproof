@@ -6,8 +6,8 @@ import cargoQueue from 'async/cargoQueue.js'
 // const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 let storageSupported = false
 try {
-  storageSupported = (window.localStorage && true)
-} catch (e) { }
+  storageSupported = window.localStorage && true
+} catch (e) {}
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default class Valet {
@@ -23,13 +23,17 @@ export default class Valet {
    */
   uploadFunction = null
 
-  constructor () {
+  constructor() {
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
-      console.log('queue worker', tasks.length, tasks.reduce((acc, t) => acc + t.value.length, 0))
+      console.log(
+        'queue worker',
+        tasks.length,
+        tasks.reduce((acc, t) => acc + t.value.length, 0)
+      )
       if (this.uploadFunction) {
         for (const task of tasks) {
           sleep(100)
-          console.log('could upload', task.carCid, task.value.length)
+          // console.log('could upload', task.carCid, task.value.length)
           await this.uploadFunction(task.carCid, task.value)
         }
       }
@@ -43,12 +47,18 @@ export default class Valet {
   withDB = async (dbWorkFun) => {
     if (!storageSupported) return
     if (!this.#db) {
-      this.#db = await openDB('valet', 1, {
-        upgrade (db) {
-          db.createObjectStore('cars') // todo use database name
-          const cidToCar = db.createObjectStore('cidToCar', { keyPath: 'car' })
-          cidToCar.createIndex('cids', 'cids', { multiEntry: true })
-        }
+      this.#db = await openDB('valet', 2, {
+        upgrade(db, oldVersion, newVersion, transaction) {
+          if (oldVersion < 1) {
+            db.createObjectStore('cars') // todo use database name
+            const cidToCar = db.createObjectStore('cidToCar', { keyPath: 'car' })
+            cidToCar.createIndex('cids', 'cids', { multiEntry: true })
+          }
+          if (oldVersion < 2) {
+            const cidToCar = transaction.objectStore('cidToCar')
+            cidToCar.createIndex('uploaded', 'uploaded')
+          }
+        },
       })
     }
     return await dbWorkFun(this.#db)
@@ -59,7 +69,7 @@ export default class Valet {
    * @param {string} carCid
    * @param {*} value
    */
-  async parkCar (carCid, value, cids) {
+  async parkCar(carCid, value, cids) {
     this.#cars.set(carCid, value)
     for (const cid of cids) {
       this.#cidToCar.set(cid, carCid)
@@ -87,7 +97,7 @@ export default class Valet {
     }
   }
 
-  async getBlock (dataCID) {
+  async getBlock(dataCID) {
     return await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
       const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)

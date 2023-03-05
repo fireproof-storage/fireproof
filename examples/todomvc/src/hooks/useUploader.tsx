@@ -8,11 +8,12 @@ import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../c
 export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
+  const [uploaderReady, setUploaderReady] = useState(false)
 
   useEffect(() => {
-    console.log('registered', registered)
     if (registered) {
       const setUploader = async () => {
+        if (uploaderReady) return
         await loadAgent()
         const withness = space.did()
         const delegz = { with: withness, ...store }
@@ -25,6 +26,7 @@ export function useUploader(database: Fireproof) {
         database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
           uploadCarBytes(conf, carCid, carBytes)
         })
+        setUploaderReady(true)
       }
       setUploader()
     }

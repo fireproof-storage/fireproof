@@ -50,7 +50,6 @@ export function AuthenticationEnsurer ({
   children: JSX.Element | JSX.Element[]
 }): JSX.Element {
   const [{ spaces, submitted }] = useAuthenticator()
-  console.log('spaces', spaces, submitted)
   const registered = Boolean(spaces.some((s) => s.registered()))
   if (registered) {
     return <>{children}</>
