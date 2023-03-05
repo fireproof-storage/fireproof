@@ -21,9 +21,7 @@ import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
  * @returns {JSX.Element}
  *   A React element representing the rendered list.
  */
-
 const LoadingView = (): JSX.Element => {
-  console.log('fixme: rendering missing route screen')
   return (
     <Layout>
       <div>
@@ -69,7 +67,11 @@ function Layout({ children }: LayoutProps): JSX.Element {
 
 const pageBase = document.location.pathname.split('/list')[0] || ''
 
-function App() {
+/**
+ * The root App component
+ * @returns {JSX.Element}
+ */
+function App(): JSX.Element {
   const fireproof = useFireproof()
   const { fetchListWithTodos, fetchAllLists } = fireproof
 
@@ -81,8 +83,8 @@ function App() {
     return await fetchAllLists()
   }
 
-  let router = createBrowserRouter(
-    createRoutesFromElements(
+  function defineRouter(): React.ReactNode {
+    return (
       <Route element={<Layout />}>
         <Route path="/" loader={allListLoader} element={<AllLists />} />
         <Route path="list">
@@ -91,14 +93,17 @@ function App() {
           </Route>
         </Route>
       </Route>
-    ),
-    { basename: pageBase }
-  )
+    )
+  }
+
   return (
     <FireproofCtx.Provider value={fireproof}>
       <W3APIProvider uploadsListPageSize={20}>
         {/* <Authenticator className='h-full'> */}
-        <RouterProvider router={router} fallbackElement={<LoadingView />} />
+        <RouterProvider
+          router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
+          fallbackElement={<LoadingView />}
+        />
         {/* </Authenticator> */}
       </W3APIProvider>
     </FireproofCtx.Provider>
