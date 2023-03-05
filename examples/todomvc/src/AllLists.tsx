@@ -6,6 +6,7 @@ import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/u
 import { useUploader, UploadManager } from './hooks/useUploader'
 
 import { ListDoc } from './interfaces'
+import { makeQueryFunctions } from './makeQueryFunctions'
 
 const threeEmptyLists: ListDoc[] = [
   { title: '', _id: '', type: 'list' },
@@ -39,7 +40,9 @@ const todoItems = ({ title, _id }: ListDoc, i: number) => {
  */
 export function AllLists(): JSX.Element {
   // first data stuff
-  const { addList, database, addSubscriber } = useContext(FireproofCtx)
+  const { database, addSubscriber } = useContext(FireproofCtx)
+  const { addList } = makeQueryFunctions(database)
+
   useRevalidatorAndSubscriber('AllLists', addSubscriber)
   let lists = useLoaderData() as ListDoc[]
   if (lists.length == 0) {
