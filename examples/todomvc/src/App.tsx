@@ -9,11 +9,7 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router-dom'
 import AppHeader from './components/AppHeader/index.jsx'
 import InputArea from './components/InputArea'
 
-import {
-  // useKeyring,
-  // KeyringContextValue,
-  KeyringProvider,
-} from '@w3ui/react-keyring'
+
 
 import { List } from './components/List'
 import { AllLists } from './components/AllLists'
@@ -126,15 +122,12 @@ function App(): JSX.Element {
   const pageBase = document.location.pathname.split('/list')[0] || ''
   return (
     <FireproofCtx.Provider value={fp}>
-      <KeyringProvider>
-        {/* W3APIProvider this calls useKeyring in it just like App() */}
-        <UploaderCtx.Provider value={up}>
-          <RouterProvider
-            router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
-            fallbackElement={<LoadingView />}
-          />
-        </UploaderCtx.Provider>
-      </KeyringProvider>
+      <UploaderCtx.Provider value={up}>
+        <RouterProvider
+          router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
+          fallbackElement={<LoadingView />}
+        />
+      </UploaderCtx.Provider>
     </FireproofCtx.Provider>
   )
 }

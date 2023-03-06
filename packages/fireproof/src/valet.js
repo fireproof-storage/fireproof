@@ -40,15 +40,13 @@ export default class Valet {
       callback()
     })
 
-    this.#uploadQueue.drain(function () {
-      this.#uploadQueue.drain(async () => {
-        console.log('all items have been processed')
-        return await this.withDB(async (db) => {
-          const carKeys = await db.getAllKeys('cars')
-          for (const carKey of carKeys) {
-            await this.uploadFunction(carKey, await db.get('cars', carKey))
-          }
-        })
+    this.#uploadQueue.drain(async () => {
+      console.log('all items have been processed')
+      return await this.withDB(async (db) => {
+        const carKeys = await db.getAllKeys('cars')
+        for (const carKey of carKeys) {
+          await this.uploadFunction(carKey, await db.get('cars', carKey))
+        }
       })
     })
   }
