@@ -1,5 +1,6 @@
 import { useEffect, useState, createContext } from 'react'
-import { useKeyring } from '@w3ui/react-keyring'
+// import { useKeyring } from '@w3ui/react-keyring'
+import {useW3API} from './useW3API'
 import { store } from '@web3-storage/capabilities/store'
 import { Fireproof } from '@fireproof/core'
 import { uploadCarBytes } from './useFireproof'
@@ -11,7 +12,8 @@ export const UploaderCtx = createContext<{ registered: Boolean; uploaderReady: B
 })
 
 export function useUploader(database: Fireproof) {
-  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
+  const w3 = useW3API()
+  const [{ agent, space }, { getProofs, loadAgent }] = w3.keyring
   const registered = Boolean(space?.registered())
   const [uploaderReady, setUploaderReady] = useState(false)
   console.log('use uploader called', { registered, uploaderReady, agent, space })
@@ -48,7 +50,7 @@ export function useUploader(database: Fireproof) {
       setUploader()
     }
   }, [space])
-  return { registered, uploaderReady }
+  return { registered, uploaderReady, w3 }
 }
 
 export const UploadManager = ({ registered }: { registered: Boolean }) => {
@@ -65,7 +67,8 @@ export const UploadManager = ({ registered }: { registered: Boolean }) => {
 }
 
 function SpaceRegistrar(): JSX.Element {
-  const [, { registerSpace }] = useKeyring()
+  const w3 = useW3API()
+  const [, { registerSpace }] = w3.keyring
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   function resetForm(): void {
