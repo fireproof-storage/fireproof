@@ -217,7 +217,7 @@ export default class Fireproof {
 
   setRemoteBlockReader (remoteBlockReaderFn) {
     // console.log('registering remote block reader')
-    // this.blocks.valet.remoteBlockFunction = remoteBlockReaderFn
+    this.blocks.valet.remoteBlockFunction = remoteBlockReaderFn
   }
 }
 

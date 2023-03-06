@@ -124,7 +124,7 @@ export function useFireproof(
         console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
         await database.setClock(clock)
         try {
-          //await database.changesSince()
+          await database.changesSince()
         } catch (e) {
           console.error('Error loading previous database clock.', e)
           await database.setClock([])
