@@ -15,10 +15,14 @@ export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
   const [uploaderReady, setUploaderReady] = useState(false)
+  const [remoteBlockReaderReady, setRemoteBlockReaderReady] = useState(false)
   useEffect(() => {
-    database.setRemoteBlockReader(
-      async (cid: any) => new Uint8Array(await (await fetch(`https://${cid}.ipfs.w3s.link/`)).arrayBuffer())
-    )
+    if (!remoteBlockReaderReady) {
+      database.setRemoteBlockReader(
+        async (cid: any) => new Uint8Array(await (await fetch(`https://${cid}.ipfs.w3s.link/`)).arrayBuffer())
+      )
+      setRemoteBlockReaderReady(true)
+    }
     const setUploader = async () => {
       if (uploaderReady) return
       const delegz = { with: space.did(), ...store }
@@ -39,6 +43,7 @@ export function useUploader(database: Fireproof) {
     const doLoadAgent = async () => {
       const ag = await loadAgent()
     }
+
     if (registered) {
       setUploader()
     } else {

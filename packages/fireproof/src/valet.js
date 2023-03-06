@@ -33,7 +33,7 @@ export default class Valet {
       if (this.uploadFunction) {
         for (const task of tasks) {
           sleep(100)
-          console.log('could upload', task.carCid, task.value.length)
+          console.log('will upload car', task.carCid, task.value.length)
           await this.uploadFunction(task.carCid, task.value)
         }
       }
