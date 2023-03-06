@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState, useContext } from 'react'
+import { useKeyring } from '@w3ui/react-keyring'
 import { useNavigate, useParams, useLoaderData } from 'react-router-dom'
 import Footer from './Footer'
 import InputArea from './InputArea'
@@ -18,7 +19,9 @@ export function List(): JSX.Element {
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
   // now upload stuff
-  const { registered } = useContext(UploaderCtx)
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
+  const registered = Boolean(space?.registered())
+
   // now route stuff
   const navigate = useNavigate()
   const { filter } = useParams()
