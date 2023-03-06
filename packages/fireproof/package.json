@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "standard && mocha test/*.test.js",
+    "test": "standard && npm run test:mocha",
+    "test:mocha": "mocha test/*.test.js",
+    "test:watch": "npm run test:mocha -- -w --parallel test/*.test.js",
     "coverage": "c8 -r html -r text npm test",
     "lint": "standard",
     "lint:fix": "standard --fix"

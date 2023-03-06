@@ -155,7 +155,7 @@ export default class TransactionBlockstore {
       }
     }
     if (cids.size > 0) {
-      console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
+      // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
       await this.#valetWriteTransaction(innerBlockstore, cids)
     }
   }
