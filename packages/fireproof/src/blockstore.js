@@ -3,6 +3,7 @@ import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as Block from 'multiformats/block'
 import * as CBW from '@ipld/car/buffer-writer'
+import { CID } from 'multiformats'
 
 import Valet from './valet.js'
 
@@ -11,8 +12,10 @@ import Valet from './valet.js'
 const husherMap = new Map()
 const husher = (id, workFn) => {
   if (!husherMap.has(id)) {
-    husherMap.set(id, workFn().finally(() =>
-      setTimeout(() => husherMap.delete(id), 100)))
+    husherMap.set(
+      id,
+      workFn().finally(() => setTimeout(() => husherMap.delete(id), 100))
+    )
   }
   return husherMap.get(id)
 }
@@ -47,8 +50,8 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch(() => {
-      // console.log('networkGet', key)
+    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch((e) => {
+      console.log('networkGet', cid.toString(), e)
       return this.networkGet(key)
     })
     if (!bytes) throw new Error('Missing block: ' + key)
@@ -66,8 +69,9 @@ export default class TransactionBlockstore {
   }
 
   async commitedGet (key) {
-    return this.#oldBlocks.get(key) || await this.valet.getBlock(key)
-    // return await this.valet.getBlock(key) // todo this is just for testing
+    const old = this.#oldBlocks.get(key)
+    if (old) return old
+    return await this.valet.getBlock(key)
   }
 
   async networkGet (key) {
@@ -77,9 +81,9 @@ export default class TransactionBlockstore {
         // console.log('networkGot: ' + key, value.length)
         // dont turn this on until the Nan thing is fixed
         // it keep the network blocks in indexedb but lets get the basics solid first
-        // doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
-        //   await innerBlockstore.put(key, value)
-        // })
+        doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
+          await innerBlockstore.put(CID.parse(key), value)
+        })
         return value
       }
     } else {
@@ -118,11 +122,11 @@ export default class TransactionBlockstore {
   }
 
   /**
-     * Begin a transaction. Ensures the uncommited blocks are empty at the begining.
-     * Returns the blocks to read and write during the transaction.
-     * @returns {InnerBlockstore}
-     * @memberof TransactionBlockstore
-     */
+   * Begin a transaction. Ensures the uncommited blocks are empty at the begining.
+   * Returns the blocks to read and write during the transaction.
+   * @returns {InnerBlockstore}
+   * @memberof TransactionBlockstore
+   */
   begin (label = '') {
     const innerTransactionBlockstore = new InnerBlockstore(label, this)
     this.#inflightTransactions.add(innerTransactionBlockstore)
@@ -130,10 +134,10 @@ export default class TransactionBlockstore {
   }
 
   /**
-     * Commit the transaction. Writes the blocks to the store.
-     * @returns {Promise<void>}
-     * @memberof TransactionBlockstore
-     */
+   * Commit the transaction. Writes the blocks to the store.
+   * @returns {Promise<void>}
+   * @memberof TransactionBlockstore
+   */
   async commit (innerBlockstore) {
     await this.#doCommit(innerBlockstore)
   }
@@ -176,10 +180,10 @@ export default class TransactionBlockstore {
   }
 
   /**
-     * Retire the transaction. Clears the uncommited blocks.
-     * @returns {void}
-     * @memberof TransactionBlockstore
-     */
+   * Retire the transaction. Clears the uncommited blocks.
+   * @returns {void}
+   * @memberof TransactionBlockstore
+   */
   retire (innerBlockstore) {
     this.#inflightTransactions.delete(innerBlockstore)
   }
