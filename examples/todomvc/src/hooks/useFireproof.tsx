@@ -9,7 +9,7 @@ import { useRevalidator } from 'react-router-dom'
 
 export const FireproofCtx = createContext<Fireproof>(null) // todo bad type
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
   const revalidator = useRevalidator()
@@ -76,11 +76,11 @@ function localSet(key, value) {
   }
 }
 
-function localRemove(key) {
-  if (storageSupported) {
-    return localStorage && localStorage.removeItem(key)
-  }
-}
+// function localRemove(key) {
+//   if (storageSupported) {
+//     return localStorage && localStorage.removeItem(key)
+//   }
+// }
 
 declare global {
   interface Window {

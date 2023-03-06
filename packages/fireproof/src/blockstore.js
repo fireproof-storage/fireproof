@@ -64,7 +64,7 @@ export default class TransactionBlockstore {
     // return await this.valet.getBlock(key) // todo this is just for testing
   }
 
-  async networkGet(key) {
+  async networkGet (key) {
     console.log('networkGet', key)
     if (this.valet.remoteBlockFunction) {
       console.log('getting block from remote', key)
