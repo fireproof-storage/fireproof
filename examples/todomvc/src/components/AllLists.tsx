@@ -1,12 +1,12 @@
 import React from 'react'
 import { useContext } from 'react'
 import { Link, useLoaderData } from 'react-router-dom'
-import InputArea from './components/InputArea'
-import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
-import { UploadManager, UploaderCtx } from './hooks/useUploader'
+import InputArea from './InputArea'
+import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from '../hooks/useFireproof'
+import { UploadManager, UploaderCtx } from '../hooks/useUploader'
 
-import { ListDoc } from './interfaces'
-import { makeQueryFunctions } from './makeQueryFunctions'
+import { ListDoc } from '../interfaces'
+import { makeQueryFunctions } from '../makeQueryFunctions'
 
 const threeEmptyLists: ListDoc[] = [
   { title: '', _id: '', type: 'list' },
@@ -71,5 +71,3 @@ export function AllLists(): JSX.Element {
     </div>
   )
 }
-
-

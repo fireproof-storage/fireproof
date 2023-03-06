@@ -1,5 +1,5 @@
 import React from 'react'
-import { useInput } from '../hooks'
+import { useInput } from '../hooks/useInput'
 
 export default function InputArea ({ onSubmit, placeholder, autoFocus = true }) {
   const { setValue, resetValue, ...inputProps } = useInput('', { controlled: true })

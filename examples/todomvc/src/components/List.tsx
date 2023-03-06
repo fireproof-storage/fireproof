@@ -1,14 +1,14 @@
 import React from 'react'
 import { useState, useContext } from 'react'
 import { useNavigate, useParams, useLoaderData } from 'react-router-dom'
-import Footer from './components/Footer'
-import InputArea from './components/InputArea'
-import TodoItem from './components/TodoItem'
-import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from './hooks/useFireproof'
-import { UploadManager, UploaderCtx } from './hooks/useUploader'
+import Footer from './Footer'
+import InputArea from './InputArea'
+import TodoItem from './TodoItem'
+import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from '../hooks/useFireproof'
+import { UploadManager, UploaderCtx } from '../hooks/useUploader'
 
-import { ListLoaderData, TodoDoc } from './interfaces'
-import { makeQueryFunctions } from './makeQueryFunctions'
+import { ListLoaderData, TodoDoc } from '../interfaces'
+import { makeQueryFunctions } from '../makeQueryFunctions'
 
 export function List(): JSX.Element {
   // first data stuff
