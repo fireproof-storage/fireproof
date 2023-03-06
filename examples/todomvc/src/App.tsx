@@ -9,7 +9,7 @@ import { Route, Outlet, RouterProvider, createBrowserRouter, createRoutesFromEle
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router-dom'
 import AppHeader from './components/AppHeader/index.jsx'
 import InputArea from './components/InputArea'
-import { W3APIProvider } from './components/W3API'
+import { W3APIProvider } from './hooks/useW3API'
 import { List } from './components/List'
 import { AllLists } from './components/AllLists'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
