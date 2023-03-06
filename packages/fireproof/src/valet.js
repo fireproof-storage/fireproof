@@ -23,7 +23,7 @@ export default class Valet {
    */
   uploadFunction = null
 
-  constructor() {
+  constructor () {
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
         'queue worker',
@@ -57,7 +57,7 @@ export default class Valet {
     if (!storageSupported) return
     if (!this.#db) {
       this.#db = await openDB('valet', 2, {
-        upgrade(db, oldVersion, newVersion, transaction) {
+        upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars') // todo use database name
             const cidToCar = db.createObjectStore('cidToCar', { keyPath: 'car' })
@@ -78,7 +78,7 @@ export default class Valet {
    * @param {string} carCid
    * @param {*} value
    */
-  async parkCar(carCid, value, cids) {
+  async parkCar (carCid, value, cids) {
     this.#cars.set(carCid, value)
     for (const cid of cids) {
       this.#cidToCar.set(cid, carCid)
@@ -108,7 +108,7 @@ export default class Valet {
 
   remoteBlockFunction = null
 
-  async getBlock(dataCID) {
+  async getBlock (dataCID) {
     return await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
       const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
