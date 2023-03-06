@@ -3,13 +3,18 @@ import { useState } from 'react'
 import { Index } from '@fireproof/core'
 import { useFireproof, FireproofCtx } from './hooks/useFireproof'
 import { makeQueryFunctions } from './makeQueryFunctions'
-import { useKeyring } from '@w3ui/react-keyring'
 import './App.css'
 import { Route, Outlet, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router-dom'
 import AppHeader from './components/AppHeader/index.jsx'
 import InputArea from './components/InputArea'
-import { W3APIProvider } from './hooks/useW3API'
+
+import {
+  // useKeyring,
+  // KeyringContextValue,
+  KeyringProvider,
+} from '@w3ui/react-keyring'
+
 import { List } from './components/List'
 import { AllLists } from './components/AllLists'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
@@ -121,7 +126,7 @@ function App(): JSX.Element {
   const pageBase = document.location.pathname.split('/list')[0] || ''
   return (
     <FireproofCtx.Provider value={fp}>
-      <W3APIProvider uploadsListPageSize={20}>
+      <KeyringProvider>
         {/* W3APIProvider this calls useKeyring in it just like App() */}
         <UploaderCtx.Provider value={up}>
           <RouterProvider
@@ -129,7 +134,7 @@ function App(): JSX.Element {
             fallbackElement={<LoadingView />}
           />
         </UploaderCtx.Provider>
-      </W3APIProvider>
+      </KeyringProvider>
     </FireproofCtx.Provider>
   )
 }
