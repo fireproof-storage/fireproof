@@ -9,8 +9,6 @@ import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router-dom'
 import AppHeader from './components/AppHeader/index.jsx'
 import InputArea from './components/InputArea'
 
-
-
 import { List } from './components/List'
 import { AllLists } from './components/AllLists'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
@@ -86,26 +84,11 @@ const defineIndexes = (database) => {
  */
 function App(): JSX.Element {
   const fp = useFireproof(defineIndexes, loadFixtures)
-  const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp.database)
-
-  // this uploader is not in a keyring context and it uses keyring
-  // maybe we should make up our own context for this?
-  const up = useUploader(fp.database)
-
-  async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
-    if (fp.ready && fp.database.todosByList) {
-      return await fetchListWithTodos(listId)
-    }
-    return { list: { title: '', type: 'list', _id: '' }, todos: [] } as ListLoaderData
-  }
-
-  async function allListLoader({ params }: LoaderFunctionArgs): Promise<ListDoc[]> {
-    if (fp.ready && fp.database.allLists) {
-      return await fetchAllLists()
-    }
-    return []
-  }
-
+  const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp)
+  const up = useUploader(fp.database) // is required to be in a KeyringProvider, see main.tsx
+  const listLoader = async ({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> =>
+    await fetchListWithTodos(listId)
+  const allListLoader = async ({ params }: LoaderFunctionArgs): Promise<ListDoc[]> => await fetchAllLists()
   function defineRouter(): React.ReactNode {
     return (
       <Route element={<Layout />}>

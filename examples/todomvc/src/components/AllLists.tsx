@@ -40,8 +40,8 @@ const todoItems = ({ title, _id }: ListDoc, i: number) => {
  */
 export function AllLists(): JSX.Element {
   // first data stuff
-  const { database, addSubscriber } = useContext(FireproofCtx)
-  const { addList } = makeQueryFunctions(database)
+  const { ready, database, addSubscriber } = useContext(FireproofCtx)
+  const { addList } = makeQueryFunctions({ ready, database })
 
   useRevalidatorAndSubscriber('AllLists', addSubscriber)
   let lists = useLoaderData() as ListDoc[]

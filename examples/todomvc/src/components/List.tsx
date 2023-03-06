@@ -12,8 +12,8 @@ import { makeQueryFunctions } from '../makeQueryFunctions'
 
 export function List(): JSX.Element {
   // first data stuff
-  const { database, addSubscriber } = useContext(FireproofCtx)
-  const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions(database)
+  const { ready, database, addSubscriber } = useContext(FireproofCtx)
+  const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions({ ready, database })
   useRevalidatorAndSubscriber('one List', addSubscriber)
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
