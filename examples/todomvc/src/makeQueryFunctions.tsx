@@ -11,7 +11,8 @@ export function makeQueryFunctions({ ready, database }): {
   clearCompleted: (listId: any) => Promise<void>
 } {
   const fetchAllLists = async () => {
-    const lists = ready && database.allLists ? await database.allLists.query({ range: ['list', 'listx'] }) : []
+    const lists =
+      ready && database.allLists ? await database.allLists.query({ range: ['list', 'listx'] }) : { rows: [] }
     return lists.rows.map(({ value }) => value)
   }
 

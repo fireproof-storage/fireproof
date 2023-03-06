@@ -14,7 +14,7 @@ export const FireproofCtx = createContext<Fireproof>(null) // todo bad type
 export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
   const revalidator = useRevalidator()
   addSubscriber(name, () => {
-    console.log('revalidating', name)
+    // console.log('revalidating', name)
     revalidator.revalidate()
   })
 }

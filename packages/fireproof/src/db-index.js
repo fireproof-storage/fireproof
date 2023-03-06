@@ -16,8 +16,6 @@ const makeGetBlock = (blocks) => async (address) => {
 }
 const makeDoc = ({ key, value }) => ({ _id: key, ...value })
 
-console.x = function () {}
-
 /**
  * Transforms a set of changes to index entries using a map function.
  *

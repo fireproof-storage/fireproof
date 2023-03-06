@@ -8,7 +8,7 @@ let storageSupported = false
 try {
   storageSupported = window.localStorage && true
 } catch (e) {}
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export default class Valet {
   #cars = new Map() // cars by cid
@@ -31,9 +31,8 @@ export default class Valet {
         tasks.reduce((acc, t) => acc + t.value.length, 0)
       )
       if (this.uploadFunction) {
+        // todo we can coalesce these into a single car file
         for (const task of tasks) {
-          sleep(100)
-          console.log('will upload car', task.carCid, task.value.length)
           await this.uploadFunction(task.carCid, task.value)
         }
       }
@@ -43,9 +42,13 @@ export default class Valet {
     this.#uploadQueue.drain(async () => {
       console.log('all items have been processed')
       return await this.withDB(async (db) => {
-        const carKeys = await db.getAllKeys('cars')
+        const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map((c) => c.car)
+        console.log('uploading cars', carKeys.length)
         for (const carKey of carKeys) {
           await this.uploadFunction(carKey, await db.get('cars', carKey))
+          const carMeta = await db.get('cidToCar', carKey)
+          delete carMeta.pending
+          await db.put('cidToCar', carMeta)
         }
       })
     })
@@ -63,7 +66,7 @@ export default class Valet {
           }
           if (oldVersion < 2) {
             const cidToCar = transaction.objectStore('cidToCar')
-            cidToCar.createIndex('uploaded', 'uploaded')
+            cidToCar.createIndex('pending', 'pending')
           }
         }
       })
@@ -85,7 +88,7 @@ export default class Valet {
     await this.withDB(async (db) => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
       await tx.objectStore('cars').put(value, carCid)
-      await tx.objectStore('cidToCar').put({ car: carCid, cids: Array.from(cids) })
+      await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
 
