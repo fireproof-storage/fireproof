@@ -104,9 +104,9 @@ The [UCAN protocol](https://ucan.xyz) verifably links Fireproof updates to autho
 
 Until encryption support is enabled, all data written to Fireproof is public. There are no big hurdles for this feature but it's not ready yet.
 
-### Persistence
+### Replication
 
-Currently Fireproof writes transactions and proofs to in-memory [CAR files](https://ipld.io/specs/transport/car/carv2/) which are well suited for peer and cloud replication. Durability coming soon.
+Currently Fireproof writes transactions and proofs to [CAR files](https://ipld.io/specs/transport/car/carv2/) which are well suited for peer and cloud replication. They are stored in IndexedDB locally, with cloud replication coming very soon.
 
 ### Pre-beta Software
 
