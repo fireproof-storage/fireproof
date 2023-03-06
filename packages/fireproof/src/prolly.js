@@ -1,4 +1,10 @@
-import { advance, EventFetcher, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents } from './clock.js'
+import {
+  advance,
+  EventFetcher,
+  EventBlock,
+  findCommonAncestorWithSortedEvents,
+  findUnknownSortedEvents
+} from './clock.js'
 import { create, load } from 'prolly-trees/map'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
@@ -21,7 +27,36 @@ const makeGetBlock = (blocks) => async (address) => {
   return createBlock({ cid, bytes, hasher, codec })
 }
 
-async function createAndSaveNewEvent (inBlocks, mblocks, getBlock, bigPut, root, { key, value, del }, head, additions, removals = []) {
+/**
+ * Creates and saves a new event.
+ * @param {import('./blockstore.js').Blockstore} inBlocks - A persistent blockstore.
+ * @param {MemoryBlockstore} mblocks - A temporary blockstore.
+ * @param {Function} getBlock - A function that gets a block.
+ * @param {Function} bigPut - A function that puts a block.
+ * @param {import('prolly-trees/map').Root} root - The root node.
+ * @param {Object<{ key: string, value: any, del: boolean }>} event - The update event.
+ * @param {import('./clock').EventLink<import('./crdt').EventData>} head - The head of the event chain.
+ * @param {Array<import('multiformats/block').Block>} additions - A array of additions.
+ * @param {Array<mport('multiformats/block').Block>>} removals - An array of removals.
+ * @returns {Promise<{
+ *   root: import('prolly-trees/map').Root,
+ *   additions: Map<string, import('multiformats/block').Block>,
+ *   removals: Array<string>,
+ *   head: import('./clock').EventLink<import('./crdt').EventData>,
+ *   event: import('./clock').EventLink<import('./crdt').EventData>
+ * }>}
+ */
+async function createAndSaveNewEvent (
+  inBlocks,
+  mblocks,
+  getBlock,
+  bigPut,
+  root,
+  { key, value, del },
+  head,
+  additions,
+  removals = []
+) {
   const data = {
     type: 'put',
     root: {
@@ -132,8 +167,16 @@ export async function put (inBlocks, head, event, options) {
     bigPut(nb, additions)
   }
 
-  return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut,
-    prollyRootBlock, event, head, Array.from(additions.values()) /*, Array.from(removals.values()) */)
+  return createAndSaveNewEvent(
+    inBlocks,
+    mblocks,
+    getBlock,
+    bigPut,
+    prollyRootBlock,
+    event,
+    head,
+    Array.from(additions.values()) /*, Array.from(removals.values()) */
+  )
 }
 
 /**
@@ -180,8 +223,11 @@ export async function eventsSince (blocks, head, since) {
     throw new Error('no head')
   }
   const sinceHead = [...since, ...head]
-  const unknownSorted3 = await findUnknownSortedEvents(blocks, sinceHead,
-    await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+  const unknownSorted3 = await findUnknownSortedEvents(
+    blocks,
+    sinceHead,
+    await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+  )
   return unknownSorted3.map(({ value: { data } }) => data)
 }
 
@@ -218,18 +264,3 @@ export async function get (blocks, head, key) {
   const { result } = await prollyRootNode.get(key)
   return result
 }
-
-/**
- * @typedef {{
- *   type: 'put'|'del'
- *   key: string
- *   value: import('./link').AnyLink
- *   root: import('./shard').ShardLink
- * }} EventData
- *
- * @typedef {{
- *   root: import('./shard').ShardLink
- *   head: import('./clock').EventLink<EventData>[]
- *   event: import('./clock').EventBlockView<EventData>
- * } & import('./db-index').ShardDiff} Result
- */

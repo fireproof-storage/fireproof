@@ -1,27 +1,34 @@
-// import { vis } from './clock.js'
 import { put, get, getAll, eventsSince } from './prolly.js'
 import Blockstore, { doTransaction } from './blockstore.js'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 /**
- * Represents a Fireproof instance that wraps a ProllyDB instance and Merkle clock head.
- *
  * @class Fireproof
- * @classdesc A Fireproof instance can be used to store and retrieve values from a ProllyDB instance.
+ * @classdesc Fireproof stores data in IndexedDB and provides a Merkle clock.
+ *  This is the main class for saving and loading JSON and other documents with the database. You can find additional examples and
+ *  usage guides in the repository README.
  *
- * @param {Blockstore} blocks - The block storage instance to use for the underlying ProllyDB instance.
- * @param {import('../clock').EventLink<import('../crdt').EventData>[]} clock - The Merkle clock head to use for the Fireproof instance.
+ * @param {Blockstore} blocks - The block storage instance to use documents and indexes
+ * @param {CID[]} clock - The Merkle clock head to use for the Fireproof instance.
  * @param {object} [config] - Optional configuration options for the Fireproof instance.
  * @param {object} [authCtx] - Optional authorization context object to use for any authentication checks.
  *
  */
 export default class Fireproof {
-  /**
-   * @param {Blockstore} blocks
-   * @param {import('../clock').EventLink<import('../crdt').EventData>[]} clock
-   */
   #listeners = new Set()
+
+  /**
+   * @function storage
+   * @memberof Fireproof
+   * Creates a new Fireproof instance with default storage settings
+   * Most apps should use this and not worry about the details.
+   * @static
+   * @returns {Fireproof} - a new Fireproof instance
+   */
+  static storage = () => {
+    return new Fireproof(new Blockstore(), [])
+  }
 
   constructor (blocks, clock, config = {}, authCtx = {}) {
     this.blocks = blocks
@@ -32,12 +39,13 @@ export default class Fireproof {
   }
 
   /**
-   * Returns a snapshot of the current Fireproof instance.
-   *
-   * @param {import('../clock').EventLink<import('../crdt').EventData>[]} clock
-   *    Clock to use for the snapshot.
+   * Returns a snapshot of the current Fireproof instance as a new instance.
+   * @function snapshot
+   * @param {CID[]} clock - The Merkle clock head to use for the snapshot.
    * @returns {Fireproof}
    *    A new Fireproof instance representing the snapshot.
+   * @memberof Fireproof
+   * @instance
    */
   snapshot (clock) {
     // how to handle listeners, views, and config?
@@ -46,7 +54,13 @@ export default class Fireproof {
   }
 
   /**
-   * This triggers a notification to all listeners of the Fireproof instance.
+   * Move the current instance to a new point in time. This triggers a notification to all listeners
+   * of the Fireproof instance so they can repaint UI, etc.
+   * @param {CID[] } clock
+   *    Clock to use for the snapshot.
+   * @returns {Promise<void>}
+   * @memberof Fireproof
+   * @instance
    */
   async setClock (clock) {
     // console.log('setClock', this.instanceId, clock)
@@ -54,6 +68,12 @@ export default class Fireproof {
     await this.#notifyListeners({ reset: true, clock })
   }
 
+  /**
+   * Renders the Fireproof instance as a JSON object.
+   * @returns {Object} - The JSON representation of the Fireproof instance. Includes clock heads for the database and its indexes.
+   * @memberof Fireproof
+   * @instance
+   */
   toJSON () {
     // todo this also needs to return the index roots...
     return { clock: this.clock }
@@ -61,13 +81,11 @@ export default class Fireproof {
 
   /**
    * Returns the changes made to the Fireproof instance since the specified event.
-   *
-   * @param {import('../clock').EventLink<import('../crdt').EventData>?} event -
-   * The event to retrieve changes since. If null or undefined, retrieves all changes.
-   * @returns {Promise<{
-   *   rows: { key: string, value?: any, del?: boolean }[],
-   *   head: import('../clock').EventLink<import('../crdt').EventData>[]
-   * }>} - An object `{rows : [...{key, value, del}], head}` containing the rows and the head of the instance's clock.
+   * @function changesSince
+   * @param {CID[]} [event] - The clock head to retrieve changes since. If null or undefined, retrieves all changes.
+   * @returns {Object<{rows : Object[], clock: CID[]}>} An object containing the rows and the head of the instance's clock.
+   * @memberof Fireproof
+   * @instance
    */
   async changesSince (event) {
     // console.log('changesSince', this.instanceId, event, this.clock)
@@ -96,6 +114,7 @@ export default class Fireproof {
    * Recieves live changes from the database after they are committed.
    * @param {Function} listener - The listener to be called when the clock is updated.
    * @returns {Function} - A function that can be called to unregister the listener.
+   * @memberof Fireproof
    */
   registerListener (listener) {
     this.#listeners.add(listener)
@@ -112,11 +131,15 @@ export default class Fireproof {
   }
 
   /**
-   * Runs validation on the specified document using the Fireproof instance's configuration.
+   * Runs validation on the specified document using the Fireproof instance's configuration. Throws an error if the document is invalid.
    *
    * @param {Object} doc - The document to validate.
+   * @returns {Promise<void>}
+   * @throws {Error} - Throws an error if the document is invalid.
+   * @memberof Fireproof
+   * @instance
    */
-  async runValidation (doc) {
+  async #runValidation (doc) {
     if (this.config && this.config.validateChange) {
       const oldDoc = await this.get(doc._id)
         .then((doc) => doc)
@@ -126,34 +149,44 @@ export default class Fireproof {
   }
 
   /**
-   * Adds a new document to the database, or updates an existing document.
+   * Adds a new document to the database, or updates an existing document. Returns the ID of the document and the new clock head.
    *
    * @param {Object} doc - the document to be added
    * @param {string} doc._id - the document ID. If not provided, a random ID will be generated.
    * @param {Object} doc.* - the document data to be added
-   * @returns {Promise<import('./prolly').PutResult>} - the result of adding the document
+   * @returns {Object<{ id: string, clock: CID[]  }>} - The result of adding the document to the database
+   * @memberof Fireproof
+   * @instance
    */
   async put ({ _id, ...doc }) {
     const id = _id || 'f' + Math.random().toString(36).slice(2)
-    await this.runValidation({ _id: id, ...doc })
-    return await this.putToProllyTree({ key: id, value: doc })
+    await this.#runValidation({ _id: id, ...doc })
+    return await this.#putToProllyTree({ key: id, value: doc })
   }
 
   /**
    * Deletes a document from the database
    * @param {string} id - the document ID
-   * @returns {Promise<import('./prolly').PutResult>} - the result of deleting the document
+   * @returns {Object<{ id: string, clock: CID[] }>} - The result of deleting the document from the database
+   * @memberof Fireproof
+   * @instance
    */
   async del (id) {
-    await this.runValidation({ _id: id, _deleted: true })
-    // return await this.putToProllyTree({ key: id, del: true }) // not working at prolly tree layer?
+    await this.#runValidation({ _id: id, _deleted: true })
+    // return await this.#putToProllyTree({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
-    return await this.putToProllyTree({ key: id, value: null })
+    return await this.#putToProllyTree({ key: id, value: null })
   }
 
-  async putToProllyTree (event) {
+  /**
+   * Updates the underlying storage with the specified event.
+   * @private
+   * @param {import('../clock').EventLink<import('../crdt').EventData>} event - the event to add
+   * @returns {Object<{ id: string, clock: import('../clock').EventLink<import('../crdt').EventData }>} - The result of adding the event to storage
+   */
+  async #putToProllyTree (event) {
     const result = await doTransaction(
-      'putToProllyTree',
+      '#putToProllyTree',
       this.blocks,
       async (blocks) => await put(blocks, this.clock, event)
     )
@@ -197,7 +230,9 @@ export default class Fireproof {
    * Retrieves the document with the specified ID from the database
    *
    * @param {string} key - the ID of the document to retrieve
-   * @returns {Promise<import('./prolly').GetResult>} - the document with the specified ID
+   * @returns {Object<{_id: string, ...doc: Object}>} - the document with the specified ID
+   * @memberof Fireproof
+   * @instance
    */
   async get (key) {
     const got = await get(this.blocks, this.clock, key)
@@ -219,13 +254,4 @@ export default class Fireproof {
     // console.log('registering remote block reader')
     this.blocks.valet.remoteBlockFunction = remoteBlockReaderFn
   }
-}
-
-/**
- * Creates a new Fireproof instance.
- *
- * @returns {Fireproof} - a new Fireproof instance
-*/
-Fireproof.storage = (_email) => {
-  return new Fireproof(new Blockstore(), [])
 }

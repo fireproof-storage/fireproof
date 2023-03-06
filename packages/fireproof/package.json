@@ -31,6 +31,7 @@
     "@ipld/car": "^5.1.0",
     "@ipld/dag-cbor": "^9.0.0",
     "archy": "^1.0.0",
+    "async": "^3.2.4",
     "car-transaction": "^1.0.1",
     "charwise": "^3.0.1",
     "cli-color": "^2.0.3",
@@ -69,5 +70,4 @@
   "workspaces": [
     "examples/todomvc"
   ]
-
 }
