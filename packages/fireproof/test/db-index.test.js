@@ -207,8 +207,11 @@ describe('Index query with bad index definition', () => {
     })
   })
   it('query index range', async () => {
+    const oldErrFn = console.error
+    console.error = () => {}
     await index.query({ range: [41, 44] }).catch((e) => {
       assert(/missingField/.test(e.message))
+      console.error = oldErrFn
     })
   })
 })

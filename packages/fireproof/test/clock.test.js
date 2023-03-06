@@ -1,6 +1,14 @@
-import { describe, it } from 'mocha'
+/* global describe, it */
+// import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, EventBlock, findCommonAncestorWithSortedEvents, findUnknownSortedEvents, decodeEventBlock, findEventsToSync } from '../src/clock.js'
+import {
+  advance,
+  EventBlock,
+  findCommonAncestorWithSortedEvents,
+  findUnknownSortedEvents,
+  decodeEventBlock,
+  findEventsToSync
+} from '../src/clock.js'
 // import { vis } from '../src/clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
@@ -34,7 +42,11 @@ describe('Clock', () => {
     assert.equal(head[0].toString(), event.cid.toString())
 
     const sinceHead = head
-    const toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    const toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 0)
   })
 
@@ -418,7 +430,11 @@ describe('Clock', () => {
     assert.equal(head[1].toString(), event1.cid.toString())
 
     let sinceHead = head1
-    let toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    let toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     // assert.equal(toSync.length, 1) // 0
     // assert.equal(toSync[0].cid.toString(), event0.cid.toString())
 
@@ -430,12 +446,20 @@ describe('Clock', () => {
     assert.equal(head.length, 1)
 
     sinceHead = head2
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 0)
 
     // todo do these since heads make sense?
     sinceHead = [...head0, ...head2]
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     // console.log('need', toSync.map(b => b.value.data))
     // assert.equal(toSync.length, 2) // 0
     // assert.equal(toSync[0].cid.toString(), event1.cid.toString())
@@ -668,7 +692,11 @@ describe('Clock', () => {
     const roothead = head
     // db root
     let sinceHead = [...roothead]
-    let toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    let toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 0) // we use all docs for first query in Fireproof
 
     // create bob
@@ -680,11 +708,19 @@ describe('Clock', () => {
 
     const event0head = head
     sinceHead = event0head
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 0)
 
     sinceHead = [...roothead, ...event0head]
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 1)
 
     // create carol
@@ -705,7 +741,11 @@ describe('Clock', () => {
     // for await (const line of vis(blocks, head)) console.log(line)
 
     sinceHead = [...event1head, ...roothead]
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
 
     assert.equal(toSync.length, 2)
 
@@ -715,11 +755,19 @@ describe('Clock', () => {
     const event2head = head
 
     sinceHead = [...event2head, ...event0head]
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 2)
 
     sinceHead = [...event2head, ...event1head]
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, await findCommonAncestorWithSortedEvents(blocks, sinceHead))
+    toSync = await findUnknownSortedEvents(
+      blocks,
+      sinceHead,
+      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+    )
     assert.equal(toSync.length, 1)
   })
 })

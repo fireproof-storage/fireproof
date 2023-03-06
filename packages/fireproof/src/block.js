@@ -37,16 +37,6 @@ export class MemoryBlockstore {
     this.#blocks.set(cid.toString(), bytes)
   }
 
-  /** @param {import('./link').AnyLink} cid */
-  async delete (cid) {
-    this.#blocks.delete(cid.toString())
-  }
-
-  /** @param {import('./link').AnyLink} cid */
-  deleteSync (cid) {
-    this.#blocks.delete(cid.toString())
-  }
-
   * entries () {
     for (const [str, bytes] of this.#blocks) {
       yield { cid: parse(str), bytes }
