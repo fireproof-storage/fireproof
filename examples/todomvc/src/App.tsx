@@ -87,6 +87,8 @@ function App(): JSX.Element {
   const fp = useFireproof(defineIndexes, loadFixtures)
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp.database)
 
+  // this uploader is not in a keyring context and it uses keyring
+  // maybe we should make up our own context for this?
   const up = useUploader(fp.database)
 
   async function listLoader({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> {
@@ -120,6 +122,7 @@ function App(): JSX.Element {
   return (
     <FireproofCtx.Provider value={fp}>
       <W3APIProvider uploadsListPageSize={20}>
+        {/* W3APIProvider this calls useKeyring in it just like App() */}
         <UploaderCtx.Provider value={up}>
           <RouterProvider
             router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
