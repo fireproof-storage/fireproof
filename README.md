@@ -124,13 +124,13 @@ Look in the `examples/` directory for projects using the database. It's not pick
 
 If are adding Fireproof to an existing page, just install it and try some operations.
 
-```
+```sh
 npm install @fireproof/core
 ```
 
 In your `app.js` or `app.tsx` file:
 
-```
+```js
 import { Fireproof } from '@fireproof/core'
 const fireproof = Fireproof.storage()
 const ok = await fireproof.put({ hello: 'world' })
