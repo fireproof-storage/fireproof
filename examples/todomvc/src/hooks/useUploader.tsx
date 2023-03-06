@@ -6,8 +6,11 @@ import { Fireproof } from '@fireproof/core'
 import { uploadCarBytes } from './useFireproof'
 import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../components/Authenticator'
 
-export const UploaderCtx = createContext<{ registered: Boolean; uploaderReady: Boolean }>({
-  registered: false,
+export const UploaderCtx = createContext<{
+  // registered: Boolean;
+  uploaderReady: Boolean
+}>({
+  // registered: false,
   uploaderReady: false,
 })
 
@@ -22,7 +25,6 @@ async function fetchWithRetries(url: string, retries: number): Promise<Response>
   }
   throw new Error(`Failed to fetch ${url} after ${retries} retries`)
 }
-
 
 export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
@@ -65,13 +67,17 @@ export function useUploader(database: Fireproof) {
     } else {
       doLoadAgent()
     }
-  }, [space])
-  return { registered, uploaderReady }
+  }, [space, agent])
+  return { uploaderReady }
 }
 
-export const UploadManager = ({ registered }: { registered: Boolean }) => {
+export const UploadManager = ({}: { registered: Boolean }) => {
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
+  const registered = Boolean(space?.registered())
   const child = registered ? (
-    <p>Your changes are being saved to the public IPFS network with web3.storage</p>
+    <p>
+      Your changes are being saved to the public IPFS network with <a href="http://web3.storage">web3.storage</a>
+    </p>
   ) : (
     <SpaceRegistrar />
   )
@@ -83,7 +89,6 @@ export const UploadManager = ({ registered }: { registered: Boolean }) => {
 }
 
 function SpaceRegistrar(): JSX.Element {
-  // const w3 = useW3API()
   const [, { registerSpace }] = useKeyring()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)

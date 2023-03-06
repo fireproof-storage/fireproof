@@ -4,7 +4,7 @@ import { Link, useLoaderData } from 'react-router-dom'
 import InputArea from './InputArea'
 import { FireproofCtx, useRevalidatorAndSubscriber, TimeTravel } from '../hooks/useFireproof'
 import { UploadManager, UploaderCtx } from '../hooks/useUploader'
-
+import { useKeyring } from '@w3ui/react-keyring'
 import { ListDoc } from '../interfaces'
 import { makeQueryFunctions } from '../makeQueryFunctions'
 
@@ -49,7 +49,10 @@ export function AllLists(): JSX.Element {
     lists = threeEmptyLists
   }
   // now upload stuff
-  const { registered } = useContext(UploaderCtx)
+  // const { registered } = useContext(UploaderCtx)
+  // const { registered } = useContext(UploaderCtx)
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
+  const registered = Boolean(space?.registered())
   return (
     <div>
       <div className="listNav">
