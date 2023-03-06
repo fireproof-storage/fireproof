@@ -11,6 +11,19 @@ export const UploaderCtx = createContext<{ registered: Boolean; uploaderReady: B
   uploaderReady: false,
 })
 
+async function fetchWithRetries(url: string, retries: number): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    const response = await fetch(url)
+    if (response.ok) {
+      return response
+    }
+    // wait for a short time before retrying
+    await new Promise((resolve) => setTimeout(resolve, 100))
+  }
+  throw new Error(`Failed to fetch ${url} after ${retries} retries`)
+}
+
+
 export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
@@ -18,9 +31,12 @@ export function useUploader(database: Fireproof) {
   const [remoteBlockReaderReady, setRemoteBlockReaderReady] = useState(false)
   useEffect(() => {
     if (!remoteBlockReaderReady) {
-      database.setRemoteBlockReader(
-        async (cid: any) => new Uint8Array(await (await fetch(`https://${cid}.ipfs.w3s.link/`)).arrayBuffer())
-      )
+      database.setRemoteBlockReader(async (cid: any) => {
+        const response = await fetchWithRetries(`https://${cid}.ipfs.w3s.link/`, 2)
+        // console.log()
+        const buffer = await response.arrayBuffer()
+        return new Uint8Array(buffer)
+      })
       setRemoteBlockReaderReady(true)
     }
     const setUploader = async () => {

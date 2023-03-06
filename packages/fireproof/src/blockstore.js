@@ -8,6 +8,15 @@ import Valet from './valet.js'
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
 
+const husherMap = new Map()
+const husher = (id, workFn) => {
+  if (!husherMap.has(id)) {
+    husherMap.set(id, workFn().finally(() =>
+      setTimeout(() => husherMap.delete(id), 100)))
+  }
+  return husherMap.get(id)
+}
+
 /**
  * @typedef {Object} AnyBlock
  * @property {import('./link').AnyLink} cid - The CID of the block
@@ -38,13 +47,10 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    // const doGets = [, this.networkGet(key)]
-
-    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch((err) => {
-      console.log('block not local', key, err)
+    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch(() => {
+      // console.log('networkGet', key)
       return this.networkGet(key)
     })
-
     if (!bytes) throw new Error('Missing block: ' + key)
     return { cid, bytes }
   }
@@ -65,10 +71,15 @@ export default class TransactionBlockstore {
   }
 
   async networkGet (key) {
-    console.log('networkGet', key)
     if (this.valet.remoteBlockFunction) {
-      console.log('getting block from remote', key)
-      return await this.valet.remoteBlockFunction(key)
+      const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
+      if (value) {
+        // console.log('networkGot: ' + key, value.length)
+        // doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
+        //   await innerBlockstore.put(key, value)
+        // })
+        return value
+      }
     } else {
       throw new Error('No remoteBlockFunction')
     }
