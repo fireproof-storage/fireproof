@@ -75,6 +75,8 @@ export default class TransactionBlockstore {
       const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
+        // dont turn this on until the Nan thing is fixed
+        // it keep the network blocks in indexedb but lets get the basics solid first
         // doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
         //   await innerBlockstore.put(key, value)
         // })
