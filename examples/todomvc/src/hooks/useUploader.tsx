@@ -12,42 +12,44 @@ export const UploaderCtx = createContext<{ registered: Boolean; uploaderReady: B
 })
 
 export function useUploader(database: Fireproof) {
-  // const w3 = useW3API()
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
   const [uploaderReady, setUploaderReady] = useState(false)
   console.log('use uploader called', { registered, uploaderReady, agent, space })
 
   useEffect(() => {
-    console.log('use uploader set remote block reader', registered)
-    database.setRemoteBlockReader(async (cid: any) => {
-      console.log('network block get', cid)
-      const resp = await fetch(`https://${cid}.ipfs.w3s.link/`)
-      return new Uint8Array(await resp.arrayBuffer())
-    })
+    database.setRemoteBlockReader(
+      async (cid: any) => new Uint8Array(await (await fetch(`https://${cid}.ipfs.w3s.link/`)).arrayBuffer())
+    )
+
+    const setUploader = async () => {
+      if (uploaderReady) return
+      const delegz = { with: space.did(), ...store }
+      delegz.can = 'store/*'
+      const conf = {
+        issuer: agent,
+        with: delegz.with,
+        proofs: await getProofs([delegz]),
+      }
+      console.log('use uploader set remote block WRITER')
+      database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
+        console.log('uploading', carCid)
+        uploadCarBytes(conf, carCid, carBytes)
+      })
+      setUploaderReady(true)
+    }
+
+    const doLoadAgent = async () => {
+      console.log('use uploader load agent')
+      const ag = await loadAgent()
+      console.log('use uploader loaded agent', ag)
+    }
 
     if (registered) {
       // on the branch that works, step through debugger to see when registered gets true
-      const setUploader = async () => {
-        if (uploaderReady) return
-        await loadAgent()
-        const withness = space.did()
-        const delegz = { with: withness, ...store }
-        delegz.can = 'store/*'
-        const conf = {
-          issuer: agent,
-          with: withness,
-          proofs: await getProofs([delegz]),
-        }
-        console.log('use uploader set remote block WRITER')
-
-        database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
-          console.log('uploading', carCid)
-          uploadCarBytes(conf, carCid, carBytes)
-        })
-        setUploaderReady(true)
-      }
       setUploader()
+    } else {
+      doLoadAgent()
     }
   }, [space])
   return { registered, uploaderReady }
