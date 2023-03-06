@@ -5,8 +5,12 @@ import App from './App'
 import 'todomvc-common/base.css'
 import 'todomvc-app-css/index.css'
 
+import { KeyringProvider } from '@w3ui/react-keyring'
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   // <React.StrictMode>
+  <KeyringProvider>
     <App />
+  </KeyringProvider>
   // </React.StrictMode>
 )

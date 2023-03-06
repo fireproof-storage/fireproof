@@ -15,13 +15,10 @@ export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
   const [uploaderReady, setUploaderReady] = useState(false)
-  console.log('use uploader called', { registered, uploaderReady, agent, space })
-
   useEffect(() => {
     database.setRemoteBlockReader(
       async (cid: any) => new Uint8Array(await (await fetch(`https://${cid}.ipfs.w3s.link/`)).arrayBuffer())
     )
-
     const setUploader = async () => {
       if (uploaderReady) return
       const delegz = { with: space.did(), ...store }
@@ -31,22 +28,18 @@ export function useUploader(database: Fireproof) {
         with: delegz.with,
         proofs: await getProofs([delegz]),
       }
-      console.log('use uploader set remote block WRITER')
-      database.setCarUploader((carCid: any, carBytes: Uint8Array) => {
-        console.log('uploading', carCid)
-        uploadCarBytes(conf, carCid, carBytes)
+      database.setCarUploader(async (carCid: any, carBytes: Uint8Array) => {
+        const uploadedCarCid = await uploadCarBytes(conf, carCid, carBytes)
+        // why are these different?
+        // console.log('uploaded', carCid, uploadedCarCid.toString())
       })
       setUploaderReady(true)
     }
 
     const doLoadAgent = async () => {
-      console.log('use uploader load agent')
       const ag = await loadAgent()
-      console.log('use uploader loaded agent', ag)
     }
-
     if (registered) {
-      // on the branch that works, step through debugger to see when registered gets true
       setUploader()
     } else {
       doLoadAgent()
