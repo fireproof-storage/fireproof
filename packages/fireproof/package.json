@@ -7,7 +7,7 @@
   "scripts": {
     "test": "standard && npm run test:mocha",
     "test:mocha": "mocha test/*.test.js",
-    "test:watch": "npm run test:mocha -- -w --parallel test/*.test.js",
+    "test:watch": "npm run test:mocha -- -w --parallel",
     "coverage": "c8 -r html -r text npm test",
     "prepublishOnly" : "cp ../../README.md .",
     "postpublish": "rm README.md",
