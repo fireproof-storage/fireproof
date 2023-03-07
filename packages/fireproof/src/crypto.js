@@ -4,14 +4,11 @@ import {
   load
 } from 'prolly-trees/cid-set'
 import { CID } from 'multiformats'
-import {
-  encode,
-  decode
-} from 'multiformats/block'
+import { encode, decode, create as mfCreate } from 'multiformats/block'
 import * as dagcbor from '@ipld/dag-cbor'
-// import { createBlock } from '../src/utils.js'
+import { sha256 as hasher } from 'multiformats/hashes/sha2'
 
-// ({ cid, bytes, hasher, codec })
+const createBlock = (bytes, cid) => mfCreate({ cid, bytes, hasher, codec })
 
 const encrypt = async function * ({ get, cids, hasher, key, cache, chunker, root }) {
   const set = new Set()
