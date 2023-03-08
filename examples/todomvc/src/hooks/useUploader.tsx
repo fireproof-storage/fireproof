@@ -76,6 +76,7 @@ export function useUploader(database: Fireproof) {
 export const UploadManager = ({}: { registered: Boolean }) => {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
+  // console.log('loadAgent', loadAgent, typeof loadAgent)
   const child = registered ? (
     <p>
       Your changes are being saved to the public IPFS network with <a href="http://web3.storage">web3.storage</a>
@@ -83,11 +84,12 @@ export const UploadManager = ({}: { registered: Boolean }) => {
   ) : (
     <SpaceRegistrar />
   )
-  return (
-    <div className="uploadManager">
-      <Authenticator>{child}</Authenticator>
-    </div>
-  )
+  return <></>
+  // return (
+  //   <div className="uploadManager">
+  //     <Authenticator>{child}</Authenticator>
+  //   </div>
+  // )
 }
 
 function SpaceRegistrar(): JSX.Element {
