@@ -1,4 +1,0 @@
-[build]
-  command = "pnpm run build"
-  publish = "examples/todomvc/dist"
-  base = "examples/todomvc"
