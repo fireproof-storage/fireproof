@@ -3,3 +3,10 @@
   from = "/*"
   to = "/"
   status = 200
+
+[build]
+  command = "cd ../.. && pnpm i && cd examles/todomvc && pnpm run build"
+  publish = "examples/todomvc/dist"
+  base = "examples/todomvc"
+
+  
