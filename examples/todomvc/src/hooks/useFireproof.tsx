@@ -1,16 +1,12 @@
 /* global localStorage */
 import { useEffect, useState, createContext } from 'react'
 import throttle from 'lodash.throttle'
-import { useKeyring } from '@w3ui/react-keyring'
-import { Store } from '@web3-storage/upload-client'
-import { InvocationConfig } from '@web3-storage/upload-client/types'
-import { Fireproof, Index, Listener } from '@fireproof/core'
+import { Fireproof, Listener } from '@fireproof/core'
 import { useRevalidator } from 'react-router-dom'
 
 export const FireproofCtx = createContext<Fireproof>(null) // todo bad type
 
-// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
+// todo remove this from the hook and put it in the component
 export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
   const revalidator = useRevalidator()
   addSubscriber(name, () => {
@@ -19,74 +15,25 @@ export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: 
   })
 }
 
-const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-const clockLog = new Set<string>()
-
-export const TimeTravel = ({ database }) => {
-  database.clock && database.clock.length && clockLog.add(database.clock.toString())
-  const diplayClocklog = Array.from(clockLog).reverse()
-  return (
-    <div className="timeTravel">
-      <h2>Time Travel</h2>
-      {/* <p>Copy and paste a <b>Fireproof clock value</b> to your friend to share application state, seperate them with commas to merge state.</p> */}
-      {/* <InputArea
-      onSubmit={
-        async (tex: string) => {
-          await database.setClock(tex.split(','))
-        }
-      }
-      placeholder='Copy a CID from below to rollback in time.'
-      autoFocus={false}
-    /> */}
-      <p>
-        Click a <b>Fireproof clock value</b> below to rollback in time.
-      </p>
-      <p>Clock log (newest first): </p>
-      <ul>
-        {diplayClocklog.map((entry) => (
-          <li key={entry}>
-            <button
-              onClick={async () => {
-                await database.setClock([entry])
-              }}
-            >
-              {shortLink(entry)}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
-  )
-}
-
 let storageSupported = false
 try {
   storageSupported = window.localStorage && true
 } catch (e) {}
-
 export function localGet(key) {
   if (storageSupported) {
     return localStorage && localStorage.getItem(key)
   }
 }
-
 function localSet(key, value) {
   if (storageSupported) {
     return localStorage && localStorage.setItem(key, value)
   }
 }
-
 // function localRemove(key) {
 //   if (storageSupported) {
 //     return localStorage && localStorage.removeItem(key)
 //   }
 // }
-
-declare global {
-  interface Window {
-    fireproof: Fireproof
-  }
-}
 
 const inboundSubscriberQueue = new Map()
 const database = Fireproof.storage()
@@ -148,6 +95,13 @@ export function useFireproof(
   }
 }
 
-export async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
-  return await Store.add(conf, new Blob([carBytes]))
+const husherMap = new Map()
+const husher = (id, workFn) => {
+  if (!husherMap.has(id)) {
+    husherMap.set(
+      id,
+      workFn().finally(() => setTimeout(() => husherMap.delete(id), 100))
+    )
+  }
+  return husherMap.get(id)
 }

@@ -1,19 +1,19 @@
 import React from 'react'
-import { useState } from 'react'
-import { Index } from '@fireproof/core'
-import { useFireproof, FireproofCtx } from './hooks/useFireproof'
-import { makeQueryFunctions } from './makeQueryFunctions'
 import './App.css'
 import { Route, Outlet, RouterProvider, createBrowserRouter, createRoutesFromElements } from 'react-router-dom'
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router-dom'
+import type { LoaderFunctionArgs } from 'react-router-dom'
+import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
+
+import { Index, Fireproof } from '@fireproof/core'
+import { useFireproof, FireproofCtx } from './hooks/useFireproof'
+import { useUploader, UploaderCtx } from './hooks/useUploader'
+import { makeQueryFunctions } from './makeQueryFunctions'
+import loadFixtures from './loadFixtures'
+
 import AppHeader from './components/AppHeader/index.jsx'
 import InputArea from './components/InputArea'
-
 import { List } from './components/List'
 import { AllLists } from './components/AllLists'
-import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
-import loadFixtures from './loadFixtures'
-import { useUploader, UploaderCtx } from './hooks/useUploader'
 
 /**
  * A React functional component that renders a list.
@@ -65,6 +65,11 @@ function Layout({ children }: LayoutProps): JSX.Element {
   )
 }
 
+declare global {
+  interface Window {
+    fireproof: Fireproof
+  }
+}
 const defineIndexes = (database) => {
   database.allLists = new Index(database, function (doc, map) {
     if (doc.type === 'list') map(doc.type, doc)

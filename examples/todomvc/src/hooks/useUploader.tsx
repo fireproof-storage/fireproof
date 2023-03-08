@@ -1,9 +1,11 @@
 import { useEffect, useState, createContext } from 'react'
 import { useKeyring } from '@w3ui/react-keyring'
+import { Store } from '@web3-storage/upload-client'
+import { InvocationConfig } from '@web3-storage/upload-client/types'
 // import {useW3API} from './useW3API'
 import { store } from '@web3-storage/capabilities/store'
 import { Fireproof } from '@fireproof/core'
-import { uploadCarBytes } from './useFireproof'
+// todo avoid application dependency
 import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../components/Authenticator'
 
 export const UploaderCtx = createContext<{
@@ -61,7 +63,7 @@ export function useUploader(database: Fireproof) {
     const doLoadAgent = async () => {
       const ag = await loadAgent()
     }
-
+    // maybe take this out of the useEffect world and just make it JS?
     if (registered) {
       setUploader()
     } else {
@@ -137,4 +139,8 @@ function SpaceRegistrar(): JSX.Element {
       </div>
     </div>
   )
+}
+
+export async function uploadCarBytes(conf: InvocationConfig, carCID: any, carBytes: Uint8Array) {
+  return await Store.add(conf, new Blob([carBytes]))
 }

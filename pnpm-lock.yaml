@@ -46,6 +46,7 @@ importers:
       '@types/react-dom': ^18.0.10
       '@vitejs/plugin-react': ^3.1.0
       '@w3ui/react-keyring': ^3.0.1
+      '@web3-storage/capabilities': ^3.2.0
       '@web3-storage/upload-client': ^6.0.0
       async: ^3.2.4
       classnames: ^2.3.2
@@ -63,6 +64,7 @@ importers:
     dependencies:
       '@fireproof/core': link:../../packages/fireproof
       '@w3ui/react-keyring': 3.0.1_pmekkgnqduwlme35zpnqhenc34
+      '@web3-storage/capabilities': 3.2.0
       '@web3-storage/upload-client': 6.0.0
       async: 3.2.4
       classnames: 2.3.2
@@ -87,6 +89,7 @@ importers:
       '@ipld/car': ^5.1.0
       '@ipld/dag-cbor': ^9.0.0
       archy: ^1.0.0
+      async: ^3.2.4
       c8: ^7.12.0
       car-transaction: ^1.0.1
       charwise: ^3.0.1
@@ -103,6 +106,7 @@ importers:
       '@ipld/car': 5.1.0
       '@ipld/dag-cbor': 9.0.0
       archy: 1.0.0
+      async: 3.2.4
       car-transaction: 1.0.1
       charwise: 3.0.1
       cli-color: 2.0.3
@@ -819,8 +823,25 @@ packages:
       multiformats: 11.0.1
     dev: false
 
+  /@ucanto/core/5.1.0:
+    resolution: {integrity: sha512-vunFhsBgeioZhLGmLqpEeydXeCVNoYEClQLivMMa5jZP0B7GnBoMSYKc95n8iX6n6mYb3mKFpWQ0BGKJUxrK/A==}
+    dependencies:
+      '@ipld/car': 5.1.0
+      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-ucan': 3.2.0
+      '@ucanto/interface': 6.0.0
+      multiformats: 11.0.1
+    dev: false
+
   /@ucanto/interface/4.2.3:
     resolution: {integrity: sha512-IoccqMc2/vqaPT6U061ylC138mQ3pLp6coqjXTDmlL9OHmskLcEeQh5Mxe0AYHWMhO1ZuB0LRIysBXk7xoK25Q==}
+    dependencies:
+      '@ipld/dag-ucan': 3.2.0
+      multiformats: 11.0.1
+    dev: false
+
+  /@ucanto/interface/6.0.0:
+    resolution: {integrity: sha512-OOZQDLKxqhuvmSRAXcHDQrlBBDs52ZiI5GsGJJW8VT/TPOPmfAkwc1HgmU/eMF4bO+a1JfG4i43+4KUoCcQnbA==}
     dependencies:
       '@ipld/dag-ucan': 3.2.0
       multiformats: 11.0.1
@@ -836,6 +857,16 @@ packages:
       one-webcrypto: 1.0.3
     dev: false
 
+  /@ucanto/principal/5.1.0:
+    resolution: {integrity: sha512-niZzojYPYAgdszTmra82wGbl5YGHugUblMTPrEjuz3RFjXDCxW50IJFwzus3Z6k6Q6zIbXPU+yVxTbzJWg8/JA==}
+    dependencies:
+      '@ipld/dag-ucan': 3.2.0
+      '@noble/ed25519': 1.7.3
+      '@ucanto/interface': 6.0.0
+      multiformats: 11.0.1
+      one-webcrypto: 1.0.3
+    dev: false
+
   /@ucanto/transport/4.2.3:
     resolution: {integrity: sha512-ZtHB5ybSB/1dBLhzJqjxGDEE+TTTNzc9HMrVA1AP5KHvaHPu2UtAmS2IMr+HrhSjcwWwdavK0qMQbXSfLWM+kg==}
     dependencies:
@@ -846,6 +877,16 @@ packages:
       multiformats: 11.0.1
     dev: false
 
+  /@ucanto/transport/5.1.0:
+    resolution: {integrity: sha512-Um/ba0DmTM1icZW08pxg7hyV1BYXGMyWEeVAnrM3W/WnrYd+JTEFoaPrbPce//Dkmrfk8uGjuIIgjpPT1eAfUA==}
+    dependencies:
+      '@ipld/car': 5.1.0
+      '@ipld/dag-cbor': 9.0.0
+      '@ucanto/core': 5.1.0
+      '@ucanto/interface': 6.0.0
+      multiformats: 11.0.1
+    dev: false
+
   /@ucanto/validator/4.2.3:
     resolution: {integrity: sha512-7lA9PK+c0Hu857eHuZIVX3ZBooqvOT25/CXUxGjqs5YFCY7dUhrNCxJYnWsPZnEdriq6x6VSj8pZPwN8I7CyQw==}
     dependencies:
@@ -853,6 +894,16 @@ packages:
       '@ipld/dag-cbor': 8.0.1
       '@ucanto/core': 4.2.3
       '@ucanto/interface': 4.2.3
+      multiformats: 11.0.1
+    dev: false
+
+  /@ucanto/validator/6.0.0:
+    resolution: {integrity: sha512-3cWy8F7G1DFGeHXHWegcvQ0sz+t8hvmAOD919a57n87qDauoYDB90s3p9c71esfOwarBDr2f8/oEFwtToAjy3A==}
+    dependencies:
+      '@ipld/car': 5.1.0
+      '@ipld/dag-cbor': 9.0.0
+      '@ucanto/core': 5.1.0
+      '@ucanto/interface': 6.0.0
       multiformats: 11.0.1
     dev: false
 
@@ -945,6 +996,16 @@ packages:
       '@ucanto/principal': 4.2.3
       '@ucanto/transport': 4.2.3
       '@ucanto/validator': 4.2.3
+    dev: false
+
+  /@web3-storage/capabilities/3.2.0:
+    resolution: {integrity: sha512-WtQNLpqfsq1v62+OJFaXUNXJsk+x8WWJZnok4tEd2p57uv1d9TeNnnWhzOo5qzGmoh1pqjlLoPjYrq78Ib9o7A==}
+    dependencies:
+      '@ucanto/core': 5.1.0
+      '@ucanto/interface': 6.0.0
+      '@ucanto/principal': 5.1.0
+      '@ucanto/transport': 5.1.0
+      '@ucanto/validator': 6.0.0
     dev: false
 
   /@web3-storage/upload-client/6.0.0:
