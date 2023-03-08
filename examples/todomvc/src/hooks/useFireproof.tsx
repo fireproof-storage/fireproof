@@ -2,18 +2,10 @@
 import { useEffect, useState, createContext } from 'react'
 import throttle from 'lodash.throttle'
 import { Fireproof, Listener } from '@fireproof/core'
-import { useRevalidator } from 'react-router-dom'
 
 export const FireproofCtx = createContext<Fireproof>(null) // todo bad type
 
-// todo remove this from the hook and put it in the component
-export function useRevalidatorAndSubscriber(name: string, addSubscriber: (name: string, fn: () => void) => void): void {
-  const revalidator = useRevalidator()
-  addSubscriber(name, () => {
-    // console.log('revalidating', name)
-    revalidator.revalidate()
-  })
-}
+
 
 let storageSupported = false
 try {
