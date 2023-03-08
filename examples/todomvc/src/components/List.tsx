@@ -1,11 +1,11 @@
 import React from 'react'
 import { useState, useContext } from 'react'
 import { useKeyring } from '@w3ui/react-keyring'
-import { useNavigate, useParams, useLoaderData } from 'react-router-dom'
+import { useNavigate, useParams, useLoaderData, useRevalidator } from 'react-router-dom'
 import Footer from './Footer'
 import InputArea from './InputArea'
 import TodoItem from './TodoItem'
-import { FireproofCtx, useRevalidatorAndSubscriber } from '../hooks/useFireproof'
+import { FireproofCtx } from '../hooks/useFireproof'
 import { TimeTravel } from './TimeTravel'
 import { UploadManager, UploaderCtx } from '../hooks/useUploader'
 
@@ -16,10 +16,16 @@ export function List(): JSX.Element {
   // first data stuff
   const { ready, database, addSubscriber } = useContext(FireproofCtx)
   const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions({ ready, database })
-  useRevalidatorAndSubscriber('one List', addSubscriber)
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
+  const revalidator = useRevalidator()
+  addSubscriber('List', () => {
+    // console.log('revalidating', name)
+    revalidator.revalidate()
+  })
+
   // now upload stuff
+
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
   const registered = Boolean(space?.registered())
 

@@ -1,8 +1,8 @@
 import React from 'react'
 import { useContext } from 'react'
-import { Link, useLoaderData } from 'react-router-dom'
+import { Link, useLoaderData, useRevalidator } from 'react-router-dom'
 import InputArea from './InputArea'
-import { FireproofCtx, useRevalidatorAndSubscriber } from '../hooks/useFireproof'
+import { FireproofCtx } from '../hooks/useFireproof'
 import { TimeTravel } from './TimeTravel'
 import { UploadManager, UploaderCtx } from '../hooks/useUploader'
 import { useKeyring } from '@w3ui/react-keyring'
@@ -44,7 +44,12 @@ export function AllLists(): JSX.Element {
   const { ready, database, addSubscriber } = useContext(FireproofCtx)
   const { addList } = makeQueryFunctions({ ready, database })
 
-  useRevalidatorAndSubscriber('AllLists', addSubscriber)
+  const revalidator = useRevalidator()
+  addSubscriber('AllLists', () => {
+    // console.log('revalidating', name)
+    revalidator.revalidate()
+  })
+
   let lists = useLoaderData() as ListDoc[]
   if (lists.length == 0) {
     lists = threeEmptyLists
