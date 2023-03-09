@@ -4,17 +4,6 @@
 import { useEffect, useState, createContext } from 'react'
 import { Fireproof, Listener } from '@fireproof/core'
 
-/** @module hooks **/
-
-/**
- * A React hook for initializing a Fireproof database, automatically saving and loading the clock.
- *
- * @class useFireproof
- * @classdesc React hook to initialize a Fireproof database, automatically saving and loading the clock.
- *
-
- */
-
 export interface FireproofCtxValue {
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
@@ -26,25 +15,7 @@ export const FireproofCtx = createContext<FireproofCtxValue>({
   ready: false,
 })
 
-let storageSupported = false
-try {
-  storageSupported = window.localStorage && true
-} catch (e) {}
-export function localGet(key: string) {
-  if (storageSupported) {
-    return localStorage && localStorage.getItem(key)
-  }
-}
-function localSet(key: string, value: string) {
-  if (storageSupported) {
-    return localStorage && localStorage.setItem(key, value)
-  }
-}
-// function localRemove(key) {
-//   if (storageSupported) {
-//     return localStorage && localStorage.removeItem(key)
-//   }
-// }
+
 
 const inboundSubscriberQueue = new Map()
 const database = Fireproof.storage()
@@ -52,14 +23,15 @@ const listener = new Listener(database)
 
 /**
  * @function useFireproof
- * @memberof useFireproof
  * React hook to initialize a Fireproof database, automatically saving and loading the clock.
- * @param defineDatabaseFn Synchronous function that defines the database, run this before any async calls
- * @param setupFn Asynchronous function that sets up the database, run this to load fixture data etc
+ * @param [defineDatabaseFn] Synchronous function that defines the database, run this before any async calls
+ * @param [setupDatabaseFn] Asynchronous function that sets up the database, run this to load fixture data etc
  * @returns {FireproofCtxValue} { addSubscriber, database, ready }
  */
-export function useFireproof(defineDatabaseFn: Function, setupFn: Function): FireproofCtxValue {
+export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Function): FireproofCtxValue {
   const [ready, setReady] = useState(false)
+  defineDatabaseFn = defineDatabaseFn || (() => {})
+  setupDatabaseFn = setupDatabaseFn || (() => {})
 
   if (!ready) {
     defineDatabaseFn(database)
@@ -87,11 +59,11 @@ export function useFireproof(defineDatabaseFn: Function, setupFn: Function): Fir
         } catch (e) {
           console.error('Error loading previous database clock.', e)
           await database.setClock([])
-          await setupFn(database)
+          await setupDatabaseFn(database)
           localSet('fireproof', JSON.stringify(database))
         }
       } else {
-        await setupFn(database)
+        await setupDatabaseFn(database)
         localSet('fireproof', JSON.stringify(database))
       }
       setReady(true)
@@ -118,3 +90,23 @@ const husher = (id: string, workFn: { (): Promise<any> }, ms: number) => {
   return husherMap.get(id)
 }
 const hushed = (id: string, workFn: { (): Promise<any> }, ms: number) => () => husher(id, workFn, ms)
+
+let storageSupported = false
+try {
+  storageSupported = window.localStorage && true
+} catch (e) {}
+export function localGet(key: string) {
+  if (storageSupported) {
+    return localStorage && localStorage.getItem(key)
+  }
+}
+function localSet(key: string, value: string) {
+  if (storageSupported) {
+    return localStorage && localStorage.setItem(key, value)
+  }
+}
+// function localRemove(key) {
+//   if (storageSupported) {
+//     return localStorage && localStorage.removeItem(key)
+//   }
+// }

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "cd packages/fireproof && npm test",
-    "docs": "jsdoc -c jsdoc.json README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js packages/fireproof/hooks/use-fireproof.ts"
+    "docs": "jsdoc -c jsdoc.json -u packages/fireproof/hooks/ README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js",
+    "docs:ts": "jsdoc -c jsdoc.json README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js packages/fireproof/hooks/use-fireproof.ts"
   },
   "keywords": [
     "database",
@@ -54,6 +55,7 @@
   "standard": {
     "ignore": [
       "**/*.tsx",
+      "**/*.ts",
       "examples/**/dist"
     ]
   },

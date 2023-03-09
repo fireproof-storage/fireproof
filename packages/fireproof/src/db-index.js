@@ -174,7 +174,7 @@ export default class DbIndex {
 /**
  * Update the DbIndex with the given entries
  * @param {Blockstore} blocks
- * @param {import('multiformats/block').Block} inRoot
+ * @param {Block} inRoot
  * @param {DbIndexEntry[]} indexEntries
  * @private
  */
@@ -206,14 +206,6 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
   }
 }
 
-/**
- * Query the DbIndex for the given range
- * @param {Blockstore} blocks
- * @param {import('multiformats/block').Block} inRoot
- * @param {import('prolly-trees/db-DbIndex').Query} query
- * @returns {Promise<import('prolly-trees/db-DbIndex').QueryResult>}
- * @private
- **/
 async function doIndexQuery (blocks, root, query) {
   const cid = root && root.cid
   if (!cid) return { result: [] }
