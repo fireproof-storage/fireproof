@@ -161,7 +161,7 @@ export default class Fireproof {
   async put ({ _id, ...doc }) {
     const id = _id || 'f' + Math.random().toString(36).slice(2)
     await this.#runValidation({ _id: id, ...doc })
-    return await this.#putToProllyTree({ key: id, value: doc })
+    return await this.#putToProllyTree({ key: id, value: doc }, doc._clock)
   }
 
   /**
@@ -171,20 +171,37 @@ export default class Fireproof {
    * @memberof Fireproof
    * @instance
    */
-  async del (id) {
+  async del (docOrId) {
+    let id
+    let clock = null
+    if (docOrId._id) {
+      id = docOrId._id
+      clock = docOrId._clock
+    } else {
+      id = docOrId
+    }
     await this.#runValidation({ _id: id, _deleted: true })
     // return await this.#putToProllyTree({ key: id, del: true }) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
-    return await this.#putToProllyTree({ key: id, value: null })
+    return await this.#putToProllyTree({ key: id, value: null }, clock)
   }
 
   /**
    * Updates the underlying storage with the specified event.
    * @private
-   * @param {CID[]} event - the event to add
+   * @param {Object<{key : string, value: any}>} event - the event to add
    * @returns {Object<{ id: string, clock: CID[] }>} - The result of adding the event to storage
    */
-  async #putToProllyTree (event) {
+  async #putToProllyTree (event, clock = null) {
+    if (clock && JSON.stringify(clock) !== JSON.stringify(this.clock)) {
+      // we need to check and see what version of the document exists at the clock specified
+      // if it is the same as the one we are trying to put, then we can proceed
+      const resp = await eventsSince(this.blocks, this.clock, event.value._clock)
+      const missedChange = resp.find(({ key }) => key === event.key)
+      if (missedChange) {
+        throw new Error('MVCC conflict, document is changed, please reload the document and try again.')
+      }
+    }
     const result = await doTransaction(
       '#putToProllyTree',
       this.blocks,
@@ -228,15 +245,24 @@ export default class Fireproof {
    * Retrieves the document with the specified ID from the database
    *
    * @param {string} key - the ID of the document to retrieve
+   * @param {Object} [opts] - options
    * @returns {Object<{_id: string, ...doc: Object}>} - the document with the specified ID
    * @memberof Fireproof
    * @instance
    */
-  async get (key) {
-    const got = await get(this.blocks, this.clock, key)
+  async get (key, opts = {}) {
+    let got
+    if (opts.clock) {
+      got = await get(this.blocks, opts.clock, key)
+    } else {
+      got = await get(this.blocks, this.clock, key)
+    }
     // this tombstone is temporary until we can get the prolly tree to delete
     if (got === null) {
       throw new Error('Not found')
+    }
+    if (opts.mvcc === true) {
+      got._clock = this.clock
     }
     got._id = key
     return got
