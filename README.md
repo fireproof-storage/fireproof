@@ -46,16 +46,16 @@ const { id, ref } = await database.put({
     name: 'André',
     age: 47
 });
-const doc = await database.get('three-thousand')
+const doc = await database.get('three-thousand', {mvcc : true}) // mvcc is optional
 // {
 //    _id  : 'three-thousand'
-//    _ref : CID(bafy84...agfw7)
+//    _clock : CID(bafy84...agfw7)
 //    name : 'André',
 //    age  : 47
 // }
 ```
 
-The `_ref` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/":"bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
+The `_clock` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/":"bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
 
 ### Flexible Indexes
 
