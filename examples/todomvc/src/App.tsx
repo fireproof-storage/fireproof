@@ -5,7 +5,7 @@ import type { LoaderFunctionArgs } from 'react-router-dom'
 import { LayoutProps, ListLoaderData, ListDoc } from './interfaces'
 
 import { Index, Fireproof } from '@fireproof/core'
-import { useFireproof, FireproofCtx } from './hooks/useFireproof'
+import { FireproofCtx, useFireproof } from '@fireproof/core/hooks/use-fireproof'
 import { useUploader, UploaderCtx } from './hooks/useUploader'
 import { makeQueryFunctions } from './makeQueryFunctions'
 import loadFixtures from './loadFixtures'

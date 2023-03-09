@@ -35,12 +35,12 @@ export function useUploader(database: Fireproof) {
   const [remoteBlockReaderReady, setRemoteBlockReaderReady] = useState(false)
   useEffect(() => {
     if (!remoteBlockReaderReady) {
-      database.setRemoteBlockReader(async (cid: any) => {
-        const response = await fetchWithRetries(`https://${cid}.ipfs.w3s.link/`, 2)
-        // console.log()
-        const buffer = await response.arrayBuffer()
-        return new Uint8Array(buffer)
-      })
+      // database.setRemoteBlockReader(async (cid: any) => {
+      //   const response = await fetchWithRetries(`https://${cid}.ipfs.w3s.link/`, 2)
+      //   // console.log()
+      //   const buffer = await response.arrayBuffer()
+      //   return new Uint8Array(buffer)
+      // })
       setRemoteBlockReaderReady(true)
     }
     const setUploader = async () => {
