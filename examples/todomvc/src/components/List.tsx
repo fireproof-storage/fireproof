@@ -5,7 +5,7 @@ import { useNavigate, useParams, useLoaderData, useRevalidator } from 'react-rou
 import Footer from './Footer'
 import InputArea from './InputArea'
 import TodoItem from './TodoItem'
-import { FireproofCtx } from '../hooks/useFireproof'
+import { FireproofCtx, FireproofCtxValue } from '@fireproof/core/hooks/use-fireproof'
 import { TimeTravel } from './TimeTravel'
 import { UploadManager, UploaderCtx } from '../hooks/useUploader'
 
@@ -14,7 +14,7 @@ import { makeQueryFunctions } from '../makeQueryFunctions'
 
 export function List(): JSX.Element {
   // first data stuff
-  const { ready, database, addSubscriber } = useContext(FireproofCtx)
+  const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue
   const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions({ ready, database })
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')

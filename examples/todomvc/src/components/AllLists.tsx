@@ -2,7 +2,7 @@ import React from 'react'
 import { useContext } from 'react'
 import { Link, useLoaderData, useRevalidator } from 'react-router-dom'
 import InputArea from './InputArea'
-import { FireproofCtx } from '../hooks/useFireproof'
+import { FireproofCtx, FireproofCtxValue } from '@fireproof/core/hooks/use-fireproof'
 import { TimeTravel } from './TimeTravel'
 import { UploadManager, UploaderCtx } from '../hooks/useUploader'
 import { useKeyring } from '@w3ui/react-keyring'
@@ -41,7 +41,7 @@ const todoItems = ({ title, _id }: ListDoc, i: number) => {
  */
 export function AllLists(): JSX.Element {
   // first data stuff
-  const { ready, database, addSubscriber } = useContext(FireproofCtx)
+  const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue
   const { addList } = makeQueryFunctions({ ready, database })
 
   const revalidator = useRevalidator()

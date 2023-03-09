@@ -1,22 +1,30 @@
 /* global localStorage */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import { useEffect, useState, createContext } from 'react'
-import throttle from 'lodash.throttle'
 import { Fireproof, Listener } from '@fireproof/core'
 
-export const FireproofCtx = createContext<Fireproof>(null) // todo bad type
-
-
+export interface FireproofCtxValue {
+  addSubscriber: (label: String, fn: Function) => void
+  database: Fireproof
+  ready: boolean
+}
+export const FireproofCtx = createContext<FireproofCtxValue>({
+  addSubscriber: () => {},
+  database: null,
+  ready: false,
+})
 
 let storageSupported = false
 try {
   storageSupported = window.localStorage && true
 } catch (e) {}
-export function localGet(key) {
+export function localGet(key: string) {
   if (storageSupported) {
     return localStorage && localStorage.getItem(key)
   }
 }
-function localSet(key, value) {
+function localSet(key: string, value: string) {
   if (storageSupported) {
     return localStorage && localStorage.setItem(key, value)
   }
@@ -31,14 +39,13 @@ const inboundSubscriberQueue = new Map()
 const database = Fireproof.storage()
 const listener = new Listener(database)
 
-export function useFireproof(
-  defineDatabaseFn: Function,
-  setupFn: Function
-): {
-  addSubscriber: (label: String, fn: Function) => void
-  database: Fireproof
-  ready: boolean
-} {
+/**
+ * React hook to initialize a Fireproof database, automatically saving and loading the clock.
+ * @param defineDatabaseFn Synchronous function that defines the database, run this before any async calls
+ * @param setupFn Asynchronous function that sets up the database, run this to load fixture data etc
+ * @returns {FireproofCtxValue} { addSubscriber, database, ready }
+ */
+export function useFireproof(defineDatabaseFn: Function, setupFn: Function): FireproofCtxValue {
   const [ready, setReady] = useState(false)
 
   if (!ready) {
@@ -49,7 +56,7 @@ export function useFireproof(
     inboundSubscriberQueue.set(label, fn)
   }
 
-  const listenerCallback = () => {
+  const listenerCallback = async () => {
     localSet('fireproof', JSON.stringify(database))
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
@@ -60,7 +67,7 @@ export function useFireproof(
       const fp = localGet('fireproof')
       if (fp) {
         const { clock } = JSON.parse(fp)
-        console.log("Loading previous database clock. (delete localStorage['fireproof'] to reset)")
+        console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
         await database.setClock(clock)
         try {
           await database.changesSince()
@@ -75,7 +82,7 @@ export function useFireproof(
         localSet('fireproof', JSON.stringify(database))
       }
       setReady(true)
-      listener.on('*', throttle(listenerCallback, 250))
+      listener.on('*', hushed('*', listenerCallback, 250))
     }
     doSetup()
   }, [ready])
@@ -88,12 +95,13 @@ export function useFireproof(
 }
 
 const husherMap = new Map()
-const husher = (id, workFn) => {
+const husher = (id: string, workFn: { (): Promise<any> }, ms: number) => {
   if (!husherMap.has(id)) {
     husherMap.set(
       id,
-      workFn().finally(() => setTimeout(() => husherMap.delete(id), 100))
+      workFn().finally(() => setTimeout(() => husherMap.delete(id), ms))
     )
   }
   return husherMap.get(id)
 }
+const hushed = (id: string, workFn: { (): Promise<any> }, ms: number) => () => husher(id, workFn, ms)
