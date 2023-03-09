@@ -34,6 +34,7 @@ export default class Valet {
         // todo we can coalesce these into a single car file
         for (const task of tasks) {
           await this.uploadFunction(task.carCid, task.value)
+          // todo we should update the indexedb to mark this car as no longer pending
         }
       }
       callback()
