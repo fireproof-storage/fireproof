@@ -181,8 +181,8 @@ export default class Fireproof {
   /**
    * Updates the underlying storage with the specified event.
    * @private
-   * @param {import('../clock').EventLink<import('../crdt').EventData>} event - the event to add
-   * @returns {Object<{ id: string, clock: import('../clock').EventLink<import('../crdt').EventData }>} - The result of adding the event to storage
+   * @param {CID[]} event - the event to add
+   * @returns {Object<{ id: string, clock: CID[] }>} - The result of adding the event to storage
    */
   async #putToProllyTree (event) {
     const result = await doTransaction(
@@ -203,8 +203,6 @@ export default class Fireproof {
   //   /**
   //    * Advances the clock to the specified event and updates the root CID
   //    *   Will be used by replication
-  //    * @param {import('../clock').EventLink<import('../crdt').EventData>} event - the event to advance to
-  //    * @returns {import('../clock').EventLink<import('../crdt').EventData>[]} - the new clock after advancing
   //    */
   //     async advance (event) {
   //       this.clock = await advance(this.blocks, this.clock, event)
