@@ -1,14 +1,30 @@
 import { create, load } from 'prolly-trees/db-index'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { nocache as cache } from 'prolly-trees/cache'
-import { bf, simpleCompare as compare } from 'prolly-trees/utils'
+import { bf, simpleCompare } from 'prolly-trees/utils'
 import * as codec from '@ipld/dag-cbor'
 import { create as createBlock } from 'multiformats/block'
 import { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
-const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
-const ALWAYS_REBUILD = true // todo: remove this
+const arrayCompare = (a, b) => {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    const len = Math.min(a.length, b.length)
+    for (let i = 0; i < len; i++) {
+      const comp = simpleCompare(a[i], b[i])
+      if (comp !== 0) {
+        return comp
+      }
+    }
+    return simpleCompare(a.length, b.length)
+  } else {
+    return simpleCompare(a, b)
+  }
+}
+
+const opts = { cache, chunker: bf(3), codec, hasher, compare: arrayCompare }
+
+const ALWAYS_REBUILD = false // todo: remove this
 
 const makeGetBlock = (blocks) => async (address) => {
   const { cid, bytes } = await blocks.get(address)
@@ -60,7 +76,7 @@ const indexEntriesForChanges = (changes, mapFun) => {
 const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => {
   const getBlock = makeGetBlock(blocks)
   const byIDindex = await load({ cid: byIDindexRoot.cid, get: getBlock, ...opts })
-  // console.trace('ids', ids)
+
   const result = await byIDindex.getMany(ids)
   return result.result
 }
@@ -142,26 +158,16 @@ export default class DbIndex {
           result.rows.map(({ key }) => key),
           this.mapFun
         )
-      )
-        // .map((key) => ({ key, value: null })) // tombstone just adds more rows...
-        .map((key) => ({ key, del: true })) // should be this
-      // .map((key) => ({ key: undefined, del: true })) // todo why does this work?
-
+      ).map((key) => ({ key, del: true })) // should be this
       this.indexRoot = await bulkIndex(blocks, this.indexRoot, oldIndexEntries, opts)
-      // console.x('oldIndexEntries', oldIndexEntries)
-      // [ { key: ['b', 1], del: true } ]
-      // [ { key: [ 5, 'x' ], del: true } ]
-      // for now we just let the by id DbIndex grow and then don't use the results...
-      // const removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
-      // this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
+      const removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
+      this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
     }
     const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
     const byIdIndexEntries = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
-    // [{key:  'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', value : [ 53, 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c' ]}]
     this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, byIdIndexEntries, opts)
     // console.log('indexEntries', indexEntries)
     this.indexRoot = await bulkIndex(blocks, this.indexRoot, indexEntries, opts)
-    // console.log('did DbIndex', this.indexRoot)
     this.dbHead = result.clock
   }
 
@@ -183,25 +189,18 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
   const putBlock = blocks.put.bind(blocks)
   const getBlock = makeGetBlock(blocks)
   if (!inRoot) {
-    // make a new DbIndex
-
     for await (const node of await create({ get: getBlock, list: indexEntries, ...opts })) {
       const block = await node.block
       await putBlock(block.cid, block.bytes)
       inRoot = block
     }
-    // console.x('created DbIndex', inRoot.cid)
     return inRoot
   } else {
-    // load existing DbIndex
-    // console.x('loading DbIndex', inRoot.cid)
     const DbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    // console.log('new indexEntries', indexEntries)
     const { root, blocks } = await DbIndex.bulk(indexEntries)
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    // console.x('updated DbIndex', root.block.cid)
     return await root.block // if we hold the root we won't have to load every time
   }
 }
