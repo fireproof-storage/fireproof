@@ -1,17 +1,11 @@
 {
     "plugins": [
-        "jsdoc-ts-utils",
-        "plugins/markdown",
-        "jsdoc-plugin-typescript"
+        "plugins/markdown"
     ],
-    "typescript": {
-        "moduleRoot": "packages/fireproof"
-    },
     "opts": {
         "template": "node_modules/clean-jsdoc-theme"
     },
     "source": {
         "includePattern": ".(jsx|js|ts|tsx)$"
-    },
-    "sourceType": "module"
+    }
 }
