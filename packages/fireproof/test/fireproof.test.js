@@ -20,12 +20,73 @@ describe('Fireproof', () => {
   it('put and get document', async () => {
     assert(resp0.id, 'should have id')
     assert.equal(resp0.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
-
     const avalue = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     assert.equal(avalue.name, 'alice')
     assert.equal(avalue.age, 42)
     assert.equal(avalue._id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
   })
+  it('mvcc put and get document with _clock that matches', async () => {
+    assert(resp0.clock, 'should have clock')
+    assert.equal(resp0.clock[0].toString(), 'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma')
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    theDoc._clock = database.clock
+    const put2 = await database.put(theDoc)
+    assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.equal(put2.clock[0].toString(), 'bafyreida2c2ckhjfoz5ulmbbfe66ey4svvedrl4tzbvtoxags2qck7lj2i')
+  })
+  it('get should return an object instance that is not the same as the one in the db', async () => {
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    const theDoc2 = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.notEqual(theDoc, theDoc2)
+    theDoc.name = 'really alice'
+    assert.equal(theDoc.name, 'really alice')
+    assert.equal(theDoc2.name, 'alice')
+  })
+  it('get with mvcc option', async () => {
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
+    assert(theDoc._clock, 'should have _clock')
+    assert.equal(theDoc._clock[0].toString(), 'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma')
+  })
+  it('get from an old snapshot with mvcc option', async () => {
+    const ogClock = resp0.clock
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    theDoc.name = 'not alice'
+    const put2 = await database.put(theDoc)
+    assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.notEqual(put2.clock.toString(), ogClock.toString())
+    const theDoc2 = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { clock: ogClock })
+    assert.equal(theDoc2.name, 'alice')
+  })
+  it('put and get document with _clock that does not match b/c the doc changed', async () => {
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
+    theDoc.name = 'not alice'
+    const put2 = await database.put(theDoc)
+    assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.notEqual(put2.clock.toString(), theDoc._clock.toString())
+
+    const err = await database.put(theDoc).catch((err) => err)
+    assert.match(err.message, /MVCC conflict/)
+  })
+  it('put and get document with _clock that does not match b/c a different doc changed should succeed', async () => {
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
+    assert.equal(theDoc.name, 'alice')
+
+    const putAnotherDoc = await database.put({ nothing: 'to see here' })
+    assert.notEqual(putAnotherDoc.clock.toString(), theDoc._clock.toString())
+
+    const ok = await database.put({ name: "isn't alice", ...theDoc })
+    assert.equal(ok.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+  })
+  it('put and get document with _clock that does not match b/c the doc was deleted', async () => {
+    const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
+    assert.equal(theDoc.name, 'alice')
+    const del = await database.del(theDoc)
+    assert(del.id)
+    const err = await database.put(theDoc).catch((err) => err)
+    console.log('err', err)
+    assert.match(err.message, /MVCC conflict/)
+  })
+
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
     const db = await Fireproof.storage({ email: 'jchris@gmail.com' })
