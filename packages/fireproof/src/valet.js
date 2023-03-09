@@ -32,10 +32,15 @@ export default class Valet {
       )
       if (this.uploadFunction) {
         // todo we can coalesce these into a single car file
-        for (const task of tasks) {
-          await this.uploadFunction(task.carCid, task.value)
-          // todo we should update the indexedb to mark this car as no longer pending
-        }
+        return await this.withDB(async (db) => {
+          for (const task of tasks) {
+            await this.uploadFunction(task.carCid, task.value)
+            // update the indexedb to mark this car as no longer pending
+            const carMeta = await db.get('cidToCar', task.carCid)
+            delete carMeta.pending
+            await db.put('cidToCar', carMeta)
+          }
+        })
       }
       callback()
     })
