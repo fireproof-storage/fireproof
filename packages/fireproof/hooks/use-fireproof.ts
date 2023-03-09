@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { useEffect, useState, createContext } from 'react'
-import { Fireproof, Listener } from '@fireproof/core'
+import { Fireproof, Listener } from '../index'
 
 export interface FireproofCtxValue {
   addSubscriber: (label: String, fn: Function) => void
