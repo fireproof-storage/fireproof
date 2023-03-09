@@ -35,15 +35,15 @@ const makeGetBlock = (blocks) => async (address) => {
  * @param {Function} bigPut - A function that puts a block.
  * @param {import('prolly-trees/map').Root} root - The root node.
  * @param {Object<{ key: string, value: any, del: boolean }>} event - The update event.
- * @param {import('./clock').EventLink<import('./crdt').EventData>} head - The head of the event chain.
+ * @param {CID[]} head - The head of the event chain.
  * @param {Array<import('multiformats/block').Block>} additions - A array of additions.
  * @param {Array<mport('multiformats/block').Block>>} removals - An array of removals.
  * @returns {Promise<{
  *   root: import('prolly-trees/map').Root,
  *   additions: Map<string, import('multiformats/block').Block>,
  *   removals: Array<string>,
- *   head: import('./clock').EventLink<import('./crdt').EventData>,
- *   event: import('./clock').EventLink<import('./crdt').EventData>
+ *   head: CID[],
+ *   event: CID[]
  * }>}
  */
 async function createAndSaveNewEvent (
@@ -135,7 +135,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
  * @param {import('./block').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  * @param {string} key The key of the value to put.
- * @param {import('./link').AnyLink} value The value to put.
+ * @param {CID} value The value to put.
  * @param {object} [options]
  * @returns {Promise<Result>}
  */

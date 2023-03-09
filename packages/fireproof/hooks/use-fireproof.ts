@@ -4,6 +4,17 @@
 import { useEffect, useState, createContext } from 'react'
 import { Fireproof, Listener } from '@fireproof/core'
 
+/** @module hooks **/
+
+/**
+ * A React hook for initializing a Fireproof database, automatically saving and loading the clock.
+ *
+ * @class useFireproof
+ * @classdesc React hook to initialize a Fireproof database, automatically saving and loading the clock.
+ *
+
+ */
+
 export interface FireproofCtxValue {
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
@@ -40,6 +51,8 @@ const database = Fireproof.storage()
 const listener = new Listener(database)
 
 /**
+ * @function useFireproof
+ * @memberof useFireproof
  * React hook to initialize a Fireproof database, automatically saving and loading the clock.
  * @param defineDatabaseFn Synchronous function that defines the database, run this before any async calls
  * @param setupFn Asynchronous function that sets up the database, run this to load fixture data etc
