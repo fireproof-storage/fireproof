@@ -4,7 +4,7 @@
  
  The hook takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
  
-The return value looks like `{ ready, database, addSubscriber }` where the `database` is your Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use the activate your UI. The `addSubscriber` function is used to update your app in realtime. 
+The return value looks like `{ ready, database, addSubscriber }` where the `database` is your Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `addSubscriber` function is used to update your app in realtime, see example. 
 
 ## Usage Example
 
@@ -44,7 +44,7 @@ function MyComponent() {
   }
 
   // run that function when the database changes
-  addSubscriber('AllLists', getDataFn)
+  addSubscriber('MyComponent', getDataFn)
 
   // run the loader on first mount
   useEffect(() => getDataFn(), [])
@@ -77,7 +77,7 @@ This should result in a tiny application that updates the document when you clic
       map([doc.listId, doc.createdAt], doc)
     }
   })
-  window.fireproof = database // 🤫
+  window.fireproof = database // 🤫 for dev
   return database
 }
  ```
