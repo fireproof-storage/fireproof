@@ -10,7 +10,7 @@ Learn more about the concepts and architecture behind Fireproof [in our plan,](h
 
 ### Status
 
-Fireproof is alpha software, you should only use it if you are planning to contribute. For now, [check out our React TodoMVC implementation running in browser-local mode.](https://main--lucky-naiad-5aa507.netlify.app/) It demonstrates document persistence, index queries, and event subscriptions, and uses the [`useFireproof()` React hook.](https://github.com/jchris/fireproof/blob/main/examples/todomvc/src/hooks/useFireproof.js)
+Fireproof is alpha software, you should only use it if you are planning to contribute. For now, [check out our React TodoMVC implementation running in browser-local mode.](https://main--lucky-naiad-5aa507.netlify.app/) It demonstrates document persistence, index queries, and event subscriptions, and uses the [`useFireproof()` React hook.](https://github.com/fireproof-storage/fireproof/blob/main/packages/fireproof/hooks/use-fireproof.tsx)
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
