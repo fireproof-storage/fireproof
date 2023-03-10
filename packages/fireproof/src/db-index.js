@@ -198,10 +198,12 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
   } else {
     const DbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts })
     const { root, blocks } = await DbIndex.bulk(indexEntries)
+    const rootBlock = await root.block
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    return await root.block // if we hold the root we won't have to load every time
+    await putBlock(rootBlock.cid, rootBlock.bytes)
+    return rootBlock // if we hold the root we won't have to load every time
   }
 }
 
