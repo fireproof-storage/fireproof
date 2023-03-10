@@ -103,6 +103,7 @@ importers:
       charwise: ^3.0.1
       cli-color: ^2.0.3
       fake-indexeddb: ^4.0.1
+      flexsearch: ^0.7.31
       idb: ^7.1.1
       mocha: ^10.2.0
       multiformats: ^11.0.1
@@ -125,6 +126,7 @@ importers:
     devDependencies:
       c8: 7.13.0
       fake-indexeddb: 4.0.1
+      flexsearch: 0.7.31
       mocha: 10.2.0
       nanoid: 4.0.1
       standard: 17.0.0
@@ -2242,6 +2244,10 @@ packages:
 
   /flatted/3.2.7:
     resolution: {integrity: sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==}
+    dev: true
+
+  /flexsearch/0.7.31:
+    resolution: {integrity: sha512-XGozTsMPYkm+6b5QL3Z9wQcJjNYxp0CYn3U1gO7dwD6PAqU1SVWZxI9CCg3z+ml3YfqdPnrBehaBrnH2AGKbNA==}
     dev: true
 
   /for-each/0.3.3:
