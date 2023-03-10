@@ -39,13 +39,15 @@ describe('Fireproof', () => {
     const changes = await database.changesSince()
     assert.equal(changes.rows.length, 13)
     const results = await flexed.search('red')
-    console.log('results', results)
     assert.equal(results.length, 3)
     for (let i = 0, len = results.length; i < len; i++) {
       const doc = await database.get(results[i])
       assert.match(doc.message, /red/)
     }
   })
+  // it('add more docs and search again', async () => {})
+  // it('delete some docs and search again', async () => {})
+  // it('update some docs and search again', async () => {})
 })
 
 function withFlexsearch (database, flexsearchOptions = {}) {
