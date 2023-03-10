@@ -212,9 +212,8 @@ export default class Fireproof {
       throw new Error('failed to put at storage layer')
     }
     this.clock = result.head // do we want to do this as a finally block
-    result.id = event.key
     await this.#notifyListeners([event])
-    return { id: result.id, clock: this.clock }
+    return { id: event.key, clock: this.clock }
   }
 
   //   /**
