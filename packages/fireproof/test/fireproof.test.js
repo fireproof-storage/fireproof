@@ -48,12 +48,14 @@ describe('Fireproof', () => {
     assert.equal(theDoc._clock[0].toString(), 'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma')
   })
   it('get with mvcc option where someone else changed another document first', async () => {
-    const put2 = await database.put({ something: 'else' })
-    assert(put2.clock, 'should have id')
-    assert.notEqual(put2.clock.toString(), resp0.clock.toString())
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
-    assert(theDoc._clock, 'should have _clock')
+    const put2 = await database.put({ something: 'else' })
+    assert(put2.clock, 'should have clock')
+    assert.notEqual(put2.clock.toString(), resp0.clock.toString())
     assert.equal(theDoc._clock.toString(), resp0.clock.toString())
+    theDoc.name = 'somone else'
+    const put3works = await database.put(theDoc)
+    assert(put3works.clock, 'should have id')
   })
   it('get from an old snapshot with mvcc option', async () => {
     const ogClock = resp0.clock
