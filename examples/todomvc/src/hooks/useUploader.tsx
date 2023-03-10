@@ -61,7 +61,9 @@ export function useUploader(database: Fireproof) {
     }
 
     const doLoadAgent = async () => {
+      console.log('loadAgent', loadAgent, typeof loadAgent)
       const ag = await loadAgent()
+      console.log('loaded agent', ag)
     }
     // maybe take this out of the useEffect world and just make it JS?
     if (registered) {
@@ -69,7 +71,7 @@ export function useUploader(database: Fireproof) {
     } else {
       doLoadAgent()
     }
-  }, [space, agent])
+  }, [space])
   return { uploaderReady }
 }
 
