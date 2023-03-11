@@ -222,7 +222,7 @@ const asyncFilter = async (arr, predicate) => Promise.all(arr.map(predicate))
   .then((results) => arr.filter((_v, index) => results[index]))
 
 export async function findCommonAncestorWithSortedEvents (blocks, children) {
-  const events = new EventFetcher(blocks)
+  const events = new EventFetcher(blocks) // todo pass me in instead of blocks?
 
   const ancestor = await findCommonAncestor(events, children)
   if (!ancestor) {
