@@ -86,7 +86,9 @@
   margin-top: 2rem;
   padding: 1rem;
 }
-
+.uploadManager a {
+  text-decoration: none;
+}
 .uploadManager input {
   margin: 1rem;
 }
