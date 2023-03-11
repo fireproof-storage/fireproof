@@ -7,7 +7,7 @@ const { Index } = flexsearch
 
 let database, flexed
 
-describe('Fireproof', () => {
+describe('Fulltext with flexsearch', () => {
   beforeEach(async () => {
     database = Fireproof.storage()
     flexed = withFlexsearch(database) // this is a function that adds the flexsearch library to the database object
@@ -25,12 +25,12 @@ describe('Fireproof', () => {
       'Blueberries are blue',
       'Raspberries are red',
       'Watermelons are green',
-      'Pineapples are yellow'
+      'Pineapples are yellow',
     ]
     for (let i = 0, len = messages.length; i < len; i++) {
       await database.put({
         _id: `message-${i}`,
-        message: messages[i]
+        message: messages[i],
       })
     }
   })
