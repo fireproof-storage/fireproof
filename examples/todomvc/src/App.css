@@ -84,8 +84,18 @@
 
 .uploadManager {
   margin-top: 2rem;
+  padding: 1rem;
 }
 
+.uploadManager input {
+  margin: 1rem;
+}
+
+.uploadManager button {
+  margin: 1rem;
+  padding: 1rem;
+  background: #fff;
+}
 html {
   animation: gradient 20s ease infinite;
 }

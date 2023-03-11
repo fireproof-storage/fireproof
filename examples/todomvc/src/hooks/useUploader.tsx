@@ -89,6 +89,9 @@ export const UploadManager = ({}: { registered: Boolean }) => {
   // return <></>
   return (
     <div className="uploadManager">
+      <h2>
+        Replicate to <a href="https://web3.storage">web3.storage</a>
+      </h2>
       <Authenticator>{child}</Authenticator>
     </div>
   )
