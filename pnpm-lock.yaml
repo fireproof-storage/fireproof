@@ -4,38 +4,15 @@ importers:
 
   .:
     specifiers:
-      '@ipld/car': ^5.1.0
-      '@ipld/dag-cbor': ^9.0.0
-      archy: ^1.0.0
-      async: ^3.2.4
       c8: ^7.12.0
-      car-transaction: ^1.0.1
-      charwise: ^3.0.1
       clean-jsdoc-theme: ^4.2.6
-      cli-color: ^2.0.3
       fake-indexeddb: ^4.0.1
-      idb: ^7.1.1
       jsdoc: ^4.0.2
       jsdoc-plugin-typescript: ^2.2.1
       jsdoc-ts-utils: ^3.1.0
       mocha: ^10.2.0
-      multiformats: ^11.0.1
       nanoid: ^4.0.0
-      prolly-trees: ^0.2.2
-      sade: ^1.8.1
       standard: ^17.0.0
-    dependencies:
-      '@ipld/car': 5.1.0
-      '@ipld/dag-cbor': 9.0.0
-      archy: 1.0.0
-      async: 3.2.4
-      car-transaction: 1.0.1
-      charwise: 3.0.1
-      cli-color: 2.0.3
-      idb: 7.1.1
-      multiformats: 11.0.1
-      prolly-trees: 0.2.4
-      sade: 1.8.1
     devDependencies:
       c8: 7.13.0
       clean-jsdoc-theme: 4.2.6_jsdoc@4.0.2
@@ -94,12 +71,35 @@ importers:
 
   packages/fireproof:
     specifiers:
+      '@ipld/car': ^5.1.0
+      '@ipld/dag-cbor': ^9.0.0
+      archy: ^1.0.0
+      async: ^3.2.4
       c8: ^7.12.0
+      car-transaction: ^1.0.1
+      charwise: ^3.0.1
+      cli-color: ^2.0.3
       fake-indexeddb: ^4.0.1
       flexsearch: ^0.7.31
+      idb: ^7.1.1
       mocha: ^10.2.0
+      multiformats: ^11.0.1
       nanoid: ^4.0.0
+      prolly-trees: ^0.2.5
+      sade: ^1.8.1
       standard: ^17.0.0
+    dependencies:
+      '@ipld/car': 5.1.0
+      '@ipld/dag-cbor': 9.0.0
+      archy: 1.0.0
+      async: 3.2.4
+      car-transaction: 1.0.1
+      charwise: 3.0.1
+      cli-color: 2.0.3
+      idb: 7.1.1
+      multiformats: 11.0.1
+      prolly-trees: 0.2.5
+      sade: 1.8.1
     devDependencies:
       c8: 7.13.0
       fake-indexeddb: 4.0.1
@@ -3420,8 +3420,8 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prolly-trees/0.2.4:
-    resolution: {integrity: sha512-virAarW9cgz0E7iT/y3/3EKReLgEUe2YLJSIGsWnM96I5bvJmmscJnQ/nogMSO5V51hhuL7FVY81VScl5dnfEg==}
+  /prolly-trees/0.2.5:
+    resolution: {integrity: sha512-+JUBzZBqj1eeBnef8HthOjIcLcU5emtpW4zJHHphrJM9zzAnnlGajEdQuZ6yYrPLois+HfL2If5HKSy3V1OKuQ==}
     dependencies:
       bl: 4.1.0
       node-sql-parser: 3.9.4
