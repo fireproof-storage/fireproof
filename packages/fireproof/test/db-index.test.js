@@ -214,4 +214,5 @@ describe('Index query with bad index definition', () => {
       console.error = oldErrFn
     })
   })
+  it.skip('reproduce missing block error from browser so we can turn off always rebuild', async () => {})
 })
