@@ -29,7 +29,7 @@ const defineIndexes = (database) => {
   return database
 }
 
-function mulberry32(a) {
+function mulberry32 (a) {
   return function () {
     let t = (a += 0x6d2b79f5)
     t = Math.imul(t ^ (t >>> 15), t | 1)
@@ -39,24 +39,18 @@ function mulberry32(a) {
 }
 const rand = mulberry32(1) // determinstic fixtures
 
-async function loadFixtures(database) {
+async function loadFixtures (database) {
   const nextId = (prefix = '') => prefix + rand().toString(32).slice(2)
-  const listTitles = ['Building Apps']
-  const todoTitles = [['In the browser']]
-  let ok
-  for (let j = 0; j < 3; j++) {
-    ok = await database.put({ title: listTitles[j], type: 'list', _id: nextId('' + j) })
-    for (let i = 0; i < todoTitles[j].length; i++) {
-      await database.put({
-        _id: nextId(),
-        title: todoTitles[j][i],
-        listId: ok.id,
-        completed: rand() > 0.75,
-        type: 'todo',
-        createdAt: '2' + i,
-      })
-    }
-  }
+  const ok = await database.put({ title: 'Building Apps', type: 'list', _id: nextId() })
+
+  await database.put({
+    _id: nextId(),
+    title: 'In the browser',
+    listId: ok.id,
+    completed: rand() > 0.75,
+    type: 'todo',
+    createdAt: '2'
+  })
   await reproduceBug(database)
 }
 
@@ -65,7 +59,7 @@ const reproduceBug = async (database) => {
   const doc = await database.get(id)
   // (await database.put({ completed: !completed, ...doc }))
   const ok = await database.put(doc)
-  await database.todosByList.query()
+  await database.todosByList.query({ range: [0, 1] })
 
   console.log('ok', ok)
 }

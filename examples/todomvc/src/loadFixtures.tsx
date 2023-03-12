@@ -22,10 +22,10 @@ export default async function loadFixtures(database: {
       'With or without Redux',
       'Login components',
       'GraphQL queries',
-      'Automatic replication and versioning',
+      'Automatic replication and versioning'
     ],
     ['Rollerskating meetup', 'Motorcycle ride', 'Write a sci-fi story with ChatGPT'],
-    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad'],
+    ['Macadamia nut milk', 'Avocado toast', 'Coffee', 'Bacon', 'Sourdough bread', 'Fruit salad']
   ]
   let ok: { id: any }
   for (let j = 0; j < 3; j++) {
@@ -37,16 +37,25 @@ export default async function loadFixtures(database: {
         listId: ok.id,
         completed: rand() > 0.75,
         type: 'todo',
-        createdAt: '2' + i,
+        createdAt: '2' + i
       })
     }
   }
-  await database.allLists
-    .query()
-    .then(console.log)
-    .catch(() => {}) // this will make the second run faster
-  await database.todosByList
-    .query()
-    .then(console.log)
-    .catch(() => {}) // this will make the second run faster
+
+  await reproduceBug(database)
+}
+
+const reproduceBug = async (database) => {
+  const id = '02pkji8'
+  const doc = await database.get(id)
+  // (await database.put({ completed: !completed, ...doc }))
+  const ok = await database.put(doc)
+  await database.todosByList.query({
+    range: [1, 2]
+  })
+  const ok2 = await database.put(doc)
+  await database.todosByList.query({
+    range: [1, 2]
+  })
+  console.log('ok', ok)
 }
