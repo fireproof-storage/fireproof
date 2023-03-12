@@ -92,7 +92,7 @@ const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => 
  *
  */
 export default class DbIndex {
-  constructor (database, mapFun) {
+  constructor(database, mapFun) {
     /**
      * The database instance to DbIndex.
      * @type {Fireproof}
@@ -103,7 +103,9 @@ export default class DbIndex {
      * @type {Function}
      */
     this.mapFun = mapFun
-    this.indexRoot = null
+    this.dbIndexRoot = null // this is a live root, we use the CID in our clock entry
+    this.dbIndex = null
+
     this.byIDindexRoot = null
     this.dbHead = null
   }
@@ -122,14 +124,14 @@ export default class DbIndex {
    * @memberof DbIndex
    * @instance
    */
-  async query (query) {
+  async query(query) {
     // if (!root) {
     // pass a root to query a snapshot
     await doTransaction('#updateIndex', this.database.blocks, async (blocks) => {
       await this.#updateIndex(blocks)
     })
     // }
-    const response = await doIndexQuery(this.database.blocks, this.indexRoot, query)
+    const response = await doIndexQuery(this.database.blocks, this.dbIndexRoot, query)
     return {
       // TODO fix this naming upstream in prolly/db-DbIndex
       // todo maybe this is a hint about why deletes arent working?
@@ -142,7 +144,7 @@ export default class DbIndex {
    * @private
    * @returns {Promise<void>}
    */
-  async #updateIndex (blocks) {
+  async #updateIndex(blocks) {
     // todo remove this hack
     if (ALWAYS_REBUILD) {
       this.dbHead = null // hack
@@ -158,15 +160,34 @@ export default class DbIndex {
           this.mapFun
         )
       ).map((key) => ({ key, del: true })) // should be this
-      this.indexRoot = await bulkIndex(blocks, this.indexRoot, oldIndexEntries, opts)
+
+      const removalResult = await bulkIndex(blocks, this.dbIndexRoot, this.dbIndex, oldIndexEntries, opts)
+      this.dbIndexRoot = removalResult.root
+      this.dbIndex = removalResult.dbIndex
+
       const removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
-      this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, removeByIdIndexEntries, opts)
+      const purgedRemovalResults = await bulkIndex(
+        blocks,
+        this.byIDindexRoot,
+        this.byIDIndex,
+        removeByIdIndexEntries,
+        opts
+      )
+      this.byIDindexRoot = purgedRemovalResults.root
+      this.byIDIndex = purgedRemovalResults.dbIndex
     }
     const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
     const byIdIndexEntries = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
-    this.byIDindexRoot = await bulkIndex(blocks, this.byIDindexRoot, byIdIndexEntries, opts)
+    const addFutureRemovalsResult = await bulkIndex(blocks, this.byIDindexRoot, this.byIDIndex, byIdIndexEntries, opts)
+    this.byIDindexRoot = addFutureRemovalsResult.root
+    this.byIDIndex = addFutureRemovalsResult.dbIndex
+
     // console.log('indexEntries', indexEntries)
-    this.indexRoot = await bulkIndex(blocks, this.indexRoot, indexEntries, opts)
+
+    const updateIndexResult = await bulkIndex(blocks, this.dbIndexRoot, this.dbIndex, indexEntries, opts)
+    this.dbIndexRoot = updateIndexResult.root
+    this.dbIndex = updateIndexResult.dbIndex
+
     this.dbHead = result.clock
   }
 
@@ -183,27 +204,30 @@ export default class DbIndex {
  * @param {DbIndexEntry[]} indexEntries
  * @private
  */
-async function bulkIndex (blocks, inRoot, indexEntries) {
-  if (!indexEntries.length) return inRoot
+async function bulkIndex(blocks, inRoot, inDBindex, indexEntries) {
+  if (!indexEntries.length) return { dbIndex: inDBindex, root: inRoot }
   const putBlock = blocks.put.bind(blocks)
   const getBlock = makeGetBlock(blocks)
+  let returnRootBlock
+  let returnNode
   if (!inRoot) {
     for await (const node of await create({ get: getBlock, list: indexEntries, ...opts })) {
       const block = await node.block
       await putBlock(block.cid, block.bytes)
-      inRoot = block
+      returnRootBlock = block
+      returnNode = node
     }
-    return inRoot
   } else {
     const dbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts })
     const { root, blocks } = await dbIndex.bulk(indexEntries)
-    const rootBlock = await root.block
+    returnRootBlock = await root.block
+    returnNode = root
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
     }
-    await putBlock(rootBlock.cid, rootBlock.bytes)
-    return rootBlock // if we hold the root we won't have to load every time
+    await putBlock(returnRootBlock.cid, returnRootBlock.bytes)
   }
+  return { dbIndex: returnNode, root: returnRootBlock }
 }
 
 async function doIndexQuery (blocks, root, query) {
