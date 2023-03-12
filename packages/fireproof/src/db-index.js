@@ -7,6 +7,8 @@ import { create as createBlock } from 'multiformats/block'
 import { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
+const ALWAYS_REBUILD = true // todo: remove this
+
 const arrayCompare = (a, b) => {
   if (Array.isArray(a) && Array.isArray(b)) {
     const len = Math.min(a.length, b.length)
@@ -23,8 +25,6 @@ const arrayCompare = (a, b) => {
 }
 
 const opts = { cache, chunker: bf(3), codec, hasher, compare: arrayCompare }
-
-const ALWAYS_REBUILD = false // todo: remove this
 
 const makeGetBlock = (blocks) => async (address) => {
   const { cid, bytes } = await blocks.get(address)
@@ -92,7 +92,7 @@ const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => 
  *
  */
 export default class DbIndex {
-  constructor(database, mapFun) {
+  constructor (database, mapFun) {
     /**
      * The database instance to DbIndex.
      * @type {Fireproof}
@@ -124,14 +124,14 @@ export default class DbIndex {
    * @memberof DbIndex
    * @instance
    */
-  async query(query) {
+  async query (query) {
     // if (!root) {
     // pass a root to query a snapshot
     await doTransaction('#updateIndex', this.database.blocks, async (blocks) => {
       await this.#updateIndex(blocks)
     })
     // }
-    const response = await doIndexQuery(this.database.blocks, this.dbIndexRoot, query)
+    const response = await doIndexQuery(this.database.blocks, this.dbIndexRoot, this.dbIndex, query)
     return {
       // TODO fix this naming upstream in prolly/db-DbIndex
       // todo maybe this is a hint about why deletes arent working?
@@ -144,11 +144,12 @@ export default class DbIndex {
    * @private
    * @returns {Promise<void>}
    */
-  async #updateIndex(blocks) {
+  async #updateIndex (blocks) {
     // todo remove this hack
     if (ALWAYS_REBUILD) {
       this.dbHead = null // hack
-      this.indexRoot = null // hack
+      this.dbIndex = null // hack
+      this.dbIndexRoot = null
     }
     const result = await this.database.changesSince(this.dbHead) // {key, value, del}
     if (this.dbHead) {
@@ -204,13 +205,13 @@ export default class DbIndex {
  * @param {DbIndexEntry[]} indexEntries
  * @private
  */
-async function bulkIndex(blocks, inRoot, inDBindex, indexEntries) {
+async function bulkIndex (blocks, inRoot, inDBindex, indexEntries) {
   if (!indexEntries.length) return { dbIndex: inDBindex, root: inRoot }
   const putBlock = blocks.put.bind(blocks)
   const getBlock = makeGetBlock(blocks)
   let returnRootBlock
   let returnNode
-  if (!inRoot) {
+  if (!inDBindex) {
     for await (const node of await create({ get: getBlock, list: indexEntries, ...opts })) {
       const block = await node.block
       await putBlock(block.cid, block.bytes)
@@ -218,8 +219,8 @@ async function bulkIndex(blocks, inRoot, inDBindex, indexEntries) {
       returnNode = node
     }
   } else {
-    const dbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    const { root, blocks } = await dbIndex.bulk(indexEntries)
+    // const dbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts }) // todo load from root on refresh
+    const { root, blocks } = await inDBindex.bulk(indexEntries)
     returnRootBlock = await root.block
     returnNode = root
     for await (const block of blocks) {
@@ -230,11 +231,13 @@ async function bulkIndex(blocks, inRoot, inDBindex, indexEntries) {
   return { dbIndex: returnNode, root: returnRootBlock }
 }
 
-async function doIndexQuery (blocks, root, query) {
-  const cid = root && root.cid
-  if (!cid) return { result: [] }
-  const getBlock = makeGetBlock(blocks)
-  const dbIndex = await load({ cid, get: getBlock, ...opts })
+async function doIndexQuery (blocks, dbIndexRoot, dbIndex, query) {
+  if (!dbIndex) {
+    const cid = dbIndexRoot && dbIndexRoot.cid
+    if (!cid) return { result: [] }
+    const getBlock = makeGetBlock(blocks)
+    dbIndex = await load({ cid, get: getBlock, ...opts })
+  }
   if (query.range) {
     const encodedRange = query.range.map((key) => charwise.encode(key))
     return dbIndex.range(...encodedRange)
