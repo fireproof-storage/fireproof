@@ -103,7 +103,8 @@ export default class DbIndex {
      * @type {Function}
      */
     this.mapFun = mapFun
-    this.dbIndexRoot = null // this is a live root, we use the CID in our clock entry
+
+    this.dbIndexRoot = null
     this.dbIndex = null
 
     this.byIDindexRoot = null
