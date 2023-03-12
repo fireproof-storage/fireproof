@@ -196,8 +196,8 @@ async function bulkIndex (blocks, inRoot, indexEntries) {
     }
     return inRoot
   } else {
-    const DbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts })
-    const { root, blocks } = await DbIndex.bulk(indexEntries)
+    const dbIndex = await load({ cid: inRoot.cid, get: getBlock, ...opts })
+    const { root, blocks } = await dbIndex.bulk(indexEntries)
     const rootBlock = await root.block
     for await (const block of blocks) {
       await putBlock(block.cid, block.bytes)
@@ -211,12 +211,12 @@ async function doIndexQuery (blocks, root, query) {
   const cid = root && root.cid
   if (!cid) return { result: [] }
   const getBlock = makeGetBlock(blocks)
-  const DbIndex = await load({ cid, get: getBlock, ...opts })
+  const dbIndex = await load({ cid, get: getBlock, ...opts })
   if (query.range) {
     const encodedRange = query.range.map((key) => charwise.encode(key))
-    return DbIndex.range(...encodedRange)
+    return dbIndex.range(...encodedRange)
   } else if (query.key) {
     const encodedKey = charwise.encode(query.key)
-    return DbIndex.get(encodedKey)
+    return dbIndex.get(encodedKey)
   }
 }

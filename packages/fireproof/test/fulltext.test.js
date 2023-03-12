@@ -25,12 +25,12 @@ describe('Fulltext with flexsearch', () => {
       'Blueberries are blue',
       'Raspberries are red',
       'Watermelons are green',
-      'Pineapples are yellow',
+      'Pineapples are yellow'
     ]
     for (let i = 0, len = messages.length; i < len; i++) {
       await database.put({
         _id: `message-${i}`,
-        message: messages[i],
+        message: messages[i]
       })
     }
   })
