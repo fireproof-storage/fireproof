@@ -118,19 +118,18 @@ export default class DbIndex {
   /**
    * Query object can have {range}
    * @param {DbQuery} query - the query range to use
-   * @param {CID} [root] - an optional root to query a snapshot
    * @returns {Promise<{rows: Array<{id: string, key: string, value: any}>}>}
    * @memberof DbIndex
    * @instance
    */
-  async query (query, root = null) {
-    if (!root) {
-      // pass a root to query a snapshot
-      await doTransaction('#updateIndex', this.database.blocks, async (blocks) => {
-        await this.#updateIndex(blocks)
-      })
-    }
-    const response = await doIndexQuery(this.database.blocks, root || this.indexRoot, query)
+  async query (query) {
+    // if (!root) {
+    // pass a root to query a snapshot
+    await doTransaction('#updateIndex', this.database.blocks, async (blocks) => {
+      await this.#updateIndex(blocks)
+    })
+    // }
+    const response = await doIndexQuery(this.database.blocks, this.indexRoot, query)
     return {
       // TODO fix this naming upstream in prolly/db-DbIndex
       // todo maybe this is a hint about why deletes arent working?
