@@ -692,10 +692,9 @@ describe('Clock', () => {
     const roothead = head
     // db root
     let sinceHead = [...roothead]
-    let toSync = await findUnknownSortedEvents(
+    let toSync = await findEventsToSync(
       blocks,
-      sinceHead,
-      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+      sinceHead
     )
     assert.equal(toSync.length, 0) // we use all docs for first query in Fireproof
 
@@ -708,18 +707,16 @@ describe('Clock', () => {
 
     const event0head = head
     sinceHead = event0head
-    toSync = await findUnknownSortedEvents(
+    toSync = await findEventsToSync(
       blocks,
-      sinceHead,
-      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+      sinceHead
     )
     assert.equal(toSync.length, 0)
 
     sinceHead = [...roothead, ...event0head]
-    toSync = await findUnknownSortedEvents(
+    toSync = await findEventsToSync(
       blocks,
-      sinceHead,
-      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+      sinceHead
     )
     assert.equal(toSync.length, 1)
 
@@ -741,10 +738,9 @@ describe('Clock', () => {
     // for await (const line of vis(blocks, head)) console.log(line)
 
     sinceHead = [...event1head, ...roothead]
-    toSync = await findUnknownSortedEvents(
+    toSync = await findEventsToSync(
       blocks,
-      sinceHead,
-      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+      sinceHead
     )
 
     assert.equal(toSync.length, 2)
@@ -755,18 +751,16 @@ describe('Clock', () => {
     const event2head = head
 
     sinceHead = [...event2head, ...event0head]
-    toSync = await findUnknownSortedEvents(
+    toSync = await findEventsToSync(
       blocks,
-      sinceHead,
-      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+      sinceHead
     )
     assert.equal(toSync.length, 2)
 
     sinceHead = [...event2head, ...event1head]
-    toSync = await findUnknownSortedEvents(
+    toSync = await findEventsToSync(
       blocks,
-      sinceHead,
-      await findCommonAncestorWithSortedEvents(blocks, sinceHead)
+      sinceHead
     )
     assert.equal(toSync.length, 1)
   })
