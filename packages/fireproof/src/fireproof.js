@@ -216,7 +216,7 @@ export default class Fireproof {
     }
     this.clock = result.head // do we want to do this as a finally block
     await this.#notifyListeners([event])
-    return { id: event.key, clock: this.clock, proof: cidsToProof(result.cids) }
+    return { id: event.key, clock: this.clock, proof: { data: cidsToProof(result.cids), clock: cidsToProof(result.clockCIDs) } }
     // todo should include additions (or split clock)
   }
 
@@ -286,7 +286,7 @@ export default class Fireproof {
 }
 
 export async function cidsToProof (cids) {
-  if (!cids._cids || !cids.all) throw new Error('cidsToProof: cids is not a cids instance')
+  if (!cids.all) throw new Error('cidsToProof: cids is not a cids instance')
   const all = await cids.all()
   return [...all].map((cid) => cid.toString())
 }
