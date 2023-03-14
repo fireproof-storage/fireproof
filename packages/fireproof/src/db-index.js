@@ -2,8 +2,9 @@ import { create, load } from 'prolly-trees/db-index'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { nocache as cache } from 'prolly-trees/cache'
 import { bf, simpleCompare } from 'prolly-trees/utils'
+import { makeGetBlock } from './prolly.js'
 import * as codec from '@ipld/dag-cbor'
-import { create as createBlock } from 'multiformats/block'
+// import { create as createBlock } from 'multiformats/block'
 import { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
@@ -26,10 +27,6 @@ const arrayCompare = (a, b) => {
 
 const opts = { cache, chunker: bf(3), codec, hasher, compare: arrayCompare }
 
-const makeGetBlock = (blocks) => async (address) => {
-  const { cid, bytes } = await blocks.get(address)
-  return createBlock({ cid, bytes, hasher, codec })
-}
 const makeDoc = ({ key, value }) => ({ _id: key, ...value })
 
 /**
@@ -74,7 +71,7 @@ const indexEntriesForChanges = (changes, mapFun) => {
 }
 
 const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => {
-  const getBlock = makeGetBlock(blocks)
+  const { getBlock, cids } = makeGetBlock(blocks)
   const byIDindex = await load({ cid: byIDindexRoot.cid, get: getBlock, ...opts })
 
   const result = await byIDindex.getMany(ids)
@@ -209,7 +206,7 @@ export default class DbIndex {
 async function bulkIndex (blocks, inRoot, inDBindex, indexEntries) {
   if (!indexEntries.length) return { dbIndex: inDBindex, root: inRoot }
   const putBlock = blocks.put.bind(blocks)
-  const getBlock = makeGetBlock(blocks)
+  const { getBlock, cids } = makeGetBlock(blocks)
   let returnRootBlock
   let returnNode
   if (!inDBindex) {
@@ -236,7 +233,7 @@ async function doIndexQuery (blocks, dbIndexRoot, dbIndex, query) {
   if (!dbIndex) {
     const cid = dbIndexRoot && dbIndexRoot.cid
     if (!cid) return { result: [] }
-    const getBlock = makeGetBlock(blocks)
+    const { getBlock, cids } = makeGetBlock(blocks)
     dbIndex = await load({ cid, get: getBlock, ...opts })
   }
   if (query.range) {
