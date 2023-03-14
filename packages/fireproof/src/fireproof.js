@@ -265,7 +265,10 @@ export default class Fireproof {
     if (opts.mvcc === true) {
       doc._clock = this.clock
     }
-    doc._proof = await cidsToProof(resp.cids)
+    doc._proof = {
+      data: await cidsToProof(resp.cids),
+      clock: this.clock
+    }
     doc._id = key
     return doc
   }

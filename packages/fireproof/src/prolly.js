@@ -177,7 +177,7 @@ export async function put (inBlocks, head, event, options) {
   for (const nb of newBlocks) {
     bigPut(nb, additions)
   }
-
+  // additions are new blocks
   return createAndSaveNewEvent(
     inBlocks,
     mblocks,
@@ -186,7 +186,7 @@ export async function put (inBlocks, head, event, options) {
     prollyRootBlock,
     event,
     head,
-    Array.from(additions.values()) /*, Array.from(removals.values()) */
+    Array.from(additions.values()) /*, todo? Array.from(removals.values()) */
   )
 }
 
@@ -218,8 +218,7 @@ export async function root (inBlocks, head) {
     }
     bigPut(prollyRootBlock)
   })
-
-  return newProllyRootNode // .block).cid // todo return live object not cid
+  return { cids: events.cids, node: newProllyRootNode }
 }
 
 /**
@@ -250,11 +249,11 @@ export async function getAll (blocks, head) {
   // todo use the root node left around from put, etc
   // move load to a central place
   if (!head.length) {
-    return { cids: new CIDCounter(), result: [] }
+    return { clockCIDs: new CIDCounter(), cids: new CIDCounter(), result: [] }
   }
-  const prollyRootNode = await root(blocks, head)
-  const { result, cids } = await prollyRootNode.getAllEntries()
-  return { cids, result: result.map(({ key, value }) => ({ key, value })) }
+  const { node: prollyRootNode, cids: clockCIDs } = await root(blocks, head)
+  const { result, cids } = await prollyRootNode.getAllEntries() // todo params
+  return { clockCIDs, cids, result: result.map(({ key, value }) => ({ key, value })) }
 }
 
 /**
@@ -267,7 +266,7 @@ export async function get (blocks, head, key) {
   if (!head.length) {
     return { cids: new CIDCounter(), result: null }
   }
-  const prollyRootNode = await root(blocks, head)
+  const { node: prollyRootNode, cids: clockCIDs } = await root(blocks, head)
   const { result, cids } = await prollyRootNode.get(key)
-  return { result, cids }
+  return { result, cids, clockCIDs }
 }

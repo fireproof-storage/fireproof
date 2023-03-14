@@ -166,7 +166,7 @@ class TestPail {
   async advance (event) {
     const { head } = await advance(this.blocks, this.head, event)
     this.head = head
-    this.root = (await root(this.blocks, this.head)).block.cid
+    this.root = (await root(this.blocks, this.head)).node.block.cid
     return this.head
   }
 
