@@ -22,9 +22,15 @@ const withLog = async (label, fn) => {
   return resp
 }
 
-const makeGetBlock = (blocks) => async (address) => {
-  const { cid, bytes } = await withLog(address, () => blocks.get(address))
-  return createBlock({ cid, bytes, hasher, codec })
+// todo should also return a CIDCounter
+export const makeGetBlock = (blocks) => {
+  const cids = new CIDCounter()
+  const getBlockFn = async (address) => {
+    const { cid, bytes } = await withLog(address, () => blocks.get(address))
+    cids.add({ address: cid })
+    return createBlock({ cid, bytes, hasher, codec })
+  }
+  return { cids, getBlock: getBlockFn }
 }
 
 /**
@@ -91,7 +97,7 @@ async function createAndSaveNewEvent (
 const makeGetAndPutBlock = (inBlocks) => {
   const mblocks = new MemoryBlockstore()
   const blocks = new MultiBlockFetcher(mblocks, inBlocks)
-  const getBlock = makeGetBlock(blocks)
+  const { getBlock, cids } = makeGetBlock(blocks)
   const put = inBlocks.put.bind(inBlocks)
   const bigPut = async (block, additions) => {
     // console.log('bigPut', block.cid.toString())
@@ -102,7 +108,7 @@ const makeGetAndPutBlock = (inBlocks) => {
       additions.set(cid.toString(), block)
     }
   }
-  return { getBlock, bigPut, mblocks, blocks }
+  return { getBlock, bigPut, mblocks, blocks, cids }
 }
 
 const bulkFromEvents = (sorted) =>
