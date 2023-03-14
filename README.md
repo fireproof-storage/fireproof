@@ -86,7 +86,7 @@ listener.on('member', (id) => {
 })
 ```
 
-### Self-soverign Identity
+### Self-sovereign Identity
 
 Fireproof is so easy to integrate with any site or app because you can get started right away, and set up an account later. By default users write to their own database copy, so you can get pretty far before you even have to think about API keys. [Authorization is via non-extractable keypair](https://ucan.xyz), like TouchID / FaceID.
 
