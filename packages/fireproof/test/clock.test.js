@@ -5,13 +5,14 @@ import {
   advance,
   EventBlock,
   decodeEventBlock,
-  findEventsToSync
+  findEventsToSync as findEventsWithProofToSync
 } from '../src/clock.js'
 // import { vis } from '../src/clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
+const testFindEventsToSync = async (blocks, head) => (await findEventsWithProofToSync(blocks, head)).events
+
 async function visHead (blocks, head) {
-  // const values =
   head.map(async (cid) => {
     const block = await blocks.get(cid)
     return (await decodeEventBlock(block.bytes)).value?.data?.value
@@ -40,7 +41,7 @@ describe('Clock', () => {
     assert.equal(head[0].toString(), event.cid.toString())
 
     const sinceHead = head
-    const toSync = await findEventsToSync(
+    const toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -67,7 +68,7 @@ describe('Clock', () => {
     assert.equal(head1.length, 1)
     assert.equal(head1[0].toString(), event1.cid.toString())
 
-    const toSync1 = await findEventsToSync(blocks, head1)
+    const toSync1 = await testFindEventsToSync(blocks, head1)
 
     assert.equal(toSync1.length, 0)
 
@@ -79,10 +80,10 @@ describe('Clock', () => {
     assert.equal(head2.length, 1)
     assert.equal(head2[0].toString(), event2.cid.toString())
 
-    const toSync2 = await findEventsToSync(blocks, head2)
+    const toSync2 = await testFindEventsToSync(blocks, head2)
     assert.equal(toSync2.length, 0)
 
-    const toSync1b = await findEventsToSync(blocks, [...head2, ...head0])
+    const toSync1b = await testFindEventsToSync(blocks, [...head2, ...head0])
 
     assert.equal(toSync1b.length, 2)
     assert.equal(toSync1b[0].value.data.value, 'event1bob')
@@ -97,13 +98,13 @@ describe('Clock', () => {
     assert.equal(head3.length, 1)
     assert.equal(head3[0].toString(), event3.cid.toString())
 
-    const toSync3 = await findEventsToSync(blocks, [...head3, ...head0])
+    const toSync3 = await testFindEventsToSync(blocks, [...head3, ...head0])
     assert.equal(toSync3.length, 3)
     assert.equal(toSync3[0].value.data.value, 'event1bob')
     assert.equal(toSync3[1].value.data.value, 'event2carol')
     assert.equal(toSync3[2].value.data.value, 'event3dave')
 
-    const toSync3B = await findEventsToSync(blocks, [...head3, ...head1])
+    const toSync3B = await testFindEventsToSync(blocks, [...head3, ...head1])
     assert.equal(toSync3B.length, 2)
     assert.equal(toSync3B[0].value.data.value, 'event2carol')
     assert.equal(toSync3B[1].value.data.value, 'event3dave')
@@ -116,28 +117,28 @@ describe('Clock', () => {
     assert.equal(head4.length, 1)
     assert.equal(head4[0].toString(), event4.cid.toString())
 
-    const toSync4 = await findEventsToSync(blocks, [...head4, ...head0])
+    const toSync4 = await testFindEventsToSync(blocks, [...head4, ...head0])
     assert.equal(toSync4.length, 4)
     assert.equal(toSync4[0].value.data.value, 'event1bob')
     assert.equal(toSync4[1].value.data.value, 'event2carol')
     assert.equal(toSync4[2].value.data.value, 'event3dave')
     assert.equal(toSync4[3].value.data.value, 'event4eve')
 
-    const toSync4B = await findEventsToSync(blocks, [...head4, ...head1])
+    const toSync4B = await testFindEventsToSync(blocks, [...head4, ...head1])
 
     assert.equal(toSync4B.length, 3)
     assert.equal(toSync4B[0].value.data.value, 'event2carol')
     assert.equal(toSync4B[1].value.data.value, 'event3dave')
     assert.equal(toSync4B[2].value.data.value, 'event4eve')
 
-    const toSync4C = await findEventsToSync(blocks, [...head4, ...head2])
+    const toSync4C = await testFindEventsToSync(blocks, [...head4, ...head2])
 
     assert.equal(toSync4C.length, 2)
     assert.equal(toSync4C[0].value.data.value, 'event3dave')
     assert.equal(toSync4C[1].value.data.value, 'event4eve')
 
     // don't ask if you already know
-    // const toSync4D = await findEventsToSync(blocks, [...head4, ...head3])
+    // const toSync4D = await testFindEventsToSync(blocks, [...head4, ...head3])
     // assert.equal(toSync4D.length, 0)
 
     /*
@@ -147,7 +148,7 @@ describe('Clock', () => {
 
     assert.equal(head5.length, 1)
     assert.equal(head5[0].toString(), event5.cid.toString())
-    const toSync5 = await findEventsToSync(blocks, [...head5, ...head0])
+    const toSync5 = await testFindEventsToSync(blocks, [...head5, ...head0])
     assert.equal(toSync5.length, 5)
     assert.equal(toSync5[0].value.data.value, 'event1bob')
     assert.equal(toSync5[1].value.data.value, 'event2carol')
@@ -155,7 +156,7 @@ describe('Clock', () => {
     assert.equal(toSync5[3].value.data.value, 'event4eve')
     assert.equal(toSync5[4].value.data.value, 'event5frank')
 
-    const toSync5B = await findEventsToSync(blocks, [...head5, ...head1])
+    const toSync5B = await testFindEventsToSync(blocks, [...head5, ...head1])
 
     assert.equal(toSync5B.length, 4)
     assert.equal(toSync5B[0].value.data.value, 'event2carol')
@@ -163,18 +164,18 @@ describe('Clock', () => {
     assert.equal(toSync5B[2].value.data.value, 'event4eve')
     assert.equal(toSync5B[3].value.data.value, 'event5frank')
 
-    const toSync5C = await findEventsToSync(blocks, [...head5, ...head2])
+    const toSync5C = await testFindEventsToSync(blocks, [...head5, ...head2])
     assert(toSync5C.length > 0, 'should have 3 events, has ' + toSync5C.length)
     assert.equal(toSync5C[0].value.data.value, 'event3dave')
     assert.equal(toSync5C[1].value.data.value, 'event4eve')
     assert.equal(toSync5C[2].value.data.value, 'event5frank')
 
-    const toSync5D = await findEventsToSync(blocks, [...head5, ...head3])
+    const toSync5D = await testFindEventsToSync(blocks, [...head5, ...head3])
     assert.equal(toSync5D.length, 2) // 4
     assert.equal(toSync5D[0].value.data.value, 'event4eve')
     assert.equal(toSync5D[1].value.data.value, 'event5frank')
 
-    const toSync5E = await findEventsToSync(blocks, [...head5, ...head4])
+    const toSync5E = await testFindEventsToSync(blocks, [...head5, ...head4])
     assert.equal(toSync5E.length, 1) // 5
     assert.equal(toSync5E[0].value.data.value, 'event5frank')
 
@@ -186,7 +187,7 @@ describe('Clock', () => {
     assert.equal(head6.length, 1)
     assert.equal(head6[0].toString(), event6.cid.toString())
 
-    const toSync6 = await findEventsToSync(blocks, [...head6, ...head0])
+    const toSync6 = await testFindEventsToSync(blocks, [...head6, ...head0])
     assert.equal(toSync6.length, 6) // 1
     assert.equal(toSync6[0].value.data.value, 'event1bob')
     assert.equal(toSync6[1].value.data.value, 'event2carol')
@@ -195,7 +196,7 @@ describe('Clock', () => {
     assert.equal(toSync6[4].value.data.value, 'event5frank')
     assert.equal(toSync6[5].value.data.value, 'event6grace')
 
-    const toSync6B = await findEventsToSync(blocks, [...head6, ...head1])
+    const toSync6B = await testFindEventsToSync(blocks, [...head6, ...head1])
     assert.equal(toSync6B.length, 5) // 2
     assert.equal(toSync6B[0].value.data.value, 'event2carol')
     assert.equal(toSync6B[1].value.data.value, 'event3dave')
@@ -203,25 +204,25 @@ describe('Clock', () => {
     assert.equal(toSync6B[3].value.data.value, 'event5frank')
     assert.equal(toSync6B[4].value.data.value, 'event6grace')
 
-    const toSync6C = await findEventsToSync(blocks, [...head6, ...head2])
+    const toSync6C = await testFindEventsToSync(blocks, [...head6, ...head2])
     assert.equal(toSync6C.length, 4) // 3
     assert.equal(toSync6C[0].value.data.value, 'event3dave')
     assert.equal(toSync6C[1].value.data.value, 'event4eve')
     assert.equal(toSync6C[2].value.data.value, 'event5frank')
     assert.equal(toSync6C[3].value.data.value, 'event6grace')
 
-    const toSync6D = await findEventsToSync(blocks, [...head6, ...head3])
+    const toSync6D = await testFindEventsToSync(blocks, [...head6, ...head3])
     assert.equal(toSync6D.length, 3) // 4
     assert.equal(toSync6D[0].value.data.value, 'event4eve')
     assert.equal(toSync6D[1].value.data.value, 'event5frank')
     assert.equal(toSync6D[2].value.data.value, 'event6grace')
 
-    const toSync6E = await findEventsToSync(blocks, [...head6, ...head4])
+    const toSync6E = await testFindEventsToSync(blocks, [...head6, ...head4])
     assert.equal(toSync6E.length, 2) // 5
     assert.equal(toSync6E[0].value.data.value, 'event5frank')
     assert.equal(toSync6E[1].value.data.value, 'event6grace')
 
-    const toSync6F = await findEventsToSync(blocks, [...head6, ...head5])
+    const toSync6F = await testFindEventsToSync(blocks, [...head6, ...head5])
     assert.equal(toSync6F.length, 1)
     assert.equal(toSync6F[0].value.data.value, 'event6grace')
 
@@ -233,7 +234,7 @@ describe('Clock', () => {
     assert.equal(head7.length, 1)
     assert.equal(head7[0].toString(), event7.cid.toString())
 
-    const toSync7 = await findEventsToSync(blocks, [...head7, ...head0])
+    const toSync7 = await testFindEventsToSync(blocks, [...head7, ...head0])
     assert.equal(toSync7.length, 7)
     assert.equal(toSync7[0].value.data.value, 'event1bob')
     assert.equal(toSync7[1].value.data.value, 'event2carol')
@@ -243,7 +244,7 @@ describe('Clock', () => {
     assert.equal(toSync7[5].value.data.value, 'event6grace')
     assert.equal(toSync7[6].value.data.value, 'event7holly')
 
-    const toSync7B = await findEventsToSync(blocks, [...head7, ...head1])
+    const toSync7B = await testFindEventsToSync(blocks, [...head7, ...head1])
     assert.equal(toSync7B.length, 6)
     assert.equal(toSync7B[0].value.data.value, 'event2carol')
     assert.equal(toSync7B[1].value.data.value, 'event3dave')
@@ -251,7 +252,7 @@ describe('Clock', () => {
     assert.equal(toSync7B[3].value.data.value, 'event5frank')
     assert.equal(toSync7B[4].value.data.value, 'event6grace')
 
-    const toSync7C = await findEventsToSync(blocks, [...head7, ...head2])
+    const toSync7C = await testFindEventsToSync(blocks, [...head7, ...head2])
     assert.equal(toSync7C.length, 5)
     assert.equal(toSync7C[0].value.data.value, 'event3dave')
     assert.equal(toSync7C[1].value.data.value, 'event4eve')
@@ -259,20 +260,20 @@ describe('Clock', () => {
     assert.equal(toSync7C[3].value.data.value, 'event6grace')
     assert.equal(toSync7C[4].value.data.value, 'event7holly')
 
-    const toSync7D = await findEventsToSync(blocks, [...head7, ...head3])
+    const toSync7D = await testFindEventsToSync(blocks, [...head7, ...head3])
     assert.equal(toSync7D.length, 4)
     assert.equal(toSync7D[0].value.data.value, 'event4eve')
     assert.equal(toSync7D[1].value.data.value, 'event5frank')
     assert.equal(toSync7D[2].value.data.value, 'event6grace')
     assert.equal(toSync7D[3].value.data.value, 'event7holly')
 
-    const toSync7E = await findEventsToSync(blocks, [...head7, ...head4])
+    const toSync7E = await testFindEventsToSync(blocks, [...head7, ...head4])
     assert.equal(toSync7E.length, 3)
     assert.equal(toSync7E[0].value.data.value, 'event5frank')
     assert.equal(toSync7E[1].value.data.value, 'event6grace')
     assert.equal(toSync7E[2].value.data.value, 'event7holly')
 
-    const toSync7F = await findEventsToSync(blocks, [...head7, ...head5])
+    const toSync7F = await testFindEventsToSync(blocks, [...head7, ...head5])
     assert.equal(toSync7F.length, 2)
     assert.equal(toSync7F[0].value.data.value, 'event6grace')
     assert.equal(toSync7F[1].value.data.value, 'event7holly')
@@ -285,7 +286,7 @@ describe('Clock', () => {
     assert.equal(head8.length, 1)
     assert.equal(head8[0].toString(), event8.cid.toString())
 
-    const toSync8 = await findEventsToSync(blocks, [...head8, ...head0])
+    const toSync8 = await testFindEventsToSync(blocks, [...head8, ...head0])
     assert.equal(toSync8.length, 8)
     assert.equal(toSync8[0].value.data.value, 'event1bob')
     assert.equal(toSync8[1].value.data.value, 'event2carol')
@@ -296,7 +297,7 @@ describe('Clock', () => {
     assert.equal(toSync8[6].value.data.value, 'event7holly')
     assert.equal(toSync8[7].value.data.value, 'event8isaac')
 
-    const toSync8B = await findEventsToSync(blocks, [...head8, ...head1])
+    const toSync8B = await testFindEventsToSync(blocks, [...head8, ...head1])
     assert.equal(toSync8B.length, 7)
     assert.equal(toSync8B[0].value.data.value, 'event2carol')
     assert.equal(toSync8B[1].value.data.value, 'event3dave')
@@ -306,7 +307,7 @@ describe('Clock', () => {
     assert.equal(toSync8B[5].value.data.value, 'event7holly')
     assert.equal(toSync8B[6].value.data.value, 'event8isaac')
 
-    const toSync8C = await findEventsToSync(blocks, [...head8, ...head2])
+    const toSync8C = await testFindEventsToSync(blocks, [...head8, ...head2])
     assert.equal(toSync8C.length, 6) // 3
     assert.equal(toSync8C[0].value.data.value, 'event3dave')
     assert.equal(toSync8C[1].value.data.value, 'event4eve')
@@ -315,7 +316,7 @@ describe('Clock', () => {
     assert.equal(toSync8C[4].value.data.value, 'event7holly')
     assert.equal(toSync8C[5].value.data.value, 'event8isaac')
 
-    const toSync8D = await findEventsToSync(blocks, [...head8, ...head3])
+    const toSync8D = await testFindEventsToSync(blocks, [...head8, ...head3])
     assert.equal(toSync8D.length, 5) // 4
     assert.equal(toSync8D[0].value.data.value, 'event4eve')
     assert.equal(toSync8D[1].value.data.value, 'event5frank')
@@ -323,14 +324,14 @@ describe('Clock', () => {
     assert.equal(toSync8D[3].value.data.value, 'event7holly')
     assert.equal(toSync8D[4].value.data.value, 'event8isaac')
 
-    const toSync8E = await findEventsToSync(blocks, [...head8, ...head4])
+    const toSync8E = await testFindEventsToSync(blocks, [...head8, ...head4])
     assert.equal(toSync8E.length, 4) // 5
     assert.equal(toSync8E[0].value.data.value, 'event5frank')
     assert.equal(toSync8E[1].value.data.value, 'event6grace')
     assert.equal(toSync8E[2].value.data.value, 'event7holly')
     assert.equal(toSync8E[3].value.data.value, 'event8isaac')
 
-    const toSync8F = await findEventsToSync(blocks, [...head8, ...head5])
+    const toSync8F = await testFindEventsToSync(blocks, [...head8, ...head5])
     assert.equal(toSync8F.length, 3) // 6
     assert.equal(toSync8F[0].value.data.value, 'event6grace')
     assert.equal(toSync8F[1].value.data.value, 'event7holly')
@@ -344,7 +345,7 @@ describe('Clock', () => {
     assert.equal(head9.length, 1)
     assert.equal(head9[0].toString(), event9.cid.toString())
 
-    const toSync9 = await findEventsToSync(blocks, [...head9, ...head0])
+    const toSync9 = await testFindEventsToSync(blocks, [...head9, ...head0])
     assert.equal(toSync9.length, 9)
     assert.equal(toSync9[0].value.data.value, 'event1bob')
     assert.equal(toSync9[1].value.data.value, 'event2carol')
@@ -356,7 +357,7 @@ describe('Clock', () => {
     assert.equal(toSync9[7].value.data.value, 'event8isaac')
     assert.equal(toSync9[8].value.data.value, 'event9jen')
 
-    const toSync9B = await findEventsToSync(blocks, [...head9, ...head1])
+    const toSync9B = await testFindEventsToSync(blocks, [...head9, ...head1])
     assert.equal(toSync9B.length, 8)
     assert.equal(toSync9B[0].value.data.value, 'event2carol')
     assert.equal(toSync9B[1].value.data.value, 'event3dave')
@@ -367,7 +368,7 @@ describe('Clock', () => {
     assert.equal(toSync9B[6].value.data.value, 'event8isaac')
     assert.equal(toSync9B[7].value.data.value, 'event9jen')
 
-    const toSync9C = await findEventsToSync(blocks, [...head9, ...head2])
+    const toSync9C = await testFindEventsToSync(blocks, [...head9, ...head2])
     assert.equal(toSync9C.length, 7)
     assert.equal(toSync9C[0].value.data.value, 'event3dave')
     assert.equal(toSync9C[1].value.data.value, 'event4eve')
@@ -377,7 +378,7 @@ describe('Clock', () => {
     assert.equal(toSync9C[5].value.data.value, 'event8isaac')
     assert.equal(toSync9C[6].value.data.value, 'event9jen')
 
-    const toSync9D = await findEventsToSync(blocks, [...head9, ...head3])
+    const toSync9D = await testFindEventsToSync(blocks, [...head9, ...head3])
     assert.equal(toSync9D.length, 6)
     assert.equal(toSync9D[0].value.data.value, 'event4eve')
     assert.equal(toSync9D[1].value.data.value, 'event5frank')
@@ -386,7 +387,7 @@ describe('Clock', () => {
     assert.equal(toSync9D[4].value.data.value, 'event8isaac')
     assert.equal(toSync9D[5].value.data.value, 'event9jen')
 
-    const toSync9E = await findEventsToSync(blocks, [...head9, ...head4])
+    const toSync9E = await testFindEventsToSync(blocks, [...head9, ...head4])
     assert.equal(toSync9E.length, 5)
     assert.equal(toSync9E[0].value.data.value, 'event5frank')
     assert.equal(toSync9E[1].value.data.value, 'event6grace')
@@ -427,7 +428,7 @@ describe('Clock', () => {
     assert.equal(head[1].toString(), event1.cid.toString())
 
     let sinceHead = head1
-    let toSync = await findEventsToSync(
+    let toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -442,7 +443,7 @@ describe('Clock', () => {
     assert.equal(head.length, 1)
 
     sinceHead = head2
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -450,7 +451,7 @@ describe('Clock', () => {
 
     // todo do these since heads make sense?
     sinceHead = [...head0, ...head2]
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -575,7 +576,7 @@ describe('Clock', () => {
     assert.equal(event10head.length, 1)
     assert.equal(event10head[0].toString(), event10.cid.toString())
 
-    const toSync3 = await findEventsToSync(blocks, [event7.cid, event10.cid])
+    const toSync3 = await testFindEventsToSync(blocks, [event7.cid, event10.cid])
     assert.equal(toSync3[0].value.data.value, 'event9')
     assert.equal(toSync3[1].value.data.value, 'event8')
     assert.equal(toSync3[2].value.data.value, 'event10')
@@ -661,7 +662,7 @@ describe('Clock', () => {
     const roothead = head
     // db root
     let sinceHead = [...roothead]
-    let toSync = await findEventsToSync(
+    let toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -676,14 +677,14 @@ describe('Clock', () => {
 
     const event0head = head
     sinceHead = event0head
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
     assert.equal(toSync.length, 0)
 
     sinceHead = [...roothead, ...event0head]
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -696,10 +697,10 @@ describe('Clock', () => {
     const event1head = head
 
     sinceHead = [...event0head, ...event1head]
-    toSync = await findEventsToSync(blocks, sinceHead)
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 1)
     sinceHead = [...event1head, ...roothead]
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
@@ -712,14 +713,14 @@ describe('Clock', () => {
     const event2head = head
 
     sinceHead = [...event2head, ...event0head]
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
     assert.equal(toSync.length, 2)
 
     sinceHead = [...event2head, ...event1head]
-    toSync = await findEventsToSync(
+    toSync = await testFindEventsToSync(
       blocks,
       sinceHead
     )
