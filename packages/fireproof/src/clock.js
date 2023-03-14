@@ -93,7 +93,7 @@ export class EventFetcher {
   constructor (blocks) {
     /** @private */
     this._blocks = blocks
-    this.cids = new CIDCounter()
+    this._cids = new CIDCounter()
   }
 
   /**
@@ -102,9 +102,14 @@ export class EventFetcher {
    */
   async get (link) {
     const block = await this._blocks.get(link)
-    this.cids.add({ address: link })
+    this._cids.add({ address: link })
     if (!block) throw new Error(`missing block: ${link}`)
     return decodeEventBlock(block.bytes)
+  }
+
+  async all () {
+    await Promise.all([...this._cids])
+    return this._cids
   }
 }
 
