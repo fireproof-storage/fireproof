@@ -24,13 +24,16 @@ const withLog = async (label, fn) => {
 
 // todo should also return a CIDCounter
 export const makeGetBlock = (blocks) => {
-  const cids = new CIDCounter()
+  // const cids = new CIDCounter() // todo this could be used for proofs of mutations
   const getBlockFn = async (address) => {
     const { cid, bytes } = await withLog(address, () => blocks.get(address))
-    cids.add({ address: cid })
+    // cids.add({ address: cid })
     return createBlock({ cid, bytes, hasher, codec })
   }
-  return { cids, getBlock: getBlockFn }
+  return {
+    // cids,
+    getBlock: getBlockFn
+  }
 }
 
 /**
