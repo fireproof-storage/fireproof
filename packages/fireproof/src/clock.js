@@ -198,14 +198,6 @@ export async function findEventsToSync (blocks, head) {
 
 export async function findUnknownSortedEvents (blocks, children, { ancestor, sorted }) {
   const events = new EventFetcher(blocks)
-  // const childrenCids = children.map(c => c.toString())
-  // const lowerEvent = sorted.find(({ cid }) => childrenCids.includes(cid.toString()))
-  // const knownAncestor = await findCommonAncestor(events, [lowerEvent.cid]) // should this be [lowerEvent.cid] ?
-  // const knownAncestor = await findCommonAncestor(events, [...children]) // should this be [lowerEvent.cid] ?
-  // console.x('already knownAncestor', knownAncestor.toString() === ancestor.toString(),
-  //   (await (await decodeEventBlock((await blocks.get(knownAncestor)).bytes)).value.data?.value), knownAncestor
-  // )
-
   const matchHead = [ancestor]
   const unknownSorted = await asyncFilter(sorted, async (uks) => {
     for (const ev of matchHead) {
@@ -214,7 +206,6 @@ export async function findUnknownSortedEvents (blocks, children, { ancestor, sor
     }
     return true
   })
-  // console.x('unknownSorted contains', unknownSorted.length, sorted.length)
   return unknownSorted
 }
 

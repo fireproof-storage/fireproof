@@ -32,6 +32,7 @@ describe('Fireproof', () => {
     theDoc._clock = database.clock
     const put2 = await database.put(theDoc)
     assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.equal(put2.clock.length, 1)
     assert.equal(put2.clock[0].toString(), 'bafyreida2c2ckhjfoz5ulmbbfe66ey4svvedrl4tzbvtoxags2qck7lj2i')
   })
   it('get should return an object instance that is not the same as the one in the db', async () => {

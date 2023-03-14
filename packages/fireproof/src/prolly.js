@@ -218,7 +218,7 @@ export async function root (inBlocks, head) {
  * @param {import('./clock').EventLink<EventData>} since Event to compare against.
  * @returns {Promise<import('./clock').EventLink<EventData>[]>}
  */
-export async function eventsSince(blocks, head, since) {
+export async function eventsSince (blocks, head, since) {
   if (!head.length) {
     throw new Error('no head')
   }
@@ -228,7 +228,8 @@ export async function eventsSince(blocks, head, since) {
     sinceHead,
     await findCommonAncestorWithSortedEvents(blocks, sinceHead)
   )
-  return { result: unknownSorted3.map(({ value: { data } }) => data) }
+  // todo factor the clock to collect a cid set during operations
+  return { cids: new Set(), result: unknownSorted3.map(({ value: { data } }) => data) }
 }
 
 /**
@@ -239,11 +240,11 @@ export async function eventsSince(blocks, head, since) {
  * @returns {Promise<import('./prolly').Entry[]>}
  *
  */
-export async function getAll(blocks, head) {
+export async function getAll (blocks, head) {
   // todo use the root node left around from put, etc
   // move load to a central place
   if (!head.length) {
-    return []
+    return { cids: new Set(), result: [] }
   }
   const prollyRootNode = await root(blocks, head)
   const { result, cids } = await prollyRootNode.getAllEntries()
@@ -255,7 +256,7 @@ export async function getAll(blocks, head) {
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  * @param {string} key The key of the value to retrieve.
  */
-export async function get(blocks, head, key) {
+export async function get (blocks, head, key) {
   // instead pass root from db? and always update on change
   if (!head.length) {
     return null
