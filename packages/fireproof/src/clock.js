@@ -33,7 +33,7 @@ export async function advance (blocks, head, event) {
   const headmap = new Map(head.map((cid) => [cid.toString(), cid]))
 
   // Check if the headmap already includes the event, return head if it does
-  if (headmap.has(event.toString())) return head
+  if (headmap.has(event.toString())) return { head }
 
   // Does event contain the clock?
   let changed = false
@@ -47,18 +47,18 @@ export async function advance (blocks, head, event) {
 
   // If the headmap has been changed, return the new headmap values
   if (changed) {
-    return [...headmap.values()]
+    return { head: [...headmap.values()] }
   }
 
   // Does clock contain the event?
   for (const p of head) {
     if (await contains(events, p, event)) {
-      return head
+      return { head }
     }
   }
 
   // Return the head concatenated with the new event if it passes both checks
-  return head.concat(event)
+  return { head: head.concat(event) }
 }
 
 /**

@@ -164,7 +164,8 @@ class TestPail {
 
   /** @param {import('../src/clock').EventLink<import('../src/crdt').EventData>} event */
   async advance (event) {
-    this.head = await advance(this.blocks, this.head, event)
+    const { head } = await advance(this.blocks, this.head, event)
+    this.head = head
     this.root = (await root(this.blocks, this.head)).block.cid
     return this.head
   }
