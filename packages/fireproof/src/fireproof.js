@@ -89,7 +89,7 @@ export default class Fireproof {
    */
   async changesSince (event) {
     // console.log('changesSince', this.instanceId, event, this.clock)
-    let rows, cids
+    let rows, dataCIDs, clockCIDs
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
@@ -101,15 +101,15 @@ export default class Fireproof {
         }
       }
       rows = Array.from(docsMap.values())
-      cids = resp.cids
+      clockCIDs = resp.cids
       // console.log('change rows', this.instanceId, rows)
     } else {
       const allResp = await getAll(this.blocks, this.clock)
       rows = allResp.result.map(({ key, value }) => ({ key, value }))
-      cids = allResp.cids
+      dataCIDs = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
-    return { rows, clock: this.clock, proof: await cidsToProof(cids) }
+    return { rows, clock: this.clock, proof: { data: await cidsToProof(dataCIDs), clock: await cidsToProof(clockCIDs) } }
   }
 
   /**
@@ -216,7 +216,7 @@ export default class Fireproof {
     }
     this.clock = result.head // do we want to do this as a finally block
     await this.#notifyListeners([event])
-    return { id: event.key, clock: this.clock, proof: { data: cidsToProof(result.cids), clock: cidsToProof(result.clockCIDs) } }
+    return { id: event.key, clock: this.clock, proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) } }
     // todo should include additions (or split clock)
   }
 
@@ -286,7 +286,7 @@ export default class Fireproof {
 }
 
 export async function cidsToProof (cids) {
-  if (!cids.all) throw new Error('cidsToProof: cids is not a cids instance')
+  if (!cids || !cids.all) return []
   const all = await cids.all()
   return [...all].map((cid) => cid.toString())
 }

@@ -94,7 +94,7 @@ async function createAndSaveNewEvent (
     additions,
     removals,
     head,
-    cids,
+    clockCIDs: cids,
     event
   }
 }
@@ -234,7 +234,7 @@ export async function eventsSince (blocks, head, since) {
   }
   const sinceHead = [...since, ...head]
   const { cids, events: unknownSorted3 } = await findEventsToSync(blocks, sinceHead)
-  return { cids, result: unknownSorted3.map(({ value: { data } }) => data) }
+  return { clockCIDs: cids, result: unknownSorted3.map(({ value: { data } }) => data) }
 }
 
 /**
