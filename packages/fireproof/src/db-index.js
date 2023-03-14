@@ -3,6 +3,7 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { nocache as cache } from 'prolly-trees/cache'
 import { bf, simpleCompare } from 'prolly-trees/utils'
 import { makeGetBlock } from './prolly.js'
+import { cidsToProof } from './fireproof.js'
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
 import { doTransaction } from './blockstore.js'
@@ -71,11 +72,11 @@ const indexEntriesForChanges = (changes, mapFun) => {
 }
 
 const indexEntriesForOldChanges = async (blocks, byIDindexRoot, ids, mapFun) => {
-  const { getBlock, cids } = makeGetBlock(blocks)
+  const { getBlock } = makeGetBlock(blocks)
   const byIDindex = await load({ cid: byIDindexRoot.cid, get: getBlock, ...opts })
 
   const result = await byIDindex.getMany(ids)
-  return result.result
+  return result
 }
 
 /**
@@ -131,8 +132,8 @@ export default class DbIndex {
     // }
     const response = await doIndexQuery(this.database.blocks, this.dbIndexRoot, this.dbIndex, query)
     return {
-      // TODO fix this naming upstream in prolly/db-DbIndex
-      // todo maybe this is a hint about why deletes arent working?
+      proof: cidsToProof(response.cids),
+      // TODO fix this naming upstream in prolly/db-DbIndex?
       rows: response.result.map(({ id, key, row }) => ({ id: key, key: charwise.decode(id), value: row }))
     }
   }
@@ -151,15 +152,13 @@ export default class DbIndex {
     }
     const result = await this.database.changesSince(this.dbHead) // {key, value, del}
     if (this.dbHead) {
-      const oldIndexEntries = (
-        await indexEntriesForOldChanges(
-          blocks,
-          this.byIDindexRoot,
-          result.rows.map(({ key }) => key),
-          this.mapFun
-        )
-      ).map((key) => ({ key, del: true })) // should be this
-
+      const oldChangeEntries = await indexEntriesForOldChanges(
+        blocks,
+        this.byIDindexRoot,
+        result.rows.map(({ key }) => key),
+        this.mapFun
+      )
+      const oldIndexEntries = oldChangeEntries.result.map((key) => ({ key, del: true }))
       const removalResult = await bulkIndex(blocks, this.dbIndexRoot, this.dbIndex, oldIndexEntries, opts)
       this.dbIndexRoot = removalResult.root
       this.dbIndex = removalResult.dbIndex
@@ -206,7 +205,7 @@ export default class DbIndex {
 async function bulkIndex (blocks, inRoot, inDBindex, indexEntries) {
   if (!indexEntries.length) return { dbIndex: inDBindex, root: inRoot }
   const putBlock = blocks.put.bind(blocks)
-  const { getBlock, cids } = makeGetBlock(blocks)
+  const { getBlock } = makeGetBlock(blocks)
   let returnRootBlock
   let returnNode
   if (!inDBindex) {
@@ -233,7 +232,7 @@ async function doIndexQuery (blocks, dbIndexRoot, dbIndex, query) {
   if (!dbIndex) {
     const cid = dbIndexRoot && dbIndexRoot.cid
     if (!cid) return { result: [] }
-    const { getBlock, cids } = makeGetBlock(blocks)
+    const { getBlock } = makeGetBlock(blocks)
     dbIndex = await load({ cid, get: getBlock, ...opts })
   }
   if (query.range) {
