@@ -3,7 +3,7 @@ import {
   EventFetcher,
   EventBlock,
   findCommonAncestorWithSortedEvents,
-  findUnknownSortedEvents
+  findEventsToSync
 } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 import * as codec from '@ipld/dag-cbor'
@@ -232,11 +232,8 @@ export async function eventsSince (blocks, head, since) {
     throw new Error('no head')
   }
   const sinceHead = [...since, ...head]
-  const unknownSorted3 = await findUnknownSortedEvents(
-    blocks,
-    sinceHead,
-    await findCommonAncestorWithSortedEvents(blocks, sinceHead)
-  )
+  const unknownSorted3 = await findEventsToSync(blocks, sinceHead)
+
   // todo factor the clock to collect a cid set during operations
   return { cids: new CIDCounter(), result: unknownSorted3.map(({ value: { data } }) => data) }
 }
