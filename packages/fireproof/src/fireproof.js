@@ -93,7 +93,7 @@ export default class Fireproof {
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
-      for (const { key, type, value } of resp) {
+      for (const { key, type, value } of resp.result) {
         if (type === 'del') {
           docsMap.set(key, { key, del: true })
         } else {
@@ -101,12 +101,15 @@ export default class Fireproof {
         }
       }
       rows = Array.from(docsMap.values())
+      cids = resp.cids
       // console.log('change rows', this.instanceId, rows)
     } else {
-      ;({ rows, cids } = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value })))
+      const allResp = await getAll(this.blocks, this.clock)
+      rows = allResp.result.map(({ key, value }) => ({ key, value }))
+      cids = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
-    return { rows, clock: this.clock, proof: cids }
+    return { rows, clock: this.clock, proof: cidsToProof(cids) }
   }
 
   /**
@@ -158,7 +161,7 @@ export default class Fireproof {
    * @memberof Fireproof
    * @instance
    */
-  async put ({ _id, ...doc }) {
+  async put ({ _id, _proof, ...doc }) {
     const id = _id || 'f' + Math.random().toString(36).slice(2)
     await this.#runValidation({ _id: id, ...doc })
     return await this.#putToProllyTree({ key: id, value: doc }, doc._clock)
@@ -197,7 +200,7 @@ export default class Fireproof {
       // we need to check and see what version of the document exists at the clock specified
       // if it is the same as the one we are trying to put, then we can proceed
       const resp = await eventsSince(this.blocks, this.clock, event.value._clock)
-      const missedChange = resp.find(({ key }) => key === event.key)
+      const missedChange = resp.result.find(({ key }) => key === event.key)
       if (missedChange) {
         throw new Error('MVCC conflict, document is changed, please reload the document and try again.')
       }
@@ -261,7 +264,7 @@ export default class Fireproof {
     if (opts.mvcc === true) {
       doc._clock = this.clock
     }
-    doc._proof = resp.cids
+    doc._proof = cidsToProof(resp.cids)
     doc._id = key
     return doc
   }
@@ -276,4 +279,8 @@ export default class Fireproof {
     // console.log('registering remote block reader')
     this.blocks.valet.remoteBlockFunction = remoteBlockReaderFn
   }
+}
+
+function cidsToProof (cids) {
+  return Array.from(cids).map((cid) => cid.toString())
 }

@@ -133,7 +133,7 @@ class TestPail {
    * @param {Blockstore} blocks
    * @param {import('../src/clock').EventLink<import('../src/crdt').EventData>[]} head
    */
-  constructor(blocks, head) {
+  constructor (blocks, head) {
     this.blocks = blocks
     this.head = head
     /** @type {import('../src/shard.js').ShardLink?} */
@@ -144,7 +144,7 @@ class TestPail {
    * @param {string} key
    * @param {import('../src/link').AnyLink} value
    */
-  async put(key, value) {
+  async put (key, value) {
     const result = await put(this.blocks, this.head, { key, value })
     if (!result) {
       console.log('failed', key, value)
@@ -163,26 +163,26 @@ class TestPail {
   // async bulk() {}
 
   /** @param {import('../src/clock').EventLink<import('../src/crdt').EventData>} event */
-  async advance(event) {
+  async advance (event) {
     this.head = await advance(this.blocks, this.head, event)
     this.root = (await root(this.blocks, this.head)).block.cid
     return this.head
   }
 
   /** @param {string} key */
-  async get(key) {
+  async get (key) {
     const resp = await get(this.blocks, this.head, key)
     console.log('prolly GET', key, resp)
     return resp.result
   }
 
   /** @param {string} key */
-  async getAll() {
+  async getAll () {
     const resp = await getAll(this.blocks, this.head)
     return resp.result
   }
 
-  async getSince(since) {
+  async getSince (since) {
     const resp = await eventsSince(this.blocks, this.head, since)
     return resp.result
   }
