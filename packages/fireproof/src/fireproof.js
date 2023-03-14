@@ -89,7 +89,7 @@ export default class Fireproof {
    */
   async changesSince (event) {
     // console.log('changesSince', this.instanceId, event, this.clock)
-    let rows
+    let rows, cids
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
@@ -103,10 +103,10 @@ export default class Fireproof {
       rows = Array.from(docsMap.values())
       // console.log('change rows', this.instanceId, rows)
     } else {
-      rows = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value }))
+      ;({ rows, cids } = (await getAll(this.blocks, this.clock)).map(({ key, value }) => ({ key, value })))
       // console.log('dbdoc rows', this.instanceId, rows)
     }
-    return { rows, clock: this.clock }
+    return { rows, clock: this.clock, proof: cids }
   }
 
   /**
@@ -250,21 +250,20 @@ export default class Fireproof {
    * @instance
    */
   async get (key, opts = {}) {
-    let got
-    if (opts.clock) {
-      got = await get(this.blocks, opts.clock, key)
-    } else {
-      got = await get(this.blocks, this.clock, key)
-    }
+    const clock = opts.clock || this.clock
+    const resp = await get(this.blocks, clock, key)
+
     // this tombstone is temporary until we can get the prolly tree to delete
-    if (got === null) {
+    if (!resp || resp.result === null) {
       throw new Error('Not found')
     }
+    const doc = resp.result
     if (opts.mvcc === true) {
-      got._clock = this.clock
+      doc._clock = this.clock
     }
-    got._id = key
-    return got
+    doc._proof = resp.cids
+    doc._id = key
+    return doc
   }
 
   setCarUploader (carUploaderFn) {
