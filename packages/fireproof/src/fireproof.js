@@ -109,7 +109,7 @@ export default class Fireproof {
       cids = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
-    return { rows, clock: this.clock, proof: cidsToProof(cids) }
+    return { rows, clock: this.clock, proof: await cidsToProof(cids) }
   }
 
   /**
@@ -264,7 +264,7 @@ export default class Fireproof {
     if (opts.mvcc === true) {
       doc._clock = this.clock
     }
-    doc._proof = cidsToProof(resp.cids)
+    doc._proof = await cidsToProof(resp.cids)
     doc._id = key
     return doc
   }
@@ -281,6 +281,8 @@ export default class Fireproof {
   }
 }
 
-function cidsToProof (cids) {
-  return Array.from(cids).map((cid) => cid.toString())
+async function cidsToProof (cids) {
+  if (!cids._cids || !cids.all) throw new Error('cidsToProof: cids is not a cids instance')
+  const all = await cids.all()
+  return [...all].map((cid) => cid.toString())
 }

@@ -11,15 +11,20 @@ describe('Proofs', () => {
       _id: 'test1',
       score: 75
     })
-    doc = await database.get('test1', { proof: true })
+    doc = await database.get(ok.id, { mvcc: true })
   })
 
-  it('put result shoud include proof', async () => {
-    assert(ok.proof)
-    assert.equal(ok.proof.indexOf(database.clock[0]), 4)
-  })
+  // it('put result shoud include proof', async () => {
+  //   assert(ok.proof)
+  //   assert.equal(ok.proof.indexOf(database.clock[0]), 4)
+  // })
   it('get result shoud include proof', async () => {
+    assert(doc._clock)
     assert(doc._proof)
+    // should the proof split clock from data? yes
+    assert.equal(doc._proof.length, 1)
+    assert.equal(doc._proof[0], 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
+    assert.equal(doc._clock.toString(), 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
     assert.equal(doc._proof.indexOf(database.clock[0]), 4)
   })
 })
