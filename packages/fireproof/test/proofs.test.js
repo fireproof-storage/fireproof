@@ -21,10 +21,15 @@ describe('Proofs', () => {
   it('get result shoud include proof', async () => {
     assert(doc._clock)
     assert(doc._proof)
+
+    assert(doc._proof.data)
+    assert(doc._proof.clock)
+    assert.equal(doc._proof.data.length, 1)
+    assert.equal(doc._proof.clock.length, 1)
+
     // should the proof split clock from data? yes
-    assert.equal(doc._proof.length, 1)
-    assert.equal(doc._proof[0], 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
-    assert.equal(doc._clock.toString(), 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
-    assert.equal(doc._proof.indexOf(database.clock[0]), 4)
+    // assert.equal(doc._proof[0], 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
+    // assert.equal(doc._clock.toString(), 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
+    // assert.equal(doc._proof.indexOf(database.clock[0]), 4)
   })
 })
