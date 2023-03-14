@@ -200,7 +200,7 @@ export default class TransactionBlockstore {
         console.log('encrypting car', innerBlockstore.label)
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
         // todo we need to return the cid map from blocksToEncryptedCarBlock
-        await this.#valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
+        await this.valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
         await this.valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
