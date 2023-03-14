@@ -12,7 +12,7 @@ import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
 import { doTransaction } from './blockstore.js'
 
 import { nocache as cache } from 'prolly-trees/cache'
-import { bf, simpleCompare as compare } from 'prolly-trees/utils'
+import { CIDCounter, bf, simpleCompare as compare } from 'prolly-trees/utils'
 import { create as createBlock } from 'multiformats/block'
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
@@ -229,7 +229,7 @@ export async function eventsSince (blocks, head, since) {
     await findCommonAncestorWithSortedEvents(blocks, sinceHead)
   )
   // todo factor the clock to collect a cid set during operations
-  return { cids: new Set(), result: unknownSorted3.map(({ value: { data } }) => data) }
+  return { cids: new CIDCounter(), result: unknownSorted3.map(({ value: { data } }) => data) }
 }
 
 /**
@@ -244,7 +244,7 @@ export async function getAll (blocks, head) {
   // todo use the root node left around from put, etc
   // move load to a central place
   if (!head.length) {
-    return { cids: new Set(), result: [] }
+    return { cids: new CIDCounter(), result: [] }
   }
   const prollyRootNode = await root(blocks, head)
   const { result, cids } = await prollyRootNode.getAllEntries()
@@ -259,7 +259,7 @@ export async function getAll (blocks, head) {
 export async function get (blocks, head, key) {
   // instead pass root from db? and always update on change
   if (!head.length) {
-    return null
+    return { cids: new CIDCounter(), result: null }
   }
   const prollyRootNode = await root(blocks, head)
   const { result, cids } = await prollyRootNode.get(key)
