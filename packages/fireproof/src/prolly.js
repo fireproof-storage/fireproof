@@ -232,10 +232,8 @@ export async function eventsSince (blocks, head, since) {
     throw new Error('no head')
   }
   const sinceHead = [...since, ...head]
-  const unknownSorted3 = await findEventsToSync(blocks, sinceHead)
-
-  // todo factor the clock to collect a cid set during operations
-  return { cids: new CIDCounter(), result: unknownSorted3.map(({ value: { data } }) => data) }
+  const { cids, events: unknownSorted3 } = await findEventsToSync(blocks, sinceHead)
+  return { cids, result: unknownSorted3.map(({ value: { data } }) => data) }
 }
 
 /**

@@ -1,6 +1,7 @@
 import { Block, encode, decode } from 'multiformats/block'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as cbor from '@ipld/dag-cbor'
+import { CIDCounter } from 'prolly-trees/utils'
 
 /**
  * @template T
@@ -92,6 +93,7 @@ export class EventFetcher {
   constructor (blocks) {
     /** @private */
     this._blocks = blocks
+    this.cids = new CIDCounter()
   }
 
   /**
@@ -100,6 +102,7 @@ export class EventFetcher {
    */
   async get (link) {
     const block = await this._blocks.get(link)
+    this.cids.add({ address: link })
     if (!block) throw new Error(`missing block: ${link}`)
     return decodeEventBlock(block.bytes)
   }
@@ -194,7 +197,8 @@ export async function * vis (blocks, head, options = {}) {
 export async function findEventsToSync (blocks, head) {
   const events = new EventFetcher(blocks)
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
-  return await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
+  const toSync = await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
+  return { cids: events.cids, events: toSync }
 }
 
 const asyncFilter = async (arr, predicate) =>
