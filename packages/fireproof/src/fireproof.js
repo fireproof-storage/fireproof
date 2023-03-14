@@ -281,7 +281,7 @@ export default class Fireproof {
   }
 }
 
-async function cidsToProof (cids) {
+export async function cidsToProof (cids) {
   if (!cids._cids || !cids.all) throw new Error('cidsToProof: cids is not a cids instance')
   const all = await cids.all()
   return [...all].map((cid) => cid.toString())
