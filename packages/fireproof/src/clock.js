@@ -29,7 +29,7 @@ import * as cbor from '@ipld/dag-cbor'
 export async function advance (blocks, head, event) {
   /** @type {EventFetcher<T>} */
   const events = new EventFetcher(blocks)
-  const headmap = new Map(head.map(cid => [cid.toString(), cid]))
+  const headmap = new Map(head.map((cid) => [cid.toString(), cid]))
 
   // Check if the headmap already includes the event, return head if it does
   if (headmap.has(event.toString())) return head
@@ -145,7 +145,7 @@ async function contains (events, a, b) {
     if (link.toString() === b.toString()) return true
     // if any of b's parents are this link, then b cannot exist in any of the
     // tree below, since that would create a cycle.
-    if (bevent.parents.some(p => link.toString() === p.toString())) continue
+    if (bevent.parents.some((p) => link.toString() === p.toString())) continue
     const { value: event } = await events.get(link)
     links.push(...event.parents)
   }
@@ -160,11 +160,11 @@ async function contains (events, a, b) {
  * @param {(b: EventBlockView<T>) => string} [options.renderNodeLabel]
  */
 export async function * vis (blocks, head, options = {}) {
-  const renderNodeLabel = options.renderNodeLabel ?? (b => (b.value.data.value))
+  const renderNodeLabel = options.renderNodeLabel ?? ((b) => b.value.data.value)
   const events = new EventFetcher(blocks)
   yield 'digraph clock {'
   yield '  node [shape=point fontname="Courier"]; head;'
-  const hevents = await Promise.all(head.map(link => events.get(link)))
+  const hevents = await Promise.all(head.map((link) => events.get(link)))
   const links = []
   const nodes = new Set()
   for (const e of hevents) {
@@ -192,37 +192,21 @@ export async function * vis (blocks, head, options = {}) {
 }
 
 export async function findEventsToSync (blocks, head) {
-  const toSync = await findUnknownSortedEvents(blocks, head, await findCommonAncestorWithSortedEvents(blocks, head))
-  return toSync
-}
-
-export async function findUnknownSortedEvents (blocks, children, { ancestor, sorted }) {
   const events = new EventFetcher(blocks)
-  const matchHead = [ancestor]
-  const unknownSorted = await asyncFilter(sorted, async (uks) => {
-    for (const ev of matchHead) {
-      const isIn = await contains(events, ev, uks.cid)
-      if (isIn) return false
-    }
-    return true
-  })
-  return unknownSorted
+  const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
+  return await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
 }
 
-const asyncFilter = async (arr, predicate) => Promise.all(arr.map(predicate))
-  .then((results) => arr.filter((_v, index) => results[index]))
+const asyncFilter = async (arr, predicate) =>
+  Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]))
 
-export async function findCommonAncestorWithSortedEvents (blocks, children) {
-  const events = new EventFetcher(blocks) // todo pass me in instead of blocks?
-
+export async function findCommonAncestorWithSortedEvents (events, children) {
   const ancestor = await findCommonAncestor(events, children)
   if (!ancestor) {
     throw new Error('failed to find common ancestor event')
   }
   // Sort the events by their sequence number
   const sorted = await findSortedEvents(events, children, ancestor)
-  // console.x('ancstor', ancestor, (await decodeEventBlock((await blocks.get(ancestor)).bytes)).value.data?.value)
-  // sorted.forEach(({ cid, value }) => console.x('xsorted', cid, value.data.value))
   return { ancestor, sorted }
 }
 
@@ -257,9 +241,7 @@ async function findCommonAncestor (events, children) {
 async function findAncestorCandidate (events, root) {
   const { value: event } = await events.get(root)
   if (!event.parents.length) return root
-  return event.parents.length === 1
-    ? event.parents[0]
-    : findCommonAncestor(events, event.parents)
+  return event.parents.length === 1 ? event.parents[0] : findCommonAncestor(events, event.parents)
 }
 
 /**
@@ -318,9 +300,7 @@ async function findSortedEvents (events, head, tail) {
   // sort by weight, and by CID within weight
   const sorted = Array.from(buckets)
     .sort((a, b) => b[0] - a[0])
-    .flatMap(([, es]) =>
-      es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1))
-    )
+    .flatMap(([, es]) => es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1)))
   // console.log('sorted', sorted.map(s => s.value.data.value))
   return sorted
 }
@@ -336,8 +316,6 @@ async function findEvents (events, start, end, depth = 0) {
   const acc = [{ event, depth }]
   const { parents } = event.value
   if (parents.length === 1 && String(parents[0]) === String(end)) return acc
-  const rest = await Promise.all(
-    parents.map((p) => findEvents(events, p, end, depth + 1))
-  )
+  const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
 }

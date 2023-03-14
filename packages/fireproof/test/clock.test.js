@@ -4,8 +4,6 @@ import assert from 'node:assert'
 import {
   advance,
   EventBlock,
-  findCommonAncestorWithSortedEvents,
-  findUnknownSortedEvents,
   decodeEventBlock,
   findEventsToSync
 } from '../src/clock.js'
@@ -577,8 +575,7 @@ describe('Clock', () => {
     assert.equal(event10head.length, 1)
     assert.equal(event10head[0].toString(), event10.cid.toString())
 
-    const ancestorWithSorted2 = await findCommonAncestorWithSortedEvents(blocks, [event7.cid, event10.cid])
-    const toSync3 = await findUnknownSortedEvents(blocks, [event7.cid, event10.cid], ancestorWithSorted2)
+    const toSync3 = await findEventsToSync(blocks, [event7.cid, event10.cid])
     assert.equal(toSync3[0].value.data.value, 'event9')
     assert.equal(toSync3[1].value.data.value, 'event8')
     assert.equal(toSync3[2].value.data.value, 'event10')
@@ -699,16 +696,8 @@ describe('Clock', () => {
     const event1head = head
 
     sinceHead = [...event0head, ...event1head]
-    // sinceHead = event0head
-    const sigil = await findCommonAncestorWithSortedEvents(blocks, sinceHead)
-    // console.log('ancestor', (await decodeEventBlock((await blocks.get(sigil.ancestor)).bytes)).value)
-
-    toSync = await findUnknownSortedEvents(blocks, sinceHead, sigil)
-
+    toSync = await findEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 1)
-
-    // for await (const line of vis(blocks, head)) console.log(line)
-
     sinceHead = [...event1head, ...roothead]
     toSync = await findEventsToSync(
       blocks,
