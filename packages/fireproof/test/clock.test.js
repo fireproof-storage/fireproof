@@ -1,14 +1,14 @@
 /* global describe, it */
 // import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import {
-  advance,
-  EventBlock,
-  decodeEventBlock,
-  findEventsToSync as findEventsWithProofToSync
-} from '../src/clock.js'
+import { advance, EventBlock, decodeEventBlock, findEventsToSync as findEventsWithProofToSync } from '../src/clock.js'
 // import { vis } from '../src/clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
+
+const testAdvance = async (blocks, oldHead, event) => {
+  const { head } = await advance(blocks, oldHead, event)
+  return head
+}
 
 const testFindEventsToSync = async (blocks, head) => (await findEventsWithProofToSync(blocks, head)).events
 
@@ -23,7 +23,7 @@ async function visHead (blocks, head) {
 async function makeNext (blocks, parent, eventData) {
   const event = await EventBlock.create(eventData, parent)
   await blocks.put(event.cid, event.bytes)
-  const head = await advance(blocks, parent, event.cid)
+  const head = await testAdvance(blocks, parent, event.cid)
   return { event, head }
 }
 
@@ -34,17 +34,14 @@ describe('Clock', () => {
     const event = await EventBlock.create({})
 
     await blocks.put(event.cid, event.bytes)
-    const head = await advance(blocks, [], event.cid)
+    const head = await testAdvance(blocks, [], event.cid)
 
     // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event.cid.toString())
 
     const sinceHead = head
-    const toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    const toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 0)
   })
 
@@ -405,7 +402,7 @@ describe('Clock', () => {
     await blocks.put(root.cid, root.bytes)
 
     /** @type {import('../src/clock').EventLink<any>[]} */
-    let head = await advance(blocks, [], root.cid)
+    let head = await testAdvance(blocks, [], root.cid)
     assert.equal(head.length, 1)
     assert.equal(head[0], root.cid)
 
@@ -414,12 +411,12 @@ describe('Clock', () => {
     const event0 = await EventBlock.create(seqEventData(), parents)
     await blocks.put(event0.cid, event0.bytes)
 
-    head = await advance(blocks, parents, event0.cid)
+    head = await testAdvance(blocks, parents, event0.cid)
     const head0 = head
 
     const event1 = await EventBlock.create(seqEventData(), parents)
     await blocks.put(event1.cid, event1.bytes)
-    head = await advance(blocks, head, event1.cid)
+    head = await testAdvance(blocks, head, event1.cid)
     const head1 = head
 
     // for await (const line of vis(blocks, head)) console.log(line)
@@ -428,33 +425,24 @@ describe('Clock', () => {
     assert.equal(head[1].toString(), event1.cid.toString())
 
     let sinceHead = head1
-    let toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    let toSync = await testFindEventsToSync(blocks, sinceHead)
     // assert.equal(toSync.length, 1) // 0
     // assert.equal(toSync[0].cid.toString(), event0.cid.toString())
 
     const event2 = await EventBlock.create(seqEventData(), head1)
     await blocks.put(event2.cid, event2.bytes)
-    head = await advance(blocks, head, event2.cid)
+    head = await testAdvance(blocks, head, event2.cid)
     const head2 = head
 
     assert.equal(head.length, 1)
 
     sinceHead = head2
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 0)
 
     // todo do these since heads make sense?
     sinceHead = [...head0, ...head2]
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     // console.log('need', toSync.map(b => b.value.data))
     // assert.equal(toSync.length, 2) // 0
     // assert.equal(toSync[0].cid.toString(), event1.cid.toString())
@@ -472,24 +460,24 @@ describe('Clock', () => {
 
     const event0 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
-    head = await advance(blocks, head, event0.cid)
+    head = await testAdvance(blocks, head, event0.cid)
 
     const event1 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
-    head = await advance(blocks, head, event1.cid)
+    head = await testAdvance(blocks, head, event1.cid)
 
     const event2 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event2.cid, event2.bytes)
-    head = await advance(blocks, head, event2.cid)
+    head = await testAdvance(blocks, head, event2.cid)
 
     const event3 = await EventBlock.create(seqEventData(), [event0.cid, event1.cid])
     await blocks.put(event3.cid, event3.bytes)
-    head = await advance(blocks, head, event3.cid)
+    head = await testAdvance(blocks, head, event3.cid)
     // const parentz = head
 
     const event4 = await EventBlock.create(seqEventData(), [event2.cid])
     await blocks.put(event4.cid, event4.bytes)
-    head = await advance(blocks, head, event4.cid)
+    head = await testAdvance(blocks, head, event4.cid)
 
     // console.log('add two events with some shared parents')
     // for await (const line of vis(blocks, head)) console.log(line)
@@ -510,63 +498,63 @@ describe('Clock', () => {
 
     const event0 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
-    head = await advance(blocks, head, event0.cid)
+    head = await testAdvance(blocks, head, event0.cid)
 
     const event1 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
-    head = await advance(blocks, head, event1.cid)
+    head = await testAdvance(blocks, head, event1.cid)
 
     const event1head = head
 
     const event2 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event2.cid, event2.bytes)
-    head = await advance(blocks, head, event2.cid)
+    head = await testAdvance(blocks, head, event2.cid)
 
     const event3 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event3.cid, event3.bytes)
-    head = await advance(blocks, head, event3.cid)
+    head = await testAdvance(blocks, head, event3.cid)
 
     const event3head = head
 
     const event4 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event4.cid, event4.bytes)
-    head = await advance(blocks, head, event4.cid)
+    head = await testAdvance(blocks, head, event4.cid)
     const event4head = head
     await visHead(blocks, event4head)
 
     const event5 = await EventBlock.create(seqEventData(), event3head)
     await blocks.put(event5.cid, event5.bytes)
-    head = await advance(blocks, head, event5.cid)
+    head = await testAdvance(blocks, head, event5.cid)
     const event5head = head
     await visHead(blocks, event5head)
 
     const event6 = await EventBlock.create(seqEventData(), event5head)
     await blocks.put(event6.cid, event6.bytes)
-    head = await advance(blocks, head, event6.cid)
+    head = await testAdvance(blocks, head, event6.cid)
     const event6head = head
     await visHead(blocks, event6head)
 
     const event7 = await EventBlock.create(seqEventData(), event6head)
     await blocks.put(event7.cid, event7.bytes)
-    head = await advance(blocks, head, event7.cid)
+    head = await testAdvance(blocks, head, event7.cid)
     const event7head = head
     await visHead(blocks, event7head)
 
     const event8 = await EventBlock.create(seqEventData(), event7head)
     await blocks.put(event8.cid, event8.bytes)
-    head = await advance(blocks, head, event8.cid)
+    head = await testAdvance(blocks, head, event8.cid)
     const event8head = head
     await visHead(blocks, event8head)
 
     const event9 = await EventBlock.create(seqEventData(), event7head)
     await blocks.put(event9.cid, event9.bytes)
-    head = await advance(blocks, head, event9.cid)
+    head = await testAdvance(blocks, head, event9.cid)
     const event9head = head
     await visHead(blocks, event9head)
 
     const event10 = await EventBlock.create(seqEventData(), event9head)
     await blocks.put(event10.cid, event10.bytes)
-    head = await advance(blocks, head, event10.cid)
+    head = await testAdvance(blocks, head, event10.cid)
     const event10head = head
     await visHead(blocks, event10head)
 
@@ -593,36 +581,36 @@ describe('Clock', () => {
 
     const event0 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event0.cid, event0.bytes)
-    head = await advance(blocks, head, event0.cid)
+    head = await testAdvance(blocks, head, event0.cid)
 
     const event1 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event1.cid, event1.bytes)
-    head = await advance(blocks, head, event1.cid)
+    head = await testAdvance(blocks, head, event1.cid)
 
     const event1head = head
 
     const event2 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event2.cid, event2.bytes)
-    head = await advance(blocks, head, event2.cid)
+    head = await testAdvance(blocks, head, event2.cid)
 
     const event3 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event3.cid, event3.bytes)
-    head = await advance(blocks, head, event3.cid)
+    head = await testAdvance(blocks, head, event3.cid)
 
     const event4 = await EventBlock.create(seqEventData(), event1head)
     await blocks.put(event4.cid, event4.bytes)
-    head = await advance(blocks, head, event4.cid)
+    head = await testAdvance(blocks, head, event4.cid)
 
     const parents2 = head
 
     const event5 = await EventBlock.create(seqEventData(), parents2)
     await blocks.put(event5.cid, event5.bytes)
-    head = await advance(blocks, head, event5.cid)
+    head = await testAdvance(blocks, head, event5.cid)
 
     // now very old one
     const event6 = await EventBlock.create(seqEventData(), parents0)
     await blocks.put(event6.cid, event6.bytes)
-    head = await advance(blocks, head, event6.cid)
+    head = await testAdvance(blocks, head, event6.cid)
 
     // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 2)
@@ -645,7 +633,7 @@ describe('Clock', () => {
     const event1 = await EventBlock.create(seqEventData(), [event0.cid])
     await blocks.put(event1.cid, event1.bytes)
 
-    head = await advance(blocks, head, event1.cid)
+    head = await testAdvance(blocks, head, event1.cid)
 
     // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
@@ -658,14 +646,11 @@ describe('Clock', () => {
     // alice
     const root = await EventBlock.create(seqEventData('alice'))
     await blocks.put(root.cid, root.bytes)
-    let head = await advance(blocks, [], root.cid)
+    let head = await testAdvance(blocks, [], root.cid)
     const roothead = head
     // db root
     let sinceHead = [...roothead]
-    let toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    let toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 0) // we use all docs for first query in Fireproof
 
     // create bob
@@ -673,57 +658,42 @@ describe('Clock', () => {
     await blocks.put(event0.cid, event0.bytes)
     // console.log('new event0', event0.cid)
 
-    head = await advance(blocks, head, event0.cid)
+    head = await testAdvance(blocks, head, event0.cid)
 
     const event0head = head
     sinceHead = event0head
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 0)
 
     sinceHead = [...roothead, ...event0head]
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 1)
 
     // create carol
     const event1 = await EventBlock.create(seqEventData('carol'), head)
     await blocks.put(event1.cid, event1.bytes)
-    head = await advance(blocks, head, event1.cid)
+    head = await testAdvance(blocks, head, event1.cid)
     const event1head = head
 
     sinceHead = [...event0head, ...event1head]
     toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 1)
     sinceHead = [...event1head, ...roothead]
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
 
     assert.equal(toSync.length, 2)
 
     const event2 = await EventBlock.create(seqEventData('xxx'), head)
     await blocks.put(event2.cid, event2.bytes)
-    head = await advance(blocks, head, event2.cid)
+    head = await testAdvance(blocks, head, event2.cid)
     const event2head = head
 
     sinceHead = [...event2head, ...event0head]
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 2)
 
     sinceHead = [...event2head, ...event1head]
-    toSync = await testFindEventsToSync(
-      blocks,
-      sinceHead
-    )
+    toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 1)
   })
 })

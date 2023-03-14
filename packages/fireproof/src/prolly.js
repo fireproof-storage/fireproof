@@ -66,6 +66,7 @@ async function createAndSaveNewEvent (
   additions,
   removals = []
 ) {
+  let cids
   const data = {
     type: 'put',
     root: {
@@ -86,13 +87,14 @@ async function createAndSaveNewEvent (
 
   const event = await EventBlock.create(data, head)
   bigPut(event)
-  head = await advance(inBlocks, head, event.cid)
+  ;({ head, cids } = await advance(inBlocks, head, event.cid))
 
   return {
     root,
     additions,
     removals,
     head,
+    cids,
     event
   }
 }

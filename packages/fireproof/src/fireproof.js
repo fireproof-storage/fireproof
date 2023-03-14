@@ -216,7 +216,8 @@ export default class Fireproof {
     }
     this.clock = result.head // do we want to do this as a finally block
     await this.#notifyListeners([event])
-    return { id: event.key, clock: this.clock }
+    return { id: event.key, clock: this.clock, proof: cidsToProof(result.cids) }
+    // todo should include additions (or split clock)
   }
 
   //   /**
