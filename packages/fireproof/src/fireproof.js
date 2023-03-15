@@ -50,7 +50,7 @@ export default class Fireproof {
    */
   snapshot (clock) {
     // how to handle listeners, views, and config?
-    // todo needs a test for that
+    // todo needs a test for listeners, views, and config
     return new Fireproof(this.blocks, clock || this.clock)
   }
 
