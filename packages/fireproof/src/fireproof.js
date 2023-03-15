@@ -1,5 +1,5 @@
 import { put, get, getAll, eventsSince } from './prolly.js'
-import Blockstore, { doTransaction } from './blockstore.js'
+import TransactionBlockstore, { doTransaction } from './blockstore.js'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -26,16 +26,17 @@ export default class Fireproof {
    * @static
    * @returns {Fireproof} - a new Fireproof instance
    */
-  static storage = () => {
-    return new Fireproof(new Blockstore(), [])
+  static storage = (name) => {
+    return new Fireproof(new TransactionBlockstore(name), [], { name })
   }
 
-  constructor (blocks, clock, config = {}, authCtx = {}) {
+  constructor (blocks, clock, config, authCtx = {}) {
+    this.name = config?.name || 'global'
+    this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = blocks
     this.clock = clock
     this.config = config
     this.authCtx = authCtx
-    this.instanceId = 'fp.' + Math.random().toString(36).substring(2, 7)
   }
 
   /**
@@ -109,7 +110,11 @@ export default class Fireproof {
       dataCIDs = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
-    return { rows, clock: this.clock, proof: { data: await cidsToProof(dataCIDs), clock: await cidsToProof(clockCIDs) } }
+    return {
+      rows,
+      clock: this.clock,
+      proof: { data: await cidsToProof(dataCIDs), clock: await cidsToProof(clockCIDs) }
+    }
   }
 
   /**
@@ -216,7 +221,11 @@ export default class Fireproof {
     }
     this.clock = result.head // do we want to do this as a finally block
     await this.#notifyListeners([event])
-    return { id: event.key, clock: this.clock, proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) } }
+    return {
+      id: event.key,
+      clock: this.clock,
+      proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) }
+    }
     // todo should include additions (or split clock)
   }
 

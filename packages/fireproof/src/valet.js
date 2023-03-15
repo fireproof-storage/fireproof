@@ -4,7 +4,7 @@ import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
 
 export default class Valet {
-  #db = null
+  idb = null
   #uploadQueue = null
   #alreadyEnqueued = new Set()
 
@@ -14,7 +14,8 @@ export default class Valet {
    */
   uploadFunction = null
 
-  constructor () {
+  constructor (name = 'default') {
+    this.name = name
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
         'queue worker',
@@ -50,8 +51,8 @@ export default class Valet {
   }
 
   withDB = async (dbWorkFun) => {
-    if (!this.#db) {
-      this.#db = await openDB('valet', 2, {
+    if (!this.idb) {
+      this.idb = await openDB(`fp.${this.name}.valet`, 2, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars') // todo use database name
@@ -65,7 +66,7 @@ export default class Valet {
         }
       })
     }
-    return await dbWorkFun(this.#db)
+    return await dbWorkFun(this.idb)
   }
 
   /**
