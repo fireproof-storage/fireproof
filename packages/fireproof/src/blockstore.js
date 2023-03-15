@@ -115,15 +115,15 @@ export default class TransactionBlockstore {
    * @yields {AnyBlock}
    * @returns {AsyncGenerator<AnyBlock>}
    */
-  * entries () {
-    // todo needs transaction blocks?
-    // for (const [str, bytes] of this.#blocks) {
-    //   yield { cid: parse(str), bytes }
-    // }
-    for (const [str, bytes] of this.#oldBlocks) {
-      yield { cid: parse(str), bytes }
-    }
-  }
+  // * entries () {
+  //   // needs transaction blocks?
+  //   // for (const [str, bytes] of this.#blocks) {
+  //   //   yield { cid: parse(str), bytes }
+  //   // }
+  //   for (const [str, bytes] of this.#oldBlocks) {
+  //     yield { cid: parse(str), bytes }
+  //   }
+  // }
 
   /**
    * Begin a transaction. Ensures the uncommited blocks are empty at the begining.

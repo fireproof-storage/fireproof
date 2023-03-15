@@ -11,12 +11,6 @@
 
 export default class Listener {
   #subcribers = new Map()
-
-  // todo code review if there is a better way that doesn't create a circular reference
-  // because otherwise we need to document that the user must call stopListening
-  // or else the listener will never be garbage collected
-  // maybe we can use WeakRef on the db side
-  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakRef
   #doStopListening = null
 
   constructor (database, routingFn) {
