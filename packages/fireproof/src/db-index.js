@@ -188,11 +188,6 @@ export default class DbIndex {
 
     this.dbHead = result.clock
   }
-
-  // todo use the DbIndex from other peers?
-  // we might need to add CRDT logic to it for that
-  // it would only be a performance improvement, but might add a lot of complexity
-  //   advanceIndex ()) {}
 }
 
 /**

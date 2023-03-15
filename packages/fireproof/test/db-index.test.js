@@ -8,7 +8,7 @@ console.x = function () {}
 describe('Index query', () => {
   let database, index
   beforeEach(async () => {
-    database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
+    database = new Fireproof(new Blockstore(), [])
     const docs = [
       { _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 },
       { _id: 'b2s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'bob', age: 40 },

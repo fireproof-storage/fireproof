@@ -440,13 +440,8 @@ describe('Clock', () => {
     toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 0)
 
-    // todo do these since heads make sense?
     sinceHead = [...head0, ...head2]
     toSync = await testFindEventsToSync(blocks, sinceHead)
-    // console.log('need', toSync.map(b => b.value.data))
-    // assert.equal(toSync.length, 2) // 0
-    // assert.equal(toSync[0].cid.toString(), event1.cid.toString())
-    // assert.equal(toSync[1].cid.toString(), event2.cid.toString())
   })
 
   it('add two events with some shared parents', async () => {
