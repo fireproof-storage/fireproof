@@ -22,7 +22,7 @@ import { CIDCounter } from 'prolly-trees/utils'
  * Advance the clock by adding an event.
  *
  * @template T
- * @param {import('./block').BlockFetcher} blocks Block storage.
+ * @param {import('../test/block').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head The head of the clock.
  * @param {EventLink<T>} event The event to add.
  * @returns {Promise<EventLink<T>[]>} The new head of the clock.
@@ -89,7 +89,7 @@ export class EventBlock extends Block {
 
 /** @template T */
 export class EventFetcher {
-  /** @param {import('./block').BlockFetcher} blocks */
+  /** @param {import('../test/block').BlockFetcher} blocks */
   constructor (blocks) {
     /** @private */
     this._blocks = blocks
@@ -162,7 +162,7 @@ async function contains (events, a, b) {
 
 /**
  * @template T
- * @param {import('./block').BlockFetcher} blocks Block storage.
+ * @param {import('../test/block').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head
  * @param {object} [options]
  * @param {(b: EventBlockView<T>) => string} [options.renderNodeLabel]

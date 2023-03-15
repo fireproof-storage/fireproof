@@ -8,7 +8,6 @@ import {
 import { create, load } from 'prolly-trees/map'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
-import { MemoryBlockstore, MultiBlockFetcher } from './block.js'
 import { doTransaction } from './blockstore.js'
 
 import { nocache as cache } from 'prolly-trees/cache'
@@ -55,18 +54,17 @@ export const makeGetBlock = (blocks) => {
  *   event: CID[]
  * }>}
  */
-async function createAndSaveNewEvent (
+async function createAndSaveNewEvent ({
   inBlocks,
-  mblocks,
-  getBlock,
   bigPut,
   root,
-  { key, value, del },
+  event: inEvent,
   head,
   additions,
   removals = []
-) {
+}) {
   let cids
+  const { key, value, del } = inEvent
   const data = {
     type: 'put',
     root: {
@@ -100,20 +98,20 @@ async function createAndSaveNewEvent (
 }
 
 const makeGetAndPutBlock = (inBlocks) => {
-  const mblocks = new MemoryBlockstore()
-  const blocks = new MultiBlockFetcher(mblocks, inBlocks)
-  const { getBlock, cids } = makeGetBlock(blocks)
+  // const mblocks = new MemoryBlockstore()
+  // const blocks = new MultiBlockFetcher(mblocks, inBlocks)
+  const { getBlock, cids } = makeGetBlock(inBlocks)
   const put = inBlocks.put.bind(inBlocks)
   const bigPut = async (block, additions) => {
     // console.log('bigPut', block.cid.toString())
     const { cid, bytes } = block
     put(cid, bytes)
-    mblocks.putSync(cid, bytes)
+    // mblocks.putSync(cid, bytes)
     if (additions) {
       additions.set(cid.toString(), block)
     }
   }
-  return { getBlock, bigPut, mblocks, blocks, cids }
+  return { getBlock, bigPut, blocks: inBlocks, cids }
 }
 
 const bulkFromEvents = (sorted) =>
@@ -143,7 +141,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
 /**
  * Put a value (a CID) for the given key. If the key exists it's value is overwritten.
  *
- * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('../test/block.js').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  * @param {string} key The key of the value to put.
  * @param {CID} value The value to put.
@@ -151,7 +149,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
  * @returns {Promise<Result>}
  */
 export async function put (inBlocks, head, event, options) {
-  const { getBlock, bigPut, mblocks, blocks } = makeGetAndPutBlock(inBlocks)
+  const { getBlock, bigPut, blocks } = makeGetAndPutBlock(inBlocks)
 
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
@@ -161,7 +159,7 @@ export async function put (inBlocks, head, event, options) {
       root = await node.block
       bigPut(root, additions)
     }
-    return createAndSaveNewEvent(inBlocks, mblocks, getBlock, bigPut, root, event, head, Array.from(additions.values()))
+    return createAndSaveNewEvent({ inBlocks, bigPut, root, event, head, additions: Array.from(additions.values()) })
   }
 
   // Otherwise, we find the common ancestor and update the root and other blocks
@@ -178,22 +176,20 @@ export async function put (inBlocks, head, event, options) {
     bigPut(nb, additions)
   }
   // additions are new blocks
-  return createAndSaveNewEvent(
+  return createAndSaveNewEvent({
     inBlocks,
-    mblocks,
-    getBlock,
     bigPut,
-    prollyRootBlock,
+    root: prollyRootBlock,
     event,
     head,
-    Array.from(additions.values()) /*, todo? Array.from(removals.values()) */
-  )
+    additions: Array.from(additions.values()) /*, todo? Array.from(removals.values()) */
+  })
 }
 
 /**
  * Determine the effective prolly root given the current merkle clock head.
  *
- * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('../test/block.js').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  */
 export async function root (inBlocks, head) {
@@ -223,7 +219,7 @@ export async function root (inBlocks, head) {
 
 /**
  * Get the list of events not known by the `since` event
- * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('../test/block.js').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  * @param {import('./clock').EventLink<EventData>} since Event to compare against.
  * @returns {Promise<import('./clock').EventLink<EventData>[]>}
@@ -239,7 +235,7 @@ export async function eventsSince (blocks, head, since) {
 
 /**
  *
- * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('../test/block.js').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  *
  * @returns {Promise<import('./prolly').Entry[]>}
@@ -257,7 +253,7 @@ export async function getAll (blocks, head) {
 }
 
 /**
- * @param {import('./block').BlockFetcher} blocks Bucket block storage.
+ * @param {import('../test/block.js').BlockFetcher} blocks Bucket block storage.
  * @param {import('./clock').EventLink<EventData>[]} head Merkle clock head.
  * @param {string} key The key of the value to retrieve.
  */
