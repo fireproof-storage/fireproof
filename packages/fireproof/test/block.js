@@ -1,8 +1,8 @@
 import { parse } from 'multiformats/link'
 
 /**
- * @typedef {{ cid: import('./link').AnyLink, bytes: Uint8Array }} AnyBlock
- * @typedef {{ get: (link: import('./link').AnyLink) => Promise<AnyBlock | undefined> }} BlockFetcher
+ * @typedef {{ cid: import('../src/link').AnyLink, bytes: Uint8Array }} AnyBlock
+ * @typedef {{ get: (link: import('../src/link').AnyLink) => Promise<AnyBlock | undefined> }} BlockFetcher
  */
 
 /** @implements {BlockFetcher} */
@@ -11,7 +11,7 @@ export class MemoryBlockstore {
   #blocks = new Map()
 
   /**
-   * @param {import('./link').AnyLink} cid
+   * @param {import('../src/link').AnyLink} cid
    * @returns {Promise<AnyBlock | undefined>}
    */
   async get (cid) {
@@ -21,7 +21,7 @@ export class MemoryBlockstore {
   }
 
   /**
-   * @param {import('./link').AnyLink} cid
+   * @param {import('../src/link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
@@ -30,7 +30,7 @@ export class MemoryBlockstore {
   }
 
   /**
-   * @param {import('./link').AnyLink} cid
+   * @param {import('../src/link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
   putSync (cid, bytes) {
@@ -53,7 +53,7 @@ export class MultiBlockFetcher {
     this.#fetchers = fetchers
   }
 
-  /** @param {import('./link').AnyLink} link */
+  /** @param {import('../src/link').AnyLink} link */
   async get (link) {
     for (const f of this.#fetchers) {
       const v = await f.get(link)
