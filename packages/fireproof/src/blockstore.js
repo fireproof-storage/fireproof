@@ -36,10 +36,14 @@ export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   #oldBlocks = new Map()
 
-  valet = new Valet() // cars by cid
+  valet = null
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
   #inflightTransactions = new Set()
+
+  constructor (name) {
+    this.valet = new Valet(name)
+  }
 
   /**
    * Get a block from the store.
