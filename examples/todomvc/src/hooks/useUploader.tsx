@@ -2,18 +2,14 @@ import { useEffect, useState, createContext } from 'react'
 import { useKeyring } from '@w3ui/react-keyring'
 import { Store } from '@web3-storage/upload-client'
 import { InvocationConfig } from '@web3-storage/upload-client/types'
-// import {useW3API} from './useW3API'
 import { store } from '@web3-storage/capabilities/store'
 import { Fireproof } from '@fireproof/core'
-// todo avoid application dependency
 import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../components/Authenticator'
 
 export const UploaderCtx = createContext<{
-  // registered: Boolean;
-  uploaderReady: Boolean
+  uploaderReady: boolean
 }>({
-  // registered: false,
-  uploaderReady: false,
+  uploaderReady: false
 })
 
 async function fetchWithRetries(url: string, retries: number): Promise<Response> {
@@ -22,7 +18,6 @@ async function fetchWithRetries(url: string, retries: number): Promise<Response>
     if (response.ok) {
       return response
     }
-    // wait for a short time before retrying
     await new Promise((resolve) => setTimeout(resolve, 100))
   }
   throw new Error(`Failed to fetch ${url} after ${retries} retries`)
@@ -33,16 +28,17 @@ export function useUploader(database: Fireproof) {
   const registered = Boolean(space?.registered())
   const [uploaderReady, setUploaderReady] = useState(false)
   const [remoteBlockReaderReady, setRemoteBlockReaderReady] = useState(false)
+
   useEffect(() => {
     if (!remoteBlockReaderReady) {
       database.setRemoteBlockReader(async (cid: any) => {
         const response = await fetchWithRetries(`https://${cid}.ipfs.w3s.link/`, 2)
-        // console.log()
         const buffer = await response.arrayBuffer()
         return new Uint8Array(buffer)
       })
       setRemoteBlockReaderReady(true)
     }
+
     const setUploader = async () => {
       if (uploaderReady) return
       const delegz = { with: space.did(), ...store }
@@ -50,12 +46,10 @@ export function useUploader(database: Fireproof) {
       const conf = {
         issuer: agent,
         with: delegz.with,
-        proofs: await getProofs([delegz]),
+        proofs: await getProofs([delegz])
       }
       database.setCarUploader(async (carCid: any, carBytes: Uint8Array) => {
-        const uploadedCarCid = await uploadCarBytes(conf, carCid, carBytes)
-        // why are these different?
-        // console.log('uploaded', carCid, uploadedCarCid.toString())
+        await uploadCarBytes(conf, carCid, carBytes)
       })
       setUploaderReady(true)
     }
@@ -65,13 +59,14 @@ export function useUploader(database: Fireproof) {
       const ag = await loadAgent()
       console.log('loaded agent', ag)
     }
-    // maybe take this out of the useEffect world and just make it JS?
+
     if (registered) {
       setUploader()
     } else {
       doLoadAgent()
     }
   }, [space])
+
   return { uploaderReady }
 }
 
@@ -96,17 +91,19 @@ export const UploadManager = ({}: { registered: Boolean }) => {
     </div>
   )
 }
-
 function SpaceRegistrar(): JSX.Element {
   const [, { registerSpace }] = useKeyring()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
+
   function resetForm(): void {
     setEmail('')
   }
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     setSubmitted(true)
+
     try {
       await registerSpace(email)
     } catch (err) {
@@ -117,6 +114,7 @@ function SpaceRegistrar(): JSX.Element {
       setSubmitted(false)
     }
   }
+
   return (
     <div className="flex flex-col items-center space-y-24 pt-12">
       <div className="flex flex-col items-center space-y-2">
