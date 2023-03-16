@@ -36,15 +36,27 @@ In your components:
 
 ```js
 import { FireproofCtx } from '@fireproof/core/hooks/use-fireproof'
-import { UploaderCtx } from './hooks/useUploader'
+import { UploaderCtx, UploadManager } from './hooks/useUploader'
+import { useKeyring } from '@w3ui/react-keyring'
 
 function MyComponent() {
   // Get Fireproof and Uploader contexts
   const { ready, database, addSubscriber } = useContext(FireproofCtx)
   const { uploaderReady } = useContext(UploaderCtx)
 
+  // Get Keyring data
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
+  const registered = Boolean(space?.registered())
+
   // Your component logic here
   // ...
+
+  return (
+    <>
+      {/* Render the UploadManager component */}
+      <UploadManager registered={registered} />
+    </>
+  )
 }
 ```
 
