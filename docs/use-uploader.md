@@ -1,4 +1,4 @@
-# useUploader React Hook for Fireproof
+# useUploader React Hook
 
 Allows you to connect to any service that accepts [CAR file uploads.](https://car.ipfs.io) Today [this mean web3.storage.](https://web3.storage/docs/how-tos/work-with-car-files/)  Don't worry you don't have to do anything, this is the hardest part.
 
