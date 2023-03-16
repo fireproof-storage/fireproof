@@ -92,7 +92,7 @@ function App(): JSX.Element {
   console.log('render App')
   const fp = useFireproof(defineIndexes, loadFixtures)
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp)
-  const up = useUploader(fp.database) // is required to be in a KeyringProvider, see main.tsx
+  const up = useUploader(fp.database) // is required to be in a KeyringProvider
   const listLoader = async ({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> =>
     await fetchListWithTodos(listId)
   const allListLoader = async ({ params }: LoaderFunctionArgs): Promise<ListDoc[]> => await fetchAllLists()

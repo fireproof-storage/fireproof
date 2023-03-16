@@ -7,7 +7,7 @@ import InputArea from './InputArea'
 import TodoItem from './TodoItem'
 import { FireproofCtx, FireproofCtxValue } from '@fireproof/core/hooks/use-fireproof'
 import { TimeTravel } from './TimeTravel'
-import { UploadManager, UploaderCtx } from '../hooks/useUploader'
+import { UploadManager } from '../hooks/useUploader'
 
 import { ListLoaderData, TodoDoc } from '../interfaces'
 import { makeQueryFunctions } from '../makeQueryFunctions'

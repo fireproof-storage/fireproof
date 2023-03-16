@@ -15,8 +15,6 @@ export const FireproofCtx = createContext<FireproofCtxValue>({
   ready: false,
 })
 
-
-
 const inboundSubscriberQueue = new Map()
 const database = Fireproof.storage()
 const listener = new Listener(database)
