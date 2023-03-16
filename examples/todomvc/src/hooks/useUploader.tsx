@@ -1,10 +1,9 @@
 import { useEffect, useState, createContext } from 'react'
-import { useKeyring } from '@w3ui/react-keyring'
+import { useKeyring, Authenticator } from '@w3ui/react-keyring'
 import { Store } from '@web3-storage/upload-client'
 import { InvocationConfig } from '@web3-storage/upload-client/types'
 import { store } from '@web3-storage/capabilities/store'
 import { Fireproof } from '@fireproof/core'
-import { Authenticator, AuthenticationForm, AuthenticationSubmitted } from '../components/Authenticator'
 
 export const UploaderCtx = createContext<{
   uploaderReady: boolean
