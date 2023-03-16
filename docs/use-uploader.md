@@ -1,6 +1,6 @@
 # useUploader React Hook
 
-Allows you to connect to any service that accepts [CAR file uploads.](https://car.ipfs.io) Today [this mean web3.storage.](https://web3.storage/docs/how-tos/work-with-car-files/)  Don't worry you don't have to do anything, this is the hardest part.
+Allows you to connect to any service that accepts [CAR file uploads.](https://car.ipfs.io) Today [this means web3.storage.](https://web3.storage/docs/how-tos/work-with-car-files/)  Don't worry you don't have to do anything, this is the hardest part.
 
 Once you are connected your data will be automatically replicated to web3.storage. Without encryption enabled (coming soon) this is public an irrevocable.
 
