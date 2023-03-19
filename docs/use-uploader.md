@@ -62,4 +62,4 @@ function MyComponent() {
 
 This example demonstrates how to use the `useUploader` hook in conjunction with the `useFireproof` hook. The `useUploader` hook requires being inside a `KeyringProvider` to work properly.
 
-See it in action in the TodoMVC example app.
+See it in action in the [TodoMVC example app.](https://github.com/fireproof-storage/fireproof/tree/main/examples/todomvc)
