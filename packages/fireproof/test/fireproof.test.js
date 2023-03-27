@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import Blockstore from '../src/blockstore.js'
 import Fireproof from '../src/fireproof.js'
+import * as codec from '@ipld/dag-cbor'
 
 let database, resp0
 
@@ -31,13 +32,13 @@ describe('Fireproof', () => {
   })
   it('mvcc put and get document with _clock that matches', async () => {
     assert(resp0.clock, 'should have clock')
-    assert.equal(resp0.clock[0].toString(), 'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma')
+    assert.equal(resp0.clock[0].toString(), 'bafyreiadhnnxgaeeqdxujfew6zxr4lnjyskkrg26cdjvk7tivy6dt4xmsm')
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     theDoc._clock = database.clock
     const put2 = await database.put(theDoc)
     assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     assert.equal(put2.clock.length, 1)
-    assert.equal(put2.clock[0].toString(), 'bafyreida2c2ckhjfoz5ulmbbfe66ey4svvedrl4tzbvtoxags2qck7lj2i')
+    assert.equal(put2.clock[0].toString(), 'bafyreib2kck2fv73lgahfcd5imarslgxcmachbxxavhtwahx5ppjfts4qe')
   })
   it('get should return an object instance that is not the same as the one in the db', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
@@ -50,7 +51,7 @@ describe('Fireproof', () => {
   it('get with mvcc option', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
     assert(theDoc._clock, 'should have _clock')
-    assert.equal(theDoc._clock[0].toString(), 'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma')
+    assert.equal(theDoc._clock[0].toString(), 'bafyreiadhnnxgaeeqdxujfew6zxr4lnjyskkrg26cdjvk7tivy6dt4xmsm')
   })
   it('get with mvcc option where someone else changed another document first', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
@@ -241,6 +242,34 @@ describe('Fireproof', () => {
     assert.equal(prevBob.age, 11)
   })
 
+  it('provides docs since tiny', async () => {
+    const result = await database.changesSince()
+    assert.equal(result.rows.length, 1)
+    assert.equal(result.rows[0].key, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+
+    // console.log('result', result)
+
+    // const result2 = await database.changesSince(result.clock)
+    // console.log('result2', result2)
+    // assert.equal(result2.rows.length, 0)
+
+    const bKey = 'befbef-3c3a-4b5e-9c1c-bbbbbb'
+    const bvalue = {
+      _id: bKey,
+      name: 'bob',
+      age: 44
+    }
+    const response = await database.put(bvalue)
+    assert(response.id, 'should have id')
+    assert.equal(response.id, bKey)
+
+    const res3 = await database.changesSince()
+    assert.equal(res3.rows.length, 2)
+
+    const res4 = await database.changesSince(result.clock)
+    assert.equal(res4.rows.length, 1)
+  })
+
   it('provides docs since', async () => {
     const result = await database.changesSince()
     assert.equal(result.rows.length, 1)
@@ -279,8 +308,6 @@ describe('Fireproof', () => {
 
     const res5 = await database.changesSince(res4.clock)
 
-    // await database.visClock()
-
     assert.equal(res5.rows.length, 1)
 
     const res6 = await database.changesSince(result2.clock)
@@ -312,22 +339,42 @@ describe('Fireproof', () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
     for (let index = 0; index < 200; index++) {
-      const id = '' + (300 - index).toString()
+      const id = '1' + (300 - index).toString()
+      // console.log(`Putting id: ${id}, index: ${index}`)
       resp = await database.put({ index, _id: id }).catch(e => {
-        assert.equal(e.message, 'put failed on  _id: ' + id)
+        assert.fail(`put failed on _id: ${id}, error: ${e.message}`)
       })
-      assert(resp.id)
+      assert(resp.id, `Failed to obtain resp.id for _id: ${id}`)
       doc = await database.get(resp.id).catch(e => {
         console.trace('failed', e)
-        assert.equal(e.message, 'get failed on _id: ' + id)
+        assert.fail(`get failed on _id: ${id}, error: ${e.message}`)
       })
-      assert.equal(doc.index, index)
-      changes = await database.changesSince().catch(e => {
-        assert.equal(e.message, 'changesSince failed on  _id: ' + id)
+
+      assert.equal(doc.index, index, `doc.index is not equal to index for _id: ${id}`)
+      changes = await database.changesSince().catch(async e => {
+        assert.fail(`changesSince failed on _id: ${id}, error: ${e.message}`)
       })
-      assert.equal(changes.rows.length, index + 2)
+      changes.rows.forEach(row => {
+        for (const key in row) {
+          const value = row[key]
+          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+        }
+      })
+      if (index > 3) {
+        const stored = await database.blocks.get('bafyreicumn7tvssch4xslbe4jjq55c6w3jt4yxyjagkr2tengsudato7vi').catch((e) => {
+          console.log(`Error getting block for index ${index}: ${e.message}`)
+        })
+        if (stored) {
+          const doc = codec.decode(await stored.bytes)
+          // console.log('stored', JSON.stringify(dec))
+          assert.equal(doc.closed, false)
+        }
+      }
+      // console.log('changes: ' + index, changes.rows.length, JSON.stringify(changes.rows))
+      assert.equal(changes.rows.length, index + 2, `failed on ${index}, with ${changes.rows.length} ${id}`)
     }
   }).timeout(20000)
+
   it('concurrent transactions', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     const promises = []

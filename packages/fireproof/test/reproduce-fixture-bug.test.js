@@ -58,8 +58,8 @@ const reproduceBug = async (database) => {
   const id = '02pkji8'
   const doc = await database.get(id)
   // (await database.put({ completed: !completed, ...doc }))
-  const ok = await database.put(doc)
+  await database.put(doc)
   await database.todosByList.query({ range: [0, 1] })
 
-  console.log('ok', ok)
+  // console.log('ok', ok)
 }
