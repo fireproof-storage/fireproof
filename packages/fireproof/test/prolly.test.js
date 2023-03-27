@@ -110,7 +110,7 @@ describe('Prolly', () => {
     assert.equal(bvalue.toString(), data[0][1].toString())
   })
 
-  it.skip('linear put hundreds of values', async () => {
+  it.skip('passing, slow: linear put hundreds of values', async () => {
     const blocks = new Blockstore()
     const alice = new TestPail(blocks, [])
 
@@ -173,7 +173,7 @@ class TestPail {
   /** @param {string} key */
   async get (key) {
     const resp = await get(this.blocks, this.head, key)
-    console.log('prolly GET', key, resp)
+    // console.log('prolly GET', key, resp)
     return resp.result
   }
 

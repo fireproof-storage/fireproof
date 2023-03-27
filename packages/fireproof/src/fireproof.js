@@ -1,5 +1,6 @@
 import { put, get, getAll, eventsSince } from './prolly.js'
 import TransactionBlockstore, { doTransaction } from './blockstore.js'
+import charwise from 'charwise'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -94,7 +95,7 @@ export default class Fireproof {
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
-      for (const { key, type, value } of resp.result) {
+      for (const { key, type, value } of resp.result.map(decodeEvent)) {
         if (type === 'del') {
           docsMap.set(key, { key, del: true })
         } else {
@@ -106,7 +107,7 @@ export default class Fireproof {
       // console.log('change rows', this.instanceId, rows)
     } else {
       const allResp = await getAll(this.blocks, this.clock)
-      rows = allResp.result.map(({ key, value }) => ({ key, value }))
+      rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value })))
       dataCIDs = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
@@ -200,7 +201,8 @@ export default class Fireproof {
    * @param {Object<{key : string, value: any}>} event - the event to add
    * @returns {Object<{ id: string, clock: CID[] }>} - The result of adding the event to storage
    */
-  async #putToProllyTree (event, clock = null) {
+  async #putToProllyTree (decodedEvent, clock = null) {
+    const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(clock) !== JSON.stringify(this.clock)) {
       // we need to check and see what version of the document exists at the clock specified
       // if it is the same as the one we are trying to put, then we can proceed
@@ -220,9 +222,9 @@ export default class Fireproof {
       throw new Error('failed to put at storage layer')
     }
     this.clock = result.head // do we want to do this as a finally block
-    await this.#notifyListeners([event])
+    await this.#notifyListeners([decodedEvent]) // this type is odd
     return {
-      id: event.key,
+      id: decodedEvent.key,
       clock: this.clock,
       proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) }
     }
@@ -264,7 +266,7 @@ export default class Fireproof {
    */
   async get (key, opts = {}) {
     const clock = opts.clock || this.clock
-    const resp = await get(this.blocks, clock, key)
+    const resp = await get(this.blocks, clock, charwise.encode(key))
 
     // this tombstone is temporary until we can get the prolly tree to delete
     if (!resp || resp.result === null) {
@@ -298,4 +300,15 @@ export async function cidsToProof (cids) {
   if (!cids || !cids.all) return []
   const all = await cids.all()
   return [...all].map((cid) => cid.toString())
+}
+
+function decodeEvent (event) {
+  const decodedKey = charwise.decode(event.key)
+  return { ...event, key: decodedKey }
+}
+
+function encodeEvent (event) {
+  if (!(event && event.key)) return
+  const encodedKey = charwise.encode(event.key)
+  return { ...event, key: encodedKey }
 }

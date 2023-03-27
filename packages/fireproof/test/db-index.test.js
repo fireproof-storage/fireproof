@@ -2,13 +2,13 @@ import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import Blockstore from '../src/blockstore.js'
 import Fireproof from '../src/fireproof.js'
-import Index from '../src/db-index.js'
+import DbIndex from '../src/db-index.js'
 console.x = function () {}
 
-describe('Index query', () => {
+describe('DbIndex query', () => {
   let database, index
   beforeEach(async () => {
-    database = new Fireproof(new Blockstore(), [])
+    database = Fireproof.storage()
     const docs = [
       { _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 },
       { _id: 'b2s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'bob', age: 40 },
@@ -24,7 +24,7 @@ describe('Index query', () => {
       assert(response.id, 'should have id')
       assert.equal(response.id, id)
     }
-    index = new Index(database, function (doc, map) {
+    index = new DbIndex(database, function (doc, map) {
       map(doc.age, doc.name)
     })
   })
@@ -36,8 +36,10 @@ describe('Index query', () => {
     assert.equal(result.rows[0].key, 43)
     assert(result.rows[0].value === 'carol', 'correct value')
   })
-  it.skip('query exact key', async () => {
-    const result = await index.query({ key: 43 })
+  it('query exact key', async () => {
+    let result = await index.query({ range: [41, 44] })
+    assert(result.rows[0].key === 43, 'correct key')
+    result = await index.query({ key: 43 })
     assert(result, 'did return result')
     assert(result.rows)
     assert.equal(result.rows.length, 1, 'one row matched')
@@ -197,12 +199,12 @@ describe('Index query', () => {
   })
 })
 
-describe('Index query with bad index definition', () => {
+describe('DbIndex query with bad index definition', () => {
   let database, index
   beforeEach(async () => {
     database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
     await database.put({ _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 })
-    index = new Index(database, function (doc, map) {
+    index = new DbIndex(database, function (doc, map) {
       map(doc.oops.missingField, doc.name)
     })
   })
@@ -214,5 +216,4 @@ describe('Index query with bad index definition', () => {
       console.error = oldErrFn
     })
   })
-  it.skip('reproduce missing block error from browser so we can turn off always rebuild', async () => {})
 })

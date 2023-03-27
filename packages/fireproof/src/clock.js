@@ -285,6 +285,7 @@ async function findSortedEvents (events, head, tail) {
   const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
   for (const arr of all) {
     for (const { event, depth } of arr) {
+      // console.log('event value', event.value.data.value)
       const info = weights.get(event.cid.toString())
       if (info) {
         info.weight += depth
