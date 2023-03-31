@@ -339,14 +339,20 @@ describe('Fireproof', () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
     for (let index = 0; index < 200; index++) {
-      const id = '1' + (300 - index).toString()
-      // console.log(`Putting id: ${id}, index: ${index}`)
+      const id = '1' + (301 - index).toString()
+      console.log(`Putting id: ${id}, index: ${index}`)
       resp = await database.put({ index, _id: id }).catch(e => {
         assert.fail(`put failed on _id: ${id}, error: ${e.message}`)
       })
       assert(resp.id, `Failed to obtain resp.id for _id: ${id}`)
+
+      console.log(`vis for update id: ${id}, index:`, index)
+      for await (const line of database.vis()) {
+        console.log(line)
+      }
+
       doc = await database.get(resp.id).catch(e => {
-        console.trace('failed', e)
+        console.log('failed', e)
         assert.fail(`get failed on _id: ${id}, error: ${e.message}`)
       })
 
@@ -370,7 +376,7 @@ describe('Fireproof', () => {
           assert.equal(doc.closed, false)
         }
       }
-      // console.log('changes: ' + index, changes.rows.length, JSON.stringify(changes.rows))
+      console.log('changes: ', index, changes.rows.length, JSON.stringify(changes.rows))
       assert.equal(changes.rows.length, index + 2, `failed on ${index}, with ${changes.rows.length} ${id}`)
     }
   }).timeout(20000)
