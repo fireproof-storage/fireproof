@@ -7,6 +7,5 @@
 [build]
   command = "pnpm run build"
   publish = "dist"
-  base = "examples/todomvc"
 
   
