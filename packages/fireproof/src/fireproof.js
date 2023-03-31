@@ -1,4 +1,4 @@
-import { put, get, getAll, eventsSince } from './prolly.js'
+import { vis, put, get, getAll, eventsSince } from './prolly.js'
 import TransactionBlockstore, { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
@@ -282,6 +282,10 @@ export default class Fireproof {
     }
     doc._id = key
     return doc
+  }
+
+  async * vis () {
+    return yield * vis(this.blocks, this.clock)
   }
 
   setCarUploader (carUploaderFn) {

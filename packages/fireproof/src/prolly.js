@@ -6,12 +6,12 @@ import {
   findEventsToSync
 } from './clock.js'
 import { create, load } from 'prolly-trees/map'
+// import { create, load } from '../../../../prolly-trees/src/map.js'
+import { nocache as cache } from 'prolly-trees/cache'
+import { CIDCounter, bf, simpleCompare as compare } from 'prolly-trees/utils'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { doTransaction } from './blockstore.js'
-
-import { nocache as cache } from 'prolly-trees/cache'
-import { CIDCounter, bf, simpleCompare as compare } from 'prolly-trees/utils'
 import { create as createBlock } from 'multiformats/block'
 const opts = { cache, chunker: bf(3), codec, hasher, compare }
 
@@ -206,15 +206,15 @@ export async function root (inBlocks, head) {
   // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = bulkFromEvents(sorted)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
-  const prollyRootBlock = await newProllyRootNode.block
-  // console.log('emphemeral blocks', newBlocks.map((nb) => nb.cid.toString()))
+  // const prollyRootBlock = await newProllyRootNode.block
+  // console.log('newBlocks', newBlocks.map((nb) => nb.cid.toString()))
   // todo maybe these should go to a temp blockstore?
   await doTransaction('root', inBlocks, async (transactionBlockstore) => {
     const { bigPut } = makeGetAndPutBlock(transactionBlockstore)
     for (const nb of newBlocks) {
       bigPut(nb)
     }
-    bigPut(prollyRootBlock)
+    // bigPut(prollyRootBlock)
   })
   return { cids: events.cids, node: newProllyRootNode }
 }
@@ -267,4 +267,16 @@ export async function get (blocks, head, key) {
   const { node: prollyRootNode, cids: clockCIDs } = await root(blocks, head)
   const { result, cids } = await prollyRootNode.get(key)
   return { result, cids, clockCIDs }
+}
+
+export async function * vis (blocks, head) {
+  if (!head.length) {
+    return { cids: new CIDCounter(), result: null }
+  }
+  const { node: prollyRootNode, cids } = await root(blocks, head)
+  const lines = []
+  for await (const line of prollyRootNode.vis()) {
+    yield line
+  }
+  return { vis: lines.join('\n'), cids }
 }

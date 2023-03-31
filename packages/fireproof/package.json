@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Realtime database for IPFS",
   "main": "index.js",
   "type": "module",
@@ -37,7 +37,7 @@
     "cli-color": "^2.0.3",
     "idb": "^7.1.1",
     "multiformats": "^11.0.1",
-    "prolly-trees": "1.0.1",
+    "prolly-trees": "1.0.2",
     "sade": "^1.8.1"
   },
   "devDependencies": {
@@ -62,12 +62,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jchris/fireproof.git"
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
   },
   "bugs": {
-    "url": "https://github.com/jchris/fireproof/issues"
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "homepage": "https://github.com/jchris/fireproof#readme",
+  "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "workspaces": [
     "examples/todomvc"
   ]

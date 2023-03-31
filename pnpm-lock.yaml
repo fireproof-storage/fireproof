@@ -85,7 +85,7 @@ importers:
       mocha: ^10.2.0
       multiformats: ^11.0.1
       nanoid: ^4.0.0
-      prolly-trees: 1.0.1
+      prolly-trees: 1.0.2
       sade: ^1.8.1
       standard: ^17.0.0
     dependencies:
@@ -98,7 +98,7 @@ importers:
       cli-color: 2.0.3
       idb: 7.1.1
       multiformats: 11.0.1
-      prolly-trees: 1.0.1
+      prolly-trees: 1.0.2
       sade: 1.8.1
     devDependencies:
       c8: 7.13.0
@@ -3420,8 +3420,8 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /prolly-trees/1.0.1:
-    resolution: {integrity: sha512-il3elSVHBY4BZfCJaxjHlO34H+xvARcXa0TPV0exPNX6KnvfLjinNfbH72TKt+QtVayv4zyX7Zmy3JfpHOQfWA==}
+  /prolly-trees/1.0.2:
+    resolution: {integrity: sha512-JCNXFSVjSqYQVPX88Xk/1ssBIr3eBvhebpQM3DoD8tLVKokmR2M4q+aIQguteKvp7wEB8pf8HqjVtViqtIczvQ==}
     dependencies:
       bl: 4.1.0
       node-sql-parser: 3.9.4
