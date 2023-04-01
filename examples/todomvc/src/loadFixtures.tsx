@@ -41,21 +41,4 @@ export default async function loadFixtures(database: {
       })
     }
   }
-
-  await reproduceBug(database)
-}
-
-const reproduceBug = async (database) => {
-  const id = '02pkji8'
-  const doc = await database.get(id)
-  // (await database.put({ completed: !completed, ...doc }))
-  const ok = await database.put(doc)
-  await database.todosByList.query({
-    range: [1, 2]
-  })
-  const ok2 = await database.put(doc)
-  await database.todosByList.query({
-    range: [1, 2]
-  })
-  console.log('ok', ok)
 }
