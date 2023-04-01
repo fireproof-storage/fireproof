@@ -78,7 +78,7 @@ export function List(): JSX.Element {
       />
       <div className="dbInfo">
         <TimeTravel database={database} />
-        <UploadManager registered={registered} />
+        {/* <UploadManager registered={registered} /> */}
       </div>
     </div>
   )
