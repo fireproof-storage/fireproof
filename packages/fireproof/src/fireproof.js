@@ -133,7 +133,7 @@ export default class Fireproof {
   }
 
   async #notifyListeners (changes) {
-    // await sleep(0)
+    // await sleep(10)
     for (const listener of this.#listeners) {
       await listener(changes)
     }
@@ -221,6 +221,7 @@ export default class Fireproof {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
     }
+    // console.log('setting clock head', result.head.toString())
     this.clock = result.head // do we want to do this as a finally block
     await this.#notifyListeners([decodedEvent]) // this type is odd
     return {

@@ -55,18 +55,18 @@ export function makeQueryFunctions({ ready, database }): {
   }
 
   const clearCompleted = async (listId) => {
-    const todos = (
-      (await ready) &&
-      database.todosByList.query({
+    const result =  ready &&
+      await database.todosByList.query({
         range: [
           [listId, '1'],
           [listId, 'x'],
         ],
       })
-    ).rows.map((row) => row.value)
+    
+    const todos = result.rows.map((row) => row.value)
     const todosToDelete = todos.filter((todo) => todo.completed)
     for (const todoToDelete of todosToDelete) {
-      ;(await ready) && database.del(todoToDelete._id)
+      await database.del(todoToDelete._id)
     }
   }
   return {
