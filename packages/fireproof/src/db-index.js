@@ -123,6 +123,10 @@ export default class DbIndex {
 
     this.byIDindexRoot = null
     this.dbHead = null
+
+    this.instanceId = this.database.instanceId + `.DbIndex.${Math.random().toString(36).substring(2, 7)}`
+
+    this.updateIndexPromise = null
   }
 
   /**
@@ -162,7 +166,17 @@ export default class DbIndex {
    * @private
    * @returns {Promise<void>}
    */
+
   async #updateIndex (blocks) {
+    if (this.updateIndexPromise) return this.updateIndexPromise
+    this.updateIndexPromise = this.#innerUpdateIndex(blocks)
+    this.updateIndexPromise.finally(() => { this.updateIndexPromise = null })
+    return this.updateIndexPromise
+  }
+
+  async #innerUpdateIndex (blocks) {
+    const callTag = Math.random().toString(36).substring(4)
+    console.log(`#updateIndex ${callTag} >`, this.instanceId, this.dbHead?.toString(), this.dbIndexRoot?.cid.toString(), this.byIDindexRoot?.cid.toString())
     // todo remove this hack
     if (ALWAYS_REBUILD) {
       this.dbHead = null // hack
@@ -194,18 +208,18 @@ export default class DbIndex {
       this.byIDIndex = purgedRemovalResults.dbIndex
     }
     const indexEntries = indexEntriesForChanges(result.rows, this.mapFun)
+    // console.log('indexEntries', indexEntries)
+
     const byIdIndexEntries = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
     const addFutureRemovalsResult = await bulkIndex(blocks, this.byIDindexRoot, this.byIDIndex, byIdIndexEntries, opts)
     this.byIDindexRoot = addFutureRemovalsResult.root
     this.byIDIndex = addFutureRemovalsResult.dbIndex
 
-    // console.log('indexEntries', indexEntries)
-
     const updateIndexResult = await bulkIndex(blocks, this.dbIndexRoot, this.dbIndex, indexEntries, opts)
     this.dbIndexRoot = updateIndexResult.root
     this.dbIndex = updateIndexResult.dbIndex
-
     this.dbHead = result.clock
+    console.log(`#updateIndex ${callTag} <`, this.instanceId, callTag, this.dbHead?.toString(), this.dbIndexRoot?.cid.toString(), this.byIDindexRoot?.cid.toString())
   }
 }
 
