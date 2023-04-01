@@ -12,6 +12,8 @@ import { UploadManager } from '../hooks/useUploader'
 import { ListLoaderData, TodoDoc } from '../interfaces'
 import { makeQueryFunctions } from '../makeQueryFunctions'
 
+const sleep = async (t: number) => new Promise((resolve) => setTimeout(resolve, t))
+
 export function List(): JSX.Element {
   // first data stuff
   const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue
@@ -19,8 +21,9 @@ export function List(): JSX.Element {
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
   const revalidator = useRevalidator()
-  addSubscriber('List', () => {
-    // console.log('revalidating', name)
+  addSubscriber('List', async () => {
+    await sleep(100)
+    console.log('revalidating', todos)
     revalidator.revalidate()
   })
 
