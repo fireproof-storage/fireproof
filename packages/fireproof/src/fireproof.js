@@ -221,7 +221,7 @@ export default class Fireproof {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
     }
-    // console.log('setting clock head', result.head.toString())
+    // console.log('new clock head', this.instanceId, result.head.toString())
     this.clock = result.head // do we want to do this as a finally block
     await this.#notifyListeners([decodedEvent]) // this type is odd
     return {

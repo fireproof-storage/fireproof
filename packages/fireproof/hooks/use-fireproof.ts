@@ -84,10 +84,9 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
 const husherMap = new Map()
 const husher = (id: string, workFn: { (): Promise<any> }, ms: number) => {
   if (!husherMap.has(id)) {
-    husherMap.set(
-      id,
-      workFn().finally(() => setTimeout(() => husherMap.delete(id), ms))
-    )
+    const start: number = Date.now()
+    husherMap.set(id, workFn().finally(() => 
+      setTimeout(() => husherMap.delete(id), ms - (Date.now() - start))))
   }
   return husherMap.get(id)
 }
