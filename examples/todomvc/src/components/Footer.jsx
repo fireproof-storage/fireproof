@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import classNames from 'classnames'
 
-function TodoFooter ({ count, uri, completedCount, onClearCompleted, nowShowing }) {
+function TodoFooter ({ count, completedCount, onClearCompleted, nowShowing }) {
   const activeTodoWord = count > 1 ? 'items' : 'item'
   let clearButton = null
 
@@ -26,12 +26,12 @@ function TodoFooter ({ count, uri, completedCount, onClearCompleted, nowShowing 
           </Link>
         </li>{' '}
         <li>
-          <Link to={`${uri ? uri + '/' : ''}active`} className={classNames({ selected: nowShowing === 'active' })}>
+          <Link to={`${nowShowing === 'active' ? '../' : ''}active`} className={classNames({ selected: nowShowing === 'active' })}>
             Active
           </Link>
         </li>{' '}
         <li>
-          <Link to={`${uri ? uri + '/' : ''}completed`} className={classNames({ selected: nowShowing === 'completed' })}>
+          <Link to={`${nowShowing === 'completed' ? '../' : ''}completed`} className={classNames({ selected: nowShowing === 'completed' })}>
             Completed
           </Link>
         </li>

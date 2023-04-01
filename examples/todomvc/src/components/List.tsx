@@ -74,7 +74,6 @@ export function List(): JSX.Element {
         completedCount={filteredTodos['completed'].length}
         onClearCompleted={onClearCompleted}
         nowShowing={nowShowing}
-        uri={routeFilter}
       />
       <div className="dbInfo">
         <TimeTravel database={database} />
