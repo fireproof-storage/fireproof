@@ -101,3 +101,7 @@
 html {
   animation: gradient 20s ease infinite;
 }
+
+body .footer:before {
+  box-shadow: none;
+}
