@@ -27,7 +27,7 @@ const LoadingView = (): JSX.Element => {
     <Layout>
       <div>
         <div className="listNav">
-          <button>Loading...</button>
+        <button>Choose a list.</button>
           <label></label>
         </div>
         <section className="main">
