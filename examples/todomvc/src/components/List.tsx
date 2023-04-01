@@ -22,8 +22,6 @@ export function List(): JSX.Element {
   const [editing, setEditing] = useState('')
   const revalidator = useRevalidator()
   addSubscriber('List', async () => {
-    await sleep(100)
-    console.log('revalidating', todos)
     revalidator.revalidate()
   })
 

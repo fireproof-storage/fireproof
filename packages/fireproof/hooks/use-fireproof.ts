@@ -53,9 +53,13 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
         console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
         await database.setClock(clock)
         try {
-          await database.changesSince()
+          const changes = await database.changesSince()
+          if (changes.rows.length < 2) {
+            console.log('Resetting database')
+            throw new Error('Resetting database')
+          }
         } catch (e) {
-          console.error('Error loading previous database clock.', e)
+          console.error(`Error loading previous database clock. ${fp} Resetting.`, e)
           await database.setClock([])
           await setupDatabaseFn(database)
           localSet('fireproof', JSON.stringify(database))
