@@ -6,7 +6,7 @@ to offer a new kind of database that:
 - scales without incurring developer costs, thanks to Filecoin
 - uses cryptographically verifiable protocols (what plants crave)
 
-Learn more about the concepts and architecture behind Fireproof [in our plan,](https://hackmd.io/@j-chris/SyoE-Plpj) or jump to the [quick start](#quick-start) for React and server-side examples.
+Learn more about the [concepts and architecture behind Fireproof](https://fireproof.storage/documentation/how-the-database-engine-works/), or jump to the [quick start](#quick-start) for React and server-side examples.
 
 ### Status
 
