@@ -30,10 +30,10 @@ describe('DbIndex query', () => {
     })
   })
   it('query index range', async () => {
-    const result = await index.query({ range: [41, 44] })
+    const result = await index.query({ range: [41, 49] })
     assert(result, 'did return result')
     assert(result.rows)
-    assert.equal(result.rows.length, 1, 'one row matched')
+    assert.equal(result.rows.length, 2, 'two row matched')
     assert.equal(result.rows[0].key, 43)
     assert(result.rows[0].value === 'carol', 'correct value')
   })
@@ -46,6 +46,14 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, 'one row matched')
     assert.equal(result.rows[0].key, 43)
     assert(result.rows[0].value === 'carol', 'correct value')
+  })
+  it('query index all', async () => {
+    const result = await index.query()
+    assert(result, 'did return result')
+    assert(result.rows)
+    assert.equal(result.rows.length, 6, 'six row matched')
+    assert.equal(result.rows[0].key, 4)
+    assert.equal(result.rows[0].value, 'emily')
   })
   it('query twice', async () => {
     let result = await index.query({ range: [41, 44] })
