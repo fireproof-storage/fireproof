@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "Realtime database for IPFS",
   "main": "index.js",
   "type": "module",
@@ -9,6 +9,8 @@
     "test:mocha": "mocha test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel test/*.test.js",
     "coverage": "c8 -r html -r text npm test",
+    "prepublishOnly" : "cp ../../README.md .",
+    "postpublish": "rm README.md",
     "lint": "standard",
     "lint:fix": "standard --fix"
   },
@@ -37,7 +39,7 @@
     "cli-color": "^2.0.3",
     "idb": "^7.1.1",
     "multiformats": "^11.0.1",
-    "prolly-trees": "1.0.2",
+    "prolly-trees": "1.0.3",
     "sade": "^1.8.1"
   },
   "devDependencies": {

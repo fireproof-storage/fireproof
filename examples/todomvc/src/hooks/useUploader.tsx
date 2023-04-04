@@ -54,9 +54,9 @@ export function useUploader(database: Fireproof) {
     }
 
     const doLoadAgent = async () => {
-      console.log('loadAgent', loadAgent, typeof loadAgent)
+      // console.log('loadAgent', loadAgent, typeof loadAgent)
       const ag = await loadAgent()
-      console.log('loaded agent', ag)
+      // console.log('loaded agent', ag)
     }
 
     if (registered) {

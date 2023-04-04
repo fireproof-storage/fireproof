@@ -55,7 +55,7 @@ export default class TransactionBlockstore {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
     const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch((e) => {
-      console.log('networkGet', cid.toString(), e)
+      // console.log('networkGet', cid.toString(), e)
       return this.networkGet(key)
     })
     if (!bytes) throw new Error('Missing block: ' + key)
@@ -83,15 +83,13 @@ export default class TransactionBlockstore {
       const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
-        // dont turn this on until the Nan thing is fixed
-        // it keep the network blocks in indexedb but lets get the basics solid first
         doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
           await innerBlockstore.put(CID.parse(key), value)
         })
         return value
       }
     } else {
-      throw new Error('No remoteBlockFunction')
+      return false
     }
   }
 
