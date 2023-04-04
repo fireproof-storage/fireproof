@@ -69,7 +69,7 @@
   "bugs": {
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "homepage": "https://github.com/fireproof-storage/fireproof#readme",
+  "homepage": "https://fireproof.storage",
   "workspaces": [
     "examples/todomvc"
   ]

@@ -319,7 +319,10 @@ async function loadIndex (blocks, index, indexOpts) {
 
 async function doIndexQuery (blocks, indexByKey, query) {
   await loadIndex(blocks, indexByKey, dbIndexOpts)
-  if (query.range) {
+  if (!query) {
+    const { result, ...all } = await indexByKey.root.getAllEntries()
+    return { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }
+  } else if (query.range) {
     const encodedRange = query.range.map((key) => charwise.encode(key))
     return indexByKey.root.range(...encodedRange)
   } else if (query.key) {
