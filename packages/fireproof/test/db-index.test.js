@@ -3,6 +3,7 @@ import assert from 'node:assert'
 import Blockstore from '../src/blockstore.js'
 import Fireproof from '../src/fireproof.js'
 import DbIndex from '../src/db-index.js'
+import Hydrator from '../src/hydrator.js'
 console.x = function () {}
 
 describe('DbIndex query', () => {
@@ -77,7 +78,7 @@ describe('DbIndex query', () => {
     // console.x('bresult.rows', bresult.rows)
     assert.equal(bresult.rows.length, 6, 'all row matched')
 
-    const oldHead = database.clock
+    const snapClock = database.clock
 
     const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c').catch((e) => e)
     assert.equal(notYet.message, 'Not found', 'not yet there')
@@ -91,7 +92,7 @@ describe('DbIndex query', () => {
     assert(gotX.name === 'Xander', 'got Xander')
     console.x('got X')
 
-    const snap = database.snapshot(oldHead)
+    const snap = Hydrator.snapshot(database, snapClock)
 
     const aliceOld = await snap.get('a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')// .catch((e) => e)
     console.x('aliceOld', aliceOld)
@@ -113,7 +114,7 @@ describe('DbIndex query', () => {
     await index.query({ range: [51, 54] })
 
     console.x('--- make Xander 53')
-    const DOCID = 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const DOCID = 'xander-doc'
     const r1 = await database.put({ _id: DOCID, name: 'Xander', age: 53 })
     assert(r1.id, 'should have id')
 
@@ -124,7 +125,7 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = database.snapshot(database.clock)
+    const snap = Hydrator.snapshot(database)
 
     console.x('--- make Xander 63')
     const response = await database.put({ _id: DOCID, name: 'Xander', age: 63 })
@@ -172,7 +173,7 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = database.snapshot(database.clock)
+    const snap = Hydrator.snapshot(database)
 
     console.x('--- delete Xander 53')
     const response = await database.del(DOCID)

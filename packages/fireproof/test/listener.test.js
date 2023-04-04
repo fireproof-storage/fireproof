@@ -3,6 +3,7 @@ import assert from 'node:assert'
 import Blockstore from '../src/blockstore.js'
 import Fireproof from '../src/fireproof.js'
 import Listener from '../src/listener.js'
+import Hydrator from '../src/hydrator.js'
 
 let database, listener, star
 
@@ -43,7 +44,7 @@ describe('Listener', () => {
       database.put({ _id: 'k645-87tk', name: 'karl2' }).then((ok) => {
         assert(ok.id)
         assert.notEqual(database.clock, startClock)
-        database.setClock(startClock)
+        Hydrator.zoom(database, startClock)
       }).catch(done)
     })
   })

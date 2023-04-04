@@ -10,8 +10,8 @@ const rand = mulberry32(1) // determinstic fixtures
 
 export default async function loadFixtures(database: {
   put: (arg0: any) => any
-  allLists: { query: () => Promise<any> }
-  todosByList: { query: () => Promise<any> }
+  allLists: { query: (opts) => Promise<any> }
+  todosByList: { query: (opts) => Promise<any> }
 }) {
   const nextId = (prefix = '') => prefix + rand().toString(32).slice(2)
   const listTitles = ['Building Apps', 'Having Fun', 'Getting Groceries']
@@ -41,4 +41,5 @@ export default async function loadFixtures(database: {
       })
     }
   }
+  await database.allLists.query({ range : [0,1]})
 }
