@@ -1,6 +1,6 @@
 # Document update tutorial
 
-Fireproof supports optional MVCC document updates. The default behavior allows any update, but if you want to make sure no one else has changed a document since you loaded it, you want MVCC. Because Fireproof uses MVCC and Merkle clocks, even if you don't active MVCC, and you end up writing a document someone else has updated, you won't lose any data, you'll juse need to merge the conflict. More about that in a future tutorial. For now let's just talk about document updates.
+Fireproof supports optional MVCC document updates. The default behavior allows any update, but if you want to make sure no one else has changed a document since you loaded it, you want MVCC. Because Fireproof uses MVCC and Merkle clocks, even if you don't active MVCC, and you end up writing a document someone else has updated, you won't lose any data, you'll just need to merge the conflict. More about that in a future tutorial. For now let's just talk about document updates.
 
 ## Document read and write
 
@@ -38,7 +38,7 @@ If multiple users are working this way, whoever writes last wins, overwriting th
 
 ## Multi-version concurrency control (MVCC)
 
-If you want to prevent that scenario, you can enable multi-version concurrency control, which will require that writers prove they are updating from the latest version, or else the write fails. This can give them a chance to reload from the source and incorporate their changes before writiing, instead of doing it later as a conflict merge.
+If you want to prevent that scenario, you can enable multi-version concurrency control, which will require that writers prove they are updating from the latest version, or else the write fails. This can give them a chance to reload from the source and incorporate their changes before writting, instead of doing it later as a conflict merge.
 
 The put response includes an `id` which is unique for the document in the database, and a `clock` which represents the current snapshot of the database. You can also request that Fireproof inline the clock with the document by passing the `{ mvcc: true }` option:
 
@@ -57,11 +57,11 @@ const putResponse5 = await database.put(theDocumentV4)
 // throws new Error('MVCC conflict, document is changed, please reload the document and try again.')
 ```
 
-In this way you can protect against users being suprised by accidental data overwrites.
+In this way you can protect against users being surprised by accidental data overwrites.
 
 ## Fun with snapshots
 
-You can get a snapshot of the database at that clock by calling the `database.snapshot()` function with a clock. It will load document versions fom that snapshot. You can also update it, effectively forking the database.
+You can get a snapshot of the database at that clock by calling the `database.snapshot()` function with a clock. It will load document versions from that snapshot. You can also update it, effectively forking the database.
 
 ```js
 const snapshot = database.snapshot(putResponse.clock)
