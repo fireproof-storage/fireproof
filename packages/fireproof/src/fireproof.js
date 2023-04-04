@@ -27,7 +27,7 @@ export default class Fireproof {
    * @static
    * @returns {Fireproof} - a new Fireproof instance
    */
-  static storage = (name) => {
+  static storage = (name = 'global') => {
     return new Fireproof(new TransactionBlockstore(name), [], { name })
   }
 

@@ -9,7 +9,7 @@ import { cidsToProof } from './fireproof.js'
 
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
-import { doTransaction } from './blockstore.js'
+import TransactionBlockstore, { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
 const ALWAYS_REBUILD = false // todo: make false
@@ -109,6 +109,9 @@ export default class DbIndex {
      * @type {Fireproof}
      */
     this.database = database
+    if (!database.indexBlocks) {
+      database.indexBlocks = new TransactionBlockstore(database.name + '.indexes')
+    }
     /**
      * The map function to apply to each entry in the database.
      * @type {Function}
@@ -190,13 +193,13 @@ export default class DbIndex {
     // if (!root) {
     // pass a root to query a snapshot
     // console.time(callId + '.#updateIndex')
-    await this.#updateIndex(this.database.blocks)
+    await this.#updateIndex(this.database.indexBlocks)
     // console.timeEnd(callId + '.#updateIndex')
 
     // }
     // console.time(callId + '.doIndexQuery')
     // console.log('query', query)
-    const response = await doIndexQuery(this.database.blocks, this.indexByKey, query)
+    const response = await doIndexQuery(this.database.indexBlocks, this.indexByKey, query)
     // console.timeEnd(callId + '.doIndexQuery')
 
     return {
