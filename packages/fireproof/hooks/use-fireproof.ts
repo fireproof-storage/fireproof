@@ -4,7 +4,6 @@
 import { useEffect, useState, createContext } from 'react'
 import { Fireproof, Listener, Hydrator } from '../index'
 
-
 export interface FireproofCtxValue {
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
@@ -13,13 +12,13 @@ export interface FireproofCtxValue {
 export const FireproofCtx = createContext<FireproofCtxValue>({
   addSubscriber: () => {},
   database: null,
-  ready: false,
+  ready: false
 })
 
 const inboundSubscriberQueue = new Map()
 const database = Fireproof.storage()
 const listener = new Listener(database)
-let startedSetup = false;
+let startedSetup = false
 
 /**
  * @function useFireproof
@@ -33,7 +32,6 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
   defineDatabaseFn = defineDatabaseFn || (() => {})
   setupDatabaseFn = setupDatabaseFn || (() => {})
   // console.log('useFireproof', database, ready)
-
 
   const addSubscriber = (label: String, fn: Function) => {
     inboundSubscriberQueue.set(label, fn)
@@ -53,12 +51,11 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
       defineDatabaseFn(database) // define indexes before querying them
       const fp = localGet('fireproof')
       if (fp) {
-        const serialized = JSON.parse(fp)
-        // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
-        console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
-        Hydrator.fromJSON(serialized, database)
-        // await database.setClock(clock)
         try {
+          const serialized = JSON.parse(fp)
+          // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
+          console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
+          Hydrator.fromJSON(serialized, database)
           const changes = await database.changesSince()
           if (changes.rows.length < 2) {
             // console.log('Resetting database')
@@ -83,7 +80,7 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
   return {
     addSubscriber,
     database,
-    ready,
+    ready
   }
 }
 
@@ -91,8 +88,10 @@ const husherMap = new Map()
 const husher = (id: string, workFn: { (): Promise<any> }, ms: number) => {
   if (!husherMap.has(id)) {
     const start: number = Date.now()
-    husherMap.set(id, workFn().finally(() => 
-      setTimeout(() => husherMap.delete(id), ms - (Date.now() - start))))
+    husherMap.set(
+      id,
+      workFn().finally(() => setTimeout(() => husherMap.delete(id), ms - (Date.now() - start)))
+    )
   }
   return husherMap.get(id)
 }
