@@ -111,6 +111,16 @@ export default class Fireproof {
     }
   }
 
+  async allDocuments () {
+    const allResp = await getAll(this.blocks, this.clock)
+    const rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value }))).map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
+    return {
+      rows,
+      clock: this.clock,
+      proof: await cidsToProof(allResp.cids)
+    }
+  }
+
   /**
    * Registers a Listener to be called when the Fireproof instance's clock is updated.
    * Recieves live changes from the database after they are committed.
