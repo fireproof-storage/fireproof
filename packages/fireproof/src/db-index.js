@@ -193,7 +193,7 @@ export default class DbIndex {
     // if (!root) {
     // pass a root to query a snapshot
     // console.time(callId + '.#updateIndex')
-    await update && this.#updateIndex(this.database.indexBlocks)
+    update && await this.#updateIndex(this.database.indexBlocks)
     // console.timeEnd(callId + '.#updateIndex')
 
     // }
