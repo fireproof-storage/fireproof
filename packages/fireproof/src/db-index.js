@@ -188,12 +188,12 @@ export default class DbIndex {
    * @memberof DbIndex
    * @instance
    */
-  async query (query) {
+  async query (query, update = true) {
     // const callId = Math.random().toString(36).substring(2, 7)
     // if (!root) {
     // pass a root to query a snapshot
     // console.time(callId + '.#updateIndex')
-    await this.#updateIndex(this.database.indexBlocks)
+    update && await this.#updateIndex(this.database.indexBlocks)
     // console.timeEnd(callId + '.#updateIndex')
 
     // }
@@ -320,16 +320,16 @@ async function loadIndex (blocks, index, indexOpts) {
   return index.root
 }
 
-async function doIndexQuery (blocks, indexByKey, query) {
+async function doIndexQuery (blocks, indexByKey, query = {}) {
   await loadIndex(blocks, indexByKey, dbIndexOpts)
-  if (!query) {
-    const { result, ...all } = await indexByKey.root.getAllEntries()
-    return { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }
-  } else if (query.range) {
+  if (query.range) {
     const encodedRange = query.range.map((key) => charwise.encode(key))
     return indexByKey.root.range(...encodedRange)
   } else if (query.key) {
     const encodedKey = charwise.encode(query.key)
     return indexByKey.root.get(encodedKey)
+  } else {
+    const { result, ...all } = await indexByKey.root.getAllEntries()
+    return { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }
   }
 }

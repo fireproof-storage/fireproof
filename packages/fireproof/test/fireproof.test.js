@@ -103,7 +103,11 @@ describe('Fireproof', () => {
     console.log('err', err)
     assert.match(err.message, /MVCC conflict/)
   })
-
+  it('allDocuments', async () => {
+    await database.put({ name: 'bob' })
+    const allDocs = await database.allDocuments()
+    assert.equal(allDocs.rows.length, 2)
+  })
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
     const db = await Fireproof.storage({ email: 'jchris@gmail.com' })
