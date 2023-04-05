@@ -27,10 +27,11 @@ let startedSetup = false
  * @param [setupDatabaseFn] Asynchronous function that sets up the database, run this to load fixture data etc
  * @returns {FireproofCtxValue} { addSubscriber, database, ready }
  */
-export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Function): FireproofCtxValue {
+export function useFireproof(
+  defineDatabaseFn = (database: Fireproof) => {},
+  setupDatabaseFn = async (database: Fireproof) => {}
+): FireproofCtxValue {
   const [ready, setReady] = useState(false)
-  defineDatabaseFn = defineDatabaseFn || (() => {})
-  setupDatabaseFn = setupDatabaseFn || (() => {})
   // console.log('useFireproof', database, ready)
 
   const addSubscriber = (label: String, fn: Function) => {
@@ -52,10 +53,10 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
       const fp = localGet('fireproof') // todo use db.name
       if (fp) {
         try {
-          const serialized = JSON.parse(fp)
-          // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
-          console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
-          Hydrator.fromJSON(serialized, database)
+        const serialized = JSON.parse(fp)
+        // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
+        console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
+        Hydrator.fromJSON(serialized, database)
           const changes = await database.changesSince()
           if (changes.rows.length < 2) {
             // console.log('Resetting database')
