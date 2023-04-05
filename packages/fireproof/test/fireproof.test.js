@@ -104,6 +104,7 @@ describe('Fireproof', () => {
     assert.match(err.message, /MVCC conflict/)
   })
   it('allDocuments', async () => {
+    await database.put({ name: 'bob' })
     const allDocs = await database.allDocuments()
     assert.equal(allDocs.rows.length, 2)
   })
