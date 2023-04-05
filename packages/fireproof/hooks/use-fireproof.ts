@@ -49,7 +49,7 @@ export function useFireproof(defineDatabaseFn: Function, setupDatabaseFn: Functi
       if (startedSetup) return
       startedSetup = true
       defineDatabaseFn(database) // define indexes before querying them
-      const fp = localGet('fireproof')
+      const fp = localGet('fireproof') // todo use db.name
       if (fp) {
         try {
           const serialized = JSON.parse(fp)
