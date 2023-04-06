@@ -3,7 +3,8 @@ import {
   EventFetcher,
   EventBlock,
   findCommonAncestorWithSortedEvents,
-  findEventsToSync
+  findEventsToSync,
+  vis as visClock
 } from './clock.js'
 import { create, load } from 'prolly-trees/map'
 // import { create, load } from '../../../../prolly-trees/src/map.js'
@@ -278,6 +279,28 @@ export async function * vis (blocks, head) {
   const lines = []
   for await (const line of prollyRootNode.vis()) {
     yield line
+    lines.push(line)
   }
   return { vis: lines.join('\n'), cids }
+}
+
+export async function visMerkleTree (blocks, head) {
+  if (!head.length) {
+    return { cids: new CIDCounter(), result: null }
+  }
+  const { node: prollyRootNode, cids } = await root(blocks, head)
+  const lines = []
+  for await (const line of prollyRootNode.vis()) {
+    lines.push(line)
+  }
+  return { vis: lines.join('\n'), cids }
+}
+
+export async function visMerkleClock (blocks, head) {
+  const lines = []
+  for await (const line of visClock(blocks, head)) {
+    // yield line
+    lines.push(line)
+  }
+  return { vis: lines.join('\n') }
 }
