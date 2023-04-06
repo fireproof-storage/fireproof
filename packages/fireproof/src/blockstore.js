@@ -20,7 +20,12 @@ import { CID } from 'multiformats'
 
 import Valet from './valet.js'
 
+import { bf } from 'prolly-trees/utils'
+const chunker = bf(3)
+
 const KEY_MATERIAL = typeof process !== 'undefined' ? process.env.KEY_MATERIAL : (import.meta && import.meta.env.VITE_KEY_MATERIAL)
+
+console.log('KEY_MATERIAL', KEY_MATERIAL)
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -245,7 +250,7 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   let size = 0
   const headerSize = CBW.headerLength({ roots: [lastCid] })
   size += headerSize
-  for (const { cid, bytes } of blocks.entries()) {
+  for (const { cid, bytes } of blocks) {
     size += CBW.blockLength({ cid, bytes })
   }
   const buffer = new Uint8Array(size)
@@ -253,7 +258,7 @@ const blocksToCarBlock = async (lastCid, blocks) => {
 
   writer.addRoot(lastCid)
 
-  for (const { cid, bytes } of blocks.entries()) {
+  for (const { cid, bytes } of blocks) {
     writer.write({ cid, bytes })
   }
   await writer.close()
@@ -273,7 +278,8 @@ const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
     cids: theCids,
     get: async cid => blocks.get(cid), // maybe we can just use blocks.get
     key: encryptionKey,
-    hasher: 'sha2-256',
+    hasher: sha256,
+    chunker,
     codec: 'dag-cbor',
     root: lastCid
   })) {
