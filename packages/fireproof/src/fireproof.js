@@ -1,4 +1,4 @@
-import { vis, put, get, getAll, eventsSince } from './prolly.js'
+import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import TransactionBlockstore, { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
@@ -294,6 +294,14 @@ export default class Fireproof {
 
   async * vis () {
     return yield * vis(this.blocks, this.clock)
+  }
+
+  async visTree () {
+    return await visMerkleTree(this.blocks, this.clock)
+  }
+
+  async visClock () {
+    return await visMerkleClock(this.blocks, this.clock)
   }
 
   setCarUploader (carUploaderFn) {
