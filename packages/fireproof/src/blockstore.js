@@ -78,7 +78,7 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch((e) => {
+    const bytes = await Promise.any([this.#transactionsGet(key), this.committedGet(key)]).catch((e) => {
       // console.log('networkGet', cid.toString(), e)
       return this.networkGet(key)
     })
@@ -96,14 +96,14 @@ export default class TransactionBlockstore {
     throw new Error('Missing block: ' + key)
   }
 
-  async commitedGet (key) {
+  async committedGet (key) {
     const old = this.#oldBlocks.get(key)
     if (old) return old
     return await this.valet.getBlock(key)
   }
 
   async networkGet (key) {
-    if (this.valet.remoteBlockFunction) {
+    if (this.valet.remoteBlockFunction) { // todo why is this on valet?
       const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
@@ -250,6 +250,9 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   let size = 0
   const headerSize = CBW.headerLength({ roots: [lastCid] })
   size += headerSize
+  if (!Array.isArray(blocks)) {
+    blocks = Array.from(blocks.entries())
+  }
   for (const { cid, bytes } of blocks) {
     size += CBW.blockLength({ cid, bytes })
   }
@@ -329,7 +332,7 @@ export class InnerBlockstore {
     const key = cid.toString()
     let bytes = this.#blocks.get(key)
     if (bytes) { return { cid, bytes } }
-    bytes = await this.parentBlockstore.commitedGet(key)
+    bytes = await this.parentBlockstore.committedGet(key)
     if (bytes) {
       return { cid, bytes }
     }
