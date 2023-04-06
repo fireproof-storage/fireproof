@@ -162,7 +162,7 @@ export default class DbIndex {
   }
 
   toJSON () {
-    const indexJson = { code: this.mapFn?.toString(), clock: { db: null, byId: null, byKey: null } }
+    const indexJson = { code: this.mapFnString, clock: { db: null, byId: null, byKey: null } }
     indexJson.clock.db = this.dbHead?.map(cid => cid.toString())
     indexJson.clock.byId = this.indexById.cid?.toString()
     indexJson.clock.byKey = this.indexByKey.cid?.toString()
