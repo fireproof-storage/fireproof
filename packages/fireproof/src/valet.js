@@ -74,9 +74,8 @@ export default class Valet {
    * @param {Set<string>} cids
    * @returns {Promise<void>}
    * @memberof Valet
-   * @private
    */
-  writeTransaction = async (innerBlockstore, cids) => {
+  async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
       if (this.#encryptionActive) {
         console.log('encrypting car', innerBlockstore.label)
