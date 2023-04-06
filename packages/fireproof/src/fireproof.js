@@ -89,6 +89,7 @@ export default class Fireproof {
   async changesSince (event) {
     // console.log('changesSince', this.instanceId, event, this.clock)
     let rows, dataCIDs, clockCIDs
+    // if (!event) event = []
     if (event) {
       const resp = await eventsSince(this.blocks, this.clock, event)
       const docsMap = new Map()
