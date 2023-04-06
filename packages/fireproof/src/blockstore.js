@@ -4,7 +4,10 @@
 // import { CarWriter } from '@ipld/car'
 // import { randomBytes } from 'crypto'
 // import { CID } from 'multiformats'
-import { encrypt, decrypt } from './crypto.js'
+import {
+  encrypt
+  // , decrypt
+} from './crypto.js'
 // import { blocksToCarBlock } from 'ipsql/utils'
 // import { create } from 'prolly-trees/cid-set'
 
@@ -52,14 +55,10 @@ export default class TransactionBlockstore {
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
   #inflightTransactions = new Set()
+  #encryptionActive = false
 
   constructor (name) {
     this.valet = new Valet(name)
-  }
-
-  #encryptionActive = false
-
-  constructor () {
     if (KEY_MATERIAL) {
       this.#encryptionActive = true
     }
@@ -286,22 +285,22 @@ const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
   return encryptedCar
 }
 
-const blocksFromEncryptedCarBlock = async (cid, get) => {
-  const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
-  const cids = new Set()
-  const decryptedBlocks = []
-  for await (const block of decrypt({
-    root: cid,
-    get,
-    key: decryptionKey,
-    hasher: 'sha2-256',
-    codec: 'dag-cbor'
-  })) {
-    decryptedBlocks.push(block)
-    cids.add(block.cid.toString())
-  }
-  return { blocks: decryptedBlocks, cids }
-}
+// const blocksFromEncryptedCarBlock = async (cid, get) => {
+//   const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+//   const cids = new Set()
+//   const decryptedBlocks = []
+//   for await (const block of decrypt({
+//     root: cid,
+//     get,
+//     key: decryptionKey,
+//     hasher: 'sha2-256',
+//     codec: 'dag-cbor'
+//   })) {
+//     decryptedBlocks.push(block)
+//     cids.add(block.cid.toString())
+//   }
+//   return { blocks: decryptedBlocks, cids }
+// }
 
 /** @implements {BlockFetcher} */
 export class InnerBlockstore {
