@@ -7,10 +7,8 @@ import * as Block from 'multiformats/block'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
 import { bf } from 'prolly-trees/utils'
-import {
-  encrypt
-  // , decrypt
-} from './crypto.js'
+import { nocache as cache } from 'prolly-trees/cache'
+import { encrypt, decrypt } from './crypto.js'
 const chunker = bf(3)
 
 const KEY_MATERIAL =
@@ -81,7 +79,7 @@ export default class Valet {
         console.log('encrypting car', innerBlockstore.label)
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
         // todo we need to return the cid map from blocksToEncryptedCarBlock
-        console.log('cids', cids.join(','))
+        console.log('cids', [...cids.values()].join(','))
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -149,10 +147,21 @@ export default class Valet {
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
-      const gotBlock = await reader.get(CID.parse(dataCID))
-      // console.log('got block', dataCID, gotBlock)
-      if (gotBlock) {
-        return gotBlock.bytes
+      console.log('reader', reader)
+      if (this.#encryptionActive) {
+        const roots = await reader.getRoots()
+        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], reader.get.bind(reader))
+        console.log('blocks', blocks)
+        const block = blocks.find(b => b.cid.toString() === dataCID)
+        if (block) {
+          return block.bytes
+        }
+      } else {
+        const gotBlock = await reader.get(CID.parse(dataCID))
+        // console.log('got block', dataCID, gotBlock)
+        if (gotBlock) {
+          return gotBlock.bytes
+        }
       }
     })
   }
@@ -201,24 +210,26 @@ const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
     encryptedBlocks.push(block)
     last = block
   }
-
+  console.log('last', last.cid.toString())
   const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
   return encryptedCar
 }
-
-// const blocksFromEncryptedCarBlock = async (cid, get) => {
-//   const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
-//   const cids = new Set()
-//   const decryptedBlocks = []
-//   for await (const block of decrypt({
-//     root: cid,
-//     get,
-//     key: decryptionKey,
-//     hasher: 'sha2-256',
-//     codec: 'dag-cbor'
-//   })) {
-//     decryptedBlocks.push(block)
-//     cids.add(block.cid.toString())
-//   }
-//   return { blocks: decryptedBlocks, cids }
-// }
+// { root, get, key, cache, chunker, hasher }
+const blocksFromEncryptedCarBlock = async (cid, get) => {
+  const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+  const cids = new Set()
+  const decryptedBlocks = []
+  for await (const block of decrypt({
+    root: cid,
+    get,
+    key: decryptionKey,
+    chunker,
+    hasher: sha256,
+    cache,
+    codec: 'dag-cbor'
+  })) {
+    decryptedBlocks.push(block)
+    cids.add(block.cid.toString())
+  }
+  return { blocks: decryptedBlocks, cids }
+}
