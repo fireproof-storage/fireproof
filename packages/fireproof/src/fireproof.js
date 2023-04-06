@@ -75,7 +75,7 @@ export default class Fireproof {
    * @instance
    */
   async notifyReset () {
-    await this.#notifyListeners({ reset: true, clock: this.clock })
+    await this.#notifyListeners({ reset: true, clock: this.clockToJSON() })
   }
 
   /**
@@ -111,7 +111,7 @@ export default class Fireproof {
     }
     return {
       rows,
-      clock: this.clock,
+      clock: this.clockToJSON(),
       proof: { data: await cidsToProof(dataCIDs), clock: await cidsToProof(clockCIDs) }
     }
   }
@@ -121,7 +121,7 @@ export default class Fireproof {
     const rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value }))).map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
     return {
       rows,
-      clock: this.clock,
+      clock: this.clockToJSON(),
       proof: await cidsToProof(allResp.cids)
     }
   }
@@ -234,7 +234,7 @@ export default class Fireproof {
     await this.#notifyListeners([decodedEvent]) // this type is odd
     return {
       id: decodedEvent.key,
-      clock: this.clock,
+      clock: this.clockToJSON(),
       proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) }
     }
     // todo should include additions (or split clock)
