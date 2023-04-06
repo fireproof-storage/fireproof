@@ -286,7 +286,7 @@ export default class Fireproof {
     }
     doc._proof = {
       data: await cidsToProof(resp.cids),
-      clock: this.clock
+      clock: this.clockToJSON()
     }
     doc._id = key
     return doc
