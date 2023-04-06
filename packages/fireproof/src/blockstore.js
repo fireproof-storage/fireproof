@@ -1,31 +1,6 @@
-// import { Buffer } from 'buffer'
-// globalThis.Buffer = Buffer
-// import { Readable, createWriteStream } from 'fs'
-// import { CarWriter } from '@ipld/car'
-// import { randomBytes } from 'crypto'
-// import { CID } from 'multiformats'
-import {
-  encrypt
-  // , decrypt
-} from './crypto.js'
-// import { blocksToCarBlock } from 'ipsql/utils'
-// import { create } from 'prolly-trees/cid-set'
-
 import { parse } from 'multiformats/link'
-import * as raw from 'multiformats/codecs/raw'
-import { sha256 } from 'multiformats/hashes/sha2'
-import * as Block from 'multiformats/block'
-import * as CBW from '@ipld/car/buffer-writer'
 import { CID } from 'multiformats'
-
 import Valet from './valet.js'
-
-import { bf } from 'prolly-trees/utils'
-const chunker = bf(3)
-
-const KEY_MATERIAL = typeof process !== 'undefined' ? process.env.KEY_MATERIAL : (import.meta && import.meta.env.VITE_KEY_MATERIAL)
-
-console.log('KEY_MATERIAL', KEY_MATERIAL)
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
 
@@ -60,13 +35,9 @@ export default class TransactionBlockstore {
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
   #inflightTransactions = new Set()
-  #encryptionActive = false
 
   constructor (name) {
     this.valet = new Valet(name)
-    if (KEY_MATERIAL) {
-      this.#encryptionActive = true
-    }
   }
 
   /**
@@ -78,7 +49,7 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    const bytes = await Promise.any([this.#transactionsGet(key), this.committedGet(key)]).catch((e) => {
+    const bytes = await Promise.any([this.#transactionsGet(key), this.committedGet(key)]).catch(e => {
       // console.log('networkGet', cid.toString(), e)
       return this.networkGet(key)
     })
@@ -97,17 +68,18 @@ export default class TransactionBlockstore {
   }
 
   async committedGet (key) {
-    const old = this.#oldBlocks.get(key)
-    if (old) return old
+    // const old = this.#oldBlocks.get(key)
+    // if (old) return old
     return await this.valet.getBlock(key)
   }
 
   async networkGet (key) {
-    if (this.valet.remoteBlockFunction) { // todo why is this on valet?
+    if (this.valet.remoteBlockFunction) {
+      // todo why is this on valet?
       const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
-        doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
+        doTransaction('networkGot: ' + key, this, async innerBlockstore => {
           await innerBlockstore.put(CID.parse(key), value)
         })
         return value
@@ -173,7 +145,7 @@ export default class TransactionBlockstore {
   // then write the transaction blockstore to a car
   // then write the car to the valet
   // then remove the transaction blockstore from the map of transaction blockstores
-  #doCommit = async (innerBlockstore) => {
+  #doCommit = async innerBlockstore => {
     const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
       const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
@@ -186,29 +158,7 @@ export default class TransactionBlockstore {
     }
     if (cids.size > 0) {
       // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
-      await this.#valetWriteTransaction(innerBlockstore, cids)
-    }
-  }
-
-  /**
-   * Group the blocks into a car and write it to the valet.
-   * @param {InnerBlockstore} innerBlockstore
-   * @param {Set<string>} cids
-   * @returns {Promise<void>}
-   * @memberof TransactionBlockstore
-   * @private
-   */
-  #valetWriteTransaction = async (innerBlockstore, cids) => {
-    if (innerBlockstore.lastCid) {
-      if (this.#encryptionActive) {
-        console.log('encrypting car', innerBlockstore.label)
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
-        // todo we need to return the cid map from blocksToEncryptedCarBlock
-        await this.valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
-      } else {
-        const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-        await this.valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
-      }
+      await this.valet.writeTransaction(innerBlockstore, cids)
     }
   }
 
@@ -246,71 +196,6 @@ export const doTransaction = async (label, blockstore, doFun) => {
   }
 }
 
-const blocksToCarBlock = async (lastCid, blocks) => {
-  let size = 0
-  const headerSize = CBW.headerLength({ roots: [lastCid] })
-  size += headerSize
-  if (!Array.isArray(blocks)) {
-    blocks = Array.from(blocks.entries())
-  }
-  for (const { cid, bytes } of blocks) {
-    size += CBW.blockLength({ cid, bytes })
-  }
-  const buffer = new Uint8Array(size)
-  const writer = await CBW.createWriter(buffer, { headerSize })
-
-  writer.addRoot(lastCid)
-
-  for (const { cid, bytes } of blocks) {
-    writer.write({ cid, bytes })
-  }
-  await writer.close()
-  return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
-}
-
-const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
-  const encryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
-  const encryptedBlocks = []
-  const theCids = []
-  for (const { cid } of blocks.entries()) {
-    theCids.push(cid.toString())
-  }
-
-  let last
-  for await (const block of encrypt({
-    cids: theCids,
-    get: async cid => blocks.get(cid), // maybe we can just use blocks.get
-    key: encryptionKey,
-    hasher: sha256,
-    chunker,
-    codec: 'dag-cbor',
-    root: lastCid
-  })) {
-    encryptedBlocks.push(block)
-    last = block
-  }
-
-  const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
-  return encryptedCar
-}
-
-// const blocksFromEncryptedCarBlock = async (cid, get) => {
-//   const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
-//   const cids = new Set()
-//   const decryptedBlocks = []
-//   for await (const block of decrypt({
-//     root: cid,
-//     get,
-//     key: decryptionKey,
-//     hasher: 'sha2-256',
-//     codec: 'dag-cbor'
-//   })) {
-//     decryptedBlocks.push(block)
-//     cids.add(block.cid.toString())
-//   }
-//   return { blocks: decryptedBlocks, cids }
-// }
-
 /** @implements {BlockFetcher} */
 export class InnerBlockstore {
   /** @type {Map<string, Uint8Array>} */
@@ -331,7 +216,9 @@ export class InnerBlockstore {
   async get (cid) {
     const key = cid.toString()
     let bytes = this.#blocks.get(key)
-    if (bytes) { return { cid, bytes } }
+    if (bytes) {
+      return { cid, bytes }
+    }
     bytes = await this.parentBlockstore.committedGet(key)
     if (bytes) {
       return { cid, bytes }

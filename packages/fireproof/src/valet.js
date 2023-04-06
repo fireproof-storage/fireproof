@@ -1,16 +1,22 @@
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
+import { sha256 } from 'multiformats/hashes/sha2'
+import * as CBW from '@ipld/car/buffer-writer'
+import * as raw from 'multiformats/codecs/raw'
+import * as Block from 'multiformats/block'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
+import { bf } from 'prolly-trees/utils'
+import {
+  encrypt
+  // , decrypt
+} from './crypto.js'
+const chunker = bf(3)
 
-// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-// let storageSupported = false
-// try {
-//   storageSupported = window.localStorage && true
-// } catch (e) {}
-// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const KEY_MATERIAL =
+  typeof process !== 'undefined' ? process.env.KEY_MATERIAL : import.meta && import.meta.env.VITE_KEY_MATERIAL
+console.log('KEY_MATERIAL', KEY_MATERIAL)
 
-// todo create an encrypted valet
 export default class Valet {
   idb = null
   #uploadQueue = null
@@ -21,9 +27,13 @@ export default class Valet {
    * @type {null|function(string, Uint8Array):Promise<void>}
    */
   uploadFunction = null
+  #encryptionActive = false
 
   constructor (name = 'default') {
     this.name = name
+    if (KEY_MATERIAL) {
+      this.#encryptionActive = true
+    }
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
         'queue worker',
@@ -32,7 +42,7 @@ export default class Valet {
       )
       if (this.uploadFunction) {
         // todo we can coalesce these into a single car file
-        return await this.withDB(async (db) => {
+        return await this.withDB(async db => {
           for (const task of tasks) {
             await this.uploadFunction(task.carCid, task.value)
             // update the indexedb to mark this car as no longer pending
@@ -46,8 +56,8 @@ export default class Valet {
     })
 
     this.#uploadQueue.drain(async () => {
-      return await this.withDB(async (db) => {
-        const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map((c) => c.car)
+      return await this.withDB(async db => {
+        const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map(c => c.car)
         for (const carKey of carKeys) {
           await this.uploadFunction(carKey, await db.get('cars', carKey))
           const carMeta = await db.get('cidToCar', carKey)
@@ -58,7 +68,30 @@ export default class Valet {
     })
   }
 
-  withDB = async (dbWorkFun) => {
+  /**
+   * Group the blocks into a car and write it to the valet.
+   * @param {InnerBlockstore} innerBlockstore
+   * @param {Set<string>} cids
+   * @returns {Promise<void>}
+   * @memberof Valet
+   * @private
+   */
+  writeTransaction = async (innerBlockstore, cids) => {
+    if (innerBlockstore.lastCid) {
+      if (this.#encryptionActive) {
+        console.log('encrypting car', innerBlockstore.label)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
+        // todo we need to return the cid map from blocksToEncryptedCarBlock
+        console.log('cids', cids.join(','))
+        await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
+      } else {
+        const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
+        await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
+      }
+    }
+  }
+
+  withDB = async dbWorkFun => {
     if (!this.idb) {
       this.idb = await openDB(`fp.${this.name}.valet`, 2, {
         upgrade (db, oldVersion, newVersion, transaction) {
@@ -83,7 +116,7 @@ export default class Valet {
    * @param {*} value
    */
   async parkCar (carCid, value, cids) {
-    await this.withDB(async (db) => {
+    await this.withDB(async db => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
       await tx.objectStore('cars').put(value, carCid)
       await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
@@ -108,7 +141,7 @@ export default class Valet {
   remoteBlockFunction = null
 
   async getBlock (dataCID) {
-    return await this.withDB(async (db) => {
+    return await this.withDB(async db => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
       const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
       const carCid = indexResp?.car
@@ -118,9 +151,75 @@ export default class Valet {
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
       const gotBlock = await reader.get(CID.parse(dataCID))
+      // console.log('got block', dataCID, gotBlock)
       if (gotBlock) {
         return gotBlock.bytes
       }
     })
   }
 }
+
+const blocksToCarBlock = async (lastCid, blocks) => {
+  let size = 0
+  const headerSize = CBW.headerLength({ roots: [lastCid] })
+  size += headerSize
+  if (!Array.isArray(blocks)) {
+    blocks = Array.from(blocks.entries())
+  }
+  for (const { cid, bytes } of blocks) {
+    size += CBW.blockLength({ cid, bytes })
+  }
+  const buffer = new Uint8Array(size)
+  const writer = await CBW.createWriter(buffer, { headerSize })
+
+  writer.addRoot(lastCid)
+
+  for (const { cid, bytes } of blocks) {
+    writer.write({ cid, bytes })
+  }
+  await writer.close()
+  return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
+}
+
+const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
+  const encryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+  const encryptedBlocks = []
+  const theCids = []
+  for (const { cid } of blocks.entries()) {
+    theCids.push(cid.toString())
+  }
+
+  let last
+  for await (const block of encrypt({
+    cids: theCids,
+    get: async cid => blocks.get(cid), // maybe we can just use blocks.get
+    key: encryptionKey,
+    hasher: sha256,
+    chunker,
+    codec: 'dag-cbor',
+    root: lastCid
+  })) {
+    encryptedBlocks.push(block)
+    last = block
+  }
+
+  const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
+  return encryptedCar
+}
+
+// const blocksFromEncryptedCarBlock = async (cid, get) => {
+//   const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+//   const cids = new Set()
+//   const decryptedBlocks = []
+//   for await (const block of decrypt({
+//     root: cid,
+//     get,
+//     key: decryptionKey,
+//     hasher: 'sha2-256',
+//     codec: 'dag-cbor'
+//   })) {
+//     decryptedBlocks.push(block)
+//     cids.add(block.cid.toString())
+//   }
+//   return { blocks: decryptedBlocks, cids }
+// }
