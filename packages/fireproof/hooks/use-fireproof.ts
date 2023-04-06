@@ -64,7 +64,7 @@ export function useFireproof(
           }
         } catch (e) {
           console.error(`Error loading previous database clock. ${fp} Resetting.`, e)
-          await database.setClock([]) // todo this should be resetClock and also reset the indexes
+          await Hydrator.zoom(database, [])
           await setupDatabaseFn(database)
           localSet('fireproof', JSON.stringify(database))
         }
