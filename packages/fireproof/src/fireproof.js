@@ -50,10 +50,14 @@ export default class Fireproof {
   toJSON () {
     // todo this also needs to return the index roots...
     return {
-      clock: this.clock.map(cid => cid.toString()),
+      clock: this.clockToJSON(),
       name: this.name,
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
+  }
+
+  clockToJSON () {
+    return this.clock.map(cid => cid.toString())
   }
 
   hydrate ({ clock, name }) {
@@ -206,7 +210,7 @@ export default class Fireproof {
    */
   async #putToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)
-    if (clock && JSON.stringify(clock) !== JSON.stringify(this.clock)) {
+    if (clock && JSON.stringify(clock) !== JSON.stringify(this.clockToJSON())) {
       // we need to check and see what version of the document exists at the clock specified
       // if it is the same as the one we are trying to put, then we can proceed
       const resp = await eventsSince(this.blocks, this.clock, event.value._clock)
@@ -278,7 +282,7 @@ export default class Fireproof {
     }
     const doc = resp.result
     if (opts.mvcc === true) {
-      doc._clock = this.clock
+      doc._clock = this.clockToJSON()
     }
     doc._proof = {
       data: await cidsToProof(resp.cids),
