@@ -82,6 +82,7 @@ const indexEntriesForChanges = (changes, mapFn) => {
   changes.forEach(({ key, value, del }) => {
     if (del || !value) return
     mapFn(makeDoc({ key, value }), (k, v) => {
+      if (typeof v === 'undefined' || typeof k === 'undefined') return
       indexEntries.push({
         key: [charwise.encode(k), key],
         value: v
@@ -102,7 +103,7 @@ const indexEntriesForChanges = (changes, mapFn) => {
  *
  */
 export default class DbIndex {
-  constructor (database, mapFn, clock) {
+  constructor (database, mapFn, clock, opts = {}) {
     // console.log('DbIndex constructor', database.constructor.name, typeof mapFn, clock)
     /**
      * The database instance to DbIndex.
@@ -133,7 +134,7 @@ export default class DbIndex {
     }
     this.instanceId = this.database.instanceId + `.DbIndex.${Math.random().toString(36).substring(2, 7)}`
     this.updateIndexPromise = null
-    DbIndex.registerWithDatabase(this, this.database)
+    if (!opts.temporary) { DbIndex.registerWithDatabase(this, this.database) }
   }
 
   static registerWithDatabase (inIndex, database) {
@@ -329,7 +330,11 @@ async function doIndexQuery (blocks, indexByKey, query = {}) {
     const encodedKey = charwise.encode(query.key)
     return indexByKey.root.get(encodedKey)
   } else {
-    const { result, ...all } = await indexByKey.root.getAllEntries()
-    return { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }
+    if (indexByKey.root) {
+      const { result, ...all } = await indexByKey.root.getAllEntries()
+      return { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }
+    } else {
+      return { result: [] }
+    }
   }
 }

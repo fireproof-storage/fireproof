@@ -8,6 +8,7 @@ export interface FireproofCtxValue {
   addSubscriber: (label: String, fn: Function) => void
   database: Fireproof
   ready: boolean
+  persist: () => void
 }
 export const FireproofCtx = createContext<FireproofCtxValue>({
   addSubscriber: () => {},
@@ -81,7 +82,10 @@ export function useFireproof(
   return {
     addSubscriber,
     database,
-    ready
+    ready,
+    persist: () => {
+      localSet('fireproof', JSON.stringify(database))
+    }
   }
 }
 
