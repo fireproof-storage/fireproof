@@ -23,7 +23,7 @@ describe('Fireproof', () => {
     const x = database.blocks.valet.idb
     assert.equal(x.name.toString(), 'fp.helloName.valet')
   })
-  it('put and get document', async () => {
+  it('only put and get document', async () => {
     assert(resp0.id, 'should have id')
     assert.equal(resp0.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     const avalue = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
