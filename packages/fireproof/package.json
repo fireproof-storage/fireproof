@@ -8,7 +8,7 @@
     "keygen": "node scripts/keygen.js",
     "test": "standard && npm run test:mocha && npm run test:encrypted",
     "test:encrypted": "KEY_MATERIAL=`node scripts/keygen.js` npm run test:mocha",
-    "test:mocha": "mocha test/*.test.js",
+    "test:mocha": "mocha --reporter list test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel",
     "coverage": "c8 -r html -r text npm test",
     "prepublishOnly": "cp ../../README.md .",
