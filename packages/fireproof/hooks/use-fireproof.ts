@@ -68,7 +68,7 @@ export function useFireproof(
           const serialized = JSON.parse(fp)
           // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
           console.log(`Loading previous database clock. (localStorage.removeItem('${localStorageKey}') to reset)`)
-          Hydrator.fromJSON(serialized, database)
+          await Hydrator.fromJSON(serialized, database)
           const changes = await database.changesSince()
           if (changes.rows.length < 2) {
             // console.log('Resetting database')
