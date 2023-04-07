@@ -22,7 +22,7 @@ export default class Valet {
   name = null
   #uploadQueue = null
   #alreadyEnqueued = new Set()
-  #keyMaterial = null
+  keyMaterial = null
 
   /**
    * Function installed by the database to upload car files
@@ -33,7 +33,7 @@ export default class Valet {
   constructor (name = 'default', keyMaterial = KEY_MATERIAL) {
     this.name = name
     if (keyMaterial) {
-      this.#keyMaterial = keyMaterial
+      this.keyMaterial = keyMaterial
     }
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
@@ -78,9 +78,9 @@ export default class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.#keyMaterial) {
-        console.log('encrypting car', innerBlockstore.label)
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.#keyMaterial)
+      if (this.keyMaterial) {
+        // console.log('encrypting car', innerBlockstore.label)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -148,7 +148,7 @@ export default class Valet {
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
-      if (this.#keyMaterial) {
+      if (this.keyMaterial) {
         const roots = await reader.getRoots()
         const readerGetWithCodec = async cid => {
           const got = await reader.get(cid)
@@ -165,7 +165,7 @@ export default class Valet {
           // console.log('decoded', decoded.value)
           return decoded
         }
-        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.#keyMaterial)
+        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
         const block = blocks.find(b => b.cid.toString() === dataCID)
         if (block) {
           return block.bytes
