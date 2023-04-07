@@ -163,7 +163,6 @@ export default class Valet {
             hasher: sha256
           })
           // console.log('decoded', decoded.value)
-
           return decoded
         }
         const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec)
