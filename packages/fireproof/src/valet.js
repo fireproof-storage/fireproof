@@ -203,7 +203,7 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
 }
 
-const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
+const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks) => {
   const encryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
   const encryptedBlocks = []
   const theCids = []
@@ -219,11 +219,12 @@ const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
     hasher: sha256,
     chunker,
     codec: dagcbor, // should be crypto?
-    root: lastCid
+    root: innerBlockStoreClockRootCid
   })) {
     encryptedBlocks.push(block)
     last = block
   }
+  // console.log('last', last.cid.toString(), 'for clock', innerBlockStoreClockRootCid.toString())
   const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
   return encryptedCar
 }
