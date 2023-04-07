@@ -12,6 +12,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
 import * as codec from 'encrypted-block'
+import sha1sync from './sha1.js'
 const chunker = bf(3)
 
 const NO_ENCRYPT =
@@ -74,9 +75,10 @@ export default class Valet {
 
   setKeyMaterial (km) {
     if (km && !NO_ENCRYPT) {
+      const hex = Uint8Array.from(Buffer.from(km, 'hex'))
       this.#keyMaterial = km
-      this.keyId = km.substr(0, 8)
-      // this.keyId = Buffer.from(sha256.encode(km)).toString('hex')
+      const hash = sha1sync(hex)
+      this.keyId = Buffer.from(hash).toString('hex')
     } else {
       this.#keyMaterial = null
       this.keyId = 'null'
@@ -94,7 +96,7 @@ export default class Valet {
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
       if (this.#keyMaterial) {
-        console.log('encrypting car', innerBlockstore.label)
+        // console.log('encrypting car', innerBlockstore.label)
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.#keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
