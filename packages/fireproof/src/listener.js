@@ -19,7 +19,7 @@ export default class Listener {
      * @type {Fireproof}
      */
     this.database = database
-    this.#doStopListening = database.registerListener((changes) => this.#onChanges(changes))
+    this.#doStopListening = database.registerListener(changes => this.#onChanges(changes))
     /**
      * The map function to apply to each entry in the database.
      * @type {Function}
@@ -46,7 +46,7 @@ export default class Listener {
     if (typeof since !== 'undefined') {
       this.database.changesSince(since).then(({ rows: changes }) => {
         const keys = topicsForChanges(changes, this.routingFn).get(topic)
-        if (keys) keys.forEach((key) => subscriber(key))
+        if (keys) keys.forEach(key => subscriber(key))
       })
     }
     return () => {
@@ -60,18 +60,14 @@ export default class Listener {
       const seenTopics = topicsForChanges(changes, this.routingFn)
       for (const [topic, keys] of seenTopics) {
         const listOfTopicSubscribers = getTopicList(this.#subcribers, topic)
-        listOfTopicSubscribers.forEach((subscriber) => keys.forEach((key) => subscriber(key)))
+        listOfTopicSubscribers.forEach(subscriber => keys.forEach(key => subscriber(key)))
       }
     } else {
-      // reset event
-      if (changes.reset) {
-        for (const [, listOfTopicSubscribers] of this.#subcribers) {
-          listOfTopicSubscribers.forEach((subscriber) => subscriber(changes))
-        }
+      // non-arrays go to all subscribers
+      for (const [, listOfTopicSubscribers] of this.#subcribers) {
+        listOfTopicSubscribers.forEach(subscriber => subscriber(changes))
       }
     }
-    // if changes is special, notify all listeners?
-    // first make the example app use listeners
   }
 }
 
@@ -99,7 +95,7 @@ const topicsForChanges = (changes, routingFn) => {
   const seenTopics = new Map()
   changes.forEach(({ key, value, del }) => {
     if (del || !value) value = { _deleted: true }
-    routingFn(makeDoc({ key, value }), (t) => {
+    routingFn(makeDoc({ key, value }), t => {
       const topicList = getTopicList(seenTopics, t)
       topicList.push(key)
     })

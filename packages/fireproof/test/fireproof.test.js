@@ -20,9 +20,12 @@ describe('Fireproof', () => {
   })
   it('takes an optional name', () => {
     assert.equal(database.name, 'helloName')
+    console.log(database.blocks)
+    const km = database.blocks.valet.getKeyMaterial()
+    if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
     const x = database.blocks.valet.idb
     const keyId = database.blocks.valet.keyId
-    assert.equal(x.name.toString(), 'fp.helloName.' + keyId + '.valet')
+    assert.equal(x.name.toString(), `fp.${keyId}.helloName.valet`)
   })
   it('only put and get document', async () => {
     assert(resp0.id, 'should have id')

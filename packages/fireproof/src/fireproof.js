@@ -82,7 +82,12 @@ export default class Fireproof {
    * @instance
    */
   async notifyReset () {
-    await this.#notifyListeners({ reset: true, clock: this.clockToJSON() })
+    await this.#notifyListeners({ _reset: true, _clock: this.clockToJSON() })
+  }
+
+  // used be indexes etc to notify database listeners of new availability
+  async notifyExternal (source = 'unknown') {
+    await this.#notifyListeners({ _external: source, _clock: this.clockToJSON() })
   }
 
   /**

@@ -47,7 +47,7 @@ export default class Hydrator {
       index.dbHead = null
     })
     database.clock = clock.map(c => parseCID(c))
-    await database.notifyReset()
+    await database.notifyReset() // hmm... indexes should listen to this? might be more complex than worth it. so far this is the only caller
     return database
   }
 }

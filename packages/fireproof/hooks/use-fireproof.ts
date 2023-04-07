@@ -41,14 +41,17 @@ export function useFireproof(
 ): FireproofCtxValue {
   const [ready, setReady] = useState(false)
   // console.log('useFireproof', database, ready)
+  initializeDatabase(name || 'useFireproof')
+  const localStorageKey = 'fp.' + database.name
 
   const addSubscriber = (label: String, fn: Function) => {
     inboundSubscriberQueue.set(label, fn)
   }
 
-  const listenerCallback = async () => {
-    // console.log ('listenerCallback', JSON.stringify(database))
-    localSet('fireproof', JSON.stringify(database))
+  const listenerCallback = async event => {
+    // console.log('listenerCallback', event)
+      localSet(localStorageKey, JSON.stringify(database))
+    if (event._external) return
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
 
@@ -56,16 +59,15 @@ export function useFireproof(
     const doSetup = async () => {
       if (ready) return
       if (startedSetup) return
-      initializeDatabase(name || 'useFireproof')
       startedSetup = true
       defineDatabaseFn(database) // define indexes before querying them
       console.log('Initializing database', database.name)
-      const fp = localGet('fireproof') // todo use db.name
+      const fp = localGet(localStorageKey) // todo use db.name
       if (fp) {
         try {
           const serialized = JSON.parse(fp)
           // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
-          console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
+          console.log(`Loading previous database clock. (localStorage.removeItem('${localStorageKey}') to reset)`)
           Hydrator.fromJSON(serialized, database)
           const changes = await database.changesSince()
           if (changes.rows.length < 2) {
@@ -76,14 +78,14 @@ export function useFireproof(
           console.error(`Error loading previous database clock. ${fp} Resetting.`, e)
           await Hydrator.zoom(database, [])
           await setupDatabaseFn(database)
-          localSet('fireproof', JSON.stringify(database))
+          localSet(localStorageKey, JSON.stringify(database))
         }
       } else {
         await setupDatabaseFn(database)
-        localSet('fireproof', JSON.stringify(database))
+        localSet(localStorageKey, JSON.stringify(database))
       }
       setReady(true)
-      listener.on('*', hushed('*', listenerCallback, 250))
+      listener.on('*', listenerCallback)//hushed('*', listenerCallback, 250))
     }
     doSetup()
   }, [ready])
@@ -93,7 +95,7 @@ export function useFireproof(
     database,
     ready,
     persist: () => {
-      localSet('fireproof', JSON.stringify(database))
+      localSet(localStorageKey, JSON.stringify(database))
     }
   }
 }
@@ -109,7 +111,10 @@ const husher = (id: string, workFn: { (): Promise<any> }, ms: number) => {
   }
   return husherMap.get(id)
 }
-const hushed = (id: string, workFn: { (): Promise<any> }, ms: number) => () => husher(id, workFn, ms)
+const hushed =
+  (id: string, workFn: { (...args): Promise<any> }, ms: number) =>
+  (...args) =>
+    husher(id, () => workFn(...args), ms)
 
 let storageSupported = false
 try {
