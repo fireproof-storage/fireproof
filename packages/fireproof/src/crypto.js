@@ -37,7 +37,9 @@ const encrypt = async function * ({ get, cids, hasher, key, cache, chunker, root
 
 const decrypt = async function * ({ root, get, key, cache, chunker, hasher }) {
   const o = { ...await get(root), codec: dagcbor, hasher }
-  const { value: [eroot, tree] } = await decode(o)
+  const decodedRoot = await decode(o)
+  // console.log('decodedRoot', decodedRoot)
+  const { value: [eroot, tree] } = decodedRoot
   const rootBlock = await get(eroot) // should I decrypt?
   const cidset = await load({ cid: tree, get, cache, chunker, codec, hasher })
   const { result: nodes } = await cidset.getAllEntries()
