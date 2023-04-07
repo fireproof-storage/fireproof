@@ -21,7 +21,8 @@ describe('Fireproof', () => {
   it('takes an optional name', () => {
     assert.equal(database.name, 'helloName')
     const x = database.blocks.valet.idb
-    assert.equal(x.name.toString(), 'fp.helloName.valet')
+    const keyId = database.blocks.valet.keyId
+    assert.equal(x.name.toString(), 'fp.helloName.' + keyId + '.valet')
   })
   it('only put and get document', async () => {
     assert(resp0.id, 'should have id')
@@ -371,7 +372,7 @@ describe('Fireproof', () => {
         }
       })
 
-      database.blocks.clearCommittedCache()
+      database.blocks.clearCommittedCache() // clear cache to force re-reading from encrypted store
 
       doc = await database.get(resp.id).catch(e => {
         console.log('failed', e)
