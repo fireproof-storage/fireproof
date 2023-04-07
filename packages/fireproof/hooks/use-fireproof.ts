@@ -30,6 +30,7 @@ const initializeDatabase = name => {
 /**
  * @function useFireproof
  * React hook to initialize a Fireproof database, automatically saving and loading the clock.
+ * You might need to `import { nodePolyfills } from 'vite-plugin-node-polyfills'` in your vite.config.ts
  * @param [defineDatabaseFn] Synchronous function that defines the database, run this before any async calls
  * @param [setupDatabaseFn] Asynchronous function that sets up the database, run this to load fixture data etc
  * @returns {FireproofCtxValue} { addSubscriber, database, ready }
@@ -40,7 +41,6 @@ export function useFireproof(
   name: string
 ): FireproofCtxValue {
   const [ready, setReady] = useState(false)
-  // console.log('useFireproof', database, ready)
   initializeDatabase(name || 'useFireproof')
   const localStorageKey = 'fp.' + database.name
 
@@ -49,7 +49,6 @@ export function useFireproof(
   }
 
   const listenerCallback = async event => {
-    // console.log('listenerCallback', event)
       localSet(localStorageKey, JSON.stringify(database))
     if (event._external) return
     for (const [, fn] of inboundSubscriberQueue) fn()
