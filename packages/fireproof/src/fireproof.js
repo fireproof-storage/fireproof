@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import TransactionBlockstore, { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
@@ -28,7 +29,8 @@ export default class Fireproof {
    * @returns {Fireproof} - a new Fireproof instance
    */
   static storage = (name = 'global') => {
-    return new Fireproof(new TransactionBlockstore(name), [], { name })
+    const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
+    return new Fireproof(new TransactionBlockstore(name, instanceKey), [], { name })
   }
 
   constructor (blocks, clock, config, authCtx = {}) {

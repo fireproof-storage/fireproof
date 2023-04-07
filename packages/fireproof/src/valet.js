@@ -16,24 +16,24 @@ const chunker = bf(3)
 
 const KEY_MATERIAL =
   typeof process !== 'undefined' ? process.env.KEY_MATERIAL : import.meta && import.meta.env.VITE_KEY_MATERIAL
-console.log('KEY_MATERIAL', KEY_MATERIAL)
 
 export default class Valet {
   idb = null
+  name = null
   #uploadQueue = null
   #alreadyEnqueued = new Set()
+  #keyMaterial = null
 
   /**
    * Function installed by the database to upload car files
    * @type {null|function(string, Uint8Array):Promise<void>}
    */
   uploadFunction = null
-  #encryptionActive = false
 
-  constructor (name = 'default') {
+  constructor (name = 'default', keyMaterial = KEY_MATERIAL) {
     this.name = name
-    if (KEY_MATERIAL) {
-      this.#encryptionActive = true
+    if (keyMaterial) {
+      this.#keyMaterial = keyMaterial
     }
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
@@ -78,9 +78,9 @@ export default class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.#encryptionActive) {
+      if (this.#keyMaterial) {
         console.log('encrypting car', innerBlockstore.label)
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.#keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -148,7 +148,7 @@ export default class Valet {
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
-      if (this.#encryptionActive) {
+      if (this.#keyMaterial) {
         const roots = await reader.getRoots()
         const readerGetWithCodec = async cid => {
           const got = await reader.get(cid)
@@ -165,7 +165,7 @@ export default class Valet {
           // console.log('decoded', decoded.value)
           return decoded
         }
-        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec)
+        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.#keyMaterial)
         const block = blocks.find(b => b.cid.toString() === dataCID)
         if (block) {
           return block.bytes
@@ -202,8 +202,8 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
 }
 
-const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks) => {
-  const encryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial) => {
+  const encryptionKey = Buffer.from(keyMaterial, 'hex')
   const encryptedBlocks = []
   const theCids = []
   for (const { cid } of blocks.entries()) {
@@ -230,12 +230,12 @@ const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks) =>
 // { root, get, key, cache, chunker, hasher }
 
 const memoizeDecryptedCarBlocks = new Map()
-const blocksFromEncryptedCarBlock = async (cid, get) => {
+const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   if (memoizeDecryptedCarBlocks.has(cid.toString())) {
     return memoizeDecryptedCarBlocks.get(cid.toString())
   } else {
     const blocksPromise = (async () => {
-      const decryptionKey = Buffer.from(KEY_MATERIAL, 'hex')
+      const decryptionKey = Buffer.from(keyMaterial, 'hex')
       const cids = new Set()
       const decryptedBlocks = []
       for await (const block of decrypt({
