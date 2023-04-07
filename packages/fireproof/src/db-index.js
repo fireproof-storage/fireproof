@@ -270,6 +270,7 @@ export default class DbIndex {
       this.indexByKey = await bulkIndex(blocks, this.indexByKey, oldIndexEntries.concat(indexEntries), dbIndexOpts)
       this.dbHead = result.clock
     })
+    this.database.notifyExternal('dbIndex')
     // console.timeEnd(callTag + '.doTransaction#updateIndex')
     // console.log(`#updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
   }
