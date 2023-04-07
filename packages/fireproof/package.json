@@ -5,8 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "keygen" : "node scripts/keygen.js",
     "test": "standard && npm run test:mocha && npm run test:encrypted",
-    "test:encrypted": "KEY_MATERIAL='3fd00454580de44ea216d8b7b234267a2a6a6aec7e56d2b38e641a45597af0f2' npm run test:mocha",
+    "test:encrypted": "KEY_MATERIAL=`node scripts/keygen.js` npm run test:mocha",
     "test:mocha": "mocha test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel",
     "coverage": "c8 -r html -r text npm test",
