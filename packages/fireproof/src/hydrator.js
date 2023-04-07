@@ -6,7 +6,7 @@ const parseCID = cid => typeof cid === 'string' ? CID.parse(cid) : cid
 
 export default class Hydrator {
   static fromJSON (json, database) {
-    database.hydrate({ clock: json.clock.map(c => parseCID(c)), name: json.name })
+    database.hydrate({ clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
     if (json.indexes) {
       for (const { code, clock: { byId, byKey, db } } of json.indexes) {
         DbIndex.fromJSON(database, {
@@ -47,7 +47,7 @@ export default class Hydrator {
       index.dbHead = null
     })
     database.clock = clock.map(c => parseCID(c))
-    await database.notifyReset()
+    await database.notifyReset() // hmm... indexes should listen to this? might be more complex than worth it. so far this is the only caller
     return database
   }
 }

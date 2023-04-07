@@ -1,3 +1,4 @@
+import { randomBytes } from 'crypto'
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import TransactionBlockstore, { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
@@ -28,7 +29,10 @@ export default class Fireproof {
    * @returns {Fireproof} - a new Fireproof instance
    */
   static storage = (name = 'global') => {
-    return new Fireproof(new TransactionBlockstore(name), [], { name })
+    const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
+    // pick a random key from const validatedKeys
+    // const instanceKey = validatedKeys[Math.floor(Math.random() * validatedKeys.length)]
+    return new Fireproof(new TransactionBlockstore(name, instanceKey), [], { name })
   }
 
   constructor (blocks, clock, config, authCtx = {}) {
@@ -52,6 +56,7 @@ export default class Fireproof {
     return {
       clock: this.clockToJSON(),
       name: this.name,
+      key: this.blocks.valet.getKeyMaterial(),
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }
@@ -60,9 +65,11 @@ export default class Fireproof {
     return this.clock.map(cid => cid.toString())
   }
 
-  hydrate ({ clock, name }) {
+  hydrate ({ clock, name, key }) {
     this.name = name
     this.clock = clock
+    this.blocks.valet.setKeyMaterial(key)
+    this.indexBlocks = null
   }
 
   /**
@@ -75,7 +82,12 @@ export default class Fireproof {
    * @instance
    */
   async notifyReset () {
-    await this.#notifyListeners({ reset: true, clock: this.clockToJSON() })
+    await this.#notifyListeners({ _reset: true, _clock: this.clockToJSON() })
+  }
+
+  // used be indexes etc to notify database listeners of new availability
+  async notifyExternal (source = 'unknown') {
+    await this.#notifyListeners({ _external: source, _clock: this.clockToJSON() })
   }
 
   /**

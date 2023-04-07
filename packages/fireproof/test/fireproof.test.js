@@ -20,10 +20,13 @@ describe('Fireproof', () => {
   })
   it('takes an optional name', () => {
     assert.equal(database.name, 'helloName')
+    const km = database.blocks.valet.getKeyMaterial()
+    if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
     const x = database.blocks.valet.idb
-    assert.equal(x.name.toString(), 'fp.helloName.valet')
+    const keyId = database.blocks.valet.keyId
+    assert.equal(x.name.toString(), `fp.${keyId}.helloName.valet`)
   })
-  it('put and get document', async () => {
+  it('only put and get document', async () => {
     assert(resp0.id, 'should have id')
     assert.equal(resp0.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     const avalue = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
@@ -354,6 +357,24 @@ describe('Fireproof', () => {
       // for await (const line of database.vis()) {
       //   console.log(line)
       // }
+
+      doc = await database.get(resp.id).catch(e => {
+        console.log('failed', e)
+        assert.fail(`get failed on _id: ${id}, error: ${e.message}`)
+      })
+
+      assert.equal(doc.index, index, `doc.index is not equal to index for _id: ${id}`)
+      changes = await database.changesSince().catch(async e => {
+        assert.fail(`changesSince failed on _id: ${id}, error: ${e.message}`)
+      })
+      changes.rows.forEach(row => {
+        for (const key in row) {
+          const value = row[key]
+          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+        }
+      })
+
+      database.blocks.clearCommittedCache() // clear cache to force re-reading from encrypted store
 
       doc = await database.get(resp.id).catch(e => {
         console.log('failed', e)

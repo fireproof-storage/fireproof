@@ -1,10 +1,5 @@
 import { parse } from 'multiformats/link'
-import * as raw from 'multiformats/codecs/raw'
-import { sha256 } from 'multiformats/hashes/sha2'
-import * as Block from 'multiformats/block'
-import * as CBW from '@ipld/car/buffer-writer'
 import { CID } from 'multiformats'
-
 import Valet from './valet.js'
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
@@ -34,15 +29,15 @@ const husher = (id, workFn) => {
  */
 export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
-  #oldBlocks = new Map()
+  #committedBlocks = new Map()
 
   valet = null
 
   #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
   #inflightTransactions = new Set()
 
-  constructor (name) {
-    this.valet = new Valet(name)
+  constructor (name, encryptionKey) {
+    this.valet = new Valet(name, encryptionKey)
   }
 
   /**
@@ -54,7 +49,7 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    const bytes = await Promise.any([this.#transactionsGet(key), this.commitedGet(key)]).catch((e) => {
+    const bytes = await Promise.any([this.#transactionsGet(key), this.committedGet(key)]).catch(e => {
       // console.log('networkGet', cid.toString(), e)
       return this.networkGet(key)
     })
@@ -72,18 +67,26 @@ export default class TransactionBlockstore {
     throw new Error('Missing block: ' + key)
   }
 
-  async commitedGet (key) {
-    const old = this.#oldBlocks.get(key)
+  async committedGet (key) {
+    const old = this.#committedBlocks.get(key)
     if (old) return old
-    return await this.valet.getBlock(key)
+    const got = await this.valet.getBlock(key)
+    // console.log('committedGet: ' + key)
+    this.#committedBlocks.set(key, got)
+    return got
+  }
+
+  async clearCommittedCache () {
+    this.#committedBlocks.clear()
   }
 
   async networkGet (key) {
     if (this.valet.remoteBlockFunction) {
+      // todo why is this on valet?
       const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
-        doTransaction('networkGot: ' + key, this, async (innerBlockstore) => {
+        doTransaction('networkGot: ' + key, this, async innerBlockstore => {
           await innerBlockstore.put(CID.parse(key), value)
         })
         return value
@@ -118,7 +121,7 @@ export default class TransactionBlockstore {
   //   // for (const [str, bytes] of this.#blocks) {
   //   //   yield { cid: parse(str), bytes }
   //   // }
-  //   for (const [str, bytes] of this.#oldBlocks) {
+  //   for (const [str, bytes] of this.#committedBlocks) {
   //     yield { cid: parse(str), bytes }
   //   }
   // }
@@ -145,39 +148,24 @@ export default class TransactionBlockstore {
   }
 
   // first get the transaction blockstore from the map of transaction blockstores
-  // then copy it to oldBlocks
+  // then copy it to committedBlocks
   // then write the transaction blockstore to a car
   // then write the car to the valet
   // then remove the transaction blockstore from the map of transaction blockstores
-  #doCommit = async (innerBlockstore) => {
+  #doCommit = async innerBlockstore => {
     const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
       const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
-      if (this.#oldBlocks.has(stringCid)) {
-        // console.log('Duplicate block: ' + stringCid)
+      if (this.#committedBlocks.has(stringCid)) {
+        // console.log('Duplicate block: ' + stringCid) // todo some of this can be avoided, cost is extra size on car files
       } else {
-        this.#oldBlocks.set(stringCid, bytes)
+        this.#committedBlocks.set(stringCid, bytes)
         cids.add(stringCid)
       }
     }
     if (cids.size > 0) {
       // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
-      await this.#valetWriteTransaction(innerBlockstore, cids)
-    }
-  }
-
-  /**
-   * Group the blocks into a car and write it to the valet.
-   * @param {InnerBlockstore} innerBlockstore
-   * @param {Set<string>} cids
-   * @returns {Promise<void>}
-   * @memberof TransactionBlockstore
-   * @private
-   */
-  #valetWriteTransaction = async (innerBlockstore, cids) => {
-    if (innerBlockstore.lastCid) {
-      const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-      await this.valet.parkCar(newCar.cid.toString(), newCar.bytes, cids)
+      await this.valet.writeTransaction(innerBlockstore, cids)
     }
   }
 
@@ -215,25 +203,6 @@ export const doTransaction = async (label, blockstore, doFun) => {
   }
 }
 
-const blocksToCarBlock = async (lastCid, blocks) => {
-  let size = 0
-  const headerSize = CBW.headerLength({ roots: [lastCid] })
-  size += headerSize
-  for (const { cid, bytes } of blocks.entries()) {
-    size += CBW.blockLength({ cid, bytes })
-  }
-  const buffer = new Uint8Array(size)
-  const writer = await CBW.createWriter(buffer, { headerSize })
-
-  writer.addRoot(lastCid)
-
-  for (const { cid, bytes } of blocks.entries()) {
-    writer.write({ cid, bytes })
-  }
-  await writer.close()
-  return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
-}
-
 /** @implements {BlockFetcher} */
 export class InnerBlockstore {
   /** @type {Map<string, Uint8Array>} */
@@ -254,8 +223,10 @@ export class InnerBlockstore {
   async get (cid) {
     const key = cid.toString()
     let bytes = this.#blocks.get(key)
-    if (bytes) { return { cid, bytes } }
-    bytes = await this.parentBlockstore.commitedGet(key)
+    if (bytes) {
+      return { cid, bytes }
+    }
+    bytes = await this.parentBlockstore.committedGet(key)
     if (bytes) {
       return { cid, bytes }
     }
