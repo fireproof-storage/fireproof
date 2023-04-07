@@ -14,8 +14,8 @@ import { Buffer } from 'buffer'
 import * as codec from 'encrypted-block'
 const chunker = bf(3)
 
-const KEY_MATERIAL =
-  typeof process !== 'undefined' ? process.env.KEY_MATERIAL : import.meta && import.meta.env.VITE_KEY_MATERIAL
+const NO_ENCRYPT =
+  typeof process !== 'undefined' ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
 
 export default class Valet {
   idb = null
@@ -30,9 +30,9 @@ export default class Valet {
    */
   uploadFunction = null
 
-  constructor (name = 'default', keyMaterial = KEY_MATERIAL) {
+  constructor (name = 'default', keyMaterial) {
     this.name = name
-    if (keyMaterial) {
+    if (keyMaterial && !NO_ENCRYPT) {
       this.keyMaterial = keyMaterial
     }
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
@@ -236,6 +236,7 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   } else {
     const blocksPromise = (async () => {
       const decryptionKey = Buffer.from(keyMaterial, 'hex')
+      console.log('decrypting', keyMaterial, cid.toString())
       const cids = new Set()
       const decryptedBlocks = []
       for await (const block of decrypt({
