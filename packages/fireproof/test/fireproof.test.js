@@ -371,7 +371,7 @@ describe('Fireproof', () => {
         }
       })
 
-      // database.blocks.clearCommittedCache()
+      database.blocks.clearCommittedCache()
 
       doc = await database.get(resp.id).catch(e => {
         console.log('failed', e)

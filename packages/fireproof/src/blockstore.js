@@ -68,9 +68,11 @@ export default class TransactionBlockstore {
   }
 
   async committedGet (key) {
-    // const old = this.#committedBlocks.get(key)
-    // if (old) return old
-    return await this.valet.getBlock(key)
+    const old = this.#committedBlocks.get(key)
+    if (old) return old
+    const got = await this.valet.getBlock(key)
+    this.#committedBlocks.set(key, got)
+    return got
   }
 
   async clearCommittedCache () {
