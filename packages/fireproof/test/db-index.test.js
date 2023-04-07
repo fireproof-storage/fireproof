@@ -152,7 +152,7 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = await Hydrator.snapshot(database)
+    const snap = Hydrator.snapshot(database)
 
     console.x('--- make Xander 63')
     const response = await database.put({ _id: DOCID, name: 'Xander', age: 63 })
@@ -200,7 +200,7 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = await Hydrator.snapshot(database)
+    const snap = Hydrator.snapshot(database)
 
     console.x('--- delete Xander 53')
     const response = await database.del(DOCID)
