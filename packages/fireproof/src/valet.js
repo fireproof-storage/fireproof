@@ -106,7 +106,7 @@ export default class Valet {
 
   withDB = async dbWorkFun => {
     if (!this.idb) {
-      this.idb = await openDB(`fp.${this.name}.${this.keyId}.valet`, 2, {
+      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 2, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars') // todo use database name
