@@ -152,13 +152,17 @@ export default class Valet {
         const roots = await reader.getRoots()
         const readerGetWithCodec = async cid => {
           const got = await reader.get(cid)
-          console.log('got.', cid.toString())
+          // console.log('got.', cid.toString())
+          let useCodec = codec
+          if (cid.toString().indexOf('bafy') === 0) {
+            useCodec = dagcbor
+          }
           const decoded = await Block.decode({
             ...got,
-            codec: dagcbor,
+            codec: useCodec,
             hasher: sha256
           })
-          console.log('decoded', decoded.value)
+          // console.log('decoded', decoded.value)
 
           return decoded
         }
