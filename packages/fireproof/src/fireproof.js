@@ -69,6 +69,7 @@ export default class Fireproof {
     this.name = name
     this.clock = clock
     this.blocks.valet.setKeyMaterial(key)
+    this.indexBlocks = null
   }
 
   /**

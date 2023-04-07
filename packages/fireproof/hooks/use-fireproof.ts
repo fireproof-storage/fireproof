@@ -17,9 +17,15 @@ export const FireproofCtx = createContext<FireproofCtxValue>({
 })
 
 const inboundSubscriberQueue = new Map()
-const database = Fireproof.storage()
-const listener = new Listener(database)
+
 let startedSetup = false
+let database
+let listener
+const initializeDatabase = name => {
+  if (database) return
+  database = Fireproof.storage(name)
+  listener = new Listener(database)
+}
 
 /**
  * @function useFireproof
@@ -30,7 +36,8 @@ let startedSetup = false
  */
 export function useFireproof(
   defineDatabaseFn = (database: Fireproof) => {},
-  setupDatabaseFn = async (database: Fireproof) => {}
+  setupDatabaseFn = async (database: Fireproof) => {},
+  name: string
 ): FireproofCtxValue {
   const [ready, setReady] = useState(false)
   // console.log('useFireproof', database, ready)
@@ -49,15 +56,17 @@ export function useFireproof(
     const doSetup = async () => {
       if (ready) return
       if (startedSetup) return
+      initializeDatabase(name || 'useFireproof')
       startedSetup = true
       defineDatabaseFn(database) // define indexes before querying them
+      console.log('Initializing database', database.name)
       const fp = localGet('fireproof') // todo use db.name
       if (fp) {
         try {
-        const serialized = JSON.parse(fp)
-        // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
-        console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
-        Hydrator.fromJSON(serialized, database)
+          const serialized = JSON.parse(fp)
+          // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
+          console.log("Loading previous database clock. (localStorage.removeItem('fireproof') to reset)")
+          Hydrator.fromJSON(serialized, database)
           const changes = await database.changesSince()
           if (changes.rows.length < 2) {
             // console.log('Resetting database')

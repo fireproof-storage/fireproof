@@ -23,7 +23,7 @@ export default class Valet {
   #uploadQueue = null
   #alreadyEnqueued = new Set()
   #keyMaterial = null
-  keyId = null
+  keyId = 'null'
 
   /**
    * Function installed by the database to upload car files
@@ -81,6 +81,7 @@ export default class Valet {
       this.#keyMaterial = null
       this.keyId = 'null'
     }
+    // console.trace('keyId', this.name, this.keyId)
   }
 
   /**
