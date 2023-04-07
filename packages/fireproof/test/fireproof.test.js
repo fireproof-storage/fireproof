@@ -371,6 +371,24 @@ describe('Fireproof', () => {
         }
       })
 
+      database.blocks.clearCommittedCache()
+
+      doc = await database.get(resp.id).catch(e => {
+        console.log('failed', e)
+        assert.fail(`get failed on _id: ${id}, error: ${e.message}`)
+      })
+
+      assert.equal(doc.index, index, `doc.index is not equal to index for _id: ${id}`)
+      changes = await database.changesSince().catch(async e => {
+        assert.fail(`changesSince failed on _id: ${id}, error: ${e.message}`)
+      })
+      changes.rows.forEach(row => {
+        for (const key in row) {
+          const value = row[key]
+          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+        }
+      })
+
       // console.log('changes: ', index, changes.rows.length, JSON.stringify(changes.rows))
       assert.equal(changes.rows.length, index + 2, `failed on ${index}, with ${changes.rows.length} ${id}`)
     }
