@@ -92,7 +92,7 @@ function App(): JSX.Element {
   console.log('render App')
   const fp = useFireproof(defineIndexes, loadFixtures)
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp)
-  const up = useUploader(fp.database) // is required to be in a KeyringProvider
+  // const up = useUploader(fp.database) // is required to be in a KeyringProvider
   const listLoader = async ({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> =>
     await fetchListWithTodos(listId)
   const allListLoader = async ({ params }: LoaderFunctionArgs): Promise<ListDoc[]> => await fetchAllLists()
@@ -113,12 +113,12 @@ function App(): JSX.Element {
   return (
     <FireproofCtx.Provider value={fp}>
       <KeyringProvider>
-        <UploaderCtx.Provider value={up}>
+        {/* <UploaderCtx.Provider value={up}> */}
           <RouterProvider
             router={createBrowserRouter(createRoutesFromElements(defineRouter()), { basename: pageBase })}
             fallbackElement={<LoadingView />}
           />
-        </UploaderCtx.Provider>
+        {/* </UploaderCtx.Provider> */}
       </KeyringProvider>
     </FireproofCtx.Provider>
   )

@@ -3,7 +3,6 @@ import assert from 'node:assert'
 import Fireproof from '../src/fireproof.js'
 import DbIndex from '../src/db-index.js'
 import Hydrator from '../src/hydrator.js'
-console.x = function () {}
 
 describe('DbIndex query', () => {
   let database, index
@@ -36,6 +35,9 @@ describe('DbIndex query', () => {
     const serialized = database.toJSON()
     // console.log('serialized', serialized)
     assert.equal(serialized.name, 'global')
+    if (database.blocks.valet.keyId !== 'null') {
+      assert.equal(serialized.key.length, 64)
+    }
     assert.equal(serialized.clock.length, 1)
     assert.equal(serialized.clock[0].constructor.name, 'String')
     assert.equal(serialized.indexes.length, 1)

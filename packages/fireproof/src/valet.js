@@ -22,7 +22,8 @@ export default class Valet {
   name = null
   #uploadQueue = null
   #alreadyEnqueued = new Set()
-  keyMaterial = null
+  #keyMaterial = null
+  keyId = null
 
   /**
    * Function installed by the database to upload car files
@@ -32,9 +33,7 @@ export default class Valet {
 
   constructor (name = 'default', keyMaterial) {
     this.name = name
-    if (keyMaterial && !NO_ENCRYPT) {
-      this.keyMaterial = keyMaterial
-    }
+    this.setKeyMaterial(keyMaterial)
     this.#uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
         'queue worker',
@@ -69,6 +68,20 @@ export default class Valet {
     })
   }
 
+  getKeyMaterial () {
+    return this.#keyMaterial
+  }
+
+  setKeyMaterial (km) {
+    if (km && !NO_ENCRYPT) {
+      this.#keyMaterial = km
+      this.keyId = Buffer.from(sha256.encode(km)).toString('hex')
+    } else {
+      this.#keyMaterial = null
+      this.keyId = 'null'
+    }
+  }
+
   /**
    * Group the blocks into a car and write it to the valet.
    * @param {InnerBlockstore} innerBlockstore
@@ -78,9 +91,9 @@ export default class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.keyMaterial) {
+      if (this.#keyMaterial) {
         // console.log('encrypting car', innerBlockstore.label)
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.#keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -91,7 +104,7 @@ export default class Valet {
 
   withDB = async dbWorkFun => {
     if (!this.idb) {
-      this.idb = await openDB(`fp.${this.name}.valet`, 2, {
+      this.idb = await openDB(`fp.${this.name}.${this.keyId}.valet`, 2, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars') // todo use database name
@@ -148,7 +161,7 @@ export default class Valet {
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
-      if (this.keyMaterial) {
+      if (this.#keyMaterial) {
         const roots = await reader.getRoots()
         const readerGetWithCodec = async cid => {
           const got = await reader.get(cid)
@@ -165,7 +178,7 @@ export default class Valet {
           // console.log('decoded', decoded.value)
           return decoded
         }
-        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
+        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.#keyMaterial)
         const block = blocks.find(b => b.cid.toString() === dataCID)
         if (block) {
           return block.bytes
@@ -236,7 +249,7 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   } else {
     const blocksPromise = (async () => {
       const decryptionKey = Buffer.from(keyMaterial, 'hex')
-      console.log('decrypting', keyMaterial, cid.toString())
+      // console.log('decrypting', keyMaterial, cid.toString())
       const cids = new Set()
       const decryptedBlocks = []
       for await (const block of decrypt({
