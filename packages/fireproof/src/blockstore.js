@@ -29,7 +29,7 @@ const husher = (id, workFn) => {
  */
 export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
-  #oldBlocks = new Map()
+  #committedBlocks = new Map()
 
   valet = null
 
@@ -68,8 +68,8 @@ export default class TransactionBlockstore {
   }
 
   async committedGet (key) {
-    // const old = this.#oldBlocks.get(key)
-    // if (old) return old
+    const old = this.#committedBlocks.get(key)
+    if (old) return old
     return await this.valet.getBlock(key)
   }
 
@@ -114,7 +114,7 @@ export default class TransactionBlockstore {
   //   // for (const [str, bytes] of this.#blocks) {
   //   //   yield { cid: parse(str), bytes }
   //   // }
-  //   for (const [str, bytes] of this.#oldBlocks) {
+  //   for (const [str, bytes] of this.#committedBlocks) {
   //     yield { cid: parse(str), bytes }
   //   }
   // }
@@ -141,7 +141,7 @@ export default class TransactionBlockstore {
   }
 
   // first get the transaction blockstore from the map of transaction blockstores
-  // then copy it to oldBlocks
+  // then copy it to committedBlocks
   // then write the transaction blockstore to a car
   // then write the car to the valet
   // then remove the transaction blockstore from the map of transaction blockstores
@@ -149,10 +149,10 @@ export default class TransactionBlockstore {
     const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
       const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
-      if (this.#oldBlocks.has(stringCid)) {
-        // console.log('Duplicate block: ' + stringCid)
+      if (this.#committedBlocks.has(stringCid)) {
+        // console.log('Duplicate block: ' + stringCid) // todo some of this can be avoided, cost is extra size on car files
       } else {
-        this.#oldBlocks.set(stringCid, bytes)
+        this.#committedBlocks.set(stringCid, bytes)
         cids.add(stringCid)
       }
     }
