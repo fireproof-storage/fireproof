@@ -68,8 +68,8 @@ export default class TransactionBlockstore {
   }
 
   async committedGet (key) {
-    const old = this.#committedBlocks.get(key)
-    if (old) return old
+    // const old = this.#committedBlocks.get(key)
+    // if (old) return old
     const got = await this.valet.getBlock(key)
     // console.log('committedGet: ' + key)
     this.#committedBlocks.set(key, got)

@@ -75,7 +75,8 @@ export default class Valet {
   setKeyMaterial (km) {
     if (km && !NO_ENCRYPT) {
       this.#keyMaterial = km
-      this.keyId = Buffer.from(sha256.encode(km)).toString('hex')
+      this.keyId = km.substr(0, 8)
+      // this.keyId = Buffer.from(sha256.encode(km)).toString('hex')
     } else {
       this.#keyMaterial = null
       this.keyId = 'null'
@@ -92,7 +93,7 @@ export default class Valet {
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
       if (this.#keyMaterial) {
-        // console.log('encrypting car', innerBlockstore.label)
+        console.log('encrypting car', innerBlockstore.label)
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.#keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
