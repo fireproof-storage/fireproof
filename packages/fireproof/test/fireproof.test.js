@@ -20,7 +20,6 @@ describe('Fireproof', () => {
   })
   it('takes an optional name', () => {
     assert.equal(database.name, 'helloName')
-    console.log(database.blocks)
     const km = database.blocks.valet.getKeyMaterial()
     if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
     const x = database.blocks.valet.idb
