@@ -10,6 +10,8 @@ import cargoQueue from 'async/cargoQueue.js'
 import { bf } from 'prolly-trees/utils'
 import { nocache as cache } from 'prolly-trees/cache'
 import { encrypt, decrypt } from './crypto.js'
+import { Buffer } from 'buffer'
+import * as codec from 'encrypted-block'
 const chunker = bf(3)
 
 const KEY_MATERIAL =
@@ -77,7 +79,7 @@ export default class Valet {
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
       if (this.#encryptionActive) {
-        // console.log('encrypting car', innerBlockstore.label)
+        console.log('encrypting car', innerBlockstore.label)
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
@@ -150,7 +152,14 @@ export default class Valet {
         const roots = await reader.getRoots()
         const readerGetWithCodec = async cid => {
           const got = await reader.get(cid)
-          const decoded = await block.decode(got)
+          console.log('got.', cid.toString())
+          const decoded = await Block.decode({
+            ...got,
+            codec: dagcbor,
+            hasher: sha256
+          })
+          console.log('decoded', decoded.value)
+
           return decoded
         }
         const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec)
@@ -216,7 +225,7 @@ const blocksToEncryptedCarBlock = async (lastCid, blocks) => {
 }
 // { root, get, key, cache, chunker, hasher }
 
-const memoizeDecryptedCarBlocks = new Set()
+const memoizeDecryptedCarBlocks = new Map()
 const blocksFromEncryptedCarBlock = async (cid, get) => {
   if (memoizeDecryptedCarBlocks.has(cid.toString())) {
     return memoizeDecryptedCarBlocks.get(cid.toString())
