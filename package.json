@@ -4,12 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "standard && npm run test:mocha",
-    "test:mocha": "mocha test/*.test.js",
-    "test:watch": "npm run test:mocha -- -w --parallel",
-    "coverage": "c8 -r html -r text npm test",
-    "lint": "standard",
-    "lint:fix": "standard --fix",
+    "test": "cd packages/fireproof && standard && npm run test:mocha",
     "docs": "jsdoc -c jsdoc.json -u docs/ README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js",
     "docs:ts": "jsdoc -c jsdoc.json README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js packages/fireproof/hooks/use-fireproof.ts"
   },
