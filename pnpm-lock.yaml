@@ -94,7 +94,6 @@ importers:
       mocha: ^10.2.0
       multiformats: ^11.0.1
       nanoid: ^4.0.0
-      node-stdlib-browser: ^1.2.0
       prolly-trees: 1.0.3
       sade: ^1.8.1
       standard: ^17.0.0
@@ -117,7 +116,6 @@ importers:
       flexsearch: 0.7.31
       mocha: 10.2.0
       nanoid: 4.0.1
-      node-stdlib-browser: 1.2.0
       standard: 17.0.0
 
 packages:
