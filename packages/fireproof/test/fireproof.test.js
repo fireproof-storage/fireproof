@@ -124,6 +124,14 @@ describe('Fireproof', () => {
     const changes = await db.changesSince()
     assert.equal(changes.rows.length, 0)
   })
+  it('delete on an empty database', async () => {
+    const db = Fireproof.storage()
+    assert(db instanceof Fireproof)
+    const e = await db.del('8c5c0c5c0c5c').catch((err) => err)
+    assert.equal(e.id, '8c5c0c5c0c5c')
+    const changes = await db.changesSince()
+    assert.equal(changes.rows.length, 0)
+  })
   it('update existing document', async () => {
     // const alice = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     // assert.equal(alice.name, 'alice')
@@ -194,8 +202,33 @@ describe('Fireproof', () => {
     const e = await database.get('missing').catch((e) => e)
     assert.equal(e.message, 'Not found')
   })
-  it('delete a document', async () => {
+  it('delete the only document', async () => {
     const id = '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const found = await database.get(id)
+    assert.equal(found._id, id)
+    const deleted = await database.del(id)
+    assert.equal(deleted.id, id)
+    const e = await database
+      .get(id)
+      .then((doc) => assert.equal('should be deleted', JSON.stringify(doc)))
+      .catch((e) => {
+        if (e.message !== 'Not found') {
+          throw e
+        }
+        return e
+      })
+    assert.equal(e.message, 'Not found')
+  })
+
+  it('delete not last document', async () => {
+    const resp1 = await database.put({
+      _id: 'second',
+      name: 'bob',
+      age: 39
+    })
+
+    // const id = '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c'
+    const id = resp1.id
     const found = await database.get(id)
     assert.equal(found._id, id)
     const deleted = await database.del(id)
