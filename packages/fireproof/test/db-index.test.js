@@ -59,6 +59,14 @@ describe('DbIndex query', () => {
     assert.equal(result.rows[0].value, 'emily')
     assert.equal(result.rows[result.rows.length - 1].value, 'dave')
   })
+  it('query index limit', async () => {
+    const result = await index.query({ limit: 3 })
+    assert(result, 'did return result')
+    assert(result.rows)
+    assert.equal(result.rows.length, 3, 'six row matched')
+    assert.equal(result.rows[0].key, 4)
+    assert.equal(result.rows[0].value, 'emily')
+  })
   it('query index NaN', async () => {
     const result = await index.query({ range: [NaN, 44] })
     assert(result, 'did return result')

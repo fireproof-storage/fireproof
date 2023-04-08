@@ -303,20 +303,23 @@ async function loadIndex (blocks, index, indexOpts) {
   return index.root
 }
 
+async function applyLimit (results, limit) {
+  console.log('applyLimit', results, limit)
+  results.result = results.result.slice(0, limit)
+  return results
+}
+
 async function doIndexQuery (blocks, indexByKey, query = {}) {
   await loadIndex(blocks, indexByKey, dbIndexOpts)
+  if (!indexByKey.root) return { result: [] }
   if (query.range) {
     const encodedRange = query.range.map((key) => charwise.encode(key))
-    return indexByKey.root.range(...encodedRange)
+    return applyLimit(await indexByKey.root.range(...encodedRange), query.limit)
   } else if (query.key) {
     const encodedKey = charwise.encode(query.key)
     return indexByKey.root.get(encodedKey)
   } else {
-    if (indexByKey.root) {
-      const { result, ...all } = await indexByKey.root.getAllEntries()
-      return { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }
-    } else {
-      return { result: [] }
-    }
+    const { result, ...all } = await indexByKey.root.getAllEntries()
+    return applyLimit({ result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }, query.limit)
   }
 }
