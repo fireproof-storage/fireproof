@@ -195,7 +195,7 @@ const doProllyBulk = async (inBlocks, head, event) => {
  * @returns {Promise<Result>}
  */
 export async function put (inBlocks, head, event, options) {
-  const { getBlock, bigPut } = makeGetAndPutBlock(inBlocks)
+  const { getBlock, bigPut, blocks } = makeGetAndPutBlock(inBlocks)
 
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
