@@ -80,9 +80,6 @@ function getTopicList (subscribersMap, name) {
   return topicList
 }
 
-// copied from src/db-index.js
-const makeDoc = ({ key, value }) => ({ _id: key, ...value })
-
 /**
  * Transforms a set of changes to events using an emitter function.
  *
@@ -95,7 +92,7 @@ const topicsForChanges = (changes, routingFn) => {
   const seenTopics = new Map()
   changes.forEach(({ key, value, del }) => {
     if (del || !value) value = { _deleted: true }
-    routingFn(makeDoc({ key, value }), t => {
+    routingFn(({ _id: key, ...value }), t => {
       const topicList = getTopicList(seenTopics, t)
       topicList.push(key)
     })
