@@ -14,21 +14,6 @@ import charwise from 'charwise'
 
 const ALWAYS_REBUILD = false // todo: make false
 
-// const arrayCompare = (a, b) => {
-//   if (Array.isArray(a) && Array.isArray(b)) {
-//     const len = Math.min(a.length, b.length)
-//     for (let i = 0; i < len; i++) {
-//       const comp = simpleCompare(a[i], b[i])
-//       if (comp !== 0) {
-//         return comp
-//       }
-//     }
-//     return simpleCompare(a.length, b.length)
-//   } else {
-//     return simpleCompare(a, b)
-//   }
-// }
-
 const compare = (a, b) => {
   const [aKey, aRef] = a
   const [bKey, bRef] = b
@@ -138,28 +123,23 @@ export default class DbIndex {
   }
 
   static registerWithDatabase (inIndex, database) {
-    // console.log('.reg > in Index', inIndex.instanceId, { live: !!inIndex.mapFn }, inIndex.indexByKey, inIndex.mapFnString)
-    if (database.indexes.has(inIndex.mapFnString)) {
+    if (!database.indexes.has(inIndex.mapFnString)) {
+      database.indexes.set(inIndex.mapFnString, inIndex)
+    } else {
       // merge our inIndex code with the inIndex clock or vice versa
-      // keep the code instance, discard the clock instance
       const existingIndex = database.indexes.get(inIndex.mapFnString)
-      // console.log('.reg - existingIndex', existingIndex.instanceId, { live: !!inIndex.mapFn }, existingIndex.indexByKey)
+      // keep the code instance, discard the clock instance
       if (existingIndex.mapFn) { // this one also has other config
         existingIndex.dbHead = inIndex.dbHead
         existingIndex.indexById.cid = inIndex.indexById.cid
         existingIndex.indexByKey.cid = inIndex.indexByKey.cid
       } else {
-        // console.log('.reg use inIndex with existingIndex clock')
         inIndex.dbHead = existingIndex.dbHead
         inIndex.indexById.cid = existingIndex.indexById.cid
         inIndex.indexByKey.cid = existingIndex.indexByKey.cid
         database.indexes.set(inIndex.mapFnString, inIndex)
       }
-    } else {
-      // console.log('.reg - fresh')
-      database.indexes.set(inIndex.mapFnString, inIndex)
     }
-    // console.log('.reg after', JSON.stringify([...database.indexes.values()].map(i => [i.instanceId, typeof i.mapFn, i.indexByKey, i.indexById])))
   }
 
   toJSON () {
@@ -191,23 +171,17 @@ export default class DbIndex {
    */
   async query (query, update = true) {
     // const callId = Math.random().toString(36).substring(2, 7)
-    // if (!root) {
-    // pass a root to query a snapshot
+    // todo pass a root to query a snapshot
     // console.time(callId + '.#updateIndex')
     update && await this.#updateIndex(this.database.indexBlocks)
     // console.timeEnd(callId + '.#updateIndex')
-
-    // }
     // console.time(callId + '.doIndexQuery')
     // console.log('query', query)
     const response = await doIndexQuery(this.database.indexBlocks, this.indexByKey, query)
     // console.timeEnd(callId + '.doIndexQuery')
-
     return {
       proof: { index: await cidsToProof(response.cids) },
-      // TODO fix this naming upstream in prolly/db-DbIndex?
       rows: response.result.map(({ id, key, row }) => {
-        // console.log('query', id, key, row)
         return ({ id, key: charwise.decode(key), value: row })
       })
     }
