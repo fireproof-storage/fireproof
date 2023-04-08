@@ -25,7 +25,7 @@ describe('DbIndex query', () => {
     }
     index = new DbIndex(database, function (doc, map) {
       map(doc.age, doc.name)
-    })
+    }, null, { name: 'names_by_age' })
   })
   it('serialize database with index', async () => {
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
@@ -44,6 +44,8 @@ describe('DbIndex query', () => {
     assert.equal(serialized.indexes[0].code, `function (doc, map) {
       map(doc.age, doc.name)
     }`)
+    assert.equal(serialized.indexes[0].name, 'names_by_age')
+
     assert.equal(serialized.indexes[0].clock.byId.constructor.name, 'String')
     assert.equal(serialized.indexes[0].clock.byKey.constructor.name, 'String')
     assert.equal(serialized.indexes[0].clock.db[0].constructor.name, 'String')
@@ -70,6 +72,8 @@ describe('DbIndex query', () => {
 
     assert.equal(newIndex.indexByKey.cid, 'bafyreicr5rpvsxnqchcwk5rxlmdvd3fah2vexmbsp2dvr4cfdxd2q2ycgu')
     // assert.equal(newIndex.indexByKey.root, null)
+
+    assert.equal(newIndex.name, 'names_by_age')
 
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')

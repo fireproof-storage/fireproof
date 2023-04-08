@@ -109,6 +109,7 @@ export default class DbIndex {
       this.mapFn = mapFn
       this.mapFnString = mapFn.toString()
     }
+    this.name = opts.name || this.mapFnString.match(/map\(([\s\S]*?)\)/)[1]
     this.indexById = { root: null, cid: null }
     this.indexByKey = { root: null, cid: null }
     this.dbHead = null
@@ -143,16 +144,16 @@ export default class DbIndex {
   }
 
   toJSON () {
-    const indexJson = { code: this.mapFnString, clock: { db: null, byId: null, byKey: null } }
+    const indexJson = { name: this.name, code: this.mapFnString, clock: { db: null, byId: null, byKey: null } }
     indexJson.clock.db = this.dbHead?.map(cid => cid.toString())
     indexJson.clock.byId = this.indexById.cid?.toString()
     indexJson.clock.byKey = this.indexByKey.cid?.toString()
     return indexJson
   }
 
-  static fromJSON (database, { code, clock }) {
+  static fromJSON (database, { code, clock, name }) {
     // console.log('DbIndex.fromJSON', database.constructor.name, code, clock)
-    return new DbIndex(database, code, clock)
+    return new DbIndex(database, code, clock, { name })
   }
 
   /**

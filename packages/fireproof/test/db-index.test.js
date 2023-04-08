@@ -27,7 +27,10 @@ describe('DbIndex query', () => {
     }
     index = new DbIndex(database, function (doc, map) {
       map(doc.age, doc.name)
-    })
+    }, null, { name: 'namesByAge' })
+  })
+  it('has a name', () => {
+    assert.equal(index.name, 'namesByAge')
   })
   it('query index range', async () => {
     const result = await index.query({ range: [41, 49] })
@@ -235,6 +238,9 @@ describe('DbIndex query with bad index definition', () => {
     index = new DbIndex(database, function (doc, map) {
       map(doc.oops.missingField, doc.name)
     })
+  })
+  it('has a default name', () => {
+    assert.equal(index.name, 'doc.oops.missingField, doc.name')
   })
   it('query index range', async () => {
     const oldErrFn = console.error
