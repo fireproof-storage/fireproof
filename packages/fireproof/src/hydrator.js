@@ -8,14 +8,15 @@ export default class Hydrator {
   static fromJSON (json, database) {
     database.hydrate({ clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
     if (json.indexes) {
-      for (const { code, clock: { byId, byKey, db } } of json.indexes) {
+      for (const { name, code, clock: { byId, byKey, db } } of json.indexes) {
         DbIndex.fromJSON(database, {
           clock: {
             byId: byId ? parseCID(byId) : null,
             byKey: byKey ? parseCID(byKey) : null,
             db: db ? db.map(c => parseCID(c)) : null
           },
-          code
+          code,
+          name
         })
       }
     }
