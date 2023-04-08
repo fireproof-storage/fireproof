@@ -304,7 +304,6 @@ async function loadIndex (blocks, index, indexOpts) {
 }
 
 async function applyLimit (results, limit) {
-  console.log('applyLimit', results, limit)
   results.result = results.result.slice(0, limit)
   return results
 }

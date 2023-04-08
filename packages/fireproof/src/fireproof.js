@@ -157,6 +157,35 @@ export default class Fireproof {
   }
 
   /**
+   * Retrieves the document with the specified ID from the database
+   *
+   * @param {string} key - the ID of the document to retrieve
+   * @param {Object} [opts] - options
+   * @returns {Object<{_id: string, ...doc: Object}>} - the document with the specified ID
+   * @memberof Fireproof
+   * @instance
+   */
+  async get (key, opts = {}) {
+    const clock = opts.clock || this.clock
+    const resp = await get(this.blocks, clock, charwise.encode(key))
+
+    // this tombstone is temporary until we can get the prolly tree to delete
+    if (!resp || resp.result === null) {
+      throw new Error('Not found')
+    }
+    const doc = resp.result
+    if (opts.mvcc === true) {
+      doc._clock = this.clockToJSON()
+    }
+    doc._proof = {
+      data: await cidsToProof(resp.cids),
+      clock: this.clockToJSON()
+    }
+    doc._id = key
+    return doc
+  }
+
+  /**
    * Adds a new document to the database, or updates an existing document. Returns the ID of the document and the new clock head.
    *
    * @param {Object} doc - the document to be added
@@ -240,35 +269,6 @@ export default class Fireproof {
   //       this.rootCid = await root(this.blocks, this.clock)
   //       return this.clock
   //     }
-
-  /**
-   * Retrieves the document with the specified ID from the database
-   *
-   * @param {string} key - the ID of the document to retrieve
-   * @param {Object} [opts] - options
-   * @returns {Object<{_id: string, ...doc: Object}>} - the document with the specified ID
-   * @memberof Fireproof
-   * @instance
-   */
-  async get (key, opts = {}) {
-    const clock = opts.clock || this.clock
-    const resp = await get(this.blocks, clock, charwise.encode(key))
-
-    // this tombstone is temporary until we can get the prolly tree to delete
-    if (!resp || resp.result === null) {
-      throw new Error('Not found')
-    }
-    const doc = resp.result
-    if (opts.mvcc === true) {
-      doc._clock = this.clockToJSON()
-    }
-    doc._proof = {
-      data: await cidsToProof(resp.cids),
-      clock: this.clockToJSON()
-    }
-    doc._id = key
-    return doc
-  }
 
   async * vis () {
     return yield * vis(this.blocks, this.clock)
