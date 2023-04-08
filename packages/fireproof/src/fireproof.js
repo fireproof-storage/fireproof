@@ -139,27 +139,6 @@ export default class Fireproof {
   }
 
   /**
-   * Registers a Listener to be called when the Fireproof instance's clock is updated.
-   * Recieves live changes from the database after they are committed.
-   * @param {Function} listener - The listener to be called when the clock is updated.
-   * @returns {Function} - A function that can be called to unregister the listener.
-   * @memberof Fireproof
-   */
-  registerListener (listener) {
-    this.#listeners.add(listener)
-    return () => {
-      this.#listeners.delete(listener)
-    }
-  }
-
-  async #notifyListeners (changes) {
-    // await sleep(10)
-    for (const listener of this.#listeners) {
-      await listener(changes)
-    }
-  }
-
-  /**
    * Runs validation on the specified document using the Fireproof instance's configuration. Throws an error if the document is invalid.
    *
    * @param {Object} doc - The document to validate.
@@ -263,20 +242,6 @@ export default class Fireproof {
   //     }
 
   /**
-   * Displays a visualization of the current clock in the console
-   */
-  //   async visClock () {
-  //     const shortLink = (l) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-  //     const renderNodeLabel = (event) => {
-  //       return event.value.data.type === 'put'
-  //         ? `${shortLink(event.cid)}\\nput(${shortLink(event.value.data.key)},
-  //         {${Object.values(event.value.data.value)}})`
-  //         : `${shortLink(event.cid)}\\ndel(${event.value.data.key})`
-  //     }
-  //     for await (const line of vis(this.blocks, this.clock, { renderNodeLabel })) console.log(line)
-  //   }
-
-  /**
    * Retrieves the document with the specified ID from the database
    *
    * @param {string} key - the ID of the document to retrieve
@@ -315,6 +280,27 @@ export default class Fireproof {
 
   async visClock () {
     return await visMerkleClock(this.blocks, this.clock)
+  }
+
+  /**
+   * Registers a Listener to be called when the Fireproof instance's clock is updated.
+   * Recieves live changes from the database after they are committed.
+   * @param {Function} listener - The listener to be called when the clock is updated.
+   * @returns {Function} - A function that can be called to unregister the listener.
+   * @memberof Fireproof
+   */
+  registerListener (listener) {
+    this.#listeners.add(listener)
+    return () => {
+      this.#listeners.delete(listener)
+    }
+  }
+
+  async #notifyListeners (changes) {
+    // await sleep(10)
+    for (const listener of this.#listeners) {
+      await listener(changes)
+    }
   }
 
   setCarUploader (carUploaderFn) {
