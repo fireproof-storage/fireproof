@@ -109,7 +109,7 @@ export default class DbIndex {
       this.mapFn = mapFn
       this.mapFnString = mapFn.toString()
     }
-    this.name = opts.name || this.mapFnString.match(/map\(([\s\S]*?)\)/)[1]
+    this.name = opts.name || this.makeName()
     this.indexById = { root: null, cid: null }
     this.indexByKey = { root: null, cid: null }
     this.dbHead = null
@@ -121,6 +121,12 @@ export default class DbIndex {
     this.instanceId = this.database.instanceId + `.DbIndex.${Math.random().toString(36).substring(2, 7)}`
     this.updateIndexPromise = null
     if (!opts.temporary) { DbIndex.registerWithDatabase(this, this.database) }
+  }
+
+  makeName () {
+    const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g
+    const matches = Array.from(this.mapFnString.matchAll(regex), match => match[1].trim())
+    return matches[1]
   }
 
   static registerWithDatabase (inIndex, database) {
