@@ -218,9 +218,9 @@ export default class Fireproof {
       id = docOrId
     }
     await this.#runValidation({ _id: id, _deleted: true })
-    // return await this.#putToProllyTree({ key: id, del: true }) // not working at prolly tree layer?
+    return await this.#putToProllyTree({ key: id, del: true }, clock) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
-    return await this.#putToProllyTree({ key: id, value: null }, clock)
+    // return await this.#putToProllyTree({ key: id, value: null }, clock)
   }
 
   /**

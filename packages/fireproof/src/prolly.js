@@ -67,12 +67,13 @@ async function createAndSaveNewEvent ({
   let cids
   const { key, value, del } = inEvent
   const data = {
-    type: 'put',
-    root: {
-      cid: root.cid,
-      bytes: root.bytes,
-      value: root.value
-    },
+    root: (root
+      ? {
+          cid: root.cid,
+          bytes: root.bytes,
+          value: root.value
+        }
+      : null),
     key
   }
 
@@ -81,6 +82,7 @@ async function createAndSaveNewEvent ({
     data.type = 'del'
   } else {
     data.value = value
+    data.type = 'put'
   }
   /** @type {EventData} */
 
@@ -115,13 +117,37 @@ const makeGetAndPutBlock = (inBlocks) => {
   return { getBlock, bigPut, blocks: inBlocks, cids }
 }
 
-const bulkFromEvents = (sorted) =>
-  sorted.map(({ value: event }) => {
+const bulkFromEvents = (sorted, event) => {
+  if (event) {
+    const update = { value: { data: { key: event.key } } }
+    if (event.del) {
+      update.value.data.type = 'del'
+    } else {
+      update.value.data.type = 'put'
+      update.value.data.value = event.value
+    }
+    // value: event.value, type: event.del ? 'del' : 'put' } } }
+    sorted.push(update)
+  }
+  const bulk = new Map()
+  console.log('bulkFromEvents in', sorted.map(({ value }) => value))
+  for (const { value: event } of sorted) {
     const {
       data: { type, value, key }
     } = event
-    return type === 'put' ? { key, value } : { key, del: true }
-  })
+    const bulkEvent = type === 'put' ? { key, value } : { key, del: true }
+    bulk.set(bulkEvent.key, bulkEvent) // last wins
+  }
+  console.log('bulkFromEvents out', Array.from(bulk.values()))
+  return Array.from(bulk.values())
+}
+// sorted.map(({ value: event }) => {
+//   console.log('bulkFromEvents', event)
+//   const {
+//     data: { type, value, key }
+//   } = event
+//   return type === 'put' ? { key, value } : { key, del: true }
+// })
 
 // Get the value of the root from the ancestor event
 /**
@@ -139,6 +165,25 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   return load({ cid: root.cid, get: getBlock, ...blockOpts })
 }
 
+const doProllyBulk = async (inBlocks, head, event) => {
+  const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
+  // Otherwise, we find the common ancestor and update the root and other blocks
+  const events = new EventFetcher(blocks)
+  // todo this is returning more events than necessary, lets define the desired semantics from the top down
+  // good semantics mean we can cache the results of this call
+  const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
+  // console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
+  const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
+  // console.log('event', event)
+  const bulkOperations = bulkFromEvents(sorted, event)
+
+  // if prolly root node is null, we need to create a new one
+
+  const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations) // ading delete support here
+  // console.log('newBlocks', newBlocks.map(({ value }) => value), newProllyRootNode?.entryList.entries.map(({ value }) => value))
+  return { root: newProllyRootNode, blocks: newBlocks }
+}
+
 /**
  * Put a value (a CID) for the given key. If the key exists it's value is overwritten.
  *
@@ -150,7 +195,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
  * @returns {Promise<Result>}
  */
 export async function put (inBlocks, head, event, options) {
-  const { getBlock, bigPut, blocks } = makeGetAndPutBlock(inBlocks)
+  const { getBlock, bigPut } = makeGetAndPutBlock(inBlocks)
 
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
@@ -205,8 +250,11 @@ export async function root (inBlocks, head) {
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   const prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
 
+  // if prolly root node is null, we need to create a new one
+
   // Perform bulk operations (put or delete) for each event in the sorted array
   const bulkOperations = bulkFromEvents(sorted)
+  console.log('root bulkOperations', bulkOperations)
   const { root: newProllyRootNode, blocks: newBlocks } = await prollyRootNode.bulk(bulkOperations)
   // const prollyRootBlock = await newProllyRootNode.block
   // console.log('newBlocks', newBlocks.map((nb) => nb.cid.toString()))
