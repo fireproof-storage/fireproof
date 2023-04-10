@@ -179,9 +179,9 @@ export default class DbIndex {
   async query (query, update = true) {
     // const callId = Math.random().toString(36).substring(2, 7)
     // todo pass a root to query a snapshot
-    // console.time(callId + '.#updateIndex')
-    update && await this.#updateIndex(this.database.indexBlocks)
-    // console.timeEnd(callId + '.#updateIndex')
+    // console.time(callId + '.updateIndex')
+    update && await this.updateIndex(this.database.indexBlocks)
+    // console.timeEnd(callId + '.updateIndex')
     // console.time(callId + '.doIndexQuery')
     // console.log('query', query)
     const response = await doIndexQuery(this.database.indexBlocks, this.indexByKey, query)
@@ -200,18 +200,18 @@ export default class DbIndex {
    * @returns {Promise<void>}
    */
 
-  async #updateIndex (blocks) {
+  async updateIndex (blocks) {
     // todo this could enqueue the request and give fresh ones to all second comers -- right now it gives out stale promises while working
     // what would it do in a world where all indexes provide a database snapshot to query?
     if (this.updateIndexPromise) return this.updateIndexPromise
-    this.updateIndexPromise = this.#innerUpdateIndex(blocks)
+    this.updateIndexPromise = this.innerUpdateIndex(blocks)
     this.updateIndexPromise.finally(() => { this.updateIndexPromise = null })
     return this.updateIndexPromise
   }
 
-  async #innerUpdateIndex (inBlocks) {
+  async innerUpdateIndex (inBlocks) {
     // const callTag = Math.random().toString(36).substring(4)
-    // console.log(`#updateIndex ${callTag} >`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
+    // console.log(`updateIndex ${callTag} >`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
     // todo remove this hack
     if (ALWAYS_REBUILD) {
       this.indexById = { root: null, cid: null }
@@ -224,15 +224,15 @@ export default class DbIndex {
     // console.timeEnd(callTag + '.changesSince')
     // console.log('result.rows.length', result.rows.length)
 
-    // console.time(callTag + '.doTransaction#updateIndex')
-    // console.log('#updateIndex changes length', result.rows.length)
+    // console.time(callTag + '.doTransactionupdateIndex')
+    // console.log('updateIndex changes length', result.rows.length)
 
     if (result.rows.length === 0) {
-      // console.log('#updateIndex < no changes', result.clock)
+      // console.log('updateIndex < no changes', result.clock)
       this.dbHead = result.clock
       return
     }
-    await doTransaction('#updateIndex', inBlocks, async (blocks) => {
+    await doTransaction('updateIndex', inBlocks, async (blocks) => {
       let oldIndexEntries = []
       let removeByIdIndexEntries = []
       await loadIndex(blocks, this.indexById, idIndexOpts)
@@ -252,8 +252,8 @@ export default class DbIndex {
       this.dbHead = result.clock
     })
     this.database.notifyExternal('dbIndex')
-    // console.timeEnd(callTag + '.doTransaction#updateIndex')
-    // console.log(`#updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
+    // console.timeEnd(callTag + '.doTransactionupdateIndex')
+    // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
   }
 }
 

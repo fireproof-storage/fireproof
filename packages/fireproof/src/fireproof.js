@@ -18,7 +18,7 @@ import charwise from 'charwise'
  *
  */
 export default class Fireproof {
-  #listeners = new Set()
+  listeners = new Set()
 
   /**
    * @function storage
@@ -82,12 +82,12 @@ export default class Fireproof {
    * @instance
    */
   async notifyReset () {
-    await this.#notifyListeners({ _reset: true, _clock: this.clockToJSON() })
+    await this.notifyListeners({ _reset: true, _clock: this.clockToJSON() })
   }
 
   // used be indexes etc to notify database listeners of new availability
   async notifyExternal (source = 'unknown') {
-    await this.#notifyListeners({ _external: source, _clock: this.clockToJSON() })
+    await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
   }
 
   /**
@@ -147,7 +147,7 @@ export default class Fireproof {
    * @memberof Fireproof
    * @instance
    */
-  async #runValidation (doc) {
+  async runValidation (doc) {
     if (this.config && this.config.validateChange) {
       const oldDoc = await this.get(doc._id)
         .then((doc) => doc)
@@ -197,8 +197,8 @@ export default class Fireproof {
    */
   async put ({ _id, _proof, ...doc }) {
     const id = _id || 'f' + Math.random().toString(36).slice(2)
-    await this.#runValidation({ _id: id, ...doc })
-    return await this.#putToProllyTree({ key: id, value: doc }, doc._clock)
+    await this.runValidation({ _id: id, ...doc })
+    return await this.putToProllyTree({ key: id, value: doc }, doc._clock)
   }
 
   /**
@@ -217,10 +217,10 @@ export default class Fireproof {
     } else {
       id = docOrId
     }
-    await this.#runValidation({ _id: id, _deleted: true })
-    return await this.#putToProllyTree({ key: id, del: true }, clock) // not working at prolly tree layer?
+    await this.runValidation({ _id: id, _deleted: true })
+    return await this.putToProllyTree({ key: id, del: true }, clock) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
-    // return await this.#putToProllyTree({ key: id, value: null }, clock)
+    // return await this.putToProllyTree({ key: id, value: null }, clock)
   }
 
   /**
@@ -229,7 +229,7 @@ export default class Fireproof {
    * @param {Object<{key : string, value: any}>} event - the event to add
    * @returns {Object<{ id: string, clock: CID[] }>} - The result of adding the event to storage
    */
-  async #putToProllyTree (decodedEvent, clock = null) {
+  async putToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(clock) !== JSON.stringify(this.clockToJSON())) {
       // we need to check and see what version of the document exists at the clock specified
@@ -241,7 +241,7 @@ export default class Fireproof {
       }
     }
     const result = await doTransaction(
-      '#putToProllyTree',
+      'putToProllyTree',
       this.blocks,
       async (blocks) => await put(blocks, this.clock, event)
     )
@@ -251,7 +251,7 @@ export default class Fireproof {
     }
     // console.log('new clock head', this.instanceId, result.head.toString())
     this.clock = result.head // do we want to do this as a finally block
-    await this.#notifyListeners([decodedEvent]) // this type is odd
+    await this.notifyListeners([decodedEvent]) // this type is odd
     return {
       id: decodedEvent.key,
       clock: this.clockToJSON(),
@@ -290,15 +290,15 @@ export default class Fireproof {
    * @memberof Fireproof
    */
   registerListener (listener) {
-    this.#listeners.add(listener)
+    this.listeners.add(listener)
     return () => {
-      this.#listeners.delete(listener)
+      this.listeners.delete(listener)
     }
   }
 
-  async #notifyListeners (changes) {
+  async notifyListeners (changes) {
     // await sleep(10)
-    for (const listener of this.#listeners) {
+    for (const listener of this.listeners) {
       await listener(changes)
     }
   }
