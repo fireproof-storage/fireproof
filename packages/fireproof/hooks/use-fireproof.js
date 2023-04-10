@@ -1,16 +1,15 @@
 /* global localStorage */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { useEffect, useState, createContext } from 'react'
 import { Fireproof, Listener, Hydrator } from '../index'
 
-export interface FireproofCtxValue {
-  addSubscriber: (label: String, fn: Function) => void
-  database: Fireproof
-  ready: boolean
-  persist: () => void
-}
-export const FireproofCtx = createContext<FireproofCtxValue>({
+// export interface FireproofCtxValue {
+//   addSubscriber: (label: String, fn: Function) => void
+//   database: Fireproof
+//   ready: boolean
+//   persist: () => void
+// }
+export const FireproofCtx = createContext({
   addSubscriber: () => {},
   database: null,
   ready: false
@@ -35,21 +34,21 @@ const initializeDatabase = name => {
  * @param [setupDatabaseFn] Asynchronous function that sets up the database, run this to load fixture data etc
  * @returns {FireproofCtxValue} { addSubscriber, database, ready }
  */
-export function useFireproof(
-  defineDatabaseFn = (database: Fireproof) => {},
-  setupDatabaseFn = async (database: Fireproof) => {},
-  name: string
-): FireproofCtxValue {
+export function useFireproof (
+  defineDatabaseFn = () => {},
+  setupDatabaseFn = async () => {},
+  name
+) {
   const [ready, setReady] = useState(false)
   initializeDatabase(name || 'useFireproof')
   const localStorageKey = 'fp.' + database.name
 
-  const addSubscriber = (label: String, fn: Function) => {
+  const addSubscriber = (label, fn) => {
     inboundSubscriberQueue.set(label, fn)
   }
 
   const listenerCallback = async event => {
-      localSet(localStorageKey, JSON.stringify(database))
+    localSet(localStorageKey, JSON.stringify(database))
     if (event._external) return
     for (const [, fn] of inboundSubscriberQueue) fn()
   }
@@ -84,7 +83,7 @@ export function useFireproof(
         localSet(localStorageKey, JSON.stringify(database))
       }
       setReady(true)
-      listener.on('*', listenerCallback)//hushed('*', listenerCallback, 250))
+      listener.on('*', listenerCallback)// hushed('*', listenerCallback, 250))
     }
     doSetup()
   }, [ready])
@@ -99,32 +98,32 @@ export function useFireproof(
   }
 }
 
-const husherMap = new Map()
-const husher = (id: string, workFn: { (): Promise<any> }, ms: number) => {
-  if (!husherMap.has(id)) {
-    const start: number = Date.now()
-    husherMap.set(
-      id,
-      workFn().finally(() => setTimeout(() => husherMap.delete(id), ms - (Date.now() - start)))
-    )
-  }
-  return husherMap.get(id)
-}
-const hushed =
-  (id: string, workFn: { (...args): Promise<any> }, ms: number) =>
-  (...args) =>
-    husher(id, () => workFn(...args), ms)
+// const husherMap = new Map()
+// const husher = (id, workFn, ms) => {
+//   if (!husherMap.has(id)) {
+//     const start = Date.now()
+//     husherMap.set(
+//       id,
+//       workFn().finally(() => setTimeout(() => husherMap.delete(id), ms - (Date.now() - start)))
+//     )
+//   }
+//   return husherMap.get(id)
+// }
+// const hushed =
+//   (id, workFn, ms) =>
+//     (...args) =>
+//       husher(id, () => workFn(...args), ms)
 
 let storageSupported = false
 try {
   storageSupported = window.localStorage && true
 } catch (e) {}
-export function localGet(key: string) {
+export function localGet (key) {
   if (storageSupported) {
     return localStorage && localStorage.getItem(key)
   }
 }
-function localSet(key: string, value: string) {
+function localSet (key, value) {
   if (storageSupported) {
     return localStorage && localStorage.setItem(key, value)
   }
