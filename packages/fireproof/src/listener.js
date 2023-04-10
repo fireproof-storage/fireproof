@@ -10,8 +10,8 @@
 // import { ChangeEvent } from './db-index'
 
 export default class Listener {
-  #subcribers = new Map()
-  #doStopListening = null
+  subcribers = new Map()
+  doStopListening = null
 
   constructor (database, routingFn) {
     /** routingFn
@@ -19,7 +19,7 @@ export default class Listener {
      * @type {Fireproof}
      */
     this.database = database
-    this.#doStopListening = database.registerListener(changes => this.#onChanges(changes))
+    this.doStopListening = database.registerListener(changes => this.onChanges(changes))
     /**
      * The map function to apply to each entry in the database.
      * @type {Function}
@@ -41,7 +41,7 @@ export default class Listener {
    * @instance
    */
   on (topic, subscriber, since) {
-    const listOfTopicSubscribers = getTopicList(this.#subcribers, topic)
+    const listOfTopicSubscribers = getTopicList(this.subcribers, topic)
     listOfTopicSubscribers.push(subscriber)
     if (typeof since !== 'undefined') {
       this.database.changesSince(since).then(({ rows: changes }) => {
@@ -55,16 +55,16 @@ export default class Listener {
     }
   }
 
-  #onChanges (changes) {
+  onChanges (changes) {
     if (Array.isArray(changes)) {
       const seenTopics = topicsForChanges(changes, this.routingFn)
       for (const [topic, keys] of seenTopics) {
-        const listOfTopicSubscribers = getTopicList(this.#subcribers, topic)
+        const listOfTopicSubscribers = getTopicList(this.subcribers, topic)
         listOfTopicSubscribers.forEach(subscriber => keys.forEach(key => subscriber(key)))
       }
     } else {
       // non-arrays go to all subscribers
-      for (const [, listOfTopicSubscribers] of this.#subcribers) {
+      for (const [, listOfTopicSubscribers] of this.subcribers) {
         listOfTopicSubscribers.forEach(subscriber => subscriber(changes))
       }
     }

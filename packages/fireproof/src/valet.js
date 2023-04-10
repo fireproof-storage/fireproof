@@ -21,9 +21,9 @@ const NO_ENCRYPT =
 export default class Valet {
   idb = null
   name = null
-  #uploadQueue = null
-  #alreadyEnqueued = new Set()
-  #keyMaterial = null
+  uploadQueue = null
+  alreadyEnqueued = new Set()
+  keyMaterial = null
   keyId = 'null'
 
   /**
@@ -35,7 +35,7 @@ export default class Valet {
   constructor (name = 'default', keyMaterial) {
     this.name = name
     this.setKeyMaterial(keyMaterial)
-    this.#uploadQueue = cargoQueue(async (tasks, callback) => {
+    this.uploadQueue = cargoQueue(async (tasks, callback) => {
       console.log(
         'queue worker',
         tasks.length,
@@ -56,7 +56,7 @@ export default class Valet {
       callback()
     })
 
-    this.#uploadQueue.drain(async () => {
+    this.uploadQueue.drain(async () => {
       return await this.withDB(async db => {
         const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map(c => c.car)
         for (const carKey of carKeys) {
@@ -70,17 +70,17 @@ export default class Valet {
   }
 
   getKeyMaterial () {
-    return this.#keyMaterial
+    return this.keyMaterial
   }
 
   setKeyMaterial (km) {
     if (km && !NO_ENCRYPT) {
       const hex = Uint8Array.from(Buffer.from(km, 'hex'))
-      this.#keyMaterial = km
+      this.keyMaterial = km
       const hash = sha1sync(hex)
       this.keyId = Buffer.from(hash).toString('hex')
     } else {
-      this.#keyMaterial = null
+      this.keyMaterial = null
       this.keyId = 'null'
     }
     // console.trace('keyId', this.name, this.keyId)
@@ -95,9 +95,9 @@ export default class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.#keyMaterial) {
+      if (this.keyMaterial) {
         // console.log('encrypting car', innerBlockstore.label)
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.#keyMaterial)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -140,14 +140,14 @@ export default class Valet {
 
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
-      if (this.#alreadyEnqueued.has(carCid)) {
+      if (this.alreadyEnqueued.has(carCid)) {
         // console.log('already enqueued', carCid)
         return
       }
       // don't await this, it will be done in the queue
       // console.log('add to queue', carCid, value.length)
-      this.#uploadQueue.push({ carCid, value })
-      this.#alreadyEnqueued.add(carCid)
+      this.uploadQueue.push({ carCid, value })
+      this.alreadyEnqueued.add(carCid)
     } else {
       // console.log('no upload function', carCid, value.length, this.uploadFunction)
     }
@@ -165,7 +165,7 @@ export default class Valet {
       }
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
-      if (this.#keyMaterial) {
+      if (this.keyMaterial) {
         const roots = await reader.getRoots()
         const readerGetWithCodec = async cid => {
           const got = await reader.get(cid)
@@ -182,7 +182,7 @@ export default class Valet {
           // console.log('decoded', decoded.value)
           return decoded
         }
-        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.#keyMaterial)
+        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
         const block = blocks.find(b => b.cid.toString() === dataCID)
         if (block) {
           return block.bytes

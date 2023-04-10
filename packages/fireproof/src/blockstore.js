@@ -29,12 +29,12 @@ const husher = (id, workFn) => {
  */
 export default class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
-  #committedBlocks = new Map()
+  committedBlocks = new Map()
 
   valet = null
 
-  #instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
-  #inflightTransactions = new Set()
+  instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
+  inflightTransactions = new Set()
 
   constructor (name, encryptionKey) {
     this.valet = new Valet(name, encryptionKey)
@@ -49,7 +49,7 @@ export default class TransactionBlockstore {
   async get (cid) {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
-    const bytes = await Promise.any([this.#transactionsGet(key), this.committedGet(key)]).catch(e => {
+    const bytes = await Promise.any([this.transactionsGet(key), this.committedGet(key)]).catch(e => {
       // console.log('networkGet', cid.toString(), e)
       return this.networkGet(key)
     })
@@ -59,8 +59,8 @@ export default class TransactionBlockstore {
 
   // this iterates over the in-flight transactions
   // and returns the first matching block it finds
-  async #transactionsGet (key) {
-    for (const transaction of this.#inflightTransactions) {
+  async transactionsGet (key) {
+    for (const transaction of this.inflightTransactions) {
       const got = await transaction.get(key)
       if (got && got.bytes) return got.bytes
     }
@@ -68,16 +68,16 @@ export default class TransactionBlockstore {
   }
 
   async committedGet (key) {
-    const old = this.#committedBlocks.get(key)
+    const old = this.committedBlocks.get(key)
     if (old) return old
     const got = await this.valet.getBlock(key)
     // console.log('committedGet: ' + key)
-    this.#committedBlocks.set(key, got)
+    this.committedBlocks.set(key, got)
     return got
   }
 
   async clearCommittedCache () {
-    this.#committedBlocks.clear()
+    this.committedBlocks.clear()
   }
 
   async networkGet (key) {
@@ -118,10 +118,10 @@ export default class TransactionBlockstore {
    */
   // * entries () {
   //   // needs transaction blocks?
-  //   // for (const [str, bytes] of this.#blocks) {
+  //   // for (const [str, bytes] of this.blocks) {
   //   //   yield { cid: parse(str), bytes }
   //   // }
-  //   for (const [str, bytes] of this.#committedBlocks) {
+  //   for (const [str, bytes] of this.committedBlocks) {
   //     yield { cid: parse(str), bytes }
   //   }
   // }
@@ -134,7 +134,7 @@ export default class TransactionBlockstore {
    */
   begin (label = '') {
     const innerTransactionBlockstore = new InnerBlockstore(label, this)
-    this.#inflightTransactions.add(innerTransactionBlockstore)
+    this.inflightTransactions.add(innerTransactionBlockstore)
     return innerTransactionBlockstore
   }
 
@@ -144,7 +144,7 @@ export default class TransactionBlockstore {
    * @memberof TransactionBlockstore
    */
   async commit (innerBlockstore) {
-    await this.#doCommit(innerBlockstore)
+    await this.doCommit(innerBlockstore)
   }
 
   // first get the transaction blockstore from the map of transaction blockstores
@@ -152,14 +152,14 @@ export default class TransactionBlockstore {
   // then write the transaction blockstore to a car
   // then write the car to the valet
   // then remove the transaction blockstore from the map of transaction blockstores
-  #doCommit = async innerBlockstore => {
+  doCommit = async innerBlockstore => {
     const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
       const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
-      if (this.#committedBlocks.has(stringCid)) {
+      if (this.committedBlocks.has(stringCid)) {
         // console.log('Duplicate block: ' + stringCid) // todo some of this can be avoided, cost is extra size on car files
       } else {
-        this.#committedBlocks.set(stringCid, bytes)
+        this.committedBlocks.set(stringCid, bytes)
         cids.add(stringCid)
       }
     }
@@ -175,7 +175,7 @@ export default class TransactionBlockstore {
    * @memberof TransactionBlockstore
    */
   retire (innerBlockstore) {
-    this.#inflightTransactions.delete(innerBlockstore)
+    this.inflightTransactions.delete(innerBlockstore)
   }
 }
 
@@ -206,7 +206,7 @@ export const doTransaction = async (label, blockstore, doFun) => {
 /** @implements {BlockFetcher} */
 export class InnerBlockstore {
   /** @type {Map<string, Uint8Array>} */
-  #blocks = new Map()
+  blocks = new Map()
   lastCid = null
   label = ''
   parentBlockstore = null
@@ -222,7 +222,7 @@ export class InnerBlockstore {
    */
   async get (cid) {
     const key = cid.toString()
-    let bytes = this.#blocks.get(key)
+    let bytes = this.blocks.get(key)
     if (bytes) {
       return { cid, bytes }
     }
@@ -238,12 +238,12 @@ export class InnerBlockstore {
    */
   put (cid, bytes) {
     // console.log('put', cid)
-    this.#blocks.set(cid.toString(), bytes)
+    this.blocks.set(cid.toString(), bytes)
     this.lastCid = cid
   }
 
   * entries () {
-    for (const [str, bytes] of this.#blocks) {
+    for (const [str, bytes] of this.blocks) {
       yield { cid: parse(str), bytes }
     }
   }
