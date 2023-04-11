@@ -1,7 +1,7 @@
 /* global localStorage */
 // @ts-ignore
 import { useEffect, useState, createContext } from 'react'
-import { Fireproof, Listener, Hydrator } from '../src/index'
+import { Fireproof, Listener } from '../src/fireproof.js'
 
 // export interface FireproofCtxValue {
 //   addSubscriber: (label: String, fn: Function) => void
@@ -66,7 +66,7 @@ export function useFireproof (
           const serialized = JSON.parse(fp)
           // console.log('serialized', JSON.stringify(serialized.indexes.map(c => c.clock)))
           console.log(`Loading previous database clock. (localStorage.removeItem('${localStorageKey}') to reset)`)
-          await Hydrator.fromJSON(serialized, database)
+          await Fireproof.fromJSON(serialized, database)
           const changes = await database.changesSince()
           if (changes.rows.length < 2) {
             // console.log('Resetting database')
@@ -74,7 +74,7 @@ export function useFireproof (
           }
         } catch (e) {
           console.error(`Error loading previous database clock. ${fp} Resetting.`, e)
-          await Hydrator.zoom(database, [])
+          await Fireproof.zoom(database, [])
           await setupDatabaseFn(database)
           localSet(localStorageKey, JSON.stringify(database))
         }

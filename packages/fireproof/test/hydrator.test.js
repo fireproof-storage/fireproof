@@ -2,7 +2,6 @@ import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
-import { Hydrator } from '../src/hydrator.js'
 
 describe('DbIndex query without name', () => {
   let database, index
@@ -57,7 +56,7 @@ describe('DbIndex query without name', () => {
     const serialized = JSON.parse(JSON.stringify(database))
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
-    const newDb = Hydrator.fromJSON(serialized, database)
+    const newDb = Fireproof.fromJSON(serialized, database)
     assert.equal(newDb.name, undefined)
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
@@ -133,7 +132,7 @@ describe('DbIndex query with dbname', () => {
     const serialized = JSON.parse(JSON.stringify(database))
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
-    const newDb = Hydrator.fromJSON(serialized, database)
+    const newDb = Fireproof.fromJSON(serialized, database)
     assert.equal(newDb.name, 'index-test')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
