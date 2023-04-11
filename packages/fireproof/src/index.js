@@ -1,6 +1,6 @@
-import { Fireproof } from './fireproof'
-import { DbIndex as Index } from './db-index'
-import { Listener } from './listener'
-import { Hydrator } from './hydrator'
+import { Fireproof } from './fireproof.js'
+import { DbIndex as Index } from './db-index.js'
+import { Listener } from './listener.js'
+import { Hydrator } from './hydrator.js'
 
 export { Fireproof, Index, Listener, Hydrator }
