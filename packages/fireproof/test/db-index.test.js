@@ -1,9 +1,7 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import { TransactionBlockstore as Blockstore } from '../src/blockstore.js'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
-import { Hydrator } from '../src/hydrator.js'
 console.x = function () {}
 
 describe('DbIndex query', () => {
@@ -130,7 +128,7 @@ describe('DbIndex query', () => {
     assert(gotX.name === 'Xander', 'got Xander')
     console.x('got X')
 
-    const snap = Hydrator.snapshot(database, snapClock)
+    const snap = Fireproof.snapshot(database, snapClock)
 
     const aliceOld = await snap.get('a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')// .catch((e) => e)
     console.x('aliceOld', aliceOld)
@@ -163,7 +161,7 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = Hydrator.snapshot(database)
+    const snap = Fireproof.snapshot(database)
 
     console.x('--- make Xander 63')
     const response = await database.put({ _id: DOCID, name: 'Xander', age: 63 })
@@ -211,7 +209,7 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = Hydrator.snapshot(database)
+    const snap = Fireproof.snapshot(database)
 
     console.x('--- delete Xander 53')
     const response = await database.del(DOCID)
@@ -241,7 +239,7 @@ describe('DbIndex query', () => {
 describe('DbIndex query with bad index definition', () => {
   let database, index
   beforeEach(async () => {
-    database = new Fireproof(new Blockstore(), [])
+    database = Fireproof.storage()
     await database.put({ _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 })
     index = new DbIndex(database, function (doc, map) {
       map(doc.oops.missingField, doc.name)

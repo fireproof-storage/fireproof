@@ -2,10 +2,10 @@
   "name": "@fireproof/core",
   "version": "0.4.0",
   "description": "Realtime database for IPFS",
-  "main": "dist/src/index.js",
-  "module": "dist/src/index.mjs",
-  "typings": "dist/src/index.d.ts",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/src/fireproof.js",
+  "module": "dist/src/fireproof.mjs",
+  "typings": "dist/src/fireproof.d.ts",
+  "types": "dist/src/fireproof.d.ts",
   "type": "module",
   "scripts": {
     "keygen": "node scripts/keygen.js",
@@ -99,14 +99,13 @@
   "homepage": "https://fireproof.storage",
   "exports": {
     ".": {
-      "types": "./dist/src/index.d.ts",
-      "import": "./dist/src/index.mjs",
-      "module": "./dist/src/index.mjs",
-      "default": "./dist/src/index.js",
-      "require": "./dist/src/index.js"
+      "types": "./dist/src/fireproof.d.ts",
+      "import": "./dist/src/fireproof.mjs",
+      "module": "./dist/src/fireproof.mjs",
+      "default": "./dist/src/fireproof.js",
+      "require": "./dist/src/fireproof.js"
     },
-    "./use-fireproof": {
-      "types": "./dist/hooks/use-fireproof.d.ts",
+    "./hooks/use-fireproof": {
       "import": "./hooks/use-fireproof.js"
     },
     "./package.json": "./package.json"

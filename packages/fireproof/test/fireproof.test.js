@@ -1,8 +1,6 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import { TransactionBlockstore as Blockstore } from '../src/blockstore.js'
 import { Fireproof } from '../src/fireproof.js'
-import { Hydrator } from '../src/hydrator.js'
 // import * as codec from '@ipld/dag-cbor'
 
 let database, resp0
@@ -144,7 +142,7 @@ describe('Fireproof', () => {
     assert(response.id, 'should have id')
     assert.equal(response.id, dogKey)
     assert.equal(value._id, dogKey)
-    const snapshot = Hydrator.snapshot(database)
+    const snapshot = Fireproof.snapshot(database)
 
     const avalue = await database.get(dogKey)
     assert.equal(avalue.name, value.name)
@@ -168,7 +166,7 @@ describe('Fireproof', () => {
     assert.equal(snapdoc.age, 2)
   })
   it("update document with validation function that doesn't allow it", async () => {
-    const validationDatabase = new Fireproof(new Blockstore(), [], {
+    const validationDatabase = Fireproof.storage('validation', {
       validateChange: (newDoc, oldDoc, authCtx) => {
         if (newDoc.name === 'bob') {
           throw new Error('no bobs allowed')
@@ -244,7 +242,7 @@ describe('Fireproof', () => {
   })
 
   it("delete a document with validation function that doesn't allow it", async () => {
-    const validationDatabase = new Fireproof(new Blockstore(), [], {
+    const validationDatabase = Fireproof.storage('validation', {
       validateChange: (newDoc, oldDoc, authCtx) => {
         if (oldDoc.name === 'bob') {
           throw new Error('no changing bob')

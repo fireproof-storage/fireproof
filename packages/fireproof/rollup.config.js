@@ -14,7 +14,7 @@ const name = pkg.main.replace(/\.js$/, '')
 
 const bundle = config => ({
   ...config,
-  input: 'src/index.js',
+  input: 'src/fireproof.js',
   // external: id => !/^[./]/.test(id)
 })
 

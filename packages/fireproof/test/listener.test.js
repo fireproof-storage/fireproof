@@ -2,14 +2,14 @@ import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { TransactionBlockstore as Blockstore } from '../src/blockstore.js'
 import { Fireproof } from '../src/fireproof.js'
+import { Database } from '../src/database.js'
 import { Listener } from '../src/listener.js'
-import { Hydrator } from '../src/hydrator.js'
 
 let database, listener, star
 
 describe('Listener', () => {
   beforeEach(async () => {
-    database = new Fireproof(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
+    database = new Database(new Blockstore(), []) // todo: these need a cloud name aka w3name, add this after we have cloud storage of blocks
     const docs = [ // dave is first today
       { _id: 'd4s3b32a-3c3a', name: 'dave', age: 48 },
       { _id: 'a1s3b32a-3c3a', name: 'alice', age: 40 },
@@ -44,7 +44,7 @@ describe('Listener', () => {
       database.put({ _id: 'k645-87tk', name: 'karl2' }).then((ok) => {
         assert(ok.id)
         assert.notEqual(database.clock, startClock)
-        Hydrator.zoom(database, startClock)
+        Fireproof.zoom(database, startClock)
       }).catch(done)
     })
   })
