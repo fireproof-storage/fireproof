@@ -1,5 +1,5 @@
 // @ts-ignore
-import { useEffect, useState } from 'react'
+import { useEffect, useState, createContext } from 'react'
 import { Fireproof, Listener } from '../src/fireproof.js'
 
 /**
@@ -11,6 +11,11 @@ import { Fireproof, Listener } from '../src/fireproof.js'
 @param {Function} fn - A function to be added as a subscriber.
 @returns {void}
 */
+export const FireproofCtx = createContext({
+  addSubscriber: () => {},
+  database: null,
+  ready: false
+})
 
 const inboundSubscriberQueue = new Map()
 
