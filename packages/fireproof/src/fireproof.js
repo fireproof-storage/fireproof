@@ -17,7 +17,7 @@ import charwise from 'charwise'
  * @param {object} [authCtx] - Optional authorization context object to use for any authentication checks.
  *
  */
-export default class Fireproof {
+export class Fireproof {
   listeners = new Set()
 
   /**

@@ -4,7 +4,7 @@ import { CID } from 'multiformats'
 
 const parseCID = cid => typeof cid === 'string' ? CID.parse(cid) : cid
 
-export default class Hydrator {
+export class Hydrator {
   static fromJSON (json, database) {
     database.hydrate({ clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
     if (json.indexes) {

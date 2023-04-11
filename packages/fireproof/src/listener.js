@@ -9,7 +9,7 @@
  */
 // import { ChangeEvent } from './db-index'
 
-export default class Listener {
+export class Listener {
   subcribers = new Map()
   doStopListening = null
 

@@ -1,8 +1,8 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import Fireproof from '../src/fireproof.js'
-import DbIndex from '../src/db-index.js'
-import Hydrator from '../src/hydrator.js'
+import { Fireproof } from '../src/fireproof.js'
+import { DbIndex } from '../src/db-index.js'
+import { Hydrator } from '../src/hydrator.js'
 
 describe('DbIndex query', () => {
   let database, index
