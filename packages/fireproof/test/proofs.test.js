@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import Fireproof from '../src/fireproof.js'
+import { Fireproof } from '../src/fireproof.js'
 
 let database, ok, doc
 

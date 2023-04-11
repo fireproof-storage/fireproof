@@ -12,7 +12,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
 import * as codec from 'encrypted-block'
-import sha1sync from './sha1.js'
+import { rawSha1 as sha1sync } from './sha1.js'
 const chunker = bf(3)
 
 const NO_ENCRYPT =

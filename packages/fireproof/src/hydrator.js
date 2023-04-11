@@ -1,5 +1,5 @@
-import DbIndex from './db-index.js'
-import Fireproof from './fireproof.js'
+import { DbIndex } from './db-index.js'
+import { Fireproof } from './fireproof.js'
 import { CID } from 'multiformats'
 
 const parseCID = cid => typeof cid === 'string' ? CID.parse(cid) : cid

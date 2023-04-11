@@ -18,7 +18,7 @@ Fireproof is alpha software, you should only use it if you are planning to contr
 ## Usage
 
 ```js
-import Fireproof from 'fireproof';
+import { Fireproof } from 'fireproof';
 
 async function main() {
   const database = Fireproof.storage('my-db');
