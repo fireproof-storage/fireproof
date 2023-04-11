@@ -19,6 +19,10 @@ import { doTransaction } from './blockstore.js'
 import { create as createBlock } from 'multiformats/block'
 const blockOpts = { cache, chunker: bf(3), codec, hasher, compare }
 
+/**
+ * @typedef {import('./blockstore.js').TransactionBlockstore} TransactionBlockstore
+ */
+
 const withLog = async (label, fn) => {
   const resp = await fn()
   // console.log('withLog', label, !!resp)
@@ -239,7 +243,7 @@ export async function put (inBlocks, head, event, options) {
 /**
  * Determine the effective prolly root given the current merkle clock head.
  *
- * @param {import('./blockstore.js').TransactionBlockstore} inBlocks Bucket block storage.
+ * @param {TransactionBlockstore} inBlocks Bucket block storage.
  * @param {import('./clock').EventLink<import('./clock').EventData>[]} head Merkle clock head.
  */
 export async function root (inBlocks, head) {
@@ -248,8 +252,8 @@ export async function root (inBlocks, head) {
   }
   const { root: newProllyRootNode, blocks: newBlocks, cids } = await doProllyBulk(inBlocks, head)
   // todo maybe these should go to a temp blockstore?
-  await doTransaction('root', inBlocks, async (transactionBlockstore) => {
-    const { bigPut } = makeGetAndPutBlock(transactionBlockstore)
+  await doTransaction('root', inBlocks, async (transactionBlocks) => {
+    const { bigPut } = makeGetAndPutBlock(transactionBlocks)
     for (const nb of newBlocks) {
       bigPut(nb)
     }
@@ -259,7 +263,7 @@ export async function root (inBlocks, head) {
 
 /**
  * Get the list of events not known by the `since` event
- * @param {import('./blockstore.js').TransactionBlockstore} blocks Bucket block storage.
+ * @param {TransactionBlockstore} blocks Bucket block storage.
  * @param {import('./clock').EventLink<import('./clock').EventData>[]} head Merkle clock head.
  * @param {import('./clock').EventLink<import('./clock').EventData>} since Event to compare against.
  * @returns {Promise<{clockCIDs: CIDCounter, result: import('./clock').EventData[]}>}
@@ -276,7 +280,7 @@ export async function eventsSince (blocks, head, since) {
 
 /**
  *
- * @param {import('./blockstore.js').TransactionBlockstore} blocks Bucket block storage.
+ * @param {TransactionBlockstore} blocks Bucket block storage.
  * @param {import('./clock').EventLink<import('./clock').EventData>[]} head Merkle clock head.
  *
  * @returns {Promise<{cids: CIDCounter, clockCIDs: CIDCounter, result: import('./clock').EventData[]}>}
@@ -297,7 +301,7 @@ export async function getAll (blocks, head) {
 }
 
 /**
- * @param {import('./blockstore.js').TransactionBlockstore} blocks Bucket block storage.
+ * @param {TransactionBlockstore} blocks Bucket block storage.
  * @param {import('./clock').EventLink<import('./clock').EventData>[]} head Merkle clock head.
  * @param {string} key The key of the value to retrieve.
  */
