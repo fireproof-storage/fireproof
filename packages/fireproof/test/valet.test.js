@@ -1,6 +1,6 @@
 import { before, describe, it } from 'mocha'
 import assert from 'node:assert'
-import Valet from '../src/valet.js'
+import { Valet } from '../src/valet.js'
 
 describe('new Valet', () => {
   let val

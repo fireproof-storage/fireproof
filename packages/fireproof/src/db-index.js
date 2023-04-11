@@ -1,15 +1,20 @@
+// @ts-ignore
 import { create, load } from 'prolly-trees/db-index'
 // import { create, load } from '../../../../prolly-trees/src/db-index.js'
 
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
+// @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
+// @ts-ignore
 import { bf, simpleCompare } from 'prolly-trees/utils'
 import { makeGetBlock } from './prolly.js'
-import { cidsToProof } from './fireproof.js'
+// eslint-disable-next-line no-unused-vars
+import { Fireproof, cidsToProof } from './fireproof.js'
 
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
-import TransactionBlockstore, { doTransaction } from './blockstore.js'
+import { TransactionBlockstore, doTransaction } from './blockstore.js'
+// @ts-ignore
 import charwise from 'charwise'
 
 const ALWAYS_REBUILD = false // todo: make false
@@ -87,13 +92,8 @@ const indexEntriesForChanges = (changes, mapFn) => {
  * @param {Function} mapFn - The map function to apply to each entry in the database.
  *
  */
-export default class DbIndex {
+export class DbIndex {
   constructor (database, mapFn, clock, opts = {}) {
-    // console.log('DbIndex constructor', database.constructor.name, typeof mapFn, clock)
-    /**
-     * The database instance to DbIndex.
-     * @type {Fireproof}
-     */
     this.database = database
     if (!database.indexBlocks) {
       database.indexBlocks = new TransactionBlockstore(database.name + '.indexes', database.blocks.valet.getKeyMaterial())
@@ -172,7 +172,7 @@ export default class DbIndex {
   /**
    * Query object can have {range}
    * @param {DbQuery} query - the query range to use
-   * @returns {Promise<{rows: Array<{id: string, key: string, value: any}>}>}
+   * @returns {Promise<{proof: {}, rows: Array<{id: string, key: string, value: any}>}>}
    * @memberof DbIndex
    * @instance
    */
@@ -259,8 +259,8 @@ export default class DbIndex {
 
 /**
  * Update the DbIndex with the given entries
- * @param {Blockstore} blocks
- * @param {Block} inRoot
+ * @param {import('./blockstore.js').Blockstore} blocks
+ * @param {{root, cid}} inIndex
  * @param {DbIndexEntry[]} indexEntries
  * @private
  */

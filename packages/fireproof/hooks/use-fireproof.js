@@ -1,7 +1,7 @@
 /* global localStorage */
 // @ts-ignore
 import { useEffect, useState, createContext } from 'react'
-import { Fireproof, Listener, Hydrator } from '../index'
+import { Fireproof, Listener, Hydrator } from '../src/index'
 
 // export interface FireproofCtxValue {
 //   addSubscriber: (label: String, fn: Function) => void

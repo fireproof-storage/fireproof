@@ -1,8 +1,8 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import Blockstore from '../src/blockstore.js'
-import Fireproof from '../src/fireproof.js'
-import Hydrator from '../src/hydrator.js'
+import { TransactionBlockstore as Blockstore } from '../src/blockstore.js'
+import { Fireproof } from '../src/fireproof.js'
+import { Hydrator } from '../src/hydrator.js'
 // import * as codec from '@ipld/dag-cbor'
 
 let database, resp0
@@ -113,12 +113,11 @@ describe('Fireproof', () => {
   })
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
-    const db = await Fireproof.storage({ email: 'jchris@gmail.com' })
-    assert(db instanceof Fireproof)
+    const db = await Fireproof.storage('test')
+    assert.equal(db.name, 'test')
   })
   it('an empty database has no documents', async () => {
     const db = Fireproof.storage()
-    assert(db instanceof Fireproof)
     const e = await db.get('8c5c0c5c0c5c').catch((err) => err)
     assert.equal(e.message, 'Not found')
     const changes = await db.changesSince()
@@ -126,7 +125,6 @@ describe('Fireproof', () => {
   })
   it('delete on an empty database', async () => {
     const db = Fireproof.storage()
-    assert(db instanceof Fireproof)
     const e = await db.del('8c5c0c5c0c5c').catch((err) => err)
     assert.equal(e.id, '8c5c0c5c0c5c')
     const changes = await db.changesSince()

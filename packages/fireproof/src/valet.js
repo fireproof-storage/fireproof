@@ -7,18 +7,21 @@ import * as Block from 'multiformats/block'
 import * as dagcbor from '@ipld/dag-cbor'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
+// @ts-ignore
 import { bf } from 'prolly-trees/utils'
+// @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
+// @ts-ignore
 import * as codec from 'encrypted-block'
-import sha1sync from './sha1.js'
+import { rawSha1 as sha1sync } from './sha1.js'
 const chunker = bf(3)
 
-const NO_ENCRYPT =
-  typeof process !== 'undefined' ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
+const NO_ENCRYPT = process.env?.NO_ENCRYPT
+// typeof process !== 'undefined' ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
 
-export default class Valet {
+export class Valet {
   idb = null
   name = null
   uploadQueue = null
@@ -88,7 +91,7 @@ export default class Valet {
 
   /**
    * Group the blocks into a car and write it to the valet.
-   * @param {InnerBlockstore} innerBlockstore
+   * @param {import('./blockstore.js').InnerBlockstore} innerBlockstore
    * @param {Set<string>} cids
    * @returns {Promise<void>}
    * @memberof Valet
@@ -234,7 +237,8 @@ const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, ke
     key: encryptionKey,
     hasher: sha256,
     chunker,
-    codec: dagcbor, // should be crypto?
+    cache,
+    // codec: dagcbor, // should be crypto?
     root: innerBlockStoreClockRootCid
   })) {
     encryptedBlocks.push(block)
@@ -262,8 +266,8 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
         key: decryptionKey,
         chunker,
         hasher: sha256,
-        cache,
-        codec: dagcbor
+        cache
+        // codec: dagcbor
       })) {
         decryptedBlocks.push(block)
         cids.add(block.cid.toString())

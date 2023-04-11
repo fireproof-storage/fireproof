@@ -1,6 +1,7 @@
 import { Block, encode, decode } from 'multiformats/block'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as cbor from '@ipld/dag-cbor'
+// @ts-ignore
 import { CIDCounter } from 'prolly-trees/utils'
 
 /**
@@ -19,13 +20,27 @@ import { CIDCounter } from 'prolly-trees/utils'
  */
 
 /**
+ * @typedef {{
+*   type: 'put'|'del'
+*   key: string
+*   value: import('./link').AnyLink
+*   root: import('./link').AnyLink
+* }} EventData
+* @typedef {{
+*   root: import('./link').AnyLink
+*   head: import('./clock').EventLink<EventData>[]
+*   event: import('./clock').EventBlockView<EventData>
+* }} Result
+*/
+
+/**
  * Advance the clock by adding an event.
  *
  * @template T
- * @param {import('../test/block').BlockFetcher} blocks Block storage.
+ * @param {import('./blockstore').TransactionBlockstore} blocks Block storage.
  * @param {EventLink<T>[]} head The head of the clock.
  * @param {EventLink<T>} event The event to add.
- * @returns {Promise<EventLink<T>[]>} The new head of the clock.
+ * @returns {Promise<{head:EventLink<T>[], cids:any[]}>} The new head of the clock.
  */
 export async function advance (blocks, head, event) {
   /** @type {EventFetcher<T>} */
@@ -33,7 +48,7 @@ export async function advance (blocks, head, event) {
   const headmap = new Map(head.map((cid) => [cid.toString(), cid]))
 
   // Check if the headmap already includes the event, return head if it does
-  if (headmap.has(event.toString())) return { head, cids: events.cids }
+  if (headmap.has(event.toString())) return { head, cids: await events.all() }
 
   // Does event contain the clock?
   let changed = false
@@ -47,18 +62,18 @@ export async function advance (blocks, head, event) {
 
   // If the headmap has been changed, return the new headmap values
   if (changed) {
-    return { head: [...headmap.values()], cids: events.cids }
+    return { head: [...headmap.values()], cids: await events.all() }
   }
 
   // Does clock contain the event?
   for (const p of head) {
     if (await contains(events, p, event)) {
-      return { head, cids: events.cids }
+      return { head, cids: await events.all() }
     }
   }
 
   // Return the head concatenated with the new event if it passes both checks
-  return { head: head.concat(event), cids: events.cids }
+  return { head: head.concat(event), cids: await events.all() }
 }
 
 /**
@@ -89,7 +104,7 @@ export class EventBlock extends Block {
 
 /** @template T */
 export class EventFetcher {
-  /** @param {import('../test/block').BlockFetcher} blocks */
+  /** @param {import('./blockstore').TransactionBlockstore} blocks */
   constructor (blocks) {
     /** @private */
     this._blocks = blocks
@@ -114,8 +129,8 @@ export class EventFetcher {
   }
 
   async all () {
-    await Promise.all([...this._cids])
-    return this._cids
+    // await Promise.all([...this._cids])
+    return this._cids.all()
   }
 }
 
@@ -168,12 +183,13 @@ async function contains (events, a, b) {
 
 /**
  * @template T
- * @param {import('../test/block').BlockFetcher} blocks Block storage.
+ * @param {import('./blockstore').TransactionBlockstore} blocks Block storage.
  * @param {EventLink<T>[]} head
  * @param {object} [options]
  * @param {(b: EventBlockView<T>) => string} [options.renderNodeLabel]
  */
 export async function * vis (blocks, head, options = {}) {
+  // @ts-ignore
   const renderNodeLabel = options.renderNodeLabel ?? ((b) => b.value.data.value)
   const events = new EventFetcher(blocks)
   yield 'digraph clock {'
@@ -216,7 +232,7 @@ export async function findEventsToSync (blocks, head) {
   const toSync = await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
   // console.timeEnd(callTag + '.contains')
 
-  return { cids: events.cids, events: toSync }
+  return { cids: events.all(), events: toSync }
 }
 
 const asyncFilter = async (arr, predicate) =>
@@ -335,10 +351,10 @@ async function findSortedEvents (events, head, tail) {
 }
 
 /**
- * @param {import('./clock').EventFetcher} events
- * @param {import('./clock').EventLink<EventData>} start
- * @param {import('./clock').EventLink<EventData>} end
- * @returns {Promise<Array<{ event: import('./clock').EventBlockView<EventData>, depth: number }>>}
+ * @param {EventFetcher} events
+ * @param {EventLink<EventData>} start
+ * @param {EventLink<EventData>} end
+ * @returns {Promise<Array<{ event: EventBlockView<EventData>, depth: number }>>}
  */
 async function findEvents (events, start, end, depth = 0) {
   // console.log('findEvents', start)

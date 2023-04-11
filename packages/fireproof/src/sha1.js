@@ -1,3 +1,4 @@
+// @ts-nocheck
 // from https://github.com/duzun/sync-sha1/blob/master/rawSha1.js
 // MIT License Copyright (c) 2020 Dumitru Uzun
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,7 +30,7 @@
 *
 * @return  {Uint8Array}  sha1 hash
 */
-export default function rawSha1 (b) {
+export function rawSha1 (b) {
   let i = b.byteLength
   let bs = 0
   let A; let B; let C; let D; let G

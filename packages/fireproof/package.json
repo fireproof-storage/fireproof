@@ -1,9 +1,10 @@
 {
   "name": "@fireproof/core",
-  "version": "0.3.2",
+  "version": "0.3.13",
   "description": "Realtime database for IPFS",
-  "main": "index.js",
+  "main": "src/index.js",
   "type": "module",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
     "keygen": "node scripts/keygen.js",
     "test": "standard && npm run test:unencrypted && npm run test:mocha",
@@ -14,7 +15,8 @@
     "prepublishOnly": "cp ../../README.md .",
     "postpublish": "rm README.md",
     "lint": "standard",
-    "lint:fix": "standard --fix"
+    "lint:fix": "standard --fix",
+    "build": "tsc --build"
   },
   "keywords": [
     "database",
@@ -32,7 +34,6 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "dependencies": {
-    "prolly-trees": "1.0.4",
     "@ipld/car": "^5.1.0",
     "@ipld/dag-cbor": "^9.0.0",
     "archy": "^1.0.0",
@@ -43,6 +44,8 @@
     "encrypted-block": "^0.0.3",
     "idb": "^7.1.1",
     "multiformats": "^11.0.1",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "prolly-trees": "1.0.4",
     "sade": "^1.8.1"
   },
   "devDependencies": {
@@ -51,7 +54,10 @@
     "flexsearch": "^0.7.31",
     "mocha": "^10.2.0",
     "nanoid": "^4.0.0",
-    "standard": "^17.0.0"
+    "standard": "^17.0.0",
+    "typescript": "^5.0.2",
+    "webpack": "^5.78.0",
+    "webpack-cli": "^5.0.1"
   },
   "mocha": {
     "require": [
@@ -73,6 +79,34 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "homepage": "https://fireproof.storage",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./fireproof": {
+      "types": "./dist/src/fireproof.d.ts",
+      "import": "./src/fireproof.js"
+    },
+    "./hydrator": {
+      "types": "./dist/src/hydrator.d.ts",
+      "import": "./src/hydrator.js"
+    },
+    "./listener": {
+      "types": "./dist/src/listener.d.ts",
+      "import": "./src/listener.js"
+    },
+    "./db-index": {
+      "types": "./dist/src/db-index.d.ts",
+      "import": "./src/db-index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "dist",
+    "README.md"
+  ],
   "workspaces": [
     "examples/todomvc"
   ]
