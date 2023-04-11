@@ -40,7 +40,10 @@ export class TransactionBlockstore {
   inflightTransactions = new Set()
 
   constructor (name, encryptionKey) {
-    this.valet = new Valet(name, encryptionKey)
+    if (name) {
+      this.valet = new Valet(name, encryptionKey)
+    }
+    this.remoteBlockFunction = null
   }
 
   /**
@@ -73,6 +76,7 @@ export class TransactionBlockstore {
   async committedGet (key) {
     const old = this.committedBlocks.get(key)
     if (old) return old
+    if (!this.valet) throw new Error('Missing block: ' + key)
     const got = await this.valet.getBlock(key)
     // console.log('committedGet: ' + key)
     this.committedBlocks.set(key, got)
@@ -84,9 +88,9 @@ export class TransactionBlockstore {
   }
 
   async networkGet (key) {
-    if (this.valet.remoteBlockFunction) {
+    if (this.remoteBlockFunction) {
       // todo why is this on valet?
-      const value = await husher(key, async () => await this.valet.remoteBlockFunction(key))
+      const value = await husher(key, async () => await this.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
         doTransaction('networkGot: ' + key, this, async innerBlockstore => {
@@ -166,7 +170,7 @@ export class TransactionBlockstore {
         cids.add(stringCid)
       }
     }
-    if (cids.size > 0) {
+    if (cids.size > 0 && this.valet) {
       // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
       await this.valet.writeTransaction(innerBlockstore, cids)
     }

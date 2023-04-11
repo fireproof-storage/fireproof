@@ -96,7 +96,7 @@ export class DbIndex {
   constructor (database, mapFn, clock, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
-      database.indexBlocks = new TransactionBlockstore(database.name + '.indexes', database.blocks.valet.getKeyMaterial())
+      database.indexBlocks = new TransactionBlockstore(database?.name + '.indexes', database.blocks.valet?.getKeyMaterial())
     }
     /**
      * The map function to apply to each entry in the database.

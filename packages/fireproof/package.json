@@ -1,10 +1,12 @@
 {
   "name": "@fireproof/core",
-  "version": "0.3.13",
+  "version": "0.4.0",
   "description": "Realtime database for IPFS",
-  "main": "src/index.js",
+  "main": "dist/src/index.js",
+  "module": "dist/src/index.mjs",
+  "typings": "dist/src/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "type": "module",
-  "types": "./dist/src/index.d.ts",
   "scripts": {
     "keygen": "node scripts/keygen.js",
     "test": "standard && npm run test:unencrypted && npm run test:mocha",
@@ -12,11 +14,12 @@
     "test:mocha": "mocha --reporter list test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel",
     "coverage": "c8 -r html -r text npm test",
-    "prepublishOnly": "cp ../../README.md .",
+    "prepublishOnly": "cp ../../README.md . && npm run build",
     "postpublish": "rm README.md",
     "lint": "standard",
     "lint:fix": "standard --fix",
-    "build": "tsc --build"
+    "tsc": "tsc --watch",
+    "build": "rollup -c"
   },
   "keywords": [
     "database",
@@ -36,24 +39,38 @@
   "dependencies": {
     "@ipld/car": "^5.1.0",
     "@ipld/dag-cbor": "^9.0.0",
+    "@rollup/plugin-commonjs": "^24.0.1",
     "archy": "^1.0.0",
     "async": "^3.2.4",
     "car-transaction": "^1.0.1",
     "charwise": "^3.0.1",
     "cli-color": "^2.0.3",
+    "crypto-browserify": "^3.12.0",
     "encrypted-block": "^0.0.3",
     "idb": "^7.1.1",
     "multiformats": "^11.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "prolly-trees": "1.0.4",
+    "randombytes": "^2.1.0",
+    "rollup-plugin-commonjs": "^10.1.0",
     "sade": "^1.8.1"
   },
   "devDependencies": {
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
     "c8": "^7.12.0",
+    "esbuild": "^0.17.16",
     "fake-indexeddb": "^4.0.1",
     "flexsearch": "^0.7.31",
     "mocha": "^10.2.0",
     "nanoid": "^4.0.0",
+    "rollup": "^3.20.2",
+    "rollup-plugin-auto-external": "^2.0.0",
+    "rollup-plugin-dts": "^5.3.0",
+    "rollup-plugin-esbuild": "^5.0.0",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-polyfill-node": "^0.12.0",
     "standard": "^17.0.0",
     "typescript": "^5.0.2",
     "webpack": "^5.78.0",
@@ -68,7 +85,8 @@
     "ignore": [
       "examples/**/*.tsx",
       "examples/**/dist",
-      "out/**"
+      "out/**",
+      "rollup.config.js"
     ]
   },
   "repository": {
@@ -82,29 +100,21 @@
   "exports": {
     ".": {
       "types": "./dist/src/index.d.ts",
-      "import": "./src/index.js"
+      "import": "./dist/src/index.mjs",
+      "module": "./dist/src/index.mjs",
+      "default": "./dist/src/index.js",
+      "require": "./dist/src/index.js"
     },
-    "./fireproof": {
-      "types": "./dist/src/fireproof.d.ts",
-      "import": "./src/fireproof.js"
-    },
-    "./hydrator": {
-      "types": "./dist/src/hydrator.d.ts",
-      "import": "./src/hydrator.js"
-    },
-    "./listener": {
-      "types": "./dist/src/listener.d.ts",
-      "import": "./src/listener.js"
-    },
-    "./db-index": {
-      "types": "./dist/src/db-index.d.ts",
-      "import": "./src/db-index.js"
+    "./use-fireproof": {
+      "types": "./dist/hooks/use-fireproof.d.ts",
+      "import": "./hooks/use-fireproof.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "src",
     "dist",
+    "hooks",
     "README.md"
   ],
   "workspaces": [
