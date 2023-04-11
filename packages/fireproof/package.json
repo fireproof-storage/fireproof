@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.3.5",
+  "version": "0.3.7",
   "description": "Realtime database for IPFS",
   "main": "src/index.js",
   "type": "module",
