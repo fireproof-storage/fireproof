@@ -87,7 +87,7 @@ const indexEntriesForChanges = (changes, mapFn) => {
  * @param {Function} mapFn - The map function to apply to each entry in the database.
  *
  */
-export default class DbIndex {
+export class DbIndex {
   constructor (database, mapFn, clock, opts = {}) {
     // console.log('DbIndex constructor', database.constructor.name, typeof mapFn, clock)
     /**

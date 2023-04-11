@@ -27,7 +27,7 @@ const husher = (id, workFn) => {
  * A blockstore that caches writes to a transaction and only persists them when committed.
  * @implements {Blockstore}
  */
-export default class TransactionBlockstore {
+export class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   committedBlocks = new Map()
 

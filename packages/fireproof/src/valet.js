@@ -18,7 +18,7 @@ const chunker = bf(3)
 const NO_ENCRYPT =
   typeof process !== 'undefined' ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
 
-export default class Valet {
+export class Valet {
   idb = null
   name = null
   uploadQueue = null
