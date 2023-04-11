@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { randomBytes } from 'crypto'
+import randomBytes from 'randombytes'
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import { TransactionBlockstore, doTransaction } from './blockstore.js'
 import charwise from 'charwise'
@@ -33,11 +33,13 @@ export class Fireproof {
    * @static
    * @returns {Fireproof} - a new Fireproof instance
    */
-  static storage = (name = 'global') => {
-    const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
-    // pick a random key from const validatedKeys
-    // const instanceKey = validatedKeys[Math.floor(Math.random() * validatedKeys.length)]
-    return new Fireproof(new TransactionBlockstore(name, instanceKey), [], { name })
+  static storage = (name = null) => {
+    if (name) {
+      const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
+      return new Fireproof(new TransactionBlockstore(name, instanceKey), [], { name })
+    } else {
+      return new Fireproof(new TransactionBlockstore(), [])
+    }
   }
 
   constructor (blocks, clock, config, authCtx = {}) {
@@ -61,7 +63,7 @@ export class Fireproof {
     return {
       clock: this.clockToJSON(),
       name: this.name,
-      key: this.blocks.valet.getKeyMaterial(),
+      key: this.blocks.valet?.getKeyMaterial(),
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }
@@ -79,7 +81,7 @@ export class Fireproof {
   hydrate ({ clock, name, key }) {
     this.name = name
     this.clock = clock
-    this.blocks.valet.setKeyMaterial(key)
+    this.blocks.valet?.setKeyMaterial(key)
     this.indexBlocks = null
   }
 
@@ -320,8 +322,7 @@ export class Fireproof {
   }
 
   setRemoteBlockReader (remoteBlockReaderFn) {
-    // console.log('registering remote block reader')
-    this.blocks.valet.remoteBlockFunction = remoteBlockReaderFn
+    this.blocks.remoteBlockFunction = remoteBlockReaderFn
   }
 }
 
