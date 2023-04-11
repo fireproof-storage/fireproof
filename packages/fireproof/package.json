@@ -14,11 +14,11 @@
     "test:mocha": "mocha --reporter list test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel",
     "coverage": "c8 -r html -r text npm test",
-    "prepublishOnly": "cp ../../README.md .",
+    "prepublishOnly": "cp ../../README.md . && npm run build",
     "postpublish": "rm README.md",
     "lint": "standard",
     "lint:fix": "standard --fix",
-    "tbuild": "tsc --build",
+    "tsc": "tsc --watch",
     "build": "rollup -c"
   },
   "keywords": [
