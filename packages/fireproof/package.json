@@ -4,6 +4,7 @@
   "description": "Realtime database for IPFS",
   "main": "index.js",
   "type": "module",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
     "keygen": "node scripts/keygen.js",
     "test": "standard && npm run test:unencrypted && npm run test:mocha",
@@ -14,7 +15,8 @@
     "prepublishOnly": "cp ../../README.md .",
     "postpublish": "rm README.md",
     "lint": "standard",
-    "lint:fix": "standard --fix"
+    "lint:fix": "standard --fix",
+    "build": "tsc --build"
   },
   "keywords": [
     "database",
@@ -51,6 +53,7 @@
     "flexsearch": "^0.7.31",
     "mocha": "^10.2.0",
     "nanoid": "^4.0.0",
+    "typescript": "^5.0.2",
     "standard": "^17.0.0"
   },
   "mocha": {
@@ -74,19 +77,31 @@
   },
   "homepage": "https://fireproof.storage",
   "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./src/index.js"
+    },
     "./fireproof": {
+      "types": "./dist/src/fireproof.d.ts",
       "import": "./src/fireproof.js"
     },
     "./hydrator": {
+      "types": "./dist/src/hydrator.d.ts",
       "import": "./src/hydrator.js"
     },
     "./listener": {
+      "types": "./dist/src/listener.d.ts",
       "import": "./src/listener.js"
     },
     "./db-index": {
+      "types": "./dist/src/db-index.d.ts",
       "import": "./src/db-index.js"
     }
   },
+  "files": [
+    "src",
+    "dist"
+  ],
   "workspaces": [
     "examples/todomvc"
   ]

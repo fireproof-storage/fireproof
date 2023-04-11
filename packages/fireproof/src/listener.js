@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * A Fireproof database Listener allows you to react to events in the database.
  *
