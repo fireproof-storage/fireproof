@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
@@ -8,16 +7,19 @@ import * as Block from 'multiformats/block'
 import * as dagcbor from '@ipld/dag-cbor'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
+// @ts-ignore
 import { bf } from 'prolly-trees/utils'
+// @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
+// @ts-ignore
 import * as codec from 'encrypted-block'
 import { rawSha1 as sha1sync } from './sha1.js'
 const chunker = bf(3)
 
-const NO_ENCRYPT =
-  typeof process !== 'undefined' ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
+const NO_ENCRYPT = process.env?.NO_ENCRYPT
+// typeof process !== 'undefined' ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
 
 export class Valet {
   idb = null
@@ -89,7 +91,7 @@ export class Valet {
 
   /**
    * Group the blocks into a car and write it to the valet.
-   * @param {InnerBlockstore} innerBlockstore
+   * @param {import('./blockstore.js').InnerBlockstore} innerBlockstore
    * @param {Set<string>} cids
    * @returns {Promise<void>}
    * @memberof Valet

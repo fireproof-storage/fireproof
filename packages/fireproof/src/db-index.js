@@ -1,4 +1,3 @@
-// @ts-nocheck
 // @ts-ignore
 import { create, load } from 'prolly-trees/db-index'
 // import { create, load } from '../../../../prolly-trees/src/db-index.js'
@@ -9,7 +8,8 @@ import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
 import { bf, simpleCompare } from 'prolly-trees/utils'
 import { makeGetBlock } from './prolly.js'
-import { cidsToProof } from './fireproof.js'
+// eslint-disable-next-line no-unused-vars
+import { Fireproof, cidsToProof } from './fireproof.js'
 
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
@@ -94,11 +94,6 @@ const indexEntriesForChanges = (changes, mapFn) => {
  */
 export class DbIndex {
   constructor (database, mapFn, clock, opts = {}) {
-    // console.log('DbIndex constructor', database.constructor.name, typeof mapFn, clock)
-    /**
-     * The database instance to DbIndex.
-     * @type {Fireproof}
-     */
     this.database = database
     if (!database.indexBlocks) {
       database.indexBlocks = new TransactionBlockstore(database.name + '.indexes', database.blocks.valet.getKeyMaterial())

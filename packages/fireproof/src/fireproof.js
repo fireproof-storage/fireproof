@@ -3,11 +3,12 @@ import { randomBytes } from 'crypto'
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import { TransactionBlockstore, doTransaction } from './blockstore.js'
 import charwise from 'charwise'
+
+// TypeScript Types
+// eslint-disable-next-line no-unused-vars
 // import { CID } from 'multiformats/dist/types/src/cid.js'
-
-// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-// class Proof {}
+// eslint-disable-next-line no-unused-vars
+class Proof {}
 
 /**
  * @class Fireproof
@@ -65,6 +66,12 @@ export class Fireproof {
     }
   }
 
+  /**
+   * Returns the Merkle clock heads for the Fireproof instance.
+   * @returns {string[]} - The Merkle clock heads for the Fireproof instance.
+   * @memberof Fireproof
+   * @instance
+   */
   clockToJSON () {
     return this.clock.map(cid => cid.toString())
   }
@@ -79,8 +86,6 @@ export class Fireproof {
   /**
    * Triggers a notification to all listeners
    * of the Fireproof instance so they can repaint UI, etc.
-   * @param {CID[] } clock
-   *    Clock to use for the snapshot.
    * @returns {Promise<void>}
    * @memberof Fireproof
    * @instance
@@ -98,7 +103,7 @@ export class Fireproof {
    * Returns the changes made to the Fireproof instance since the specified event.
    * @function changesSince
    * @param {CID[]} [event] - The clock head to retrieve changes since. If null or undefined, retrieves all changes.
-   * @returns {Object<{rows : Object[], clock: CID[]}>} An object containing the rows and the head of the instance's clock.
+   * @returns {Promise<{rows : Object[], clock: CID[], proof: {}}>} An object containing the rows and the head of the instance's clock.
    * @memberof Fireproof
    * @instance
    */
@@ -117,7 +122,7 @@ export class Fireproof {
         }
       }
       rows = Array.from(docsMap.values())
-      clockCIDs = resp.cids
+      clockCIDs = resp.clockCIDs
       // console.log('change rows', this.instanceId, rows)
     } else {
       const allResp = await getAll(this.blocks, this.clock)
