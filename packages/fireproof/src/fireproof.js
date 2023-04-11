@@ -4,6 +4,8 @@ import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } fro
 import { TransactionBlockstore, doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
+import { Hydrator } from './hydrator.js'
+
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
 // import { CID } from 'multiformats/dist/types/src/cid.js'
@@ -35,20 +37,27 @@ export class Fireproof {
    */
   static storage = (name = null) => {
     if (name) {
-      const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
-      return new Fireproof(new TransactionBlockstore(name, instanceKey), [], { name })
+      const existing = localGet('fp.' + name)
+      if (existing) {
+        const existingConfig = JSON.parse(existing)
+        const fp = new Fireproof(new TransactionBlockstore(name, existingConfig.key), [], { name })
+        return Hydrator.fromJSON(existingConfig, fp)
+      } else {
+        const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
+        return new Fireproof(new TransactionBlockstore(name, instanceKey), [], { name })
+      }
     } else {
       return new Fireproof(new TransactionBlockstore(), [])
     }
   }
 
-  constructor (blocks, clock, config, authCtx = {}) {
-    this.name = config?.name || 'global'
+  // todo refactor this for the next version
+  constructor (blocks, clock, config = {}) {
+    this.name = config.name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = blocks
     this.clock = clock
     this.config = config
-    this.authCtx = authCtx
     this.indexes = new Map()
   }
 
@@ -83,6 +92,12 @@ export class Fireproof {
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
     this.indexBlocks = null
+  }
+
+  maybeSaveClock () {
+    if (this.name && this.blocks.valet) {
+      localSet('fp.' + this.name, JSON.stringify(this))
+    }
   }
 
   /**
@@ -310,6 +325,7 @@ export class Fireproof {
 
   async notifyListeners (changes) {
     // await sleep(10)
+    await this.maybeSaveClock()
     for (const listener of this.listeners) {
       await listener(changes)
     }
@@ -341,4 +357,20 @@ function encodeEvent (event) {
   if (!(event && event.key)) return
   const encodedKey = charwise.encode(event.key)
   return { ...event, key: encodedKey }
+}
+
+/* global localStorage */
+let storageSupported = false
+try {
+  storageSupported = window.localStorage && true
+} catch (e) {}
+function localGet (key) {
+  if (storageSupported) {
+    return localStorage && localStorage.getItem(key)
+  }
+}
+function localSet (key, value) {
+  if (storageSupported) {
+    return localStorage && localStorage.setItem(key, value)
+  }
 }
