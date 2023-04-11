@@ -87,11 +87,9 @@ importers:
       car-transaction: ^1.0.1
       charwise: ^3.0.1
       cli-color: ^2.0.3
-      crypto-browserify: ^3.12.0
       encrypted-block: ^0.0.3
       fake-indexeddb: ^4.0.1
       flexsearch: ^0.7.31
-      husky: ^8.0.3
       idb: ^7.1.1
       mocha: ^10.2.0
       multiformats: ^11.0.1
@@ -111,7 +109,6 @@ importers:
       car-transaction: 1.0.1
       charwise: 3.0.1
       cli-color: 2.0.3
-      crypto-browserify: 3.12.0
       encrypted-block: 0.0.3
       idb: 7.1.1
       multiformats: 11.0.1
@@ -122,7 +119,6 @@ importers:
       c8: 7.13.0
       fake-indexeddb: 4.0.1
       flexsearch: 0.7.31
-      husky: 8.0.3
       mocha: 10.2.0
       nanoid: 4.0.1
       standard: 17.0.0
@@ -2947,12 +2943,6 @@ packages:
 
   /https-browserify/1.0.0:
     resolution: {integrity: sha512-J+FkSdyD+0mA0N+81tMotaRMfSL9SGi+xpD3T6YApKsc3bGSXJlfXri3VyFOeYkfLRQisDk1W+jIFFKBeUBbBg==}
-
-  /husky/8.0.3:
-    resolution: {integrity: sha512-+dQSyqPh4x1hlO1swXBiNb2HzTDN1I2IGLQx1GrBuiqFJfoMrnZWwVmatvSiO+Iz8fBUnf+lekwNo4c2LlXItg==}
-    engines: {node: '>=14'}
-    hasBin: true
-    dev: true
 
   /iconv-lite/0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}

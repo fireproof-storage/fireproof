@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { parse } from 'multiformats/link'
 import { CID } from 'multiformats'
 import { Valet } from './valet.js'
@@ -17,6 +16,10 @@ const husher = (id, workFn) => {
 }
 
 /**
+ * @typedef {{ get: (link: import('../src/link').AnyLink) => Promise<AnyBlock | undefined> }} BlockFetcher
+ */
+
+/**
  * @typedef {Object} AnyBlock
  * @property {import('./link').AnyLink} cid - The CID of the block
  * @property {Uint8Array} bytes - The block's data
@@ -26,8 +29,7 @@ const husher = (id, workFn) => {
  * @property {function(import('./link').AnyLink, Uint8Array): Promise<void>} put - A function to store a block's data and CID
  *
  * A blockstore that caches writes to a transaction and only persists them when committed.
- * @implements {Blockstore}
- */
+*/
 export class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   committedBlocks = new Map()
@@ -190,21 +192,24 @@ export class TransactionBlockstore {
  * @memberof TransactionBlockstore
  */
 export const doTransaction = async (label, blockstore, doFun) => {
+  // @ts-ignore
   if (!blockstore.commit) return await doFun(blockstore)
+  // @ts-ignore
   const innerBlockstore = blockstore.begin(label)
   try {
     const result = await doFun(innerBlockstore)
+    // @ts-ignore
     await blockstore.commit(innerBlockstore)
     return result
   } catch (e) {
     console.error(`Transaction ${label} failed`, e, e.stack)
     throw e
   } finally {
+    // @ts-ignore
     blockstore.retire(innerBlockstore)
   }
 }
 
-/** @implements {BlockFetcher} */
 export class InnerBlockstore {
   /** @type {Map<string, Uint8Array>} */
   blocks = new Map()
@@ -237,7 +242,7 @@ export class InnerBlockstore {
    * @param {import('./link').AnyLink} cid
    * @param {Uint8Array} bytes
    */
-  put (cid, bytes) {
+  async put (cid, bytes) {
     // console.log('put', cid)
     this.blocks.set(cid.toString(), bytes)
     this.lastCid = cid

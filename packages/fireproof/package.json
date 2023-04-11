@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.3.7",
+  "version": "0.3.13",
   "description": "Realtime database for IPFS",
   "main": "src/index.js",
   "type": "module",
@@ -99,7 +99,8 @@
     "./db-index": {
       "types": "./dist/src/db-index.d.ts",
       "import": "./src/db-index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
