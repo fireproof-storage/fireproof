@@ -73,6 +73,20 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "homepage": "https://fireproof.storage",
+  "exports": {
+    "./fireproof": {
+      "import": "./src/fireproof.js"
+    },
+    "./hydrator": {
+      "import": "./src/hydrator.js"
+    },
+    "./listener": {
+      "import": "./src/listener.js"
+    },
+    "./db-index": {
+      "import": "./src/db-index.js"
+    }
+  },
   "workspaces": [
     "examples/todomvc"
   ]

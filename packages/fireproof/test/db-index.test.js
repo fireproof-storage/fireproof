@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import { Blockstore } from '../src/blockstore.js'
+import { TransactionBlockstore as Blockstore } from '../src/blockstore.js'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
 import { Hydrator } from '../src/hydrator.js'

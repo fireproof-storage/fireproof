@@ -1,6 +1,6 @@
 import { randomBytes } from 'crypto'
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
-import TransactionBlockstore, { doTransaction } from './blockstore.js'
+import { TransactionBlockstore, doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))

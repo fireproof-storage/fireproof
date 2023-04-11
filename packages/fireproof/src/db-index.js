@@ -9,7 +9,7 @@ import { cidsToProof } from './fireproof.js'
 
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
-import TransactionBlockstore, { doTransaction } from './blockstore.js'
+import { TransactionBlockstore, doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 
 const ALWAYS_REBUILD = false // todo: make false

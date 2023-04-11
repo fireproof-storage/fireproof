@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
-import Fireproof from '../src/fireproof.js'
+import { Fireproof } from '../src/fireproof.js'
 import flexsearch from 'flexsearch'
 const { Index } = flexsearch
 // this is an illustration of how to use the flexsearch library

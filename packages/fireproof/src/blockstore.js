@@ -1,6 +1,6 @@
 import { parse } from 'multiformats/link'
 import { CID } from 'multiformats'
-import Valet from './valet.js'
+import { Valet } from './valet.js'
 
 // const sleep = ms => new Promise(r => setTimeout(r, ms))
 
