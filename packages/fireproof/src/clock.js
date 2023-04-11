@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Block, encode, decode } from 'multiformats/block'
 import { sha256 } from 'multiformats/hashes/sha2'
 import * as cbor from '@ipld/dag-cbor'
@@ -22,7 +23,7 @@ import { CIDCounter } from 'prolly-trees/utils'
  * Advance the clock by adding an event.
  *
  * @template T
- * @param {import('../test/block').BlockFetcher} blocks Block storage.
+ * @param {import('./blockstore').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head The head of the clock.
  * @param {EventLink<T>} event The event to add.
  * @returns {Promise<EventLink<T>[]>} The new head of the clock.
@@ -89,7 +90,7 @@ export class EventBlock extends Block {
 
 /** @template T */
 export class EventFetcher {
-  /** @param {import('../test/block').BlockFetcher} blocks */
+  /** @param {import('./blockstore').BlockFetcher} blocks */
   constructor (blocks) {
     /** @private */
     this._blocks = blocks
@@ -168,7 +169,7 @@ async function contains (events, a, b) {
 
 /**
  * @template T
- * @param {import('../test/block').BlockFetcher} blocks Block storage.
+ * @param {import('./blockstore').BlockFetcher} blocks Block storage.
  * @param {EventLink<T>[]} head
  * @param {object} [options]
  * @param {(b: EventBlockView<T>) => string} [options.renderNodeLabel]

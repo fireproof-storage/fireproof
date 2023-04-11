@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { parse } from 'multiformats/link'
 import { CID } from 'multiformats'
 import { Valet } from './valet.js'

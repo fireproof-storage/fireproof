@@ -97,6 +97,7 @@ importers:
       prolly-trees: 1.0.4
       sade: ^1.8.1
       standard: ^17.0.0
+      typescript: ^5.0.2
     dependencies:
       '@ipld/car': 5.1.0
       '@ipld/dag-cbor': 9.0.0
@@ -117,6 +118,7 @@ importers:
       mocha: 10.2.0
       nanoid: 4.0.1
       standard: 17.0.0
+      typescript: 5.0.4
 
 packages:
 
@@ -4527,6 +4529,12 @@ packages:
   /typescript/4.9.5:
     resolution: {integrity: sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==}
     engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/5.0.4:
+    resolution: {integrity: sha512-cW9T5W9xY37cc+jfEnaUvX91foxtHkza3Nw3wkoF4sSlKn0MONdkdEndig/qPBWXNkmplh3NzayQzCiHM4/hqw==}
+    engines: {node: '>=12.20'}
     hasBin: true
     dev: true
 

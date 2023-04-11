@@ -1,9 +1,13 @@
+// @ts-nocheck
 import { randomBytes } from 'crypto'
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import { TransactionBlockstore, doTransaction } from './blockstore.js'
 import charwise from 'charwise'
+// import { CID } from 'multiformats/dist/types/src/cid.js'
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
+// class Proof {}
 
 /**
  * @class Fireproof
@@ -11,7 +15,7 @@ import charwise from 'charwise'
  *  This is the main class for saving and loading JSON and other documents with the database. You can find additional examples and
  *  usage guides in the repository README.
  *
- * @param {Blockstore} blocks - The block storage instance to use documents and indexes
+ * @param {import('./blockstore.js').TransactionBlockstore} blocks - The block storage instance to use documents and indexes
  * @param {CID[]} clock - The Merkle clock head to use for the Fireproof instance.
  * @param {object} [config] - Optional configuration options for the Fireproof instance.
  * @param {object} [authCtx] - Optional authorization context object to use for any authentication checks.
@@ -161,7 +165,7 @@ export class Fireproof {
    *
    * @param {string} key - the ID of the document to retrieve
    * @param {Object} [opts] - options
-   * @returns {Object<{_id: string, ...doc: Object}>} - the document with the specified ID
+   * @returns {Promise<{_id: string}>} - the document with the specified ID
    * @memberof Fireproof
    * @instance
    */
@@ -190,8 +194,9 @@ export class Fireproof {
    *
    * @param {Object} doc - the document to be added
    * @param {string} doc._id - the document ID. If not provided, a random ID will be generated.
-   * @param {Object} doc.* - the document data to be added
-   * @returns {Object<{ id: string, clock: CID[]  }>} - The result of adding the document to the database
+   * @param {CID[]} doc._clock - the document ID. If not provided, a random ID will be generated.
+   * @param {Proof} doc._proof - CIDs referenced by the update
+   * @returns {Promise<{ id: string, clock: CID[]  }>} - The result of adding the document to the database
    * @memberof Fireproof
    * @instance
    */
@@ -203,8 +208,8 @@ export class Fireproof {
 
   /**
    * Deletes a document from the database
-   * @param {string} id - the document ID
-   * @returns {Object<{ id: string, clock: CID[] }>} - The result of deleting the document from the database
+   * @param {string | any} docOrId - the document ID
+   * @returns {Promise<{ id: string, clock: CID[] }>} - The result of deleting the document from the database
    * @memberof Fireproof
    * @instance
    */
@@ -226,8 +231,8 @@ export class Fireproof {
   /**
    * Updates the underlying storage with the specified event.
    * @private
-   * @param {Object<{key : string, value: any}>} event - the event to add
-   * @returns {Object<{ id: string, clock: CID[] }>} - The result of adding the event to storage
+   * @param {{del?: true, key : string, value?: any}} decodedEvent - the event to add
+   * @returns {Promise<{ proof:{}, id: string, clock: CID[] }>} - The result of adding the event to storage
    */
   async putToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)

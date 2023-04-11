@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as codec from 'encrypted-block'
 import {
   create,

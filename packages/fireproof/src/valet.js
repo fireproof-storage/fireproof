@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
@@ -234,7 +235,8 @@ const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, ke
     key: encryptionKey,
     hasher: sha256,
     chunker,
-    codec: dagcbor, // should be crypto?
+    cache,
+    // codec: dagcbor, // should be crypto?
     root: innerBlockStoreClockRootCid
   })) {
     encryptedBlocks.push(block)
@@ -262,8 +264,8 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
         key: decryptionKey,
         chunker,
         hasher: sha256,
-        cache,
-        codec: dagcbor
+        cache
+        // codec: dagcbor
       })) {
         decryptedBlocks.push(block)
         cids.add(block.cid.toString())
