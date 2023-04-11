@@ -41,7 +41,6 @@
     "car-transaction": "^1.0.1",
     "charwise": "^3.0.1",
     "cli-color": "^2.0.3",
-    "crypto-browserify": "^3.12.0",
     "encrypted-block": "^0.0.3",
     "idb": "^7.1.1",
     "multiformats": "^11.0.1",
