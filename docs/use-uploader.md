@@ -14,7 +14,7 @@ import { useUploader, UploaderCtx } from './hooks/useUploader'
 import { KeyringProvider } from '@w3ui/react-keyring'
 
 function App() {
-  const fp = useFireproof(defineIndexes, loadFixtures, 'myAppName')
+  const fp = useFireproof('myAppName', defineIndexes, loadFixtures)
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp)
   
   // Use the useUploader hook within a KeyringProvider

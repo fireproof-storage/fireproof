@@ -15,7 +15,7 @@ import { FireproofCtx, useFireproof } from '@fireproof/core/hooks/use-fireproof'
 
 function App() {
   // establish the Fireproof context value
-  const fpCtxValue = useFireproof()
+  const fpCtxValue = useFireproof('db-name')
 
   // render the rest of the application wrapped in the Fireproof provider
   return (

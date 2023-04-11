@@ -18,7 +18,7 @@ export class Fireproof {
    * Creates a new Fireproof instance with default storage settings
    * Most apps should use this and not worry about the details.
    * @static
-   * @returns {Fireproof} - a new Fireproof instance
+   * @returns {Database} - a new Fireproof instance
    */
   static storage = (name = null, opts = {}) => {
     if (name) {

@@ -184,14 +184,18 @@ export class Database {
     doc._id = key
     return doc
   }
+  /**
+ * @typedef {any} Document
+ * @property {string} _id - The ID of the document (required)
+ * @property {string} [_proof] - The proof of the document (optional)
+ * @property {string} [_clock] - The clock of the document (optional)
+ * @property {any} [key: string] - Index signature notation to allow any other unknown fields
+ */
 
   /**
    * Adds a new document to the database, or updates an existing document. Returns the ID of the document and the new clock head.
    *
-   * @param {Object} doc - the document to be added
-   * @param {string} doc._id - the document ID. If not provided, a random ID will be generated.
-   * @param {CID[]} doc._clock - the document ID. If not provided, a random ID will be generated.
-   * @param {Proof} doc._proof - CIDs referenced by the update
+   * @param {Document} doc - the document to be added
    * @returns {Promise<{ id: string, clock: CID[]  }>} - The result of adding the document to the database
    * @memberof Fireproof
    * @instance
