@@ -8,9 +8,28 @@ to offer a new kind of database that:
 
 Learn more about the [concepts and architecture behind Fireproof](https://fireproof.storage/documentation/how-the-database-engine-works/), or jump to the [quick start](#quick-start) for React and server-side examples.
 
+## Quick Start
+
+Look in the `examples/` directory for projects using the database, or see [examples on CodePen](https://codepen.io/jchrisa/pen/GRYJJEM). If you are adding Fireproof to an existing page, just install it and try some operations.
+
+```sh
+npm install @fireproof/core
+```
+
+In your `app.js` or `app.tsx` file:
+
+```js
+import { Fireproof } from '@fireproof/core'
+const fireproof = Fireproof.storage("my-db")
+const ok = await fireproof.put({ hello: 'world' })
+const doc = await fireproof.get(ok.id)
+```
+
+🤫 I like to drop a `window.fireproof = fireproof` in there as a development aid.
+
 ### Status
 
-Fireproof is alpha software, you should only use it if you are planning to contribute. For now, [check out our React TodoMVC implementation running in browser-local mode.](https://main--lucky-naiad-5aa507.netlify.app/) It demonstrates document persistence, index queries, and event subscriptions, and uses the [`useFireproof()` React hook.](https://github.com/fireproof-storage/fireproof/blob/main/packages/fireproof/hooks/use-fireproof.tsx)
+Fireproof is alpha software, ready for you to evaluate for your future applications. For now, [check out our React TodoMVC implementation running in browser-local mode.](https://main--lucky-naiad-5aa507.netlify.app/) It demonstrates document persistence, index queries, and event subscriptions, and uses the [`useFireproof()` React hook.](https://github.com/fireproof-storage/fireproof/blob/main/packages/fireproof/hooks/use-fireproof.tsx)
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
@@ -117,27 +136,6 @@ While the underlying data structures and libraries Fireproof uses are trusted wi
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable datastructures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle hash-tree clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
-
-## Quick Start
-
-Look in the `examples/` directory for projects using the database. It's not picky how you use it, but we want to provide convenient jumping off places. Think of the examples as great to fork when starting your next project.
-
-If are adding Fireproof to an existing page, just install it and try some operations.
-
-```sh
-npm install @fireproof/core
-```
-
-In your `app.js` or `app.tsx` file:
-
-```js
-import { Fireproof } from '@fireproof/core'
-const fireproof = Fireproof.storage()
-const ok = await fireproof.put({ hello: 'world' })
-const doc = await fireproof.get(ok.id)
-```
-
-🤫 I like to drop a `window.fireproof = fireproof` in there as a development aid.
 
 # Contributing
 
