@@ -2,7 +2,6 @@
   "name": "@fireproof/monorepo",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "cd packages/fireproof && npm test",
     "docs": "jsdoc -c jsdoc.json -u docs/ README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js",
@@ -35,18 +34,6 @@
     "mocha": "^10.2.0",
     "nanoid": "^4.0.0",
     "standard": "^17.0.0"
-  },
-  "mocha": {
-    "require": [
-      "fake-indexeddb/auto"
-    ]
-  },
-  "standard": {
-    "ignore": [
-      "**/*.tsx",
-      "**/*.ts",
-      "examples/**/dist"
-    ]
   },
   "repository": {
     "type": "git",

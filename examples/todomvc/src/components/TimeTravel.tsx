@@ -1,6 +1,6 @@
 const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
 const clockLog = new Set<string>()
-import {Hydrator} from '@fireproof/core'
+import { Fireproof } from '@fireproof/core'
 
 export const TimeTravel = ({ database }) => {
   database.clock && database.clock.length && clockLog.add(database.clock.toString())
@@ -23,11 +23,11 @@ export const TimeTravel = ({ database }) => {
       </p>
       <p>Clock log (newest first): </p>
       <ul>
-        {diplayClocklog.map((entry) => (
+        {diplayClocklog.map(entry => (
           <li key={entry}>
             <button
               onClick={async () => {
-                await Hydrator.zoom(database, [entry])
+                await Fireproof.zoom(database, [entry])
               }}
             >
               {shortLink(entry)}

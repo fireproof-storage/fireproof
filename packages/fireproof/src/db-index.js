@@ -9,7 +9,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { bf, simpleCompare } from 'prolly-trees/utils'
 import { makeGetBlock } from './prolly.js'
 // eslint-disable-next-line no-unused-vars
-import { Fireproof, cidsToProof } from './fireproof.js'
+import { Database, cidsToProof } from './database.js'
 
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
@@ -88,7 +88,7 @@ const indexEntriesForChanges = (changes, mapFn) => {
  * @class DbIndex
  * @classdesc An DbIndex can be used to order and filter the documents in a Fireproof database.
  *
- * @param {Fireproof} database - The Fireproof database instance to DbIndex.
+ * @param {Database} database - The Fireproof database instance to DbIndex.
  * @param {Function} mapFn - The map function to apply to each entry in the database.
  *
  */

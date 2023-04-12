@@ -5,6 +5,10 @@ import { advance } from '../src/clock.js'
 import { put, get, getAll, root, eventsSince } from '../src/prolly.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
+/**
+ * @typedef {import('../src/blockstore.js').TransactionBlockstore} TransactionBlockstore
+ */
+
 describe('Prolly', () => {
   it('put a value to a new clock', async () => {
     const blocks = new Blockstore()
@@ -131,12 +135,12 @@ describe('Prolly', () => {
 class TestPail {
   /**
    * @param {Blockstore} blocks
-   * @param {import('../src/clock').EventLink<import('../src/crdt').EventData>[]} head
+   * @param {import('../src/clock').EventLink<import('../src/clock').EventData>[]} head
    */
   constructor (blocks, head) {
     this.blocks = blocks
     this.head = head
-    /** @type {import('../src/shard.js').ShardLink?} */
+    /** @type {import('../src/clock.js').ShardLink?} */
     this.root = null
   }
 
@@ -162,10 +166,11 @@ class TestPail {
   // todo make bulk ops which should be easy at the prolly layer by passing a list of events instead of one
   // async bulk() {}
 
-  /** @param {import('../src/clock').EventLink<import('../src/crdt').EventData>} event */
+  /** @param {import('../src/clock').EventLink<import('../src/clock.js').EventData>} event */
   async advance (event) {
     const { head } = await advance(this.blocks, this.head, event)
     this.head = head
+    // needs a transaction
     this.root = (await root(this.blocks, this.head)).node.block.cid
     return this.head
   }
@@ -177,7 +182,6 @@ class TestPail {
     return resp.result
   }
 
-  /** @param {string} key */
   async getAll () {
     const resp = await getAll(this.blocks, this.head)
     return resp.result

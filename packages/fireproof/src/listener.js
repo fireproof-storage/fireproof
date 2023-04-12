@@ -4,7 +4,7 @@
  * @class Listener
  * @classdesc An listener attaches to a Fireproof database and runs a routing function on each change, sending the results to subscribers.
  *
- * @param {import('./fireproof.js').Fireproof} database - The Fireproof database instance to index.
+ * @param {import('./database.js').Database} database - The Database database instance to index.
  * @param {Function} routingFn - The routing function to apply to each entry in the database.
  */
 // import { ChangeEvent } from './db-index'
@@ -14,21 +14,23 @@ export class Listener {
   doStopListening = null
 
   /**
-   * @param {import('./fireproof.js').Fireproof} database
+   * @param {import('./database.js').Database} database
    * @param {(_: any, emit: any) => void} routingFn
    */
-  constructor (database, routingFn) {
+  constructor (
+    database,
+    routingFn = function (/** @type {any} */ _, /** @type {(arg0: string) => void} */ emit) {
+      emit('*')
+    }
+  ) {
     this.database = database
     this.doStopListening = database.registerListener((/** @type {any} */ changes) => this.onChanges(changes))
     /**
      * The map function to apply to each entry in the database.
      * @type {Function}
      */
-    this.routingFn =
-      routingFn ||
-      function (/** @type {any} */ _, /** @type {(arg0: string) => void} */ emit) {
-        emit('*')
-      }
+    this.routingFn = routingFn
+
     this.dbHead = null
   }
 
