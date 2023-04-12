@@ -139,6 +139,18 @@ Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never
 
 # Contributing
 
+To contribute please follow these steps for local setup and installation of the project
+
+Step-1) Click on the "Fork" button in the top-right corner of the repository's page. This will create a copy of the repository in your account.
+Step-2) Clone the forked repository to your local machine using Git.
+Step-3) Now cd to the target directory and open up a terminal.
+Step-4) Write the command 'pnpm install'. This will install all the dependencies that are listed in the package.json file
+Step-5) Now change the directory to packages/fireproof using the command 'cd packages/fireproof'
+Step-6) See the package.json file to work with all the listed commands and try them out. You can also test your application locally using 'npm test'
+Step-7) Also change directory to examples/todomvc and run the command 'npm run dev' to load up a simple application to understand the use of fireproof as a real time database
+Step-8) Keep contributing:)
+
+
 Feel free to join in. All welcome. [Open an issue](https://github.com/jchris/fireproof/issues)!
 
 # License
