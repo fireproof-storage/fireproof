@@ -7,7 +7,7 @@ import { CID } from 'multiformats'
 import { TransactionBlockstore } from './blockstore.js'
 import { localGet } from './utils.js'
 
-export { Index, Listener }
+export { Index, Listener, Database }
 
 const parseCID = cid => typeof cid === 'string' ? CID.parse(cid) : cid
 
