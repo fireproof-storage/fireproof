@@ -93,7 +93,7 @@ const indexEntriesForChanges = (changes, mapFn) => {
  *
  */
 export class DbIndex {
-  constructor (database, mapFn, clock, opts = {}) {
+  constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
       database.indexBlocks = new TransactionBlockstore(database?.name + '.indexes', database.blocks.valet?.getKeyMaterial())
@@ -109,7 +109,7 @@ export class DbIndex {
       this.mapFn = mapFn
       this.mapFnString = mapFn.toString()
     }
-    this.name = opts.name || this.makeName()
+    this.name = name || this.makeName()
     this.indexById = { root: null, cid: null }
     this.indexByKey = { root: null, cid: null }
     this.dbHead = null
@@ -159,7 +159,7 @@ export class DbIndex {
 
   static fromJSON (database, { code, clock, name }) {
     // console.log('DbIndex.fromJSON', database.constructor.name, code, clock)
-    return new DbIndex(database, code, clock, { name })
+    return new DbIndex(database, name, code, clock)
   }
 
   /**
