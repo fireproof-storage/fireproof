@@ -22,9 +22,9 @@ describe('DbIndex query without name', () => {
       assert(response.id, 'should have id')
       assert.equal(response.id, id)
     }
-    index = new DbIndex(database, function (doc, map) {
+    index = new DbIndex(database, 'names_by_age', function (doc, map) {
       map(doc.age, doc.name)
-    }, null, { name: 'names_by_age' })
+    })
   })
   it('serialize database with index', async () => {
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })

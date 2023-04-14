@@ -72,10 +72,10 @@ const indexEntriesForChanges = (changes, mapFn) => {
   changes.forEach(({ key, value, del }) => {
     if (del || !value) return
     mapFn(makeDoc({ key, value }), (k, v) => {
-      if (typeof v === 'undefined' || typeof k === 'undefined') return
+      if (typeof k === 'undefined') return
       indexEntries.push({
         key: [charwise.encode(k), key],
-        value: v
+        value: v || null
       })
     })
   })
@@ -176,7 +176,7 @@ export class DbIndex {
    * @memberof DbIndex
    * @instance
    */
-  async query (query, update = true) {
+  async query (query = {}, update = true) {
     // const callId = Math.random().toString(36).substring(2, 7)
     // todo pass a root to query a snapshot
     // console.time(callId + '.updateIndex')

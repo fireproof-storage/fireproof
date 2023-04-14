@@ -185,11 +185,12 @@ export class Database {
     return doc
   }
   /**
- * @typedef {any} Document
+ * @typedef {Object} Document
  * @property {string} _id - The ID of the document (required)
  * @property {string} [_proof] - The proof of the document (optional)
  * @property {string} [_clock] - The clock of the document (optional)
  * @property {any} [key: string] - Index signature notation to allow any other unknown fields
+ *  * @property {Object.<string, any>} [otherProperties] - Any other unknown properties (optional)
  */
 
   /**
