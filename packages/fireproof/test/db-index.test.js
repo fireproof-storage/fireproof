@@ -23,9 +23,9 @@ describe('DbIndex query', () => {
       assert(response.id, 'should have id')
       assert.equal(response.id, id)
     }
-    index = new DbIndex(database, function (doc, map) {
+    index = new DbIndex(database, 'namesByAge', function (doc, map) {
       map(doc.age, doc.name)
-    }, null, { name: 'namesByAge' })
+    }, null)
   })
   it('has a name', () => {
     assert.equal(index.name, 'namesByAge')
@@ -241,7 +241,7 @@ describe('DbIndex query with bad index definition', () => {
   beforeEach(async () => {
     database = Fireproof.storage()
     await database.put({ _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 })
-    index = new DbIndex(database, function (doc, map) {
+    index = new DbIndex(database, null, function (doc, map) {
       map(doc.oops.missingField, doc.name)
     })
   })
