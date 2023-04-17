@@ -3,6 +3,7 @@ import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } fro
 import { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 import { localSet } from './utils.js'
+import cargoQueue from 'async/cargoQueue.js'
 
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
@@ -33,6 +34,12 @@ export class Database {
     this.clock = clock
     this.config = config
     this.indexes = new Map()
+    this.updateQueue = cargoQueue((tasks, callback) => {
+      this.qCallback(tasks, callback)
+    })
+    this.updateQueue.drain(async (ts) => {
+      console.log('drain', ts)
+    })
   }
 
   /**
@@ -66,6 +73,7 @@ export class Database {
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
     this.indexBlocks = null
+    this.updatePromise = null
   }
 
   maybeSaveClock () {
@@ -236,6 +244,33 @@ export class Database {
    * @returns {Promise<{ proof:{}, id: string, clock: CID[] }>} - The result of adding the event to storage
    */
   async putToProllyTree (decodedEvent, clock = null) {
+    return this.innerPutToProllyTree(decodedEvent, clock)
+    // const resolve = (v) => { return v }
+    // const reject = (e) => e
+    // const taskPromise = new Promise(resolve, reject)
+    // taskPromise.then(() => {
+    //   console.log('then')
+    // })
+    // const task = { event: decodedEvent, clock, resolve, reject }
+    // this.updateQueue.push(task)
+    // return taskPromise
+  }
+
+  async qCallback (tasks, callback) {
+    for (const { event, clock, resolve, reject } of tasks) {
+      try {
+        console.log('event', event)
+        const did = await this.innerPutToProllyTree(event, clock)
+        console.log('did', did)
+        resolve(did)
+      } catch (e) {
+        reject(e)
+      }
+    }
+    callback()
+  }
+
+  async innerPutToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(clock) !== JSON.stringify(this.clockToJSON())) {
       // we need to check and see what version of the document exists at the clock specified
@@ -246,6 +281,7 @@ export class Database {
         throw new Error('MVCC conflict, document is changed, please reload the document and try again.')
       }
     }
+    const prevClock = [...this.clock]
     const result = await doTransaction(
       'putToProllyTree',
       this.blocks,
@@ -256,7 +292,8 @@ export class Database {
       throw new Error('failed to put at storage layer')
     }
     // console.log('new clock head', this.instanceId, result.head.toString())
-    this.clock = result.head // do we want to do this as a finally block
+    // this.clock = result.head // do we want to do this as a finally block
+    this.applyClock(prevClock, result.head)
     await this.notifyListeners([decodedEvent]) // this type is odd
     return {
       id: decodedEvent.key,
@@ -264,6 +301,12 @@ export class Database {
       proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) }
     }
     // todo should include additions (or split clock)
+  }
+
+  applyClock (prevClock, newClock) {
+    // console.log('applyClock', prevClock, newClock, this.clock)
+    const removedprevCIDs = this.clock.filter((cid) => prevClock.indexOf(cid) !== -1)
+    this.clock = removedprevCIDs.concat(newClock)
   }
 
   //   /**

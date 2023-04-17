@@ -203,7 +203,12 @@ export class DbIndex {
   async updateIndex (blocks) {
     // todo this could enqueue the request and give fresh ones to all second comers -- right now it gives out stale promises while working
     // what would it do in a world where all indexes provide a database snapshot to query?
-    if (this.updateIndexPromise) return this.updateIndexPromise
+    if (this.updateIndexPromise) {
+      return this.updateIndexPromise.then(() => {
+        this.updateIndexPromise = null
+        return this.updateIndex(blocks)
+      })
+    }
     this.updateIndexPromise = this.innerUpdateIndex(blocks)
     this.updateIndexPromise.finally(() => { this.updateIndexPromise = null })
     return this.updateIndexPromise
@@ -232,7 +237,7 @@ export class DbIndex {
       this.dbHead = result.clock
       return
     }
-    await doTransaction('updateIndex', inBlocks, async (blocks) => {
+    const didT = await doTransaction('updateIndex', inBlocks, async (blocks) => {
       let oldIndexEntries = []
       let removeByIdIndexEntries = []
       await loadIndex(blocks, this.indexById, idIndexOpts)
@@ -254,6 +259,7 @@ export class DbIndex {
     this.database.notifyExternal('dbIndex')
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
     // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
+    return didT
   }
 }
 
@@ -296,7 +302,11 @@ async function bulkIndex (blocks, inIndex, indexEntries, opts) {
 async function loadIndex (blocks, index, indexOpts) {
   if (!index.root) {
     const cid = index.cid
-    if (!cid) return
+    if (!cid) {
+      // console.log('no cid', index)
+      // throw new Error('cannot load index')
+      return null
+    }
     const { getBlock } = makeGetBlock(blocks)
     index.root = await load({ cid, get: getBlock, ...indexOpts })
   }
