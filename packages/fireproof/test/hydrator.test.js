@@ -151,8 +151,16 @@ describe('DbIndex query with dbname', () => {
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')
   })
-  it('can make a car', async () => {
+  it('can save as an encrypted car', async () => {
     const car = await Fireproof.makeCar(database)
-    console.log(car)
+    assert(car.cid)
+    // todo asserts abount read
+    // console.log(car)
+  })
+  it('can save as a clear car', async () => {
+    const car = await Fireproof.makeCar(database, null)
+    assert(car.cid)
+    // todo asserts abount read
+    // console.log(car)
   })
 })

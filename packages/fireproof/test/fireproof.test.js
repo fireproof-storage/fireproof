@@ -457,7 +457,7 @@ describe('Fireproof', () => {
     }
     const got = await Promise.all(promises)
     assert.equal(got.length, putYes * 2)
-    console.log('putYes', putYes)
+    // console.log('putYes', putYes)
     // await sleep(1000)
     // console.log('all', await database.allDocuments())
     assert.equal((await database.allDocuments()).rows.length, 21)
