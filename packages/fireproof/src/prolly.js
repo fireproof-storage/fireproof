@@ -270,7 +270,8 @@ export async function root (inBlocks, head) {
  */
 export async function eventsSince (blocks, head, since) {
   if (!head.length) {
-    throw new Error('no head')
+    // throw new Error('no head')
+    return { clockCIDs: [], result: [] }
   }
   // @ts-ignore
   const sinceHead = [...since, ...head] // ?
