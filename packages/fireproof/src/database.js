@@ -305,7 +305,7 @@ export class Database {
 
   applyClock (prevClock, newClock) {
     // console.log('applyClock', prevClock, newClock, this.clock)
-    const removedprevCIDs = this.clock.filter((cid) => prevClock.indexOf(cid) !== -1)
+    const removedprevCIDs = this.clock.filter((cid) => prevClock.indexOf(cid) === -1)
     this.clock = removedprevCIDs.concat(newClock)
   }
 

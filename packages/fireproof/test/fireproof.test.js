@@ -374,7 +374,7 @@ describe('Fireproof', () => {
     assert.equal(res9.rows.length, 0)
   })
 
-  it.skip('docs since repeated changes', async () => {
+  it('docs since repeated changes', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
     for (let index = 0; index < 30; index++) {
@@ -460,7 +460,7 @@ describe('Fireproof', () => {
     console.log('putYes', putYes)
     // await sleep(1000)
     console.log('all', await database.allDocuments())
-    assert.equal((await database.changesSince()).rows.length, 2)
+    assert.equal((await database.changesSince()).rows.length, 21)
   }).timeout(20000)
   it('serialize database', async () => {
     await database.put({ _id: 'rehy', name: 'drate' })
