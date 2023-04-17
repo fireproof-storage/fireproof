@@ -128,7 +128,7 @@ describe('Prolly', () => {
       // console.log('vx', vx)
       // assert.equal(vx.toString(), value.toString())
     }
-    console.log('blocks', Array.from(blocks.entries()).length)
+    // console.log('blocks', Array.from(blocks.entries()).length)
   }).timeout(10000)
 })
 

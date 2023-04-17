@@ -208,6 +208,7 @@ export const blocksToCarBlock = async (lastCid, blocks) => {
     blocks = Array.from(blocks.entries())
   }
   for (const { cid, bytes } of blocks) {
+    // console.log(cid, bytes)
     size += CBW.blockLength({ cid, bytes })
   }
   const buffer = new Uint8Array(size)

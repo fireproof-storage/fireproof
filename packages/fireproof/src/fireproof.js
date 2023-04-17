@@ -91,19 +91,36 @@ export class Fireproof {
 
   // get all the cids
   // tell valet to make a file
-  static async makeCar (database, key = null) {
+  static async makeCar (database, key) {
     const allCIDs = await database.allCIDs()
     const blocks = database.blocks
-    const carBlocks = {
-      entries: () => allCIDs.map(cid => ({ cid })),
-      get: async (cid) => await blocks.get(cid)
-    }
 
-    key = key || blocks.valet?.getKeyMaterial()
+    const rootCid = CID.parse(allCIDs[allCIDs.length - 1])
+    if (typeof key === 'undefined') {
+      key = blocks.valet?.getKeyMaterial()
+    }
     if (key) {
-      return blocksToEncryptedCarBlock(allCIDs[allCIDs.length - 1], carBlocks, key)
+      return blocksToEncryptedCarBlock(
+        rootCid,
+        {
+          entries: () => allCIDs.map(cid => ({ cid })),
+          get: async cid => await blocks.get(cid)
+        },
+        key
+      )
     } else {
-      return blocksToCarBlock(allCIDs[allCIDs.length - 1], carBlocks)
+      const carBlocks = await Promise.all(
+        allCIDs.map(async c => {
+          const b = await blocks.get(c)
+          // console.log('block', b)
+          if (typeof b.cid === 'string') { b.cid = CID.parse(b.cid) }
+          // if (b.bytes.constructor.name === 'Buffer') console.log('conver vbuff')
+          return b
+        })
+      )
+      return blocksToCarBlock(rootCid, {
+        entries: () => carBlocks
+      })
     }
   }
 }
