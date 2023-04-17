@@ -3,7 +3,6 @@ import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } fro
 import { doTransaction } from './blockstore.js'
 import charwise from 'charwise'
 import { localSet } from './utils.js'
-import cargoQueue from 'async/cargoQueue.js'
 
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
@@ -34,12 +33,6 @@ export class Database {
     this.clock = clock
     this.config = config
     this.indexes = new Map()
-    this.updateQueue = cargoQueue((tasks, callback) => {
-      this.qCallback(tasks, callback)
-    })
-    this.updateQueue.drain(async (ts) => {
-      console.log('drain', ts)
-    })
   }
 
   /**
@@ -125,7 +118,7 @@ export class Database {
       // console.log('change rows', this.instanceId, rows)
     } else {
       const allResp = await getAll(this.blocks, this.clock)
-      rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value })))
+      rows = allResp.result.map(({ key, value }) => decodeEvent({ key, value }))
       dataCIDs = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
@@ -138,7 +131,9 @@ export class Database {
 
   async allDocuments () {
     const allResp = await getAll(this.blocks, this.clock)
-    const rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value }))).map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
+    const rows = allResp.result
+      .map(({ key, value }) => decodeEvent({ key, value }))
+      .map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
     return {
       rows,
       clock: this.clockToJSON(),
@@ -158,7 +153,7 @@ export class Database {
   async runValidation (doc) {
     if (this.config && this.config.validateChange) {
       const oldDoc = await this.get(doc._id)
-        .then((doc) => doc)
+        .then(doc => doc)
         .catch(() => ({}))
       this.config.validateChange(doc, oldDoc, this.authCtx)
     }
@@ -193,13 +188,13 @@ export class Database {
     return doc
   }
   /**
- * @typedef {Object} Document
- * @property {string} _id - The ID of the document (required)
- * @property {string} [_proof] - The proof of the document (optional)
- * @property {string} [_clock] - The clock of the document (optional)
- * @property {any} [key: string] - Index signature notation to allow any other unknown fields
- *  * @property {Object.<string, any>} [otherProperties] - Any other unknown properties (optional)
- */
+   * @typedef {Object} Document
+   * @property {string} _id - The ID of the document (required)
+   * @property {string} [_proof] - The proof of the document (optional)
+   * @property {string} [_clock] - The clock of the document (optional)
+   * @property {any} [key: string] - Index signature notation to allow any other unknown fields
+   *  * @property {Object.<string, any>} [otherProperties] - Any other unknown properties (optional)
+   */
 
   /**
    * Adds a new document to the database, or updates an existing document. Returns the ID of the document and the new clock head.
@@ -244,33 +239,6 @@ export class Database {
    * @returns {Promise<{ proof:{}, id: string, clock: CID[] }>} - The result of adding the event to storage
    */
   async putToProllyTree (decodedEvent, clock = null) {
-    return this.innerPutToProllyTree(decodedEvent, clock)
-    // const resolve = (v) => { return v }
-    // const reject = (e) => e
-    // const taskPromise = new Promise(resolve, reject)
-    // taskPromise.then(() => {
-    //   console.log('then')
-    // })
-    // const task = { event: decodedEvent, clock, resolve, reject }
-    // this.updateQueue.push(task)
-    // return taskPromise
-  }
-
-  async qCallback (tasks, callback) {
-    for (const { event, clock, resolve, reject } of tasks) {
-      try {
-        console.log('event', event)
-        const did = await this.innerPutToProllyTree(event, clock)
-        console.log('did', did)
-        resolve(did)
-      } catch (e) {
-        reject(e)
-      }
-    }
-    callback()
-  }
-
-  async innerPutToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(clock) !== JSON.stringify(this.clockToJSON())) {
       // we need to check and see what version of the document exists at the clock specified
@@ -285,7 +253,7 @@ export class Database {
     const result = await doTransaction(
       'putToProllyTree',
       this.blocks,
-      async (blocks) => await put(blocks, this.clock, event)
+      async blocks => await put(blocks, this.clock, event)
     )
     if (!result) {
       console.error('failed', event)
@@ -305,7 +273,7 @@ export class Database {
 
   applyClock (prevClock, newClock) {
     // console.log('applyClock', prevClock, newClock, this.clock)
-    const removedprevCIDs = this.clock.filter((cid) => prevClock.indexOf(cid) === -1)
+    const removedprevCIDs = this.clock.filter(cid => prevClock.indexOf(cid) === -1)
     this.clock = removedprevCIDs.concat(newClock)
   }
 
@@ -367,7 +335,7 @@ export class Database {
 export async function cidsToProof (cids) {
   if (!cids || !cids.all) return []
   const all = await cids.all()
-  return [...all].map((cid) => cid.toString())
+  return [...all].map(cid => cid.toString())
 }
 
 function decodeEvent (event) {
