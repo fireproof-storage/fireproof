@@ -459,7 +459,8 @@ describe('Fireproof', () => {
     assert.equal(got.length, putYes * 2)
     console.log('putYes', putYes)
     // await sleep(1000)
-    console.log('all', await database.allDocuments())
+    // console.log('all', await database.allDocuments())
+    assert.equal((await database.allDocuments()).rows.length, 21)
     assert.equal((await database.changesSince()).rows.length, 21)
   }).timeout(20000)
   it('serialize database', async () => {
