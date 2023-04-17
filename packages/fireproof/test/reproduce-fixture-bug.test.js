@@ -18,10 +18,10 @@ describe('IPLD encode error', () => {
 })
 
 const defineIndexes = (database) => {
-  database.allLists = new DbIndex(database, function (doc, map) {
+  database.allLists = new DbIndex(database, 'allLists', function (doc, map) {
     if (doc.type === 'list') map(doc.type, doc)
   })
-  database.todosByList = new DbIndex(database, function (doc, map) {
+  database.todosByList = new DbIndex(database, 'todosByList', function (doc, map) {
     if (doc.type === 'todo' && doc.listId) {
       map([doc.listId, doc.createdAt], doc)
     }

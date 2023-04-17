@@ -22,9 +22,9 @@ describe('DbIndex query without name', () => {
       assert(response.id, 'should have id')
       assert.equal(response.id, id)
     }
-    index = new DbIndex(database, function (doc, map) {
+    index = new DbIndex(database, 'names_by_age', function (doc, map) {
       map(doc.age, doc.name)
-    }, null, { name: 'names_by_age' })
+    })
   })
   it('serialize database with index', async () => {
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
@@ -96,9 +96,9 @@ describe('DbIndex query with dbname', () => {
       assert(response.id, 'should have id')
       assert.equal(response.id, id)
     }
-    index = new DbIndex(database, function (doc, map) {
+    index = new DbIndex(database, 'names_by_age', function (doc, map) {
       map(doc.age, doc.name)
-    }, null, { name: 'names_by_age' })
+    }, null)
   })
   it('serialize database with index', async () => {
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
@@ -150,5 +150,17 @@ describe('DbIndex query with dbname', () => {
 
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')
+  })
+  it('can save as an encrypted car', async () => {
+    const car = await Fireproof.makeCar(database)
+    assert(car.cid)
+    // todo asserts abount read
+    // console.log(car)
+  })
+  it('can save as a clear car', async () => {
+    const car = await Fireproof.makeCar(database, null)
+    assert(car.cid)
+    // todo asserts abount read
+    // console.log(car)
   })
 })

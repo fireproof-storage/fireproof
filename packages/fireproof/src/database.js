@@ -117,7 +117,7 @@ export class Database {
       // console.log('change rows', this.instanceId, rows)
     } else {
       const allResp = await getAll(this.blocks, this.clock)
-      rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value })))
+      rows = allResp.result.map(({ key, value }) => decodeEvent({ key, value }))
       dataCIDs = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
     }
@@ -130,12 +130,23 @@ export class Database {
 
   async allDocuments () {
     const allResp = await getAll(this.blocks, this.clock)
-    const rows = allResp.result.map(({ key, value }) => (decodeEvent({ key, value }))).map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
+    const rows = allResp.result
+      .map(({ key, value }) => decodeEvent({ key, value }))
+      .map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
     return {
       rows,
       clock: this.clockToJSON(),
       proof: await cidsToProof(allResp.cids)
     }
+  }
+
+  async allCIDs () {
+    const allResp = await getAll(this.blocks, this.clock)
+    const cids = await cidsToProof(allResp.cids)
+    const clockCids = await cidsToProof(allResp.clockCIDs)
+    // console.log('allcids', cids, clockCids)
+    // todo we need to put the clock head as the last block in the encrypted car
+    return [...cids, ...clockCids] // need a single block version of clock head, maybe an encoded block for it
   }
 
   /**
@@ -150,7 +161,7 @@ export class Database {
   async runValidation (doc) {
     if (this.config && this.config.validateChange) {
       const oldDoc = await this.get(doc._id)
-        .then((doc) => doc)
+        .then(doc => doc)
         .catch(() => ({}))
       this.config.validateChange(doc, oldDoc, this.authCtx)
     }
@@ -185,12 +196,13 @@ export class Database {
     return doc
   }
   /**
- * @typedef {any} Document
- * @property {string} _id - The ID of the document (required)
- * @property {string} [_proof] - The proof of the document (optional)
- * @property {string} [_clock] - The clock of the document (optional)
- * @property {any} [key: string] - Index signature notation to allow any other unknown fields
- */
+   * @typedef {Object} Document
+   * @property {string} _id - The ID of the document (required)
+   * @property {string} [_proof] - The proof of the document (optional)
+   * @property {string} [_clock] - The clock of the document (optional)
+   * @property {any} [key: string] - Index signature notation to allow any other unknown fields
+   *  * @property {Object.<string, any>} [otherProperties] - Any other unknown properties (optional)
+   */
 
   /**
    * Adds a new document to the database, or updates an existing document. Returns the ID of the document and the new clock head.
@@ -245,17 +257,17 @@ export class Database {
         throw new Error('MVCC conflict, document is changed, please reload the document and try again.')
       }
     }
+    const prevClock = [...this.clock]
     const result = await doTransaction(
       'putToProllyTree',
       this.blocks,
-      async (blocks) => await put(blocks, this.clock, event)
+      async blocks => await put(blocks, this.clock, event)
     )
     if (!result) {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
     }
-    // console.log('new clock head', this.instanceId, result.head.toString())
-    this.clock = result.head // do we want to do this as a finally block
+    this.applyClock(prevClock, result.head)
     await this.notifyListeners([decodedEvent]) // this type is odd
     return {
       id: decodedEvent.key,
@@ -263,6 +275,12 @@ export class Database {
       proof: { data: await cidsToProof(result.cids), clock: await cidsToProof(result.clockCIDs) }
     }
     // todo should include additions (or split clock)
+  }
+
+  applyClock (prevClock, newClock) {
+    // console.log('applyClock', prevClock, newClock, this.clock)
+    const removedprevCIDs = this.clock.filter(cid => prevClock.indexOf(cid) === -1)
+    this.clock = removedprevCIDs.concat(newClock)
   }
 
   //   /**
@@ -323,7 +341,7 @@ export class Database {
 export async function cidsToProof (cids) {
   if (!cids || !cids.all) return []
   const all = await cids.all()
-  return [...all].map((cid) => cid.toString())
+  return [...all].map(cid => cid.toString())
 }
 
 function decodeEvent (event) {
