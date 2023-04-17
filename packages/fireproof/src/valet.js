@@ -200,7 +200,7 @@ export class Valet {
   }
 }
 
-const blocksToCarBlock = async (lastCid, blocks) => {
+export const blocksToCarBlock = async (lastCid, blocks) => {
   let size = 0
   const headerSize = CBW.headerLength({ roots: [lastCid] })
   size += headerSize
@@ -222,7 +222,7 @@ const blocksToCarBlock = async (lastCid, blocks) => {
   return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
 }
 
-const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial) => {
+export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial) => {
   const encryptionKey = Buffer.from(keyMaterial, 'hex')
   const encryptedBlocks = []
   const theCids = []

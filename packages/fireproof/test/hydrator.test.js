@@ -151,4 +151,8 @@ describe('DbIndex query with dbname', () => {
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')
   })
+  it('can make a car', async () => {
+    const car = await Fireproof.makeCar(database)
+    console.log(car)
+  })
 })

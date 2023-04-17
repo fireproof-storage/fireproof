@@ -66,7 +66,6 @@ export class Database {
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
     this.indexBlocks = null
-    this.updatePromise = null
   }
 
   maybeSaveClock () {
@@ -139,6 +138,15 @@ export class Database {
       clock: this.clockToJSON(),
       proof: await cidsToProof(allResp.cids)
     }
+  }
+
+  async allCIDs () {
+    const allResp = await getAll(this.blocks, this.clock)
+    const cids = await cidsToProof(allResp.cids)
+    const clockCids = await cidsToProof(allResp.clockCIDs)
+    // console.log('allcids', cids, clockCids)
+    // todo we need to put the clock head as the last block in the encrypted car
+    return [...cids, ...clockCids] // need a single block version of clock head, maybe an encoded block for it
   }
 
   /**
@@ -259,8 +267,6 @@ export class Database {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
     }
-    // console.log('new clock head', this.instanceId, result.head.toString())
-    // this.clock = result.head // do we want to do this as a finally block
     this.applyClock(prevClock, result.head)
     await this.notifyListeners([decodedEvent]) // this type is odd
     return {
