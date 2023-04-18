@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Realtime database for IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",
@@ -11,7 +11,7 @@
     "keygen": "node scripts/keygen.js",
     "test": "standard && npm run test:unencrypted && npm run test:mocha",
     "test:unencrypted": "set NO_ENCRYPT=true && npm run test:mocha",
-    "test:mocha": "mocha --reporter list test/*.test.js",
+    "test:mocha": "mocha test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel",
     "coverage": "c8 -r html -r text npm test",
     "prepublishOnly": "cp ../../README.md . && npm run build",

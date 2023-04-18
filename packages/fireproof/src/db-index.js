@@ -72,10 +72,10 @@ const indexEntriesForChanges = (changes, mapFn) => {
   changes.forEach(({ key, value, del }) => {
     if (del || !value) return
     mapFn(makeDoc({ key, value }), (k, v) => {
-      if (typeof v === 'undefined' || typeof k === 'undefined') return
+      if (typeof k === 'undefined') return
       indexEntries.push({
         key: [charwise.encode(k), key],
-        value: v
+        value: v || null
       })
     })
   })
@@ -93,7 +93,7 @@ const indexEntriesForChanges = (changes, mapFn) => {
  *
  */
 export class DbIndex {
-  constructor (database, mapFn, clock, opts = {}) {
+  constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
       database.indexBlocks = new TransactionBlockstore(database?.name + '.indexes', database.blocks.valet?.getKeyMaterial())
@@ -109,7 +109,7 @@ export class DbIndex {
       this.mapFn = mapFn
       this.mapFnString = mapFn.toString()
     }
-    this.name = opts.name || this.makeName()
+    this.name = name || this.makeName()
     this.indexById = { root: null, cid: null }
     this.indexByKey = { root: null, cid: null }
     this.dbHead = null
@@ -159,7 +159,7 @@ export class DbIndex {
 
   static fromJSON (database, { code, clock, name }) {
     // console.log('DbIndex.fromJSON', database.constructor.name, code, clock)
-    return new DbIndex(database, code, clock, { name })
+    return new DbIndex(database, name, code, clock)
   }
 
   /**
@@ -176,7 +176,7 @@ export class DbIndex {
    * @memberof DbIndex
    * @instance
    */
-  async query (query, update = true) {
+  async query (query = {}, update = true) {
     // const callId = Math.random().toString(36).substring(2, 7)
     // todo pass a root to query a snapshot
     // console.time(callId + '.updateIndex')
@@ -203,7 +203,12 @@ export class DbIndex {
   async updateIndex (blocks) {
     // todo this could enqueue the request and give fresh ones to all second comers -- right now it gives out stale promises while working
     // what would it do in a world where all indexes provide a database snapshot to query?
-    if (this.updateIndexPromise) return this.updateIndexPromise
+    if (this.updateIndexPromise) {
+      return this.updateIndexPromise.then(() => {
+        this.updateIndexPromise = null
+        return this.updateIndex(blocks)
+      })
+    }
     this.updateIndexPromise = this.innerUpdateIndex(blocks)
     this.updateIndexPromise.finally(() => { this.updateIndexPromise = null })
     return this.updateIndexPromise
@@ -232,7 +237,7 @@ export class DbIndex {
       this.dbHead = result.clock
       return
     }
-    await doTransaction('updateIndex', inBlocks, async (blocks) => {
+    const didT = await doTransaction('updateIndex', inBlocks, async (blocks) => {
       let oldIndexEntries = []
       let removeByIdIndexEntries = []
       await loadIndex(blocks, this.indexById, idIndexOpts)
@@ -254,6 +259,7 @@ export class DbIndex {
     this.database.notifyExternal('dbIndex')
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
     // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
+    return didT
   }
 }
 
@@ -296,7 +302,11 @@ async function bulkIndex (blocks, inIndex, indexEntries, opts) {
 async function loadIndex (blocks, index, indexOpts) {
   if (!index.root) {
     const cid = index.cid
-    if (!cid) return
+    if (!cid) {
+      // console.log('no cid', index)
+      // throw new Error('cannot load index')
+      return null
+    }
     const { getBlock } = makeGetBlock(blocks)
     index.root = await load({ cid, get: getBlock, ...indexOpts })
   }

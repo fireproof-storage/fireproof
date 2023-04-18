@@ -10,6 +10,7 @@ let database, resp0
 describe('Fireproof', () => {
   beforeEach(async () => {
     database = Fireproof.storage('helloName')
+    assert.equal(database.clock.length, 0)
     resp0 = await database.put({
       _id: '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c',
       name: 'alice',
@@ -34,9 +35,11 @@ describe('Fireproof', () => {
   })
   it('mvcc put and get document with _clock that matches', async () => {
     assert(resp0.clock, 'should have clock')
+    assert.equal(resp0.clock.length, 1)
     assert.equal(resp0.clock[0].toString(), 'bafyreiadhnnxgaeeqdxujfew6zxr4lnjyskkrg26cdjvk7tivy6dt4xmsm')
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     theDoc._clock = database.clock
+    assert.equal(database.clock.length, 1)
     const put2 = await database.put(theDoc)
     assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     assert.equal(put2.clock.length, 1)
@@ -456,7 +459,9 @@ describe('Fireproof', () => {
     assert.equal(got.length, putYes * 2)
     // console.log('putYes', putYes)
     // await sleep(1000)
-    assert.equal((await database.changesSince()).rows.length, 2)
+    // console.log('all', await database.allDocuments())
+    assert.equal((await database.allDocuments()).rows.length, 21)
+    assert.equal((await database.changesSince()).rows.length, 21)
   }).timeout(20000)
   it('serialize database', async () => {
     await database.put({ _id: 'rehy', name: 'drate' })
