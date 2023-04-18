@@ -98,11 +98,13 @@ export class DbIndex {
     if (!database.indexBlocks) {
       database.indexBlocks = new TransactionBlockstore(database?.name + '.indexes', database.blocks.valet?.getKeyMaterial())
     }
-    /**
-     * The map function to apply to each entry in the database.
-     * @type {Function}
-     */
-
+    if (typeof name === 'function') {
+      // app is using deprecated API, remove in 0.7
+      opts = clock
+      clock = mapFn
+      mapFn = name
+      name = null
+    }
     if (typeof mapFn === 'string') {
       this.mapFnString = mapFn
     } else {
