@@ -228,26 +228,30 @@ describe('DbIndex query', () => {
     assert.equal(result.rows.length, 1, '1 row matched')
     assert(result.rows[0].key === 53, 'correct key')
 
-    const snap = Fireproof.snapshot(database)
-
     const response = await database.del(DOCID)
     assert(response)
     assert(response.id, 'should have id')
-
-    const oldXander = await snap.get(r1.id)
-    assert.equal(oldXander.age, 53, 'old xander')
-
-    const newZander = await database.get(r1.id).catch((e) => e)
-    assert.equal(newZander.message, 'Not found', 'new xander')
 
     const allresult = await index.query({ range: [2, 90] })
     // todo
     assert.equal(allresult.rows.length, 6, 'all row matched')
 
+    const all = await Promise.all(allresult.rows.map(({ id }) => database.del(id)))
+
+    assert.equal(all.length, 6)
+
     const result2 = await index.query({ range: [51, 54] })
     assert(result2, 'did return result')
     assert(result2.rows)
     assert.equal(result2.rows.length, 0, '0 row matched')
+
+    const rafter = await database.put({ _id: '98a6sdfy', name: 'Adam', age: 20 })
+    assert.equal(rafter.id, '98a6sdfy')
+
+    const result3 = await index.query()
+    assert(result3, 'did return result')
+    assert(result3.rows)
+    assert.equal(result3.rows.length, 1, '1 row matched')
   })
 })
 

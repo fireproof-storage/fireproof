@@ -244,7 +244,7 @@ export class DbIndex {
       let removeByIdIndexEntries = []
       await loadIndex(blocks, this.indexById, idIndexOpts)
       await loadIndex(blocks, this.indexByKey, dbIndexOpts)
-      console.log('head', this.dbHead, this.indexById)
+      // console.log('head', this.dbHead, this.indexById)
       if (this.indexById.root) {
         const oldChangeEntries = await this.indexById.root.getMany(result.rows.map(({ key }) => key))
         oldIndexEntries = oldChangeEntries.result.map((key) => ({ key, del: true }))
@@ -302,7 +302,8 @@ async function bulkIndex (blocks, inIndex, indexEntries, opts) {
     await putBlock(returnRootBlock.cid, returnRootBlock.bytes)
     return { root: returnNode, cid: returnRootBlock.cid }
   } else {
-    throw new Error('test for index after delete')
+    // throw new Error('test for index after delete')
+    return { root: null, cid: null }
   }
 }
 
