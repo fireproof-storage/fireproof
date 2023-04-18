@@ -1,6 +1,6 @@
 // @ts-ignore
-import { create, load } from 'prolly-trees/db-index'
-// import { create, load } from '../../../../prolly-trees/src/db-index.js'
+// import { create, load } from 'prolly-trees/db-index'
+import { create, load } from '../../../../prolly-trees/src/db-index.js'
 
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 // @ts-ignore
@@ -293,13 +293,17 @@ async function bulkIndex (blocks, inIndex, indexEntries, opts) {
     inIndex.root = await load({ cid, get: getBlock, ...dbIndexOpts })
   }
   const { root, blocks: newBlocks } = await inIndex.root.bulk(indexEntries)
-  returnRootBlock = await root.block
-  returnNode = root
-  for await (const block of newBlocks) {
-    await putBlock(block.cid, block.bytes)
+  if (root) {
+    returnRootBlock = await root.block
+    returnNode = root
+    for await (const block of newBlocks) {
+      await putBlock(block.cid, block.bytes)
+    }
+    await putBlock(returnRootBlock.cid, returnRootBlock.bytes)
+    return { root: returnNode, cid: returnRootBlock.cid }
+  } else {
+    throw new Error('test for index after delete')
   }
-  await putBlock(returnRootBlock.cid, returnRootBlock.bytes)
-  return { root: returnNode, cid: returnRootBlock.cid }
 }
 
 async function loadIndex (blocks, index, indexOpts) {
