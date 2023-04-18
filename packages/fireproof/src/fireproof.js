@@ -1,16 +1,13 @@
 import randomBytes from 'randombytes'
 
-import { Database } from './database.js'
+import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
-import { CID } from 'multiformats'
 import { TransactionBlockstore } from './blockstore.js'
 import { localGet } from './utils.js'
 import { blocksToCarBlock, blocksToEncryptedCarBlock } from './valet.js'
 
 export { Index, Listener, Database }
-
-const parseCID = cid => (typeof cid === 'string' ? CID.parse(cid) : cid)
 
 export class Fireproof {
   /**
@@ -95,7 +92,7 @@ export class Fireproof {
     const allCIDs = await database.allCIDs()
     const blocks = database.blocks
 
-    const rootCid = CID.parse(allCIDs[allCIDs.length - 1])
+    const rootCid = parseCID(allCIDs[allCIDs.length - 1])
     if (typeof key === 'undefined') {
       key = blocks.valet?.getKeyMaterial()
     }
@@ -113,7 +110,9 @@ export class Fireproof {
         allCIDs.map(async c => {
           const b = await blocks.get(c)
           // console.log('block', b)
-          if (typeof b.cid === 'string') { b.cid = CID.parse(b.cid) }
+          if (typeof b.cid === 'string') {
+            b.cid = parseCID(b.cid)
+          }
           // if (b.bytes.constructor.name === 'Buffer') console.log('conver vbuff')
           return b
         })
