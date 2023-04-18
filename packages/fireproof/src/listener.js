@@ -41,9 +41,9 @@ export class Listener {
    * @returns {Function} A function to unsubscribe from the topic.
    * @memberof Listener
    * @instance
-   * @param {any} since
+   * @param {any} [since] - clock to flush from on launch
    */
-  on (topic, subscriber, since) {
+  on (topic, subscriber, since = undefined) {
     const listOfTopicSubscribers = getTopicList(this.subcribers, topic)
     listOfTopicSubscribers.push(subscriber)
     if (typeof since !== 'undefined') {
