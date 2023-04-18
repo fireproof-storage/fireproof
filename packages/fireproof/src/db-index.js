@@ -100,8 +100,8 @@ export class DbIndex {
     }
     if (typeof name === 'function') {
       // app is using deprecated API, remove in 0.7
-      opts = clock
-      clock = mapFn
+      opts = clock || {}
+      clock = mapFn || null
       mapFn = name
       name = null
     }
@@ -244,6 +244,7 @@ export class DbIndex {
       let removeByIdIndexEntries = []
       await loadIndex(blocks, this.indexById, idIndexOpts)
       await loadIndex(blocks, this.indexByKey, dbIndexOpts)
+      console.log('head', this.dbHead, this.indexById)
       if (this.dbHead) {
         const oldChangeEntries = await this.indexById.root.getMany(result.rows.map(({ key }) => key))
         oldIndexEntries = oldChangeEntries.result.map((key) => ({ key, del: true }))
