@@ -245,7 +245,7 @@ export class DbIndex {
       await loadIndex(blocks, this.indexById, idIndexOpts)
       await loadIndex(blocks, this.indexByKey, dbIndexOpts)
       console.log('head', this.dbHead, this.indexById)
-      if (this.dbHead) {
+      if (this.indexById.root) {
         const oldChangeEntries = await this.indexById.root.getMany(result.rows.map(({ key }) => key))
         oldIndexEntries = oldChangeEntries.result.map((key) => ({ key, del: true }))
         removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
