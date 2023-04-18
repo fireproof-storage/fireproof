@@ -47,7 +47,7 @@ export class Fireproof {
           clock: {
             byId: byId ? parseCID(byId) : null,
             byKey: byKey ? parseCID(byKey) : null,
-            db: db ? db.map(c => parseCID(c)) : null
+            db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
           },
           code,
           name
