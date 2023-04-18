@@ -17,7 +17,7 @@ import { TransactionBlockstore, doTransaction } from './blockstore.js'
 // @ts-ignore
 import charwise from 'charwise'
 
-const ALWAYS_REBUILD = false // todo: make false
+const ALWAYS_REBUILD = false // todo: remove
 
 const compare = (a, b) => {
   const [aKey, aRef] = a
