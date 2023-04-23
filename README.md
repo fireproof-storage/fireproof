@@ -27,6 +27,23 @@ const doc = await fireproof.get(ok.id)
 
 🤫 I like to drop a `window.fireproof = fireproof` in there as a development aid.
 
+### ChatGPT Quick Start
+
+Paste this to GPT 4 or 3.5 to enable it to write apps using Fireproof:
+
+```
+Fireproof/API/Usage: import { Fireproof, Listener, Index } from '@fireproof/core'; const db = http://Fireproof.storage("app-db-name"); const ok = await db.put({ any: 'fields' }); const doc = await db.get(http://ok.id); await db.del(doc._id); const all = await db.allDocuments(); http://all.rows.map(({key, value}) => value); const listener = new Listener(db); listener.on('*', updateReactStateFn); const index = new Index(db, function(doc, map) { map(doc.any, `custom ${doc.any}`); }); const result = await index.query({range : ["a", "z"]}); http://result.rows.map(({ key }) => key);
+```
+
+In the same prompt, describe the app you want to build. Here are some examples that worked for us:
+
+* Create a react app using Fireproof for tracking party invites. It should have a text input that creates a new document with the guest name, and an Index that lists all guests in a &lt;ul&gt;. ([Running copy here.](https://codepen.io/jchrisa/pen/zYmogWO))
+* Build a React app that allows you to create profiles for dogs, and browse to each profile. It should be optimized for mobile. Use Tailwind.
+* Build a photo grid app that with drag and drop ordering that references photos by url. Use tailwind and render all photos as squares. Keep grid arrangement in fireproof with one document for each gallery, that is: 4-16 photos arranged into a layout.
+* Build an app using React, Fireproof, MagicLink, and Tailwind that allows user to create one-question multiple choice polls and collect the answers.
+
+Please share your successes with us here or on [Twitter.](https://twitter.com/FireproofStorge)
+
 ### Status
 
 Fireproof is alpha software, ready for you to evaluate for your future applications. For now, [check out our React TodoMVC implementation running in browser-local mode.](https://main--lucky-naiad-5aa507.netlify.app/) It demonstrates document persistence, index queries, and event subscriptions, and uses the [`useFireproof()` React hook.](https://github.com/fireproof-storage/fireproof/blob/main/packages/fireproof/hooks/use-fireproof.tsx)
