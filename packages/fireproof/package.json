@@ -36,7 +36,7 @@
     "Mikeal Rogers"
   ],
   "license": "Apache-2.0 OR MIT",
-  "gptdoc" : "Fireproof/API/Usage: import { Fireproof, Listener, Index } from '@fireproof/core'; const db = fireproof.storage('app-db-name'); const ok = await db.put({ any: 'json' }); const doc = await db.get(ok.id); await db.del(doc._id); const all = await db.allDocuments(); all.rows.map(({key, value}) => value); const listener = new Listener(db); listener.on('*', updateReactStateFn); const index = new Index(db, (doc, map) => map(doc.any, {fields: Object.keys(doc)})); const result = await index.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "gptdoc" : "Fireproof/API/Usage: import { Fireproof, Listener, Index } from '@fireproof/core'; const db = fireproof.storage('app-db-name'); const ok = await db.put({ any: 'json' }); const doc = await db.get(ok.id); await db.del(doc._id); const all = await db.allDocuments(); all.rows.map(({key, value}) => value); const listener = new Listener(db); listener.on('*', updateReactStateFn); const index = new Index(db, (doc, map) => map(doc.any, {custom: Object.keys(doc)})); const result = await index.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);",
   "dependencies": {
     "@ipld/car": "^5.1.0",
     "@ipld/dag-cbor": "^9.0.0",
