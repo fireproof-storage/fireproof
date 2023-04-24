@@ -32,7 +32,7 @@ const doc = await fireproof.get(ok.id)
 Paste this to GPT 4 or 3.5 to enable it to write apps using Fireproof:
 
 ```
-Fireproof/API/Usage: import { Fireproof, Listener, Index } from '@fireproof/core'; const db = fireproof.storage('app-db-name'); const ok = await db.put({ any: 'fields' }); const doc = await db.get(ok.id); await db.del(doc._id); const all = await db.allDocuments(); all.rows.map(({key, value}) => value); const listener = new Listener(db); listener.on('*', updateReactStateFn); const index = new Index(db, function(doc, map) { map(doc.any, `custom ${doc.any}`); }); const result = await index.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);
+Fireproof/API/Usage: import { Fireproof, Listener, Index } from '@fireproof/core'; const db = fireproof.storage('app-db-name'); const ok = await db.put({ any: 'json' }); const doc = await db.get(ok.id); await db.del(doc._id); const all = await db.allDocuments(); all.rows.map(({key, value}) => value); const listener = new Listener(db); listener.on('*', updateReactStateFn); const index = new Index(db, (doc, map) => map(doc.any, {fields: Object.keys(doc)})); const result = await index.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);
 ```
 
 In the same prompt, describe the app you want to build. Here are some examples that worked for us:
