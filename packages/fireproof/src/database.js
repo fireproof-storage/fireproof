@@ -144,6 +144,7 @@ export class Database {
 
   async allCIDs () {
     const allResp = await getAll(this.blocks, this.clock)
+    // console.log('allcids', allResp.cids, allResp.clockCIDs)
     const cids = await cidsToProof(allResp.cids)
     const clockCids = await cidsToProof(allResp.clockCIDs)
     // console.log('allcids', cids, clockCids)
@@ -341,7 +342,9 @@ export class Database {
 }
 
 export async function cidsToProof (cids) {
-  if (!cids || !cids.all) return []
+  if (!cids) return []
+  if (!cids.all) { return [...cids] }
+
   const all = await cids.all()
   return [...all].map(cid => cid.toString())
 }
