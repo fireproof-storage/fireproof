@@ -49,42 +49,56 @@ export class Sync {
   }
 
   async gotData (data) {
-    // console.log('got data', this.peer.initiator)
-    const reader = await CarReader.fromBytes(data)
-    const blz = new Set()
-    for await (const block of reader.blocks()) {
-      blz.add(block)
+    console.log('got data', data.constructor.name, data.length)
+    try {
+      const reader = await CarReader.fromBytes(data)
+      const blz = new Set()
+      for await (const block of reader.blocks()) {
+        blz.add(block)
+      }
+      // @ts-ignore
+      reader.entries = reader.blocks
+      await this.database.blocks.commit({
+        entries: () => [...blz],
+        get: async cid => await reader.get(cid)
+      })
+      const roots = await reader.getRoots()
+      console.log('got roots', roots.toString(), this.database.clock.toString())
+      this.database.applyClock([], roots)
+      this.pushBacklogResolve({ ok: true })
+    } catch (e) {
+      // console.error(e, data)
+      // data is a json string, parse it
+      const reqCidDiff = JSON.parse(data.toString())
+      // this might be a CID diff
+      console.log('got diff', reqCidDiff)
+      const carBlock = await Sync.makeCar(this.database, null, reqCidDiff.cids)
+      console.log('do send', carBlock.bytes.length)
+      this.peer.send(carBlock.bytes)
+      this.pushBacklogResolve({ ok: true })
     }
-    // @ts-ignore
-    reader.entries = reader.blocks
-    await this.database.blocks.commit({
-      entries: () => [...blz],
-      get: async cid => await reader.get(cid)
-    })
-    const roots = await reader.getRoots()
-    // console.log('got roots', roots, this.database.clock)
-    this.database.applyClock([], roots)
-    this.pushBacklogResolve({ ok: true })
   }
 
   async startSync () {
     // console.log('start sync', this.peer.initiator)
-
-    const carBlock = await Sync.makeCar(this.database, null)
-    // console.log('do send')
-    this.peer.send(carBlock.bytes)
-    this.pushBacklogResolve({ ok: true })
+    const allCIDs = await this.database.allCIDs()
+    const reqCidDiff = {
+      clock: this.database.clockToJSON(),
+      cids: allCIDs.map(cid => cid.toString())
+    }
+    this.peer.send(JSON.stringify(reqCidDiff))
   }
 
   // get all the cids
   // tell valet to make a file
-  static async makeCar (database, key) {
+  static async makeCar (database, key, skip = []) {
     const allCIDs = await database.allCIDs()
     const blocks = database.blocks
-
     const rootCIDs = database.clock
 
-    // console.log('makeCar', rootCIDs, allCIDs)
+    const syncCIDs = [...rootCIDs, ...allCIDs.filter(cid => !skip.includes(cid.toString()))]
+
+    console.log('makeCar', rootCIDs.toString(), syncCIDs.toString())
 
     if (typeof key === 'undefined') {
       key = blocks.valet?.getKeyMaterial()
@@ -93,14 +107,14 @@ export class Sync {
       return blocksToEncryptedCarBlock(
         rootCIDs,
         {
-          entries: () => allCIDs.map(cid => ({ cid })),
+          entries: () => syncCIDs.map(cid => ({ cid })),
           get: async cid => await blocks.get(cid)
         },
         key
       )
     } else {
       const carBlocks = await Promise.all(
-        allCIDs.map(async c => {
+        syncCIDs.map(async c => {
           const b = await blocks.get(c)
           if (typeof b.cid === 'string') {
             b.cid = parseCID(b.cid)
