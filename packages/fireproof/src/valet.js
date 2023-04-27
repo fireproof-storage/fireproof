@@ -100,6 +100,7 @@ export class Valet {
     if (innerBlockstore.lastCid) {
       if (this.keyMaterial) {
         // console.log('encrypting car', innerBlockstore.label)
+        // should we pass cids in instead of iterating frin innerBlockstore?
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
@@ -200,9 +201,12 @@ export class Valet {
   }
 }
 
-export const blocksToCarBlock = async (lastCid, blocks) => {
+export const blocksToCarBlock = async (rootCids, blocks) => {
   let size = 0
-  const headerSize = CBW.headerLength({ roots: [lastCid] })
+  if (!Array.isArray(rootCids)) {
+    rootCids = [rootCids]
+  }
+  const headerSize = CBW.headerLength({ roots: rootCids })
   size += headerSize
   if (!Array.isArray(blocks)) {
     blocks = Array.from(blocks.entries())
@@ -214,7 +218,9 @@ export const blocksToCarBlock = async (lastCid, blocks) => {
   const buffer = new Uint8Array(size)
   const writer = await CBW.createWriter(buffer, { headerSize })
 
-  writer.addRoot(lastCid)
+  for (const cid of rootCids) {
+    writer.addRoot(cid)
+  }
 
   for (const { cid, bytes } of blocks) {
     writer.write({ cid, bytes })
