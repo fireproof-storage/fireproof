@@ -75,10 +75,10 @@ export class TransactionBlockstore {
 
   async committedGet (key) {
     const old = this.committedBlocks.get(key)
+    // console.log('committedGet: ' + key + ' ' + this.instanceId, old.length)
     if (old) return old
     if (!this.valet) throw new Error('Missing block: ' + key)
     const got = await this.valet.getBlock(key)
-    // console.log('committedGet: ' + key)
     this.committedBlocks.set(key, got)
     return got
   }
@@ -170,6 +170,7 @@ export class TransactionBlockstore {
         cids.add(stringCid)
       }
     }
+
     if (cids.size > 0 && this.valet) {
       // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
       await this.valet.writeTransaction(innerBlockstore, cids)

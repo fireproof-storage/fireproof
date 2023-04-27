@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
 
-describe('DbIndex query without name', () => {
+describe('Hydrator', () => {
   let database, index
   beforeEach(async () => {
     database = Fireproof.storage()
@@ -77,7 +77,7 @@ describe('DbIndex query without name', () => {
   })
 })
 
-describe('DbIndex query with dbname', () => {
+describe('hydrator query with dbname', () => {
   let database, index
   beforeEach(async () => {
     database = Fireproof.storage('index-test')
@@ -150,17 +150,5 @@ describe('DbIndex query with dbname', () => {
 
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')
-  })
-  it('can save as an encrypted car', async () => {
-    const car = await Fireproof.makeCar(database)
-    assert(car.cid)
-    // todo asserts abount read
-    // console.log(car)
-  })
-  it('can save as a clear car', async () => {
-    const car = await Fireproof.makeCar(database, null)
-    assert(car.cid)
-    // todo asserts abount read
-    // console.log(car)
   })
 })

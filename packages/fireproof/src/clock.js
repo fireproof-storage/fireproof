@@ -232,7 +232,7 @@ export async function findEventsToSync (blocks, head) {
   const toSync = await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
   // console.timeEnd(callTag + '.contains')
 
-  return { cids: events.all(), events: toSync }
+  return { cids: events, events: toSync }
 }
 
 const asyncFilter = async (arr, predicate) =>
