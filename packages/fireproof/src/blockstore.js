@@ -34,6 +34,7 @@ export class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   committedBlocks = new Map()
 
+  /** @type {Valet} */
   valet = null
 
   instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
@@ -120,18 +121,22 @@ export class TransactionBlockstore {
   /**
    * Iterate over all blocks in the store.
    *
-   * @yields {AnyBlock}
-   * @returns {AsyncGenerator<AnyBlock>}
+   * @yields {{cid: string, bytes: Uint8Array}}
+   * @returns {AsyncGenerator<any, any, any>}
    */
-  // * entries () {
-  //   // needs transaction blocks?
-  //   // for (const [str, bytes] of this.blocks) {
-  //   //   yield { cid: parse(str), bytes }
-  //   // }
-  //   for (const [str, bytes] of this.committedBlocks) {
-  //     yield { cid: parse(str), bytes }
-  //   }
-  // }
+  async * entries () {
+    for (const transaction of this.inflightTransactions) {
+      for (const [str, bytes] of transaction) {
+        yield { cid: str, bytes }
+      }
+    }
+    for (const [str, bytes] of this.committedBlocks) {
+      yield { cid: str, bytes }
+    }
+    for await (const { cid } of this.valet.cids()) {
+      yield { cid }
+    }
+  }
 
   /**
    * Begin a transaction. Ensures the uncommited blocks are empty at the begining.
@@ -170,9 +175,8 @@ export class TransactionBlockstore {
         cids.add(stringCid)
       }
     }
-
+    console.log(innerBlockstore.label, 'committing', cids.size, 'blocks', [...cids].map(cid => cid.toString()), this.valet)
     if (cids.size > 0 && this.valet) {
-      // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
       await this.valet.writeTransaction(innerBlockstore, cids)
     }
   }

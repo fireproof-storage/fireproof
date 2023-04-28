@@ -152,6 +152,14 @@ export class Database {
     return [...cids, ...clockCids] // need a single block version of clock head, maybe an encoded block for it
   }
 
+  async allStoredCIDs () {
+    const allCIDs = []
+    for await (const { cid } of this.blocks.entries()) {
+      allCIDs.push(cid)
+    }
+    return allCIDs
+  }
+
   /**
    * Runs validation on the specified document using the Fireproof instance's configuration. Throws an error if the document is invalid.
    *
@@ -281,9 +289,16 @@ export class Database {
   }
 
   applyClock (prevClock, newClock) {
-    // console.log('applyClock', prevClock, newClock, this.clock)
-    const removedprevCIDs = this.clock.filter(cid => prevClock.indexOf(cid) === -1)
-    this.clock = removedprevCIDs.concat(newClock)
+    console.log('applyClock', prevClock, newClock, this.clock)
+    const stPrev = prevClock.map(cid => cid.toString())
+    const keptPrevClock = this.clock.filter(cid => stPrev.indexOf(cid.toString()) === -1)
+    const merged = keptPrevClock.concat(newClock)
+    const uniquebyCid = new Map()
+    for (const cid of merged) {
+      uniquebyCid.set(cid.toString(), cid)
+    }
+    this.clock = Array.from(uniquebyCid.values())
+    console.log('afterClock', this.clock)
   }
 
   //   /**
