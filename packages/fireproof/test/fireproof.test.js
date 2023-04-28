@@ -112,6 +112,13 @@ describe('Fireproof', () => {
     const allDocs = await database.allDocuments()
     assert.equal(allDocs.rows.length, 2)
   })
+  it('allCids', async () => {
+    const allCids = await database.allCIDs()
+    assert.equal(allCids.length, 2)
+    const storedCids = await database.allStoredCIDs()
+    assert.equal(storedCids.length, 3)
+  })
+
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
     const db = await Fireproof.storage('test')

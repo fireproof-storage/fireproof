@@ -107,6 +107,8 @@ export class Valet {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       }
+    } else {
+      throw new Error('missing lastCid for car header')
     }
   }
 
@@ -130,6 +132,22 @@ export class Valet {
   }
 
   /**
+   * Iterate over all blocks in the store.
+   *
+   * @yields {{cid: string, value: Uint8Array}}
+   * @returns {AsyncGenerator<any, any, any>}
+   */
+  async * cids () {
+    const db = await this.withDB(async db => db)
+    const tx = db.transaction(['cidToCar'], 'readonly')
+    let cursor = await tx.store.openCursor()
+    while (cursor) {
+      yield { cid: cursor.key, car: cursor.value.car }
+      cursor = await cursor.continue()
+    }
+  }
+
+  /**
    *
    * @param {string} carCid
    * @param {*} value
@@ -141,7 +159,7 @@ export class Valet {
       await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
-
+    console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
       if (this.alreadyEnqueued.has(carCid)) {
@@ -236,7 +254,8 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   for (const { cid } of blocks.entries()) {
     theCids.push(cid.toString())
   }
-
+  console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
+  console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
     cids: theCids,

@@ -6,18 +6,7 @@ describe('Sync', () => {
   let database
   beforeEach(async () => {
     database = Fireproof.storage()
-    const docs = [
-      { _id: 'a1s35c', name: 'alice', age: 40 },
-      { _id: 'b2s35c', name: 'bob', age: 40 },
-      { _id: 'f4s35c', name: 'frank', age: 7 }
-    ]
-    for (const doc of docs) {
-      const id = doc._id
-      const response = await database.put(doc)
-      assert(response)
-      assert(response.id, 'should have id')
-      assert.equal(response.id, id)
-    }
+    setupDb(database)
   })
   it('can save as an encrypted car', async () => {
     const car = await Sync.makeCar(database)
@@ -62,6 +51,9 @@ describe('Sync', () => {
     const result4 = await database2.get('f4s35c')
     assert.equal(result4.name, 'frank')
   })
+  it("two identical databases don't send cars", async () => {
+
+  })
 })
 
 class MockPeer {
@@ -96,5 +88,20 @@ class MockPeer {
       // console.log('do', event)
       this.handlers.get(event)(message)
     }, 10)
+  }
+}
+
+const setupDb = async (database) => {
+  const docs = [
+    { _id: 'a1s35c', name: 'alice', age: 40 },
+    { _id: 'b2s35c', name: 'bob', age: 40 },
+    { _id: 'f4s35c', name: 'frank', age: 7 }
+  ]
+  for (const doc of docs) {
+    const id = doc._id
+    const response = await database.put(doc)
+    assert(response)
+    assert(response.id, 'should have id')
+    assert.equal(response.id, id)
   }
 }
