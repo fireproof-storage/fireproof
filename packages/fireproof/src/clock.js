@@ -291,6 +291,7 @@ async function findAncestorCandidate (events, root) {
  * @param  {Array<T[]>} arrays
  */
 function findCommonString (arrays) {
+  // console.log('findCommonString', arrays.map((a) => a.map((i) => String(i))))
   arrays = arrays.map((a) => [...a])
   for (const arr of arrays) {
     for (const item of arr) {
