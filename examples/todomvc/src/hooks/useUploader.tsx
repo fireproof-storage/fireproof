@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useState, createContext } from 'react'
 import { useKeyring, Authenticator } from '@w3ui/react-keyring'
 import { Store } from '@web3-storage/upload-client'
