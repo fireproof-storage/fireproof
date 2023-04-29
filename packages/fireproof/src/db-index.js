@@ -35,8 +35,8 @@ const refCompare = (aRef, bRef) => {
   return simpleCompare(aRef, bRef)
 }
 
-const dbIndexOpts = { cache, chunker: bf(3), codec, hasher, compare }
-const idIndexOpts = { cache, chunker: bf(3), codec, hasher, compare: simpleCompare }
+const dbIndexOpts = { cache, chunker: bf(30), codec, hasher, compare }
+const idIndexOpts = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare }
 
 const makeDoc = ({ key, value }) => ({ _id: key, ...value })
 

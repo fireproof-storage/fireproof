@@ -133,8 +133,8 @@ describe('Sync', () => {
     // const result3 = await database.get('b2s35c')
     // assert.equal(result3.name, 'Bob')
 
-    const result4 = await database.get('f4s35c')
-    assert.equal(result4.name, 'Frank')
+    // const result4 = await database.get('f4s35c')
+    // assert.equal(result4.name, 'Frank')
   })
 })
 

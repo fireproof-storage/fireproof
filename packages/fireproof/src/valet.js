@@ -16,7 +16,7 @@ import { Buffer } from 'buffer'
 // @ts-ignore
 import * as codec from 'encrypted-block'
 import { rawSha1 as sha1sync } from './sha1.js'
-const chunker = bf(3)
+const chunker = bf(30)
 
 const NO_ENCRYPT = typeof process !== 'undefined' && !!process.env?.NO_ENCRYPT
 // ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT

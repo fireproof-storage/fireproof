@@ -17,7 +17,7 @@ import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { doTransaction } from './blockstore.js'
 import { create as createBlock } from 'multiformats/block'
-const blockOpts = { cache, chunker: bf(3), codec, hasher, compare }
+const blockOpts = { cache, chunker: bf(30), codec, hasher, compare }
 
 /**
  * @typedef {import('./blockstore.js').TransactionBlockstore} TransactionBlockstore
