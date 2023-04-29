@@ -100,12 +100,15 @@ export class Valet {
     if (innerBlockstore.lastCid) {
       if (this.keyMaterial) {
         // console.log('encrypting car', innerBlockstore.label)
+        // should we pass cids in instead of iterating frin innerBlockstore?
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       }
+    } else {
+      throw new Error('missing lastCid for car header')
     }
   }
 
@@ -129,6 +132,23 @@ export class Valet {
   }
 
   /**
+   * Iterate over all blocks in the store.
+   *
+   * @yields {{cid: string, value: Uint8Array}}
+   * @returns {AsyncGenerator<any, any, any>}
+   */
+  async * cids () {
+    // console.log('valet cids')
+    const db = await this.withDB(async db => db)
+    const tx = db.transaction(['cidToCar'], 'readonly')
+    let cursor = await tx.store.openCursor()
+    while (cursor) {
+      yield { cid: cursor.key, car: cursor.value.car }
+      cursor = await cursor.continue()
+    }
+  }
+
+  /**
    *
    * @param {string} carCid
    * @param {*} value
@@ -140,7 +160,7 @@ export class Valet {
       await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
-
+    // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
       if (this.alreadyEnqueued.has(carCid)) {
@@ -200,9 +220,12 @@ export class Valet {
   }
 }
 
-export const blocksToCarBlock = async (lastCid, blocks) => {
+export const blocksToCarBlock = async (rootCids, blocks) => {
   let size = 0
-  const headerSize = CBW.headerLength({ roots: [lastCid] })
+  if (!Array.isArray(rootCids)) {
+    rootCids = [rootCids]
+  }
+  const headerSize = CBW.headerLength({ roots: rootCids })
   size += headerSize
   if (!Array.isArray(blocks)) {
     blocks = Array.from(blocks.entries())
@@ -214,7 +237,9 @@ export const blocksToCarBlock = async (lastCid, blocks) => {
   const buffer = new Uint8Array(size)
   const writer = await CBW.createWriter(buffer, { headerSize })
 
-  writer.addRoot(lastCid)
+  for (const cid of rootCids) {
+    writer.addRoot(cid)
+  }
 
   for (const { cid, bytes } of blocks) {
     writer.write({ cid, bytes })
@@ -230,7 +255,8 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   for (const { cid } of blocks.entries()) {
     theCids.push(cid.toString())
   }
-
+  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
+  // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
     cids: theCids,

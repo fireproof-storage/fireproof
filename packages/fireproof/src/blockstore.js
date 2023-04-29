@@ -34,10 +34,12 @@ export class TransactionBlockstore {
   /** @type {Map<string, Uint8Array>} */
   committedBlocks = new Map()
 
+  /** @type {Valet} */
   valet = null
 
   instanceId = 'blkz.' + Math.random().toString(36).substring(2, 4)
   inflightTransactions = new Set()
+  syncs = new Set()
 
   constructor (name, encryptionKey) {
     if (name) {
@@ -75,10 +77,10 @@ export class TransactionBlockstore {
 
   async committedGet (key) {
     const old = this.committedBlocks.get(key)
+    // console.log('committedGet: ' + key + ' ' + this.instanceId, old.length)
     if (old) return old
     if (!this.valet) throw new Error('Missing block: ' + key)
     const got = await this.valet.getBlock(key)
-    // console.log('committedGet: ' + key)
     this.committedBlocks.set(key, got)
     return got
   }
@@ -120,18 +122,24 @@ export class TransactionBlockstore {
   /**
    * Iterate over all blocks in the store.
    *
-   * @yields {AnyBlock}
-   * @returns {AsyncGenerator<AnyBlock>}
+   * @yields {{cid: string, bytes: Uint8Array}}
+   * @returns {AsyncGenerator<any, any, any>}
    */
-  // * entries () {
-  //   // needs transaction blocks?
-  //   // for (const [str, bytes] of this.blocks) {
-  //   //   yield { cid: parse(str), bytes }
-  //   // }
-  //   for (const [str, bytes] of this.committedBlocks) {
-  //     yield { cid: parse(str), bytes }
-  //   }
-  // }
+  async * entries () {
+    for (const transaction of this.inflightTransactions) {
+      for (const [str, bytes] of transaction) {
+        yield { cid: str, bytes }
+      }
+    }
+    for (const [str, bytes] of this.committedBlocks) {
+      yield { cid: str, bytes }
+    }
+    if (this.valet) {
+      for await (const { cid } of this.valet.cids()) {
+        yield { cid }
+      }
+    }
+  }
 
   /**
    * Begin a transaction. Ensures the uncommited blocks are empty at the begining.
@@ -150,8 +158,13 @@ export class TransactionBlockstore {
    * @returns {Promise<void>}
    * @memberof TransactionBlockstore
    */
-  async commit (innerBlockstore) {
+  async commit (innerBlockstore, doSync = true) {
+    // console.log('commit', doSync, innerBlockstore.label)
     await this.doCommit(innerBlockstore)
+    if (doSync) {
+      // const all =
+      await Promise.all([...this.syncs].map(async sync => sync.sendUpdate(innerBlockstore)))
+    }
   }
 
   // first get the transaction blockstore from the map of transaction blockstores
@@ -170,8 +183,8 @@ export class TransactionBlockstore {
         cids.add(stringCid)
       }
     }
+    // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks', [...cids].map(cid => cid.toString()), this.valet)
     if (cids.size > 0 && this.valet) {
-      // console.log(innerBlockstore.label, 'committing', cids.size, 'blocks')
       await this.valet.writeTransaction(innerBlockstore, cids)
     }
   }
@@ -195,7 +208,7 @@ export class TransactionBlockstore {
  * @returns {Promise<any>}
  * @memberof TransactionBlockstore
  */
-export const doTransaction = async (label, blockstore, doFun) => {
+export const doTransaction = async (label, blockstore, doFun, doSync = true) => {
   // @ts-ignore
   if (!blockstore.commit) return await doFun(blockstore)
   // @ts-ignore
@@ -203,7 +216,7 @@ export const doTransaction = async (label, blockstore, doFun) => {
   try {
     const result = await doFun(innerBlockstore)
     // @ts-ignore
-    await blockstore.commit(innerBlockstore)
+    await blockstore.commit(innerBlockstore, doSync)
     return result
   } catch (e) {
     console.error(`Transaction ${label} failed`, e, e.stack)

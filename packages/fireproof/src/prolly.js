@@ -157,9 +157,9 @@ const doProllyBulk = async (inBlocks, head, event) => {
   const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
   let bulkSorted = []
   let prollyRootNode = null
+  const events = new EventFetcher(blocks)
   if (head.length) {
   // Otherwise, we find the common ancestor and update the root and other blocks
-    const events = new EventFetcher(blocks)
     // todo this is returning more events than necessary, lets define the desired semantics from the top down
     // good semantics mean we can cache the results of this call
     const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
@@ -177,15 +177,17 @@ const doProllyBulk = async (inBlocks, head, event) => {
     const newBlocks = []
     // if all operations are deletes, we can just return an empty root
     if (bulkOperations.every((op) => op.del)) {
-      return { root: null, blocks: [] }
+      return { root: null, blocks: [], clockCIDs: await events.all() }
     }
     for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
       root = await node.block
       newBlocks.push(root)
     }
-    return { root, blocks: newBlocks }
+    return { root, blocks: newBlocks, clockCIDs: await events.all() }
   } else {
-    return await prollyRootNode.bulk(bulkOperations) // { root: newProllyRootNode, blocks: newBlocks }
+    const writeResp = await prollyRootNode.bulk(bulkOperations) // { root: newProllyRootNode, blocks: newBlocks }
+    writeResp.clockCIDs = await events.all()
+    return writeResp
   }
 }
 
@@ -250,15 +252,15 @@ export async function root (inBlocks, head) {
   if (!head.length) {
     throw new Error('no head')
   }
-  const { root: newProllyRootNode, blocks: newBlocks, cids } = await doProllyBulk(inBlocks, head)
+  const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head)
   // todo maybe these should go to a temp blockstore?
   await doTransaction('root', inBlocks, async (transactionBlocks) => {
     const { bigPut } = makeGetAndPutBlock(transactionBlocks)
     for (const nb of newBlocks) {
       bigPut(nb)
     }
-  })
-  return { cids, node: newProllyRootNode }
+  }, false)
+  return { clockCIDs, node: newProllyRootNode }
 }
 
 /**
@@ -293,7 +295,8 @@ export async function getAll (blocks, head) {
   if (!head.length) {
     return { clockCIDs: new CIDCounter(), cids: new CIDCounter(), result: [] }
   }
-  const { node: prollyRootNode, cids: clockCIDs } = await root(blocks, head)
+  const { node: prollyRootNode, clockCIDs } = await root(blocks, head)
+
   if (!prollyRootNode) {
     return { clockCIDs, cids: new CIDCounter(), result: [] }
   }

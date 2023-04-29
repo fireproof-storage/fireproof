@@ -144,11 +144,20 @@ export class Database {
 
   async allCIDs () {
     const allResp = await getAll(this.blocks, this.clock)
+    // console.log('allcids', allResp.cids, allResp.clockCIDs)
     const cids = await cidsToProof(allResp.cids)
     const clockCids = await cidsToProof(allResp.clockCIDs)
     // console.log('allcids', cids, clockCids)
     // todo we need to put the clock head as the last block in the encrypted car
     return [...cids, ...clockCids] // need a single block version of clock head, maybe an encoded block for it
+  }
+
+  async allStoredCIDs () {
+    const allCIDs = []
+    for await (const { cid } of this.blocks.entries()) {
+      allCIDs.push(cid)
+    }
+    return allCIDs
   }
 
   /**
@@ -281,8 +290,15 @@ export class Database {
 
   applyClock (prevClock, newClock) {
     // console.log('applyClock', prevClock, newClock, this.clock)
-    const removedprevCIDs = this.clock.filter(cid => prevClock.indexOf(cid) === -1)
-    this.clock = removedprevCIDs.concat(newClock)
+    const stPrev = prevClock.map(cid => cid.toString())
+    const keptPrevClock = this.clock.filter(cid => stPrev.indexOf(cid.toString()) === -1)
+    const merged = keptPrevClock.concat(newClock)
+    const uniquebyCid = new Map()
+    for (const cid of merged) {
+      uniquebyCid.set(cid.toString(), cid)
+    }
+    this.clock = Array.from(uniquebyCid.values())
+    // console.log('afterClock', this.clock)
   }
 
   //   /**
@@ -341,7 +357,9 @@ export class Database {
 }
 
 export async function cidsToProof (cids) {
-  if (!cids || !cids.all) return []
+  if (!cids) return []
+  if (!cids.all) { return [...cids] }
+
   const all = await cids.all()
   return [...all].map(cid => cid.toString())
 }
