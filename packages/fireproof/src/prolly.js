@@ -259,7 +259,7 @@ export async function root (inBlocks, head) {
     for (const nb of newBlocks) {
       bigPut(nb)
     }
-  })
+  }, false)
   return { clockCIDs, node: newProllyRootNode }
 }
 

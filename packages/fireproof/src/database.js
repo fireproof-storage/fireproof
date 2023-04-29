@@ -289,7 +289,7 @@ export class Database {
   }
 
   applyClock (prevClock, newClock) {
-    console.log('applyClock', prevClock, newClock, this.clock)
+    // console.log('applyClock', prevClock, newClock, this.clock)
     const stPrev = prevClock.map(cid => cid.toString())
     const keptPrevClock = this.clock.filter(cid => stPrev.indexOf(cid.toString()) === -1)
     const merged = keptPrevClock.concat(newClock)
@@ -298,7 +298,7 @@ export class Database {
       uniquebyCid.set(cid.toString(), cid)
     }
     this.clock = Array.from(uniquebyCid.values())
-    console.log('afterClock', this.clock)
+    // console.log('afterClock', this.clock)
   }
 
   //   /**

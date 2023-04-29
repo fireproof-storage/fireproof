@@ -138,6 +138,7 @@ export class Valet {
    * @returns {AsyncGenerator<any, any, any>}
    */
   async * cids () {
+    // console.log('valet cids')
     const db = await this.withDB(async db => db)
     const tx = db.transaction(['cidToCar'], 'readonly')
     let cursor = await tx.store.openCursor()
@@ -159,7 +160,7 @@ export class Valet {
       await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
-    console.log('parked car', carCid, value.length, Array.from(cids))
+    // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
       if (this.alreadyEnqueued.has(carCid)) {
@@ -254,8 +255,8 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   for (const { cid } of blocks.entries()) {
     theCids.push(cid.toString())
   }
-  console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
-  console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
+  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
+  // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
     cids: theCids,
