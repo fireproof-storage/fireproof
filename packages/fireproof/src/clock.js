@@ -243,17 +243,19 @@ const asyncFilter = async (arr, predicate) =>
   Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]))
 
 export async function findCommonAncestorWithSortedEvents (events, children) {
+  // console.trace('findCommonAncestorWithSortedEvents')
   const callTag = Math.random().toString(36).substring(7)
   console.time(callTag + '.findCommonAncestor')
   const ancestor = await findCommonAncestor(events, children)
-  console.log('ancestor', ancestor.toString())
   console.timeEnd(callTag + '.findCommonAncestor')
+  console.log('ancestor', ancestor.toString())
   if (!ancestor) {
     throw new Error('failed to find common ancestor event')
   }
   console.time(callTag + '.findSortedEvents')
   const sorted = await findSortedEvents(events, children, ancestor)
   console.timeEnd(callTag + '.findSortedEvents')
+  console.log('sorted', sorted.length)
   return { ancestor, sorted }
 }
 

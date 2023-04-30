@@ -48,6 +48,7 @@ describe('Fireproof', () => {
   it('get should return an object instance that is not the same as the one in the db', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     const theDoc2 = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    assert.equal(JSON.stringify(theDoc), JSON.stringify(theDoc2))
     assert.notEqual(theDoc, theDoc2)
     theDoc.name = 'really alice'
     assert.equal(theDoc.name, 'really alice')
