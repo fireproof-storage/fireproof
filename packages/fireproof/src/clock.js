@@ -327,12 +327,14 @@ async function findSortedEvents (events, head, tail) {
 
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
-  console.log(callTag + '.head', [tail.toString(), ...head.map((h) => h.toString())])
+  head = [...new Set(head)]
+  console.log(callTag + '.head', head.length, [tail.toString(), ...head.map((h) => h.toString())])
   const allEvents = new Set([tail.toString(), ...head.map((h) => h.toString())])
   if (allEvents.size === 1) {
     console.log('head contains tail')
     return []
   }
+  console.log('finding events')
   console.time(callTag + '.findEvents')
   const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
   console.timeEnd(callTag + '.findEvents')
@@ -376,11 +378,12 @@ async function findSortedEvents (events, head, tail) {
  * @returns {Promise<Array<{ event: EventBlockView<EventData>, depth: number }>>}
  */
 async function findEvents (events, start, end, depth = 0) {
-  // console.log('findEvents', start)
+  console.log('findEvents', start.toString(), end, depth)
   const event = await events.get(start)
   const acc = [{ event, depth }]
   const { parents } = event.value
   if (parents.length === 1 && String(parents[0]) === String(end)) return acc
+  // if (parents.length === 1) return acc
   const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
 }
