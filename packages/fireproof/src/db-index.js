@@ -93,6 +93,9 @@ const indexEntriesForChanges = (changes, mapFn) => {
  *
  */
 export class DbIndex {
+  /**
+   * @param {Database} database
+   */
   constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {

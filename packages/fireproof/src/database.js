@@ -26,15 +26,16 @@ export const parseCID = cid => (typeof cid === 'string' ? CID.parse(cid) : cid)
  */
 export class Database {
   listeners = new Set()
+  indexes = new Map()
+  rootCache = null
+  eventsCache = new Map()
 
-  // todo refactor this for the next version
   constructor (blocks, clock, config = {}) {
     this.name = config.name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = blocks
     this.clock = clock
     this.config = config
-    this.indexes = new Map()
   }
 
   /**
@@ -105,7 +106,16 @@ export class Database {
     let rows, dataCIDs, clockCIDs
     // if (!event) event = []
     if (event) {
-      const resp = await eventsSince(this.blocks, this.clock, event)
+      console.log('events for', this.instanceId, [...event, ...this.clock])
+      const eventKey = JSON.stringify([...event, ...this.clockToJSON()])
+      let resp
+      if (this.eventsCache.has(eventKey)) {
+        console.log('events from cache')
+        resp = this.eventsCache.get(eventKey)
+      } else {
+        resp = await eventsSince(this.blocks, this.clock, event)
+        this.eventsCache.set(eventKey, resp)
+      }
       const docsMap = new Map()
       for (const { key, type, value } of resp.result.map(decodeEvent)) {
         if (type === 'del') {
@@ -118,7 +128,9 @@ export class Database {
       clockCIDs = resp.clockCIDs
       // console.log('change rows', this.instanceId, rows)
     } else {
-      const allResp = await getAll(this.blocks, this.clock)
+      const allResp = await getAll(this.blocks, this.clock, this.rootCache)
+      this.rootCache = { root: allResp.root, clockCIDs: allResp.clockCIDs }
+
       rows = allResp.result.map(({ key, value }) => decodeEvent({ key, value }))
       dataCIDs = allResp.cids
       // console.log('dbdoc rows', this.instanceId, rows)
@@ -131,7 +143,9 @@ export class Database {
   }
 
   async allDocuments () {
-    const allResp = await getAll(this.blocks, this.clock)
+    const allResp = await getAll(this.blocks, this.clock, this.rootCache)
+    this.rootCache = { root: allResp.root, clockCIDs: allResp.clockCIDs }
+
     const rows = allResp.result
       .map(({ key, value }) => decodeEvent({ key, value }))
       .map(({ key, value }) => ({ key, value: { _id: key, ...value } }))
@@ -143,7 +157,8 @@ export class Database {
   }
 
   async allCIDs () {
-    const allResp = await getAll(this.blocks, this.clock)
+    const allResp = await getAll(this.blocks, this.clock, this.rootCache)
+    this.rootCache = { root: allResp.root, clockCIDs: allResp.clockCIDs }
     // console.log('allcids', allResp.cids, allResp.clockCIDs)
     const cids = await cidsToProof(allResp.cids)
     const clockCids = await cidsToProof(allResp.clockCIDs)
@@ -189,13 +204,13 @@ export class Database {
    */
   async get (key, opts = {}) {
     const clock = opts.clock || this.clock
-    const resp = await get(this.blocks, clock, charwise.encode(key))
-
+    const resp = await get(this.blocks, clock, charwise.encode(key), this.rootCache)
+    this.rootCache = { root: resp.root, clockCIDs: resp.clockCIDs }
     // this tombstone is temporary until we can get the prolly tree to delete
     if (!resp || resp.result === null) {
       throw new Error('Not found')
     }
-    const doc = resp.result
+    const doc = { ...resp.result }
     if (opts.mvcc === true) {
       doc._clock = this.clockToJSON()
     }
@@ -289,7 +304,7 @@ export class Database {
   }
 
   applyClock (prevClock, newClock) {
-    // console.log('applyClock', prevClock, newClock, this.clock)
+    console.log('applyClock', prevClock, newClock, this.clock)
     const stPrev = prevClock.map(cid => cid.toString())
     const keptPrevClock = this.clock.filter(cid => stPrev.indexOf(cid.toString()) === -1)
     const merged = keptPrevClock.concat(newClock)
@@ -298,6 +313,8 @@ export class Database {
       uniquebyCid.set(cid.toString(), cid)
     }
     this.clock = Array.from(uniquebyCid.values())
+    this.rootCache = null
+    this.eventsCache.clear()
     // console.log('afterClock', this.clock)
   }
 
