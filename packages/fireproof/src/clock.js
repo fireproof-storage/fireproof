@@ -382,8 +382,8 @@ async function findEvents (events, start, end, depth = 0) {
   const event = await events.get(start)
   const acc = [{ event, depth }]
   const { parents } = event.value
-  if (parents.length === 1 && String(parents[0]) === String(end)) return acc
-  // if (parents.length === 1) return acc
+  // if (parents.length === 1 && String(parents[0]) === String(end)) return acc
+  if (parents.length === 1) return acc
   const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
 }
