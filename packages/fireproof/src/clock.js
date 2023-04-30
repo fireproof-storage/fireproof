@@ -245,6 +245,7 @@ const asyncFilter = async (arr, predicate) =>
 export async function findCommonAncestorWithSortedEvents (events, children) {
   // console.trace('findCommonAncestorWithSortedEvents')
   const callTag = Math.random().toString(36).substring(7)
+  console.log(callTag + '.children', children.map((c) => c.toString()))
   console.time(callTag + '.findCommonAncestor')
   const ancestor = await findCommonAncestor(events, children)
   console.timeEnd(callTag + '.findCommonAncestor')
@@ -322,9 +323,19 @@ function findCommonString (arrays) {
 async function findSortedEvents (events, head, tail) {
   // const callTag = Math.random().toString(36).substring(7)
   // get weighted events - heavier events happened first
+  const callTag = Math.random().toString(36).substring(7)
+
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
+  console.log(callTag + '.head', [tail.toString(), ...head.map((h) => h.toString())])
+  const allEvents = new Set([tail.toString(), ...head.map((h) => h.toString())])
+  if (allEvents.size === 1) {
+    console.log('head contains tail')
+    return []
+  }
+  console.time(callTag + '.findEvents')
   const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
+  console.timeEnd(callTag + '.findEvents')
   for (const arr of all) {
     for (const { event, depth } of arr) {
       // console.log('event value', event.value.data.value)
