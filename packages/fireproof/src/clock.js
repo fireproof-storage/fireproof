@@ -190,7 +190,11 @@ async function contains (events, a, b) {
  */
 export async function * vis (blocks, head, options = {}) {
   // @ts-ignore
-  const renderNodeLabel = options.renderNodeLabel ?? ((b) => b.value.data.value)
+  const renderNodeLabel = options.renderNodeLabel ?? ((b) => {
+    // @ts-ignore
+    const { key, root, type } = b.value.data
+    return b.cid.toString() + '\n' + JSON.stringify({ key, root: root.cid.toString(), type }, null, 2).replace(/"/g, '\'')
+  })
   const events = new EventFetcher(blocks)
   yield 'digraph clock {'
   yield '  node [shape=point fontname="Courier"]; head;'
@@ -239,16 +243,17 @@ const asyncFilter = async (arr, predicate) =>
   Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]))
 
 export async function findCommonAncestorWithSortedEvents (events, children) {
-  // const callTag = Math.random().toString(36).substring(7)
-  // console.time(callTag + '.findCommonAncestor')
+  const callTag = Math.random().toString(36).substring(7)
+  console.time(callTag + '.findCommonAncestor')
   const ancestor = await findCommonAncestor(events, children)
-  // console.timeEnd(callTag + '.findCommonAncestor')
+  console.log('ancestor', ancestor.toString())
+  console.timeEnd(callTag + '.findCommonAncestor')
   if (!ancestor) {
     throw new Error('failed to find common ancestor event')
   }
-  // console.time(callTag + '.findSortedEvents')
+  console.time(callTag + '.findSortedEvents')
   const sorted = await findSortedEvents(events, children, ancestor)
-  // console.timeEnd(callTag + '.findSortedEvents')
+  console.timeEnd(callTag + '.findSortedEvents')
   return { ancestor, sorted }
 }
 

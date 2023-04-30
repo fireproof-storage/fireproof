@@ -23,17 +23,18 @@ const blockOpts = { cache, chunker: bf(30), codec, hasher, compare }
  * @typedef {import('./blockstore.js').TransactionBlockstore} TransactionBlockstore
  */
 
-const withLog = async (label, fn) => {
-  const resp = await fn()
-  // console.log('withLog', label, !!resp)
-  return resp
-}
+// const withLog = async (label, fn) => {
+//   const resp = await fn()
+//   // console.log('withLog', label, !!resp)
+//   return resp
+// }
 
 // should also return a CIDCounter
-export const makeGetBlock = (blocks) => {
+export const makeGetBlock = blocks => {
   // const cids = new CIDCounter() // this could be used for proofs of mutations
-  const getBlockFn = async (address) => {
-    const { cid, bytes } = await withLog(address, () => blocks.get(address))
+  const getBlockFn = async address => {
+    // const { cid, bytes } = await withLog(address, () => blocks.get(address))
+    const { cid, bytes } = await blocks.get(address)
     // cids.add({ address: cid })
     return createBlock({ cid, bytes, hasher, codec })
   }
@@ -48,25 +49,17 @@ export const makeGetBlock = (blocks) => {
  * @param {*} param0
  * @returns
  */
-async function createAndSaveNewEvent ({
-  inBlocks,
-  bigPut,
-  root,
-  event: inEvent,
-  head,
-  additions,
-  removals = []
-}) {
+async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, head, additions, removals = [] }) {
   let cids
   const { key, value, del } = inEvent
   const data = {
-    root: (root
+    root: root
       ? {
           cid: root.cid,
           bytes: root.bytes, // can we remove this?
           value: root.value // can we remove this?
         }
-      : null),
+      : null,
     key
   }
   // import('./clock').EventLink<import('./clock').EventData>
@@ -94,7 +87,7 @@ async function createAndSaveNewEvent ({
   }
 }
 
-const makeGetAndPutBlock = (inBlocks) => {
+const makeGetAndPutBlock = inBlocks => {
   // const mblocks = new MemoryBlockstore()
   // const blocks = new MultiBlockFetcher(mblocks, inBlocks)
   const { getBlock, cids } = makeGetBlock(inBlocks)
@@ -159,12 +152,12 @@ const doProllyBulk = async (inBlocks, head, event) => {
   let prollyRootNode = null
   const events = new EventFetcher(blocks)
   if (head.length) {
-  // Otherwise, we find the common ancestor and update the root and other blocks
+    // Otherwise, we find the common ancestor and update the root and other blocks
     // todo this is returning more events than necessary, lets define the desired semantics from the top down
     // good semantics mean we can cache the results of this call
     const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
     bulkSorted = sorted
-    // console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
+    console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
     prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
     // console.log('event', event)
   }
@@ -176,7 +169,7 @@ const doProllyBulk = async (inBlocks, head, event) => {
     let root
     const newBlocks = []
     // if all operations are deletes, we can just return an empty root
-    if (bulkOperations.every((op) => op.del)) {
+    if (bulkOperations.every(op => op.del)) {
       return { root: null, blocks: [], clockCIDs: await events.all() }
     }
     for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
@@ -196,7 +189,7 @@ const doProllyBulk = async (inBlocks, head, event) => {
  *
  * @param {import('./blockstore.js').Blockstore} inBlocks Bucket block storage.
  * @param {import('./clock').EventLink<import('./clock').EventData>[]} head Merkle clock head.
-* @param {{key: string, value: import('./clock').EventLink<import('./clock').EventData>}} event The key of the value to put.
+ * @param {{key: string, value: import('./clock').EventLink<import('./clock').EventData>}} event The key of the value to put.
  * @param {object} [options]
  * @returns {Promise<any>}
  */
@@ -254,12 +247,17 @@ export async function root (inBlocks, head) {
   }
   const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head)
   // todo maybe these should go to a temp blockstore?
-  await doTransaction('root', inBlocks, async (transactionBlocks) => {
-    const { bigPut } = makeGetAndPutBlock(transactionBlocks)
-    for (const nb of newBlocks) {
-      bigPut(nb)
-    }
-  }, false)
+  await doTransaction(
+    'root',
+    inBlocks,
+    async transactionBlocks => {
+      const { bigPut } = makeGetAndPutBlock(transactionBlocks)
+      for (const nb of newBlocks) {
+        bigPut(nb)
+      }
+    },
+    false
+  )
   return { clockCIDs, node: newProllyRootNode }
 }
 
@@ -336,8 +334,20 @@ export async function * vis (blocks, head) {
 }
 
 export async function visMerkleTree (blocks, head) {
-  if (!head.length) {
-    return { cids: new CIDCounter(), result: null }
+  // if (!head) return
+  if (head && !Array.isArray(head)) {
+    const getBl = makeGetBlock(blocks)
+    console.log('getbl', getBl)
+    const prollyRootNode = await load({
+      cid: head,
+      get: getBl.getBlock,
+      ...blockOpts
+    })
+    const lines = []
+    for await (const line of prollyRootNode.vis()) {
+      lines.push(line)
+    }
+    return { vis: lines.join('\n'), cids: new CIDCounter() }
   }
   const { node: prollyRootNode, cids } = await root(blocks, head)
   const lines = []

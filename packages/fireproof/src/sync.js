@@ -63,8 +63,13 @@ export class Sync {
 
   async gotData (data) {
     // console.log('got data', data.toString())
+    let reader = null
     try {
-      const reader = await CarReader.fromBytes(data)
+      reader = await CarReader.fromBytes(data)
+    } catch (e) {
+      // console.log('not a car', data.toString())
+    }
+    if (reader) {
       const blz = new Set()
       for await (const block of reader.blocks()) {
         blz.add(block)
@@ -91,13 +96,7 @@ export class Sync {
       this.database.notifyReset()
       // console.log('after', this.database.clockToJSON())
       this.pushBacklogResolve({ ok: true })
-    } catch (e) {
-      // console.error(e)
-      // if e.message matche 'CBOR' we can ignore it
-      if (!e.message.match(/CBOR|fromBytes/)) {
-        throw e
-      }
-
+    } else {
       // data is a json string, parse it
       const message = JSON.parse(data.toString())
       // console.log('got message', message)
