@@ -102,12 +102,14 @@ export class Database {
    * @instance
    */
   async changesSince (event) {
+    // console.log('events for', this.instanceId, event.constructor.name)
     // console.log('changesSince', this.instanceId, event, this.clock)
     let rows, dataCIDs, clockCIDs
     // if (!event) event = []
     if (event) {
-      console.log('events for', this.instanceId, [...event, ...this.clock])
+      event = event.map((cid) => cid.toString())
       const eventKey = JSON.stringify([...event, ...this.clockToJSON()])
+
       let resp
       if (this.eventsCache.has(eventKey)) {
         console.log('events from cache')
