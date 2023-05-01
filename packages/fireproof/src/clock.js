@@ -289,7 +289,7 @@ async function findCommonAncestor (events, children) {
  * @param {import('./clock').EventLink<EventData>} root
  */
 async function findAncestorCandidate (events, root) {
-  const { value: event } = await events.get(root)
+  const { value: event } = await events.get(root)// .catch(() => ({ value: { parents: [] } }))
   if (!event.parents.length) return root
   return event.parents.length === 1 ? event.parents[0] : findCommonAncestor(events, event.parents)
 }
@@ -382,8 +382,9 @@ async function findEvents (events, start, end, depth = 0) {
   const event = await events.get(start)
   const acc = [{ event, depth }]
   const { parents } = event.value
-  // if (parents.length === 1 && String(parents[0]) === String(end)) return acc
-  if (parents.length === 1) return acc
+  if (parents.length === 1 && String(parents[0]) === String(end)) return acc
+  // if (parents.findIndex((p) => String(p) === String(end)) !== -1) return acc
+  // if (parents.length === 1) return acc
   const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
 }
