@@ -317,7 +317,7 @@ function findCommonString (arrays) {
 /**
  * Find and sort events between the head(s) and the tail.
  * @param {import('./clock').EventFetcher} events
- * @param {import('./clock').EventLink<EventData>[]} head
+ * @param {any[]} head
  * @param {import('./clock').EventLink<EventData>} tail
  */
 async function findSortedEvents (events, head, tail) {
@@ -327,13 +327,16 @@ async function findSortedEvents (events, head, tail) {
 
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
-  head = [...new Set(head)]
-  console.log(callTag + '.head', head.length, [tail.toString(), ...head.map((h) => h.toString())])
-  const allEvents = new Set([tail.toString(), ...head.map((h) => h.toString())])
-  if (allEvents.size === 1) {
-    console.log('head contains tail')
-    return []
-  }
+  head = [...new Set([...head.map((h) => h.toString())])]
+  // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
+  console.log(callTag + '.head', head, tail)
+
+  // const allEvents = new Set([tail.toString(), ...head])
+  // if (allEvents.size === 1) {
+  //   console.log('head contains tail')
+  //   return []
+  // }
+
   console.log('finding events')
   console.time(callTag + '.findEvents')
   const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
@@ -378,7 +381,7 @@ async function findSortedEvents (events, head, tail) {
  * @returns {Promise<Array<{ event: EventBlockView<EventData>, depth: number }>>}
  */
 async function findEvents (events, start, end, depth = 0) {
-  console.log('findEvents', start.toString(), end, depth)
+  // console.log('findEvents', start.toString(), end.toString(), depth)
   const event = await events.get(start)
   const acc = [{ event, depth }]
   const { parents } = event.value
