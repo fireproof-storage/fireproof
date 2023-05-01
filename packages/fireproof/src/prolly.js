@@ -152,14 +152,18 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
   let prollyRootNode = null
   const events = new EventFetcher(blocks)
   if (head.length) {
+    if (!doFull && head.length === 1) {
+      prollyRootNode = await prollyRootFromAncestor(events, head[0], getBlock)
+    } else {
     // Otherwise, we find the common ancestor and update the root and other blocks
     // todo this is returning more events than necessary, lets define the desired semantics from the top down
     // good semantics mean we can cache the results of this call
-    const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head, doFull)
-    bulkSorted = sorted
-    // console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
-    prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
+      const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head, doFull)
+      bulkSorted = sorted
+      // console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
+      prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
     // console.log('event', event)
+    }
   }
 
   const bulkOperations = bulkFromEvents(bulkSorted, event)
