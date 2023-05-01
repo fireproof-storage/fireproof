@@ -226,15 +226,15 @@ export async function * vis (blocks, head, options = {}) {
 }
 
 export async function findEventsToSync (blocks, head) {
-  // const callTag = Math.random().toString(36).substring(7)
+  const callTag = Math.random().toString(36).substring(7)
   const events = new EventFetcher(blocks)
   // console.time(callTag + '.findCommonAncestorWithSortedEvents')
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   // console.timeEnd(callTag + '.findCommonAncestorWithSortedEvents')
   // console.log('sorted', sorted.length)
-  // console.time(callTag + '.contains')
+  console.time(callTag + '.contains')
   const toSync = await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
-  // console.timeEnd(callTag + '.contains')
+  console.timeEnd(callTag + '.contains')
 
   return { cids: events, events: toSync }
 }
@@ -329,7 +329,6 @@ async function findSortedEvents (events, head, tail, doFull) {
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
   head = [...new Set([...head.map((h) => h.toString())])]
-  // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
   console.log(callTag + '.head', head.length)
 
   const allEvents = new Set([tail.toString(), ...head])
@@ -341,6 +340,8 @@ async function findSortedEvents (events, head, tail, doFull) {
   }
 
   console.log('finding events')
+  console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
+
   console.time(callTag + '.findEvents')
   const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
   console.timeEnd(callTag + '.findEvents')
@@ -386,10 +387,11 @@ async function findSortedEvents (events, head, tail, doFull) {
 async function findEvents (events, start, end, depth = 0) {
   // console.log('findEvents', start.toString(), end.toString(), depth)
   const event = await events.get(start)
+  const send = String(end)
   const acc = [{ event, depth }]
   const { parents } = event.value
-  if (parents.length === 1 && String(parents[0]) === String(end)) return acc
-  // if (parents.findIndex((p) => String(p) === String(end)) !== -1) return acc
+  // if (parents.length === 1 && String(parents[0]) === send) return acc
+  if (parents.findIndex((p) => String(p) === send) !== -1) return acc
   // if (parents.length === 1) return acc
   const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
