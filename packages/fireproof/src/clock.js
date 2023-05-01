@@ -335,7 +335,7 @@ async function findSortedEvents (events, head, tail, doFull) {
   const allEvents = new Set([tail.toString(), ...head])
   if (!doFull && allEvents.size === 1) {
     console.log('head contains tail', tail.toString())
-    // return []
+    return []
     // const event = await events.get(tail)
     // return [event]
   }
@@ -372,7 +372,7 @@ async function findSortedEvents (events, head, tail, doFull) {
   const sorted = Array.from(buckets)
     .sort((a, b) => b[0] - a[0])
     .flatMap(([, es]) => es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1)))
-  console.log('sorted', sorted.map(s => s.cid))
+  // console.log('sorted', sorted.map(s => s.cid))
 
   return sorted
 }
