@@ -127,6 +127,9 @@ describe('Sync', () => {
     // console.log('clock4', database4.clockToJSON())
     // assert.deepEqual(database.clockToJSON(), database4.clockToJSON())
 
+    // const vs = await database.visClock()
+    // console.log(vs.vis)
+
     const result2 = await database.get('a1s35c')
     assert.equal(result2.name, 'Alice')
 
