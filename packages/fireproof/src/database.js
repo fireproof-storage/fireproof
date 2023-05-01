@@ -159,7 +159,7 @@ export class Database {
   }
 
   async allCIDs () {
-    const allResp = await getAll(this.blocks, this.clock, this.rootCache)
+    const allResp = await getAll(this.blocks, this.clock, this.rootCache, true)
     this.rootCache = { root: allResp.root, clockCIDs: allResp.clockCIDs }
     // console.log('allcids', allResp.cids, allResp.clockCIDs)
     const cids = await cidsToProof(allResp.cids)

@@ -242,7 +242,7 @@ export async function findEventsToSync (blocks, head) {
 const asyncFilter = async (arr, predicate) =>
   Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]))
 
-export async function findCommonAncestorWithSortedEvents (events, children) {
+export async function findCommonAncestorWithSortedEvents (events, children, doFull = false) {
   // console.trace('findCommonAncestorWithSortedEvents')
   const callTag = Math.random().toString(36).substring(7)
   console.log(callTag + '.children', children.map((c) => c.toString()))
@@ -254,7 +254,7 @@ export async function findCommonAncestorWithSortedEvents (events, children) {
     throw new Error('failed to find common ancestor event')
   }
   console.time(callTag + '.findSortedEvents')
-  const sorted = await findSortedEvents(events, children, ancestor)
+  const sorted = await findSortedEvents(events, children, ancestor, doFull)
   console.timeEnd(callTag + '.findSortedEvents')
   console.log('sorted', sorted.length)
   return { ancestor, sorted }
@@ -321,7 +321,7 @@ function findCommonString (arrays) {
  * @param {any[]} head
  * @param {import('./clock').EventLink<EventData>} tail
  */
-async function findSortedEvents (events, head, tail) {
+async function findSortedEvents (events, head, tail, doFull) {
   // const callTag = Math.random().toString(36).substring(7)
   // get weighted events - heavier events happened first
   const callTag = Math.random().toString(36).substring(7)
@@ -333,9 +333,9 @@ async function findSortedEvents (events, head, tail) {
   console.log(callTag + '.head', head.length)
 
   const allEvents = new Set([tail.toString(), ...head])
-  if (allEvents.size === 1) {
+  if (!doFull && allEvents.size === 1) {
     console.log('head contains tail', tail.toString())
-    return []
+    // return []
     // const event = await events.get(tail)
     // return [event]
   }

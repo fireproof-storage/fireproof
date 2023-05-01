@@ -201,7 +201,7 @@ describe('Sync', () => {
 
     // const result4 = await database.get('f4s35c')
     // assert.equal(result4.name, 'Frank')
-  }).timeout(30000)
+  }).timeout(10000)
 })
 
 async function setupSync (dbA, dbB) {
