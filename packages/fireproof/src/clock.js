@@ -332,11 +332,13 @@ async function findSortedEvents (events, head, tail) {
   // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
   console.log(callTag + '.head', head.length)
 
-  // const allEvents = new Set([tail.toString(), ...head])
-  // if (allEvents.size === 1) {
-  //   console.log('head contains tail')
-  //   return []
-  // }
+  const allEvents = new Set([tail.toString(), ...head])
+  if (allEvents.size === 1) {
+    console.log('head contains tail', tail.toString())
+    return []
+    // const event = await events.get(tail)
+    // return [event]
+  }
 
   console.log('finding events')
   console.time(callTag + '.findEvents')
@@ -370,7 +372,7 @@ async function findSortedEvents (events, head, tail) {
   const sorted = Array.from(buckets)
     .sort((a, b) => b[0] - a[0])
     .flatMap(([, es]) => es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1)))
-  // console.log('sorted', sorted.map(s => s.value.data.value))
+  console.log('sorted', sorted.map(s => s.cid))
 
   return sorted
 }
