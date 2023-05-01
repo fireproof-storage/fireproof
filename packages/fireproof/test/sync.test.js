@@ -136,6 +136,43 @@ describe('Sync', () => {
     // const result4 = await database.get('f4s35c')
     // assert.equal(result4.name, 'Frank')
   })
+  it('with a complex clock', async () => {
+    const db2 = Fireproof.storage()
+    await setupDb(db2)
+
+    assert.deepEqual(database.clockToJSON(), db2.clockToJSON())
+
+    for (const i of Array(20).keys()) {
+      const response = await db2.put({ _id: 'id' + i, name: 'two' + i })
+      assert(response)
+      assert(response.id, 'should have id')
+
+      const db1resp = await database.put({ _id: 'id' + i, name: 'one' + i })
+      assert(db1resp)
+      assert(db1resp.id, 'should have id')
+    }
+
+    const result2 = await database.get('id1')
+    assert.equal(result2.name, 'one1')
+
+    // const newClock = database4.clockToJSON()
+
+    await setupSync(database, db2)
+
+    const result3 = await db2.get('id1')
+    const result4 = await database.get('id1')
+    assert.equal(result4.name, result3.name)
+
+    console.log('clock0', database.clockToJSON())
+    console.log('clock4', db2.clockToJSON())
+    // assert.deepEqual(database.clockToJSON(), database4.clockToJSON())
+
+    // const result3 = await database.get('b2s35c')
+    // assert.equal(result3.name, 'Bob')
+
+    // const result4 = await database.get('f4s35c')
+    // assert.equal(result4.name, 'Frank')
+  })
 })
 
 async function setupSync (dbA, dbB) {

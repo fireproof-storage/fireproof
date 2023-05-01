@@ -314,7 +314,7 @@ export class Database {
     for (const cid of merged) {
       uniquebyCid.set(cid.toString(), cid)
     }
-    this.clock = Array.from(uniquebyCid.values())
+    this.clock = Array.from(uniquebyCid.values()).sort((a, b) => a.toString().localeCompare(b.toString()))
     this.rootCache = null
     this.eventsCache.clear()
     // console.log('afterClock', this.clock)
