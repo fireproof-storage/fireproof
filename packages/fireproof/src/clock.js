@@ -269,6 +269,7 @@ export async function findCommonAncestorWithSortedEvents (events, children) {
  */
 async function findCommonAncestor (events, children) {
   if (!children.length) return
+  if (children.length === 1) return children[0]
   const candidates = children.map((c) => [c])
   while (true) {
     let changed = false
@@ -329,7 +330,7 @@ async function findSortedEvents (events, head, tail) {
   const weights = new Map()
   head = [...new Set([...head.map((h) => h.toString())])]
   // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
-  console.log(callTag + '.head', head, tail)
+  console.log(callTag + '.head', head.length)
 
   // const allEvents = new Set([tail.toString(), ...head])
   // if (allEvents.size === 1) {
