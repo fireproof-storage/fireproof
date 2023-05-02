@@ -487,6 +487,30 @@ describe('Fireproof', () => {
     assert.equal(changes.rows[1].key, 'three')
     assert.equal(changes.rows[2].key, '4')
   })
+  const PERF_REPS = 50
+  it('perf many changes in order', async () => {
+    for (const i of Array(PERF_REPS).keys()) {
+      await database.put({ _id: i.toString() })
+    }
+    for (const i of Array(PERF_REPS).keys()) {
+      const doc = await database.get(i.toString())
+      assert.equal(doc._id, i.toString())
+    }
+  }).timeout(10000)
+
+  it('perf many changes in parallel', async () => {
+    const ops = []
+    for (const i of Array(PERF_REPS).keys()) {
+      // console.log('putting', i)
+      ops.push(database.put({ _id: i.toString() }))
+    }
+    await Promise.all(ops)
+    for (const i of Array(PERF_REPS).keys()) {
+      const doc = await database.get(i.toString())
+      assert.equal(doc._id, i.toString())
+    }
+  }).timeout(10000)
+
   it.skip('changes in order', async () => {
     await database.put({ _id: '2' })
     await database.put({ _id: 'three' })
