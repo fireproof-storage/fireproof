@@ -97,6 +97,10 @@ export class Sync {
       // get the roots parents
       const parents = await Promise.all(roots.map(async (cid) => {
         const rbl = await reader.get(cid)
+        if (!rbl) {
+          console.log('missing root block', cid.toString(), reader)
+          throw new Error('missing root block')
+        }
         const block = await decodeEventBlock(rbl.bytes)
         return block.value.parents
       }))
@@ -113,7 +117,7 @@ export class Sync {
       } else if (message.clock) {
         const reqCidDiff = message
         // this might be a CID diff
-        // console.log('got diff', reqCidDiff)
+        console.log('got diff', reqCidDiff)
         const carBlock = await Sync.makeCar(this.database, null, reqCidDiff.cids)
         if (!carBlock) {
         // we are full synced
