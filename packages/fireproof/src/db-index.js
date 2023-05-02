@@ -7,7 +7,7 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
 import { bf, simpleCompare } from 'prolly-trees/utils'
-import { makeGetBlock } from './prolly.js'
+import { makeGetBlock, visMerkleTree } from './prolly.js'
 // eslint-disable-next-line no-unused-vars
 import { Database, cidsToProof } from './database.js'
 
@@ -35,8 +35,8 @@ const refCompare = (aRef, bRef) => {
   return simpleCompare(aRef, bRef)
 }
 
-const dbIndexOpts = { cache, chunker: bf(3), codec, hasher, compare }
-const idIndexOpts = { cache, chunker: bf(3), codec, hasher, compare: simpleCompare }
+const dbIndexOpts = { cache, chunker: bf(30), codec, hasher, compare }
+const idIndexOpts = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare }
 
 const makeDoc = ({ key, value }) => ({ _id: key, ...value })
 
@@ -93,6 +93,9 @@ const indexEntriesForChanges = (changes, mapFn) => {
  *
  */
 export class DbIndex {
+  /**
+   * @param {Database} database
+   */
   constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
@@ -162,6 +165,14 @@ export class DbIndex {
   static fromJSON (database, { code, clock, name }) {
     // console.log('DbIndex.fromJSON', database.constructor.name, code, clock)
     return new DbIndex(database, name, code, clock)
+  }
+
+  async visKeyTree () {
+    return await visMerkleTree(this.database.indexBlocks, this.indexById.cid)
+  }
+
+  async visIdTree () {
+    return await visMerkleTree(this.database.indexBlocks, this.indexByKey.cid)
   }
 
   /**

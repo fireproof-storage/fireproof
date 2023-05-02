@@ -1,5 +1,6 @@
 import SimplePeer from 'simple-peer'
 import { parseCID } from './database.js'
+import { decodeEventBlock } from './clock.js'
 import { blocksToCarBlock, blocksToEncryptedCarBlock } from './valet.js'
 import { CarReader } from '@ipld/car'
 
@@ -15,7 +16,7 @@ export class Sync {
    */
   constructor (database, PeerClass = SimplePeer) {
     this.database = database
-    this.database.blocks.syncs.add(this)
+    this.database.blocks.syncs.add(this) // should this happen during setup?
     this.PeerClass = PeerClass
     this.pushBacklog = new Promise((resolve, reject) => {
       this.pushBacklogResolve = resolve
@@ -63,8 +64,13 @@ export class Sync {
 
   async gotData (data) {
     // console.log('got data', data.toString())
+    let reader = null
     try {
-      const reader = await CarReader.fromBytes(data)
+      reader = await CarReader.fromBytes(data)
+    } catch (e) {
+      // console.log('not a car', data.toString())
+    }
+    if (reader) {
       const blz = new Set()
       for await (const block of reader.blocks()) {
         blz.add(block)
@@ -87,17 +93,18 @@ export class Sync {
         get: async cid => await reader.get(cid),
         lastCid: [...blz][0].cid // doesn't matter
       }, false)
-      this.database.applyClock([], roots)
+      // first arg could be the roots parents?
+      // get the roots parents
+      const parents = await Promise.all(roots.map(async (cid) => {
+        const rbl = await reader.get(cid)
+        const block = await decodeEventBlock(rbl.bytes)
+        return block.value.parents
+      }))
+      this.database.applyClock(parents.flat(), roots)
       this.database.notifyReset()
       // console.log('after', this.database.clockToJSON())
       this.pushBacklogResolve({ ok: true })
-    } catch (e) {
-      // console.error(e)
-      // if e.message matche 'CBOR' we can ignore it
-      if (!e.message.match(/CBOR|fromBytes/)) {
-        throw e
-      }
-
+    } else {
       // data is a json string, parse it
       const message = JSON.parse(data.toString())
       // console.log('got message', message)
@@ -123,7 +130,7 @@ export class Sync {
   }
 
   async sendUpdate (blockstore) {
-    console.log('send update from', this.database.instanceId)
+    // console.log('send update from', this.database.instanceId)
     // todo should send updates since last sync
     const newCar = await blocksToCarBlock(blockstore.lastCid, blockstore)
     this.peer.send(newCar.bytes)

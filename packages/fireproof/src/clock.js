@@ -190,7 +190,11 @@ async function contains (events, a, b) {
  */
 export async function * vis (blocks, head, options = {}) {
   // @ts-ignore
-  const renderNodeLabel = options.renderNodeLabel ?? ((b) => b.value.data.value)
+  const renderNodeLabel = options.renderNodeLabel ?? ((b) => {
+    // @ts-ignore
+    const { key, root, type } = b.value.data
+    return b.cid.toString() + '\n' + JSON.stringify({ key, root: root.cid.toString(), type }, null, 2).replace(/"/g, '\'')
+  })
   const events = new EventFetcher(blocks)
   yield 'digraph clock {'
   yield '  node [shape=point fontname="Courier"]; head;'
@@ -231,6 +235,7 @@ export async function findEventsToSync (blocks, head) {
   // console.time(callTag + '.contains')
   const toSync = await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
   // console.timeEnd(callTag + '.contains')
+  // console.log('toSync.contains', toSync.length)
 
   return { cids: events, events: toSync }
 }
@@ -238,17 +243,21 @@ export async function findEventsToSync (blocks, head) {
 const asyncFilter = async (arr, predicate) =>
   Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]))
 
-export async function findCommonAncestorWithSortedEvents (events, children) {
+export async function findCommonAncestorWithSortedEvents (events, children, doFull = false) {
+  // console.trace('findCommonAncestorWithSortedEvents')
   // const callTag = Math.random().toString(36).substring(7)
+  // console.log(callTag + '.children', children.map((c) => c.toString()))
   // console.time(callTag + '.findCommonAncestor')
   const ancestor = await findCommonAncestor(events, children)
   // console.timeEnd(callTag + '.findCommonAncestor')
+  // console.log('ancestor', ancestor.toString())
   if (!ancestor) {
     throw new Error('failed to find common ancestor event')
   }
   // console.time(callTag + '.findSortedEvents')
-  const sorted = await findSortedEvents(events, children, ancestor)
+  const sorted = await findSortedEvents(events, children, ancestor, doFull)
   // console.timeEnd(callTag + '.findSortedEvents')
+  // console.log('sorted', sorted.length)
   return { ancestor, sorted }
 }
 
@@ -261,6 +270,7 @@ export async function findCommonAncestorWithSortedEvents (events, children) {
  */
 async function findCommonAncestor (events, children) {
   if (!children.length) return
+  if (children.length === 1) return children[0]
   const candidates = children.map((c) => [c])
   while (true) {
     let changed = false
@@ -281,7 +291,7 @@ async function findCommonAncestor (events, children) {
  * @param {import('./clock').EventLink<EventData>} root
  */
 async function findAncestorCandidate (events, root) {
-  const { value: event } = await events.get(root)
+  const { value: event } = await events.get(root)// .catch(() => ({ value: { parents: [] } }))
   if (!event.parents.length) return root
   return event.parents.length === 1 ? event.parents[0] : findCommonAncestor(events, event.parents)
 }
@@ -291,6 +301,7 @@ async function findAncestorCandidate (events, root) {
  * @param  {Array<T[]>} arrays
  */
 function findCommonString (arrays) {
+  // console.log('findCommonString', arrays.map((a) => a.map((i) => String(i))))
   arrays = arrays.map((a) => [...a])
   for (const arr of arrays) {
     for (const item of arr) {
@@ -308,15 +319,33 @@ function findCommonString (arrays) {
 /**
  * Find and sort events between the head(s) and the tail.
  * @param {import('./clock').EventFetcher} events
- * @param {import('./clock').EventLink<EventData>[]} head
+ * @param {any[]} head
  * @param {import('./clock').EventLink<EventData>} tail
  */
-async function findSortedEvents (events, head, tail) {
+async function findSortedEvents (events, head, tail, doFull) {
   // const callTag = Math.random().toString(36).substring(7)
   // get weighted events - heavier events happened first
+  // const callTag = Math.random().toString(36).substring(7)
+
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
+  head = [...new Set([...head.map((h) => h.toString())])]
+  // console.log(callTag + '.head', head.length)
+
+  const allEvents = new Set([tail.toString(), ...head])
+  if (!doFull && allEvents.size === 1) {
+    // console.log('head contains tail', tail.toString())
+    return []
+    // const event = await events.get(tail)
+    // return [event]
+  }
+
+  // console.log('finding events')
+  // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
+
+  // console.time(callTag + '.findEvents')
   const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
+  // console.timeEnd(callTag + '.findEvents')
   for (const arr of all) {
     for (const { event, depth } of arr) {
       // console.log('event value', event.value.data.value)
@@ -345,7 +374,7 @@ async function findSortedEvents (events, head, tail) {
   const sorted = Array.from(buckets)
     .sort((a, b) => b[0] - a[0])
     .flatMap(([, es]) => es.sort((a, b) => (String(a.cid) < String(b.cid) ? -1 : 1)))
-  // console.log('sorted', sorted.map(s => s.value.data.value))
+  // console.log('sorted', sorted.map(s => s.cid))
 
   return sorted
 }
@@ -357,11 +386,14 @@ async function findSortedEvents (events, head, tail) {
  * @returns {Promise<Array<{ event: EventBlockView<EventData>, depth: number }>>}
  */
 async function findEvents (events, start, end, depth = 0) {
-  // console.log('findEvents', start)
+  // console.log('findEvents', start.toString(), end.toString(), depth)
   const event = await events.get(start)
+  const send = String(end)
   const acc = [{ event, depth }]
   const { parents } = event.value
-  if (parents.length === 1 && String(parents[0]) === String(end)) return acc
+  // if (parents.length === 1 && String(parents[0]) === send) return acc
+  if (parents.findIndex((p) => String(p) === send) !== -1) return acc
+  // if (parents.length === 1) return acc
   const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
 }
