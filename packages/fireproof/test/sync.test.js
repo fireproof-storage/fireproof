@@ -58,7 +58,7 @@ describe('Sync', () => {
     const result4 = await database2.get('f4s35c')
     assert.equal(result4.name, 'frank')
 
-    console.log('sync complete')
+    // console.log('sync complete')
 
     let done
     const doneP = new Promise((resolve) => { done = resolve })
@@ -172,7 +172,7 @@ describe('Sync', () => {
       assert(db1resp.id, 'should have id')
     }
 
-    await sleep(3000)
+    await sleep(300)
 
     const result3 = await db2.get('id1')
     const result4 = await database.get('id1')
@@ -185,9 +185,9 @@ describe('Sync', () => {
 
     const r5 = await db2.put({ _id: 'after', name: 'after' })
     assert(r5.id)
-    await sleep(2000)
+    await sleep(200)
 
-    console.log('do get')
+    // console.log('do get')
 
     const after = await db2.get('after')
     assert.equal(after.name, 'after')
@@ -201,7 +201,8 @@ describe('Sync', () => {
     // const result4 = await database.get('f4s35c')
     // assert.equal(result4.name, 'Frank')
   }).timeout(10000)
-
+  it('two database that start out different')
+  it('use promise all to write a lot in parallel')
   it('with a medium clock', async () => {
     const db2 = Fireproof.storage()
     await setupDb(db2)
@@ -230,11 +231,11 @@ describe('Sync', () => {
 
     const rxb = await db2.put({ _id: 'betweenb', name: 'betweenb' })
     assert(rxb.id)
-    await sleep(500)
+    await sleep(50)
 
     const rx1 = await database.put({ _id: 'between1', name: 'between1' })
     assert(rx1.id)
-    await sleep(500)
+    await sleep(50)
 
     for (const i of Array(5).keys()) {
       const response = await db2.put({ _id: 'id' + i, name: 'two' + i })
@@ -244,10 +245,10 @@ describe('Sync', () => {
       const db1resp = await database.put({ _id: 'id' + i, name: 'one' + i })
       assert(db1resp)
       assert(db1resp.id, 'should have id')
-      console.log('putting', i, database.clockToJSON(), db2.clockToJSON())
+      // console.log('putting', i, database.clockToJSON(), db2.clockToJSON())
     }
 
-    await sleep(3000)
+    await sleep(300)
 
     const result3 = await db2.get('id1')
     const result4 = await database.get('id1')
@@ -255,24 +256,24 @@ describe('Sync', () => {
     // assert.equal(result4.name, result3.name)
 
     // console.log('clock0', database.clockToJSON())
-    console.log('clock4', db2.clockToJSON())
+    // console.log('clock4', db2.clockToJSON())
     // assert.deepEqual(database.clockToJSON(), database4.clockToJSON())
 
     const r5 = await db2.put({ _id: 'after2', name: 'after2' })
     assert(r5.id)
-    await sleep(500)
+    await sleep(50)
 
     const r6 = await database.put({ _id: 'after1', name: 'after1' })
     assert(r6.id)
-    await sleep(2000)
+    await sleep(200)
 
-    console.log('do get')
+    // console.log('do get')
 
     const after = await db2.get('after2')
     assert.equal(after.name, 'after2')
 
-    const clvis = await db2.visClock()
-    console.log(clvis.vis)
+    // const clvis = await db2.visClock()
+    // console.log(clvis.vis)
 
     // const result3 = await database.get('b2s35c')
     // assert.equal(result3.name, 'Bob')

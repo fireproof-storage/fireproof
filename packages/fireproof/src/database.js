@@ -306,9 +306,9 @@ export class Database {
   }
 
   applyClock (prevClock, newClock) {
-    console.log('applyClock', prevClock.length, prevClock.map((cid) => cid.toString()))
-    console.log('newClock', newClock.length, newClock.map((cid) => cid.toString()))
-    console.log('this.clock', this.clock.length, this.clockToJSON())
+    // console.log('prevClock', prevClock.length, prevClock.map((cid) => cid.toString()))
+    // console.log('newClock', newClock.length, newClock.map((cid) => cid.toString()))
+    // console.log('this.clock', this.clock.length, this.clockToJSON())
     const stPrev = prevClock.map(cid => cid.toString())
     const keptPrevClock = this.clock.filter(cid => stPrev.indexOf(cid.toString()) === -1)
     const merged = keptPrevClock.concat(newClock)
@@ -319,7 +319,7 @@ export class Database {
     this.clock = Array.from(uniquebyCid.values()).sort((a, b) => a.toString().localeCompare(b.toString()))
     this.rootCache = null
     this.eventsCache.clear()
-    console.log('afterClock', this.clock.length, this.clockToJSON())
+    // console.log('afterClock', this.clock.length, this.clockToJSON())
   }
 
   //   /**

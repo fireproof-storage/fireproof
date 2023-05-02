@@ -249,7 +249,7 @@ export async function root (inBlocks, head, doFull = false) {
   if (!head.length) {
     throw new Error('no head')
   }
-  console.log('root', head.map(h => h.toString()))
+  // console.log('root', head.map(h => h.toString()))
   const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head, null, doFull)
   // todo maybe these should go to a temp blockstore?
   await doTransaction(
@@ -316,10 +316,10 @@ async function rootOrCache (blocks, head, rootCache, doFull = false) {
     clockCIDs = rootCache.clockCIDs
   } else {
     // console.log('finding root')
-    const callTag = Math.random().toString(36).substring(7)
-    console.time(callTag + '.root')
+    // const callTag = Math.random().toString(36).substring(7)
+    // console.time(callTag + '.root')
     ;({ node, clockCIDs } = await root(blocks, head, doFull))
-    console.timeEnd(callTag + '.root')
+    // console.timeEnd(callTag + '.root')
     // console.log('found root')
   }
   return { node, clockCIDs }
@@ -362,7 +362,6 @@ export async function visMerkleTree (blocks, head) {
   // if (!head) return
   if (head && !Array.isArray(head)) {
     const getBl = makeGetBlock(blocks)
-    console.log('getbl', getBl)
     const prollyRootNode = await load({
       cid: head,
       get: getBl.getBlock,
