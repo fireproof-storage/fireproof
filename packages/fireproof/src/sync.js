@@ -130,7 +130,7 @@ export class Sync {
   }
 
   async sendUpdate (blockstore) {
-    console.log('send update from', this.database.instanceId)
+    // console.log('send update from', this.database.instanceId)
     // todo should send updates since last sync
     const newCar = await blocksToCarBlock(blockstore.lastCid, blockstore)
     this.peer.send(newCar.bytes)
