@@ -249,7 +249,7 @@ export async function root (inBlocks, head, doFull = false) {
   if (!head.length) {
     throw new Error('no head')
   }
-  console.log('root', head.toString())
+  console.log('root', head.map(h => h.toString()))
   const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head, null, doFull)
   // todo maybe these should go to a temp blockstore?
   await doTransaction(
