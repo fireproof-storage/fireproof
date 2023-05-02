@@ -1,5 +1,6 @@
 import SimplePeer from 'simple-peer'
 import { parseCID } from './database.js'
+import { decodeEventBlock } from './clock.js'
 import { blocksToCarBlock, blocksToEncryptedCarBlock } from './valet.js'
 import { CarReader } from '@ipld/car'
 
@@ -15,7 +16,7 @@ export class Sync {
    */
   constructor (database, PeerClass = SimplePeer) {
     this.database = database
-    this.database.blocks.syncs.add(this)
+    this.database.blocks.syncs.add(this) // should this happen during setup?
     this.PeerClass = PeerClass
     this.pushBacklog = new Promise((resolve, reject) => {
       this.pushBacklogResolve = resolve
@@ -92,7 +93,14 @@ export class Sync {
         get: async cid => await reader.get(cid),
         lastCid: [...blz][0].cid // doesn't matter
       }, false)
-      this.database.applyClock([], roots)
+      // first arg could be the roots parents?
+      // get the roots parents
+      const parents = await Promise.all(roots.map(async (cid) => {
+        const rbl = await reader.get(cid)
+        const block = await decodeEventBlock(rbl.bytes)
+        return block.value.parents
+      }))
+      this.database.applyClock(parents.flat(), roots)
       this.database.notifyReset()
       // console.log('after', this.database.clockToJSON())
       this.pushBacklogResolve({ ok: true })

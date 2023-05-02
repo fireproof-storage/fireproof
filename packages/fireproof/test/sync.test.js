@@ -172,7 +172,6 @@ describe('Sync', () => {
       assert(db1resp.id, 'should have id')
     }
 
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
     await sleep(3000)
 
     const result3 = await db2.get('id1')
@@ -195,6 +194,85 @@ describe('Sync', () => {
 
     // const clvis = await db2.visClock()
     // console.log(clvis.vis)
+
+    // const result3 = await database.get('b2s35c')
+    // assert.equal(result3.name, 'Bob')
+
+    // const result4 = await database.get('f4s35c')
+    // assert.equal(result4.name, 'Frank')
+  }).timeout(10000)
+
+  it('with a medium clock', async () => {
+    const db2 = Fireproof.storage()
+    await setupDb(db2)
+
+    assert.deepEqual(database.clockToJSON(), db2.clockToJSON())
+
+    for (const i of Array(5).keys()) {
+      const response = await db2.put({ _id: 'id' + i, name: 'two' + i })
+      assert(response)
+      assert(response.id, 'should have id')
+
+      const db1resp = await database.put({ _id: 'id' + i, name: 'one' + i })
+      assert(db1resp)
+      assert(db1resp.id, 'should have id')
+    }
+
+    const result2 = await database.get('id1')
+    assert.equal(result2.name, 'one1')
+
+    // const newClock = database4.clockToJSON()
+
+    await setupSync(database, db2)
+
+    const rx = await db2.put({ _id: 'between', name: 'between' })
+    assert(rx.id)
+
+    const rxb = await db2.put({ _id: 'betweenb', name: 'betweenb' })
+    assert(rxb.id)
+    await sleep(500)
+
+    const rx1 = await database.put({ _id: 'between1', name: 'between1' })
+    assert(rx1.id)
+    await sleep(500)
+
+    for (const i of Array(5).keys()) {
+      const response = await db2.put({ _id: 'id' + i, name: 'two' + i })
+      assert(response)
+      assert(response.id, 'should have id')
+
+      const db1resp = await database.put({ _id: 'id' + i, name: 'one' + i })
+      assert(db1resp)
+      assert(db1resp.id, 'should have id')
+      console.log('putting', i, database.clockToJSON(), db2.clockToJSON())
+    }
+
+    await sleep(3000)
+
+    const result3 = await db2.get('id1')
+    const result4 = await database.get('id1')
+    assert.equal(result4._id, result3._id)
+    // assert.equal(result4.name, result3.name)
+
+    // console.log('clock0', database.clockToJSON())
+    console.log('clock4', db2.clockToJSON())
+    // assert.deepEqual(database.clockToJSON(), database4.clockToJSON())
+
+    const r5 = await db2.put({ _id: 'after2', name: 'after2' })
+    assert(r5.id)
+    await sleep(500)
+
+    const r6 = await database.put({ _id: 'after1', name: 'after1' })
+    assert(r6.id)
+    await sleep(2000)
+
+    console.log('do get')
+
+    const after = await db2.get('after2')
+    assert.equal(after.name, 'after2')
+
+    const clvis = await db2.visClock()
+    console.log(clvis.vis)
 
     // const result3 = await database.get('b2s35c')
     // assert.equal(result3.name, 'Bob')
@@ -276,3 +354,4 @@ const setupDb = async (database) => {
     assert.equal(response.id, id)
   }
 }
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
