@@ -24,7 +24,7 @@ export class Fireproof {
       if (existing) {
         const existingConfig = JSON.parse(existing)
         const fp = new Database(new TransactionBlockstore(name, existingConfig.key), [], opts)
-        return this.fromJSON(existingConfig, fp)
+        return Fireproof.fromJSON(existingConfig, fp)
       } else {
         const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
         return new Database(new TransactionBlockstore(name, instanceKey), [], opts)
@@ -67,7 +67,7 @@ export class Fireproof {
         index.clock.db = null
       })
     }
-    const snappedDb = this.fromJSON(definition, withBlocks)
+    const snappedDb = Fireproof.fromJSON(definition, withBlocks)
     ;[...database.indexes.values()].forEach(index => {
       snappedDb.indexes.get(index.mapFnString).mapFn = index.mapFn
     })
