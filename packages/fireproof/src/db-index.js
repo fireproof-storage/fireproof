@@ -70,14 +70,23 @@ const makeDoc = ({ key, value }) => ({ _id: key, ...value })
 const indexEntriesForChanges = (changes, mapFn) => {
   const indexEntries = []
   changes.forEach(({ key, value, del }) => {
+    // key is _id, value is the document
     if (del || !value) return
-    mapFn(makeDoc({ key, value }), (k, v) => {
+    let mapCalled = false
+    const mapReturn = mapFn(makeDoc({ key, value }), (k, v) => {
+      mapCalled = true
       if (typeof k === 'undefined') return
       indexEntries.push({
         key: [charwise.encode(k), key],
         value: v || null
       })
     })
+    if (!mapCalled && mapReturn) {
+      indexEntries.push({
+        key: [charwise.encode(mapReturn), key],
+        value: null
+      })
+    }
   })
   return indexEntries
 }
@@ -130,7 +139,11 @@ export class DbIndex {
 
   makeName () {
     const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g
-    const matches = Array.from(this.mapFnString.matchAll(regex), match => match[1].trim())
+    let matches = Array.from(this.mapFnString.matchAll(regex), match => match[1].trim())
+    if (matches.length === 0) {
+      // it's a consise arrow function, match everythign after the arrow
+      matches = /=>\s*(.*)/.exec(this.mapFnString)
+    }
     return matches[1]
   }
 
