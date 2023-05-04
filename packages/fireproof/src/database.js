@@ -351,11 +351,21 @@ export class Database {
    * @returns {Function} - A function that can be called to unregister the listener.
    * @memberof Fireproof
    */
-  registerListener (listener) {
+  subscribe (listener) {
     this.listeners.add(listener)
     return () => {
       this.listeners.delete(listener)
     }
+  }
+
+  /**
+   * @deprecated 0.7.0 - renamed subscribe(listener)
+   * @param {Function} listener - The listener to be called when the clock is updated.
+   * @returns {Function} - A function that can be called to unregister the listener.
+   * @memberof Fireproof
+   */
+  registerListener (listener) {
+    return this.subscribe(listener)
   }
 
   async notifyListeners (changes) {

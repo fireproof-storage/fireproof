@@ -19,7 +19,7 @@ export const FireproofCtx = createContext({
   ready: false
 })
 
-const inboundSubscriberQueue = new Map()
+// const inboundSubscriberQueue = new Map()
 
 let startedSetup = false
 let database
@@ -35,19 +35,19 @@ You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in 
 @param {string} name - The path to the database file
 @param {function(database): void} [defineDatabaseFn] - Synchronous function that defines the database, run this before any async calls
 @param {function(database): Promise<void>} [setupDatabaseFn] - Asynchronous function that sets up the database, run this to load fixture data etc
-@returns {FireproofCtxValue} { addSubscriber, database, ready }
+@returns {FireproofCtxValue} { useLiveQuery, useLiveDocument, database, ready }
 */
 export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}, setupDatabaseFn = async () => {}) {
   const [ready, setReady] = useState(false)
   initializeDatabase(name)
 
+  /**
+   * @deprecated - use database.subscribe instead
+   */
   const addSubscriber = (label, fn) => {
-    inboundSubscriberQueue.set(label, fn)
-  }
-
-  const listenerCallback = async event => {
-    if (event._external) return
-    for (const [, fn] of inboundSubscriberQueue) fn()
+    // todo test that the label is not needed
+    return database.subscribe(fn)
+    // inboundSubscriberQueue.set(label, fn)
   }
 
   useEffect(() => {
@@ -62,9 +62,6 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
       setReady(true)
     }
     doSetup()
-    return database.registerListener((events) => {
-      listenerCallback(events)
-    })
   }, [ready])
 
   function useLiveDocument (initialDoc) {
@@ -82,9 +79,9 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
 
     useEffect(
       () =>
-        database.registerListener(change => {
+        database.subscribe(change => {
           if (change.find(c => c.key === id)) {
-            refreshDoc()
+            refreshDoc() // todo use change.value
           }
         }),
       [id, refreshDoc]
@@ -110,7 +107,7 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
     useEffect(
       () => {
         // todo listen to index changes
-        return database.registerListener(() => {
+        return database.subscribe(() => {
           refreshRows()
         })
       },
