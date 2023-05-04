@@ -28,8 +28,38 @@ const initializeDatabase = name => {
   listener = new Listener(database)
 }
 
-/**
+function useLiveDoc (initialDoc) {
+  const id = initialDoc._id
+  const [doc, setDoc] = useState(initialDoc)
 
+  const saveDoc = async newDoc => {
+    await fireproof.put({ _id: id, ...newDoc })
+  }
+  const refreshDoc = useCallback(async () => {
+    // todo add option for mvcc checks
+    const got = await fireproof.get(id).catch(() => initialDoc)
+    setDoc(got)
+  }, [id, initialDoc])
+
+  useEffect(
+    () =>
+      fireproof.registerListener(change => {
+        if (change.find(c => c.key === id)) {
+          refreshDoc()
+        }
+      }),
+    [id, refreshDoc]
+  )
+
+  useEffect(() => {
+    refreshDoc()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return [doc, saveDoc]
+}
+
+/**
 @function useFireproof
 React hook to initialize a Fireproof database, automatically saving and loading the clock.
 You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in your vite.config.ts
