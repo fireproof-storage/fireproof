@@ -105,6 +105,8 @@ export class DbIndex {
   /**
    * @param {Database} database
    */
+  listeners = new Set()
+
   constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
@@ -353,10 +355,29 @@ export class DbIndex {
       this.dbHead = result.clock
     })
     // todo index subscriptions
-    this.database.notifyExternal('dbIndex')
+    // this.database.notifyExternal('dbIndex')
+    this.notifyListeners()
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
     // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
     return didT
+  }
+
+  /**
+   * Registers a Listener to be called when the Fireproof instance's clock is updated.
+   * Recieves live changes from the database after they are committed.
+   * @param {Function} listener - The listener to be called when the clock is updated.
+   * @returns {Function} - A function that can be called to unregister the listener.
+   * @memberof Fireproof
+   */
+  registerListener (listener) {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
+  }
+
+  async notifyListeners () {
+    for (const listener of this.listeners) {
+      await listener()
+    }
   }
 }
 
