@@ -97,28 +97,34 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
     return [doc, saveDoc]
   }
 
-  function useLiveQuery (mapFn, query = {}, initialRows = []) {
-    const [rows, setRows] = useState(initialRows)
+  function useLiveQuery (mapFn, query = null, initialRows = []) {
+    const [rows, setRows] = useState({ rows: initialRows, proof: {} })
     const [index, setIndex] = useState(null)
 
     const refreshRows = useCallback(async () => {
-      const got = await index.query(query)
+      if (!index) return
+      const got = await index.query(query || {})
       setRows(got)
-    }, [index, query])
+    }, [index, JSON.stringify(query)])
 
     useEffect(
-      () =>
+      () => {
         // todo listen to index changes
-        database.registerListener(() => {
+        return database.registerListener(() => {
           refreshRows()
-        }),
+        })
+      },
       [refreshRows]
     )
 
     useEffect(() => {
+      refreshRows()
+    }, [index])
+
+    useEffect(() => {
       const index = new Index(database, null, mapFn) // this should only be created once
       setIndex(index)
-    }, [])
+    }, [mapFn.toString()])
 
     return rows
   }

@@ -22,9 +22,14 @@ describe('DbIndex query', () => {
       assert(response.id, 'should have id')
       assert.equal(response.id, id)
     }
-    index = new DbIndex(database, 'namesByAge', function (doc, map) {
-      map(doc.age, doc.name)
-    }, null)
+    index = new DbIndex(
+      database,
+      'namesByAge',
+      function (doc, map) {
+        map(doc.age, doc.name)
+      },
+      null
+    )
   })
   it('has a name', () => {
     assert.equal(index.name, 'namesByAge')
@@ -114,7 +119,7 @@ describe('DbIndex query', () => {
 
     const snapClock = database.clock
 
-    const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c').catch((e) => e)
+    const notYet = await database.get('xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c').catch(e => e)
     assert.equal(notYet.message, 'Not found', 'not yet there')
     const response = await database.put({ _id: 'xxxx-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'Xander', age: 53 })
     assert(response)
@@ -126,10 +131,10 @@ describe('DbIndex query', () => {
 
     const snap = Fireproof.snapshot(database, snapClock)
 
-    const aliceOld = await snap.get('a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')// .catch((e) => e)
+    const aliceOld = await snap.get('a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c') // .catch((e) => e)
     assert.equal(aliceOld.name, 'alice', 'alice old')
 
-    const noX = await snap.get(response.id).catch((e) => e)
+    const noX = await snap.get(response.id).catch(e => e)
     assert.equal(noX.message, 'Not found', 'not yet there')
 
     const allresult = await index.query({ range: [2, 90] })
@@ -203,7 +208,7 @@ describe('DbIndex query', () => {
     const oldXander = await snap.get(r1.id)
     assert.equal(oldXander.age, 53, 'old xander')
 
-    const newZander = await database.get(r1.id).catch((e) => e)
+    const newZander = await database.get(r1.id).catch(e => e)
     assert.equal(newZander.message, 'Not found', 'new xander')
 
     const allresult = await index.query({ range: [2, 90] })
@@ -253,6 +258,17 @@ describe('DbIndex query', () => {
     assert(result3.rows)
     assert.equal(result3.rows.length, 1, '1 row matched')
   })
+  it('with includeDocs = true', async () => {
+    const result = await index.query({ range: [39, 44], includeDocs: true })
+    assert.equal(result.rows[0].value, 'alice')
+    assert(result.rows[0].doc, 'doc should be included')
+    assert.equal(result.rows[0].doc.name, 'alice')
+  })
+  it('defaults to includeDocs = false', async () => {
+    const result = await index.query({ range: [39, 44] })
+    assert.equal(result.rows[0].value, 'alice')
+    assert(!result.rows[0].doc, 'doc should not be included')
+  })
 })
 
 describe('DbIndex query with bad index definition', () => {
@@ -270,7 +286,7 @@ describe('DbIndex query with bad index definition', () => {
   it('query index range', async () => {
     const oldErrFn = console.error
     console.error = () => {}
-    await index.query({ range: [39, 44] }).catch((e) => {
+    await index.query({ range: [39, 44] }).catch(e => {
       assert(/missingField/.test(e.message))
       console.error = oldErrFn
     })
@@ -282,10 +298,10 @@ describe('DbIndex query with concise index definition', () => {
   beforeEach(async () => {
     database = Fireproof.storage()
     await database.put({ _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 })
-    index = new DbIndex(database, null, (doc) => doc.age)
+    index = new DbIndex(database, null, doc => doc.age)
   })
   it('sets string fn', () => {
-    assert.equal(index.mapFnString, '(doc) => doc.age')
+    assert.equal(index.mapFnString, 'doc => doc.age')
   })
   it('has a default name', () => {
     assert.equal(index.name, 'doc.age')
@@ -293,5 +309,23 @@ describe('DbIndex query with concise index definition', () => {
   it('query index range', async () => {
     const result = await index.query({ range: [39, 44] })
     assert.equal(result.rows.length, 1)
+    assert.equal(result.rows[0].value, null)
+  })
+  it('defaults to includeDocs = true', async () => {
+    const result = await index.query({ range: [39, 44] })
+    assert.equal(result.rows[0].value, null)
+    assert(result.rows[0].doc, 'doc is included')
+    assert.equal(result.rows[0].doc.name, 'alice')
+  })
+  it('with includeDocs = false', async () => {
+    const result = await index.query({ range: [39, 44], includeDocs: false })
+    assert.equal(result.rows[0].value, null)
+    assert(!result.rows[0].doc, 'doc should not be included')
+  })
+  it('query index range descending', async () => {
+    await database.put({ _id: 'randy-1234', name: 'randy', age: 41 })
+    const result = await index.query({ range: [39, 44], descending: true })
+    assert.equal(result.rows.length, 2)
+    assert.equal(result.rows[0].key, 41)
   })
 })

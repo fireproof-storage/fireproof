@@ -108,7 +108,10 @@ export class DbIndex {
   constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
-      database.indexBlocks = new TransactionBlockstore(database?.name + '.indexes', database.blocks.valet?.getKeyMaterial())
+      database.indexBlocks = new TransactionBlockstore(
+        database?.name + '.indexes',
+        database.blocks.valet?.getKeyMaterial()
+      )
     }
     if (typeof name === 'function') {
       // app is using deprecated API, remove in 0.7
@@ -117,13 +120,8 @@ export class DbIndex {
       mapFn = name
       name = null
     }
-    if (typeof mapFn === 'string') {
-      this.mapFnString = mapFn
-    } else {
-      this.mapFn = mapFn
-      this.mapFnString = mapFn.toString()
-    }
-    this.name = name || this.makeName()
+    this.applyMapFn(mapFn, name)
+
     this.indexById = { root: null, cid: null }
     this.indexByKey = { root: null, cid: null }
     this.dbHead = null
@@ -134,17 +132,34 @@ export class DbIndex {
     }
     this.instanceId = this.database.instanceId + `.DbIndex.${Math.random().toString(36).substring(2, 7)}`
     this.updateIndexPromise = null
-    if (!opts.temporary) { DbIndex.registerWithDatabase(this, this.database) }
+    if (!opts.temporary) {
+      DbIndex.registerWithDatabase(this, this.database)
+    }
+  }
+
+  applyMapFn (mapFn, name) {
+    if (typeof mapFn === 'string') {
+      this.mapFnString = mapFn
+    } else {
+      this.mapFn = mapFn
+      this.mapFnString = mapFn.toString()
+    }
+    this.name = name || this.makeName()
   }
 
   makeName () {
     const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g
     let matches = Array.from(this.mapFnString.matchAll(regex), match => match[1].trim())
     if (matches.length === 0) {
-      // it's a consise arrow function, match everythign after the arrow
       matches = /=>\s*(.*)/.exec(this.mapFnString)
     }
-    return matches[1]
+    if (matches.length === 0) {
+      return this.mapFnString
+    } else {
+      // it's a consise arrow function, match everythign after the arrow
+      this.includeDocsDefault = true
+      return matches[1]
+    }
   }
 
   static registerWithDatabase (inIndex, database) {
@@ -154,7 +169,8 @@ export class DbIndex {
       // merge our inIndex code with the inIndex clock or vice versa
       const existingIndex = database.indexes.get(inIndex.mapFnString)
       // keep the code instance, discard the clock instance
-      if (existingIndex.mapFn) { // this one also has other config
+      if (existingIndex.mapFn) {
+        // this one also has other config
         existingIndex.dbHead = inIndex.dbHead
         existingIndex.indexById.cid = inIndex.indexById.cid
         existingIndex.indexByKey.cid = inIndex.indexByKey.cid
@@ -206,17 +222,60 @@ export class DbIndex {
     // const callId = Math.random().toString(36).substring(2, 7)
     // todo pass a root to query a snapshot
     // console.time(callId + '.updateIndex')
-    update && await this.updateIndex(this.database.indexBlocks)
+    update && (await this.updateIndex(this.database.indexBlocks))
     // console.timeEnd(callId + '.updateIndex')
     // console.time(callId + '.doIndexQuery')
     // console.log('query', query)
-    const response = await doIndexQuery(this.database.indexBlocks, this.indexByKey, query)
+    const response = await this.doIndexQuery(query)
     // console.timeEnd(callId + '.doIndexQuery')
     return {
       proof: { index: await cidsToProof(response.cids) },
-      rows: response.result.map(({ id, key, row }) => {
-        return ({ id, key: charwise.decode(key), value: row })
+      rows: response.result.map(({ id, key, row, doc }) => {
+        return { id, key: charwise.decode(key), value: row, doc }
       })
+    }
+  }
+
+  /**
+   *
+   * @param {any} results
+   * @param {any} query
+   * @returns
+   */
+  async applyQuery (resp, query) {
+    if (query.descending) {
+      resp.result = resp.result.reverse()
+    }
+    if (query.limit) {
+      resp.result = resp.result.slice(0, query.limit)
+    }
+    if (query.includeDocs) {
+      resp.result = await Promise.all(
+        resp.result.map(async row => {
+          const doc = await this.database.get(row.id)
+          return { ...row, doc }
+        })
+      )
+    }
+    return resp
+  }
+
+  async doIndexQuery (query = {}) {
+    await loadIndex(this.database.indexBlocks, this.indexByKey, dbIndexOpts)
+    if (!this.indexByKey.root) return { result: [] }
+    if (query.includeDocs === undefined) query.includeDocs = this.includeDocsDefault
+    if (query.range) {
+      const encodedRange = query.range.map(key => charwise.encode(key))
+      return await this.applyQuery(await this.indexByKey.root.range(...encodedRange), query)
+    } else if (query.key) {
+      const encodedKey = charwise.encode(query.key)
+      return await this.applyQuery(this.indexByKey.root.get(encodedKey), query)
+    } else {
+      const { result, ...all } = await this.indexByKey.root.getAllEntries()
+      return await this.applyQuery(
+        { result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all },
+        query
+      )
     }
   }
 
@@ -236,7 +295,9 @@ export class DbIndex {
       })
     }
     this.updateIndexPromise = this.innerUpdateIndex(blocks)
-    this.updateIndexPromise.finally(() => { this.updateIndexPromise = null })
+    this.updateIndexPromise.finally(() => {
+      this.updateIndexPromise = null
+    })
     return this.updateIndexPromise
   }
 
@@ -263,7 +324,7 @@ export class DbIndex {
       this.dbHead = result.clock
       return
     }
-    const didT = await doTransaction('updateIndex', inBlocks, async (blocks) => {
+    const didT = await doTransaction('updateIndex', inBlocks, async blocks => {
       let oldIndexEntries = []
       let removeByIdIndexEntries = []
       await loadIndex(blocks, this.indexById, idIndexOpts)
@@ -271,15 +332,23 @@ export class DbIndex {
       // console.log('head', this.dbHead, this.indexById)
       if (this.indexById.root) {
         const oldChangeEntries = await this.indexById.root.getMany(result.rows.map(({ key }) => key))
-        oldIndexEntries = oldChangeEntries.result.map((key) => ({ key, del: true }))
+        oldIndexEntries = oldChangeEntries.result.map(key => ({ key, del: true }))
         removeByIdIndexEntries = oldIndexEntries.map(({ key }) => ({ key: key[1], del: true }))
       }
       if (!this.mapFn) {
-        throw new Error('No live map function installed for index, cannot update. Make sure your index definition runs before any queries.' + (this.mapFnString ? ' Your code should match the stored map function source:\n' + this.mapFnString : ''))
+        throw new Error(
+          'No live map function installed for index, cannot update. Make sure your index definition runs before any queries.' +
+            (this.mapFnString ? ' Your code should match the stored map function source:\n' + this.mapFnString : '')
+        )
       }
       const indexEntries = indexEntriesForChanges(result.rows, this.mapFn)
       const byIdIndexEntries = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
-      this.indexById = await bulkIndex(blocks, this.indexById, removeByIdIndexEntries.concat(byIdIndexEntries), idIndexOpts)
+      this.indexById = await bulkIndex(
+        blocks,
+        this.indexById,
+        removeByIdIndexEntries.concat(byIdIndexEntries),
+        idIndexOpts
+      )
       this.indexByKey = await bulkIndex(blocks, this.indexByKey, oldIndexEntries.concat(indexEntries), dbIndexOpts)
       this.dbHead = result.clock
     })
@@ -344,24 +413,4 @@ async function loadIndex (blocks, index, indexOpts) {
     index.root = await load({ cid, get: getBlock, ...indexOpts })
   }
   return index.root
-}
-
-async function applyLimit (results, limit) {
-  results.result = results.result.slice(0, limit)
-  return results
-}
-
-async function doIndexQuery (blocks, indexByKey, query = {}) {
-  await loadIndex(blocks, indexByKey, dbIndexOpts)
-  if (!indexByKey.root) return { result: [] }
-  if (query.range) {
-    const encodedRange = query.range.map((key) => charwise.encode(key))
-    return applyLimit(await indexByKey.root.range(...encodedRange), query.limit)
-  } else if (query.key) {
-    const encodedKey = charwise.encode(query.key)
-    return indexByKey.root.get(encodedKey)
-  } else {
-    const { result, ...all } = await indexByKey.root.getAllEntries()
-    return applyLimit({ result: result.map(({ key: [k, id], value }) => ({ key: k, id, row: value })), ...all }, query.limit)
-  }
 }
