@@ -89,9 +89,9 @@ export class Database {
   }
 
   // used be indexes etc to notify database listeners of new availability
-  async notifyExternal (source = 'unknown') {
-    await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
-  }
+  // async notifyExternal (source = 'unknown') {
+  //   // await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
+  // }
 
   /**
    * Returns the changes made to the Fireproof instance since the specified event.
@@ -351,11 +351,21 @@ export class Database {
    * @returns {Function} - A function that can be called to unregister the listener.
    * @memberof Fireproof
    */
-  registerListener (listener) {
+  subscribe (listener) {
     this.listeners.add(listener)
     return () => {
       this.listeners.delete(listener)
     }
+  }
+
+  /**
+   * @deprecated 0.7.0 - renamed subscribe(listener)
+   * @param {Function} listener - The listener to be called when the clock is updated.
+   * @returns {Function} - A function that can be called to unregister the listener.
+   * @memberof Fireproof
+   */
+  registerListener (listener) {
+    return this.subscribe(listener)
   }
 
   async notifyListeners (changes) {

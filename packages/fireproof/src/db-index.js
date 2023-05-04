@@ -238,7 +238,7 @@ export class DbIndex {
 
   /**
    *
-   * @param {any} results
+   * @param {any} resp
    * @param {any} query
    * @returns
    */
@@ -353,7 +353,7 @@ export class DbIndex {
       this.dbHead = result.clock
     })
     // todo index subscriptions
-    this.database.notifyExternal('dbIndex')
+    // this.database.notifyExternal('dbIndex')
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
     // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
     return didT

@@ -8,7 +8,9 @@
  * @param {Function} routingFn - The routing function to apply to each entry in the database.
  */
 // import { ChangeEvent } from './db-index'
-
+/**
+ * @deprecated since version 0.7.0
+ */
 export class Listener {
   subcribers = new Map()
   doStopListening = null
