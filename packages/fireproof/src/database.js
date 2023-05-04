@@ -89,9 +89,9 @@ export class Database {
   }
 
   // used be indexes etc to notify database listeners of new availability
-  async notifyExternal (source = 'unknown') {
-    await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
-  }
+  // async notifyExternal (source = 'unknown') {
+  //   // await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
+  // }
 
   /**
    * Returns the changes made to the Fireproof instance since the specified event.

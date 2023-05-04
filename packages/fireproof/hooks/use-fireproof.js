@@ -1,6 +1,6 @@
 // @ts-ignore
 import { useEffect, useState, useCallback, createContext } from 'react'
-import { Fireproof, Index, Listener } from '@fireproof/core'
+import { Fireproof, Index } from '@fireproof/core'
 
 /**
 @typedef {Object} FireproofCtxValue
@@ -23,11 +23,9 @@ const inboundSubscriberQueue = new Map()
 
 let startedSetup = false
 let database
-let listener
 const initializeDatabase = name => {
   if (database) return
   database = Fireproof.storage(name)
-  listener = new Listener(database)
 }
 
 /**
@@ -62,9 +60,11 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
         await setupDatabaseFn(database)
       }
       setReady(true)
-      listener.on('*', listenerCallback) // hushed('*', listenerCallback, 250))
     }
     doSetup()
+    return database.registerListener((events) => {
+      listenerCallback(events)
+    })
   }, [ready])
 
   function useLiveDocument (initialDoc) {
