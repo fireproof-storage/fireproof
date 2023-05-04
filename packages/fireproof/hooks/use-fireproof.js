@@ -1,11 +1,13 @@
 // @ts-ignore
-import { useEffect, useState, createContext } from 'react'
-import { Fireproof, Listener } from '../src/fireproof.js'
+import { useEffect, useState, useCallback, createContext } from 'react'
+import { Fireproof, Index, Listener } from '@fireproof/core'
 
 /**
 @typedef {Object} FireproofCtxValue
 @property {Function} addSubscriber - A function to add a subscriber with a label and function.
 @property {Fireproof} database - An instance of the Fireproof class.
+@property {Function} useLiveQuery - A hook to return a query result
+@property {Function} useLiveDocument - A hook to return a live document
 @property {boolean} ready - A boolean indicating whether the database is ready.
 @param {string} label - A label for the subscriber.
 @param {Function} fn - A function to be added as a subscriber.
@@ -26,37 +28,6 @@ const initializeDatabase = name => {
   if (database) return
   database = Fireproof.storage(name)
   listener = new Listener(database)
-}
-
-function useLiveDoc (initialDoc) {
-  const id = initialDoc._id
-  const [doc, setDoc] = useState(initialDoc)
-
-  const saveDoc = async newDoc => {
-    await fireproof.put({ _id: id, ...newDoc })
-  }
-  const refreshDoc = useCallback(async () => {
-    // todo add option for mvcc checks
-    const got = await fireproof.get(id).catch(() => initialDoc)
-    setDoc(got)
-  }, [id, initialDoc])
-
-  useEffect(
-    () =>
-      fireproof.registerListener(change => {
-        if (change.find(c => c.key === id)) {
-          refreshDoc()
-        }
-      }),
-    [id, refreshDoc]
-  )
-
-  useEffect(() => {
-    refreshDoc()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  return [doc, saveDoc]
 }
 
 /**
@@ -96,8 +67,66 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
     doSetup()
   }, [ready])
 
+  function useLiveDocument (initialDoc) {
+    const id = initialDoc._id
+    const [doc, setDoc] = useState(initialDoc)
+
+    const saveDoc = async newDoc => {
+      await database.put({ _id: id, ...newDoc })
+    }
+    const refreshDoc = useCallback(async () => {
+      // todo add option for mvcc checks
+      const got = await database.get(id).catch(() => initialDoc)
+      setDoc(got)
+    }, [id, initialDoc])
+
+    useEffect(
+      () =>
+        database.registerListener(change => {
+          if (change.find(c => c.key === id)) {
+            refreshDoc()
+          }
+        }),
+      [id, refreshDoc]
+    )
+
+    useEffect(() => {
+      refreshDoc()
+    }, [])
+
+    return [doc, saveDoc]
+  }
+
+  function useLiveQuery (mapFn, query = {}, initialRows = []) {
+    const [rows, setRows] = useState(initialRows)
+    const [index, setIndex] = useState(null)
+
+    const refreshRows = useCallback(async () => {
+      const got = await index.query(query)
+      setRows(got)
+    }, [index, query])
+
+    useEffect(
+      () =>
+        // todo listen to index changes
+        database.registerListener(() => {
+          refreshRows()
+        }),
+      [refreshRows]
+    )
+
+    useEffect(() => {
+      const index = new Index(database, null, mapFn) // this should only be created once
+      setIndex(index)
+    }, [])
+
+    return rows
+  }
+
   return {
     addSubscriber,
+    useLiveQuery,
+    useLiveDocument,
     database,
     ready
   }

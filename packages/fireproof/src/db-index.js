@@ -283,6 +283,7 @@ export class DbIndex {
       this.indexByKey = await bulkIndex(blocks, this.indexByKey, oldIndexEntries.concat(indexEntries), dbIndexOpts)
       this.dbHead = result.clock
     })
+    // todo index subscriptions
     this.database.notifyExternal('dbIndex')
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
     // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
