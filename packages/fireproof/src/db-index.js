@@ -214,7 +214,7 @@ export class DbIndex {
   /**
    * Query object can have {range}
    * @param {DbQuery} query - the query range to use
-   * @returns {Promise<{proof: {}, rows: Array<{id: string, key: string, value: any}>}>}
+   * @returns {Promise<{proof: {}, rows: Array<{id: string, key: string, value: any, doc?: any}>}>}
    * @memberof DbIndex
    * @instance
    */

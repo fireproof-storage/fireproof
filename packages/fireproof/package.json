@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Cloudless database for apps, the browser, and IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",
@@ -88,6 +88,7 @@
       "examples/**/*.tsx",
       "examples/**/dist",
       "out/**",
+      "packages/react/**",
       "rollup.config.js"
     ]
   },
