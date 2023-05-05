@@ -8,6 +8,7 @@ import { CID } from 'multiformats'
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
 // import { CID } from 'multiformats/dist/types/src/cid.js'
+
 // eslint-disable-next-line no-unused-vars
 class Proof {}
 export const parseCID = cid => (typeof cid === 'string' ? CID.parse(cid) : cid)
