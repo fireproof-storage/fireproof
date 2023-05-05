@@ -1,0 +1,34 @@
+{
+  "name": "@fireproof/react",
+  "version": "0.5.9",
+  "description": "React hooks for Fireproof realtime cloudless database",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "keywords": [
+    "react",
+    "database",
+    "json",
+    "live",
+    "sync"
+  ],
+  "author": "J Chris Anderson",
+  "license": "Apache-2.0 OR MIT",
+  "gptdoc": "Fireproof/React/Usage: import { useFireproof } from '@fireproof/react'; function App() { const { useLiveQuery, useLiveDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useLiveDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
+  "dependencies": {
+    "@fireproof/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": ">= 16.8.0",
+    "react-dom": ">= 16.8.0"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "homepage": "https://github.com/fireproof-storage/fireproof#readme"
+}

@@ -1,0 +1,43 @@
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+
+    "plugin:prettier/recommended",
+    "prettier/@typescript-eslint"
+  ],
+  "plugins": [
+    "react",
+    "@typescript-eslint",
+    "prettier",
+    "react-hooks",
+    "simple-import-sort"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "env": { "browser": true, "node": true, "es6": true, "jest": true },
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "settings": {
+    "react": {
+      "pragma": "React",
+      "version": "detect"
+    }
+  },
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "simple-import-sort/sort": "error",
+    "prettier/prettier": ["error"],
+    "linebreak-style": 0,
+    "camelcase": "off",
+    "endOfLine": 0,
+    "@typescript-eslint/camelcase": [
+      "error",
+      {
+        "ignoreDestructuring": true
+      }
+    ],
+    "@typescript-eslint/explicit-function-return-type": 0
+  }
+}
