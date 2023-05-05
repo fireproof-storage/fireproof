@@ -61,9 +61,11 @@ describe('Sync', () => {
     // console.log('sync complete')
 
     let done
-    const doneP = new Promise((resolve) => { done = resolve })
+    const doneP = new Promise(resolve => {
+      done = resolve
+    })
 
-    database2.registerListener(async (event) => {
+    database2.registerListener(async event => {
       const result5 = await database2.get('carol')
       assert.equal(result5.name, 'carol')
       done()
@@ -107,7 +109,8 @@ describe('Sync', () => {
 
     assert.deepEqual(database.clockToJSON(), database4.clockToJSON())
 
-    const docs = [ // capitalized
+    const docs = [
+      // capitalized
       { _id: 'a1s35c', name: 'Alice', age: 40 },
       { _id: 'b2s35c', name: 'Bob', age: 40 },
       { _id: 'f4s35c', name: 'Frank', age: 7 }
@@ -201,7 +204,19 @@ describe('Sync', () => {
     // const result4 = await database.get('f4s35c')
     // assert.equal(result4.name, 'Frank')
   }).timeout(10000)
-  it('two database that start out different')
+  it('two databases that start out different', async () => {
+    const db2 = Fireproof.storage()
+    for (const i of Array(5).keys()) {
+      const ok = await db2.put({ _id: 'testid' + i, name: 'two' + i })
+      assert.equal(ok.id, 'testid' + i)
+    }
+
+    await setupSync(database, db2)
+    await sleep(50)
+
+    const result2 = await database.get('testid1')
+    assert.equal(result2.name, 'two1')
+  })
   it('use promise all to write a lot in parallel')
   it('with a medium clock', async () => {
     const db2 = Fireproof.storage()
@@ -341,7 +356,7 @@ class MockPeer {
   }
 }
 
-const setupDb = async (database) => {
+const setupDb = async database => {
   const docs = [
     { _id: 'a1s35c', name: 'alice', age: 40 },
     { _id: 'b2s35c', name: 'bob', age: 40 },
@@ -355,4 +370,4 @@ const setupDb = async (database) => {
     assert.equal(response.id, id)
   }
 }
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))

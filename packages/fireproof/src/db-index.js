@@ -153,7 +153,7 @@ export class DbIndex {
     if (matches.length === 0) {
       matches = /=>\s*(.*)/.exec(this.mapFnString)
     }
-    if (matches.length === 0) {
+    if (matches === null) {
       return this.mapFnString
     } else {
       // it's a consise arrow function, match everythign after the arrow

@@ -14,6 +14,7 @@ export class Sync {
    * @memberof Sync
    * @static
    */
+  status = 'new'
   constructor (database, PeerClass = SimplePeer) {
     this.database = database
     this.database.blocks.syncs.add(this) // should this happen during setup?
@@ -29,6 +30,7 @@ export class Sync {
   }
 
   async offer () {
+    this.status = 'offering'
     return this.setupPeer(true)
   }
 
@@ -36,11 +38,13 @@ export class Sync {
     const offer = JSON.parse(atob(base64offer))
     const p = this.setupPeer(false)
     this.peer.signal(offer)
+    this.status = 'accepting'
     return p
   }
 
   connect (base64accept) {
     const accept = JSON.parse(atob(base64accept))
+    this.status = 'connecting'
     this.peer.signal(accept)
   }
 
@@ -71,39 +75,46 @@ export class Sync {
       // console.log('not a car', data.toString())
     }
     if (reader) {
+      console.log('got car')
+      this.status = 'parking car'
       const blz = new Set()
       for await (const block of reader.blocks()) {
         blz.add(block)
       }
       const roots = await reader.getRoots()
-      // console.log(
-      //   'got car',
-      //   roots.map(c => c.toString()),
-      //   this.database.clock.map(c => c.toString())
-      // )
-      // console.log(
-      //   'got blocks',
-      //   [...blz].map(({ cid }) => cid.toString())
-      // )
+      console.log(
+        'got car',
+        roots.map(c => c.toString()),
+        this.database.clock.map(c => c.toString())
+      )
+      console.log(
+        'got blocks!',
+        [...blz].map(({ cid }) => cid.toString())
+      )
       // @ts-ignore
       reader.entries = reader.blocks
-      await this.database.blocks.commit({
-        label: 'sync',
-        entries: () => [...blz],
-        get: async cid => await reader.get(cid),
-        lastCid: [...blz][0].cid // doesn't matter
-      }, false)
+      await this.database.blocks.commit(
+        {
+          label: 'sync',
+          entries: () => [...blz],
+          get: async cid => await reader.get(cid),
+          lastCid: [...blz][0].cid // doesn't matter
+        },
+        false
+      )
       // first arg could be the roots parents?
       // get the roots parents
-      const parents = await Promise.all(roots.map(async (cid) => {
-        const rbl = await reader.get(cid)
-        if (!rbl) {
-          console.log('missing root block', cid.toString(), reader)
-          throw new Error('missing root block')
-        }
-        const block = await decodeEventBlock(rbl.bytes)
-        return block.value.parents
-      }))
+      const parents = await Promise.all(
+        roots.map(async cid => {
+          const rbl = await reader.get(cid)
+          if (!rbl) {
+            console.log('missing root block', cid.toString(), reader)
+            throw new Error('missing root block')
+          }
+          const block = await decodeEventBlock(rbl.bytes)
+          return block.value.parents
+        })
+      )
       this.database.applyClock(parents.flat(), roots)
       this.database.notifyReset()
       // console.log('after', this.database.clockToJSON())
@@ -113,6 +124,7 @@ export class Sync {
       const message = JSON.parse(data.toString())
       // console.log('got message', message)
       if (message.ok) {
+        this.status = 'ok'
         this.pushBacklogResolve({ ok: true })
       } else if (message.clock) {
         const reqCidDiff = message
@@ -120,23 +132,34 @@ export class Sync {
         console.log('got diff', reqCidDiff)
         const carBlock = await Sync.makeCar(this.database, null, reqCidDiff.cids)
         if (!carBlock) {
-        // we are full synced
-        // console.log('we are full synced')
+          // we are full synced
+          console.log('we are full synced')
+          this.status = 'full synced'
           this.peer.send(JSON.stringify({ ok: true }))
           // this.pushBacklogResolve({ ok: true })
         } else {
-        // console.log('do send', carBlock.bytes.length)
+          console.log('do send diff', carBlock.bytes.length)
+          this.status = 'sending diff car'
           this.peer.send(carBlock.bytes)
+          console.log('sent diff car')
           // this.pushBacklogResolve({ ok: true })
         }
       }
     }
   }
 
+  destroy () {
+    this.database.blocks.syncs.delete(this)
+    this.status = 'destroyed'
+    this.peer.destroy()
+  }
+
   async sendUpdate (blockstore) {
+    if (!this.peer) return
     // console.log('send update from', this.database.instanceId)
     // todo should send updates since last sync
     const newCar = await blocksToCarBlock(blockstore.lastCid, blockstore)
+    this.status = 'sending update car'
     this.peer.send(newCar.bytes)
   }
 
@@ -149,6 +172,7 @@ export class Sync {
       cids: allCIDs.map(cid => cid.toString())
     }
     // console.log('send diff', reqCidDiff)
+    this.status = 'sending cid diff'
     this.peer.send(JSON.stringify(reqCidDiff))
   }
 

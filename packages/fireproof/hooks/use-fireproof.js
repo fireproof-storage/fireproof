@@ -47,7 +47,7 @@ export function useFireproof (name = 'useFireproof', defineDatabaseFn = () => {}
    */
   const addSubscriber = (label, fn) => {
     // todo test that the label is not needed
-    return database.subscribe(fn)
+    return database.registerListener(fn)
     // inboundSubscriberQueue.set(label, fn)
   }
 

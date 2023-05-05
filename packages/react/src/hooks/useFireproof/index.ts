@@ -6,7 +6,7 @@ interface Document {
   [key: string]: any;
 }
 
-interface FireproofCtxValue {
+export interface FireproofCtxValue {
   database: Fireproof|null;
   useLiveQuery: Function;
   useLiveDocument: Function;
@@ -46,11 +46,9 @@ export function useFireproof(
     database;
   },
 ) : FireproofCtxValue {
-  console.log('useFireproof', name)
   const [ready, setReady] = useState(false);
-  console.log('ready', ready)
   initializeDatabase(name);
-  
+
   useEffect(() => {
     const doSetup = async () => {
       if (ready || startedSetup) return;
