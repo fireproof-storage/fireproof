@@ -156,6 +156,14 @@ importers:
       webpack: 5.78.0_2mtfwo6qacryk7vz2y35qcf42e
       webpack-cli: 5.0.1_webpack@5.78.0
 
+  packages/react:
+    specifiers:
+      '@fireproof/core': workspace:^
+      react: ^18.2.0
+    dependencies:
+      '@fireproof/core': link:../fireproof
+      react: 18.2.0
+
 packages:
 
   /@ampproject/remapping/2.2.0:
