@@ -159,13 +159,14 @@ export class TransactionBlockstore {
    * @memberof TransactionBlockstore
    */
   async commit (innerBlockstore, doSync = true) {
-    // console.log('commit', doSync, innerBlockstore.label)
+    console.log('commit', doSync, innerBlockstore.label)
     await this.doCommit(innerBlockstore)
     if (doSync) {
       // const all =
+      console.log('syncing', innerBlockstore.label)
       await Promise.all([...this.syncs].map(async sync => sync.sendUpdate(innerBlockstore).catch(e => {
-        console.error('sync error', e)
-        this.syncs.delete(sync)
+        console.error('sync error, cancelling', e)
+        sync.destroy()
       })))
     }
   }

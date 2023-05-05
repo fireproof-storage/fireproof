@@ -1,1 +1,1 @@
-export { useFireproof } from './hooks/useFireproof'
+export { useFireproof, FireproofCtx, FireproofCtxValue } from './hooks/useFireproof'

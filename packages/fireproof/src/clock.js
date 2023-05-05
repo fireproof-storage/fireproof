@@ -271,18 +271,30 @@ export async function findCommonAncestorWithSortedEvents (events, children, doFu
 async function findCommonAncestor (events, children) {
   if (!children.length) return
   if (children.length === 1) return children[0]
+
   const candidates = children.map((c) => [c])
+  const visited = new Set()
+
   while (true) {
     let changed = false
     for (const c of candidates) {
       const candidate = await findAncestorCandidate(events, c[c.length - 1])
+
       if (!candidate) continue
+
+      if (visited.has(candidate)) {
+        return candidate // Common ancestor found
+      }
+
+      visited.add(candidate)
       changed = true
       c.push(candidate)
-      const ancestor = findCommonString(candidates)
-      if (ancestor) return ancestor
     }
-    if (!changed) return
+
+    if (!changed) {
+      // No common ancestor found, exhausted candidates
+      return null
+    }
   }
 }
 
@@ -291,29 +303,10 @@ async function findCommonAncestor (events, children) {
  * @param {import('./clock').EventLink<EventData>} root
  */
 async function findAncestorCandidate (events, root) {
+  console.log('findAncestorCandidate', root.toString())
   const { value: event } = await events.get(root)// .catch(() => ({ value: { parents: [] } }))
   if (!event.parents.length) return root
   return event.parents.length === 1 ? event.parents[0] : findCommonAncestor(events, event.parents)
-}
-
-/**
- * @template {{ toString: () => string }} T
- * @param  {Array<T[]>} arrays
- */
-function findCommonString (arrays) {
-  // console.log('findCommonString', arrays.map((a) => a.map((i) => String(i))))
-  arrays = arrays.map((a) => [...a])
-  for (const arr of arrays) {
-    for (const item of arr) {
-      let matched = true
-      for (const other of arrays) {
-        if (arr === other) continue
-        matched = other.some((i) => String(i) === String(item))
-        if (!matched) break
-      }
-      if (matched) return item
-    }
-  }
 }
 
 /**

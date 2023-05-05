@@ -1,7 +1,7 @@
 /* global describe, it */
 // import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, EventBlock, decodeEventBlock, findEventsToSync as findEventsWithProofToSync } from '../src/clock.js'
+import { advance, EventBlock, decodeEventBlock, findEventsToSync } from '../src/clock.js'
 // import { vis } from '../src/clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
@@ -10,7 +10,7 @@ const testAdvance = async (blocks, oldHead, event) => {
   return head
 }
 
-const testFindEventsToSync = async (blocks, head) => (await findEventsWithProofToSync(blocks, head)).events
+const testFindEventsToSync = async (blocks, head) => (await findEventsToSync(blocks, head)).events
 
 async function visHead (blocks, head) {
   head.map(async (cid) => {
@@ -43,6 +43,33 @@ describe('Clock', () => {
     const sinceHead = head
     const toSync = await testFindEventsToSync(blocks, sinceHead)
     assert.equal(toSync.length, 0)
+  })
+
+  it('find the lowest common ancestor in a simple tree structure using findEventsToSync', async () => {
+    setSeq(-1)
+    const blocks = new Blockstore()
+
+    // Create the root event
+    const root = await EventBlock.create(seqEventData())
+    await blocks.put(root.cid, root.bytes)
+
+    // Create two child events for the root event
+    const { event: child1, head: head1 } = await makeNext(blocks, [root.cid], seqEventData())
+    const { event: child2, head: head2 } = await makeNext(blocks, [root.cid], seqEventData())
+
+    // Create two grandchild events, one for each child event
+    const { event: grandchild1, head: head3 } = await makeNext(blocks, [child1.cid], seqEventData())
+    const { event: grandchild2, head: head4 } = await makeNext(blocks, [child2.cid], seqEventData())
+
+    // Find the events to sync between the two grandchild events
+    const { events: toSync } = await findEventsToSync(blocks, [grandchild1.cid, grandchild2.cid])
+
+    // Verify that the toSync array contains both grandchild events and the root event
+    const expectedCids = new Set([grandchild1.cid.toString(), grandchild2.cid.toString(), root.cid.toString()])
+    assert.equal(toSync.length, 3)
+    toSync.forEach(event => {
+      assert(expectedCids.has(event.cid.toString()))
+    })
   })
 
   it('add events sequentially', async () => {
