@@ -54,6 +54,7 @@ export const makeGetBlock = blocks => {
 async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, head, additions, removals = [] }) {
   let cids
   const { key, value, del } = inEvent
+  console.log('createAndSaveNewEvent', root)
   const data = {
     root: root
       ? root.cid
@@ -167,12 +168,12 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   }
 }
 
-async function bigMerge (events, head, getBlock) {
-  const allRoots = await Promise.all(head.map(async h => prollyRootFromAncestor(events, h, getBlock)))
-  console.log('allRoots', allRoots)
-  // todo query over all roots and merge them, but how do they not have a common ancestor? they all start with the _sync root
-  throw new Error('not implemented')
-}
+// async function bigMerge (events, head, getBlock) {
+//   const allRoots = await Promise.all(head.map(async h => prollyRootFromAncestor(events, h, getBlock)))
+//   console.log('allRoots', allRoots)
+//   // todo query over all roots and merge them, but how do they not have a common ancestor? they all start with the _sync root
+//   throw new Error('not implemented')
+// }
 
 const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
   const { getBlock, blocks } = makeGetAndPutBlock(inBlocks) // this is doubled with eventfetcher
@@ -188,14 +189,15 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
       // good semantics mean we can cache the results of this call
       // const {cids, events : bulkSorted } = await findEventsToSync(blocks, head)
       const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head, doFull)
+
       bulkSorted = sorted
-      console.log('sorted', ancestor, JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
+      console.log('sorted', !!ancestor, JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
       if (ancestor) {
         prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
-        if (!prollyRootNode) {
-          prollyRootNode = await bigMerge(events, head, getBlock)
-          // throw new Error('no common ancestor')
-        }
+        // if (!prollyRootNode) {
+        //   prollyRootNode = await bigMerge(events, head, getBlock)
+        //   // throw new Error('no common ancestor')
+        // }
       }
       // console.log('event', event)
     }
@@ -205,7 +207,9 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
 
   // if prolly root node is null, we need to create a new one
   if (!prollyRootNode) {
+    console.log('make new root', bulkOperations.length)
     let root
+    let rootNode
     const newBlocks = []
     // if all operations are deletes, we can just return an empty root
     if (bulkOperations.every(op => op.del)) {
@@ -213,8 +217,11 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
     }
     for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
       root = await node.block
+      rootNode = node
       newBlocks.push(root)
     }
+    // throw new Error('not root time')
+    console.log('made new root', rootNode.constructor.name, root.value)
     return { root, blocks: newBlocks, clockCIDs: await events.all() }
   } else {
     const writeResp = await prollyRootNode.bulk(bulkOperations) // { root: newProllyRootNode, blocks: newBlocks }
@@ -234,7 +241,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
  */
 export async function put (inBlocks, head, event, options) {
   const { bigPut } = makeGetAndPutBlock(inBlocks)
-
+  console.log('major put')
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
     const additions = new Map()
@@ -284,21 +291,24 @@ export async function root (inBlocks, head, doFull = false) {
   if (!head.length) {
     throw new Error('no head')
   }
-  // console.log('root', head.map(h => h.toString()))
-  const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head, null, doFull)
+  console.log('root', head.map(h => h.toString()))
   // todo maybe these should go to a temp blockstore?
-  await doTransaction(
+  return await doTransaction(
     'root',
     inBlocks,
     async transactionBlocks => {
       const { bigPut } = makeGetAndPutBlock(transactionBlocks)
+      const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head, null, doFull)
+
       for (const nb of newBlocks) {
         bigPut(nb)
       }
+
+      return { clockCIDs, node: newProllyRootNode }
     },
     false
   )
-  return { clockCIDs, node: newProllyRootNode }
+  // return { clockCIDs, node: newProllyRootNode }
 }
 
 /**
@@ -346,16 +356,23 @@ async function rootOrCache (blocks, head, rootCache, doFull = false) {
   let node
   let clockCIDs
   if (!doFull && rootCache && rootCache.root) {
-    // console.log('get root from cache', rootCache)
+    console.log('get root from cache', rootCache)
     node = rootCache.root
     clockCIDs = rootCache.clockCIDs
   } else {
     // console.log('finding root')
     // const callTag = Math.random().toString(36).substring(7)
     // console.time(callTag + '.root')
+    //
+    // const prevClock = [...this.clock]
+
     ;({ node, clockCIDs } = await root(blocks, head, doFull))
+
+    // this.applyClock(prevClock, result.head)
+    // await this.notifyListeners([decodedEvent])
+
     // console.timeEnd(callTag + '.root')
-    // console.log('found root')
+    console.log('found root', node)
   }
   return { node, clockCIDs }
 }
