@@ -287,6 +287,7 @@ export class Database {
       }
     }
     const prevClock = [...this.clock]
+    console.log('putToProllyTree', this.clockToJSON())
     const result = await doTransaction(
       'putToProllyTree',
       this.blocks,

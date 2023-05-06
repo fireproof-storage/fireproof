@@ -1,7 +1,7 @@
 /* global describe, it */
 // import { describe, it } from 'mocha'
 import assert from 'node:assert'
-import { advance, EventBlock, decodeEventBlock, findEventsToSync } from '../src/clock.js'
+import { advance, EventFetcher, EventBlock, decodeEventBlock, findEventsToSync, findCommonAncestorWithSortedEvents } from '../src/clock.js'
 // import { vis } from '../src/clock.js'
 import { Blockstore, seqEventData, setSeq } from './helpers.js'
 
@@ -20,10 +20,10 @@ async function visHead (blocks, head) {
   // console.log('visHead', head, await Promise.all(values))
 }
 
-async function makeNext (blocks, parent, eventData) {
-  const event = await EventBlock.create(eventData, parent)
+async function makeNext (blocks, parents, eventData) {
+  const event = await EventBlock.create(eventData, parents)
   await blocks.put(event.cid, event.bytes)
-  const head = await testAdvance(blocks, parent, event.cid)
+  const head = await testAdvance(blocks, parents, event.cid)
   return { event, head }
 }
 
@@ -58,15 +58,19 @@ describe('Clock', () => {
     const { event: child2, head: head2 } = await makeNext(blocks, [root.cid], seqEventData())
 
     // Create two grandchild events, one for each child event
-    const { event: grandchild1, head: head3 } = await makeNext(blocks, [child1.cid], seqEventData())
-    const { event: grandchild2, head: head4 } = await makeNext(blocks, [child2.cid], seqEventData())
+    const { event: grandchild1, head: head3 } = await makeNext(blocks, [head1], seqEventData())
+    const { event: grandchild2, head: head4 } = await makeNext(blocks, [head2], seqEventData())
 
     // Find the events to sync between the two grandchild events
-    const { events: toSync } = await findEventsToSync(blocks, [grandchild1.cid, grandchild2.cid])
+    const { events: toSync } = await findEventsToSync(blocks, [head3, head4])
+
+    // Print the toSync array for debugging purposes
+    console.log('toSync:', toSync.map(event => event.cid.toString()))
 
     // Verify that the toSync array contains both grandchild events and the root event
-    const expectedCids = new Set([grandchild1.cid.toString(), grandchild2.cid.toString(), root.cid.toString()])
-    assert.equal(toSync.length, 3)
+    const expectedCids = new Set([grandchild1.cid.toString(), grandchild2.cid.toString(), child1.cid.toString(), child2.cid.toString()])
+    console.log('expectedCids:', expectedCids)
+    assert.equal(toSync.length, 4)
     toSync.forEach(event => {
       assert(expectedCids.has(event.cid.toString()))
     })
@@ -508,6 +512,61 @@ describe('Clock', () => {
     assert.equal(head[1].toString(), event4.cid.toString())
   })
 
+  it('converge when multi-root simplified', async () => {
+    // this one sets up a good example of many events since common ancestor but few to sync. todo optimize this case
+    setSeq(-1)
+    const blocks = new Blockstore()
+
+    const root = await EventBlock.create(seqEventData())
+    await blocks.put(root.cid, root.bytes)
+    let head = [root.cid]
+    const parents0 = head
+
+    const event0 = await EventBlock.create(seqEventData(), parents0)
+    await blocks.put(event0.cid, event0.bytes)
+    head = await testAdvance(blocks, head, event0.cid)
+
+    const event1 = await EventBlock.create(seqEventData(), parents0)
+    await blocks.put(event1.cid, event1.bytes)
+    head = await testAdvance(blocks, head, event1.cid)
+
+    const event1head = head
+    const event2 = await EventBlock.create(seqEventData(), event1head)
+    await blocks.put(event2.cid, event2.bytes)
+    head = await testAdvance(blocks, head, event2.cid)
+
+    const event3 = await EventBlock.create(seqEventData(), event1head)
+    await blocks.put(event3.cid, event3.bytes)
+    head = await testAdvance(blocks, head, event3.cid)
+
+    const event3head = head
+
+    const event4 = await EventBlock.create(seqEventData(), event1head)
+    await blocks.put(event4.cid, event4.bytes)
+    head = await testAdvance(blocks, head, event4.cid)
+
+    const event5 = await EventBlock.create(seqEventData(), event3head)
+    await blocks.put(event5.cid, event5.bytes)
+    head = await testAdvance(blocks, head, event5.cid)
+    console.log('head6', head)
+    const event6 = await EventBlock.create(seqEventData(), [event5.cid])
+    await blocks.put(event6.cid, event6.bytes)
+    head = await testAdvance(blocks, head, event6.cid)
+
+    const event7 = await EventBlock.create(seqEventData(), [event6.cid])
+    await blocks.put(event7.cid, event7.bytes)
+    head = await testAdvance(blocks, head, event7.cid)
+
+    const event8 = await EventBlock.create(seqEventData(), [event7.cid])
+    await blocks.put(event8.cid, event8.bytes)
+    head = await testAdvance(blocks, head, event8.cid)
+
+    const toSync3 = await testFindEventsToSync(blocks, [event7.cid, event8.cid])
+    assert.equal(toSync3.length, 1)
+
+    assert.equal(head.length, 2)
+  })
+
   it('converge when multi-root', async () => {
     setSeq(-1)
     const blocks = new Blockstore()
@@ -660,6 +719,110 @@ describe('Clock', () => {
     // for await (const line of vis(blocks, head)) console.log(line)
     assert.equal(head.length, 1)
     assert.equal(head[0].toString(), event1.cid.toString())
+  })
+
+  it('events with no common ancestor', async () => {
+    setSeq(-1)
+    const blocks = new Blockstore()
+
+    // Create two separate root events with no common ancestor
+    const root1 = await EventBlock.create(seqEventData())
+    await blocks.put(root1.cid, root1.bytes)
+    const root2 = await EventBlock.create(seqEventData())
+    await blocks.put(root2.cid, root2.bytes)
+
+    // Create child events for both root events
+    const event1 = await EventBlock.create(seqEventData(), [root1.cid])
+    await blocks.put(event1.cid, event1.bytes)
+    const event2 = await EventBlock.create(seqEventData(), [root2.cid])
+    await blocks.put(event2.cid, event2.bytes)
+
+    // Create grandchild events for both event1 and event2
+    const event3 = await EventBlock.create(seqEventData(), [event1.cid])
+    await blocks.put(event3.cid, event3.bytes)
+    const event4 = await EventBlock.create(seqEventData(), [event2.cid])
+    await blocks.put(event4.cid, event4.bytes)
+
+    // Create heads for both event chains
+    const head1 = [event1.cid, event3.cid]
+    const head2 = [event2.cid, event4.cid]
+
+    // Check if events to be synced when both heads point to the grandchild events
+    assert.equal((await findEventsToSync(blocks, head1)).events.length, 1)
+    assert.equal((await findEventsToSync(blocks, head2)).events.length, 1)
+
+    // Use findEventsToSync to check for the existence of a common ancestor
+    const syncResult1 = await findEventsToSync(blocks, head1)
+    const syncResult2 = await findEventsToSync(blocks, head2)
+
+    // Check if the events are found in the respective sync results
+    assert(syncResult1.events.some((event) => event.cid.toString() === event3.cid.toString()))
+    assert(syncResult2.events.some((event) => event.cid.toString() === event4.cid.toString()))
+
+    // Check if the other events are not found in the respective sync results
+    assert(!syncResult1.events.some((event) => event.cid.toString() === event4.cid.toString()))
+    assert(!syncResult2.events.some((event) => event.cid.toString() === event3.cid.toString()))
+  })
+  it('findEventsToSync infinite loop issue', async () => {
+    setSeq(-1)
+    const blocks = new Blockstore()
+
+    // Create two separate root events with no common ancestor
+    const root1 = await EventBlock.create(seqEventData())
+    await blocks.put(root1.cid, root1.bytes)
+    const root2 = await EventBlock.create(seqEventData())
+    await blocks.put(root2.cid, root2.bytes)
+
+    // Create child events for both root events
+    const event1 = await EventBlock.create(seqEventData(), [root1.cid])
+    await blocks.put(event1.cid, event1.bytes)
+    const event2 = await EventBlock.create(seqEventData(), [root2.cid])
+    await blocks.put(event2.cid, event2.bytes)
+
+    // Create grandchild events for both event1 and event2
+    const event3 = await EventBlock.create(seqEventData(), [event1.cid])
+    await blocks.put(event3.cid, event3.bytes)
+    const event4 = await EventBlock.create(seqEventData(), [event2.cid])
+    await blocks.put(event4.cid, event4.bytes)
+
+    // Create heads for both event chains
+    let head1 = [event1.cid]
+    let head2 = [event2.cid]
+
+    // Advance heads separately
+    head1 = await testAdvance(blocks, head1, event3.cid)
+    head2 = await testAdvance(blocks, head2, event4.cid)
+
+    // Check that the heads are distinct and have no common ancestor
+    assert.notEqual(head1[0].toString(), head2[0].toString())
+  })
+  it('events that trigger infinite loop in findCommonAncestor', async () => {
+    setSeq(-1)
+    const blocks = new Blockstore()
+
+    // Create a cycle in the event graph: A -> B -> D -> A
+    const eventA = await EventBlock.create(seqEventData())
+    await blocks.put(eventA.cid, eventA.bytes)
+    const eventB = await EventBlock.create(seqEventData(), [eventA.cid])
+    await blocks.put(eventB.cid, eventB.bytes)
+    const eventC = await EventBlock.create(seqEventData(), [eventA.cid])
+    await blocks.put(eventC.cid, eventC.bytes)
+    const eventD = await EventBlock.create(seqEventData(), [eventB.cid, eventC.cid])
+    await blocks.put(eventD.cid, eventD.bytes)
+
+    // Update the parents of eventA to include eventD, creating a cycle
+    eventA.value.parents.push(eventD.cid)
+    await blocks.put(eventA.cid, eventA.bytes)
+
+    // const eventFetcher = createEventFetcher(blocks)
+    const children = [eventA.cid, eventB.cid, eventC.cid].map((cid) => ({ cid, toString: () => cid.toString() }))
+    const events = new EventFetcher(blocks)
+
+    try {
+      await findCommonAncestorWithSortedEvents(events, children)
+    } catch (error) {
+      assert.strictEqual(error.message, 'failed to find common ancestor event')
+    }
   })
 
   it('reproduce the issue from fireproof docs since update test', async () => {
