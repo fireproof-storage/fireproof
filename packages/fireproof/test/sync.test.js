@@ -214,6 +214,9 @@ describe('Sync', () => {
     await setupSync(database, db2)
     await sleep(50)
 
+    const alldocs = await database.allDocuments()
+    assert.equal(alldocs.rows.length, 5)
+
     const resultx2 = await database.get('a1s35c')
     assert.equal(resultx2.name, 'alice')
 

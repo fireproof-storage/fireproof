@@ -404,7 +404,7 @@ function findCommonString (arrays) {
  * Find and sort events between the head(s) and the tail.
  * @param {import('./clock').EventFetcher} events
  * @param {any[]} head
- * @param {import('./clock').EventLink<EventData>} tail
+ * @param {import('./clock').EventLink<EventData>[]} tails
  */
 async function findSortedEvents (events, head, tails, doFull) {
   // const callTag = Math.random().toString(36).substring(7)
@@ -429,6 +429,7 @@ async function findSortedEvents (events, head, tails, doFull) {
 
   // console.time(callTag + '.findEvents')
   const all = await (await Promise.all(tails.map((t) => Promise.all(head.map(h => findEvents(events, h, t)))))).flat()
+  console.log('all', all.length)
   // console.timeEnd(callTag + '.findEvents')
   for (const arr of all) {
     for (const { event, depth } of arr) {
