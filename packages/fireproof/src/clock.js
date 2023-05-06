@@ -237,9 +237,10 @@ export async function findEventsToSync (blocks, head) {
   // console.time(callTag + '.findCommonAncestorWithSortedEvents')
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   // console.timeEnd(callTag + '.findCommonAncestorWithSortedEvents')
-  console.log('sorted', sorted.length)
+  console.log('sortedxx', !!ancestor, sorted.length)
   // console.time(callTag + '.contains')
-  const toSync = await asyncFilter(sorted, async uks => !(await contains(events, ancestor, uks.cid)))
+
+  const toSync = ancestor ? await asyncFilter(sorted, async uks => !(await contains(events, ancestor, uks.cid))) : sorted
   // console.timeEnd(callTag + '.contains')
   console.log('toSync.contains', toSync.length)
 
@@ -258,12 +259,13 @@ export async function findCommonAncestorWithSortedEvents (events, children, doFu
   // console.timeEnd(callTag + '.findCommonAncestor')
   // console.log('ancestor', ancestor.toString())
   if (!ancestor) {
-    console.log('no common ancestor')
+    console.log('no common ancestor', children)
     // throw new Error('no common ancestor')
-    return { ancestor: null, sorted: [] }
+    const sorted = await findSortedEvents(events, children, children, doFull)
+    return { ancestor: null, sorted }
   }
   // console.time(callTag + '.findSortedEvents')
-  const sorted = await findSortedEvents(events, children, ancestor, doFull)
+  const sorted = await findSortedEvents(events, children, [ancestor], doFull)
   // console.timeEnd(callTag + '.findSortedEvents')
   console.log('sorted', sorted.length)
   console.log('ancestor', JSON.stringify(ancestor, null, 2))
@@ -404,7 +406,7 @@ function findCommonString (arrays) {
  * @param {any[]} head
  * @param {import('./clock').EventLink<EventData>} tail
  */
-async function findSortedEvents (events, head, tail, doFull) {
+async function findSortedEvents (events, head, tails, doFull) {
   // const callTag = Math.random().toString(36).substring(7)
   // get weighted events - heavier events happened first
   // const callTag = Math.random().toString(36).substring(7)
@@ -414,7 +416,7 @@ async function findSortedEvents (events, head, tail, doFull) {
   head = [...new Set([...head.map(h => h.toString())])]
   // console.log(callTag + '.head', head.length)
 
-  const allEvents = new Set([tail.toString(), ...head])
+  const allEvents = new Set([tails.map((t) => t.toString()).toString(), ...head])
   if (!doFull && allEvents.size === 1) {
     // console.log('head contains tail', tail.toString())
     return []
@@ -426,7 +428,7 @@ async function findSortedEvents (events, head, tail, doFull) {
   // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
 
   // console.time(callTag + '.findEvents')
-  const all = await Promise.all(head.map(h => findEvents(events, h, tail)))
+  const all = await (await Promise.all(tails.map((t) => Promise.all(head.map(h => findEvents(events, h, t)))))).flat()
   // console.timeEnd(callTag + '.findEvents')
   for (const arr of all) {
     for (const { event, depth } of arr) {
