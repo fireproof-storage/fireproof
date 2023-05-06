@@ -14,13 +14,13 @@ describe('Proofs', () => {
     doc = await database.get(ok.id, { mvcc: true })
   })
 
-  it('first put result shoud not include proof', async () => {
+  it('first put result should include proof', async () => {
     assert(ok.proof)
     assert(ok.proof.data)
     assert(ok.proof.clock)
     // console.log('ok', ok)
     assert.equal(ok.proof.data.length, 0)
-    assert.equal(ok.proof.clock.length, 0)
+    assert.equal(ok.proof.clock.length, 2)
 
     // assert.equal(ok.proof.data[0], 'bafyreibsbxxd4ueujryihk6xza2ekwhzsh6pzuu5fysft5ilz7cbw6bjju')
     // assert.equal(ok.proof.clock[0].toString(), 'bafyreiactx5vku7zueq27i5zdrgcjnczxvepceo5yszjqb2exufwrwxg44')
@@ -48,6 +48,6 @@ describe('Proofs', () => {
     assert.equal(doc._proof.data.length, 1)
     assert.equal(doc._proof.clock.length, 1)
     assert.equal(doc._proof.data[0], 'bafyreieilmvxq6wudu46i2ssmuyrmaszr4onzlqxzlvngrczbn7ppyvloq')
-    assert.equal(doc._proof.clock[0].toString(), 'bafyreicj6o5qtersjpqjrgk7thtxnwqwimfnz4cgkw2eme3dcmxkekzvam')
+    assert.equal(doc._proof.clock[0].toString(), 'bafyreiae5g2ule4fcgradd4wygrx6er34opl42hqbhhohkxobabuzq34cu')
   })
 })

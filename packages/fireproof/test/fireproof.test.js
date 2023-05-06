@@ -36,14 +36,14 @@ describe('Fireproof', () => {
   it('mvcc put and get document with _clock that matches', async () => {
     assert(resp0.clock, 'should have clock')
     assert.equal(resp0.clock.length, 1)
-    assert.equal(resp0.clock[0].toString(), 'bafyreiad55hjvlzse7dxt5qwf6xsv4zucuyoracvpcqifpi6pmdaavdkoa')
+    assert.equal(resp0.clock[0].toString(), 'bafyreicjgjkfw7kkxzkhohgqfrh2g27toz23uxeyw2mohliagnmqerw7oa')
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     theDoc._clock = database.clock
     assert.equal(database.clock.length, 1)
     const put2 = await database.put(theDoc)
     assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     assert.equal(put2.clock.length, 1)
-    assert.equal(put2.clock[0].toString(), 'bafyreifupxoz3rrdonecu7zekknjc6itt5w3osxwp3cb6ptigypbsvyf2i')
+    assert.equal(put2.clock[0].toString(), 'bafyreiedvlp3i6icsebn4syhxtm57lkrszevze7gjdbjnrr7kktav7dcqm')
   })
   it('get should return an object instance that is not the same as the one in the db', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
@@ -57,7 +57,7 @@ describe('Fireproof', () => {
   it('get with mvcc option', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
     assert(theDoc._clock, 'should have _clock')
-    assert.equal(theDoc._clock[0].toString(), 'bafyreiad55hjvlzse7dxt5qwf6xsv4zucuyoracvpcqifpi6pmdaavdkoa')
+    assert.equal(theDoc._clock[0].toString(), 'bafyreicjgjkfw7kkxzkhohgqfrh2g27toz23uxeyw2mohliagnmqerw7oa')
   })
   it('get with mvcc option where someone else changed another document first', async () => {
     const theDoc = await database.get('1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', { mvcc: true })
@@ -115,9 +115,9 @@ describe('Fireproof', () => {
   })
   it('allCids', async () => {
     const allCids = await database.allCIDs()
-    assert.equal(allCids.length, 2)
+    assert.equal(allCids.length, 3)
     const storedCids = await database.allStoredCIDs()
-    assert.equal(storedCids.length, 3)
+    assert.equal(storedCids.length, 5)
   })
 
   it('has a factory for making new instances with default settings', async () => {

@@ -259,7 +259,8 @@ export async function findCommonAncestorWithSortedEvents (events, children, doFu
   // console.log('ancestor', ancestor.toString())
   if (!ancestor) {
     console.log('no common ancestor')
-    return { ancestor: null, sorted: [] }
+    throw new Error('no common ancestor')
+    // return { ancestor: null, sorted: [] }
   }
   // console.time(callTag + '.findSortedEvents')
   const sorted = await findSortedEvents(events, children, ancestor, doFull)

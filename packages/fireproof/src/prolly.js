@@ -19,6 +19,8 @@ import { doTransaction } from './blockstore.js'
 import { create as createBlock } from 'multiformats/block'
 const blockOpts = { cache, chunker: bf(30), codec, hasher, compare }
 
+const SYNC_ROOT = 'fireproof' // change this if you want to break sync
+
 /**
  * @typedef {import('./blockstore.js').TransactionBlockstore} TransactionBlockstore
  */
@@ -49,18 +51,20 @@ export const makeGetBlock = blocks => {
  * @param {*} param0
  * @returns
  */
-async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, head, additions, removals = [] }) {
+async function createAndSaveNewEvent ({ inBlocks, root, event: inEvent, head, additions, removals = [] }) {
+  const { bigPut, getBlock } = makeGetAndPutBlock(inBlocks)
+
   let cids
   const { key, value, del } = inEvent
   const data = {
     root: root
       ? root.cid
-    // {
+      : // {
     // cid: root.cid//,
     // bytes: root.bytes, // can we remove this?
     // value: root.value // can we remove this?
     // }
-      : null,
+      null,
     key
   }
   // import('./clock').EventLink<import('./clock').EventData>
@@ -72,16 +76,27 @@ async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, 
     data.type = 'put'
   }
   // console.log('head', head)
-  // if (head.length === 0) {
-  //   const first = await EventBlock.create({
-  //     root: 'bafkqAAAQD8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
-  //     key: null,
-  //     value: null,
-  //     type: 'del'
-  //   }, [])
-  //   bigPut(first)
-  //   head = [first.cid]
-  // }
+  if (head.length === 0) {
+    // create an empty prolly root
+    let emptyRoot
+
+    for await (const node of create({ get: getBlock, list: [{ key: '_sync', value: SYNC_ROOT }], ...blockOpts })) {
+      emptyRoot = await node.block
+      bigPut(emptyRoot)
+    }
+    console.log('emptyRoot', emptyRoot)
+    const first = await EventBlock.create(
+      {
+        root: emptyRoot.cid,
+        key: null,
+        value: null,
+        type: 'del'
+      },
+      []
+    )
+    bigPut(first)
+    head = [first.cid]
+  }
 
   /** @type {import('./clock').EventData} */
   // @ts-ignore
@@ -151,16 +166,22 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   // console.log('prollyRootFromAncestor', ancestor)
   const event = await events.get(ancestor)
   const { root } = event.value.data
-  // console.log('prollyRootFromAncestor', root.cid, JSON.stringify(root.value))
   if (root) {
     return load({ cid: root, get: getBlock, ...blockOpts })
   } else {
-    return null
+    console.log('no root', root) // false means no common ancestor. null means empty database.
+    return root
   }
 }
 
+async function bigMerge (events, head, getBlock) {
+  const allRoots = await Promise.all(head.map(async h => prollyRootFromAncestor(events, h, getBlock)))
+  console.log('allRoots', allRoots)
+  throw new Error('not implemented')
+}
+
 const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
-  const { getBlock, blocks } = makeGetAndPutBlock(inBlocks)
+  const { getBlock, blocks } = makeGetAndPutBlock(inBlocks) // this is doubled with eventfetcher
   let bulkSorted = []
   let prollyRootNode = null
   const events = new EventFetcher(blocks)
@@ -174,9 +195,12 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
       // const {cids, events : bulkSorted } = await findEventsToSync(blocks, head)
       const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head, doFull)
       bulkSorted = sorted
-      // console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
+      console.log('sorted', ancestor, JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
       if (ancestor) {
         prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
+        if (!prollyRootNode) {
+          prollyRootNode = await bigMerge(events, head, getBlock)
+        }
       }
       // console.log('event', event)
     }
