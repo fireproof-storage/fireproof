@@ -177,6 +177,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
 async function bigMerge (events, head, getBlock) {
   const allRoots = await Promise.all(head.map(async h => prollyRootFromAncestor(events, h, getBlock)))
   console.log('allRoots', allRoots)
+  // todo query over all roots and merge them, but how do they not have a common ancestor? they all start with the _sync root
   throw new Error('not implemented')
 }
 
@@ -199,6 +200,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
       if (ancestor) {
         prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
         if (!prollyRootNode) {
+          // throw new Error('no common ancestor')
           prollyRootNode = await bigMerge(events, head, getBlock)
         }
       }
