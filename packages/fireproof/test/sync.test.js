@@ -133,14 +133,14 @@ describe('Sync', () => {
     // const vs = await database.visClock()
     // console.log(vs.vis)
 
-    // const result2 = await database.get('a1s35c')
-    // assert.equal(result2.name, 'Alice')
+    const result2 = await database.get('a1s35c')
+    assert.equal(result2.name, 'Alice')
 
-    // const result3 = await database.get('b2s35c')
-    // assert.equal(result3.name, 'Bob')
+    const result3 = await database.get('b2s35c')
+    assert.equal(result3.name, 'Bob')
 
-    const result4 = await database.get('f4s35c')
-    assert.equal(result4.name, 'Frank')
+    // const result4 = await database.get('f4s35c')
+    // assert.equal(result4.name, 'Frank')
   })
   it('with a complex clock', async () => {
     const db2 = Fireproof.storage()
@@ -198,8 +198,8 @@ describe('Sync', () => {
     // const clvis = await db2.visClock()
     // console.log(clvis.vis)
 
-    // const result3 = await database.get('b2s35c')
-    // assert.equal(result3.name, 'Bob')
+    // const resulty = await database.get('b2s35c')
+    // assert.equal(resulty.name, 'Bob')
 
     // const result4 = await database.get('f4s35c')
     // assert.equal(result4.name, 'Frank')
@@ -216,6 +216,9 @@ describe('Sync', () => {
 
     const result2 = await database.get('testid1')
     assert.equal(result2.name, 'two1')
+
+    const result3 = await db2.get('a1s35c')
+    assert.equal(result3.name, 'alice')
   })
   it('use promise all to write a lot in parallel')
   it('with a medium clock', async () => {
