@@ -19,7 +19,7 @@ import { doTransaction } from './blockstore.js'
 import { create as createBlock } from 'multiformats/block'
 const blockOpts = { cache, chunker: bf(30), codec, hasher, compare }
 
-const SYNC_ROOT = 'fireproof' // change this if you want to break sync
+// const SYNC_ROOT = 'fireproof' // change this if you want to break sync
 
 /**
  * @typedef {import('./blockstore.js').TransactionBlockstore} TransactionBlockstore
@@ -51,20 +51,13 @@ export const makeGetBlock = blocks => {
  * @param {*} param0
  * @returns
  */
-async function createAndSaveNewEvent ({ inBlocks, root, event: inEvent, head, additions, removals = [] }) {
-  const { bigPut, getBlock } = makeGetAndPutBlock(inBlocks)
-
+async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, head, additions, removals = [] }) {
   let cids
   const { key, value, del } = inEvent
   const data = {
     root: root
       ? root.cid
-      : // {
-    // cid: root.cid//,
-    // bytes: root.bytes, // can we remove this?
-    // value: root.value // can we remove this?
-    // }
-      null,
+      : null,
     key
   }
   // import('./clock').EventLink<import('./clock').EventData>
@@ -76,27 +69,27 @@ async function createAndSaveNewEvent ({ inBlocks, root, event: inEvent, head, ad
     data.type = 'put'
   }
   // console.log('head', head)
-  if (head.length === 0) {
-    // create an empty prolly root
-    let emptyRoot
+  // if (head.length === 0) {
+  //   // create an empty prolly root
+  //   let emptyRoot
 
-    for await (const node of create({ get: getBlock, list: [{ key: '_sync', value: SYNC_ROOT }], ...blockOpts })) {
-      emptyRoot = await node.block
-      bigPut(emptyRoot)
-    }
-    console.log('emptyRoot', emptyRoot)
-    const first = await EventBlock.create(
-      {
-        root: emptyRoot.cid,
-        key: null,
-        value: null,
-        type: 'del'
-      },
-      []
-    )
-    bigPut(first)
-    head = [first.cid]
-  }
+  //   for await (const node of create({ get: getBlock, list: [{ key: '_sync', value: SYNC_ROOT }], ...blockOpts })) {
+  //     emptyRoot = await node.block
+  //     bigPut(emptyRoot)
+  //   }
+  //   console.log('emptyRoot', emptyRoot)
+  //   const first = await EventBlock.create(
+  //     {
+  //       root: emptyRoot.cid,
+  //       key: null,
+  //       value: null,
+  //       type: 'del'
+  //     },
+  //     []
+  //   )
+  //   bigPut(first)
+  //   head = [first.cid]
+  // }
 
   /** @type {import('./clock').EventData} */
   // @ts-ignore
@@ -200,8 +193,8 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
       if (ancestor) {
         prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
         if (!prollyRootNode) {
-          // throw new Error('no common ancestor')
           prollyRootNode = await bigMerge(events, head, getBlock)
+          // throw new Error('no common ancestor')
         }
       }
       // console.log('event', event)

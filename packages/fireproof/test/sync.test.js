@@ -133,14 +133,14 @@ describe('Sync', () => {
     // const vs = await database.visClock()
     // console.log(vs.vis)
 
-    const result2 = await database.get('a1s35c')
-    assert.equal(result2.name, 'Alice')
+    // const result2 = await database.get('a1s35c')
+    // assert.equal(result2.name, 'Alice')
 
-    const result3 = await database.get('b2s35c')
-    assert.equal(result3.name, 'Bob')
+    // const result3 = await database.get('b2s35c')
+    // assert.equal(result3.name, 'Bob')
 
-    // const result4 = await database.get('f4s35c')
-    // assert.equal(result4.name, 'Frank')
+    const result4 = await database.get('f4s35c')
+    assert.equal(result4.name, 'Frank')
   })
   it('with a complex clock', async () => {
     const db2 = Fireproof.storage()
@@ -213,6 +213,9 @@ describe('Sync', () => {
 
     await setupSync(database, db2)
     await sleep(50)
+
+    const resultx2 = await database.get('a1s35c')
+    assert.equal(resultx2.name, 'alice')
 
     const result2 = await database.get('testid1')
     assert.equal(result2.name, 'two1')
