@@ -54,11 +54,12 @@ async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, 
   const { key, value, del } = inEvent
   const data = {
     root: root
-      ? {
-          cid: root.cid,
-          bytes: root.bytes, // can we remove this?
-          value: root.value // can we remove this?
-        }
+      ? root.cid
+    // {
+    // cid: root.cid//,
+    // bytes: root.bytes, // can we remove this?
+    // value: root.value // can we remove this?
+    // }
       : null,
     key
   }
@@ -70,6 +71,18 @@ async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, 
     data.value = value
     data.type = 'put'
   }
+  // console.log('head', head)
+  // if (head.length === 0) {
+  //   const first = await EventBlock.create({
+  //     root: 'bafkqAAAQD8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+  //     key: null,
+  //     value: null,
+  //     type: 'del'
+  //   }, [])
+  //   bigPut(first)
+  //   head = [first.cid]
+  // }
+
   /** @type {import('./clock').EventData} */
   // @ts-ignore
   const event = await EventBlock.create(data, head)
@@ -140,7 +153,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   const { root } = event.value.data
   // console.log('prollyRootFromAncestor', root.cid, JSON.stringify(root.value))
   if (root) {
-    return load({ cid: root.cid, get: getBlock, ...blockOpts })
+    return load({ cid: root, get: getBlock, ...blockOpts })
   } else {
     return null
   }
@@ -155,14 +168,17 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
     if (!doFull && head.length === 1) {
       prollyRootNode = await prollyRootFromAncestor(events, head[0], getBlock)
     } else {
-    // Otherwise, we find the common ancestor and update the root and other blocks
-    // todo this is returning more events than necessary, lets define the desired semantics from the top down
-    // good semantics mean we can cache the results of this call
+      // Otherwise, we find the common ancestor and update the root and other blocks
+      // todo this is returning more events than necessary, lets define the desired semantics from the top down
+      // good semantics mean we can cache the results of this call
+      // const {cids, events : bulkSorted } = await findEventsToSync(blocks, head)
       const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head, doFull)
       bulkSorted = sorted
       // console.log('sorted', JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
-      prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
-    // console.log('event', event)
+      if (ancestor) {
+        prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
+      }
+      // console.log('event', event)
     }
   }
 

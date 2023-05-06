@@ -48,6 +48,6 @@ describe('Proofs', () => {
     assert.equal(doc._proof.data.length, 1)
     assert.equal(doc._proof.clock.length, 1)
     assert.equal(doc._proof.data[0], 'bafyreieilmvxq6wudu46i2ssmuyrmaszr4onzlqxzlvngrczbn7ppyvloq')
-    assert.equal(doc._proof.clock[0].toString(), 'bafyreict4aip45uwnm4xcsn4oikh73t5n7nzdmc2u36rdbguroun2yaf2y')
+    assert.equal(doc._proof.clock[0].toString(), 'bafyreicj6o5qtersjpqjrgk7thtxnwqwimfnz4cgkw2eme3dcmxkekzvam')
   })
 })

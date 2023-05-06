@@ -21,17 +21,17 @@ import { CIDCounter } from 'prolly-trees/utils'
 
 /**
  * @typedef {{
-*   type: 'put'|'del'
-*   key: string
-*   value: import('./link').AnyLink
-*   root: import('./link').AnyLink
-* }} EventData
-* @typedef {{
-*   root: import('./link').AnyLink
-*   head: import('./clock').EventLink<EventData>[]
-*   event: import('./clock').EventBlockView<EventData>
-* }} Result
-*/
+ *   type: 'put'|'del'
+ *   key: string
+ *   value: import('./link').AnyLink
+ *   root: import('./link').AnyLink
+ * }} EventData
+ * @typedef {{
+ *   root: import('./link').AnyLink
+ *   head: import('./clock').EventLink<EventData>[]
+ *   event: import('./clock').EventBlockView<EventData>
+ * }} Result
+ */
 
 /**
  * Advance the clock by adding an event.
@@ -45,7 +45,7 @@ import { CIDCounter } from 'prolly-trees/utils'
 export async function advance (blocks, head, event) {
   /** @type {EventFetcher<T>} */
   const events = new EventFetcher(blocks)
-  const headmap = new Map(head.map((cid) => [cid.toString(), cid]))
+  const headmap = new Map(head.map(cid => [cid.toString(), cid]))
 
   // Check if the headmap already includes the event, return head if it does
   if (headmap.has(event.toString())) return { head, cids: await events.all() }
@@ -167,14 +167,16 @@ export async function decodeEventBlock (bytes) {
 async function contains (events, a, b) {
   if (a.toString() === b.toString()) return true
   const [{ value: aevent }, { value: bevent }] = await Promise.all([events.get(a), events.get(b)])
-  const links = [...aevent.parents]
+  // const links = [...aevent.parents]
+  // console.log('aevent', aevent.parents)
+  const links = [...(aevent.parents || [])]
   while (links.length) {
     const link = links.shift()
     if (!link) break
     if (link.toString() === b.toString()) return true
     // if any of b's parents are this link, then b cannot exist in any of the
     // tree below, since that would create a cycle.
-    if (bevent.parents.some((p) => link.toString() === p.toString())) continue
+    if (bevent.parents.some(p => link.toString() === p.toString())) continue
     const { value: event } = await events.get(link)
     links.push(...event.parents)
   }
@@ -190,15 +192,19 @@ async function contains (events, a, b) {
  */
 export async function * vis (blocks, head, options = {}) {
   // @ts-ignore
-  const renderNodeLabel = options.renderNodeLabel ?? ((b) => {
-    // @ts-ignore
-    const { key, root, type } = b.value.data
-    return b.cid.toString() + '\n' + JSON.stringify({ key, root: root.cid.toString(), type }, null, 2).replace(/"/g, '\'')
-  })
+  const renderNodeLabel =
+    options.renderNodeLabel ??
+    (b => {
+      // @ts-ignore
+      const { key, root, type } = b.value.data
+      return (
+        b.cid.toString() + '\n' + JSON.stringify({ key, root: root.cid.toString(), type }, null, 2).replace(/"/g, "'")
+      )
+    })
   const events = new EventFetcher(blocks)
   yield 'digraph clock {'
   yield '  node [shape=point fontname="Courier"]; head;'
-  const hevents = await Promise.all(head.map((link) => events.get(link)))
+  const hevents = await Promise.all(head.map(link => events.get(link)))
   const links = []
   const nodes = new Set()
   for (const e of hevents) {
@@ -231,17 +237,17 @@ export async function findEventsToSync (blocks, head) {
   // console.time(callTag + '.findCommonAncestorWithSortedEvents')
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   // console.timeEnd(callTag + '.findCommonAncestorWithSortedEvents')
-  // console.log('sorted', sorted.length)
+  console.log('sorted', sorted.length)
   // console.time(callTag + '.contains')
-  const toSync = await asyncFilter(sorted, async (uks) => !(await contains(events, ancestor, uks.cid)))
+  const toSync = await asyncFilter(sorted, async uks => !(await contains(events, ancestor, uks.cid)))
   // console.timeEnd(callTag + '.contains')
-  // console.log('toSync.contains', toSync.length)
+  console.log('toSync.contains', toSync.length)
 
   return { cids: events, events: toSync }
 }
 
 const asyncFilter = async (arr, predicate) =>
-  Promise.all(arr.map(predicate)).then((results) => arr.filter((_v, index) => results[index]))
+  Promise.all(arr.map(predicate)).then(results => arr.filter((_v, index) => results[index]))
 
 export async function findCommonAncestorWithSortedEvents (events, children, doFull = false) {
   // console.trace('findCommonAncestorWithSortedEvents')
@@ -252,12 +258,14 @@ export async function findCommonAncestorWithSortedEvents (events, children, doFu
   // console.timeEnd(callTag + '.findCommonAncestor')
   // console.log('ancestor', ancestor.toString())
   if (!ancestor) {
-    throw new Error('failed to find common ancestor event')
+    console.log('no common ancestor')
+    return { ancestor: null, sorted: [] }
   }
   // console.time(callTag + '.findSortedEvents')
   const sorted = await findSortedEvents(events, children, ancestor, doFull)
   // console.timeEnd(callTag + '.findSortedEvents')
-  // console.log('sorted', sorted.length)
+  console.log('sorted', sorted.length)
+  console.log('ancestor', JSON.stringify(ancestor, null, 2))
   return { ancestor, sorted }
 }
 
@@ -268,45 +276,125 @@ export async function findCommonAncestorWithSortedEvents (events, children, doFu
  * @param {import('./clock').EventFetcher} events
  * @param  {import('./clock').EventLink<EventData>[]} children
  */
+// async function NEWfindCommonAncestor (events, children) {
+//   if (!children.length) return
+//   if (children.length === 1) return children[0]
+
+//   const candidates = children.map(c => [c])
+//   const visited = new Set()
+
+//   while (true) {
+//     let changed = false
+//     for (const c of candidates) {
+//       const candidate = await findAncestorCandidate(events, c[c.length - 1])
+
+//       if (!candidate) continue
+
+//       if (visited.has(candidate)) {
+//         return candidate // Common ancestor found
+//       }
+
+//       visited.add(candidate)
+//       changed = true
+//       c.push(candidate)
+//     }
+
+//     if (!changed) {
+//       // No common ancestor found, exhausted candidates
+//       return null
+//     }
+//   }
+// }
+
 async function findCommonAncestor (events, children) {
   if (!children.length) return
   if (children.length === 1) return children[0]
-
   const candidates = children.map((c) => [c])
-  const visited = new Set()
-
+  // console.log(
+  //   'og candidates',
+  //   candidates.map((c) => c.toString())
+  // )
   while (true) {
     let changed = false
     for (const c of candidates) {
       const candidate = await findAncestorCandidate(events, c[c.length - 1])
-
       if (!candidate) continue
 
-      if (visited.has(candidate)) {
-        return candidate // Common ancestor found
-      }
+      // Check if the candidate is already in the list, and if so, skip it.
+      if (c.includes(candidate)) continue
 
-      visited.add(candidate)
+      // if set size is all cids, then no common ancestor
       changed = true
-      c.push(candidate)
+      c.push(candidate) // make set?
+      // console.log('candidate', candidates.map((c) => c.toString()))
+      const ancestor = findCommonString(candidates)
+      if (ancestor) return ancestor
     }
-
-    if (!changed) {
-      // No common ancestor found, exhausted candidates
-      return null
-    }
+    if (!changed) return
   }
 }
+
+// async function OGfindCommonAncestor (events, children) {
+//   if (!children.length) return
+//   if (children.length === 1) return children[0]
+//   const candidates = children.map(c => [c])
+//   console.log(
+//     'og candidates',
+//     candidates.map(c => c.toString())
+//   )
+//   while (true) {
+//     let changed = false
+//     for (const c of candidates) {
+//       const candidate = await findAncestorCandidate(events, c[c.length - 1])
+//       if (!candidate) continue
+//       // if set size is all cids, then no common ancestor
+//       changed = true
+//       c.push(candidate) // make set?
+//       console.log(
+//         'candidate',
+//         candidates.map(c => c.toString())
+//       )
+//       const ancestor = findCommonString(candidates)
+//       if (ancestor) return ancestor
+//     }
+//     if (!changed) return
+//   }
+// }
 
 /**
  * @param {import('./clock').EventFetcher} events
  * @param {import('./clock').EventLink<EventData>} root
  */
 async function findAncestorCandidate (events, root) {
-  console.log('findAncestorCandidate', root.toString())
-  const { value: event } = await events.get(root)// .catch(() => ({ value: { parents: [] } }))
+  const { value: event } = await events.get(root) // .catch(() => ({ value: { parents: [] } }))
+  // console.log(
+  //   'findAncestorCandidate',
+  //   root.toString(),
+  //   'parents',
+  //   event.parents.map(p => p.toString())
+  // )
   if (!event.parents.length) return root
   return event.parents.length === 1 ? event.parents[0] : findCommonAncestor(events, event.parents)
+}
+
+/**
+ * @template {{ toString: () => string }} T
+ * @param  {Array<T[]>} arrays
+ */
+function findCommonString (arrays) {
+  // console.log('findCommonString', arrays.map((a) => a.map((i) => String(i))))
+  arrays = arrays.map(a => [...a])
+  for (const arr of arrays) {
+    for (const item of arr) {
+      let matched = true
+      for (const other of arrays) {
+        if (arr === other) continue
+        matched = other.some(i => String(i) === String(item))
+        if (!matched) break
+      }
+      if (matched) return item
+    }
+  }
 }
 
 /**
@@ -322,7 +410,7 @@ async function findSortedEvents (events, head, tail, doFull) {
 
   /** @type {Map<string, { event: import('./clock').EventBlockView<EventData>, weight: number }>} */
   const weights = new Map()
-  head = [...new Set([...head.map((h) => h.toString())])]
+  head = [...new Set([...head.map(h => h.toString())])]
   // console.log(callTag + '.head', head.length)
 
   const allEvents = new Set([tail.toString(), ...head])
@@ -337,7 +425,7 @@ async function findSortedEvents (events, head, tail, doFull) {
   // console.log(callTag + '.head', head.length, [...head.map((h) => h.toString())], tail.toString())
 
   // console.time(callTag + '.findEvents')
-  const all = await Promise.all(head.map((h) => findEvents(events, h, tail)))
+  const all = await Promise.all(head.map(h => findEvents(events, h, tail)))
   // console.timeEnd(callTag + '.findEvents')
   for (const arr of all) {
     for (const { event, depth } of arr) {
@@ -385,8 +473,8 @@ async function findEvents (events, start, end, depth = 0) {
   const acc = [{ event, depth }]
   const { parents } = event.value
   // if (parents.length === 1 && String(parents[0]) === send) return acc
-  if (parents.findIndex((p) => String(p) === send) !== -1) return acc
+  if (parents.findIndex(p => String(p) === send) !== -1) return acc
   // if (parents.length === 1) return acc
-  const rest = await Promise.all(parents.map((p) => findEvents(events, p, end, depth + 1)))
+  const rest = await Promise.all(parents.map(p => findEvents(events, p, end, depth + 1)))
   return acc.concat(...rest)
 }
