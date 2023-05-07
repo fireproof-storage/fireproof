@@ -311,6 +311,7 @@ export async function findCommonAncestorWithSortedEvents (events, children, doFu
 
 async function findCommonAncestor (events, children) {
   if (!children.length) return
+  children = [...new Set(children)]
   if (children.length === 1) return children[0]
   const candidates = children.map((c) => [c])
   // console.log(

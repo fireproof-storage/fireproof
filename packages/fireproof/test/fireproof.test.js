@@ -3,7 +3,9 @@ import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 // import * as codec from '@ipld/dag-cbor'
 
-let database, resp0
+let database = Fireproof.storage()
+
+let resp0
 
 // const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
@@ -317,7 +319,7 @@ describe('Fireproof', () => {
     assert.equal(res4.rows.length, 1)
   })
 
-  it('provides docs since', async () => {
+  it('provides docs since long', async () => {
     const result = await database.changesSince()
     assert.equal(result.rows.length, 1)
     assert.equal(result.rows[0].key, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')

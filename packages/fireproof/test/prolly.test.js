@@ -156,7 +156,7 @@ class TestPail {
     this.blocks.putSync(result.event.cid, result.event.bytes)
     result.additions.forEach((a) => this.blocks.putSync(a.cid, a.bytes))
     this.head = result.head
-    this.root = result.root.cid
+    this.root = await result.root.address
     // this difference probably matters, but we need to test it
     // this.root = await root(this.blocks, this.head)
     // console.log('prolly PUT', key, value, { head: result.head, additions: result.additions.map(a => a.cid), event: result.event.cid })

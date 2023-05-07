@@ -54,7 +54,7 @@ export const makeGetBlock = blocks => {
 async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, head, additions, removals = [] }) {
   let cids
   const { key, value, del } = inEvent
-  console.log('createAndSaveNewEvent', root.constructor.name, root.entryList)
+  // console.log('createAndSaveNewEvent', root.constructor.name, root.entryList)
   // root = await root.block
   const data = {
     root: root
@@ -223,7 +223,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
     }
     // throw new Error('not root time')
     // root.isThisOne = 'yes'
-    console.log('made new root', root.constructor.name, root.constructor.name)
+    console.log('made new root', root.constructor.name, root.block.cid.toString())
 
     return { root, blocks: newBlocks, clockCIDs: await events.all() }
   } else {
@@ -302,12 +302,13 @@ export async function root (inBlocks, head, doFull = false) {
     async transactionBlocks => {
       const { bigPut } = makeGetAndPutBlock(transactionBlocks)
       const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head, null, doFull)
-      const rootBlock = await newProllyRootNode.block
-      bigPut(rootBlock)
+      //
+      // const rootBlock = await newProllyRootNode.block
+      // bigPut(rootBlock)
       for (const nb of newBlocks) {
         bigPut(nb)
       }
-      console.log('root root', newProllyRootNode.constructor.name, newProllyRootNode)
+      // console.log('root root', newProllyRootNode.constructor.name, newProllyRootNode)
       return { clockCIDs, node: newProllyRootNode }
     },
     false
@@ -328,7 +329,8 @@ export async function eventsSince (blocks, head, since) {
     return { clockCIDs: [], result: [] }
   }
   // @ts-ignore
-  const sinceHead = [...since, ...head] // ?
+  const sinceHead = [...since, ...head].map(h => h.toString()) // ?
+  // console.log('eventsSince', sinceHead.map(h => h.toString()))
   const { cids, events: unknownSorted3 } = await findEventsToSync(blocks, sinceHead)
   return { clockCIDs: cids, result: unknownSorted3.map(({ value: { data } }) => data) }
 }
@@ -376,7 +378,7 @@ async function rootOrCache (blocks, head, rootCache, doFull = false) {
     // await this.notifyListeners([decodedEvent])
 
     // console.timeEnd(callTag + '.root')
-    console.log('found root', node)
+    // console.log('found root', node.entryList)
   }
   return { node, clockCIDs }
 }
