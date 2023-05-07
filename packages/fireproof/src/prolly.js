@@ -58,7 +58,7 @@ async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, 
   // root = await root.block
   const data = {
     root: root
-      ? root.cid // (await root.address)
+      ? (await root.address)
       : null,
     key
   }
@@ -219,7 +219,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
     for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
       // root = await node.block
       root = node
-      newBlocks.push(root)
+      newBlocks.push(await node.block)
     }
     // throw new Error('not root time')
     // root.isThisOne = 'yes'
@@ -276,7 +276,7 @@ export async function put (inBlocks, head, event, options) {
     return createAndSaveNewEvent({
       inBlocks,
       bigPut,
-      root: newProllyRootNode,
+      root: newProllyRootNode, // Block
       event,
       head,
       additions: Array.from(additions.values()) /*, todo? Array.from(removals.values()) */
