@@ -106,7 +106,7 @@ export function useFireproof(
         database.subscribe(() => {
           refreshRows();
         })),
-      [refreshRows],
+      [database, refreshRows],
     );
 
     useEffect(() => {
