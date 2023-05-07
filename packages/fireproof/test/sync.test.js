@@ -201,8 +201,8 @@ describe('Sync', () => {
     // const resulty = await database.get('b2s35c')
     // assert.equal(resulty.name, 'Bob')
 
-    // const result4 = await database.get('f4s35c')
-    // assert.equal(result4.name, 'Frank')
+    // const resultf = await database.get('f4s35c')
+    // assert.equal(resultf.name, 'Frank')
   }).timeout(10000)
   it('two databases that start out different', async () => {
     const db2 = Fireproof.storage()
@@ -211,11 +211,15 @@ describe('Sync', () => {
       assert.equal(ok.id, 'testid' + i)
     }
 
+    const alldocs1 = await database.allDocuments()
+    assert.equal(alldocs1.rows.length, 3)
+
     await setupSync(database, db2)
     await sleep(50)
 
     const alldocs = await database.allDocuments()
-    assert.equal(alldocs.rows.length, 5)
+    console.log('alldocs', alldocs)
+    assert.equal(alldocs.rows.length, 8)
 
     const resultx2 = await database.get('a1s35c')
     assert.equal(resultx2.name, 'alice')
