@@ -39,11 +39,11 @@ export class Valet {
     this.name = name
     this.setKeyMaterial(keyMaterial)
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
-      console.log(
-        'queue worker',
-        tasks.length,
-        tasks.reduce((acc, t) => acc + t.value.length, 0)
-      )
+      // console.log(
+      //   'queue worker',
+      //   tasks.length,
+      //   tasks.reduce((acc, t) => acc + t.value.length, 0)
+      // )
       if (this.uploadFunction) {
         // todo we can coalesce these into a single car file
         return await this.withDB(async db => {

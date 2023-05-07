@@ -8,6 +8,7 @@ import { CID } from 'multiformats'
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
 // import { CID } from 'multiformats/dist/types/src/cid.js'
+
 // eslint-disable-next-line no-unused-vars
 class Proof {}
 export const parseCID = cid => (typeof cid === 'string' ? CID.parse(cid) : cid)
@@ -60,8 +61,8 @@ export class Database {
    * @memberof Fireproof
    * @instance
    */
-  clockToJSON () {
-    return this.clock.map(cid => cid.toString())
+  clockToJSON (clock = null) {
+    return (clock || this.clock).map(cid => cid.toString())
   }
 
   hydrate ({ clock, name, key }) {
@@ -101,21 +102,21 @@ export class Database {
    * @memberof Fireproof
    * @instance
    */
-  async changesSince (event) {
-    // console.log('events for', this.instanceId, event.constructor.name)
-    // console.log('changesSince', this.instanceId, event, this.clock)
+  async changesSince (aClock) {
+    // console.log('events for', this.instanceId, aClock?.constructor.name)
+    // console.log('changesSince', this.instanceId, this.clockToJSON(aClock), this.clockToJSON())
     let rows, dataCIDs, clockCIDs
-    // if (!event) event = []
-    if (event) {
-      event = event.map((cid) => cid.toString())
-      const eventKey = JSON.stringify([...event, ...this.clockToJSON()])
+    // if (!aClock) aClock = []
+    if (aClock && aClock.length > 0) {
+      aClock = aClock.map((cid) => cid.toString())
+      const eventKey = JSON.stringify([...this.clockToJSON(aClock), ...this.clockToJSON()])
 
       let resp
       if (this.eventsCache.has(eventKey)) {
-        console.log('events from cache')
+        // console.log('events from cache')
         resp = this.eventsCache.get(eventKey)
       } else {
-        resp = await eventsSince(this.blocks, this.clock, event)
+        resp = await eventsSince(this.blocks, this.clock, aClock)
         this.eventsCache.set(eventKey, resp)
       }
       const docsMap = new Map()
@@ -276,7 +277,9 @@ export class Database {
    */
   async putToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)
-    if (clock && JSON.stringify(clock) !== JSON.stringify(this.clockToJSON())) {
+    if (clock && JSON.stringify(this.clockToJSON(clock)) !== JSON.stringify(this.clockToJSON())) {
+      // console.log('this.clock', this.clockToJSON())
+      // console.log('that.clock', this.clockToJSON(clock))
       // we need to check and see what version of the document exists at the clock specified
       // if it is the same as the one we are trying to put, then we can proceed
       const resp = await eventsSince(this.blocks, this.clock, event.value._clock)
@@ -286,6 +289,7 @@ export class Database {
       }
     }
     const prevClock = [...this.clock]
+    // console.log('putToProllyTree', this.clockToJSON(), decodedEvent)
     const result = await doTransaction(
       'putToProllyTree',
       this.blocks,

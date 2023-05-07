@@ -14,7 +14,7 @@ describe('Proofs', () => {
     doc = await database.get(ok.id, { mvcc: true })
   })
 
-  it('first put result shoud not include proof', async () => {
+  it('first put result should include empty proof', async () => {
     assert(ok.proof)
     assert(ok.proof.data)
     assert(ok.proof.clock)
@@ -48,6 +48,6 @@ describe('Proofs', () => {
     assert.equal(doc._proof.data.length, 1)
     assert.equal(doc._proof.clock.length, 1)
     assert.equal(doc._proof.data[0], 'bafyreieilmvxq6wudu46i2ssmuyrmaszr4onzlqxzlvngrczbn7ppyvloq')
-    assert.equal(doc._proof.clock[0].toString(), 'bafyreict4aip45uwnm4xcsn4oikh73t5n7nzdmc2u36rdbguroun2yaf2y')
+    assert.equal(doc._proof.clock[0].toString(), 'bafyreicj6o5qtersjpqjrgk7thtxnwqwimfnz4cgkw2eme3dcmxkekzvam')
   })
 })

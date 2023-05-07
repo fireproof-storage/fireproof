@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.5.9",
+  "version": "0.5.13",
   "description": "Cloudless database for apps, the browser, and IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",
@@ -19,7 +19,7 @@
     "lint": "standard",
     "lint:fix": "standard --fix",
     "tsc": "tsc --watch",
-    "build": "rollup -c"
+    "build": "tsc && rollup -c"
   },
   "keywords": [
     "database",
@@ -88,6 +88,7 @@
       "examples/**/*.tsx",
       "examples/**/dist",
       "out/**",
+      "packages/react/**",
       "rollup.config.js"
     ]
   },

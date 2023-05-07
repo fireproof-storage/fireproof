@@ -153,7 +153,7 @@ export class DbIndex {
     if (matches.length === 0) {
       matches = /=>\s*(.*)/.exec(this.mapFnString)
     }
-    if (matches.length === 0) {
+    if (matches === null) {
       return this.mapFnString
     } else {
       // it's a consise arrow function, match everythign after the arrow
@@ -214,7 +214,7 @@ export class DbIndex {
   /**
    * Query object can have {range}
    * @param {DbQuery} query - the query range to use
-   * @returns {Promise<{proof: {}, rows: Array<{id: string, key: string, value: any}>}>}
+   * @returns {Promise<{proof: {}, rows: Array<{id: string, key: string, value: any, doc?: any}>}>}
    * @memberof DbIndex
    * @instance
    */
@@ -351,7 +351,7 @@ export class DbIndex {
       )
       this.indexByKey = await bulkIndex(blocks, this.indexByKey, oldIndexEntries.concat(indexEntries), dbIndexOpts)
       this.dbHead = result.clock
-    })
+    }, false /* don't sync transaction -- maybe move this flag to database.indexBlocks? */)
     // todo index subscriptions
     // this.database.notifyExternal('dbIndex')
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
