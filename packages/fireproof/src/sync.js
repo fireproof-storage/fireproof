@@ -80,22 +80,22 @@ export class Sync {
       // console.log('not a car', data.toString())
     }
     if (reader) {
-      console.log('got car')
+      // console.log('got car')
       this.status = 'parking car'
       const blz = new Set()
       for await (const block of reader.blocks()) {
         blz.add(block)
       }
       const roots = await reader.getRoots()
-      console.log(
-        'got car',
-        roots.map(c => c.toString()),
-        this.database.clock.map(c => c.toString())
-      )
-      console.log(
-        'got blocks!',
-        [...blz].map(({ cid }) => cid.toString())
-      )
+      // console.log(
+      //   'got car',
+      //   roots.map(c => c.toString()),
+      //   this.database.clock.map(c => c.toString())
+      // )
+      // console.log(
+      //   'got blocks!',
+      //   [...blz].map(({ cid }) => cid.toString())
+      // )
       // @ts-ignore
       reader.entries = reader.blocks
       await this.database.blocks.commit(
@@ -134,19 +134,19 @@ export class Sync {
       } else if (message.clock) {
         const reqCidDiff = message
         // this might be a CID diff
-        console.log('got diff', reqCidDiff)
+        // console.log('got diff', reqCidDiff)
         const carBlock = await Sync.makeCar(this.database, null, reqCidDiff.cids)
         if (!carBlock) {
           // we are full synced
-          console.log('we are full synced')
+          // console.log('we are full synced')
           this.status = 'full synced'
           this.peer.send(JSON.stringify({ ok: true }))
           // this.pushBacklogResolve({ ok: true })
         } else {
-          console.log('do send diff', carBlock.bytes.length)
+          // console.log('do send diff', carBlock.bytes.length)
           this.status = 'sending diff car'
           this.peer.send(carBlock.bytes)
-          console.log('sent diff car')
+          // console.log('sent diff car')
           // this.pushBacklogResolve({ ok: true })
         }
       }

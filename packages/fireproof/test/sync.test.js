@@ -218,7 +218,7 @@ describe('Sync', () => {
     await sleep(50)
 
     const alldocs = await database.allDocuments()
-    console.log('alldocs', alldocs)
+    // console.log('alldocs', alldocs)
     assert.equal(alldocs.rows.length, 8)
 
     const resultx2 = await database.get('a1s35c')

@@ -164,7 +164,7 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   if (root) {
     return load({ cid: root, get: getBlock, ...blockOpts })
   } else {
-    console.log('no root', root) // false means no common ancestor. null means empty database.
+    // console.log('no root', root) // false means no common ancestor. null means empty database.
     return root
   }
 }
@@ -192,7 +192,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
       const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head, doFull)
 
       bulkSorted = sorted
-      console.log('sorted', !!ancestor, JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
+      // console.log('sorted', !!ancestor, JSON.stringify(sorted.map(({ value: { data: { key, value } } }) => ({ key, value }))))
       if (ancestor) {
         prollyRootNode = await prollyRootFromAncestor(events, ancestor, getBlock)
         // if (!prollyRootNode) {
@@ -208,7 +208,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
 
   // if prolly root node is null, we need to create a new one
   if (!prollyRootNode) {
-    console.log('make new root', bulkOperations.length)
+    // console.log('make new root', bulkOperations.length)
     let root
     // let rootNode
     const newBlocks = []
@@ -223,7 +223,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
     }
     // throw new Error('not root time')
     // root.isThisOne = 'yes'
-    console.log('made new root', root.constructor.name, root.block.cid.toString())
+    // console.log('made new root', root.constructor.name, root.block.cid.toString())
 
     return { root, blocks: newBlocks, clockCIDs: await events.all() }
   } else {
@@ -244,7 +244,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
  */
 export async function put (inBlocks, head, event, options) {
   const { bigPut } = makeGetAndPutBlock(inBlocks)
-  console.log('major put')
+  // console.log('major put')
   // If the head is empty, we create a new event and return the root and addition blocks
   if (!head.length) {
     const additions = new Map()
@@ -294,7 +294,7 @@ export async function root (inBlocks, head, doFull = false) {
   if (!head.length) {
     throw new Error('no head')
   }
-  console.log('root', head.map(h => h.toString()))
+  // console.log('root', head.map(h => h.toString()))
   // todo maybe these should go to a temp blockstore?
   return await doTransaction(
     'root',
@@ -362,7 +362,7 @@ async function rootOrCache (blocks, head, rootCache, doFull = false) {
   let node
   let clockCIDs
   if (!doFull && rootCache && rootCache.root) {
-    console.log('get root from cache', rootCache)
+    // console.log('get root from cache', rootCache)
     node = rootCache.root
     clockCIDs = rootCache.clockCIDs
   } else {
