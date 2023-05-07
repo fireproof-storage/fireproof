@@ -103,8 +103,8 @@ export class Database {
    * @instance
    */
   async changesSince (aClock) {
-    console.log('events for', this.instanceId, aClock?.constructor.name)
-    console.log('changesSince', this.instanceId, this.clockToJSON(aClock), this.clockToJSON())
+    // console.log('events for', this.instanceId, aClock?.constructor.name)
+    // console.log('changesSince', this.instanceId, this.clockToJSON(aClock), this.clockToJSON())
     let rows, dataCIDs, clockCIDs
     // if (!aClock) aClock = []
     if (aClock && aClock.length > 0) {
@@ -278,8 +278,8 @@ export class Database {
   async putToProllyTree (decodedEvent, clock = null) {
     const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(this.clockToJSON(clock)) !== JSON.stringify(this.clockToJSON())) {
-      console.log('this.clock', this.clockToJSON())
-      console.log('that.clock', this.clockToJSON(clock))
+      // console.log('this.clock', this.clockToJSON())
+      // console.log('that.clock', this.clockToJSON(clock))
       // we need to check and see what version of the document exists at the clock specified
       // if it is the same as the one we are trying to put, then we can proceed
       const resp = await eventsSince(this.blocks, this.clock, event.value._clock)
@@ -289,7 +289,7 @@ export class Database {
       }
     }
     const prevClock = [...this.clock]
-    console.log('putToProllyTree', this.clockToJSON(), decodedEvent)
+    // console.log('putToProllyTree', this.clockToJSON(), decodedEvent)
     const result = await doTransaction(
       'putToProllyTree',
       this.blocks,

@@ -46,7 +46,7 @@ const decrypt = async function * ({ root, get, key, cache, chunker, hasher }) {
   const { result: nodes } = await cidset.getAllEntries()
   const unwrap = async (eblock) => {
     const { bytes, cid } = await codec.decrypt({ ...eblock, key }).catch(e => {
-      console.log('ekey', e)
+      // console.log('ekey', e)
       throw new Error('bad key: ' + key.toString('hex'))
     })
     const block = await createBlock(bytes, cid)
