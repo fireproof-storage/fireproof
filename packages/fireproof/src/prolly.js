@@ -54,10 +54,11 @@ export const makeGetBlock = blocks => {
 async function createAndSaveNewEvent ({ inBlocks, bigPut, root, event: inEvent, head, additions, removals = [] }) {
   let cids
   const { key, value, del } = inEvent
-  console.log('createAndSaveNewEvent', root)
+  console.log('createAndSaveNewEvent', root.constructor.name, root.entryList)
+  // root = await root.block
   const data = {
     root: root
-      ? root.cid
+      ? root.cid // (await root.address)
       : null,
     key
   }
@@ -207,21 +208,23 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
 
   // if prolly root node is null, we need to create a new one
   if (!prollyRootNode) {
-    console.log('make new root', bulkOperations.length)
+    console.trace('make new root', bulkOperations.length)
     let root
-    let rootNode
+    // let rootNode
     const newBlocks = []
     // if all operations are deletes, we can just return an empty root
     if (bulkOperations.every(op => op.del)) {
       return { root: null, blocks: [], clockCIDs: await events.all() }
     }
     for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
-      root = await node.block
-      rootNode = node
+      // root = await node.block
+      root = node
       newBlocks.push(root)
     }
     // throw new Error('not root time')
-    console.log('made new root', rootNode.constructor.name, root.value)
+    // root.isThisOne = 'yes'
+    console.log('made new root', root.constructor.name, root.constructor.name)
+
     return { root, blocks: newBlocks, clockCIDs: await events.all() }
   } else {
     const writeResp = await prollyRootNode.bulk(bulkOperations) // { root: newProllyRootNode, blocks: newBlocks }
@@ -273,7 +276,7 @@ export async function put (inBlocks, head, event, options) {
     return createAndSaveNewEvent({
       inBlocks,
       bigPut,
-      root: prollyRootBlock,
+      root: newProllyRootNode,
       event,
       head,
       additions: Array.from(additions.values()) /*, todo? Array.from(removals.values()) */
@@ -299,11 +302,12 @@ export async function root (inBlocks, head, doFull = false) {
     async transactionBlocks => {
       const { bigPut } = makeGetAndPutBlock(transactionBlocks)
       const { root: newProllyRootNode, blocks: newBlocks, clockCIDs } = await doProllyBulk(inBlocks, head, null, doFull)
-
+      const rootBlock = await newProllyRootNode.block
+      bigPut(rootBlock)
       for (const nb of newBlocks) {
         bigPut(nb)
       }
-
+      console.log('root root', newProllyRootNode.constructor.name, newProllyRootNode)
       return { clockCIDs, node: newProllyRootNode }
     },
     false

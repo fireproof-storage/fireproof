@@ -23,9 +23,14 @@ export class Sync {
       this.pushBacklogResolve = resolve
       this.pushBacklogReject = reject
     })
+    this.isReady = false
     // this.pushBacklog.then(() => {
     //   // console.log('sync backlog resolved')
     //   this.database.notifyReset()
+    // })
+    // this.connected = new Promise((resolve, reject) => {
+    //   this.readyResolve = resolve
+    //   this.readyReject = reject
     // })
   }
 
@@ -155,7 +160,7 @@ export class Sync {
   }
 
   async sendUpdate (blockstore) {
-    if (!this.peer) return
+    if (!this.peer || !this.isReady) return
     // console.log('send update from', this.database.instanceId)
     // todo should send updates since last sync
     const newCar = await blocksToCarBlock(blockstore.lastCid, blockstore)
@@ -165,6 +170,7 @@ export class Sync {
 
   async startSync () {
     // console.log('start sync', this.peer.initiator)
+    this.isReady = true
     const allCIDs = await this.database.allStoredCIDs()
     // console.log('allCIDs', allCIDs)
     const reqCidDiff = {
