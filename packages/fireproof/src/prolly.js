@@ -208,7 +208,7 @@ const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
 
   // if prolly root node is null, we need to create a new one
   if (!prollyRootNode) {
-    console.trace('make new root', bulkOperations.length)
+    console.log('make new root', bulkOperations.length)
     let root
     // let rootNode
     const newBlocks = []

@@ -104,10 +104,10 @@ export class Database {
    */
   async changesSince (aClock) {
     console.log('events for', this.instanceId, aClock?.constructor.name)
-    console.log('changesSince', this.instanceId, aClock, this.clock)
+    console.log('changesSince', this.instanceId, this.clockToJSON(aClock), this.clockToJSON())
     let rows, dataCIDs, clockCIDs
     // if (!aClock) aClock = []
-    if (aClock) {
+    if (aClock && aClock.length > 0) {
       aClock = aClock.map((cid) => cid.toString())
       const eventKey = JSON.stringify([...this.clockToJSON(aClock), ...this.clockToJSON()])
 
