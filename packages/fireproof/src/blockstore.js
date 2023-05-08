@@ -127,8 +127,8 @@ export class TransactionBlockstore {
    */
   async * entries () {
     for (const transaction of this.inflightTransactions) {
-      for (const [str, bytes] of transaction) {
-        yield { cid: str, bytes }
+      for (const [cid, bytes] of transaction.entries()) { // test for this?
+        yield { cid: cid.toString(), bytes }
       }
     }
     for (const [str, bytes] of this.committedBlocks) {
@@ -179,7 +179,7 @@ export class TransactionBlockstore {
   doCommit = async innerBlockstore => {
     const cids = new Set()
     for (const { cid, bytes } of innerBlockstore.entries()) {
-      const stringCid = cid.toString() // unnecessary string conversion, can we fix upstream?
+      const stringCid = cid.toString()
       if (this.committedBlocks.has(stringCid)) {
         // console.log('Duplicate block: ' + stringCid) // todo some of this can be avoided, cost is extra size on car files
       } else {

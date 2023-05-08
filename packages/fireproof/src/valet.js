@@ -228,7 +228,6 @@ export const blocksToCarBlock = async (rootCids, blocks) => {
   const headerSize = CBW.headerLength({ roots: rootCids })
   size += headerSize
   if (!Array.isArray(blocks)) {
-    console.log('blocks is not an array', blocks)
     blocks = Array.from(blocks.entries())
   }
   for (const { cid, bytes } of blocks) {
