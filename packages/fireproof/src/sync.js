@@ -193,7 +193,7 @@ export class Sync {
     const blocks = database.blocks
     const rootCIDs = database.clock
 
-    const syncCIDs = [...new Set([...rootCIDs, ...allCIDs])].filter(cid => !skip.includes(cid.toString()))
+    const syncCIDs = [...new Set([...rootCIDs, ...allCIDs.filter(cid => !skip.includes(cid.toString()))])]
     // console.log(
     //   'makeCar',
     //   rootCIDs.map(c => c.toString()),
