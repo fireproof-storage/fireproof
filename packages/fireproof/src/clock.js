@@ -242,7 +242,7 @@ export async function findEventsToSync (blocks, head) {
 
   const toSync = ancestor ? await asyncFilter(sorted, async uks => !(await contains(events, ancestor, uks.cid))) : sorted
   // console.timeEnd(callTag + '.contains')
-  console.log('toSync', !!ancestor, sorted.length - toSync.length)
+  // console.log('optimize sorted', !!ancestor, sorted.length - toSync.length)
 
   return { cids: events, events: toSync }
 }
