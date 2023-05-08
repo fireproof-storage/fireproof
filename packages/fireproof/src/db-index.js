@@ -144,6 +144,8 @@ export class DbIndex {
       this.mapFn = mapFn
       this.mapFnString = mapFn.toString()
     }
+    const matches = /=>\s*(.*)/.exec(this.mapFnString)
+    this.includeDocsDefault = matches && matches.length > 0
     this.name = name || this.makeName()
   }
 
@@ -157,7 +159,6 @@ export class DbIndex {
       return this.mapFnString
     } else {
       // it's a consise arrow function, match everythign after the arrow
-      this.includeDocsDefault = true
       return matches[1]
     }
   }

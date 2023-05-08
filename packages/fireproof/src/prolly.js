@@ -143,6 +143,9 @@ const bulkFromEvents = (sorted, event) => {
     const {
       data: { type, value, key }
     } = event
+    if (!key) {
+      throw new Error('key is required')
+    }
     const bulkEvent = type === 'put' ? { key, value } : { key, del: true }
     bulk.set(bulkEvent.key, bulkEvent) // last wins
   }
