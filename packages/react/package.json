@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/react",
-  "version": "0.5.17",
+  "version": "0.5.18",
   "description": "React hooks for Fireproof realtime cloudless database",
   "main": "dist/index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   "license": "Apache-2.0 OR MIT",
   "gptdoc": "Fireproof/React/Usage: import { useFireproof } from '@fireproof/react'; function App() { const { useLiveQuery, useLiveDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useLiveDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
-    "@fireproof/core": "^0.5.15"
+    "@fireproof/core": "^0.5.16"
   },
   "peerDependencies": {
     "react": ">= 16.8.0",
