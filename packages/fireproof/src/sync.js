@@ -156,7 +156,7 @@ export class Sync {
   destroy () {
     this.database.blocks.syncs.delete(this)
     this.status = 'destroyed'
-    this.peer.destroy()
+    // this.peer.destroy()  todo
   }
 
   async sendUpdate (blockstore) {
