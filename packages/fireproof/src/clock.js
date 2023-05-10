@@ -237,12 +237,12 @@ export async function findEventsToSync (blocks, head) {
   // console.time(callTag + '.findCommonAncestorWithSortedEvents')
   const { ancestor, sorted } = await findCommonAncestorWithSortedEvents(events, head)
   // console.timeEnd(callTag + '.findCommonAncestorWithSortedEvents')
-  // console.log('sorted', !!ancestor, sorted.length)
+  // console.log('sorted', !!ancestor, sorted)
   // console.time(callTag + '.contains')
 
   const toSync = ancestor ? await asyncFilter(sorted, async uks => !(await contains(events, ancestor, uks.cid))) : sorted
   // console.timeEnd(callTag + '.contains')
-  // console.log('optimize sorted', !!ancestor, sorted.length - toSync.length)
+  console.log('optimize sorted', !!ancestor, sorted.length - toSync.length)
 
   return { cids: events, events: toSync }
 }
