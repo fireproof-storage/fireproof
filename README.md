@@ -3,7 +3,7 @@
 Fireproof is a realtime database for today's interactive applications. It uses immutable data and distributed protocols 
 to offer a new kind of database that:
 - can be embedded in any page or app, with a flexible data ownership model
-- scales without incurring developer costs, thanks to Filecoin
+- can be hosted on any cloud
 - uses cryptographically verifiable protocols (what plants crave)
 
 Learn more about the [concepts and architecture behind Fireproof](https://fireproof.storage/documentation/how-the-database-engine-works/), or jump to the [quick start](#quick-start) for React and server-side examples.
