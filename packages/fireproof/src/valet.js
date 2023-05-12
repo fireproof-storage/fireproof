@@ -160,6 +160,21 @@ export class Valet {
   }
 
   async getCarCIDForCID (cid) {
+    const { getBlock } = makeGetBlock(this.valetCidBlocks)
+    let indexNode
+    if (this.valetRootCid) {
+      if (this.valetRoot) {
+        indexNode = this.valetRoot
+      } else {
+        indexNode = await load({ cid: this.valetRootCid, get: getBlock, ...blockOpts })
+      }
+    }
+    return await indexNode.get(cid)
+    // console.log('getCarCIDForCID', cid, result, cids)
+    // return result
+  }
+
+  async OLDgetCarCIDForCID (cid) {
     return await this.withDB(async db => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
       const indexResp = await tx.objectStore('cidToCar').index('cids').get(cid)
@@ -188,7 +203,9 @@ export class Valet {
     // (getBlock, valetRoot, valetRootCid, carCid, cids)
     const { blocks, root } = await addCidsToCarIndex(getBlock, this.valetRoot, this.valetRootCid, carCid, Array.from(cids))
     this.valetRoot = root
-    this.valetRootCid = (await root.block).cid.toString()
+    const bl = (await root.block)
+    // console.log('new valet root block', bl)
+    this.valetRootCid = bl.cid.toString()
     for (const { cid, bytes } of blocks) {
       await this.valetCidBlocks.put(cid, bytes)
     }
