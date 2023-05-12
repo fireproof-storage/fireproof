@@ -265,7 +265,14 @@ export class DbIndex {
     await loadIndex(this.database.indexBlocks, this.indexByKey, dbIndexOpts)
     if (!this.indexByKey.root) return { result: [] }
     if (query.includeDocs === undefined) query.includeDocs = this.includeDocsDefault
-    if (query.range) {
+    if (query.prefix) {
+      // ensure prefix is an array
+      if (!Array.isArray(query.prefix)) query.prefix = [query.prefix]
+      const start = [...query.prefix, NaN]
+      const end = [...query.prefix, Infinity]
+      const prefixRange = [start, end].map(key => charwise.encode(key))
+      return await this.applyQuery(await this.indexByKey.root.range(...prefixRange), query)
+    } else if (query.range) {
       const encodedRange = query.range.map(key => charwise.encode(key))
       return await this.applyQuery(await this.indexByKey.root.range(...encodedRange), query)
     } else if (query.key) {

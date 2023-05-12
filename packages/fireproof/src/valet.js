@@ -178,6 +178,7 @@ export class Valet {
 
   remoteBlockFunction = null
 
+  // todo memoize this
   async getBlock (dataCID) {
     return await this.withDB(async db => {
       const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
@@ -195,6 +196,7 @@ export class Valet {
           // console.log('got.', cid.toString())
           let useCodec = codec
           if (cid.toString().indexOf('bafy') === 0) {
+            // todo cleanup types
             useCodec = dagcbor
           }
           const decoded = await Block.decode({
