@@ -164,6 +164,12 @@ export class Valet {
     }
   }
 
+  setRootCarCid (cid) {
+    this.valetRootCarCid = cid
+    this.valetRoot = null
+    this.valetRootCid = null
+  }
+
   async getCarCIDForCID (cid) {
     // make a car reader for this.valetRootCarCid
     if (!this.valetRootCarCid) return

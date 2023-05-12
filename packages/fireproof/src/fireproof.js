@@ -44,6 +44,7 @@ export class Fireproof {
       for (const {
         name,
         code,
+        car,
         clock: { byId, byKey, db }
       } of json.indexes) {
         Index.fromJSON(database, {
@@ -52,6 +53,7 @@ export class Fireproof {
             byKey: byKey ? parseCID(byKey) : null,
             db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
           },
+          car,
           code,
           name
         })

@@ -107,7 +107,7 @@ describe('hydrator query with dbname', () => {
     assert.equal(result.rows[0].value, 'drate')
     const serialized = database.toJSON()
     // console.log('serialized', serialized)
-    assert.equal(serialized.name, 'index-test')
+    assert.equal(serialized.name, 'testDBindex')
     if (database.blocks.valet.keyId !== 'null') {
       assert.equal(serialized.key.length, 64)
     }
@@ -133,7 +133,7 @@ describe('hydrator query with dbname', () => {
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
     const newDb = Fireproof.fromJSON(serialized, database)
-    assert.equal(newDb.name, 'index-test')
+    assert.equal(newDb.name, 'testDBindex')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
     const newIndex = [...newDb.indexes.values()][0]

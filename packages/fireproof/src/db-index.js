@@ -108,6 +108,8 @@ export class DbIndex {
   constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
     if (!database.indexBlocks) {
+      // move ownership of this to database
+      // so that it can be hydrated from car once
       database.indexBlocks = new TransactionBlockstore(
         database?.name + '.indexes',
         database.blocks.valet?.getKeyMaterial()
@@ -192,7 +194,7 @@ export class DbIndex {
     return indexJson
   }
 
-  static fromJSON (database, { code, clock, name }) {
+  static fromJSON (database, { car, code, clock, name }) {
     // console.log('DbIndex.fromJSON', database.constructor.name, code, clock)
     return new DbIndex(database, name, code, clock)
   }
