@@ -276,6 +276,7 @@ export class Database {
    * @returns {Promise<{ proof:{}, id: string, clock: CID[] }>} - The result of adding the event to storage
    */
   async putToProllyTree (decodedEvent, clock = null) {
+    console.log('putToProllyTree', decodedEvent)
     const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(this.clockToJSON(clock)) !== JSON.stringify(this.clockToJSON())) {
       // console.log('this.clock', this.clockToJSON())
