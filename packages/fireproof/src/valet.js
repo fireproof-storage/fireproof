@@ -222,7 +222,7 @@ export class Valet {
           if (!carMapReader) throw e
           const bytes = await carMapReader(cid)
           await theseValetCidBlocks.put(cid, bytes)
-          return bytes
+          return { cid, bytes }
         }
       }
     }
@@ -239,9 +239,9 @@ export class Valet {
     const saveValetBlocks = new VMemoryBlockstore() //  todo this blockstore should read from the last valetCid car also
 
     for await (const cidx of mapNode.cids()) {
-      const bytes = await combinedReader.get(cidx)
-      console.log('combinedReader ocks', cidx, bytes)
-      saveValetBlocks.put(cidx, bytes)
+      const { cid, bytes } = await combinedReader.get(cidx)
+      console.log('combinedReader ocks', cid, bytes)
+      saveValetBlocks.put(cid, bytes)
     }
     console.log('did addCidsToCarIndex r', saveValetBlocks)
     const newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
@@ -392,15 +392,11 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
     theCids.push(cid.toString())
   }
   console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
-  console.log('cids', blocks)
+  // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
     cids: theCids,
-    get: async cid => {
-      const bytes = blocks.get(cid)
-      if (bytes.cid) return bytes
-      return { cid, bytes }
-    }, // maybe we can just use blocks.get
+    get: async cid => blocks.get(cid), // maybe we can just use blocks.get
     key: encryptionKey,
     hasher: sha256,
     chunker,
@@ -492,17 +488,7 @@ const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperat
   return indexNode
 }
 
-function buftoarr (buf) {
-  if (!buf) return undefined
-  if (buf.constructor.name === 'Uint8Array' ||
-  buf.constructor === Uint8Array) {
-    return buf
-  }
-  if (typeof buf === 'string') buf = Buffer.from(buf)
-  const a = new Uint8Array(buf.length)
-  for (let i = 0; i < buf.length; i++) a[i] = buf[i]
-  return a
-}
+/// remove once we can use valet as its own blockstore
 
 export class VMemoryBlockstore {
   /** @type {Map<string, Uint8Array>} */
@@ -516,7 +502,7 @@ export class VMemoryBlockstore {
       // console.log('getvm', bytes.())
     }
     if (!bytes) throw new Error('block not found ' + cid.toString())
-    return bytes
+    return { cid, bytes }
   }
 
   /**
@@ -525,11 +511,10 @@ export class VMemoryBlockstore {
    */
   async put (cid, bytes) {
     console.log('putvm', bytes.constructor.name, this.instanceId, cid, bytes.length)
-    // if (bytes.constructor.name == 'Buffer') {
-    //   console.log('putvmx', bytes.buffer.constructor.name)
-    // }
+    if (bytes.constructor.name == 'Buffer') {
+      console.log('putvmx', bytes.buffer.constructor.name)
+    }
     this.blocks.set(cid.toString(), bytes)
-    // this.blocks.set(cid.toString(), buftoarr(bytes))
   }
 
   * entries () {
