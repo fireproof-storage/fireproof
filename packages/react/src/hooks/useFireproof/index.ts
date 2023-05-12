@@ -94,11 +94,14 @@ export function useFireproof(
   }
 
   function useLiveQuery(mapFn: Function, query = {}, initialRows: any[] = []) {
-    const [rows, setRows] = useState({ rows: initialRows, proof: {} });
+    const [result, setResult] = useState({ rows: initialRows, proof: {}, docs: initialRows.map((r) => r.doc) });
     const [index, setIndex] = useState<Index | null>(null);
 
     const refreshRows = useCallback(async () => {
-      if (index) setRows(await index.query(query));
+      if (index) {
+        const res = await index.query(query)
+        setResult({...res, docs: res.rows.map((r) => r.doc)});
+      }
     }, [index, JSON.stringify(query)]);
 
     useEffect(
@@ -117,7 +120,7 @@ export function useFireproof(
       setIndex(new Index(database, null, mapFn));
     }, [mapFn.toString()]);
 
-    return rows;
+    return result;
   }
 
   return {
