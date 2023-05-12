@@ -80,7 +80,7 @@ export class TransactionBlockstore {
     // console.log('committedGet: ' + key + ' ' + this.instanceId, old.length)
     if (old) return old
     if (!this.valet) throw new Error('Missing block: ' + key)
-    const got = await this.valet.getBlock(key)
+    const got = await this.valet.getValetBlock(key)
     this.committedBlocks.set(key, got)
     return got
   }

@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
+// import { Valet } from '../src/valet.js'
 
 describe('Hydrator', () => {
   let database, index
@@ -132,6 +133,42 @@ describe('hydrator query with dbname', () => {
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
     const newDb = Fireproof.fromJSON(serialized, database)
+    assert.equal(newDb.name, 'index-test')
+    assert.equal(newDb.clock.length, 1)
+    assert.equal((await newDb.changesSince()).rows.length, 7)
+    const newIndex = [...newDb.indexes.values()][0]
+    assert.equal(newIndex.mapFn, `function (doc, map) {
+      map(doc.age, doc.name)
+    }`)
+    assert.match(newIndex.indexById.cid.toString(), /bafyr/)
+    // assert.equal(newIndex.indexById.root, null)
+    assert.match(newIndex.indexByKey.cid.toString(), /bafyr/)
+
+    // assert.equal(newIndex.indexByKey.root, null)
+
+    assert.equal(newIndex.name, 'names_by_age')
+
+    const newResult = await newIndex.query({ range: [0, 54] })
+    assert.equal(newResult.rows[0].value, 'drate')
+  })
+  it('rehydrate database w reset valet', async () => {
+    await database.put({ _id: 'rehy', name: 'drate', age: 1 })
+    assert.equal((await database.changesSince()).rows.length, 7)
+    const result = await index.query({ range: [0, 54] })
+    assert.equal(result.rows[0].value, 'drate')
+
+    const serialized = JSON.parse(JSON.stringify(database))
+    // console.log('serialized', JSON.stringify(serialized))
+    // connect it to the same blockstore for testing
+    console.log('new database --------')
+
+    const newDb = Fireproof.fromConfig(database.name, serialized)
+    // const oldV = database.blocks.valet
+    // reset valet
+    // newDb.blocks.valet = new Valet(oldV.name, oldV.getKeyMaterial())
+    // newDb.blocks.valet.valetRootCid = null
+    // newDb.blocks = null
+
     assert.equal(newDb.name, 'index-test')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)

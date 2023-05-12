@@ -23,8 +23,7 @@ export class Fireproof {
       const existing = localGet('fp.' + name)
       if (existing) {
         const existingConfig = JSON.parse(existing)
-        const fp = new Database(new TransactionBlockstore(name, existingConfig.key), [], opts)
-        return Fireproof.fromJSON(existingConfig, fp)
+        return Fireproof.fromConfig(name, existingConfig, opts)
       } else {
         const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
         return new Database(new TransactionBlockstore(name, instanceKey), [], opts)
@@ -32,6 +31,11 @@ export class Fireproof {
     } else {
       return new Database(new TransactionBlockstore(), [], opts)
     }
+  }
+
+  static fromConfig (name, existingConfig, opts = {}) {
+    const fp = new Database(new TransactionBlockstore(name, existingConfig.key), [], opts)
+    return Fireproof.fromJSON(existingConfig, fp)
   }
 
   static fromJSON (json, database) {
