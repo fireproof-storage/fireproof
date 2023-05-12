@@ -201,20 +201,24 @@ export class Valet {
     }
 
     const theseValetCidBlocks = this.valetCidBlocks
-    console.log('theseValetCidBlocks', theseValetCidBlocks)
+    // console.log('theseValetCidBlocks', theseValetCidBlocks)
     const combinedReader = {
       put: async (cid, bytes) => {
         console.log('mapPut', cid, bytes.length)
         return await theseValetCidBlocks.put(cid, bytes)
       },
       get: async cid => {
+        console.log('mapGet', cid)
         try {
-          return await theseValetCidBlocks.get(cid)
+          const got = await theseValetCidBlocks.get(cid)
+          return got.bytes
         } catch (e) {
+          // console.log('get from car', cid, carMapReader)
           if (!carMapReader) throw e
           const bytes = await carMapReader(cid)
           await theseValetCidBlocks.put(cid, bytes)
-          return { cid, bytes }
+          console.log('mapGet', cid, bytes.length, bytes.constructor.name)
+          return bytes
         }
       }
     }
@@ -249,11 +253,11 @@ export class Valet {
     const saveValetBlocks = new VMemoryBlockstore() //  todo this blockstore should read from the last valetCid car also
 
     for await (const cidx of mapNode.cids()) {
-      const { cid, bytes } = await combinedReader.get(cidx)
-      console.log('combinedReader ocks', cid, bytes)
-      saveValetBlocks.put(cid, bytes)
+      const bytes = await combinedReader.get(cidx)
+      console.log('combinedReader ocks', cidx, bytes.constructor.name, bytes.length)
+      saveValetBlocks.put(cidx, bytes)
     }
-    console.log('did addCidsToCarIndex r', saveValetBlocks)
+    // console.log('did addCidsToCarIndex r', saveValetBlocks)
     let newValetCidCar
     if (this.keyMaterial) {
       newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
@@ -320,7 +324,7 @@ export class Valet {
       const tx = db.transaction(['cars'], 'readonly')
       // const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
       // const carCid = indexResp?.car
-      console.log('getCarReader', carCid)
+      // console.log('getCarReader', carCid)
       const carBytes = await tx.objectStore('cars').get(carCid)
       const reader = await CarReader.fromBytes(carBytes)
       if (this.keyMaterial) {
@@ -344,7 +348,10 @@ export class Valet {
         const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
 
         return async dataCID => {
+          // console.log('getCarReader dataCID', dataCID)
+          dataCID = dataCID.toString()
           const block = blocks.find(b => b.cid.toString() === dataCID)
+          // console.log('getCarReader block', block)
           if (block) {
             return block.bytes
           }
@@ -505,16 +512,16 @@ const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperat
   return indexNode
 }
 
-function btoArr (buf) {
-  if (!buf) return undefined
-  if (buf.constructor.name === 'Uint8Array' || buf.constructor === Uint8Array) {
-    return buf
-  }
-  if (typeof buf === 'string') buf = Buffer.from(buf)
-  const a = new Uint8Array(buf.length)
-  for (let i = 0; i < buf.length; i++) a[i] = buf[i]
-  return a
-}
+// function btoArr (buf) {
+//   if (!buf) return undefined
+//   if (buf.constructor.name === 'Uint8Array' || buf.constructor === Uint8Array) {
+//     return buf
+//   }
+//   if (typeof buf === 'string') buf = Buffer.from(buf)
+//   const a = new Uint8Array(buf.length)
+//   for (let i = 0; i < buf.length; i++) a[i] = buf[i]
+//   return a
+// }
 export class VMemoryBlockstore {
   /** @type {Map<string, Uint8Array>} */
   blocks = new Map()

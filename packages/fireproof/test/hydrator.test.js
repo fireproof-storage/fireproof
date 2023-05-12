@@ -165,6 +165,8 @@ describe('hydrator query with dbname', () => {
     const newDb = Fireproof.fromConfig(database.name, serialized)
     // const oldV = database.blocks.valet
     // reset valet
+    newDb.blocks.valet.valetRootCarCid = database.blocks.valet.valetRootCarCid
+    newDb.blocks.valet.valetRootCid = database.blocks.valet.valetRootCid
     // newDb.blocks.valet = new Valet(oldV.name, oldV.getKeyMaterial())
     // newDb.blocks.valet.valetRootCid = null
     // newDb.blocks = null
