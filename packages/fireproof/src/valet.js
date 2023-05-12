@@ -8,15 +8,21 @@ import * as dagcbor from '@ipld/dag-cbor'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
 // @ts-ignore
-import { bf } from 'prolly-trees/utils'
+import { create, load } from 'prolly-trees/map'
+// @ts-ignore
+import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
+import { makeGetBlock } from './prolly.js'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
 // @ts-ignore
 import * as codec from 'encrypted-block'
+
 import { rawSha1 as sha1sync } from './sha1.js'
 const chunker = bf(30)
+
+const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
 
 const NO_ENCRYPT = typeof process !== 'undefined' && !!process.env?.NO_ENCRYPT
 // ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
@@ -28,6 +34,11 @@ export class Valet {
   alreadyEnqueued = new Set()
   keyMaterial = null
   keyId = 'null'
+  valetRoot = null
+  valetRootCid = null // set by hydrate
+  valetRootCarCid = null // most recent diff
+
+  valetCidBlocks = new VMemoryBlockstore()
 
   /**
    * Function installed by the database to upload car files
@@ -173,6 +184,14 @@ export class Valet {
     // add all the new cidsToCar entries to it
     // also add the cidToCar entry for the current root
     // store the cidToCar root in localstorage
+    const { getBlock } = makeGetBlock(this.valetCidBlocks)
+    // (getBlock, valetRoot, valetRootCid, carCid, cids)
+    const { blocks, root } = await addCidsToCarIndex(getBlock, this.valetRoot, this.valetRootCid, carCid, Array.from(cids))
+    this.valetRoot = root
+    this.valetRootCid = (await root.block).cid.toString()
+    for (const { cid, bytes } of blocks) {
+      await this.valetCidBlocks.put(cid, bytes)
+    }
 
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
@@ -319,5 +338,56 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
     })()
     memoizeDecryptedCarBlocks.set(cid.toString(), blocksPromise)
     return blocksPromise
+  }
+}
+
+const addCidsToCarIndex = async (getBlock, valetRoot, valetRootCid, carCid, cids) => {
+  const bulkOperations = cids.map(cid => ({ key: cid.toString(), value: carCid.toString() }))
+  let indexNode
+  const newBlocks = []
+  if (valetRootCid) {
+    if (valetRoot) {
+      indexNode = valetRoot
+    } else {
+      indexNode = await load({ cid: valetRootCid, get: getBlock, ...blockOpts })
+    }
+    console.log('update ')
+    return indexNode.bulk(bulkOperations)
+  } else {
+    for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
+      indexNode = node
+      newBlocks.push(await node.block)
+    }
+    // console.log('created ', indexNode.cid.toString())
+
+    return { root: indexNode, blocks: newBlocks }
+  }
+}
+
+/// remove once we can use valet as its own blockstore
+
+export class VMemoryBlockstore {
+  /** @type {Map<string, Uint8Array>} */
+  blocks = new Map()
+
+  async get (cid) {
+    const bytes = this.blocks.get(cid.toString())
+    if (!bytes) return
+    return { cid, bytes }
+  }
+
+  /**
+   * @param {import('../src/link').AnyLink} cid
+   * @param {Uint8Array} bytes
+   */
+  async put (cid, bytes) {
+    // console.log('put', cid)
+    this.blocks.set(cid.toString(), bytes)
+  }
+
+  * entries () {
+    for (const [str, bytes] of this.blocks) {
+      yield { cid: str, bytes }
+    }
   }
 }
