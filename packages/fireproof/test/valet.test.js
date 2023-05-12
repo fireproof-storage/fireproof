@@ -27,6 +27,10 @@ describe('new Valet', () => {
         val.getBlock('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((block) => {
           assert.equal(block.length, carBytes.length)
         })
+
+        val.getCarCIDForCID('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((carCid) => {
+          assert.equal(carCid, 'carCid')
+        })
       })
   })
   it('calls the upload function', () => {

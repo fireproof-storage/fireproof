@@ -148,6 +148,14 @@ export class Valet {
     }
   }
 
+  async getCarCIDForCID (cid) {
+    return await this.withDB(async db => {
+      const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
+      const indexResp = await tx.objectStore('cidToCar').index('cids').get(cid)
+      return indexResp?.car
+    })
+  }
+
   /**
    *
    * @param {string} carCid
