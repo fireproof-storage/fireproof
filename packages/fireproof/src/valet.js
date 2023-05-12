@@ -1,6 +1,7 @@
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
+import { parse } from 'multiformats/link'
 import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
@@ -177,7 +178,7 @@ export class Valet {
 
     const got = await indexNode.get(cid)
     console.log('getCarCIDForCID', cid, got)
-    return got
+    return { result: got }
   }
 
   async OLDgetCarCIDForCID (cid) {
@@ -244,12 +245,17 @@ export class Valet {
       saveValetBlocks.put(cid, bytes)
     }
     console.log('did addCidsToCarIndex r', saveValetBlocks)
-    const newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
+    let newValetCidCar
+    if (this.keyMaterial) {
+      newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
+    } else {
+      newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
+    }
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
 
     await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readwrite')
-      await tx.objectStore('cars').put(value, carCid)
+      await tx.objectStore('cars').put(value, carCid.toString())
       if (newValetCidCar) {
         await tx.objectStore('cars').put(newValetCidCar.bytes, newValetCidCar.cid.toString())
       }
@@ -352,11 +358,13 @@ export class Valet {
     if (!carCid) {
       throw new Error('Missing block: ' + dataCID)
     }
-    return await (await this.getCarReader(carCid)).get(dataCID)
+    const reader = await this.getCarReader(carCid)
+    return await reader(dataCID)
   }
 }
 
 export const blocksToCarBlock = async (rootCids, blocks) => {
+  console.log('blocksToCarBlock', rootCids, blocks.constructor.name)
   let size = 0
   if (!Array.isArray(rootCids)) {
     rootCids = [rootCids]
@@ -511,15 +519,15 @@ export class VMemoryBlockstore {
    */
   async put (cid, bytes) {
     console.log('putvm', bytes.constructor.name, this.instanceId, cid, bytes.length)
-    if (bytes.constructor.name == 'Buffer') {
-      console.log('putvmx', bytes.buffer.constructor.name)
-    }
+    // if (bytes.constructor.name == 'Buffer') {
+    //   console.log('putvmx', bytes.buffer.constructor.name)
+    // }
     this.blocks.set(cid.toString(), bytes)
   }
 
   * entries () {
     for (const [str, bytes] of this.blocks) {
-      yield { cid: str, bytes }
+      yield { cid: parse(str), bytes }
     }
   }
 }
