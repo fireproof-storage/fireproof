@@ -42,6 +42,7 @@ export class Valet {
   valetRootCarCid = null // most recent diff
 
   valetCidBlocks = new VMemoryBlockstore()
+  instanceId = Math.random().toString(36).slice(2)
 
   /**
    * Function installed by the database to upload car files
@@ -50,6 +51,7 @@ export class Valet {
   uploadFunction = null
 
   constructor (name = 'default', keyMaterial) {
+    console.log('valet', name)
     this.name = name
     this.setKeyMaterial(keyMaterial)
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
@@ -167,16 +169,19 @@ export class Valet {
     if (!this.valetRootCarCid) return
 
     let indexNode
-    if (this.valetRootCid) {
-      if (this.valetRoot) {
-        indexNode = this.valetRoot
-      } else {
-        const combinedReader = await this.getCombinedReader(this.valetRootCarCid)
-        indexNode = await load(combinedReader, this.valetRootCid, {
-          blockHasher: blockOpts.hasher,
-          blockCodec: blockOpts.codec
-        })
+    if (this.valetRoot) {
+      indexNode = this.valetRoot
+    } else {
+      const combinedReader = await this.getCombinedReader(this.valetRootCarCid)
+      if (!this.valetRootCid) {
+        const root = combinedReader.root.cid
+        console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
+        this.valetRootCid = root
       }
+      indexNode = await load(combinedReader, this.valetRootCid, {
+        blockHasher: blockOpts.hasher,
+        blockCodec: blockOpts.codec
+      })
     }
 
     const got = await indexNode.get(cid)
@@ -203,12 +208,13 @@ export class Valet {
     const theseValetCidBlocks = this.valetCidBlocks
     // console.log('theseValetCidBlocks', theseValetCidBlocks)
     const combinedReader = {
+      root: carMapReader?.root,
       put: async (cid, bytes) => {
-        console.log('mapPut', cid, bytes.length)
+        // console.log('mapPut', cid, bytes.length)
         return await theseValetCidBlocks.put(cid, bytes)
       },
       get: async cid => {
-        console.log('mapGet', cid)
+        // console.log('mapGet', cid)
         try {
           const got = await theseValetCidBlocks.get(cid)
           return got.bytes
@@ -217,7 +223,7 @@ export class Valet {
           if (!carMapReader) throw e
           const bytes = await carMapReader.get(cid)
           await theseValetCidBlocks.put(cid, bytes)
-          console.log('mapGet', cid, bytes.length, bytes.constructor.name)
+          // console.log('mapGet', cid, bytes.length, bytes.constructor.name)
           return bytes
         }
       }
@@ -231,7 +237,7 @@ export class Valet {
    * @param {*} value
    */
   async parkCar (carCid, value, cids) {
-    console.log('parkCar', carCid, cids)
+    console.log('parkCar', this.instanceId, this.name, carCid, cids)
     // const bulkOperations = []
     // if (this.valetRootCid) {
     //   for (const { cid } of this.valetCidBlocks.entries()) {
@@ -254,7 +260,7 @@ export class Valet {
 
     for await (const cidx of mapNode.cids()) {
       const bytes = await combinedReader.get(cidx)
-      console.log('combinedReader ocks', cidx, bytes.constructor.name, bytes.length)
+      // console.log('combinedReader ocks', cidx, bytes.constructor.name, bytes.length)
       saveValetBlocks.put(cidx, bytes)
     }
     // console.log('did addCidsToCarIndex r', saveValetBlocks)
@@ -264,6 +270,7 @@ export class Valet {
     } else {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
+    console.log('new valetRootCid', this.instanceId, this.name, newValetCidCar.cid, this.valetRootCid)
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
 
     await this.withDB(async db => {
@@ -347,8 +354,11 @@ export class Valet {
         }
         const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
 
+        // last block is the root ???
+        const rootBlock = blocks[blocks.length - 1]
+
         return {
-          reader,
+          root: rootBlock,
           get: async dataCID => {
           // console.log('getCarReader dataCID', dataCID)
             dataCID = dataCID.toString()
@@ -361,7 +371,7 @@ export class Valet {
         }
       } else {
         return {
-          reader,
+          root: reader.getRoots()[0],
           get: async dataCID => {
             const gotBlock = await reader.get(CID.parse(dataCID))
             if (gotBlock) {
@@ -375,7 +385,7 @@ export class Valet {
 
   // todo memoize this
   async getValetBlock (dataCID) {
-    console.log('get valet block', dataCID)
+    // console.log('get valet block', dataCID)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
     if (!carCid) {
       throw new Error('Missing block: ' + dataCID)
@@ -386,7 +396,7 @@ export class Valet {
 }
 
 export const blocksToCarBlock = async (rootCids, blocks) => {
-  console.log('blocksToCarBlock', rootCids, blocks.constructor.name)
+  // console.log('blocksToCarBlock', rootCids, blocks.constructor.name)
   let size = 0
   if (!Array.isArray(rootCids)) {
     rootCids = [rootCids]
@@ -510,9 +520,9 @@ const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperat
       blockCodec: blockOpts.codec
     })
   }
-  console.log('adding', bulkOperations.length, 'cids to index')
+  // console.log('adding', bulkOperations.length, 'cids to index')
   for (const { key, value } of bulkOperations) {
-    console.log('adding', key, value)
+    // console.log('adding', key, value)
     await indexNode.set(key, value)
   }
   return indexNode
@@ -535,7 +545,7 @@ export class VMemoryBlockstore {
 
   async get (cid) {
     const bytes = this.blocks.get(cid.toString())
-    console.log('getvm', bytes.constructor.name, this.instanceId, cid, bytes && bytes.length)
+    // console.log('getvm', bytes.constructor.name, this.instanceId, cid, bytes && bytes.length)
     if (bytes.length === 253) {
       // console.log('getvm', bytes.())
     }
@@ -548,7 +558,7 @@ export class VMemoryBlockstore {
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
-    console.log('putvm', bytes.constructor.name, this.instanceId, cid, bytes.length)
+    // console.log('putvm', bytes.constructor.name, this.instanceId, cid, bytes.length)
     // if (bytes.constructor.name == 'Buffer') {
     //   console.log('putvmx', bytes.buffer.constructor.name)
     // }
