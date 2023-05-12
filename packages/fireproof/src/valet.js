@@ -215,7 +215,7 @@ export class Valet {
         } catch (e) {
           // console.log('get from car', cid, carMapReader)
           if (!carMapReader) throw e
-          const bytes = await carMapReader(cid)
+          const bytes = await carMapReader.get(cid)
           await theseValetCidBlocks.put(cid, bytes)
           console.log('mapGet', cid, bytes.length, bytes.constructor.name)
           return bytes
@@ -347,20 +347,26 @@ export class Valet {
         }
         const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
 
-        return async dataCID => {
+        return {
+          reader,
+          get: async dataCID => {
           // console.log('getCarReader dataCID', dataCID)
-          dataCID = dataCID.toString()
-          const block = blocks.find(b => b.cid.toString() === dataCID)
-          // console.log('getCarReader block', block)
-          if (block) {
-            return block.bytes
+            dataCID = dataCID.toString()
+            const block = blocks.find(b => b.cid.toString() === dataCID)
+            // console.log('getCarReader block', block)
+            if (block) {
+              return block.bytes
+            }
           }
         }
       } else {
-        return async dataCID => {
-          const gotBlock = await reader.get(CID.parse(dataCID))
-          if (gotBlock) {
-            return gotBlock.bytes
+        return {
+          reader,
+          get: async dataCID => {
+            const gotBlock = await reader.get(CID.parse(dataCID))
+            if (gotBlock) {
+              return gotBlock.bytes
+            }
           }
         }
       }
@@ -375,7 +381,7 @@ export class Valet {
       throw new Error('Missing block: ' + dataCID)
     }
     const reader = await this.getCarReader(carCid)
-    return await reader(dataCID)
+    return await reader.get(dataCID)
   }
 }
 
