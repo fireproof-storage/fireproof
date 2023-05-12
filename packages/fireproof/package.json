@@ -49,6 +49,7 @@
     "crypto-browserify": "^3.12.0",
     "encrypted-block": "^0.0.3",
     "idb": "^7.1.1",
+    "ipld-hashmap": "^2.1.18",
     "multiformats": "^11.0.1",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "prolly-trees": "1.0.4",
