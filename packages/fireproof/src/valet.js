@@ -160,6 +160,12 @@ export class Valet {
       await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
+
+    // load the existing cidToCar index from prolly
+    // add all the new cidsToCar entries to it
+    // also add the cidToCar entry for the current root
+    // store the cidToCar root in localstorage
+
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
