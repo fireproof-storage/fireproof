@@ -165,14 +165,17 @@ export class Valet {
   async getCarCIDForCID (cid) {
     // make a car reader for this.valetRootCarCid
     if (!this.valetRootCarCid) return
-    const carMapReader = await this.getCarReader(this.valetRootCarCid)
 
     let indexNode
     if (this.valetRootCid) {
       if (this.valetRoot) {
         indexNode = this.valetRoot
       } else {
-        indexNode = await load(carMapReader, this.valetRootCid, { blockHasher: blockOpts.hasher, blockCodec: blockOpts.codec })
+        const combinedReader = await this.getCombinedReader(this.valetRootCarCid)
+        indexNode = await load(combinedReader, this.valetRootCid, {
+          blockHasher: blockOpts.hasher,
+          blockCodec: blockOpts.codec
+        })
       }
     }
 
@@ -190,22 +193,10 @@ export class Valet {
     return { result: carCid }
   }
 
-  /**
-   *
-   * @param {string} carCid
-   * @param {*} value
-   */
-  async parkCar (carCid, value, cids) {
-    console.log('parkCar', carCid, cids)
-    // const bulkOperations = []
-    // if (this.valetRootCid) {
-    //   for (const { cid } of this.valetCidBlocks.entries()) {
-    //     console.log('did enc valetCidBlocks', cid)
-    //     bulkOperations.push({ key: cid.toString(), value: newValetCidCar.cid.toString() })
-    //   }
-    // }
+  async getCombinedReader (carCid) {
     let carMapReader
-    if (this.valetRootCarCid) { // todo only need this if we are cold starting
+    if (this.valetRootCarCid) {
+      // todo only need this if we are cold starting
       carMapReader = await this.getCarReader(this.valetRootCarCid)
     }
 
@@ -227,6 +218,24 @@ export class Valet {
         }
       }
     }
+    return combinedReader
+  }
+
+  /**
+   *
+   * @param {string} carCid
+   * @param {*} value
+   */
+  async parkCar (carCid, value, cids) {
+    console.log('parkCar', carCid, cids)
+    // const bulkOperations = []
+    // if (this.valetRootCid) {
+    //   for (const { cid } of this.valetCidBlocks.entries()) {
+    //     console.log('did enc valetCidBlocks', cid)
+    //     bulkOperations.push({ key: cid.toString(), value: newValetCidCar.cid.toString() })
+    //   }
+    // }
+    const combinedReader = await this.getCombinedReader(carCid)
     const mapNode = await addCidsToCarIndex(
       combinedReader,
       this.valetRoot,
@@ -334,14 +343,14 @@ export class Valet {
         }
         const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
 
-        return async (dataCID) => {
+        return async dataCID => {
           const block = blocks.find(b => b.cid.toString() === dataCID)
           if (block) {
             return block.bytes
           }
         }
       } else {
-        return async (dataCID) => {
+        return async dataCID => {
           const gotBlock = await reader.get(CID.parse(dataCID))
           if (gotBlock) {
             return gotBlock.bytes
@@ -496,8 +505,16 @@ const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperat
   return indexNode
 }
 
-/// remove once we can use valet as its own blockstore
-
+function btoArr (buf) {
+  if (!buf) return undefined
+  if (buf.constructor.name === 'Uint8Array' || buf.constructor === Uint8Array) {
+    return buf
+  }
+  if (typeof buf === 'string') buf = Buffer.from(buf)
+  const a = new Uint8Array(buf.length)
+  for (let i = 0; i < buf.length; i++) a[i] = buf[i]
+  return a
+}
 export class VMemoryBlockstore {
   /** @type {Map<string, Uint8Array>} */
   blocks = new Map()
@@ -522,6 +539,7 @@ export class VMemoryBlockstore {
     // if (bytes.constructor.name == 'Buffer') {
     //   console.log('putvmx', bytes.buffer.constructor.name)
     // }
+    // this.blocks.set(cid.toString(), btoArr(bytes))
     this.blocks.set(cid.toString(), bytes)
   }
 
