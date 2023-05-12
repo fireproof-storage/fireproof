@@ -24,7 +24,7 @@ describe('new Valet', () => {
       ])
       .then((car) => {
         assert('car parked')
-        return val.getBlock('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((block) => {
+        return val.getValetBlock('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((block) => {
           assert.equal(block.length, 300)
           return val.getCarCIDForCID('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then(({ result }) => {
             assert.equal(result, 'carCid')
