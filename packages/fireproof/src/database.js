@@ -51,6 +51,7 @@ export class Database {
       clock: this.clockToJSON(),
       name: this.name,
       key: this.blocks.valet?.getKeyMaterial(),
+      car: this.blocks.valet?.valetRootCarCid.toString(),
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }
@@ -65,10 +66,11 @@ export class Database {
     return (clock || this.clock).map(cid => cid.toString())
   }
 
-  hydrate ({ clock, name, key }) {
+  hydrate ({ clock, name, key, car }) {
     this.name = name
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
+    this.blocks.valet?.setRootCarCid(car) // maybe
     this.indexBlocks = null
   }
 
