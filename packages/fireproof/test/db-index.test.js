@@ -4,7 +4,8 @@ import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
 
 describe('DbIndex query', () => {
-  let database, index
+  let database = Fireproof.storage()
+  let index = new DbIndex(database, () => {})
   beforeEach(async () => {
     database = Fireproof.storage()
     const docs = [
@@ -290,6 +291,48 @@ describe('DbIndex query with bad index definition', () => {
       assert(/missingField/.test(e.message))
       console.error = oldErrFn
     })
+  })
+})
+
+describe('DbIndex query with compound key', () => {
+  let database, index
+  beforeEach(async () => {
+    database = Fireproof.storage()
+    await database.put({ _id: 'a1s', name: 'alice', age: 40 })
+    await database.put({ _id: 'b3x', name: 'bob', age: 4 })
+    await database.put({ _id: 'b4f', name: 'bob', age: 24 })
+    await database.put({ _id: 'c4f', name: 'carol', age: 21 })
+    index = new DbIndex(database, null, doc => [doc.name, doc.age])
+  })
+  it('sets string fn', () => {
+    assert.equal(index.mapFnString, 'doc => [doc.name, doc.age]')
+  })
+  it('has a default name', () => {
+    assert.equal(index.name, '[doc.name, doc.age]')
+  })
+  it('query index range', async () => {
+    const result = await index.query({ range: [['alice', NaN], ['alice', Infinity]] })
+    assert.equal(result.rows.length, 1)
+    assert.equal(result.rows[0].value, null)
+    assert.deepEqual(result.rows[0].key, ['alice', 40])
+  })
+  it('query index prefix', async () => {
+    const result = await index.query({ prefix: ['alice'] })
+    assert.equal(result.rows.length, 1)
+    assert.equal(result.rows[0].value, null)
+    assert.deepEqual(result.rows[0].key, ['alice', 40])
+  })
+  it('query index range two', async () => {
+    const result = await index.query({ range: [['bob', NaN], ['bob', Infinity]] })
+    assert.equal(result.rows.length, 2)
+    assert.equal(result.rows[0].value, null)
+    assert.deepEqual(result.rows[0].key, ['bob', 4])
+  })
+  it('query index prefix two', async () => {
+    const result = await index.query({ prefix: 'bob' })
+    assert.equal(result.rows.length, 2)
+    assert.equal(result.rows[0].value, null)
+    assert.deepEqual(result.rows[0].key, ['bob', 4])
   })
 })
 
