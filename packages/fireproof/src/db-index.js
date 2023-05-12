@@ -69,21 +69,21 @@ const makeDoc = ({ key, value }) => ({ _id: key, ...value })
  */
 const indexEntriesForChanges = (changes, mapFn) => {
   const indexEntries = []
-  changes.forEach(({ key, value, del }) => {
+  changes.forEach(({ key: _id, value, del }) => {
     // key is _id, value is the document
     if (del || !value) return
     let mapCalled = false
-    const mapReturn = mapFn(makeDoc({ key, value }), (k, v) => {
+    const mapReturn = mapFn(makeDoc({ key: _id, value }), (k, v) => {
       mapCalled = true
       if (typeof k === 'undefined') return
       indexEntries.push({
-        key: [charwise.encode(k), key],
+        key: [charwise.encode(k), _id],
         value: v || null
       })
     })
     if (!mapCalled && mapReturn) {
       indexEntries.push({
-        key: [charwise.encode(mapReturn), key],
+        key: [charwise.encode(mapReturn), _id],
         value: null
       })
     }
