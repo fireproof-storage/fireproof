@@ -243,13 +243,6 @@ export class Valet {
    */
   async parkCar (carCid, value, cids) {
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    // const bulkOperations = []
-    // if (this.valetRootCid) {
-    //   for (const { cid } of this.valetCidBlocks.entries()) {
-    //     console.log('did enc valetCidBlocks', cid)
-    //     bulkOperations.push({ key: cid.toString(), value: newValetCidCar.cid.toString() })
-    //   }
-    // }
     const combinedReader = await this.getCombinedReader(carCid)
     const mapNode = await addCidsToCarIndex(
       combinedReader,
@@ -265,10 +258,8 @@ export class Valet {
 
     for await (const cidx of mapNode.cids()) {
       const bytes = await combinedReader.get(cidx)
-      // console.log('combinedReader ocks', cidx, bytes.constructor.name, bytes.length)
       saveValetBlocks.put(cidx, bytes)
     }
-    // console.log('did addCidsToCarIndex r', saveValetBlocks)
     let newValetCidCar
     if (this.keyMaterial) {
       newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
@@ -277,41 +268,14 @@ export class Valet {
     }
     // console.log('new valetRootCid', this.instanceId, this.name, newValetCidCar.cid, this.valetRootCid)
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
-
     await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readwrite')
       await tx.objectStore('cars').put(value, carCid.toString())
       if (newValetCidCar) {
         await tx.objectStore('cars').put(newValetCidCar.bytes, newValetCidCar.cid.toString())
       }
-      // await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
       return await tx.done
     })
-
-    // load the existing cidToCar index from prolly
-    // add all the new cidsToCar entries to it
-    // also add the cidToCar entry for the current root
-    // store the cidToCar root in localstorage
-
-    // clear valetCidBlocks and put them in a car file
-    // put those car index entries in the valetCid index
-
-    // const { getBlock } = makeGetBlock({
-    //   get: async (cid) => {
-    //     try {
-    //       return await this.valetCidBlocks.get(cid)
-    //     } catch (e) {
-    //       const bytes = await this.getValetBlock(cid)
-    //       await this.valetCidBlocks.put(cid, bytes)
-    //       return { cid, bytes }
-    //     }
-    //   }
-    // })
-
-    // const { getBlock } = makeGetBlock(this.valetCidBlocks)
-
-    // (getBlock, valetRoot, valetRootCid, carCid, cids)
-
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
@@ -332,60 +296,58 @@ export class Valet {
 
   async getCarReader (carCid) {
     carCid = carCid.toString()
-    return await this.withDB(async db => {
+    const carBytes = await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readonly')
-      // const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
-      // const carCid = indexResp?.car
       // console.log('getCarReader', carCid)
-      const carBytes = await tx.objectStore('cars').get(carCid)
-      const reader = await CarReader.fromBytes(carBytes)
-      if (this.keyMaterial) {
-        const roots = await reader.getRoots()
-        const readerGetWithCodec = async cid => {
-          const got = await reader.get(cid)
-          // console.log('got.', cid.toString())
-          let useCodec = codec
-          if (cid.toString().indexOf('bafy') === 0) {
-            // todo cleanup types
-            useCodec = dagcbor
-          }
-          const decoded = await Block.decode({
-            ...got,
-            codec: useCodec,
-            hasher: sha256
-          })
-          // console.log('decoded', decoded.value)
-          return decoded
+      return await tx.objectStore('cars').get(carCid)
+    })
+    const reader = await CarReader.fromBytes(carBytes)
+    if (this.keyMaterial) {
+      const roots = await reader.getRoots()
+      const readerGetWithCodec = async cid => {
+        const got = await reader.get(cid)
+        // console.log('got.', cid.toString())
+        let useCodec = codec
+        if (cid.toString().indexOf('bafy') === 0) {
+          // todo cleanup types
+          useCodec = dagcbor
         }
-        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
+        const decoded = await Block.decode({
+          ...got,
+          codec: useCodec,
+          hasher: sha256
+        })
+        // console.log('decoded', decoded.value)
+        return decoded
+      }
+      const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
 
-        // last block is the root ???
-        const rootBlock = blocks[blocks.length - 1]
+      // last block is the root ???
+      const rootBlock = blocks[blocks.length - 1]
 
-        return {
-          root: rootBlock,
-          get: async dataCID => {
+      return {
+        root: rootBlock,
+        get: async dataCID => {
           // console.log('getCarReader dataCID', dataCID)
-            dataCID = dataCID.toString()
-            const block = blocks.find(b => b.cid.toString() === dataCID)
-            // console.log('getCarReader block', block)
-            if (block) {
-              return block.bytes
-            }
-          }
-        }
-      } else {
-        return {
-          root: reader.getRoots()[0],
-          get: async dataCID => {
-            const gotBlock = await reader.get(CID.parse(dataCID))
-            if (gotBlock) {
-              return gotBlock.bytes
-            }
+          dataCID = dataCID.toString()
+          const block = blocks.find(b => b.cid.toString() === dataCID)
+          // console.log('getCarReader block', block)
+          if (block) {
+            return block.bytes
           }
         }
       }
-    })
+    } else {
+      return {
+        root: reader.getRoots()[0],
+        get: async dataCID => {
+          const gotBlock = await reader.get(CID.parse(dataCID))
+          if (gotBlock) {
+            return gotBlock.bytes
+          }
+        }
+      }
+    }
   }
 
   // todo memoize this
@@ -487,28 +449,6 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   }
 }
 
-// const addCidsToCarIndex = async (getBlock, valetRoot, valetRootCid, bulkOperations) => {
-//   let indexNode
-//   const newBlocks = []
-//   if (valetRootCid) {
-//     if (valetRoot) {
-//       indexNode = valetRoot
-//     } else {
-//       indexNode = await load({ cid: valetRootCid, get: getBlock, ...blockOpts })
-//     }
-//     console.log('update ')
-//     return indexNode.bulk(bulkOperations)
-//   } else {
-//     for await (const node of create({ get: getBlock, list: bulkOperations, ...blockOpts })) {
-//       indexNode = node
-//       newBlocks.push(await node.block)
-//     }
-//     // console.log('created ', indexNode.cid.toString())
-
-//     return { root: indexNode, blocks: newBlocks }
-//   }
-// }
-
 const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperations) => {
   let indexNode
   if (valetRootCid) {
@@ -533,16 +473,6 @@ const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperat
   return indexNode
 }
 
-// function btoArr (buf) {
-//   if (!buf) return undefined
-//   if (buf.constructor.name === 'Uint8Array' || buf.constructor === Uint8Array) {
-//     return buf
-//   }
-//   if (typeof buf === 'string') buf = Buffer.from(buf)
-//   const a = new Uint8Array(buf.length)
-//   for (let i = 0; i < buf.length; i++) a[i] = buf[i]
-//   return a
-// }
 export class VMemoryBlockstore {
   /** @type {Map<string, Uint8Array>} */
   blocks = new Map()
@@ -563,11 +493,6 @@ export class VMemoryBlockstore {
    * @param {Uint8Array} bytes
    */
   async put (cid, bytes) {
-    // console.log('putvm', bytes.constructor.name, this.instanceId, cid, bytes.length)
-    // if (bytes.constructor.name == 'Buffer') {
-    //   console.log('putvmx', bytes.buffer.constructor.name)
-    // }
-    // this.blocks.set(cid.toString(), btoArr(bytes))
     this.blocks.set(cid.toString(), bytes)
   }
 
