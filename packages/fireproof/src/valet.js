@@ -267,15 +267,19 @@ export class Valet {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    this.valetRootCarCid = newValetCidCar.cid // goes to clock
     await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readwrite')
       await tx.objectStore('cars').put(value, carCid.toString())
       if (newValetCidCar) {
+        if (this.valetRootCarCid) {
+          // await tx.objectStore('cars').delete(this.valetRootCarCid.toString())
+        }
         await tx.objectStore('cars').put(newValetCidCar.bytes, newValetCidCar.cid.toString())
       }
       return await tx.done
     })
+    this.valetRootCarCid = newValetCidCar.cid // goes to clock
+
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
