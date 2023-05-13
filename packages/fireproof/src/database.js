@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
-import { doTransaction } from './blockstore.js'
+import { doTransaction, TransactionBlockstore } from './blockstore.js'
 import charwise from 'charwise'
 import { localSet } from './utils.js'
 import { CID } from 'multiformats'
@@ -19,7 +19,6 @@ export const parseCID = cid => (typeof cid === 'string' ? CID.parse(cid) : cid)
  *  This is the main class for saving and loading JSON and other documents with the database. You can find additional examples and
  *  usage guides in the repository README.
  *
- * @param {import('./blockstore.js').TransactionBlockstore} blocks - The block storage instance to use documents and indexes
  * @param {CID[]} clock - The Merkle clock head to use for the Fireproof instance.
  * @param {object} [config] - Optional configuration options for the Fireproof instance.
  * @param {object} [authCtx] - Optional authorization context object to use for any authentication checks.
@@ -31,10 +30,11 @@ export class Database {
   rootCache = null
   eventsCache = new Map()
 
-  constructor (blocks, clock, config = {}) {
-    this.name = config.name
+  constructor (name, clock, config = {}) {
+    this.name = name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
-    this.blocks = blocks
+    this.blocks = new TransactionBlockstore(name, config.key)
+    this.indexBlocks = new TransactionBlockstore(name + '.indexes', config.key)
     this.clock = clock
     this.config = config
   }
@@ -71,7 +71,7 @@ export class Database {
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
     this.blocks.valet?.setRootCarCid(car) // maybe
-    this.indexBlocks = null
+    // this.indexBlocks = null
   }
 
   maybeSaveClock () {
@@ -110,7 +110,7 @@ export class Database {
     let rows, dataCIDs, clockCIDs
     // if (!aClock) aClock = []
     if (aClock && aClock.length > 0) {
-      aClock = aClock.map((cid) => cid.toString())
+      aClock = aClock.map(cid => cid.toString())
       const eventKey = JSON.stringify([...this.clockToJSON(aClock), ...this.clockToJSON()])
 
       let resp
@@ -396,7 +396,9 @@ export class Database {
 
 export async function cidsToProof (cids) {
   if (!cids) return []
-  if (!cids.all) { return [...cids] }
+  if (!cids.all) {
+    return [...cids]
+  }
 
   const all = await cids.all()
   return [...all].map(cid => cid.toString())
