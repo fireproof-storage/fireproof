@@ -29,7 +29,7 @@ const databases = new Map<string, Database>();
 
 const initializeDatabase = (name: string) : Database => {
   if (databases.has(name)) {
-    console.log(`Using existing database ${name}`);
+    // console.log(`Using existing database ${name}`);
     return databases.get(name) as Database;
   } else {
     const database = Fireproof.storage(name);
