@@ -186,7 +186,7 @@ export class DbIndex {
     return indexJson
   }
 
-  static fromJSON (database, { car, code, clock, name }) {
+  static fromJSON (database, { code, clock, name }) {
     // console.log('DbIndex.fromJSON', database.constructor.name, code, clock)
     return new DbIndex(database, name, code, clock)
   }

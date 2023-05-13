@@ -13,7 +13,7 @@ describe('new Valet', () => {
     }
   })
   it('has default attributes', async () => {
-    assert(val.getBlock)
+    assert(val.getValetBlock)
     assert(val.parkCar)
   })
   it('can park a car and serve the blocks', async () => {
