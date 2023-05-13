@@ -13,9 +13,6 @@ export interface FireproofCtxValue {
   ready: boolean;
 }
 
-/**
- * @deprecated useFireproof is context-free, just call the hook
- */
 export const FireproofCtx = createContext<FireproofCtxValue>({
   useLiveQuery: () => {},
   useLiveDocument: () => {},
@@ -27,12 +24,13 @@ const databases = new Map<string, { database: Database; setupStarted: Boolean }>
 
 const initializeDatabase = (
   name: string,
+  defineDatabaseFn: Function,
 ): { database: Database; setupStarted: Boolean } => {
   if (databases.has(name)) {
-    // console.log(`Using existing database ${name}`);
     return databases.get(name) as { database: Database; setupStarted: Boolean };
   } else {
     const database = Fireproof.storage(name);
+    defineDatabaseFn(database);
     const obj = { database, setupStarted: false }
     databases.set(name, obj);
     return obj;
@@ -56,30 +54,23 @@ export function useFireproof(
   },
   setupDatabaseFn : Function|null = null,
 ): FireproofCtxValue {
-  console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
+  // console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
   const [ready, setReady] = useState(false);
-  const [didDefine, setDidDefine] = useState(false);
-  const init = initializeDatabase(name);
+  const init = initializeDatabase(name, defineDatabaseFn);
   const database = init.database
 
   useEffect(() => {
     const doSetup = async () => {
-      if (!didDefine || ready || init.setupStarted || !setupDatabaseFn) return;
+      if (ready || init.setupStarted || !setupDatabaseFn) return;
       // console.log('Setting up database', name);
       init.setupStarted = true;
       if (database.clock.length === 0) {
-        console.log('setupDatabaseFn', name, setupDatabaseFn);
+        // console.log('setupDatabaseFn', name, setupDatabaseFn);
         await setupDatabaseFn(database);
       }
       setReady(true);
     };
     doSetup();
-  }, [didDefine]);
-
-  useEffect(() => {
-    if (didDefine) return;
-    defineDatabaseFn(database);
-    setDidDefine(true);
   }, [name]);
 
   function useLiveDocument(initialDoc: Document) {
