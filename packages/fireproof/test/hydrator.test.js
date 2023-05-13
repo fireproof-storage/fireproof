@@ -152,25 +152,25 @@ describe('hydrator query with dbname', () => {
     assert.equal(newResult.rows[0].value, 'drate')
   })
   it('rehydrate database w reset valet', async () => {
-    console.log('og.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
+    // console.log('og.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
 
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
     assert.equal((await database.changesSince()).rows.length, 7)
     const result = await index.query({ range: [0, 54] })
     assert.equal(result.rows[0].value, 'drate')
-    console.log('dd.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
+    // console.log('dd.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
 
     const serialized = JSON.parse(JSON.stringify(database))
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
-    console.log('------------ new database --------')
+    // console.log('------------ new database --------')
 
     const newDb = Fireproof.fromConfig(database.name, serialized)
     // const oldV = database.blocks.valet
     // reset valet
     // newDb.blocks.valet.valetRootCarCid = database.blocks.valet.valetRootCarCid
     // newDb.indexBlocks.valet.valetRootCarCid = database.indexBlocks.valet.valetRootCarCid
-    console.log('dx.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
+    // console.log('dx.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
     // newDb.blocks.valet.valetRootCid = database.blocks.valet.valetRootCid
     // newDb.indexBlocks.valet.valetRootCid = database.indexBlocks.valet.valetRootCid
 
@@ -181,7 +181,7 @@ describe('hydrator query with dbname', () => {
     assert.equal(newDb.name, 'testDBindex')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
-    console.log('ind', newDb.indexes)
+    // console.log('ind', newDb.indexes)
 
     const newIndex = [...newDb.indexes.values()][0]
     assert.equal(newIndex.mapFnString, `function (doc, map) {
