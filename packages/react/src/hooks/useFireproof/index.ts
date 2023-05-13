@@ -6,8 +6,8 @@ interface Document {
   [key: string]: any;
 }
 
-export interface FireproofHookValue {
-  database: Database|null;
+export interface FireproofCtxValue {
+  database: Database;
   useLiveQuery: Function;
   useLiveDocument: Function;
   ready: boolean;
@@ -16,25 +16,26 @@ export interface FireproofHookValue {
 /**
  * @deprecated useFireproof is context-free, just call the hook
  */
-export const FireproofCtx  = createContext<FireproofHookValue>({
+export const FireproofCtx = createContext<FireproofCtxValue>({
   useLiveQuery: () => {},
   useLiveDocument: () => {},
-  database: null,
+  database: new Database(null, []),
   ready: false,
-})
+});
 
-let startedSetup = false;
+const databases = new Map<string, { database: Database; setupStarted: Boolean }>();
 
-const databases = new Map<string, Database>();
-
-const initializeDatabase = (name: string) : Database => {
+const initializeDatabase = (
+  name: string,
+): { database: Database; setupStarted: Boolean } => {
   if (databases.has(name)) {
     // console.log(`Using existing database ${name}`);
-    return databases.get(name) as Database;
+    return databases.get(name) as { database: Database; setupStarted: Boolean };
   } else {
     const database = Fireproof.storage(name);
-    databases.set(name, database);
-    return database;
+    const obj = { database, setupStarted: false }
+    databases.set(name, obj);
+    return obj;
   }
 };
 
@@ -45,7 +46,7 @@ You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in 
 @param {string} name - The path to the database file
 @param {function(database: Database): void} [defineDatabaseFn] - Synchronous function that defines the database, run this before any async calls
 @param {function(database: Database): Promise<void>} [setupDatabaseFn] - Asynchronous function that sets up the database, run this to load fixture data etc
-@returns {FireproofHookValue} { useLiveQuery, useLiveDocument, database, ready }
+@returns {FireproofCtxValue} { useLiveQuery, useLiveDocument, database, ready }
 */
 export function useFireproof(
   name = 'useFireproof',
@@ -53,25 +54,33 @@ export function useFireproof(
     // define indexes here before querying them in setup
     database;
   },
-  setupDatabaseFn = async (database: Database) => {
-    database;
-  },
-) : FireproofHookValue {
+  setupDatabaseFn : Function|null = null,
+): FireproofCtxValue {
+  console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
   const [ready, setReady] = useState(false);
-  const database = initializeDatabase(name);
+  const [didDefine, setDidDefine] = useState(false);
+  const init = initializeDatabase(name);
+  const database = init.database
 
   useEffect(() => {
     const doSetup = async () => {
-      if (ready || startedSetup) return;
-      startedSetup = true;
-      defineDatabaseFn(database);
+      if (!didDefine || ready || init.setupStarted || !setupDatabaseFn) return;
+      // console.log('Setting up database', name);
+      init.setupStarted = true;
       if (database.clock.length === 0) {
+        console.log('setupDatabaseFn', name, setupDatabaseFn);
         await setupDatabaseFn(database);
       }
       setReady(true);
     };
     doSetup();
-  }, [ready]);
+  }, [didDefine]);
+
+  useEffect(() => {
+    if (didDefine) return;
+    defineDatabaseFn(database);
+    setDidDefine(true);
+  }, [name]);
 
   function useLiveDocument(initialDoc: Document) {
     const id = initialDoc._id;
@@ -105,13 +114,17 @@ export function useFireproof(
   }
 
   function useLiveQuery(mapFn: Function, query = {}, initialRows: any[] = []) {
-    const [result, setResult] = useState({ rows: initialRows, proof: {}, docs: initialRows.map((r) => r.doc) });
+    const [result, setResult] = useState({
+      rows: initialRows,
+      proof: {},
+      docs: initialRows.map((r) => r.doc),
+    });
     const [index, setIndex] = useState<Index | null>(null);
 
     const refreshRows = useCallback(async () => {
       if (index) {
-        const res = await index.query(query)
-        setResult({...res, docs: res.rows.map((r) => r.doc)});
+        const res = await index.query(query);
+        setResult({ ...res, docs: res.rows.map((r) => r.doc) });
       }
     }, [index, JSON.stringify(query)]);
 

@@ -314,7 +314,12 @@ describe('DbIndex query with compound key', () => {
     assert.equal(index.name, '[doc.name, doc.age]')
   })
   it('query index range', async () => {
-    const result = await index.query({ range: [['alice', NaN], ['alice', Infinity]] })
+    const result = await index.query({
+      range: [
+        ['alice', NaN],
+        ['alice', Infinity]
+      ]
+    })
     assert.equal(result.rows.length, 1)
     assert.equal(result.rows[0].value, null)
     assert.deepEqual(result.rows[0].key, ['alice', 40])
@@ -326,7 +331,12 @@ describe('DbIndex query with compound key', () => {
     assert.deepEqual(result.rows[0].key, ['alice', 40])
   })
   it('query index range two', async () => {
-    const result = await index.query({ range: [['bob', NaN], ['bob', Infinity]] })
+    const result = await index.query({
+      range: [
+        ['bob', NaN],
+        ['bob', Infinity]
+      ]
+    })
     assert.equal(result.rows.length, 2)
     assert.equal(result.rows[0].value, null)
     assert.deepEqual(result.rows[0].key, ['bob', 4])
