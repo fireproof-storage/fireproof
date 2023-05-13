@@ -35,6 +35,9 @@ describe('DbIndex query', () => {
   it('has a name', () => {
     assert.equal(index.name, 'namesByAge')
   })
+  it('can get by name from db', () => {
+    assert.equal(database.index(index.name), index)
+  })
   it('query index range', async () => {
     const result = await index.query({ range: [41, 49] })
     assert(result, 'did return result')

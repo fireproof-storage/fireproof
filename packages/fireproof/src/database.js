@@ -83,6 +83,18 @@ export class Database {
     }
   }
 
+  index (name) {
+    // iterate over the indexes and gather any with the same name
+    // if there are more than one, throw an error
+    // if there is one, return it
+    // if there are none, return null
+    const indexes = [...this.indexes.values()].filter(index => index.name === name)
+    if (indexes.length > 1) {
+      throw new Error(`Multiple indexes found with name ${name}`)
+    }
+    return indexes[0] || null
+  }
+
   /**
    * Triggers a notification to all listeners
    * of the Fireproof instance so they can repaint UI, etc.

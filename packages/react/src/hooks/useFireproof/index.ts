@@ -6,14 +6,17 @@ interface Document {
   [key: string]: any;
 }
 
-export interface FireproofCtxValue {
+export interface FireproofHookValue {
   database: Fireproof|null;
   useLiveQuery: Function;
   useLiveDocument: Function;
   ready: boolean;
 }
 
-export const FireproofCtx  = createContext<FireproofCtxValue>({
+/**
+ * @deprecated useFireproof is context-free, just call the hook
+ */
+export const FireproofCtx  = createContext<FireproofHookValue>({
   useLiveQuery: () => {},
   useLiveDocument: () => {},
   database: null,
@@ -21,10 +24,18 @@ export const FireproofCtx  = createContext<FireproofCtxValue>({
 })
 
 let startedSetup = false;
-let database: Database;
-const initializeDatabase = (name: string) => {
-  if (database) return;
-  database = Fireproof.storage(name);
+
+const databases = new Map<string, Database>();
+
+const initializeDatabase = (name: string) : Database => {
+  if (databases.has(name)) {
+    console.log(`Using existing database ${name}`);
+    return databases.get(name) as Database;
+  } else {
+    const database = Fireproof.storage(name);
+    databases.set(name, database);
+    return database;
+  }
 };
 
 /**
@@ -34,7 +45,7 @@ You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in 
 @param {string} name - The path to the database file
 @param {function(database: Database): void} [defineDatabaseFn] - Synchronous function that defines the database, run this before any async calls
 @param {function(database: Database): Promise<void>} [setupDatabaseFn] - Asynchronous function that sets up the database, run this to load fixture data etc
-@returns {FireproofCtxValue} { useLiveQuery, useLiveDocument, database, ready }
+@returns {FireproofHookValue} { useLiveQuery, useLiveDocument, database, ready }
 */
 export function useFireproof(
   name = 'useFireproof',
@@ -45,9 +56,9 @@ export function useFireproof(
   setupDatabaseFn = async (database: Database) => {
     database;
   },
-) : FireproofCtxValue {
+) : FireproofHookValue {
   const [ready, setReady] = useState(false);
-  initializeDatabase(name);
+  const database = initializeDatabase(name);
 
   useEffect(() => {
     const doSetup = async () => {
