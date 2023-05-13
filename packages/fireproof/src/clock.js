@@ -88,7 +88,7 @@ export class EventBlock extends Block {
    * @param {Uint8Array} config.bytes
    */
   constructor ({ cid, value, bytes }) {
-    // @ts-expect-error
+    // @ts-ignore
     super({ cid, value, bytes })
   }
 
@@ -142,7 +142,7 @@ export class EventFetcher {
 export async function encodeEventBlock (value) {
   // TODO: sort parents
   const { cid, bytes } = await encode({ value, codec: cbor, hasher: sha256 })
-  // @ts-expect-error
+  // @ts-ignore
   return new Block({ cid, value, bytes })
 }
 
@@ -153,7 +153,7 @@ export async function encodeEventBlock (value) {
  */
 export async function decodeEventBlock (bytes) {
   const { cid, value } = await decode({ bytes, codec: cbor, hasher: sha256 })
-  // @ts-expect-error
+  // @ts-ignore
   return new Block({ cid, value, bytes })
 }
 

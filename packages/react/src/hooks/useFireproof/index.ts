@@ -7,7 +7,7 @@ interface Document {
 }
 
 export interface FireproofHookValue {
-  database: Fireproof|null;
+  database: Database|null;
   useLiveQuery: Function;
   useLiveDocument: Function;
   ready: boolean;
