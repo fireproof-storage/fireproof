@@ -13,7 +13,7 @@ import { Database, cidsToProof } from './database.js'
 
 import * as codec from '@ipld/dag-cbor'
 // import { create as createBlock } from 'multiformats/block'
-import { TransactionBlockstore, doTransaction } from './blockstore.js'
+import { doTransaction } from './blockstore.js'
 // @ts-ignore
 import charwise from 'charwise'
 
@@ -107,14 +107,6 @@ export class DbIndex {
    */
   constructor (database, name, mapFn, clock = null, opts = {}) {
     this.database = database
-    if (!database.indexBlocks) {
-      // move ownership of this to database
-      // so that it can be hydrated from car once
-      database.indexBlocks = new TransactionBlockstore(
-        database?.name + '.indexes',
-        database.blocks.valet?.getKeyMaterial()
-      )
-    }
     if (typeof name === 'function') {
       // app is using deprecated API, remove in 0.7
       opts = clock || {}
