@@ -1,33 +1,12 @@
 # useFireproof React hook
 
 React hook to initialize a Fireproof database, automatically saving and loading the clock.
-
+ 
 The hook takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
  
 The return value looks like `{ useLiveQuery, useLiveDocument, database, ready }` where the `database` is the Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `useLiveQuery` and `useLiveDocument` functions are hooks used to update your app in real-time.
 
 Changes made via remote sync peers, or other members of your cloud replica group will appear automatically if you use these APIs. Makes writing collaborative workgroup software, and multiplayer games super easy.
-
-## Usage Example
-
-In larger apps you set up your context in App.js, and then use it in other components. This allows you to easily share
-your index definitions and other setup code across your app. Here is what you might see in App.js:
-
-```js
-import { FireproofCtx, useFireproof } from '@fireproof/core/hooks/use-fireproof'
-
-function App() {
-  // establish the Fireproof context value
-  const fpCtxValue = useFireproof()
-
-  // render the rest of the application wrapped in the Fireproof provider
-  return (
-    <FireproofCtx.Provider value={fpCtxValue}>
-        <MyComponent />
-    </FireproofCtx.Provider>
-  )
-}
-```
 
 ### useLiveQuery
 
@@ -119,16 +98,17 @@ This should result in a tiny application that updates the document when you clic
 
 ## Setup Functions
 
+
 ### defineDatabaseFn 
  
 Synchronous function that defines the database, run this before any async calls. You can use it to do stuff like set up Indexes. Here's an example:
 
 ```js
 const defineIndexes = (database) => {
-  database.allLists = new Index(database, 'allLists', function (doc, map) {
+  new Index(database, 'allLists', function (doc, map) {
     if (doc.type === 'list') map(doc.type, doc)
   })
-  database.todosByList = new Index(database, 'todosByList', function (doc, map) {
+  new Index(database, 'todosByList', function (doc, map) {
     if (doc.type === 'todo' && doc.listId) {
       map([doc.listId, doc.createdAt], doc)
     }
@@ -139,6 +119,26 @@ const defineIndexes = (database) => {
 ```
 
 ### setupDatabaseFn
+
+#### A note on using Context
+
+If you are just calling `useLiveQuery` and `useLiveDocument` and doing setup with the synchronous `defineDatabaseFn`, you may not need to manage context. If you are doing async setup work with `setupDatabaseFn` you will need to manage context. This allows you to run database setup code once for your entire app. Here is what you might see in App.js:
+
+```js
+import { FireproofCtx, useFireproof } from '@fireproof/core/hooks/use-fireproof'
+
+function App() {
+  // establish the Fireproof context value
+  const fpCtxValue = useFireproof('dbname', defineIndexes, setupDatabase)
+
+  // render the rest of the application wrapped in the Fireproof provider
+  return (
+    <FireproofCtx.Provider value={fpCtxValue}>
+        <MyComponent />
+    </FireproofCtx.Provider>
+  )
+}
+```
 
 An asynchronous function that uses the database when it's ready, run this to load fixture data, insert a dataset from somewhere else, etc. Here's a simple example:
 
