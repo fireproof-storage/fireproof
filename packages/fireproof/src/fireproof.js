@@ -2,7 +2,7 @@ import randomBytes from 'randombytes'
 import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
-import { TransactionBlockstore } from './blockstore.js'
+// import { TransactionBlockstore } from './blockstore.js'
 import { localGet } from './utils.js'
 import { Sync } from './sync.js'
 
@@ -20,22 +20,29 @@ export class Fireproof {
   static storage = (name = null, opts = {}) => {
     if (name) {
       opts.name = name
+      // todo this can come from a registry also
       const existing = localGet('fp.' + name)
       if (existing) {
         const existingConfig = JSON.parse(existing)
-        const fp = new Database(new TransactionBlockstore(name, existingConfig.key), [], opts)
-        return Fireproof.fromJSON(existingConfig, fp)
+        return Fireproof.fromConfig(name, existingConfig, opts)
       } else {
         const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
-        return new Database(new TransactionBlockstore(name, instanceKey), [], opts)
+        opts.key = instanceKey
+        return new Database(name, [], opts)
       }
     } else {
-      return new Database(new TransactionBlockstore(), [], opts)
+      return new Database(null, [], opts)
     }
   }
 
+  static fromConfig (name, existingConfig, opts = {}) {
+    opts.key = existingConfig.key
+    const fp = new Database(name, [], opts)
+    return Fireproof.fromJSON(existingConfig, fp)
+  }
+
   static fromJSON (json, database) {
-    database.hydrate({ clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
+    database.hydrate({ car: json.car, indexCar: json.indexCar, clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
     if (json.indexes) {
       for (const {
         name,
@@ -58,7 +65,8 @@ export class Fireproof {
 
   static snapshot (database, clock) {
     const definition = database.toJSON()
-    const withBlocks = new Database(database.blocks)
+    const withBlocks = new Database(database.name)
+    withBlocks.blocks = database.blocks
     if (clock) {
       definition.clock = clock.map(c => parseCID(c))
       definition.indexes.forEach(index => {

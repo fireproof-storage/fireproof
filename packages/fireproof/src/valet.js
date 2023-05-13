@@ -1,6 +1,7 @@
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
+import { parse } from 'multiformats/link'
 import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
@@ -8,15 +9,23 @@ import * as dagcbor from '@ipld/dag-cbor'
 import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
 // @ts-ignore
-import { bf } from 'prolly-trees/utils'
+
+// @ts-ignore
+import { bf, simpleCompare as compare } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
+// import { makeGetBlock } from './prolly.js'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
 // @ts-ignore
 import * as codec from 'encrypted-block'
+
+import { create, load } from 'ipld-hashmap'
+
 import { rawSha1 as sha1sync } from './sha1.js'
 const chunker = bf(30)
+
+const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
 
 const NO_ENCRYPT = typeof process !== 'undefined' && !!process.env?.NO_ENCRYPT
 // ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
@@ -28,6 +37,12 @@ export class Valet {
   alreadyEnqueued = new Set()
   keyMaterial = null
   keyId = 'null'
+  valetRoot = null
+  valetRootCid = null // set by hydrate
+  valetRootCarCid = null // most recent diff
+
+  valetCidBlocks = new VMemoryBlockstore()
+  instanceId = Math.random().toString(36).slice(2)
 
   /**
    * Function installed by the database to upload car files
@@ -148,18 +163,123 @@ export class Valet {
     }
   }
 
+  setRootCarCid (cid) {
+    this.valetRootCarCid = cid
+    this.valetRoot = null
+    this.valetRootCid = null
+  }
+
+  async getCarCIDForCID (cid) {
+    // make a car reader for this.valetRootCarCid
+    if (!this.valetRootCarCid) return
+
+    let indexNode
+    if (this.valetRoot) {
+      indexNode = this.valetRoot
+    } else {
+      const combinedReader = await this.getCombinedReader(this.valetRootCarCid)
+      if (!this.valetRootCid) {
+        const root = combinedReader.root.cid
+        // console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
+        this.valetRootCid = root
+      }
+      indexNode = await load(combinedReader, this.valetRootCid, {
+        blockHasher: blockOpts.hasher,
+        blockCodec: blockOpts.codec
+      })
+    }
+
+    const got = await indexNode.get(cid)
+    // console.log('getCarCIDForCID', cid, got)
+    return { result: got }
+  }
+
+  async OLDgetCarCIDForCID (cid) {
+    const carCid = await this.withDB(async db => {
+      const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
+      const indexResp = await tx.objectStore('cidToCar').index('cids').get(cid)
+      return indexResp?.car
+    })
+    return { result: carCid }
+  }
+
+  async getCombinedReader (carCid) {
+    let carMapReader
+    if (this.valetRootCarCid) {
+      // todo only need this if we are cold starting
+      carMapReader = await this.getCarReader(this.valetRootCarCid)
+    }
+
+    const theseValetCidBlocks = this.valetCidBlocks
+    // console.log('theseValetCidBlocks', theseValetCidBlocks)
+    const combinedReader = {
+      root: carMapReader?.root,
+      put: async (cid, bytes) => {
+        // console.log('mapPut', cid, bytes.length)
+        return await theseValetCidBlocks.put(cid, bytes)
+      },
+      get: async cid => {
+        // console.log('mapGet', cid)
+        try {
+          const got = await theseValetCidBlocks.get(cid)
+          return got.bytes
+        } catch (e) {
+          // console.log('get from car', cid, carMapReader)
+          if (!carMapReader) throw e
+          const bytes = await carMapReader.get(cid)
+          await theseValetCidBlocks.put(cid, bytes)
+          // console.log('mapGet', cid, bytes.length, bytes.constructor.name)
+          return bytes
+        }
+      }
+    }
+    return combinedReader
+  }
+
   /**
    *
    * @param {string} carCid
    * @param {*} value
    */
   async parkCar (carCid, value, cids) {
+    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
+    const combinedReader = await this.getCombinedReader(carCid)
+    const mapNode = await addCidsToCarIndex(
+      combinedReader,
+      this.valetRoot,
+      this.valetRootCid,
+      Array.from(cids).map(cid => ({ key: cid.toString(), value: carCid.toString() }))
+    )
+
+    this.valetRoot = mapNode
+    this.valetRootCid = mapNode.cid
+    // make a block set with all the cids of the map
+    const saveValetBlocks = new VMemoryBlockstore() //  todo this blockstore should read from the last valetCid car also
+
+    for await (const cidx of mapNode.cids()) {
+      const bytes = await combinedReader.get(cidx)
+      saveValetBlocks.put(cidx, bytes)
+    }
+    let newValetCidCar
+    if (this.keyMaterial) {
+      newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
+    } else {
+      newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
+    }
+    // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
     await this.withDB(async db => {
-      const tx = db.transaction(['cars', 'cidToCar'], 'readwrite')
-      await tx.objectStore('cars').put(value, carCid)
-      await tx.objectStore('cidToCar').put({ pending: 'y', car: carCid, cids: Array.from(cids) })
+      const tx = db.transaction(['cars'], 'readwrite')
+      await tx.objectStore('cars').put(value, carCid.toString())
+      if (newValetCidCar) {
+        if (this.valetRootCarCid) {
+          // await tx.objectStore('cars').delete(this.valetRootCarCid.toString())
+        }
+        await tx.objectStore('cars').put(newValetCidCar.bytes, newValetCidCar.cid.toString())
+      }
       return await tx.done
     })
+    this.valetRootCarCid = newValetCidCar.cid // goes to clock
+
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
     if (this.uploadFunction) {
@@ -178,51 +298,76 @@ export class Valet {
 
   remoteBlockFunction = null
 
-  // todo memoize this
-  async getBlock (dataCID) {
-    return await this.withDB(async db => {
-      const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
-      const indexResp = await tx.objectStore('cidToCar').index('cids').get(dataCID)
-      const carCid = indexResp?.car
-      if (!carCid) {
-        throw new Error('Missing block: ' + dataCID)
-      }
-      const carBytes = await tx.objectStore('cars').get(carCid)
-      const reader = await CarReader.fromBytes(carBytes)
-      if (this.keyMaterial) {
-        const roots = await reader.getRoots()
-        const readerGetWithCodec = async cid => {
-          const got = await reader.get(cid)
-          // console.log('got.', cid.toString())
-          let useCodec = codec
-          if (cid.toString().indexOf('bafy') === 0) {
-            // todo cleanup types
-            useCodec = dagcbor
-          }
-          const decoded = await Block.decode({
-            ...got,
-            codec: useCodec,
-            hasher: sha256
-          })
-          // console.log('decoded', decoded.value)
-          return decoded
-        }
-        const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
-        const block = blocks.find(b => b.cid.toString() === dataCID)
-        if (block) {
-          return block.bytes
-        }
-      } else {
-        const gotBlock = await reader.get(CID.parse(dataCID))
-        if (gotBlock) {
-          return gotBlock.bytes
-        }
-      }
+  async getCarReader (carCid) {
+    carCid = carCid.toString()
+    const carBytes = await this.withDB(async db => {
+      const tx = db.transaction(['cars'], 'readonly')
+      // console.log('getCarReader', carCid)
+      return await tx.objectStore('cars').get(carCid)
     })
+    const reader = await CarReader.fromBytes(carBytes)
+    if (this.keyMaterial) {
+      const roots = await reader.getRoots()
+      const readerGetWithCodec = async cid => {
+        const got = await reader.get(cid)
+        // console.log('got.', cid.toString())
+        let useCodec = codec
+        if (cid.toString().indexOf('bafy') === 0) {
+          // todo cleanup types
+          useCodec = dagcbor
+        }
+        const decoded = await Block.decode({
+          ...got,
+          codec: useCodec,
+          hasher: sha256
+        })
+        // console.log('decoded', decoded.value)
+        return decoded
+      }
+      const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
+
+      // last block is the root ???
+      const rootBlock = blocks[blocks.length - 1]
+
+      return {
+        root: rootBlock,
+        get: async dataCID => {
+          // console.log('getCarReader dataCID', dataCID)
+          dataCID = dataCID.toString()
+          const block = blocks.find(b => b.cid.toString() === dataCID)
+          // console.log('getCarReader block', block)
+          if (block) {
+            return block.bytes
+          }
+        }
+      }
+    } else {
+      return {
+        root: reader.getRoots()[0],
+        get: async dataCID => {
+          const gotBlock = await reader.get(CID.parse(dataCID))
+          if (gotBlock) {
+            return gotBlock.bytes
+          }
+        }
+      }
+    }
+  }
+
+  // todo memoize this
+  async getValetBlock (dataCID) {
+    // console.log('get valet block', dataCID)
+    const { result: carCid } = await this.getCarCIDForCID(dataCID)
+    if (!carCid) {
+      throw new Error('Missing block: ' + dataCID)
+    }
+    const reader = await this.getCarReader(carCid)
+    return await reader.get(dataCID)
   }
 }
 
 export const blocksToCarBlock = async (rootCids, blocks) => {
+  // console.log('blocksToCarBlock', rootCids, blocks.constructor.name)
   let size = 0
   if (!Array.isArray(rootCids)) {
     rootCids = [rootCids]
@@ -305,5 +450,59 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
     })()
     memoizeDecryptedCarBlocks.set(cid.toString(), blocksPromise)
     return blocksPromise
+  }
+}
+
+const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperations) => {
+  let indexNode
+  if (valetRootCid) {
+    if (valetRoot) {
+      indexNode = valetRoot
+    } else {
+      indexNode = await load(blockstore, valetRootCid, { blockHasher: blockOpts.hasher, blockCodec: blockOpts.codec })
+    }
+  } else {
+    indexNode = await create(blockstore, {
+      bitWidth: 4,
+      bucketSize: 2,
+      blockHasher: blockOpts.hasher,
+      blockCodec: blockOpts.codec
+    })
+  }
+  // console.log('adding', bulkOperations.length, 'cids to index')
+  for (const { key, value } of bulkOperations) {
+    // console.log('adding', key, value)
+    await indexNode.set(key, value)
+  }
+  return indexNode
+}
+
+export class VMemoryBlockstore {
+  /** @type {Map<string, Uint8Array>} */
+  blocks = new Map()
+  instanceId = Math.random().toString(36).slice(2)
+
+  async get (cid) {
+    const bytes = this.blocks.get(cid.toString())
+    // console.log('getvm', bytes.constructor.name, this.instanceId, cid, bytes && bytes.length)
+    if (bytes.length === 253) {
+      // console.log('getvm', bytes.())
+    }
+    if (!bytes) throw new Error('block not found ' + cid.toString())
+    return { cid, bytes }
+  }
+
+  /**
+   * @param {import('../src/link').AnyLink} cid
+   * @param {Uint8Array} bytes
+   */
+  async put (cid, bytes) {
+    this.blocks.set(cid.toString(), bytes)
+  }
+
+  * entries () {
+    for (const [str, bytes] of this.blocks) {
+      yield { cid: parse(str), bytes }
+    }
   }
 }
