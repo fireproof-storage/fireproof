@@ -52,6 +52,7 @@ export class Database {
       name: this.name,
       key: this.blocks.valet?.getKeyMaterial(),
       car: this.blocks.valet?.valetRootCarCid.toString(),
+      indexCar: this.indexBlocks.valet?.valetRootCarCid?.toString(),
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }
@@ -66,11 +67,13 @@ export class Database {
     return (clock || this.clock).map(cid => cid.toString())
   }
 
-  hydrate ({ clock, name, key, car }) {
+  hydrate ({ clock, name, key, car, indexCar }) {
     this.name = name
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
     this.blocks.valet?.setRootCarCid(car) // maybe
+    this.indexBlocks.valet?.setKeyMaterial(key)
+    this.indexBlocks.valet?.setRootCarCid(indexCar) // maybe
     // this.indexBlocks = null
   }
 
@@ -278,7 +281,7 @@ export class Database {
    * @returns {Promise<{ proof:{}, id: string, clock: CID[] }>} - The result of adding the event to storage
    */
   async putToProllyTree (decodedEvent, clock = null) {
-    console.log('putToProllyTree', decodedEvent)
+    // console.log('putToProllyTree', decodedEvent)
     const event = encodeEvent(decodedEvent)
     if (clock && JSON.stringify(this.clockToJSON(clock)) !== JSON.stringify(this.clockToJSON())) {
       // console.log('this.clock', this.clockToJSON())

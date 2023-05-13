@@ -42,12 +42,11 @@ export class Fireproof {
   }
 
   static fromJSON (json, database) {
-    database.hydrate({ clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
+    database.hydrate({ car: json.car, indexCar: json.indexCar, clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
     if (json.indexes) {
       for (const {
         name,
         code,
-        car,
         clock: { byId, byKey, db }
       } of json.indexes) {
         Index.fromJSON(database, {
@@ -56,7 +55,6 @@ export class Fireproof {
             byKey: byKey ? parseCID(byKey) : null,
             db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
           },
-          car,
           code,
           name
         })

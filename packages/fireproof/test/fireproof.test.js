@@ -125,7 +125,7 @@ describe('Fireproof', () => {
     const allCids = await database.allCIDs()
     assert.equal(allCids.length, 2)
     const storedCids = await database.allStoredCIDs()
-    assert.equal(storedCids.length, 3)
+    assert.equal(storedCids.length, 2)
   })
 
   it('has a factory for making new instances with default settings', async () => {

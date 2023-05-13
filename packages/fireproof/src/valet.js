@@ -51,7 +51,6 @@ export class Valet {
   uploadFunction = null
 
   constructor (name = 'default', keyMaterial) {
-    console.log('valet', name)
     this.name = name
     this.setKeyMaterial(keyMaterial)
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
@@ -181,7 +180,7 @@ export class Valet {
       const combinedReader = await this.getCombinedReader(this.valetRootCarCid)
       if (!this.valetRootCid) {
         const root = combinedReader.root.cid
-        console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
+        // console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
         this.valetRootCid = root
       }
       indexNode = await load(combinedReader, this.valetRootCid, {
@@ -191,7 +190,7 @@ export class Valet {
     }
 
     const got = await indexNode.get(cid)
-    console.log('getCarCIDForCID', cid, got)
+    // console.log('getCarCIDForCID', cid, got)
     return { result: got }
   }
 
@@ -243,7 +242,7 @@ export class Valet {
    * @param {*} value
    */
   async parkCar (carCid, value, cids) {
-    console.log('parkCar', this.instanceId, this.name, carCid, cids)
+    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
     // const bulkOperations = []
     // if (this.valetRootCid) {
     //   for (const { cid } of this.valetCidBlocks.entries()) {
@@ -276,7 +275,7 @@ export class Valet {
     } else {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
-    console.log('new valetRootCid', this.instanceId, this.name, newValetCidCar.cid, this.valetRootCid)
+    // console.log('new valetRootCid', this.instanceId, this.name, newValetCidCar.cid, this.valetRootCid)
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
 
     await this.withDB(async db => {
@@ -437,7 +436,7 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   for (const { cid } of blocks.entries()) {
     theCids.push(cid.toString())
   }
-  console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
+  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
   // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
