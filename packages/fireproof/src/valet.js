@@ -266,7 +266,7 @@ export class Valet {
     } else {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
-    // console.log('new valetRootCid', this.instanceId, this.name, newValetCidCar.cid, this.valetRootCid)
+    // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
     await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readwrite')
