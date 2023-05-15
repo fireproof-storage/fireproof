@@ -160,7 +160,7 @@ importers:
 
   packages/react:
     specifiers:
-      '@fireproof/core': ^0.5.18
+      '@fireproof/core': ^0.5.19
       '@jest/globals': ^29.5.0
       '@testing-library/react-hooks': ^3.4.1
       '@types/jest': ^26.0.7
