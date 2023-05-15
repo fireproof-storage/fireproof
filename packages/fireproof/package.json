@@ -1,7 +1,7 @@
 {
   "name": "@fireproof/core",
-  "version": "0.5.18",
-  "description": "Cloudless database for apps, the browser, and IPFS",
+  "version": "0.5.19",
+  "description": "Live data for your React app, powered by IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",
   "typings": "dist/src/fireproof.d.ts",

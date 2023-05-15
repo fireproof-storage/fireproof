@@ -83,6 +83,18 @@ export class Database {
     }
   }
 
+  index (name) {
+    // iterate over the indexes and gather any with the same name
+    // if there are more than one, throw an error
+    // if there is one, return it
+    // if there are none, return null
+    const indexes = [...this.indexes.values()].filter(index => index.name === name)
+    if (indexes.length > 1) {
+      throw new Error(`Multiple indexes found with name ${name}`)
+    }
+    return indexes[0] || null
+  }
+
   /**
    * Triggers a notification to all listeners
    * of the Fireproof instance so they can repaint UI, etc.
@@ -230,12 +242,11 @@ export class Database {
     return doc
   }
   /**
-   * @typedef {Object} Document
+   * @typedef {any} Document
    * @property {string} _id - The ID of the document (required)
    * @property {string} [_proof] - The proof of the document (optional)
    * @property {string} [_clock] - The clock of the document (optional)
-   * @property {any} [key: string] - Index signature notation to allow any other unknown fields
-   *  * @property {Object.<string, any>} [otherProperties] - Any other unknown properties (optional)
+   * @property {Object.<string, any>} [unknown: string] - Any other unknown properties (optional)
    */
 
   /**

@@ -7,24 +7,34 @@ interface Document {
 }
 
 export interface FireproofCtxValue {
-  database: Fireproof|null;
+  database: Database;
   useLiveQuery: Function;
   useLiveDocument: Function;
   ready: boolean;
 }
 
-export const FireproofCtx  = createContext<FireproofCtxValue>({
+export const FireproofCtx = createContext<FireproofCtxValue>({
   useLiveQuery: () => {},
   useLiveDocument: () => {},
-  database: null,
+  database: new Database(null, []),
   ready: false,
-})
+});
 
-let startedSetup = false;
-let database: Database;
-const initializeDatabase = (name: string) => {
-  if (database) return;
-  database = Fireproof.storage(name);
+const databases = new Map<string, { database: Database; setupStarted: Boolean }>();
+
+const initializeDatabase = (
+  name: string,
+  defineDatabaseFn: Function,
+): { database: Database; setupStarted: Boolean } => {
+  if (databases.has(name)) {
+    return databases.get(name) as { database: Database; setupStarted: Boolean };
+  } else {
+    const database = Fireproof.storage(name);
+    defineDatabaseFn(database);
+    const obj = { database, setupStarted: false }
+    databases.set(name, obj);
+    return obj;
+  }
 };
 
 /**
@@ -42,25 +52,26 @@ export function useFireproof(
     // define indexes here before querying them in setup
     database;
   },
-  setupDatabaseFn = async (database: Database) => {
-    database;
-  },
-) : FireproofCtxValue {
+  setupDatabaseFn : Function|null = null,
+): FireproofCtxValue {
+  // console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
   const [ready, setReady] = useState(false);
-  initializeDatabase(name);
+  const init = initializeDatabase(name, defineDatabaseFn);
+  const database = init.database
 
   useEffect(() => {
     const doSetup = async () => {
-      if (ready || startedSetup) return;
-      startedSetup = true;
-      defineDatabaseFn(database);
+      if (ready || init.setupStarted || !setupDatabaseFn) return;
+      // console.log('Setting up database', name);
+      init.setupStarted = true;
       if (database.clock.length === 0) {
+        // console.log('setupDatabaseFn', name, setupDatabaseFn);
         await setupDatabaseFn(database);
       }
       setReady(true);
     };
     doSetup();
-  }, [ready]);
+  }, [name]);
 
   function useLiveDocument(initialDoc: Document) {
     const id = initialDoc._id;
@@ -94,13 +105,17 @@ export function useFireproof(
   }
 
   function useLiveQuery(mapFn: Function, query = {}, initialRows: any[] = []) {
-    const [result, setResult] = useState({ rows: initialRows, proof: {}, docs: initialRows.map((r) => r.doc) });
+    const [result, setResult] = useState({
+      rows: initialRows,
+      proof: {},
+      docs: initialRows.map((r) => r.doc),
+    });
     const [index, setIndex] = useState<Index | null>(null);
 
     const refreshRows = useCallback(async () => {
       if (index) {
-        const res = await index.query(query)
-        setResult({...res, docs: res.rows.map((r) => r.doc)});
+        const res = await index.query(query);
+        setResult({ ...res, docs: res.rows.map((r) => r.doc) });
       }
     }, [index, JSON.stringify(query)]);
 
