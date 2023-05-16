@@ -13,10 +13,10 @@ Changes made via remote sync peers, or other members of your cloud replica group
 And in your components, the `database` object and `useLiveQuery` and `useLiveDocument` hooks are available. In this example the `useLiveQuery` hook is used to display a list of todos, and the `database` object is used to add new todos:
 
 ```js
-import { FireproofCtx } from '@fireproof/react'
+import { useFireproof } from '@fireproof/react'
 
 export default TodoList = () => {
-  const { database, useLiveQuery } = useContext(FireproofCtx)
+  const { database, useLiveQuery } = useFireproof()
   const todos = useLiveQuery((doc) => doc.date).docs
   const [newTodo, setNewTodo] = useState('')
 
@@ -44,11 +44,11 @@ export default TodoList = () => {
 You can also subscribe directly to database updates, and redraw when necessary:
 
 ```js
-import { FireproofCtx } from '@fireproof/react'
+import { useFireproof } from '@fireproof/react'
 
 function MyComponent() {
   // get Fireproof context
-  const { useLiveDocument } = useContext(FireproofCtx)
+  const { useLiveDocument } = useFireproof()
   const [doc, saveDoc] = useLiveDocument({_id : "my-doc-id"})
   
   // a function to change the value of the document
@@ -66,11 +66,10 @@ function MyComponent() {
 Here is the same example but without using the `useLiveDocument` hook:
 
 ```js
-import { FireproofCtx } from '@fireproof/react'
+import { useFireproof } from '@fireproof/react'
 
 function MyComponent() {
-  // get Fireproof context
-  const { ready, database } = useContext(FireproofCtx)
+  const { ready, database } = useFireproof()
 
   // set a default empty document
   const [doc, setDoc] = useState({})
