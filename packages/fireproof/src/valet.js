@@ -62,29 +62,28 @@ export class Valet {
       if (this.uploadFunction) {
         // todo we can coalesce these into a single car file
         // todo remove idb usage here
-        return await this.withDB(async db => {
-          for (const task of tasks) {
-            await this.uploadFunction(task.carCid, task.value)
-            // update the indexedb to mark this car as no longer pending
-            const carMeta = await db.get('cidToCar', task.carCid)
-            delete carMeta.pending
-            await db.put('cidToCar', carMeta)
-          }
-        })
+        for (const task of tasks) {
+          await this.uploadFunction(task.carCid, task.value)
+          // todo update syncCidMap to say this has been synced
+          // const carMeta = await db.get('cidToCar', task.carCid)
+          // delete carMeta.pending
+          // await db.put('cidToCar', carMeta)
+        }
       }
       callback()
     })
 
     this.uploadQueue.drain(async () => {
-      return await this.withDB(async db => {
-        const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map(c => c.car)
-        for (const carKey of carKeys) {
-          await this.uploadFunction(carKey, await db.get('cars', carKey))
-          const carMeta = await db.get('cidToCar', carKey)
-          delete carMeta.pending
-          await db.put('cidToCar', carMeta)
-        }
-      })
+      // todo read syncCidMap and sync any that are still unsynced
+      //   return await this.withDB(async db => {
+      //     const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map(c => c.car)
+      //     for (const carKey of carKeys) {
+      //       await this.uploadFunction(carKey, await db.get('cars', carKey))
+      //       const carMeta = await db.get('cidToCar', carKey)
+      //       delete carMeta.pending
+      //       await db.put('cidToCar', carMeta)
+      //     }
+      //   })
     })
   }
 
@@ -130,16 +129,10 @@ export class Valet {
 
   withDB = async dbWorkFun => {
     if (!this.idb) {
-      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 2, {
+      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 3, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
-            db.createObjectStore('cars') // todo use database name
-            const cidToCar = db.createObjectStore('cidToCar', { keyPath: 'car' })
-            cidToCar.createIndex('cids', 'cids', { multiEntry: true })
-          }
-          if (oldVersion < 2) {
-            const cidToCar = transaction.objectStore('cidToCar')
-            cidToCar.createIndex('pending', 'pending')
+            db.createObjectStore('cars')
           }
         }
       })
@@ -155,13 +148,11 @@ export class Valet {
    */
   async * cids () {
     // console.log('valet cids')
-    const db = await this.withDB(async db => db)
-    const tx = db.transaction(['cidToCar'], 'readonly')
-    let cursor = await tx.store.openCursor()
-    while (cursor) {
-      yield { cid: cursor.key, car: cursor.value.car }
-      cursor = await cursor.continue()
-    }
+    // todo use cidMap
+    // while (cursor) {
+    // yield { cid: cursor.key, car: cursor.value.car }
+    // cursor = await cursor.continue()
+    // }
   }
 
   setRootCarCid (cid) {
@@ -194,15 +185,6 @@ export class Valet {
     const got = await indexNode.get(cid)
     // console.log('getCarCIDForCID', cid, got)
     return { result: got }
-  }
-
-  async OLDgetCarCIDForCID (cid) {
-    const carCid = await this.withDB(async db => {
-      const tx = db.transaction(['cars', 'cidToCar'], 'readonly')
-      const indexResp = await tx.objectStore('cidToCar').index('cids').get(cid)
-      return indexResp?.car
-    })
-    return { result: carCid }
   }
 
   async getCombinedReader (carCid) {
@@ -269,17 +251,20 @@ export class Valet {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    await this.withDB(async db => {
-      const tx = db.transaction(['cars'], 'readwrite')
-      await tx.objectStore('cars').put(value, carCid.toString())
-      if (newValetCidCar) {
-        if (this.valetRootCarCid) {
-          // await tx.objectStore('cars').delete(this.valetRootCarCid.toString())
-        }
-        await tx.objectStore('cars').put(newValetCidCar.bytes, newValetCidCar.cid.toString())
+    await this.writeCars([
+      {
+        cid: carCid,
+        bytes: value,
+        replaces: null
+      },
+      {
+        cid: newValetCidCar.cid,
+        bytes: newValetCidCar.bytes,
+        replaces: null
+        // replaces: this.valetRootCarCid // todo
       }
-      return await tx.done
-    })
+    ])
+
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
 
     // console.log('parked car', carCid, value.length, Array.from(cids))
@@ -296,6 +281,20 @@ export class Valet {
     } else {
       // console.log('no upload function', carCid, value.length, this.uploadFunction)
     }
+  }
+
+  async writeCars (cars) {
+    return await this.withDB(async db => {
+      const tx = db.transaction(['cars'], 'readwrite')
+      for (const { cid, bytes, replaces } of cars) {
+        await tx.objectStore('cars').put(bytes, cid.toString())
+        // todo remove old maps
+        if (replaces) {
+          await tx.objectStore('cars').delete(replaces.toString())
+        }
+      }
+      return await tx.done
+    })
   }
 
   remoteBlockFunction = null
@@ -328,7 +327,7 @@ export class Valet {
       }
       const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
 
-      // last block is the root ???
+      // last block is the root ??? todo
       const rootBlock = blocks[blocks.length - 1]
 
       return {
