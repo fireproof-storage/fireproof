@@ -164,7 +164,7 @@ export class Valet {
   // todo memoize this
   async getCarCIDForCID (cid) {
     // make a car reader for this.valetRootCarCid
-    if (!this.valetRootCarCid) return
+    if (!this.valetRootCarCid) return { result: null }
 
     let indexNode
     if (this.valetRoot) {
