@@ -306,7 +306,7 @@ export class DbIndex {
   async innerUpdateIndex (inBlocks) {
     // const callTag = Math.random().toString(36).substring(4)
     // console.log(`updateIndex ${callTag} >`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
-    // todo remove this hack
+    // todo remove this hack in 0.7.0
     if (ALWAYS_REBUILD) {
       this.indexById = { root: null, cid: null }
       this.indexByKey = { root: null, cid: null }
@@ -353,9 +353,7 @@ export class DbIndex {
       )
       this.indexByKey = await bulkIndex(blocks, this.indexByKey, oldIndexEntries.concat(indexEntries), dbIndexOpts)
       this.dbHead = result.clock
-    }, false /* don't sync transaction -- maybe move this flag to database.indexBlocks? */)
-    // todo index subscriptions
-    // this.database.notifyExternal('dbIndex')
+    }, false /* don't sync transaction -- todo move this flag to database.indexBlocks, and concept of sync channels */)
     // console.timeEnd(callTag + '.doTransactionupdateIndex')
     // console.log(`updateIndex ${callTag} <`, this.instanceId, this.dbHead?.toString(), this.indexByKey.cid?.toString(), this.indexById.cid?.toString())
     return didT

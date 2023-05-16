@@ -172,13 +172,6 @@ const prollyRootFromAncestor = async (events, ancestor, getBlock) => {
   }
 }
 
-// async function bigMerge (events, head, getBlock) {
-//   const allRoots = await Promise.all(head.map(async h => prollyRootFromAncestor(events, h, getBlock)))
-//   console.log('allRoots', allRoots)
-//   // todo query over all roots and merge them, but how do they not have a common ancestor? they all start with the _sync root
-//   throw new Error('not implemented')
-// }
-
 const doProllyBulk = async (inBlocks, head, event, doFull = false) => {
   const { getBlock, blocks } = makeGetAndPutBlock(inBlocks) // this is doubled with eventfetcher
   let bulkSorted = []
@@ -347,8 +340,6 @@ export async function eventsSince (blocks, head, since) {
  *
  */
 export async function getAll (blocks, head, rootCache = null, doFull = false) {
-  // todo use the root node left around from put, etc
-  // move load to a central place
   if (!head.length) {
     return { root: null, clockCIDs: new CIDCounter(), cids: new CIDCounter(), result: [] }
   }

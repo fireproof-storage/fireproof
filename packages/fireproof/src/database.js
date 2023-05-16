@@ -46,7 +46,6 @@ export class Database {
    * @instance
    */
   toJSON () {
-    // todo this also needs to return the index roots...
     return {
       clock: this.clockToJSON(),
       name: this.name,
@@ -183,8 +182,7 @@ export class Database {
     const cids = await cidsToProof(allResp.cids)
     const clockCids = await cidsToProof(allResp.clockCIDs)
     // console.log('allcids', cids, clockCids)
-    // todo we need to put the clock head as the last block in the encrypted car
-    return [...cids, ...clockCids] // need a single block version of clock head, maybe an encoded block for it
+    return [...cids, ...clockCids] // clock CID last -- need to handle multiple entry clocks
   }
 
   async allStoredCIDs () {
@@ -226,7 +224,7 @@ export class Database {
     const clock = opts.clock || this.clock
     const resp = await get(this.blocks, clock, charwise.encode(key), this.rootCache)
     this.rootCache = { root: resp.root, clockCIDs: resp.clockCIDs }
-    // this tombstone is temporary until we can get the prolly tree to delete
+    // ? this tombstone is temporary until we can get the prolly tree to delete
     if (!resp || resp.result === null) {
       throw new Error('Not found')
     }

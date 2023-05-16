@@ -162,7 +162,7 @@ export class Sync {
   async sendUpdate (blockstore) {
     if (!this.peer || !this.isReady) return
     // console.log('send update from', this.database.instanceId)
-    // todo should send updates since last sync
+    // todo should send updates since last sync (currently sends each transaction)
     const newCar = await blocksToCarBlock(blockstore.lastCid, blockstore)
     this.status = 'sending update car'
     this.peer.send(newCar.bytes)

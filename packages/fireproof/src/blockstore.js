@@ -91,7 +91,6 @@ export class TransactionBlockstore {
 
   async networkGet (key) {
     if (this.remoteBlockFunction) {
-      // todo why is this on valet?
       const value = await husher(key, async () => await this.remoteBlockFunction(key))
       if (value) {
         // console.log('networkGot: ' + key, value.length)
