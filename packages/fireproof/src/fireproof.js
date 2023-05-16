@@ -6,6 +6,7 @@ import { DbIndex as Index } from './db-index.js'
 import { localGet } from './utils.js'
 import { Sync } from './sync.js'
 
+// todo remove Listener in 0.7.0
 export { Index, Listener, Database, Sync }
 
 export class Fireproof {
@@ -20,7 +21,7 @@ export class Fireproof {
   static storage = (name = null, opts = {}) => {
     if (name) {
       opts.name = name
-      // todo this can come from a registry also
+      // todo this can come from a registry also eg remote database / config, etc
       const existing = localGet('fp.' + name)
       if (existing) {
         const existingConfig = JSON.parse(existing)

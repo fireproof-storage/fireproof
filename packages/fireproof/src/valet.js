@@ -61,6 +61,7 @@ export class Valet {
       // )
       if (this.uploadFunction) {
         // todo we can coalesce these into a single car file
+        // todo remove idb usage here
         return await this.withDB(async db => {
           for (const task of tasks) {
             await this.uploadFunction(task.carCid, task.value)
@@ -169,6 +170,7 @@ export class Valet {
     this.valetRootCid = null
   }
 
+  // todo memoize this
   async getCarCIDForCID (cid) {
     // make a car reader for this.valetRootCarCid
     if (!this.valetRootCarCid) return
