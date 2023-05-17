@@ -31,7 +31,7 @@ const initializeDatabase = (
   } else {
     const database = Fireproof.storage(name);
     defineDatabaseFn(database);
-    const obj = { database, setupStarted: false }
+    const obj = { database, setupStarted: false };
     databases.set(name, obj);
     return obj;
   }
@@ -52,12 +52,12 @@ export function useFireproof(
     // define indexes here before querying them in setup
     database;
   },
-  setupDatabaseFn : Function|null = null,
+  setupDatabaseFn: Function | null = null,
 ): FireproofCtxValue {
   // console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
   const [ready, setReady] = useState(false);
   const init = initializeDatabase(name, defineDatabaseFn);
-  const database = init.database
+  const database = init.database;
 
   useEffect(() => {
     const doSetup = async () => {
@@ -78,7 +78,7 @@ export function useFireproof(
     const [doc, setDoc] = useState(initialDoc);
 
     const saveDoc = useCallback(
-      async (newDoc) => await database.put({ _id: id, ...newDoc }),
+      async () => await database.put({ ...doc, _id: id }),
       [id],
     );
 
@@ -101,7 +101,7 @@ export function useFireproof(
       refreshDoc();
     }, []);
 
-    return [doc, saveDoc];
+    return [doc, (newDoc) => setDoc((d) => ({ ...d, ...newDoc })), saveDoc];
   }
 
   function useLiveQuery(mapFn: Function, query = {}, initialRows: any[] = []) {

@@ -41,29 +41,27 @@ export default TodoList = () => {
 
 ### useLiveDocument
 
-You can also subscribe directly to database updates, and redraw when necessary:
+You can also subscribe directly to database updates, and automatically redraw when necessary. When sync is enabled you'll have both parties updating the same database in real-time. Here's an example of a simple shared text area (in real life you'd probably want to use an operational transform library like [Yjs](https://github.com/yjs/yjs) or [Automerge](https://automerge.org) for shared text areas, which both work great with Fireproof). Another simple use case for Live Document is a shared form, where multiple users can edit the same document at the same time. For something like a chat room you should use Live Query instead:
+
+```js
 
 ```js
 import { useFireproof } from '@fireproof/react'
 
 function MyComponent() {
-  // get Fireproof context
   const { useLiveDocument } = useFireproof()
-  const [doc, saveDoc] = useLiveDocument({_id : "my-doc-id"})
-  
-  // a function to change the value of the document
-  const updateFn = async () => {
-    await saveDoc({ _id : "my-doc-id", hello: "world", updated_at: new Date()})
-  }
+  const [doc, setDoc, saveDoc] = useLiveDocument({ _id : "my-doc-id" })
 
-  // render the document with a click handler to update it
-  return <pre onclick={updateFn}>{JSON.stringify(doc)}</pre>
+  return <input
+          value={doc.text}
+          onChange={(e) => setDoc({text : e.target.value});}
+        /><button onClick={saveDoc}>Save</button>
 }
 ```
 
 ### Raw database subscription
 
-Here is the same example but without using the `useLiveDocument` hook:
+Here is an example that uses direct database APIs instead of document and query hooks. You might see this in more complex applications that want to manage low-level details.
 
 ```js
 import { useFireproof } from '@fireproof/react'

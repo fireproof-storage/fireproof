@@ -6,74 +6,91 @@ to offer a new kind of database that:
 - can be hosted on any cloud
 - uses cryptographically verifiable protocols (what plants crave)
 
-Learn more about the [concepts and architecture behind Fireproof](https://fireproof.storage/documentation/how-the-database-engine-works/), or jump to the [quick start](#quick-start) for React and server-side examples.
+Fireproof is optimized to make building React apps fast and fun, with reliable results. The data can be as mission-critical as you want, as everything is encrypted and hash-based proofs are used to verify integrity. [Great use cases](https://fireproof.storage/posts/great-opportunites-to-use-fireproof/) include everything from social media to collaborative world-building (metaverse) to executive decision support tools that can stand up to blockchain levels of scrutiny.
 
-## Quick Start
+## React hooks API
 
-Look in the `examples/` directory for projects using the database, or see [examples on CodePen](https://codepen.io/jchrisa/pen/GRYJJEM). If you are adding Fireproof to an existing page, just install it and try some operations.
-
-```sh
-npm install @fireproof/core
-```
-
-In your `app.js` or `app.tsx` file:
+Here's an example app using Fireproof and React. Look out for `useLiveQuery` and `database.put` -- that's all you really need to get started:
 
 ```js
-import { Fireproof } from '@fireproof/core'
-const fireproof = Fireproof.storage("my-db")
-const ok = await fireproof.put({ hello: 'world' })
-const doc = await fireproof.get(ok.id)
+import { useFireproof } from '@fireproof/react'
+
+export default App = () => {
+  const { database, useLiveQuery } = useFireproof()
+  const todoList = useLiveQuery((doc) => doc.date).docs
+  const [newTodo, setNewTodo] = useState('')
+
+  return (
+    <div>
+      <input type="text" onChange={(e) => setNewTodo(e.target.value)} />
+      <button onClick={() => database.put({text: newTodo, date: Date.now(), completed: false})}>Save</button>
+      <ul>
+        {todoList.map((todo) => (
+          <li key={todo._id}>
+            <input 
+              type="checkbox" 
+              checked={todo.completed}
+              onChange={() => database.put({...todo, completed: !todo.completed})} />
+            {todo.text}
+          </li>
+        ))}
+    </div>
+  )
+}
 ```
 
-🤫 I like to drop a `window.fireproof = fireproof` in there as a development aid.
+### Features
 
-### ChatGPT Quick Start
+* **Realtime** - data is updated as soon as it is available, with no polling or refreshes required.
+* **Distributed** - data is stored in a distributed network, so it is always available.
+* **Sync** - users can collaborate on data subsets, with changes synced across devices or via the cloud.
+* **Proofs** - cryptographic verification makes results verifiable and lowers operating costs
 
-Paste this to GPT 4 or 3.5 to enable it to write apps using Fireproof:
+### Architecture
+
+* Powered by IPFS data structures, Fireproof can be hosted on traditional cloud or Filecoin infrastructure.
+* Immutable content-addressed data ensures that data is always consistent, accurate, and verified
+* Encrypted at rest and in transit, with optional clear-text database publishing for content management use cases.
+* Open source, so you can inspect the code and make sure that it meets your security and privacy requirements.
+
+Learn more about the [concepts](https://fireproof.storage/posts/from-mlops-to-point-of-sale:-merkle-proofs-and-data-locality/) and [architecture](https://fireproof.storage/documentation/how-the-database-engine-works/) behind Fireproof, or look in the `examples/` directory for projects using the database, or see [examples on CodePen](https://codepen.io/jchrisa/pen/GRYJJEM). 
+
+## ChatGPT / Bard Quick Start
+
+Paste this to GPT 4, 3.5, or Bard to enable it to write React apps using Fireproof:
 
 ```
-Fireproof/API/Usage: import { Fireproof, Listener, Index } from '@fireproof/core'; const db = fireproof.storage('app-db-name'); const ok = await db.put({ any: 'json' }); const doc = await db.get(ok.id); await db.del(doc._id); const all = await db.allDocuments(); all.rows.map(({key, value}) => value); const listener = new Listener(db); listener.on('*', updateReactStateFn); const index = new Index(db, (doc, map) => map(doc.any, {custom: Object.keys(doc)})); const result = await index.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);
+Fireproof/React/Usage: import { useFireproof } from '@fireproof/react'; function App() { const { useLiveQuery, useLiveDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useLiveDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}
 ```
 
 In the same prompt, describe the app you want to build. Here are some examples that worked for us:
 
-* Create a react app using Fireproof for tracking party invites. It should have a text input that creates a new document with the guest name, and an Index that lists all guests in a &lt;ul&gt;. ([Running copy here.](https://codepen.io/jchrisa/pen/zYmogWO))
+* Create a React app using Fireproof for tracking party invites. It should have a text input that creates a new document with the guest name, and an Index that lists all guests in a &lt;ul&gt;. ([Running copy here.](https://codepen.io/jchrisa/pen/zYmogWO))
 * Build a React app that allows you to create profiles for dogs, and browse to each profile. It should be optimized for mobile. Use Tailwind.
-* Build a photo grid app that with drag and drop ordering that references photos by url. Use tailwind and render all photos as squares. Keep grid arrangement in fireproof with one document for each gallery, that is: 4-16 photos arranged into a layout.
-* Build an app using React, Fireproof, MagicLink, and Tailwind that allows user to create one-question multiple choice polls and collect the answers.
-* Create a note taking app using React, Tailwind, and Fireproof that stores each note as a large text string in a Fireproof document, and uses an Index to split the text of the documents into tokens for full text search. The app has an input field to search the documents via an index query.
+* Build a photo grid app with drag-and-drop ordering that references photos by URL. Use tailwind and render all photos as squares. Keep grid arrangement in Fireproof with one document for each gallery, that is 4-16 photos arranged into a layout.
+* Build an app using React, Fireproof, MagicLink, and Tailwind that allows users to create one-question multiple-choice polls and collect the answers.
+* Create a note-taking app using React, Tailwind, and Fireproof that stores each note as a large text string in a Fireproof document, and uses an Index to split the text of the documents into tokens for full-text search. The app has an input field to search the documents via an index query.
 
 Please share your successes with us here or on [Twitter.](https://twitter.com/FireproofStorge)
 
+#### Advanced AI Docs
+
+You can enhance the AI's understanding by adding the core APIs. Use this if you aren't using React, or you are adding additional features to your app and you need to go deeper than the React hooks.
+
+```
+Fireproof/API/Usage: import { Fireproof, Index } from '@fireproof/core'; const db = fireproof.storage('app-db-name'); const ok = await db.put({ any: 'json' }); const doc = await db.get(ok.id); await db.del(doc._id); const all = await db.allDocuments(); all.rows.map(({key, value}) => value); useEffect(()=> db.subscribe(updateReactStateFn), []); const index = new Index(db, (doc, map) => map(doc.any, {custom: Object.keys(doc)})); const result = await index.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);
+```
+
 ### Status
 
-Fireproof is alpha software, ready for you to evaluate for your future applications. For now, [check out our React TodoMVC implementation running in browser-local mode.](https://main--lucky-naiad-5aa507.netlify.app/) It demonstrates document persistence, index queries, and event subscriptions, and uses the [`useFireproof()` React hook.](https://github.com/fireproof-storage/fireproof/blob/main/packages/fireproof/hooks/use-fireproof.tsx)
+Fireproof 0.6.0 is alpha software, 0.7.0 will be the first beta release. It is ready for you to evaluate for your future applications. 
 
 [![Test](https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg)](https://github.com/jchris/fireproof/actions/workflows/test.yml)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
-## Usage
-
-```js
-import { Fireproof } from 'fireproof';
-
-async function main() {
-  const database = Fireproof.storage('my-db');
-  const ok = await database.put({
-    name: 'alice',
-    age: 42
-  });
-  
-  const doc = await database.get(ok.id);
-  console.log(doc.name); // 'alice'
-}
-
-main();
-```
-
 ## Features
 
-### Document Store
+### Encrypted Documents
 
 A simple put, get, and delete interface for keeping track of all your JSON documents. Once your data is in Fireproof you can access it from any app or website. Fireproof document store uses MVCC versioning and Merkle clocks so you can always recover the version you are looking for.
 
@@ -83,7 +100,7 @@ const { id, ref } = await database.put({
     name: 'André',
     age: 47
 });
-const doc = await database.get('three-thousand', {mvcc : true}) // mvcc is optional
+const doc = await database.get('three-thousand', { mvcc : true }) // mvcc is optional
 // {
 //    _id  : 'three-thousand'
 //    _clock : CID(bafy84...agfw7)
@@ -92,9 +109,11 @@ const doc = await database.get('three-thousand', {mvcc : true}) // mvcc is optio
 // }
 ```
 
-The `_clock` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/":"bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
+As you can see in the return value above, the `_clock` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/":"bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
 
-### Flexible Indexes
+### Live Query
+
+Fireproof provides a live query interface that allows you to subscribe to changes in your data. This means that your UI will automatically update whenever there is a change to your data.
 
 Fireproof indexes are defined by custom JavaScript functions that you write, allowing you to easily index and search your data in the way that works best for your application. Easily handle data variety and schema drift by normalizing any data to the desired index.
 
@@ -134,20 +153,6 @@ Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.sto
 ### Cryptographic Proofs
 
 The [UCAN protocol](https://ucan.xyz) verifiably links Fireproof updates to authorized agents via cryptographic proof chains. These proofs are portable like bearer tokens, but because invocations are signed by end-user device keys, UCAN proofs don't need to be hidden to be secure, allowing for delegation of service capabilities across devices and parties. Additionally, Fireproof's Merkle clocks and hash trees are immutable and self-validating, making merging changes safe and efficient. Fireproof makes cryptographic proofs available for all of its operations, making it an ideal verifiable document database for smart contracts and other applications running in trustless environments. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
-
-## Limitations 💣
-
-### Security
-
-Until encryption support is enabled, all data written to Fireproof is public. There are no big hurdles for this feature but it's not ready yet.
-
-### Replication
-
-Currently Fireproof writes transactions and proofs to [CAR files](https://ipld.io/specs/transport/car/carv2/) which are well suited for peer and cloud replication. They are stored in IndexedDB locally, with cloud replication coming very soon.
-
-### Pre-beta Software
-
-While the underlying data structures and libraries Fireproof uses are trusted with billions of dollars worth of data, Fireproof started in February of 2023. Results may vary.
 
 ## Thanks 🙏
 
