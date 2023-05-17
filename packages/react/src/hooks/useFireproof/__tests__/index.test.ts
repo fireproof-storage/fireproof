@@ -29,19 +29,19 @@ describe('useFireproof tests', () => {
   });
 
   it('should update livequery', async () => {
-    // let db: Database;
+    let db: any;
     const res = renderHook(() => {
       const { database, useLiveQuery } = useFireproof();
       if (database) {
-        // db = database;
+        db = database;
       }
       return useLiveQuery((doc: any) => doc.good);
     });
     console.log('res', res.result.current);
 
     await act(async () => {
-      // await db.put({ _id: '1', good: true });
+      await db.put({ _id: '1', good: true });
     });
-    expect(res.rows.length).toBe(1);
+    expect(res.result.current.rows.length).toBe(1);
   });
 });
