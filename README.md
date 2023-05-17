@@ -1,4 +1,11 @@
-# 🔥 Fireproof
+<h1 align="center">
+  <a href="https://fireproof.storage/">
+    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="200">
+  </a>
+  <br>
+  Cloudless database for React apps
+</h1>
+<p align="center"><b></b></p>
 
 Fireproof is a realtime database for today's interactive applications. It uses immutable data and distributed protocols 
 to offer a new kind of database that:
