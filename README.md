@@ -1,6 +1,3 @@
-
-
-
 # 🔥 Fireproof
 
 Fireproof is a realtime database for today's interactive applications. It uses immutable data and distributed protocols 
@@ -116,12 +113,21 @@ As you can see in the return value above, the `_clock` allows you to query a sta
 
 ### Live Query
 
-Fireproof provides a live query interface that allows you to subscribe to changes in your data. This means that your UI will automatically update whenever there is a change to your data.
+Fireproof provides a live query interface that allows you to subscribe to changes in your data. This means that your UI will automatically update whenever there is a change to your data. See the [useFireproof React hooks documentation](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) for the easiest way to use this feature.
 
-Fireproof indexes are defined by custom JavaScript functions that you write, allowing you to easily index and search your data in the way that works best for your application. Easily handle data variety and schema drift by normalizing any data to the desired index.
+Fireproof indexes are defined by custom JavaScript functions that you write, allowing you to easily index and search your data in the way that works best for your application. Easily handle data variety and schema drift by normalizing any data to the desired index. The index function defines the sort order. You can use the index to query for a range of values or to find exact matches. This baseline functionality is all you need to build many kinds of complex queries.
 
 ```js
-const index = new Index(database, function (doc, map) {
+const index = new Index(database, "byAge", (doc) => doc.age)
+const { rows, proof } = await index.query({ range: [40, 52] })
+```
+
+You can ignore the proof or use it to optimize hydration of your client side components. The `rows` are the results of the query. You can use `database.subscribe(myAppQueryFn)` to get notified of changes and re-issue your query. The React [useLiveQuery](https://fireproof.storage/documentation/usefireproof-hook-for-react/) hook does this for you automatically.
+
+If you need more control over the results, you can use the optional second argument to your map function to specify both keys and values for the index:
+
+```js
+const index = new Index(database, "namesByAge", function (doc, map) {
   map(doc.age, doc.name)
 })
 const { rows, ref } = await index.query({ range: [40, 52] })
@@ -131,35 +137,38 @@ const { rows, ref } = await index.query({ range: [40, 52] })
 
 ### Realtime Updates
 
-Subscribe to query changes in your application, so your UI updates automatically. Use the supplied React hooks, our Redux connector, or simple function calls to be notified of relevant changes.
+Subscribe to query changes in your application, so your UI updates automatically. Use the supplied React hooks, or simple function calls to be notified of relevant changes.
 
 ```js
-const listener = new Listener(database, function(doc, emit) {
-  if (doc.type == 'member') {
-    emit('member')
-  }
-})
-listener.on('member', (id) => {
-  const doc = await db.get(id)
-  alert(`Member update ${doc.name}`)
+const unsubscribe = database.subscribe(changes) => {
+  changes.forEach(change => {
+    console.log(change)
+  })
 })
 ```
+
+Return the `unsubscribe` function from `useEffect` and React will handle it for you. (In the code below, we use the arrow function's implicit return to connect the unsubscribe function to the `useEffect` hook. This prevents extra subscriptions from building up on each render.)
+
+```js
+useEffect(() => database.subscribe((changes) => 
+    changes.forEach(change => console.log(change))), [])
+```
+
+### Cryptographic Proofs
+
+Fireproof's Merkle clocks and hash trees are immutable and self-validating, making merging changes safe and efficient. Fireproof makes cryptographic proofs available for all of its operations, accelerating replication and making trustless index sharing possible. [Proofs make Fireproof the ideal verifiable document database](https://fireproof.storage/posts/from-mlops-to-point-of-sale:-merkle-proofs-and-data-locality/) for smart contracts and other applications where unique, verifiable, and trustworthy data is required. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
+
+### Automatic Replication (coming soon)
+
+Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over [IPFS] and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. 
 
 ### Self-sovereign Identity
 
 Fireproof is so easy to integrate with any site or app because you can get started right away, and set up an account later. By default users write to their own database copy, so you can get pretty far before you even have to think about API keys. [Authorization is via non-extractable keypair](https://ucan.xyz), like TouchID / FaceID.
 
-### Automatic Replication
-
-Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over [IPFS] and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. [Learn how to enable replication.](#status)
-
-### Cryptographic Proofs
-
-The [UCAN protocol](https://ucan.xyz) verifiably links Fireproof updates to authorized agents via cryptographic proof chains. These proofs are portable like bearer tokens, but because invocations are signed by end-user device keys, UCAN proofs don't need to be hidden to be secure, allowing for delegation of service capabilities across devices and parties. Additionally, Fireproof's Merkle clocks and hash trees are immutable and self-validating, making merging changes safe and efficient. Fireproof makes cryptographic proofs available for all of its operations, making it an ideal verifiable document database for smart contracts and other applications running in trustless environments. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
-
 ## Thanks 🙏
 
-Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable datastructures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
+Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle hash-tree clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
 
