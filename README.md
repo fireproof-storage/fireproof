@@ -1,3 +1,6 @@
+
+
+
 # 🔥 Fireproof
 
 Fireproof is a realtime database for today's interactive applications. It uses immutable data and distributed protocols 
@@ -100,7 +103,7 @@ const { id, ref } = await database.put({
     name: 'André',
     age: 47
 });
-const doc = await database.get('three-thousand', { mvcc : true }) // mvcc is optional
+const doc = await database.get('three-thousand', { mvcc: true }) // mvcc is optional
 // {
 //    _id  : 'three-thousand'
 //    _clock : CID(bafy84...agfw7)
@@ -109,7 +112,7 @@ const doc = await database.get('three-thousand', { mvcc : true }) // mvcc is opt
 // }
 ```
 
-As you can see in the return value above, the `_clock` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/":"bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
+As you can see in the return value above, the `_clock` allows you to query a stable snapshot of that version of the database. Fireproof uses immutable data structures under the hood, so you can always rollback to old data. Files can be embedded anywhere in your document using IPFS links like `{"/": "bafybeih3e3zdiehbqfpxzpppxrb6kaaw4xkbqzyr2f5pwr5refq2te2ape"}`, with API sugar coming soon.
 
 ### Live Query
 
