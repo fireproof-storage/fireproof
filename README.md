@@ -147,7 +147,7 @@ Fireproof's Merkle clocks and hash trees are immutable and self-validating, maki
 
 ### Automatic Replication
 
-Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over [IPFS] and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. 
+Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. 
 
 ### Self-sovereign Identity
 
