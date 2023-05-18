@@ -6,6 +6,7 @@ import esbuild from 'rollup-plugin-esbuild'
 import nodePolyfills from 'rollup-plugin-polyfill-node'
 import resolve from '@rollup/plugin-node-resolve'
 import commonJS from '@rollup/plugin-commonjs'
+import { visualizer } from "rollup-plugin-visualizer";
 
 import pkg from './package.json' assert { type: 'json' } // eslint-disable-line
 import { auto } from 'async';
@@ -42,6 +43,7 @@ export default [
       // commonJS({ include: ['src','node_modules/**'] }),
       // autoExternal()
       // commonJS()
+      visualizer()
       
     ],
     output: [
