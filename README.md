@@ -125,6 +125,8 @@ const { rows, ref } = await index.query({ range: [40, 52] })
 //   { key: 47, value: 'André', id: 'three-thousand' } ]
 ```
 
+The same mechanism that powers the built-in indexes can all be used to connect secondary [vector indexers](https://github.com/tantaraio/voy) or fulltext indexes to Fireproof. [Follow this tutorial to connect a secondary index](https://fireproof.storage/documentation/external-indexers/).
+
 ### Realtime Updates
 
 Subscribe to query changes in your application, so your UI updates automatically. Use the supplied React hooks, or simple function calls to be notified of relevant changes.
@@ -146,11 +148,15 @@ useEffect(() => database.subscribe((changes) =>
 
 ### Cryptographic Proofs
 
-Fireproof's Merkle clocks and hash trees are immutable and self-validating, making merging changes safe and efficient. Fireproof makes cryptographic proofs available for all of its operations, accelerating replication and making trustless index sharing possible. [Proofs make Fireproof the ideal verifiable document database](https://fireproof.storage/posts/from-mlops-to-point-of-sale:-merkle-proofs-and-data-locality/) for smart contracts and other applications where unique, verifiable, and trustworthy data is required. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
+Fireproof's Merkle clocks and hash trees are immutable and self-validating, and all query results are offline-capable data slices. Fireproof makes cryptographic proofs available for all of its operations, accelerating replication and making trustless index sharing possible. If you are making a "DocuSign for _____", [proofs make Fireproof the ideal verifiable document database](https://fireproof.storage/posts/from-mlops-to-point-of-sale:-merkle-proofs-and-data-locality/) for smart contracts and other applications where unique, verifiable, and trustworthy data is required. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
 
 ### Automatic Replication
 
 Documents changes are persisted to [Filecoin](https://filecoin.io) via [web3.storage](https://web3.storage), and made available over IPFS and on a global content delivery network. All you need to do to sync state is send a link to the latest database head, and Fireproof will take care of the rest. 
+
+### Peer-to-peer Sync
+
+Application instances can be connected using WebRTC or any other stream API library, like [Socket Supply](https://socketsupply.co), [libp2p](https://libp2p.io), or [PartyKit](https://partykit.io). The [first sync demo uses pure WebRTC with no signaling server](https://game.fireproof.storage), which limits its usability. There are demos with other transports coming soon.
 
 ### Self-sovereign Identity
 
