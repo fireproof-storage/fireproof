@@ -8,13 +8,16 @@
 </h3>
 
 <p align="center">
+  <a href="https://bundlephobia.com/package/@fireproof/core" rel="nofollow">
+    <img src="https://deno.bundlejs.com/?q=@fireproof/core&treeshake=[*+as+fireproofCore]&badge" alt="Bundle Size"  style="max-width: 100%;">
+  </a>
   <a href="https://github.com/jchris/fireproof/actions/workflows/test.yml">
     <img src="https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg" alt="Test" style="max-width: 100%;">
   </a>
   <a href="https://standardjs.com" rel="nofollow">
     <img src="https://img.shields.io/badge/code_style-standard-brightgreen.svg" alt="JavaScript Style Guide"  style="max-width: 100%;">
   </a>
-    <a href="https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md">
+  <a href="https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md">
     <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
   </a>
 </p>

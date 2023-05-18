@@ -7,6 +7,16 @@
    Quickly add dynamic data to your React app
 </h3>
 
+<p align="center">
+  <a href="https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md">
+    <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
+  </a>
+  <a href="https://bundlephobia.com/package/@fireproof/react">
+    <img src="https://deno.bundlejs.com/?q=@fireproof/react&treeshake=[*+as+fireproofReact]&badge" alt="Bundle Size"  style="max-width: 100%;">
+  </a>
+</p>
+
+
 Learn more about [the features and benefits of Fireproof](https://github.com/fireproof-storage/fireproof#readme) in the core repo. This README is for the React hooks.
 
 ## Quick Start
