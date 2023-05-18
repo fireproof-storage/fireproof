@@ -111,6 +111,7 @@ importers:
       rollup-plugin-esbuild: ^5.0.0
       rollup-plugin-node-builtins: ^2.1.2
       rollup-plugin-polyfill-node: ^0.12.0
+      rollup-plugin-visualizer: ^5.9.0
       sade: ^1.8.1
       simple-peer: ^9.11.1
       standard: ^17.0.0
@@ -153,6 +154,7 @@ importers:
       rollup-plugin-esbuild: 5.0.0_6mlpvenjr3li56ehaunupwexea
       rollup-plugin-node-builtins: 2.1.2
       rollup-plugin-polyfill-node: 0.12.0_rollup@3.20.2
+      rollup-plugin-visualizer: 5.9.0_rollup@3.20.2
       standard: 17.0.0
       typescript: 5.0.4
       webpack: 5.78.0_2mtfwo6qacryk7vz2y35qcf42e
@@ -3242,7 +3244,6 @@ packages:
       string-width: 4.2.3
       strip-ansi: 6.0.1
       wrap-ansi: 7.0.0
-    dev: false
 
   /clone-deep/4.0.1:
     resolution: {integrity: sha512-neHB9xuzh/wk0dIHweyAXv2aPGZIVk3pLMe+/RNzINf17fe0OG96QroktYAUm7SM1PBnzTabaLboqqxDyMU+SQ==}
@@ -3572,6 +3573,11 @@ packages:
     resolution: {integrity: sha512-+WCbb4+ez/SZ77Sdy1iadagFiVzMB89IKOBhglgnUkVxOxRWmmFsz8UDSNWh4Rhq+3wr/vMFlYj+rdEwWUDdng==}
     dependencies:
       abstract-leveldown: 0.12.4
+    dev: true
+
+  /define-lazy-prop/2.0.0:
+    resolution: {integrity: sha512-Ds09qNh8yw3khSjiJjiUInaGX9xlqZDY7JVryGxdxV7NPeuqQfplOpQ66yJFZut3jLa5zOwkXw1g9EI2uKh4Og==}
+    engines: {node: '>=8'}
     dev: true
 
   /define-properties/1.2.0:
@@ -5211,7 +5217,6 @@ packages:
     engines: {node: '>=8'}
     hasBin: true
     dev: true
-    optional: true
 
   /is-extendable/0.1.1:
     resolution: {integrity: sha512-5BMULNob1vgFX6EjQw5izWDxrecWK9AM72rugNr0TFldMOi0fj6Jk+zeKIt0xGj4cEfQIJth4w3OKWOJ4f+AFw==}
@@ -5415,7 +5420,6 @@ packages:
     dependencies:
       is-docker: 2.2.1
     dev: true
-    optional: true
 
   /is/0.2.7:
     resolution: {integrity: sha512-ajQCouIvkcSnl2iRdK70Jug9mohIHVX9uKpoWnl115ov0R5mzBvRrXxrnHbsA+8AdwCwc/sfw7HXmd4I5EJBdQ==}
@@ -7181,6 +7185,15 @@ packages:
     dependencies:
       mimic-fn: 2.1.0
 
+  /open/8.4.2:
+    resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
+    engines: {node: '>=12'}
+    dependencies:
+      define-lazy-prop: 2.0.0
+      is-docker: 2.2.1
+      is-wsl: 2.2.0
+    dev: true
+
   /optionator/0.8.3:
     resolution: {integrity: sha512-+IW9pACdk3XWmmTXG8m3upGUJst5XRGzxMRjXzAuJ1XnIFNvfhjjIuYkDvysnPQ7qzqVzLt78BCruntqRhWQbA==}
     engines: {node: '>= 0.8.0'}
@@ -8085,6 +8098,23 @@ packages:
       rollup: 1.32.1
       serialize-javascript: 2.1.2
       uglify-js: 3.17.4
+    dev: true
+
+  /rollup-plugin-visualizer/5.9.0_rollup@3.20.2:
+    resolution: {integrity: sha512-bbDOv47+Bw4C/cgs0czZqfm8L82xOZssk4ayZjG40y9zbXclNk7YikrZTDao6p7+HDiGxrN0b65SgZiVm9k1Cg==}
+    engines: {node: '>=14'}
+    hasBin: true
+    peerDependencies:
+      rollup: 2.x || 3.x
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      open: 8.4.2
+      picomatch: 2.3.1
+      rollup: 3.20.2
+      source-map: 0.7.4
+      yargs: 17.7.2
     dev: true
 
   /rollup-pluginutils/2.8.1:
@@ -9617,7 +9647,6 @@ packages:
   /yargs-parser/21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
-    dev: false
 
   /yargs-unparser/2.0.0:
     resolution: {integrity: sha512-7pRTIA9Qc1caZ0bZ6RYRGbHJthJWuakf+WmHK0rVeLkNrrGhfoabBNdue6kdINI6r4if7ocq9aD/n7xwKOdzOA==}
@@ -9670,7 +9699,6 @@ packages:
       string-width: 4.2.3
       y18n: 5.0.8
       yargs-parser: 21.1.1
-    dev: false
 
   /yocto-queue/0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}

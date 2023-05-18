@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Live data for React, accelerated by proofs, powered by IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",
@@ -74,6 +74,7 @@
     "rollup-plugin-esbuild": "^5.0.0",
     "rollup-plugin-node-builtins": "^2.1.2",
     "rollup-plugin-polyfill-node": "^0.12.0",
+    "rollup-plugin-visualizer": "^5.9.0",
     "standard": "^17.0.0",
     "typescript": "^5.0.2",
     "webpack": "^5.78.0",
@@ -119,8 +120,5 @@
     "dist",
     "hooks",
     "README.md"
-  ],
-  "workspaces": [
-    "examples/todomvc"
   ]
 }
