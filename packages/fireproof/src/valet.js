@@ -7,6 +7,8 @@ import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
 import * as dagcbor from '@ipld/dag-cbor'
 import cargoQueue from 'async/cargoQueue.js'
+import { Loader } from './loader.js'
+
 // @ts-ignore
 
 // @ts-ignore
@@ -49,9 +51,9 @@ export class Valet {
    */
   uploadFunction = null
 
-  constructor (name = 'default', loader, keyMaterial) {
+  constructor (name = 'default', keyMaterial) {
     this.name = name
-    this.loader = loader
+    this.loader = new Loader(name) // todo send this config.loader, if we ever need it
     this.setKeyMaterial(keyMaterial)
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
@@ -85,6 +87,10 @@ export class Valet {
       //     }
       //   })
     })
+  }
+
+  saveHeader (header) {
+    return this.loader.saveHeader(header)
   }
 
   getKeyMaterial () {

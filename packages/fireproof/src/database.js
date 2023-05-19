@@ -2,7 +2,6 @@
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import { doTransaction, TransactionBlockstore } from './blockstore.js'
 import charwise from 'charwise'
-import { Loader } from './loader.js'
 import { CID } from 'multiformats'
 
 // TypeScript Types
@@ -33,9 +32,8 @@ export class Database {
   constructor (name, clock, config = {}) {
     this.name = name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
-    this.loader = new Loader(name, config.loader)
-    this.blocks = new TransactionBlockstore(name, this.loader, config.key)
-    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, this.loader, config.key)
+    this.blocks = new TransactionBlockstore(name, config.key)
+    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, config.key)
     this.clock = clock
     this.config = config
   }
@@ -79,7 +77,7 @@ export class Database {
 
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {
-      this.loader.saveHeader(JSON.stringify(this))
+      this.blocks.valet.saveHeader(JSON.stringify(this))
     }
   }
 
