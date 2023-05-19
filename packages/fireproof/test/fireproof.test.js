@@ -488,9 +488,10 @@ describe('Fireproof', () => {
     assert.equal(got.length, putYes * 2)
     // console.log('putYes', putYes)
     // await sleep(1000)
+    assert.equal(database.clockToJSON().length, 20, 'clockToJSON')
     // console.log('all', await database.allDocuments())
-    assert.equal((await database.changesSince()).rows.length, 21)
-    assert.equal((await database.allDocuments()).rows.length, 21)
+    assert.equal((await database.changesSince()).rows.length, 21, 'changesSince')
+    assert.equal((await database.allDocuments()).rows.length, 21, 'allDocuments')
   }).timeout(20000)
   it('serialize database', async () => {
     await database.put({ _id: 'rehy', name: 'drate' })

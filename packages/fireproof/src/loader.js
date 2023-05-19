@@ -1,4 +1,5 @@
-import { writeFileSync, readFileSync, createReadStream } from 'fs'
+import { readFileSync, createReadStream } from 'fs'
+import { writeFile } from 'fs/promises'
 import { mkdir } from 'node:fs/promises'
 import { openDB } from 'idb'
 import { join, dirname } from 'path'
@@ -42,13 +43,15 @@ export class Loader {
   async writeCars (cars) {
     // console.log('writeCars', this.config.dataDir, this.name, cars.map(c => c.cid.toString()))
     if (FORCE_IDB || this.isBrowser) {
-      return await this.writeCarsIDB(cars)
+      await this.writeCarsIDB(cars)
     } else {
+      const writes = []
       for (const { cid, bytes } of cars) {
         const carFilename = join(this.config.dataDir, this.name, `${cid.toString()}.car`)
         // console.log('writeCars', carFilename)
-        await writeSync(carFilename, bytes)
+        writes.push(writeSync(carFilename, bytes))
       }
+      await Promise.all(writes)
     }
   }
 
@@ -156,5 +159,6 @@ function loadSync (filename) {
 
 async function writeSync (fullpath, stringValue) {
   await mkdir(dirname(fullpath), { recursive: true })
-  writeFileSync(fullpath, stringValue)
+  // writeFileSync(fullpath, stringValue)
+  await writeFile(fullpath, stringValue)
 }
