@@ -1,10 +1,12 @@
-import { readFileSync, createReadStream } from 'fs'
-import { writeFile } from 'fs/promises'
-import { mkdir } from 'node:fs/promises'
+import {
+  readFileSync
+  // createReadStream
+} from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { openDB } from 'idb'
 import { join, dirname } from 'path'
-import { parse } from '@jsonlines/core'
-import cargoQueue from 'async/cargoQueue.js'
+// import { parse } from '@jsonlines/core'
+// import cargoQueue from 'async/cargoQueue.js'
 import { homedir } from 'os'
 
 const defaultConfig = {
@@ -123,31 +125,31 @@ export class Loader {
     return join(this.config.dataDir, this.name, 'header.json')
   }
 
-  async loadData (database, filename) {
-    const fullFilePath = join(process.cwd(), filename)
-    const readableStream = createReadStream(fullFilePath)
-    const parseStream = parse()
-    readableStream.pipe(parseStream)
+  //   async loadData (database, filename) {
+  //     const fullFilePath = join(process.cwd(), filename)
+  //     const readableStream = createReadStream(fullFilePath)
+  //     const parseStream = parse()
+  //     readableStream.pipe(parseStream)
 
-    const saveQueue = cargoQueue(async (tasks, callback) => {
-      for (const t of tasks) {
-        await database.put(t)
-      }
-      callback()
-    })
+  //     const saveQueue = cargoQueue(async (tasks, callback) => {
+  //       for (const t of tasks) {
+  //         await database.put(t)
+  //       }
+  //       callback()
+  //     })
 
-    parseStream.on('data', async (data) => {
-      saveQueue.push(data)
-    })
-    let res
-    const p = new Promise((resolve, reject) => {
-      res = resolve
-    })
-    saveQueue.drain(async (x) => {
-      res()
-    })
-    return p
-  }
+//     parseStream.on('data', async (data) => {
+//       saveQueue.push(data)
+//     })
+//     let res
+//     const p = new Promise((resolve, reject) => {
+//       res = resolve
+//     })
+//     saveQueue.drain(async (x) => {
+//       res()
+//     })
+//     return p
+//   }
 }
 
 function loadSync (filename) {
