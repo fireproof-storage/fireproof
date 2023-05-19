@@ -53,8 +53,8 @@ export class Valet {
 
   constructor (name = 'default', keyMaterial) {
     this.name = name
-    this.loader = new Loader(name) // todo send this config.loader, if we ever need it
     this.setKeyMaterial(keyMaterial)
+    this.loader = new Loader(name, this.keyId) // todo send this config.loader, if we ever need it
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
       //   'queue worker',
@@ -281,6 +281,7 @@ export class Valet {
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
+    console.log('getCarReader', carCid, carBytes.constructor.name)
     const reader = await CarReader.fromBytes(carBytes)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()
