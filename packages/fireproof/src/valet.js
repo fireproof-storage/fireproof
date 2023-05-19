@@ -173,6 +173,7 @@ export class Valet {
         blockHasher: blockOpts.hasher,
         blockCodec: blockOpts.codec
       })
+      this.valetRoot = indexNode
     }
 
     const got = await indexNode.get(cid)
@@ -244,6 +245,7 @@ export class Valet {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
+    console.log('writeCars', this.name, this.instanceId)
     await this.loader.writeCars([
       {
         cid: carCid,
@@ -259,6 +261,8 @@ export class Valet {
     ])
 
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
+
+    console.log('wroteCars', this.name, this.instanceId)
 
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
