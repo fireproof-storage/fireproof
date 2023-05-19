@@ -40,6 +40,8 @@
   "dependencies": {
     "@ipld/car": "^5.1.0",
     "@ipld/dag-cbor": "^9.0.0",
+    "@jsonlines/core": "^1.0.2",
+    "@multiformats/blake2": "^1.0.13",
     "@rollup/plugin-commonjs": "^24.0.1",
     "archy": "^1.0.0",
     "async": "^3.2.4",
