@@ -81,6 +81,8 @@ importers:
     specifiers:
       '@ipld/car': ^5.1.0
       '@ipld/dag-cbor': ^9.0.0
+      '@jsonlines/core': ^1.0.2
+      '@multiformats/blake2': ^1.0.13
       '@rollup/plugin-alias': ^5.0.0
       '@rollup/plugin-commonjs': ^24.0.1
       '@rollup/plugin-json': ^6.0.0
@@ -121,6 +123,8 @@ importers:
     dependencies:
       '@ipld/car': 5.1.0
       '@ipld/dag-cbor': 9.0.0
+      '@jsonlines/core': 1.0.2
+      '@multiformats/blake2': 1.0.13
       '@rollup/plugin-commonjs': 24.0.1_rollup@3.20.2
       archy: 1.0.0
       async: 3.2.4
@@ -1411,8 +1415,21 @@ packages:
       lodash: 4.17.21
     dev: true
 
+  /@jsonlines/core/1.0.2:
+    resolution: {integrity: sha512-yEEv8OoCYcspWV+SD+W6Hy72ENP4q8dihdnV2xpYI+TLvHbRj8yhzwoTPZPvYJ6J+mnigToUJSdQ0ywbidyXEg==}
+    dependencies:
+      core-js: 3.30.2
+    dev: false
+
   /@multiformats/base-x/4.0.1:
     resolution: {integrity: sha512-eMk0b9ReBbV23xXU693TAIrLyeO5iTgBZGSJfpqriG8UkYvr/hC9u9pyMlAakDNHWmbhMZCDs6KQO0jzKD8OTw==}
+    dev: false
+
+  /@multiformats/blake2/1.0.13:
+    resolution: {integrity: sha512-T1Kzya0wjj85CaVeRSpJ858EnSvW1pw94GSitxYf84VsNdv5XYbJ6QG8y26Ft1bVALzrUCmqkQrR53QHSyu6RA==}
+    dependencies:
+      blakejs: 1.2.1
+      multiformats: 9.9.0
     dev: false
 
   /@noble/ed25519/1.7.3:
@@ -2783,6 +2800,10 @@ packages:
       readable-stream: 3.6.1
     dev: false
 
+  /blakejs/1.2.1:
+    resolution: {integrity: sha512-QXUSXI3QVc/gJME0dBpXrag1kbzOqCjCX8/b54ntNyW6sjtoqxqRk3LTmXzaJoh71zMsDCjM+47jS7XiwN/+fQ==}
+    dev: false
+
   /bluebird/3.7.2:
     resolution: {integrity: sha512-XpNj6GDQzdfW+r2Wnn7xiSAd7TM3jzkxGXBGTtWKuSXv1xUV+azxAm8jdWZN06QTQk+2N2XB9jRDkvbmQmcRtg==}
     dev: true
@@ -3376,6 +3397,11 @@ packages:
     deprecated: core-js@<3.23.3 is no longer maintained and not recommended for usage due to the number of issues. Because of the V8 engine whims, feature detection in old core-js versions could cause a slowdown up to 100x even if nothing is polyfilled. Some versions have web compatibility issues. Please, upgrade your dependencies to the actual version of core-js.
     requiresBuild: true
     dev: true
+
+  /core-js/3.30.2:
+    resolution: {integrity: sha512-uBJiDmwqsbJCWHAwjrx3cvjbMXP7xD72Dmsn5LOJpiRmE3WbBbN5rCqQ2Qh6Ek6/eOrjlWngEynBWo4VxerQhg==}
+    requiresBuild: true
+    dev: false
 
   /core-util-is/1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
