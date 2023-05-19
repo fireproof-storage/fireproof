@@ -3,7 +3,7 @@ import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { Loader } from '../src/loader.js'
 import { join } from 'path'
-import { rmSync } from 'node:fs'
+import { rmSync, readdirSync } from 'node:fs'
 // import * as codec from '@ipld/dag-cbor'
 
 let database = Fireproof.storage()
@@ -15,14 +15,17 @@ let resp0
 describe('Fireproof', () => {
   beforeEach(async () => {
     const loader = new Loader('helloName')
-    const dbPath = join(loader.config.dataDir, 'helloName')
-    try {
-      rmSync(dbPath, { recursive: true, force: true })
-    } catch (err) {
-      // console.error(err)
+
+    const files = readdirSync(loader.config.dataDir)
+
+    for (const file of files) {
+      if (file.match(/fptest/)) {
+        // console.log('removing', file)
+        rmSync(join(loader.config.dataDir, file), { recursive: true, force: true })
+      }
     }
 
-    database = Fireproof.storage('helloName')
+    database = Fireproof.storage('fptest-hello-name')
     assert.equal(database.clock.length, 0)
     resp0 = await database.put({
       _id: '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c',
@@ -31,7 +34,7 @@ describe('Fireproof', () => {
     })
   })
   it('takes an optional name', () => {
-    assert.equal(database.name, 'helloName')
+    assert.equal(database.name, 'fptest-hello-name')
     const km = database.blocks.valet.getKeyMaterial()
     if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
     // uncomment to test in browser
@@ -142,8 +145,8 @@ describe('Fireproof', () => {
 
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
-    const db = await Fireproof.storage('test')
-    assert.equal(db.name, 'test')
+    const db = await Fireproof.storage('fptest')
+    assert.equal(db.name, 'fptest')
   })
   it('an empty database has no documents', async () => {
     const db = Fireproof.storage()
@@ -197,7 +200,7 @@ describe('Fireproof', () => {
     assert.equal(snapdoc.age, 2)
   })
   it("update document with validation function that doesn't allow it", async () => {
-    const validationDatabase = Fireproof.storage('validation', {
+    const validationDatabase = Fireproof.storage('fptest-validation', {
       validateChange: (newDoc, oldDoc, authCtx) => {
         if (newDoc.name === 'bob') {
           throw new Error('no bobs allowed')
@@ -273,7 +276,7 @@ describe('Fireproof', () => {
   })
 
   it("delete a document with validation function that doesn't allow it", async () => {
-    const validationDatabase = Fireproof.storage('validation', {
+    const validationDatabase = Fireproof.storage('fptest-validation', {
       validateChange: (newDoc, oldDoc, authCtx) => {
         if (oldDoc.name === 'bob') {
           throw new Error('no changing bob')
@@ -466,15 +469,13 @@ describe('Fireproof', () => {
       promises.push(database.put({ index, _id: id }).catch(e => {
         assert.equal(e.message, 'put failed on  _id: ' + id)
       }).then(r => {
-        if (r.id) {
-          putYes++
-          return database.get(r.id).catch(e => {
-            // assert.equal(e.message, 'get failed on _id: ' + r.id)
-          }).then(d => {
-            // assert.equal(d.index, index)
-            return r.id
-          })
-        }
+        putYes++
+        return database.get(r.id).catch(e => {
+          // assert.equal(e.message, 'get failed on _id: ' + r.id)
+        }).then(d => {
+          // assert.equal(d.index, index)
+          return r.id
+        })
       }))
       promises.push(database.changesSince().catch(e => {
         assert.equal(e.message, 'changesSince failed')
@@ -488,14 +489,14 @@ describe('Fireproof', () => {
     // console.log('putYes', putYes)
     // await sleep(1000)
     // console.log('all', await database.allDocuments())
-    assert.equal((await database.allDocuments()).rows.length, 21)
     assert.equal((await database.changesSince()).rows.length, 21)
+    assert.equal((await database.allDocuments()).rows.length, 21)
   }).timeout(20000)
   it('serialize database', async () => {
     await database.put({ _id: 'rehy', name: 'drate' })
     assert.equal((await database.changesSince()).rows.length, 2)
     const serialized = JSON.parse(JSON.stringify(database))
-    assert.equal(serialized.name, 'helloName')
+    assert.equal(serialized.name, 'fptest-hello-name')
     assert.equal(serialized.clock.length, 1)
   })
   it('clocked changes in order', async () => {

@@ -5,7 +5,7 @@ import { Fireproof } from '../src/fireproof.js'
 import { join } from 'path'
 import { readFileSync, rmSync, readdirSync } from 'node:fs'
 
-const TEST_DB_NAME = 'dataset-test'
+const TEST_DB_NAME = 'dataset-fptest'
 
 describe('Create a dataset', () => {
   let db, loader

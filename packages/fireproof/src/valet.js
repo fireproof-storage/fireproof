@@ -281,7 +281,7 @@ export class Valet {
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
-    console.log('getCarReader', carCid, carBytes.constructor.name)
+    // console.log('getCarReader', carCid, carBytes.constructor.name)
     const reader = await CarReader.fromBytes(carBytes)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()

@@ -11,6 +11,8 @@ const defaultConfig = {
   headerKeyPrefix: 'fp.'
 }
 
+const FORCE_IDB = false // set to true to force use of IndexedDB for testing
+
 /* global localStorage */
 
 export class Loader {
@@ -39,7 +41,7 @@ export class Loader {
 
   async writeCars (cars) {
     // console.log('writeCars', this.config.dataDir, this.name, cars.map(c => c.cid.toString()))
-    if (this.isBrowser) {
+    if (FORCE_IDB || this.isBrowser) {
       return await this.writeCarsIDB(cars)
     } else {
       for (const { cid, bytes } of cars) {
@@ -65,7 +67,7 @@ export class Loader {
   }
 
   async readCar (carCid) {
-    if (this.isBrowser) {
+    if (FORCE_IDB || this.isBrowser) {
       return await this.readCarIDB(carCid)
     } else {
       const carFilename = join(this.config.dataDir, this.name, `${carCid.toString()}.car`)
@@ -88,6 +90,7 @@ export class Loader {
       return localStorage.getItem(this.config.headerKeyPrefix + this.name)
     } else {
       return loadSync(this.headerFilename())
+      // return null
     }
   }
 
