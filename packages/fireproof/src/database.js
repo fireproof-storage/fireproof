@@ -313,6 +313,7 @@ export class Database {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
     }
+    // await new Promise(resolve => setTimeout(resolve, 10)) // makes concurrent tests work
     this.applyClock(prevClock, result.head)
     await this.notifyListeners([decodedEvent]) // this type is odd
     return {

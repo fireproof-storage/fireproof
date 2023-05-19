@@ -220,7 +220,7 @@ export class Valet {
    * @param {*} value
    */
   async parkCar (carCid, value, cids) {
-    const callId = Math.random().toString(36).substring(7)
+    // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
     const combinedReader = await this.getCombinedReader(carCid)
     const mapNode = await addCidsToCarIndex(
@@ -246,7 +246,7 @@ export class Valet {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    console.log('writeCars', callId, carCid.toString(), newValetCidCar.cid.toString())
+    // console.log('writeCars', callId, carCid.toString(), newValetCidCar.cid.toString())
     await this.loader.writeCars([
       {
         cid: carCid,
@@ -263,7 +263,7 @@ export class Valet {
 
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
 
-    console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
+    // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
 
     // console.log('parked car', carCid, value.length, Array.from(cids))
     // upload to web3.storage if we have credentials
@@ -286,8 +286,8 @@ export class Valet {
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
-    const callID = Math.random().toString(36).substring(7)
-    console.log('getCarReader', callID, carCid)
+    // const callID = Math.random().toString(36).substring(7)
+    // console.log('getCarReader', callID, carCid)
     const reader = await CarReader.fromBytes(carBytes)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()
@@ -311,7 +311,7 @@ export class Valet {
 
       // last block is the root ??? todo
       const rootBlock = blocks[blocks.length - 1]
-      console.log('got reader', callID, carCid)
+      // console.log('got reader', callID, carCid)
       return {
         root: rootBlock,
         get: async dataCID => {
@@ -438,8 +438,8 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
 
 const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperations) => {
   let indexNode
-  const callID = Math.random().toString(32).substring(2, 8)
-  console.log('addCidsToCarIndex', callID, valetRootCid, bulkOperations.length)
+  // const callID = Math.random().toString(32).substring(2, 8)
+  // console.log('addCidsToCarIndex', callID, valetRootCid, bulkOperations.length)
   if (valetRootCid) {
     if (valetRoot) {
       indexNode = valetRoot
@@ -459,7 +459,7 @@ const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperat
     // console.log('adding', key, value)
     await indexNode.set(key, value)
   }
-  console.log('newCidsToCarIndex', callID, indexNode.cid, bulkOperations.length)
+  // console.log('newCidsToCarIndex', callID, indexNode.cid, bulkOperations.length)
   return indexNode
 }
 
