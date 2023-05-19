@@ -4,7 +4,7 @@ import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
 // import { TransactionBlockstore } from './blockstore.js'
-import { localGet } from './utils.js'
+import { Loader } from './loader.js'
 import { Sync } from './sync.js'
 
 // todo remove Listener in 0.7.0
@@ -22,8 +22,8 @@ export class Fireproof {
   static storage = (name = null, opts = {}) => {
     if (name) {
       opts.name = name
-      // todo this can come from a registry also eg remote database / config, etc
-      const existing = localGet('fp.' + name)
+      const loader = new Loader(opts.loader)
+      const existing = loader.getHeader(name)
       if (existing) {
         const existingConfig = JSON.parse(existing)
         return Fireproof.fromConfig(name, existingConfig, opts)
