@@ -5,11 +5,11 @@ import { Fireproof, Sync } from '../src/fireproof.js'
 describe('Sync valet', () => {
   let database
   beforeEach(async () => {
-    database = Fireproof.storage('test-sync-full')
+    database = Fireproof.storage('fptest-sync-full')
     await setupDb(database)
   })
   it('can sync to an empty database', async () => {
-    const database2 = Fireproof.storage('test-full-empty')
+    const database2 = Fireproof.storage('fptest-full-empty')
     await setupSync(database, database2)
 
     const result2 = await database2.get('a1s35c')
