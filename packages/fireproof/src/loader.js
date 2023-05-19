@@ -12,7 +12,7 @@ const defaultConfig = {
   headerKeyPrefix: 'fp.'
 }
 
-const FORCE_IDB = false // set to true to force use of IndexedDB for testing
+const FORCE_IDB = typeof process !== 'undefined' && !!process.env?.FORCE_IDB
 
 /* global localStorage */
 
@@ -42,6 +42,8 @@ export class Loader {
 
   async writeCars (cars) {
     // console.log('writeCars', this.config.dataDir, this.name, cars.map(c => c.cid.toString()))
+    // console.log('writeCars', cars.length)
+
     if (FORCE_IDB || this.isBrowser) {
       await this.writeCarsIDB(cars)
     } else {

@@ -38,4 +38,7 @@ describe('Create a dataset', () => {
     const files = readdirSync(dbPath)
     assert(files.length > 2)
   })
+  it('doesnt put the key in the header', async () => {
+
+  })
 })

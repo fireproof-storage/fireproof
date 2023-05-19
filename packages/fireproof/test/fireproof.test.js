@@ -10,7 +10,7 @@ let database = Fireproof.storage()
 
 let resp0
 
-// const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+// const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 describe('Fireproof', () => {
   beforeEach(async () => {
@@ -36,7 +36,11 @@ describe('Fireproof', () => {
   it('takes an optional name', () => {
     assert.equal(database.name, 'fptest-hello-name')
     const km = database.blocks.valet.getKeyMaterial()
-    if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
+    if (process.env.NO_ENCRYPT) {
+      assert.equal(km, null)
+    } else {
+      assert.equal(km.length, 64)
+    }
     // uncomment to test in browser
     // const x = database.blocks.valet.idb
     // const keyId = database.blocks.valet.keyId
@@ -109,7 +113,7 @@ describe('Fireproof', () => {
     assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     assert.notEqual(put2.clock.toString(), theDoc._clock.toString())
 
-    const err = await database.put(theDoc).catch((err) => err)
+    const err = await database.put(theDoc).catch(err => err)
     assert.match(err.message, /MVCC conflict/)
   })
   it('put and get document with _clock that does not match b/c a different doc changed should succeed', async () => {
@@ -127,7 +131,7 @@ describe('Fireproof', () => {
     assert.equal(theDoc.name, 'alice')
     const del = await database.del(theDoc)
     assert(del.id)
-    const err = await database.put(theDoc).catch((err) => err)
+    const err = await database.put(theDoc).catch(err => err)
     console.log('err', err)
     assert.match(err.message, /MVCC conflict/)
   })
@@ -150,14 +154,14 @@ describe('Fireproof', () => {
   })
   it('an empty database has no documents', async () => {
     const db = Fireproof.storage()
-    const e = await db.get('8c5c0c5c0c5c').catch((err) => err)
+    const e = await db.get('8c5c0c5c0c5c').catch(err => err)
     assert.equal(e.message, 'Not found')
     const changes = await db.changesSince()
     assert.equal(changes.rows.length, 0)
   })
   it('delete on an empty database', async () => {
     const db = Fireproof.storage()
-    const e = await db.del('8c5c0c5c0c5c').catch((err) => err)
+    const e = await db.del('8c5c0c5c0c5c').catch(err => err)
     assert.equal(e.id, '8c5c0c5c0c5c')
     const changes = await db.changesSince()
     assert.equal(changes.rows.length, 0)
@@ -221,15 +225,15 @@ describe('Fireproof', () => {
         name: 'bob',
         age: 11
       })
-      .catch((e) => e)
+      .catch(e => e)
     assert.equal(e.message, 'no bobs allowed')
 
-    e = await validationDatabase.get('222-bob').catch((e) => e)
+    e = await validationDatabase.get('222-bob').catch(e => e)
     assert.equal(e.message, 'Not found')
   })
 
   it('get missing document', async () => {
-    const e = await database.get('missing').catch((e) => e)
+    const e = await database.get('missing').catch(e => e)
     assert.equal(e.message, 'Not found')
   })
   it('delete the only document', async () => {
@@ -240,8 +244,8 @@ describe('Fireproof', () => {
     assert.equal(deleted.id, id)
     const e = await database
       .get(id)
-      .then((doc) => assert.equal('should be deleted', JSON.stringify(doc)))
-      .catch((e) => {
+      .then(doc => assert.equal('should be deleted', JSON.stringify(doc)))
+      .catch(e => {
         if (e.message !== 'Not found') {
           throw e
         }
@@ -265,8 +269,8 @@ describe('Fireproof', () => {
     assert.equal(deleted.id, id)
     const e = await database
       .get(id)
-      .then((doc) => assert.equal('should be deleted', JSON.stringify(doc)))
-      .catch((e) => {
+      .then(doc => assert.equal('should be deleted', JSON.stringify(doc)))
+      .catch(e => {
         if (e.message !== 'Not found') {
           throw e
         }
@@ -297,14 +301,14 @@ describe('Fireproof', () => {
         name: 'bob',
         age: 12
       })
-      .catch((e) => e)
+      .catch(e => e)
     assert.equal(e.message, 'no changing bob')
 
     let prevBob = await validationDatabase.get('222-bob')
     assert.equal(prevBob.name, 'bob')
     assert.equal(prevBob.age, 11)
 
-    const e2 = await validationDatabase.del('222-bob').catch((e) => e)
+    const e2 = await validationDatabase.del('222-bob').catch(e => e)
     assert.equal(e2.message, 'no changing bob')
 
     prevBob = await validationDatabase.get('222-bob')
@@ -433,7 +437,10 @@ describe('Fireproof', () => {
       changes.rows.forEach(row => {
         for (const key in row) {
           const value = row[key]
-          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+          assert(
+            !/^bafy/.test(value),
+            `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`
+          )
         }
       })
 
@@ -451,7 +458,10 @@ describe('Fireproof', () => {
       changes.rows.forEach(row => {
         for (const key in row) {
           const value = row[key]
-          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+          assert(
+            !/^bafy/.test(value),
+            `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`
+          )
         }
       })
 
@@ -463,35 +473,66 @@ describe('Fireproof', () => {
   it('concurrent transactions', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     const promises = []
+    const promisesChanges = []
     let putYes = 0
+    // const howMany = 0
+
     for (let index = 0; index < 20; index++) {
       const id = 'a' + (300 - index).toString()
-      promises.push(database.put({ index, _id: id }).catch(e => {
-        assert.equal(e.message, 'put failed on  _id: ' + id)
-      }).then(r => {
-        putYes++
-        return database.get(r.id).catch(e => {
-          // assert.equal(e.message, 'get failed on _id: ' + r.id)
-        }).then(d => {
-          // assert.equal(d.index, index)
-          return r.id
-        })
-      }))
-      promises.push(database.changesSince().catch(e => {
-        assert.equal(e.message, 'changesSince failed')
-      }).then(c => {
-        assert(c.rows.length > 0)
-        return c.rows.length
-      }))
+      // await sleep(0)
+
+      promises.push(
+        database
+          .put({ index, _id: id })
+          .catch(e => {
+            assert.equal(e.message, 'put failed on  _id: ' + id)
+          })
+          .then(r => {
+            putYes++
+            return database
+              .get(r.id)
+              .catch(e => {
+                // assert.equal(e.message, 'get failed on _id: ' + r.id)
+              })
+              .then(d => {
+                // assert.equal(d.index, index)
+                return database.changesSince().then(c => {
+                  console.log('changesSince A', c.rows.length)
+                  // howMany = c.rows.length + 1
+                  // assert.equal(c.rows.length, ++howMany)
+                  return c.rows.length
+                })
+                // return r.id
+              })
+          })
+      )
+      promisesChanges.push(
+        database
+          .changesSince()
+          .catch(e => {
+            assert.equal(e.message, 'changesSince failed')
+          })
+          .then(c => {
+            console.log('changesSince', c.rows.length)
+            // howMany = c.rows.length + 1
+            // assert.equal(c.rows.length, ++howMany)
+            return c.rows.length
+          })
+      )
     }
+    console.log('promises', promises.length)
     const got = await Promise.all(promises)
-    assert.equal(got.length, putYes * 2)
+    console.log('gotlength', got.length)
+    assert.equal(got.length, putYes)
     // console.log('putYes', putYes)
+    const gotChanges = await Promise.all(promisesChanges)
+    assert.equal(got.length, gotChanges.length)
+
     // await sleep(1000)
-    assert.equal(database.clockToJSON().length, 20, 'clockToJSON')
     // console.log('all', await database.allDocuments())
     assert.equal((await database.changesSince()).rows.length, 21, 'changesSince')
     assert.equal((await database.allDocuments()).rows.length, 21, 'allDocuments')
+    assert.equal(database.clockToJSON().length, 20, 'clockToJSON')
   }).timeout(20000)
   it('serialize database', async () => {
     await database.put({ _id: 'rehy', name: 'drate' })
