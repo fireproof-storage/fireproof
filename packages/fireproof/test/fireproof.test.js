@@ -410,6 +410,8 @@ describe('Fireproof', () => {
   })
 
   it('docs since repeated changes', async () => {
+    assert.equal(database.clockToJSON().length, 1)
+    assert.equal(database.clockToJSON()[0], 'bafyreiad55hjvlzse7dxt5qwf6xsv4zucuyoracvpcqifpi6pmdaavdkoa')
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
     for (let index = 0; index < 30; index++) {
@@ -465,8 +467,19 @@ describe('Fireproof', () => {
         }
       })
 
-      // console.log('changes: ', index, changes.rows.length, JSON.stringify(changes.rows))
+      console.log('changes: ', index, changes.rows.length, JSON.stringify(changes))
       assert.equal(changes.rows.length, index + 2, `failed on ${index}, with ${changes.rows.length} ${id}`)
+      assert.equal(database.clockToJSON().length, 1)
+      // dig out the prolly root
+      assert(
+        [
+          'bafyreibbleckum7cn4y7rothgsa36lnavyp57rzzfgjzozklhhv2e5xpqe',
+          'bafyreigxiwa3sqacp4vtu7uaejep4xv7tt5dribslfffm23wwlq4xif4da', 'bafyreia7mosntjgvwzkhnubhao47w6nwrevmxfnohhquyxhc3xsi3frhkm',
+          'bafyreibpf2awohuttydyvpz56kbpczfgfr2nv2vrpsqz2jyiwmzsf7nzfi', 'bafyreiclda4g3zj3mgawzsczqswisy6jjrazmhf7dfynbzahzhom3otc2y'
+        ].indexOf(database.clockToJSON()[0]) > -1,
+        `new cid: ${database.clockToJSON()}`
+      )
+      // assert.equal(database.clockToJSON()[0], 'bafyreibpf2awohuttydyvpz56kbpczfgfr2nv2vrpsqz2jyiwmzsf7nzfi')
     }
   }).timeout(30000)
 
