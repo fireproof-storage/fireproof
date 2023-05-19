@@ -1,6 +1,9 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
+import { Loader } from '../src/loader.js'
+import { join } from 'path'
+import { rmSync } from 'node:fs'
 // import * as codec from '@ipld/dag-cbor'
 
 let database = Fireproof.storage()
@@ -11,6 +14,14 @@ let resp0
 
 describe('Fireproof', () => {
   beforeEach(async () => {
+    const loader = new Loader('helloName')
+    const dbPath = join(loader.config.dataDir, 'helloName')
+    try {
+      rmSync(dbPath, { recursive: true, force: true })
+    } catch (err) {
+      // console.error(err)
+    }
+
     database = Fireproof.storage('helloName')
     assert.equal(database.clock.length, 0)
     resp0 = await database.put({
@@ -23,9 +34,10 @@ describe('Fireproof', () => {
     assert.equal(database.name, 'helloName')
     const km = database.blocks.valet.getKeyMaterial()
     if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
-    const x = database.blocks.valet.idb
-    const keyId = database.blocks.valet.keyId
-    assert.equal(x.name.toString(), `fp.${keyId}.helloName.valet`)
+    // uncomment to test in browser
+    // const x = database.blocks.valet.idb
+    // const keyId = database.blocks.valet.keyId
+    // assert.equal(x.name.toString(), `fp.${keyId}.helloName.valet`)
   })
   it('only put and get document', async () => {
     assert(resp0.id, 'should have id')

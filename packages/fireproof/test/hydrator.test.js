@@ -123,7 +123,7 @@ describe('hydrator query with dbname', () => {
     assert.equal(serialized.indexes[0].clock.byKey.constructor.name, 'String')
     assert.equal(serialized.indexes[0].clock.db[0].constructor.name, 'String')
   })
-  it('rehydrate database', async () => {
+  it('rehydrate database twoo', async () => {
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
     assert.equal((await database.changesSince()).rows.length, 7)
     const result = await index.query({ range: [0, 54] })

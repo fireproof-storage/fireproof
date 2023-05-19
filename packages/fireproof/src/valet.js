@@ -6,7 +6,6 @@ import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
 import * as dagcbor from '@ipld/dag-cbor'
-import { openDB } from 'idb'
 import cargoQueue from 'async/cargoQueue.js'
 // @ts-ignore
 
@@ -50,8 +49,9 @@ export class Valet {
    */
   uploadFunction = null
 
-  constructor (name = 'default', keyMaterial) {
+  constructor (name = 'default', loader, keyMaterial) {
     this.name = name
+    this.loader = loader
     this.setKeyMaterial(keyMaterial)
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
@@ -125,19 +125,6 @@ export class Valet {
     } else {
       throw new Error('missing lastCid for car header')
     }
-  }
-
-  withDB = async dbWorkFun => {
-    if (!this.idb) {
-      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 3, {
-        upgrade (db, oldVersion, newVersion, transaction) {
-          if (oldVersion < 1) {
-            db.createObjectStore('cars')
-          }
-        }
-      })
-    }
-    return await dbWorkFun(this.idb)
   }
 
   /**
@@ -251,7 +238,7 @@ export class Valet {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    await this.writeCars([
+    await this.loader.writeCars([
       {
         cid: carCid,
         bytes: value,
@@ -283,29 +270,11 @@ export class Valet {
     }
   }
 
-  async writeCars (cars) {
-    return await this.withDB(async db => {
-      const tx = db.transaction(['cars'], 'readwrite')
-      for (const { cid, bytes, replaces } of cars) {
-        await tx.objectStore('cars').put(bytes, cid.toString())
-        // todo remove old maps
-        if (replaces) {
-          await tx.objectStore('cars').delete(replaces.toString())
-        }
-      }
-      return await tx.done
-    })
-  }
-
   remoteBlockFunction = null
 
   async getCarReader (carCid) {
     carCid = carCid.toString()
-    const carBytes = await this.withDB(async db => {
-      const tx = db.transaction(['cars'], 'readonly')
-      // console.log('getCarReader', carCid)
-      return await tx.objectStore('cars').get(carCid)
-    })
+    const carBytes = await this.loader.readCar(carCid)
     const reader = await CarReader.fromBytes(carBytes)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()

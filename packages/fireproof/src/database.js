@@ -33,11 +33,11 @@ export class Database {
   constructor (name, clock, config = {}) {
     this.name = name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
-    this.blocks = new TransactionBlockstore(name, config.key)
-    this.indexBlocks = new TransactionBlockstore(name + '.indexes', config.key)
+    this.loader = new Loader(name, config.loader)
+    this.blocks = new TransactionBlockstore(name, this.loader, config.key)
+    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, this.loader, config.key)
     this.clock = clock
     this.config = config
-    this.loader = new Loader(config.loader)
   }
 
   /**
@@ -79,7 +79,7 @@ export class Database {
 
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {
-      this.loader.saveHeader(this.name, JSON.stringify(this))
+      this.loader.saveHeader(JSON.stringify(this))
     }
   }
 

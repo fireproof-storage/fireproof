@@ -1,59 +1,117 @@
-import { Fireproof } from './fireproof.js'
-import { readFileSync, createReadStream } from 'fs'
-import { join } from 'path'
+import { writeFileSync, readFileSync, createReadStream } from 'fs'
+import { mkdir } from 'node:fs/promises'
+import { openDB } from 'idb'
+import { join, dirname } from 'path'
 import { parse } from '@jsonlines/core'
 import cargoQueue from 'async/cargoQueue.js'
+import { homedir } from 'os'
 
 const defaultConfig = {
-  dataDir: '~/.fireproof',
+  dataDir: join(homedir(), '.fireproof'),
   keyPrefix: 'fp.'
 }
 
 /* global localStorage */
-let storageSupported = false
-try {
-  storageSupported = window.localStorage && true
-} catch (e) {}
 
 export class Loader {
-  constructor (config = defaultConfig) {
+  constructor (dbName, config = defaultConfig) {
+    this.dbName = dbName
     this.config = config
-  }
-
-  getHeader (key) {
-    key = this.config.keyPrefix + key
-    if (storageSupported) {
-      return localStorage && localStorage.getItem(key)
-    } // else {
-    //   throw new Error('localStorage not supported')
-    // }
-  }
-
-  saveHeader (key, value) {
-    key = this.config.keyPrefix + key
-    if (storageSupported) {
-      return localStorage && localStorage.setItem(key, value)
-    }
-  }
-
-  loadDatabase (database) {
-    const clock = this.loadClock(database)
-    if (clock) {
-      throw new Error(`Database ${database} already exists`)
-    } else {
-      return Fireproof.storage(database)
-    }
-  }
-
-  loadClock (database) {
-    const clockFile = join(this.config.dataDir, database, 'clock.json')
-    let clock
+    this.isBrowser = false
     try {
-      clock = JSON.parse(readFileSync(clockFile, 'utf8'))
-    } catch (err) {
-      clock = null
+      this.isBrowser = window.localStorage && true
+    } catch (e) {}
+  }
+
+  withDB = async dbWorkFun => {
+    if (!this.idb) {
+      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 3, {
+        upgrade (db, oldVersion, newVersion, transaction) {
+          if (oldVersion < 1) {
+            db.createObjectStore('cars')
+          }
+        }
+      })
     }
-    return clock
+    return await dbWorkFun(this.idb)
+  }
+
+  async writeCars (cars) {
+    console.log('writeCars', this.config.dataDir, this.dbName, cars.map(c => c.cid.toString()))
+    if (this.isBrowser) {
+      return await this.writeCarsIDB(cars)
+    } else {
+      for (const { cid, bytes } of cars) {
+        const carFilename = join(this.config.dataDir, this.dbName, `${cid.toString()}.car`)
+        // console.log('writeCars', carFilename)
+        await writeSync(carFilename, bytes)
+      }
+    }
+  }
+
+  async writeCarsIDB (cars) {
+    return await this.withDB(async db => {
+      const tx = db.transaction(['cars'], 'readwrite')
+      for (const { cid, bytes, replaces } of cars) {
+        await tx.objectStore('cars').put(bytes, cid.toString())
+        // todo remove old maps
+        if (replaces) {
+          await tx.objectStore('cars').delete(replaces.toString())
+        }
+      }
+      return await tx.done
+    })
+  }
+
+  async readCar (carCid) {
+    if (this.isBrowser) {
+      return await this.readCarIDB(carCid)
+    } else {
+      const carFilename = join(this.config.dataDir, this.dbName, `${carCid.toString()}.car`)
+      const got = readFileSync(carFilename)
+      // console.log('readCar', carFilename, got.constructor.name)
+      return got
+    }
+  }
+
+  async readCarIDB (carCid) {
+    return await this.withDB(async db => {
+      const tx = db.transaction(['cars'], 'readonly')
+      // console.log('getCarReader', carCid)
+      return await tx.objectStore('cars').get(carCid)
+    })
+  }
+
+  getHeader () {
+    if (this.isBrowser) {
+      return localStorage.getItem(this.config.keyPrefix + this.dbName)
+    } else {
+      return loadSync(this.headerFilename())
+    }
+  }
+
+  async saveHeader (stringValue) {
+    // console.log('saveHeader', this.isBrowser)
+    if (this.isBrowser) {
+      // console.log('localStorage!', this.config.keyPrefix)
+      return localStorage.setItem(this.config.keyPrefix + this.dbName, stringValue)
+    } else {
+      // console.log('no localStorage', this.config.dataDir, this.dbName)
+      // console.log('saving clock to', this.headerFilename(), stringValue)
+
+      try {
+        await writeSync(this.headerFilename(), stringValue)
+      } catch (error) {
+        console.log('error', error)
+      }
+
+      // console.log('saved clock to', this.headerFilename())
+    }
+  }
+
+  headerFilename () {
+    // console.log('headerFilename', this.config.dataDir, this.dbName)
+    return join(this.config.dataDir, this.dbName, 'header.json')
   }
 
   async loadData (database, filename) {
@@ -81,4 +139,18 @@ export class Loader {
     })
     return p
   }
+}
+
+function loadSync (filename) {
+  try {
+    return readFileSync(filename, 'utf8').toString()
+  } catch (error) {
+    // console.log('error', error)
+    return null
+  }
+}
+
+async function writeSync (fullpath, stringValue) {
+  await mkdir(dirname(fullpath), { recursive: true })
+  writeFileSync(fullpath, stringValue)
 }
