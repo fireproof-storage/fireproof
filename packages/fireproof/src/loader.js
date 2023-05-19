@@ -5,12 +5,35 @@ import { parse } from '@jsonlines/core'
 import cargoQueue from 'async/cargoQueue.js'
 
 const defaultConfig = {
-  dataDir: '~/.fireproof'
+  dataDir: '~/.fireproof',
+  keyPrefix: 'fp.'
 }
+
+/* global localStorage */
+let storageSupported = false
+try {
+  storageSupported = window.localStorage && true
+} catch (e) {}
 
 export class Loader {
   constructor (config = defaultConfig) {
     this.config = config
+  }
+
+  getHeader (key) {
+    key = this.config.keyPrefix + key
+    if (storageSupported) {
+      return localStorage && localStorage.getItem(key)
+    } // else {
+    //   throw new Error('localStorage not supported')
+    // }
+  }
+
+  saveHeader (key, value) {
+    key = this.config.keyPrefix + key
+    if (storageSupported) {
+      return localStorage && localStorage.setItem(key, value)
+    }
   }
 
   loadDatabase (database) {

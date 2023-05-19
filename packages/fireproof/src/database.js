@@ -2,7 +2,7 @@
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import { doTransaction, TransactionBlockstore } from './blockstore.js'
 import charwise from 'charwise'
-import { localSet } from './utils.js'
+import { Loader } from './loader.js'
 import { CID } from 'multiformats'
 
 // TypeScript Types
@@ -37,6 +37,7 @@ export class Database {
     this.indexBlocks = new TransactionBlockstore(name + '.indexes', config.key)
     this.clock = clock
     this.config = config
+    this.loader = new Loader(config.loader)
   }
 
   /**
@@ -78,7 +79,7 @@ export class Database {
 
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {
-      localSet('fp.' + this.name, JSON.stringify(this))
+      this.loader.saveHeader(this.name, JSON.stringify(this))
     }
   }
 
