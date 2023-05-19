@@ -80,7 +80,7 @@ describe('Hydrator', () => {
 describe('hydrator query with dbname', () => {
   let database, index
   beforeEach(async () => {
-    database = Fireproof.storage('fptest-testDBindex')
+    database = Fireproof.storage('fptest-ix-name')
     const docs = [
       { _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 },
       { _id: 'b2s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'bob', age: 40 },
@@ -100,14 +100,14 @@ describe('hydrator query with dbname', () => {
       map(doc.age, doc.name)
     }, null)
   })
-  it('serialize database with index', async () => {
+  it('serialize database with index and name', async () => {
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
     assert.equal((await database.changesSince()).rows.length, 7)
     const result = await index.query({ range: [0, 54] })
     assert.equal(result.rows[0].value, 'drate')
     const serialized = database.toJSON()
     // console.log('serialized', serialized)
-    assert.equal(serialized.name, 'fptest-testDBindex')
+    assert.equal(serialized.name, 'fptest-ix-name')
     if (database.blocks.valet.keyId !== 'null') {
       assert.equal(serialized.key.length, 64)
     }
@@ -133,7 +133,7 @@ describe('hydrator query with dbname', () => {
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
     const newDb = Fireproof.fromJSON(serialized, database)
-    assert.equal(newDb.name, 'fptest-testDBindex')
+    assert.equal(newDb.name, 'fptest-ix-name')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
     const newIndex = [...newDb.indexes.values()][0]
@@ -178,7 +178,7 @@ describe('hydrator query with dbname', () => {
     // newDb.blocks.valet.valetRootCid = null
     // newDb.blocks = null
 
-    assert.equal(newDb.name, 'fptest-testDBindex')
+    assert.equal(newDb.name, 'fptest-ix-name')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
     // console.log('ind', newDb.indexes)
