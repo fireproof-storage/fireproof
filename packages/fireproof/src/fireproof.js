@@ -22,8 +22,8 @@ export class Fireproof {
   static storage = (name = null, opts = {}) => {
     if (name) {
       opts.name = name
-      const loader = new Loader(opts.loader)
-      const existing = loader.getHeader(name)
+      const loader = new Loader(name, opts.loader)
+      const existing = loader.getHeader()
       if (existing) {
         const existingConfig = JSON.parse(existing)
         return Fireproof.fromConfig(name, existingConfig, opts)
