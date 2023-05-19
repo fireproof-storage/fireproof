@@ -14,8 +14,9 @@ const defaultConfig = {
 /* global localStorage */
 
 export class Loader {
-  constructor (dbName, config = defaultConfig) {
-    this.dbName = dbName
+  constructor (name, keyId, config = defaultConfig) {
+    this.name = name
+    this.keyId = keyId
     this.config = config
     this.isBrowser = false
     try {
@@ -23,9 +24,9 @@ export class Loader {
     } catch (e) {}
   }
 
-  withDB = async (name, keyId, dbWorkFun) => {
+  withDB = async (dbWorkFun) => {
     if (!this.idb) {
-      this.idb = await openDB(`fp.${keyId}.${name}.valet`, 3, {
+      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 3, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars')
@@ -37,12 +38,12 @@ export class Loader {
   }
 
   async writeCars (cars) {
-    // console.log('writeCars', this.config.dataDir, this.dbName, cars.map(c => c.cid.toString()))
+    // console.log('writeCars', this.config.dataDir, this.name, cars.map(c => c.cid.toString()))
     if (this.isBrowser) {
       return await this.writeCarsIDB(cars)
     } else {
       for (const { cid, bytes } of cars) {
-        const carFilename = join(this.config.dataDir, this.dbName, `${cid.toString()}.car`)
+        const carFilename = join(this.config.dataDir, this.name, `${cid.toString()}.car`)
         // console.log('writeCars', carFilename)
         await writeSync(carFilename, bytes)
       }
@@ -67,7 +68,7 @@ export class Loader {
     if (this.isBrowser) {
       return await this.readCarIDB(carCid)
     } else {
-      const carFilename = join(this.config.dataDir, this.dbName, `${carCid.toString()}.car`)
+      const carFilename = join(this.config.dataDir, this.name, `${carCid.toString()}.car`)
       const got = readFileSync(carFilename)
       // console.log('readCar', carFilename, got.constructor.name)
       return got
@@ -84,7 +85,7 @@ export class Loader {
 
   getHeader () {
     if (this.isBrowser) {
-      return localStorage.getItem(this.config.headerKeyPrefix + this.dbName)
+      return localStorage.getItem(this.config.headerKeyPrefix + this.name)
     } else {
       return loadSync(this.headerFilename())
     }
@@ -94,9 +95,9 @@ export class Loader {
     // console.log('saveHeader', this.isBrowser)
     if (this.isBrowser) {
       // console.log('localStorage!', this.config.headerKeyPrefix)
-      return localStorage.setItem(this.config.headerKeyPrefix + this.dbName, stringValue)
+      return localStorage.setItem(this.config.headerKeyPrefix + this.name, stringValue)
     } else {
-      // console.log('no localStorage', this.config.dataDir, this.dbName)
+      // console.log('no localStorage', this.config.dataDir, this.name)
       // console.log('saving clock to', this.headerFilename(), stringValue)
 
       try {
@@ -110,8 +111,8 @@ export class Loader {
   }
 
   headerFilename () {
-    // console.log('headerFilename', this.config.dataDir, this.dbName)
-    return join(this.config.dataDir, this.dbName, 'header.json')
+    // console.log('headerFilename', this.config.dataDir, this.name)
+    return join(this.config.dataDir, this.name, 'header.json')
   }
 
   async loadData (database, filename) {
