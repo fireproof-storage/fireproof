@@ -1,14 +1,13 @@
 import { before, describe, it } from 'mocha'
 import assert from 'node:assert'
 import { Valet } from '../src/valet.js'
-import { Loader } from '../src/loader.js'
 
 describe('new Valet', () => {
   let val
   const calls = []
 
   before(async () => {
-    val = new Valet('test', new Loader('test'))
+    val = new Valet('test')
     val.uploadFunction = async (carCid, value) => {
       calls.push({ carCid, value })
     }

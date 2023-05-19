@@ -8,7 +8,7 @@ import { homedir } from 'os'
 
 const defaultConfig = {
   dataDir: join(homedir(), '.fireproof'),
-  keyPrefix: 'fp.'
+  headerKeyPrefix: 'fp.'
 }
 
 /* global localStorage */
@@ -23,9 +23,9 @@ export class Loader {
     } catch (e) {}
   }
 
-  withDB = async dbWorkFun => {
+  withDB = async (name, keyId, dbWorkFun) => {
     if (!this.idb) {
-      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 3, {
+      this.idb = await openDB(`fp.${keyId}.${name}.valet`, 3, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars')
@@ -37,7 +37,7 @@ export class Loader {
   }
 
   async writeCars (cars) {
-    console.log('writeCars', this.config.dataDir, this.dbName, cars.map(c => c.cid.toString()))
+    // console.log('writeCars', this.config.dataDir, this.dbName, cars.map(c => c.cid.toString()))
     if (this.isBrowser) {
       return await this.writeCarsIDB(cars)
     } else {
@@ -84,7 +84,7 @@ export class Loader {
 
   getHeader () {
     if (this.isBrowser) {
-      return localStorage.getItem(this.config.keyPrefix + this.dbName)
+      return localStorage.getItem(this.config.headerKeyPrefix + this.dbName)
     } else {
       return loadSync(this.headerFilename())
     }
@@ -93,8 +93,8 @@ export class Loader {
   async saveHeader (stringValue) {
     // console.log('saveHeader', this.isBrowser)
     if (this.isBrowser) {
-      // console.log('localStorage!', this.config.keyPrefix)
-      return localStorage.setItem(this.config.keyPrefix + this.dbName, stringValue)
+      // console.log('localStorage!', this.config.headerKeyPrefix)
+      return localStorage.setItem(this.config.headerKeyPrefix + this.dbName, stringValue)
     } else {
       // console.log('no localStorage', this.config.dataDir, this.dbName)
       // console.log('saving clock to', this.headerFilename(), stringValue)
