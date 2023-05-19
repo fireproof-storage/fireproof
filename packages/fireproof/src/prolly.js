@@ -15,6 +15,8 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { CIDCounter, bf, simpleCompare as compare } from 'prolly-trees/utils'
 import * as codec from '@ipld/dag-cbor'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
+// import { blake2b256 as hasher } from '@multiformats/blake2/blake2b'
+
 import { doTransaction } from './blockstore.js'
 import { create as createBlock } from 'multiformats/block'
 const blockOpts = { cache, chunker: bf(30), codec, hasher, compare }

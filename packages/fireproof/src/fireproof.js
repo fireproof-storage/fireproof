@@ -1,4 +1,5 @@
 import randomBytes from 'randombytes'
+// import { randomBytes } from 'crypto'
 import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
