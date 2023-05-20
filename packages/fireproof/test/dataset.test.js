@@ -7,6 +7,7 @@ import { join } from 'path'
 import { readFileSync, rmSync, readdirSync } from 'node:fs'
 
 const TEST_DB_NAME = 'dataset-fptest'
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('Create a dataset', () => {
   let db, loader
@@ -42,7 +43,20 @@ describe('Create a dataset', () => {
   it('doesnt put the key in the header', async () => {
 
   })
-  it('works with rest storage', () => {
-    // const restDb = Fireproof.storage(TEST_DB_NAME)
+  it('works with fresh reader storage', async () => {
+    await sleep(100)
+    const fileDb = await Fireproof.storage(TEST_DB_NAME)
+    const response = await fileDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+  })
+  it('works with rest storage', async () => {
+    await sleep(100)
+    console.log('file alldocs')
+    const dbdocs = await db.allDocuments()
+    assert.equal(dbdocs.rows.length, 18)
+    console.log('rest storage')
+    const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', baseURL: 'http://localhost:8000' } })
+    const response = await restDb.allDocuments()
+    assert.equal(response.rows.length, 18)
   })
 })
