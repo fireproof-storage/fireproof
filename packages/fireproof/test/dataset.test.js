@@ -57,7 +57,7 @@ describe('Create a dataset', () => {
     const dbdocs = await db.allDocuments()
     assert.equal(dbdocs.rows.length, 18)
     console.log('rest storage')
-    const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', baseURL: 'http://localhost:8000' } })
+    const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
     const response = await restDb.allDocuments()
     assert.equal(response.rows.length, 18)
 
@@ -66,6 +66,24 @@ describe('Create a dataset', () => {
     }))
     const response2 = await restDb.allDocuments()
     assert.equal(response2.rows.length, 118)
+    server.close()
+  }).timeout(10000)
+  it.skip('creates new db with rest storage', async () => {
+    const server = startServer()
+    await sleep(100)
+    console.log('file alldocs')
+    const dbdocs = await db.allDocuments()
+    assert.equal(dbdocs.rows.length, 18)
+    console.log('rest storage')
+    const newRestDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/fptest-new-db-rest' } })
+    const response = await newRestDb.allDocuments()
+    assert.equal(response.rows.length, 0)
+
+    await Promise.all(Array.from({ length: 100 }).map(async () => {
+      await newRestDb.put({ foo: 'bar' })
+    }))
+    const response2 = await newRestDb.allDocuments()
+    assert.equal(response2.rows.length, 100)
     server.close()
   }).timeout(10000)
 })

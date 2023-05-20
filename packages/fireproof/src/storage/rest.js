@@ -9,12 +9,12 @@ export class Rest {
     this.name = name
     this.keyId = keyId
     this.config = Object.assign({}, defaultConfig, config)
-    this.headerURL = `${this.config.baseURL}/${this.name}/header.json`
+    this.headerURL = `${this.config.url}/header.json`
   }
 
   async writeCars (cars) {
     for (const { cid, bytes } of cars) {
-      const carURL = `${this.config.baseURL}/${this.name}/${cid.toString()}.car`
+      const carURL = `${this.config.url}/${cid.toString()}.car`
 
       const response = await fetch(carURL, {
         method: 'PUT',
@@ -26,7 +26,7 @@ export class Rest {
   }
 
   async readCar (carCid) {
-    const carURL = `${this.config.baseURL}/${this.name}/${carCid.toString()}.car`
+    const carURL = `${this.config.url}/${carCid.toString()}.car`
     // console.log('readCar', carURL)
     const response = await fetch(carURL)
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)
@@ -38,7 +38,8 @@ export class Rest {
 
   async getHeader () {
     const response = await fetch(this.headerURL)
-    if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)
+    // console.log('getHeader', response)
+    if (!response.ok) return null
 
     return await response.json()
   }

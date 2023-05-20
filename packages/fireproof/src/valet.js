@@ -314,7 +314,7 @@ export class Valet {
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
-    const callID = Math.random().toString(36).substring(7)
+    // const callID = Math.random().toString(36).substring(7)
     // console.log('innerGetCarReader', callID, carCid, carBytes.constructor.name, carBytes.byteLength)
     const reader = await CarReader.fromBytes(carBytes)
     // console.log('got reader', callID, reader)
