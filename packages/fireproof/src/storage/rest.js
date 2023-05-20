@@ -27,11 +27,13 @@ export class Rest {
 
   async readCar (carCid) {
     const carURL = `${this.config.baseURL}/${this.name}/${carCid.toString()}.car`
-    console.log('getCar', carURL)
+    // console.log('readCar', carURL)
     const response = await fetch(carURL)
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)
-
-    return await response.arrayBuffer()
+    const got = await response.arrayBuffer()
+    // console.log('readCar', got.byteLength)
+    return new Uint8Array(got)
+    // return got
   }
 
   async getHeader () {

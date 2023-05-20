@@ -5,6 +5,7 @@ import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
 import { join } from 'path'
 import { readFileSync, rmSync, readdirSync } from 'node:fs'
+import { startServer } from '../scripts/server.js'
 
 const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -50,6 +51,7 @@ describe('Create a dataset', () => {
     assert.equal(response.rows.length, 18)
   })
   it('works with rest storage', async () => {
+    const server = startServer()
     await sleep(100)
     console.log('file alldocs')
     const dbdocs = await db.allDocuments()
@@ -58,5 +60,12 @@ describe('Create a dataset', () => {
     const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', baseURL: 'http://localhost:8000' } })
     const response = await restDb.allDocuments()
     assert.equal(response.rows.length, 18)
-  })
+
+    await Promise.all(Array.from({ length: 100 }).map(async () => {
+      await restDb.put({ foo: 'bar' })
+    }))
+    const response2 = await restDb.allDocuments()
+    assert.equal(response2.rows.length, 118)
+    server.close()
+  }).timeout(10000)
 })
