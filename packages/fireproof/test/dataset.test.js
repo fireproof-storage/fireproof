@@ -1,6 +1,7 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Loader } from '../src/loader.js'
+import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
 import { join } from 'path'
 import { readFileSync, rmSync, readdirSync } from 'node:fs'
@@ -19,7 +20,7 @@ describe('Create a dataset', () => {
       // console.error(err)
     }
     db = Fireproof.storage(TEST_DB_NAME)
-    await loader.loadData(db, './test/todos.json')
+    await loadData(db, './test/todos.json')
   })
   it('gets all docs', async () => {
     const response = await db.allDocuments()
@@ -40,5 +41,8 @@ describe('Create a dataset', () => {
   })
   it('doesnt put the key in the header', async () => {
 
+  })
+  it('works with rest storage', () => {
+    // const restDb = Fireproof.storage(TEST_DB_NAME)
   })
 })

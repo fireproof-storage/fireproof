@@ -2,9 +2,21 @@ import * as fs from 'node:fs'
 import * as http from 'node:http'
 import * as path from 'node:path'
 
+// import { mkdir, writeFile } from 'fs/promises'
+
 import { Loader } from '../src/loader.js'
 
 const PORT = 8000
+
+/**
+ * This server is for illustration purposes. It trusts the client.
+ * Before using in production it requires customization:
+ * - Validate car files
+ * - Validate paths & mime types
+ * - Authenticate requests and enforce that users can only update their own header file (userid in header filename)
+ * - Deploy in a secure environment
+ * To connect with a managed service, see https://fireproof.storage
+ */
 
 const MIME_TYPES = {
   default: 'application/octet-stream',
@@ -12,7 +24,7 @@ const MIME_TYPES = {
   car: 'application/car'
 }
 
-const DATA_PATH = new Loader('fireproof').config.dataDir
+const DATA_PATH = Loader.appropriate('fireproof').config.dataDir
 
 const toBool = [() => true, () => false]
 
@@ -30,8 +42,13 @@ const prepareFile = async url => {
 
 http
   .createServer(async (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
     if (req.method === 'PUT') {
       const filePath = path.join(DATA_PATH, req.url)
+      await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
       const writeStream = fs.createWriteStream(filePath)
       req.pipe(writeStream)
 
@@ -46,6 +63,10 @@ http
         res.end('Internal Server Error')
         console.log(`PUT ${req.url} 500 - ${err.message}`)
       })
+    } else if (req.method === 'OPTIONS') {
+      // Pre-flight request. Reply successfully:
+      res.writeHead(200)
+      res.end()
     } else {
       const file = await prepareFile(req.url)
       if (file.found) {

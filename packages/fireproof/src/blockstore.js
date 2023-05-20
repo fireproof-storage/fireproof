@@ -41,9 +41,9 @@ export class TransactionBlockstore {
   inflightTransactions = new Set()
   syncs = new Set()
 
-  constructor (name, encryptionKey) {
+  constructor (name, config) {
     if (name) {
-      this.valet = new Valet(name, encryptionKey)
+      this.valet = new Valet(name, config)
     }
     this.remoteBlockFunction = null
   }

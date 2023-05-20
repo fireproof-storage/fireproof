@@ -51,10 +51,10 @@ export class Valet {
    */
   uploadFunction = null
 
-  constructor (name = 'default', keyMaterial) {
+  constructor (name = 'default', config = {}) {
     this.name = name
-    this.setKeyMaterial(keyMaterial)
-    this.loader = Loader.appropriate(name, this.keyId) // todo send this config.loader, if we ever need it
+    this.setKeyMaterial(config.key)
+    this.loader = Loader.appropriate(name, this.keyId, config.loader) // todo send this config.loader, if we ever need it
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
       //   'queue worker',
