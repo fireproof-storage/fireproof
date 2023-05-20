@@ -4,8 +4,10 @@ import { Loader } from '../src/loader.js'
 import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
 import { join } from 'path'
-import { readFileSync, rmSync, readdirSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { startServer } from '../scripts/server.js'
+
+import { resetTestDataDir } from './helpers.js'
 
 const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -15,14 +17,10 @@ describe('Create a dataset', () => {
   beforeEach(async () => {
     // rm -rf dbPath
     loader = Loader.appropriate(TEST_DB_NAME)
-    const dbPath = join(loader.config.dataDir, TEST_DB_NAME)
-    try {
-      rmSync(dbPath, { recursive: true, force: true })
-    } catch (err) {
-      // console.error(err)
-    }
+    resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     await loadData(db, './test/todos.json')
+    await sleep(100)
   })
   it('gets all docs', async () => {
     const response = await db.allDocuments()
@@ -67,23 +65,33 @@ describe('Create a dataset', () => {
     const response2 = await restDb.allDocuments()
     assert.equal(response2.rows.length, 118)
     server.close()
+    await sleep(100)
   }).timeout(10000)
-  it.skip('creates new db with rest storage', async () => {
+  it('creates new db with rest storage', async () => {
     const server = startServer()
     await sleep(100)
-    console.log('file alldocs')
-    const dbdocs = await db.allDocuments()
-    assert.equal(dbdocs.rows.length, 18)
-    console.log('rest storage')
     const newRestDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/fptest-new-db-rest' } })
     const response = await newRestDb.allDocuments()
     assert.equal(response.rows.length, 0)
+    console.log('do puts')
+    // await Promise.all(Array.from({ length: 2 }).map(async () => {
+    const ok = await newRestDb.put({ _id: 'test', foo: 'bar' })
+    assert.equal(ok.id, 'test')
 
+    const ok2 = await newRestDb.put({ _id: 'test2', foo: 'bar' })
+    assert.equal(ok2.id, 'test2')
+
+    // }))
+    console.log('newRestDb alldocs')
+    const response2 = await newRestDb.allDocuments()
+    assert.equal(response2.rows.length, 2)
     await Promise.all(Array.from({ length: 100 }).map(async () => {
       await newRestDb.put({ foo: 'bar' })
     }))
-    const response2 = await newRestDb.allDocuments()
-    assert.equal(response2.rows.length, 100)
+    const response3 = await newRestDb.allDocuments()
+    assert.equal(response3.rows.length, 102)
+
     server.close()
+    await sleep(100)
   }).timeout(10000)
 })

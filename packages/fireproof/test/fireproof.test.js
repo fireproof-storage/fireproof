@@ -3,9 +3,11 @@ import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { Loader } from '../src/loader.js'
 import { join } from 'path'
-import { rmSync, readdirSync } from 'node:fs'
+import { rmSync } from 'node:fs'
 // import { resolve } from 'node:path'
 // import * as codec from '@ipld/dag-cbor'
+
+import { resetTestDataDir } from './helpers.js'
 
 let database = Fireproof.storage()
 
@@ -15,16 +17,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('Fireproof', () => {
   before(async () => {
-    const loader = Loader.appropriate('helloName')
-
-    const files = readdirSync(loader.config.dataDir)
-
-    for (const file of files) {
-      if (file.match(/fptest/)) {
-        // console.log('removing', file)
-        rmSync(join(loader.config.dataDir, file), { recursive: true, force: true })
-      }
-    }
+    resetTestDataDir()
   })
   beforeEach(async () => {
     await sleep(10)

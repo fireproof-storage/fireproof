@@ -4,6 +4,28 @@ import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { MemoryBlockstore } from './block.js'
+import { Loader } from '../src/loader.js'
+
+import { join } from 'path'
+import { rmSync, readdirSync } from 'node:fs'
+// import { resolve } from 'node:path'
+// import * as codec from '@ipld/dag-cbor'
+
+export function resetTestDataDir () {
+  // fs.rmdirSync(testDataDir, { recursive: true })
+  // fs.mkdirSync(testDataDir, { recursive: true })
+
+  const loader = Loader.appropriate('helloName')
+
+  const files = readdirSync(loader.config.dataDir)
+
+  for (const file of files) {
+    if (file.match(/fptest/)) {
+      // console.log('removing', file)
+      rmSync(join(loader.config.dataDir, file), { recursive: true, force: true })
+    }
+  }
+}
 
 // console.x = console.log
 // console.log = function (...args) {

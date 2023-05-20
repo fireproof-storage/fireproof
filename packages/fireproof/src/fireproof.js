@@ -34,7 +34,7 @@ export class Fireproof {
             return new Database(name, [], opts)
           })
         }
-        const existingConfig = JSON.parse(existing)
+        const existingConfig = existing
         console.log('got existing config', existingConfig)
         return Fireproof.fromConfig(name, existingConfig, opts)
       } else {
