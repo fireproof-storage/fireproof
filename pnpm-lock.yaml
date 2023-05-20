@@ -189,7 +189,7 @@ importers:
       tslib: ^2.5.0
       typescript: ^3.8.3
     dependencies:
-      '@fireproof/core': link:../fireproof
+      '@fireproof/core': 0.6.4_rollup@1.32.1
     devDependencies:
       '@jest/globals': 29.5.0
       '@testing-library/react-hooks': 3.7.0_tdqown5j64uauhc2nsegmgpvwq
@@ -993,6 +993,34 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
+  /@fireproof/core/0.6.4_rollup@1.32.1:
+    resolution: {integrity: sha512-sz4KYZrxMSHh9u/W7bH8VSWVv0rtZ2i/CQH7H4JODiwmDDC9iBXtmSXIui9vxBn2w+sZriGWO4QgRzy4Y08TkQ==}
+    dependencies:
+      '@ipld/car': 5.1.0
+      '@ipld/dag-cbor': 9.0.0
+      '@rollup/plugin-commonjs': 24.0.1_rollup@1.32.1
+      archy: 1.0.0
+      async: 3.2.4
+      car-transaction: 1.0.1
+      charwise: 3.0.1
+      cli-color: 2.0.3
+      crypto-browserify: 3.12.0
+      encrypted-block: 0.0.3
+      idb: 7.1.1
+      ipld-hashmap: 2.1.18
+      multiformats: 11.0.1
+      node-polyfill-webpack-plugin: 2.0.1
+      prolly-trees: 1.0.4
+      randombytes: 2.1.0
+      rollup-plugin-commonjs: 10.1.0_rollup@1.32.1
+      sade: 1.8.1
+      simple-peer: 9.11.1
+    transitivePeerDependencies:
+      - rollup
+      - supports-color
+      - webpack
+    dev: false
+
   /@humanwhocodes/config-array/0.11.8:
     resolution: {integrity: sha512-UybHIJzJnR5Qc/MsD9Kr+RpO2h+/P1GhOwdiLPXK5TWk5sgTdu88bTD9UP+CKbPPh5Rni1u0GjAdYQLemG8g+g==}
     engines: {node: '>=10.10.0'}
@@ -1518,6 +1546,24 @@ packages:
       slash: 4.0.0
     dev: true
 
+  /@rollup/plugin-commonjs/24.0.1_rollup@1.32.1:
+    resolution: {integrity: sha512-15LsiWRZk4eOGqvrJyu3z3DaBu5BhXIMeWnijSRvd8irrrg9SHpQ1pH+BUK4H6Z9wL9yOxZJMTLU+Au86XHxow==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^2.68.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@rollup/pluginutils': 5.0.2_rollup@1.32.1
+      commondir: 1.0.1
+      estree-walker: 2.0.2
+      glob: 8.1.0
+      is-reference: 1.2.1
+      magic-string: 0.27.0
+      rollup: 1.32.1
+    dev: false
+
   /@rollup/plugin-commonjs/24.0.1_rollup@3.20.2:
     resolution: {integrity: sha512-15LsiWRZk4eOGqvrJyu3z3DaBu5BhXIMeWnijSRvd8irrrg9SHpQ1pH+BUK4H6Z9wL9yOxZJMTLU+Au86XHxow==}
     engines: {node: '>=14.0.0'}
@@ -1623,7 +1669,6 @@ packages:
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 1.32.1
-    dev: true
 
   /@rollup/pluginutils/5.0.2_rollup@3.20.2:
     resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
@@ -2272,7 +2317,6 @@ packages:
     resolution: {integrity: sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
 
   /acorn/8.8.2:
     resolution: {integrity: sha512-xjIYgE8HBrkpd/sJqOGNspf8uHG+NOHGOw6a/Urj8taM2EXfdNAH2oFcPeIFfsv3+kz/mJrS5VuMqbNLjCa2vw==}
@@ -6976,6 +7020,39 @@ packages:
     dev: true
     optional: true
 
+  /node-polyfill-webpack-plugin/2.0.1:
+    resolution: {integrity: sha512-ZUMiCnZkP1LF0Th2caY6J/eKKoA0TefpoVa68m/LQU1I/mE8rGt4fNYGgNuCcK+aG8P8P43nbeJ2RqJMOL/Y1A==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      webpack: '>=5'
+    dependencies:
+      assert: 2.0.0
+      browserify-zlib: 0.2.0
+      buffer: 6.0.3
+      console-browserify: 1.2.0
+      constants-browserify: 1.0.0
+      crypto-browserify: 3.12.0
+      domain-browser: 4.22.0
+      events: 3.3.0
+      filter-obj: 2.0.2
+      https-browserify: 1.0.0
+      os-browserify: 0.3.0
+      path-browserify: 1.0.1
+      process: 0.11.10
+      punycode: 2.3.0
+      querystring-es3: 0.2.1
+      readable-stream: 4.3.0
+      stream-browserify: 3.0.0
+      stream-http: 3.2.0
+      string_decoder: 1.3.0
+      timers-browserify: 2.0.12
+      tty-browserify: 0.0.1
+      type-fest: 2.19.0
+      url: 0.11.0
+      util: 0.12.5
+      vm-browserify: 1.1.2
+    dev: false
+
   /node-polyfill-webpack-plugin/2.0.1_webpack@5.78.0:
     resolution: {integrity: sha512-ZUMiCnZkP1LF0Th2caY6J/eKKoA0TefpoVa68m/LQU1I/mE8rGt4fNYGgNuCcK+aG8P8P43nbeJ2RqJMOL/Y1A==}
     engines: {node: '>=12'}
@@ -8024,6 +8101,20 @@ packages:
       semver: 5.7.1
     dev: true
 
+  /rollup-plugin-commonjs/10.1.0_rollup@1.32.1:
+    resolution: {integrity: sha512-jlXbjZSQg8EIeAAvepNwhJj++qJWNJw1Cl0YnOqKtP5Djx+fFGkp3WRh+W0ASCaFG5w1jhmzDxgu3SJuVxPF4Q==}
+    deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-commonjs.
+    peerDependencies:
+      rollup: '>=1.12.0'
+    dependencies:
+      estree-walker: 0.6.1
+      is-reference: 1.2.1
+      magic-string: 0.25.9
+      resolve: 1.22.1
+      rollup: 1.32.1
+      rollup-pluginutils: 2.8.2
+    dev: false
+
   /rollup-plugin-commonjs/10.1.0_rollup@3.20.2:
     resolution: {integrity: sha512-jlXbjZSQg8EIeAAvepNwhJj++qJWNJw1Cl0YnOqKtP5Djx+fFGkp3WRh+W0ASCaFG5w1jhmzDxgu3SJuVxPF4Q==}
     deprecated: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-commonjs.
@@ -8162,7 +8253,6 @@ packages:
       '@types/estree': 1.0.0
       '@types/node': 18.14.6
       acorn: 7.4.1
-    dev: true
 
   /rollup/3.18.0:
     resolution: {integrity: sha512-J8C6VfEBjkvYPESMQYxKHxNOh4A5a3FlP+0BETGo34HEcE4eTlgCrO2+eWzlu2a/sHs2QUkZco+wscH7jhhgWg==}
