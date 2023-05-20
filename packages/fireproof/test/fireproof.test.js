@@ -15,7 +15,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('Fireproof', () => {
   before(async () => {
-    const loader = new Loader('helloName')
+    const loader = Loader.appropriate('helloName')
 
     const files = readdirSync(loader.config.dataDir)
 
@@ -28,7 +28,7 @@ describe('Fireproof', () => {
   })
   beforeEach(async () => {
     await sleep(10)
-    const loader = new Loader('helloName')
+    const loader = Loader.appropriate('helloName')
     rmSync(join(loader.config.dataDir, 'fptest-hello-name'), { recursive: true, force: true })
     database = Fireproof.storage('fptest-hello-name')
     assert.equal(database.clock.length, 0)

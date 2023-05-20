@@ -54,7 +54,7 @@ export class Valet {
   constructor (name = 'default', keyMaterial) {
     this.name = name
     this.setKeyMaterial(keyMaterial)
-    this.loader = new Loader(name, this.keyId) // todo send this config.loader, if we ever need it
+    this.loader = Loader.appropriate(name, this.keyId) // todo send this config.loader, if we ever need it
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
       //   'queue worker',
