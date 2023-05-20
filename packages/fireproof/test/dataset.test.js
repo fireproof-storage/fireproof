@@ -94,4 +94,42 @@ describe('Create a dataset', () => {
     server.close()
     await sleep(100)
   }).timeout(10000)
+  it('creates new db with file storage AND secondary rest storage', async () => {
+    const server = startServer()
+    await sleep(100)
+    const secondaryDb = await Fireproof.storage('fptest-secondary-rest', { secondary: { type: 'rest', url: 'http://localhost:8000/fptest-secondary-rest-remote' } })
+
+    const response = await secondaryDb.allDocuments()
+    assert.equal(response.rows.length, 0)
+    console.log('do puts')
+    // await Promise.all(Array.from({ length: 2 }).map(async () => {
+    const ok = await secondaryDb.put({ _id: 'test', foo: 'bar' })
+    assert.equal(ok.id, 'test')
+
+    const ok2 = await secondaryDb.put({ _id: 'test2', foo: 'bar' })
+    assert.equal(ok2.id, 'test2')
+
+    const dbPath = join(loader.config.dataDir, 'fptest-secondary-rest')
+    const files = readdirSync(dbPath)
+    assert(files.length > 4)
+
+    await sleep(100)
+
+    const remoteDbPath = join(loader.config.dataDir, 'fptest-secondary-rest-remote')
+    const remoteFiles = readdirSync(remoteDbPath)
+    assert(remoteFiles.length > 2)
+
+    // }))
+    console.log('secondaryDb alldocs')
+    const response2 = await secondaryDb.allDocuments()
+    assert.equal(response2.rows.length, 2)
+    await Promise.all(Array.from({ length: 100 }).map(async () => {
+      await secondaryDb.put({ foo: 'bar' })
+    }))
+    const response3 = await secondaryDb.allDocuments()
+    assert.equal(response3.rows.length, 102)
+
+    server.close()
+    await sleep(100)
+  }).timeout(10000)
 })

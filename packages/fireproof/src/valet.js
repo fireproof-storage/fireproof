@@ -54,7 +54,8 @@ export class Valet {
   constructor (name = 'default', config = {}) {
     this.name = name
     this.setKeyMaterial(config.key)
-    this.loader = Loader.appropriate(name, this.keyId, config.loader) // todo send this config.loader, if we ever need it
+    this.loader = Loader.appropriate(name, this.keyId, config.loader)
+    this.secondary = config.secondary ? Loader.appropriate(name, this.keyId, config.secondary) : null
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
       //   'queue worker',
@@ -89,8 +90,9 @@ export class Valet {
     })
   }
 
-  saveHeader (header) {
-    return this.loader.saveHeader(header)
+  async saveHeader (header) {
+    this.secondary?.saveHeader(header)
+    return await this.loader.saveHeader(header)
   }
 
   getKeyMaterial () {
@@ -260,7 +262,7 @@ export class Valet {
 
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
-    await this.loader.writeCars([
+    const carList = [
       {
         cid: carCid,
         bytes: value,
@@ -272,7 +274,10 @@ export class Valet {
         replaces: null
         // replaces: this.valetRootCarCid // todo
       }
-    ])
+    ]
+
+    await this.loader.writeCars(carList)
+    this.secondary?.writeCars(carList)
 
     this.valetRootCarCid = newValetCidCar.cid // goes to clock
 
@@ -313,9 +318,13 @@ export class Valet {
 
   async getCarReader (carCid) {
     carCid = carCid.toString()
-    const carBytes = await this.loader.readCar(carCid)
+    const loaderBytes = this.loader.readCar(carCid)
+    const secondaryBytes = this.secondary?.readCar(carCid)
+
+    const carBytes = await Promise.any([loaderBytes, secondaryBytes])
+
     // const callID = Math.random().toString(36).substring(7)
-    // console.log('innerGetCarReader', callID, carCid, carBytes.constructor.name, carBytes.byteLength)
+    console.log('innerGetCarReader', carCid, carBytes.constructor.name, carBytes.byteLength)
     const reader = await CarReader.fromBytes(carBytes)
     // console.log('got reader', callID, reader)
     if (this.keyMaterial) {
