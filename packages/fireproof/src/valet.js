@@ -156,6 +156,7 @@ export class Valet {
 
   // todo memoize this
   async getCarCIDForCID (cid) {
+    // console.log('getCarCIDForCID', cid, this.valetRootCarCid)
     // make a car reader for this.valetRootCarCid
     if (!this.valetRootCarCid) return { result: null }
 
@@ -176,12 +177,12 @@ export class Valet {
       this.valetRoot = indexNode
     }
 
-    for await (const [key, value] of indexNode.entries()) {
-      console.log(`[${key}]:`, value)
-    }
+    // for await (const [key, value] of indexNode.entries()) {
+    // console.log(`[${key}]:`, value)
+    // }
 
     const got = await indexNode.get(cid)
-    console.log('getCarCIDForCID', cid, got)
+    // console.log('getCarCIDForCID', cid, got)
     return { result: got }
   }
 
@@ -193,7 +194,7 @@ export class Valet {
     }
 
     const theseValetCidBlocks = this.valetCidBlocks
-    // console.log('theseValetCidBlocks', theseValetCidBlocks)
+    // console.log('carMapReader', carMapReader)
     const combinedReader = {
       root: carMapReader?.root,
       put: async (cid, bytes) => {
@@ -253,11 +254,11 @@ export class Valet {
    */
   async parkCar (carCid, value, cids) {
     // const callId = Math.random().toString(36).substring(7)
-    console.log('parkCar', this.instanceId, this.name, carCid, cids)
+    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
     const newValetCidCar = await this.makeCidCarMap(carCid, cids)
 
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
+    // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
     await this.loader.writeCars([
       {
         cid: carCid,
@@ -298,8 +299,9 @@ export class Valet {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
     const callID = Math.random().toString(36).substring(7)
-    console.log('getCarReader', callID, carCid)
+    // console.log('getCarReader', callID, carCid, carBytes.constructor.name, carBytes.byteLength)
     const reader = await CarReader.fromBytes(carBytes)
+    // console.log('got reader', callID, reader)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()
       const readerGetWithCodec = async cid => {

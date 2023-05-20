@@ -40,47 +40,52 @@ const prepareFile = async url => {
   return { found, ext, stream }
 }
 
-http
-  .createServer(async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+export function startServer () {
+  const server = http
+    .createServer(async (req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*')
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 
-    if (req.method === 'PUT') {
-      const filePath = path.join(DATA_PATH, req.url)
-      await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
-      const writeStream = fs.createWriteStream(filePath)
-      req.pipe(writeStream)
+      if (req.method === 'PUT') {
+        const filePath = path.join(DATA_PATH, req.url)
+        await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
+        const writeStream = fs.createWriteStream(filePath)
+        req.pipe(writeStream)
 
-      req.on('end', () => {
-        res.writeHead(200, { 'Content-Type': 'text/plain' })
-        res.end('File written successfully')
-        console.log(`PUT ${req.url} 200`)
-      })
+        req.on('end', () => {
+          res.writeHead(200, { 'Content-Type': 'text/plain' })
+          res.end('File written successfully')
+          console.log(`PUT ${req.url} 200`)
+        })
 
-      req.on('error', err => {
-        res.writeHead(500, { 'Content-Type': 'text/plain' })
-        res.end('Internal Server Error')
-        console.log(`PUT ${req.url} 500 - ${err.message}`)
-      })
-    } else if (req.method === 'OPTIONS') {
+        req.on('error', err => {
+          res.writeHead(500, { 'Content-Type': 'text/plain' })
+          res.end('Internal Server Error')
+          console.log(`PUT ${req.url} 500 - ${err.message}`)
+        })
+      } else if (req.method === 'OPTIONS') {
       // Pre-flight request. Reply successfully:
-      res.writeHead(200)
-      res.end()
-    } else {
-      const file = await prepareFile(req.url)
-      if (file.found) {
-        const mimeType = MIME_TYPES[file.ext] || MIME_TYPES.default
-        res.writeHead(200, { 'Content-Type': mimeType })
-        file.stream.pipe(res)
-        console.log(`GET ${req.url} 200`)
+        res.writeHead(200)
+        res.end()
       } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain' })
-        res.end('Not found')
-        console.log(`GET ${req.url} 404`)
+        const file = await prepareFile(req.url)
+        if (file.found) {
+          const mimeType = MIME_TYPES[file.ext] || MIME_TYPES.default
+          res.writeHead(200, { 'Content-Type': mimeType })
+          file.stream.pipe(res)
+          console.log(`GET ${req.url} 200`)
+        } else {
+          res.writeHead(404, { 'Content-Type': 'text/plain' })
+          res.end('Not found')
+          console.log(`GET ${req.url} 404`)
+        }
       }
-    }
-  })
-  .listen(PORT)
+    })
+  server.listen(PORT)
+  console.log(`Server running at http://127.0.0.1:${PORT}/`)
+  return server
+}
 
-console.log(`Server running at http://127.0.0.1:${PORT}/`)
+// if the script is run directly (not imported as a module), start the server:
+if (import.meta.url === 'file://' + process.argv[1]) startServer()
