@@ -21,38 +21,48 @@ export class Fireproof {
    */
   static storage = (name = null, opts = {}) => {
     if (name) {
+      let secondaryHeader
       opts.name = name
-      const existing = Loader.appropriate(name, null, opts.loader).getHeader()
-      if (existing) {
-        if (typeof existing === 'object' && (typeof (existing.then)) === 'function') {
-          return existing.then(existingConfig => {
-            console.log('got existing config', existingConfig)
-            if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
-
-            const instanceKey = randomBytes(32).toString('hex')
-            opts.key = instanceKey // to disable encryption, pass a null key
-            return new Database(name, [], opts)
-          })
+      const existingHeader = Loader.appropriate(name, null, opts.loader).getHeader()
+      if (opts.secondary) {
+        secondaryHeader = Loader.appropriate(name, null, opts.secondary).getHeader()
+      }
+      if (existingHeader) {
+        if (!secondaryHeader) {
+          if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
+            return existingHeader.then(existingConfig => {
+              if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
+              return Fireproof.withKey(name, opts)
+            })
+          }
+          return Fireproof.fromConfig(name, existingHeader, opts)
+        } else {
+          throw new Error('Not implemented: merge both headers')
         }
-        const existingConfig = existing
-        console.log('got existing config', existingConfig)
-        return Fireproof.fromConfig(name, existingConfig, opts)
       } else {
-        const instanceKey = randomBytes(32).toString('hex')
-        opts.key = instanceKey // to disable encryption, pass a null key
-        return new Database(name, [], opts)
+        if (secondaryHeader) {
+          if (typeof secondaryHeader === 'object' && (typeof (secondaryHeader.then)) === 'function') {
+            return secondaryHeader.then(existingConfig => {
+              console.log('got secondaryHeader config', existingConfig)
+              if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
+              return Fireproof.withKey(name, opts)
+            })
+          }
+          return Fireproof.fromConfig(name, secondaryHeader, opts)
+        } else {
+          return Fireproof.withKey(name, opts)
+        }
       }
     } else {
       return new Database(null, [], opts)
     }
   }
 
-  // this is a non-standard configuration, primarily for testing
-  // typically you should use storage() instead, and then add a remote as secondary
-  // static remote = async (name, opts = {}) => {
-  //   // try to get the config, if it doesnt exist, create a new db for it
-  //   const existing = await Loader.appropriate(name, null, opts.loader).getHeader()
-  // }
+  static withKey = (name, opts = {}) => {
+    const instanceKey = randomBytes(32).toString('hex')
+    opts.key = instanceKey // to disable encryption, pass a null key
+    return new Database(name, [], opts)
+  }
 
   static fromConfig (name, existingConfig, opts = {}) {
     opts.key = existingConfig.key
