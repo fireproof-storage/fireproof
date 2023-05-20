@@ -11,7 +11,7 @@ describe('Create a dataset', () => {
   let db, loader
   beforeEach(async () => {
     // rm -rf dbPath
-    loader = new Loader(TEST_DB_NAME)
+    loader = Loader.appropriate(TEST_DB_NAME)
     const dbPath = join(loader.config.dataDir, TEST_DB_NAME)
     try {
       rmSync(dbPath, { recursive: true, force: true })
