@@ -27,7 +27,11 @@ export class Fireproof {
         if (typeof existing === 'object' && (typeof (existing.then)) === 'function') {
           return existing.then(existingConfig => {
             console.log('got existing config', existingConfig)
-            return Fireproof.fromConfig(name, existingConfig, opts)
+            if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
+
+            const instanceKey = randomBytes(32).toString('hex')
+            opts.key = instanceKey // to disable encryption, pass a null key
+            return new Database(name, [], opts)
           })
         }
         const existingConfig = JSON.parse(existing)
