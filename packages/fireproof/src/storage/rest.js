@@ -47,7 +47,7 @@ export class Rest {
   async saveHeader (stringValue) {
     const response = await fetch(this.headerURL, {
       method: 'PUT',
-      body: JSON.stringify(stringValue),
+      body: stringValue, // JSON.stringify(stringValue),
       headers: { 'Content-Type': 'application/json' }
     })
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)

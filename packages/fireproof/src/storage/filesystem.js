@@ -32,7 +32,10 @@ export class Filesystem {
   }
 
   getHeader () {
-    return loadSync(this.headerFilename())
+    const header = loadSync(this.headerFilename())
+    // console.log('getHeader', header)
+    if (!header) return null
+    return JSON.parse(header)
   }
 
   async saveHeader (stringValue) {
