@@ -221,6 +221,7 @@ export class Valet {
   }
 
   async makeCidCarMap (carCid, cids) {
+    console.log('makeCidCarMap', carCid, cids.size)
     const combinedReader = await this.getWriteableCarReader()
     const mapNode = await addCidsToCarIndex(
       combinedReader,
@@ -295,11 +296,26 @@ export class Valet {
 
   remoteBlockFunction = null
 
+  // memoizeCarReaders = new Map()
+  // async memogetCarReader (carCid) {
+  //   console.log('getCarReader', carCid)
+  //   if (this.memoizeCarReaders.has(carCid)) {
+  //     return this.memoizeCarReaders.get(carCid)
+  //   } else {
+  //     const readerP = this.innerGetCarReader(carCid)
+  //     // this.memoizeCarReaders.set(carCid, readerP)
+  //     return readerP.then(reader => {
+  //       console.log('reader ready', carCid, reader)
+  //       return reader
+  //     })
+  //   }
+  // }
+
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
     const callID = Math.random().toString(36).substring(7)
-    // console.log('getCarReader', callID, carCid, carBytes.constructor.name, carBytes.byteLength)
+    // console.log('innerGetCarReader', callID, carCid, carBytes.constructor.name, carBytes.byteLength)
     const reader = await CarReader.fromBytes(carBytes)
     // console.log('got reader', callID, reader)
     if (this.keyMaterial) {
