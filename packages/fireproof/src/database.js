@@ -32,8 +32,8 @@ export class Database {
   constructor (name, clock, config = {}) {
     this.name = name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
-    this.blocks = new TransactionBlockstore(name, config.key)
-    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, config.key)
+    this.blocks = new TransactionBlockstore(name, config)
+    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, config)
     this.clock = clock
     this.config = config
   }
