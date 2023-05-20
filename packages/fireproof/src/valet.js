@@ -163,7 +163,7 @@ export class Valet {
     if (this.valetRoot) {
       indexNode = this.valetRoot
     } else {
-      const combinedReader = await this.getCombinedReader(this.valetRootCarCid)
+      const combinedReader = await this.getWriteableCarReader()
       if (!this.valetRootCid) {
         const root = combinedReader.root.cid
         // console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
@@ -176,12 +176,16 @@ export class Valet {
       this.valetRoot = indexNode
     }
 
+    for await (const [key, value] of indexNode.entries()) {
+      console.log(`[${key}]:`, value)
+    }
+
     const got = await indexNode.get(cid)
-    // console.log('getCarCIDForCID', cid, got)
+    console.log('getCarCIDForCID', cid, got)
     return { result: got }
   }
 
-  async getCombinedReader (carCid) {
+  async getWriteableCarReader () {
     let carMapReader
     if (this.valetRootCarCid) {
       // todo only need this if we are cold starting
@@ -211,18 +215,12 @@ export class Valet {
         }
       }
     }
+    // console.log('combinedReader', carCid)
     return combinedReader
   }
 
-  /**
-   *
-   * @param {string} carCid
-   * @param {*} value
-   */
-  async parkCar (carCid, value, cids) {
-    // const callId = Math.random().toString(36).substring(7)
-    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    const combinedReader = await this.getCombinedReader(carCid)
+  async makeCidCarMap (carCid, cids) {
+    const combinedReader = await this.getWriteableCarReader()
     const mapNode = await addCidsToCarIndex(
       combinedReader,
       this.valetRoot,
@@ -245,8 +243,21 @@ export class Valet {
     } else {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
+    return newValetCidCar
+  }
+
+  /**
+   *
+   * @param {string} carCid
+   * @param {*} value
+   */
+  async parkCar (carCid, value, cids) {
+    // const callId = Math.random().toString(36).substring(7)
+    console.log('parkCar', this.instanceId, this.name, carCid, cids)
+    const newValetCidCar = await this.makeCidCarMap(carCid, cids)
+
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    // console.log('writeCars', callId, carCid.toString(), newValetCidCar.cid.toString())
+    console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
     await this.loader.writeCars([
       {
         cid: carCid,
@@ -286,8 +297,8 @@ export class Valet {
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.loader.readCar(carCid)
-    // const callID = Math.random().toString(36).substring(7)
-    // console.log('getCarReader', callID, carCid)
+    const callID = Math.random().toString(36).substring(7)
+    console.log('getCarReader', callID, carCid)
     const reader = await CarReader.fromBytes(carBytes)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()

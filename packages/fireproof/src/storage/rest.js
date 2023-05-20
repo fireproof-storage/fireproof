@@ -27,7 +27,7 @@ export class Rest {
 
   async readCar (carCid) {
     const carURL = `${this.config.baseURL}/${this.name}/${carCid.toString()}.car`
-
+    console.log('getCar', carURL)
     const response = await fetch(carURL)
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)
 
