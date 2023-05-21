@@ -37,7 +37,34 @@ export class Fireproof {
           }
           return Fireproof.fromConfig(name, existingHeader, opts)
         } else {
-          throw new Error('Not implemented: merge both headers')
+          if (typeof secondaryHeader === 'object' && (typeof (secondaryHeader.then)) === 'function') {
+            return secondaryHeader.then(secondaryConfig => {
+              console.log('got secondaryHeader config', secondaryConfig)
+              if (!secondaryConfig) {
+                if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
+                  return existingHeader.then(existingConfig => {
+                    if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
+                    return Fireproof.withKey(name, opts)
+                  })
+                }
+                return Fireproof.fromConfig(name, existingHeader, opts)
+              } else {
+                if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
+                  return existingHeader.then(existingConfig => {
+                    if (existingConfig) throw new Error('Not implemented: merge both headers')
+                    return Fireproof.fromConfig(name, secondaryConfig, opts)
+                  })
+                }
+                throw new Error('Not implemented: merge both headers')
+              }
+            })
+          }
+          if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
+            return existingHeader.then(existingConfig => {
+              if (existingConfig) throw new Error('Not implemented: merge both headers')
+              return Fireproof.fromConfig(name, secondaryHeader, opts)
+            })
+          }
         }
       } else {
         if (secondaryHeader) {

@@ -143,5 +143,15 @@ describe('Rest dataset', () => {
 
     await sleep(100)
   }).timeout(10000)
-  it('attach secondary rest storage to existing db')
+  it('attach empty secondary rest storage to existing db', async () => {
+    const fileDb = await Fireproof.storage(TEST_DB_NAME, { secondary: { type: 'rest', url: 'http://localhost:8000/fptest-todos-remote' } })
+    const response = await fileDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+  })
+  it('attach existing secondary rest storage to empty db', () => {
+
+  })
+  it('attach existing secondary rest storage to existing db', () => {
+
+  })
 })
