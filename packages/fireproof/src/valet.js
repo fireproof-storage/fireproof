@@ -39,7 +39,8 @@ export class Valet {
     const storageConfig = Object.assign({}, { key: config.key }, config.storage)
     this.storage = Loader.appropriate(name, storageConfig)
     // this.secondaryHeader = config.secondaryHeader
-    // this.secondary = config.secondary ? Loader.appropriate(name, config.secondary) : null
+    const secondaryConfig = Object.assign({}, { key: config.key }, config.secondary)
+    this.secondary = config.secondary ? Loader.appropriate(name, secondaryConfig) : null
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
       //   'queue worker',
@@ -75,6 +76,7 @@ export class Valet {
   }
 
   async saveHeader (header) {
+    // each storage needs to add its own carCidMapCarCid to the header
     // this.secondary?.saveHeader(header)
     return await this.storage.saveHeader(header)
   }
@@ -142,26 +144,7 @@ export class Valet {
   async parkCar (carCid, value, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    const newValetCidCar = await this.storage.updateCarCidMap(carCid, cids)
-
-    // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
-    // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
-    const carList = [
-      {
-        cid: carCid,
-        bytes: value,
-        replaces: null
-      },
-      {
-        cid: newValetCidCar.cid,
-        bytes: newValetCidCar.bytes,
-        replaces: null
-        // replaces: this.valetRootCarCid // todo
-      }
-    ]
-
-    await this.storage.writeCars(carList)
-    // this.secondary?.writeCars(carList)
+    const newValetCidCar = await this.storage.saveCar(carCid, value, cids)
 
     this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per storage)
 
