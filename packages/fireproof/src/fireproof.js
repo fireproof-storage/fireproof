@@ -21,61 +21,47 @@ export class Fireproof {
    */
   static storage = (name = null, opts = {}) => {
     if (name) {
-      let secondaryHeader
       opts.name = name
-      const existingHeader = Loader.appropriate(name, null, opts.loader).getHeader()
-      if (opts.secondary) {
-        secondaryHeader = Loader.appropriate(name, null, opts.secondary).getHeader()
-      }
-      if (existingHeader) {
-        if (!secondaryHeader) {
-          if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
-            return existingHeader.then(existingConfig => {
-              if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
+      const existingLoader = Loader.appropriate(name, null, opts.loader)
+      const secondaryLoader = opts.secondary ? Loader.appropriate(name, null, opts.secondary) : null
+
+      const handleHeader = (header, loader) => {
+        if (typeof header === 'object' && typeof header.then === 'function') {
+          return header.then(config => {
+            if (config) {
+              return Fireproof.fromConfig(name, config, opts)
+            } else {
               return Fireproof.withKey(name, opts)
-            })
-          }
-          return Fireproof.fromConfig(name, existingHeader, opts)
+            }
+          })
+        }
+        return Fireproof.fromConfig(name, header, opts)
+      }
+
+      const existingHeader = existingLoader.getHeader()
+      if (existingHeader) {
+        if (!secondaryLoader) {
+          return handleHeader(existingHeader, existingLoader)
         } else {
-          if (typeof secondaryHeader === 'object' && (typeof (secondaryHeader.then)) === 'function') {
-            return secondaryHeader.then(secondaryConfig => {
-              console.log('got secondaryHeader config', secondaryConfig)
-              if (!secondaryConfig) {
-                if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
-                  return existingHeader.then(existingConfig => {
-                    if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
-                    return Fireproof.withKey(name, opts)
-                  })
+          const secondaryHeader = secondaryLoader.getHeader()
+          if (secondaryHeader) {
+            if (typeof secondaryHeader === 'object' && typeof secondaryHeader.then === 'function') {
+              return secondaryHeader.then(secondaryConfig => {
+                if (!secondaryConfig) {
+                  return handleHeader(existingHeader, existingLoader)
+                } else {
+                  throw new Error('Not implemented: merge both headers')
                 }
-                return Fireproof.fromConfig(name, existingHeader, opts)
-              } else {
-                if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
-                  return existingHeader.then(existingConfig => {
-                    if (existingConfig) throw new Error('Not implemented: merge both headers')
-                    return Fireproof.fromConfig(name, secondaryConfig, opts)
-                  })
-                }
-                throw new Error('Not implemented: merge both headers')
-              }
-            })
-          }
-          if (typeof existingHeader === 'object' && (typeof (existingHeader.then)) === 'function') {
-            return existingHeader.then(existingConfig => {
-              if (existingConfig) throw new Error('Not implemented: merge both headers')
-              return Fireproof.fromConfig(name, secondaryHeader, opts)
-            })
+              })
+            }
+            throw new Error('Not implemented: merge both headers')
+          } else {
+            return handleHeader(existingHeader, existingLoader)
           }
         }
       } else {
-        if (secondaryHeader) {
-          if (typeof secondaryHeader === 'object' && (typeof (secondaryHeader.then)) === 'function') {
-            return secondaryHeader.then(existingConfig => {
-              console.log('got secondaryHeader config', existingConfig)
-              if (existingConfig) return Fireproof.fromConfig(name, existingConfig, opts)
-              return Fireproof.withKey(name, opts)
-            })
-          }
-          return Fireproof.fromConfig(name, secondaryHeader, opts)
+        if (secondaryLoader) {
+          return handleHeader(secondaryLoader.getHeader(), secondaryLoader)
         } else {
           return Fireproof.withKey(name, opts)
         }
