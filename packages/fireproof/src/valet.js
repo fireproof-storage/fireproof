@@ -42,6 +42,8 @@ export class Valet {
   valetRootCid = null // set by hydrate
   valetRootCarCid = null // most recent diff
 
+  valetCarCidMap = null
+
   valetCidBlocks = new VMemoryBlockstore()
   instanceId = Math.random().toString(36).slice(2)
 
@@ -162,6 +164,21 @@ export class Valet {
   async getCarCIDForCID (cid) {
     // console.log('getCarCIDForCID', cid, this.valetRootCarCid)
     // make a car reader for this.valetRootCarCid
+    const cidMap = await this.getCidCarMap()
+    const carCid = cidMap.get(cid.toString())
+    if (carCid) {
+      return { result: carCid }
+    }
+    // throw new Error('not found')
+    return { result: null }
+  }
+
+  // called by getValetBlock
+  // should look up in the memory hash map
+  // the code below can be used on cold start
+  async OLDgetCarCIDForCID (cid) {
+    // console.log('getCarCIDForCID', cid, this.valetRootCarCid)
+    // make a car reader for this.valetRootCarCid
     if (!this.valetRootCarCid) return { result: null }
 
     let indexNode
@@ -181,13 +198,59 @@ export class Valet {
       this.valetRoot = indexNode
     }
 
-    // for await (const [key, value] of indexNode.entries()) {
-    // console.log(`[${key}]:`, value)
-    // }
-
     const got = await indexNode.get(cid)
     // console.log('getCarCIDForCID', cid, got)
     return { result: got }
+  }
+
+  async getEmptyLoader () {
+    const theseWriteableBlocks = new VMemoryBlockstore()
+    // console.log('carMapReader', carMapReader)
+    const combinedReader = {
+      blocks: theseWriteableBlocks,
+      // root: carMapReader?.root,
+      put: async (cid, bytes) => {
+        // console.log('mapPut', cid, bytes.length)
+        return await theseWriteableBlocks.put(cid, bytes)
+      },
+      get: async cid => {
+        const got = await theseWriteableBlocks.get(cid)
+        return got.bytes
+      }
+    }
+    // console.log('combinedReader', carCid)
+    return combinedReader
+  }
+
+  async getWriteableCarReader (carCid) {
+    const carMapReader = await this.getCarReader(carCid)
+
+    const theseWriteableBlocks = new VMemoryBlockstore()
+    // console.log('carMapReader', carMapReader)
+    const combinedReader = {
+      blocks: theseWriteableBlocks,
+      root: carMapReader?.root,
+      put: async (cid, bytes) => {
+        // console.log('mapPut', cid, bytes.length)
+        return await theseWriteableBlocks.put(cid, bytes)
+      },
+      get: async cid => {
+        // console.log('mapGet', cid)
+        try {
+          const got = await theseWriteableBlocks.get(cid)
+          return got.bytes
+        } catch (e) {
+          // console.log('get from car', cid, carMapReader)
+          if (!carMapReader) throw e
+          const bytes = await carMapReader.get(cid)
+          await theseWriteableBlocks.put(cid, bytes)
+          // console.log('mapGet', cid, bytes.length, bytes.constructor.name)
+          return bytes
+        }
+      }
+    }
+    // console.log('combinedReader', carCid)
+    return combinedReader
   }
 
   async getWriteableCarCidMapReader () {
@@ -254,16 +317,63 @@ export class Valet {
     return newValetCidCar
   }
 
-  updateCarCidMap (carCid, cids) {
+  async updateCarCidMap (carCid, cids) {
     // called by parkCar
     // this adds the cids to the in-memory map
     // and returns a new car file with the updated map
+    // this does not write the car file to disk
+    const theCarMap = await this.getCidCarMap() // this hydrates the map if it has not been hydrated
+    for (const cid of cids) {
+      theCarMap.set(cid, carCid)
+    }
+
+    const loader = await this.getEmptyLoader()
+    const indexNode = await create(loader, {
+      bitWidth: 4,
+      bucketSize: 2,
+      blockHasher: blockOpts.hasher,
+      blockCodec: blockOpts.codec
+    })
+
+    for (const [key, value] of theCarMap.entries()) {
+      await indexNode.set(key, value)
+    }
+
+    let newValetCidCar
+    if (this.keyMaterial) {
+      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, loader.blocks, this.keyMaterial)
+    } else {
+      newValetCidCar = await blocksToCarBlock(indexNode.cid, loader.blocks)
+    }
+    return newValetCidCar
   }
 
-  getCidCarMap (carCid) {
+  async getCidCarMap () {
+    if (this.valetCarCidMap) return this.valetCarCidMap
+
     // called by getCarCIDForCID
     // this returns the in-memory map if it has been hydrated
     // otherwise it hydrates the map based on the car file
+
+    if (this.valetRootCarCid) {
+      // load the car
+      const carMapReader = await this.getWriteableCarReader(this.valetRootCarCid)
+      const indexNode = await load(carMapReader, carMapReader.root.cid, {
+        blockHasher: blockOpts.hasher,
+        blockCodec: blockOpts.codec
+      })
+      const theCarMap = new Map()
+      for await (const [key, value] of indexNode.entries()) {
+        // console.log('getCidCarMap', key, value)
+        theCarMap.set(key, value)
+      }
+      this.valetCarCidMap = theCarMap
+      return theCarMap
+    } else {
+      // no car file, so make an empty map
+      this.valetCarCidMap = new Map()
+      return this.valetCarCidMap
+    }
   }
 
   /**
@@ -274,7 +384,8 @@ export class Valet {
   async parkCar (carCid, value, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    const newValetCidCar = await this.makeCidCarMap(carCid, cids)
+    // const newValetCidCar = await this.makeCidCarMap(carCid, cids)
+    const newValetCidCar = await this.updateCarCidMap(carCid, cids)
 
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
