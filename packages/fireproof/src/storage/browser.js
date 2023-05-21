@@ -1,4 +1,5 @@
 import { openDB } from 'idb'
+import { Base } from './base.js'
 
 const defaultConfig = {
   headerKeyPrefix: 'fp.'
@@ -6,15 +7,13 @@ const defaultConfig = {
 
 /* global localStorage */
 
-export class Browser {
+export class Browser extends Base {
   constructor (name, keyId, config = {}) {
+    super(name, keyId, Object.assign({}, defaultConfig, config))
     this.isBrowser = false
     try {
       this.isBrowser = window.localStorage && true
     } catch (e) {}
-    this.name = name
-    this.keyId = keyId
-    this.config = Object.assign({}, defaultConfig, config)
   }
 
   withDB = async dbWorkFun => {
@@ -31,6 +30,7 @@ export class Browser {
   }
 
   async writeCars (cars) {
+    super.writeCars()
     return await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readwrite')
       for (const { cid, bytes, replaces } of cars) {
@@ -57,6 +57,7 @@ export class Browser {
   }
 
   async saveHeader (stringValue) {
+    super.saveHeader()
     return this.isBrowser && localStorage.setItem(this.config.headerKeyPrefix + this.name, stringValue)
   }
 }
