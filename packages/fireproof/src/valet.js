@@ -165,6 +165,7 @@ export class Valet {
   hydrateRootCarCid (cid) {
     this.didHydrate = true
     this.valetRootCarCid = cid
+    this.loader.valetRootCarCid = cid
     // this.valetRoot = null
     // this.valetRootCid = null
   }
@@ -221,7 +222,7 @@ export class Valet {
   remoteBlockFunction = null
 
   async getValetBlock (dataCID) {
-    console.log('get valet block', dataCID)
+    // console.log('get valet block', dataCID)
     const { result: carCid } = await this.loader.getCarCIDForCID(dataCID)
     if (!carCid) {
       throw new Error('Missing block: ' + dataCID)
