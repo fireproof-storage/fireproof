@@ -24,8 +24,8 @@ export class Fireproof {
       return new Database(null, [], opts)
     } else {
       opts.name = name
-      const existingLoader = Loader.appropriate(name, null, opts.loader)
-      const secondaryLoader = opts.secondary ? Loader.appropriate(name, null, opts.secondary) : null
+      const existingLoader = Loader.appropriate(name, opts.loader)
+      const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary) : null
 
       const handleHeader = (header, secondary) => {
         if (secondary) { // never a promise, we are scheduling a merge

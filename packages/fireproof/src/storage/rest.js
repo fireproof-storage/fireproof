@@ -6,8 +6,8 @@ const defaultConfig = {
 }
 
 export class Rest extends Base {
-  constructor (name, keyId, config = {}) {
-    super(name, keyId, Object.assign({}, defaultConfig, config))
+  constructor (name, config = {}) {
+    super(name, Object.assign({}, defaultConfig, config))
     this.headerURL = `${this.config.url}/header.json`
   }
 

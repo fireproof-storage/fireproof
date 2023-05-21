@@ -7,20 +7,20 @@ const FORCE_IDB = typeof process !== 'undefined' && !!process.env?.FORCE_IDB
 /* global window */
 
 export const Loader = {
-  appropriate: (name, keyId, config = {}) => {
+  appropriate: (name, config = {}) => {
     let isBrowser = false
     try {
       isBrowser = window.localStorage && true
     } catch (e) {}
 
     if (config.type === 'rest') {
-      return new Rest(name, keyId, config)
+      return new Rest(name, config)
     }
 
     if (FORCE_IDB || isBrowser) {
-      return new Browser(name, keyId, config)
+      return new Browser(name, config)
     } else {
-      return new Filesystem(name, keyId, config)
+      return new Filesystem(name, config)
     }
   }
 }
