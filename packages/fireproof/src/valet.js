@@ -156,6 +156,7 @@ export class Valet {
     this.valetRootCid = null
   }
 
+  // called by getValetBlock
   // should look up in the memory hash map
   // the code below can be used on cold start
   async getCarCIDForCID (cid) {
@@ -167,7 +168,7 @@ export class Valet {
     if (this.valetRoot) {
       indexNode = this.valetRoot
     } else {
-      const combinedReader = await this.getWriteableCarReader()
+      const combinedReader = await this.getWriteableCarCidMapReader()
       if (!this.valetRootCid) {
         const root = combinedReader.root.cid
         // console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
@@ -189,7 +190,7 @@ export class Valet {
     return { result: got }
   }
 
-  async getWriteableCarReader () {
+  async getWriteableCarCidMapReader () {
     let carMapReader
     if (this.valetRootCarCid) {
       // todo only need this if we are cold starting
@@ -226,7 +227,7 @@ export class Valet {
   // should add to in-memory map and flush to car
   async makeCidCarMap (carCid, cids) {
     console.log('makeCidCarMap', carCid, cids.size)
-    const combinedReader = await this.getWriteableCarReader()
+    const combinedReader = await this.getWriteableCarCidMapReader()
     // TODO keep an in-memory map of cids to carCids and flush it out instead of reading the car each time
     const mapNode = await addCidsToCarIndex(
       combinedReader,
@@ -251,6 +252,18 @@ export class Valet {
       newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
     }
     return newValetCidCar
+  }
+
+  updateCarCidMap (carCid, cids) {
+    // called by parkCar
+    // this adds the cids to the in-memory map
+    // and returns a new car file with the updated map
+  }
+
+  getCidCarMap (carCid) {
+    // called by getCarCIDForCID
+    // this returns the in-memory map if it has been hydrated
+    // otherwise it hydrates the map based on the car file
   }
 
   /**
@@ -504,6 +517,7 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
 }
 
 // should convert in-memory map to ipld-hashmap
+// maybe obsolete
 const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperations) => {
   let indexNode
   // const callID = Math.random().toString(32).substring(2, 8)
