@@ -39,10 +39,7 @@ export class Database {
 
     if (config.mergeHeader) {
       console.log('mergeHeader', config.mergeHeader)
-      // load both cid maps (car) and merge them to a new car
-      // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
-      // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
-      // for now return the local one
+      this.mergePromise = this.blocks.valet?.mergeHeader(config.mergeHeader)
     }
   }
 

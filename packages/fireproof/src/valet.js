@@ -114,6 +114,13 @@ export class Valet {
     // console.trace('keyId', this.name, this.keyId)
   }
 
+  async mergeHeader (header) {
+    // load both cid maps (car) and merge them to a new car
+    // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
+    // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
+    // for now return the local one
+  }
+
   /**
    * Group the blocks into a car and write it to the valet.
    * @param {import('./blockstore.js').InnerBlockstore} innerBlockstore
@@ -173,36 +180,6 @@ export class Valet {
     return { result: null }
   }
 
-  // called by getValetBlock
-  // should look up in the memory hash map
-  // the code below can be used on cold start
-  async OLDgetCarCIDForCID (cid) {
-    // console.log('getCarCIDForCID', cid, this.valetRootCarCid)
-    // make a car reader for this.valetRootCarCid
-    if (!this.valetRootCarCid) return { result: null }
-
-    let indexNode
-    if (this.valetRoot) {
-      indexNode = this.valetRoot
-    } else {
-      const combinedReader = await this.getWriteableCarCidMapReader()
-      if (!this.valetRootCid) {
-        const root = combinedReader.root.cid
-        // console.log('roots', this.instanceId, this.name, root, this.valetRootCarCid, this.valetRootCid)
-        this.valetRootCid = root
-      }
-      indexNode = await load(combinedReader, this.valetRootCid, {
-        blockHasher: blockOpts.hasher,
-        blockCodec: blockOpts.codec
-      })
-      this.valetRoot = indexNode
-    }
-
-    const got = await indexNode.get(cid)
-    // console.log('getCarCIDForCID', cid, got)
-    return { result: got }
-  }
-
   async getEmptyLoader () {
     const theseWriteableBlocks = new VMemoryBlockstore()
     // console.log('carMapReader', carMapReader)
@@ -254,71 +231,6 @@ export class Valet {
     return combinedReader
   }
 
-  async getWriteableCarCidMapReader () {
-    let carMapReader
-    if (this.valetRootCarCid) {
-      // todo only need this if we are cold starting
-      console.log('getWriteableCarCidMapReader', this.valetRootCarCid)
-      carMapReader = await this.getCarReader(this.valetRootCarCid)
-    }
-
-    const theseValetCidBlocks = this.valetCidBlocks
-    // console.log('carMapReader', carMapReader)
-    const combinedReader = {
-      root: carMapReader?.root,
-      put: async (cid, bytes) => {
-        // console.log('mapPut', cid, bytes.length)
-        return await theseValetCidBlocks.put(cid, bytes)
-      },
-      get: async cid => {
-        // console.log('mapGet', cid)
-        try {
-          const got = await theseValetCidBlocks.get(cid)
-          return got.bytes
-        } catch (e) {
-          // console.log('get from car', cid, carMapReader)
-          if (!carMapReader) throw e
-          const bytes = await carMapReader.get(cid)
-          await theseValetCidBlocks.put(cid, bytes)
-          // console.log('mapGet', cid, bytes.length, bytes.constructor.name)
-          return bytes
-        }
-      }
-    }
-    // console.log('combinedReader', carCid)
-    return combinedReader
-  }
-
-  // should add to in-memory map and flush to car
-  async makeCidCarMap (carCid, cids) {
-    console.log('makeCidCarMap', carCid, cids.size)
-    const combinedReader = await this.getWriteableCarCidMapReader()
-    // TODO keep an in-memory map of cids to carCids and flush it out instead of reading the car each time
-    const mapNode = await addCidsToCarIndex(
-      combinedReader,
-      this.valetRoot,
-      this.valetRootCid,
-      Array.from(cids).map(cid => ({ key: cid.toString(), value: carCid.toString() }))
-    )
-
-    this.valetRoot = mapNode
-    this.valetRootCid = mapNode.cid
-    // make a block set with all the cids of the map
-    const saveValetBlocks = new VMemoryBlockstore()
-
-    for await (const cidx of mapNode.cids()) {
-      const bytes = await combinedReader.get(cidx)
-      saveValetBlocks.put(cidx, bytes)
-    }
-    let newValetCidCar
-    if (this.keyMaterial) {
-      newValetCidCar = await blocksToEncryptedCarBlock(this.valetRootCid, saveValetBlocks, this.keyMaterial)
-    } else {
-      newValetCidCar = await blocksToCarBlock(this.valetRootCid, saveValetBlocks)
-    }
-    return newValetCidCar
-  }
-
   async updateCarCidMap (carCid, cids) {
     // called by parkCar
     // this adds the cids to the in-memory map
@@ -328,7 +240,7 @@ export class Valet {
     for (const cid of cids) {
       theCarMap.set(cid, carCid)
     }
-
+    // todo can we debounce this? -- maybe put it into a queue so we can batch it
     const loader = await this.getEmptyLoader()
     const indexNode = await create(loader, {
       bitWidth: 4,
@@ -386,7 +298,6 @@ export class Valet {
   async parkCar (carCid, value, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    // const newValetCidCar = await this.makeCidCarMap(carCid, cids)
     const newValetCidCar = await this.updateCarCidMap(carCid, cids)
 
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
@@ -429,21 +340,6 @@ export class Valet {
   }
 
   remoteBlockFunction = null
-
-  // memoizeCarReaders = new Map()
-  // async memogetCarReader (carCid) {
-  //   console.log('getCarReader', carCid)
-  //   if (this.memoizeCarReaders.has(carCid)) {
-  //     return this.memoizeCarReaders.get(carCid)
-  //   } else {
-  //     const readerP = this.innerGetCarReader(carCid)
-  //     // this.memoizeCarReaders.set(carCid, readerP)
-  //     return readerP.then(reader => {
-  //       console.log('reader ready', carCid, reader)
-  //       return reader
-  //     })
-  //   }
-  // }
 
   async getCarBytes (carCid) {
     const primaryRead = this.loader.readCar(carCid)
@@ -627,35 +523,6 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
     memoizeDecryptedCarBlocks.set(cid.toString(), blocksPromise)
     return blocksPromise
   }
-}
-
-// should convert in-memory map to ipld-hashmap
-// maybe obsolete
-const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperations) => {
-  let indexNode
-  // const callID = Math.random().toString(32).substring(2, 8)
-  // console.log('addCidsToCarIndex', callID, valetRootCid, bulkOperations.length)
-  if (valetRootCid) {
-    if (valetRoot) {
-      indexNode = valetRoot
-    } else {
-      indexNode = await load(blockstore, valetRootCid, { blockHasher: blockOpts.hasher, blockCodec: blockOpts.codec })
-    }
-  } else {
-    indexNode = await create(blockstore, {
-      bitWidth: 4,
-      bucketSize: 2,
-      blockHasher: blockOpts.hasher,
-      blockCodec: blockOpts.codec
-    })
-  }
-  // console.log('adding', bulkOperations.length, 'cids to index')
-  for (const { key, value } of bulkOperations) {
-    // console.log('adding', key, value)
-    await indexNode.set(key, value)
-  }
-  // console.log('newCidsToCarIndex', callID, indexNode.cid, bulkOperations.length)
-  return indexNode
 }
 
 export class VMemoryBlockstore {
