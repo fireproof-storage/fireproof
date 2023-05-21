@@ -62,13 +62,21 @@ export class Base {
     ]
 
     await this.writeCars(carList)
+    this.valetRootCarCid = newValetCidCar.cid
     return newValetCidCar
   }
 
-  saveHeader () { // todo this will be called as super and it's job is to add the key, carCid to the header
+  async saveHeader () {
     if (this.config.readonly) {
       throw new Error('Read-only mode')
     }
+  }
+
+  prepareHeader (header, json = true) {
+    header.key = this.keyMaterial
+    header.car = this.valetRootCarCid.toString()
+    // console.log('prepareHeader', header)
+    return json ? JSON.stringify(header) : header
   }
 
   async getCarCIDForCID (cid) {

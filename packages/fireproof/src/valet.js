@@ -2,7 +2,6 @@ import { sha256 } from 'multiformats/hashes/sha2'
 import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
-import cargoQueue from 'async/cargoQueue.js'
 import { Loader } from './loader.js'
 
 // @ts-ignore
@@ -39,13 +38,13 @@ export class Valet {
 
   async saveHeader (header) {
     // each storage needs to add its own carCidMapCarCid to the header
-    // this.secondary?.saveHeader(header)
+    this.secondary?.saveHeader(header)
     return await this.storage.saveHeader(header)
   }
 
-  getKeyMaterial () {
-    return this.storage.keyMaterial
-  }
+  // getKeyMaterial () {
+  //   return this.storage.keyMaterial
+  // }
 
   setKeyMaterial (km) {
     this.storage.setKeyMaterial(km)
@@ -60,15 +59,9 @@ export class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.storage.keyMaterial) { // encrpyt once per key material
-        // console.log('encrypting car', innerBlockstore.label)
-        // should we pass cids in instead of iterating frin innerBlockstore?
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.storage.keyMaterial)
-        await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
-      } else {
-        const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-        await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
-      }
+      await this.parkCar(this.storage, innerBlockstore, cids)
+      if (this.secondary) await this.parkCar(this.secondary, innerBlockstore, cids)
+      // this.valetRootCarCid = newValetCidCar.cid
     } else {
       throw new Error('missing lastCid for car header')
     }
@@ -91,25 +84,32 @@ export class Valet {
 
   hydrateRootCarCid (cid) {
     this.didHydrate = true
-    this.valetRootCarCid = cid
+    // this.valetRootCarCid = cid
+    console.log('hydrateRootCarCid', cid)
     this.storage.valetRootCarCid = cid
     this.storage.valetCarCidMap = null
     // this.valetRoot = null
     // this.valetRootCid = null
   }
 
-  /**
-   *
-   * @param {string} carCid
-   * @param {*} value
-   */
-  async parkCar (carCid, value, cids) {
+  async parkCar (storage, innerBlockstore, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    const newValetCidCar = await this.storage.saveCar(carCid, value, cids)
+    let newValetCidCar
+    if (storage.keyMaterial) {
+      // console.log('encrypting car', innerBlockstore.label)
+      // should we pass cids in instead of iterating frin innerBlockstore?
+      const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.storage.keyMaterial)
+      newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+    } else {
+      const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
+      newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+    }
 
-    this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per storage)
+    // const newValetCidCar = await this.storage.saveCar(carCid, value, cids)
 
+    // this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per storage)
+    return newValetCidCar
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
 
     // console.log('parked car', carCid, value.length, Array.from(cids))

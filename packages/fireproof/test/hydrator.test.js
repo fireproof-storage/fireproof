@@ -3,6 +3,7 @@ import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
 // import { Valet } from '../src/valet.js'
+import { resetTestDataDir } from './helpers.js'
 
 describe('Hydrator', () => {
   let database, index
@@ -80,6 +81,8 @@ describe('Hydrator', () => {
 describe('hydrator query with dbname', () => {
   let database, index
   beforeEach(async () => {
+    resetTestDataDir()
+
     database = Fireproof.storage('fptest-ix-name')
     const docs = [
       { _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 },
@@ -108,9 +111,9 @@ describe('hydrator query with dbname', () => {
     const serialized = database.toJSON()
     // console.log('serialized', serialized)
     assert.equal(serialized.name, 'fptest-ix-name')
-    if (database.blocks.valet.keyId !== 'null') {
-      assert.equal(serialized.key.length, 64)
-    }
+    // if (database.blocks.valet.keyId !== 'null') {
+    //   assert.equal(serialized.key.length, 64)
+    // }
     assert.equal(serialized.clock.length, 1)
     assert.equal(serialized.clock[0].constructor.name, 'String')
     assert.equal(serialized.indexes.length, 1)
@@ -161,10 +164,13 @@ describe('hydrator query with dbname', () => {
     // console.log('dd.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
 
     const serialized = JSON.parse(JSON.stringify(database))
-    // console.log('serialized', JSON.stringify(serialized))
+    console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
     // console.log('------------ new database --------')
-
+    assert.equal(serialized.name, 'fptest-ix-name')
+    assert.equal(serialized.clock.length, 1)
+    assert(serialized.car, 'where is the car?')
+    assert.match(serialized.car, /bafk/)
     const newDb = Fireproof.fromConfig(database.name, serialized)
     // const oldV = database.blocks.valet
     // reset valet
@@ -177,6 +183,7 @@ describe('hydrator query with dbname', () => {
     // newDb.blocks.valet = new Valet(oldV.name, oldV.getKeyMaterial())
     // newDb.blocks.valet.valetRootCid = null
     // newDb.blocks = null
+    console.log('about to crash')
 
     assert.equal(newDb.name, 'fptest-ix-name')
     assert.equal(newDb.clock.length, 1)

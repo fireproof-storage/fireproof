@@ -56,8 +56,8 @@ export class Browser extends Base {
     return this.isBrowser && localStorage.getItem(this.config.headerKeyPrefix + this.name)
   }
 
-  async saveHeader (stringValue) {
+  async saveHeader (header) {
     super.saveHeader()
-    return this.isBrowser && localStorage.setItem(this.config.headerKeyPrefix + this.name, stringValue)
+    return this.isBrowser && localStorage.setItem(this.config.headerKeyPrefix + this.name, this.prepareHeader(header))
   }
 }

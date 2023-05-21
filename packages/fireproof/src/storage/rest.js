@@ -38,11 +38,11 @@ export class Rest extends Base {
     return await response.json()
   }
 
-  async saveHeader (stringValue) {
-    super.saveHeader()
+  async saveHeader (header) {
+    await super.saveHeader()
     const response = await fetch(this.headerURL, {
       method: 'PUT',
-      body: stringValue,
+      body: this.prepareHeader(header),
       headers: { 'Content-Type': 'application/json' }
     })
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)
