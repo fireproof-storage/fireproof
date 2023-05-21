@@ -12,6 +12,8 @@ export class Rest {
     this.headerURL = `${this.config.url}/header.json`
   }
 
+  // todo make a write queue with configurable concurrency -- maybe this even wraps all the storage classes?
+  // turn up the number of writes in 'works long with rest storage' test
   async writeCars (cars) {
     if (this.config.readonly) return
     for (const { cid, bytes } of cars) {
