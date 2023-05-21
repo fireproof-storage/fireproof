@@ -318,10 +318,11 @@ export class Valet {
 
   async getCarReader (carCid) {
     carCid = carCid.toString()
-    const loaderBytes = this.loader.readCar(carCid)
-    const secondaryBytes = this.secondary?.readCar(carCid)
-
-    const carBytes = await Promise.any([loaderBytes, secondaryBytes])
+    const readBytes = [this.loader.readCar(carCid)]
+    if (this.secondary) {
+      readBytes.push(this.secondary.readCar(carCid))
+    }
+    const carBytes = await Promise.any(readBytes)
 
     // const callID = Math.random().toString(36).substring(7)
     console.log('innerGetCarReader', carCid, carBytes.constructor.name, carBytes.byteLength)
