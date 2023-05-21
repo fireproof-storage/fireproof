@@ -27,12 +27,6 @@ export class Valet {
 
   instanceId = Math.random().toString(36).slice(2)
 
-  /**
-   * Function installed by the database to upload car files
-   * @type {null|function(string, Uint8Array):Promise<void>}
-   */
-  uploadFunction = null
-
   constructor (name = 'default', config = {}) {
     this.name = name
     // this.setKeyMaterial(config.key)
@@ -41,38 +35,6 @@ export class Valet {
     // this.secondaryHeader = config.secondaryHeader
     const secondaryConfig = Object.assign({}, { key: config.key }, config.secondary)
     this.secondary = config.secondary ? Loader.appropriate(name, secondaryConfig) : null
-    this.uploadQueue = cargoQueue(async (tasks, callback) => {
-      // console.log(
-      //   'queue worker',
-      //   tasks.length,
-      //   tasks.reduce((acc, t) => acc + t.value.length, 0)
-      // )
-      if (this.uploadFunction) {
-        // todo we can coalesce these into a single car file
-        // todo remove idb usage here
-        for (const task of tasks) {
-          await this.uploadFunction(task.carCid, task.value)
-          // todo update syncCidMap to say this has been synced
-          // const carMeta = await db.get('cidToCar', task.carCid)
-          // delete carMeta.pending
-          // await db.put('cidToCar', carMeta)
-        }
-      }
-      callback()
-    })
-
-    this.uploadQueue.drain(async () => {
-      // todo read syncCidMap and sync any that are still unsynced
-      //   return await this.withDB(async db => {
-      //     const carKeys = (await db.getAllFromIndex('cidToCar', 'pending')).map(c => c.car)
-      //     for (const carKey of carKeys) {
-      //       await this.uploadFunction(carKey, await db.get('cars', carKey))
-      //       const carMeta = await db.get('cidToCar', carKey)
-      //       delete carMeta.pending
-      //       await db.put('cidToCar', carMeta)
-      //     }
-      //   })
-    })
   }
 
   async saveHeader (header) {
@@ -151,19 +113,6 @@ export class Valet {
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
 
     // console.log('parked car', carCid, value.length, Array.from(cids))
-    // upload to web3.storage if we have credentials
-    if (this.uploadFunction) {
-      if (this.alreadyEnqueued.has(carCid)) {
-        // console.log('already enqueued', carCid)
-        return
-      }
-      // don't await this, it will be done in the queue
-      // console.log('add to queue', carCid, value.length)
-      this.uploadQueue.push({ carCid, value })
-      this.alreadyEnqueued.add(carCid)
-    } else {
-      // console.log('no upload function', carCid, value.length, this.uploadFunction)
-    }
   }
 
   remoteBlockFunction = null
