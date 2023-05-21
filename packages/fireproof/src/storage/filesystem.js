@@ -37,9 +37,10 @@ export class Filesystem extends Base {
     return JSON.parse(header)
   }
 
-  async saveHeader (stringValue) {
+  async saveHeader (header) {
     // console.log('saveHeader', this.isBrowser)
-    await writeSync(this.headerFilename(), stringValue)
+    await super.saveHeader()
+    await writeSync(this.headerFilename(), this.prepareHeader(header))
   }
 
   headerFilename () {

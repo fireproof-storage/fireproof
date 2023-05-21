@@ -50,12 +50,16 @@ export class Database {
    * @instance
    */
   toJSON () {
+    return this.blocks.valet ? this.blocks.valet.storage.prepareHeader(this.toHeader(), false) : this.toHeader() // omg
+  }
+
+  toHeader () {
     return {
       clock: this.clockToJSON(),
       name: this.name,
-      key: this.blocks.valet?.getKeyMaterial(),
-      car: this.blocks.valet?.valetRootCarCid.toString(),
-      indexCar: this.indexBlocks.valet?.valetRootCarCid?.toString(),
+      // key: this.blocks.valet?.getKeyMaterial(),
+      // car: this.blocks.valet?.storage.valetRootCarCid?.toString(),
+      indexCar: this.indexBlocks.valet?.storage.valetRootCarCid?.toString(),
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }
@@ -71,7 +75,7 @@ export class Database {
   }
 
   hydrate ({ clock, name, key, car, indexCar }) {
-    this.name = name
+    this.name = name // todo remove
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
     this.blocks.valet?.hydrateRootCarCid(car) // maybe
@@ -82,7 +86,7 @@ export class Database {
 
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {
-      this.blocks.valet.saveHeader(JSON.stringify(this))
+      this.blocks.valet.saveHeader(this.toHeader())
     }
   }
 
