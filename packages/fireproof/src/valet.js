@@ -19,22 +19,11 @@ import { Buffer } from 'buffer'
 
 const chunker = bf(30)
 
-// const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
-
-// ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
-
 export class Valet {
   idb = null
   name = null
   uploadQueue = null
   alreadyEnqueued = new Set()
-  // keyMaterial = null
-  // keyId = 'null'
-  // valetRoot = null
-  // valetRootCid = null // set by hydrate
-  // valetRootCarCid = null // most recent diff
-
-  // valetCarCidMap = null
 
   instanceId = Math.random().toString(36).slice(2)
 
@@ -96,33 +85,7 @@ export class Valet {
 
   setKeyMaterial (km) {
     this.loader.setKeyMaterial(km)
-    // if (km && !NO_ENCRYPT) {
-    //   const hex = Uint8Array.from(Buffer.from(km, 'hex'))
-    //   this.keyMaterial = km
-    //   const hash = sha1sync(hex)
-    //   this.keyId = Buffer.from(hash).toString('hex')
-    // } else {
-    //   this.keyMaterial = null
-    //   this.keyId = 'null'
-    // }
-    // console.trace('keyId', this.name, this.keyId)
   }
-
-  // async mergeHeader (secondaryHeader) {
-  //   if (!this.didHydrate) throw new Error('cannot merge header before hydrate???')
-  //   // load both cid maps (car) and merge them to a new car
-  //   const theCarMap = await this.getCidCarMap()
-  //   const theSecondaryMap = await this.mapForIPLDHashmapCarCid(secondaryHeader.car)
-
-  //   for (const [key, value] of theSecondaryMap.entries()) {
-  //     theCarMap.set(key, value)
-  //   }
-
-  //   const newValetCidCar = await this.persistCarMap(theCarMap)
-  //   // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
-  //   // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
-  //   // for now return the local one
-  // }
 
   /**
    * Group the blocks into a car and write it to the valet.
@@ -133,7 +96,7 @@ export class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.loader.keyMaterial) {
+      if (this.loader.keyMaterial) { // encrpyt once per key material
         // console.log('encrypting car', innerBlockstore.label)
         // should we pass cids in instead of iterating frin innerBlockstore?
         const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.loader.keyMaterial)
@@ -166,6 +129,7 @@ export class Valet {
     this.didHydrate = true
     this.valetRootCarCid = cid
     this.loader.valetRootCarCid = cid
+    this.loader.valetCarCidMap = null
     // this.valetRoot = null
     // this.valetRootCid = null
   }
@@ -199,7 +163,7 @@ export class Valet {
     await this.loader.writeCars(carList)
     // this.secondary?.writeCars(carList)
 
-    this.valetRootCarCid = newValetCidCar.cid // goes to clock (should be per loader)
+    this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per loader)
 
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
 
@@ -223,12 +187,7 @@ export class Valet {
 
   async getValetBlock (dataCID) {
     // console.log('get valet block', dataCID)
-    const { result: carCid } = await this.loader.getCarCIDForCID(dataCID)
-    if (!carCid) {
-      throw new Error('Missing block: ' + dataCID)
-    }
-    const reader = await this.loader.getCarReader(carCid)
-    return await reader.get(dataCID)
+    return this.loader.getLoaderBlock(dataCID)
   }
 }
 
