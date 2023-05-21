@@ -13,10 +13,10 @@ const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('Create a dataset', () => {
-  let db, loader
+  let db, storage
   beforeEach(async () => {
     await sleep(10)
-    loader = Loader.appropriate(TEST_DB_NAME)
+    storage = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     await loadData(db, './test/todos.json')
@@ -27,7 +27,7 @@ describe('Create a dataset', () => {
     assert.equal(response.rows.length, 18)
   }).timeout(10000)
   it('creates clock file', async () => {
-    const dbPath = join(loader.config.dataDir, TEST_DB_NAME)
+    const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
     const clockPath = join(dbPath, 'header.json')
     assert.match(dbPath, /\.fireproof\//)
     assert(dbPath.indexOf(TEST_DB_NAME) > 0)
@@ -35,7 +35,7 @@ describe('Create a dataset', () => {
     assert.equal(clockData.name, TEST_DB_NAME)
   }).timeout(10000)
   it('saves car files', async () => {
-    const files = await dbFiles(loader, TEST_DB_NAME)
+    const files = await dbFiles(storage, TEST_DB_NAME)
     assert(files.length > 2)
   })
   it('doesnt put the key in the header', async () => {
@@ -50,10 +50,10 @@ describe('Create a dataset', () => {
 })
 
 describe('Rest dataset', () => {
-  let db, loader, server
+  let db, storage, server
   beforeEach(async () => {
     await sleep(10)
-    loader = Loader.appropriate(TEST_DB_NAME)
+    storage = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     await loadData(db, './test/todos.json')
@@ -69,7 +69,7 @@ describe('Rest dataset', () => {
     const dbdocs = await db.allDocuments()
     assert.equal(dbdocs.rows.length, 18)
     // console.log('rest storage')
-    const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    const restDb = await Fireproof.storage(TEST_DB_NAME, { storage: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
     const response = await restDb.allDocuments()
     assert.equal(response.rows.length, 18)
     // console.log('do writes')
@@ -87,11 +87,11 @@ describe('Rest dataset', () => {
     const dbdocs = await db.allDocuments()
     assert.equal(dbdocs.rows.length, 18)
     // console.log('rest storage')
-    const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    const restDb = await Fireproof.storage(TEST_DB_NAME, { storage: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
     const response = await restDb.allDocuments()
     assert.equal(response.rows.length, 18)
     // console.log('do writes')
-    // todo turn this number up to stress test the loader concurrency
+    // todo turn this number up to stress test the storage concurrency
     // see Rest#writeCars
     await Promise.all(Array.from({ length: 20 }).map(async () => {
       // console.log('do write')
@@ -104,7 +104,7 @@ describe('Rest dataset', () => {
   }).timeout(10000)
   it('creates new db with rest storage', async () => {
     await sleep(100)
-    const newRestDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/fptest-new-db-rest' } })
+    const newRestDb = await Fireproof.storage(TEST_DB_NAME, { storage: { type: 'rest', url: 'http://localhost:8000/fptest-new-db-rest' } })
     const response = await newRestDb.allDocuments()
     assert.equal(response.rows.length, 0)
     // console.log('do puts')
@@ -141,13 +141,13 @@ describe('Rest dataset', () => {
     const ok2 = await secondaryDb.put({ _id: 'test2', foo: 'bar' })
     assert.equal(ok2.id, 'test2')
 
-    const files = await dbFiles(loader, 'fptest-secondary-rest')
+    const files = await dbFiles(storage, 'fptest-secondary-rest')
 
     assert(files.length > 4)
 
     await sleep(100)
 
-    const remoteFiles = await dbFiles(loader, 'fptest-secondary-rest-remote')
+    const remoteFiles = await dbFiles(storage, 'fptest-secondary-rest-remote')
 
     assert(remoteFiles.length > 2)
 
@@ -168,7 +168,7 @@ describe('Rest dataset', () => {
     resetTestDataDir('fptest-xtodos-remote')
     // await mkdir(dirname(fullpath), { recursive: true })
 
-    const remoteFiles0 = await dbFiles(loader, 'fptest-xtodos-remote')
+    const remoteFiles0 = await dbFiles(storage, 'fptest-xtodos-remote')
     // console.log('remoteFiles0', 'fptest-xtodos-remote', remoteFiles0)
     assert.equal(remoteFiles0.length, 0)
     await sleep(100)
@@ -179,11 +179,11 @@ describe('Rest dataset', () => {
     assert.equal(fileDb.name, TEST_DB_NAME)
     // new writes should go to both
     // it('saves car files', () => {
-    const files = await dbFiles(loader, TEST_DB_NAME)
+    const files = await dbFiles(storage, TEST_DB_NAME)
     assert(files.length > 2)
     // })
 
-    const remoteFiles = await dbFiles(loader, 'fptest-xtodos-remote')
+    const remoteFiles = await dbFiles(storage, 'fptest-xtodos-remote')
     assert.equal(remoteFiles.length, 0)
 
     await fileDb.put({ _id: 'test', foo: 'bar' })
@@ -191,16 +191,16 @@ describe('Rest dataset', () => {
     await sleep(100)
     // it only writes new changes to the secondary, not history
 
-    const remoteFiles2 = await dbFiles(loader, 'fptest-xtodos-remote')
+    const remoteFiles2 = await dbFiles(storage, 'fptest-xtodos-remote')
     assert(remoteFiles2.length > 2)
     assert.equal(remoteFiles2.length, 3)
   })
   it('attach existing secondary rest storage to empty db in read-only mode', async () => {
     const emptyDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { readonly: true, type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
-    const files = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files.length, 0)
 
-    const filesA = await dbFiles(loader, TEST_DB_NAME)
+    const filesA = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(filesA.length, 37)
     await sleep(50)
     assert.equal(emptyDb.name, 'fptest-empty-db-todos')
@@ -208,7 +208,7 @@ describe('Rest dataset', () => {
     assert.equal(response.rows.length, 18)
     await sleep(50)
 
-    const files2 = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files2 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files2.length, 3)
     // now test wht happens when we write to the secondary?
 
@@ -216,10 +216,10 @@ describe('Rest dataset', () => {
     assert.equal(ok.id, 'test')
     await sleep(50)
 
-    const filesB = await dbFiles(loader, TEST_DB_NAME)
+    const filesB = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(filesB.length, 37)
 
-    const files3 = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files3 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files3.length, 6)
 
     /// now test what happens when we open a new db on the secondary's files
@@ -233,7 +233,7 @@ describe('Rest dataset', () => {
 
     await sleep(100)
 
-    const files4 = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files4 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files4.length, 8)
 
     // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
@@ -244,7 +244,7 @@ describe('Rest dataset', () => {
 
     await sleep(100)
 
-    const files5 = await dbFiles(loader, TEST_DB_NAME)
+    const files5 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files5.length, 39)
 
     const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
@@ -254,7 +254,7 @@ describe('Rest dataset', () => {
   })
   it('attach existing secondary rest storage to empty db', async () => {
     const emptyDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
-    const files = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files.length, 0)
 
     assert.equal(emptyDb.name, 'fptest-empty-db-todos')
@@ -262,7 +262,7 @@ describe('Rest dataset', () => {
     assert.equal(response.rows.length, 18)
     await sleep(100)
 
-    const files2 = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files2 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files2.length, 3)
     // now test wht happens when we write to the secondary?
 
@@ -270,7 +270,7 @@ describe('Rest dataset', () => {
     assert.equal(ok.id, 'test')
     await sleep(100)
 
-    const files3 = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files3 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files3.length, 6)
 
     /// now test what happens when we open a new db on the secondary's files
@@ -284,7 +284,7 @@ describe('Rest dataset', () => {
 
     await sleep(100)
 
-    const files4 = await dbFiles(loader, 'fptest-empty-db-todos')
+    const files4 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files4.length, 8)
 
     // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
@@ -295,7 +295,7 @@ describe('Rest dataset', () => {
 
     await sleep(100)
 
-    const files5 = await dbFiles(loader, TEST_DB_NAME)
+    const files5 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files5.length, 41)
 
     const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })

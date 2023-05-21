@@ -13,8 +13,8 @@ import { rmSync, readdirSync } from 'node:fs'
 
 import { mkdir } from 'fs/promises'
 
-export const dbFiles = async (loader, name) => {
-  const dbPath = join(loader.config.dataDir, name)
+export const dbFiles = async (storage, name) => {
+  const dbPath = join(storage.config.dataDir, name)
   await mkdir(dbPath, { recursive: true })
   const files = readdirSync(dbPath)
   return files
@@ -24,18 +24,18 @@ export function resetTestDataDir (name) {
   // fs.rmdirSync(testDataDir, { recursive: true })
   // fs.mkdirSync(testDataDir, { recursive: true })
 
-  const loader = Loader.appropriate('helloName')
+  const storage = Loader.appropriate('helloName')
 
-  const files = readdirSync(loader.config.dataDir)
+  const files = readdirSync(storage.config.dataDir)
 
   if (name) {
     console.log('removing', name)
-    rmSync(join(loader.config.dataDir, name), { recursive: true, force: true })
+    rmSync(join(storage.config.dataDir, name), { recursive: true, force: true })
   } else {
     for (const file of files) {
       if (file.match(/fptest/)) {
         console.log('removing', file)
-        rmSync(join(loader.config.dataDir, file), { recursive: true, force: true })
+        rmSync(join(storage.config.dataDir, file), { recursive: true, force: true })
       }
     }
   }

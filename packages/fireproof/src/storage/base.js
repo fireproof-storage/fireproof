@@ -185,8 +185,8 @@ export class Base {
   }
 
   async persistCarMap (theCarMap) {
-    const loader = await getEmptyLoader()
-    const indexNode = await create(loader, {
+    const ipldLoader = await getEmptyLoader()
+    const indexNode = await create(ipldLoader, {
       bitWidth: 4,
       bucketSize: 2,
       blockHasher: blockOpts.hasher,
@@ -199,9 +199,9 @@ export class Base {
 
     let newValetCidCar
     if (this.keyMaterial) {
-      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, loader.blocks, this.keyMaterial)
+      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, ipldLoader.blocks, this.keyMaterial)
     } else {
-      newValetCidCar = await blocksToCarBlock(indexNode.cid, loader.blocks)
+      newValetCidCar = await blocksToCarBlock(indexNode.cid, ipldLoader.blocks)
     }
     return newValetCidCar
   }
