@@ -223,6 +223,7 @@ export class Valet {
   }
 
   async getWriteableCarReader (carCid) {
+    console.log('getWriteableCarReader', carCid)
     const carMapReader = await this.getCarReader(carCid)
 
     const theseWriteableBlocks = new VMemoryBlockstore()
@@ -257,6 +258,7 @@ export class Valet {
     let carMapReader
     if (this.valetRootCarCid) {
       // todo only need this if we are cold starting
+      console.log('getWriteableCarCidMapReader', this.valetRootCarCid)
       carMapReader = await this.getCarReader(this.valetRootCarCid)
     }
 
@@ -530,7 +532,7 @@ export class Valet {
 
   // todo memoize this
   async getValetBlock (dataCID) {
-    // console.log('get valet block', dataCID)
+    console.log('get valet block', dataCID)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
     if (!carCid) {
       throw new Error('Missing block: ' + dataCID)

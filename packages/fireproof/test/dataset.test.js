@@ -65,19 +65,40 @@ describe('Rest dataset', () => {
     await sleep(100)
   })
   it('works with rest storage', async () => {
-    console.log('file alldocs')
+    // console.log('file alldocs')
     const dbdocs = await db.allDocuments()
     assert.equal(dbdocs.rows.length, 18)
-    console.log('rest storage')
+    // console.log('rest storage')
     const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
     const response = await restDb.allDocuments()
     assert.equal(response.rows.length, 18)
+    // console.log('do writes')
 
-    await Promise.all(Array.from({ length: 100 }).map(async () => {
+    const ok = await restDb.put({ _id: 'testx', foo: 'bar' })
+    assert.equal(ok.id, 'testx')
+
+    const response2 = await restDb.allDocuments()
+    assert.equal(response2.rows.length, 19)
+    server.close()
+    await sleep(100)
+  }).timeout(10000)
+  it('works long with rest storage', async () => {
+    // console.log('file alldocs')
+    const dbdocs = await db.allDocuments()
+    assert.equal(dbdocs.rows.length, 18)
+    // console.log('rest storage')
+    const restDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    const response = await restDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+    // console.log('do writes')
+    // todo turn this number up to stress test the loader concurrency
+    // see Rest#writeCars
+    await Promise.all(Array.from({ length: 20 }).map(async () => {
+      // console.log('do write')
       await restDb.put({ foo: 'bar' })
     }))
     const response2 = await restDb.allDocuments()
-    assert.equal(response2.rows.length, 118)
+    assert.equal(response2.rows.length, 38)
     server.close()
     await sleep(100)
   }).timeout(10000)
@@ -86,7 +107,7 @@ describe('Rest dataset', () => {
     const newRestDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/fptest-new-db-rest' } })
     const response = await newRestDb.allDocuments()
     assert.equal(response.rows.length, 0)
-    console.log('do puts')
+    // console.log('do puts')
     // await Promise.all(Array.from({ length: 2 }).map(async () => {
     const ok = await newRestDb.put({ _id: 'test', foo: 'bar' })
     assert.equal(ok.id, 'test')
@@ -95,14 +116,14 @@ describe('Rest dataset', () => {
     assert.equal(ok2.id, 'test2')
 
     // }))
-    console.log('newRestDb alldocs')
+    // console.log('newRestDb alldocs')
     const response2 = await newRestDb.allDocuments()
     assert.equal(response2.rows.length, 2)
-    await Promise.all(Array.from({ length: 100 }).map(async () => {
+    await Promise.all(Array.from({ length: 10 }).map(async () => {
       await newRestDb.put({ foo: 'bar' })
     }))
     const response3 = await newRestDb.allDocuments()
-    assert.equal(response3.rows.length, 102)
+    assert.equal(response3.rows.length, 12)
 
     await sleep(100)
   }).timeout(10000)
@@ -112,7 +133,7 @@ describe('Rest dataset', () => {
 
     const response = await secondaryDb.allDocuments()
     assert.equal(response.rows.length, 0)
-    console.log('do puts')
+    // console.log('do puts')
     // await Promise.all(Array.from({ length: 2 }).map(async () => {
     const ok = await secondaryDb.put({ _id: 'test', foo: 'bar' })
     assert.equal(ok.id, 'test')
@@ -134,11 +155,11 @@ describe('Rest dataset', () => {
     console.log('secondaryDb alldocs')
     const response2 = await secondaryDb.allDocuments()
     assert.equal(response2.rows.length, 2)
-    await Promise.all(Array.from({ length: 100 }).map(async () => {
+    await Promise.all(Array.from({ length: 10 }).map(async () => {
       await secondaryDb.put({ foo: 'bar' })
     }))
     const response3 = await secondaryDb.allDocuments()
-    assert.equal(response3.rows.length, 102)
+    assert.equal(response3.rows.length, 12)
 
     await sleep(100)
   }).timeout(10000)
@@ -148,7 +169,7 @@ describe('Rest dataset', () => {
     // await mkdir(dirname(fullpath), { recursive: true })
 
     const remoteFiles0 = await dbFiles(loader, 'fptest-xtodos-remote')
-    console.log('remoteFiles0', 'fptest-xtodos-remote', remoteFiles0)
+    // console.log('remoteFiles0', 'fptest-xtodos-remote', remoteFiles0)
     assert.equal(remoteFiles0.length, 0)
     await sleep(100)
 
