@@ -4,13 +4,9 @@ import { Valet } from '../src/valet.js'
 
 describe('new Valet', () => {
   let val
-  const calls = []
 
   before(async () => {
     val = new Valet('test')
-    val.uploadFunction = async (carCid, value) => {
-      calls.push({ carCid, value })
-    }
   })
   it('has default attributes', async () => {
     assert(val.getValetBlock)
@@ -31,10 +27,6 @@ describe('new Valet', () => {
           })
         })
       })
-  })
-  it('calls the upload function', () => {
-    assert.equal(calls.length, 1)
-    assert.equal(calls[0].carCid, 'carCid')
   })
 })
 

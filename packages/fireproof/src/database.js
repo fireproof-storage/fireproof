@@ -400,12 +400,6 @@ export class Database {
     }
   }
 
-  setCarUploader (carUploaderFn) {
-    // console.log('registering car uploader')
-    // https://en.wikipedia.org/wiki/Law_of_Demeter - this is a violation of the law of demeter
-    this.blocks.valet.uploadFunction = carUploaderFn
-  }
-
   setRemoteBlockReader (remoteBlockReaderFn) {
     this.blocks.remoteBlockFunction = remoteBlockReaderFn
   }
