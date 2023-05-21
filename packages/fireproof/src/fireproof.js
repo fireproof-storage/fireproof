@@ -20,12 +20,14 @@ export class Fireproof {
    * @returns {Database|Promise<Database>} - a new Fireproof instance or a promise for remote loaders
    */
   static storage = (name = null, opts = {}) => {
-    if (name) {
+    if (!name) {
+      return new Database(null, [], opts)
+    } else {
       opts.name = name
       const existingLoader = Loader.appropriate(name, null, opts.loader)
       const secondaryLoader = opts.secondary ? Loader.appropriate(name, null, opts.secondary) : null
 
-      const handleHeader = (header, loader) => {
+      const handleHeader = (header) => {
         if (typeof header === 'object' && typeof header.then === 'function') {
           return header.then(config => {
             if (config) {
@@ -41,14 +43,14 @@ export class Fireproof {
       const existingHeader = existingLoader.getHeader()
       if (existingHeader) {
         if (!secondaryLoader) {
-          return handleHeader(existingHeader, existingLoader)
+          return handleHeader(existingHeader)
         } else {
           const secondaryHeader = secondaryLoader.getHeader()
           if (secondaryHeader) {
             if (typeof secondaryHeader === 'object' && typeof secondaryHeader.then === 'function') {
               return secondaryHeader.then(secondaryConfig => {
                 if (!secondaryConfig) {
-                  return handleHeader(existingHeader, existingLoader)
+                  return handleHeader(existingHeader)
                 } else {
                   throw new Error('Not implemented: merge both headers')
                 }
@@ -56,18 +58,16 @@ export class Fireproof {
             }
             throw new Error('Not implemented: merge both headers')
           } else {
-            return handleHeader(existingHeader, existingLoader)
+            return handleHeader(existingHeader)
           }
         }
       } else {
         if (secondaryLoader) {
-          return handleHeader(secondaryLoader.getHeader(), secondaryLoader)
+          return handleHeader(secondaryLoader.getHeader())
         } else {
           return Fireproof.withKey(name, opts)
         }
       }
-    } else {
-      return new Database(null, [], opts)
     }
   }
 

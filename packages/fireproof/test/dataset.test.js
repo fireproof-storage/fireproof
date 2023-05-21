@@ -4,10 +4,10 @@ import { Loader } from '../src/loader.js'
 import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
 import { join } from 'path'
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { startServer } from '../scripts/server.js'
 
-import { resetTestDataDir } from './helpers.js'
+import { resetTestDataDir, dbFiles } from './helpers.js'
 
 const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -34,9 +34,8 @@ describe('Create a dataset', () => {
     const clockData = JSON.parse(readFileSync(clockPath))
     assert.equal(clockData.name, TEST_DB_NAME)
   }).timeout(10000)
-  it('saves car files', () => {
-    const dbPath = join(loader.config.dataDir, TEST_DB_NAME)
-    const files = readdirSync(dbPath)
+  it('saves car files', async () => {
+    const files = await dbFiles(loader, TEST_DB_NAME)
     assert(files.length > 2)
   })
   it('doesnt put the key in the header', async () => {
@@ -121,14 +120,14 @@ describe('Rest dataset', () => {
     const ok2 = await secondaryDb.put({ _id: 'test2', foo: 'bar' })
     assert.equal(ok2.id, 'test2')
 
-    const dbPath = join(loader.config.dataDir, 'fptest-secondary-rest')
-    const files = readdirSync(dbPath)
+    const files = await dbFiles(loader, 'fptest-secondary-rest')
+
     assert(files.length > 4)
 
     await sleep(100)
 
-    const remoteDbPath = join(loader.config.dataDir, 'fptest-secondary-rest-remote')
-    const remoteFiles = readdirSync(remoteDbPath)
+    const remoteFiles = await dbFiles(loader, 'fptest-secondary-rest-remote')
+
     assert(remoteFiles.length > 2)
 
     // }))
@@ -144,12 +143,42 @@ describe('Rest dataset', () => {
     await sleep(100)
   }).timeout(10000)
   it('attach empty secondary rest storage to existing db', async () => {
-    const fileDb = await Fireproof.storage(TEST_DB_NAME, { secondary: { type: 'rest', url: 'http://localhost:8000/fptest-todos-remote' } })
-    const response = await fileDb.allDocuments()
-    assert.equal(response.rows.length, 18)
-  })
-  it('attach existing secondary rest storage to empty db', () => {
+    await sleep(100)
+    resetTestDataDir('fptest-xtodos-remote')
+    // await mkdir(dirname(fullpath), { recursive: true })
 
+    const remoteFiles0 = await dbFiles(loader, 'fptest-xtodos-remote')
+    console.log('remoteFiles0', 'fptest-xtodos-remote', remoteFiles0)
+    assert.equal(remoteFiles0.length, 0)
+    await sleep(100)
+
+    const fileDb = await Fireproof.storage(TEST_DB_NAME, { secondary: { type: 'rest', url: 'http://localhost:8000/fptest-xtodos-remote' } })
+    // const response = await fileDb.allDocuments()
+    // assert.equal(response.rows.length, 18)
+    assert.equal(fileDb.name, TEST_DB_NAME)
+    // new writes should go to both
+    // it('saves car files', () => {
+    const files = await dbFiles(loader, TEST_DB_NAME)
+    assert(files.length > 2)
+    // })
+
+    const remoteFiles = await dbFiles(loader, 'fptest-xtodos-remote')
+    assert.equal(remoteFiles.length, 0)
+
+    await fileDb.put({ _id: 'test', foo: 'bar' })
+
+    await sleep(100)
+    // it only writes new changes to the secondary, not history
+
+    const remoteFiles2 = await dbFiles(loader, 'fptest-xtodos-remote')
+    assert(remoteFiles2.length > 2)
+    assert.equal(remoteFiles2.length, 3)
+  })
+  it('attach existing secondary rest storage to empty db', async () => {
+    const emptyDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    assert.equal(emptyDb.name, 'fptest-empty-db-todos')
+    const response = await emptyDb.allDocuments()
+    assert.equal(response.rows.length, 18)
   })
   it('attach existing secondary rest storage to existing db', () => {
 
