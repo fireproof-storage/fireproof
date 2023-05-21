@@ -24,7 +24,7 @@ export class Fireproof {
       return new Database(null, [], opts)
     } else {
       opts.name = name
-      const existingLoader = Loader.appropriate(name, opts.loader)
+      const existingLoader = Loader.appropriate(name, opts.storage)
       const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary) : null
 
       const handleHeader = (header, secondary) => {

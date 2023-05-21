@@ -36,8 +36,8 @@ export class Valet {
   constructor (name = 'default', config = {}) {
     this.name = name
     // this.setKeyMaterial(config.key)
-    const loaderConfig = Object.assign({}, { key: config.key }, config.loader)
-    this.loader = Loader.appropriate(name, loaderConfig)
+    const storageConfig = Object.assign({}, { key: config.key }, config.storage)
+    this.storage = Loader.appropriate(name, storageConfig)
     // this.secondaryHeader = config.secondaryHeader
     // this.secondary = config.secondary ? Loader.appropriate(name, config.secondary) : null
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
@@ -76,15 +76,15 @@ export class Valet {
 
   async saveHeader (header) {
     // this.secondary?.saveHeader(header)
-    return await this.loader.saveHeader(header)
+    return await this.storage.saveHeader(header)
   }
 
   getKeyMaterial () {
-    return this.loader.keyMaterial
+    return this.storage.keyMaterial
   }
 
   setKeyMaterial (km) {
-    this.loader.setKeyMaterial(km)
+    this.storage.setKeyMaterial(km)
   }
 
   /**
@@ -96,10 +96,10 @@ export class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.loader.keyMaterial) { // encrpyt once per key material
+      if (this.storage.keyMaterial) { // encrpyt once per key material
         // console.log('encrypting car', innerBlockstore.label)
         // should we pass cids in instead of iterating frin innerBlockstore?
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.loader.keyMaterial)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.storage.keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -128,8 +128,8 @@ export class Valet {
   hydrateRootCarCid (cid) {
     this.didHydrate = true
     this.valetRootCarCid = cid
-    this.loader.valetRootCarCid = cid
-    this.loader.valetCarCidMap = null
+    this.storage.valetRootCarCid = cid
+    this.storage.valetCarCidMap = null
     // this.valetRoot = null
     // this.valetRootCid = null
   }
@@ -142,7 +142,7 @@ export class Valet {
   async parkCar (carCid, value, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    const newValetCidCar = await this.loader.updateCarCidMap(carCid, cids)
+    const newValetCidCar = await this.storage.updateCarCidMap(carCid, cids)
 
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
@@ -160,10 +160,10 @@ export class Valet {
       }
     ]
 
-    await this.loader.writeCars(carList)
+    await this.storage.writeCars(carList)
     // this.secondary?.writeCars(carList)
 
-    this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per loader)
+    this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per storage)
 
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
 
@@ -187,7 +187,7 @@ export class Valet {
 
   async getValetBlock (dataCID) {
     // console.log('get valet block', dataCID)
-    return this.loader.getLoaderBlock(dataCID)
+    return this.storage.getLoaderBlock(dataCID)
   }
 }
 

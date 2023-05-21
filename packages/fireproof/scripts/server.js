@@ -4,7 +4,7 @@ import * as path from 'node:path'
 
 // import { mkdir, writeFile } from 'fs/promises'
 
-import { Loader } from '../src/loader.js'
+import { Loader } from '../src/loader.js/index.js'
 
 const PORT = 8000
 
