@@ -29,7 +29,7 @@ export class Fireproof {
 
       const handleHeader = (header, secondary) => {
         if (secondary) { // never a promise, we are scheduling a merge
-          opts.mergeHeader = secondary
+          opts.secondaryHeader = secondary
         }
         if (typeof header === 'object' && typeof header.then === 'function') {
           return header.then(config => {
