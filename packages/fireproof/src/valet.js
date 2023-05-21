@@ -225,6 +225,7 @@ export class Valet {
   async makeCidCarMap (carCid, cids) {
     console.log('makeCidCarMap', carCid, cids.size)
     const combinedReader = await this.getWriteableCarReader()
+    // TODO keep an in-memory map of cids to carCids and flush it out instead of reading the car each time
     const mapNode = await addCidsToCarIndex(
       combinedReader,
       this.valetRoot,
