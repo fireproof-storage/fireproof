@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from 'mocha'
+import { describe, it, beforeEach, afterEach } from 'mocha'
 import assert from 'node:assert'
 import { Loader } from '../src/loader.js'
 import { loadData } from '../src/import.js'
@@ -15,7 +15,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 describe('Create a dataset', () => {
   let db, loader
   beforeEach(async () => {
-    // rm -rf dbPath
+    await sleep(100)
     loader = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
@@ -48,9 +48,24 @@ describe('Create a dataset', () => {
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 18)
   })
-  it('works with rest storage', async () => {
-    const server = startServer()
+})
+
+describe('Rest dataset', () => {
+  let db, loader, server
+  beforeEach(async () => {
     await sleep(100)
+    loader = Loader.appropriate(TEST_DB_NAME)
+    resetTestDataDir()
+    db = Fireproof.storage(TEST_DB_NAME)
+    await loadData(db, './test/todos.json')
+    server = startServer()
+    await sleep(100)
+  })
+  afterEach(async () => {
+    server.close()
+    await sleep(100)
+  })
+  it('works with rest storage', async () => {
     console.log('file alldocs')
     const dbdocs = await db.allDocuments()
     assert.equal(dbdocs.rows.length, 18)
@@ -68,7 +83,6 @@ describe('Create a dataset', () => {
     await sleep(100)
   }).timeout(10000)
   it('creates new db with rest storage', async () => {
-    const server = startServer()
     await sleep(100)
     const newRestDb = await Fireproof.storage(TEST_DB_NAME, { loader: { type: 'rest', url: 'http://localhost:8000/fptest-new-db-rest' } })
     const response = await newRestDb.allDocuments()
@@ -91,11 +105,9 @@ describe('Create a dataset', () => {
     const response3 = await newRestDb.allDocuments()
     assert.equal(response3.rows.length, 102)
 
-    server.close()
     await sleep(100)
   }).timeout(10000)
   it('creates new db with file storage AND secondary rest storage', async () => {
-    const server = startServer()
     await sleep(100)
     const secondaryDb = await Fireproof.storage('fptest-secondary-rest', { secondary: { type: 'rest', url: 'http://localhost:8000/fptest-secondary-rest-remote' } })
 
@@ -129,7 +141,7 @@ describe('Create a dataset', () => {
     const response3 = await secondaryDb.allDocuments()
     assert.equal(response3.rows.length, 102)
 
-    server.close()
     await sleep(100)
   }).timeout(10000)
+  it('attach secondary rest storage to existing db')
 })
