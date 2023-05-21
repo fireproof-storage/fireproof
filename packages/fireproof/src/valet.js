@@ -38,13 +38,13 @@ export class Valet {
   alreadyEnqueued = new Set()
   keyMaterial = null
   keyId = 'null'
-  valetRoot = null
-  valetRootCid = null // set by hydrate
+  // valetRoot = null
+  // valetRootCid = null // set by hydrate
   valetRootCarCid = null // most recent diff
 
   valetCarCidMap = null
 
-  valetCidBlocks = new VMemoryBlockstore()
+  // valetCidBlocks = new VMemoryBlockstore()
   instanceId = Math.random().toString(36).slice(2)
 
   /**
@@ -57,6 +57,7 @@ export class Valet {
     this.name = name
     this.setKeyMaterial(config.key)
     this.loader = Loader.appropriate(name, this.keyId, config.loader)
+    this.secondaryHeader = config.secondaryHeader
     this.secondary = config.secondary ? Loader.appropriate(name, this.keyId, config.secondary) : null
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
@@ -114,14 +115,21 @@ export class Valet {
     // console.trace('keyId', this.name, this.keyId)
   }
 
-  async mergeHeader (secondaryHeader) {
-    if (!this.didHydrate) throw new Error('cannot merge header before hydrate???')
-    // load both cid maps (car) and merge them to a new car
-    const theCarMap = await this.getCidCarMap()
-    // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
-    // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
-    // for now return the local one
-  }
+  // async mergeHeader (secondaryHeader) {
+  //   if (!this.didHydrate) throw new Error('cannot merge header before hydrate???')
+  //   // load both cid maps (car) and merge them to a new car
+  //   const theCarMap = await this.getCidCarMap()
+  //   const theSecondaryMap = await this.mapForIPLDHashmapCarCid(secondaryHeader.car)
+
+  //   for (const [key, value] of theSecondaryMap.entries()) {
+  //     theCarMap.set(key, value)
+  //   }
+
+  //   const newValetCidCar = await this.persistCarMap(theCarMap)
+  //   // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
+  //   // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
+  //   // for now return the local one
+  // }
 
   /**
    * Group the blocks into a car and write it to the valet.
@@ -164,8 +172,8 @@ export class Valet {
   hydrateRootCarCid (cid) {
     this.didHydrate = true
     this.valetRootCarCid = cid
-    this.valetRoot = null
-    this.valetRootCid = null
+    // this.valetRoot = null
+    // this.valetRootCid = null
   }
 
   // called by getValetBlock
@@ -244,6 +252,10 @@ export class Valet {
       theCarMap.set(cid, carCid)
     }
     // todo can we debounce this? -- maybe put it into a queue so we can batch it
+    return await this.persistCarMap(theCarMap)
+  }
+
+  async persistCarMap (theCarMap) {
     const loader = await this.getEmptyLoader()
     const indexNode = await create(loader, {
       bitWidth: 4,

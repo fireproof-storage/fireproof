@@ -37,10 +37,10 @@ export class Database {
     this.clock = clock
     this.config = config
 
-    if (config.mergeHeader) {
-      console.log('mergeHeader', config.mergeHeader)
-      this.mergePromise = this.blocks.valet?.mergeHeader(config.mergeHeader)
-    }
+    // if (config.mergeHeader) {
+    //   console.log('mergeHeader', config.mergeHeader)
+    //   this.mergePromise = this.blocks.valet?.mergeHeader(config.mergeHeader)
+    // }
   }
 
   /**
