@@ -2,16 +2,15 @@ import { readFileSync } from 'fs'
 import { mkdir, writeFile } from 'fs/promises'
 import { join, dirname } from 'path'
 import { homedir } from 'os'
+import { Base } from './base.js'
 
 const defaultConfig = {
   dataDir: join(homedir(), '.fireproof')
 }
 
-export class Filesystem {
+export class Filesystem extends Base {
   constructor (name, keyId, config = {}) {
-    this.name = name
-    this.keyId = keyId
-    this.config = Object.assign({}, defaultConfig, config)
+    super(name, keyId, Object.assign({}, defaultConfig, config))
   }
 
   async writeCars (cars) {
