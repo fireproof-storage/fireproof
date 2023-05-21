@@ -8,8 +8,8 @@ const defaultConfig = {
 /* global localStorage */
 
 export class Browser extends Base {
-  constructor (name, keyId, config = {}) {
-    super(name, keyId, Object.assign({}, defaultConfig, config))
+  constructor (name, config = {}) {
+    super(name, Object.assign({}, defaultConfig, config))
     this.isBrowser = false
     try {
       this.isBrowser = window.localStorage && true

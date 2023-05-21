@@ -1,34 +1,26 @@
-import { CarReader } from '@ipld/car'
-import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
-import { parse } from 'multiformats/link'
 import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
-import * as dagcbor from '@ipld/dag-cbor'
 import cargoQueue from 'async/cargoQueue.js'
 import { Loader } from './loader.js'
 
 // @ts-ignore
 
 // @ts-ignore
-import { bf, simpleCompare as compare } from 'prolly-trees/utils'
+import { bf } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
 // import { makeGetBlock } from './prolly.js'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
 // @ts-ignore
-import * as codec from 'encrypted-block'
+// import * as codec from 'encrypted-block'
 
-import { create, load } from 'ipld-hashmap'
-
-import { rawSha1 as sha1sync } from './sha1.js'
 const chunker = bf(30)
 
-const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
+// const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
 
-const NO_ENCRYPT = typeof process !== 'undefined' && !!process.env?.NO_ENCRYPT
 // ? process.env.NO_ENCRYPT : import.meta && import.meta.env.VITE_NO_ENCRYPT
 
 export class Valet {
@@ -36,15 +28,14 @@ export class Valet {
   name = null
   uploadQueue = null
   alreadyEnqueued = new Set()
-  keyMaterial = null
-  keyId = 'null'
+  // keyMaterial = null
+  // keyId = 'null'
   // valetRoot = null
   // valetRootCid = null // set by hydrate
-  valetRootCarCid = null // most recent diff
+  // valetRootCarCid = null // most recent diff
 
-  valetCarCidMap = null
+  // valetCarCidMap = null
 
-  // valetCidBlocks = new VMemoryBlockstore()
   instanceId = Math.random().toString(36).slice(2)
 
   /**
@@ -55,10 +46,11 @@ export class Valet {
 
   constructor (name = 'default', config = {}) {
     this.name = name
-    this.setKeyMaterial(config.key)
-    this.loader = Loader.appropriate(name, this.keyId, config.loader)
-    this.secondaryHeader = config.secondaryHeader
-    this.secondary = config.secondary ? Loader.appropriate(name, this.keyId, config.secondary) : null
+    // this.setKeyMaterial(config.key)
+    const loaderConfig = Object.assign({}, { key: config.key }, config.loader)
+    this.loader = Loader.appropriate(name, loaderConfig)
+    // this.secondaryHeader = config.secondaryHeader
+    // this.secondary = config.secondary ? Loader.appropriate(name, config.secondary) : null
     this.uploadQueue = cargoQueue(async (tasks, callback) => {
       // console.log(
       //   'queue worker',
@@ -94,24 +86,25 @@ export class Valet {
   }
 
   async saveHeader (header) {
-    this.secondary?.saveHeader(header)
+    // this.secondary?.saveHeader(header)
     return await this.loader.saveHeader(header)
   }
 
   getKeyMaterial () {
-    return this.keyMaterial
+    return this.loader.keyMaterial
   }
 
   setKeyMaterial (km) {
-    if (km && !NO_ENCRYPT) {
-      const hex = Uint8Array.from(Buffer.from(km, 'hex'))
-      this.keyMaterial = km
-      const hash = sha1sync(hex)
-      this.keyId = Buffer.from(hash).toString('hex')
-    } else {
-      this.keyMaterial = null
-      this.keyId = 'null'
-    }
+    this.loader.setKeyMaterial(km)
+    // if (km && !NO_ENCRYPT) {
+    //   const hex = Uint8Array.from(Buffer.from(km, 'hex'))
+    //   this.keyMaterial = km
+    //   const hash = sha1sync(hex)
+    //   this.keyId = Buffer.from(hash).toString('hex')
+    // } else {
+    //   this.keyMaterial = null
+    //   this.keyId = 'null'
+    // }
     // console.trace('keyId', this.name, this.keyId)
   }
 
@@ -140,10 +133,10 @@ export class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      if (this.keyMaterial) {
+      if (this.loader.keyMaterial) {
         // console.log('encrypting car', innerBlockstore.label)
         // should we pass cids in instead of iterating frin innerBlockstore?
-        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial)
+        const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.loader.keyMaterial)
         await this.parkCar(newCar.cid.toString(), newCar.bytes, cids)
       } else {
         const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -176,138 +169,6 @@ export class Valet {
     // this.valetRootCid = null
   }
 
-  // called by getValetBlock
-  // should look up in the memory hash map
-  // the code below can be used on cold start
-  async getCarCIDForCID (cid) {
-    // console.log('getCarCIDForCID', cid, this.valetRootCarCid)
-    // make a car reader for this.valetRootCarCid
-    const cidMap = await this.getCidCarMap()
-    const carCid = cidMap.get(cid.toString())
-    if (carCid) {
-      return { result: carCid }
-    }
-    // throw new Error('not found')
-    return { result: null }
-  }
-
-  async getEmptyLoader () {
-    const theseWriteableBlocks = new VMemoryBlockstore()
-    // console.log('carMapReader', carMapReader)
-    const combinedReader = {
-      blocks: theseWriteableBlocks,
-      // root: carMapReader?.root,
-      put: async (cid, bytes) => {
-        // console.log('mapPut', cid, bytes.length)
-        return await theseWriteableBlocks.put(cid, bytes)
-      },
-      get: async cid => {
-        const got = await theseWriteableBlocks.get(cid)
-        return got.bytes
-      }
-    }
-    // console.log('combinedReader', carCid)
-    return combinedReader
-  }
-
-  async getWriteableCarReader (carCid) {
-    console.log('getWriteableCarReader', carCid)
-    const carMapReader = await this.getCarReader(carCid)
-
-    const theseWriteableBlocks = new VMemoryBlockstore()
-    // console.log('carMapReader', carMapReader)
-    const combinedReader = {
-      blocks: theseWriteableBlocks,
-      root: carMapReader?.root,
-      put: async (cid, bytes) => {
-        // console.log('mapPut', cid, bytes.length)
-        return await theseWriteableBlocks.put(cid, bytes)
-      },
-      get: async cid => {
-        // console.log('mapGet', cid)
-        try {
-          const got = await theseWriteableBlocks.get(cid)
-          return got.bytes
-        } catch (e) {
-          // console.log('get from car', cid, carMapReader)
-          if (!carMapReader) throw e
-          const bytes = await carMapReader.get(cid)
-          await theseWriteableBlocks.put(cid, bytes)
-          // console.log('mapGet', cid, bytes.length, bytes.constructor.name)
-          return bytes
-        }
-      }
-    }
-    // console.log('combinedReader', carCid)
-    return combinedReader
-  }
-
-  async updateCarCidMap (carCid, cids) {
-    // called by parkCar
-    // this adds the cids to the in-memory map
-    // and returns a new car file with the updated map
-    // this does not write the car file to disk
-    const theCarMap = await this.getCidCarMap() // this hydrates the map if it has not been hydrated
-    for (const cid of cids) {
-      theCarMap.set(cid, carCid)
-    }
-    // todo can we debounce this? -- maybe put it into a queue so we can batch it
-    return await this.persistCarMap(theCarMap)
-  }
-
-  async persistCarMap (theCarMap) {
-    const loader = await this.getEmptyLoader()
-    const indexNode = await create(loader, {
-      bitWidth: 4,
-      bucketSize: 2,
-      blockHasher: blockOpts.hasher,
-      blockCodec: blockOpts.codec
-    })
-
-    for (const [key, value] of theCarMap.entries()) {
-      await indexNode.set(key, value)
-    }
-
-    let newValetCidCar
-    if (this.keyMaterial) {
-      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, loader.blocks, this.keyMaterial)
-    } else {
-      newValetCidCar = await blocksToCarBlock(indexNode.cid, loader.blocks)
-    }
-    return newValetCidCar
-  }
-
-  async getCidCarMap () {
-    if (this.valetCarCidMap) return this.valetCarCidMap
-
-    // called by getCarCIDForCID
-    // this returns the in-memory map if it has been hydrated
-    // otherwise it hydrates the map based on the car file
-
-    if (this.valetRootCarCid) {
-      this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
-      return this.valetCarCidMap
-    } else {
-      // no car file, so make an empty map
-      this.valetCarCidMap = new Map()
-      return this.valetCarCidMap
-    }
-  }
-
-  async mapForIPLDHashmapCarCid (carCid) {
-    const carMapReader = await this.getWriteableCarReader(carCid)
-    const indexNode = await load(carMapReader, carMapReader.root.cid, {
-      blockHasher: blockOpts.hasher,
-      blockCodec: blockOpts.codec
-    })
-    const theCarMap = new Map()
-    for await (const [key, value] of indexNode.entries()) {
-      // console.log('getCidCarMap', key, value)
-      theCarMap.set(key, value)
-    }
-    return theCarMap
-  }
-
   /**
    *
    * @param {string} carCid
@@ -316,7 +177,7 @@ export class Valet {
   async parkCar (carCid, value, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    const newValetCidCar = await this.updateCarCidMap(carCid, cids)
+    const newValetCidCar = await this.loader.updateCarCidMap(carCid, cids)
 
     // console.log('newValetCidCar', this.name, Math.floor(newValetCidCar.bytes.length / 1024))
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
@@ -335,9 +196,9 @@ export class Valet {
     ]
 
     await this.loader.writeCars(carList)
-    this.secondary?.writeCars(carList)
+    // this.secondary?.writeCars(carList)
 
-    this.valetRootCarCid = newValetCidCar.cid // goes to clock
+    this.valetRootCarCid = newValetCidCar.cid // goes to clock (should be per loader)
 
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
 
@@ -359,99 +220,13 @@ export class Valet {
 
   remoteBlockFunction = null
 
-  async getCarBytes (carCid) {
-    const primaryRead = this.loader.readCar(carCid)
-    let secondaryRead = null
-    if (this.secondary) {
-      secondaryRead = this.secondary.readCar(carCid)
-    }
-
-    try {
-      const carBytes = await primaryRead
-      return carBytes
-    } catch {
-      if (secondaryRead) {
-        const secondaryCarBytes = await secondaryRead
-        if (secondaryCarBytes) {
-          // throw new Error('write lazy load')
-          // this.parkCar
-          this.loader.writeCars([
-            {
-              cid: carCid,
-              bytes: secondaryCarBytes,
-              replaces: null
-            }])
-          return secondaryCarBytes
-        }
-      }
-      throw new Error('Both loaders failed')
-    }
-  }
-
-  async getCarReader (carCid) {
-    carCid = carCid.toString()
-    const carBytes = await this.getCarBytes(carCid)
-
-    // const callID = Math.random().toString(36).substring(7)
-    console.log('innerGetCarReader', carCid, carBytes.constructor.name, carBytes.byteLength)
-    const reader = await CarReader.fromBytes(carBytes)
-    // console.log('got reader', callID, reader)
-    if (this.keyMaterial) {
-      const roots = await reader.getRoots()
-      const readerGetWithCodec = async cid => {
-        const got = await reader.get(cid)
-        // console.log('got.', cid.toString())
-        let useCodec = codec
-        if (cid.toString().indexOf('bafy') === 0) {
-          // todo cleanup types
-          useCodec = dagcbor
-        }
-        const decoded = await Block.decode({
-          ...got,
-          codec: useCodec,
-          hasher: sha256
-        })
-        // console.log('decoded', decoded.value)
-        return decoded
-      }
-      const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
-
-      // last block is the root ??? todo
-      const rootBlock = blocks[blocks.length - 1]
-      // console.log('got reader', callID, carCid)
-      return {
-        root: rootBlock,
-        get: async dataCID => {
-          // console.log('getCarReader dataCID', dataCID)
-          dataCID = dataCID.toString()
-          const block = blocks.find(b => b.cid.toString() === dataCID)
-          // console.log('getCarReader block', block)
-          if (block) {
-            return block.bytes
-          }
-        }
-      }
-    } else {
-      return {
-        root: reader.getRoots()[0],
-        get: async dataCID => {
-          const gotBlock = await reader.get(CID.parse(dataCID))
-          if (gotBlock) {
-            return gotBlock.bytes
-          }
-        }
-      }
-    }
-  }
-
-  // todo memoize this
   async getValetBlock (dataCID) {
     console.log('get valet block', dataCID)
-    const { result: carCid } = await this.getCarCIDForCID(dataCID)
+    const { result: carCid } = await this.loader.getCarCIDForCID(dataCID)
     if (!carCid) {
       throw new Error('Missing block: ' + dataCID)
     }
-    const reader = await this.getCarReader(carCid)
+    const reader = await this.loader.getCarReader(carCid)
     return await reader.get(dataCID)
   }
 }
@@ -515,7 +290,7 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
 // { root, get, key, cache, chunker, hasher }
 
 const memoizeDecryptedCarBlocks = new Map()
-const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
+export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   if (memoizeDecryptedCarBlocks.has(cid.toString())) {
     return memoizeDecryptedCarBlocks.get(cid.toString())
   } else {
@@ -540,35 +315,5 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
     })()
     memoizeDecryptedCarBlocks.set(cid.toString(), blocksPromise)
     return blocksPromise
-  }
-}
-
-export class VMemoryBlockstore {
-  /** @type {Map<string, Uint8Array>} */
-  blocks = new Map()
-  instanceId = Math.random().toString(36).slice(2)
-
-  async get (cid) {
-    const bytes = this.blocks.get(cid.toString())
-    // console.log('getvm', bytes.constructor.name, this.instanceId, cid, bytes && bytes.length)
-    if (bytes.length === 253) {
-      // console.log('getvm', bytes.())
-    }
-    if (!bytes) throw new Error('block not found ' + cid.toString())
-    return { cid, bytes }
-  }
-
-  /**
-   * @param {import('../src/link').AnyLink} cid
-   * @param {Uint8Array} bytes
-   */
-  async put (cid, bytes) {
-    this.blocks.set(cid.toString(), bytes)
-  }
-
-  * entries () {
-    for (const [str, bytes] of this.blocks) {
-      yield { cid: parse(str), bytes }
-    }
   }
 }
