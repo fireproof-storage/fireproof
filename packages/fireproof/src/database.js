@@ -77,9 +77,9 @@ export class Database {
     this.name = name
     this.clock = clock
     this.blocks.valet?.setKeyMaterial(key)
-    this.blocks.valet?.setRootCarCid(car) // maybe
+    this.blocks.valet?.hydrateRootCarCid(car) // maybe
     this.indexBlocks.valet?.setKeyMaterial(key)
-    this.indexBlocks.valet?.setRootCarCid(indexCar) // maybe
+    this.indexBlocks.valet?.hydrateRootCarCid(indexCar) // maybe
     // this.indexBlocks = null
   }
 

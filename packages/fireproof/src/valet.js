@@ -150,13 +150,14 @@ export class Valet {
     // }
   }
 
-  setRootCarCid (cid) {
+  hydrateRootCarCid (cid) {
     this.valetRootCarCid = cid
     this.valetRoot = null
     this.valetRootCid = null
   }
 
-  // todo memoize this
+  // should look up in the memory hash map
+  // the code below can be used on cold start
   async getCarCIDForCID (cid) {
     // console.log('getCarCIDForCID', cid, this.valetRootCarCid)
     // make a car reader for this.valetRootCarCid
@@ -222,6 +223,7 @@ export class Valet {
     return combinedReader
   }
 
+  // should add to in-memory map and flush to car
   async makeCidCarMap (carCid, cids) {
     console.log('makeCidCarMap', carCid, cids.size)
     const combinedReader = await this.getWriteableCarReader()
@@ -501,6 +503,7 @@ const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   }
 }
 
+// should convert in-memory map to ipld-hashmap
 const addCidsToCarIndex = async (blockstore, valetRoot, valetRootCid, bulkOperations) => {
   let indexNode
   // const callID = Math.random().toString(32).substring(2, 8)
