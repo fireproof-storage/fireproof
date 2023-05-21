@@ -15,12 +15,12 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 describe('Create a dataset', () => {
   let db, loader
   beforeEach(async () => {
-    await sleep(100)
+    await sleep(10)
     loader = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     await loadData(db, './test/todos.json')
-    await sleep(100)
+    await sleep(10)
   })
   it('gets all docs', async () => {
     const response = await db.allDocuments()
@@ -42,7 +42,7 @@ describe('Create a dataset', () => {
 
   })
   it('works with fresh reader storage', async () => {
-    await sleep(100)
+    await sleep(10)
     const fileDb = await Fireproof.storage(TEST_DB_NAME)
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 18)
@@ -52,7 +52,7 @@ describe('Create a dataset', () => {
 describe('Rest dataset', () => {
   let db, loader, server
   beforeEach(async () => {
-    await sleep(100)
+    await sleep(10)
     loader = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
@@ -62,7 +62,7 @@ describe('Rest dataset', () => {
   })
   afterEach(async () => {
     server.close()
-    await sleep(100)
+    await sleep(10)
   })
   it('works with rest storage', async () => {
     // console.log('file alldocs')
@@ -202,11 +202,11 @@ describe('Rest dataset', () => {
 
     const filesA = await dbFiles(loader, TEST_DB_NAME)
     assert.equal(filesA.length, 37)
-
+    await sleep(50)
     assert.equal(emptyDb.name, 'fptest-empty-db-todos')
     const response = await emptyDb.allDocuments()
     assert.equal(response.rows.length, 18)
-    await sleep(100)
+    await sleep(50)
 
     const files2 = await dbFiles(loader, 'fptest-empty-db-todos')
     assert.equal(files2.length, 3)
@@ -214,7 +214,7 @@ describe('Rest dataset', () => {
 
     const ok = await emptyDb.put({ _id: 'test', foo: 'bar' })
     assert.equal(ok.id, 'test')
-    await sleep(100)
+    await sleep(50)
 
     const filesB = await dbFiles(loader, TEST_DB_NAME)
     assert.equal(filesB.length, 37)
