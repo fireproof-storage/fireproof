@@ -44,13 +44,28 @@ export class Base {
     }
   }
 
-  writeCars () {
-    if (this.config.readonly) {
-      throw new Error('Read-only mode')
-    }
+  async saveCar (carCid, value, cids) {
+    const newValetCidCar = await this.updateCarCidMap(carCid, cids)
+    // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
+    const carList = [
+      {
+        cid: carCid,
+        bytes: value,
+        replaces: null
+      },
+      {
+        cid: newValetCidCar.cid,
+        bytes: newValetCidCar.bytes,
+        replaces: null
+        // replaces: this.valetRootCarCid // todo
+      }
+    ]
+
+    await this.writeCars(carList)
+    return newValetCidCar
   }
 
-  saveHeader () {
+  saveHeader () { // todo this will be called as super and it's job is to add the key, carCid to the header
     if (this.config.readonly) {
       throw new Error('Read-only mode')
     }
@@ -171,6 +186,12 @@ export class Base {
           }
         }
       }
+    }
+  }
+
+  writeCars (cars) {
+    if (this.config.readonly) {
+      throw new Error('Read-only mode')
     }
   }
 

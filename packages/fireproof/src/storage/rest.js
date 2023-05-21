@@ -12,7 +12,7 @@ export class Rest extends Base {
   }
 
   async writeCars (cars) {
-    super.writeCars()
+    super.writeCars(cars)
     for (const { cid, bytes } of cars) {
       const carURL = `${this.config.url}/${cid.toString()}.car`
       const response = await fetch(carURL, {
