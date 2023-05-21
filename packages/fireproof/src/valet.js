@@ -114,8 +114,10 @@ export class Valet {
     // console.trace('keyId', this.name, this.keyId)
   }
 
-  async mergeHeader (header) {
+  async mergeHeader (secondaryHeader) {
+    if (!this.didHydrate) throw new Error('cannot merge header before hydrate???')
     // load both cid maps (car) and merge them to a new car
+    const theCarMap = await this.getCidCarMap()
     // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
     // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
     // for now return the local one
@@ -160,6 +162,7 @@ export class Valet {
   }
 
   hydrateRootCarCid (cid) {
+    this.didHydrate = true
     this.valetRootCarCid = cid
     this.valetRoot = null
     this.valetRootCid = null
@@ -270,24 +273,27 @@ export class Valet {
     // otherwise it hydrates the map based on the car file
 
     if (this.valetRootCarCid) {
-      // load the car
-      const carMapReader = await this.getWriteableCarReader(this.valetRootCarCid)
-      const indexNode = await load(carMapReader, carMapReader.root.cid, {
-        blockHasher: blockOpts.hasher,
-        blockCodec: blockOpts.codec
-      })
-      const theCarMap = new Map()
-      for await (const [key, value] of indexNode.entries()) {
-        // console.log('getCidCarMap', key, value)
-        theCarMap.set(key, value)
-      }
-      this.valetCarCidMap = theCarMap
-      return theCarMap
+      this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
+      return this.valetCarCidMap
     } else {
       // no car file, so make an empty map
       this.valetCarCidMap = new Map()
       return this.valetCarCidMap
     }
+  }
+
+  async mapForIPLDHashmapCarCid (carCid) {
+    const carMapReader = await this.getWriteableCarReader(carCid)
+    const indexNode = await load(carMapReader, carMapReader.root.cid, {
+      blockHasher: blockOpts.hasher,
+      blockCodec: blockOpts.codec
+    })
+    const theCarMap = new Map()
+    for await (const [key, value] of indexNode.entries()) {
+      // console.log('getCidCarMap', key, value)
+      theCarMap.set(key, value)
+    }
+    return theCarMap
   }
 
   /**
