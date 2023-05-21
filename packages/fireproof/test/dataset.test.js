@@ -58,7 +58,7 @@ describe('Rest dataset', () => {
     db = Fireproof.storage(TEST_DB_NAME)
     await loadData(db, './test/todos.json')
     server = startServer()
-    await sleep(100)
+    await sleep(150)
   })
   afterEach(async () => {
     server.close()
@@ -174,13 +174,126 @@ describe('Rest dataset', () => {
     assert(remoteFiles2.length > 2)
     assert.equal(remoteFiles2.length, 3)
   })
-  it('attach existing secondary rest storage to empty db', async () => {
-    const emptyDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+  it('attach existing secondary rest storage to empty db in read-only mode', async () => {
+    const emptyDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { readonly: true, type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    const files = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files.length, 0)
+
+    const filesA = await dbFiles(loader, TEST_DB_NAME)
+    assert.equal(filesA.length, 37)
+
     assert.equal(emptyDb.name, 'fptest-empty-db-todos')
     const response = await emptyDb.allDocuments()
     assert.equal(response.rows.length, 18)
-  })
-  it('attach existing secondary rest storage to existing db', () => {
+    await sleep(100)
 
+    const files2 = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files2.length, 3)
+    // now test wht happens when we write to the secondary?
+
+    const ok = await emptyDb.put({ _id: 'test', foo: 'bar' })
+    assert.equal(ok.id, 'test')
+    await sleep(100)
+
+    const filesB = await dbFiles(loader, TEST_DB_NAME)
+    assert.equal(filesB.length, 37)
+
+    const files3 = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files3.length, 6)
+
+    /// now test what happens when we open a new db on the secondary's files
+    const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos')
+
+    const response2 = await noSecondaryCloneDb.allDocuments()
+    assert.equal(response2.rows.length, 19)
+
+    const ok3 = await noSecondaryCloneDb.put({ _id: 'test3', foo: 'bar' })
+    assert.equal(ok3.id, 'test3')
+
+    await sleep(100)
+
+    const files4 = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files4.length, 8)
+
+    // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
+
+    // first make changes in TEST_DB_NAME
+    const ok4 = await db.put({ _id: 'test4', foo: 'bar' })
+    assert.equal(ok4.id, 'test4')
+
+    await sleep(100)
+
+    const files5 = await dbFiles(loader, TEST_DB_NAME)
+    assert.equal(files5.length, 39)
+
+    const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+
+    const response3 = await ezistingDb.allDocuments()
+    assert.equal(response3.rows.length, 20)
+  })
+  it('attach existing secondary rest storage to empty db', async () => {
+    const emptyDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    const files = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files.length, 0)
+
+    assert.equal(emptyDb.name, 'fptest-empty-db-todos')
+    const response = await emptyDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+    await sleep(100)
+
+    const files2 = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files2.length, 3)
+    // now test wht happens when we write to the secondary?
+
+    const ok = await emptyDb.put({ _id: 'test', foo: 'bar' })
+    assert.equal(ok.id, 'test')
+    await sleep(100)
+
+    const files3 = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files3.length, 6)
+
+    /// now test what happens when we open a new db on the secondary's files
+    const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos')
+
+    const response2 = await noSecondaryCloneDb.allDocuments()
+    assert.equal(response2.rows.length, 19)
+
+    const ok3 = await noSecondaryCloneDb.put({ _id: 'test3', foo: 'bar' })
+    assert.equal(ok3.id, 'test3')
+
+    await sleep(100)
+
+    const files4 = await dbFiles(loader, 'fptest-empty-db-todos')
+    assert.equal(files4.length, 8)
+
+    // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
+
+    // first make changes in TEST_DB_NAME
+    const ok4 = await db.put({ _id: 'test4', foo: 'bar' })
+    assert.equal(ok4.id, 'test4')
+
+    await sleep(100)
+
+    const files5 = await dbFiles(loader, TEST_DB_NAME)
+    assert.equal(files5.length, 41)
+
+    const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+
+    const four = await ezistingDb.get('test4')
+    assert.equal(four.foo, 'bar')
+
+    const response3 = await ezistingDb.allDocuments()
+    console.log(response3.rows.map(r => r.key))
+    assert.equal(response3.rows.length, 20)
+  })
+  it('attach existing secondary rest storage to existing db with no common ancestor', async () => {
+    const newExistingDb = await Fireproof.storage('fptest-new-existing-db-todos')
+    const ok = await newExistingDb.put({ _id: 'test', foo: 'bar' })
+    assert.equal(ok.id, 'test')
+    const mergedExistingDb = await Fireproof.storage('fptest-new-existing-db-todos', { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
+    const response = await mergedExistingDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+    const got = await mergedExistingDb.get('test')
+    assert.equal(got.foo, 'bar')
   })
 })

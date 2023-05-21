@@ -316,13 +316,38 @@ export class Valet {
   //   }
   // }
 
+  async getCarBytes (carCid) {
+    const primaryRead = this.loader.readCar(carCid)
+    let secondaryRead = null
+    if (this.secondary) {
+      secondaryRead = this.secondary.readCar(carCid)
+    }
+
+    try {
+      const carBytes = await primaryRead
+      return carBytes
+    } catch {
+      if (secondaryRead) {
+        const secondaryCarBytes = await secondaryRead
+        if (secondaryCarBytes) {
+          // throw new Error('write lazy load')
+          // this.parkCar
+          this.loader.writeCars([
+            {
+              cid: carCid,
+              bytes: secondaryCarBytes,
+              replaces: null
+            }])
+          return secondaryCarBytes
+        }
+      }
+      throw new Error('Both loaders failed')
+    }
+  }
+
   async getCarReader (carCid) {
     carCid = carCid.toString()
-    const readBytes = [this.loader.readCar(carCid)]
-    if (this.secondary) {
-      readBytes.push(this.secondary.readCar(carCid))
-    }
-    const carBytes = await Promise.any(readBytes)
+    const carBytes = await this.getCarBytes(carCid)
 
     // const callID = Math.random().toString(36).substring(7)
     console.log('innerGetCarReader', carCid, carBytes.constructor.name, carBytes.byteLength)
