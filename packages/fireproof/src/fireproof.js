@@ -27,10 +27,14 @@ export class Fireproof {
       const existingLoader = Loader.appropriate(name, null, opts.loader)
       const secondaryLoader = opts.secondary ? Loader.appropriate(name, null, opts.secondary) : null
 
-      const handleHeader = (header) => {
+      const handleHeader = (header, secondary) => {
+        if (secondary) { // never a promise, we are scheduling a merge
+          opts.mergeHeader = secondary
+        }
         if (typeof header === 'object' && typeof header.then === 'function') {
           return header.then(config => {
             if (config) {
+              config.name = name
               return Fireproof.fromConfig(name, config, opts)
             } else {
               return Fireproof.withKey(name, opts)
@@ -52,11 +56,33 @@ export class Fireproof {
                 if (!secondaryConfig) {
                   return handleHeader(existingHeader)
                 } else {
-                  throw new Error('Not implemented: merge both headers')
+                  // console.log('merge both headers B', secondaryConfig, existingHeader)
+
+                  // load both cid maps (car) and merge them to a new car
+                  // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
+                  // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
+                  // for now return the local one
+                  // mergeHeaders(existingHeader, secondaryConfig)
+                  return handleHeader(existingHeader, secondaryConfig)
+                  // {
+                  //   clock: [ 'bafyreicdyblqzce7ptfmuvvmn4ixmzzuwtcw4fuattdlnkx7qy66zzujym' ],
+                  //   name: 'dataset-fptest',
+                  //   key: '1581d5feb6998d0f22da9500a1ba29bfdae09ab0c0027a71e4145236498640fa',
+                  //   car: 'bafkreif4umv6z5efeqaw6g42ga3u65hueswharou3uxr46hrw3lfgwuaqa',
+                  //   indexes: []
+                  // } {
+                  //   clock: [ 'bafyreigv2elguift3rukcaingzipkcsruy5mtgxvusixtfphwo35cbb574' ],
+                  //   name: 'fptest-empty-db-todos',
+                  //   key: '1581d5feb6998d0f22da9500a1ba29bfdae09ab0c0027a71e4145236498640fa',
+                  //   car: 'bafkreidtwa4qp24mgmqpltwv5ek2m3l3d2vnt33oqdoluwwtm54a76rhju',
+                  //   indexes: []
+                  // }
                 }
               })
             }
-            throw new Error('Not implemented: merge both headers')
+            // console.log('merge both headers A', secondaryConfig, existingHeader)
+            return handleHeader(existingHeader, secondaryHeader)
+            // throw new Error('Not implemented: merge both headers A')
           } else {
             return handleHeader(existingHeader)
           }
@@ -79,6 +105,7 @@ export class Fireproof {
 
   static fromConfig (name, existingConfig, opts = {}) {
     opts.key = existingConfig.key
+    existingConfig.name = name
     const fp = new Database(name, [], opts)
     return Fireproof.fromJSON(existingConfig, fp)
   }

@@ -13,6 +13,7 @@ export class Rest {
   }
 
   async writeCars (cars) {
+    if (this.config.readonly) return
     for (const { cid, bytes } of cars) {
       const carURL = `${this.config.url}/${cid.toString()}.car`
 
@@ -45,6 +46,7 @@ export class Rest {
   }
 
   async saveHeader (stringValue) {
+    if (this.config.readonly) return
     const response = await fetch(this.headerURL, {
       method: 'PUT',
       body: stringValue, // JSON.stringify(stringValue),
