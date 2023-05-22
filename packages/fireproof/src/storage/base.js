@@ -33,9 +33,9 @@ export class Base {
     this.config = config
     this.header = header
     // allow to pass a null key and get unencrypted storage
-    const nullKey = header.key === null || config.key === null
-    this.setKeyMaterial(header.key || config.key || (nullKey ? null : randomBytes(32).toString('hex')))
-    this.setCarCidMapCarCid(header.car)
+    const nullKey = (header && header.key === null) || (config && config.key === null)
+    this.setKeyMaterial(header?.key || config?.key || (nullKey ? null : randomBytes(32).toString('hex')))
+    this.setCarCidMapCarCid(header?.car)
   }
 
   setCarCidMapCarCid (carCid) {
@@ -105,13 +105,13 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
-    console.log('getLoaderBlock', dataCID)
+    // console.log('getLoaderBlock', dataCID)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
     if (!carCid) {
-      throw new Error('Missing car: ' + dataCID)
+      throw new Error('Missing car for: ' + dataCID)
     }
     const reader = await this.getCarReader(carCid)
-    return await reader.get(dataCID)
+    return { block: await reader.get(dataCID), reader, carCid }
   }
 
   /** Private - internal **/
@@ -129,6 +129,7 @@ export class Base {
   }
 
   async mapForIPLDHashmapCarCid (carCid) {
+    console.log('mapForIPLDHashmapCarCid', carCid)
     const carMapReader = await this.getWriteableCarReader(carCid)
     const indexNode = await load(carMapReader, carMapReader.root.cid, {
       blockHasher: blockOpts.hasher,
@@ -136,6 +137,7 @@ export class Base {
     })
     const theCarMap = new Map()
     for await (const [key, value] of indexNode.entries()) {
+      // console.log('mapForIPLDHashmapCarCid', key, value)
       theCarMap.set(key, value)
     }
     return theCarMap
@@ -187,21 +189,41 @@ export class Base {
       }
       const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
       const rootBlock = blocks[blocks.length - 1]
+      const blocksIterable = function * () { for (const block of blocks) yield block }
+
+      const gat = async dataCID => {
+        dataCID = dataCID.toString()
+        return blocks.find(b => b.cid.toString() === dataCID)
+      }
+
       return {
+        // blocks,
+
+        entries: blocksIterable,
         root: rootBlock,
+        gat,
         get: async dataCID => {
-          dataCID = dataCID.toString()
-          const block = blocks.find(b => b.cid.toString() === dataCID)
+          const block = await gat(dataCID)
           if (block) {
             return block.bytes
           }
         }
       }
     } else {
+      // const blocks = []
+      // for await (const block of reader.blocks()) {
+      //   blocks.push(block)
+      // }
+      const gat = async dataCID => {
+        return await reader.get(CID.parse(dataCID))
+      }
       return {
+        // blocks,
+        entries: reader.blocks.bind(reader),
         root: reader.getRoots()[0],
+        gat,
         get: async dataCID => {
-          const gotBlock = await reader.get(CID.parse(dataCID))
+          const gotBlock = await gat(dataCID)
           if (gotBlock) {
             return gotBlock.bytes
           }

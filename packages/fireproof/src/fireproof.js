@@ -24,11 +24,14 @@ export class Fireproof {
       return new Database(null, [], opts)
     } else {
       opts.name = name
-      const existingLoader = Loader.appropriate(name, opts.storage)
-      const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary) : null
+      const existingLoader = Loader.appropriate(name, opts.storage, { key: null })
+      const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
+
+      // console.log('storage', name, opts, existingLoader, secondaryLoader)
 
       const handleHeader = (header, secondary) => {
-        if (typeof header === 'object' && typeof header.then === 'function') {
+        // console.log('handleHeader', header, secondary)
+        if (header && typeof header === 'object' && typeof header.then === 'function') {
           return header.then(config => {
             if (config) {
               config.name = name
@@ -54,9 +57,12 @@ export class Fireproof {
       const existingHeader = existingLoader.getHeader()
       if (existingHeader) {
         if (!secondaryLoader) {
+          // console.log('here NO')
           return handleHeader(existingHeader)
         } else {
+          // console.log('here YES')
           const secondaryHeader = secondaryLoader.getHeader()
+          // console.log('merge both headers X', secondaryHeader, existingHeader)
           if (secondaryHeader) {
             if (typeof secondaryHeader === 'object' && typeof secondaryHeader.then === 'function') {
               return secondaryHeader.then(secondaryConfig => {
@@ -64,30 +70,11 @@ export class Fireproof {
                   return handleHeader(existingHeader)
                 } else {
                   // console.log('merge both headers B', secondaryConfig, existingHeader)
-
-                  // load both cid maps (car) and merge them to a new car
-                  // new clock is the unique set of clocks from both (plus whatever new might have happed during the merge)
-                  // this will be scheduled to run in the background, but it will stop writes during the merge (after the remote car is downloaded)
-                  // for now return the local one
-                  // mergeHeaders(existingHeader, secondaryConfig)
                   return handleHeader(existingHeader, secondaryConfig)
-                  // {
-                  //   clock: [ 'bafyreicdyblqzce7ptfmuvvmn4ixmzzuwtcw4fuattdlnkx7qy66zzujym' ],
-                  //   name: 'dataset-fptest',
-                  //   key: '1581d5feb6998d0f22da9500a1ba29bfdae09ab0c0027a71e4145236498640fa',
-                  //   car: 'bafkreif4umv6z5efeqaw6g42ga3u65hueswharou3uxr46hrw3lfgwuaqa',
-                  //   indexes: []
-                  // } {
-                  //   clock: [ 'bafyreigv2elguift3rukcaingzipkcsruy5mtgxvusixtfphwo35cbb574' ],
-                  //   name: 'fptest-empty-db-todos',
-                  //   key: '1581d5feb6998d0f22da9500a1ba29bfdae09ab0c0027a71e4145236498640fa',
-                  //   car: 'bafkreidtwa4qp24mgmqpltwv5ek2m3l3d2vnt33oqdoluwwtm54a76rhju',
-                  //   indexes: []
-                  // }
                 }
               })
             }
-            // console.log('merge both headers A', secondaryConfig, existingHeader)
+            // console.log('merge both headers A', secondaryHeader, existingHeader)
             return handleHeader(existingHeader, secondaryHeader)
             // throw new Error('Not implemented: merge both headers A')
           } else {
@@ -96,7 +83,19 @@ export class Fireproof {
         }
       } else {
         if (secondaryLoader) {
-          return handleHeader(secondaryLoader.getHeader())
+          // console.log('here YES2')
+          const secondaryHeader = secondaryLoader.getHeader()
+          if (typeof secondaryHeader === 'object' && typeof secondaryHeader.then === 'function') {
+            return secondaryHeader.then(secondaryConfig => {
+              if (!secondaryConfig) {
+                return new Database(name, [], opts)
+              } else {
+                // console.log('merge both headers C', secondaryConfig, existingHeader)
+                return handleHeader(null, secondaryConfig)
+              }
+            })
+          }
+          return handleHeader(null, secondaryHeader)
         } else {
           // return Fireproof.withKey(name, opts)
           return new Database(name, [], opts)
@@ -112,6 +111,7 @@ export class Fireproof {
   // }
 
   static fromConfig (name, primary, secondary, opts = {}) {
+    console.log('fromConfig', name, primary, secondary, opts)
     // opts.key = existingConfig.key
     // existingConfig.name = name
 

@@ -114,18 +114,30 @@ export class Valet {
   remoteBlockFunction = null
 
   async getValetBlock (dataCID) {
-    console.log('get valet block', dataCID)
+    // console.log('getValetBlock primary', dataCID)
     try {
-      return await this.storage.getLoaderBlock(dataCID)
+      const { block } = await this.storage.getLoaderBlock(dataCID)
+      return block
     } catch (e) {
-      console.log('get valet block error', e)
+      console.log('getValetBlock error', e)
 
       if (this.secondary) {
-        console.log('get valet block secondary', dataCID)
-
-        const got = this.secondary.getLoaderBlock(dataCID)
-        // todo put got in storage
-        return got
+        // console.log('getValetBlock secondary', dataCID)
+        try {
+          const { block, reader } = await this.secondary.getLoaderBlock(dataCID)
+          const cids = new Set()
+          for await (const { cid } of reader.entries()) {
+            // console.log(cid, bytes)
+            cids.add(cid.toString())
+          }
+          reader.get = reader.gat
+          // console.log('replicating', reader.root)
+          reader.lastCid = reader.root.cid
+          await this.parkCar(this.storage, reader, [...cids])
+          return block
+        } catch (e) {
+          console.log('getValetBlock secondary error', e)
+        }
       }
     }
   }
@@ -164,6 +176,7 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   const encryptionKey = Buffer.from(keyMaterial, 'hex')
   const encryptedBlocks = []
   const theCids = []
+  // console.trace('blocksToEncryptedCarBlock', blocks)
   for (const { cid } of blocks.entries()) {
     theCids.push(cid.toString())
   }
