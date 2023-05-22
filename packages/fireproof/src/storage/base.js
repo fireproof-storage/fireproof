@@ -79,8 +79,13 @@ export class Base {
     return newValetCidCar
   }
 
-  async saveHeader () {
-
+  async saveHeader (header) {
+    // for each branch, save the header
+    console.log('saveHeader', this.config.branches)
+    //  for (const branch of this.branches) {
+    //    await this.saveBranchHeader(branch)
+    //  }
+    this.writeHeader(header)
   }
 
   prepareHeader (header, json = true) {
