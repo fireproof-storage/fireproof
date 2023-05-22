@@ -34,8 +34,11 @@ export class Rest extends Base {
 
   async getHeader () {
     const response = await fetch(this.headerURL)
+    // console.log('rest getHeader', response.constructor.name)
     if (!response.ok) return null
-    return await response.json()
+    const got = await response.json()
+    // console.log('rest getHeader', got)
+    return got
   }
 
   async saveHeader (header) {
