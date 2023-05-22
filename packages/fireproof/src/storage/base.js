@@ -1,3 +1,5 @@
+import randomBytes from 'randombytes'
+// import { randomBytes } from 'crypto'
 import { create, load } from 'ipld-hashmap'
 import { parse } from 'multiformats/link'
 import { CarReader } from '@ipld/car'
@@ -26,13 +28,24 @@ export class Base {
   keyMaterial = null
   keyId = 'null'
 
-  constructor (name, config = {}) {
+  constructor (name, config = {}, header = {}) {
     this.name = name
     this.config = config
-    this.setKeyMaterial(config.key)
+    this.header = header
+    // allow to pass a null key and get unencrypted storage
+    const nullKey = header.key === null || config.key === null
+    this.setKeyMaterial(header.key || config.key || (nullKey ? null : randomBytes(32).toString('hex')))
+    this.setCarCidMapCarCid(header.car)
+  }
+
+  setCarCidMapCarCid (carCid) {
+    if (!carCid) return
+    this.valetRootCarCid = parse(carCid)
+    this.valetCarCidMap = null
   }
 
   setKeyMaterial (km) {
+    // console.log('setKeyMaterial', km)
     if (km && !NO_ENCRYPT) {
       const hex = Uint8Array.from(Buffer.from(km, 'hex'))
       this.keyMaterial = km
@@ -94,9 +107,10 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
+    console.log('getLoaderBlock', dataCID)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
     if (!carCid) {
-      throw new Error('Missing block: ' + dataCID)
+      throw new Error('Missing car: ' + dataCID)
     }
     const reader = await this.getCarReader(carCid)
     return await reader.get(dataCID)
@@ -105,6 +119,7 @@ export class Base {
   /** Private - internal **/
 
   async getCidCarMap () {
+    // console.log('getCidCarMap', this.constructor.name, this.name, this.valetRootCarCid, this.valetCarCidMap)
     if (this.valetCarCidMap) return this.valetCarCidMap
     if (this.valetRootCarCid) {
       this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
@@ -129,7 +144,7 @@ export class Base {
   }
 
   async getWriteableCarReader (carCid) {
-    console.log('getWriteableCarReader', carCid)
+    // console.log('getWriteableCarReader', carCid)
     const carMapReader = await this.getCarReader(carCid)
     const theseWriteableBlocks = new VMemoryBlockstore()
     const combinedReader = {
@@ -163,7 +178,7 @@ export class Base {
         const got = await reader.get(cid)
         let useCodec = codec
         if (cid.toString().indexOf('bafy') === 0) {
-          useCodec = dagcbor
+          useCodec = dagcbor // todo this is a dirty check
         }
         const decoded = await Block.decode({
           ...got,

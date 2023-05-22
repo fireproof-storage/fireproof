@@ -195,6 +195,8 @@ describe('Fireproof', () => {
     assert.equal(bvalue.age, 3)
     assert.equal(bvalue._id, dogKey)
 
+    assert.equal(snapshot.clockToJSON().length, 1)
+
     const snapdoc = await snapshot.get(dogKey)
     // console.log('snapdoc', snapdoc)
     // assert(snapdoc.id, 'should have id')

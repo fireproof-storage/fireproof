@@ -9,8 +9,8 @@ const defaultConfig = {
 }
 
 export class Filesystem extends Base {
-  constructor (name, config = {}) {
-    super(name, Object.assign({}, defaultConfig, config))
+  constructor (name, config = {}, header = {}) {
+    super(name, Object.assign({}, defaultConfig, config), header)
   }
 
   async writeCars (cars) {

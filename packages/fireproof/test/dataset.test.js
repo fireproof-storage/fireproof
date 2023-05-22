@@ -204,6 +204,8 @@ describe('Rest dataset', () => {
     assert.equal(filesA.length, 37)
     await sleep(50)
     assert.equal(emptyDb.name, 'fptest-empty-db-todos')
+
+    console.log('HERE HERE')
     const response = await emptyDb.allDocuments()
     assert.equal(response.rows.length, 18)
     await sleep(50)

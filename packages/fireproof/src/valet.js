@@ -28,12 +28,8 @@ export class Valet {
 
   constructor (name = 'default', config = {}) {
     this.name = name
-    // this.setKeyMaterial(config.key)
-    const storageConfig = Object.assign({}, { key: config.key }, config.storage)
-    this.storage = Loader.appropriate(name, storageConfig)
-    // this.secondaryHeader = config.secondaryHeader
-    const secondaryConfig = Object.assign({}, { key: config.key }, config.secondary)
-    this.secondary = config.secondary ? Loader.appropriate(name, secondaryConfig) : null
+    this.storage = Loader.appropriate(name, config.storage, config.storageHeader)
+    this.secondary = config.secondary ? Loader.appropriate(name, config.secondary, config.secondaryHeader) : null
   }
 
   async saveHeader (header) {
@@ -46,9 +42,10 @@ export class Valet {
   //   return this.storage.keyMaterial
   // }
 
-  setKeyMaterial (km) {
-    this.storage.setKeyMaterial(km)
-  }
+  // setKeyMaterial (km) {
+  //   this.storage.setKeyMaterial(km)
+  //   this.secondary?.setKeyMaterial(km)
+  // }
 
   /**
    * Group the blocks into a car and write it to the valet.
@@ -61,7 +58,6 @@ export class Valet {
     if (innerBlockstore.lastCid) {
       await this.parkCar(this.storage, innerBlockstore, cids)
       if (this.secondary) await this.parkCar(this.secondary, innerBlockstore, cids)
-      // this.valetRootCarCid = newValetCidCar.cid
     } else {
       throw new Error('missing lastCid for car header')
     }
@@ -118,8 +114,20 @@ export class Valet {
   remoteBlockFunction = null
 
   async getValetBlock (dataCID) {
-    // console.log('get valet block', dataCID)
-    return this.storage.getLoaderBlock(dataCID)
+    console.log('get valet block', dataCID)
+    try {
+      return await this.storage.getLoaderBlock(dataCID)
+    } catch (e) {
+      console.log('get valet block error', e)
+
+      if (this.secondary) {
+        console.log('get valet block secondary', dataCID)
+
+        const got = this.secondary.getLoaderBlock(dataCID)
+        // todo put got in storage
+        return got
+      }
+    }
   }
 }
 
