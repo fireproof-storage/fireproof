@@ -28,13 +28,14 @@ export class Valet {
 
   constructor (name = 'default', config = {}) {
     this.name = name
+    // console.log('new Valet', name, config.storage)
     this.storage = Loader.appropriate(name, config.storage, config.storageHeader)
     this.secondary = config.secondary ? Loader.appropriate(name, config.secondary, config.secondaryHeader) : null
   }
 
   async saveHeader (header) {
     // each storage needs to add its own carCidMapCarCid to the header
-    this.secondary?.saveHeader(header)
+    if (this.secondary) { this.secondary.saveHeader(header) } // todo: await?
     return await this.storage.saveHeader(header)
   }
 
@@ -81,7 +82,7 @@ export class Valet {
   hydrateRootCarCid (cid) {
     this.didHydrate = true
     // this.valetRootCarCid = cid
-    console.log('hydrateRootCarCid', cid)
+    // console.log('hydrateRootCarCid', cid)
     this.storage.valetRootCarCid = cid
     this.storage.valetCarCidMap = null
     // this.valetRoot = null
@@ -119,7 +120,7 @@ export class Valet {
       const { block } = await this.storage.getLoaderBlock(dataCID)
       return block
     } catch (e) {
-      console.log('getValetBlock error', e)
+      // console.log('getValetBlock error', e)
 
       if (this.secondary) {
         // console.log('getValetBlock secondary', dataCID)
@@ -130,13 +131,13 @@ export class Valet {
             // console.log(cid, bytes)
             cids.add(cid.toString())
           }
-          reader.get = reader.gat
+          reader.get = reader.gat // some consumers prefer get
           // console.log('replicating', reader.root)
           reader.lastCid = reader.root.cid
           await this.parkCar(this.storage, reader, [...cids])
           return block
         } catch (e) {
-          console.log('getValetBlock secondary error', e)
+          // console.log('getValetBlock secondary error', e)
         }
       }
     }

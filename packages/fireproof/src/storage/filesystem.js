@@ -10,7 +10,9 @@ const defaultConfig = {
 
 export class Filesystem extends Base {
   constructor (name, config = {}, header = {}) {
-    super(name, Object.assign({}, defaultConfig, config), header)
+    const mergedConfig = Object.assign({}, defaultConfig, config)
+    // console.log('Filesystem', name, mergedConfig, header)
+    super(name, mergedConfig, header)
   }
 
   async writeCars (cars) {

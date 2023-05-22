@@ -40,7 +40,9 @@ const prepareFile = async url => {
   return { found, ext, stream }
 }
 
-export function startServer () {
+export function startServer (quiet = true) {
+  const log = quiet ? () => {} : console.log
+
   const server = http
     .createServer(async (req, res) => {
       res.setHeader('Access-Control-Allow-Origin', '*')
@@ -56,13 +58,13 @@ export function startServer () {
         req.on('end', () => {
           res.writeHead(200, { 'Content-Type': 'text/plain' })
           res.end('File written successfully')
-          console.log(`PUT ${req.url} 200`)
+          log(`PUT ${req.url} 200`)
         })
 
         req.on('error', err => {
           res.writeHead(500, { 'Content-Type': 'text/plain' })
           res.end('Internal Server Error')
-          console.log(`PUT ${req.url} 500 - ${err.message}`)
+          log(`PUT ${req.url} 500 - ${err.message}`)
         })
       } else if (req.method === 'OPTIONS') {
       // Pre-flight request. Reply successfully:
@@ -74,18 +76,18 @@ export function startServer () {
           const mimeType = MIME_TYPES[file.ext] || MIME_TYPES.default
           res.writeHead(200, { 'Content-Type': mimeType })
           file.stream.pipe(res)
-          console.log(`GET ${req.url} 200`)
+          log(`GET ${req.url} 200`)
         } else {
           res.writeHead(404, { 'Content-Type': 'text/plain' })
           res.end('Not found')
-          console.log(`GET ${req.url} 404`)
+          log(`GET ${req.url} 404`)
         }
       }
     })
   server.listen(PORT)
-  console.log(`Server running at http://127.0.0.1:${PORT}/`)
+  log(`Server running at http://127.0.0.1:${PORT}/`)
   return server
 }
 
 // if the script is run directly (not imported as a module), start the server:
-if (import.meta.url === 'file://' + process.argv[1]) startServer()
+if (import.meta.url === 'file://' + process.argv[1]) startServer(false)

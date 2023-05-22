@@ -32,13 +32,15 @@ export class Base {
     this.name = name
     this.config = config
     this.header = header
+    // console.log('new Base', name, config, header)
     // allow to pass a null key and get unencrypted storage
     const nullKey = (header && header.key === null) || (config && config.key === null)
     this.setKeyMaterial(header?.key || config?.key || (nullKey ? null : randomBytes(32).toString('hex')))
-    this.setCarCidMapCarCid(header?.car)
+    this.setCarCidMapCarCid(header?.car || config?.car)
   }
 
   setCarCidMapCarCid (carCid) {
+    // console.trace('setCarCidMapCarCid', carCid)
     if (!carCid) return
     this.valetRootCarCid = parse(carCid)
     this.valetCarCidMap = null
@@ -117,7 +119,7 @@ export class Base {
   /** Private - internal **/
 
   async getCidCarMap () {
-    // console.log('getCidCarMap', this.constructor.name, this.name, this.valetRootCarCid, this.valetCarCidMap)
+    // console.log('getCidCarMap', this.constructor.name, this.name, this.valetRootCarCid, typeof this.valetCarCidMap)
     if (this.valetCarCidMap) return this.valetCarCidMap
     if (this.valetRootCarCid) {
       this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
