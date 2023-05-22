@@ -213,6 +213,7 @@ describe('Rest dataset', () => {
     const files2 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files2.length, 3)
     // now test wht happens when we write to the secondary?
+    console.log('PUT')
 
     const ok = await emptyDb.put({ _id: 'test', foo: 'bar' })
     assert.equal(ok.id, 'test')
