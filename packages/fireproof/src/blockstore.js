@@ -43,8 +43,6 @@ export class TransactionBlockstore {
 
   constructor (name, config) {
     if (name) {
-      // todo the indexes will be getting the carCidMapCarCid of the blocks, not the index blocks
-      // we need to add the index carCidMapCarCid to the headers
       this.valet = new Valet(name, config)
     }
     this.remoteBlockFunction = null
@@ -60,7 +58,7 @@ export class TransactionBlockstore {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
     const bytes = await Promise.any([this.transactionsGet(key), this.committedGet(key)]).catch(e => {
-      console.log('get error', cid.toString(), e)
+      // console.log('get error', cid.toString(), e)
       return this.networkGet(key)
     })
     if (!bytes) throw new Error('Missing block: ' + key)

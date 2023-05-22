@@ -32,8 +32,6 @@ export class Base {
     this.name = name
     this.config = config
     this.header = header
-    // console.log('new Base', name, config, header)
-    // allow to pass a null key and get unencrypted storage
     const nullKey = (header && header.key === null) || (config && config.key === null)
     this.setKeyMaterial(header?.key || config?.key || (nullKey ? null : randomBytes(32).toString('hex')))
     this.setCarCidMapCarCid(header?.car || config?.car)
@@ -200,8 +198,6 @@ export class Base {
       }
 
       return {
-        // blocks,
-
         entries: blocksIterable,
         root: rootBlock,
         gat,
@@ -213,10 +209,6 @@ export class Base {
         }
       }
     } else {
-      // const blocks = []
-      // for await (const block of reader.blocks()) {
-      //   blocks.push(block)
-      // }
       const gat = async dataCID => {
         return await reader.get(CID.parse(dataCID))
       }
@@ -235,9 +227,7 @@ export class Base {
     }
   }
 
-  writeCars (cars) {
-
-  }
+  writeCars (cars) { }
 
   async updateCarCidMap (carCid, cids) {
     // this hydrates the map if it has not been hydrated

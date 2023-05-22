@@ -18,14 +18,14 @@ async function loadData (database, filename) {
     callback()
   })
 
-  parseStream.on('data', async (data) => {
+  parseStream.on('data', async data => {
     saveQueue.push(data)
   })
   let res
   const p = new Promise((resolve, reject) => {
     res = resolve
   })
-  saveQueue.drain(async (x) => {
+  saveQueue.drain(async x => {
     res()
   })
   return p
