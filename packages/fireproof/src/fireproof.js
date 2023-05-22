@@ -41,6 +41,7 @@ export class Fireproof {
               return Fireproof.fromConfig(name, config, secondary, opts)
             } else {
               if (secondary) {
+                // console.log('async primary null')
                 return Fireproof.fromConfig(name, null, secondary, opts)
               } else {
                 return new Database(name, [], opts)
@@ -51,6 +52,8 @@ export class Fireproof {
         // if (secondary) { // never a promise, we are scheduling a merge
         //   opts.secondaryHeader = secondary
         // }
+        // console.log('sync primary')
+
         return Fireproof.fromConfig(name, header, secondary, opts)
       }
 
@@ -95,6 +98,7 @@ export class Fireproof {
               }
             })
           }
+          // console.log('sync primary null')
           return handleHeader(null, secondaryHeader)
         } else {
           // return Fireproof.withKey(name, opts)
@@ -111,7 +115,7 @@ export class Fireproof {
   // }
 
   static fromConfig (name, primary, secondary, opts = {}) {
-    console.log('fromConfig', name, primary, secondary, opts)
+    // console.log('fromConfig', name, primary, secondary, opts)
     // opts.key = existingConfig.key
     // existingConfig.name = name
 
@@ -134,7 +138,6 @@ export class Fireproof {
 
   static fromJSON (primary, secondary, database) {
     const json = primary && primary.indexes ? primary : secondary
-
     if (json.indexes) {
       for (const {
         name,
