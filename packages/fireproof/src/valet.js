@@ -3,18 +3,12 @@ import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 import * as Block from 'multiformats/block'
 import { Loader } from './loader.js'
-
-// @ts-ignore
-
 // @ts-ignore
 import { bf } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
-// import { makeGetBlock } from './prolly.js'
 import { encrypt, decrypt } from './crypto.js'
 import { Buffer } from 'buffer'
-// @ts-ignore
-// import * as codec from 'encrypted-block'
 
 const chunker = bf(30)
 
@@ -38,15 +32,6 @@ export class Valet {
     if (this.secondary) { this.secondary.saveHeader(header) } // todo: await?
     return await this.storage.saveHeader(header)
   }
-
-  // getKeyMaterial () {
-  //   return this.storage.keyMaterial
-  // }
-
-  // setKeyMaterial (km) {
-  //   this.storage.setKeyMaterial(km)
-  //   this.secondary?.setKeyMaterial(km)
-  // }
 
   /**
    * Group the blocks into a car and write it to the valet.
@@ -79,37 +64,21 @@ export class Valet {
     // }
   }
 
-  hydrateRootCarCid (cid) {
-    this.didHydrate = true
-    // this.valetRootCarCid = cid
-    // console.log('hydrateRootCarCid', cid)
-    this.storage.valetRootCarCid = cid
-    this.storage.valetCarCidMap = null
-    // this.valetRoot = null
-    // this.valetRootCid = null
-  }
-
   async parkCar (storage, innerBlockstore, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
     let newValetCidCar
     if (storage.keyMaterial) {
       // console.log('encrypting car', innerBlockstore.label)
-      // should we pass cids in instead of iterating frin innerBlockstore?
+      // todo should we pass cids in instead of iterating innerBlockstore?
       const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.storage.keyMaterial)
       newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
     } else {
       const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
       newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
     }
-
-    // const newValetCidCar = await this.storage.saveCar(carCid, value, cids)
-
-    // this.valetRootCarCid = newValetCidCar.cid // goes to header (should be per storage)
     return newValetCidCar
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
-
-    // console.log('parked car', carCid, value.length, Array.from(cids))
   }
 
   remoteBlockFunction = null
@@ -121,7 +90,6 @@ export class Valet {
       return block
     } catch (e) {
       // console.log('getValetBlock error', e)
-
       if (this.secondary) {
         // console.log('getValetBlock secondary', dataCID)
         try {

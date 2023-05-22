@@ -35,15 +35,9 @@ export class Database {
     this.blocks = new TransactionBlockstore(name, config)
     // console.log('config.index', config.index)
     this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { storage: config.index })
-    // this.indexBlocks.valet?.setKeyMaterial(key)
 
     this.clock = clock
     this.config = config
-
-    // if (config.mergeHeader) {
-    //   console.log('mergeHeader', config.mergeHeader)
-    //   this.mergePromise = this.blocks.valet?.mergeHeader(config.mergeHeader)
-    // }
   }
 
   /**
@@ -60,8 +54,6 @@ export class Database {
     return {
       clock: this.clockToJSON(),
       name: this.name,
-      // key: this.blocks.valet?.getKeyMaterial(),
-      // car: this.blocks.valet?.storage.valetRootCarCid?.toString(),
       index: {
         key: this.indexBlocks.valet?.storage.keyMaterial,
         car: this.indexBlocks.valet?.storage.valetRootCarCid?.toString()
@@ -80,21 +72,6 @@ export class Database {
     return (clock || this.clock).map(cid => cid.toString())
   }
 
-  hydrate ({ clock, name, key, car, indexCar }) {
-    this.name = name // todo remove
-    this.clock = clock
-    // this.blocks.valet?.setKeyMaterial(key)
-    // this.blocks.valet?.hydrateRootCarCid(car) // maybe
-    this.indexBlocks.valet?.setKeyMaterial(key)
-    // indexCar && this.indexBlocks.valet?.hydrateRootCarCid(indexCar) // maybe
-    // this.indexBlocks = null
-  }
-
-  // hydrateClock (primary, secondary) {
-  //   console.log('hydrateClock', primary, secondary)
-  //   this.clock = [...new Set([...primary, ...secondary])].map(c => parseCID(c))
-  // }
-
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {
       this.blocks.valet.saveHeader(this.toHeader())
@@ -102,10 +79,6 @@ export class Database {
   }
 
   index (name) {
-    // iterate over the indexes and gather any with the same name
-    // if there are more than one, throw an error
-    // if there is one, return it
-    // if there are none, return null
     const indexes = [...this.indexes.values()].filter(index => index.name === name)
     if (indexes.length > 1) {
       throw new Error(`Multiple indexes found with name ${name}`)
@@ -123,11 +96,6 @@ export class Database {
   async notifyReset () {
     await this.notifyListeners({ _reset: true, _clock: this.clockToJSON() })
   }
-
-  // used be indexes etc to notify database listeners of new availability
-  // async notifyExternal (source = 'unknown') {
-  //   // await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
-  // }
 
   /**
    * Returns the changes made to the Fireproof instance since the specified event.
@@ -333,7 +301,6 @@ export class Database {
       console.error('failed', event)
       throw new Error('failed to put at storage layer')
     }
-    // await new Promise(resolve => setTimeout(resolve, 10)) // makes concurrent tests work
     this.applyClock(prevClock, result.head)
     await this.notifyListeners([decodedEvent]) // this type is odd
     return {

@@ -1,9 +1,6 @@
-// import randomBytes from 'randombytes'
-// import { randomBytes } from 'crypto'
 import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
-// import { TransactionBlockstore } from './blockstore.js'
 import { Loader } from './loader.js'
 import { Sync } from './sync.js'
 
@@ -35,9 +32,6 @@ export class Fireproof {
           return header.then(config => {
             if (config) {
               config.name = name
-              // if (secondary) { // never a promise, we are scheduling a merge
-              //   opts.secondaryHeader = secondary
-              // }
               return Fireproof.fromConfig(name, config, secondary, opts)
             } else {
               if (secondary) {
@@ -49,11 +43,7 @@ export class Fireproof {
             }
           })
         }
-        // if (secondary) { // never a promise, we are scheduling a merge
-        //   opts.secondaryHeader = secondary
-        // }
         // console.log('sync primary')
-
         return Fireproof.fromConfig(name, header, secondary, opts)
       }
 
@@ -79,7 +69,6 @@ export class Fireproof {
             }
             // console.log('merge both headers A', secondaryHeader, existingHeader)
             return handleHeader(existingHeader, secondaryHeader)
-            // throw new Error('Not implemented: merge both headers A')
           } else {
             return handleHeader(existingHeader)
           }
@@ -108,17 +97,8 @@ export class Fireproof {
     }
   }
 
-  // static withKey = (name, opts = {}) => {
-  //   const instanceKey = randomBytes(32).toString('hex')
-  //   opts.key = instanceKey // to disable encryption, pass a null key
-  //   return new Database(name, [], opts)
-  // }
-
   static fromConfig (name, primary, secondary, opts = {}) {
     // console.log('fromConfig', name, primary, secondary, opts)
-    // opts.key = existingConfig.key
-    // existingConfig.name = name
-
     let clock = []
     if (primary && primary.clock) {
       clock = clock.concat(primary.clock)
