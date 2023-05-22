@@ -12,7 +12,7 @@ export class Rest extends Base {
   }
 
   async writeCars (cars) {
-    super.writeCars(cars)
+    if (this.config.readonly) return
     for (const { cid, bytes } of cars) {
       const carURL = `${this.config.url}/${cid.toString()}.car`
       const response = await fetch(carURL, {
@@ -39,7 +39,7 @@ export class Rest extends Base {
   }
 
   async saveHeader (header) {
-    await super.saveHeader()
+    if (this.config.readonly) return
     const response = await fetch(this.headerURL, {
       method: 'PUT',
       body: this.prepareHeader(header),

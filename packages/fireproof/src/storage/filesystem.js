@@ -14,6 +14,7 @@ export class Filesystem extends Base {
   }
 
   async writeCars (cars) {
+    if (this.config.readonly) return
     const writes = []
     for (const { cid, bytes } of cars) {
       const carFilename = join(this.config.dataDir, this.name, `${cid.toString()}.car`)
@@ -39,6 +40,7 @@ export class Filesystem extends Base {
 
   async saveHeader (header) {
     // console.log('saveHeader', this.isBrowser)
+    if (this.config.readonly) return
     await super.saveHeader()
     await writeSync(this.headerFilename(), this.prepareHeader(header))
   }

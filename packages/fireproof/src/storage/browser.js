@@ -30,7 +30,7 @@ export class Browser extends Base {
   }
 
   async writeCars (cars) {
-    super.writeCars()
+    if (this.config.readonly) return
     return await this.withDB(async db => {
       const tx = db.transaction(['cars'], 'readwrite')
       for (const { cid, bytes, replaces } of cars) {
@@ -57,7 +57,7 @@ export class Browser extends Base {
   }
 
   async saveHeader (header) {
-    super.saveHeader()
+    if (this.config.readonly) return
     return this.isBrowser && localStorage.setItem(this.config.headerKeyPrefix + this.name, this.prepareHeader(header))
   }
 }

@@ -80,9 +80,7 @@ export class Base {
   }
 
   async saveHeader () {
-    if (this.config.readonly) {
-      throw new Error('Read-only mode')
-    }
+
   }
 
   prepareHeader (header, json = true) {
@@ -213,9 +211,7 @@ export class Base {
   }
 
   writeCars (cars) {
-    if (this.config.readonly) {
-      throw new Error('Read-only mode')
-    }
+
   }
 
   async updateCarCidMap (carCid, cids) {
