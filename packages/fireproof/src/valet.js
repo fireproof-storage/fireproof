@@ -67,17 +67,16 @@ export class Valet {
   async parkCar (storage, innerBlockstore, cids) {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    let newValetCidCar
+    let newCar
     if (storage.keyMaterial) {
       // console.log('encrypting car', innerBlockstore.label)
       // todo should we pass cids in instead of iterating innerBlockstore?
-      const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.primary.keyMaterial)
-      newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+
+      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.primary.keyMaterial)
     } else {
-      const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-      newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+      newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
     }
-    return newValetCidCar
+    return await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
     // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
   }
 

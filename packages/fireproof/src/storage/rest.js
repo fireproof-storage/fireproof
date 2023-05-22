@@ -8,6 +8,7 @@ const defaultConfig = {
 export class Rest extends Base {
   constructor (name, config = {}, header = {}) {
     super(name, Object.assign({}, defaultConfig, config), header)
+    console.log('Rest', name, config, header)
     this.headerURL = `${this.config.url}/header.json`
   }
 
@@ -41,7 +42,7 @@ export class Rest extends Base {
     return got
   }
 
-  async saveHeader (header) {
+  async writeHeader (header) {
     if (this.config.readonly) return
     const response = await fetch(this.headerURL, {
       method: 'PUT',
