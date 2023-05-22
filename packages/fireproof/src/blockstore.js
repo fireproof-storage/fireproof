@@ -43,6 +43,8 @@ export class TransactionBlockstore {
 
   constructor (name, config) {
     if (name) {
+      // todo the indexes will be getting the carCidMapCarCid of the blocks, not the index blocks
+      // we need to add the index carCidMapCarCid to the headers
       this.valet = new Valet(name, config)
     }
     this.remoteBlockFunction = null

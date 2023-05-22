@@ -34,6 +34,8 @@ export class Database {
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = new TransactionBlockstore(name, config)
     this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, config)
+    // this.indexBlocks.valet?.setKeyMaterial(key)
+
     this.clock = clock
     this.config = config
 
@@ -77,12 +79,17 @@ export class Database {
   hydrate ({ clock, name, key, car, indexCar }) {
     this.name = name // todo remove
     this.clock = clock
-    this.blocks.valet?.setKeyMaterial(key)
-    this.blocks.valet?.hydrateRootCarCid(car) // maybe
+    // this.blocks.valet?.setKeyMaterial(key)
+    // this.blocks.valet?.hydrateRootCarCid(car) // maybe
     this.indexBlocks.valet?.setKeyMaterial(key)
-    this.indexBlocks.valet?.hydrateRootCarCid(indexCar) // maybe
+    // indexCar && this.indexBlocks.valet?.hydrateRootCarCid(indexCar) // maybe
     // this.indexBlocks = null
   }
+
+  // hydrateClock (primary, secondary) {
+  //   console.log('hydrateClock', primary, secondary)
+  //   this.clock = [...new Set([...primary, ...secondary])].map(c => parseCID(c))
+  // }
 
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {

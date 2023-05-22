@@ -58,7 +58,7 @@ describe('Hydrator', () => {
     const serialized = JSON.parse(JSON.stringify(database))
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
-    const newDb = Fireproof.fromJSON(serialized, database)
+    const newDb = Fireproof.fromJSON(serialized, null, database)
     assert.equal(newDb.name, undefined)
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)
@@ -76,6 +76,7 @@ describe('Hydrator', () => {
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')
   })
+  it('rehydrate with validation function')
 })
 
 describe('hydrator query with dbname', () => {
@@ -135,7 +136,7 @@ describe('hydrator query with dbname', () => {
     const serialized = JSON.parse(JSON.stringify(database))
     // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
-    const newDb = Fireproof.fromJSON(serialized, database)
+    const newDb = Fireproof.fromJSON(serialized, null, database)
     assert.equal(newDb.name, 'fptest-ix-name')
     assert.equal(newDb.clock.length, 1)
     assert.equal((await newDb.changesSince()).rows.length, 7)

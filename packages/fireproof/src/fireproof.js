@@ -1,4 +1,4 @@
-import randomBytes from 'randombytes'
+// import randomBytes from 'randombytes'
 // import { randomBytes } from 'crypto'
 import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
@@ -28,20 +28,27 @@ export class Fireproof {
       const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary) : null
 
       const handleHeader = (header, secondary) => {
-        if (secondary) { // never a promise, we are scheduling a merge
-          opts.secondaryHeader = secondary
-        }
         if (typeof header === 'object' && typeof header.then === 'function') {
           return header.then(config => {
             if (config) {
               config.name = name
-              return Fireproof.fromConfig(name, config, opts)
+              // if (secondary) { // never a promise, we are scheduling a merge
+              //   opts.secondaryHeader = secondary
+              // }
+              return Fireproof.fromConfig(name, config, secondary, opts)
             } else {
-              return Fireproof.withKey(name, opts)
+              if (secondary) {
+                return Fireproof.fromConfig(name, null, secondary, opts)
+              } else {
+                return new Database(name, [], opts)
+              }
             }
           })
         }
-        return Fireproof.fromConfig(name, header, opts)
+        // if (secondary) { // never a promise, we are scheduling a merge
+        //   opts.secondaryHeader = secondary
+        // }
+        return Fireproof.fromConfig(name, header, secondary, opts)
       }
 
       const existingHeader = existingLoader.getHeader()
@@ -91,27 +98,43 @@ export class Fireproof {
         if (secondaryLoader) {
           return handleHeader(secondaryLoader.getHeader())
         } else {
-          return Fireproof.withKey(name, opts)
+          // return Fireproof.withKey(name, opts)
+          return new Database(name, [], opts)
         }
       }
     }
   }
 
-  static withKey = (name, opts = {}) => {
-    const instanceKey = randomBytes(32).toString('hex')
-    opts.key = instanceKey // to disable encryption, pass a null key
-    return new Database(name, [], opts)
+  // static withKey = (name, opts = {}) => {
+  //   const instanceKey = randomBytes(32).toString('hex')
+  //   opts.key = instanceKey // to disable encryption, pass a null key
+  //   return new Database(name, [], opts)
+  // }
+
+  static fromConfig (name, primary, secondary, opts = {}) {
+    // opts.key = existingConfig.key
+    // existingConfig.name = name
+
+    let clock = []
+    if (primary && primary.clock) {
+      clock = clock.concat(primary.clock)
+    }
+    if (secondary && secondary.clock) {
+      clock = clock.concat(secondary.clock)
+    }
+
+    const mergedClock = [...new Set(clock)].map(c => parseCID(c))
+
+    opts.storageHeader = primary
+    opts.secondaryHeader = secondary
+
+    const fp = new Database(name, mergedClock, opts)
+    return Fireproof.fromJSON(primary, secondary, fp)
   }
 
-  static fromConfig (name, existingConfig, opts = {}) {
-    opts.key = existingConfig.key
-    existingConfig.name = name
-    const fp = new Database(name, [], opts)
-    return Fireproof.fromJSON(existingConfig, fp)
-  }
+  static fromJSON (primary, secondary, database) {
+    const json = primary && primary.indexes ? primary : secondary
 
-  static fromJSON (json, database) {
-    database.hydrate({ car: json.car, indexCar: json.indexCar, clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
     if (json.indexes) {
       for (const {
         name,
@@ -134,8 +157,6 @@ export class Fireproof {
 
   static snapshot (database, clock) {
     const definition = database.toJSON()
-    const withBlocks = new Database(database.name)
-    withBlocks.blocks = database.blocks
     if (clock) {
       definition.clock = clock.map(c => parseCID(c))
       definition.indexes.forEach(index => {
@@ -144,7 +165,11 @@ export class Fireproof {
         index.clock.db = null
       })
     }
-    const snappedDb = Fireproof.fromJSON(definition, withBlocks)
+
+    const withBlocks = new Database(database.name, definition.clock.map(c => parseCID(c)))
+    withBlocks.blocks = database.blocks
+
+    const snappedDb = Fireproof.fromJSON(definition, null, withBlocks)
     ;[...database.indexes.values()].forEach(index => {
       snappedDb.indexes.get(index.mapFnString).mapFn = index.mapFn
     })

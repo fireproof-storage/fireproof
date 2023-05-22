@@ -6,7 +6,7 @@ describe('new Valet', () => {
   let val
 
   before(async () => {
-    val = new Valet('test')
+    val = new Valet('test', { storage: { key: null } })
   })
   it('has default attributes', async () => {
     assert(val.getValetBlock)
