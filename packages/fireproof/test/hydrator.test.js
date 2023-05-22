@@ -165,7 +165,7 @@ describe('hydrator query with dbname', () => {
     // console.log('dd.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
 
     const serialized = JSON.parse(JSON.stringify(database))
-    console.log('serialized', JSON.stringify(serialized))
+    // console.log('serialized', JSON.stringify(serialized))
     // connect it to the same blockstore for testing
     // console.log('------------ new database --------')
     assert.equal(serialized.name, 'fptest-ix-name')
@@ -184,7 +184,6 @@ describe('hydrator query with dbname', () => {
     // newDb.blocks.valet = new Valet(oldV.name, oldV.getKeyMaterial())
     // newDb.blocks.valet.valetRootCid = null
     // newDb.blocks = null
-    console.log('about to crash')
 
     assert.equal(newDb.name, 'fptest-ix-name')
     assert.equal(newDb.clock.length, 1)
@@ -202,6 +201,8 @@ describe('hydrator query with dbname', () => {
     // assert.equal(newIndex.indexByKey.root, null)
 
     assert.equal(newIndex.name, 'names_by_age')
+
+    console.log('about to crash')
 
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')

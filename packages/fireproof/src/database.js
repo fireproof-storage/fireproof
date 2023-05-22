@@ -33,7 +33,8 @@ export class Database {
     this.name = name
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = new TransactionBlockstore(name, config)
-    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, config)
+    // console.log('config.index', config.index)
+    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { storage: config.index })
     // this.indexBlocks.valet?.setKeyMaterial(key)
 
     this.clock = clock
@@ -61,7 +62,10 @@ export class Database {
       name: this.name,
       // key: this.blocks.valet?.getKeyMaterial(),
       // car: this.blocks.valet?.storage.valetRootCarCid?.toString(),
-      indexCar: this.indexBlocks.valet?.storage.valetRootCarCid?.toString(),
+      index: {
+        key: this.indexBlocks.valet?.storage.keyMaterial,
+        car: this.indexBlocks.valet?.storage.valetRootCarCid?.toString()
+      },
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }

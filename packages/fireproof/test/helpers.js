@@ -29,12 +29,12 @@ export function resetTestDataDir (name) {
   const files = readdirSync(storage.config.dataDir)
 
   if (name) {
-    console.log('removing', name)
+    // console.log('removing', name)
     rmSync(join(storage.config.dataDir, name), { recursive: true, force: true })
   } else {
     for (const file of files) {
       if (file.match(/fptest/)) {
-        console.log('removing', file)
+        // console.log('removing', file)
         rmSync(join(storage.config.dataDir, file), { recursive: true, force: true })
       }
     }

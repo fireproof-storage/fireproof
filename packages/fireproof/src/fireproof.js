@@ -132,6 +132,8 @@ export class Fireproof {
     opts.storageHeader = primary
     opts.secondaryHeader = secondary
 
+    opts.index = primary ? primary.index : {}
+
     const fp = new Database(name, mergedClock, opts)
     return Fireproof.fromJSON(primary, secondary, fp)
   }
