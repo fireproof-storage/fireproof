@@ -34,7 +34,7 @@ export class Database {
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = new TransactionBlockstore(name, config)
     // console.log('config.index', config.index)
-    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { storage: config.index })
+    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { primary: config.index })
 
     this.clock = clock
     this.config = config
@@ -47,7 +47,7 @@ export class Database {
    * @instance
    */
   toJSON () {
-    return this.blocks.valet ? this.blocks.valet.storage.prepareHeader(this.toHeader(), false) : this.toHeader() // omg
+    return this.blocks.valet ? this.blocks.valet.primary.prepareHeader(this.toHeader(), false) : this.toHeader() // omg
   }
 
   toHeader () {
@@ -55,8 +55,8 @@ export class Database {
       clock: this.clockToJSON(),
       name: this.name,
       index: {
-        key: this.indexBlocks.valet?.storage.keyMaterial,
-        car: this.indexBlocks.valet?.storage.valetRootCarCid?.toString()
+        key: this.indexBlocks.valet?.primary.keyMaterial,
+        car: this.indexBlocks.valet?.primary.valetRootCarCid?.toString()
       },
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
