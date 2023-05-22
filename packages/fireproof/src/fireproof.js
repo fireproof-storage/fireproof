@@ -21,10 +21,10 @@ export class Fireproof {
       return new Database(null, [], opts)
     } else {
       opts.name = name
-      const existingLoader = Loader.appropriate(name, opts.storage, { key: null })
+      const primaryLoader = Loader.appropriate(name, opts.primary, { key: null })
       const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
 
-      // console.log('storage', name, opts, existingLoader, secondaryLoader)
+      // console.log('storage', name, opts, primaryLoader, secondaryLoader)
 
       const handleHeader = (header, secondary) => {
         // console.log('handleHeader', header, secondary)
@@ -47,7 +47,7 @@ export class Fireproof {
         return Fireproof.fromConfig(name, header, secondary, opts)
       }
 
-      const existingHeader = existingLoader.getHeader()
+      const existingHeader = primaryLoader.getHeader()
       if (existingHeader) {
         if (!secondaryLoader) {
           // console.log('here NO')
@@ -109,7 +109,7 @@ export class Fireproof {
 
     const mergedClock = [...new Set(clock)].map(c => parseCID(c))
 
-    opts.storageHeader = primary
+    opts.primaryHeader = primary
     opts.secondaryHeader = secondary
 
     opts.index = primary ? primary.index : {}

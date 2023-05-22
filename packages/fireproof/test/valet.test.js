@@ -6,14 +6,14 @@ describe('new Valet', () => {
   let val
 
   before(async () => {
-    val = new Valet('test', { storage: { key: null } })
+    val = new Valet('test', { primary: { key: null } })
   })
   it('has default attributes', async () => {
     assert(val.getValetBlock)
     assert(val.parkCar)
   })
   it('can park a car and serve the blocks', async () => {
-    await val.storage.saveCar('carCid', carBytes, [
+    await val.primary.saveCar('carCid', carBytes, [
       'bafyreifwghknmzabvgearl72url3v5leqqhtafvybcsrceelc3psqkocoi',
       'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma'
     ])
@@ -21,7 +21,7 @@ describe('new Valet', () => {
         assert('car parked')
         return val.getValetBlock('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((block) => {
           assert.equal(block.length, 300)
-          return val.storage.getCarCIDForCID('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then(({ result }) => {
+          return val.primary.getCarCIDForCID('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then(({ result }) => {
             assert.equal(result, 'carCid')
           })
         })

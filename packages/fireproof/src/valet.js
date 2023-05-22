@@ -22,15 +22,15 @@ export class Valet {
 
   constructor (name = 'default', config = {}) {
     this.name = name
-    // console.log('new Valet', name, config.storage)
-    this.storage = Loader.appropriate(name, config.storage, config.storageHeader)
+    // console.log('new Valet', name, config.primary)
+    this.primary = Loader.appropriate(name, config.primary, config.primaryHeader)
     this.secondary = config.secondary ? Loader.appropriate(name, config.secondary, config.secondaryHeader) : null
   }
 
   async saveHeader (header) {
     // each storage needs to add its own carCidMapCarCid to the header
     if (this.secondary) { this.secondary.saveHeader(header) } // todo: await?
-    return await this.storage.saveHeader(header)
+    return await this.primary.saveHeader(header)
   }
 
   /**
@@ -42,7 +42,7 @@ export class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      await this.parkCar(this.storage, innerBlockstore, cids)
+      await this.parkCar(this.primary, innerBlockstore, cids)
       if (this.secondary) await this.parkCar(this.secondary, innerBlockstore, cids)
     } else {
       throw new Error('missing lastCid for car header')
@@ -71,7 +71,7 @@ export class Valet {
     if (storage.keyMaterial) {
       // console.log('encrypting car', innerBlockstore.label)
       // todo should we pass cids in instead of iterating innerBlockstore?
-      const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.storage.keyMaterial)
+      const newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.primary.keyMaterial)
       newValetCidCar = await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
     } else {
       const newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -86,7 +86,7 @@ export class Valet {
   async getValetBlock (dataCID) {
     // console.log('getValetBlock primary', dataCID)
     try {
-      const { block } = await this.storage.getLoaderBlock(dataCID)
+      const { block } = await this.primary.getLoaderBlock(dataCID)
       return block
     } catch (e) {
       // console.log('getValetBlock error', e)
@@ -102,7 +102,7 @@ export class Valet {
           reader.get = reader.gat // some consumers prefer get
           // console.log('replicating', reader.root)
           reader.lastCid = reader.root.cid
-          await this.parkCar(this.storage, reader, [...cids])
+          await this.parkCar(this.primary, reader, [...cids])
           return block
         } catch (e) {
           // console.log('getValetBlock secondary error', e)

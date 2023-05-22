@@ -33,7 +33,7 @@ describe('Fireproof', () => {
   })
   it('takes an optional name', () => {
     assert.equal(database.name, 'fptest-hello-name')
-    const km = database.blocks.valet.storage.keyMaterial
+    const km = database.blocks.valet.primary.keyMaterial
     if (process.env.NO_ENCRYPT) {
       assert.equal(km, null)
     } else {
