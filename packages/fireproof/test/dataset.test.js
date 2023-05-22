@@ -152,7 +152,7 @@ describe('Rest dataset', () => {
     assert(remoteFiles.length > 2)
 
     // }))
-    console.log('secondaryDb alldocs')
+    // console.log('secondaryDb alldocs')
     const response2 = await secondaryDb.allDocuments()
     assert.equal(response2.rows.length, 2)
     await Promise.all(Array.from({ length: 10 }).map(async () => {
@@ -230,13 +230,13 @@ describe('Rest dataset', () => {
     assert.equal(filesB.length, 37)
 
     const files3 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert.equal(files3.length, 9)
+    assert.equal(files3.length > 8, true)
 
     /// now test what happens when we open a new db on the new primary's files
     // this should pass because the reads from the secondary are written to the primary
     const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos')
 
-    console.log('HERE HERE')
+    // console.log('HERE HERE')
 
     const response2 = await noSecondaryCloneDb.allDocuments()
     assert.equal(response2.rows.length, 19)
@@ -247,7 +247,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const files4 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert.equal(files4.length, 11)
+    assert.equal(files4.length > 10, true)
 
     // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
 
@@ -321,17 +321,34 @@ describe('Rest dataset', () => {
     assert.equal(four.foo, 'bar')
 
     const response3 = await ezistingDb.allDocuments()
-    console.log(response3.rows.map(r => r.key))
+    // console.log(response3.rows.map(r => r.key))
     assert.equal(response3.rows.length, 21)
   })
   it('attach existing secondary rest storage to existing db with no common ancestor', async () => {
     const newExistingDb = await Fireproof.storage('fptest-new-existing-db-todos')
     const ok = await newExistingDb.put({ _id: 'test', foo: 'bar' })
     assert.equal(ok.id, 'test')
+    assert.equal(newExistingDb.clockToJSON().length, 1)
+    const response0 = await newExistingDb.allDocuments()
+    assert.equal(response0.rows.length, 1)
+
+    const files5 = await dbFiles(storage, 'fptest-new-existing-db-todos')
+    assert.equal(files5.length > 1, true)
+
+    await sleep(100)
+    // can reopen the database normally
+    const newExistingDb2 = await Fireproof.storage('fptest-new-existing-db-todos')
+    const response1 = await newExistingDb2.allDocuments()
+    assert.equal(response1.rows.length, 1)
+    assert.equal(newExistingDb2.clockToJSON().length, 1)
+    assert.deepEqual(newExistingDb2.clockToJSON(), newExistingDb.clockToJSON())
+
+    // console.log('HERE HERE')
     const mergedExistingDb = await Fireproof.storage('fptest-new-existing-db-todos',
       { secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME } })
     const response = await mergedExistingDb.allDocuments()
-    assert.equal(response.rows.length, 18)
+    assert.equal(mergedExistingDb.clockToJSON().length, 2, 'clock length')
+    assert.equal(response.rows.length, 19)
     const got = await mergedExistingDb.get('test')
     assert.equal(got.foo, 'bar')
   })

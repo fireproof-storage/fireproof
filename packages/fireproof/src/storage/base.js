@@ -105,11 +105,11 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
-    // console.log('getLoaderBlock', dataCID)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
     if (!carCid) {
       throw new Error('Missing car for: ' + dataCID)
     }
+    // console.log('getLoaderBlock', dataCID, carCid)
     const reader = await this.getCarReader(carCid)
     return { block: await reader.get(dataCID), reader, carCid }
   }
@@ -129,7 +129,7 @@ export class Base {
   }
 
   async mapForIPLDHashmapCarCid (carCid) {
-    console.log('mapForIPLDHashmapCarCid', carCid)
+    // console.log('mapForIPLDHashmapCarCid', carCid)
     const carMapReader = await this.getWriteableCarReader(carCid)
     const indexNode = await load(carMapReader, carMapReader.root.cid, {
       blockHasher: blockOpts.hasher,
@@ -171,6 +171,7 @@ export class Base {
   async getCarReader (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.readCar(carCid)
+    // console.log('getCarReader', this.constructor.name, carCid, carBytes.length)
     const reader = await CarReader.fromBytes(carBytes)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()

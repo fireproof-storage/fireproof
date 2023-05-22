@@ -33,7 +33,7 @@ export class Filesystem extends Base {
 
   getHeader () {
     const header = loadSync(this.headerFilename())
-    // console.log('getHeader', header)
+    // console.log('fs getHeader', this.headerFilename(), header, typeof header)
     if (!header) return null
     return JSON.parse(header)
   }
