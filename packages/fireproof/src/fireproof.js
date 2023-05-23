@@ -24,6 +24,8 @@ export class Fireproof {
       const primaryLoader = Loader.appropriate(name, opts.primary, { key: null })
       const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
 
+      // todo we need branch names here
+
       // console.log('storage', name, opts, primaryLoader, secondaryLoader)
 
       const handleHeader = (header, secondary) => {
@@ -98,7 +100,7 @@ export class Fireproof {
   }
 
   static fromConfig (name, primary, secondary, opts = {}) {
-    // console.log('fromConfig', name, primary, secondary, opts)
+    console.log('fromConfig', name, primary, secondary, opts)
     let clock = []
     if (primary && primary.clock) {
       clock = clock.concat(primary.clock)

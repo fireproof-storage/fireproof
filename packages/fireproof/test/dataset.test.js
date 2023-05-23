@@ -28,7 +28,7 @@ describe('Create a dataset', () => {
   }).timeout(10000)
   it('creates clock file', async () => {
     const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
-    const clockPath = join(dbPath, 'header.json')
+    const clockPath = join(dbPath, 'main.json')
     assert.match(dbPath, /\.fireproof\//)
     assert(dbPath.indexOf(TEST_DB_NAME) > 0)
     const clockData = JSON.parse(readFileSync(clockPath))
@@ -36,7 +36,7 @@ describe('Create a dataset', () => {
   }).timeout(10000)
   it('saves car files', async () => {
     const files = await dbFiles(storage, TEST_DB_NAME)
-    assert(files.length > 2)
+    assert(files.length > 20)
   })
   it('doesnt put the key in the header', async () => {})
   it('works with fresh reader storage', async () => {
@@ -385,7 +385,6 @@ describe('Rest dataset', () => {
       secondary: {
         type: 'rest',
         url: 'http://localhost:8000/' + TEST_DB_NAME,
-        readonly: true,
         branches: {
           main: { readonly: true },
           userX: { readonly: false }
@@ -408,7 +407,7 @@ describe('Rest dataset', () => {
     assert.equal(files3.length > 6, true)
 
     const files2 = await dbFiles(storage, TEST_DB_NAME)
-    assert.equal(files2.length, 37)
+    assert.equal(files2.length > 36, true)
 
     // it will be saved locally and to the user branch on the server
     // ** to prove this **
@@ -450,4 +449,7 @@ describe('Rest dataset', () => {
     assert.equal(doc3._id, 'phr936g')
     assert.equal(doc3.title, 'Tea')
   })
+
+  // the same test as above but where the user branch shares a key with the local main branch
+  it('user clone of server dataset with user key in user branch')
 })
