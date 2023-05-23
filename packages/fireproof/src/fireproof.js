@@ -31,26 +31,26 @@ export class Fireproof {
     }
   }
 
-  static fromConfig (name, primary, secondary, opts = {}) {
-    console.log('fromConfig', name, primary, secondary, opts)
-    let clock = []
-    if (primary && primary.clock) {
-      clock = clock.concat(primary.clock)
-    }
-    if (secondary && secondary.clock) {
-      clock = clock.concat(secondary.clock)
-    }
+  // static fromConfig (name, primary, secondary, opts = {}) {
+  //   console.log('fromConfig', name, primary, secondary, opts)
+  //   let clock = []
+  //   if (primary && primary.clock) {
+  //     clock = clock.concat(primary.clock)
+  //   }
+  //   if (secondary && secondary.clock) {
+  //     clock = clock.concat(secondary.clock)
+  //   }
 
-    const mergedClock = [...new Set(clock)].map(c => parseCID(c))
+  //   const mergedClock = [...new Set(clock)].map(c => parseCID(c))
 
-    opts.primaryHeader = primary
-    opts.secondaryHeader = secondary
+  //   opts.primaryHeader = primary
+  //   opts.secondaryHeader = secondary
 
-    opts.index = primary ? primary.index : {}
+  //   opts.index = primary ? primary.index : {}
 
-    const fp = new Database(name, mergedClock, opts)
-    return Fireproof.fromJSON(primary, secondary, fp)
-  }
+  //   const fp = new Database(name, mergedClock, opts)
+  //   return Fireproof.fromJSON(primary, secondary, fp)
+  // }
 
   static fromJSON (primary, secondary, database) {
     const json = primary && primary.indexes ? primary : secondary

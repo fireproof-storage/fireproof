@@ -39,10 +39,19 @@ export class Database {
     this.clock = clock
     this.config = config
     // todo we can wait for index blocks elsewhere
-    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then((blocksReady) => {
-      console.log('blocksReady db', name, blocksReady)
+    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(([blocksReady]) => {
+      const clock = new Set()
+      for (const headers of blocksReady) {
+        for (const [branch, header] of Object.entries(headers)) {
+          if (!header) continue
+          // console.log('branch', branch, header)
+          for (const cid of header.clock) {
+            clock.add(cid)
+          }
+        }
+      }
+      this.clock = [...clock]
     })
-    // console.log('new db', name, this.instanceId)
   }
 
   /**

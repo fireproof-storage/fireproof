@@ -46,7 +46,7 @@ export class Base {
     // the config for first run, and then we use the headers
     // once they exist
     this.ready = this.getHeaders().then((blocksReady) => {
-      console.log('blocksReady base', blocksReady)
+      console.log('blocksReady base', this.name, blocksReady)
       return blocksReady
     })
   }
@@ -64,9 +64,9 @@ export class Base {
       this.keyMaterial = km
       const hash = sha1sync(hex)
       this.keyId = Buffer.from(hash).toString('hex')
-      console.log('setKeyMaterial', this.instanceId, km, this)
+      console.log('setKeyMaterial', this.instanceId, this.name, km)
     } else {
-      console.log('setKeyMaterial', km)
+      console.log('setKeyMaterial', this.instanceId, this.name, km)
       this.keyMaterial = null
       this.keyId = 'null'
     }
@@ -97,10 +97,10 @@ export class Base {
   applyHeaders (headers) {
     // console.log('applyHeaders', headers)
     this.headers = headers
-    console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
+    // console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
     for (const [branch, header] of Object.entries(headers)) {
       if (header) {
-        console.log('applyHeaders', this.instanceId, this.name, branch, header.key, this.config)
+        // console.log('applyHeaders', this.instanceId, this.name, branch, header.key, this.config)
         header.key && this.setKeyMaterial(header.key)
         this.setCarCidMapCarCid(header.car)
       }
@@ -120,7 +120,7 @@ export class Base {
     const headers = {}
     for (const [branch] of Object.entries(this.config.branches)) {
       const got = await this.loadHeader(branch)
-      console.log('getHeaders', this.name, branch, got)
+      // console.log('getHeaders', this.name, branch, got)
       headers[branch] = got
     }
     this.applyHeaders(headers)
@@ -146,7 +146,7 @@ export class Base {
   prepareHeader (header, json = true) {
     header.key = this.keyMaterial
     header.car = this.valetRootCarCid.toString()
-    console.log('prepareHeader', this.instanceId, header.key, this.keyMaterial, this.valetRootCarCid.toString())
+    console.log('prepareHeader', this.instanceId, this.name, header.key, this.valetRootCarCid.toString())
     return json ? JSON.stringify(header) : header
   }
 
