@@ -8,11 +8,15 @@ import { MemoryBlockstore } from './block.js'
 import { homedir } from 'os'
 
 import { join } from 'path'
-import { rmSync, readdirSync } from 'node:fs'
+import { rmSync, readdirSync, cpSync } from 'node:fs'
 // import { resolve } from 'node:path'
 // import * as codec from '@ipld/dag-cbor'
 
 import { mkdir } from 'fs/promises'
+
+export function cpDir (src, dst) {
+  cpSync(src, dst, { recursive: true })
+}
 
 export const dbFiles = async (storage, name) => {
   const dbPath = join(storage.config.dataDir, name)

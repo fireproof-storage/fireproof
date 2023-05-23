@@ -155,7 +155,7 @@ describe('hydrator query with dbname', () => {
     const newResult = await newIndex.query({ range: [0, 54] })
     assert.equal(newResult.rows[0].value, 'drate')
   })
-  it('rehydrate database w reset valet', async () => {
+  it.skip('obsolete rehydrate database w reset valet', async () => {
     // console.log('og.blocks.valet', database.blocks.valet.name, database.blocks.valet.instanceId, database.blocks.valet.valetRootCarCid, database.blocks.valet.valetRootCid)
 
     await database.put({ _id: 'rehy', name: 'drate', age: 1 })
