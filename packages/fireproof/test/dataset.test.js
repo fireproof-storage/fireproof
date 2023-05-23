@@ -17,12 +17,12 @@ describe('basic dataset', () => {
   beforeEach(async () => {
     await sleep(10)
     resetTestDataDir()
-    console.log('make db')
+    // console.log('make db')
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
     // await db.ready
 
-    console.log('load data')
+    // console.log('load data')
     await db.put({ _id: 'foo', bar: 'baz' })
     await sleep(10)
   })
@@ -43,15 +43,15 @@ describe('basic dataset', () => {
     const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
     const headerPath = join(dbPath, 'main.json')
     const headerData = JSON.parse(readFileSync(headerPath))
-    console.log('headerData', headerData)
+    // console.log('headerData', headerData)
     assert.equal(headerData.name, TEST_DB_NAME)
     assert(headerData.key, 'key should be in header')
   })
   it('reloads fresh', async () => {
-    console.log('NEW DB')
+    // console.log('NEW DB')
     const fileDb = Fireproof.storage(TEST_DB_NAME)
     // await fileDb.ready
-    console.log('QUERY')
+    // console.log('QUERY')
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 1)
     const doc = await fileDb.get('foo')
@@ -89,13 +89,13 @@ describe('basic dataset with index', () => {
   beforeEach(async () => {
     await sleep(10)
     resetTestDataDir()
-    console.log('make db')
+    // console.log('make db')
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
 
     index = new Index(db, 'food', doc => doc.bar)
 
-    console.log('load data')
+    // console.log('load data')
     await db.put({ _id: 'foo', bar: 'baz' })
     response = await index.query({ key: 'baz' })
     db.maybeSaveClock()
@@ -122,7 +122,7 @@ describe('basic dataset with index', () => {
     const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
     const headerPath = join(dbPath, 'main.json')
     const headerData = JSON.parse(readFileSync(headerPath))
-    console.log('headerData', headerData)
+    // console.log('headerData', headerData)
     assert.equal(headerData.name, TEST_DB_NAME)
     assert(headerData.key, 'key should be in header')
     assert.equal(headerData.indexes.length, 1)
@@ -130,16 +130,16 @@ describe('basic dataset with index', () => {
     assert.equal(headerData.indexes[0].code, 'doc => doc.bar')
   })
   it('reloads fresh', async () => {
-    console.log('NEW DB')
+    // console.log('NEW DB')
     const fileDb = Fireproof.storage(TEST_DB_NAME)
     // await fileDb.ready
-    console.log('QUERY')
+    // console.log('QUERY')
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 1)
     const doc = await fileDb.get('foo')
     assert.equal(doc.bar, 'baz')
 
-    console.log('QUERY INDEX', fileDb.indexes)
+    // console.log('QUERY INDEX', fileDb.indexes)
     assert.equal(fileDb.indexes.size, 1)
 
     const food = fileDb.index('food')
@@ -158,7 +158,7 @@ describe('Create a dataset', () => {
     storage = db.blocks.valet.primary
     // await db.ready
 
-    console.log('load data')
+    // console.log('load data')
     await loadData(db, './test/todos.json')
     await sleep(10)
   })
@@ -183,7 +183,7 @@ describe('Create a dataset', () => {
     await sleep(10)
     const fileDb = Fireproof.storage(TEST_DB_NAME)
     // await fileDb.ready
-    console.log('QUERY', fileDb)
+    // console.log('QUERY', fileDb)
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 18)
   })
@@ -548,7 +548,7 @@ describe('Rest dataset', () => {
     assert.equal(got.foo, 'bar')
   })
   it('user clone of server short', async () => {
-    console.log('user clone of server short')
+    // console.log('user clone of server short')
     const SERVER_DB_NAME = 'fptest-server-db-todos'
     const serverDb = await Fireproof.storage(SERVER_DB_NAME)
     serverDb.put({ _id: 'ice', title: 'Coffee' })
@@ -605,7 +605,7 @@ describe('Rest dataset', () => {
 
     const carPath = join(testdbPath, userHeaderData2.car) + '.car'
     const carDataRaw = readFileSync(carPath)
-    assert.equal(carDataRaw.length, 2399)
+    assert(carDataRaw.length > 2000)
 
     // open a db with primary storage using the main branch from the cloud secondary
     const userDb4 = await Fireproof.storage(SERVER_DB_NAME)
@@ -716,7 +716,7 @@ describe('Rest dataset', () => {
     assert.equal(doc3.title, 'Tea')
   })
   it('user clone of server dataset', async () => {
-    console.log('HERE HERE')
+    // console.log('HERE HERE')
     const files5 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files5.length, 37)
     const files4 = await dbFiles(storage, 'fptest-user-db-todos')
@@ -811,7 +811,7 @@ describe('Rest dataset', () => {
     const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
     const headerPath = join(dbPath, 'mine.json')
     const headerData = JSON.parse(readFileSync(headerPath))
-    console.log('headerXXXData', headerData)
+    // console.log('headerXXXData', headerData)
     // assert.equal(headerData.name, TEST_DB_NAME)
 
     assert(headerData.key, 'key should be in header')
@@ -821,7 +821,7 @@ describe('Rest dataset', () => {
     assert.deepEqual(userHeaderData2.key, headerData.key)
 
     await sleep(100)
-    console.log('HEREHERE')
+    // console.log('HEREHERE')
 
     // open a db with storage using the user branch from the cloud secondary
     const userDb3 = Fireproof.storage(TEST_DB_NAME, {

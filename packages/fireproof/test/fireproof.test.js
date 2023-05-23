@@ -543,7 +543,7 @@ describe('Fireproof', () => {
     const gotChanges = await Promise.all(promisesChanges)
     assert.equal(got.length, gotChanges.length)
 
-    // await sleep(1000)
+    await sleep(100)
     // console.log('all', await database.allDocuments())
     assert.equal((await database.changesSince()).rows.length, 21, 'changesSince')
     assert.equal((await database.allDocuments()).rows.length, 21, 'allDocuments')

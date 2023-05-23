@@ -40,7 +40,7 @@ const prepareFile = async url => {
   return { found, ext, stream }
 }
 
-export function startServer (quiet = false) {
+export function startServer (quiet = true) {
   const log = quiet ? () => {} : console.log
 
   const server = http

@@ -247,7 +247,7 @@ export class DbIndex {
    * @returns
    */
   async applyQuery (resp, query) {
-    console.log('applyQuery', resp, query)
+    // console.log('applyQuery', resp, query)
     if (query.descending) {
       resp.result = resp.result.reverse()
     }
