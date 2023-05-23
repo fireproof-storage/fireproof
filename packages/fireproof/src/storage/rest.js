@@ -9,7 +9,10 @@ export class Rest extends Base {
   constructor (name, config = {}, header = {}) {
     super(name, Object.assign({}, defaultConfig, config), header)
     console.log('Rest', name, config, header)
-    this.headerURL = `${this.config.url}/header.json`
+  }
+
+  headerURL (branch = 'main') {
+    return `${this.config.url}/${branch}.json`
   }
 
   async writeCars (cars) {
@@ -33,8 +36,8 @@ export class Rest extends Base {
     return new Uint8Array(got)
   }
 
-  async getHeader () {
-    const response = await fetch(this.headerURL)
+  async loadHeader (branch = 'main') {
+    const response = await fetch(this.headerURL(branch))
     // console.log('rest getHeader', response.constructor.name)
     if (!response.ok) return null
     const got = await response.json()
@@ -42,9 +45,9 @@ export class Rest extends Base {
     return got
   }
 
-  async writeHeader (header) {
+  async writeHeader (branch, header) {
     if (this.config.readonly) return
-    const response = await fetch(this.headerURL, {
+    const response = await fetch(this.headerURL(branch), {
       method: 'PUT',
       body: this.prepareHeader(header),
       headers: { 'Content-Type': 'application/json' }

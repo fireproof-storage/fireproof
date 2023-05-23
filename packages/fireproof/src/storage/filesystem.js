@@ -33,22 +33,22 @@ export class Filesystem extends Base {
     return got
   }
 
-  getHeader () {
-    const header = loadSync(this.headerFilename())
+  loadHeader (branch = 'main') {
+    const header = loadSync(this.headerFilename(branch))
     // console.log('fs getHeader', this.headerFilename(), header, typeof header)
     if (!header) return null
     return JSON.parse(header)
   }
 
-  async writeHeader (header) {
+  async writeHeader (branch, header) {
     // console.log('saveHeader', this.isBrowser)
     if (this.config.readonly) return
-    await writeSync(this.headerFilename(), this.prepareHeader(header))
+    await writeSync(this.headerFilename(branch), this.prepareHeader(header))
   }
 
-  headerFilename () {
+  headerFilename (branch = 'main') {
     // console.log('headerFilename', this.config.dataDir, this.name)
-    return join(this.config.dataDir, this.name, 'header.json')
+    return join(this.config.dataDir, this.name, branch + '.json')
   }
 }
 

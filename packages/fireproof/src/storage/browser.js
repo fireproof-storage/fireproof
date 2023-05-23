@@ -52,12 +52,16 @@ export class Browser extends Base {
     })
   }
 
-  getHeader () {
-    return this.isBrowser && localStorage.getItem(this.config.headerKeyPrefix + this.name)
+  loadHeader (branch = 'main') {
+    return this.isBrowser && localStorage.getItem(this.headerKey(branch))
   }
 
-  async writeHeader (header) {
+  async writeHeader (branch, header) {
     if (this.config.readonly) return
-    return this.isBrowser && localStorage.setItem(this.config.headerKeyPrefix + this.name, this.prepareHeader(header))
+    return this.isBrowser && localStorage.setItem(this.headerKey(branch), this.prepareHeader(header))
+  }
+
+  headerKey (branch = 'main') {
+    return this.config.headerKeyPrefix + this.name + '.' + branch
   }
 }

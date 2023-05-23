@@ -35,6 +35,12 @@ export class Base {
     const nullKey = (header && header.key === null) || (config && config.key === null)
     this.setKeyMaterial(header?.key || config?.key || (nullKey ? null : randomBytes(32).toString('hex')))
     this.setCarCidMapCarCid(header?.car || config?.car)
+
+    if (!this.config.branches) {
+      this.config.branches = {
+        main: { readonly: false }
+      }
+    }
   }
 
   setCarCidMapCarCid (carCid) {
@@ -79,13 +85,28 @@ export class Base {
     return newValetCidCar
   }
 
+  async getHeader () {
+    const headers = {}
+    for (const [branch] of Object.entries(this.config.branches)) {
+      headers[branch] = this.loadHeader(branch)
+    }
+    return headers
+  }
+
+  loadHeader (branch = 'main') {
+    throw new Error('not implemented')
+  }
+
   async saveHeader (header) {
     // for each branch, save the header
     console.log('saveHeader', this.config.branches)
     //  for (const branch of this.branches) {
     //    await this.saveBranchHeader(branch)
     //  }
-    this.writeHeader(header)
+    for (const [branch, { readonly }] of Object.entries(this.config.branches)) {
+      if (readonly) continue
+      await this.writeHeader(branch, header)
+    }
   }
 
   prepareHeader (header, json = true) {
@@ -93,6 +114,10 @@ export class Base {
     header.car = this.valetRootCarCid.toString()
     // console.log('prepareHeader', header)
     return json ? JSON.stringify(header) : header
+  }
+
+  writeHeader (branch, header) {
+    throw new Error('not implemented')
   }
 
   async getCarCIDForCID (cid) {
