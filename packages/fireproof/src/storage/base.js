@@ -28,19 +28,27 @@ export class Base {
   keyMaterial = null
   keyId = 'null'
 
-  constructor (name, config = {}, header = {}) {
+  constructor (name, config = {}) {
+    this.instanceId = Math.random().toString(36).slice(2)
     this.name = name
     this.config = config
-    this.header = header
-    const nullKey = (header && header.key === null) || (config && config.key === null)
-    this.setKeyMaterial(header?.key || config?.key || (nullKey ? null : randomBytes(32).toString('hex')))
-    this.setCarCidMapCarCid(header?.car || config?.car)
 
     if (!this.config.branches) {
       this.config.branches = {
         main: { readonly: false }
       }
     }
+
+    console.log('this.config', this.instanceId, this.name, this.config)
+    // if there is config.key and config.car,
+    // then we could skip loading the headers if we want.
+    // currently we don't do that, because we only use
+    // the config for first run, and then we use the headers
+    // once they exist
+    this.ready = this.getHeaders().then((blocksReady) => {
+      console.log('blocksReady base', blocksReady)
+      return blocksReady
+    })
   }
 
   setCarCidMapCarCid (carCid) {
@@ -51,13 +59,14 @@ export class Base {
   }
 
   setKeyMaterial (km) {
-    // console.log('setKeyMaterial', km)
     if (km && !NO_ENCRYPT) {
       const hex = Uint8Array.from(Buffer.from(km, 'hex'))
       this.keyMaterial = km
       const hash = sha1sync(hex)
       this.keyId = Buffer.from(hash).toString('hex')
+      console.log('setKeyMaterial', this.instanceId, km, this)
     } else {
+      console.log('setKeyMaterial', km)
       this.keyMaterial = null
       this.keyId = 'null'
     }
@@ -85,11 +94,36 @@ export class Base {
     return newValetCidCar
   }
 
-  async getHeader () {
+  applyHeaders (headers) {
+    // console.log('applyHeaders', headers)
+    this.headers = headers
+    console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
+    for (const [branch, header] of Object.entries(headers)) {
+      if (header) {
+        console.log('applyHeaders', this.instanceId, this.name, branch, header.key, this.config)
+        header.key && this.setKeyMaterial(header.key)
+        this.setCarCidMapCarCid(header.car)
+      }
+    }
+    if (!this.keyMaterial) {
+      const nullKey = this.config.key === null
+      if (nullKey) {
+        this.setKeyMaterial(null)
+      } else {
+        this.setKeyMaterial(randomBytes(32).toString('hex'))
+      }
+    }
+    // console.log('applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
+  }
+
+  async getHeaders () {
     const headers = {}
     for (const [branch] of Object.entries(this.config.branches)) {
-      headers[branch] = this.loadHeader(branch)
+      const got = await this.loadHeader(branch)
+      console.log('getHeaders', this.name, branch, got)
+      headers[branch] = got
     }
+    this.applyHeaders(headers)
     return headers
   }
 
@@ -99,7 +133,7 @@ export class Base {
 
   async saveHeader (header) {
     // for each branch, save the header
-    console.log('saveHeader', this.config.branches)
+    // console.log('saveHeader', this.config.branches)
     //  for (const branch of this.branches) {
     //    await this.saveBranchHeader(branch)
     //  }
@@ -112,7 +146,7 @@ export class Base {
   prepareHeader (header, json = true) {
     header.key = this.keyMaterial
     header.car = this.valetRootCarCid.toString()
-    // console.log('prepareHeader', header)
+    console.log('prepareHeader', this.instanceId, header.key, this.keyMaterial, this.valetRootCarCid.toString())
     return json ? JSON.stringify(header) : header
   }
 
