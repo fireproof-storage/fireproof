@@ -1,7 +1,6 @@
 import { Database, parseCID } from './database.js'
 import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
-import { Loader } from './loader.js'
 import { Sync } from './sync.js'
 
 // todo remove Listener in 0.7.0
@@ -20,82 +19,15 @@ export class Fireproof {
     if (!name) {
       return new Database(null, [], opts)
     } else {
-      opts.name = name
-      const primaryLoader = Loader.appropriate(name, opts.primary, { key: null })
-      const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
+      // const primaryLoader = Loader.appropriate(name, opts.primary, { key: null })
+      // const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
+      const db = new Database(name, [], opts)
+      return db
+      // const loaders = [pr]
 
       // todo we need branch names here
 
       // console.log('storage', name, opts, primaryLoader, secondaryLoader)
-
-      const handleHeader = (header, secondary) => {
-        // console.log('handleHeader', header, secondary)
-        if (header && typeof header === 'object' && typeof header.then === 'function') {
-          return header.then(config => {
-            if (config) {
-              config.name = name
-              return Fireproof.fromConfig(name, config, secondary, opts)
-            } else {
-              if (secondary) {
-                // console.log('async primary null')
-                return Fireproof.fromConfig(name, null, secondary, opts)
-              } else {
-                return new Database(name, [], opts)
-              }
-            }
-          })
-        }
-        // console.log('sync primary')
-        return Fireproof.fromConfig(name, header, secondary, opts)
-      }
-
-      const existingHeader = primaryLoader.getHeader()
-      if (existingHeader) {
-        if (!secondaryLoader) {
-          // console.log('here NO')
-          return handleHeader(existingHeader)
-        } else {
-          // console.log('here YES')
-          const secondaryHeader = secondaryLoader.getHeader()
-          // console.log('merge both headers X', secondaryHeader, existingHeader)
-          if (secondaryHeader) {
-            if (typeof secondaryHeader === 'object' && typeof secondaryHeader.then === 'function') {
-              return secondaryHeader.then(secondaryConfig => {
-                if (!secondaryConfig) {
-                  return handleHeader(existingHeader)
-                } else {
-                  // console.log('merge both headers B', secondaryConfig, existingHeader)
-                  return handleHeader(existingHeader, secondaryConfig)
-                }
-              })
-            }
-            // console.log('merge both headers A', secondaryHeader, existingHeader)
-            return handleHeader(existingHeader, secondaryHeader)
-          } else {
-            return handleHeader(existingHeader)
-          }
-        }
-      } else {
-        if (secondaryLoader) {
-          // console.log('here YES2')
-          const secondaryHeader = secondaryLoader.getHeader()
-          if (typeof secondaryHeader === 'object' && typeof secondaryHeader.then === 'function') {
-            return secondaryHeader.then(secondaryConfig => {
-              if (!secondaryConfig) {
-                return new Database(name, [], opts)
-              } else {
-                // console.log('merge both headers C', secondaryConfig, existingHeader)
-                return handleHeader(null, secondaryConfig)
-              }
-            })
-          }
-          // console.log('sync primary null')
-          return handleHeader(null, secondaryHeader)
-        } else {
-          // return Fireproof.withKey(name, opts)
-          return new Database(name, [], opts)
-        }
-      }
     }
   }
 
