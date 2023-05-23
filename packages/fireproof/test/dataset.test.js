@@ -48,9 +48,10 @@ describe('basic dataset', () => {
     assert(headerData.key, 'key should be in header')
   })
   it('reloads fresh', async () => {
+    console.log('NEW DB')
     const fileDb = Fireproof.storage(TEST_DB_NAME)
     await fileDb.ready
-    console.log('QUERY', fileDb)
+    console.log('QUERY')
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 1)
     const doc = await fileDb.get('foo')

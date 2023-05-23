@@ -27,8 +27,11 @@ export class Valet {
     this.secondary = config.secondary ? Loader.appropriate(name, config.secondary) : null
     // set up a promise listener that applies all the headers to the clock
     // when they resolve
-    this.ready = Promise.all([this.primary.ready, this.secondary ? this.secondary.ready : Promise.resolve()]).then((blocksReady) => {
-      console.log('blocksReady valet', blocksReady)
+    const readyP = [this.primary.ready]
+    if (this.secondary) readyP.push(this.secondary.ready)
+
+    this.ready = Promise.all(readyP).then((blocksReady) => {
+      console.log('blocksReady valet', this.name, blocksReady)
       return blocksReady
     })
   }
