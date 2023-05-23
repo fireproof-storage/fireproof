@@ -198,7 +198,7 @@ describe('Rest dataset', () => {
     storage = db.blocks.valet.primary
     await loadData(db, './test/todos.json')
     server = startServer()
-    await sleep(150)
+    await sleep(10)
   })
   afterEach(async () => {
     server.close()
