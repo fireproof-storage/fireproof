@@ -206,7 +206,7 @@ export class Sync {
     }
 
     if (typeof key === 'undefined') {
-      key = blocks.valet?.getKeyMaterial()
+      key = blocks.valet?.primary.keyMaterial
     }
     if (key) {
       return blocksToEncryptedCarBlock(
