@@ -93,14 +93,14 @@ export class Valet {
   remoteBlockFunction = null
 
   async getValetBlock (dataCID) {
-    console.log('getValetBlock primary', dataCID)
+    // console.log('getValetBlock primary', dataCID)
     try {
       const { block } = await this.primary.getLoaderBlock(dataCID)
       return block
     } catch (e) {
-      console.log('getValetBlock error', e)
+      // console.log('getValetBlock error', e)
       if (this.secondary) {
-        console.log('getValetBlock secondary', dataCID)
+        // console.log('getValetBlock secondary', dataCID)
         try {
           const { block, reader } = await this.secondary.getLoaderBlock(dataCID)
           const cids = new Set()
@@ -114,7 +114,7 @@ export class Valet {
           await this.parkCar(this.primary, reader, [...cids])
           return block
         } catch (e) {
-          console.log('getValetBlock secondary error', e)
+          // console.log('getValetBlock secondary error', e)
         }
       }
     }
@@ -187,7 +187,7 @@ export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   } else {
     const blocksPromise = (async () => {
       const decryptionKey = Buffer.from(keyMaterial, 'hex')
-      console.log('decrypting', keyMaterial, cid.toString())
+      // console.log('decrypting', keyMaterial, cid.toString())
       const cids = new Set()
       const decryptedBlocks = []
       for await (const block of decrypt({

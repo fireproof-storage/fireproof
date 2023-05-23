@@ -41,7 +41,7 @@ export class Database {
     // todo we can wait for index blocks elsewhere
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(([blocksReady, indexReady]) => {
       const clock = new Set()
-      console.log('blocksReady', blocksReady)
+      // console.log('blocksReady', blocksReady)
       if (!blocksReady) {
         return
       }
@@ -61,7 +61,7 @@ export class Database {
               code,
               clock: { byId, byKey, db }
             } of header.indexes) {
-              console.log('index', name, code, { byId, byKey }, db, header.indexes)
+              // console.log('index', name, code, { byId, byKey }, db, header.indexes)
               Index.fromJSON(this, {
                 clock: {
                   byId: byId ? parseCID(byId) : null,

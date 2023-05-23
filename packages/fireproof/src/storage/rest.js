@@ -48,7 +48,7 @@ export class Rest extends Base {
   async writeHeader (branch, header) {
     if (this.config.readonly) return
     const pHeader = this.prepareHeader(header)
-    console.log('writeHeader rt', branch, pHeader)
+    // console.log('writeHeader rt', branch, pHeader)
 
     const response = await fetch(this.headerURL(branch), {
       method: 'PUT',

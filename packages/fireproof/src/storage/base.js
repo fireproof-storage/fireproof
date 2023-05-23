@@ -39,14 +39,14 @@ export class Base {
       }
     }
 
-    console.log('this.config', this.instanceId, this.name, this.config)
+    // console.log('this.config', this.instanceId, this.name, this.config)
     // if there is config.key and config.car,
     // then we could skip loading the headers if we want.
     // currently we don't do that, because we only use
     // the config for first run, and then we use the headers
     // once they exist
     this.ready = this.getHeaders().then((blocksReady) => {
-      console.log('blocksReady base', this.name, blocksReady)
+      // console.log('blocksReady base', this.name, blocksReady)
       return blocksReady
     })
   }
@@ -64,9 +64,9 @@ export class Base {
       this.keyMaterial = km
       const hash = sha1sync(hex)
       this.keyId = Buffer.from(hash).toString('hex')
-      console.log('setKeyMaterial', this.instanceId, this.name, km)
+      // console.log('setKeyMaterial', this.instanceId, this.name, km)
     } else {
-      console.log('setKeyMaterial', this.instanceId, this.name, km)
+      // console.log('setKeyMaterial', this.instanceId, this.name, km)
       this.keyMaterial = null
       this.keyId = 'null'
     }
@@ -100,7 +100,7 @@ export class Base {
     // console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
     for (const [, header] of Object.entries(headers)) {
       if (header) {
-        console.log('applyHeaders', this.instanceId, this.name, header.key, header.car)
+        // console.log('applyHeaders', this.instanceId, this.name, header.key, header.car)
         header.key && this.setKeyMaterial(header.key)
         this.setCarCidMapCarCid(header.car)
       }
@@ -116,7 +116,7 @@ export class Base {
         this.setKeyMaterial(randomBytes(32).toString('hex'))
       }
     }
-    console.log('applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
+    // console.log('applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
   }
 
   async getHeaders () {

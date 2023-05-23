@@ -44,7 +44,7 @@ export class Filesystem extends Base {
     // console.log('saveHeader', this.isBrowser)
     if (this.config.readonly) return
     const pHeader = this.prepareHeader(header)
-    console.log('writeHeader fs', branch, pHeader)
+    // console.log('writeHeader fs', branch, pHeader)
     await writeSync(this.headerFilename(branch), pHeader)
   }
 
