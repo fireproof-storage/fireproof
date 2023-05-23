@@ -1,28 +1,23 @@
-import { describe, it, beforeEach, before } from 'mocha'
+import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
-import { Loader } from '../src/loader.js'
-import { join } from 'path'
-import { rmSync } from 'node:fs'
-// import { resolve } from 'node:path'
-// import * as codec from '@ipld/dag-cbor'
-
 import { resetTestDataDir } from './helpers.js'
-
-let database
-
-let resp0
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+let database
+let resp0
+
 describe('Fireproof', () => {
-  before(async () => {
-    resetTestDataDir()
-  })
+  // before(async () => {
+  // resetTestDataDir()
+  // })
   beforeEach(async () => {
     await sleep(10)
-    const loader = Loader.appropriate('helloName')
-    rmSync(join(loader.config.dataDir, 'fptest-hello-name'), { recursive: true, force: true })
+    resetTestDataDir()
+    // const loader = Loader.appropriate('helloName')
+    // rmSync(join(loader.config.dataDir, 'fptest-hello-name'), { recursive: true, force: true })
+    // console.log('new database instance')
     database = Fireproof.storage('fptest-hello-name')
     assert.equal(database.clock.length, 0)
     resp0 = await database.put({
@@ -178,7 +173,13 @@ describe('Fireproof', () => {
     assert(response.id, 'should have id')
     assert.equal(response.id, dogKey)
     assert.equal(value._id, dogKey)
+    await sleep(10)
+    // console.log('snapshot')
     const snapshot = Fireproof.snapshot(database)
+    await snapshot.ready
+
+    assert.equal(snapshot.clockToJSON().length, 1)
+    assert.deepEqual(snapshot.clockToJSON(), database.clockToJSON())
 
     const avalue = await database.get(dogKey)
     assert.equal(avalue.name, value.name)

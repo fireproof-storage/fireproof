@@ -1,13 +1,13 @@
 import { describe, it, beforeEach, afterEach } from 'mocha'
 import assert from 'node:assert'
-import { Loader } from '../src/loader.js'
 import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
+import { DbIndex as Index } from '../src/db-index.js'
 import { join } from 'path'
-import { readFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { startServer } from '../scripts/server.js'
 
-import { resetTestDataDir, dbFiles } from './helpers.js'
+import { resetTestDataDir, dbFiles, cpDir } from './helpers.js'
 
 const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
@@ -20,7 +20,7 @@ describe('basic dataset', () => {
     console.log('make db')
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
-    await db.ready
+    // await db.ready
 
     console.log('load data')
     await db.put({ _id: 'foo', bar: 'baz' })
@@ -50,12 +50,101 @@ describe('basic dataset', () => {
   it('reloads fresh', async () => {
     console.log('NEW DB')
     const fileDb = Fireproof.storage(TEST_DB_NAME)
-    await fileDb.ready
+    // await fileDb.ready
     console.log('QUERY')
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 1)
     const doc = await fileDb.get('foo')
     assert.equal(doc.bar, 'baz')
+  })
+  it('reloads fresh on branch', async () => {
+    const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
+    const headerPath = join(dbPath, 'main.json')
+    const header2Path = join(dbPath, 'branch.json')
+
+    // copy the file from main to branch
+    const headerRaw = readFileSync(headerPath)
+    writeFileSync(header2Path, headerRaw)
+
+    // open a db with storage using the user branch from the cloud secondary
+    const userDb3 = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        branches: {
+          branch: { readonly: false }
+        }
+      }
+    })
+    await userDb3.ready
+
+    // make sure the branch is there
+    const doc = await userDb3.get('foo')
+    assert.equal(doc.bar, 'baz')
+  })
+})
+
+// todo: this test but for rest
+// assert that the index has the same rest config as the db
+describe('basic dataset with index', () => {
+  let db, storage, index, response
+  beforeEach(async () => {
+    await sleep(10)
+    resetTestDataDir()
+    console.log('make db')
+    db = Fireproof.storage(TEST_DB_NAME)
+    storage = db.blocks.valet.primary
+
+    index = new Index(db, 'food', doc => doc.bar)
+
+    console.log('load data')
+    await db.put({ _id: 'foo', bar: 'baz' })
+    response = await index.query({ key: 'baz' })
+    db.maybeSaveClock()
+    await sleep(10)
+  })
+  it('gets all docs', async () => {
+    const response = await db.allDocuments()
+    assert.equal(response.rows.length, 1)
+    const doc = await db.get('foo')
+    assert.equal(doc.bar, 'baz')
+  }).timeout(10000)
+  it('gets index', async () => {
+    assert.equal(response.rows.length, 1)
+    assert.equal(response.rows[0].id, 'foo')
+  })
+  it('creates car files', async () => {
+    const files = await dbFiles(storage, TEST_DB_NAME)
+    assert(files.length > 2)
+  })
+  it('writes header file', async () => {
+    const files = await dbFiles(storage, TEST_DB_NAME)
+    assert(files.includes('main.json'))
+
+    const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
+    const headerPath = join(dbPath, 'main.json')
+    const headerData = JSON.parse(readFileSync(headerPath))
+    console.log('headerData', headerData)
+    assert.equal(headerData.name, TEST_DB_NAME)
+    assert(headerData.key, 'key should be in header')
+    assert.equal(headerData.indexes.length, 1)
+    assert.equal(headerData.indexes[0].name, 'food')
+    assert.equal(headerData.indexes[0].code, 'doc => doc.bar')
+  })
+  it('reloads fresh', async () => {
+    console.log('NEW DB')
+    const fileDb = Fireproof.storage(TEST_DB_NAME)
+    // await fileDb.ready
+    console.log('QUERY')
+    const response = await fileDb.allDocuments()
+    assert.equal(response.rows.length, 1)
+    const doc = await fileDb.get('foo')
+    assert.equal(doc.bar, 'baz')
+
+    console.log('QUERY INDEX', fileDb.indexes)
+    assert.equal(fileDb.indexes.size, 1)
+
+    const food = fileDb.index('food')
+    const foodResponse = await food.query({ key: 'baz' }, false)
+    assert.equal(foodResponse.rows.length, 1)
   })
 })
 
@@ -67,7 +156,7 @@ describe('Create a dataset', () => {
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
-    await db.ready
+    // await db.ready
 
     console.log('load data')
     await loadData(db, './test/todos.json')
@@ -93,7 +182,7 @@ describe('Create a dataset', () => {
   it('works with fresh reader storage', async () => {
     await sleep(10)
     const fileDb = Fireproof.storage(TEST_DB_NAME)
-    await fileDb.ready
+    // await fileDb.ready
     console.log('QUERY', fileDb)
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 18)
@@ -104,9 +193,9 @@ describe('Rest dataset', () => {
   let db, storage, server
   beforeEach(async () => {
     await sleep(10)
-    storage = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
+    storage = db.blocks.valet.primary
     await loadData(db, './test/todos.json')
     server = startServer()
     await sleep(150)
@@ -188,6 +277,34 @@ describe('Rest dataset', () => {
 
     await sleep(100)
   }).timeout(10000)
+
+  it('reloads fresh on branch', async () => {
+    const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
+    const headerPath = join(dbPath, 'main.json')
+    const header2Path = join(dbPath, 'branch.json')
+
+    // copy the file from main to branch
+    const headerRaw = readFileSync(headerPath)
+    writeFileSync(header2Path, headerRaw)
+
+    // open a db with storage using the user branch from the cloud secondary
+    const userDb3 = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        type: 'rest',
+        url: 'http://localhost:8000/' + TEST_DB_NAME,
+        branches: {
+          branch: { readonly: false }
+        }
+      }
+    })
+    await userDb3.ready
+
+    // make sure the branch is there
+    const doc = await userDb3.get('phr936g')
+    assert.equal(doc._id, 'phr936g')
+    assert.equal(doc.title, 'Coffee')
+  })
+
   it('creates new db with file storage AND secondary rest storage', async () => {
     await sleep(100)
     const secondaryDb = await Fireproof.storage('fptest-secondary-rest', {
@@ -430,8 +547,176 @@ describe('Rest dataset', () => {
     const got = await mergedExistingDb.get('test')
     assert.equal(got.foo, 'bar')
   })
+  it('user clone of server short', async () => {
+    console.log('user clone of server short')
+    const SERVER_DB_NAME = 'fptest-server-db-todos'
+    const serverDb = await Fireproof.storage(SERVER_DB_NAME)
+    serverDb.put({ _id: 'ice', title: 'Coffee' })
 
+    await sleep(100)
+
+    const USER_DB_NAME = 'fptest-user-db-todos'
+
+    const userDb = await Fireproof.storage(USER_DB_NAME, {
+      secondary: {
+        type: 'rest',
+        url: 'http://localhost:8000/' + SERVER_DB_NAME,
+        branches: {
+          main: { readonly: true },
+          branch: { readonly: false }
+        }
+      }
+    })
+    // db can load a document by id
+    const doc = await userDb.get('ice')
+    assert.equal(doc._id, 'ice')
+    assert.equal(doc.title, 'Coffee')
+
+    userDb.maybeSaveClock() // force header write
+    await sleep(100)
+
+    const testdbPath = join(storage.config.dataDir, SERVER_DB_NAME)
+    const localdbPath = join(storage.config.dataDir, USER_DB_NAME)
+    const mainHeaderPath = join(testdbPath, 'main.json')
+    const userHeaderPath = join(testdbPath, 'branch.json')
+    const mainHeaderData = JSON.parse(readFileSync(mainHeaderPath))
+    const userHeaderData = JSON.parse(readFileSync(userHeaderPath))
+
+    assert(mainHeaderData.clock.length > 0)
+    assert(userHeaderData.clock.length > 0)
+
+    assert.deepEqual(mainHeaderData.clock, userHeaderData.clock)
+
+    assert.deepEqual(mainHeaderData.key, userHeaderData.key)
+    assert.deepEqual(mainHeaderData.car, userHeaderData.car)
+
+    doc.title = 'Tea'
+    const ok = await userDb.put(doc)
+    assert.equal(ok.id, 'ice')
+
+    await sleep(100)
+    const doc3a = await userDb.get('ice')
+    assert.equal(doc3a._id, 'ice')
+    assert.equal(doc3a.title, 'Tea')
+
+    const userHeaderData2 = JSON.parse(readFileSync(userHeaderPath))
+    assert.deepEqual(userHeaderData2.key, userHeaderData.key)
+    assert.notDeepEqual(userHeaderData2.car, userHeaderData.car)
+
+    const carPath = join(testdbPath, userHeaderData2.car) + '.car'
+    const carDataRaw = readFileSync(carPath)
+    assert.equal(carDataRaw.length, 2399)
+
+    // open a db with primary storage using the main branch from the cloud secondary
+    const userDb4 = await Fireproof.storage(SERVER_DB_NAME)
+
+    // console.log('HEREHERE')
+
+    // it will not have the same document
+    const doc4 = await userDb4.get('ice')
+    assert.equal(doc4._id, 'ice')
+    assert.equal(doc4.title, 'Coffee')
+
+    // open a db with the same local name, no secondary
+    const userDb2 = await Fireproof.storage(USER_DB_NAME)
+    // it will have the same document
+    const doc2 = await userDb2.get('ice')
+    assert.equal(doc2._id, 'ice')
+    assert.equal(doc2.title, 'Tea')
+
+    await sleep(100)
+
+    // fuck around with the filesystem
+    const COPY_NAME = USER_DB_NAME + 'copy'
+    resetTestDataDir(COPY_NAME)
+    const copydbPath = join(storage.config.dataDir, COPY_NAME)
+
+    // recursively copy from testdbPath to copydbPath
+
+    cpDir(localdbPath, copydbPath)
+    const copyHeaderPath = join(copydbPath, 'main.json')
+    const copy2HeaderPath = join(copydbPath, 'biff.json')
+    // copy the file from main to branch
+    const headerRaw = readFileSync(copyHeaderPath)
+    writeFileSync(copy2HeaderPath, headerRaw)
+
+    const userXYZ = Fireproof.storage(COPY_NAME)
+    await userXYZ.ready
+    // return
+    await sleep(100)
+    const docX = await userXYZ.get('ice')
+    assert.equal(docX._id, 'ice')
+    assert.equal(docX.title, 'Tea')
+
+    // now open one on the branch
+
+    // open a db with storage using the user branch from the cloud secondary
+    const userDbG = Fireproof.storage(COPY_NAME, {
+      primary: {
+        branches: {
+          biff: { readonly: false }
+        }
+      }
+    })
+    await userDbG.ready
+
+    await sleep(100)
+    const docG = await userXYZ.get('ice')
+    assert.equal(docG._id, 'ice')
+    assert.equal(docG.title, 'Tea')
+
+    // const copy2HeaderPath = join(copydbPath, 'biff.json')
+    // copy the file from main to branch
+    const branchheaderRaw = readFileSync(userHeaderPath)
+    // const mainheaderRaw = readFileSync(mainHeaderPath)
+
+    const branchHeaderJSON = JSON.parse(branchheaderRaw)
+
+    assert.equal(branchHeaderJSON.key, userDb4.blocks.valet.primary.keyMaterial)
+    assert.equal(branchHeaderJSON.key, mainHeaderData.key)
+    assert(branchHeaderJSON.car)
+
+    // which key should it be?
+    // assert.equal(branchHeaderJSON.key, userDbG.blocks.valet.primary.keyMaterial, 'key material')
+    assert.equal(branchHeaderJSON.key, userHeaderData.key, 'key material')
+    assert.equal(branchHeaderJSON.key, userHeaderData2.key, 'key material')
+    assert.equal(branchHeaderJSON.key, userDb4.blocks.valet.primary.keyMaterial, 'key material')
+    assert.equal(branchHeaderJSON.key, userDb.blocks.valet.secondary.keyMaterial, 'key material')
+    assert.equal(branchHeaderJSON.car, userHeaderData2.car, 'car file')
+    // const branchheaderRaw = readFileSync(branchHeaderPath)
+    // writeFileSync(copy2HeaderPath, headerRaw)
+
+    // todo TEMPORARILY try copying branch.json to main.json
+    // const headerRaw = readFileSync(copyHeaderPath)
+    // writeFileSync(mainHeaderPath, branchheaderRaw)
+    // writeFileSync(userHeaderPath, mainheaderRaw)
+
+    // conclusion: we are writing out the branch header with the wrong car
+
+    // return
+    // open a db with storage using the user branch from the cloud secondary
+    const userDb3 = Fireproof.storage(SERVER_DB_NAME, {
+      primary: {
+        type: 'rest',
+        branches: {
+          branch: { readonly: false }
+        },
+        url: 'http://localhost:8000/' + SERVER_DB_NAME
+      }
+    })
+    await userDb3.ready
+    // return
+    await sleep(100)
+
+    assert.equal(branchHeaderJSON.key, userDb3.blocks.valet.primary.keyMaterial, 'key material')
+    assert.equal(branchHeaderJSON.car, userDb3.blocks.valet.primary.valetRootCarCid, 'car file')
+
+    const doc3 = await userDb3.get('ice')
+    assert.equal(doc3._id, 'ice')
+    assert.equal(doc3.title, 'Tea')
+  })
   it('user clone of server dataset', async () => {
+    console.log('HERE HERE')
     const files5 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files5.length, 37)
     const files4 = await dbFiles(storage, 'fptest-user-db-todos')
@@ -444,16 +729,35 @@ describe('Rest dataset', () => {
         url: 'http://localhost:8000/' + TEST_DB_NAME,
         branches: {
           main: { readonly: true },
-          userX: { readonly: false }
+          mine: { readonly: false }
         }
       }
     })
-    console.log('HERE HERE')
     // db can load a document by id
     const doc = await userDb.get('phr936g')
     assert.equal(doc._id, 'phr936g')
     assert.equal(doc.title, 'Coffee')
     // user modifies document
+
+    userDb.maybeSaveClock() // force header write
+    await sleep(100)
+
+    const testdbPath = join(storage.config.dataDir, TEST_DB_NAME)
+    // const localdbPath = join(storage.config.dataDir, 'fptest-user-db-todos')
+    const mainHeaderPath = join(testdbPath, 'main.json')
+    const userHeaderPath = join(testdbPath, 'mine.json')
+    const mainHeaderData = JSON.parse(readFileSync(mainHeaderPath))
+    const userHeaderData = JSON.parse(readFileSync(userHeaderPath))
+
+    // console.log('userDataPath', userHeaderData)
+
+    assert(mainHeaderData.clock.length > 0)
+    assert(userHeaderData.clock.length > 0)
+
+    assert.deepEqual(mainHeaderData.clock, userHeaderData.clock)
+
+    assert.deepEqual(mainHeaderData.key, userHeaderData.key)
+    assert.deepEqual(mainHeaderData.car, userHeaderData.car)
 
     doc.title = 'Tea'
     const ok = await userDb.put(doc)
@@ -466,6 +770,17 @@ describe('Rest dataset', () => {
 
     const files2 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files2.length > 36, true)
+
+    const mainHeaderData2 = JSON.parse(readFileSync(mainHeaderPath))
+    const userHeaderData2 = JSON.parse(readFileSync(userHeaderPath))
+
+    assert(mainHeaderData2.clock.length > 0)
+    assert.deepEqual(mainHeaderData.clock, mainHeaderData2.clock)
+
+    assert.notDeepEqual(userHeaderData.clock, userHeaderData2.clock)
+
+    const doc3a = await userDb.get('phr936g')
+    assert.equal(doc3a._id, 'phr936g')
 
     // it will be saved locally and to the user branch on the server
     // ** to prove this **
@@ -490,24 +805,54 @@ describe('Rest dataset', () => {
     const doc2 = await userDb2.get('phr936g')
     assert.equal(doc2._id, 'phr936g')
     assert.equal(doc2.title, 'Tea')
+
+    const files = await dbFiles(storage, TEST_DB_NAME)
+    assert(files.includes('mine.json'))
+    const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
+    const headerPath = join(dbPath, 'mine.json')
+    const headerData = JSON.parse(readFileSync(headerPath))
+    console.log('headerXXXData', headerData)
+    // assert.equal(headerData.name, TEST_DB_NAME)
+
+    assert(headerData.key, 'key should be in header')
+    assert.deepEqual(mainHeaderData.key, headerData.key)
+    assert.notDeepEqual(mainHeaderData.car, headerData.car)
+    assert.deepEqual(userHeaderData2.car, headerData.car)
+    assert.deepEqual(userHeaderData2.key, headerData.key)
+
+    await sleep(100)
+    console.log('HEREHERE')
+
     // open a db with storage using the user branch from the cloud secondary
-    const userDb3 = await Fireproof.storage(TEST_DB_NAME, {
+    const userDb3 = Fireproof.storage(TEST_DB_NAME, {
       primary: {
         type: 'rest',
         url: 'http://localhost:8000/' + TEST_DB_NAME,
         branches: {
-          // main: { readonly: true },
-          usrX: { readonly: false }
+          mine: { readonly: false }
         }
       }
     })
+    await userDb3.ready
+    // return
+    await sleep(100)
+
+    assert.equal(userDb3.blocks.valet.primary.name, 'dataset-fptest')
+    assert.equal(userDb3.blocks.valet.primary.config.branches.mine.readonly, false)
+    // console.log('hmm', userDb3.blocks.valet.primary)
+
+    assert.equal(userDb3.blocks.valet.primary.valetRootCarCid, headerData.car)
+    assert.equal(userDb3.blocks.valet.primary.keyMaterial, headerData.key)
 
     // it will have the same document
     const doc3 = await userDb3.get('phr936g')
     assert.equal(doc3._id, 'phr936g')
     assert.equal(doc3.title, 'Tea')
+
+    // also test mine branch on Filesystem primary
+    // what happens when we use a bunk branch name?
   })
 
   // the same test as above but where the user branch shares a key with the local main branch
-  it('user clone of server dataset with user key in user branch')
+  it('user clone server dataset with user key in user branch')
 })

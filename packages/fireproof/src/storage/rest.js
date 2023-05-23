@@ -47,9 +47,12 @@ export class Rest extends Base {
 
   async writeHeader (branch, header) {
     if (this.config.readonly) return
+    const pHeader = this.prepareHeader(header)
+    console.log('writeHeader rt', branch, pHeader)
+
     const response = await fetch(this.headerURL(branch), {
       method: 'PUT',
-      body: this.prepareHeader(header),
+      body: pHeader,
       headers: { 'Content-Type': 'application/json' }
     })
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)

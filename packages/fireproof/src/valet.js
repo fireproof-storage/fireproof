@@ -31,7 +31,7 @@ export class Valet {
     if (this.secondary) readyP.push(this.secondary.ready)
 
     this.ready = Promise.all(readyP).then((blocksReady) => {
-      console.log('blocksReady valet', this.name, blocksReady)
+      // console.log('blocksReady valet', this.name, blocksReady)
       return blocksReady
     })
   }
@@ -81,7 +81,8 @@ export class Valet {
       // console.log('encrypting car', innerBlockstore.label)
       // todo should we pass cids in instead of iterating innerBlockstore?
 
-      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.primary.keyMaterial)
+      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, storage.keyMaterial)
+      // console.log('encrypted car', newCar.cid.toString(), keyMa)
     } else {
       newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
     }
@@ -92,14 +93,14 @@ export class Valet {
   remoteBlockFunction = null
 
   async getValetBlock (dataCID) {
-    // console.log('getValetBlock primary', dataCID)
+    console.log('getValetBlock primary', dataCID)
     try {
       const { block } = await this.primary.getLoaderBlock(dataCID)
       return block
     } catch (e) {
-      // console.log('getValetBlock error', e)
+      console.log('getValetBlock error', e)
       if (this.secondary) {
-        // console.log('getValetBlock secondary', dataCID)
+        console.log('getValetBlock secondary', dataCID)
         try {
           const { block, reader } = await this.secondary.getLoaderBlock(dataCID)
           const cids = new Set()
@@ -113,7 +114,7 @@ export class Valet {
           await this.parkCar(this.primary, reader, [...cids])
           return block
         } catch (e) {
-          // console.log('getValetBlock secondary error', e)
+          console.log('getValetBlock secondary error', e)
         }
       }
     }
@@ -157,7 +158,7 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   for (const { cid } of blocks.entries()) {
     theCids.push(cid.toString())
   }
-  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()))
+  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()), keyMaterial)
   // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
@@ -186,7 +187,7 @@ export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
   } else {
     const blocksPromise = (async () => {
       const decryptionKey = Buffer.from(keyMaterial, 'hex')
-      // console.log('decrypting', keyMaterial, cid.toString())
+      console.log('decrypting', keyMaterial, cid.toString())
       const cids = new Set()
       const decryptedBlocks = []
       for await (const block of decrypt({

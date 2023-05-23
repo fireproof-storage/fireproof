@@ -17,11 +17,11 @@ export class Fireproof {
    */
   static storage = (name = null, opts = {}) => {
     if (!name) {
-      return new Database(null, [], opts)
+      return new Database(null, opts)
     } else {
       // const primaryLoader = Loader.appropriate(name, opts.primary, { key: null })
       // const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
-      const db = new Database(name, [], opts)
+      const db = new Database(name, opts)
       return db
       // const loaders = [pr]
 
@@ -85,8 +85,9 @@ export class Fireproof {
       })
     }
 
-    const withBlocks = new Database(database.name, definition.clock.map(c => parseCID(c)))
+    const withBlocks = new Database(database.name)
     withBlocks.blocks = database.blocks
+    withBlocks.clock = definition.clock
 
     const snappedDb = Fireproof.fromJSON(definition, null, withBlocks)
     ;[...database.indexes.values()].forEach(index => {

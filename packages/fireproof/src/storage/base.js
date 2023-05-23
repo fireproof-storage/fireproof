@@ -95,25 +95,28 @@ export class Base {
   }
 
   applyHeaders (headers) {
-    // console.log('applyHeaders', headers)
+    // console.log('applyHeaders', headers.index)
     this.headers = headers
     // console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
-    for (const [branch, header] of Object.entries(headers)) {
+    for (const [, header] of Object.entries(headers)) {
       if (header) {
-        // console.log('applyHeaders', this.instanceId, this.name, branch, header.key, this.config)
+        console.log('applyHeaders', this.instanceId, this.name, header.key, header.car)
         header.key && this.setKeyMaterial(header.key)
         this.setCarCidMapCarCid(header.car)
       }
     }
+    if (!this.valetRootCarCid) {
+      this.setCarCidMapCarCid(this.config.car)
+    }
     if (!this.keyMaterial) {
       const nullKey = this.config.key === null
-      if (nullKey) {
-        this.setKeyMaterial(null)
+      if (nullKey || this.config.key) {
+        this.setKeyMaterial(this.config.key)
       } else {
         this.setKeyMaterial(randomBytes(32).toString('hex'))
       }
     }
-    // console.log('applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
+    console.log('applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
   }
 
   async getHeaders () {
@@ -139,6 +142,7 @@ export class Base {
     //  }
     for (const [branch, { readonly }] of Object.entries(this.config.branches)) {
       if (readonly) continue
+      // console.log('saveHeader', this.instanceId, this.name, branch, header)
       await this.writeHeader(branch, header)
     }
   }
@@ -146,7 +150,7 @@ export class Base {
   prepareHeader (header, json = true) {
     header.key = this.keyMaterial
     header.car = this.valetRootCarCid.toString()
-    console.log('prepareHeader', this.instanceId, this.name, header.key, this.valetRootCarCid.toString())
+    // console.log('prepareHeader', this.instanceId, this.name, header.key, this.valetRootCarCid.toString())
     return json ? JSON.stringify(header) : header
   }
 
