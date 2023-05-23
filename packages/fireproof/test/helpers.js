@@ -4,7 +4,8 @@ import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { MemoryBlockstore } from './block.js'
-import { Loader } from '../src/loader.js'
+// import { defaultConfig } from '../src/storage/filesystem.js'
+import { homedir } from 'os'
 
 import { join } from 'path'
 import { rmSync, readdirSync } from 'node:fs'
@@ -21,21 +22,18 @@ export const dbFiles = async (storage, name) => {
 }
 
 export function resetTestDataDir (name) {
-  // fs.rmdirSync(testDataDir, { recursive: true })
-  // fs.mkdirSync(testDataDir, { recursive: true })
+  const dataDir = join(homedir(), '.fireproof')
 
-  const storage = Loader.appropriate('helloName')
-
-  const files = readdirSync(storage.config.dataDir)
+  const files = readdirSync(dataDir)
 
   if (name) {
     // console.log('removing', name)
-    rmSync(join(storage.config.dataDir, name), { recursive: true, force: true })
+    rmSync(join(dataDir, name), { recursive: true, force: true })
   } else {
     for (const file of files) {
       if (file.match(/fptest/)) {
         // console.log('removing', file)
-        rmSync(join(storage.config.dataDir, file), { recursive: true, force: true })
+        rmSync(join(dataDir, file), { recursive: true, force: true })
       }
     }
   }
