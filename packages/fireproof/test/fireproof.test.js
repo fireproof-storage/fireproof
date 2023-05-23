@@ -9,7 +9,7 @@ import { rmSync } from 'node:fs'
 
 import { resetTestDataDir } from './helpers.js'
 
-let database = Fireproof.storage()
+let database
 
 let resp0
 

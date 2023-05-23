@@ -4,15 +4,15 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { Base } from './base.js'
 
-const defaultConfig = {
+export const defaultConfig = {
   dataDir: join(homedir(), '.fireproof')
 }
 
 export class Filesystem extends Base {
-  constructor (name, config = {}, header = {}) {
+  constructor (name, config = {}) {
     const mergedConfig = Object.assign({}, defaultConfig, config)
     // console.log('Filesystem', name, mergedConfig, header)
-    super(name, mergedConfig, header)
+    super(name, mergedConfig)
   }
 
   async writeCars (cars) {

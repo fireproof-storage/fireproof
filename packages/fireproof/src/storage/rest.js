@@ -6,9 +6,9 @@ const defaultConfig = {
 }
 
 export class Rest extends Base {
-  constructor (name, config = {}, header = {}) {
-    super(name, Object.assign({}, defaultConfig, config), header)
-    console.log('Rest', name, config, header)
+  constructor (name, config = {}) {
+    super(name, Object.assign({}, defaultConfig, config))
+    // console.log('Rest', name, config)
   }
 
   headerURL (branch = 'main') {

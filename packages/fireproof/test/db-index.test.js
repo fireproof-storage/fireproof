@@ -4,8 +4,8 @@ import { Fireproof } from '../src/fireproof.js'
 import { DbIndex } from '../src/db-index.js'
 
 describe('DbIndex query', () => {
-  let database = Fireproof.storage()
-  let index = new DbIndex(database, () => {})
+  let database
+  let index
   beforeEach(async () => {
     database = Fireproof.storage()
     const docs = [

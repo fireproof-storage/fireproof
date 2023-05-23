@@ -38,6 +38,11 @@ export class Database {
 
     this.clock = clock
     this.config = config
+    // todo we can wait for index blocks elsewhere
+    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then((blocksReady) => {
+      console.log('blocksReady db', name, blocksReady)
+    })
+    // console.log('new db', name, this.instanceId)
   }
 
   /**

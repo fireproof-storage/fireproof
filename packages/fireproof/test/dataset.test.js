@@ -12,13 +12,63 @@ import { resetTestDataDir, dbFiles } from './helpers.js'
 const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+describe('basic dataset', () => {
+  let db, storage
+  beforeEach(async () => {
+    await sleep(10)
+    resetTestDataDir()
+    console.log('make db')
+    db = Fireproof.storage(TEST_DB_NAME)
+    storage = db.blocks.valet.primary
+    await db.ready
+
+    console.log('load data')
+    await db.put({ _id: 'foo', bar: 'baz' })
+    await sleep(10)
+  })
+  it('gets all docs', async () => {
+    const response = await db.allDocuments()
+    assert.equal(response.rows.length, 1)
+    const doc = await db.get('foo')
+    assert.equal(doc.bar, 'baz')
+  }).timeout(10000)
+  it('creates car files', async () => {
+    const files = await dbFiles(storage, TEST_DB_NAME)
+    assert(files.length > 2)
+  })
+  it('writes header file', async () => {
+    const files = await dbFiles(storage, TEST_DB_NAME)
+    assert(files.includes('main.json'))
+
+    const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
+    const headerPath = join(dbPath, 'main.json')
+    const headerData = JSON.parse(readFileSync(headerPath))
+    console.log('headerData', headerData)
+    assert.equal(headerData.name, TEST_DB_NAME)
+    assert(headerData.key, 'key should be in header')
+  })
+  it('reloads fresh', async () => {
+    const fileDb = Fireproof.storage(TEST_DB_NAME)
+    await fileDb.ready
+    console.log('QUERY', fileDb)
+    const response = await fileDb.allDocuments()
+    assert.equal(response.rows.length, 1)
+    const doc = await fileDb.get('foo')
+    assert.equal(doc.bar, 'baz')
+  })
+})
+
 describe('Create a dataset', () => {
   let db, storage
   beforeEach(async () => {
     await sleep(10)
-    storage = Loader.appropriate(TEST_DB_NAME)
+    // storage = Loader.appropriate(TEST_DB_NAME)
     resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
+    storage = db.blocks.valet.primary
+    await db.ready
+
+    console.log('load data')
     await loadData(db, './test/todos.json')
     await sleep(10)
   })
@@ -41,7 +91,9 @@ describe('Create a dataset', () => {
   it('doesnt put the key in the header', async () => {})
   it('works with fresh reader storage', async () => {
     await sleep(10)
-    const fileDb = await Fireproof.storage(TEST_DB_NAME)
+    const fileDb = Fireproof.storage(TEST_DB_NAME)
+    await fileDb.ready
+    console.log('QUERY', fileDb)
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 18)
   })
@@ -188,8 +240,12 @@ describe('Rest dataset', () => {
     const fileDb = await Fireproof.storage(TEST_DB_NAME, {
       secondary: { type: 'rest', url: 'http://localhost:8000/fptest-xtodos-remote' }
     })
-    // const response = await fileDb.allDocuments()
-    // assert.equal(response.rows.length, 18)
+    const response0 = await db.allDocuments()
+    assert.equal(response0.rows.length, 18)
+
+    const response = await fileDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+
     assert.equal(fileDb.name, TEST_DB_NAME)
     // new writes should go to both
     // it('saves car files', () => {
@@ -391,6 +447,7 @@ describe('Rest dataset', () => {
         }
       }
     })
+    console.log('HERE HERE')
     // db can load a document by id
     const doc = await userDb.get('phr936g')
     assert.equal(doc._id, 'phr936g')

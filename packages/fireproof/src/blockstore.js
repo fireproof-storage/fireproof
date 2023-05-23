@@ -44,6 +44,9 @@ export class TransactionBlockstore {
   constructor (name, config) {
     if (name) {
       this.valet = new Valet(name, config)
+      this.ready = this.valet.ready
+    } else {
+      this.ready = Promise.resolve()
     }
     this.remoteBlockFunction = null
   }

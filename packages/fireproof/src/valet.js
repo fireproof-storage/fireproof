@@ -23,8 +23,14 @@ export class Valet {
   constructor (name = 'default', config = {}) {
     this.name = name
     // console.log('new Valet', name, config.primary)
-    this.primary = Loader.appropriate(name, config.primary, config.primaryHeader)
-    this.secondary = config.secondary ? Loader.appropriate(name, config.secondary, config.secondaryHeader) : null
+    this.primary = Loader.appropriate(name, config.primary)
+    this.secondary = config.secondary ? Loader.appropriate(name, config.secondary) : null
+    // set up a promise listener that applies all the headers to the clock
+    // when they resolve
+    this.ready = Promise.all([this.primary.ready, this.secondary ? this.secondary.ready : Promise.resolve()]).then((blocksReady) => {
+      console.log('blocksReady valet', blocksReady)
+      return blocksReady
+    })
   }
 
   async saveHeader (header) {
