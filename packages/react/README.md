@@ -65,13 +65,7 @@ export default TodoList = () => {
 
 This example shows calling `useFireproof` and `useLiveQuery`. It may be all you need to get started.
 
-## Using the `useFireproof` hook
-
-The other top level hook, `useFireproof`, takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
-
-The return value looks like `{ useLiveQuery, useLiveDocument, database, ready }` where the `database` is the Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `useLiveQuery` and `useLiveDocument` functions are hooks used to update your app in real-time.
-
-Changes made via remote sync peers, or other members of your cloud replica group will appear automatically if you use these APIs. Makes writing collaborative workgroup software, and multiplayer games super easy.
+## Hooks usage
 
 ### `useLiveQuery`
 
@@ -163,6 +157,15 @@ function MyComponent() {
         /><button onClick={saveDoc}>Save</button>
 }
 ```
+
+## Using the `useFireproof` hook
+
+The other top level hook, `useFireproof`, takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
+
+The return value looks like `{ useLiveQuery, useLiveDocument, database, ready }` where the `database` is the Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `useLiveQuery` and `useLiveDocument` functions are hooks used to update your app in real-time.
+
+Changes made via remote sync peers, or other members of your cloud replica group will appear automatically if you use these APIs. Makes writing collaborative workgroup software, and multiplayer games super easy.
+
 
 ### Raw database subscription
 
