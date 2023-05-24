@@ -1,6 +1,6 @@
 {
-  "name": "@fireproof/react",
-  "version": "0.6.7",
+  "name": "use-fireproof",
+  "version": "0.6.8",
   "description": "React hooks for Fireproof realtime cloudless database",
   "main": "dist/index.js",
   "scripts": {
