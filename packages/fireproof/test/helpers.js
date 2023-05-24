@@ -25,8 +25,9 @@ export const dbFiles = async (storage, name) => {
   return files
 }
 
-export function resetTestDataDir (name) {
+export async function resetTestDataDir (name) {
   const dataDir = join(homedir(), '.fireproof')
+  await mkdir(dataDir, { recursive: true })
 
   const files = readdirSync(dataDir)
 

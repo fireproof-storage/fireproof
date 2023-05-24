@@ -16,7 +16,7 @@ describe('basic dataset', () => {
   let db, storage
   beforeEach(async () => {
     await sleep(10)
-    resetTestDataDir()
+    await resetTestDataDir()
     // console.log('make db')
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
@@ -88,7 +88,7 @@ describe('basic dataset with index', () => {
   let db, storage, index, response
   beforeEach(async () => {
     await sleep(10)
-    resetTestDataDir()
+    await resetTestDataDir()
     // console.log('make db')
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
@@ -153,7 +153,7 @@ describe('Create a dataset', () => {
   beforeEach(async () => {
     await sleep(10)
     // storage = Loader.appropriate(TEST_DB_NAME)
-    resetTestDataDir()
+    await resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
     // await db.ready
@@ -193,7 +193,7 @@ describe('Rest dataset', () => {
   let db, storage, server
   beforeEach(async () => {
     await sleep(10)
-    resetTestDataDir()
+    await resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
     storage = db.blocks.valet.primary
     await loadData(db, './test/todos.json')
@@ -347,7 +347,7 @@ describe('Rest dataset', () => {
   }).timeout(10000)
   it('attach empty secondary rest storage to existing db', async () => {
     await sleep(100)
-    resetTestDataDir('fptest-xtodos-remote')
+    await resetTestDataDir('fptest-xtodos-remote')
     // await mkdir(dirname(fullpath), { recursive: true })
 
     const remoteFiles0 = await dbFiles(storage, 'fptest-xtodos-remote')
@@ -628,7 +628,7 @@ describe('Rest dataset', () => {
 
     // fuck around with the filesystem
     const COPY_NAME = USER_DB_NAME + 'copy'
-    resetTestDataDir(COPY_NAME)
+    await resetTestDataDir(COPY_NAME)
     const copydbPath = join(storage.config.dataDir, COPY_NAME)
 
     // recursively copy from testdbPath to copydbPath
