@@ -16,7 +16,6 @@
   </a>
 </p>
 
-
 Learn more about [the features and benefits of Fireproof](https://github.com/fireproof-storage/fireproof#readme) in the core repo. This README is for the React hooks.
 
 ## Quick Start
@@ -61,7 +60,7 @@ This example shows calling `useFireproof` and `useLiveQuery`. It may be all you 
 
 ## Using the `useFireproof` hook
 
-The `useFireproof` hook takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
+The other top level hook, `useFireproof`, takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
  
 The return value looks like `{ useLiveQuery, useLiveDocument, database, ready }` where the `database` is the Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `useLiveQuery` and `useLiveDocument` functions are hooks used to update your app in real-time.
 
@@ -69,13 +68,23 @@ Changes made via remote sync peers, or other members of your cloud replica group
 
 ### `useLiveQuery`
 
-In your components, the `database` object and `useLiveQuery` hook are returned from the `useFireproof` hook. You can use the `useLiveQuery` hook to subscribe to query results, and automatically redraw when necessary. When sync is enabled you'll have both parties updating the same database in real-time. Here's an example of a simple shared to-do list. For something like a form you should use Live Document instead:
+In your components, the `database` object and `useLiveQuery` hook are returned from the `useFireproof` hook. You can use the `useLiveQuery` hook to subscribe to query results, and automatically redraw when necessary. When sync is enabled you'll have both parties updating the same database in real-time. Here's an example of a simple shared to-do list. For something like a form you should use Live Document instead. There are two ways to call `useLiveQuery` - as a top-level hook, or based on the return value of `useFireproof`, which allows you to specifc the database name and replication options. Most apps will start with the top-level `useLiveQuery` hook, and then move to the lower-level API when they need more control.
 
-```
-const { database, useLiveQuery } = useFireproof("my-app-db")
-const todos = useLiveQuery('date').docs
+```js
+export default TodoList = () => {
+  const todos = useLiveQuery('date').docs
+  ...
 ```
 
+The top-level call (above) will use the default database name, and the default replication options. You can also call `useLiveQuery` with a database name and replication options, by instantiating the `useFireproof` hook directly. Here's an example that uses the lower-level API:
+
+
+```js
+export default TodoList = () => {
+  const { database, useLiveQuery } = useFireproof("my-todo-app")
+  const todos = useLiveQuery('date').docs
+  ...
+```
 
 This [running CodePen example](https://codepen.io/jchrisa/pen/vYVVxez?editors=0010) uses the `useLiveQuery` to display a list of todos, and the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:
 
@@ -234,5 +243,3 @@ export default async function loadFixtures(database) {
   }
 }
 ```
-
- 
