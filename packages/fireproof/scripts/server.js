@@ -85,7 +85,9 @@ export function startServer (quiet = true) {
       }
     })
   server.listen(PORT)
-  log(`Server running at http://127.0.0.1:${PORT}/`)
+  fs.promises.mkdir(DATA_PATH, { recursive: true }).then(() => {
+    log(`Server running at http://127.0.0.1:${PORT}/`)
+  })
   return server
 }
 
