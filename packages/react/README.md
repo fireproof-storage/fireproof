@@ -27,14 +27,14 @@ Using Fireproof in your React app is as easy as running:
 npm install @fireproof/react
 ```
 
-Then in your app, you can use the `useFireproof` hook to get access to the database and live query hooks. Here's an example to-do list that initializes the database and sets up automatic refresh for query results. It also uses the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:
+Then in your app, you can use the top-level `useLiveQuery` hook to get access to the database and live query responses. Here's an example to-do list that initializes the database and sets up automatic refresh for query results. It also uses the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:
 
 ```js
-import { useFireproof } from '@fireproof/react'
+import { useLiveQuery } from '@fireproof/react'
 
 export default TodoList = () => {
-  const { database, useLiveQuery } = useFireproof("my-app-db")
   const todos = useLiveQuery('date').docs
+  const database = useLiveQuery.database
   const [newTodo, setNewTodo] = useState('')
 
   return (
