@@ -38,6 +38,34 @@ const initializeDatabase = (
 };
 
 /**
+ * Top level hook to initialize a Fireproof database and a query for it.
+ * Uses default db name 'useFireproof'.
+ */
+const topLevelUseLiveQuery = (...args) => {
+  const { useLiveQuery } = useFireproof();
+  return useLiveQuery(...args);
+};
+
+export const useLiveQuery = new Proxy(topLevelUseLiveQuery, {
+  get(target, prop, receiver) {
+    const { database } = useFireproof();
+    if (typeof database[prop] === 'function') {
+      return database[prop].bind(database);
+    }
+    return Reflect.get(target, prop, receiver);
+  },
+  set(target, prop, value) {
+    const { database } = useFireproof();
+    if (typeof database[prop] === 'function') {
+      throw new Error(`Cannot set property '${String(prop)}' of useLiveQuery, because it's a database method.`);
+    }
+    return Reflect.set(target, prop, value);
+  },
+});
+
+// export { useLiveQuery };
+
+/**
 @function useFireproof
 React hook to initialize a Fireproof database.
 You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in your vite.config.ts
