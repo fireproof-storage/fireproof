@@ -63,7 +63,7 @@ export default TodoList = () => {
 };
 ```
 
-This example shows calling `useFireproof` and `useLiveQuery`. It may be all you need to get started.
+This example shows calling `useLiveQuery` and `database.put`. It may be all you need to get started. You can [try out a running version here.](https://codepen.io/jchrisa/pen/vYVVxez?editors=0010)
 
 ## Hooks usage
 
