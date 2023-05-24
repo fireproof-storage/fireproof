@@ -385,3 +385,40 @@ describe('DbIndex query with concise index definition', () => {
     assert.equal(result.rows[0].key, 41)
   })
 })
+
+describe('DbIndex query with string index definition', () => {
+  let database, index
+  beforeEach(async () => {
+    database = Fireproof.storage()
+    await database.put({ _id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c', name: 'alice', age: 40 })
+    index = new DbIndex(database, null, 'age')
+  })
+  it('sets string fn', () => {
+    assert.equal(index.mapFnString, 'age')
+  })
+  it('has a default name', () => {
+    assert.equal(index.name, 'age')
+  })
+  it('query index range', async () => {
+    const result = await index.query({ range: [39, 44] })
+    assert.equal(result.rows.length, 1)
+    assert.equal(result.rows[0].value, null)
+  })
+  it('defaults to includeDocs = true', async () => {
+    const result = await index.query({ range: [39, 44] })
+    assert.equal(result.rows[0].value, null)
+    assert(result.rows[0].doc, 'doc is included')
+    assert.equal(result.rows[0].doc.name, 'alice')
+  })
+  it('with includeDocs = false', async () => {
+    const result = await index.query({ range: [39, 44], includeDocs: false })
+    assert.equal(result.rows[0].value, null)
+    assert(!result.rows[0].doc, 'doc should not be included')
+  })
+  it('query index range descending', async () => {
+    await database.put({ _id: 'randy-1234', name: 'randy', age: 41 })
+    const result = await index.query({ range: [39, 44], descending: true })
+    assert.equal(result.rows.length, 2)
+    assert.equal(result.rows[0].key, 41)
+  })
+})

@@ -34,7 +34,7 @@ import { useFireproof } from '@fireproof/react'
 
 export default TodoList = () => {
   const { database, useLiveQuery } = useFireproof("my-app-db")
-  const todos = useLiveQuery((doc) => doc.date).docs
+  const todos = useLiveQuery('date').docs
   const [newTodo, setNewTodo] = useState('')
 
   return (
@@ -59,7 +59,7 @@ export default TodoList = () => {
 
 This example shows calling `useFireproof` and `useLiveQuery`. It may be all you need to get started.
 
-### `useFireproof`
+## Using the `useFireproof` hook
 
 The `useFireproof` hook takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
  
@@ -69,8 +69,12 @@ Changes made via remote sync peers, or other members of your cloud replica group
 
 ### `useLiveQuery`
 
-And in your components, the `database` object and `useLiveQuery` and `useLiveDocument` hooks are available. 
+In your components, the `database` object and `useLiveQuery` hook are returned from the `useFireproof` hook. You can use the `useLiveQuery` hook to subscribe to query results, and automatically redraw when necessary. When sync is enabled you'll have both parties updating the same database in real-time. Here's an example of a simple shared to-do list. For something like a form you should use Live Document instead:
 
+```
+const { database, useLiveQuery } = useFireproof("my-app-db")
+const todos = useLiveQuery('date').docs
+```
 
 
 This [running CodePen example](https://codepen.io/jchrisa/pen/vYVVxez?editors=0010) uses the `useLiveQuery` to display a list of todos, and the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:

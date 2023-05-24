@@ -134,12 +134,21 @@ export class DbIndex {
   applyMapFn (mapFn, name) {
     if (typeof mapFn === 'string') {
       this.mapFnString = mapFn
+      // make a regex that matches strings that only have letters, numbers, and spaces
+      const regex = /^[a-zA-Z0-9 ]+$/
+      // if the string matches the regex, make a function that returns the value at that key
+      if (regex.test(mapFn)) {
+        this.mapFn = (doc, emit) => {
+          if (doc[mapFn]) emit(doc[mapFn])
+        }
+        this.includeDocsDefault = true
+      }
     } else {
       this.mapFn = mapFn
       this.mapFnString = mapFn.toString()
     }
     const matches = /=>\s*(.*)/.exec(this.mapFnString)
-    this.includeDocsDefault = matches && matches.length > 0
+    this.includeDocsDefault = this.includeDocsDefault || (matches && matches.length > 0)
     this.name = name || this.makeName()
   }
 
