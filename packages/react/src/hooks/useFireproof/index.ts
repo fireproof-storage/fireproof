@@ -9,13 +9,13 @@ interface Document {
 export interface FireproofCtxValue {
   database: Database;
   useLiveQuery: Function;
-  useLiveDocument: Function;
+  useDocument: Function;
   ready: boolean;
 }
 
 export const FireproofCtx = createContext<FireproofCtxValue>({
   useLiveQuery: () => {},
-  useLiveDocument: () => {},
+  useDocument: () => {},
   database: new Database(null, []),
   ready: false,
 });
@@ -55,13 +55,13 @@ export const useLiveQuery = topLevelUseLiveQuery
  * Uses default db name 'useFireproof'.
  */
 const topLevelUseLiveDocument = (...args) => {
-  const { useLiveDocument, database } = useFireproof();
+  const { useDocument, database } = useFireproof();
   // @ts-ignore
   topLevelUseLiveQuery.database = database
-  return useLiveDocument(...args);
+  return useDocument(...args);
 };
 
-export const useLiveDocument = topLevelUseLiveDocument
+export const useDocument = topLevelUseLiveDocument
 
 
 // export { useLiveQuery };
@@ -73,7 +73,7 @@ You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in 
 @param {string} name - The path to the database file
 @param {function(database: Database): void} [defineDatabaseFn] - Synchronous function that defines the database, run this before any async calls
 @param {function(database: Database): Promise<void>} [setupDatabaseFn] - Asynchronous function that sets up the database, run this to load fixture data etc
-@returns {FireproofCtxValue} { useLiveQuery, useLiveDocument, database, ready }
+@returns {FireproofCtxValue} { useLiveQuery, useDocument, database, ready }
 */
 export function useFireproof(
   name = 'useFireproof',
@@ -102,13 +102,13 @@ export function useFireproof(
     doSetup();
   }, [name]);
 
-  function useLiveDocument(initialDoc: Document) {
+  function useDocument(initialDoc: Document) {
     const id = initialDoc._id;
     const [doc, setDoc] = useState(initialDoc);
 
     const saveDoc = useCallback(
       async () => await database.put({ ...doc, _id: id }),
-      [id],
+      [id, doc],
     );
 
     const refreshDoc = useCallback(async () => {
@@ -169,7 +169,7 @@ export function useFireproof(
 
   return {
     useLiveQuery,
-    useLiveDocument,
+    useDocument,
     database,
     ready,
   };
