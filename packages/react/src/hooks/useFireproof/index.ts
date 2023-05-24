@@ -89,10 +89,6 @@ export function useFireproof(
 
   useEffect(() => { }, [name]);
 
-  database.onReady(() => {
-
-  });
-
   useEffect(() => {
     const doSetup = async () => {
       if (ready || init.setupStarted) return;
