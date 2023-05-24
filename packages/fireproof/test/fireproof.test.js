@@ -10,11 +10,11 @@ let resp0
 
 describe('Fireproof', () => {
   // before(async () => {
-  // resetTestDataDir()
+  // await resetTestDataDir()
   // })
   beforeEach(async () => {
     await sleep(10)
-    resetTestDataDir()
+    await resetTestDataDir()
     // const loader = Loader.appropriate('helloName')
     // rmSync(join(loader.config.dataDir, 'fptest-hello-name'), { recursive: true, force: true })
     // console.log('new database instance')

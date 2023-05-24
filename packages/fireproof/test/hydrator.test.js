@@ -82,7 +82,7 @@ describe('Hydrator', () => {
 describe('hydrator query with dbname', () => {
   let database, index
   beforeEach(async () => {
-    resetTestDataDir()
+    await resetTestDataDir()
 
     database = Fireproof.storage('fptest-ix-name')
     const docs = [
