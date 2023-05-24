@@ -92,38 +92,49 @@ export default TodoList = () => {
 
 This [running CodePen example](https://codepen.io/jchrisa/pen/vYVVxez?editors=0010) uses the `useLiveQuery` to display a list of todos, and the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:
 
-### `useLiveDocument`
+### `useDocument`
 
 You can also subscribe directly to database updates, and automatically redraw when necessary. When sync is enabled you'll have both parties updating the same database in real-time. Here's an example of a simple shared text area (in real life you'd probably want to use an operational transform library like [Yjs](https://github.com/yjs/yjs) or [Automerge](https://automerge.org) for shared text areas, which both work great with Fireproof).
 
-Just like useLiveQuery, you can call useLiveDocument as a top-level hook, or based on the return value of useFireproof. Here's an example that uses the top-level hook:
+Just like useLiveQuery, you can call useDocument as a top-level hook, or based on the return value of useFireproof. Here's an example that uses the top-level hook:
 
 ```js
-import { useLiveDocument } from 'use-fireproof';
+import { useDocument } from 'use-fireproof';
 
 const CustomerProfile = ({ customerId }) => {
-  const [doc, setDoc, saveDoc] = useLiveDocument({
+  const [doc, setDoc, saveDoc] = useDocument({
     _id: `${customerId}-profile`,
     name: "",
     company: "",
-    createdAt: new Date()
+    startedAt: Date.now()
   });
   return (
-    <>
+    <div>
       <form>
-        Name:{" "}
-        <input type="text" value={doc.name} onChange={(e) => setDoc({ name: e.target.value })} />
-        Company:{" "}
+        Name:
+        <input
+          type="text"
+          value={doc.name}
+          onChange={(e) => setDoc({ name: e.target.value })}
+        />
+        Company:
         <input
           type="text"
           value={doc.company}
           onChange={(e) => setDoc({ company: e.target.value })}
         />
-        <button onClick={saveDoc}>Save</button>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            saveDoc();
+          }}
+        >
+          Save
+        </button>
       </form>
-      <p>Created: {doc.createdAt}</p>
-      <pre>{JSON.stringify(doc, null, 2)}</pre>
-    </>
+          <p>Started at: {doc.startedAt}</p>
+        <pre>{JSON.stringify(doc, null, 2)}</pre>
+    </div>
   );
 };
 ```
@@ -134,8 +145,8 @@ The top-level call (above) will use the default database name, and the default r
 import { useFireproof } from 'use-fireproof';
 
 const CustomerProfile = ({ customerId }) => {
-  const { database, useLiveDocument } = useFireproof("my-todo-app")
-  const [doc, setDoc, saveDoc] = useLiveDocument({
+  const { database, useDocument } = useFireproof("my-todo-app")
+  const [doc, setDoc, saveDoc] = useDocument({
     _id: `${customerId}-profile`,
     name: "",
     company: "",
@@ -147,10 +158,10 @@ const CustomerProfile = ({ customerId }) => {
 Another simple use case for Live Document is a shared form, where multiple users can edit the same document at the same time. For something like a chat room you should use Live Query instead:
 
 ```js
-import { useLiveDocument } from 'use-fireproof'
+import { useDocument } from 'use-fireproof'
 
 function MyComponent() {
-  const [doc, setDoc, saveDoc] = useLiveDocument({ _id : "my-doc-id" })
+  const [doc, setDoc, saveDoc] = useDocument({ _id : "my-doc-id" })
 
   return <input
           value={doc.text}
@@ -163,7 +174,7 @@ function MyComponent() {
 
 The other top level hook, `useFireproof`, takes two optional setup function arguments, `defineDatabaseFn` and `setupDatabaseFn`. See below for examples.
 
-The return value looks like `{ useLiveQuery, useLiveDocument, database, ready }` where the `database` is the Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `useLiveQuery` and `useLiveDocument` functions are hooks used to update your app in real-time.
+The return value looks like `{ useLiveQuery, useDocument, database, ready }` where the `database` is the Fireproof instance that you can interact with using `put` and `get`, or via your indexes. The `ready` flag turns true after setup completes, you can use this to activate your UI. The `useLiveQuery` and `useDocument` functions are hooks used to update your app in real-time.
 
 Changes made via remote sync peers, or other members of your cloud replica group will appear automatically if you use these APIs. Makes writing collaborative workgroup software, and multiplayer games super easy.
 
@@ -227,7 +238,7 @@ const defineIndexes = (database) => {
 
 #### A note on using Context
 
-If you are just calling `useLiveQuery` and `useLiveDocument` and doing setup with the synchronous `defineDatabaseFn`, you may not need to manage context. If you are doing async setup work with `setupDatabaseFn` you will need to manage context. This allows you to run database setup code once for your entire app. Here is what you might see in App.js:
+If you are just calling `useLiveQuery` and `useDocument` and doing setup with the synchronous `defineDatabaseFn`, you may not need to manage context. If you are doing async setup work with `setupDatabaseFn` you will need to manage context. This allows you to run database setup code once for your entire app. Here is what you might see in App.js:
 
 ```js
 import { FireproofCtx, useFireproof } from '@fireproof/core/hooks/use-fireproof';

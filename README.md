@@ -38,14 +38,14 @@ With Fireproof, you **build first** and connect it to your cloud of choice when 
 ```js
   const completedTodos = useLiveQuery((doc) => doc.completed, { key: true })
 ```
-This is the README for the core database technology. [The `useFireproof` hook documentation has features and a getting started guide](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md), like `useLiveDocument` and database setup helpers. Don't forget to star 🌟 this repo on the way over.
+This is the README for the core database technology. [The `useFireproof` hook documentation has features and a getting started guide](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md), like `useDocument` and database setup helpers. Don't forget to star 🌟 this repo on the way over.
 
 ## AI Assistant Quick Start
 
 Because Fireproof is designed around the mantra of build-first, it's ideal for AI-assisted app development as you can get an app up and running before even considering the cloud. If you are using GPT-3.5, GPT-4, or Bard, you can [easily enable the AI to write React apps using Fireproof](https://hackernoon.com/get-chatgpt-to-focus-on-coding-on-the-right-apis-with-gptdoc-strings). Paste this line of code into your prompt, along with a detailed description of the app to build:
 
 ```
-Fireproof/React/Usage: import { useFireproof } from '@fireproof/react'; function App() { const { useLiveQuery, useLiveDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useLiveDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}
+Fireproof/React/Usage: import { useFireproof } from '@fireproof/react'; function App() { const { useLiveQuery, useDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}
 ```
 
 Here are some examples that worked for us:

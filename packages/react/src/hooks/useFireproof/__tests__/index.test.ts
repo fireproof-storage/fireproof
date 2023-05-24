@@ -20,10 +20,10 @@ describe('useFireproof tests', () => {
 
   it('renders the hook correctly and checks types', () => {
     renderHook(() => {
-      const { database, useLiveQuery, useLiveDocument } = useFireproof('dbname');
-      // console.log('useFireproof', database, useLiveQuery, useLiveDocument);
+      const { database, useLiveQuery, useDocument } = useFireproof('dbname');
+      // console.log('useFireproof', database, useLiveQuery, useDocument);
       expect(typeof useLiveQuery).toBe('function');
-      expect(typeof useLiveDocument).toBe('function');
+      expect(typeof useDocument).toBe('function');
       expect(database?.constructor.name).toBe('Database');
     });
   });
