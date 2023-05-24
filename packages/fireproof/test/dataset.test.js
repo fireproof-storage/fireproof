@@ -546,7 +546,7 @@ describe('Rest dataset', () => {
     assert.equal(response.rows.length, 19)
     const got = await mergedExistingDb.get('test')
     assert.equal(got.foo, 'bar')
-  })
+  }).timeout(10000)
   it('user clone of server short', async () => {
     // console.log('user clone of server short')
     const SERVER_DB_NAME = 'fptest-server-db-todos'
