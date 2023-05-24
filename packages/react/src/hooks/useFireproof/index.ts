@@ -50,6 +50,20 @@ const topLevelUseLiveQuery = (...args) => {
 
 export const useLiveQuery = topLevelUseLiveQuery
 
+/**
+ * Top level hook to initialize a Fireproof database and a document for it.
+ * Uses default db name 'useFireproof'.
+ */
+const topLevelUseLiveDocument = (...args) => {
+  const { useLiveDocument, database } = useFireproof();
+  // @ts-ignore
+  topLevelUseLiveQuery.database = database
+  return useLiveDocument(...args);
+};
+
+export const useLiveDocument = topLevelUseLiveDocument
+
+
 // export { useLiveQuery };
 
 /**
