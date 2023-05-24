@@ -11,8 +11,8 @@
   <a href="https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md">
     <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
   </a>
-  <a href="https://bundlephobia.com/package/@fireproof/react">
-    <img src="https://deno.bundlejs.com/?q=@fireproof/react&treeshake=[*+as+fireproofReact]&badge" alt="Bundle Size"  style="max-width: 100%;">
+  <a href="https://bundlephobia.com/package/use-fireproof">
+    <img src="https://deno.bundlejs.com/?q=use-fireproof&treeshake=[*+as+useFireproof]&badge" alt="Bundle Size"  style="max-width: 100%;">
   </a>
 </p>
 
@@ -23,13 +23,13 @@ Learn more about [the features and benefits of Fireproof](https://github.com/fir
 Using Fireproof in your React app is as easy as running:
 
 ```bash
-npm install @fireproof/react
+npm install use-fireproof
 ```
 
 Then in your app, you can use the top-level `useLiveQuery` hook to get access to the database and live query responses. Here's an example to-do list that initializes the database and sets up automatic refresh for query results. It also uses the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:
 
 ```js
-import { useLiveQuery } from '@fireproof/react';
+import { useLiveQuery } from 'use-fireproof';
 
 export default TodoList = () => {
   const todos = useLiveQuery('date').docs;
@@ -78,7 +78,7 @@ Changes made via remote sync peers, or other members of your cloud replica group
 In your components, the `database` object and `useLiveQuery` hook are returned from the `useFireproof` hook. You can use the `useLiveQuery` hook to subscribe to query results, and automatically redraw when necessary. When sync is enabled you'll have both parties updating the same database in real-time. Here's an example of a simple shared to-do list. For something like a form you should use Live Document instead. There are two ways to call `useLiveQuery` - as a top-level hook, or based on the return value of `useFireproof`, which allows you to specifc the database name and replication options. Most apps will start with the top-level `useLiveQuery` hook, and then move to the lower-level API when they need more control.
 
 ```js
-import { useLiveQuery } from '@fireproof/react';
+import { useLiveQuery } from 'use-fireproof';
 
 export default TodoList = () => {
   const todos = useLiveQuery('date').docs
@@ -88,7 +88,7 @@ export default TodoList = () => {
 The top-level call (above) will use the default database name, and the default replication options. You can also call `useLiveQuery` with a database name and replication options, by instantiating the `useFireproof` hook directly. Here's an example that uses the lower-level API:
 
 ```js
-import { useFireproof } from '@fireproof/react';
+import { useFireproof } from 'use-fireproof';
 
 export default TodoList = () => {
   const { database, useLiveQuery } = useFireproof("my-todo-app")
@@ -105,7 +105,7 @@ You can also subscribe directly to database updates, and automatically redraw wh
 Just like useLiveQuery, you can call useLiveDocument as a top-level hook, or based on the return value of useFireproof. Here's an example that uses the top-level hook:
 
 ```js
-import { useLiveDocument } from '@fireproof/react';
+import { useLiveDocument } from 'use-fireproof';
 
 const CustomerProfile = ({ customerId }) => {
   const [doc, setDoc, saveDoc] = useLiveDocument({
@@ -136,7 +136,7 @@ const CustomerProfile = ({ customerId }) => {
 The top-level call (above) will use the default database name, and the default replication options. You can also call `useLiveQuery` with a database name and replication options, by instantiating the `useFireproof` hook directly. Here's an example that uses the lower-level API:
 
 ```js
-import { useFireproof } from '@fireproof/react';
+import { useFireproof } from 'use-fireproof';
 
 const CustomerProfile = ({ customerId }) => {
   const { database, useLiveDocument } = useFireproof("my-todo-app")
@@ -152,7 +152,7 @@ const CustomerProfile = ({ customerId }) => {
 Another simple use case for Live Document is a shared form, where multiple users can edit the same document at the same time. For something like a chat room you should use Live Query instead:
 
 ```js
-import { useLiveDocument } from '@fireproof/react'
+import { useLiveDocument } from 'use-fireproof'
 
 function MyComponent() {
   const [doc, setDoc, saveDoc] = useLiveDocument({ _id : "my-doc-id" })
@@ -169,7 +169,7 @@ function MyComponent() {
 Here is an example that uses direct database APIs instead of document and query hooks. You might see this in more complex applications that want to manage low-level details.
 
 ```js
-import { useFireproof } from '@fireproof/react';
+import { useFireproof } from 'use-fireproof';
 
 function MyComponent() {
   const { ready, database } = useFireproof();
