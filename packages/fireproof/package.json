@@ -110,9 +110,6 @@
       "default": "./dist/src/fireproof.js",
       "require": "./dist/src/fireproof.js"
     },
-    "./hooks/use-fireproof": {
-      "import": "./hooks/use-fireproof.js"
-    },
     "./package.json": "./package.json"
   },
   "files": [
