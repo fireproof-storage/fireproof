@@ -51,8 +51,8 @@ export class Valet {
    */
   async writeTransaction (innerBlockstore, cids) {
     if (innerBlockstore.lastCid) {
-      await this.parkCar(this.primary, innerBlockstore, cids)
-      if (this.secondary) await this.parkCar(this.secondary, innerBlockstore, cids)
+      await parkCar(this.primary, innerBlockstore, cids)
+      if (this.secondary) await parkCar(this.secondary, innerBlockstore, cids)
     } else {
       throw new Error('missing lastCid for car header')
     }
@@ -71,23 +71,6 @@ export class Valet {
     // yield { cid: cursor.key, car: cursor.value.car }
     // cursor = await cursor.continue()
     // }
-  }
-
-  async parkCar (storage, innerBlockstore, cids) {
-    // const callId = Math.random().toString(36).substring(7)
-    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
-    let newCar
-    if (storage.keyMaterial) {
-      // console.log('encrypting car', innerBlockstore.label)
-      // todo should we pass cids in instead of iterating innerBlockstore?
-
-      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, storage.keyMaterial)
-      // console.log('encrypted car', newCar.cid.toString(), keyMa)
-    } else {
-      newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
-    }
-    return await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
-    // console.log('wroteCars', callId, carCid.toString(), newValetCidCar.cid.toString())
   }
 
   remoteBlockFunction = null
@@ -111,7 +94,7 @@ export class Valet {
           reader.get = reader.gat // some consumers prefer get
           // console.log('replicating', reader.root)
           reader.lastCid = reader.root.cid
-          await this.parkCar(this.primary, reader, [...cids])
+          await parkCar(this.primary, reader, [...cids])
           return block
         } catch (e) {
           // console.log('getValetBlock secondary error', e)
@@ -119,6 +102,20 @@ export class Valet {
       }
     }
   }
+}
+
+async function parkCar (storage, innerBlockstore, cids) {
+  // console.log('parkCar', this.instanceId, this.name, carCid, cids)
+  let newCar
+  if (storage.keyMaterial) {
+    // console.log('encrypting car', innerBlockstore.label)
+    newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, storage.keyMaterial)
+  } else {
+    // todo should we pass cids in instead of iterating innerBlockstore?
+    newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
+  }
+  // console.log('new car', newCar.cid.toString())
+  return await storage.saveCar(newCar.cid.toString(), newCar.bytes, cids)
 }
 
 export const blocksToCarBlock = async (rootCids, blocks) => {
