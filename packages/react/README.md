@@ -112,10 +112,11 @@ const CustomerProfile = ({ customerId }) => {
     <>
       <form>
         Name:{" "}
-        <input type="text" onChange={(e) => setDoc({ name: e.target.value })} />
+        <input type="text" value={doc.name} onChange={(e) => setDoc({ name: e.target.value })} />
         Company:{" "}
         <input
           type="text"
+          value={doc.company}
           onChange={(e) => setDoc({ company: e.target.value })}
         />
         <button onClick={saveDoc}>Save</button>
