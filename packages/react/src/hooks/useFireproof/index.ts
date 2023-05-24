@@ -42,26 +42,13 @@ const initializeDatabase = (
  * Uses default db name 'useFireproof'.
  */
 const topLevelUseLiveQuery = (...args) => {
-  const { useLiveQuery } = useFireproof();
+  const { useLiveQuery, database } = useFireproof();
+  // @ts-ignore
+  topLevelUseLiveQuery.database = database
   return useLiveQuery(...args);
 };
 
-export const useLiveQuery = new Proxy(topLevelUseLiveQuery, {
-  get(target, prop, receiver) {
-    const { database } = useFireproof();
-    if (typeof database[prop] === 'function') {
-      return database[prop].bind(database);
-    }
-    return Reflect.get(target, prop, receiver);
-  },
-  set(target, prop, value) {
-    const { database } = useFireproof();
-    if (typeof database[prop] === 'function') {
-      throw new Error(`Cannot set property '${String(prop)}' of useLiveQuery, because it's a database method.`);
-    }
-    return Reflect.set(target, prop, value);
-  },
-});
+export const useLiveQuery = topLevelUseLiveQuery
 
 // export { useLiveQuery };
 
