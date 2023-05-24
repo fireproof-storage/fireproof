@@ -87,8 +87,6 @@ export function useFireproof(
   const init = initializeDatabase(name, defineDatabaseFn);
   const database = init.database;
 
-  useEffect(() => { }, [name]);
-
   useEffect(() => {
     const doSetup = async () => {
       if (ready || init.setupStarted) return;
