@@ -4,8 +4,8 @@
   "description": "",
   "scripts": {
     "test": "cd packages/fireproof && npm test",
-    "docs": "jsdoc -c jsdoc.json -u docs/ README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js",
-    "docs:ts": "jsdoc -c jsdoc.json README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/listener.js"
+    "docs": "jsdoc -c jsdoc.json -u docs/ README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/sync.js",
+    "docs:ts": "jsdoc -c jsdoc.json README.md packages/fireproof/src/fireproof.js packages/fireproof/src/db-index.js packages/fireproof/src/sync.js"
   },
   "keywords": [
     "database",
