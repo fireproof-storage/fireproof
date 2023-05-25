@@ -1,10 +1,8 @@
 import { Database, parseCID } from './database.js'
-import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
 import { Sync } from './sync.js'
 
-// todo remove Listener in 0.7.0
-export { Index, Listener, Database, Sync }
+export { Index, Database, Sync }
 
 export class Fireproof {
   /**
