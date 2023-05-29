@@ -90,7 +90,7 @@ export default TodoList = () => {
   ...
 ```
 
-This [running CodePen example](https://codepen.io/jchrisa/pen/vYVVxez?editors=0010) uses the `useLiveQuery` to display a list of todos, and the `database.put` function to add new todos. With sync connected, the list of todos will redraw for all users in real-time. Here's the code:
+This [running CodePen example](https://codepen.io/jchrisa/pen/vYVVxez?editors=0010) uses the `useLiveQuery` to display a list of todos, and the `database.put` function to add new todos. 
 
 ### `useDocument`
 
@@ -139,7 +139,7 @@ const CustomerProfile = ({ customerId }) => {
 };
 ```
 
-The top-level call (above) will use the default database name, and the default replication options. You can also call `useLiveQuery` with a database name and replication options, by instantiating the `useFireproof` hook directly. Here's an example that uses the lower-level API:
+The top-level call (above) will use the default database name, and the default replication options. You can also call `useDocument` with a database name and replication options, by instantiating the `useFireproof` hook directly. Here's an example that uses the lower-level API:
 
 ```js
 import { useFireproof } from 'use-fireproof';
