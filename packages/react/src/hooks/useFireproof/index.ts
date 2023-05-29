@@ -44,11 +44,11 @@ const initializeDatabase = (
 const topLevelUseLiveQuery = (...args) => {
   const { useLiveQuery, database } = useFireproof();
   // @ts-ignore
-  topLevelUseLiveQuery.database = database
+  topLevelUseLiveQuery.database = database;
   return useLiveQuery(...args);
 };
 
-export const useLiveQuery = topLevelUseLiveQuery
+export const useLiveQuery = topLevelUseLiveQuery;
 
 /**
  * Top level hook to initialize a Fireproof database and a document for it.
@@ -57,12 +57,11 @@ export const useLiveQuery = topLevelUseLiveQuery
 const topLevelUseLiveDocument = (...args) => {
   const { useDocument, database } = useFireproof();
   // @ts-ignore
-  topLevelUseLiveQuery.database = database
+  topLevelUseLiveQuery.database = database;
   return useDocument(...args);
 };
 
-export const useDocument = topLevelUseLiveDocument
-
+export const useDocument = topLevelUseLiveDocument;
 
 // export { useLiveQuery };
 
@@ -130,7 +129,14 @@ export function useFireproof(
       refreshDoc();
     }, []);
 
-    return [doc, (newDoc) => setDoc((d) => ({ ...d, ...newDoc })), saveDoc];
+    return [
+      doc,
+      (newDoc) => {
+        if (newDoc) return setDoc((d) => ({ ...d, ...newDoc }));
+        else return setDoc(initialDoc);
+      },
+      saveDoc,
+    ];
   }
 
   function useLiveQuery(mapFn: Function, query = {}, initialRows: any[] = []) {
