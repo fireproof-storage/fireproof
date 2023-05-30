@@ -8,8 +8,8 @@
 </h3>
 
 <p align="center">
-  <a href="https://github.com/jchris/fireproof/actions/workflows/test.yml">
-    <img src="https://github.com/jchris/fireproof/actions/workflows/test.yml/badge.svg" alt="Test" style="max-width: 100%;">
+  <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml">
+    <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test" style="max-width: 100%;">
   </a>
   <a href="https://standardjs.com" rel="nofollow">
     <img src="https://img.shields.io/badge/code_style-standard-brightgreen.svg" alt="JavaScript Style Guide"  style="max-width: 100%;">
