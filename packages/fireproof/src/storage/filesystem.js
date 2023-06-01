@@ -1,5 +1,5 @@
 
-import { mkdir, writeFile } from 'fs/promises'
+// import { mkdir, writeFile } from 'fs/promises'
 import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { Base } from './base.js'
@@ -68,7 +68,7 @@ function loadSync (filename) {
 }
 
 async function writeSync (fullpath, stringValue) {
-  await mkdir(dirname(fullpath), { recursive: true })
+  await fs.promises.mkdir(dirname(fullpath), { recursive: true })
   // writeFileSync(fullpath, stringValue)
-  await writeFile(fullpath, stringValue)
+  await fs.promises.writeFile(fullpath, stringValue)
 }
