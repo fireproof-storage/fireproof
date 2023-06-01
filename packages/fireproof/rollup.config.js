@@ -59,7 +59,7 @@ export default [
         // preserveModules: true,
         sourcemap: true,
         inlineDynamicImports: true,
-      },
+      }
     ]
   }),
   bundle({
