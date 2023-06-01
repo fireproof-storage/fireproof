@@ -11,22 +11,10 @@ export class Fireproof {
    * Creates a new Fireproof instance with default storage settings
    * Most apps should use this and not worry about the details.
    * @static
-   * @returns {Database|Promise<Database>} - a new Fireproof instance or a promise for remote loaders
+   * @returns {Database} - a new Fireproof instance
    */
   static storage = (name = null, opts = {}) => {
-    if (!name) {
-      return new Database(null, opts)
-    } else {
-      // const primaryLoader = Loader.appropriate(name, opts.primary, { key: null })
-      // const secondaryLoader = opts.secondary ? Loader.appropriate(name, opts.secondary, { key: null }) : null
-      const db = new Database(name, opts)
-      return db
-      // const loaders = [pr]
-
-      // todo we need branch names here
-
-      // console.log('storage', name, opts, primaryLoader, secondaryLoader)
-    }
+    return new Database(name, opts)
   }
 
   // static fromConfig (name, primary, secondary, opts = {}) {
