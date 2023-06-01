@@ -1,10 +1,12 @@
-// import { readFileSync } from 'fs'
-import fs from 'fs'
-// const {readFileSync}=require('fs');
-import { mkdir, writeFile } from 'fs/promises'
+
+// import { mkdir, writeFile } from 'fs/promises'
 import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { Base } from './base.js'
+// import { readFileSync } from 'node:fs'
+// const { readFileSync } = require('fs')
+import fs from 'fs'
+const readFileSync = fs.readFileSync
 
 export const defaultConfig = {
   dataDir: join(homedir(), '.fireproof')
@@ -30,7 +32,7 @@ export class Filesystem extends Base {
 
   async readCar (carCid) {
     const carFilename = join(this.config.dataDir, this.name, `${carCid.toString()}.car`)
-    const got = fs.readFileSync(carFilename)
+    const got = readFileSync(carFilename)
     // console.log('readCar', carFilename, got.constructor.name)
     return got
   }
@@ -58,7 +60,7 @@ export class Filesystem extends Base {
 
 function loadSync (filename) {
   try {
-    return fs.readFileSync(filename, 'utf8').toString()
+    return readFileSync(filename, 'utf8').toString()
   } catch (error) {
     // console.log('error', error)
     return null
@@ -66,7 +68,7 @@ function loadSync (filename) {
 }
 
 async function writeSync (fullpath, stringValue) {
-  await mkdir(dirname(fullpath), { recursive: true })
+  await fs.promises.mkdir(dirname(fullpath), { recursive: true })
   // writeFileSync(fullpath, stringValue)
-  await writeFile(fullpath, stringValue)
+  await fs.promises.writeFile(fullpath, stringValue)
 }
