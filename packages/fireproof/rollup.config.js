@@ -52,6 +52,8 @@ export default [
         format: 'cjs',
         sourcemap: true,
         inlineDynamicImports: true,
+        sourcemap: true,
+        inlineDynamicImports: true,
       },
       {
         file: `${name}.mjs`,
@@ -59,7 +61,7 @@ export default [
         // preserveModules: true,
         sourcemap: true,
         inlineDynamicImports: true,
-      },
+      }
     ]
   }),
   bundle({
