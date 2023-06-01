@@ -1,5 +1,5 @@
-import { readFileSync } from 'fs'
-import { mkdir, writeFile } from 'fs/promises'
+import { readFileSync } from 'node:fs'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { Base } from './base.js'

@@ -50,13 +50,15 @@ export default [
       {
         file: `${name}.js`,
         format: 'cjs',
-        sourcemap: true
+        sourcemap: true,
+        inlineDynamicImports: true,
       },
       {
         file: `${name}.mjs`,
         format: 'es',
         // preserveModules: true,
         sourcemap: true,
+        inlineDynamicImports: true,
       }
     ]
   }),
