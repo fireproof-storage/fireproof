@@ -35,11 +35,11 @@ export default [
       nodePolyfills({
         // Whether to polyfill `node:` protocol imports.
         // crypto: true,
-        protocolImports: false
+        protocolImports: true
       }),
       // resolve({ modulesOnly: true }),
       commonJS(),
-      resolve({browser: true, preferBuiltins: false}),
+      resolve({browser: true, preferBuiltins: true}),
       // commonJS({ include: ['src','node_modules/**'] }),
       // autoExternal()
       // commonJS()
