@@ -3,10 +3,10 @@ import { mkdir, writeFile } from 'fs/promises'
 import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { Base } from './base.js'
-import { readFileSync } from 'node:fs'
-// const {readFileSync}=require('fs');
-// import fs from 'fs'
-// const readFileSync = fs.readFileSync
+// import { readFileSync } from 'node:fs'
+// const { readFileSync } = require('fs')
+import fs from 'fs'
+const readFileSync = fs.readFileSync
 
 export const defaultConfig = {
   dataDir: join(homedir(), '.fireproof')
