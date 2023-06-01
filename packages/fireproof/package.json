@@ -49,6 +49,7 @@
     "cli-color": "^2.0.3",
     "crypto-browserify": "^3.12.0",
     "encrypted-block": "^0.0.3",
+    "filer": "^1.4.1",
     "idb": "^7.1.1",
     "ipld-hashmap": "^2.1.18",
     "multiformats": "^11.0.1",
@@ -80,7 +81,8 @@
     "standard": "^17.0.0",
     "typescript": "^5.0.2",
     "webpack": "^5.78.0",
-    "webpack-cli": "^5.0.1"
+    "webpack-cli": "^5.0.1",
+    "webpack-node-externals": "^3.0.0"
   },
   "mocha": {
     "require": [

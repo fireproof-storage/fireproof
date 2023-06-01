@@ -68,5 +68,5 @@ export default [
       file: `${name}.d.ts`,
       format: 'es'
     }
-  })
+  }),
 ]
