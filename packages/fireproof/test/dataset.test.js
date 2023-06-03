@@ -9,6 +9,8 @@ import { startServer } from '../scripts/server.js'
 
 import { resetTestDataDir, dbFiles, cpDir } from './helpers.js'
 
+import { Filesystem } from '../src/storage/filesystem.js'
+
 const TEST_DB_NAME = 'dataset-fptest'
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -19,7 +21,10 @@ describe('basic dataset', () => {
     await resetTestDataDir()
     // console.log('make db')
     db = Fireproof.storage(TEST_DB_NAME)
+    // db.
+    db.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
     storage = db.blocks.valet.primary
+    console.log('storage', storage)
     // await db.ready
 
     // console.log('load data')
