@@ -109,124 +109,143 @@ importers:
         version: 0.7.0(vite@4.1.4)
 
   packages/fireproof:
-
-    specifiers:
-      '@ipld/car': ^5.1.0
-      '@ipld/dag-cbor': ^9.0.0
-      '@jsonlines/core': ^1.0.2
-      '@rollup/plugin-alias': ^5.0.0
-      '@rollup/plugin-commonjs': ^24.0.1
-      '@rollup/plugin-json': ^6.0.0
-      '@rollup/plugin-node-resolve': ^15.0.2
-      archy: ^1.0.0
-      async: ^3.2.4
-      c8: ^7.12.0
-      car-transaction: ^1.0.1
-      charwise: ^3.0.1
-      cli-color: ^2.0.3
-      crypto-browserify: ^3.12.0
-      encrypted-block: ^0.0.3
-      esbuild: ^0.17.16
-      fake-indexeddb: ^4.0.1
-      filer: ^1.4.1
-      flexsearch: ^0.7.31
-      idb: ^7.1.1
-      ipld-hashmap: ^2.1.18
-      mocha: ^10.2.0
-      multiformats: ^11.0.1
-      nanoid: ^4.0.0
-      node-fetch: ^3.3.1
-      node-polyfill-webpack-plugin: ^2.0.1
-      prolly-trees: 1.0.4
-      randombytes: ^2.1.0
-      rollup: ^3.20.2
-      rollup-plugin-auto-external: ^2.0.0
-      rollup-plugin-commonjs: ^10.1.0
-      rollup-plugin-dts: ^5.3.0
-      rollup-plugin-esbuild: ^5.0.0
-      rollup-plugin-node-builtins: ^2.1.2
-      rollup-plugin-polyfill-node: ^0.12.0
-      rollup-plugin-visualizer: ^5.9.0
-      sade: ^1.8.1
-      simple-peer: ^9.11.1
-      standard: ^17.0.0
-      typescript: ^5.0.2
-      webpack: ^5.78.0
-      webpack-cli: ^5.0.1
-      webpack-node-externals: ^3.0.0
     dependencies:
-      '@ipld/car': 5.1.0
-      '@ipld/dag-cbor': 9.0.0
-      '@jsonlines/core': 1.0.2
-      '@rollup/plugin-commonjs': 24.0.1_rollup@3.20.2
-      archy: 1.0.0
-      async: 3.2.4
-      car-transaction: 1.0.1
-      charwise: 3.0.1
-      cli-color: 2.0.3
-      crypto-browserify: 3.12.0
-      encrypted-block: 0.0.3
-      filer: 1.4.1
-      idb: 7.1.1
-      ipld-hashmap: 2.1.18
-      multiformats: 11.0.1
-      node-fetch: 3.3.1
-      node-polyfill-webpack-plugin: 2.0.1_webpack@5.78.0
-      prolly-trees: 1.0.4
-      randombytes: 2.1.0
-      rollup-plugin-commonjs: 10.1.0_rollup@3.20.2
-      sade: 1.8.1
-      simple-peer: 9.11.1
+      '@ipld/car':
+        specifier: ^5.1.0
+        version: 5.1.0
+      '@ipld/dag-cbor':
+        specifier: ^9.0.0
+        version: 9.0.0
+      '@jsonlines/core':
+        specifier: ^1.0.2
+        version: 1.0.2
+      '@rollup/plugin-commonjs':
+        specifier: ^24.0.1
+        version: 24.0.1(rollup@3.20.2)
+      archy:
+        specifier: ^1.0.0
+        version: 1.0.0
+      async:
+        specifier: ^3.2.4
+        version: 3.2.4
+      car-transaction:
+        specifier: ^1.0.1
+        version: 1.0.1
+      charwise:
+        specifier: ^3.0.1
+        version: 3.0.1
+      cli-color:
+        specifier: ^2.0.3
+        version: 2.0.3
+      crypto-browserify:
+        specifier: ^3.12.0
+        version: 3.12.0
+      encrypted-block:
+        specifier: ^0.0.3
+        version: 0.0.3
+      filer:
+        specifier: ^1.4.1
+        version: 1.4.1
+      idb:
+        specifier: ^7.1.1
+        version: 7.1.1
+      ipld-hashmap:
+        specifier: ^2.1.18
+        version: 2.1.18
+      multiformats:
+        specifier: ^11.0.1
+        version: 11.0.1
+      node-fetch:
+        specifier: ^3.3.1
+        version: 3.3.1
+      node-polyfill-webpack-plugin:
+        specifier: ^2.0.1
+        version: 2.0.1(webpack@5.78.0)
+      prolly-trees:
+        specifier: 1.0.4
+        version: 1.0.4
+      randombytes:
+        specifier: ^2.1.0
+        version: 2.1.0
+      rollup-plugin-commonjs:
+        specifier: ^10.1.0
+        version: 10.1.0(rollup@3.20.2)
+      sade:
+        specifier: ^1.8.1
+        version: 1.8.1
+      simple-peer:
+        specifier: ^9.11.1
+        version: 9.11.1
     devDependencies:
-      '@rollup/plugin-alias': 5.0.0_rollup@3.20.2
-      '@rollup/plugin-json': 6.0.0_rollup@3.20.2
-      '@rollup/plugin-node-resolve': 15.0.2_rollup@3.20.2
-      c8: 7.13.0
-      esbuild: 0.17.16
-      fake-indexeddb: 4.0.1
-      flexsearch: 0.7.31
-      mocha: 10.2.0
-      nanoid: 4.0.1
-      rollup: 3.20.2
-      rollup-plugin-auto-external: 2.0.0_rollup@3.20.2
-      rollup-plugin-dts: 5.3.0_4uaj55xah35he2rmgneoluguqy
-      rollup-plugin-esbuild: 5.0.0_6mlpvenjr3li56ehaunupwexea
-      rollup-plugin-node-builtins: 2.1.2
-      rollup-plugin-polyfill-node: 0.12.0_rollup@3.20.2
-      rollup-plugin-visualizer: 5.9.0_rollup@3.20.2
-      standard: 17.0.0
-      typescript: 5.0.4
-      webpack: 5.78.0_2mtfwo6qacryk7vz2y35qcf42e
-      webpack-cli: 5.0.1_webpack@5.78.0
-      webpack-node-externals: 3.0.0
+      '@rollup/plugin-alias':
+        specifier: ^5.0.0
+        version: 5.0.0(rollup@3.20.2)
+      '@rollup/plugin-json':
+        specifier: ^6.0.0
+        version: 6.0.0(rollup@3.20.2)
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.0.2
+        version: 15.0.2(rollup@3.20.2)
+      c8:
+        specifier: ^7.12.0
+        version: 7.13.0
+      esbuild:
+        specifier: ^0.17.16
+        version: 0.17.16
+      fake-indexeddb:
+        specifier: ^4.0.1
+        version: 4.0.1
+      flexsearch:
+        specifier: ^0.7.31
+        version: 0.7.31
+      mocha:
+        specifier: ^10.2.0
+        version: 10.2.0
+      nanoid:
+        specifier: ^4.0.0
+        version: 4.0.1
+      rollup:
+        specifier: ^3.20.2
+        version: 3.20.2
+      rollup-plugin-auto-external:
+        specifier: ^2.0.0
+        version: 2.0.0(rollup@3.20.2)
+      rollup-plugin-dts:
+        specifier: ^5.3.0
+        version: 5.3.0(rollup@3.20.2)(typescript@5.0.4)
+      rollup-plugin-esbuild:
+        specifier: ^5.0.0
+        version: 5.0.0(esbuild@0.17.16)(rollup@3.20.2)
+      rollup-plugin-node-builtins:
+        specifier: ^2.1.2
+        version: 2.1.2
+      rollup-plugin-polyfill-node:
+        specifier: ^0.12.0
+        version: 0.12.0(rollup@3.20.2)
+      rollup-plugin-visualizer:
+        specifier: ^5.9.0
+        version: 5.9.0(rollup@3.20.2)
+      standard:
+        specifier: ^17.0.0
+        version: 17.0.0
+      typescript:
+        specifier: ^5.0.2
+        version: 5.0.4
+      webpack:
+        specifier: ^5.78.0
+        version: 5.78.0(esbuild@0.17.16)(webpack-cli@5.0.1)
+      webpack-cli:
+        specifier: ^5.0.1
+        version: 5.0.1(webpack@5.78.0)
+      webpack-node-externals:
+        specifier: ^3.0.0
+        version: 3.0.0
 
   packages/react:
-    specifiers:
-      '@fireproof/core': ^0.7.0-alpha.3
-      '@jest/globals': ^29.5.0
-      '@testing-library/react-hooks': ^3.4.1
-      '@types/jest': ^26.0.7
-      '@types/react': ^16.3.13
-      '@types/react-dom': ^16.0.5
-      '@types/testing-library__react-hooks': ^4.0.0
-      babel-core: ^6.26.3
-      babel-runtime: ^6.26.0
-      eslint-plugin-react-hooks: ^4.0.8
-      jest: ^26.1.0
-      randombytes: ^2.1.0
-      react: ^16.12.0
-      react-dom: ^16.12.0
-      react-test-renderer: ^16.13.1
-      rollup: ^1.29.0
-      rollup-plugin-sass: ^1.2.2
-      rollup-plugin-typescript2: ^0.25.3
-      rollup-plugin-uglify: ^6.0.4
-      ts-jest: ^26.1.3
-      tslib: ^2.5.0
-      typescript: ^3.8.3
     dependencies:
-      '@fireproof/core': link:../fireproof
-
+      '@fireproof/core':
+        specifier: ^0.7.0-alpha.4
+        version: link:../fireproof
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -254,7 +273,7 @@ importers:
         version: 6.26.0
       eslint-plugin-react-hooks:
         specifier: ^4.0.8
-        version: 4.6.0(eslint@8.35.0)
+        version: 4.6.0
       jest:
         specifier: ^26.1.0
         version: 26.6.3
@@ -330,7 +349,7 @@ packages:
       '@babel/traverse': 7.21.2
       '@babel/types': 7.21.2
       convert-source-map: 1.9.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.0
@@ -644,7 +663,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.18.6
       '@babel/parser': 7.21.2
       '@babel/types': 7.21.2
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -1055,7 +1074,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       espree: 9.4.1
       globals: 13.20.0
       ignore: 5.2.4
@@ -1077,7 +1096,7 @@ packages:
     engines: {node: '>=10.10.0'}
     dependencies:
       '@humanwhocodes/object-schema': 1.2.1
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -1493,15 +1512,14 @@ packages:
     dependencies:
       lodash: 4.17.21
     dev: true
-    
-  /@jsonlines/core/1.0.2:
+
+  /@jsonlines/core@1.0.2:
     resolution: {integrity: sha512-yEEv8OoCYcspWV+SD+W6Hy72ENP4q8dihdnV2xpYI+TLvHbRj8yhzwoTPZPvYJ6J+mnigToUJSdQ0ywbidyXEg==}
     dependencies:
       core-js: 3.30.2
     dev: false
 
-  /@multiformats/base-x/4.0.1:
-
+  /@multiformats/base-x@4.0.1:
     resolution: {integrity: sha512-eMk0b9ReBbV23xXU693TAIrLyeO5iTgBZGSJfpqriG8UkYvr/hC9u9pyMlAakDNHWmbhMZCDs6KQO0jzKD8OTw==}
     dev: false
 
@@ -1609,6 +1627,20 @@ packages:
       rollup: 3.20.2
     dev: false
 
+  /@rollup/plugin-inject@5.0.3:
+    resolution: {integrity: sha512-411QlbL+z2yXpRWFXSmw/teQRMkXcAAC8aYTemc15gwJRpvEVDQwoe+N/HTFD8RFG8+88Bme9DK2V9CVm7hJdA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@rollup/pluginutils': 5.0.2
+      estree-walker: 2.0.2
+      magic-string: 0.27.0
+    dev: true
+
   /@rollup/plugin-inject@5.0.3(rollup@3.20.2):
     resolution: {integrity: sha512-411QlbL+z2yXpRWFXSmw/teQRMkXcAAC8aYTemc15gwJRpvEVDQwoe+N/HTFD8RFG8+88Bme9DK2V9CVm7hJdA==}
     engines: {node: '>=14.0.0'}
@@ -1653,6 +1685,20 @@ packages:
       is-module: 1.0.0
       resolve: 1.22.1
       rollup: 3.20.2
+    dev: true
+
+  /@rollup/pluginutils@5.0.2:
+    resolution: {integrity: sha512-pTd9rIsP92h+B6wWwFbW8RkZv4hiR/xKsqre4SIuAOaOEQRxi0lqLke9k2/7WegC85GgUs9pjmOjCUi3In4vwA==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@types/estree': 1.0.0
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
     dev: true
 
   /@rollup/pluginutils@5.0.2(rollup@1.32.1):
@@ -2332,15 +2378,13 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
 
-  /ajv-formats@2.1.1(ajv@8.12.0):
+  /ajv-formats@2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -3403,7 +3447,7 @@ packages:
     engines: {node: '>=12'}
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
+      ajv-formats: 2.1.1
       atomically: 1.7.0
       debounce-fn: 4.0.0
       dot-prop: 6.0.1
@@ -3439,14 +3483,12 @@ packages:
     requiresBuild: true
     dev: true
 
-
-  /core-js/3.30.2:
+  /core-js@3.30.2:
     resolution: {integrity: sha512-uBJiDmwqsbJCWHAwjrx3cvjbMXP7xD72Dmsn5LOJpiRmE3WbBbN5rCqQ2Qh6Ek6/eOrjlWngEynBWo4VxerQhg==}
     requiresBuild: true
     dev: false
 
-  /core-util-is/1.0.3:
-
+  /core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
     dev: true
 
@@ -3538,14 +3580,12 @@ packages:
       type: 1.2.0
     dev: false
 
-
-  /data-uri-to-buffer/4.0.1:
+  /data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
     engines: {node: '>= 12'}
     dev: false
 
-  /data-urls/2.0.0:
-
+  /data-urls@2.0.0:
     resolution: {integrity: sha512-X5eWTSXO/BJmpdIKCRuKUgSCgAN0OwliVK3yPKbwIWU1Tdw5BRajxlzMidvh+gwko9AfQ9zIj52pzF91Q3YAvQ==}
     engines: {node: '>=10'}
     dependencies:
@@ -3587,6 +3627,17 @@ packages:
       ms: 2.1.3
     dev: true
 
+  /debug@4.3.4:
+    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+    dependencies:
+      ms: 2.1.2
+
   /debug@4.3.4(supports-color@8.1.1):
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -3598,6 +3649,7 @@ packages:
     dependencies:
       ms: 2.1.2
       supports-color: 8.1.1
+    dev: true
 
   /decamelize@1.2.0:
     resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
@@ -3928,14 +3980,12 @@ packages:
   /es6-object-assign@1.1.0:
     resolution: {integrity: sha512-MEl9uirslVwqQU369iHNWZXsI8yaZYGg/D65aOgZkeyFJwHYSxilf7rQzXKI7DdDuBPrBXbfk3sl9hJhmd5AUw==}
 
-
-  /es6-promisify/7.0.0:
+  /es6-promisify@7.0.0:
     resolution: {integrity: sha512-ginqzK3J90Rd4/Yz7qRrqUeIpe3TwSXTPPZtPne7tGBPeAaQiU8qt4fpKApnxHcq1AwtUdHVg5P77x/yrggG8Q==}
     engines: {node: '>=6'}
     dev: false
 
-  /es6-symbol/3.1.3:
-
+  /es6-symbol@3.1.3:
     resolution: {integrity: sha512-NJ6Yn3FuDinBaBRWl/q5X/s4koRHBrgKAu+yGI6JCBeiu3qrcbJhwT2GeR/EXVfylRk8dpQVJoLEFhK+Mu31NA==}
     dependencies:
       d: 1.0.1
@@ -4178,13 +4228,11 @@ packages:
       eslint: 8.35.0
     dev: true
 
-  /eslint-plugin-react-hooks@4.6.0(eslint@8.35.0):
+  /eslint-plugin-react-hooks@4.6.0:
     resolution: {integrity: sha512-oFc7Itz9Qxh2x4gNHStv3BqJq54ExXmfC+a1NjAta66IAN87Wu0R/QArgIS9qKzX3dXKPI9H5crl9QchNMY9+g==}
     engines: {node: '>=10'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0
-    dependencies:
-      eslint: 8.35.0
     dev: true
 
   /eslint-plugin-react@7.32.2(eslint@8.35.0):
@@ -4271,7 +4319,7 @@ packages:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.3
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.1.1
@@ -4533,8 +4581,7 @@ packages:
       bser: 2.1.1
     dev: true
 
-
-  /fetch-blob/3.2.0:
+  /fetch-blob@3.2.0:
     resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
     engines: {node: ^12.20 || >= 14.13}
     dependencies:
@@ -4542,8 +4589,7 @@ packages:
       web-streams-polyfill: 3.2.1
     dev: false
 
-  /figures/5.0.0:
-
+  /figures@5.0.0:
     resolution: {integrity: sha512-ej8ksPF4x6e5wvK9yevct0UCXh8TTFlWGVLlgjZuoBH1HwjIfKE/IdL5mq89sFA7zELi1VhKpmtDnrs7zWyeyg==}
     engines: {node: '>=14'}
     dependencies:
@@ -4558,8 +4604,7 @@ packages:
       flat-cache: 3.0.4
     dev: true
 
-
-  /filer/1.4.1:
+  /filer@1.4.1:
     resolution: {integrity: sha512-CJqhUN2yPioDov+DYpsUG9vLvAy0pt3aWuwHP+OfR86scb6lg/EdAo3EbZDCGyIRZxte2sAJ6gPtvGji9JlTyQ==}
     dependencies:
       es6-promisify: 7.0.0
@@ -4567,8 +4612,7 @@ packages:
       schema-utils: 3.1.1
     dev: false
 
-  /fill-range/4.0.0:
-
+  /fill-range@4.0.0:
     resolution: {integrity: sha512-VcpLTWqWDiTerugjj8e3+esbg+skS3M9e54UuR3iCeIDMXCLTsAH8hTSzDQU/X6/6t3eYkOKoZSef2PlU6U1XQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
@@ -4672,15 +4716,14 @@ packages:
       mime-types: 2.1.35
     dev: true
 
-
-  /formdata-polyfill/4.0.10:
+  /formdata-polyfill@4.0.10:
     resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
     engines: {node: '>=12.20.0'}
     dependencies:
       fetch-blob: 3.2.0
     dev: false
 
-  /fragment-cache/0.2.1:
+  /fragment-cache@0.2.1:
     resolution: {integrity: sha512-GMBAbW9antB8iZRHLoGw0b3HANt57diZYFO/HL1JGIC1MjKrdmhxvrJbupnVvpys0zsz7yBApXdQyfepKly2kA==}
     engines: {node: '>=0.10.0'}
     dependencies:
@@ -5037,7 +5080,7 @@ packages:
     dependencies:
       '@tootallnate/once': 1.1.2
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -5050,7 +5093,7 @@ packages:
     engines: {node: '>= 6'}
     dependencies:
       agent-base: 6.0.2
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -5608,7 +5651,7 @@ packages:
     resolution: {integrity: sha512-n3s8EwkdFIJCG3BPKBYvskgXGoy88ARzvegkitk60NxRdwltLOTaH7CUiMRXvwYorl0Q712iEjcWB+fK/MrWVw==}
     engines: {node: '>=10'}
     dependencies:
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       istanbul-lib-coverage: 3.2.0
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -7033,13 +7076,12 @@ packages:
       lower-case: 1.1.4
     dev: true
 
-
-  /node-domexception/1.0.0:
+  /node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
     dev: false
 
-  /node-fetch/3.3.1:
+  /node-fetch@3.3.1:
     resolution: {integrity: sha512-cRVc/kyto/7E5shrWca1Wsea4y6tL9iYJE5FBCius3JQfb/4P4I295PfhgbJQBLTx6lATE4z+wK0rPM4VS2uow==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dependencies:
@@ -7048,8 +7090,7 @@ packages:
       formdata-polyfill: 4.0.10
     dev: false
 
-  /node-int64/0.4.0:
-
+  /node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
     dev: true
 
@@ -8150,7 +8191,7 @@ packages:
       rollup: ^1.20.0 || ^2.0.0 || ^3.0.0
     dependencies:
       '@rollup/pluginutils': 5.0.2(rollup@3.20.2)
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       es-module-lexer: 1.2.1
       esbuild: 0.17.16
       joycon: 3.1.1
@@ -8499,7 +8540,7 @@ packages:
     resolution: {integrity: sha512-D1SaWpOW8afq1CZGWB8xTfrT3FekjQmPValrqncJMX7QFl8YwhrPTZvMCANLtgBwwdS+7zURyqxDDEmY558tTw==}
     dependencies:
       buffer: 6.0.3
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.4
       err-code: 3.0.1
       get-browser-rtc: 1.1.0
       queue-microtask: 1.2.3
@@ -9361,7 +9402,7 @@ packages:
     peerDependencies:
       vite: ^2.0.0 || ^3.0.0 || ^4.0.0
     dependencies:
-      '@rollup/plugin-inject': 5.0.3(rollup@3.20.2)
+      '@rollup/plugin-inject': 5.0.3
       node-stdlib-browser: 1.2.0
       vite: 4.1.4
     transitivePeerDependencies:
@@ -9495,13 +9536,12 @@ packages:
       clone-deep: 4.0.1
       wildcard: 2.0.0
 
-  /webpack-node-externals/3.0.0:
+  /webpack-node-externals@3.0.0:
     resolution: {integrity: sha512-LnL6Z3GGDPht/AigwRh2dvL9PQPFQ8skEpVrWZXLWBYmqcaojHNN0onvHzie6rq7EWKrrBfPYqNEzTJgiwEQDQ==}
     engines: {node: '>=6'}
     dev: true
 
-  /webpack-sources/3.2.3:
-
+  /webpack-sources@3.2.3:
     resolution: {integrity: sha512-/DyMEOrDgLKKIG0fmvtz+4dUX/3Ghozwgm6iPp8KRhvn+eQf9+Q7GWxVNMk3+uCPWfdXYC4ExGBckIXdFEfH1w==}
     engines: {node: '>=10.13.0'}
 
