@@ -45,7 +45,7 @@ export class Base {
     // currently we don't do that, because we only use
     // the config for first run, and then we use the headers
     // once they exist
-    this.ready = this.getHeaders().then((blocksReady) => {
+    this.ready = this.getHeaders().then(blocksReady => {
       // console.log('blocksReady base', this.name, blocksReady)
       return blocksReady
     })
@@ -258,7 +258,9 @@ export class Base {
       }
       const { blocks } = await blocksFromEncryptedCarBlock(roots[0], readerGetWithCodec, this.keyMaterial)
       const rootBlock = blocks[blocks.length - 1]
-      const blocksIterable = function * () { for (const block of blocks) yield block }
+      const blocksIterable = function * () {
+        for (const block of blocks) yield block
+      }
 
       const gat = async dataCID => {
         dataCID = dataCID.toString()
@@ -295,7 +297,7 @@ export class Base {
     }
   }
 
-  writeCars (cars) { }
+  writeCars (cars) {}
 
   async updateCarCidMap (carCid, cids) {
     // this hydrates the map if it has not been hydrated
