@@ -50,7 +50,7 @@ export class Fireproof {
           clock: {
             byId: byId ? parseCID(byId) : null,
             byKey: byKey ? parseCID(byKey) : null,
-            db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
+            db: db && db.length > 0 ? db.map(c => parseCID(c)) : null
           },
           code,
           name
@@ -73,7 +73,9 @@ export class Fireproof {
 
     const withBlocks = new Database(database.name)
     withBlocks.blocks = database.blocks
-    withBlocks.clock = definition.clock
+    withBlocks.ready.then(() => {
+      withBlocks.clock = definition.clock.map(c => parseCID(c))
+    })
 
     const snappedDb = Fireproof.fromJSON(definition, null, withBlocks)
     ;[...database.indexes.values()].forEach(index => {

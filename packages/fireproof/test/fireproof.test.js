@@ -2,6 +2,7 @@ import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
 import { resetTestDataDir } from './helpers.js'
+import { Filesystem } from '../src/storage/filesystem.js'
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
@@ -18,7 +19,11 @@ describe('Fireproof', () => {
     // const loader = Loader.appropriate('helloName')
     // rmSync(join(loader.config.dataDir, 'fptest-hello-name'), { recursive: true, force: true })
     // console.log('new database instance')
-    database = Fireproof.storage('fptest-hello-name')
+    database = Fireproof.storage('fptest-hello-name', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     assert.equal(database.clock.length, 0)
     resp0 = await database.put({
       _id: '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c',
@@ -185,6 +190,8 @@ describe('Fireproof', () => {
     assert.equal(avalue.name, value.name)
     assert.equal(avalue.age, value.age)
     assert.equal(avalue._id, dogKey)
+
+    assert.equal(snapshot.clockToJSON().length, 1)
 
     avalue.age = 3
     const response2 = await database.put(avalue)
