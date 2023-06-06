@@ -1,4 +1,4 @@
-import fetch from 'node-fetch'
+import fetch from 'cross-fetch'
 import { Base } from './base.js'
 
 const defaultConfig = {
