@@ -8,6 +8,9 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonJS from '@rollup/plugin-commonjs'
 import { visualizer } from "rollup-plugin-visualizer";
 
+
+// @rollup/plugin-commonjs
+
 import pkg from './package.json' assert { type: 'json' } // eslint-disable-line
 import { auto } from 'async';
 
