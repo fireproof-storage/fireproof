@@ -20,11 +20,12 @@ describe('basic dataset', () => {
     await sleep(10)
     await resetTestDataDir()
     // console.log('make db')
-    db = Fireproof.storage(TEST_DB_NAME)
-    // db.
-    db.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
+    db = Fireproof.storage(TEST_DB_NAME, {
+      primary: { StorageClass: Filesystem }
+    })
+    // db.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
     storage = db.blocks.valet.primary
-    console.log('storage', storage)
+    // console.log('storage', storage)
     // await db.ready
 
     // console.log('load data')
@@ -53,8 +54,13 @@ describe('basic dataset', () => {
     assert(headerData.key, 'key should be in header')
   })
   it('reloads fresh', async () => {
+    const responsex = await db.allDocuments()
+    assert.equal(responsex.rows.length, 1)
     // console.log('NEW DB')
-    const fileDb = Fireproof.storage(TEST_DB_NAME)
+    const fileDb = Fireproof.storage(TEST_DB_NAME, {
+      primary: { StorageClass: Filesystem }
+    })
+    // fileDb.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
     // await fileDb.ready
     // console.log('QUERY')
     const response = await fileDb.allDocuments()
@@ -72,13 +78,16 @@ describe('basic dataset', () => {
     writeFileSync(header2Path, headerRaw)
 
     // open a db with storage using the user branch from the cloud secondary
-    const userDb3 = Fireproof.storage(TEST_DB_NAME, {
+    const theConfg = {
       primary: {
+        StorageClass: Filesystem,
         branches: {
           branch: { readonly: false }
         }
       }
-    })
+    }
+    const userDb3 = Fireproof.storage(TEST_DB_NAME, theConfg)
+    // userDb3.blocks.valet.primary = new Filesystem(TEST_DB_NAME, theConfg.primary)
     await userDb3.ready
 
     // make sure the branch is there
@@ -95,7 +104,13 @@ describe('basic dataset with index', () => {
     await sleep(10)
     await resetTestDataDir()
     // console.log('make db')
-    db = Fireproof.storage(TEST_DB_NAME)
+    db = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
+    // db.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
+    // db.indexBlocks.valet.primary = new Filesystem(TEST_DB_NAME + 'index')
     storage = db.blocks.valet.primary
 
     index = new Index(db, 'food', doc => doc.bar)
@@ -136,7 +151,11 @@ describe('basic dataset with index', () => {
   })
   it('reloads fresh', async () => {
     // console.log('NEW DB')
-    const fileDb = Fireproof.storage(TEST_DB_NAME)
+    const fileDb = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     // await fileDb.ready
     // console.log('QUERY')
     const response = await fileDb.allDocuments()
@@ -159,7 +178,11 @@ describe('Create a dataset', () => {
     await sleep(10)
     // storage = Loader.appropriate(TEST_DB_NAME)
     await resetTestDataDir()
-    db = Fireproof.storage(TEST_DB_NAME)
+    db = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     storage = db.blocks.valet.primary
     // await db.ready
 
@@ -186,7 +209,11 @@ describe('Create a dataset', () => {
   it('doesnt put the key in the header', async () => {})
   it('works with fresh reader storage', async () => {
     await sleep(10)
-    const fileDb = Fireproof.storage(TEST_DB_NAME)
+    const fileDb = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     // await fileDb.ready
     // console.log('QUERY', fileDb)
     const response = await fileDb.allDocuments()
@@ -200,6 +227,7 @@ describe('Rest dataset', () => {
     await sleep(10)
     await resetTestDataDir()
     db = Fireproof.storage(TEST_DB_NAME)
+    db.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
     storage = db.blocks.valet.primary
     await loadData(db, './test/todos.json')
     server = startServer()
@@ -313,6 +341,7 @@ describe('Rest dataset', () => {
   it('creates new db with file storage AND secondary rest storage', async () => {
     await sleep(100)
     const secondaryDb = await Fireproof.storage('fptest-secondary-rest', {
+      primary: { StorageClass: Filesystem },
       secondary: { type: 'rest', url: 'http://localhost:8000/fptest-secondary-rest-remote' }
     })
 
@@ -361,6 +390,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const fileDb = await Fireproof.storage(TEST_DB_NAME, {
+      primary: { StorageClass: Filesystem },
       secondary: { type: 'rest', url: 'http://localhost:8000/fptest-xtodos-remote' }
     })
     const response0 = await db.allDocuments()
@@ -390,6 +420,7 @@ describe('Rest dataset', () => {
   })
   it('attach existing secondary rest storage to empty db in read-only mode', async () => {
     const emptyDb = await Fireproof.storage('fptest-empty-db-todos', {
+      primary: { StorageClass: Filesystem },
       secondary: { readonly: true, type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
     })
     const files = await dbFiles(storage, 'fptest-empty-db-todos')
@@ -428,7 +459,11 @@ describe('Rest dataset', () => {
 
     /// now test what happens when we open a new db on the new primary's files
     // this should pass because the reads from the secondary are written to the primary
-    const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos')
+    const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
 
     // console.log('HERE HERE')
 
@@ -440,7 +475,11 @@ describe('Rest dataset', () => {
 
     await sleep(100)
 
-    const files4 = await dbFiles(storage, 'fptest-empty-db-todos')
+    const files4 = await dbFiles(storage, 'fptest-empty-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     assert.equal(files4.length > 10, true)
 
     // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
@@ -455,6 +494,9 @@ describe('Rest dataset', () => {
     assert.equal(files5.length, 39)
 
     const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      },
       secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
     })
 
@@ -463,6 +505,9 @@ describe('Rest dataset', () => {
   })
   it('attach existing secondary rest storage to empty db', async () => {
     const emptyDb = await Fireproof.storage('fptest-empty-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      },
       secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
     })
     const files = await dbFiles(storage, 'fptest-empty-db-todos')
@@ -488,7 +533,11 @@ describe('Rest dataset', () => {
     assert.equal(files3.length > 8, true)
 
     /// now test what happens when we open a new db on the secondary's files
-    const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos')
+    const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
 
     const response2 = await noSecondaryCloneDb.allDocuments()
     assert.equal(response2.rows.length, 19)
@@ -513,6 +562,9 @@ describe('Rest dataset', () => {
     assert.equal(files5.length, 41)
 
     const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      },
       secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
     })
 
@@ -524,7 +576,11 @@ describe('Rest dataset', () => {
     assert.equal(response3.rows.length, 21)
   })
   it('attach existing secondary rest storage to existing db with no common ancestor', async () => {
-    const newExistingDb = await Fireproof.storage('fptest-new-existing-db-todos')
+    const newExistingDb = await Fireproof.storage('fptest-new-existing-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     const ok = await newExistingDb.put({ _id: 'test', foo: 'bar' })
     assert.equal(ok.id, 'test')
     assert.equal(newExistingDb.clockToJSON().length, 1)
@@ -536,7 +592,11 @@ describe('Rest dataset', () => {
 
     await sleep(100)
     // can reopen the database normally
-    const newExistingDb2 = await Fireproof.storage('fptest-new-existing-db-todos')
+    const newExistingDb2 = await Fireproof.storage('fptest-new-existing-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     const response1 = await newExistingDb2.allDocuments()
     assert.equal(response1.rows.length, 1)
     assert.equal(newExistingDb2.clockToJSON().length, 1)
@@ -544,6 +604,9 @@ describe('Rest dataset', () => {
 
     // console.log('HERE HERE')
     const mergedExistingDb = await Fireproof.storage('fptest-new-existing-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      },
       secondary: { type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
     })
     const response = await mergedExistingDb.allDocuments()
@@ -555,7 +618,11 @@ describe('Rest dataset', () => {
   it('user clone of server short', async () => {
     // console.log('user clone of server short')
     const SERVER_DB_NAME = 'fptest-server-db-todos'
-    const serverDb = await Fireproof.storage(SERVER_DB_NAME)
+    const serverDb = await Fireproof.storage(SERVER_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     serverDb.put({ _id: 'ice', title: 'Coffee' })
 
     await sleep(100)
@@ -563,6 +630,9 @@ describe('Rest dataset', () => {
     const USER_DB_NAME = 'fptest-user-db-todos'
 
     const userDb = await Fireproof.storage(USER_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      },
       secondary: {
         type: 'rest',
         url: 'http://localhost:8000/' + SERVER_DB_NAME,
@@ -613,7 +683,11 @@ describe('Rest dataset', () => {
     assert(carDataRaw.length > 2000)
 
     // open a db with primary storage using the main branch from the cloud secondary
-    const userDb4 = await Fireproof.storage(SERVER_DB_NAME)
+    const userDb4 = await Fireproof.storage(SERVER_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
 
     // console.log('HEREHERE')
 
@@ -623,7 +697,11 @@ describe('Rest dataset', () => {
     assert.equal(doc4.title, 'Coffee')
 
     // open a db with the same local name, no secondary
-    const userDb2 = await Fireproof.storage(USER_DB_NAME)
+    const userDb2 = await Fireproof.storage(USER_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     // it will have the same document
     const doc2 = await userDb2.get('ice')
     assert.equal(doc2._id, 'ice')
@@ -645,7 +723,11 @@ describe('Rest dataset', () => {
     const headerRaw = readFileSync(copyHeaderPath)
     writeFileSync(copy2HeaderPath, headerRaw)
 
-    const userXYZ = Fireproof.storage(COPY_NAME)
+    const userXYZ = Fireproof.storage(COPY_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     await userXYZ.ready
     // return
     await sleep(100)
@@ -658,6 +740,7 @@ describe('Rest dataset', () => {
     // open a db with storage using the user branch from the cloud secondary
     const userDbG = Fireproof.storage(COPY_NAME, {
       primary: {
+        StorageClass: Filesystem,
         branches: {
           biff: { readonly: false }
         }
@@ -729,6 +812,9 @@ describe('Rest dataset', () => {
 
     // user opens a new db with a cloud secondary with a read-only main branch and a read-write user branch
     const userDb = await Fireproof.storage('fptest-user-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      },
       secondary: {
         type: 'rest',
         url: 'http://localhost:8000/' + TEST_DB_NAME,
@@ -805,7 +891,11 @@ describe('Rest dataset', () => {
     assert.equal(doc4.title, 'Coffee')
 
     // open a db with the same local name, no secondary
-    const userDb2 = await Fireproof.storage('fptest-user-db-todos')
+    const userDb2 = await Fireproof.storage('fptest-user-db-todos', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     // it will have the same document
     const doc2 = await userDb2.get('phr936g')
     assert.equal(doc2._id, 'phr936g')
