@@ -4,37 +4,28 @@ import { Valet } from '../src/valet.js'
 
 describe('new Valet', () => {
   let val
-  const calls = []
 
   before(async () => {
-    val = new Valet()
-    val.uploadFunction = async (carCid, value) => {
-      calls.push({ carCid, value })
-    }
+    val = new Valet('test', { primary: { key: null } })
   })
   it('has default attributes', async () => {
     assert(val.getValetBlock)
-    assert(val.parkCar)
+    assert(val.primary)
   })
   it('can park a car and serve the blocks', async () => {
-    await val
-      .parkCar('carCid', carBytes, [
-        'bafyreifwghknmzabvgearl72url3v5leqqhtafvybcsrceelc3psqkocoi',
-        'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma'
-      ])
+    await val.primary.saveCar('carCid', carBytes, [
+      'bafyreifwghknmzabvgearl72url3v5leqqhtafvybcsrceelc3psqkocoi',
+      'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma'
+    ])
       .then((car) => {
         assert('car parked')
         return val.getValetBlock('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((block) => {
           assert.equal(block.length, 300)
-          return val.getCarCIDForCID('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then(({ result }) => {
+          return val.primary.getCarCIDForCID('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then(({ result }) => {
             assert.equal(result, 'carCid')
           })
         })
       })
-  })
-  it('calls the upload function', () => {
-    assert.equal(calls.length, 1)
-    assert.equal(calls[0].carCid, 'carCid')
   })
 })
 

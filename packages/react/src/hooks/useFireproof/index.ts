@@ -89,10 +89,10 @@ export function useFireproof(
 
   useEffect(() => {
     const doSetup = async () => {
-      if (ready || init.setupStarted || !setupDatabaseFn) return;
+      if (ready || init.setupStarted) return;
       // console.log('Setting up database', name);
       init.setupStarted = true;
-      if (database.clock.length === 0) {
+      if (setupDatabaseFn && database.clock.length === 0) {
         // console.log('setupDatabaseFn', name, setupDatabaseFn);
         await setupDatabaseFn(database);
       }

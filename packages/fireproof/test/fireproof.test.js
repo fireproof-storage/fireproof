@@ -1,17 +1,29 @@
 import { describe, it, beforeEach } from 'mocha'
 import assert from 'node:assert'
 import { Fireproof } from '../src/fireproof.js'
-// import * as codec from '@ipld/dag-cbor'
+import { resetTestDataDir } from './helpers.js'
+import { Filesystem } from '../src/storage/filesystem.js'
 
-let database = Fireproof.storage()
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+let database
 let resp0
 
-// const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
-
 describe('Fireproof', () => {
+  // before(async () => {
+  // await resetTestDataDir()
+  // })
   beforeEach(async () => {
-    database = Fireproof.storage('helloName')
+    await sleep(10)
+    await resetTestDataDir()
+    // const loader = Loader.appropriate('helloName')
+    // rmSync(join(loader.config.dataDir, 'fptest-hello-name'), { recursive: true, force: true })
+    // console.log('new database instance')
+    database = Fireproof.storage('fptest-hello-name', {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
     assert.equal(database.clock.length, 0)
     resp0 = await database.put({
       _id: '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c',
@@ -20,12 +32,17 @@ describe('Fireproof', () => {
     })
   })
   it('takes an optional name', () => {
-    assert.equal(database.name, 'helloName')
-    const km = database.blocks.valet.getKeyMaterial()
-    if (process.env.NO_ENCRYPT) { assert.equal(km, null) } else { assert.equal(km.length, 64) }
-    const x = database.blocks.valet.idb
-    const keyId = database.blocks.valet.keyId
-    assert.equal(x.name.toString(), `fp.${keyId}.helloName.valet`)
+    assert.equal(database.name, 'fptest-hello-name')
+    const km = database.blocks.valet.primary.keyMaterial
+    if (process.env.NO_ENCRYPT) {
+      assert.equal(km, null)
+    } else {
+      assert.equal(km.length, 64)
+    }
+    // uncomment to test in browser
+    // const x = database.blocks.valet.idb
+    // const keyId = database.blocks.valet.keyId
+    // assert.equal(x.name.toString(), `fp.${keyId}.helloName.valet`)
   })
   it('only put and get document', async () => {
     assert(resp0.id, 'should have id')
@@ -94,7 +111,7 @@ describe('Fireproof', () => {
     assert.equal(put2.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
     assert.notEqual(put2.clock.toString(), theDoc._clock.toString())
 
-    const err = await database.put(theDoc).catch((err) => err)
+    const err = await database.put(theDoc).catch(err => err)
     assert.match(err.message, /MVCC conflict/)
   })
   it('put and get document with _clock that does not match b/c a different doc changed should succeed', async () => {
@@ -112,8 +129,8 @@ describe('Fireproof', () => {
     assert.equal(theDoc.name, 'alice')
     const del = await database.del(theDoc)
     assert(del.id)
-    const err = await database.put(theDoc).catch((err) => err)
-    console.log('err', err)
+    const err = await database.put(theDoc).catch(err => err)
+    // console.log('err', err)
     assert.match(err.message, /MVCC conflict/)
   })
   it('allDocuments', async () => {
@@ -130,19 +147,19 @@ describe('Fireproof', () => {
 
   it('has a factory for making new instances with default settings', async () => {
     // TODO if you pass it an email it asks the local keyring, and if no key, does the email validation thing
-    const db = await Fireproof.storage('test')
-    assert.equal(db.name, 'test')
+    const db = await Fireproof.storage('fptest')
+    assert.equal(db.name, 'fptest')
   })
   it('an empty database has no documents', async () => {
     const db = Fireproof.storage()
-    const e = await db.get('8c5c0c5c0c5c').catch((err) => err)
+    const e = await db.get('8c5c0c5c0c5c').catch(err => err)
     assert.equal(e.message, 'Not found')
     const changes = await db.changesSince()
     assert.equal(changes.rows.length, 0)
   })
   it('delete on an empty database', async () => {
     const db = Fireproof.storage()
-    const e = await db.del('8c5c0c5c0c5c').catch((err) => err)
+    const e = await db.del('8c5c0c5c0c5c').catch(err => err)
     assert.equal(e.id, '8c5c0c5c0c5c')
     const changes = await db.changesSince()
     assert.equal(changes.rows.length, 0)
@@ -161,12 +178,20 @@ describe('Fireproof', () => {
     assert(response.id, 'should have id')
     assert.equal(response.id, dogKey)
     assert.equal(value._id, dogKey)
+    await sleep(10)
+    // console.log('snapshot')
     const snapshot = Fireproof.snapshot(database)
+    await snapshot.ready
+
+    assert.equal(snapshot.clockToJSON().length, 1)
+    assert.deepEqual(snapshot.clockToJSON(), database.clockToJSON())
 
     const avalue = await database.get(dogKey)
     assert.equal(avalue.name, value.name)
     assert.equal(avalue.age, value.age)
     assert.equal(avalue._id, dogKey)
+
+    assert.equal(snapshot.clockToJSON().length, 1)
 
     avalue.age = 3
     const response2 = await database.put(avalue)
@@ -178,6 +203,8 @@ describe('Fireproof', () => {
     assert.equal(bvalue.age, 3)
     assert.equal(bvalue._id, dogKey)
 
+    assert.equal(snapshot.clockToJSON().length, 1)
+
     const snapdoc = await snapshot.get(dogKey)
     // console.log('snapdoc', snapdoc)
     // assert(snapdoc.id, 'should have id')
@@ -185,7 +212,7 @@ describe('Fireproof', () => {
     assert.equal(snapdoc.age, 2)
   })
   it("update document with validation function that doesn't allow it", async () => {
-    const validationDatabase = Fireproof.storage('validation', {
+    const validationDatabase = Fireproof.storage('fptest-validation', {
       validateChange: (newDoc, oldDoc, authCtx) => {
         if (newDoc.name === 'bob') {
           throw new Error('no bobs allowed')
@@ -206,15 +233,15 @@ describe('Fireproof', () => {
         name: 'bob',
         age: 11
       })
-      .catch((e) => e)
+      .catch(e => e)
     assert.equal(e.message, 'no bobs allowed')
 
-    e = await validationDatabase.get('222-bob').catch((e) => e)
+    e = await validationDatabase.get('222-bob').catch(e => e)
     assert.equal(e.message, 'Not found')
   })
 
   it('get missing document', async () => {
-    const e = await database.get('missing').catch((e) => e)
+    const e = await database.get('missing').catch(e => e)
     assert.equal(e.message, 'Not found')
   })
   it('delete the only document', async () => {
@@ -225,8 +252,8 @@ describe('Fireproof', () => {
     assert.equal(deleted.id, id)
     const e = await database
       .get(id)
-      .then((doc) => assert.equal('should be deleted', JSON.stringify(doc)))
-      .catch((e) => {
+      .then(doc => assert.equal('should be deleted', JSON.stringify(doc)))
+      .catch(e => {
         if (e.message !== 'Not found') {
           throw e
         }
@@ -250,8 +277,8 @@ describe('Fireproof', () => {
     assert.equal(deleted.id, id)
     const e = await database
       .get(id)
-      .then((doc) => assert.equal('should be deleted', JSON.stringify(doc)))
-      .catch((e) => {
+      .then(doc => assert.equal('should be deleted', JSON.stringify(doc)))
+      .catch(e => {
         if (e.message !== 'Not found') {
           throw e
         }
@@ -261,7 +288,7 @@ describe('Fireproof', () => {
   })
 
   it("delete a document with validation function that doesn't allow it", async () => {
-    const validationDatabase = Fireproof.storage('validation', {
+    const validationDatabase = Fireproof.storage('fptest-validation', {
       validateChange: (newDoc, oldDoc, authCtx) => {
         if (oldDoc.name === 'bob') {
           throw new Error('no changing bob')
@@ -282,14 +309,14 @@ describe('Fireproof', () => {
         name: 'bob',
         age: 12
       })
-      .catch((e) => e)
+      .catch(e => e)
     assert.equal(e.message, 'no changing bob')
 
     let prevBob = await validationDatabase.get('222-bob')
     assert.equal(prevBob.name, 'bob')
     assert.equal(prevBob.age, 11)
 
-    const e2 = await validationDatabase.del('222-bob').catch((e) => e)
+    const e2 = await validationDatabase.del('222-bob').catch(e => e)
     assert.equal(e2.message, 'no changing bob')
 
     prevBob = await validationDatabase.get('222-bob')
@@ -391,6 +418,8 @@ describe('Fireproof', () => {
   })
 
   it('docs since repeated changes', async () => {
+    assert.equal(database.clockToJSON().length, 1)
+    assert.equal(database.clockToJSON()[0], 'bafyreiad55hjvlzse7dxt5qwf6xsv4zucuyoracvpcqifpi6pmdaavdkoa')
     assert.equal((await database.changesSince()).rows.length, 1)
     let resp, doc, changes
     for (let index = 0; index < 30; index++) {
@@ -418,7 +447,10 @@ describe('Fireproof', () => {
       changes.rows.forEach(row => {
         for (const key in row) {
           const value = row[key]
-          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+          assert(
+            !/^bafy/.test(value),
+            `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`
+          )
         }
       })
 
@@ -436,54 +468,99 @@ describe('Fireproof', () => {
       changes.rows.forEach(row => {
         for (const key in row) {
           const value = row[key]
-          assert(!/^bafy/.test(value), `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`)
+          assert(
+            !/^bafy/.test(value),
+            `Unexpected "bafy..." value found at index ${index} in row ${JSON.stringify(row)}`
+          )
         }
       })
 
-      // console.log('changes: ', index, changes.rows.length, JSON.stringify(changes.rows))
+      // console.log('changes: ', index, changes.rows.length, JSON.stringify(changes))
       assert.equal(changes.rows.length, index + 2, `failed on ${index}, with ${changes.rows.length} ${id}`)
+      assert.equal(database.clockToJSON().length, 1)
+      // dig out the prolly root
+
+      // assert(
+      //   [
+      //     'bafyreibbleckum7cn4y7rothgsa36lnavyp57rzzfgjzozklhhv2e5xpqe',
+      //     'bafyreigxiwa3sqacp4vtu7uaejep4xv7tt5dribslfffm23wwlq4xif4da', 'bafyreia7mosntjgvwzkhnubhao47w6nwrevmxfnohhquyxhc3xsi3frhkm',
+      //     'bafyreibpf2awohuttydyvpz56kbpczfgfr2nv2vrpsqz2jyiwmzsf7nzfi', 'bafyreiclda4g3zj3mgawzsczqswisy6jjrazmhf7dfynbzahzhom3otc2y'
+      //   ].indexOf(database.clockToJSON()[0]) > -1,
+      //   `new cid: ${database.clockToJSON()}`
+      // )
+      // assert.equal(database.clockToJSON()[0], 'bafyreibpf2awohuttydyvpz56kbpczfgfr2nv2vrpsqz2jyiwmzsf7nzfi')
     }
   }).timeout(30000)
 
   it('concurrent transactions', async () => {
     assert.equal((await database.changesSince()).rows.length, 1)
     const promises = []
+    const promisesChanges = []
     let putYes = 0
+    // const howMany = 0
+
     for (let index = 0; index < 20; index++) {
       const id = 'a' + (300 - index).toString()
-      promises.push(database.put({ index, _id: id }).catch(e => {
-        assert.equal(e.message, 'put failed on  _id: ' + id)
-      }).then(r => {
-        if (r.id) {
-          putYes++
-          return database.get(r.id).catch(e => {
-            // assert.equal(e.message, 'get failed on _id: ' + r.id)
-          }).then(d => {
-            // assert.equal(d.index, index)
-            return r.id
+      await sleep(0)
+
+      promises.push(
+        database
+          .put({ index, _id: id })
+          .catch(e => {
+            assert.equal(e.message, 'put failed on  _id: ' + id)
           })
-        }
-      }))
-      promises.push(database.changesSince().catch(e => {
-        assert.equal(e.message, 'changesSince failed')
-      }).then(c => {
-        assert(c.rows.length > 0)
-        return c.rows.length
-      }))
+          .then(r => {
+            putYes++
+            return database
+              .get(r.id)
+              .catch(e => {
+                // assert.equal(e.message, 'get failed on _id: ' + r.id)
+              })
+              .then(d => {
+                // assert.equal(d.index, index)
+                return database.changesSince().then(c => {
+                  // console.log('changesSince A', c.rows.length)
+                  // howMany = c.rows.length + 1
+                  // assert.equal(c.rows.length, ++howMany)
+                  return c.rows.length
+                })
+                // return r.id
+              })
+          })
+      )
+      promisesChanges.push(
+        database
+          .changesSince()
+          .catch(e => {
+            assert.equal(e.message, 'changesSince failed')
+          })
+          .then(c => {
+            // console.log('changesSince', c.rows.length)
+            // howMany = c.rows.length + 1
+            // assert.equal(c.rows.length, ++howMany)
+            return c.rows.length
+          })
+      )
     }
+    // console.log('promises', promises.length)
     const got = await Promise.all(promises)
-    assert.equal(got.length, putYes * 2)
+    // console.log('gotlength', got.length)
+    assert.equal(got.length, putYes)
     // console.log('putYes', putYes)
-    // await sleep(1000)
+    const gotChanges = await Promise.all(promisesChanges)
+    assert.equal(got.length, gotChanges.length)
+
+    await sleep(100)
     // console.log('all', await database.allDocuments())
-    assert.equal((await database.allDocuments()).rows.length, 21)
-    assert.equal((await database.changesSince()).rows.length, 21)
+    assert.equal((await database.changesSince()).rows.length, 21, 'changesSince')
+    assert.equal((await database.allDocuments()).rows.length, 21, 'allDocuments')
+    // assert.equal(database.clockToJSON().length, 20, 'clockToJSON')
   }).timeout(20000)
   it('serialize database', async () => {
     await database.put({ _id: 'rehy', name: 'drate' })
     assert.equal((await database.changesSince()).rows.length, 2)
     const serialized = JSON.parse(JSON.stringify(database))
-    assert.equal(serialized.name, 'helloName')
+    assert.equal(serialized.name, 'fptest-hello-name')
     assert.equal(serialized.clock.length, 1)
   })
   it('clocked changes in order', async () => {

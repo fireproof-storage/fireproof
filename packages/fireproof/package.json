@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.6.6",
+  "version": "0.7.0-alpha.7",
   "description": "Live data for React, accelerated by proofs, powered by IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",
@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "keygen": "node scripts/keygen.js",
-    "test": "standard && npm run test:unencrypted && npm run test:mocha",
+    "test": "standard && tsc && npm run test:unencrypted && npm run test:mocha",
     "test:unencrypted": "set NO_ENCRYPT=true && npm run test:mocha",
     "test:mocha": "mocha test/*.test.js",
     "test:watch": "npm run test:mocha -- -w --parallel",
@@ -40,12 +40,14 @@
   "dependencies": {
     "@ipld/car": "^5.1.0",
     "@ipld/dag-cbor": "^9.0.0",
+    "@jsonlines/core": "^1.0.2",
     "@rollup/plugin-commonjs": "^24.0.1",
     "archy": "^1.0.0",
     "async": "^3.2.4",
     "car-transaction": "^1.0.1",
     "charwise": "^3.0.1",
     "cli-color": "^2.0.3",
+    "cross-fetch": "^3.1.6",
     "crypto-browserify": "^3.12.0",
     "encrypted-block": "^0.0.3",
     "idb": "^7.1.1",

@@ -1,13 +1,8 @@
-import randomBytes from 'randombytes'
 import { Database, parseCID } from './database.js'
-import { Listener } from './listener.js'
 import { DbIndex as Index } from './db-index.js'
-// import { TransactionBlockstore } from './blockstore.js'
-import { localGet } from './utils.js'
 import { Sync } from './sync.js'
 
-// todo remove Listener in 0.7.0
-export { Index, Listener, Database, Sync }
+export { Index, Database, Sync }
 
 export class Fireproof {
   /**
@@ -19,31 +14,32 @@ export class Fireproof {
    * @returns {Database} - a new Fireproof instance
    */
   static storage = (name = null, opts = {}) => {
-    if (name) {
-      opts.name = name
-      // todo this can come from a registry also eg remote database / config, etc
-      const existing = localGet('fp.' + name)
-      if (existing) {
-        const existingConfig = JSON.parse(existing)
-        return Fireproof.fromConfig(name, existingConfig, opts)
-      } else {
-        const instanceKey = randomBytes(32).toString('hex') // pass null to disable encryption
-        opts.key = instanceKey
-        return new Database(name, [], opts)
-      }
-    } else {
-      return new Database(null, [], opts)
-    }
+    return new Database(name, opts)
   }
 
-  static fromConfig (name, existingConfig, opts = {}) {
-    opts.key = existingConfig.key
-    const fp = new Database(name, [], opts)
-    return Fireproof.fromJSON(existingConfig, fp)
-  }
+  // static fromConfig (name, primary, secondary, opts = {}) {
+  //   console.log('fromConfig', name, primary, secondary, opts)
+  //   let clock = []
+  //   if (primary && primary.clock) {
+  //     clock = clock.concat(primary.clock)
+  //   }
+  //   if (secondary && secondary.clock) {
+  //     clock = clock.concat(secondary.clock)
+  //   }
 
-  static fromJSON (json, database) {
-    database.hydrate({ car: json.car, indexCar: json.indexCar, clock: json.clock.map(c => parseCID(c)), name: json.name, key: json.key })
+  //   const mergedClock = [...new Set(clock)].map(c => parseCID(c))
+
+  //   opts.primaryHeader = primary
+  //   opts.secondaryHeader = secondary
+
+  //   opts.index = primary ? primary.index : {}
+
+  //   const fp = new Database(name, mergedClock, opts)
+  //   return Fireproof.fromJSON(primary, secondary, fp)
+  // }
+
+  static fromJSON (primary, secondary, database) {
+    const json = primary && primary.indexes ? primary : secondary
     if (json.indexes) {
       for (const {
         name,
@@ -54,7 +50,7 @@ export class Fireproof {
           clock: {
             byId: byId ? parseCID(byId) : null,
             byKey: byKey ? parseCID(byKey) : null,
-            db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
+            db: db && db.length > 0 ? db.map(c => parseCID(c)) : null
           },
           code,
           name
@@ -66,8 +62,6 @@ export class Fireproof {
 
   static snapshot (database, clock) {
     const definition = database.toJSON()
-    const withBlocks = new Database(database.name)
-    withBlocks.blocks = database.blocks
     if (clock) {
       definition.clock = clock.map(c => parseCID(c))
       definition.indexes.forEach(index => {
@@ -76,7 +70,14 @@ export class Fireproof {
         index.clock.db = null
       })
     }
-    const snappedDb = Fireproof.fromJSON(definition, withBlocks)
+
+    const withBlocks = new Database(database.name)
+    withBlocks.blocks = database.blocks
+    withBlocks.ready.then(() => {
+      withBlocks.clock = definition.clock.map(c => parseCID(c))
+    })
+
+    const snappedDb = Fireproof.fromJSON(definition, null, withBlocks)
     ;[...database.indexes.values()].forEach(index => {
       snappedDb.indexes.get(index.mapFnString).mapFn = index.mapFn
     })

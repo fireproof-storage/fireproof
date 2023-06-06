@@ -41,9 +41,12 @@ export class TransactionBlockstore {
   inflightTransactions = new Set()
   syncs = new Set()
 
-  constructor (name, encryptionKey) {
+  constructor (name, config) {
     if (name) {
-      this.valet = new Valet(name, encryptionKey)
+      this.valet = new Valet(name, config)
+      this.ready = this.valet.ready
+    } else {
+      this.ready = Promise.resolve()
     }
     this.remoteBlockFunction = null
   }
@@ -58,7 +61,7 @@ export class TransactionBlockstore {
     const key = cid.toString()
     // it is safe to read from the in-flight transactions becauase they are immutable
     const bytes = await Promise.any([this.transactionsGet(key), this.committedGet(key)]).catch(e => {
-      // console.log('networkGet', cid.toString(), e)
+      console.log('get error', cid.toString(), e)
       return this.networkGet(key)
     })
     if (!bytes) throw new Error('Missing block: ' + key)

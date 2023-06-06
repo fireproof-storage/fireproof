@@ -2,8 +2,8 @@
 import { visMerkleClock, visMerkleTree, vis, put, get, getAll, eventsSince } from './prolly.js'
 import { doTransaction, TransactionBlockstore } from './blockstore.js'
 import charwise from 'charwise'
-import { localSet } from './utils.js'
 import { CID } from 'multiformats'
+import { DbIndex as Index } from './db-index.js'
 
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
@@ -30,13 +30,53 @@ export class Database {
   rootCache = null
   eventsCache = new Map()
 
-  constructor (name, clock, config = {}) {
+  constructor (name, config = {}) {
     this.name = name
+    this.clock = []
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
-    this.blocks = new TransactionBlockstore(name, config.key)
-    this.indexBlocks = new TransactionBlockstore(name + '.indexes', config.key)
-    this.clock = clock
+    this.blocks = new TransactionBlockstore(name, config)
+    this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { primary: config.index })
+
     this.config = config
+    // todo we can wait for index blocks elsewhere
+    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(([blocksReady, indexReady]) => {
+      const clock = new Set()
+      // console.log('blocksReady', blocksReady)
+      if (!blocksReady) {
+        return
+      }
+      for (const headers of blocksReady) {
+        for (const [, header] of Object.entries(headers)) {
+          if (!header) continue
+          for (const cid of header.clock) {
+            clock.add(cid)
+          }
+          if (header.index) {
+            this.indexBlocks.valet.primary.setCarCidMapCarCid(header.index.car)
+            this.indexBlocks.valet.primary.setKeyMaterial(header.index.key)
+          }
+          if (header.indexes) {
+            for (const {
+              name,
+              code,
+              clock: { byId, byKey, db }
+            } of header.indexes) {
+              // console.log('index', name, code, { byId, byKey }, db, header.indexes)
+              Index.fromJSON(this, {
+                clock: {
+                  byId: byId ? parseCID(byId) : null,
+                  byKey: byKey ? parseCID(byKey) : null,
+                  db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
+                },
+                code,
+                name
+              })
+            }
+          }
+        }
+      }
+      this.clock = [...clock]
+    })
   }
 
   /**
@@ -46,12 +86,17 @@ export class Database {
    * @instance
    */
   toJSON () {
+    return this.blocks.valet ? this.blocks.valet.primary.prepareHeader(this.toHeader(), false) : this.toHeader() // omg
+  }
+
+  toHeader () {
     return {
       clock: this.clockToJSON(),
       name: this.name,
-      key: this.blocks.valet?.getKeyMaterial(),
-      car: this.blocks.valet?.valetRootCarCid.toString(),
-      indexCar: this.indexBlocks.valet?.valetRootCarCid?.toString(),
+      index: {
+        key: this.indexBlocks.valet?.primary.keyMaterial,
+        car: this.indexBlocks.valet?.primary.valetRootCarCid?.toString()
+      },
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
   }
@@ -66,27 +111,13 @@ export class Database {
     return (clock || this.clock).map(cid => cid.toString())
   }
 
-  hydrate ({ clock, name, key, car, indexCar }) {
-    this.name = name
-    this.clock = clock
-    this.blocks.valet?.setKeyMaterial(key)
-    this.blocks.valet?.setRootCarCid(car) // maybe
-    this.indexBlocks.valet?.setKeyMaterial(key)
-    this.indexBlocks.valet?.setRootCarCid(indexCar) // maybe
-    // this.indexBlocks = null
-  }
-
   maybeSaveClock () {
     if (this.name && this.blocks.valet) {
-      localSet('fp.' + this.name, JSON.stringify(this))
+      this.blocks.valet.saveHeader(this.toHeader())
     }
   }
 
   index (name) {
-    // iterate over the indexes and gather any with the same name
-    // if there are more than one, throw an error
-    // if there is one, return it
-    // if there are none, return null
     const indexes = [...this.indexes.values()].filter(index => index.name === name)
     if (indexes.length > 1) {
       throw new Error(`Multiple indexes found with name ${name}`)
@@ -102,13 +133,9 @@ export class Database {
    * @instance
    */
   async notifyReset () {
+    await this.ready
     await this.notifyListeners({ _reset: true, _clock: this.clockToJSON() })
   }
-
-  // used be indexes etc to notify database listeners of new availability
-  // async notifyExternal (source = 'unknown') {
-  //   // await this.notifyListeners({ _external: source, _clock: this.clockToJSON() })
-  // }
 
   /**
    * Returns the changes made to the Fireproof instance since the specified event.
@@ -119,6 +146,7 @@ export class Database {
    * @instance
    */
   async changesSince (aClock) {
+    await this.ready
     // console.log('events for', this.instanceId, aClock?.constructor.name)
     // console.log('changesSince', this.instanceId, this.clockToJSON(aClock), this.clockToJSON())
     let rows, dataCIDs, clockCIDs
@@ -162,6 +190,7 @@ export class Database {
   }
 
   async allDocuments () {
+    await this.ready
     const allResp = await getAll(this.blocks, this.clock, this.rootCache)
     this.rootCache = { root: allResp.root, clockCIDs: allResp.clockCIDs }
 
@@ -176,6 +205,7 @@ export class Database {
   }
 
   async allCIDs () {
+    await this.ready
     const allResp = await getAll(this.blocks, this.clock, this.rootCache, true)
     this.rootCache = { root: allResp.root, clockCIDs: allResp.clockCIDs }
     // console.log('allcids', allResp.cids, allResp.clockCIDs)
@@ -186,29 +216,12 @@ export class Database {
   }
 
   async allStoredCIDs () {
+    await this.ready
     const allCIDs = []
     for await (const { cid } of this.blocks.entries()) {
       allCIDs.push(cid)
     }
     return allCIDs
-  }
-
-  /**
-   * Runs validation on the specified document using the Fireproof instance's configuration. Throws an error if the document is invalid.
-   *
-   * @param {Object} doc - The document to validate.
-   * @returns {Promise<void>}
-   * @throws {Error} - Throws an error if the document is invalid.
-   * @memberof Fireproof
-   * @instance
-   */
-  async runValidation (doc) {
-    if (this.config && this.config.validateChange) {
-      const oldDoc = await this.get(doc._id)
-        .then(doc => doc)
-        .catch(() => ({}))
-      this.config.validateChange(doc, oldDoc, this.authCtx)
-    }
   }
 
   /**
@@ -221,6 +234,7 @@ export class Database {
    * @instance
    */
   async get (key, opts = {}) {
+    await this.ready
     const clock = opts.clock || this.clock
     const resp = await get(this.blocks, clock, charwise.encode(key), this.rootCache)
     this.rootCache = { root: resp.root, clockCIDs: resp.clockCIDs }
@@ -256,6 +270,7 @@ export class Database {
    * @instance
    */
   async put ({ _id, _proof, ...doc }) {
+    await this.ready
     const id = _id || 'f' + Math.random().toString(36).slice(2)
     await this.runValidation({ _id: id, ...doc })
     return await this.putToProllyTree({ key: id, value: doc }, doc._clock)
@@ -269,6 +284,7 @@ export class Database {
    * @instance
    */
   async del (docOrId) {
+    await this.ready
     let id
     let clock = null
     if (docOrId._id) {
@@ -281,6 +297,24 @@ export class Database {
     return await this.putToProllyTree({ key: id, del: true }, clock) // not working at prolly tree layer?
     // this tombstone is temporary until we can get the prolly tree to delete
     // return await this.putToProllyTree({ key: id, value: null }, clock)
+  }
+
+  /**
+   * Runs validation on the specified document using the Fireproof instance's configuration. Throws an error if the document is invalid.
+   *
+   * @param {Object} doc - The document to validate.
+   * @returns {Promise<void>}
+   * @throws {Error} - Throws an error if the document is invalid.
+   * @memberof Fireproof
+   * @instance
+   */
+  async runValidation (doc) {
+    if (this.config && this.config.validateChange) {
+      const oldDoc = await this.get(doc._id)
+        .then(doc => doc)
+        .catch(() => ({}))
+      this.config.validateChange(doc, oldDoc, this.authCtx)
+    }
   }
 
   /**
@@ -393,12 +427,6 @@ export class Database {
     for (const listener of this.listeners) {
       await listener(changes)
     }
-  }
-
-  setCarUploader (carUploaderFn) {
-    // console.log('registering car uploader')
-    // https://en.wikipedia.org/wiki/Law_of_Demeter - this is a violation of the law of demeter
-    this.blocks.valet.uploadFunction = carUploaderFn
   }
 
   setRemoteBlockReader (remoteBlockReaderFn) {

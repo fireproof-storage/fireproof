@@ -4,6 +4,45 @@ import * as Link from 'multiformats/link'
 import * as raw from 'multiformats/codecs/raw'
 import { sha256 } from 'multiformats/hashes/sha2'
 import { MemoryBlockstore } from './block.js'
+// import { defaultConfig } from '../src/storage/filesystem.js'
+import { homedir } from 'os'
+
+import { join } from 'path'
+import { rmSync, readdirSync, cpSync } from 'node:fs'
+// import { resolve } from 'node:path'
+// import * as codec from '@ipld/dag-cbor'
+
+import { mkdir } from 'fs/promises'
+
+export function cpDir (src, dst) {
+  cpSync(src, dst, { recursive: true })
+}
+
+export const dbFiles = async (storage, name) => {
+  const dbPath = join(storage.config.dataDir, name)
+  await mkdir(dbPath, { recursive: true })
+  const files = readdirSync(dbPath)
+  return files
+}
+
+export async function resetTestDataDir (name) {
+  const dataDir = join(homedir(), '.fireproof')
+  await mkdir(dataDir, { recursive: true })
+
+  const files = readdirSync(dataDir)
+
+  if (name) {
+    // console.log('removing', name)
+    rmSync(join(dataDir, name), { recursive: true, force: true })
+  } else {
+    for (const file of files) {
+      if (file.match(/fptest/)) {
+        // console.log('removing', file)
+        rmSync(join(dataDir, file), { recursive: true, force: true })
+      }
+    }
+  }
+}
 
 // console.x = console.log
 // console.log = function (...args) {
