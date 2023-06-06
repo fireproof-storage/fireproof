@@ -35,11 +35,11 @@ export default [
       nodePolyfills({
         // Whether to polyfill `node:` protocol imports.
         // crypto: true,
-        protocolImports: true
+        protocolImports: false
       }),
       // resolve({ modulesOnly: true }),
       commonJS(),
-      resolve({browser: true, preferBuiltins: true}),
+      resolve({browser: true, preferBuiltins: false}),
       // commonJS({ include: ['src','node_modules/**'] }),
       // autoExternal()
       // commonJS()
@@ -68,5 +68,5 @@ export default [
       file: `${name}.d.ts`,
       format: 'es'
     }
-  }),
+  })
 ]
