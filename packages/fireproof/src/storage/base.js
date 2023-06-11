@@ -14,7 +14,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { Buffer } from 'buffer'
 import { rawSha1 as sha1sync } from '../sha1.js'
 // @ts-ignore
-import * as codec from 'encrypted-block'
+import * as codec from '../encrypted-block.js'
 import { blocksToCarBlock, blocksToEncryptedCarBlock, blocksFromEncryptedCarBlock } from '../valet.js'
 
 const chunker = bf(30)
@@ -247,6 +247,7 @@ export class Base {
         const got = await reader.get(cid)
         let useCodec = codec
         if (cid.toString().indexOf('bafy') === 0) {
+          // @ts-ignore
           useCodec = dagcbor // todo this is a dirty check
         }
         const decoded = await Block.decode({

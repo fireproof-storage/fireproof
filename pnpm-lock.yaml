@@ -135,15 +135,15 @@ importers:
       crypto-browserify:
         specifier: ^3.12.0
         version: 3.12.1
-      encrypted-block:
-        specifier: jchris/encrypted-block#update
-        version: https://codeload.github.com/jchris/encrypted-block/tar.gz/102c55ac9354b3499c7c04ceecde10e055ecf89d
       idb:
         specifier: ^7.1.1
         version: 7.1.1
       ipld-hashmap:
         specifier: ^2.1.18
         version: 2.1.18
+      js-crypto-aes:
+        specifier: ^1.0.4
+        version: 1.0.6
       multiformats:
         specifier: ^11.0.1
         version: 11.0.2
@@ -2216,10 +2216,6 @@ packages:
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
-
-  encrypted-block@https://codeload.github.com/jchris/encrypted-block/tar.gz/102c55ac9354b3499c7c04ceecde10e055ecf89d:
-    resolution: {tarball: https://codeload.github.com/jchris/encrypted-block/tar.gz/102c55ac9354b3499c7c04ceecde10e055ecf89d}
-    version: 0.0.0-dev
 
   end-of-stream@1.4.4:
     resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
@@ -7611,12 +7607,6 @@ snapshots:
   emittery@0.7.2: {}
 
   emoji-regex@8.0.0: {}
-
-  encrypted-block@https://codeload.github.com/jchris/encrypted-block/tar.gz/102c55ac9354b3499c7c04ceecde10e055ecf89d:
-    dependencies:
-      js-crypto-aes: 1.0.6
-      multiformats: 11.0.2
-      randombytes: 2.1.0
 
   end-of-stream@1.4.4:
     dependencies:
