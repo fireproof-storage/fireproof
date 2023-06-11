@@ -131,15 +131,15 @@ importers:
       crypto-browserify:
         specifier: ^3.12.0
         version: 3.12.0
-      encrypted-block:
-        specifier: jchris/encrypted-block#update
-        version: github.com/jchris/encrypted-block/102c55ac9354b3499c7c04ceecde10e055ecf89d
       idb:
         specifier: ^7.1.1
         version: 7.1.1
       ipld-hashmap:
         specifier: ^2.1.18
         version: 2.1.18
+      js-crypto-aes:
+        specifier: ^1.0.4
+        version: 1.0.4
       multiformats:
         specifier: ^11.0.1
         version: 11.0.1
@@ -9495,14 +9495,4 @@ packages:
 
   /zod@3.21.0:
     resolution: {integrity: sha512-UYdykTcVxB6lfdyLzAqLyyYAlOcpoluECvjsdoaqfQmz9p+3LRaIqYcNiL/J2kFYp66fBM8wwBvIGVEjq7KtZw==}
-    dev: false
-
-  github.com/jchris/encrypted-block/102c55ac9354b3499c7c04ceecde10e055ecf89d:
-    resolution: {tarball: https://codeload.github.com/jchris/encrypted-block/tar.gz/102c55ac9354b3499c7c04ceecde10e055ecf89d}
-    name: encrypted-block
-    version: 0.0.0-dev
-    dependencies:
-      js-crypto-aes: 1.0.4
-      multiformats: 11.0.1
-      randombytes: 2.1.0
     dev: false

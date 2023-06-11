@@ -1,5 +1,5 @@
 // @ts-nocheck
-import * as codec from 'encrypted-block'
+import * as codec from './encrypted-block.js'
 import {
   create,
   load
