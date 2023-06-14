@@ -73,6 +73,7 @@
     "rollup-plugin-visualizer": "^5.9.0",
     "standard": "^17.0.0",
     "typescript": "^5.0.2",
+    "vector-storage": "^1.0.55",
     "webpack": "^5.78.0",
     "webpack-cli": "^5.0.1"
   },
