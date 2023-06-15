@@ -11,9 +11,16 @@ export default {
       format: 'cjs',
       exports: 'named',
       sourcemap: true,
-      strict: false,
+      strict: false
     },
+    {
+      file: pkg.main.replace(/\.js$/, '.mjs'),
+      format: 'es',
+      // preserveModules: true,
+      sourcemap: true,
+      inlineDynamicImports: true
+    }
   ],
   plugins: [typescript(), uglify()],
-  external: ['react', 'react-dom'],
+  external: ['react', 'react-dom']
 }
