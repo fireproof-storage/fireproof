@@ -25,11 +25,12 @@ const databases = new Map<string, { database: Database; setupStarted: Boolean }>
 const initializeDatabase = (
   name: string,
   defineDatabaseFn: Function,
+  config: any,
 ): { database: Database; setupStarted: Boolean } => {
   if (databases.has(name)) {
     return databases.get(name) as { database: Database; setupStarted: Boolean };
   } else {
-    const database = Fireproof.storage(name);
+    const database = Fireproof.storage(name, config);
     defineDatabaseFn(database);
     const obj = { database, setupStarted: false };
     databases.set(name, obj);
@@ -81,10 +82,11 @@ export function useFireproof(
     database;
   },
   setupDatabaseFn: Function | null = null,
+  config = {},
 ): FireproofCtxValue {
   // console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
   const [ready, setReady] = useState(false);
-  const init = initializeDatabase(name, defineDatabaseFn);
+  const init = initializeDatabase(name, defineDatabaseFn, config);
   const database = init.database;
 
   useEffect(() => {
@@ -175,6 +177,7 @@ export function useFireproof(
 
   return {
     useLiveQuery,
+    // useLiveDocument : useDocument,
     useDocument,
     database,
     ready,
