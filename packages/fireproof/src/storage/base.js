@@ -331,7 +331,9 @@ export class Base {
 
     let newValetCidCar
     if (this.keyMaterial) {
-      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, ipldLoader.blocks, this.keyMaterial)
+      const cids = [...ipldLoader.blocks.blocks.keys()]
+      // console.log('persistCarMap', cids)
+      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, ipldLoader.blocks, this.keyMaterial, cids)
     } else {
       newValetCidCar = await blocksToCarBlock(indexNode.cid, ipldLoader.blocks)
     }
