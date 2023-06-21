@@ -85,22 +85,34 @@ export class Base {
     }
   }
 
-  // async compact () {
-  //   const cidMap = await this.getCidCarMap()
-  //   const dataCids = [...cidMap.keys()]
-  //   const blocks = {
-  //     get: async cid => await this.getLoaderBlock(cid)
-  //   }
-
-  // }
+  async compact (clock) {
+    if (this.readonly) return
+    if (clock.length !== 1) {
+      throw new Error(
+        `Compacting with clock length ${clock.length} instead of 1. To merge the clock, apply an update to the database first.`
+      )
+    }
+    const cidMap = await this.getCidCarMap()
+    const dataCids = [...cidMap.keys()]
+    const allBlocks = new Map()
+    for (const cid of dataCids) {
+      const block = await this.getLoaderBlock(cid)
+      allBlocks.set(cid, block)
+    }
+    const blocks = {
+      lastCid: clock[0],
+      get: cid => allBlocks.get(cid.toString())
+    }
+    await this.parkCar(blocks, dataCids)
+  }
 
   async parkCar (innerBlockstore, cids) {
-    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
+    // console.log('parkCar', this.instanceId, this.name, this.readonly)
     if (this.readonly) return
     let newCar
     if (this.keyMaterial) {
       // console.log('encrypting car', innerBlockstore.label)
-      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial, cids)
+      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial, [...cids])
     } else {
       // todo should we pass cids in instead of iterating innerBlockstore?
       newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -128,6 +140,7 @@ export class Base {
 
     await this.writeCars(carList)
     this.valetRootCarCid = newValetCidCar.cid
+    // console.trace('saved car', this.instanceId, this.name, newValetCidCar.cid.toString())
     return newValetCidCar
   }
 
@@ -173,7 +186,7 @@ export class Base {
 
   async saveHeader (header) {
     // for each branch, save the header
-    // console.log('saveHeader', this.config.branches)
+    // console.log('saveHeader', this.config.branches, header)
     //  for (const branch of this.branches) {
     //    await this.saveBranchHeader(branch)
     //  }
@@ -187,7 +200,7 @@ export class Base {
   prepareHeader (header, json = true) {
     header.key = this.keyMaterial
     header.car = this.valetRootCarCid.toString()
-    // console.log('prepareHeader', this.instanceId, this.name, header.key, this.valetRootCarCid.toString())
+    // console.log('prepareHeader', this.instanceId, this.name, header)
     return json ? JSON.stringify(header) : header
   }
 
@@ -449,12 +462,23 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   // for (const { cid } of blocks.entries()) {
   //   theCids.push(cid.toString())
   // }
-  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()), keyMaterial)
+  // console.log(
+  //   'encrypting',
+  //   theCids.length,
+  //   'blocks',
+  //   theCids.includes(innerBlockStoreClockRootCid.toString()),
+  //   keyMaterial
+  // )
   // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
   for await (const block of encrypt({
     cids: theCids,
-    get: async cid => blocks.get(cid), // maybe we can just use blocks.get
+    get: async cid => {
+      // console.log('getencrypt', cid)
+      const got = blocks.get(cid)
+      // console.log('got', got)
+      return got.block ? ({ cid, bytes: got.block }) : got
+    }, // maybe we can just use blocks.get
     key: encryptionKey,
     hasher: sha256,
     chunker,

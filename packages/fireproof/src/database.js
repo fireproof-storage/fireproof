@@ -66,7 +66,7 @@ export class Database {
                 clock: {
                   byId: byId ? parseCID(byId) : null,
                   byKey: byKey ? parseCID(byKey) : null,
-                  db: (db && db.length > 0) ? db.map(c => parseCID(c)) : null
+                  db: db && db.length > 0 ? db.map(c => parseCID(c)) : null
                 },
                 code,
                 name
@@ -136,6 +136,13 @@ export class Database {
   async notifyReset () {
     await this.ready
     await this.notifyListeners({ _reset: true, _clock: this.clockToJSON() })
+  }
+
+  async compact () {
+    if (this.name && this.blocks.valet) {
+      await this.blocks.valet.compact(this.clock)
+      await this.blocks.valet.saveHeader(this.toHeader())
+    }
   }
 
   /**

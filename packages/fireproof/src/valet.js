@@ -31,6 +31,11 @@ export class Valet {
     return await this.primary.saveHeader(header)
   }
 
+  async compact (clock) {
+    await this.primary.compact(clock)
+    if (this.secondary) await this.secondary.compact(clock)
+  }
+
   /**
    * Group the blocks into a car and write it to the valet.
    * @param {import('./blockstore.js').InnerBlockstore} innerBlockstore
