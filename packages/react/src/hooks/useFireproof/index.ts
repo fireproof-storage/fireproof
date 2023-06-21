@@ -13,12 +13,7 @@ export interface FireproofCtxValue {
   ready: boolean;
 }
 
-export const FireproofCtx = createContext<FireproofCtxValue>({
-  useLiveQuery: () => {},
-  useDocument: () => {},
-  database: new Database(null, []),
-  ready: false,
-});
+export const FireproofCtx = createContext<FireproofCtxValue>({} as FireproofCtxValue);
 
 const databases = new Map<string, { database: Database; setupStarted: Boolean }>();
 

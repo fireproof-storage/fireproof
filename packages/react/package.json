@@ -1,6 +1,6 @@
 {
   "name": "use-fireproof",
-  "version": "0.7.2-dev.2",
+  "version": "0.7.2-dev.4",
   "description": "React hooks: useLiveQuery and useDocument for Fireproof realtime cloudless database",
   "main": "dist/index.js",
   "scripts": {
