@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.7.2-dev.2",
+  "version": "0.7.2-dev.4",
   "description": "Live data for React, accelerated by proofs, powered by IPFS",
   "main": "dist/src/fireproof.js",
   "module": "dist/src/fireproof.mjs",

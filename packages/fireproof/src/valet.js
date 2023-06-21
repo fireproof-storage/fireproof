@@ -58,6 +58,19 @@ export class Valet {
     }
   }
 
+  // async compact() {
+  //   const carCids = []
+  //   // for await (const { cid } of this.valet.cids()) {
+  //   //   yield { cid }
+  //   // }
+  //   // create a blockstore with all data
+  //   {
+  //     entries: () => syncCIDs.map(cid => ({ cid })),
+  //     get: async cid => await blocks.get(cid)
+  //   }
+  //   // park it
+  // }
+
   /**
    * Iterate over all blocks in the store.
    *

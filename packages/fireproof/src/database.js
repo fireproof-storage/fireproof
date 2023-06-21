@@ -86,6 +86,7 @@ export class Database {
    * @instance
    */
   toJSON () {
+    // todo this prepareHeader ignores secondary storage, need both
     return this.blocks.valet ? this.blocks.valet.primary.prepareHeader(this.toHeader(), false) : this.toHeader() // omg
   }
 
