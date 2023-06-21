@@ -215,7 +215,8 @@ export class Sync {
           entries: () => syncCIDs.map(cid => ({ cid })),
           get: async cid => await blocks.get(cid)
         },
-        key
+        key,
+        syncCIDs.map(c => c.toString())
       )
     } else {
       const carBlocks = await Promise.all(

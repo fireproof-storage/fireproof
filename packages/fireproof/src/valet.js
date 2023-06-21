@@ -123,7 +123,7 @@ async function parkCar (storage, innerBlockstore, cids) {
   let newCar
   if (storage.keyMaterial) {
     // console.log('encrypting car', innerBlockstore.label)
-    newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, storage.keyMaterial)
+    newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, storage.keyMaterial, cids)
   } else {
     // todo should we pass cids in instead of iterating innerBlockstore?
     newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
@@ -161,14 +161,14 @@ export const blocksToCarBlock = async (rootCids, blocks) => {
   return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
 }
 
-export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial) => {
+export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial, cids) => {
   const encryptionKey = Buffer.from(keyMaterial, 'hex')
   const encryptedBlocks = []
-  const theCids = []
+  const theCids = cids
   // console.trace('blocksToEncryptedCarBlock', blocks)
-  for (const { cid } of blocks.entries()) {
-    theCids.push(cid.toString())
-  }
+  // for (const { cid } of blocks.entries()) {
+  //   theCids.push(cid.toString())
+  // }
   // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()), keyMaterial)
   // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
   let last
