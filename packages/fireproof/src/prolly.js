@@ -116,11 +116,11 @@ const makeGetAndPutBlock = inBlocks => {
   // const mblocks = new MemoryBlockstore()
   // const blocks = new MultiBlockFetcher(mblocks, inBlocks)
   const { getBlock, cids } = makeGetBlock(inBlocks)
-  const put = inBlocks.put.bind(inBlocks)
+  // const put = inBlocks.put.bind(inBlocks)
   const bigPut = async (block, additions) => {
     // console.log('bigPut', block.cid.toString())
     const { cid, bytes } = block
-    put(cid, bytes)
+    inBlocks.put(cid, bytes)
     // mblocks.putSync(cid, bytes)
     if (additions) {
       additions.set(cid.toString(), block)

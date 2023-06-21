@@ -72,6 +72,12 @@ export class Base {
     }
   }
 
+  // async compact () {
+  //   const cidMap = await this.getCidCarMap()
+  //   const dataCids = Object.keys(cidMap)
+
+  // }
+
   async saveCar (carCid, value, cids) {
     const newValetCidCar = await this.updateCarCidMap(carCid, cids)
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
