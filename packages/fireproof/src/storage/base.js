@@ -1,3 +1,16 @@
+// import { sha256 } from 'multiformats/hashes/sha2'
+import * as CBW from '@ipld/car/buffer-writer'
+import * as raw from 'multiformats/codecs/raw'
+// import * as Block from 'multiformats/block'
+// @ts-ignore
+// import { bf } from 'prolly-trees/utils'
+// @ts-ignore
+// import { nocache as cache } from 'prolly-trees/cache'
+import { encrypt, decrypt } from '../crypto.js'
+// import { Buffer } from 'buffer'
+
+// const chunker = bf(30)
+
 import randomBytes from 'randombytes'
 // import { randomBytes } from 'crypto'
 import { create, load } from 'ipld-hashmap'
@@ -15,7 +28,6 @@ import { Buffer } from 'buffer'
 import { rawSha1 as sha1sync } from '../sha1.js'
 // @ts-ignore
 import * as codec from '../encrypted-block.js'
-import { blocksToCarBlock, blocksToEncryptedCarBlock, blocksFromEncryptedCarBlock } from '../valet.js'
 
 const chunker = bf(30)
 const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
@@ -27,6 +39,7 @@ export class Base {
   valetRootCarCid = null // used on initial hydrate, if you change this, set this.valetCarCidMap = null
   keyMaterial = null
   keyId = 'null'
+  readonly = false
 
   constructor (name, config = {}) {
     this.instanceId = Math.random().toString(36).slice(2)
@@ -74,9 +87,27 @@ export class Base {
 
   // async compact () {
   //   const cidMap = await this.getCidCarMap()
-  //   const dataCids = Object.keys(cidMap)
+  //   const dataCids = [...cidMap.keys()]
+  //   const blocks = {
+  //     get: async cid => await this.getLoaderBlock(cid)
+  //   }
 
   // }
+
+  async parkCar (innerBlockstore, cids) {
+    // console.log('parkCar', this.instanceId, this.name, carCid, cids)
+    if (this.readonly) return
+    let newCar
+    if (this.keyMaterial) {
+      // console.log('encrypting car', innerBlockstore.label)
+      newCar = await blocksToEncryptedCarBlock(innerBlockstore.lastCid, innerBlockstore, this.keyMaterial, cids)
+    } else {
+      // todo should we pass cids in instead of iterating innerBlockstore?
+      newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
+    }
+    // console.log('new car', newCar.cid.toString())
+    return await this.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+  }
 
   async saveCar (carCid, value, cids) {
     const newValetCidCar = await this.updateCarCidMap(carCid, cids)
@@ -378,5 +409,93 @@ export class VMemoryBlockstore {
     for (const [str, bytes] of this.blocks) {
       yield { cid: parse(str), bytes }
     }
+  }
+}
+
+export const blocksToCarBlock = async (rootCids, blocks) => {
+  // console.log('blocksToCarBlock', rootCids, blocks.constructor.name)
+  let size = 0
+  if (!Array.isArray(rootCids)) {
+    rootCids = [rootCids]
+  }
+  const headerSize = CBW.headerLength({ roots: rootCids })
+  size += headerSize
+  if (!Array.isArray(blocks)) {
+    blocks = Array.from(blocks.entries())
+  }
+  for (const { cid, bytes } of blocks) {
+    // console.log(cid, bytes)
+    size += CBW.blockLength({ cid, bytes })
+  }
+  const buffer = new Uint8Array(size)
+  const writer = await CBW.createWriter(buffer, { headerSize })
+
+  for (const cid of rootCids) {
+    writer.addRoot(cid)
+  }
+
+  for (const { cid, bytes } of blocks) {
+    writer.write({ cid, bytes })
+  }
+  await writer.close()
+  return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
+}
+
+export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial, cids) => {
+  const encryptionKey = Buffer.from(keyMaterial, 'hex')
+  const encryptedBlocks = []
+  const theCids = cids
+  // console.trace('blocksToEncryptedCarBlock', blocks)
+  // for (const { cid } of blocks.entries()) {
+  //   theCids.push(cid.toString())
+  // }
+  // console.log('encrypting', theCids.length, 'blocks', theCids.includes(innerBlockStoreClockRootCid.toString()), keyMaterial)
+  // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
+  let last
+  for await (const block of encrypt({
+    cids: theCids,
+    get: async cid => blocks.get(cid), // maybe we can just use blocks.get
+    key: encryptionKey,
+    hasher: sha256,
+    chunker,
+    cache,
+    // codec: dagcbor, // should be crypto?
+    root: innerBlockStoreClockRootCid
+  })) {
+    encryptedBlocks.push(block)
+    last = block
+  }
+  // console.log('last', last.cid.toString(), 'for clock', innerBlockStoreClockRootCid.toString())
+  const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
+  return encryptedCar
+}
+// { root, get, key, cache, chunker, hasher }
+
+const memoizeDecryptedCarBlocks = new Map()
+export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
+  if (memoizeDecryptedCarBlocks.has(cid.toString())) {
+    return memoizeDecryptedCarBlocks.get(cid.toString())
+  } else {
+    const blocksPromise = (async () => {
+      const decryptionKey = Buffer.from(keyMaterial, 'hex')
+      // console.log('decrypting', keyMaterial, cid.toString())
+      const cids = new Set()
+      const decryptedBlocks = []
+      for await (const block of decrypt({
+        root: cid,
+        get,
+        key: decryptionKey,
+        chunker,
+        hasher: sha256,
+        cache
+        // codec: dagcbor
+      })) {
+        decryptedBlocks.push(block)
+        cids.add(block.cid.toString())
+      }
+      return { blocks: decryptedBlocks, cids }
+    })()
+    memoizeDecryptedCarBlocks.set(cid.toString(), blocksPromise)
+    return blocksPromise
   }
 }
