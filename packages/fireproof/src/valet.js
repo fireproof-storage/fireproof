@@ -106,6 +106,7 @@ export class Valet {
 
 async function parkCar (storage, innerBlockstore, cids) {
   // console.log('parkCar', this.instanceId, this.name, carCid, cids)
+  if (storage.readonly) return
   let newCar
   if (storage.keyMaterial) {
     // console.log('encrypting car', innerBlockstore.label)
