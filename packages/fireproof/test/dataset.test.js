@@ -4,7 +4,7 @@ import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex as Index } from '../src/db-index.js'
 import { join } from 'path'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, unlinkSync } from 'node:fs'
 import { startServer } from '../scripts/server.js'
 
 import { resetTestDataDir, dbFiles, cpDir } from './helpers.js'
@@ -217,6 +217,40 @@ describe('Create a dataset', () => {
     // await fileDb.ready
     // console.log('QUERY', fileDb)
     const response = await fileDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+  })
+  it('you can compact it and delete the old files', async () => {
+    const filesBefore = await dbFiles(storage, TEST_DB_NAME)
+    assert(filesBefore.length > 10)
+
+    const beforeClock = storage.prepareHeader(db.toHeader())
+
+    // console.log('COMPACT')
+
+    await db.compact()
+
+    const afterClock = storage.prepareHeader(db.toHeader())
+
+    assert.notDeepEqual(beforeClock, afterClock)
+
+    // erase the old files
+    filesBefore.forEach(file => {
+      if (file === 'main.json') return
+      const filePath = join(storage.config.dataDir, TEST_DB_NAME, file)
+      unlinkSync(filePath)
+    })
+    const filesAfter = await dbFiles(storage, TEST_DB_NAME)
+    assert(filesAfter.length < 10)
+
+    await sleep(10)
+    const newFileDb = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
+    await newFileDb.ready
+    // console.log('QUERY', newFileDb.clockToJSON())
+    const response = await newFileDb.allDocuments()
     assert.equal(response.rows.length, 18)
   })
 })
