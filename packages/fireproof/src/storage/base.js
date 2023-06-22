@@ -99,10 +99,12 @@ export class Base {
       const block = await this.getLoaderBlock(cid)
       allBlocks.set(cid, block)
     }
+    cidMap.clear()
     const blocks = {
       lastCid: clock[0],
       get: cid => allBlocks.get(cid.toString())
     }
+    console.log('compact', this.instanceId, this.name, blocks.lastCid.toString(), dataCids.length)
     await this.parkCar(blocks, dataCids)
   }
 
@@ -248,6 +250,7 @@ export class Base {
 
   async mapForIPLDHashmapCarCid (carCid) {
     // console.log('mapForIPLDHashmapCarCid', carCid)
+    // todo why is this writeable?
     const carMapReader = await this.getWriteableCarReader(carCid)
     const indexNode = await load(carMapReader, carMapReader.root.cid, {
       blockHasher: blockOpts.hasher,
@@ -286,7 +289,19 @@ export class Base {
     return combinedReader
   }
 
+  async xgetCarReader (carCid) {
+    return this.getCarReaderImpl(carCid)
+  }
+
+  carReaderCache = new Map()
   async getCarReader (carCid) {
+    if (!this.carReaderCache.has(carCid)) {
+      this.carReaderCache.set(carCid, this.getCarReaderImpl(carCid))
+    }
+    return this.carReaderCache.get(carCid)
+  }
+
+  async getCarReaderImpl (carCid) {
     carCid = carCid.toString()
     const carBytes = await this.readCar(carCid)
     // console.log('getCarReader', this.constructor.name, carCid, carBytes.length)

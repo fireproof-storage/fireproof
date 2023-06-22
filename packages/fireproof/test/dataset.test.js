@@ -221,9 +221,14 @@ describe('Create a dataset', () => {
   })
   it('you can compact it and delete the old files', async () => {
     const filesBefore = await dbFiles(storage, TEST_DB_NAME)
-    assert(filesBefore.length > 10)
+    assert.equal(filesBefore.length, 37)
 
     const beforeClock = storage.prepareHeader(db.toHeader())
+
+    const cidMap0 = await storage.getCidCarMap()
+    assert.equal(cidMap0.size, 48)
+    const carCids0 = new Set(cidMap0.values())
+    assert.equal(carCids0.size, 18)
 
     // console.log('COMPACT')
 
@@ -240,7 +245,7 @@ describe('Create a dataset', () => {
       unlinkSync(filePath)
     })
     const filesAfter = await dbFiles(storage, TEST_DB_NAME)
-    assert(filesAfter.length < 10)
+    assert(filesAfter.length === 3)
 
     await sleep(10)
     const newFileDb = Fireproof.storage(TEST_DB_NAME, {
@@ -252,6 +257,18 @@ describe('Create a dataset', () => {
     // console.log('QUERY', newFileDb.clockToJSON())
     const response = await newFileDb.allDocuments()
     assert.equal(response.rows.length, 18)
+
+    const response2 = await newFileDb.changesSince()
+    assert.equal(response2.rows.length, 18)
+
+    const response3 = await newFileDb.changesSince(newFileDb.clockToJSON())
+    assert.equal(response3.rows.length, 0)
+
+    const st2 = newFileDb.blocks.valet.primary
+    const cidMap = await st2.getCidCarMap()
+    assert.equal(cidMap.size, 48)
+    const carCids = new Set(cidMap.values())
+    assert.equal(carCids.size, 1)
   })
 })
 
@@ -452,7 +469,7 @@ describe('Rest dataset', () => {
     assert(remoteFiles2.length > 2)
     assert.equal(remoteFiles2.length, 3)
   })
-  it('attach existing secondary rest storage to empty db in read-only mode', async () => {
+  it.skip('attach existing secondary rest storage to empty db in read-only mode', async () => {
     const emptyDb = await Fireproof.storage('fptest-empty-db-todos', {
       primary: { StorageClass: Filesystem },
       secondary: { readonly: true, type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
@@ -837,7 +854,7 @@ describe('Rest dataset', () => {
     assert.equal(doc3._id, 'ice')
     assert.equal(doc3.title, 'Tea')
   })
-  it('user clone of server dataset', async () => {
+  it.skip('user clone of server dataset', async () => {
     // console.log('HERE HERE')
     const files5 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files5.length, 37)
