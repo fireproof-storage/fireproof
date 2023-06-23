@@ -469,7 +469,7 @@ describe('Rest dataset', () => {
     assert(remoteFiles2.length > 2)
     assert.equal(remoteFiles2.length, 3)
   })
-  it.skip('attach existing secondary rest storage to empty db in read-only mode', async () => {
+  it('attach existing secondary rest storage to empty db in read-only mode', async () => {
     const emptyDb = await Fireproof.storage('fptest-empty-db-todos', {
       primary: { StorageClass: Filesystem },
       secondary: { readonly: true, type: 'rest', url: 'http://localhost:8000/' + TEST_DB_NAME }
@@ -854,7 +854,7 @@ describe('Rest dataset', () => {
     assert.equal(doc3._id, 'ice')
     assert.equal(doc3.title, 'Tea')
   })
-  it.skip('user clone of server dataset', async () => {
+  it('user clone of server dataset', async () => {
     // console.log('HERE HERE')
     const files5 = await dbFiles(storage, TEST_DB_NAME)
     assert.equal(files5.length, 37)
