@@ -10,10 +10,6 @@ const defaultConfig = {
 export class Browser extends Base {
   constructor (name, config = {}) {
     super(name, Object.assign({}, defaultConfig, config))
-    this.isBrowser = false
-    try {
-      this.isBrowser = window.localStorage && true
-    } catch (e) {}
   }
 
   withDB = async dbWorkFun => {
@@ -53,12 +49,16 @@ export class Browser extends Base {
   }
 
   loadHeader (branch = 'main') {
-    return this.isBrowser && localStorage.getItem(this.headerKey(branch))
+    try {
+      return JSON.parse(localStorage.getItem(this.headerKey(branch)))
+    } catch (e) {}
   }
 
   async writeHeader (branch, header) {
     if (this.config.readonly) return
-    return this.isBrowser && localStorage.setItem(this.headerKey(branch), this.prepareHeader(header))
+    try {
+      return localStorage.setItem(this.headerKey(branch), this.prepareHeader(header))
+    } catch (e) {}
   }
 
   headerKey (branch = 'main') {

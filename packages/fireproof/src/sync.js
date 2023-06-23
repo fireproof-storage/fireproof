@@ -1,7 +1,7 @@
 import SimplePeer from 'simple-peer'
 import { parseCID } from './database.js'
 import { decodeEventBlock } from './clock.js'
-import { blocksToCarBlock, blocksToEncryptedCarBlock } from './valet.js'
+import { blocksToCarBlock, blocksToEncryptedCarBlock } from './storage/base.js'
 import { CarReader } from '@ipld/car'
 
 /**
@@ -215,7 +215,8 @@ export class Sync {
           entries: () => syncCIDs.map(cid => ({ cid })),
           get: async cid => await blocks.get(cid)
         },
-        key
+        key,
+        syncCIDs.map(c => c.toString())
       )
     } else {
       const carBlocks = await Promise.all(

@@ -4,7 +4,7 @@ import { loadData } from '../src/import.js'
 import { Fireproof } from '../src/fireproof.js'
 import { DbIndex as Index } from '../src/db-index.js'
 import { join } from 'path'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync, unlinkSync } from 'node:fs'
 import { startServer } from '../scripts/server.js'
 
 import { resetTestDataDir, dbFiles, cpDir } from './helpers.js'
@@ -218,6 +218,57 @@ describe('Create a dataset', () => {
     // console.log('QUERY', fileDb)
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 18)
+  })
+  it('you can compact it and delete the old files', async () => {
+    const filesBefore = await dbFiles(storage, TEST_DB_NAME)
+    assert.equal(filesBefore.length, 37)
+
+    const beforeClock = storage.prepareHeader(db.toHeader())
+
+    const cidMap0 = await storage.getCidCarMap()
+    assert.equal(cidMap0.size, 48)
+    const carCids0 = new Set(cidMap0.values())
+    assert.equal(carCids0.size, 18)
+
+    // console.log('COMPACT')
+
+    await db.compact()
+
+    const afterClock = storage.prepareHeader(db.toHeader())
+
+    assert.notDeepEqual(beforeClock, afterClock)
+
+    // erase the old files
+    filesBefore.forEach(file => {
+      if (file === 'main.json') return
+      const filePath = join(storage.config.dataDir, TEST_DB_NAME, file)
+      unlinkSync(filePath)
+    })
+    const filesAfter = await dbFiles(storage, TEST_DB_NAME)
+    assert(filesAfter.length === 3)
+
+    await sleep(10)
+    const newFileDb = Fireproof.storage(TEST_DB_NAME, {
+      primary: {
+        StorageClass: Filesystem
+      }
+    })
+    await newFileDb.ready
+    // console.log('QUERY', newFileDb.clockToJSON())
+    const response = await newFileDb.allDocuments()
+    assert.equal(response.rows.length, 18)
+
+    const response2 = await newFileDb.changesSince()
+    assert.equal(response2.rows.length, 18)
+
+    const response3 = await newFileDb.changesSince(newFileDb.clockToJSON())
+    assert.equal(response3.rows.length, 0)
+
+    const st2 = newFileDb.blocks.valet.primary
+    const cidMap = await st2.getCidCarMap()
+    assert.equal(cidMap.size, 48)
+    const carCids = new Set(cidMap.values())
+    assert.equal(carCids.size, 1)
   })
 })
 
