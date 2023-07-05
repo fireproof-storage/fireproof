@@ -18,18 +18,29 @@ export const FireproofCtx = createContext<FireproofCtxValue>({} as FireproofCtxV
 const databases = new Map<string, { database: Database; setupStarted: Boolean }>();
 
 const initializeDatabase = (
-  name: string,
+  name: string|Database,
   defineDatabaseFn: Function,
   config: any,
 ): { database: Database; setupStarted: Boolean } => {
-  if (databases.has(name)) {
-    return databases.get(name) as { database: Database; setupStarted: Boolean };
+  if (typeof name === 'object' && name instanceof Database) {
+    if (databases.has(name.name)) {
+      return databases.get(name.name) as { database: Database; setupStarted: Boolean };
+    } else {
+      defineDatabaseFn(name);
+      const obj = { database: name, setupStarted: false };
+      databases.set(name.name, obj);
+      return obj;
+    }
   } else {
-    const database = Fireproof.storage(name, config);
-    defineDatabaseFn(database);
-    const obj = { database, setupStarted: false };
-    databases.set(name, obj);
-    return obj;
+    if (databases.has(name)) {
+      return databases.get(name) as { database: Database; setupStarted: Boolean };
+    } else {
+      const database = Fireproof.storage(name, config);
+      defineDatabaseFn(database);
+      const obj = { database, setupStarted: false };
+      databases.set(name, obj);
+      return obj;
+    }
   }
 };
 
@@ -65,7 +76,7 @@ export const useDocument = topLevelUseLiveDocument;
 @function useFireproof
 React hook to initialize a Fireproof database.
 You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in your vite.config.ts
-@param {string} name - The path to the database file
+@param {string|Database} name - The path to the database file
 @param {function(database: Database): void} [defineDatabaseFn] - Synchronous function that defines the database, run this before any async calls
 @param {function(database: Database): Promise<void>} [setupDatabaseFn] - Asynchronous function that sets up the database, run this to load fixture data etc
 @returns {FireproofCtxValue} { useLiveQuery, useDocument, database, ready }
