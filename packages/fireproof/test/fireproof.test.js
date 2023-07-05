@@ -58,6 +58,12 @@ describe('Fireproof', () => {
     const put2 = await database.put({ _id: null, field: 'foo' })
     assert.notEqual(put2.id, null)
   })
+  it('only put document with undefined field', async () => {
+    assert(resp0.id, 'should have id')
+    assert.equal(resp0.id, '1ef3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c')
+    const put2 = await database.put({ _id: 'undef', field: undefined })
+    assert.notEqual(put2.id, null)
+  })
   it('mvcc put and get document with _clock that matches', async () => {
     assert(resp0.clock, 'should have clock')
     assert.equal(resp0.clock.length, 1)

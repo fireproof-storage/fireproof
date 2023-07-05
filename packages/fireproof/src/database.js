@@ -277,11 +277,13 @@ export class Database {
    * @memberof Fireproof
    * @instance
    */
-  async put ({ _id, _proof, ...doc }) {
+  async put ({ _id, _proof, _clock, ...doc }) {
     await this.ready
     const id = _id || 'f' + Math.random().toString(36).slice(2)
+    doc = JSON.parse(JSON.stringify(doc))
+    if (_clock) doc._clock = _clock
     await this.runValidation({ _id: id, ...doc })
-    return await this.putToProllyTree({ key: id, value: doc }, doc._clock)
+    return await this.putToProllyTree({ key: id, value: doc }, _clock)
   }
 
   /**
