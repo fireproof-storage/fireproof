@@ -36,6 +36,25 @@ importers:
         specifier: ^17.0.0
         version: 17.1.2
 
+  examples/playground:
+    dependencies:
+      esbuild:
+        specifier: ^0.8.46
+        version: 0.8.57
+      react:
+        specifier: ^17.0.1
+        version: 17.0.2
+      react-dom:
+        specifier: ^17.0.1
+        version: 17.0.2(react@17.0.2)
+      use-fireproof:
+        specifier: ^0.7.3
+        version: 0.7.3(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
+    devDependencies:
+      servor:
+        specifier: ^4.0.2
+        version: 4.0.2
+
   examples/todomvc:
     dependencies:
       '@fireproof/core':
@@ -2298,6 +2317,10 @@ packages:
     engines: {node: '>=12'}
     hasBin: true
 
+  esbuild@0.8.57:
+    resolution: {integrity: sha512-j02SFrUwFTRUqiY0Kjplwjm1psuzO1d6AjaXKuOR9hrY0HuPsT6sV42B6myW34h1q4CRy+Y3g4RU/cGJeI/nNA==}
+    hasBin: true
+
   escalade@3.2.0:
     resolution: {integrity: sha512-WUj2qlxaQtO4g6Pq5c29GTcWGDyd8itL8zTlipgECz3JesAiiOKotd8JU6otB3PACgG6xkJUyVhboMS+bje/jA==}
     engines: {node: '>=6'}
@@ -4150,6 +4173,11 @@ packages:
     peerDependencies:
       react: ^16.14.0
 
+  react-dom@17.0.2:
+    resolution: {integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==}
+    peerDependencies:
+      react: 17.0.2
+
   react-dom@18.3.1:
     resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
@@ -4188,6 +4216,10 @@ packages:
 
   react@16.14.0:
     resolution: {integrity: sha512-0X2CImDkJGApiAlcf0ODKIneSwBPhqJawOa5wCtKbu7ZECrmS26NvtSILynQ66cgkT/RJ4LidJOc3bUESwmU8g==}
+    engines: {node: '>=0.10.0'}
+
+  react@17.0.2:
+    resolution: {integrity: sha512-gnhPt75i/dq/z3/6q/0asP78D0u592D5L1pd7M8P+dck6Fu/jJeL6iVVK23fptSUZj8Vjf++7wXA8UNclGQcbA==}
     engines: {node: '>=0.10.0'}
 
   react@18.3.1:
@@ -4467,6 +4499,9 @@ packages:
   scheduler@0.19.1:
     resolution: {integrity: sha512-n/zwRWRYSUj0/3g/otKDRPMh6qv2SYMWNq85IEa8iZyAv8od9zDYpGSnpBEjNgcMNq6Scbu5KfIPxNF72R/2EA==}
 
+  scheduler@0.20.2:
+    resolution: {integrity: sha512-2eWfGgAqqWFGqtdMmcL5zCMK1U8KlXv8SQFGglL3CEtd0aDVDWgeF/YoCmvln55m5zSk3J/20hTaSBeSObsQDQ==}
+
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
 
@@ -4492,6 +4527,10 @@ packages:
 
   serialize-javascript@6.0.2:
     resolution: {integrity: sha512-Saa1xPByTTq2gdeFZYLLo+RFE35NHZkAbqZeWNd3BpzppeVisAqpDjcp8dyf6uIvEqJRd46jemmyA4iFIeVk8g==}
+
+  servor@4.0.2:
+    resolution: {integrity: sha512-MlmQ5Ntv4jDYUN060x/KEmN7emvIqKMZ9OkM+nY8Bf2+KkyLmGsTqWLyAN2cZr5oESAcH00UanUyyrlS1LRjFw==}
+    hasBin: true
 
   set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
@@ -5019,6 +5058,12 @@ packages:
   url@0.11.4:
     resolution: {integrity: sha512-oCwdVC7mTuWiPyjLUz/COz5TLk6wgp0RCsN+wHZ2Ekneac9w8uuV0njcbbie2ME+Vs+d6duwmYuR3HgQXs1fOg==}
     engines: {node: '>= 0.4'}
+
+  use-fireproof@0.7.3:
+    resolution: {integrity: sha512-gIlFrBY/v3QLQ6aHhX829zHHRwoiMylMWic6oqVLHJB3F/b3eBuAwv1wZ6A9k+HYI3au9/QwhIUAtkTXF7kzdw==}
+    peerDependencies:
+      react: '>= 16.8.0'
+      react-dom: '>= 16.8.0'
 
   use@3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}
@@ -7796,6 +7841,8 @@ snapshots:
       '@esbuild/win32-ia32': 0.18.20
       '@esbuild/win32-x64': 0.18.20
 
+  esbuild@0.8.57: {}
+
   escalade@3.2.0: {}
 
   escape-string-regexp@1.0.5: {}
@@ -10159,6 +10206,13 @@ snapshots:
       react: 16.14.0
       scheduler: 0.19.1
 
+  react-dom@17.0.2(react@17.0.2):
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      react: 17.0.2
+      scheduler: 0.20.2
+
   react-dom@18.3.1(react@18.3.1):
     dependencies:
       loose-envify: 1.4.0
@@ -10198,6 +10252,11 @@ snapshots:
       loose-envify: 1.4.0
       object-assign: 4.1.1
       prop-types: 15.8.1
+
+  react@17.0.2:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
 
   react@18.3.1:
     dependencies:
@@ -10522,6 +10581,11 @@ snapshots:
       loose-envify: 1.4.0
       object-assign: 4.1.1
 
+  scheduler@0.20.2:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+
   scheduler@0.23.2:
     dependencies:
       loose-envify: 1.4.0
@@ -10544,6 +10608,8 @@ snapshots:
   serialize-javascript@6.0.2:
     dependencies:
       randombytes: 2.1.0
+
+  servor@4.0.2: {}
 
   set-blocking@2.0.0: {}
 
@@ -11133,6 +11199,15 @@ snapshots:
     dependencies:
       punycode: 1.4.1
       qs: 6.14.0
+
+  use-fireproof@0.7.3(react-dom@17.0.2(react@17.0.2))(react@17.0.2):
+    dependencies:
+      '@fireproof/core': 0.7.2
+      react: 17.0.2
+      react-dom: 17.0.2(react@17.0.2)
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
 
   use@3.1.1: {}
 
