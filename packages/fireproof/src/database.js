@@ -5,6 +5,8 @@ import charwise from 'charwise'
 import { CID } from 'multiformats'
 import { DbIndex as Index } from './db-index.js'
 
+import Remote from './remote.js'
+
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
 // import { CID } from 'multiformats/dist/types/src/cid.js'
@@ -29,14 +31,15 @@ export class Database {
   indexes = new Map()
   rootCache = null
   eventsCache = new Map()
-
+  remote = null
+  name = ''
   constructor (name, config = {}) {
     this.name = name
     this.clock = []
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = new TransactionBlockstore(name, config)
     this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { primary: config.index })
-
+    this.remote = new Remote(name, config)
     this.config = config
     // todo we can wait for index blocks elsewhere
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(([blocksReady, indexReady]) => {
