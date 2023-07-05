@@ -44,8 +44,8 @@ importers:
         specifier: ^17.0.1
         version: 17.0.2(react@17.0.2)
       use-fireproof:
-        specifier: ^0.7.3
-        version: 0.7.3(react-dom@17.0.2)(react@17.0.2)
+        specifier: ^0.7.4-dev.1
+        version: link:../../packages/react
     devDependencies:
       servor:
         specifier: ^4.0.2
@@ -1111,28 +1111,6 @@ packages:
     resolution: {integrity: sha512-JXdzbRiWclLVoD8sNUjR443VVlYqiYmDVT6rGUEIEHU5YJW0gaVZwV2xgM7D4arkvASqD0IlLUVjHiFuxaftRw==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
-
-  /@fireproof/core@0.7.2:
-    resolution: {integrity: sha512-BFd4jqOw1dDzGCq/8U/KosQYjL4tQ09iA3KwOkNJXpg92wB4f8ZZ0IDsbEzOYKRB1BwsajvsQSD6MgmW99sd7Q==}
-    dependencies:
-      '@ipld/car': 5.1.0
-      '@ipld/dag-cbor': 9.0.0
-      '@jsonlines/core': 1.0.2
-      async: 3.2.4
-      charwise: 3.0.1
-      cross-fetch: 3.1.6
-      crypto-browserify: 3.12.0
-      idb: 7.1.1
-      ipld-hashmap: 2.1.18
-      js-crypto-aes: 1.0.4
-      multiformats: 11.0.1
-      prolly-trees: 1.0.4
-      randombytes: 2.1.0
-      simple-peer: 9.11.1
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-    dev: false
 
   /@humanwhocodes/config-array@0.11.8:
     resolution: {integrity: sha512-UybHIJzJnR5Qc/MsD9Kr+RpO2h+/P1GhOwdiLPXK5TWk5sgTdu88bTD9UP+CKbPPh5Rni1u0GjAdYQLemG8g+g==}
@@ -9061,20 +9039,6 @@ packages:
       punycode: 1.3.2
       querystring: 0.2.0
     dev: true
-
-  /use-fireproof@0.7.3(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-gIlFrBY/v3QLQ6aHhX829zHHRwoiMylMWic6oqVLHJB3F/b3eBuAwv1wZ6A9k+HYI3au9/QwhIUAtkTXF7kzdw==}
-    peerDependencies:
-      react: '>= 16.8.0'
-      react-dom: '>= 16.8.0'
-    dependencies:
-      '@fireproof/core': 0.7.2
-      react: 17.0.2
-      react-dom: 17.0.2(react@17.0.2)
-    transitivePeerDependencies:
-      - encoding
-      - supports-color
-    dev: false
 
   /use@3.1.1:
     resolution: {integrity: sha512-cwESVXlO3url9YWlFW/TA9cshCEhtu7IKJ/p5soJ/gGpj7vbvFrAY/eIioQ6Dw23KjZhYgiIo8HOs1nQ2vr/oQ==}
