@@ -17,16 +17,13 @@ export class Remote {
   async connect (email) {
     try {
       const client = await create()
-      const gotAuth = await client.authorize(email)
-      console.log('gotAuth', gotAuth)
+      await client.authorize(email)
       const claims = await client.capability.access.claim()
       console.log('claims', claims)
       const space = await client.createSpace('fp.' + this.name)
       console.log('space', space)
-      const gotSetSpace = await client.setCurrentSpace(space.did())
-      console.log('gotSetSpace', gotSetSpace)
-      const gotReg = await client.registerSpace(email)
-      console.log('gotReg', gotReg)
+      await client.setCurrentSpace(space.did())
+      await client.registerSpace(email)
       this.client = client
       console.log('client', client)
     } catch (err) {

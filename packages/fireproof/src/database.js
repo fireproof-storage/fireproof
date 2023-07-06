@@ -5,7 +5,7 @@ import charwise from 'charwise'
 import { CID } from 'multiformats'
 import { DbIndex as Index } from './db-index.js'
 
-import Remote from './remote.js'
+import { Remote } from './remote.js'
 
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
