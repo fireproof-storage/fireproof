@@ -22,16 +22,19 @@ const initializeDatabase = (
   defineDatabaseFn: Function,
   config: any,
 ): { database: Database; setupStarted: Boolean } => {
-  if (typeof name === 'object' && name instanceof Database) {
-    if (databases.has(name.name)) {
-      return databases.get(name.name) as { database: Database; setupStarted: Boolean };
+  if (typeof name['name'] === 'string' ) {
+    const theName = name['name'] as string;
+    const theDb = name as Database;
+    if (databases.has(theName)) {
+      return databases.get(theName) as { database: Database; setupStarted: Boolean };
     } else {
-      defineDatabaseFn(name);
-      const obj = { database: name, setupStarted: false };
-      databases.set(name.name, obj);
+      defineDatabaseFn(theDb);
+      const obj = { database: theDb, setupStarted: false };
+      databases.set(theName, obj);
       return obj;
     }
   } else {
+    if (typeof name !== 'string') throw new Error('Database name must be a string')
     if (databases.has(name)) {
       return databases.get(name) as { database: Database; setupStarted: Boolean };
     } else {
