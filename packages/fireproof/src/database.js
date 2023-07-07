@@ -39,7 +39,7 @@ export class Database {
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = new TransactionBlockstore(name, config)
     this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { primary: config.index })
-    this.remote = new Remote(name, config)
+    this.remote = new Remote(this, name, config)
     this.config = config
     // todo we can wait for index blocks elsewhere
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(([blocksReady, indexReady]) => {
