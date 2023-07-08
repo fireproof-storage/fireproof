@@ -221,6 +221,9 @@ export const doTransaction = async (label, blockstore, doFun, doSync = true) => 
   const innerBlockstore = blockstore.begin(label)
   try {
     const result = await doFun(innerBlockstore)
+    // console.log('doTransaction', label, 'result', result.head)
+    if (result && result.head) { innerBlockstore.head = result.head }
+    // pass the latest clock head for writing to the valet
     // @ts-ignore
     await blockstore.commit(innerBlockstore, doSync)
     return result
@@ -236,6 +239,7 @@ export const doTransaction = async (label, blockstore, doFun, doSync = true) => 
 export class InnerBlockstore {
   /** @type {Map<string, Uint8Array>} */
   blocks = new Map()
+  head = []
   lastCid = null
   label = ''
   parentBlockstore = null

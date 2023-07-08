@@ -307,7 +307,7 @@ export async function root (inBlocks, head, doFull = false) {
         bigPut(nb)
       }
       // console.log('root root', newProllyRootNode.constructor.name, newProllyRootNode)
-      return { clockCIDs, node: newProllyRootNode }
+      return { clockCIDs, node: newProllyRootNode, head }
     },
     false
   )
