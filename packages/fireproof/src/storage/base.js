@@ -101,6 +101,7 @@ export class Base {
     }
     cidMap.clear()
     const blocks = {
+      head: clock,
       lastCid: clock[0],
       get: cid => allBlocks.get(cid.toString())
     }
@@ -123,7 +124,7 @@ export class Base {
     return await this.saveCar(newCar.cid.toString(), newCar.bytes, cids, innerBlockstore.head)
   }
 
-  async saveCar (carCid, value, cids, head = []) {
+  async saveCar (carCid, value, cids, head = null) {
     const newValetCidCar = await this.updateCarCidMap(carCid, cids, head)
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
     const carList = [
@@ -146,15 +147,17 @@ export class Base {
     return newValetCidCar
   }
 
-  applyHeaders (headers) {
+  async applyHeaders (headers) {
     // console.log('applyHeaders', headers.index)
     this.headers = headers
     // console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
-    for (const [, header] of Object.entries(headers)) {
+    for (const [branch, header] of Object.entries(headers)) {
       if (header) {
         // console.log('applyHeaders', this.instanceId, this.name, header.key, header.car)
         header.key && this.setKeyMaterial(header.key)
         this.setCarCidMapCarCid(header.car)
+        const { clock } = await this.readHeaderCar(header.car)
+        console.log('stored clock', this.name, branch, clock)
       }
     }
     if (!this.valetRootCarCid) {
@@ -175,15 +178,26 @@ export class Base {
     const headers = {}
     for (const [branch] of Object.entries(this.config.branches)) {
       const got = await this.loadHeader(branch)
+      // const carCid = got.car
       // console.log('getHeaders', this.name, branch, got)
+      // if (got && got.car) {
+      // const { clock } = await this.readHeaderCar(got.car)
+      // console.log('stored clock', this.name, branch, clock)
+      // }
+
       headers[branch] = got
     }
-    this.applyHeaders(headers)
+    await this.applyHeaders(headers)
     return headers
   }
 
   loadHeader (branch = 'main') {
-    throw new Error('not implemented')
+    if (NOT_IMPL) throw new Error('not implemented')
+    return {}
+  }
+
+  async getStoredClock (carCid) {
+
   }
 
   async saveHeader (header) {
@@ -252,15 +266,11 @@ export class Base {
   async mapForIPLDHashmapCarCid (carCid) {
     // console.log('mapForIPLDHashmapCarCid', carCid)
     // todo why is this writeable?
-    const carMapReader = await this.getWriteableCarReader(carCid)
+    const { cars, reader: carMapReader } = await this.readHeaderCar(carCid)
 
-    // now when we load the root cid from the car, we get our new custom root node
-    const bytes = await carMapReader.get(carMapReader.root.cid)
-    const decoded = await Block.decode({ bytes, hasher: blockOpts.hasher, codec: blockOpts.codec })
-    // @ts-ignore
-    const { fp: { cars, clock } } = decoded.value
+    // this.clock = clock
 
-    console.log('mapForIPLDHashmapCarCid', cars, clock)
+    // console.log('mapForIPLDHashmapCarCid', cars)
 
     const indexNode = await load(carMapReader, cars, {
       blockHasher: blockOpts.hasher,
@@ -274,9 +284,21 @@ export class Base {
     return theCarMap
   }
 
+  async readHeaderCar (carCid) {
+    const carMapReader = await this.getWriteableCarReader(carCid)
+    // console.log('readHeaderCar', carCid, carMapReader)
+    // now when we load the root cid from the car, we get our new custom root node
+    const bytes = await carMapReader.get(carMapReader.root.cid)
+    const decoded = await Block.decode({ bytes, hasher: blockOpts.hasher, codec: blockOpts.codec })
+    // @ts-ignore
+    const { fp: { cars, clock } } = decoded.value
+    return { cars, clock, reader: carMapReader }
+  }
+
   async getWriteableCarReader (carCid) {
     // console.log('getWriteableCarReader', carCid)
     const carMapReader = await this.getCarReader(carCid)
+    // console.log('getWriteableCarReader', carCid, carMapReader)
     const theseWriteableBlocks = new VMemoryBlockstore()
     const combinedReader = {
       blocks: theseWriteableBlocks,
@@ -313,12 +335,16 @@ export class Base {
 
   async getCarReaderImpl (carCid) {
     carCid = carCid.toString()
+    console.log('getCarReaderImpl', carCid)
     const carBytes = await this.readCar(carCid)
     // console.log('getCarReader', this.constructor.name, carCid, carBytes.length)
     const reader = await CarReader.fromBytes(carBytes)
+    // console.log('getCarReader', carCid, reader._header)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()
+      // let count = 0
       const readerGetWithCodec = async cid => {
+        // console.log('readerGetWithCodec', count++, cid)
         const got = await reader.get(cid)
         let useCodec = codec
         if (cid.toString().indexOf('bafy') === 0) {
@@ -398,6 +424,7 @@ export class Base {
       await indexNode.set(key, value)
     }
 
+    // console.log('persistCarMap', indexNode.cid, head)
     const value = { fp: { cars: indexNode.cid, clock: head } }
     const header = await Block.encode({ value, hasher: blockOpts.hasher, codec: blockOpts.codec })
     ipldLoader.blocks.put(header.cid, header.bytes)
@@ -546,6 +573,7 @@ export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
         cache
         // codec: dagcbor
       })) {
+        // console.log('decrypted', block.cid.toString())
         decryptedBlocks.push(block)
         cids.add(block.cid.toString())
       }

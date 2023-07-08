@@ -16,7 +16,7 @@ describe('new Valet', () => {
     await val.primary.saveCar('carCid', carBytes, [
       'bafyreifwghknmzabvgearl72url3v5leqqhtafvybcsrceelc3psqkocoi',
       'bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma'
-    ])
+    ], [])
       .then((car) => {
         assert('car parked')
         return val.getValetBlock('bafyreieth2ckopwivda5mf6vu76xwqvox3q5wsaxgbmxy2dgrd4hfuzmma').then((block) => {
