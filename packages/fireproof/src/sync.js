@@ -1,7 +1,7 @@
 import SimplePeer from 'simple-peer'
 import { parseCID } from './database.js'
 import { decodeEventBlock } from './clock.js'
-import { blocksToCarBlock, blocksToEncryptedCarBlock } from './storage/base.js'
+import { blocksToCarBlock, blocksToEncryptedCarBlock } from './storage/utils.js'
 import { CarReader } from '@ipld/car'
 
 /**

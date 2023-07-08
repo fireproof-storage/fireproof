@@ -252,8 +252,8 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.7.2
-        version: 0.7.2
+        specifier: ^0.8.0-dev
+        version: 0.8.0(encoding@0.1.13)
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -800,6 +800,9 @@ packages:
 
   '@fireproof/core@0.7.2':
     resolution: {integrity: sha512-BFd4jqOw1dDzGCq/8U/KosQYjL4tQ09iA3KwOkNJXpg92wB4f8ZZ0IDsbEzOYKRB1BwsajvsQSD6MgmW99sd7Q==}
+
+  '@fireproof/core@0.8.0':
+    resolution: {integrity: sha512-lB9e1MBGCl2Es2jbGsUro8OCC1lQQlb5TybihGuei8FmxiNmTkaorBgfc49YJAXM7NF8qfJsOA2gh1Q8IUY7FQ==}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -6007,6 +6010,30 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  '@fireproof/core@0.8.0(encoding@0.1.13)':
+    dependencies:
+      '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.4
+      '@jsonlines/core': 1.0.2
+      '@web3-storage/clock': 0.3.0
+      '@web3-storage/w3up-client': 7.0.0(encoding@0.1.13)
+      async: 3.2.6
+      charwise: 3.0.1
+      cross-fetch: 3.2.0(encoding@0.1.13)
+      crypto-browserify: 3.12.1
+      idb: 7.1.1
+      ipld-hashmap: 2.1.18
+      js-crypto-aes: 1.0.6
+      multiformats: 11.0.2
+      prolly-trees: 1.0.4
+      randombytes: 2.1.0
+      simple-peer: 9.11.1
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - supports-color
+      - utf-8-validate
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
