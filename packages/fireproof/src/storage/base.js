@@ -264,10 +264,10 @@ export class Base {
 
   async getCidCarMap () {
     if (this.valetCarCidMap) return this.valetCarCidMap
-    console.log('getCidCarMap', this.valetRootCarCid, typeof this.valetCarCidMap)
+    // console.log('getCidCarMap', this.valetRootCarCid, typeof this.valetCarCidMap)
     if (this.valetRootCarCid) {
       this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
-      console.log('getCap', this.valetRootCarCid, this.valetCarCidMap.size)
+      // console.log('getCap', this.valetRootCarCid, this.valetCarCidMap.size)
       return this.valetCarCidMap
     } else {
       this.valetCarCidMap = new Map()
@@ -445,10 +445,15 @@ export class Base {
     while (true) {
       const key = `_${charwise.encode(next)}`
       if (!theCarMap.has(key)) {
-        throw new Error(`last compact point not found ${next} ${key}`)
+        if (next === 0) {
+          theCarMap.set('_last_compact', charwise.encode(next))
+          break
+        } else {
+          throw new Error(`last compact point not found ${next} ${key}`)
+        }
       } else {
         const got = theCarMap.get(key)
-        console.log('setLastCompact', key, got)
+        // console.log('setLastCompact', key, got)
         if (got === lastCompactCarCid) {
           theCarMap.set('_last_compact', charwise.encode(next))
           break
@@ -458,7 +463,7 @@ export class Base {
     }
   }
 
-  async updateCarCidMap (carCid, cids) {
+  async updateCarCidMap (carCid, cids, head) {
     // this hydrates the map if it has not been hydrated
     const theCarMap = await this.getCidCarMap()
     for (const cid of cids) {
