@@ -2,12 +2,17 @@
 import * as CBW from '@ipld/car/buffer-writer'
 import * as raw from 'multiformats/codecs/raw'
 // import * as Block from 'multiformats/block'
+
+// import { Block, encode, decode } from 'multiformats/block'
+
 // @ts-ignore
 // import { bf } from 'prolly-trees/utils'
 // @ts-ignore
 // import { nocache as cache } from 'prolly-trees/cache'
 import { encrypt, decrypt } from '../crypto.js'
 // import { Buffer } from 'buffer'
+
+import charwise from 'charwise'
 
 // const chunker = bf(30)
 
@@ -93,7 +98,7 @@ export class Base {
       )
     }
     const cidMap = await this.getCidCarMap()
-    const dataCids = [...cidMap.keys()]
+    const dataCids = [...cidMap.keys()].filter(cid => cid[0] !== '_')
     const allBlocks = new Map()
     for (const cid of dataCids) {
       const block = await this.getLoaderBlock(cid)
@@ -105,8 +110,9 @@ export class Base {
       lastCid: clock[0],
       get: cid => allBlocks.get(cid.toString())
     }
-    // console.log('compact', this.instanceId, this.name, blocks.lastCid.toString(), dataCids.length)
-    await this.parkCar(blocks, dataCids)
+    const lastCompactCar = await this.parkCar(blocks, dataCids) // todo this should remove old cars from the cid car map
+    console.log('compact', this.name, lastCompactCar.cid, blocks.lastCid.toString(), dataCids.length)
+    await this.setLastCompact(lastCompactCar.cid)
   }
 
   async parkCar (innerBlockstore, cids) {
@@ -127,6 +133,10 @@ export class Base {
   async saveCar (carCid, value, cids, head = null) {
     const newValetCidCar = await this.updateCarCidMap(carCid, cids, head)
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
+    // just write the cars and update the list of them.
+    // can we track the list as a map of cars from offset to cid? and then if two writers write the same offset, we can just use them both?
+    // or we can just write the cars and update the list of them.
+
     const carList = [
       {
         cid: carCid,
@@ -253,10 +263,11 @@ export class Base {
   /** Private - internal **/
 
   async getCidCarMap () {
-    // console.log('getCidCarMap', this.constructor.name, this.name, this.valetRootCarCid, typeof this.valetCarCidMap)
     if (this.valetCarCidMap) return this.valetCarCidMap
+    console.log('getCidCarMap', this.valetRootCarCid, typeof this.valetCarCidMap)
     if (this.valetRootCarCid) {
       this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
+      console.log('getCap', this.valetRootCarCid, this.valetCarCidMap.size)
       return this.valetCarCidMap
     } else {
       this.valetCarCidMap = new Map()
@@ -402,12 +413,58 @@ export class Base {
 
   writeCars (cars) {}
 
-  async updateCarCidMap (carCid, cids, head) {
+  sequenceCarMapAppend (theCarMap, carCid) {
+    // _last_compact
+    // _last_sync (map per clock? you can find this by looking at a clocks car and it's position in the map)
+    const oldMark = theCarMap.get('_last_compact')
+    // console.log('sequenceCarMapAppend oldMark', oldMark)
+    const lastCompact = oldMark ? charwise.decode(oldMark) : 0
+    // start iterating from the last compact point and find the first missing entry.
+    // then write the carCid to that entry
+    let next = lastCompact
+    while (true) {
+      const key = `_${charwise.encode(next)}`
+      if (!theCarMap.has(key)) {
+        console.log('sequenceCarMapAppend', next, key, carCid)
+        theCarMap.set(key, carCid.toString())
+        break
+      } else {
+        // const got = theCarMap.get(key)
+        next++
+      }
+    }
+  }
+
+  async setLastCompact (lastCompactCarCid) {
+    console.log('setLastCompact', lastCompactCarCid)
+    const theCarMap = await this.getCidCarMap()
+    const oldMark = theCarMap.get('_last_compact')
+    const lastCompact = oldMark ? charwise.decode(oldMark) : 0
+
+    let next = lastCompact
+    while (true) {
+      const key = `_${charwise.encode(next)}`
+      if (!theCarMap.has(key)) {
+        throw new Error(`last compact point not found ${next} ${key}`)
+      } else {
+        const got = theCarMap.get(key)
+        console.log('setLastCompact', key, got)
+        if (got === lastCompactCarCid) {
+          theCarMap.set('_last_compact', charwise.encode(next))
+          break
+        }
+        next++
+      }
+    }
+  }
+
+  async updateCarCidMap (carCid, cids) {
     // this hydrates the map if it has not been hydrated
     const theCarMap = await this.getCidCarMap()
     for (const cid of cids) {
       theCarMap.set(cid, carCid)
     }
+    // this.sequenceCarMapAppend(theCarMap, carCid)
     // todo can we debounce this? -- maybe put it into a queue so we can batch it
     return await this.persistCarMap(theCarMap, head)
   }
@@ -422,6 +479,7 @@ export class Base {
     })
 
     for (const [key, value] of theCarMap.entries()) {
+      // console.log('persistCarMap', key, value)
       await indexNode.set(key, value)
     }
 
