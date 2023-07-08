@@ -62,6 +62,7 @@ export class Fireproof {
 
   static snapshot (database, clock) {
     const definition = database.toJSON()
+    definition.clock = database.clockToJSON()
     if (clock) {
       definition.clock = clock.map(c => parseCID(c))
       definition.indexes.forEach(index => {
