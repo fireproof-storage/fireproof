@@ -120,11 +120,11 @@ export class Base {
       newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
     }
     // console.log('new car', newCar.cid.toString())
-    return await this.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+    return await this.saveCar(newCar.cid.toString(), newCar.bytes, cids, innerBlockstore.head)
   }
 
-  async saveCar (carCid, value, cids) {
-    const newValetCidCar = await this.updateCarCidMap(carCid, cids)
+  async saveCar (carCid, value, cids, head = []) {
+    const newValetCidCar = await this.updateCarCidMap(carCid, cids, head)
     // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
     const carList = [
       {
@@ -187,8 +187,9 @@ export class Base {
   }
 
   async saveHeader (header) {
+    // this.clock = header.clock
     // for each branch, save the header
-    // console.log('saveHeader', this.config.branches, header)
+    // console.log('saveHeader', header.clock)
     //  for (const branch of this.branches) {
     //    await this.saveBranchHeader(branch)
     //  }
@@ -252,7 +253,16 @@ export class Base {
     // console.log('mapForIPLDHashmapCarCid', carCid)
     // todo why is this writeable?
     const carMapReader = await this.getWriteableCarReader(carCid)
-    const indexNode = await load(carMapReader, carMapReader.root.cid, {
+
+    // now when we load the root cid from the car, we get our new custom root node
+    const bytes = await carMapReader.get(carMapReader.root.cid)
+    const decoded = await Block.decode({ bytes, hasher: blockOpts.hasher, codec: blockOpts.codec })
+    // @ts-ignore
+    const { fp: { cars, clock } } = decoded.value
+
+    console.log('mapForIPLDHashmapCarCid', cars, clock)
+
+    const indexNode = await load(carMapReader, cars, {
       blockHasher: blockOpts.hasher,
       blockCodec: blockOpts.codec
     })
@@ -365,17 +375,17 @@ export class Base {
 
   writeCars (cars) {}
 
-  async updateCarCidMap (carCid, cids) {
+  async updateCarCidMap (carCid, cids, head) {
     // this hydrates the map if it has not been hydrated
     const theCarMap = await this.getCidCarMap()
     for (const cid of cids) {
       theCarMap.set(cid, carCid)
     }
     // todo can we debounce this? -- maybe put it into a queue so we can batch it
-    return await this.persistCarMap(theCarMap)
+    return await this.persistCarMap(theCarMap, head)
   }
 
-  async persistCarMap (theCarMap) {
+  async persistCarMap (theCarMap, head) {
     const ipldLoader = await getEmptyLoader()
     const indexNode = await create(ipldLoader, {
       bitWidth: 4,
@@ -388,13 +398,20 @@ export class Base {
       await indexNode.set(key, value)
     }
 
+    const value = { fp: { cars: indexNode.cid, clock: head } }
+    const header = await Block.encode({ value, hasher: blockOpts.hasher, codec: blockOpts.codec })
+    ipldLoader.blocks.put(header.cid, header.bytes)
+
     let newValetCidCar
     if (this.keyMaterial) {
       const cids = [...ipldLoader.blocks.blocks.keys()]
       // console.log('persistCarMap', cids)
-      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, ipldLoader.blocks, this.keyMaterial, cids)
+      // store the clock head and a link to the indexNode.cid in a custom root?
+
+      newValetCidCar = await blocksToEncryptedCarBlock(header.cid, ipldLoader.blocks, this.keyMaterial, cids)
+      // then put this carcid into the header / w3clock
     } else {
-      newValetCidCar = await blocksToCarBlock(indexNode.cid, ipldLoader.blocks)
+      newValetCidCar = await blocksToCarBlock(header.cid, ipldLoader.blocks)
     }
     return newValetCidCar
   }
