@@ -37,8 +37,8 @@ describe('Hydrator', () => {
     // console.log('serialized', serialized)
     assert.equal(serialized.name, undefined)
     assert.equal(serialized.key, null)
-    assert.equal(serialized.clock.length, 1)
-    assert.equal(serialized.clock[0].constructor.name, 'String')
+    // assert.equal(serialized.clock.length, 1)
+    // assert.equal(serialized.clock[0].constructor.name, 'String')
     assert.equal(serialized.indexes.length, 1)
     assert.equal(serialized.indexes[0].code, `function (doc, map) {
       map(doc.age, doc.name)
@@ -115,8 +115,8 @@ describe('hydrator query with dbname', () => {
     // if (database.blocks.valet.keyId !== 'null') {
     //   assert.equal(serialized.key.length, 64)
     // }
-    assert.equal(serialized.clock.length, 1)
-    assert.equal(serialized.clock[0].constructor.name, 'String')
+    // assert.equal(serialized.clock.length, 1)
+    // assert.equal(serialized.clock[0].constructor.name, 'String')
     assert.equal(serialized.indexes.length, 1)
     assert.equal(serialized.indexes[0].code, `function (doc, map) {
       map(doc.age, doc.name)

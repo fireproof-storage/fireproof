@@ -105,7 +105,7 @@ export class Base {
       lastCid: clock[0],
       get: cid => allBlocks.get(cid.toString())
     }
-    console.log('compact', this.instanceId, this.name, blocks.lastCid.toString(), dataCids.length)
+    // console.log('compact', this.instanceId, this.name, blocks.lastCid.toString(), dataCids.length)
     await this.parkCar(blocks, dataCids)
   }
 
@@ -151,13 +151,14 @@ export class Base {
     // console.log('applyHeaders', headers.index)
     this.headers = headers
     // console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
-    for (const [branch, header] of Object.entries(headers)) {
+    for (const [, header] of Object.entries(headers)) {
       if (header) {
         // console.log('applyHeaders', this.instanceId, this.name, header.key, header.car)
         header.key && this.setKeyMaterial(header.key)
         this.setCarCidMapCarCid(header.car)
         const { clock } = await this.readHeaderCar(header.car)
-        console.log('stored clock', this.name, branch, clock)
+        // console.log('stored clock', this.name, branch, clock, header)
+        header.clock = clock.map(c => c.toString())
       }
     }
     if (!this.valetRootCarCid) {
@@ -335,7 +336,7 @@ export class Base {
 
   async getCarReaderImpl (carCid) {
     carCid = carCid.toString()
-    console.log('getCarReaderImpl', carCid)
+    // console.log('getCarReaderImpl', carCid)
     const carBytes = await this.readCar(carCid)
     // console.log('getCarReader', this.constructor.name, carCid, carBytes.length)
     const reader = await CarReader.fromBytes(carBytes)

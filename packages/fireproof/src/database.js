@@ -95,7 +95,7 @@ export class Database {
 
   toHeader () {
     return {
-      clock: this.clockToJSON(),
+      // clock: this.clockToJSON(),
       name: this.name,
       index: {
         key: this.indexBlocks.valet?.primary.keyMaterial,

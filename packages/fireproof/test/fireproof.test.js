@@ -567,7 +567,7 @@ describe('Fireproof', () => {
     assert.equal((await database.changesSince()).rows.length, 2)
     const serialized = JSON.parse(JSON.stringify(database))
     assert.equal(serialized.name, 'fptest-hello-name')
-    assert.equal(serialized.clock.length, 1)
+    // assert.equal(serialized.clock.length, 1)
   })
   it('clocked changes in order', async () => {
     await database.put({ _id: '2' })
