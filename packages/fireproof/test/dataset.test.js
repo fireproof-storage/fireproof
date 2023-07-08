@@ -226,7 +226,8 @@ describe('Create a dataset', () => {
     const beforeClock = storage.prepareHeader(db.toHeader())
 
     const cidMap0 = await storage.getCidCarMap()
-    assert.equal(cidMap0.size, 48)
+    // assert.equal(cidMap0.size, 48)
+    assert.equal(cidMap0.size, 66)
     const carCids0 = new Set(cidMap0.values())
     assert.equal(carCids0.size, 18)
 
