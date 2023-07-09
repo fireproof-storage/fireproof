@@ -36,6 +36,11 @@ export class Remote {
 
   async sync (cid) {
     // fetch the remote clock headCids using w3clock.head
+    const agent = this.client.agent()
+    const head = await w3clock.head({ issuer: agent, with: agent.did(), proofs: [] })
+    console.log('head', head, JSON.stringify(head.root.data.ocm.out))
+    const headCids = head.root.data.ocm.out.ok.head
+
     // if it is the same as the local (current metadata carcid? `newValetCidCar` / sync clock), do nothing, we are in sync
     // if it is the same as our previously pushed clock event, but our local clock is ahead of it, we need to push our clock
     //               - we can store the previous clock event cid in the metadata
