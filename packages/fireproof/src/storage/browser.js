@@ -57,7 +57,7 @@ export class Browser extends Base {
   async writeHeader (branch, header) {
     if (this.config.readonly) return
     try {
-      return localStorage.setItem(this.headerKey(branch), this.prepareHeader(header))
+      return localStorage.setItem(this.headerKey(branch), header)
     } catch (e) {}
   }
 

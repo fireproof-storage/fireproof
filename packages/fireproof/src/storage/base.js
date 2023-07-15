@@ -49,6 +49,11 @@ export class Base {
     })
   }
 
+  setLastCar (car) {
+    this.lastCar = car
+    this.carLog.unshift(car)
+  }
+
   setKeyMaterial (km) {
     if (km && !NO_ENCRYPT) {
       const hex = Uint8Array.from(Buffer.from(km, 'hex'))
@@ -91,7 +96,9 @@ export class Base {
     // console.log('parkCar', this.instanceId, this.name, this.readonly)
     if (this.readonly) return
 
-    const value = { fp: { last: innerBlockstore.lastCid, clock: [], cars: this.carLog } }
+    // console.log('parkCar', this.name, this.carLog)
+
+    const value = { fp: { last: innerBlockstore.lastCid, clock: innerBlockstore.head, cars: this.carLog } }
     const header = await Block.encode({ value, hasher: blockOpts.hasher, codec: blockOpts.codec })
     await innerBlockstore.put(header.cid, header.bytes)
     cids.add(header.cid.toString())
@@ -104,22 +111,20 @@ export class Base {
       // todo should we pass cids in instead of iterating innerBlockstore?
       newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
     }
-    // console.log('new car', newCar.cid.toString())
-    return await this.saveCar(newCar.cid.toString(), newCar.bytes, cids, innerBlockstore.head)
+    return await this.saveCar(newCar.cid.toString(), newCar.bytes)
   }
 
-  async saveCar (carCid, value, cids, head = null) {
+  async saveCar (carCid, value) {
     // add the car cid to our in memory car list
     this.carLog.unshift(carCid)
-
-    const carList = [
+    this.lastCar = carCid
+    // console.log('saveCar', this.name, carCid, this.carLog.length)
+    await this.writeCars([
       {
         cid: carCid,
         bytes: value
       }
-    ]
-
-    await this.writeCars(carList)
+    ])
   }
 
   async applyHeaders (headers) {
@@ -132,8 +137,9 @@ export class Base {
         header.key && this.setKeyMaterial(header.key)
         // this.setCarCidMapCarCid(header.car) // instead we should just extract the list of cars from the car
         const carHeader = await this.readHeaderCar(header.car)
-        console.log('stored carHeader', this.name, carHeader)
+        // console.log('stored carHeader', this.name, carHeader)
         this.carLog = carHeader.cars
+        this.lastCar = header.car // ?
         header.clock = carHeader.clock.map(c => c.toString())
       }
     }
@@ -167,20 +173,20 @@ export class Base {
   async saveHeader (header) {
     // this.clock = header.clock
     // for each branch, save the header
-    // console.log('saveHeader', header.clock)
+    // console.log('saveHeader', this.config.branches)
     //  for (const branch of this.branches) {
     //    await this.saveBranchHeader(branch)
     //  }
     for (const [branch, { readonly }] of Object.entries(this.config.branches)) {
       if (readonly) continue
       // console.log('saveHeader', this.instanceId, this.name, branch, header)
-      await this.writeHeader(branch, header)
+      await this.writeHeader(branch, this.prepareHeader(header))
     }
   }
 
   prepareHeader (header, json = true) {
     header.key = this.keyMaterial
-    header.car = this.lastCar.toString()
+    header.car = this.lastCar?.toString()
     // console.log('prepareHeader', this.instanceId, this.name, header)
     return json ? JSON.stringify(header) : header
   }
@@ -194,7 +200,7 @@ export class Base {
     // for each car in the car log
     for (const carCid of this.carLog) {
       const reader = await this.getCarReader(carCid)
-      // console.log('getCarCIDForCID', carCid, cid, reader)
+      // console.log('getCarCIDForCID', carCid, cid)
       // if (reader.has(cid)) {
       //   console.log('getCarCIDForCID found', cid)
       //   return { result: carCid }
@@ -225,11 +231,12 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
+    // console.log('getLoaderBlock', dataCID)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
+    // console.log('getLoaderBlock', dataCID, carCid)
     if (!carCid) {
       throw new Error('Missing car for: ' + dataCID)
     }
-    // console.log('getLoaderBlock', dataCID, carCid)
     const reader = await this.getCarReader(carCid)
     return { block: await reader.get(dataCID), reader, carCid }
   }

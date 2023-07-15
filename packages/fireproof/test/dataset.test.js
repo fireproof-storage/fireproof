@@ -40,10 +40,14 @@ describe('basic dataset', () => {
   }).timeout(10000)
   it('creates car files', async () => {
     const files = await dbFiles(storage, TEST_DB_NAME)
-    assert(files.length > 2)
+    assert.equal(files.length, 2)
+    await db.put({ _id: 'xyz', bar: 'baz' })
+    const files2 = await dbFiles(storage, TEST_DB_NAME)
+    assert.equal(files2.length, 3)
   })
   it('writes header file', async () => {
     const files = await dbFiles(storage, TEST_DB_NAME)
+    // console.log('files', files)
     assert(files.includes('main.json'))
 
     const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
@@ -57,12 +61,16 @@ describe('basic dataset', () => {
     const responsex = await db.allDocuments()
     assert.equal(responsex.rows.length, 1)
     // console.log('NEW DB')
+    sleep(10)
     const fileDb = Fireproof.storage(TEST_DB_NAME, {
       primary: { StorageClass: Filesystem }
     })
-    // fileDb.blocks.valet.primary = new Filesystem(TEST_DB_NAME)
-    // await fileDb.ready
-    // console.log('QUERY')
+    await fileDb.ready
+    console.log('QUERY')
+    assert.deepEqual(fileDb.clockToJSON(), db.clockToJSON())
+
+    assert.deepEqual(fileDb.blocks.valet.primary.lastCar, db.blocks.valet.primary.lastCar)
+
     const response = await fileDb.allDocuments()
     assert.equal(response.rows.length, 1)
     const doc = await fileDb.get('foo')
@@ -133,7 +141,7 @@ describe('basic dataset with index', () => {
   })
   it('creates car files', async () => {
     const files = await dbFiles(storage, TEST_DB_NAME)
-    assert(files.length > 2)
+    assert.equal(files.length, 2)
   })
   it('writes header file', async () => {
     const files = await dbFiles(storage, TEST_DB_NAME)
