@@ -51,14 +51,14 @@ export class Database {
       for (const headers of blocksReady) {
         for (const [, header] of Object.entries(headers)) {
           if (!header) continue
-          // console.log('header', header)
+          console.log('header', header)
           for (const cid of header.clock) {
             clock.add(cid)
           }
-          if (header.car) {
-            console.log('header.car', header.car)
-            this.blocks.valet.primary.setLastCar(header.car)
-          }
+          // if (header.car) {
+            // console.log('header.car', header.car, this.blocks.valet.primary.carLog)
+            // this.blocks.valet.primary.setLastCar(header.car)
+          // }
           // console.log('header.lastCar', this.blocks.valet.primary.lastCar)
           if (header.index) {
             this.indexBlocks.valet.primary.setLastCar(header.index.car)
@@ -105,7 +105,7 @@ export class Database {
       name: this.name,
       index: {
         key: this.indexBlocks.valet?.primary.keyMaterial,
-        car: this.indexBlocks.valet?.primary.valetRootCarCid?.toString()
+        car: this.indexBlocks.valet?.primary.lastCar?.toString()
       },
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
