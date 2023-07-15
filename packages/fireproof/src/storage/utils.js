@@ -11,7 +11,7 @@ import { bf } from 'prolly-trees/utils'
 import { nocache as cache } from 'prolly-trees/cache'
 const chunker = bf(30)
 
-export async function getEmptyLoader () {
+export async function getEmptyLoader () { // unused?
   const theseWriteableBlocks = new VMemoryBlockstore()
   return {
     blocks: theseWriteableBlocks,
