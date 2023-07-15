@@ -74,17 +74,22 @@ export class Base {
       )
     }
     const cidMap = await this.getCidCarMap()
-    const dataCids = [...cidMap.keys()].filter(cid => cid[0] !== '_')
+    const dataCids = new Set([...cidMap.keys()].filter(cid => cid[0] !== '_').map(cid => CID.parse(cid)))
     const allBlocks = new Map()
     for (const cid of dataCids) {
       const block = await this.getLoaderBlock(cid)
       allBlocks.set(cid, block)
     }
     cidMap.clear()
+    let lastCid = clock[0]
     const blocks = {
       head: clock,
-      lastCid: clock[0],
-      get: cid => allBlocks.get(cid.toString())
+      lastCid,
+      get: cid => allBlocks.get(cid.toString()),
+      put: async (cid, block) => {
+        allBlocks.set(cid.toString(), block)
+        lastCid = cid.toString()
+      }
     }
     // const lastCompactCar =
     await this.parkCar(blocks, dataCids) // todo this should remove old cars from the cid car map
@@ -137,9 +142,14 @@ export class Base {
         header.key && this.setKeyMaterial(header.key)
         // this.setCarCidMapCarCid(header.car) // instead we should just extract the list of cars from the car
         const carHeader = await this.readHeaderCar(header.car)
-        // console.log('stored carHeader', this.name, carHeader)
         this.carLog = carHeader.cars
-        this.lastCar = header.car // ?
+        console.log('stored carHeader', this.name, this.config.type, this.carLog)
+
+        // this.lastCar = header.car // ?
+        if (header.car) {
+          // console.log('header.car', header.car, this.blocks.valet.primary.carLog)
+          this.setLastCar(header.car)
+        }
         header.clock = carHeader.clock.map(c => c.toString())
       }
     }
@@ -196,11 +206,11 @@ export class Base {
   }
 
   async getCarCIDForCID (cid) {
-    // console.log('getCarCIDForCID', cid, this.carLog)
+    console.log('getCarCIDForCID', cid, this.carLog, this.config.type)
     // for each car in the car log
     for (const carCid of this.carLog) {
       const reader = await this.getCarReader(carCid)
-      // console.log('getCarCIDForCID', carCid, cid)
+      console.log('getCarCIDForCID', carCid, cid)
       // if (reader.has(cid)) {
       //   console.log('getCarCIDForCID found', cid)
       //   return { result: carCid }
@@ -208,13 +218,14 @@ export class Base {
 
       for await (const block of reader.entries()) {
         // console.log('getCarCIDForCID', cid, block.cid.toString())
+        console.log('getCarCIDForCID', cid, block.cid.toString())
         if (block.cid.toString() === cid.toString()) {
           // console.log('getCarCIDForCID found', cid)
           return { result: carCid }
         }
       }
     }
-    // console.log('getCarCIDForCID not found', cid)
+    console.log('getCarCIDForCID not found', cid, this.config.type)
     return { result: null }
     // return this.carLog[0]
     // const cidMap = await this.getCidCarMap()
@@ -231,7 +242,7 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
-    // console.log('getLoaderBlock', dataCID)
+    console.log('getLoaderBlock', dataCID, this.config)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
     // console.log('getLoaderBlock', dataCID, carCid)
     if (!carCid) {

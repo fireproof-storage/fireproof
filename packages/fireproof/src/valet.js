@@ -77,7 +77,7 @@ export class Valet {
     } catch (e) {
       // console.log('getValetBlock error', e)
       if (this.secondary) {
-        // console.log('getValetBlock secondary', dataCID)
+        console.log('getValetBlock secondary', dataCID)
         try {
           const { block, reader } = await this.secondary.getLoaderBlock(dataCID)
           const cids = new Set()
