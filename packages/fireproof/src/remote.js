@@ -40,6 +40,38 @@ export class Remote {
     const head = await w3clock.head({ issuer: agent, with: agent.did(), proofs: [] })
     console.log('head', head, JSON.stringify(head.root.data.ocm.out))
     const headCids = head.root.data.ocm.out.ok.head
+    const lastSyncHead = await this.database.blocks.valet.primary.getLastSynced()
+    console.log('lastSyncHead', lastSyncHead)
+    const headSet = new Set(headCids.map(c => c.toString()))
+    const lastSyncSet = new Set(lastSyncHead.map(c => c.toString()))
+
+    // are they the same?
+    const same = headSet.size === lastSyncSet.size && [...headSet].every(value => lastSyncSet.has(value))
+
+    // if the headCids and the lastSyncHead are the same, we are in sync and can push
+    if (same) {
+      const currentHead = this.database.clock
+      const currentHeadSet = new Set(currentHead.map(c => c.toString()))
+
+      console.log('synced with cloud', headSet, lastSyncSet)
+
+      // are they the same?
+      const currentSame = headSet.size === currentHeadSet.size && [...headSet].every(value => currentHeadSet.has(value))
+      if (currentSame) {
+        // we are in sync, do nothing
+        return true
+      } else {
+        console.log('push to cloud', headSet, currentHeadSet)
+        // we are ahead of the remote, push our clock
+        // const lastCompact = this.database.blocks.valet.primary.getLastCompact()
+        // get a compact since the last sync
+        console.log('we are ahead of the remote, push our clock')
+        // const compact = this.database.blocks.valet.primary.getCompactSince(lastSyncHead)
+      }
+    } else {
+      // we are behind, fetch the remote
+      console.log('we are behind, fetch the remote')
+    }
 
     // if it is the same as the local (current metadata carcid? `newValetCidCar` / sync clock), do nothing, we are in sync
     // if it is the same as our previously pushed clock event, but our local clock is ahead of it, we need to push our clock
@@ -47,6 +79,7 @@ export class Remote {
     // - sending our updates:
     //   - get the _last_sync and _last_compact values from our metadata
     //   - if last sync is after last compact
+    //     - make a merged car file for the syncs
     //   - else
     //     - upload the car file for the last compact
     //     - make a merge car file for any uncompacted car files since the last compact, it should base its cidMap on the compact car file (as we go the sync stream will need to track it's own cidMap)

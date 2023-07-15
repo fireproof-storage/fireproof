@@ -205,10 +205,6 @@ export class Base {
     return {}
   }
 
-  async getStoredClock (carCid) {
-
-  }
-
   async saveHeader (header) {
     // this.clock = header.clock
     // for each branch, save the header
@@ -256,6 +252,26 @@ export class Base {
     // console.log('getLoaderBlock', dataCID, carCid)
     const reader = await this.getCarReader(carCid)
     return { block: await reader.get(dataCID), reader, carCid }
+  }
+
+  async getLastSynced () {
+    const metadata = await this.getCidCarMap()
+    if (metadata.has('_last_sync_head')) {
+      return JSON.parse(metadata.get('_last_sync_head'))
+    } else {
+      return []
+    }
+  }
+
+  async setLastSynced (lastSynced) {
+    const metadata = await this.getCidCarMap()
+    metadata.set('_last_sync_head', JSON.stringify(lastSynced))
+    // await this.writeMetadata(metadata)
+  }
+
+  async getCompactSince (sinceHead) {
+    // get the car for the head
+    // find the location of the car in the metadata car sequence
   }
 
   /** Private - internal **/
@@ -329,10 +345,6 @@ export class Base {
       }
     }
     return combinedReader
-  }
-
-  async xgetCarReader (carCid) {
-    return this.getCarReaderImpl(carCid)
   }
 
   carReaderCache = new Map()
@@ -414,7 +426,7 @@ export class Base {
   sequenceCarMapAppend (theCarMap, carCid) {
     // _last_compact
     // _last_sync (map per clock? you can find this by looking at a clocks car and it's position in the map)
-    const oldMark = theCarMap.get('_last_compact')
+    const oldMark = theCarMap.get('_last_compact') // todo we can track _next_seq directly
     // console.log('sequenceCarMapAppend oldMark', oldMark)
     const lastCompact = oldMark ? charwise.decode(oldMark) : 0
     // start iterating from the last compact point and find the first missing entry.
@@ -461,13 +473,13 @@ export class Base {
     }
   }
 
-  async updateCarCidMap (carCid, cids, head) {
+  async updateCarCidMap (dataCarCid, cids, head) {
     // this hydrates the map if it has not been hydrated
     const theCarMap = await this.getCidCarMap()
     for (const cid of cids) {
-      theCarMap.set(cid, carCid)
+      theCarMap.set(cid, dataCarCid)
     }
-    // this.sequenceCarMapAppend(theCarMap, carCid)
+    // this.sequenceCarMapAppend(theCarMap, dataCarCid)
     // todo can we debounce this? -- maybe put it into a queue so we can batch it
     return await this.persistCarMap(theCarMap, head)
   }
