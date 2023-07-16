@@ -102,7 +102,7 @@ export class Base {
     // console.log('parkCar', this.instanceId, this.name, this.readonly)
     if (this.readonly) return
 
-    // console.log('parkCar', this.name, this.carLog)
+    // console.log('parkCar', this.name, this.carLog, innerBlockstore.head)
 
     const value = { fp: { last: innerBlockstore.lastCid, clock: innerBlockstore.head, cars: this.carLog } }
     const header = await Block.encode({ value, hasher: blockOpts.hasher, codec: blockOpts.codec })
@@ -144,7 +144,7 @@ export class Base {
         // this.setCarCidMapCarCid(header.car) // instead we should just extract the list of cars from the car
         const carHeader = await this.readHeaderCar(header.car)
         this.carLog = carHeader.cars
-        console.log('stored carHeader', this.name, this.config.type, this.carLog)
+        // console.log('stored carHeader', this.name, this.config.type, this.carLog)
 
         // this.lastCar = header.car // ?
         if (header.car) {
@@ -207,11 +207,11 @@ export class Base {
   }
 
   async getCarCIDForCID (cid) { // todo combine with getLoaderBlock for one fetch not many
-    console.log('getCarCIDForCID', cid, this.carLog, this.config.type)
+    // console.log('getCarCIDForCID', cid, this.carLog, this.config.type)
     // for each car in the car log
     for (const carCid of this.carLog) {
       const reader = await this.getCarReader(carCid)
-      console.log('getCarCIDForCID', carCid, cid)
+      // console.log('getCarCIDForCID', carCid, cid)
       // if (reader.has(cid)) {
       //   console.log('getCarCIDForCID found', cid)
       //   return { result: carCid }
@@ -219,14 +219,14 @@ export class Base {
 
       for await (const block of reader.entries()) {
         // console.log('getCarCIDForCID', cid, block.cid.toString())
-        console.log('getCarCIDForCID', cid, block.cid.toString())
+        // console.log('getCarCIDForCID', cid, block.cid.toString())
         if (block.cid.toString() === cid.toString()) {
-          console.log('getCarCIDForCID found', cid)
+          // console.log('getCarCIDForCID found', cid)
           return { result: carCid }
         }
       }
     }
-    console.log('getCarCIDForCID not found', cid, this.config.type)
+    // console.log('getCarCIDForCID not found', cid, this.config.type)
     return { result: null }
     // return this.carLog[0]
     // const cidMap = await this.getCidCarMap()
@@ -243,15 +243,15 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
-    console.log('getLoaderBlock', dataCID, this.config, this.carLog)
+    // console.log('getLoaderBlock', dataCID, this.config, this.carLog)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
-    console.log('gotLoaderBlock', dataCID, carCid)
+    // console.log('gotLoaderBlock', dataCID, carCid)
     if (!carCid) {
       throw new Error('Missing car for: ' + dataCID)
     }
     const reader = await this.getCarReader(carCid)
     const block = await reader.get(dataCID)
-    console.log('gotLoaderBlock', dataCID, block.length)
+    // console.log('gotLoaderBlock', dataCID, block.length)
     return { block, reader, carCid }
   }
 
@@ -299,7 +299,7 @@ export class Base {
   // parkCar should handle it's own writeable wrapper, and it should love to be called with
   // a read only car reader
   async getWriteableCarReader (carReader) {
-    // console.log('getWriteableCarReader', carCid)
+    // console.log('getWriteableCarReader')
     // const carReader = await this.getCarReader(carCid)
     // console.log('getWriteableCarReader', carCid, carReader)
     const theseWriteableBlocks = new VMemoryBlockstore()
@@ -310,12 +310,14 @@ export class Base {
         return await theseWriteableBlocks.put(cid, bytes)
       },
       get: async cid => {
+        // console.log('getWriteableCarReader get', cid)
         try {
           const got = await theseWriteableBlocks.get(cid)
           return got.bytes
         } catch (e) {
           if (!carReader) throw e
           const bytes = await carReader.get(cid)
+          // console.log('getWriteableCarReader', cid, bytes)
           await theseWriteableBlocks.put(cid, bytes)
           return bytes
         }

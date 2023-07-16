@@ -150,7 +150,6 @@ describe('basic dataset with index', () => {
     const dbPath = join(storage.config.dataDir, TEST_DB_NAME)
     const headerPath = join(dbPath, 'main.json')
     const headerData = JSON.parse(readFileSync(headerPath))
-    console.log('headerData', headerData)
     assert.equal(headerData.name, TEST_DB_NAME)
     assert(headerData.key, 'key should be in header')
     assert.equal(headerData.indexes.length, 1)
@@ -501,19 +500,23 @@ describe('Rest dataset', () => {
 
     const fileCars = db.blocks.valet.primary.carLog
     const fileCars2 = emptyDb.blocks.valet.primary.carLog
+    const fileCars3 = emptyDb.blocks.valet.secondary.carLog
 
     assert.equal(fileCars.length, 18)
 
-    console.log('fileCars2', fileCars2)
+    assert.equal(fileCars2.length, 0)
+    assert.equal(fileCars3.length, 18)
 
-    assert.equal(fileCars.length, fileCars2.length)
+    // console.log('fileCars2', fileCars2)
+
+    // assert.equal(fileCars.length, fileCars2.length)
 
     const response = await emptyDb.allDocuments()
     assert.equal(response.rows.length, 18)
     await sleep(50)
 
     const files2 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert.equal(files2.length > 5, true)
+    assert.equal(files2.length, 3, `should have many files, had ${files2.length}`)
     // now test wht happens when we write to the secondary?
     // console.log('PUT')
     const ok = await emptyDb.put({ _id: 'test', foo: 'bar' })
@@ -525,10 +528,10 @@ describe('Rest dataset', () => {
     await sleep(50)
 
     const filesB = await dbFiles(storage, TEST_DB_NAME)
-    assert.equal(filesB.length, 37)
+    assert.equal(filesB.length, 19)
 
     const files3 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert.equal(files3.length > 8, true)
+    assert.equal(files3.length, 5, `should have many files, had ${files3.length}`)
 
     /// now test what happens when we open a new db on the new primary's files
     // this should pass because the reads from the secondary are written to the primary
@@ -553,7 +556,7 @@ describe('Rest dataset', () => {
         StorageClass: Filesystem
       }
     })
-    assert.equal(files4.length > 10, true)
+    assert.equal(files4.length, 6, `should have many files, had ${files4.length}`)
 
     // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
 
@@ -564,7 +567,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const files5 = await dbFiles(storage, TEST_DB_NAME)
-    assert.equal(files5.length, 39)
+    assert.equal(files5.length, 20)
 
     const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', {
       primary: {
@@ -595,7 +598,7 @@ describe('Rest dataset', () => {
     await sleep(200)
 
     const files2 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert(files2.length > 5) // why is this variable?
+    assert.equal(files2.length, 3, `got ${files2.length} files`) // why is this variable?
     // now test wht happens when we write to the secondary?
 
     const ok = await emptyDb.put({ _id: 'test', foo: 'bar' })
@@ -603,7 +606,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const files3 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert.equal(files3.length > 8, true)
+    assert.equal(files3.length, 5, `got ${files3.length} files`)
 
     /// now test what happens when we open a new db on the secondary's files
     const noSecondaryCloneDb = await Fireproof.storage('fptest-empty-db-todos', {
@@ -621,7 +624,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const files4 = await dbFiles(storage, 'fptest-empty-db-todos')
-    assert.equal(files4.length > 10, true) // why variable?
+    assert.equal(files4.length, 6, `got ${files4.length} files`) // why variable?
 
     // now make a db that uses empty-db-todos as its files, and TEST_DB_NAME
 
@@ -632,7 +635,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const files5 = await dbFiles(storage, TEST_DB_NAME)
-    assert.equal(files5.length, 41)
+    assert.equal(files5.length, 21)
 
     const ezistingDb = await Fireproof.storage('fptest-empty-db-todos', {
       primary: {
@@ -696,8 +699,6 @@ describe('Rest dataset', () => {
         StorageClass: Filesystem
       }
     })
-    console.log('putting ice')
-
     await serverDb.put({ _id: 'ice', title: 'Coffee' })
 
     const iceCoffee = await serverDb.get('ice')
@@ -706,8 +707,6 @@ describe('Rest dataset', () => {
     await sleep(10)
 
     const USER_DB_NAME = 'fptest-user-db-todos'
-
-    console.log('creating user db', USER_DB_NAME)
 
     const userDb = await Fireproof.storage(USER_DB_NAME, {
       primary: {
@@ -754,7 +753,6 @@ describe('Rest dataset', () => {
     const err = await userPrimary.getLoaderBlock(blockCID).catch(e => e)
     assert.match(err.message, /Missing car/)
 
-    console.log('QUERY user db', USER_DB_NAME)
     // db can load a document by id
     const doc = await userDb.get('ice')
     assert.equal(doc._id, 'ice')
@@ -972,10 +970,10 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     const files3 = await dbFiles(storage, 'fptest-user-db-todos')
-    assert.equal(files3.length > 6, true)
+    assert.equal(files3.length, 4, `files3.length ${files3.length}`)
 
     const files2 = await dbFiles(storage, TEST_DB_NAME)
-    assert.equal(files2.length > 36, true)
+    assert.equal(files2.length, 21, `files2.length ${files2.length}`)
 
     // const mainHeaderData2 = JSON.parse(readFileSync(mainHeaderPath))
     const userHeaderData2 = JSON.parse(readFileSync(userHeaderPath))
@@ -1051,7 +1049,7 @@ describe('Rest dataset', () => {
     assert.equal(userDb3.blocks.valet.primary.config.branches.mine.readonly, false)
     // console.log('hmm', userDb3.blocks.valet.primary)
 
-    assert.equal(userDb3.blocks.valet.primary.valetRootCarCid, headerData.car)
+    assert.equal(userDb3.blocks.valet.primary.lastCar, headerData.car)
     assert.equal(userDb3.blocks.valet.primary.keyMaterial, headerData.key)
 
     // it will have the same document

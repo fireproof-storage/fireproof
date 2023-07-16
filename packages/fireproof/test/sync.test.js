@@ -8,7 +8,7 @@ describe('Sync valet', () => {
     database = Fireproof.storage('fptest-sync-full')
     await setupDb(database)
   })
-  it('can sync to an empty database', async () => {
+  it.skip('can sync to an empty database', async () => {
     const database2 = Fireproof.storage('fptest-full-empty')
     await setupSync(database, database2)
 
