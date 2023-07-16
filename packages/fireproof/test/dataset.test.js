@@ -66,7 +66,6 @@ describe('basic dataset', () => {
       primary: { StorageClass: Filesystem }
     })
     await fileDb.ready
-    console.log('QUERY')
     assert.deepEqual(fileDb.clockToJSON(), db.clockToJSON())
 
     assert.deepEqual(fileDb.blocks.valet.primary.lastCar, db.blocks.valet.primary.lastCar)
