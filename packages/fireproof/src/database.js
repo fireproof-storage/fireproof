@@ -56,8 +56,8 @@ export class Database {
             clock.add(cid)
           }
           // if (header.car) {
-            // console.log('header.car', header.car, this.blocks.valet.primary.carLog)
-            // this.blocks.valet.primary.setLastCar(header.car)
+          // console.log('header.car', header.car, this.blocks.valet.primary.carLog)
+          // this.blocks.valet.primary.setLastCar(header.car)
           // }
           // console.log('header.lastCar', this.blocks.valet.primary.lastCar)
           if (header.index) {
