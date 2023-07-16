@@ -27,6 +27,7 @@ const NO_ENCRYPT = typeof process !== 'undefined' && !!process.env?.NO_ENCRYPT
 const NOT_IMPL = true
 
 export class Base {
+  static format = '0.8'
   lastCar = null
   carLog = []
   keyMaterial = null
@@ -143,7 +144,10 @@ export class Base {
         header.key && this.setKeyMaterial(header.key)
         // this.setCarCidMapCarCid(header.car) // instead we should just extract the list of cars from the car
         const carHeader = await this.readHeaderCar(header.car)
-        this.carLog = carHeader.cars
+
+        // console.log('carHeader', this.name, carHeader)
+
+        this.carLog = carHeader.cars || []
         // console.log('stored carHeader', this.name, this.config.type, this.carLog)
 
         // this.lastCar = header.car // ?

@@ -14,6 +14,8 @@ import { rmSync, readdirSync, cpSync } from 'node:fs'
 
 import { mkdir } from 'fs/promises'
 
+import { Base } from '../src/storage/base.js'
+
 export function cpDir (src, dst) {
   cpSync(src, dst, { recursive: true })
 }
@@ -26,7 +28,7 @@ export const dbFiles = async (storage, name) => {
 }
 
 export async function resetTestDataDir (name) {
-  const dataDir = join(homedir(), '.fireproof')
+  const dataDir = join(homedir(), '.fireproof', 'v' + Base.format)
   await mkdir(dataDir, { recursive: true })
 
   const files = readdirSync(dataDir)
