@@ -119,6 +119,7 @@ export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blo
   const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
   return encryptedCar
 }
+
 // { root, get, key, cache, chunker, hasher }
 const memoizeDecryptedCarBlocks = new Map()
 export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {

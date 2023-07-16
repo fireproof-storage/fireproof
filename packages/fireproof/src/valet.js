@@ -70,19 +70,19 @@ export class Valet {
   remoteBlockFunction = null
 
   async getValetBlock (dataCID) {
-    console.log('getValetBlock primary', dataCID)
+    // console.log('getValetBlock primary', dataCID)
     try {
       const { block } = await this.primary.getLoaderBlock(dataCID)
       return block
     } catch (e) {
-      console.log('getValetBlock error', e)
+      // console.log('getValetBlock error', e)
       if (this.secondary) {
-        console.log('getValetBlock secondary', dataCID)
+        // console.log('getValetBlock secondary', dataCID)
         try {
           // eslint-disable-next-line
           const { block, reader } = await this.secondary.getLoaderBlock(dataCID)
           const writeableCarReader = await this.primary.getWriteableCarReader(reader)
-          console.log('getValetBlock secondary', dataCID, block.length)
+          // console.log('getValetBlock secondary', dataCID, block.length)
           // eslint-disable-next-line
           const cids = new Set()
           for await (const { cid } of reader.entries()) {
@@ -91,11 +91,10 @@ export class Valet {
           }
           // reader.get = reader.gat // some consumers prefer get
           // console.log('replicating', reader.root)
-          reader.lastCid = reader.root.cid
-          reader.head = []
-          console.log('PARK CAR')
-          const did = await this.primary.parkCar(writeableCarReader, [...cids]).catch(e => e)
-          console.log('FIX THIS', did)
+          writeableCarReader.lastCid = reader.root.cid
+          writeableCarReader.head = []
+          await this.primary.parkCar(writeableCarReader, cids).catch(e => console.error('parkCar error', e))
+          // console.log('FIX THIS', did)
           return block
         } catch (e) {
           // console.log('getValetBlock secondary error', e)

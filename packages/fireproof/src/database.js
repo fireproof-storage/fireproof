@@ -51,15 +51,9 @@ export class Database {
       for (const headers of blocksReady) {
         for (const [, header] of Object.entries(headers)) {
           if (!header) continue
-          console.log('header', header)
           for (const cid of header.clock) {
             clock.add(cid)
           }
-          // if (header.car) {
-          // console.log('header.car', header.car, this.blocks.valet.primary.carLog)
-          // this.blocks.valet.primary.setLastCar(header.car)
-          // }
-          // console.log('header.lastCar', this.blocks.valet.primary.lastCar)
           if (header.index) {
             this.indexBlocks.valet.primary.setLastCar(header.index.car)
             this.indexBlocks.valet.primary.setKeyMaterial(header.index.key)
