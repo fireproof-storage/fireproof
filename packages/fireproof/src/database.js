@@ -5,6 +5,8 @@ import charwise from 'charwise'
 import { CID } from 'multiformats'
 import { DbIndex as Index } from './db-index.js'
 
+import { Remote } from './remote.js'
+
 // TypeScript Types
 // eslint-disable-next-line no-unused-vars
 // import { CID } from 'multiformats/dist/types/src/cid.js'
@@ -29,14 +31,15 @@ export class Database {
   indexes = new Map()
   rootCache = null
   eventsCache = new Map()
-
+  remote = null
+  name = ''
   constructor (name, config = {}) {
     this.name = name
     this.clock = []
     this.instanceId = `fp.${this.name}.${Math.random().toString(36).substring(2, 7)}`
     this.blocks = new TransactionBlockstore(name, config)
     this.indexBlocks = new TransactionBlockstore(name ? name + '.indexes' : null, { primary: config.index })
-
+    this.remote = new Remote(this, name, config)
     this.config = config
     // todo we can wait for index blocks elsewhere
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(([blocksReady, indexReady]) => {
@@ -52,7 +55,7 @@ export class Database {
             clock.add(cid)
           }
           if (header.index) {
-            this.indexBlocks.valet.primary.setCarCidMapCarCid(header.index.car)
+            this.indexBlocks.valet.primary.setLastCar(header.index.car)
             this.indexBlocks.valet.primary.setKeyMaterial(header.index.key)
           }
           if (header.indexes) {
@@ -92,11 +95,11 @@ export class Database {
 
   toHeader () {
     return {
-      clock: this.clockToJSON(),
+      // clock: this.clockToJSON(),
       name: this.name,
       index: {
         key: this.indexBlocks.valet?.primary.keyMaterial,
-        car: this.indexBlocks.valet?.primary.valetRootCarCid?.toString()
+        car: this.indexBlocks.valet?.primary.lastCar?.toString()
       },
       indexes: [...this.indexes.values()].map(index => index.toJSON())
     }
@@ -112,9 +115,9 @@ export class Database {
     return (clock || this.clock).map(cid => cid.toString())
   }
 
-  maybeSaveClock () {
+  async maybeSaveClock () {
     if (this.name && this.blocks.valet) {
-      this.blocks.valet.saveHeader(this.toHeader())
+      await this.blocks.valet.saveHeader(this.toHeader())
     }
   }
 

@@ -1,20 +1,5 @@
-// import { sha256 } from 'multiformats/hashes/sha2'
-import * as CBW from '@ipld/car/buffer-writer'
-import * as raw from 'multiformats/codecs/raw'
-// import * as Block from 'multiformats/block'
-// @ts-ignore
-// import { bf } from 'prolly-trees/utils'
-// @ts-ignore
-// import { nocache as cache } from 'prolly-trees/cache'
-import { encrypt, decrypt } from '../crypto.js'
-// import { Buffer } from 'buffer'
-
-// const chunker = bf(30)
-
 import randomBytes from 'randombytes'
 // import { randomBytes } from 'crypto'
-import { create, load } from 'ipld-hashmap'
-import { parse } from 'multiformats/link'
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats/cid'
 import { sha256 } from 'multiformats/hashes/sha2'
@@ -28,6 +13,12 @@ import { Buffer } from 'buffer'
 import { rawSha1 as sha1sync } from '../sha1.js'
 // @ts-ignore
 import * as codec from '../encrypted-block.js'
+import {
+  blocksToEncryptedCarBlock,
+  blocksToCarBlock,
+  blocksFromEncryptedCarBlock,
+  VMemoryBlockstore
+} from './utils.js'
 
 const chunker = bf(30)
 const blockOpts = { cache, chunker, codec: dagcbor, hasher: sha256, compare }
@@ -36,13 +27,15 @@ const NO_ENCRYPT = typeof process !== 'undefined' && !!process.env?.NO_ENCRYPT
 const NOT_IMPL = true
 
 export class Base {
-  valetRootCarCid = null // used on initial hydrate, if you change this, set this.valetCarCidMap = null
+  static format = '0.8'
+  lastCar = null
+  carLog = []
   keyMaterial = null
   keyId = 'null'
   readonly = false
+  instanceId = Math.random().toString(36).slice(2)
 
   constructor (name, config = {}) {
-    this.instanceId = Math.random().toString(36).slice(2)
     this.name = name
     this.config = config
 
@@ -52,23 +45,15 @@ export class Base {
       }
     }
 
-    // console.log('this.config', this.instanceId, this.name, this.config)
-    // if there is config.key and config.car,
-    // then we could skip loading the headers if we want.
-    // currently we don't do that, because we only use
-    // the config for first run, and then we use the headers
-    // once they exist
     this.ready = this.getHeaders().then(blocksReady => {
       // console.log('blocksReady base', this.name, blocksReady)
       return blocksReady
     })
   }
 
-  setCarCidMapCarCid (carCid) {
-    // console.trace('setCarCidMapCarCid', carCid)
-    if (!carCid) return
-    this.valetRootCarCid = parse(carCid)
-    this.valetCarCidMap = null
+  setLastCar (car) {
+    this.lastCar = car
+    this.carLog.unshift(car)
   }
 
   setKeyMaterial (km) {
@@ -77,9 +62,7 @@ export class Base {
       this.keyMaterial = km
       const hash = sha1sync(hex)
       this.keyId = Buffer.from(hash).toString('hex')
-      // console.log('setKeyMaterial', this.instanceId, this.name, km)
     } else {
-      // console.log('setKeyMaterial', this.instanceId, this.name, km)
       this.keyMaterial = null
       this.keyId = 'null'
     }
@@ -93,24 +76,40 @@ export class Base {
       )
     }
     const cidMap = await this.getCidCarMap()
-    const dataCids = [...cidMap.keys()]
+    const dataCids = new Set([...cidMap.keys()].filter(cid => cid[0] !== '_').map(cid => CID.parse(cid)))
     const allBlocks = new Map()
     for (const cid of dataCids) {
       const block = await this.getLoaderBlock(cid)
-      allBlocks.set(cid, block)
+      allBlocks.set(cid, block.block)
     }
     cidMap.clear()
+    let lastCid = clock[0]
     const blocks = {
-      lastCid: clock[0],
-      get: cid => allBlocks.get(cid.toString())
+      head: clock,
+      lastCid,
+      get: cid => allBlocks.get(cid.toString()),
+      put: async (cid, block) => {
+        allBlocks.set(cid.toString(), block)
+        lastCid = cid.toString()
+      }
     }
-    console.log('compact', this.instanceId, this.name, blocks.lastCid.toString(), dataCids.length)
-    await this.parkCar(blocks, dataCids)
+    // const lastCompactCar =
+    await this.parkCar(blocks, dataCids) // todo this should remove old cars from the cid car map
+    // console.log('compact', this.name, lastCompactCar.cid, blocks.lastCid.toString(), dataCids.length)
+    // await this.setLastCompact(lastCompactCar.cid)
   }
 
   async parkCar (innerBlockstore, cids) {
     // console.log('parkCar', this.instanceId, this.name, this.readonly)
     if (this.readonly) return
+
+    // console.log('parkCar', this.name, this.carLog, innerBlockstore.head)
+
+    const value = { fp: { last: innerBlockstore.lastCid, clock: innerBlockstore.head, cars: this.carLog } }
+    const header = await Block.encode({ value, hasher: blockOpts.hasher, codec: blockOpts.codec })
+    await innerBlockstore.put(header.cid, header.bytes)
+    cids.add(header.cid.toString())
+
     let newCar
     if (this.keyMaterial) {
       // console.log('encrypting car', innerBlockstore.label)
@@ -119,34 +118,23 @@ export class Base {
       // todo should we pass cids in instead of iterating innerBlockstore?
       newCar = await blocksToCarBlock(innerBlockstore.lastCid, innerBlockstore)
     }
-    // console.log('new car', newCar.cid.toString())
-    return await this.saveCar(newCar.cid.toString(), newCar.bytes, cids)
+    return await this.saveCar(newCar.cid.toString(), newCar.bytes)
   }
 
-  async saveCar (carCid, value, cids) {
-    const newValetCidCar = await this.updateCarCidMap(carCid, cids)
-    // console.log('writeCars', carCid.toString(), newValetCidCar.cid.toString())
-    const carList = [
+  async saveCar (carCid, value) {
+    // add the car cid to our in memory car list
+    this.carLog.unshift(carCid)
+    this.lastCar = carCid
+    // console.log('saveCar', this.name, carCid, this.carLog.length)
+    await this.writeCars([
       {
         cid: carCid,
-        bytes: value,
-        replaces: null
-      },
-      {
-        cid: newValetCidCar.cid,
-        bytes: newValetCidCar.bytes,
-        replaces: null
-        // replaces: this.valetRootCarCid // todo
+        bytes: value
       }
-    ]
-
-    await this.writeCars(carList)
-    this.valetRootCarCid = newValetCidCar.cid
-    // console.trace('saved car', this.instanceId, this.name, newValetCidCar.cid.toString())
-    return newValetCidCar
+    ])
   }
 
-  applyHeaders (headers) {
+  async applyHeaders (headers) {
     // console.log('applyHeaders', headers.index)
     this.headers = headers
     // console.log('before applied', this.instanceId, this.name, this.keyMaterial, this.valetRootCarCid)
@@ -154,12 +142,23 @@ export class Base {
       if (header) {
         // console.log('applyHeaders', this.instanceId, this.name, header.key, header.car)
         header.key && this.setKeyMaterial(header.key)
-        this.setCarCidMapCarCid(header.car)
+        // this.setCarCidMapCarCid(header.car) // instead we should just extract the list of cars from the car
+        const carHeader = await this.readHeaderCar(header.car)
+
+        // console.log('carHeader', this.name, carHeader)
+
+        this.carLog = carHeader.cars || []
+        // console.log('stored carHeader', this.name, this.config.type, this.carLog)
+
+        // this.lastCar = header.car // ?
+        if (header.car) {
+          // console.log('header.car', header.car, this.blocks.valet.primary.carLog)
+          this.setLastCar(header.car)
+        }
+        header.clock = carHeader.clock.map(c => c.toString())
       }
     }
-    if (!this.valetRootCarCid) {
-      this.setCarCidMapCarCid(this.config.car)
-    }
+
     if (!this.keyMaterial) {
       const nullKey = this.config.key === null
       if (nullKey || this.config.key) {
@@ -175,33 +174,34 @@ export class Base {
     const headers = {}
     for (const [branch] of Object.entries(this.config.branches)) {
       const got = await this.loadHeader(branch)
-      // console.log('getHeaders', this.name, branch, got)
       headers[branch] = got
     }
-    this.applyHeaders(headers)
+    await this.applyHeaders(headers)
     return headers
   }
 
   loadHeader (branch = 'main') {
-    throw new Error('not implemented')
+    if (NOT_IMPL) throw new Error('not implemented')
+    return {}
   }
 
   async saveHeader (header) {
+    // this.clock = header.clock
     // for each branch, save the header
-    // console.log('saveHeader', this.config.branches, header)
+    // console.log('saveHeader', this.config.branches)
     //  for (const branch of this.branches) {
     //    await this.saveBranchHeader(branch)
     //  }
     for (const [branch, { readonly }] of Object.entries(this.config.branches)) {
       if (readonly) continue
       // console.log('saveHeader', this.instanceId, this.name, branch, header)
-      await this.writeHeader(branch, header)
+      await this.writeHeader(branch, this.prepareHeader(header))
     }
   }
 
   prepareHeader (header, json = true) {
     header.key = this.keyMaterial
-    header.car = this.valetRootCarCid.toString()
+    header.car = this.lastCar?.toString()
     // console.log('prepareHeader', this.instanceId, this.name, header)
     return json ? JSON.stringify(header) : header
   }
@@ -210,13 +210,35 @@ export class Base {
     throw new Error('not implemented')
   }
 
-  async getCarCIDForCID (cid) {
-    const cidMap = await this.getCidCarMap()
-    const carCid = cidMap.get(cid.toString())
-    if (carCid) {
-      return { result: carCid }
+  async getCarCIDForCID (cid) { // todo combine with getLoaderBlock for one fetch not many
+    // console.log('getCarCIDForCID', cid, this.carLog, this.config.type)
+    // for each car in the car log
+    for (const carCid of this.carLog) {
+      const reader = await this.getCarReader(carCid)
+      // console.log('getCarCIDForCID', carCid, cid)
+      // if (reader.has(cid)) {
+      //   console.log('getCarCIDForCID found', cid)
+      //   return { result: carCid }
+      // }
+
+      for await (const block of reader.entries()) {
+        // console.log('getCarCIDForCID', cid, block.cid.toString())
+        // console.log('getCarCIDForCID', cid, block.cid.toString())
+        if (block.cid.toString() === cid.toString()) {
+          // console.log('getCarCIDForCID found', cid)
+          return { result: carCid }
+        }
+      }
     }
+    // console.log('getCarCIDForCID not found', cid, this.config.type)
     return { result: null }
+    // return this.carLog[0]
+    // const cidMap = await this.getCidCarMap()
+    // const carCid = cidMap.get(cid.toString())
+    // if (carCid) {
+    //   return { result: carCid }
+    // }
+    // return { result: null }
   }
 
   async readCar (carCid) {
@@ -225,72 +247,87 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
+    // console.log('getLoaderBlock', dataCID, this.config, this.carLog)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
+    // console.log('gotLoaderBlock', dataCID, carCid)
     if (!carCid) {
       throw new Error('Missing car for: ' + dataCID)
     }
-    // console.log('getLoaderBlock', dataCID, carCid)
     const reader = await this.getCarReader(carCid)
-    return { block: await reader.get(dataCID), reader, carCid }
+    const block = await reader.get(dataCID)
+    // console.log('gotLoaderBlock', dataCID, block.length)
+    return { block, reader, carCid }
   }
+
+  // async getLastSynced () {
+  //   const metadata = await this.getCidCarMap()
+  //   if (metadata.has('_last_sync_head')) {
+  //     return JSON.parse(metadata.get('_last_sync_head'))
+  //   } else {
+  //     return []
+  //   }
+  // }
+
+  // async setLastSynced (lastSynced) {
+  //   const metadata = await this.getCidCarMap()
+  //   metadata.set('_last_sync_head', JSON.stringify(lastSynced))
+  //   // await this.writeMetadata(metadata)
+  // }
+
+  // async getCompactSince (sinceHead) {
+  //   // get the car for the head
+  //   // find the location of the car in the metadata car sequence
+  // }
 
   /** Private - internal **/
 
   async getCidCarMap () {
-    // console.log('getCidCarMap', this.constructor.name, this.name, this.valetRootCarCid, typeof this.valetCarCidMap)
     if (this.valetCarCidMap) return this.valetCarCidMap
-    if (this.valetRootCarCid) {
-      this.valetCarCidMap = await this.mapForIPLDHashmapCarCid(this.valetRootCarCid)
-      return this.valetCarCidMap
-    } else {
-      this.valetCarCidMap = new Map()
-      return this.valetCarCidMap
-    }
+    this.valetCarCidMap = new Map()
+    return this.valetCarCidMap
   }
 
-  async mapForIPLDHashmapCarCid (carCid) {
-    // console.log('mapForIPLDHashmapCarCid', carCid)
-    // todo why is this writeable?
-    const carMapReader = await this.getWriteableCarReader(carCid)
-    const indexNode = await load(carMapReader, carMapReader.root.cid, {
-      blockHasher: blockOpts.hasher,
-      blockCodec: blockOpts.codec
-    })
-    const theCarMap = new Map()
-    for await (const [key, value] of indexNode.entries()) {
-      // console.log('mapForIPLDHashmapCarCid', key, value)
-      theCarMap.set(key, value)
-    }
-    return theCarMap
-  }
-
-  async getWriteableCarReader (carCid) {
-    // console.log('getWriteableCarReader', carCid)
+  async readHeaderCar (carCid) {
     const carMapReader = await this.getCarReader(carCid)
+    // await this.getWriteableCarReader(carCid)
+    // console.log('readHeaderCar', carCid, carMapReader)
+    // now when we load the root cid from the car, we get our new custom root node
+    const bytes = await carMapReader.get(carMapReader.root.cid)
+    const decoded = await Block.decode({ bytes, hasher: blockOpts.hasher, codec: blockOpts.codec })
+    // @ts-ignore
+    const { fp: { cars, clock } } = decoded.value
+    return { cars, clock, reader: carMapReader }
+  }
+
+  // todo this is only because parkCar wants a writable reader to put the metadata block
+  // parkCar should handle it's own writeable wrapper, and it should love to be called with
+  // a read only car reader
+  async getWriteableCarReader (carReader) {
+    // console.log('getWriteableCarReader')
+    // const carReader = await this.getCarReader(carCid)
+    // console.log('getWriteableCarReader', carCid, carReader)
     const theseWriteableBlocks = new VMemoryBlockstore()
     const combinedReader = {
       blocks: theseWriteableBlocks,
-      root: carMapReader?.root,
+      root: carReader?.root,
       put: async (cid, bytes) => {
         return await theseWriteableBlocks.put(cid, bytes)
       },
       get: async cid => {
+        // console.log('getWriteableCarReader get', cid)
         try {
           const got = await theseWriteableBlocks.get(cid)
           return got.bytes
         } catch (e) {
-          if (!carMapReader) throw e
-          const bytes = await carMapReader.get(cid)
+          if (!carReader) throw e
+          const bytes = await carReader.get(cid)
+          // console.log('getWriteableCarReader', cid, bytes)
           await theseWriteableBlocks.put(cid, bytes)
           return bytes
         }
       }
     }
     return combinedReader
-  }
-
-  async xgetCarReader (carCid) {
-    return this.getCarReaderImpl(carCid)
   }
 
   carReaderCache = new Map()
@@ -306,6 +343,7 @@ export class Base {
     const carBytes = await this.readCar(carCid)
     // console.log('getCarReader', this.constructor.name, carCid, carBytes.length)
     const reader = await CarReader.fromBytes(carBytes)
+    // console.log('getCarReader', carCid, reader._header)
     if (this.keyMaterial) {
       const roots = await reader.getRoots()
       const readerGetWithCodec = async cid => {
@@ -365,176 +403,61 @@ export class Base {
 
   writeCars (cars) {}
 
-  async updateCarCidMap (carCid, cids) {
+  // sequenceCarMapAppend (theCarMap, carCid) {
+  //   // _last_compact
+  //   // _last_sync (map per clock? you can find this by looking at a clocks car and it's position in the map)
+  //   const oldMark = theCarMap.get('_last_compact') // todo we can track _next_seq directly
+  //   // console.log('sequenceCarMapAppend oldMark', oldMark)
+  //   const lastCompact = oldMark ? charwise.decode(oldMark) : 0
+  //   // start iterating from the last compact point and find the first missing entry.
+  //   // then write the carCid to that entry
+  //   let next = lastCompact
+  //   while (true) {
+  //     const key = `_${charwise.encode(next)}`
+  //     if (!theCarMap.has(key)) {
+  //       console.log('sequenceCarMapAppend', next, key, carCid)
+  //       theCarMap.set(key, carCid.toString())
+  //       break
+  //     } else {
+  //       // const got = theCarMap.get(key)
+  //       next++
+  //     }
+  //   }
+  // }
+
+  // async setLastCompact (lastCompactCarCid) {
+  //   console.log('setLastCompact', lastCompactCarCid)
+  //   const theCarMap = await this.getCidCarMap()
+  //   const oldMark = theCarMap.get('_last_compact')
+  //   const lastCompact = oldMark ? charwise.decode(oldMark) : 0
+
+  //   let next = lastCompact
+  //   while (true) {
+  //     const key = `_${charwise.encode(next)}`
+  //     if (!theCarMap.has(key)) {
+  //       if (next === 0) {
+  //         theCarMap.set('_last_compact', charwise.encode(next))
+  //         break
+  //       } else {
+  //         throw new Error(`last compact point not found ${next} ${key}`)
+  //       }
+  //     } else {
+  //       const got = theCarMap.get(key)
+  //       // console.log('setLastCompact', key, got)
+  //       if (got === lastCompactCarCid) {
+  //         theCarMap.set('_last_compact', charwise.encode(next))
+  //         break
+  //       }
+  //       next++
+  //     }
+  //   }
+  // }
+
+  async updateCarCidMap (dataCarCid, cids, head) {
     // this hydrates the map if it has not been hydrated
     const theCarMap = await this.getCidCarMap()
     for (const cid of cids) {
-      theCarMap.set(cid, carCid)
+      theCarMap.set(cid, dataCarCid)
     }
-    // todo can we debounce this? -- maybe put it into a queue so we can batch it
-    return await this.persistCarMap(theCarMap)
-  }
-
-  async persistCarMap (theCarMap) {
-    const ipldLoader = await getEmptyLoader()
-    const indexNode = await create(ipldLoader, {
-      bitWidth: 4,
-      bucketSize: 2,
-      blockHasher: blockOpts.hasher,
-      blockCodec: blockOpts.codec
-    })
-
-    for (const [key, value] of theCarMap.entries()) {
-      await indexNode.set(key, value)
-    }
-
-    let newValetCidCar
-    if (this.keyMaterial) {
-      const cids = [...ipldLoader.blocks.blocks.keys()]
-      // console.log('persistCarMap', cids)
-      newValetCidCar = await blocksToEncryptedCarBlock(indexNode.cid, ipldLoader.blocks, this.keyMaterial, cids)
-    } else {
-      newValetCidCar = await blocksToCarBlock(indexNode.cid, ipldLoader.blocks)
-    }
-    return newValetCidCar
-  }
-}
-
-async function getEmptyLoader () {
-  const theseWriteableBlocks = new VMemoryBlockstore()
-  return {
-    blocks: theseWriteableBlocks,
-    put: async (cid, bytes) => {
-      return await theseWriteableBlocks.put(cid, bytes)
-    },
-    get: async cid => {
-      const got = await theseWriteableBlocks.get(cid)
-      return got.bytes
-    }
-  }
-}
-
-export class VMemoryBlockstore {
-  /** @type {Map<string, Uint8Array>} */
-  blocks = new Map()
-  instanceId = Math.random().toString(36).slice(2)
-
-  async get (cid) {
-    const bytes = this.blocks.get(cid.toString())
-    if (!bytes) throw new Error('block not found ' + cid.toString())
-    return { cid, bytes }
-  }
-
-  /**
-   * @param {any} cid
-   * @param {Uint8Array} bytes
-   */
-  async put (cid, bytes) {
-    this.blocks.set(cid.toString(), bytes)
-  }
-
-  * entries () {
-    for (const [str, bytes] of this.blocks) {
-      yield { cid: parse(str), bytes }
-    }
-  }
-}
-
-export const blocksToCarBlock = async (rootCids, blocks) => {
-  // console.log('blocksToCarBlock', rootCids, blocks.constructor.name)
-  let size = 0
-  if (!Array.isArray(rootCids)) {
-    rootCids = [rootCids]
-  }
-  const headerSize = CBW.headerLength({ roots: rootCids })
-  size += headerSize
-  if (!Array.isArray(blocks)) {
-    blocks = Array.from(blocks.entries())
-  }
-  for (const { cid, bytes } of blocks) {
-    // console.log(cid, bytes)
-    size += CBW.blockLength({ cid, bytes })
-  }
-  const buffer = new Uint8Array(size)
-  const writer = await CBW.createWriter(buffer, { headerSize })
-
-  for (const cid of rootCids) {
-    writer.addRoot(cid)
-  }
-
-  for (const { cid, bytes } of blocks) {
-    writer.write({ cid, bytes })
-  }
-  await writer.close()
-  return await Block.encode({ value: writer.bytes, hasher: sha256, codec: raw })
-}
-
-export const blocksToEncryptedCarBlock = async (innerBlockStoreClockRootCid, blocks, keyMaterial, cids) => {
-  const encryptionKey = Buffer.from(keyMaterial, 'hex')
-  const encryptedBlocks = []
-  const theCids = cids
-  // console.trace('blocksToEncryptedCarBlock', blocks)
-  // for (const { cid } of blocks.entries()) {
-  //   theCids.push(cid.toString())
-  // }
-  // console.log(
-  //   'encrypting',
-  //   theCids.length,
-  //   'blocks',
-  //   theCids.includes(innerBlockStoreClockRootCid.toString()),
-  //   keyMaterial
-  // )
-  // console.log('cids', theCids, innerBlockStoreClockRootCid.toString())
-  let last
-  for await (const block of encrypt({
-    cids: theCids,
-    get: async cid => {
-      // console.log('getencrypt', cid)
-      const got = blocks.get(cid)
-      // console.log('got', got)
-      return got.block ? ({ cid, bytes: got.block }) : got
-    }, // maybe we can just use blocks.get
-    key: encryptionKey,
-    hasher: sha256,
-    chunker,
-    cache,
-    // codec: dagcbor, // should be crypto?
-    root: innerBlockStoreClockRootCid
-  })) {
-    encryptedBlocks.push(block)
-    last = block
-  }
-  // console.log('last', last.cid.toString(), 'for clock', innerBlockStoreClockRootCid.toString())
-  const encryptedCar = await blocksToCarBlock(last.cid, encryptedBlocks)
-  return encryptedCar
-}
-// { root, get, key, cache, chunker, hasher }
-
-const memoizeDecryptedCarBlocks = new Map()
-export const blocksFromEncryptedCarBlock = async (cid, get, keyMaterial) => {
-  if (memoizeDecryptedCarBlocks.has(cid.toString())) {
-    return memoizeDecryptedCarBlocks.get(cid.toString())
-  } else {
-    const blocksPromise = (async () => {
-      const decryptionKey = Buffer.from(keyMaterial, 'hex')
-      // console.log('decrypting', keyMaterial, cid.toString())
-      const cids = new Set()
-      const decryptedBlocks = []
-      for await (const block of decrypt({
-        root: cid,
-        get,
-        key: decryptionKey,
-        chunker,
-        hasher: sha256,
-        cache
-        // codec: dagcbor
-      })) {
-        decryptedBlocks.push(block)
-        cids.add(block.cid.toString())
-      }
-      return { blocks: decryptedBlocks, cids }
-    })()
-    memoizeDecryptedCarBlocks.set(cid.toString(), blocksPromise)
-    return blocksPromise
   }
 }

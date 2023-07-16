@@ -16,7 +16,11 @@ const encrypt = async function * ({ get, cids, hasher, key, cache, chunker, root
   let eroot
   for (const string of cids) {
     const cid = CID.parse(string)
-    const unencrypted = await get(cid)
+    let unencrypted = await get(cid)
+    if (!unencrypted.cid) {
+      unencrypted = { cid, bytes: unencrypted }
+    }
+    // console.log('unencrypted', unencrypted)
     const block = await encode({ ...await codec.encrypt({ ...unencrypted, key }), codec, hasher })
     // console.log(`encrypting ${string} as ${block.cid}`)
     yield block

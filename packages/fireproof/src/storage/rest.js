@@ -2,7 +2,7 @@ import fetch from 'cross-fetch'
 import { Base } from './base.js'
 
 const defaultConfig = {
-  url: 'http://localhost:4000'
+  url: 'http://localhost:4000/v' + Base.format
 }
 
 export class Rest extends Base {
@@ -47,12 +47,11 @@ export class Rest extends Base {
 
   async writeHeader (branch, header) {
     if (this.config.readonly) return
-    const pHeader = this.prepareHeader(header)
     // console.log('writeHeader rt', branch, pHeader)
 
     const response = await fetch(this.headerURL(branch), {
       method: 'PUT',
-      body: pHeader,
+      body: header,
       headers: { 'Content-Type': 'application/json' }
     })
     if (!response.ok) throw new Error(`An error occurred: ${response.statusText}`)

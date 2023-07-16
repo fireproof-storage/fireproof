@@ -79,16 +79,22 @@ export class Valet {
       if (this.secondary) {
         // console.log('getValetBlock secondary', dataCID)
         try {
+          // eslint-disable-next-line
           const { block, reader } = await this.secondary.getLoaderBlock(dataCID)
+          const writeableCarReader = await this.primary.getWriteableCarReader(reader)
+          // console.log('getValetBlock secondary', dataCID, block.length)
+          // eslint-disable-next-line
           const cids = new Set()
           for await (const { cid } of reader.entries()) {
             // console.log(cid, bytes)
             cids.add(cid.toString())
           }
-          reader.get = reader.gat // some consumers prefer get
+          // reader.get = reader.gat // some consumers prefer get
           // console.log('replicating', reader.root)
-          reader.lastCid = reader.root.cid
-          await this.primary.parkCar(reader, [...cids])
+          writeableCarReader.lastCid = reader.root.cid
+          writeableCarReader.head = []
+          await this.primary.parkCar(writeableCarReader, cids).catch(e => console.error('parkCar error', e))
+          // console.log('FIX THIS', did)
           return block
         } catch (e) {
           // console.log('getValetBlock secondary error', e)
