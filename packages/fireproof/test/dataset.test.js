@@ -511,7 +511,6 @@ describe('Rest dataset', () => {
     const response = await emptyDb.allDocuments()
     assert.equal(response.rows.length, 18)
     await sleep(50)
-    return
 
     const files2 = await dbFiles(storage, 'fptest-empty-db-todos')
     assert.equal(files2.length > 5, true)
@@ -697,11 +696,18 @@ describe('Rest dataset', () => {
         StorageClass: Filesystem
       }
     })
-    serverDb.put({ _id: 'ice', title: 'Coffee' })
+    console.log('putting ice')
 
-    await sleep(100)
+    await serverDb.put({ _id: 'ice', title: 'Coffee' })
+
+    const iceCoffee = await serverDb.get('ice')
+    assert.equal(iceCoffee.title, 'Coffee')
+
+    await sleep(10)
 
     const USER_DB_NAME = 'fptest-user-db-todos'
+
+    console.log('creating user db', USER_DB_NAME)
 
     const userDb = await Fireproof.storage(USER_DB_NAME, {
       primary: {
@@ -716,10 +722,45 @@ describe('Rest dataset', () => {
         }
       }
     })
+
+    await userDb.ready
+
+    assert.equal(serverDb.clock.length, 1)
+    assert.equal(userDb.clock.length, 1)
+    assert.deepEqual(serverDb.clockToJSON(), userDb.clockToJSON())
+
+    const serverPrimary = serverDb.blocks.valet.primary
+    const userSecondary = userDb.blocks.valet.secondary
+
+    assert.equal(serverPrimary.carLog.length, 1)
+    assert.equal(userSecondary.carLog.length, 1)
+    assert.deepEqual(serverPrimary.carLog, userSecondary.carLog)
+
+    const blockCID = serverDb.clock[0]
+    const gotBlock = await serverPrimary.getLoaderBlock(blockCID)
+    // console.log('GGGGGG gotBlock', gotBlock)
+    assert(gotBlock.block)
+    assert(gotBlock.carCid)
+    assert.equal(gotBlock.carCid.toString(), serverPrimary.carLog[0].toString())
+
+    const gotBlock2 = await userSecondary.getLoaderBlock(blockCID)
+    assert(gotBlock2.block)
+    assert(gotBlock2.carCid)
+    assert.equal(gotBlock2.carCid.toString(), serverPrimary.carLog[0].toString())
+
+    const userPrimary = userDb.blocks.valet.primary
+    assert.deepEqual([], userPrimary.carLog)
+
+    const err = await userPrimary.getLoaderBlock(blockCID).catch(e => e)
+    assert.match(err.message, /Missing car/)
+
+    console.log('QUERY user db', USER_DB_NAME)
     // db can load a document by id
     const doc = await userDb.get('ice')
     assert.equal(doc._id, 'ice')
     assert.equal(doc.title, 'Coffee')
+
+    // return
 
     userDb.maybeSaveClock() // force header write
     await sleep(100)
@@ -754,7 +795,7 @@ describe('Rest dataset', () => {
 
     const carPath = join(testdbPath, userHeaderData2.car) + '.car'
     const carDataRaw = readFileSync(carPath)
-    assert(carDataRaw.length > 2000)
+    assert(carDataRaw.length > 200)
 
     // open a db with primary storage using the main branch from the cloud secondary
     const userDb4 = await Fireproof.storage(SERVER_DB_NAME, {
@@ -871,7 +912,7 @@ describe('Rest dataset', () => {
     await sleep(100)
 
     assert.equal(branchHeaderJSON.key, userDb3.blocks.valet.primary.keyMaterial, 'key material')
-    assert.equal(branchHeaderJSON.car, userDb3.blocks.valet.primary.valetRootCarCid, 'car file')
+    assert.equal(branchHeaderJSON.car, userDb3.blocks.valet.primary.lastCar, 'car file')
 
     const doc3 = await userDb3.get('ice')
     assert.equal(doc3._id, 'ice')

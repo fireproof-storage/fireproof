@@ -16,7 +16,8 @@ import * as codec from '../encrypted-block.js'
 import {
   blocksToEncryptedCarBlock,
   blocksToCarBlock,
-  blocksFromEncryptedCarBlock
+  blocksFromEncryptedCarBlock,
+  VMemoryBlockstore
 } from './utils.js'
 
 const chunker = bf(30)
@@ -78,7 +79,7 @@ export class Base {
     const allBlocks = new Map()
     for (const cid of dataCids) {
       const block = await this.getLoaderBlock(cid)
-      allBlocks.set(cid, block)
+      allBlocks.set(cid, block.block)
     }
     cidMap.clear()
     let lastCid = clock[0]
@@ -205,7 +206,7 @@ export class Base {
     throw new Error('not implemented')
   }
 
-  async getCarCIDForCID (cid) {
+  async getCarCIDForCID (cid) { // todo combine with getLoaderBlock for one fetch not many
     console.log('getCarCIDForCID', cid, this.carLog, this.config.type)
     // for each car in the car log
     for (const carCid of this.carLog) {
@@ -220,7 +221,7 @@ export class Base {
         // console.log('getCarCIDForCID', cid, block.cid.toString())
         console.log('getCarCIDForCID', cid, block.cid.toString())
         if (block.cid.toString() === cid.toString()) {
-          // console.log('getCarCIDForCID found', cid)
+          console.log('getCarCIDForCID found', cid)
           return { result: carCid }
         }
       }
@@ -242,14 +243,16 @@ export class Base {
   }
 
   async getLoaderBlock (dataCID) {
-    console.log('getLoaderBlock', dataCID, this.config)
+    console.log('getLoaderBlock', dataCID, this.config, this.carLog)
     const { result: carCid } = await this.getCarCIDForCID(dataCID)
-    // console.log('getLoaderBlock', dataCID, carCid)
+    console.log('gotLoaderBlock', dataCID, carCid)
     if (!carCid) {
       throw new Error('Missing car for: ' + dataCID)
     }
     const reader = await this.getCarReader(carCid)
-    return { block: await reader.get(dataCID), reader, carCid }
+    const block = await reader.get(dataCID)
+    console.log('gotLoaderBlock', dataCID, block.length)
+    return { block, reader, carCid }
   }
 
   // async getLastSynced () {
@@ -292,31 +295,34 @@ export class Base {
     return { cars, clock, reader: carMapReader }
   }
 
-  // async getWriteableCarReader (carCid) {
-  //   // console.log('getWriteableCarReader', carCid)
-  //   const carMapReader = await this.getCarReader(carCid)
-  //   // console.log('getWriteableCarReader', carCid, carMapReader)
-  //   const theseWriteableBlocks = new VMemoryBlockstore()
-  //   const combinedReader = {
-  //     blocks: theseWriteableBlocks,
-  //     root: carMapReader?.root,
-  //     put: async (cid, bytes) => {
-  //       return await theseWriteableBlocks.put(cid, bytes)
-  //     },
-  //     get: async cid => {
-  //       try {
-  //         const got = await theseWriteableBlocks.get(cid)
-  //         return got.bytes
-  //       } catch (e) {
-  //         if (!carMapReader) throw e
-  //         const bytes = await carMapReader.get(cid)
-  //         await theseWriteableBlocks.put(cid, bytes)
-  //         return bytes
-  //       }
-  //     }
-  //   }
-  //   return combinedReader
-  // }
+  // todo this is only because parkCar wants a writable reader to put the metadata block
+  // parkCar should handle it's own writeable wrapper, and it should love to be called with
+  // a read only car reader
+  async getWriteableCarReader (carReader) {
+    // console.log('getWriteableCarReader', carCid)
+    // const carReader = await this.getCarReader(carCid)
+    // console.log('getWriteableCarReader', carCid, carReader)
+    const theseWriteableBlocks = new VMemoryBlockstore()
+    const combinedReader = {
+      blocks: theseWriteableBlocks,
+      root: carReader?.root,
+      put: async (cid, bytes) => {
+        return await theseWriteableBlocks.put(cid, bytes)
+      },
+      get: async cid => {
+        try {
+          const got = await theseWriteableBlocks.get(cid)
+          return got.bytes
+        } catch (e) {
+          if (!carReader) throw e
+          const bytes = await carReader.get(cid)
+          await theseWriteableBlocks.put(cid, bytes)
+          return bytes
+        }
+      }
+    }
+    return combinedReader
+  }
 
   carReaderCache = new Map()
   async getCarReader (carCid) {
