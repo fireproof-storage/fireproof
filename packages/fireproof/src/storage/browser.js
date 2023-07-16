@@ -2,7 +2,7 @@ import { openDB } from 'idb'
 import { Base } from './base.js'
 
 const defaultConfig = {
-  headerKeyPrefix: 'fp.'
+  headerKeyPrefix: 'fp.' + Base.format
 }
 
 /* global localStorage */
@@ -14,7 +14,7 @@ export class Browser extends Base {
 
   withDB = async dbWorkFun => {
     if (!this.idb) {
-      this.idb = await openDB(`fp.${this.keyId}.${this.name}.valet`, 3, {
+      this.idb = await openDB(`fp.${Base.format}.${this.keyId}.${this.name}.valet`, 3, {
         upgrade (db, oldVersion, newVersion, transaction) {
           if (oldVersion < 1) {
             db.createObjectStore('cars')

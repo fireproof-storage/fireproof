@@ -2,7 +2,7 @@ import fetch from 'cross-fetch'
 import { Base } from './base.js'
 
 const defaultConfig = {
-  url: 'http://localhost:4000'
+  url: 'http://localhost:4000/v' + Base.format
 }
 
 export class Rest extends Base {

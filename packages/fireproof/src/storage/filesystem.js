@@ -9,7 +9,7 @@ import fs from 'fs'
 const readFileSync = fs.readFileSync
 
 export const defaultConfig = {
-  dataDir: join(homedir(), '.fireproof')
+  dataDir: join(homedir(), '.fireproof', 'v' + Base.format)
 }
 
 export class Filesystem extends Base {
