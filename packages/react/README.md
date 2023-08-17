@@ -18,7 +18,7 @@
   </a>
 </p>
 
-This is the right place to start if you want add live data to your React app. Fireproof allows you to build your app first and connect to the cloud when you are ready. Use familiar APIs to write JSON documents:
+Add live data to your React app. Fireproof allows you to build your app first and connect to the cloud when you are ready. Use familiar APIs to write JSON documents:
 
 ```js
 const [newTodo, updateTodo, saveTodo] = useDocument({ 
