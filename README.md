@@ -1,10 +1,6 @@
-<p align="center" >
-  <a href="https://fireproof.storage/">
-    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="200">
-  </a>
-</p>
+
 <h3 align="center">
-  Cloudless database for React apps
+  Live database for the web
 </h3>
 
 <p align="center">
@@ -12,7 +8,7 @@
     <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test" style="max-width: 100%;">
   </a>
   <a href="https://standardjs.com" rel="nofollow">
-    <img src="https://img.shields.io/badge/code_style-standard-brightgreen.svg" alt="JavaScript Style Guide"  style="max-width: 100%;">
+    <img src="https://camo.githubusercontent.com/0d1fa0bafb9d3d26ac598799ca1d0bf767fc28a41d3f718d404433b392b9a5cd/68747470733a2f2f696d672e736869656c64732e696f2f6e706d2f74797065732f73637275622d6a732e737667" alt="JavaScript Style Guide"  style="max-width: 100%;">
   </a>
   <a href="https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md">
     <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
@@ -21,7 +17,11 @@
     <img src="https://deno.bundlejs.com/?q=@fireproof/core&treeshake=[*+as+fireproofCore]&badge" alt="Bundle Size"  style="max-width: 100%;">
   </a>
 </p>
-
+<p align="center" >
+  <a href="https://fireproof.storage/">
+    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="200">
+  </a>
+</p>
 Fireproof uses immutable data and distributed protocols to offer a new kind of database that:
 - can be embedded in any page or app, with a flexible data ownership model
 - can be hosted on any cloud
