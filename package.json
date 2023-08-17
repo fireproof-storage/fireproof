@@ -1,7 +1,7 @@
 {
   "name": "@fireproof/monorepo",
   "version": "1.0.0",
-  "description": "",
+  "description": "Live database for the web",
   "scripts": {
     "test": "cd packages/fireproof && npm test"
   },
@@ -24,21 +24,14 @@
   },
   "devDependencies": {
     "c8": "^7.12.0",
-    "clean-jsdoc-theme": "^4.2.6",
-    "fake-indexeddb": "^4.0.1",
-    "jsdoc": "^4.0.2",
-    "jsdoc-plugin-typescript": "^2.2.1",
-    "jsdoc-ts-utils": "^3.1.0",
-    "mocha": "^10.2.0",
-    "nanoid": "^4.0.0",
     "standard": "^17.0.0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jchris/fireproof.git"
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
   },
   "bugs": {
-    "url": "https://github.com/jchris/fireproof/issues"
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "homepage": "https://github.com/jchris/fireproof#readme"
+  "homepage": "https://github.com/fireproof-storage/fireproof#readme"
 }
