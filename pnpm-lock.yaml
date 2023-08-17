@@ -248,8 +248,8 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/database':
-        specifier: 0.10.63
-        version: 0.10.63
+        specifier: 0.10.67
+        version: 0.10.67
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -1152,8 +1152,8 @@ packages:
       - supports-color
     dev: false
 
-  /@fireproof/database@0.10.63:
-    resolution: {integrity: sha512-veE+JtRoowFKGj6TcVOyFxhFu1cK7K2fjRAvP+QpUhdduZtQINqKdMwfYU0bHXqH5fctwsMYjFnjbVd+ruFLxw==}
+  /@fireproof/database@0.10.67:
+    resolution: {integrity: sha512-YR+9Owpv5L8uAyPbt/hEzDo0Mpo2okpD1+JNZYziEM5Z2XQWnezAcyrIBTd1HPYVQHWkPmhIt+ggn3s//roQxA==}
     dependencies:
       '@alanshaw/pail': 0.3.3
       '@ipld/dag-cbor': 9.0.4
@@ -1263,9 +1263,9 @@ packages:
   /@ipld/dag-ucan@3.3.2:
     resolution: {integrity: sha512-EhuOrAfnudsVYIbzEIgi3itHAEo3WZNOt1VNPsYhxKBhOzDMeoTXh6/IHc7ZKBW1T2vDQHdgj4m1r64z6MssGA==}
     dependencies:
-      '@ipld/dag-cbor': 9.0.0
-      '@ipld/dag-json': 10.0.1
-      multiformats: 11.0.1
+      '@ipld/dag-cbor': 9.0.4
+      '@ipld/dag-json': 10.1.3
+      multiformats: 11.0.2
     dev: false
 
   /@ipld/unixfs@2.0.1:
@@ -2196,10 +2196,10 @@ packages:
     resolution: {integrity: sha512-Ne45bH0uUhAexNkJWj8tYsvKut58LaL3rsu30vxVh+ybkj47nD02mY8KqW+vCHY80E1ubPcjlHuCt0+efR9bgw==}
     dependencies:
       '@ipld/car': 5.1.0
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-ucan': 3.3.2
       '@ucanto/interface': 8.0.0
-      multiformats: 11.0.1
+      multiformats: 11.0.2
     dev: false
 
   /@ucanto/interface@4.2.3:
@@ -2227,7 +2227,7 @@ packages:
     resolution: {integrity: sha512-xeJJYdGAPKOYbCiG8BsGmyoBovZDtVya+42Gtd8fViZeNSS3h0f2BPDBS91YFOxSGswqCd2fqvrfrlg3TTMmZw==}
     dependencies:
       '@ipld/dag-ucan': 3.3.2
-      multiformats: 11.0.1
+      multiformats: 11.0.2
     dev: false
 
   /@ucanto/principal@4.2.3:
@@ -2266,7 +2266,7 @@ packages:
       '@ipld/dag-ucan': 3.3.2
       '@noble/ed25519': 1.7.3
       '@ucanto/interface': 8.0.0
-      multiformats: 11.0.1
+      multiformats: 11.0.2
       one-webcrypto: 1.0.3
     dev: false
 
@@ -2336,7 +2336,7 @@ packages:
     resolution: {integrity: sha512-esbxBSe4HIlwbL/+G4pCZf7Z09OsQ9thoFUpIvKO96iZin2hFJJhW5AcXTp/9z/+k3SO3pD879PjPpGkrMZRVA==}
     dependencies:
       '@ipld/car': 5.1.1
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-cbor': 9.0.4
       '@ucanto/core': 7.1.1
       '@ucanto/interface': 7.1.0
       multiformats: 11.0.2

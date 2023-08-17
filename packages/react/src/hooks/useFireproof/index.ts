@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, createContext } from 'react';
 import { database as obtainDb, index as obtainIndex } from '@fireproof/database';
 
-import type { Doc, DocFragment, Index, Database } from '@fireproof/database';
+import type { Doc, DocFragment, Index, Database, FireproofOptions } from '@fireproof/database';
 
 export interface FireproofCtxValue {
   database: Database;
@@ -43,11 +43,10 @@ export const useDocument = topLevelUseLiveDocument;
 export function useFireproof(
   name : string | Database = 'useFireproof',
   setupDatabaseFn: null | ((db: Database) => Promise<void>) = null,
-  config = {},
+  config: FireproofOptions = {},
 ): FireproofCtxValue {
   const [ready, setReady] = useState(false);
-  const database = (typeof name === 'string') ? obtainDb(name) : name;
-  database.config = config;
+  const database = (typeof name === 'string') ? obtainDb(name, config) : name;
 
   useEffect(() => {
     const doSetup = async () => {
