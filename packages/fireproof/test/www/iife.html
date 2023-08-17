@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireproof Test</title>
+    <script src="../../dist/browser/fireproof.iife.js"></script>
+    <script type="text/javascript">
+      function testApp() {
+        const db = Fireproof.database('iife-test');
+
+        const draw = async () => {
+          const result = await Fireproof
+            .index(db, 'sort')
+            .query({includeDocs: true});
+          document
+            .querySelector('ul')
+            .innerHTML = '';
+          for (const row of result.rows) {
+            document
+              .querySelector('ul')
+              .appendChild(document.createElement('li'))
+              .innerText = JSON.stringify(row.doc);
+          }
+        }
+
+        async function initialize() {
+          db.subscribe(draw);
+          draw()
+        }
+
+        async function onButtonClick(e) {
+          e.preventDefault();
+          const ok = await db.put({sort: Math.random(), test: 'test'});
+          console.log('ok', ok.id);
+        }
+        window.onButtonClick = onButtonClick;
+        window.onload = initialize;
+      }
+      testApp();
+    </script>
+  </head>
+  <body>
+    <button onclick="onButtonClick(event)">Click to Run</button>
+    <ul></ul>
+  </body>
+</html>

@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fireproof/core": "workspace:^",
+    "@fireproof/core": "^0.8.0",
     "@w3ui/react-keyring": "^3.0.1",
     "@web3-storage/capabilities": "^3.2.0",
     "@web3-storage/upload-client": "^6.0.0",

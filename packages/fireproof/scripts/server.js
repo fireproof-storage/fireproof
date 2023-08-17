@@ -1,15 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import * as fs from 'node:fs'
 import * as http from 'node:http'
 import * as path from 'node:path'
 
-import { join } from 'path'
-import { homedir } from 'os'
-// import { mkdir, writeFile } from 'fs/promises'
-import { Base } from '../src/storage/base.js'
-
-const defaultConfig = {
-  dataDir: join(homedir(), '.fireproof', 'v' + Base.format)
-}
+import { HeaderStore } from '../dist/test/store-fs.esm.js'
 
 const PORT = 8000
 
@@ -29,7 +27,7 @@ const MIME_TYPES = {
   car: 'application/car'
 }
 
-const DATA_PATH = defaultConfig.dataDir
+const DATA_PATH = HeaderStore.dataDir
 
 const toBool = [() => true, () => false]
 
@@ -45,7 +43,7 @@ const prepareFile = async url => {
   return { found, ext, stream }
 }
 
-export function startServer (quiet = true) {
+export function startServer(quiet = true) {
   const log = quiet ? () => {} : console.log
 
   const server = http.createServer(async (req, res) => {
@@ -89,7 +87,7 @@ export function startServer (quiet = true) {
     }
   })
   server.listen(PORT)
-  fs.promises.mkdir(DATA_PATH, { recursive: true }).then(() => {
+  void fs.promises.mkdir(DATA_PATH, { recursive: true }).then(() => {
     log(`Server running at http://127.0.0.1:${PORT}/`)
   })
   return server
