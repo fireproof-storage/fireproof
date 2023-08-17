@@ -247,9 +247,9 @@ importers:
 
   packages/react:
     dependencies:
-      '@fireproof/core':
-        specifier: ^0.8.0
-        version: link:../fireproof
+      '@fireproof/database':
+        specifier: 0.10.63
+        version: 0.10.63
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -322,7 +322,7 @@ packages:
     hasBin: true
     dependencies:
       '@ipld/car': 5.1.1
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-cbor': 9.0.4
       archy: 1.0.0
       cli-color: 2.0.3
       multiformats: 11.0.2
@@ -1152,6 +1152,19 @@ packages:
       - supports-color
     dev: false
 
+  /@fireproof/database@0.10.63:
+    resolution: {integrity: sha512-veE+JtRoowFKGj6TcVOyFxhFu1cK7K2fjRAvP+QpUhdduZtQINqKdMwfYU0bHXqH5fctwsMYjFnjbVd+ruFLxw==}
+    dependencies:
+      '@alanshaw/pail': 0.3.3
+      '@ipld/dag-cbor': 9.0.4
+      '@ipld/dag-json': 10.1.3
+      '@peculiar/webcrypto': 1.4.3
+      charwise: 3.0.1
+      idb: 7.1.1
+      multiformats: 12.0.1
+      prolly-trees: 1.0.4
+    dev: false
+
   /@humanwhocodes/config-array@0.11.8:
     resolution: {integrity: sha512-UybHIJzJnR5Qc/MsD9Kr+RpO2h+/P1GhOwdiLPXK5TWk5sgTdu88bTD9UP+CKbPPh5Rni1u0GjAdYQLemG8g+g==}
     engines: {node: '>=10.10.0'}
@@ -1186,7 +1199,7 @@ packages:
     resolution: {integrity: sha512-HoFTUqUJL9cPGhC9qRmHCvamfIsj1JllQSQ/Xu9/KN/VNJp8To9Ms4qiZPEMOwcrNFclfYqrahjGYbf4KL/d9A==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-cbor': 9.0.4
       cborg: 1.10.0
       multiformats: 11.0.2
       varint: 6.0.0
@@ -1197,7 +1210,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 1.10.0
-      multiformats: 11.0.1
+      multiformats: 11.0.2
     dev: false
 
   /@ipld/dag-cbor@9.0.0:
@@ -1208,12 +1221,28 @@ packages:
       multiformats: 11.0.1
     dev: false
 
+  /@ipld/dag-cbor@9.0.4:
+    resolution: {integrity: sha512-HBNVngk/47pKNLTAelN6ORWgKkjJtQj96Xb+jIBtRShJGCsXgghj1TzTynTTIp1dZxwPe5rVIL6yjZmvdyP2Wg==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+    dependencies:
+      cborg: 2.0.4
+      multiformats: 12.0.1
+    dev: false
+
   /@ipld/dag-json@10.0.1:
     resolution: {integrity: sha512-XE1Eqw3eNVrSfOhtqCM/gwCxEgYFBzkDlkwhEeMmMvhd0rLBfSyVzXbahZSlv97tiTPEIx5rt41gcFAda3W8zg==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 1.10.0
       multiformats: 11.0.2
+    dev: false
+
+  /@ipld/dag-json@10.1.3:
+    resolution: {integrity: sha512-c0PJE+cDnsYfyuWMdTTwkzMvxjthEwWD+0u6ApQfXrs+GTcxeYh+Hefd0xE9L4fb2Trr1DGA1a/iia4PAS3Mpg==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+    dependencies:
+      cborg: 2.0.4
+      multiformats: 12.0.1
     dev: false
 
   /@ipld/dag-pb@4.0.2:
@@ -1649,6 +1678,32 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
     dev: true
+
+  /@peculiar/asn1-schema@2.3.6:
+    resolution: {integrity: sha512-izNRxPoaeJeg/AyH8hER6s+H7p4itk+03QCa4sbxI3lNdseQYCuxzgsuNK8bTXChtLTjpJz6NmXKA73qLa3rCA==}
+    dependencies:
+      asn1js: 3.0.5
+      pvtsutils: 1.3.3
+      tslib: 2.6.1
+    dev: false
+
+  /@peculiar/json-schema@1.1.12:
+    resolution: {integrity: sha512-coUfuoMeIB7B8/NMekxaDzLhaYmp0HZNPEjYRm9goRou8UZIC3z21s0sL9AWoCw4EG876QyO3kYrc61WNF9B/w==}
+    engines: {node: '>=8.0.0'}
+    dependencies:
+      tslib: 2.6.1
+    dev: false
+
+  /@peculiar/webcrypto@1.4.3:
+    resolution: {integrity: sha512-VtaY4spKTdN5LjJ04im/d/joXuvLbQdgy5Z4DXF4MFZhQ+MTrejbNMkfZBp1Bs3O5+bFqnJgyGdPuZQflvIa5A==}
+    engines: {node: '>=10.12.0'}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.6
+      '@peculiar/json-schema': 1.1.12
+      pvtsutils: 1.3.3
+      tslib: 2.6.1
+      webcrypto-core: 1.7.7
+    dev: false
 
   /@perma/map@1.0.3:
     resolution: {integrity: sha512-Bf5njk0fnJGTFE2ETntq0N1oJ6YdCPIpTDn3R3KYZJQdeYSOCNL7mBrFlGnbqav8YQhJA/p81pvHINX9vAtHkQ==}
@@ -2110,11 +2165,11 @@ packages:
   /@ucanto/core@4.2.3:
     resolution: {integrity: sha512-udvp7IMRCE3XFhPYiKISt52r8QjbrqG7d1papdtWwF6RAzTbIWhgXSwAjEbroYCr/gQst7U8aYsgr4xvG2miUQ==}
     dependencies:
-      '@ipld/car': 5.1.0
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/car': 5.1.1
+      '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-ucan': 3.2.0
       '@ucanto/interface': 4.2.3
-      multiformats: 11.0.1
+      multiformats: 11.0.2
     dev: false
 
   /@ucanto/core@5.1.0:
@@ -2131,7 +2186,7 @@ packages:
     resolution: {integrity: sha512-RXYOXVTqpTqeYBw7aVGna4JwLEi4xnfN4eX53n+9SLNbh7lNrD7bZuXGMB53W4PimRIZp92tQSWSO8ljw3hf1Q==}
     dependencies:
       '@ipld/car': 5.1.1
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-ucan': 3.3.2
       '@ucanto/interface': 7.1.0
       multiformats: 11.0.2
@@ -2181,7 +2236,7 @@ packages:
       '@ipld/dag-ucan': 3.2.0
       '@noble/ed25519': 1.7.3
       '@ucanto/interface': 4.2.3
-      multiformats: 11.0.1
+      multiformats: 11.0.2
       one-webcrypto: 1.0.3
     dev: false
 
@@ -2260,11 +2315,11 @@ packages:
   /@ucanto/validator@4.2.3:
     resolution: {integrity: sha512-7lA9PK+c0Hu857eHuZIVX3ZBooqvOT25/CXUxGjqs5YFCY7dUhrNCxJYnWsPZnEdriq6x6VSj8pZPwN8I7CyQw==}
     dependencies:
-      '@ipld/car': 5.1.0
+      '@ipld/car': 5.1.1
       '@ipld/dag-cbor': 8.0.1
       '@ucanto/core': 4.2.3
       '@ucanto/interface': 4.2.3
-      multiformats: 11.0.1
+      multiformats: 11.0.2
     dev: false
 
   /@ucanto/validator@6.0.0:
@@ -2291,7 +2346,7 @@ packages:
     resolution: {integrity: sha512-S+cGKUVu074TT1FaoOyZa3mKf3CuEBLHLlE3TU1UoIC5Yp9WnvX+cDOGKIyfJ/HgHHBvAEDxYNOkNZbCATsRdA==}
     dependencies:
       '@ipld/car': 5.1.1
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/dag-cbor': 9.0.4
       '@ucanto/core': 8.0.0
       '@ucanto/interface': 8.0.0
       multiformats: 11.0.2
@@ -2381,8 +2436,8 @@ packages:
     resolution: {integrity: sha512-GwrSHhOigNI009DRmRtJjqQ3JS/a+rlU7wXM7k5+FwMR9Kqr/Ayid+Ida1tN7NPEIKBqfe9wfXbVMowi86YNYw==}
     hasBin: true
     dependencies:
-      '@ipld/car': 5.1.0
-      '@ipld/dag-cbor': 9.0.0
+      '@ipld/car': 5.1.1
+      '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-ucan': 3.2.0
       '@ucanto/client': 4.2.3
       '@ucanto/core': 4.2.3
@@ -2396,7 +2451,7 @@ packages:
       inquirer: 9.1.4
       isomorphic-ws: 5.0.0(ws@8.12.1)
       kysely: 0.23.4
-      multiformats: 11.0.1
+      multiformats: 11.0.2
       one-webcrypto: 1.0.3
       ora: 6.1.2
       p-defer: 4.0.0
@@ -2943,6 +2998,15 @@ packages:
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
       safer-buffer: 2.1.2
+
+  /asn1js@3.0.5:
+    resolution: {integrity: sha512-FVnvrKJwpt9LP2lAMl8qZswRNm3T4q9CON+bxldk2iwk3FFpuwhx2FfinyitizWHsVYyaY+y5JzDR0rCMV5yTQ==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      pvtsutils: 1.3.3
+      pvutils: 1.1.3
+      tslib: 2.6.1
+    dev: false
 
   /assert@2.0.0:
     resolution: {integrity: sha512-se5Cd+js9dXJnu6Ag2JFc00t+HmHOen+8Q+L7O9zI0PqQXr20uk2J0XQqMxZEeo5U50o8Nvmmx7dZrl+Ufr35A==}
@@ -3504,6 +3568,11 @@ packages:
 
   /cborg@1.10.0:
     resolution: {integrity: sha512-/eM0JCaL99HDHxjySNQJLaolZFVdl6VA0/hEKIoiQPcQzE5LrG5QHdml0HaBt31brgB9dNe1zMr3f8IVrpotRQ==}
+    hasBin: true
+    dev: false
+
+  /cborg@2.0.4:
+    resolution: {integrity: sha512-QradkXyNBLIyg1XNxcoXqUG4stcOhfuR1uexq+qNzL+EvFV5TXvN+c+LCh5XXxTv2fjBIkNB+3I6IO17EnKuKg==}
     hasBin: true
     dev: false
 
@@ -8060,6 +8129,17 @@ packages:
     resolution: {integrity: sha512-rRV+zQD8tVFys26lAGR9WUuS4iUAngJScM+ZRSKtvl5tKeZ2t5bvdNFdNHBW9FWR4guGHlgmsZ1G7BSm2wTbuA==}
     engines: {node: '>=6'}
 
+  /pvtsutils@1.3.3:
+    resolution: {integrity: sha512-6sAOMlXyrJ+8tRN5IAaYfuYZRp1C2uJ0SyDynEFxL+VY8kCRib9Lpj/+KPaNFpaQWr/iRik5nrzz6iaNlxgEGA==}
+    dependencies:
+      tslib: 2.6.1
+    dev: false
+
+  /pvutils@1.1.3:
+    resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
+    engines: {node: '>=6.0.0'}
+    dev: false
+
   /querystring-es3@0.2.1:
     resolution: {integrity: sha512-773xhDQnZBMFobEiztv8LIl70ch5MSF/jUQVlhwFyBILqq96anmoctVIYz+ZRp0qbCKATTn6ev02M3r7Ga5vqA==}
     engines: {node: '>=0.4.x'}
@@ -8596,7 +8676,7 @@ packages:
   /rxjs@7.8.0:
     resolution: {integrity: sha512-F2+gxDshqmIub1KdvZkaEfGDwLNpPvk9Fs6LD/MyQxNgMds/WH9OdDDXOmxUZpME+iSK3rQCctkL0DYyytUqMg==}
     dependencies:
-      tslib: 2.5.0
+      tslib: 2.6.1
     dev: false
 
   /sade@1.8.1:
@@ -9392,6 +9472,11 @@ packages:
 
   /tslib@2.5.0:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
+    dev: true
+
+  /tslib@2.6.1:
+    resolution: {integrity: sha512-t0hLfiEKfMUoqhG+U1oid7Pva4bbDPHYfJNiB7BiIjRkj1pyC++4N3huJfqY6aRH6VTB0rvtzQwjM4K6qpfOig==}
+    dev: false
 
   /tty-browserify@0.0.1:
     resolution: {integrity: sha512-C3TaO7K81YvjCgQH9Q1S3R3P3BtN3RIM8n+OvX4il1K1zgE8ZhI0op7kClgkxtutIE8hQrcrHBXvIheqKUUCxw==}
@@ -9767,6 +9852,16 @@ packages:
   /web-streams-polyfill@3.2.1:
     resolution: {integrity: sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==}
     engines: {node: '>= 8'}
+    dev: false
+
+  /webcrypto-core@1.7.7:
+    resolution: {integrity: sha512-7FjigXNsBfopEj+5DV2nhNpfic2vumtjjgPmeDKk45z+MJwXKKfhPB7118Pfzrmh4jqOMST6Ch37iPAHoImg5g==}
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.6
+      '@peculiar/json-schema': 1.1.12
+      asn1js: 3.0.5
+      pvtsutils: 1.3.3
+      tslib: 2.6.1
     dev: false
 
   /webidl-conversions@3.0.1:
