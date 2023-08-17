@@ -1,51 +1,16 @@
 import { useEffect, useState, useCallback, createContext } from 'react';
-import { Database, Fireproof, Index } from '@fireproof/core';
+import { database as obtainDb, index as obtainIndex } from '@fireproof/database';
 
-interface Document {
-  _id: string;
-  [key: string]: any;
-}
+import type { Doc, DocFragment, Index, Database } from '@fireproof/database';
 
 export interface FireproofCtxValue {
   database: Database;
-  useLiveQuery: Function;
-  useDocument: Function;
+  useLiveQuery: (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => { docs: Doc[], rows: any[] };
+  useDocument: (initialDoc: Doc) => [Doc, (newDoc: Doc) => void, () => Promise<void>]
   ready: boolean;
 }
 
 export const FireproofCtx = createContext<FireproofCtxValue>({} as FireproofCtxValue);
-
-const databases = new Map<string, { database: Database; setupStarted: Boolean }>();
-
-const initializeDatabase = (
-  name: string|Database,
-  defineDatabaseFn: Function,
-  config: any,
-): { database: Database; setupStarted: Boolean } => {
-  if (typeof name['name'] === 'string' ) {
-    const theName = name['name'] as string;
-    const theDb = name as Database;
-    if (databases.has(theName)) {
-      return databases.get(theName) as { database: Database; setupStarted: Boolean };
-    } else {
-      defineDatabaseFn(theDb);
-      const obj = { database: theDb, setupStarted: false };
-      databases.set(theName, obj);
-      return obj;
-    }
-  } else {
-    if (typeof name !== 'string') throw new Error('Database name must be a string')
-    if (databases.has(name)) {
-      return databases.get(name) as { database: Database; setupStarted: Boolean };
-    } else {
-      const database = Fireproof.storage(name, config);
-      defineDatabaseFn(database);
-      const obj = { database, setupStarted: false };
-      databases.set(name, obj);
-      return obj;
-    }
-  }
-};
 
 /**
  * Top level hook to initialize a Fireproof database and a query for it.
@@ -55,6 +20,7 @@ const topLevelUseLiveQuery = (...args) => {
   const { useLiveQuery, database } = useFireproof();
   // @ts-ignore
   topLevelUseLiveQuery.database = database;
+  // @ts-ignore
   return useLiveQuery(...args);
 };
 
@@ -67,63 +33,52 @@ export const useLiveQuery = topLevelUseLiveQuery;
 const topLevelUseLiveDocument = (...args) => {
   const { useDocument, database } = useFireproof();
   // @ts-ignore
-  topLevelUseLiveQuery.database = database;
+  topLevelUseLiveDocument.database = database;
+  // @ts-ignore
   return useDocument(...args);
 };
 
 export const useDocument = topLevelUseLiveDocument;
 
-// export { useLiveQuery };
-
-/**
-@function useFireproof
-React hook to initialize a Fireproof database.
-You might need to import { nodePolyfills } from 'vite-plugin-node-polyfills' in your vite.config.ts
-@param {string|Database} name - The path to the database file
-@param {function(database: Database): void} [defineDatabaseFn] - Synchronous function that defines the database, run this before any async calls
-@param {function(database: Database): Promise<void>} [setupDatabaseFn] - Asynchronous function that sets up the database, run this to load fixture data etc
-@returns {FireproofCtxValue} { useLiveQuery, useDocument, database, ready }
-*/
 export function useFireproof(
-  name = 'useFireproof',
-  defineDatabaseFn = (database: Database) => {
-    // define indexes here before querying them in setup
-    database;
-  },
-  setupDatabaseFn: Function | null = null,
+  name : string | Database = 'useFireproof',
+  setupDatabaseFn: null | ((db: Database) => Promise<void>) = null,
   config = {},
 ): FireproofCtxValue {
-  // console.log('useFireproof', name, defineDatabaseFn, setupDatabaseFn);
   const [ready, setReady] = useState(false);
-  const init = initializeDatabase(name, defineDatabaseFn, config);
-  const database = init.database;
+  const database = (typeof name === 'string') ? obtainDb(name) : name;
+  database.config = config;
 
   useEffect(() => {
     const doSetup = async () => {
-      if (ready || init.setupStarted) return;
-      // console.log('Setting up database', name);
-      init.setupStarted = true;
-      if (setupDatabaseFn && database.clock.length === 0) {
-        // console.log('setupDatabaseFn', name, setupDatabaseFn);
-        await setupDatabaseFn(database);
+      if (ready) return;
+      if (setupDatabaseFn) {
+        const chs = await database.changes([])
+        if (chs.rows.length === 0) {
+          await setupDatabaseFn(database);
+        }
       }
       setReady(true);
     };
     doSetup();
   }, [name]);
 
-  function useDocument(initialDoc: Document) {
+  function useDocument(initialDoc: Doc): [Doc, (newDoc: Doc) => void, () => Promise<void>] {
     const id = initialDoc._id;
     const [doc, setDoc] = useState(initialDoc);
 
     const saveDoc = useCallback(
-      async () => await database.put({ ...doc, _id: id }),
+      async () => {
+        const putDoc = id ? { ...doc, _id: id } : doc;
+        await database.put(putDoc)
+      },
       [id, doc],
     );
 
     const refreshDoc = useCallback(async () => {
       // todo add option for mvcc checks
-      setDoc(await database.get(id).catch(() => initialDoc));
+      if (id)
+        setDoc(await database.get(id).catch(() => initialDoc));
     }, [id, initialDoc]);
 
     useEffect(
@@ -150,10 +105,9 @@ export function useFireproof(
     ];
   }
 
-  function useLiveQuery(mapFn: Function, query = {}, initialRows: any[] = []) {
+  function useLiveQuery(mapFn: ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment) | string | Index, query = {}, initialRows: any[] = []) {
     const [result, setResult] = useState({
       rows: initialRows,
-      proof: {},
       docs: initialRows.map((r) => r.doc),
     });
     const [index, setIndex] = useState<Index | null>(null);
@@ -178,7 +132,15 @@ export function useFireproof(
     }, [index]);
 
     useEffect(() => {
-      setIndex(new Index(database, null, mapFn));
+      if (typeof mapFn === 'string') {
+        setIndex(obtainIndex(database, mapFn));
+      // @ts-ignore
+      } else if (mapFn.crdt) {
+        setIndex(mapFn as Index);
+      } else {
+        // @ts-ignore
+        setIndex(obtainIndex(database, makeName(mapFn.toString()), mapFn));
+      }
     }, [mapFn.toString()]);
 
     return result;
@@ -191,4 +153,20 @@ export function useFireproof(
     database,
     ready,
   };
+}
+
+
+function makeName(fnString: string) {
+  const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g
+  let found: RegExpExecArray | null = null
+  let matches = Array.from(fnString.matchAll(regex), match => match[1].trim())
+  if (matches.length === 0) {
+    found = /=>\s*(.*)/.exec(fnString)
+  }
+  if (!found) {
+    return fnString
+  } else {
+    // it's a consise arrow function, match everythign after the arrow
+    return found[1]
+  }
 }

@@ -251,9 +251,9 @@ importers:
 
   packages/react:
     dependencies:
-      '@fireproof/core':
-        specifier: ^0.8.0
-        version: 0.8.0(encoding@0.1.13)
+      '@fireproof/database':
+        specifier: 0.10.63
+        version: 0.10.63
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -801,8 +801,8 @@ packages:
   '@fireproof/core@0.7.2':
     resolution: {integrity: sha512-BFd4jqOw1dDzGCq/8U/KosQYjL4tQ09iA3KwOkNJXpg92wB4f8ZZ0IDsbEzOYKRB1BwsajvsQSD6MgmW99sd7Q==}
 
-  '@fireproof/core@0.8.0':
-    resolution: {integrity: sha512-lB9e1MBGCl2Es2jbGsUro8OCC1lQQlb5TybihGuei8FmxiNmTkaorBgfc49YJAXM7NF8qfJsOA2gh1Q8IUY7FQ==}
+  '@fireproof/database@0.10.63':
+    resolution: {integrity: sha512-veE+JtRoowFKGj6TcVOyFxhFu1cK7K2fjRAvP+QpUhdduZtQINqKdMwfYU0bHXqH5fctwsMYjFnjbVd+ruFLxw==}
 
   '@humanwhocodes/config-array@0.13.0':
     resolution: {integrity: sha512-DZLEEqFWQFiyK6h5YIeynKx7JlvCYWL0cImfSRXZ9l4Sg2efkFGTuFf6vzXjK1cq6IYkU+Eg/JizXw+TD2vRNw==}
@@ -1067,6 +1067,17 @@ packages:
   '@parcel/watcher@2.5.1':
     resolution: {integrity: sha512-dfUnCxiN9H4ap84DvD2ubjw+3vUNpstxa0TneY/Paat8a3R4uQZDLSvWjmznAY/DoahqTHl9V46HF/Zs3F29pg==}
     engines: {node: '>= 10.0.0'}
+
+  '@peculiar/asn1-schema@2.3.15':
+    resolution: {integrity: sha512-QPeD8UA8axQREpgR5UTAfu2mqQmm97oUqahDtNdBcfj3qAnoXzFdQW+aNf/tD2WVXF8Fhmftxoj0eMIT++gX2w==}
+
+  '@peculiar/json-schema@1.1.12':
+    resolution: {integrity: sha512-coUfuoMeIB7B8/NMekxaDzLhaYmp0HZNPEjYRm9goRou8UZIC3z21s0sL9AWoCw4EG876QyO3kYrc61WNF9B/w==}
+    engines: {node: '>=8.0.0'}
+
+  '@peculiar/webcrypto@1.5.0':
+    resolution: {integrity: sha512-BRs5XUAwiyCDQMsVA9IDvDa7UBR9gAvPHgugOeGng3YN6vJ9JYonyDc0lNczErgtCWtucjR5N7VtaonboD/ezg==}
+    engines: {node: '>=10.12.0'}
 
   '@perma/map@1.0.3':
     resolution: {integrity: sha512-Bf5njk0fnJGTFE2ETntq0N1oJ6YdCPIpTDn3R3KYZJQdeYSOCNL7mBrFlGnbqav8YQhJA/p81pvHINX9vAtHkQ==}
@@ -1695,6 +1706,10 @@ packages:
 
   asn1.js@4.10.1:
     resolution: {integrity: sha512-p32cOF5q0Zqs9uBiONKYLm6BClCoBCM5O9JfeUSlnQLBTxYdTK+pW+nXflm8UkKd2UYlEbYz5qEi0JuZR9ckSw==}
+
+  asn1js@3.0.6:
+    resolution: {integrity: sha512-UOCGPYbl0tv8+006qks/dTgV9ajs97X2p0FAbyS2iyCRrmLSRolDaHdp+v/CLgnzHc3fVB+CwYiUmei7ndFcgA==}
+    engines: {node: '>=12.0.0'}
 
   assert@2.1.0:
     resolution: {integrity: sha512-eLHpSK/Y4nhMJ07gDaAzoX/XAKS8PSaojml3M0DM4JpV1LAi5JOJ/p6H/XWrl8L+DzVEvVCW1z3vWAaB9oTsQw==}
@@ -4377,6 +4392,13 @@ packages:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
 
+  pvtsutils@1.3.6:
+    resolution: {integrity: sha512-PLgQXQ6H2FWCaeRak8vvk1GW462lMxB5s3Jm673N82zI4vqtVUPuZdffdZbPDFRoU8kAhItWFtPCWiPpp4/EDg==}
+
+  pvutils@1.1.3:
+    resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
+    engines: {node: '>=6.0.0'}
+
   qs@6.14.0:
     resolution: {integrity: sha512-YWWTjgABSKcvs/nWBi9PycY/JiPJqOD4JA6o9Sej2AtvSGarXxKC3OQSk4pAarbdQlKAh5D4FCQkJNkW+GAn3w==}
     engines: {node: '>=0.6'}
@@ -5406,6 +5428,9 @@ packages:
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
 
+  webcrypto-core@1.8.1:
+    resolution: {integrity: sha512-P+x1MvlNCXlKbLSOY4cYrdreqPG5hbzkmawbcXLKN/mf6DZW0SdNNkZ+sjwsqVkI4A4Ko2sPZmkZtCKY58w83A==}
+
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
@@ -6011,29 +6036,16 @@ snapshots:
       - encoding
       - supports-color
 
-  '@fireproof/core@0.8.0(encoding@0.1.13)':
+  '@fireproof/database@0.10.63':
     dependencies:
-      '@ipld/car': 5.4.2
+      '@alanshaw/pail': 0.3.4
       '@ipld/dag-cbor': 9.2.4
-      '@jsonlines/core': 1.0.2
-      '@web3-storage/clock': 0.3.0
-      '@web3-storage/w3up-client': 7.0.0(encoding@0.1.13)
-      async: 3.2.6
+      '@ipld/dag-json': 10.2.5
+      '@peculiar/webcrypto': 1.5.0
       charwise: 3.0.1
-      cross-fetch: 3.2.0(encoding@0.1.13)
-      crypto-browserify: 3.12.1
       idb: 7.1.1
-      ipld-hashmap: 2.1.18
-      js-crypto-aes: 1.0.6
-      multiformats: 11.0.2
+      multiformats: 12.1.3
       prolly-trees: 1.0.4
-      randombytes: 2.1.0
-      simple-peer: 9.11.1
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - supports-color
-      - utf-8-validate
 
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
@@ -6439,6 +6451,24 @@ snapshots:
       '@parcel/watcher-win32-ia32': 2.5.1
       '@parcel/watcher-win32-x64': 2.5.1
     optional: true
+
+  '@peculiar/asn1-schema@2.3.15':
+    dependencies:
+      asn1js: 3.0.6
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
+
+  '@peculiar/json-schema@1.1.12':
+    dependencies:
+      tslib: 2.8.1
+
+  '@peculiar/webcrypto@1.5.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/json-schema': 1.1.12
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
+      webcrypto-core: 1.8.1
 
   '@perma/map@1.0.3':
     dependencies:
@@ -7376,6 +7406,12 @@ snapshots:
       bn.js: 4.12.2
       inherits: 2.0.4
       minimalistic-assert: 1.0.1
+
+  asn1js@3.0.6:
+    dependencies:
+      pvtsutils: 1.3.6
+      pvutils: 1.1.3
+      tslib: 2.8.1
 
   assert@2.1.0:
     dependencies:
@@ -10871,6 +10907,12 @@ snapshots:
 
   punycode@2.3.1: {}
 
+  pvtsutils@1.3.6:
+    dependencies:
+      tslib: 2.8.1
+
+  pvutils@1.1.3: {}
+
   qs@6.14.0:
     dependencies:
       side-channel: 1.1.0
@@ -12008,6 +12050,14 @@ snapshots:
   wcwidth@1.0.1:
     dependencies:
       defaults: 1.0.4
+
+  webcrypto-core@1.8.1:
+    dependencies:
+      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/json-schema': 1.1.12
+      asn1js: 3.0.6
+      pvtsutils: 1.3.6
+      tslib: 2.8.1
 
   webidl-conversions@3.0.1: {}
 
