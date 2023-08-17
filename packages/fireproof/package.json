@@ -48,7 +48,7 @@
     "build": "npm run clean && node ./scripts/build.js",
     "build:types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "prepublishOnly": "npm run build:all",
-    "build:all": "npm run build && npm run build:types && npm run build:version",
+    "build:all": " npm run build:version && npm run build && npm run build:types && npm run test:browser",
     "clean": "rm -rf dist/*",
     "start": "node ./scripts/serve.js",
     "analyze": "node ./scripts/analyze.js",
