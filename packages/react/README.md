@@ -1,22 +1,41 @@
+<h3 align="center">
+   Quickly add live data to your React app
+</h3>
 <p align="center" >
   <a href="https://fireproof.storage/">
-    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="200">
+    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="160">
   </a>
 </p>
-<h3 align="center">
-   Quickly add dynamic data to your React app
-</h3>
-
 <p align="center">
   <a href="https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md">
     <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
+  </a>
+  <a href="https://www.typescriptlang.org" rel="nofollow">
+    <img src="https://camo.githubusercontent.com/0d1fa0bafb9d3d26ac598799ca1d0bf767fc28a41d3f718d404433b392b9a5cd/68747470733a2f2f696d672e736869656c64732e696f2f6e706d2f74797065732f73637275622d6a732e737667" alt="Types exported"  style="max-width: 100%;">
   </a>
   <a href="https://bundlephobia.com/package/use-fireproof">
     <img src="https://deno.bundlejs.com/?q=use-fireproof&treeshake=[*+as+useFireproof]&badge" alt="Bundle Size"  style="max-width: 100%;">
   </a>
 </p>
 
-Learn more about [the features and benefits of Fireproof](https://github.com/fireproof-storage/fireproof#readme) in the core repo. This README is for the React hooks.
+This is the right place to start if you want add live data to your React app. Fireproof allows you to build your app first and connect to the cloud when you are ready. Use familiar APIs to write JSON documents:
+
+```js
+const [newTodo, updateTodo, saveTodo] = useDocument({ 
+  type : "todo", 
+  text : "", 
+  completed: false, 
+  createdAt: Date.now() 
+})
+```
+And later, triggerd by UI events:
+```js
+updateTodo({text : "Buy milk"})
+
+saveTodo()
+```
+
+This React hooks library also includes `useLiveQuery` (keep reading for docs) -- together they are all you need to write collaborative apps. Read the [Fireproof React hooks tutorial for a detailed getting started guide](https://use-fireproof.com/docs/react-tutorial), or continue in this README for API details. Also, you can learn more about [the features and benefits of Fireproof](https://github.com/fireproof-storage/fireproof#readme) in the core database. 
 
 ## Quick Start
 
@@ -213,27 +232,6 @@ function MyComponent() {
 
 This should result in a tiny application that updates the document when you click it. In a real application you'd probably query an index to present eg. all of the photos in a gallery.
 
-## Setup Functions
-
-### `defineDatabaseFn`
-
-Synchronous function that defines the database, run this before any async calls. You can use it to do stuff like set up Indexes. Here's an example:
-
-```js
-const defineIndexes = (database) => {
-  new Index(database, 'allLists', function (doc, map) {
-    if (doc.type === 'list') map(doc.type, doc);
-  });
-  new Index(database, 'todosByList', function (doc, map) {
-    if (doc.type === 'todo' && doc.listId) {
-      map([doc.listId, doc.createdAt], doc);
-    }
-  });
-  window.fireproof = database; // 🤫 for dev
-  return database;
-};
-```
-
 ### `setupDatabaseFn`
 
 #### A note on using Context
@@ -245,7 +243,7 @@ import { FireproofCtx, useFireproof } from '@fireproof/core/hooks/use-fireproof'
 
 function App() {
   // establish the Fireproof context value
-  const fpCtxValue = useFireproof('dbname', defineIndexes, setupDatabase);
+  const fpCtxValue = useFireproof('dbname', setupDatabase);
 
   // render the rest of the application wrapped in the Fireproof provider
   return (
