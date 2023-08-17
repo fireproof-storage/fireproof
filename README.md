@@ -2,7 +2,11 @@
 <h3 align="center">
   Live database for the web
 </h3>
-
+<p align="center" >
+  <a href="https://fireproof.storage/">
+    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="160">
+  </a>
+</p>
 <p align="center">
   <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml">
     <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test" style="max-width: 100%;">
@@ -17,11 +21,7 @@
     <img src="https://deno.bundlejs.com/?q=@fireproof/core&treeshake=[*+as+fireproofCore]&badge" alt="Bundle Size"  style="max-width: 100%;">
   </a>
 </p>
-<p align="center" >
-  <a href="https://fireproof.storage/">
-    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="200">
-  </a>
-</p>
+
 Fireproof uses immutable data and distributed protocols to offer a new kind of database that:
 - can be embedded in any page or app, with a flexible data ownership model
 - can be hosted on any cloud
