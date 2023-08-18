@@ -33,7 +33,7 @@ describe('CarStore', function () {
       bytes: new Uint8Array([55, 56, 57])
     }
     await store.save(car)
-    const path = join(testConfig.dataDir, store.name, car.cid + '.car')
+    const path = join(CarStore.dataDir, store.name, car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
@@ -51,7 +51,7 @@ describe('CarStore with a saved car', function () {
     await store.save(car)
   })
   it('should have a car', async function () {
-    const path = join(testConfig.dataDir, store.name, car.cid + '.car')
+    const path = join(CarStore.dataDir, store.name, car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
