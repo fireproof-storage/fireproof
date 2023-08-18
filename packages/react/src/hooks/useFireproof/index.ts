@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, createContext } from 'react';
-import { database as obtainDb, index as obtainIndex } from '@fireproof/database';
+import { fireproof, index as defineIndex } from '@fireproof/core';
 
-import type { Doc, DocFragment, Index, Database, FireproofOptions } from '@fireproof/database';
+import type { Doc, DocFragment, Index, Database, FireproofOptions } from '@fireproof/core';
 
 export interface FireproofCtxValue {
   database: Database;
@@ -46,7 +46,7 @@ export function useFireproof(
   config: FireproofOptions = {},
 ): FireproofCtxValue {
   const [ready, setReady] = useState(false);
-  const database = (typeof name === 'string') ? obtainDb(name, config) : name;
+  const database = (typeof name === 'string') ? fireproof(name, config) : name;
 
   useEffect(() => {
     const doSetup = async () => {
@@ -132,13 +132,13 @@ export function useFireproof(
 
     useEffect(() => {
       if (typeof mapFn === 'string') {
-        setIndex(obtainIndex(database, mapFn));
+        setIndex(defineIndex(database, mapFn));
       // @ts-ignore
       } else if (mapFn.crdt) {
         setIndex(mapFn as Index);
       } else {
         // @ts-ignore
-        setIndex(obtainIndex(database, makeName(mapFn.toString()), mapFn));
+        setIndex(defineIndex(database, makeName(mapFn.toString()), mapFn));
       }
     }, [mapFn.toString()]);
 

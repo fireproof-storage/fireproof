@@ -113,7 +113,6 @@ describe('HeaderStore with a saved header', function () {
   it('should load a header', async function () {
     const loaded = await store.load()
     assert(loaded)
-    // console.log(loaded)
     assert(loaded.car)
     equals(loaded.car.toString(), cid.toString())
   })

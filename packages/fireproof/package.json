@@ -1,6 +1,6 @@
 {
-  "name": "@fireproof/database",
-  "version": "0.10.69",
+  "name": "@fireproof/core",
+  "version": "0.11.1",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -9,8 +9,7 @@
       "import": "./dist/browser/fireproof.esm.js",
       "require": "./dist/browser/fireproof.cjs",
       "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/browser/fireproof.iife.js",
-      "default": "./dist/browser/fireproof.esm.js"
+      "script": "./dist/browser/fireproof.iife.js"
     },
     "./rollup" : {
       "import": "./dist/rollup/browser/fireproof.esm.js",
@@ -30,15 +29,13 @@
       "import": "./dist/node/database.esm.js",
       "require": "./dist/node/database.cjs",
       "types": "./dist/types/database.d.ts",
-      "script": "./dist/browser/database.iife.js",
-      "default": "./dist/node/database.esm.js"
+      "script": "./dist/browser/database.iife.js"
     },
     "./index": {
       "import": "./dist/node/index.esm.js",
       "require": "./dist/node/index.cjs",
       "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js",
-      "default": "./dist/node/index.esm.js"
+      "script": "./dist/browser/index.iife.js"
     }
   },
   "browser": "./dist/fireproof.browser.iife.js",
@@ -54,12 +51,13 @@
   "scripts": {
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:esbuild": "node ./scripts/build.js",
-    "build:types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
-    "prepublishOnly": "npm run build:all",
+    "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
+    "prepublishOnly": "cp ../../README.md . && npm run build:all",
+    "postpublish": "rm README.md",
     "build:all": " npm run build:version && npm run build && npm run test:browser",
     "build:test" : "node ./scripts/build.js",
     "build": "npm run build:tsc && rollup -c scripts/rollup.js && npm run build:test",
-    "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/",
+    "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "clean": "rm -rf dist/*",
     "start": "node ./scripts/serve.js",
     "analyze": "node ./scripts/analyze.js",

@@ -112,7 +112,7 @@ const encrypt = async ({ key, cid, bytes }: { key: ArrayBuffer, cid: AnyLink, by
     )
     bytes = new Uint8Array(deBytes)
   } catch (e) {
-    console.log('e', e)
+    console.log('ee', e)
     throw e
   }
   return { value: { bytes, iv } }

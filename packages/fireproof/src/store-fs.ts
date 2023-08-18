@@ -1,5 +1,5 @@
 /* eslint-disable import/first */
-console.log('import store-node-fs')
+// console.log('import store-node-fs')
 
 import { join, dirname } from 'path'
 import { homedir } from 'os'
