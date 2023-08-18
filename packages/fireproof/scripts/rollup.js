@@ -42,8 +42,21 @@ export default [
     input: nodeInput,
     plugins: [...commonPlugins],
     output: {
-      file: path.join(rollupOutput, 'fireproof.cjs'),
+      file: path.join(rollupOutput, 'node', 'fireproof.cjs'),
       format: 'cjs',
+      banner: 'console.log("Node CJS build");',
+      sourcemap: true
+    }
+  },
+
+  // Node ESM build
+  {
+    input: nodeInput,
+    plugins: [...commonPlugins],
+    output: {
+      file: path.join(rollupOutput, 'node', 'fireproof.esm.js'),
+      format: 'es',
+      banner: 'console.log("Node ESM build");',
       sourcemap: true
     }
   },
@@ -53,9 +66,10 @@ export default [
     input: browserInput,
     plugins: [...commonPlugins, ...browserPlugins],
     output: {
-      file: path.join(rollupOutput, 'fireproof.iife.js'),
+      file: path.join(rollupOutput, 'browser', 'fireproof.iife.js'),
       format: 'iife',
       name: 'Fireproof',
+      banner: 'console.log("Browser IIFE build");',
       sourcemap: true
     }
   },
@@ -65,8 +79,9 @@ export default [
     input: browserInput,
     plugins: [...commonPlugins, ...browserPlugins],
     output: {
-      file: path.join(rollupOutput, 'fireproof.esm.js'),
+      file: path.join(rollupOutput, 'browser', 'fireproof.esm.js'),
       format: 'es',
+      banner: 'console.log("Browser ESM build");',
       sourcemap: true
     }
   },
@@ -76,8 +91,9 @@ export default [
     input: browserInput,
     plugins: [...commonPlugins, ...browserPlugins],
     output: {
-      file: path.join(rollupOutput, 'fireproof.cjs'),
+      file: path.join(rollupOutput, 'browser', 'fireproof.cjs'),
       format: 'cjs',
+      banner: 'console.log("Browser ESM build");',
       sourcemap: true
     }
   }
