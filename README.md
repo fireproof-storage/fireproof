@@ -35,19 +35,31 @@ If you are using React, [jump to the `useFireproof` README](https://www.npmjs.co
 
 Fireproof uses end-to-end encryption, immutable data, and distributed protocols so your app is easy to start and seriously scales. Add a few lines to your front-end pages and you'll be developing with a live database with no other setup:
 
+Import (or require) the library:
+
 ```js
 import { database, index } from '@fireproof/core'
+```
+Intialize a database and optional index:
 
+```js
 const db = database('my-app-name')
 const byAge = index(db, 'age')
+```
+Query the index anytime the database changes (great for automatically repainting UI):
 
+```js
 const onChange(async () => {
   const { rows } = await byAge.query({ range: [40, 52] })
   console.log(rows)
 })
 db.subscribe(onChange)
 onChange()
+```
 
+Update documents based on user input:
+
+```js
 async function doChange(name, age)  {
   await db.put({ name, age })
 }
@@ -55,7 +67,7 @@ async function doChange(name, age)  {
 onClick = () => doChange(name, age)
 ```
 
-Fireproof can be embedded in any page or app, and connect with any cloud (coming soon) via REST, S3, and web3.storage support. If you have particular storage needs, reach out and we can help you write a custom storage adapter.
+This is even easier with [the Fireproof React hooks API](https://use-fireproof.com/docs/react-tutorial/) so it's OK to start there. Fireproof can be embedded in any page or app, and connect with any cloud (coming soon) via REST, S3, and web3.storage support. If you have particular storage needs, reach out and we can help you write a custom storage adapter.
 
 ## Why choose Fireproof
 
