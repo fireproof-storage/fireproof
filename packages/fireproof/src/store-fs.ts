@@ -10,7 +10,7 @@ import { STORAGE_VERSION, HeaderStore as HeaderStoreBase, CarStore as CarStoreBa
 export class HeaderStore extends HeaderStoreBase {
   tag: string = 'header-node-fs'
   keyId: string = 'public'
-  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION)
+  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'meta')
 
   async load(branch: string = 'main'): Promise<DbMeta | null> {
     const filepath = join(HeaderStore.dataDir, this.name, branch + '.json')
@@ -34,7 +34,7 @@ export const testConfig = {
 
 export class CarStore extends CarStoreBase {
   tag: string = 'car-node-fs'
-  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION)
+  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'data')
 
   async save(car: AnyBlock): Promise<void> {
     const filepath = join(CarStore.dataDir, this.name, car.cid.toString() + '.car')
