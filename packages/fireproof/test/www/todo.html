@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireproof Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@fireproof/core@0.11.3/dist/browser/fireproof.iife.js"></script>
+    <script type="text/javascript">
+      function todoApp() {
+        const db = Fireproof.fireproof('todo-app');
+
+        const redraw = async () => {
+          const result = await Fireproof
+            .index(db, 'created')
+            .query({includeDocs: true});
+          document
+            .querySelector('ul')
+            .innerHTML = '';
+
+          for (const row of result.rows) {
+            const checkbox = document.createElement('input');
+            checkbox.setAttribute('type', 'checkbox');
+            if (row.doc.completed) {checkbox.setAttribute('checked', true);}
+            checkbox.onchange = () => {
+              row.doc.completed = !row.doc.completed
+              db.put(row.doc);
+            }
+            const textSpan = document.createElement('span');
+            textSpan.innerText = row.doc.task;
+            const li = document.createElement('li');
+            li.appendChild(checkbox);
+            li.appendChild(textSpan);
+            document
+              .querySelector('ul')
+              .appendChild(li);
+          }
+        }
+
+        async function initialize() {
+          db.subscribe(redraw);
+          redraw()
+        }
+
+        async function onButtonClick(e) {
+          e.preventDefault();
+          const input = document.querySelector('#todo');
+          const ok = await db.put({created: Date.now(), task: input.value, completed: false});
+          input.value = '';
+        }
+        window.onButtonClick = onButtonClick;
+        window.onload = initialize;
+      }
+      todoApp();
+    </script>
+  </head>
+  <body>
+    <h1>Fireproof Todos</h1>
+    <input type="text" name="todo" id="todo"/>
+    <button onclick="onButtonClick(event)">Create Todo</button>
+    <ul></ul>
+  </body>
+</html>
