@@ -40,7 +40,8 @@ Import (or require) the library:
 ```js
 import { database, index } from '@fireproof/core'
 ```
-Intialize a database and optional index:
+
+Initialize a database and optional index:
 
 ```js
 const db = database('my-app-name')
