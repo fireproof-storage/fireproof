@@ -22,7 +22,8 @@ Fireproof is the quickest way to add live data to your React or other front-end 
 npm install @fireproof/core
 ```
 
-or via `<script src="...">` tag referencing [`fireproof.iife.js`](https://www.npmjs.com/package/@fireproof/core?activeTab=code) for plain old HTML apps. (CDN link coming soon.)
+or via `<script src="https://cdn.jsdelivr.net/npm/@fireproof/core@0.11.3/dist/browser/fireproof.iife.js"></script>` tag for plain old HTML apps.
+
 <p align="center">
   <a href="https://www.npmjs.com/package/use-fireproof">
     <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
