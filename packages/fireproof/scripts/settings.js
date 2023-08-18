@@ -61,7 +61,7 @@ const require = createRequire(import.meta.url);
 
     builds.push(esmConfig)
 
-    if (/fireproof\.|database\.|index\./.test(entryPoint)) {
+    if (/fireproof\./.test(entryPoint)) {
       const esmPublishConfig = {
         ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
