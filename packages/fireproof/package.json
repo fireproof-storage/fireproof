@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/database",
-  "version": "0.10.68",
+  "version": "0.10.69",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -11,6 +11,13 @@
       "types": "./dist/types/fireproof.d.ts",
       "script": "./dist/browser/fireproof.iife.js",
       "default": "./dist/browser/fireproof.esm.js"
+    },
+    "./rollup" : {
+      "import": "./dist/rollup/browser/fireproof.esm.js",
+      "require": "./dist/rollup/browser/fireproof.cjs",
+      "types": "./dist/types/fireproof.d.ts",
+      "script": "./dist/rollup/browser/fireproof.iife.js",
+      "default": "./dist/rollup/browser/fireproof.esm.js"
     },
     "./node": {
       "import": "./dist/node/fireproof.esm.js",
@@ -38,6 +45,7 @@
   "types": "./dist/types/fireproof.d.ts",
   "files": [
     "src",
+    "dist/rollup",
     "dist/node",
     "dist/browser",
     "dist/types"
@@ -49,7 +57,8 @@
     "build:types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "prepublishOnly": "npm run build:all",
     "build:all": " npm run build:version && npm run build && npm run test:browser",
-    "build": "npm run build:tsc && rollup -c scripts/rollup.js && node ./scripts/build.js",
+    "build:test" : "node ./scripts/build.js",
+    "build": "npm run build:tsc && rollup -c scripts/rollup.js && npm run build:test",
     "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/",
     "clean": "rm -rf dist/*",
     "start": "node ./scripts/serve.js",
@@ -58,7 +67,7 @@
     "test:node": "node ./scripts/test.js",
     "test:browser": "node ./scripts/browser-test.js",
     "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
-    "test": "npm run build && npm run test:node && tsc",
+    "test": "npm run build:test && npm run test:node && tsc",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
     "lint:fix": "eslint --fix 'src/**/*.{js,ts}'"
