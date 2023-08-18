@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/database",
-  "version": "0.10.67",
+  "version": "0.10.68",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -49,6 +49,7 @@
     "build:types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "prepublishOnly": "npm run build:all",
     "build:all": " npm run build:version && npm run build && npm run build:types && npm run test:browser",
+    "bundle": "tsc && rollup -c scripts/rollup.js",
     "clean": "rm -rf dist/*",
     "start": "node ./scripts/serve.js",
     "analyze": "node ./scripts/analyze.js",
