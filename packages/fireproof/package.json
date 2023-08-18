@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -10,13 +10,6 @@
       "require": "./dist/browser/fireproof.cjs",
       "types": "./dist/types/fireproof.d.ts",
       "script": "./dist/browser/fireproof.iife.js"
-    },
-    "./rollup" : {
-      "import": "./dist/rollup/browser/fireproof.esm.js",
-      "require": "./dist/rollup/browser/fireproof.cjs",
-      "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/rollup/browser/fireproof.iife.js",
-      "default": "./dist/rollup/browser/fireproof.esm.js"
     },
     "./node": {
       "import": "./dist/node/fireproof.esm.js",
@@ -41,8 +34,6 @@
   "browser": "./dist/fireproof.browser.iife.js",
   "types": "./dist/types/fireproof.d.ts",
   "files": [
-    "src",
-    "dist/rollup",
     "dist/node",
     "dist/browser",
     "dist/types"
@@ -55,8 +46,9 @@
     "prepublishOnly": "cp ../../README.md . && npm run build:all",
     "postpublish": "rm README.md",
     "build:all": " npm run build:version && npm run build && npm run test:browser",
-    "build:test" : "node ./scripts/build.js",
-    "build": "npm run build:tsc && rollup -c scripts/rollup.js && npm run build:test",
+    "build:test": "node ./scripts/build.js",
+    "build:rollup": "rollup -c scripts/rollup.js",
+    "build": "npm run build:tsc && npm run build:test",
     "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "clean": "rm -rf dist/*",
     "start": "node ./scripts/serve.js",
@@ -141,6 +133,7 @@
     "charwise": "^3.0.1",
     "idb": "^7.1.1",
     "multiformats": "^12.0.1",
-    "prolly-trees": "^1.0.4"
+    "prolly-trees": "^1.0.4",
+    "uuidv7": "^0.6.2"
   }
 }

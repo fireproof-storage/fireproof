@@ -1,7 +1,7 @@
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions } from './types'
-
+import { uuidv7 } from 'uuidv7'
 export class Database {
   static databases: Map<string, Database> = new Map()
 
@@ -36,7 +36,7 @@ export class Database {
 
   async put(doc: Doc): Promise<DbResponse> {
     const { _id, ...value } = doc
-    const docId = _id || 'f' + Math.random().toString(36).slice(2) // todo uuid v7
+    const docId = _id || uuidv7() // 'f' + Math.random().toString(36).slice(2) // todo uuid v7
     const result: BulkResult = await this._writeQueue.push({ key: docId, value } as DocUpdate)
     return { id: docId, clock: result?.head } as DbResponse
   }
