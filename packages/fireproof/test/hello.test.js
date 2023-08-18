@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable mocha/max-top-level-suites */
 import { assert, equals, resetDirectory } from './helpers.js'
-import { database, Database } from '../dist/test/database.esm.js'
+import { fireproof as database, Database } from '../dist/test/database.esm.js'
 import { index, Index } from '../dist/test/index.esm.js'
 import { testConfig } from '../dist/test/store-fs.esm.js'
 

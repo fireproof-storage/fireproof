@@ -7,14 +7,14 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, equals, notEquals, matches, equalsJSON, resetDirectory } from './helpers.js'
 
-import { database, Database } from '../dist/test/database.esm.js'
+import { fireproof, Database } from '../dist/test/database.esm.js'
 import { index, Index } from '../dist/test/index.esm.js'
 import { testConfig } from '../dist/test/store-fs.esm.js'
 
 describe('public API', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-api')
-    this.db = database('test-api')
+    this.db = fireproof('test-api')
     this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })
     this.doc = await this.db.get('test')
@@ -169,7 +169,7 @@ describe('Reopening a database with indexes', function () {
     await resetDirectory(testConfig.dataDir, 'test-reopen-idx')
     await resetDirectory(testConfig.dataDir, 'test-reopen-idx.idx')
 
-    db = database('test-reopen-idx')
+    db = fireproof('test-reopen-idx')
     const ok = await db.put({ _id: 'test', foo: 'bar' })
     equals(ok.id, 'test')
 
@@ -215,7 +215,7 @@ describe('Reopening a database with indexes', function () {
   })
 
   it('should have the same data on reopen', async function () {
-    const db2 = database('test-reopen-idx')
+    const db2 = fireproof('test-reopen-idx')
     const doc = await db2.get('test')
     equals(doc.foo, 'bar')
     assert(db2._crdt._head)
@@ -230,7 +230,7 @@ describe('Reopening a database with indexes', function () {
     equals(r0.rows.length, 1)
     equals(r0.rows[0].key, 'bar')
 
-    const db2 = database('test-reopen-idx')
+    const db2 = fireproof('test-reopen-idx')
     const doc = await db2.get('test')
     equals(doc.foo, 'bar')
     assert(db2._crdt._head)
@@ -245,7 +245,7 @@ describe('Reopening a database with indexes', function () {
   //   equals(r0.rows.length, 1)
   //   equals(r0.rows[0].key, 'bar')
 
-  //   const db2 = database('test-reopen-idx')
+  //   const db2 = fireproof('test-reopen-idx')
   //   const d2 = await db2.get('test')
   //   equals(d2.foo, 'bar')
   //   didMap = false

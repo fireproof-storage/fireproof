@@ -1,5 +1,5 @@
 /* eslint-disable import/first */
-console.log('import store-browser')
+// console.log('import store-browser')
 
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'

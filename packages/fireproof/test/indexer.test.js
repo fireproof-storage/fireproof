@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Index, index } from '../dist/test/index.esm.js'
-import { Database, database } from '../dist/test/database.esm.js'
+import { Database, fireproof as database } from '../dist/test/database.esm.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

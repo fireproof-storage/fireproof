@@ -65,7 +65,7 @@ abstract class Loader {
 
   protected async initializeStores() {
     const isBrowser = typeof window !== 'undefined'
-    console.log('is browser?', isBrowser)
+    // console.log('is browser?', isBrowser)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {
@@ -124,11 +124,9 @@ abstract class Loader {
           console.warn('missing crypto module, using public mode')
         }
       }
-      console.log('no meta, returning default header', this.name, this.keyId)
       return this.defaultHeader
     }
     const { car: cid, key } = meta
-    console.log('ingesting car head from meta', { car: cid, key })
     if (key) {
       await this.setKey(key)
     }

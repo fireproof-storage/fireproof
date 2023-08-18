@@ -83,7 +83,7 @@ type DbResponse = {
 
 type ListenerFn = (docs: Doc[]) => Promise<void> | void
 
-export function database(name: string, opts?: FireproofOptions): Database {
+export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
     Database.databases.set(name, new Database(name, opts))
   }

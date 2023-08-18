@@ -25,6 +25,21 @@ export function createBuildSettings(options) {
     ...options
   }
 
+  const doLog = false
+  function bannerLog(banner, always = '') {
+    if (doLog) {
+      return {
+        js: banner + always
+      }
+    } else {
+      return always
+        ? {
+            js: always
+          }
+        : {}
+    }
+  }
+
   // Generate build configs for each entry point
   const configs = entryPoints.map(entryPoint => {
     const filename = path.basename(entryPoint, '.ts')
@@ -37,13 +52,11 @@ export function createBuildSettings(options) {
       format: 'esm',
       platform: 'node',
       entryPoints: [entryPoint],
-      banner: {
-        js: `
-console.log('esm/node build');
+      banner: bannerLog(`
+console.log('esm/node build');`, `
 import { createRequire } from 'module'; 
 const require = createRequire(import.meta.url);
-        `
-      }
+        `)
     }
 
     builds.push(esmConfig)
@@ -62,14 +75,14 @@ const require = createRequire(import.meta.url);
         format: 'cjs',
         platform: 'node',
         entryPoints: [entryPoint],
-        banner: {
-          js: `
+        banner: bannerLog`
 console.log('cjs/node build');
 `
-        }
+
       }
       builds.push(cjsConfig)
 
+      // popular builds inherit here
       const browserIIFEConfig = {
         ...commonSettings,
         outfile: `dist/browser/${filename}.iife.js`,
@@ -78,11 +91,9 @@ console.log('cjs/node build');
         platform: 'browser',
         target: 'es2015',
         entryPoints: [entryPoint],
-        banner: {
-          js: `
+        banner: bannerLog`
 console.log('browser/es2015 build');
-`
-        },
+`,
         plugins: [
           polyfillNode({
             polyfills: { crypto: true, fs: true, process: 'empty' }
@@ -97,28 +108,26 @@ console.log('browser/es2015 build');
 
       builds.push(browserIIFEConfig)
 
+      // create react app uses this
       const browserESMConfig = {
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.esm.js`,
         format: 'esm',
-        banner: { // should this include createRequire?
-          js: `
+        banner: bannerLog`
 console.log('esm/es2015 build');
 `
-        }
       }
 
       builds.push(browserESMConfig)
 
+      // most popular
       const browserCJSConfig = {
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.cjs`,
         format: 'cjs',
-        banner: {
-          js: `
+        banner: bannerLog`
 console.log('cjs/es2015 build');
 `
-        }
       }
       builds.push(browserCJSConfig)
     }
