@@ -5,15 +5,15 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { mkdir, readFile, writeFile, unlink } from 'fs/promises'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
-import { STORAGE_VERSION, HeaderStore as HeaderStoreBase, CarStore as CarStoreBase } from './store'
+import { STORAGE_VERSION, MetaStore as MetaStoreBase, CarStore as CarStoreBase } from './store'
 
-export class HeaderStore extends HeaderStoreBase {
+export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
   keyId: string = 'public'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'meta')
 
   async load(branch: string = 'main'): Promise<DbMeta | null> {
-    const filepath = join(HeaderStore.dataDir, this.name, branch + '.json')
+    const filepath = join(MetaStore.dataDir, this.name, branch + '.json')
     const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === 'ENOENT') return null
       throw e
@@ -22,14 +22,14 @@ export class HeaderStore extends HeaderStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
-    const filepath = join(HeaderStore.dataDir, this.name, branch + '.json')
+    const filepath = join(MetaStore.dataDir, this.name, branch + '.json')
     const bytes = this.makeHeader(meta)
     await writePathFile(filepath, bytes)
   }
 }
 
 export const testConfig = {
-  dataDir: HeaderStore.dataDir
+  dataDir: MetaStore.dataDir
 }
 
 export class CarStore extends CarStoreBase {

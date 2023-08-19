@@ -3,7 +3,7 @@
 
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { CarStore as CarStoreBase, HeaderStore as HeaderStoreBase } from './store'
+import { CarStore as CarStoreBase, MetaStore as MetaStoreBase } from './store'
 
 export class CarStore extends CarStoreBase {
   tag: string = 'car-browser-idb'
@@ -52,7 +52,7 @@ export class CarStore extends CarStoreBase {
   }
 }
 
-export class HeaderStore extends HeaderStoreBase {
+export class MetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
   keyId: string = 'public'
   decoder: TextDecoder

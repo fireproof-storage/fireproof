@@ -7,7 +7,7 @@ import * as fs from 'node:fs'
 import * as http from 'node:http'
 import * as path from 'node:path'
 
-import { HeaderStore } from '../dist/test/store-fs.esm.js'
+import { MetaStore } from '../dist/test/store-fs.esm.js'
 
 const PORT = 8000
 
@@ -27,7 +27,7 @@ const MIME_TYPES = {
   car: 'application/car'
 }
 
-const DATA_PATH = HeaderStore.dataDir
+const DATA_PATH = MetaStore.dataDir
 
 const toBool = [() => true, () => false]
 
