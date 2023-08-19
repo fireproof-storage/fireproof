@@ -10,7 +10,7 @@ abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION
 }
 
-export abstract class HeaderStore extends VersionedStore {
+export abstract class MetaStore extends VersionedStore {
   tag: string = 'header-base'
   name: string
   constructor(name: string) {

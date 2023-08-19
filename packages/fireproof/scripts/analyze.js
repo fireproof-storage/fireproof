@@ -10,7 +10,7 @@ async function analyzeProject() {
   const buildConfigs = createBuildSettings({ minify: true, metafile: true })
 
   for (const config of buildConfigs) {
-    if (!/fireproof/.test(config.outfile)) continue
+    if (!/fireproof\.cjs/.test(config.outfile)) continue
     try {
       const result = await esbuild.build(config)
 

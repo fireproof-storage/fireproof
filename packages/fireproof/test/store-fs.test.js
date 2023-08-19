@@ -12,7 +12,7 @@ import { CID } from 'multiformats'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, matches, equals } from './helpers.js'
 
-import { CarStore, testConfig, HeaderStore } from '../dist/test/store-fs.esm.js'
+import { CarStore, testConfig, MetaStore } from '../dist/test/store-fs.esm.js'
 
 const { readFile } = promises
 
@@ -68,11 +68,11 @@ describe('CarStore with a saved car', function () {
   })
 })
 
-describe('HeaderStore', function () {
-  /** @type {HeaderStore} */
+describe('MetaStore', function () {
+  /** @type {MetaStore} */
   let store
   beforeEach(function () {
-    store = new HeaderStore('test')
+    store = new MetaStore('test')
   })
   it('should have a name', function () {
     equals(store.name, 'test')
@@ -93,11 +93,11 @@ describe('HeaderStore', function () {
   })
 })
 
-describe('HeaderStore with a saved header', function () {
-  /** @type {HeaderStore} */
+describe('MetaStore with a saved header', function () {
+  /** @type {MetaStore} */
   let store, cid
   beforeEach(async function () {
-    store = new HeaderStore('test-saved-header')
+    store = new MetaStore('test-saved-header')
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     await store.save({ car: cid, key: null })
   })

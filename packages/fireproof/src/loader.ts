@@ -7,7 +7,7 @@ import type {
   IdxMeta, IdxMetaMap
 } from './types'
 import { CID } from 'multiformats'
-import { CarStore, HeaderStore } from './store'
+import { CarStore, MetaStore } from './store'
 import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 
@@ -15,7 +15,7 @@ abstract class Loader {
   name: string
   opts: FireproofOptions = {}
 
-  headerStore: HeaderStore | undefined
+  metaStore: MetaStore | undefined
   carStore: CarStore | undefined
   carLog: AnyLink[] = []
   carReaders: Map<string, CarReader> = new Map()
@@ -30,8 +30,8 @@ abstract class Loader {
     this.name = name
     this.opts = opts || this.opts
     this.ready = this.initializeStores().then(async () => {
-      if (!this.headerStore || !this.carStore) throw new Error('stores not initialized')
-      const meta = await this.headerStore.load('main')
+      if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
+      const meta = await this.metaStore.load('main')
       return await this.ingestCarHeadFromMeta(meta)
     })
   }
@@ -49,7 +49,7 @@ abstract class Loader {
     } else {
       this.carLog.push(cid)
     }
-    await this.headerStore!.save({ car: cid, key: this.key || null })
+    await this.metaStore!.save({ car: cid, key: this.key || null })
     return cid
   }
 
@@ -70,7 +70,7 @@ abstract class Loader {
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.headerStore = new module.HeaderStore(this.name) as HeaderStore
+      this.metaStore = new module.MetaStore(this.name) as MetaStore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.carStore = new module.CarStore(this.name) as CarStore
     } else {
@@ -81,7 +81,7 @@ abstract class Loader {
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader;
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
-    if (!this.headerStore || !this.carStore) throw new Error('stores not initialized')
+    if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
     if (this.carReaders.has(cid.toString())) return this.carReaders.get(cid.toString()) as CarReader
     const car = await this.carStore.load(cid)
     if (!car) throw new Error(`missing car file ${cid.toString()}`)
@@ -114,7 +114,7 @@ abstract class Loader {
   }
 
   protected async ingestCarHeadFromMeta(meta: DbMeta | null): Promise<AnyCarHeader> {
-    if (!this.headerStore || !this.carStore) throw new Error('stores not initialized')
+    if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
     if (!meta) {
       // generate a random key
       if (!this.opts.public) {
