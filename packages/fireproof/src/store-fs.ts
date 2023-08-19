@@ -5,7 +5,7 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { mkdir, readFile, writeFile, unlink } from 'fs/promises'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
-import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as CarStoreBase } from './store'
+import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase } from './store'
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
@@ -32,7 +32,7 @@ export const testConfig = {
   dataDir: MetaStore.dataDir
 }
 
-export class DataStore extends CarStoreBase {
+export class DataStore extends DataStoreBase {
   tag: string = 'car-node-fs'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'data')
 
