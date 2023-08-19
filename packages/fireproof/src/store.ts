@@ -32,7 +32,7 @@ export abstract class MetaStore extends VersionedStore {
   abstract save(dbMeta: DbMeta, branch?: string): Promise<void>
 }
 
-export abstract class CarStore extends VersionedStore {
+export abstract class DataStore extends VersionedStore {
   tag: string = 'car-base'
   name: string
   constructor(name: string) {
