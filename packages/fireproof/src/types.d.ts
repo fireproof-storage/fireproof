@@ -4,6 +4,7 @@ import type { EventData } from '@alanshaw/pail/crdt'
 
 export type FireproofOptions = {
   public?: boolean
+  remote?: any
 }
 
 export type ClockHead = EventLink<EventData>[]

@@ -5,7 +5,7 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { mkdir, readFile, writeFile, unlink } from 'fs/promises'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
-import { STORAGE_VERSION, MetaStore as MetaStoreBase, CarStore as CarStoreBase } from './store'
+import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as CarStoreBase } from './store'
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
@@ -32,23 +32,23 @@ export const testConfig = {
   dataDir: MetaStore.dataDir
 }
 
-export class CarStore extends CarStoreBase {
+export class DataStore extends CarStoreBase {
   tag: string = 'car-node-fs'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'data')
 
   async save(car: AnyBlock): Promise<void> {
-    const filepath = join(CarStore.dataDir, this.name, car.cid.toString() + '.car')
+    const filepath = join(DataStore.dataDir, this.name, car.cid.toString() + '.car')
     await writePathFile(filepath, car.bytes)
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
-    const filepath = join(CarStore.dataDir, this.name, cid.toString() + '.car')
+    const filepath = join(DataStore.dataDir, this.name, cid.toString() + '.car')
     const bytes = await readFile(filepath)
     return { cid, bytes: new Uint8Array(bytes) }
   }
 
   async remove(cid: AnyLink): Promise<void> {
-    const filepath = join(CarStore.dataDir, this.name, cid.toString() + '.car')
+    const filepath = join(DataStore.dataDir, this.name, cid.toString() + '.car')
     await unlink(filepath)
   }
 }

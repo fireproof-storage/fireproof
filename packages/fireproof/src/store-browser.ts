@@ -3,9 +3,9 @@
 
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { CarStore as CarStoreBase, MetaStore as MetaStoreBase } from './store'
+import { DataStore as CarStoreBase, MetaStore as MetaStoreBase } from './store'
 
-export class CarStore extends CarStoreBase {
+export class DataStore extends CarStoreBase {
   tag: string = 'car-browser-idb'
   keyId: string = 'public'
   idb: IDBPDatabase<unknown> | null = null

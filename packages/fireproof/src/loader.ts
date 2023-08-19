@@ -7,7 +7,7 @@ import type {
   IdxMeta, IdxMetaMap
 } from './types'
 import { CID } from 'multiformats'
-import { CarStore, MetaStore } from './store'
+import { DataStore, MetaStore } from './store'
 import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 
@@ -15,8 +15,10 @@ abstract class Loader {
   name: string
   opts: FireproofOptions = {}
 
+  remoteMetaStore: MetaStore | undefined
+  remoteCarStore: DataStore | undefined
   metaStore: MetaStore | undefined
-  carStore: CarStore | undefined
+  carStore: DataStore | undefined
   carLog: AnyLink[] = []
   carReaders: Map<string, CarReader> = new Map()
   ready: Promise<AnyCarHeader>
@@ -66,13 +68,18 @@ abstract class Loader {
   protected async initializeStores() {
     const isBrowser = typeof window !== 'undefined'
     // console.log('is browser?', isBrowser)
+
+    // if (this.opts.remote) {
+
+    // }
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.metaStore = new module.MetaStore(this.name) as MetaStore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.carStore = new module.CarStore(this.name) as CarStore
+      this.carStore = new module.DataStore(this.name) as DataStore
     } else {
       throw new Error('Failed to initialize stores.')
     }
