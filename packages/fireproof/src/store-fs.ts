@@ -9,7 +9,6 @@ import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
-  keyId: string = 'public'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'meta')
 
   async load(branch: string = 'main'): Promise<DbMeta | null> {
@@ -37,18 +36,22 @@ export class DataStore extends DataStoreBase {
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'data')
 
   async save(car: AnyBlock): Promise<void> {
-    const filepath = join(DataStore.dataDir, this.name, car.cid.toString() + '.car')
+    const filepath = this.cidPath(car.cid)
     await writePathFile(filepath, car.bytes)
   }
 
+  private cidPath(cid: AnyLink) {
+    return join(DataStore.dataDir, this.name, cid.toString() + '.car')
+  }
+
   async load(cid: AnyLink): Promise<AnyBlock> {
-    const filepath = join(DataStore.dataDir, this.name, cid.toString() + '.car')
+    const filepath = this.cidPath(cid)
     const bytes = await readFile(filepath)
     return { cid, bytes: new Uint8Array(bytes) }
   }
 
   async remove(cid: AnyLink): Promise<void> {
-    const filepath = join(DataStore.dataDir, this.name, cid.toString() + '.car')
+    const filepath = this.cidPath(cid)
     await unlink(filepath)
   }
 }

@@ -3,11 +3,11 @@
 
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { DataStore as CarStoreBase, MetaStore as MetaStoreBase } from './store'
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 
-export class DataStore extends CarStoreBase {
+export class DataStore extends DataStoreBase {
   tag: string = 'car-browser-idb'
-  keyId: string = 'public'
+  keyId: string = 'public' // faciliates removal of unreadable cars
   idb: IDBPDatabase<unknown> | null = null
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
@@ -54,18 +54,10 @@ export class DataStore extends CarStoreBase {
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
-  keyId: string = 'public'
-  decoder: TextDecoder
-  encoder: TextEncoder
-
-  constructor(name: string) {
-    super(name)
-    this.decoder = new TextDecoder()
-    this.encoder = new TextEncoder()
-  }
 
   headerKey(branch: string) {
-    return `fp.${this.STORAGE_VERSION}.${this.keyId}.${this.name}.${branch}`
+    // remove 'public' on next storage version bump
+    return `fp.${this.STORAGE_VERSION}.public.${this.name}.${branch}`
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await

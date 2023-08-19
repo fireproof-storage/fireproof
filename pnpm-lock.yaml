@@ -130,6 +130,9 @@ importers:
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
+      cross-fetch:
+        specifier: ^4.0.0
+        version: 4.0.0
       idb:
         specifier: ^7.1.1
         version: 7.1.1
