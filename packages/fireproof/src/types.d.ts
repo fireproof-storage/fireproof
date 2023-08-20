@@ -113,3 +113,28 @@ export interface CarMakeable {
   entries(): Iterable<AnyBlock>
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
+
+export type UploadFnParams = {
+  type: 'data' | 'meta',
+  name: string,
+  car?: string,
+  branch?: string,
+  size: string
+}
+
+export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<void>
+
+export type DownloadFnParams = {
+  type: 'data' | 'meta',
+  name: string,
+  car?: string,
+  branch?: string,
+}
+
+export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array|null>
+
+export interface Connection {
+  upload: UploadFn
+  download: DownloadFn
+  remove: (params: DownloadFnParams) => Promise<void>
+}

@@ -65,14 +65,19 @@ abstract class Loader {
     }
   }
 
+  protected connectRemoteStores(upload: string, download: string) {
+  // this.remoteMetaStore = new MetaStore(this.name, { upload, download })
+  // this.remoteCarStore = new DataStore(this.name, { upload, download })
+
+  }
+
   protected async initializeStores() {
+    if (this.opts.remote) {
+
+    }
+
     const isBrowser = typeof window !== 'undefined'
     // console.log('is browser?', isBrowser)
-
-    // if (this.opts.remote) {
-
-    // }
-
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {
