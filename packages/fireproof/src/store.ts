@@ -23,6 +23,7 @@ export abstract class MetaStore extends VersionedStore {
   }
 
   parseHeader(headerData: ToString<DbMeta>): DbMeta {
+    console.log('parseHeader', headerData)
     const got = parse<DbMeta>(headerData)
     return got
   }
