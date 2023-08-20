@@ -22,10 +22,10 @@ describe('DataStore', function () {
   /** @type {DataStore} */
   let store
   beforeEach(function () {
-    store = new DataStore('test')
+    store = new DataStore({ name: 'test', keyId: 'keyyyy' })
   })
   it('should have a name', function () {
-    equals(store.name, 'test')
+    equals(store.loader.name, 'test')
   })
   it('should save a car', async function () {
     const car = {
@@ -33,7 +33,7 @@ describe('DataStore', function () {
       bytes: new Uint8Array([55, 56, 57])
     }
     await store.save(car)
-    const path = join(DataStore.dataDir, store.name, car.cid + '.car')
+    const path = join(DataStore.dataDir, store.loader.name, car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
@@ -43,7 +43,7 @@ describe('DataStore with a saved car', function () {
   /** @type {DataStore} */
   let store, car
   beforeEach(async function () {
-    store = new DataStore('test2')
+    store = new DataStore({ name: 'test2', keyId: 'keyyyy' })
     car = {
       cid: 'cid',
       bytes: new Uint8Array([55, 56, 57, 80])
@@ -51,7 +51,7 @@ describe('DataStore with a saved car', function () {
     await store.save(car)
   })
   it('should have a car', async function () {
-    const path = join(DataStore.dataDir, store.name, car.cid + '.car')
+    const path = join(DataStore.dataDir, store.loader.name, car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })

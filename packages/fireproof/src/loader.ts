@@ -12,7 +12,7 @@ import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
-abstract class Loader {
+export abstract class Loader {
   name: string
   opts: FireproofOptions = {}
 
@@ -47,7 +47,7 @@ abstract class Loader {
 
   connectRemote(connection: Connection) {
     this.remoteMetaStore = new RemoteMetaStore(this.name, connection)
-    this.remoteCarStore = new RemoteDataStore(this.name, connection)
+    this.remoteCarStore = new RemoteDataStore(this, connection)
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (meta) => {
       console.log('remoteMeta', meta)
       if (meta) {
@@ -136,7 +136,7 @@ abstract class Loader {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.metaStore = new module.MetaStore(this.name) as MetaStore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.carStore = new module.DataStore(this.name) as DataStore
+      this.carStore = new module.DataStore(this) as DataStore
     } else {
       throw new Error('Failed to initialize stores.')
     }
