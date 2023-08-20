@@ -7,7 +7,6 @@ import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-browser-idb'
-  keyId: string = 'public' // faciliates removal of unreadable cars
   idb: IDBPDatabase<unknown> | null = null
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
