@@ -134,7 +134,8 @@ export type DownloadFnParams = {
 export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array|null>
 
 export interface Connection {
+  ready: Promise<any>
   upload: UploadFn
   download: DownloadFn
-  remove: (params: DownloadFnParams) => Promise<void>
+  // remove: (params: DownloadFnParams) => Promise<void>
 }
