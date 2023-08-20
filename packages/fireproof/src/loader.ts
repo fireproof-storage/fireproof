@@ -68,7 +68,7 @@ export abstract class Loader {
   protected async ingestCarHeadFromMeta(meta: DbMeta, opts = { merge: false }): Promise<AnyCarHeader> {
     const { car: cid } = meta
     const reader = await this.loadCar(cid)
-    this.carLog = opts.merge ? [cid, ...this.carLog] : [cid] // this.carLog.push(cid)
+    this.carLog = opts.merge ? [...new Set([cid, ...this.carLog])] : [cid] // this.carLog.push(cid)
     const carHeader = await parseCarFile(reader)
     await this.getMoreReaders(carHeader.cars)
     return carHeader
@@ -147,7 +147,7 @@ export abstract class Loader {
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
     if (this.carReaders.has(cid.toString())) return this.carReaders.get(cid.toString()) as CarReader
-    const car = await this.carStore.load(cid)
+    const car = await Promise.any([this.carStore.load(cid), this.remoteCarStore?.load(cid)])
     if (!car) throw new Error(`missing car file ${cid.toString()}`)
     const reader = await this.ensureDecryptedReader(await CarReader.fromBytes(car.bytes)) as CarReader
     this.carReaders.set(cid.toString(), reader)
