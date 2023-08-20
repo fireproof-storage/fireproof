@@ -8,15 +8,14 @@ export const STORAGE_VERSION = match[0]
 
 abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION
+  name: string
+  constructor(name: string) {
+    this.name = name
+  }
 }
 
 export abstract class MetaStore extends VersionedStore {
   tag: string = 'header-base'
-  name: string
-  constructor(name: string) {
-    super()
-    this.name = name
-  }
 
   makeHeader({ car, key }: DbMeta): ToString<DbMeta> {
     const encoded = format({ car, key } as DbMeta)
@@ -34,11 +33,6 @@ export abstract class MetaStore extends VersionedStore {
 
 export abstract class DataStore extends VersionedStore {
   tag: string = 'car-base'
-  name: string
-  constructor(name: string) {
-    super()
-    this.name = name
-  }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>
   abstract save(car: AnyBlock): Promise<void>
