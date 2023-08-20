@@ -3,26 +3,26 @@
 
 import { AnyBlock, AnyLink, Connection, DbMeta, UploadFnParams } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
-
+import type { Loader } from './loader'
 // import type { Response } from 'cross-fetch'
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'car-browser-s3'
   connection: Connection
 
-  prefix: string
-  keyId: string = 'public' // faciliates removal of unreadable cars
-
-  constructor(name: string, connection: Connection) {
-    super(name)
-    this.prefix = `fp.${this.name}.${this.STORAGE_VERSION}.${this.keyId}.`
+  constructor(loader: Loader, connection: Connection) {
+    super(loader)
     this.connection = connection
+  }
+
+  prefix() {
+    return `fp.${this.loader.name}.${this.STORAGE_VERSION}.${this.loader.keyId}`
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
     const bytes = await this.connection.download({
       type: 'data',
-      name: this.prefix,
+      name: this.prefix(),
       car: carCid.toString()
     })
     if (!bytes) throw new Error(`missing remote car ${carCid.toString()}`)
@@ -32,7 +32,7 @@ export class RemoteDataStore extends DataStoreBase {
   async save(car: AnyBlock): Promise<void> {
     const uploadParams: UploadFnParams = {
       type: 'data',
-      name: this.prefix,
+      name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
@@ -48,19 +48,21 @@ export class RemoteDataStore extends DataStoreBase {
 export class RemoteMetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
   connection: Connection
-  prefix: string
 
   constructor(name: string, connection: Connection) {
     super(name)
-    this.prefix = `fp.${this.name}.${this.STORAGE_VERSION}`
     this.connection = connection
+  }
+
+  prefix() {
+    return `fp.${this.name}.${this.STORAGE_VERSION}`
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch: string = 'main'): Promise<DbMeta | null> {
     const bytes = await this.connection.download({
       type: 'meta',
-      name: this.prefix,
+      name: this.prefix(),
       branch
     })
     if (!bytes) return null
@@ -76,7 +78,7 @@ export class RemoteMetaStore extends MetaStoreBase {
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const uploadParams = {
       type: 'meta',
-      name: this.prefix,
+      name: this.prefix(),
       branch,
       size: bytes.length.toString()
     }

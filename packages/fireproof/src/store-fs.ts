@@ -45,7 +45,7 @@ export class DataStore extends DataStoreBase {
   }
 
   private cidPath(cid: AnyLink) {
-    return join(DataStore.dataDir, this.name, cid.toString() + '.car')
+    return join(DataStore.dataDir, this.loader.name, cid.toString() + '.car')
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {

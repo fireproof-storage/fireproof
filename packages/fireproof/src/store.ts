@@ -2,6 +2,7 @@ import { format, parse, ToString } from '@ipld/dag-json'
 import { AnyBlock, AnyLink, DbMeta } from './types'
 
 import { PACKAGE_VERSION } from './version'
+import type { Loader } from './loader'
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
@@ -32,9 +33,14 @@ export abstract class MetaStore extends VersionedStore {
   abstract save(dbMeta: DbMeta, branch?: string): Promise<void>
 }
 
-export abstract class DataStore extends VersionedStore {
+export abstract class DataStore {
   tag: string = 'car-base'
-  keyId: string = 'public' // faciliates removal of unreadable cars
+
+  STORAGE_VERSION: string = STORAGE_VERSION
+  loader: Loader
+  constructor(loader: Loader) {
+    this.loader = loader
+  }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>
   abstract save(car: AnyBlock): Promise<void>
