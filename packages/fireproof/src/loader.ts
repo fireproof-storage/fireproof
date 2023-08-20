@@ -101,6 +101,8 @@ abstract class Loader {
     const theKey = await this._getKey()
     const { cid, bytes } = theKey ? await encryptedMakeCarFile(theKey, fp, t) : await clearMakeCarFile(fp, t)
     await this.carStore!.save({ cid, bytes })
+    console.log('remoteCarStore?.save', cid.toString())
+    await this.remoteCarStore?.save({ cid, bytes })
     if (compact) {
       for (const cid of this.carLog) {
         await this.carStore!.remove(cid)
@@ -110,6 +112,8 @@ abstract class Loader {
       this.carLog.push(cid)
     }
     await this.metaStore!.save({ car: cid, key: theKey || null })
+    console.log('remoteMetaStore?.save', cid.toString(), theKey)
+    await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
     return cid
   }
 

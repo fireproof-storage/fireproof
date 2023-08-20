@@ -64,7 +64,11 @@ export class RemoteMetaStore extends MetaStoreBase {
       branch
     })
     if (!bytes) return null
-    return this.parseHeader(new TextDecoder().decode(bytes))
+    try {
+      return this.parseHeader(new TextDecoder().decode(bytes))
+    } catch (e) {
+      return null
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await

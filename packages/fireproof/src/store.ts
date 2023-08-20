@@ -23,7 +23,7 @@ export abstract class MetaStore extends VersionedStore {
   }
 
   parseHeader(headerData: ToString<DbMeta>): DbMeta {
-    console.log('parseHeader', headerData)
+    // console.log('parseHeader', headerData)
     const got = parse<DbMeta>(headerData)
     return got
   }
@@ -34,6 +34,7 @@ export abstract class MetaStore extends VersionedStore {
 
 export abstract class DataStore extends VersionedStore {
   tag: string = 'car-base'
+  keyId: string = 'public' // faciliates removal of unreadable cars
 
   abstract load(cid: AnyLink): Promise<AnyBlock>
   abstract save(car: AnyBlock): Promise<void>
