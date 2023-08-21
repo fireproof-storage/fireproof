@@ -72,7 +72,7 @@ export abstract class Loader {
     const { car: cid } = meta
     const reader = await this.loadCar(cid)
     const carHeader = await parseCarFile(reader)
-    this.carLog = [...carHeader.cars, cid]
+    this.carLog = [cid, ...carHeader.cars]
     void this.getMoreReaders(carHeader.cars)
     this._applyHeader(carHeader)
     return carHeader
@@ -113,7 +113,6 @@ export abstract class Loader {
         await this.carStore!.remove(cid)
       }
       this.carLog = [cid]
-      // this.carLog.splice(0, this.carLog.length, cid)
     } else {
       this.carLog.unshift(cid)
     }
