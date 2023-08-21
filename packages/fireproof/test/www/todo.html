@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fireproof Test</title>
     <script src="../../dist/browser/fireproof.iife.js"></script>
-    <script xsrc="https://cdn.jsdelivr.net/npm/@fireproof/core@0.11.3/dist/browser/fireproof.iife.js"></script>
     <script type="text/javascript">
       function todoApp() {
         const {connect, fireproof, index} = Fireproof;
 
-        const db = fireproof('todo-app-s3');
+        const db = fireproof('todo-app-fps');
         connect.s3(db, {
           upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
           download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
@@ -59,6 +58,8 @@
         }
         window.onButtonClick = onButtonClick;
         window.onload = initialize;
+        window.db = db;
+        window.redraw = redraw;
       }
       todoApp();
     </script>
