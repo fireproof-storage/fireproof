@@ -133,11 +133,13 @@ describe('Reopening a database', function () {
 
   it('faster, should have the same data on reopen after reopen and update', async function () {
     for (let i = 0; i < 4; i++) {
+      console.log('iteration', i)
       const db = new Database('test-reopen')
       assert(db._crdt.ready)
       await db._crdt.ready
       equals(db._crdt.blocks.loader.carLog.length, i + 1)
       const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
+      console.log('ok')
       assert(ok)
       equals(db._crdt.blocks.loader.carLog.length, i + 2)
       const doc = await db.get(`test${i}`)

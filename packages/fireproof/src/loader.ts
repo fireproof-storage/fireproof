@@ -126,18 +126,17 @@ export abstract class Loader {
     const sCid = cid.toString()
     if (!this.getBlockCache.has(sCid)) {
       this.getBlockCache.set(sCid, (async () => {
-        for (const carCid of this.carLog) {
-          let reader = await this.carReaders.get(carCid.toString())
+        return Promise.any(this.carLog.map(async (carCid) => {
+          const reader = await this.carReaders.get(carCid.toString())
           if (!reader) {
             throw new Error(`missing car reader ${carCid.toString()}`)
-            console.log('getBlock loading car', carCid.toString())
-            reader = await this.loadCar(carCid)
           }
           const block = await reader.get(cid)
           if (block) {
             return block
           }
-        }
+          throw new Error(`block not in reader: ${cid.toString()}`)
+        })).catch(() => undefined)
       })())
     }
     return this.getBlockCache.get(sCid)
