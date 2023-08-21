@@ -151,7 +151,7 @@ describe('basic Database parallel writes / public', function () {
   })
   it('should have one head', function () {
     const crdt = db._crdt
-    equals(crdt._head.length, 1)
+    equals(crdt.clock.head.length, 1)
   })
   it('should write all', async function () {
     for (let i = 0; i < 10; i++) {

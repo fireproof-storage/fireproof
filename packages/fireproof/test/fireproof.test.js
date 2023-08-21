@@ -98,8 +98,8 @@ describe('Reopening a database', function () {
     assert(ok)
     equals(ok.id, 'test')
 
-    assert(db._crdt._head)
-    equals(db._crdt._head.length, 1)
+    assert(db._crdt.clock.head)
+    equals(db._crdt.clock.head.length, 1)
   })
 
   it('should persist data', async function () {
@@ -111,9 +111,9 @@ describe('Reopening a database', function () {
     const db2 = new Database('test-reopen')
     const doc = await db2.get('test')
     equals(doc.foo, 'bar')
-    assert(db2._crdt._head)
-    equals(db2._crdt._head.length, 1)
-    equalsJSON(db2._crdt._head, db._crdt._head)
+    assert(db2._crdt.clock.head)
+    equals(db2._crdt.clock.head.length, 1)
+    equalsJSON(db2._crdt.clock.head, db._crdt.clock.head)
   })
 
   it('should have a car in the car log', async function () {
@@ -218,9 +218,9 @@ describe('Reopening a database with indexes', function () {
     const db2 = fireproof('test-reopen-idx')
     const doc = await db2.get('test')
     equals(doc.foo, 'bar')
-    assert(db2._crdt._head)
-    equals(db2._crdt._head.length, 1)
-    equalsJSON(db2._crdt._head, db._crdt._head)
+    assert(db2._crdt.clock.head)
+    equals(db2._crdt.clock.head.length, 1)
+    equalsJSON(db2._crdt.clock.head, db._crdt.clock.head)
   })
 
   it('should have the same data on reopen after a query', async function () {
@@ -233,9 +233,9 @@ describe('Reopening a database with indexes', function () {
     const db2 = fireproof('test-reopen-idx')
     const doc = await db2.get('test')
     equals(doc.foo, 'bar')
-    assert(db2._crdt._head)
-    equals(db2._crdt._head.length, 1)
-    equalsJSON(db2._crdt._head, db._crdt._head)
+    assert(db2._crdt.clock.head)
+    equals(db2._crdt.clock.head.length, 1)
+    equalsJSON(db2._crdt.clock.head, db._crdt.clock.head)
   })
 
   // it('should query the same data on reopen', async function () {
