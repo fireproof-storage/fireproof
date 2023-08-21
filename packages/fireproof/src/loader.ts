@@ -73,10 +73,13 @@ export abstract class Loader {
       void this.getMoreReaders(carHeader.cars)
       this._applyHeader(carHeader)
     } else {
-      console.log('local car log', this.carLog)
-      console.log('remote car log', remoteCarLog)
+      const newCarLog = [meta.car, ...new Set([...this.carLog, ...carHeader.cars])]
+      this.carLog = newCarLog
+      void this.getMoreReaders(carHeader.cars)
+      console.log('local car log', this.carLog.map(c => c.toString()))
+      console.log('remote car log', remoteCarLog.map(c => c.toString()))
       console.log('remote meta', meta)
-      throw new Error('not implemented car merge')
+      this._applyHeader(carHeader, true)
     }
   }
 
@@ -101,7 +104,7 @@ export abstract class Loader {
     return carHeader
   }
 
-  protected _applyHeader(_carHeader: AnyCarHeader) { }
+  protected _applyHeader(_carHeader: AnyCarHeader, _merge?: boolean) { }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
@@ -262,9 +265,8 @@ export class DbLoader extends Loader {
     this.clock = clock
   }
 
-  protected _applyHeader(carHeader: DbCarHeader) {
-    this.clock.applyHead(carHeader.head)
-    // this.clock.head = carHeader.head
+  protected _applyHeader(carHeader: DbCarHeader, merge: boolean) {
+    this.clock.applyHead(carHeader.head, merge)
   }
 
   protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
