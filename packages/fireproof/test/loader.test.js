@@ -26,7 +26,7 @@ describe('basic Loader', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-commit')
     t = new Transaction(new MemoryBlockstore())
-    loader = new DbLoader('test-loader-commit', { public: true })
+    loader = new DbLoader('test-loader-commit', { head: [] }, { public: true })
     block = (await encode({
       value: { hello: 'world' },
       hasher,
@@ -54,7 +54,7 @@ describe('basic Loader with two commits', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-two-commit')
     t = new Transaction(new MemoryBlockstore())
-    loader = new DbLoader('test-loader-two-commit', { public: true })
+    loader = new DbLoader('test-loader-two-commit', { head: [] }, { public: true })
     block = (await encode({
       value: { hello: 'world' },
       hasher,

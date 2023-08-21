@@ -11,6 +11,7 @@ import { DataStore, MetaStore } from './store'
 import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
+import { CRDTClock } from './crdt'
 
 export abstract class Loader {
   name: string
@@ -68,10 +69,16 @@ export abstract class Loader {
   protected async ingestCarHeadFromMeta(meta: DbMeta, opts = { merge: false }): Promise<AnyCarHeader> {
     const { car: cid } = meta
     const reader = await this.loadCar(cid)
-    this.carLog = opts.merge ? [...new Set([cid, ...this.carLog])] : [cid] // this.carLog.push(cid)
+    this.carLog = opts.merge ? [cid, ...this.carLog] : [cid]
+    // this.carLog = opts.merge ? [...new Set([cid, ...this.carLog])] : [cid] // this.carLog.push(cid)
     const carHeader = await parseCarFile(reader)
     await this.getMoreReaders(carHeader.cars)
+    this._applyHeader(carHeader)
     return carHeader
+  }
+
+  protected _applyHeader(carHeader: AnyCarHeader) {
+    console.log('applyHeader', carHeader)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -147,7 +154,8 @@ export abstract class Loader {
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
     if (this.carReaders.has(cid.toString())) return this.carReaders.get(cid.toString()) as CarReader
-    const car = await Promise.any([this.carStore.load(cid), this.remoteCarStore?.load(cid)])
+    const car = await this.carStore.load(cid)
+    // const car = await Promise.any([this.carStore.load(cid), this.remoteCarStore?.load(cid)])
     if (!car) throw new Error(`missing car file ${cid.toString()}`)
     const reader = await this.ensureDecryptedReader(await CarReader.fromBytes(car.bytes)) as CarReader
     this.carReaders.set(cid.toString(), reader)
@@ -183,17 +191,6 @@ export abstract class Loader {
   }
 }
 
-export class DbLoader extends Loader {
-  declare ready: Promise<DbCarHeader> // todo this will be a map of headers by branch name
-
-  static defaultHeader = { cars: [], compact: [], head: [] }
-  defaultHeader = DbLoader.defaultHeader
-
-  protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
-    return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
-  }
-}
-
 export class IdxLoader extends Loader {
   declare ready: Promise<IdxCarHeader>
 
@@ -206,3 +203,26 @@ export class IdxLoader extends Loader {
 }
 
 type IndexerResult = CarCommit & IdxMetaMap
+
+export class DbLoader extends Loader {
+  declare ready: Promise<DbCarHeader> // todo this will be a map of headers by branch name
+
+  static defaultHeader = { cars: [], compact: [], head: [] }
+  defaultHeader = DbLoader.defaultHeader
+
+  clock: CRDTClock
+
+  constructor(name: string, clock: CRDTClock, opts?: FireproofOptions) {
+    super(name, opts)
+    this.clock = clock
+  }
+
+  protected _applyHeader(carHeader: DbCarHeader) {
+    this.clock.applyHead(carHeader.head)
+    // this.clock.head = carHeader.head
+  }
+
+  protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
+    return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
+  }
+}

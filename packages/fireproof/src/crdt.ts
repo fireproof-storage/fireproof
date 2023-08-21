@@ -3,8 +3,12 @@ import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact }
 import type { DocUpdate, BulkResult, ClockHead, DbCarHeader, FireproofOptions } from './types'
 import type { Index } from './index'
 
-class FpClock {
+export class CRDTClock {
   head: ClockHead = []
+
+  applyHead(head: ClockHead) {
+    this.head = head
+  }
 }
 
 export class CRDT {
@@ -16,17 +20,17 @@ export class CRDT {
 
   indexers: Map<string, Index> = new Map()
 
-  private clock: FpClock = new FpClock()
+  private clock: CRDTClock = new CRDTClock()
 
   constructor(name?: string, opts?: FireproofOptions) {
     this.name = name || null
     this.opts = opts || this.opts
-    this.blocks = new TransactionBlockstore(name, this.opts)
-    this.indexBlocks = new IndexBlockstore(name ? name + '.idx' : undefined, this.opts)
+    this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
+    this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this.opts)
     this.ready = this.blocks.ready.then((header: DbCarHeader) => {
       // @ts-ignore
       if (header.indexes) throw new Error('cannot have indexes in crdt header')
-      if (header.head) { this.clock.head = header.head } // todo multi head support here
+      // if (header.head) { this.clock.head = header.head } // todo multi head support here
     })
   }
 
