@@ -16,10 +16,11 @@ export class Database {
     this.name = name
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
+    this._crdt.clock.onTick((updates: DocUpdate[]) => {
+      void this._notify(updates)
+    })
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
-      const r = await this._crdt.bulk(updates)
-      await this._notify(updates)
-      return r
+      return await this._crdt.bulk(updates)
     })
   }
 

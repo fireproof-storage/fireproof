@@ -152,6 +152,10 @@ export abstract class Loader {
     const sCid = cid.toString()
     if (!this.getBlockCache.has(sCid)) {
       this.getBlockCache.set(sCid, (async () => {
+        // binds to old car log
+        // should remove self if missing
+        // we should go back to the version that
+        // only fills the cache on success
         return Promise.any(this.carLog.map(async (carCid) => {
           const reader = await this.carReaders.get(carCid.toString())
           if (!reader) {

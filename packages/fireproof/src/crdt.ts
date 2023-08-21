@@ -6,9 +6,24 @@ import type { Index } from './index'
 export class CRDTClock {
   head: ClockHead = []
 
-  applyHead(newHead: ClockHead, prevHead: ClockHead) {
+  zoomers: Set<(() => void)> = new Set()
+  watchers: Set<((updates: DocUpdate[]) => void)> = new Set()
+
+  applyHead(newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
     const keepFromPrevHead = this.head.filter((link) => !prevHead.includes(link))
     this.head = [...new Set([...keepFromPrevHead, ...newHead])].sort((a, b) => a.toString().localeCompare(b.toString()))
+    if (keepFromPrevHead.length !== 0 && this.head.length !== 0) {
+      this.zoomers.forEach((fn) => fn())
+    }
+    this.watchers.forEach((fn) => fn(updates))
+  }
+
+  onTick(fn: (updates: DocUpdate[]) => void) {
+    this.watchers.add(fn)
+  }
+
+  onZoom(fn: () => void) {
+    this.zoomers.add(fn)
   }
 }
 
@@ -21,7 +36,7 @@ export class CRDT {
 
   indexers: Map<string, Index> = new Map()
 
-  private clock: CRDTClock = new CRDTClock()
+  clock: CRDTClock = new CRDTClock()
 
   constructor(name?: string, opts?: FireproofOptions) {
     this.name = name || null
@@ -29,6 +44,11 @@ export class CRDT {
     this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
     this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this.opts)
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
+    this.clock.onZoom(() => {
+      for (const idx of this.indexers.values()) {
+        idx._resetIndex()
+      }
+    })
   }
 
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
@@ -36,7 +56,7 @@ export class CRDT {
     const tResult = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
       const beforeHead = [...this.clock.head]
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-      this.clock.applyHead(head, beforeHead) // we need multi head support here if allowing calls to bulk in parallel
+      this.clock.applyHead(head, beforeHead, updates) // we need multi head support here if allowing calls to bulk in parallel
       return { head }
     })
     return tResult
