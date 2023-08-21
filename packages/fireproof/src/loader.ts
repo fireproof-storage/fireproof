@@ -71,15 +71,15 @@ export abstract class Loader {
       // fast forward to remote
       this.carLog = remoteCarLog
       void this.getMoreReaders(carHeader.cars)
-      this._applyHeader(carHeader)
+      this._applyCarHeader(carHeader, false)
     } else {
       const newCarLog = [meta.car, ...new Set([...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
       void this.getMoreReaders(carHeader.cars)
-      console.log('local car log', this.carLog.map(c => c.toString()))
-      console.log('remote car log', remoteCarLog.map(c => c.toString()))
-      console.log('remote meta', meta)
-      this._applyHeader(carHeader, true)
+      // console.log('local car log', this.carLog.map(c => c.toString()))
+      // console.log('remote car log', remoteCarLog.map(c => c.toString()))
+      // console.log('remote meta', meta)
+      this._applyCarHeader(carHeader, true)
     }
   }
 
@@ -100,11 +100,11 @@ export abstract class Loader {
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     this.carLog = [meta.car, ...carHeader.cars]
     void this.getMoreReaders(carHeader.cars)
-    this._applyHeader(carHeader)
+    this._applyCarHeader(carHeader, false)
     return carHeader
   }
 
-  protected _applyHeader(_carHeader: AnyCarHeader, _merge?: boolean) { }
+  protected _applyCarHeader(_carHeader: AnyCarHeader, _merge: boolean) { }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
@@ -265,8 +265,8 @@ export class DbLoader extends Loader {
     this.clock = clock
   }
 
-  protected _applyHeader(carHeader: DbCarHeader, merge: boolean) {
-    this.clock.applyHead(carHeader.head, merge)
+  protected _applyCarHeader(carHeader: DbCarHeader, _merge: boolean) {
+    this.clock.applyHead(carHeader.head, [])
   }
 
   protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
