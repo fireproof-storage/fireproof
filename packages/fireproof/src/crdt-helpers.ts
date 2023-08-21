@@ -36,6 +36,7 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 }
 
 export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
+  if (!head.length) throw new Error('No documents in a fresh database')
   const link = await get(blocks, head, key)
   if (!link) throw new Error(`Missing key ${key}`)
   return await getValueFromLink(blocks, link)

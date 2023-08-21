@@ -23,18 +23,18 @@ export class ConnectS3 implements Connection {
   }
 
   async upload(bytes: Uint8Array, params: UploadFnParams) {
-    console.log('upload', params)
+    // console.log('upload', params)
     this.validateParams(params)
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams(params).toString()}`)
-    console.log('fetchUploadUrl', fetchUploadUrl.toString())
+    // console.log('fetchUploadUrl', fetchUploadUrl.toString())
     const response = await fetch(fetchUploadUrl)
     const { uploadURL } = await response.json() as { uploadURL: string }
-    console.log('uploadURL', uploadURL.toString())
+    // console.log('uploadURL', uploadURL.toString())
     await fetch(uploadURL, { method: 'PUT', body: bytes })
   }
 
   async download(params: DownloadFnParams) {
-    console.log('download', params)
+    // console.log('download', params)
     this.validateParams(params)
     const { type, name, car, branch } = params
     const fetchFromUrl = new URL(`${type}/${name}/${type === 'data'
