@@ -4,6 +4,7 @@ import type { EventData } from '@alanshaw/pail/crdt'
 
 export type FireproofOptions = {
   public?: boolean
+  remote?: any
 }
 
 export type ClockHead = EventLink<EventData>[]
@@ -111,4 +112,30 @@ export type DbMeta = { car: AnyLink, key: string | null }
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>
   get(cid: AnyLink): Promise<AnyBlock | undefined>
+}
+
+export type UploadFnParams = {
+  type: 'data' | 'meta',
+  name: string,
+  car?: string,
+  branch?: string,
+  size: string
+}
+
+export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<void>
+
+export type DownloadFnParams = {
+  type: 'data' | 'meta',
+  name: string,
+  car?: string,
+  branch?: string,
+}
+
+export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array|null>
+
+export interface Connection {
+  ready: Promise<any>
+  upload: UploadFn
+  download: DownloadFn
+  // remove: (params: DownloadFnParams) => Promise<void>
 }

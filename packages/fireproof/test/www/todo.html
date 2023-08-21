@@ -4,15 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fireproof Test</title>
-    <script src="https://cdn.jsdelivr.net/npm/@fireproof/core@0.11.3/dist/browser/fireproof.iife.js"></script>
+    <script src="../../dist/browser/fireproof.iife.js"></script>
+    <script xsrc="https://cdn.jsdelivr.net/npm/@fireproof/core@0.11.3/dist/browser/fireproof.iife.js"></script>
     <script type="text/javascript">
       function todoApp() {
-        const db = Fireproof.fireproof('todo-app');
+        const {connect, fireproof, index} = Fireproof;
+
+        const db = fireproof('todo-app-s3');
+        connect.s3(db, {
+          upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+          download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+        })
 
         const redraw = async () => {
-          const result = await Fireproof
-            .index(db, 'created')
-            .query({includeDocs: true});
+          const result = await index(db, 'created').query({includeDocs: true});
           document
             .querySelector('ul')
             .innerHTML = '';
@@ -20,10 +25,15 @@
           for (const row of result.rows) {
             const checkbox = document.createElement('input');
             checkbox.setAttribute('type', 'checkbox');
-            if (row.doc.completed) {checkbox.setAttribute('checked', true);}
+            if (row.doc.completed) {
+              checkbox.setAttribute('checked', true);
+            }
             checkbox.onchange = () => {
-              row.doc.completed = !row.doc.completed
-              db.put(row.doc);
+              row.doc.completed = !row
+                .doc
+                .completed
+                db
+                .put(row.doc);
             }
             const textSpan = document.createElement('span');
             textSpan.innerText = row.doc.task;

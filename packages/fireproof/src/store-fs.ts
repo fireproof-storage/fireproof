@@ -5,15 +5,18 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { mkdir, readFile, writeFile, unlink } from 'fs/promises'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
-import { STORAGE_VERSION, HeaderStore as HeaderStoreBase, CarStore as CarStoreBase } from './store'
+import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase } from './store'
 
-export class HeaderStore extends HeaderStoreBase {
+// todo refactor this system to the current store-remote is the new prototype
+// this would mean that there'd be a version of filesystem and browser access
+// that use the Connection interface
+
+export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
-  keyId: string = 'public'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'meta')
 
   async load(branch: string = 'main'): Promise<DbMeta | null> {
-    const filepath = join(HeaderStore.dataDir, this.name, branch + '.json')
+    const filepath = join(MetaStore.dataDir, this.name, branch + '.json')
     const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === 'ENOENT') return null
       throw e
@@ -22,33 +25,37 @@ export class HeaderStore extends HeaderStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
-    const filepath = join(HeaderStore.dataDir, this.name, branch + '.json')
+    const filepath = join(MetaStore.dataDir, this.name, branch + '.json')
     const bytes = this.makeHeader(meta)
     await writePathFile(filepath, bytes)
   }
 }
 
 export const testConfig = {
-  dataDir: HeaderStore.dataDir
+  dataDir: MetaStore.dataDir
 }
 
-export class CarStore extends CarStoreBase {
+export class DataStore extends DataStoreBase {
   tag: string = 'car-node-fs'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'data')
 
   async save(car: AnyBlock): Promise<void> {
-    const filepath = join(CarStore.dataDir, this.name, car.cid.toString() + '.car')
+    const filepath = this.cidPath(car.cid)
     await writePathFile(filepath, car.bytes)
   }
 
+  private cidPath(cid: AnyLink) {
+    return join(DataStore.dataDir, this.loader.name, cid.toString() + '.car')
+  }
+
   async load(cid: AnyLink): Promise<AnyBlock> {
-    const filepath = join(CarStore.dataDir, this.name, cid.toString() + '.car')
+    const filepath = this.cidPath(cid)
     const bytes = await readFile(filepath)
     return { cid, bytes: new Uint8Array(bytes) }
   }
 
   async remove(cid: AnyLink): Promise<void> {
-    const filepath = join(CarStore.dataDir, this.name, cid.toString() + '.car')
+    const filepath = this.cidPath(cid)
     await unlink(filepath)
   }
 }

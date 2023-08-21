@@ -12,20 +12,20 @@ import { CID } from 'multiformats'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, matches, equals } from './helpers.js'
 
-import { CarStore, testConfig, HeaderStore } from '../dist/test/store-fs.esm.js'
+import { DataStore, testConfig, MetaStore } from '../dist/test/store-fs.esm.js'
 
 const { readFile } = promises
 
 const decoder = new TextDecoder('utf-8')
 
-describe('CarStore', function () {
-  /** @type {CarStore} */
+describe('DataStore', function () {
+  /** @type {DataStore} */
   let store
   beforeEach(function () {
-    store = new CarStore('test')
+    store = new DataStore({ name: 'test', keyId: 'keyyyy' })
   })
   it('should have a name', function () {
-    equals(store.name, 'test')
+    equals(store.loader.name, 'test')
   })
   it('should save a car', async function () {
     const car = {
@@ -33,17 +33,17 @@ describe('CarStore', function () {
       bytes: new Uint8Array([55, 56, 57])
     }
     await store.save(car)
-    const path = join(CarStore.dataDir, store.name, car.cid + '.car')
+    const path = join(DataStore.dataDir, store.loader.name, car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
 })
 
-describe('CarStore with a saved car', function () {
-  /** @type {CarStore} */
+describe('DataStore with a saved car', function () {
+  /** @type {DataStore} */
   let store, car
   beforeEach(async function () {
-    store = new CarStore('test2')
+    store = new DataStore({ name: 'test2', keyId: 'keyyyy' })
     car = {
       cid: 'cid',
       bytes: new Uint8Array([55, 56, 57, 80])
@@ -51,7 +51,7 @@ describe('CarStore with a saved car', function () {
     await store.save(car)
   })
   it('should have a car', async function () {
-    const path = join(CarStore.dataDir, store.name, car.cid + '.car')
+    const path = join(DataStore.dataDir, store.loader.name, car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
@@ -68,11 +68,11 @@ describe('CarStore with a saved car', function () {
   })
 })
 
-describe('HeaderStore', function () {
-  /** @type {HeaderStore} */
+describe('MetaStore', function () {
+  /** @type {MetaStore} */
   let store
   beforeEach(function () {
-    store = new HeaderStore('test')
+    store = new MetaStore('test')
   })
   it('should have a name', function () {
     equals(store.name, 'test')
@@ -93,11 +93,11 @@ describe('HeaderStore', function () {
   })
 })
 
-describe('HeaderStore with a saved header', function () {
-  /** @type {HeaderStore} */
+describe('MetaStore with a saved header', function () {
+  /** @type {MetaStore} */
   let store, cid
   beforeEach(async function () {
-    store = new HeaderStore('test-saved-header')
+    store = new MetaStore('test-saved-header')
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     await store.save({ car: cid, key: null })
   })

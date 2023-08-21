@@ -2,21 +2,21 @@ import { format, parse, ToString } from '@ipld/dag-json'
 import { AnyBlock, AnyLink, DbMeta } from './types'
 
 import { PACKAGE_VERSION } from './version'
+import type { Loader } from './loader'
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
 
 abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION
-}
-
-export abstract class HeaderStore extends VersionedStore {
-  tag: string = 'header-base'
   name: string
   constructor(name: string) {
-    super()
     this.name = name
   }
+}
+
+export abstract class MetaStore extends VersionedStore {
+  tag: string = 'header-base'
 
   makeHeader({ car, key }: DbMeta): ToString<DbMeta> {
     const encoded = format({ car, key } as DbMeta)
@@ -24,6 +24,7 @@ export abstract class HeaderStore extends VersionedStore {
   }
 
   parseHeader(headerData: ToString<DbMeta>): DbMeta {
+    // console.log('parseHeader', headerData)
     const got = parse<DbMeta>(headerData)
     return got
   }
@@ -32,12 +33,13 @@ export abstract class HeaderStore extends VersionedStore {
   abstract save(dbMeta: DbMeta, branch?: string): Promise<void>
 }
 
-export abstract class CarStore extends VersionedStore {
+export abstract class DataStore {
   tag: string = 'car-base'
-  name: string
-  constructor(name: string) {
-    super()
-    this.name = name
+
+  STORAGE_VERSION: string = STORAGE_VERSION
+  loader: Loader
+  constructor(loader: Loader) {
+    this.loader = loader
   }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>

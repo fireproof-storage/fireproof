@@ -166,7 +166,7 @@ describe('basic Index upon cold start', function () {
     indexer = await index({ _crdt: crdt }, 'hello', mapFn)
     // new Index(db._crdt.indexBlocks, db._crdt, 'hello', mapFn)
     result = await indexer.query()
-    equalsJSON(indexer.indexHead, crdt._head)
+    equalsJSON(indexer.indexHead, crdt.clock.head)
   })
   it('should call map on first query', function () {
     assert(didMap)

@@ -14,7 +14,7 @@ describe('Fresh crdt', function () {
     crdt = new CRDT()
   })
   it('should have an empty head', async function () {
-    const head = crdt._head
+    const head = crdt.clock.head
     equals(head.length, 0)
   })
   it('should accept put and return results', async function () {
@@ -37,7 +37,7 @@ describe('CRDT with one record', function () {
     firstPut = await crdt.bulk([{ key: 'hello', value: { hello: 'world' } }])
   })
   it('should have a one-element head', async function () {
-    const head = crdt._head
+    const head = crdt.clock.head
     equals(head.length, 1)
   })
   it('should return the head', async function () {
@@ -78,7 +78,7 @@ describe('CRDT with a multi-write', function () {
     firstPut = await crdt.bulk([{ key: 'ace', value: { points: 11 } }, { key: 'king', value: { points: 10 } }])
   })
   it('should have a one-element head', async function () {
-    const head = crdt._head
+    const head = crdt.clock.head
     equals(head.length, 1)
     equals(firstPut.head.length, 1)
   })
@@ -127,7 +127,7 @@ describe('CRDT with two multi-writes', function () {
     secondPut = await crdt.bulk([{ key: 'queen', value: { points: 10 } }, { key: 'jack', value: { points: 10 } }])
   })
   it('should have a one-element head', async function () {
-    const head = crdt._head
+    const head = crdt.clock.head
     equals(head.length, 1)
     equals(firstPut.head.length, 1)
     equals(secondPut.head.length, 1)

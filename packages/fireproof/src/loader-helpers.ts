@@ -9,7 +9,7 @@ import { CarReader } from '@ipld/car'
 import { AnyBlock, AnyCarHeader, AnyLink, CarMakeable } from './types'
 import { Transaction } from './transaction'
 
-export async function innerMakeCarFile(fp: AnyCarHeader, t: Transaction): Promise<AnyBlock> {
+export async function clearMakeCarFile(fp: AnyCarHeader, t: Transaction): Promise<AnyBlock> {
   const { cid, bytes } = await encodeCarHeader(fp)
   await t.put(cid, bytes)
   return encodeCarFile(cid, t)

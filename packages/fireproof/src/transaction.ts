@@ -5,6 +5,7 @@ import {
 } from './types'
 import { DbLoader, IdxLoader } from './loader'
 import { CID } from 'multiformats'
+import { CRDTClock } from './crdt'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
   constructor(private parent: BlockFetcher) {
@@ -30,14 +31,15 @@ abstract class FireproofBlockstore implements BlockFetcher {
 
   private transactions: Set<Transaction> = new Set()
 
-  constructor(name: string | null, LoaderClass: typeof DbLoader | typeof IdxLoader, opts?: FireproofOptions) {
+  constructor(name: string | null, loader?: DbLoader | IdxLoader, opts?: FireproofOptions) {
     this.opts = opts || this.opts
     if (name) {
       this.name = name
-      this.loader = new LoaderClass(name, this.opts)
+      this.loader = loader!
       this.ready = this.loader.ready
     } else {
-      this.ready = Promise.resolve(LoaderClass.defaultHeader as DbCarHeader | IdxCarHeader)
+      this.ready = Promise.reject(new Error('implement default header in subclass'))
+      // Promise.resolve(loader.defaultHeader as DbCarHeader | IdxCarHeader)
     }
   }
 
@@ -89,8 +91,13 @@ abstract class FireproofBlockstore implements BlockFetcher {
 export class IndexBlockstore extends FireproofBlockstore {
   declare ready: Promise<IdxCarHeader>
 
-  constructor(name?: string, opts?: FireproofOptions) {
-    super(name || null, IdxLoader, opts)
+  constructor(name: string | null, opts?: FireproofOptions) {
+    if (name) {
+      super(name, new IdxLoader(name, opts), opts)
+    } else {
+      super(null)
+      this.ready = Promise.resolve(IdxLoader.defaultHeader as IdxCarHeader)
+    }
   }
 
   async transaction(fn: (t: Transaction) => Promise<IdxMeta>, indexes: Map<string, IdxMeta>): Promise<IdxMetaCar> {
@@ -105,9 +112,14 @@ export class IndexBlockstore extends FireproofBlockstore {
 export class TransactionBlockstore extends FireproofBlockstore {
   declare ready: Promise<DbCarHeader>
 
-  constructor(name?: string, opts?: FireproofOptions) {
+  constructor(name: string | null, clock: CRDTClock, opts?: FireproofOptions) {
     // todo this will be a map of headers by branch name
-    super(name || null, DbLoader, opts)
+    if (name) {
+      super(name, new DbLoader(name, clock, opts), opts)
+    } else {
+      super(null)
+      this.ready = Promise.resolve(DbLoader.defaultHeader as DbCarHeader)
+    }
   }
 
   async transaction(fn: (t: Transaction) => Promise<BulkResult>): Promise<BulkResultCar> {

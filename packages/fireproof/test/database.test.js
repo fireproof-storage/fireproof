@@ -5,7 +5,7 @@
 import { assert, equals, notEquals, matches, resetDirectory } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
-import { HeaderStore } from '../dist/test/store-fs.esm.js'
+import { MetaStore } from '../dist/test/store-fs.esm.js'
 
 /**
  * @typedef {Object.<string, any>} DocBody
@@ -89,7 +89,7 @@ describe('named Database with record', function () {
   /** @type {Database} */
   let db
   beforeEach(async function () {
-    await resetDirectory(HeaderStore.dataDir, 'test-db-name')
+    await resetDirectory(MetaStore.dataDir, 'test-db-name')
 
     db = new Database('test-db-name')
     /** @type {Doc} */
@@ -140,7 +140,7 @@ describe('basic Database parallel writes / public', function () {
   let db
   const writes = []
   beforeEach(async function () {
-    await resetDirectory(HeaderStore.dataDir, 'test-parallel-writes')
+    await resetDirectory(MetaStore.dataDir, 'test-parallel-writes')
     db = new Database('test-parallel-writes', { public: true })
     /** @type {Doc} */
     for (let i = 0; i < 10; i++) {
@@ -151,7 +151,7 @@ describe('basic Database parallel writes / public', function () {
   })
   it('should have one head', function () {
     const crdt = db._crdt
-    equals(crdt._head.length, 1)
+    equals(crdt.clock.head.length, 1)
   })
   it('should write all', async function () {
     for (let i = 0; i < 10; i++) {
