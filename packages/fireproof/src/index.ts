@@ -124,6 +124,12 @@ export class Index {
     }, opts)
   }
 
+  _resetIndex() {
+    this.byId = new IndexTree()
+    this.byKey = new IndexTree()
+    this.indexHead = undefined
+  }
+
   async _hydrateIndex() {
     if (this.byId.root && this.byKey.root) return
     if (!this.byId.cid || !this.byKey.cid) return
@@ -151,6 +157,7 @@ export class Index {
     const indexEntries = indexEntriesForChanges(result, this.mapFn) // use a getter to translate from string
     const byIdIndexEntries: DocUpdate[] = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
     const indexerMeta: Map<string, IdxMeta> = new Map()
+
     for (const [name, indexer] of this.crdt.indexers) {
       if (indexer.indexHead) {
         indexerMeta.set(name, {

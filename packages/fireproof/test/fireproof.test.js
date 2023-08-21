@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable mocha/max-top-level-suites */
@@ -6,6 +7,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, equals, notEquals, matches, equalsJSON, resetDirectory } from './helpers.js'
+
+import { CID } from 'multiformats/cid'
 
 import { fireproof, Database } from '../dist/test/database.esm.js'
 import { index, Index } from '../dist/test/index.esm.js'
@@ -258,4 +261,21 @@ describe('Reopening a database with indexes', function () {
   //   equals(result.rows[0].key, 'bar')
   //   assert(!didMap)
   // })
+})
+
+describe('basic js verify', function () {
+  it('should include cids in arrays', async function () {
+    const db = fireproof('test-verify')
+    const ok = await db.put({ _id: 'test', foo: ['bar', 'bam'] })
+    equals(ok.id, 'test')
+    const ok2 = await db.put({ _id: 'test2', foo: ['bar', 'bam'] })
+    equals(ok2.id, 'test2')
+    const cid = db._crdt.blocks.loader.carLog[0]
+    const cid2 = db._crdt.clock.head[0]
+    notEquals(cid, cid2)
+    assert(cid !== cid2)
+    const cidList = [cid, cid2]
+    const cid3 = CID.parse(cid.toString())
+    assert(!cidList.includes(cid3)) // sad trombone
+  })
 })

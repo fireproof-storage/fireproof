@@ -51,6 +51,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
   }
 
   async get(cid: AnyLink): Promise<AnyBlock | undefined> {
+    if (!cid) throw new Error('required cid')
     for (const f of this.transactions) {
       const v = await f.superGet(cid)
       if (v) return v
