@@ -38,7 +38,7 @@ export class CRDT {
     await this.ready
     const tResult = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-      this.clock.head = head // we need multi head support here if allowing calls to bulk in parallel
+      this.clock.applyHead(head) // we need multi head support here if allowing calls to bulk in parallel
       return { head }
     })
     return tResult
