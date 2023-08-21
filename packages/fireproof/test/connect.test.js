@@ -16,12 +16,11 @@ const serviceConfig = {
   }
 }
 
-const dbName = 'test-2-s3'
-
 describe('basic Connection with s3 remote', function () {
   /** @type {Database} */
-  let db
+  let db, dbName
   beforeEach(async function () {
+    dbName = 'test-s3-' + Math.ceil(Math.random() * 100000)
     db = new Database(dbName)
     const remote = connect.s3(db, serviceConfig.s3)
     await remote.ready
