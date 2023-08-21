@@ -2,6 +2,7 @@ import { TransactionBlockstore, IndexBlockstore } from './transaction'
 import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, DbCarHeader, FireproofOptions } from './types'
 import type { Index } from './index'
+import { cidListIncludes, uniqueCids } from './loader'
 
 export class CRDTClock {
   head: ClockHead = []
@@ -10,8 +11,8 @@ export class CRDTClock {
   watchers: Set<((updates: DocUpdate[]) => void)> = new Set()
 
   applyHead(newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
-    const keepFromPrevHead = this.head.filter((link) => !prevHead.includes(link))
-    this.head = [...new Set([...keepFromPrevHead, ...newHead])].sort((a, b) => a.toString().localeCompare(b.toString()))
+    const keepFromPrevHead = this.head.filter((link) => !cidListIncludes(prevHead, link))
+    this.head = [...(uniqueCids([...keepFromPrevHead, ...newHead]) as ClockHead)].sort((a, b) => a.toString().localeCompare(b.toString()))
     if (keepFromPrevHead.length !== 0 && this.head.length !== 0) {
       this.zoomers.forEach((fn) => fn())
     }

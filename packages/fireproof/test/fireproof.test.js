@@ -13,6 +13,7 @@ import { CID } from 'multiformats/cid'
 import { fireproof, Database } from '../dist/test/database.esm.js'
 import { index, Index } from '../dist/test/index.esm.js'
 import { testConfig } from '../dist/test/store-fs.esm.js'
+import { cidListIncludes } from '../dist/test/loader.esm.js'
 
 describe('public API', function () {
   beforeEach(async function () {
@@ -277,5 +278,6 @@ describe('basic js verify', function () {
     const cidList = [cid, cid2]
     const cid3 = CID.parse(cid.toString())
     assert(!cidList.includes(cid3)) // sad trombone
+    assert(cidListIncludes(cidList, cid3))
   })
 })

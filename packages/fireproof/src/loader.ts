@@ -13,6 +13,17 @@ import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 import { CRDTClock } from './crdt'
 
+export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
+  return list.some(c => c.equals(cid))
+}
+export function uniqueCids(list: AnyLink[]) {
+  const byString = new Map<string, AnyLink>()
+  for (const cid of list) {
+    byString.set(cid.toString(), cid)
+  }
+  return [...byString.values()]
+}
+
 export abstract class Loader {
   name: string
   opts: FireproofOptions = {}
@@ -67,13 +78,13 @@ export abstract class Loader {
     if (this.carLog.includes(meta.car)) { return }
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     const remoteCarLog = [meta.car, ...carHeader.cars]
-    if (this.carLog.length === 0 || remoteCarLog.includes(this.carLog[0])) {
+    if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
       this.carLog = remoteCarLog
       void this.getMoreReaders(carHeader.cars)
       this._applyCarHeader(carHeader, false)
     } else {
-      const newCarLog = [meta.car, ...new Set([...this.carLog, ...carHeader.cars])]
+      const newCarLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
       void this.getMoreReaders(carHeader.cars)
       // console.log('local car log', this.carLog.map(c => c.toString()))
