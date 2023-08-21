@@ -27,11 +27,7 @@ export class CRDT {
     this.opts = opts || this.opts
     this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
     this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this.opts)
-    this.ready = this.blocks.ready.then((header: DbCarHeader) => {
-      // @ts-ignore
-      if (header.indexes) throw new Error('cannot have indexes in crdt header')
-      // if (header.head) { this.clock.head = header.head } // todo multi head support here
-    })
+    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
   }
 
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {

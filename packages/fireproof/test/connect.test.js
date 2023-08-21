@@ -48,7 +48,7 @@ describe('basic Connection with s3 remote', function () {
     await remote.ready
     const { _crdt: { blocks: { loader: loader2 } } } = db2
     const gotMain = await loader2.remoteMetaStore.load('main')
-    equals(gotMain.key, loader2.key)
+    equals(gotMain.key, loader2.key) // fails when remote not ingested
 
     const doc = await db2.get('hello')
 

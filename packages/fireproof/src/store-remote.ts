@@ -20,7 +20,7 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
-    console.log('load car', carCid.toString())
+    // console.log('load car', carCid.toString())
     const bytes = await this.connection.download({
       type: 'data',
       name: this.prefix(),
