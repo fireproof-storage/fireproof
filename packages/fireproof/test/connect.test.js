@@ -46,7 +46,6 @@ describe('basic Connection with s3 remote', function () {
     const db2 = new Database(dbName)
     const remote = connect.s3(db2, serviceConfig.s3)
     await remote.ready
-    console.log('remote ready')
     const { _crdt: { blocks: { loader: loader2 } } } = db2
     const gotMain = await loader2.remoteMetaStore.load('main')
     equals(gotMain.key, loader2.key) // fails when remote not ingested

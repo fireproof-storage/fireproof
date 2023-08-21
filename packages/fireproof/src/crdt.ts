@@ -6,8 +6,13 @@ import type { Index } from './index'
 export class CRDTClock {
   head: ClockHead = []
 
-  applyHead(head: ClockHead) {
-    this.head = head
+  applyHead(head: ClockHead, merge: boolean = false) {
+    if (merge) {
+      throw new Error('merge not implemented')
+      this.head = [...this.head, ...head]
+    } else {
+      this.head = head
+    }
   }
 }
 

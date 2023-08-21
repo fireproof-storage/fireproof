@@ -76,7 +76,7 @@ export type IdxMeta = {
   head: ClockHead
 }
 
-type IdxMetaMap = {
+export type IdxMetaMap = {
   indexes: Map<string, IdxMeta>
 }
 
