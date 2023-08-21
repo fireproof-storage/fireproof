@@ -66,7 +66,7 @@ export class RemoteMetaStore extends MetaStoreBase {
       name: this.prefix(),
       branch
     })
-    console.log('load meta', bytes?.length)
+    // console.log('load meta', bytes?.length)
     if (!bytes) return null
     try {
       return this.parseHeader(new TextDecoder().decode(bytes))

@@ -22,13 +22,13 @@ const mockConnect = {
   // eslint-disable-next-line @typescript-eslint/require-await
   upload: async function (bytes, { type, name, car, branch }) {
     const key = new URLSearchParams({ type, name, car, branch }).toString()
-    console.log('upload', key)
+    // console.log('upload', key)
     mockStore.set(key, bytes)
   },
   // eslint-disable-next-line @typescript-eslint/require-await
   download: async function ({ type, name, car, branch }) {
     const key = new URLSearchParams({ type, name, car, branch }).toString()
-    console.log('download', key)
+    // console.log('download', key)
     return mockStore.get(key)
   }
 }
@@ -120,7 +120,7 @@ describe('basic Connection with raw remote', function () {
   }).timeout(10000)
 })
 
-describe('forked Connection with s3 remote', function () {
+describe('forked Connection with raw remote', function () {
   /** @type {Database} */
   let db, dbName
   beforeEach(async function () {
@@ -146,21 +146,46 @@ describe('forked Connection with s3 remote', function () {
     equals(doc._id, 'hello')
     equals(doc.value, 'world')
   }).timeout(10000)
-  it('should get remote', async function () {
-    await resetDirectory(MetaStore.dataDir, dbName)
+  it('should get remote fork', async function () {
+    // await resetDirectory(MetaStore.dataDir, dbName)
+
     const db2 = new Database(dbName)
-    const ok2 = await db2.put({ _id: 'greetings', value: 'universe' })
-    equals(ok2.id, 'greetings')
+
+    const doc = await db2.get('hello')
+    assert(doc)
+    equals(doc._id, 'hello')
+    equals(doc.value, 'world')
+
+    // db is still connected to mockConnect
+    await db.put({ _id: 'greetings', value: 'universe' })
+
     const remote = connect.raw(db2, mockConnect)
     await remote.ready
     const { _crdt: { blocks: { loader: loader2 } } } = db2
     const gotMain = await loader2.remoteMetaStore.load('main')
     equals(gotMain.key, loader2.key) // fails when remote not ingested
 
-    const doc = await db2.get('hello')
+    const doc2 = await db2.get('greetings')
+    equals(doc2.value, 'universe')
+    equals(db2._crdt.clock.head.length, 2)
 
-    assert(doc)
-    equals(doc._id, 'hello')
-    equals(doc.value, 'world')
+    const ok3 = await db2.put({ _id: 'hey', value: 'partyverse' })
+    equals(ok3.id, 'hey')
+    equals(db2._crdt.clock.head.length, 1)
+
+    // open a the db again from files
+    const db3 = new Database(dbName)
+    const doc3 = await db3.get('hey')
+    equals(doc3.value, 'partyverse')
+    const doc4 = await db3.get('greetings')
+    equals(doc4.value, 'universe')
+
+    // reset files and open again
+    await resetDirectory(MetaStore.dataDir, dbName)
+    const db4 = new Database(dbName)
+    const remote4 = connect.raw(db4, mockConnect)
+    await remote4.ready
+    const changes = await db4.changes()
+    equals(changes.rows.length, 3)
   }).timeout(10000)
 })

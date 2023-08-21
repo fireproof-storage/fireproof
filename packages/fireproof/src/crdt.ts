@@ -6,13 +6,9 @@ import type { Index } from './index'
 export class CRDTClock {
   head: ClockHead = []
 
-  applyHead(head: ClockHead, merge: boolean = false) {
-    if (merge) {
-      throw new Error('merge not implemented')
-      this.head = [...this.head, ...head]
-    } else {
-      this.head = head
-    }
+  applyHead(newHead: ClockHead, prevHead: ClockHead) {
+    const keepFromPrevHead = this.head.filter((link) => !prevHead.includes(link))
+    this.head = [...new Set([...keepFromPrevHead, ...newHead])].sort((a, b) => a.toString().localeCompare(b.toString()))
   }
 }
 
@@ -38,8 +34,9 @@ export class CRDT {
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
     await this.ready
     const tResult = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
+      const beforeHead = [...this.clock.head]
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-      this.clock.applyHead(head) // we need multi head support here if allowing calls to bulk in parallel
+      this.clock.applyHead(head, beforeHead) // we need multi head support here if allowing calls to bulk in parallel
       return { head }
     })
     return tResult
