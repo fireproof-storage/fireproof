@@ -101,7 +101,7 @@ describe('basic Loader with two commits', function () {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)
-    matches(e.message, 'rejected')
+    matches(e.message, 'missing car file')
   })
 })
 

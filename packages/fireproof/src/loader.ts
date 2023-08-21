@@ -58,7 +58,22 @@ export abstract class Loader {
         // await this.ingestCarHeadFromMeta(meta)
       }
     })
+    // todo put this where it can be used by crdt bulk
     connection.ready = Promise.all([this.ready, this.remoteMetaLoading])
+  }
+
+  async mergeMetaFromRemote(meta: DbMeta) {
+    // todo test this on null key
+    if (meta.key !== this.key) { throw new Error('key mismatch') }
+    // todo we should use a this.longCarLog() method that loads beyond compactions
+    if (this.carLog.includes(meta.car)) return
+    const carHeader = await this.loadCarHeaderFromMeta(meta)
+    if (carHeader.cars.includes(meta.car)) {
+      // fast forward to remote
+      this.carLog = [meta.car, ...carHeader.cars]
+      void this.getMoreReaders(carHeader.cars)
+      this._applyHeader(carHeader)
+    }
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -68,11 +83,15 @@ export abstract class Loader {
     }
   }
 
-  protected async ingestCarHeadFromMeta(meta: DbMeta): Promise<AnyCarHeader> {
+  async loadCarHeaderFromMeta(meta: DbMeta): Promise<AnyCarHeader> {
     const { car: cid } = meta
     const reader = await this.loadCar(cid)
-    const carHeader = await parseCarFile(reader)
-    this.carLog = [cid, ...carHeader.cars]
+    return await parseCarFile(reader)
+  }
+
+  protected async ingestCarHeadFromMeta(meta: DbMeta): Promise < AnyCarHeader > {
+    const carHeader = await this.loadCarHeaderFromMeta(meta)
+    this.carLog = [meta.car, ...carHeader.cars]
     void this.getMoreReaders(carHeader.cars)
     this._applyHeader(carHeader)
     return carHeader
@@ -101,7 +120,7 @@ export abstract class Loader {
     return this.key
   }
 
-  async commit(t: Transaction, done: IndexerResult | BulkResult, compact: boolean = false): Promise<AnyLink> {
+  async commit(t: Transaction, done: IndexerResult | BulkResult, compact: boolean = false): Promise < AnyLink > {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, compact)
     const theKey = await this._getKey()
@@ -121,7 +140,7 @@ export abstract class Loader {
     return cid
   }
 
-  async getBlock(cid: CID): Promise<AnyBlock | undefined> {
+  async getBlock(cid: CID): Promise < AnyBlock | undefined > {
     await this.ready
     const sCid = cid.toString()
     if (!this.getBlockCache.has(sCid)) {
@@ -148,7 +167,7 @@ export abstract class Loader {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.metaStore = new module.MetaStore(this.name) as MetaStore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.carStore = new module.DataStore(this) as DataStore
@@ -159,16 +178,25 @@ export abstract class Loader {
 
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader;
 
-  protected async loadCar(cid: AnyLink): Promise<CarReader> {
+  protected async loadCar(cid: AnyLink): Promise < CarReader > {
     if (!this.carReaders.has(cid.toString())) {
       this.carReaders.set(cid.toString(), (async () => {
         if (!this.carStore) throw new Error('car store not initialized')
-        const loaders = [this.carStore.load(cid)]
-        if (this.remoteCarStore) {
-          loaders.push(this.remoteCarStore.load(cid))
+        let loadedCar: AnyBlock | null = null
+        try {
+          loadedCar = await this.carStore.load(cid)
+        } catch (e) {
+          if (this.remoteCarStore) {
+            const remoteCar = await this.remoteCarStore.load(cid)
+            if (remoteCar) {
+              // todo test for this
+              await this.carStore.save(remoteCar)
+              loadedCar = remoteCar
+            }
+          }
         }
-        const car = await Promise.any(loaders)
-        if (!car) throw new Error(`missing car file ${cid.toString()}`)
+        if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
+        const car = loadedCar
         const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(car.bytes)) as Promise<CarReader>
         this.carReaders.set(cid.toString(), readerP)
         return readerP
