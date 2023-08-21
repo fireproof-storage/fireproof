@@ -31,9 +31,7 @@ describe('basic Connection with s3 remote', function () {
   })// .timeout(10000)
   it('should save a remote header', async function () {
     const { _crdt: { blocks: { loader } } } = db
-    // const expectedHeader = `/meta/test-s3/hello.json`
     const gotMain = await loader.remoteMetaStore.load('main')
-    console.log('gotMain', gotMain)
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
@@ -44,7 +42,6 @@ describe('basic Connection with s3 remote', function () {
     equals(doc.value, 'world')
   }).timeout(10000)
   it('should get remote', async function () {
-    console.log('reset------------------')
     await resetDirectory(MetaStore.dataDir, dbName)
     const db2 = new Database(dbName)
     const remote = connect.s3(db2, serviceConfig.s3)

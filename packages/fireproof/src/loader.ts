@@ -50,7 +50,6 @@ export abstract class Loader {
     this.remoteMetaStore = new RemoteMetaStore(this.name, connection)
     this.remoteCarStore = new RemoteDataStore(this, connection)
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (meta) => {
-      console.log('remoteMeta', meta)
       if (meta) {
         await this.ingestKeyFromMeta(meta)
         await this.ingestCarHeadFromMeta(meta, { merge: true })
@@ -77,9 +76,7 @@ export abstract class Loader {
     return carHeader
   }
 
-  protected _applyHeader(carHeader: AnyCarHeader) {
-    console.log('applyHeader', carHeader)
-  }
+  protected _applyHeader(_carHeader: AnyCarHeader) {}
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
@@ -108,7 +105,6 @@ export abstract class Loader {
     const theKey = await this._getKey()
     const { cid, bytes } = theKey ? await encryptedMakeCarFile(theKey, fp, t) : await clearMakeCarFile(fp, t)
     await this.carStore!.save({ cid, bytes })
-    console.log('remoteCarStore?.save', cid.toString())
     await this.remoteCarStore?.save({ cid, bytes })
     if (compact) {
       for (const cid of this.carLog) {
@@ -119,7 +115,6 @@ export abstract class Loader {
       this.carLog.push(cid)
     }
     await this.metaStore!.save({ car: cid, key: theKey || null })
-    console.log('remoteMetaStore?.save', cid.toString(), theKey)
     await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
     return cid
   }
