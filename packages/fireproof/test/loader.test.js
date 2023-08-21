@@ -155,8 +155,8 @@ describe('Loader with two committed transactions', function () {
     notEquals(done1.car, done2.car)
     equals(blockstore.transactions.size, 2)
     equals(loader.carLog.length, 2)
-    equals(loader.carLog.indexOf(done1.car), 0)
-    equals(loader.carLog.indexOf(done2.car), 1)
+    equals(loader.carLog.indexOf(done1.car), 1)
+    equals(loader.carLog.indexOf(done2.car), 0)
   })
   it('can load the car', async function () {
     const reader = await loader.loadCar(done2.car)
