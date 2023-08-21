@@ -42,6 +42,7 @@
   "scripts": {
     "test": "npm run build:test && npm run test:node && tsc",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build && npm run test:node\"",
+    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "tsc:watch": "tsc --watch",
     "build:all": " npm run build:version && npm run build && npm run test:browser",
     "analyze": "node ./scripts/analyze.js",

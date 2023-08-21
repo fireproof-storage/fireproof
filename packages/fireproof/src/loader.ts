@@ -54,8 +54,7 @@ export abstract class Loader {
     // eslint-disable-next-line @typescript-eslint/require-await
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (meta) => {
       if (meta) {
-        // await this.ingestKeyFromMeta(meta)
-        // await this.ingestCarHeadFromMeta(meta)
+        await this.mergeMetaFromRemote(meta)
       }
     })
     // todo put this where it can be used by crdt bulk
@@ -63,16 +62,21 @@ export abstract class Loader {
   }
 
   async mergeMetaFromRemote(meta: DbMeta) {
-    // todo test this on null key
-    if (meta.key !== this.key) { throw new Error('key mismatch') }
+    if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
-    if (this.carLog.includes(meta.car)) return
+    if (this.carLog.includes(meta.car)) { return }
     const carHeader = await this.loadCarHeaderFromMeta(meta)
-    if (carHeader.cars.includes(meta.car)) {
+    const remoteCarLog = [meta.car, ...carHeader.cars]
+    if (this.carLog.length === 0 || remoteCarLog.includes(this.carLog[0])) {
       // fast forward to remote
-      this.carLog = [meta.car, ...carHeader.cars]
+      this.carLog = remoteCarLog
       void this.getMoreReaders(carHeader.cars)
       this._applyHeader(carHeader)
+    } else {
+      console.log('local car log', this.carLog)
+      console.log('remote car log', remoteCarLog)
+      console.log('remote meta', meta)
+      throw new Error('not implemented car merge')
     }
   }
 
@@ -196,8 +200,7 @@ export abstract class Loader {
           }
         }
         if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
-        const car = loadedCar
-        const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(car.bytes)) as Promise<CarReader>
+        const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes)) as Promise<CarReader>
         this.carReaders.set(cid.toString(), readerP)
         return readerP
       })())
@@ -216,7 +219,7 @@ export abstract class Loader {
   }
 
   protected async setKey(key: string) {
-    if (this.key && this.key !== key) throw new Error('key already set')
+    if (this.key && this.key !== key) throw new Error('key mismatch')
     this.key = key
     const crypto = getCrypto()
     if (!crypto) throw new Error('missing crypto module')
