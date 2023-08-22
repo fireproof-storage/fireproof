@@ -34,14 +34,15 @@ export class Index {
     this.crdt = crdt
     this.applyMapFn(name, mapFn, meta)
     if (!(this.mapFnString || this.initError)) throw new Error('missing mapFnString')
-    this.ready = this.blocks.ready.then((header: IdxCarHeader) => {
-      // @ts-ignore
-      if (header.head) throw new Error('cannot have head in idx header')
-      if (header.indexes === undefined) throw new Error('missing indexes in idx header')
-      for (const [name, idx] of Object.entries(header.indexes)) {
-        index({ _crdt: crdt }, name, undefined, idx as IdxMeta)
-      }
-    })
+    this.ready = this.blocks.ready.then(() => {})
+  // .then((header: IdxCarHeader) => {
+  //     // @ts-ignore
+  //     if (header.head) throw new Error('cannot have head in idx header')
+  //     if (header.indexes === undefined) throw new Error('missing indexes in idx header')
+  //     // for (const [name, idx] of Object.entries(header.indexes)) {
+  //     //   index({ _crdt: crdt }, name, undefined, idx as IdxMeta)
+  //     // }
+  //   })
   }
 
   applyMapFn(name: string, mapFn?: MapFn, meta?: IdxMeta) {

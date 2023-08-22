@@ -255,12 +255,26 @@ describe('two Connection with raw remote', function () {
 
     await writeFile(metaPath, meta1)
 
+    console.log('make db2')
     const db2 = new Database(dbName)
+    console.log('connect db2 to remote')
     const remote2 = connect.raw(db2, mockConnect)
+
     await remote2.ready
+    console.log('db2 remote2 ready')
+
+    await db2._crdt.blocks.loader.ready
+
+    console.log('loader ready')
 
     const doc3 = { _id: 'hey', value: 'partyverse' }
     console.log('put doc3')
+
+    assert(db2._crdt.blocks.loader)
+    assert(db2._crdt.blocks.loader.carLog)
+    equals(db2._crdt.blocks.loader.carLog.length, 1)
+    console.log('carlog', db2._crdt.blocks.loader.carLog.toString())
+
     const ok3 = await db2.put(doc3)
     equals(ok3.id, 'hey')
     console.log('query changes')

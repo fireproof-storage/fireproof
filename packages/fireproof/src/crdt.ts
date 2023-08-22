@@ -17,24 +17,28 @@ export class CRDTClock {
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    if (ogHead.toString() === newHead.toString()) return
+    if (ogHead.toString() === newHead.toString()) {
+      console.log('applyHead noop')
+      return
+    }
     const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    console.log('applyHead', ogHead, newHead, ogPrev)
+    console.log('applyHead', !!tblocks, { ogHead, newHead, ogPrev })
     if (ogHead.toString() === ogPrev.toString()) {
       this.head = newHead
       this.watchers.forEach((fn) => fn(updates))
-      console.log('applyHead done')
+      console.log('applyHead done: this.head = newHead')
       return
     }
 
     const withBlocks = async (tblocks: Transaction| null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
       if (tblocks instanceof Transaction) return await fn(tblocks)
       if (!this.blocks) throw new Error('missing blocks')
-      console.log('run own transaction')
+      console.log('run own transaction', this.blocks.loader?.carLog.toString())
       return await this.blocks.transaction(fn)
     }
 
     const { head } = await withBlocks(tblocks, async (tblocks) => {
+      console.log('advanving over', newHead.toString())
       // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
       let head = this.head
       for (const cid of newHead) {
@@ -46,6 +50,7 @@ export class CRDTClock {
     })
 
     this.head = head
+    console.log('onZoom', this.head)
     this.zoomers.forEach((fn) => fn())
     this.watchers.forEach((fn) => fn(updates))
   }
@@ -55,7 +60,6 @@ export class CRDTClock {
   }
 
   onZoom(fn: () => void) {
-    console.log('onZoom')
     this.zoomers.add(fn)
   }
 }
@@ -76,7 +80,7 @@ export class CRDT {
     this.opts = opts || this.opts
     this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
     this.clock.blocks = this.blocks
-    this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this.opts)
+    this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this, this.opts)
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
