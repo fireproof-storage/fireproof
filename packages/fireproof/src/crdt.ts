@@ -15,7 +15,6 @@ export class CRDTClock {
   blocks: TransactionBlockstore | null = null
 
   setHead(head: ClockHead) {
-    console.log('setHead', head)
     this.head = head
   }
 
@@ -23,27 +22,22 @@ export class CRDTClock {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     if (ogHead.toString() === newHead.toString()) {
-      console.log('applyHead noop', ogHead.toString(), newHead.toString())
       return
     }
     const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    console.log('applyHead', !!tblocks, { ogHead, newHead, ogPrev })
     if (ogHead.toString() === ogPrev.toString()) {
       this.setHead(newHead)
       this.watchers.forEach((fn) => fn(updates))
-      console.log('applyHead done: this.head = newHead')
       return
     }
 
     const withBlocks = async (tblocks: Transaction| null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
       if (tblocks instanceof Transaction) return await fn(tblocks)
       if (!this.blocks) throw new Error('missing blocks')
-      console.log('run own transaction', this.blocks.loader?.carLog.toString())
       return await this.blocks.transaction(fn)
     }
 
     const { head } = await withBlocks(tblocks, async (tblocks) => {
-      console.log('advanving over', newHead.toString())
       // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
       let head = this.head
       for (const cid of newHead) {
@@ -55,7 +49,6 @@ export class CRDTClock {
     })
 
     this.setHead(head)
-    console.log('onZoom', this.head)
     this.zoomers.forEach((fn) => fn())
     this.watchers.forEach((fn) => fn(updates))
   }
@@ -88,7 +81,6 @@ export class CRDT {
     this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this, this.opts)
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
     this.clock.onZoom(() => {
-      console.log('reset indexes', [...this.indexers.keys()], this.clock.head.toString())
       for (const idx of this.indexers.values()) {
         idx._resetIndex()
       }
