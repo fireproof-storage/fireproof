@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -15,11 +16,12 @@ import { assert, matches, equals, resetDirectory, notEquals } from './helpers.js
 import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
 
 import { IdxLoader, DbLoader } from '../dist/test/loader.esm.js'
-import { CRDT } from '../dist/test/crdt.esm.js'
-import { Transaction } from '../dist/test/transaction.esm.js'
+import { CRDT, CRDTClock } from '../dist/test/crdt.esm.js'
+import { Transaction, IndexBlockstore } from '../dist/test/transaction.esm.js'
 
 import { testConfig } from '../dist/test/store-fs.esm.js'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { index } from '../dist/test/index.esm.js'
 
 describe('basic Loader', function () {
   let loader, block, t
@@ -204,17 +206,19 @@ describe('Loader with many committed transactions', function () {
 })
 
 describe('basic Loader with index commits', function () {
-  let loader, block, t, indexerResult, cid
+  let block, ib, indexerResult, cid, indexMap
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-index')
-    t = new Transaction(new MemoryBlockstore())
-    loader = new IdxLoader('test-loader-index', { public: true })
+    // t = new Transaction()
+    ib = new IndexBlockstore('test-loader-index', new CRDT(), {})
+    // loader = new IdxLoader('test-loader-index', { indexers: new Map() }, { public: true })
     block = (await encode({
       value: { hello: 'world' },
       hasher,
       codec
     }))
-    await t.put(block.cid, block.bytes)
+    console.log('block', block.cid.toString())
+
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     indexerResult = {
       indexes: {
@@ -227,17 +231,23 @@ describe('basic Loader with index commits', function () {
         }
       }
     }
+    indexMap = new Map()
   })
   it('should start with an empty car log', function () {
-    equals(loader.carLog.length, 0)
+    equals(ib.loader.carLog.length, 0)
   })
   it('should commit the index metadata', async function () {
-    const carCid = await loader.commit(t, indexerResult)
+    const { car: carCid } = await ib.transaction(async (t) => {
+      await t.put(block.cid, block.bytes)
+      // const car = await loader.commit(t, indexerResult)
+      // console.log()
+      return indexerResult.indexes.hello
+    }, indexMap)
 
-    const carLog = loader.carLog
+    const carLog = ib.loader.carLog
 
     equals(carLog.length, 1)
-    const reader = await loader.loadCar(carCid)
+    const reader = await ib.loader.loadCar(carCid)
     assert(reader)
     const parsed = await parseCarFile(reader)
     assert(parsed.cars)
