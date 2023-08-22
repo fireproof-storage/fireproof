@@ -69,27 +69,49 @@ export abstract class Loader {
       }
     })
     // todo put this where it can be used by crdt bulk
-    connection.ready = Promise.all([this.ready, this.remoteMetaLoading])
+    const loaderReady = this.ready
+    connection.ready = Promise.all([loaderReady, this.remoteMetaLoading])
+    this.ready = connection.ready.then(() => {
+      console.log('connection ready')
+      return loaderReady
+    })
+    // void this.ready.then(() => {
+    //   setInterval(() => {
+    //     void this.remoteMetaStore!.load('main').then(async (meta) => {
+    //       if (meta) {
+    //         await this.mergeMetaFromRemote(meta)
+    //       }
+    //     })
+    //   }, 1000)
+    // })
+    return connection
   }
 
   async mergeMetaFromRemote(meta: DbMeta) {
+    console.log('merge meta from remote', meta)
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
-    if (this.carLog.includes(meta.car)) { return }
+    if (cidListIncludes(this.carLog, meta.car)) {
+      console.log('FF: this.carLog includes remote car')
+      return
+    }
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     const remoteCarLog = [meta.car, ...carHeader.cars]
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
+      console.log('FF: remoteCarLog includes local head car', this.carLog.length)
       this.carLog = remoteCarLog
       void this.getMoreReaders(carHeader.cars)
       this._applyCarHeader(carHeader, false)
     } else {
+      // throw new Error('remote car log does not include local car log')
+      console.log('not ff, search for common ancestor')
       const newCarLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
       void this.getMoreReaders(carHeader.cars)
-      // console.log('local car log', this.carLog.map(c => c.toString()))
-      // console.log('remote car log', remoteCarLog.map(c => c.toString()))
-      // console.log('remote meta', meta)
+      console.log('local car log', this.carLog.map(c => c.toString()))
+      console.log('remote car log', remoteCarLog.map(c => c.toString()))
+      console.log('remote meta', meta)
       this._applyCarHeader(carHeader, true)
     }
   }
@@ -280,8 +302,8 @@ export class DbLoader extends Loader {
     this.clock = clock
   }
 
-  protected _applyCarHeader(carHeader: DbCarHeader, _merge: boolean) {
-    this.clock.applyHead(carHeader.head, [])
+  protected _applyCarHeader(carHeader: DbCarHeader, merge: boolean) {
+    this.clock.applyHead(carHeader.head, merge ? [] : this.clock.head)
   }
 
   protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
