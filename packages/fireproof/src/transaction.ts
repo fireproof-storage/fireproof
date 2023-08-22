@@ -5,7 +5,7 @@ import {
 } from './types'
 import { DbLoader, IdxLoader } from './loader'
 // import { CID } from 'multiformats'
-import { CRDTClock } from './crdt'
+import { CRDT, CRDTClock } from './crdt'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
   constructor(private parent: BlockFetcher) {
@@ -23,7 +23,7 @@ export class Transaction extends MemoryBlockstore implements CarMakeable {
 }
 
 abstract class FireproofBlockstore implements BlockFetcher {
-  ready: Promise<IdxCarHeader | DbCarHeader>
+  ready: Promise<void>
   name: string | null = null
 
   loader: DbLoader | IdxLoader | null = null
@@ -35,10 +35,11 @@ abstract class FireproofBlockstore implements BlockFetcher {
     this.opts = opts || this.opts
     if (name) {
       this.name = name
-      this.loader = loader!
+      if (!loader) throw new Error('missing loader')
+      this.loader = loader
       this.ready = this.loader.ready
     } else {
-      this.ready = Promise.reject(new Error('implement default header in subclass'))
+      this.ready = Promise.resolve() // Promise.reject(new Error('implement default header in subclass'))
     }
   }
 
@@ -89,14 +90,14 @@ abstract class FireproofBlockstore implements BlockFetcher {
 }
 
 export class IndexBlockstore extends FireproofBlockstore {
-  declare ready: Promise<IdxCarHeader>
+  // declare ready: Promise<IdxCarHeader>
 
-  constructor(name: string | null, opts?: FireproofOptions) {
+  constructor(name: string | null, crdt: CRDT, opts?: FireproofOptions) {
     if (name) {
-      super(name, new IdxLoader(name, opts), opts)
+      super(name, new IdxLoader(name, crdt, opts), opts)
     } else {
       super(null)
-      this.ready = Promise.resolve(IdxLoader.defaultHeader as IdxCarHeader)
+      // this.ready = Promise.resolve(IdxLoader.defaultHeader as IdxCarHeader)
     }
   }
 
@@ -110,7 +111,7 @@ export class IndexBlockstore extends FireproofBlockstore {
 }
 
 export class TransactionBlockstore extends FireproofBlockstore {
-  declare ready: Promise<DbCarHeader>
+  // declare ready: Promise<DbCarHeader>
 
   constructor(name: string | null, clock: CRDTClock, opts?: FireproofOptions) {
     // todo this will be a map of headers by branch name
@@ -118,7 +119,7 @@ export class TransactionBlockstore extends FireproofBlockstore {
       super(name, new DbLoader(name, clock, opts), opts)
     } else {
       super(null)
-      this.ready = Promise.resolve(DbLoader.defaultHeader as DbCarHeader)
+      // this.ready = Promise.resolve(DbLoader.defaultHeader as DbCarHeader)
     }
   }
 

@@ -11,12 +11,13 @@ import { DataStore, MetaStore } from './store'
 import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
-import { CRDTClock } from './crdt'
+import { CRDT, CRDTClock } from './crdt'
+import { index } from './index'
 
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
-export function uniqueCids(list: AnyLink[]) {
+export function uniqueCids(list: AnyLink[]): AnyLink[] {
   const byString = new Map<string, AnyLink>()
   for (const cid of list) {
     byString.set(cid.toString(), cid)
@@ -35,7 +36,7 @@ export abstract class Loader {
   carStore: DataStore | undefined
   carLog: AnyLink[] = []
   carReaders: Map<string, Promise<CarReader>> = new Map()
-  ready: Promise<AnyCarHeader>
+  ready: Promise<void>
   key: string | undefined
   keyId: string | undefined
 
@@ -52,10 +53,10 @@ export abstract class Loader {
       const meta = await this.metaStore.load('main')
       if (!meta) {
         // await this._getKey() // generate a random key
-        return this.defaultHeader
+        return // this.defaultHeader
       }
       await this.ingestKeyFromMeta(meta)
-      return await this.ingestCarHeadFromMeta(meta)
+      await this.ingestCarHeadFromMeta(meta)
     })
   }
 
@@ -88,7 +89,7 @@ export abstract class Loader {
   }
 
   async mergeMetaFromRemote(meta: DbMeta) {
-    console.log('merge meta from remote', meta)
+    console.log('mergeMetaFromRemote', meta)
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
@@ -100,18 +101,23 @@ export abstract class Loader {
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
       console.log('FF: remoteCarLog includes local head car', this.carLog.length)
-      this.carLog = remoteCarLog
+      this.carLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
+      console.log('FF new carLog', this.carLog.map(c => c.toString()))
       void this.getMoreReaders(carHeader.cars)
+      console.log('_applyCarHeader m1', meta)
       this._applyCarHeader(carHeader)
     } else {
       // throw new Error('remote car log does not include local car log')
       console.log('not ff, search for common ancestor', this.carLog.map(c => c.toString()))
       const newCarLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
+      console.log('not ff new carLog', this.carLog.map(c => c.toString()))
+
       void this.getMoreReaders(carHeader.cars)
       // console.log('local car log', this.carLog.map(c => c.toString()))
       // console.log('remote car log', remoteCarLog.map(c => c.toString()))
       // console.log('remote meta', meta)
+      console.log('_applyCarHeader m2', meta)
       this._applyCarHeader(carHeader)
     }
   }
@@ -133,6 +139,7 @@ export abstract class Loader {
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     this.carLog = [meta.car, ...carHeader.cars]
     void this.getMoreReaders(carHeader.cars)
+    console.log('_applyCarHeader i', meta)
     this._applyCarHeader(carHeader)
     return carHeader
   }
@@ -273,10 +280,24 @@ export abstract class Loader {
 }
 
 export class IdxLoader extends Loader {
-  declare ready: Promise<IdxCarHeader>
+  // declare ready: Promise<IdxCarHeader>
+
+  crdt: CRDT
 
   static defaultHeader = { cars: [], compact: [], indexes: new Map() as Map<string, IdxMeta> }
   defaultHeader = IdxLoader.defaultHeader
+
+  constructor(name: string, crdt: CRDT, opts?: FireproofOptions) {
+    super(name, opts)
+    this.crdt = crdt
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async _applyCarHeader(header: IdxCarHeader) {
+    for (const [name, idx] of Object.entries(header.indexes)) {
+      index({ _crdt: this.crdt }, name, undefined, idx as IdxMeta)
+    }
+  }
 
   protected makeCarHeader({ indexes }: IndexerResult, cars: AnyLink[], compact: boolean = false): IdxCarHeader {
     return compact ? { indexes, cars: [], compact: cars } : { indexes, cars, compact: [] }
@@ -286,7 +307,7 @@ export class IdxLoader extends Loader {
 type IndexerResult = CarCommit & IdxMetaMap
 
 export class DbLoader extends Loader {
-  declare ready: Promise<DbCarHeader> // todo this will be a map of headers by branch name
+  // declare ready: Promise<DbCarHeader> // todo this will be a map of headers by branch name
 
   static defaultHeader = { cars: [], compact: [], head: [] }
   defaultHeader = DbLoader.defaultHeader
