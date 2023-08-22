@@ -4,7 +4,7 @@ import {
   DbCarHeader, IdxCarHeader, IdxMeta, CarCommit, CarMakeable, FireproofOptions
 } from './types'
 import { DbLoader, IdxLoader } from './loader'
-import { CID } from 'multiformats'
+// import { CID } from 'multiformats'
 import { CRDTClock } from './crdt'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
@@ -39,7 +39,6 @@ abstract class FireproofBlockstore implements BlockFetcher {
       this.ready = this.loader.ready
     } else {
       this.ready = Promise.reject(new Error('implement default header in subclass'))
-      // Promise.resolve(loader.defaultHeader as DbCarHeader | IdxCarHeader)
     }
   }
 
