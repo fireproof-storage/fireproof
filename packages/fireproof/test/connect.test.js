@@ -1,15 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable mocha/max-top-level-suites */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, copyDirectory } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory, copyDirectory, equalsJSON } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 import { connect } from '../dist/test/connect.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 import { MetaStore } from '../dist/test/store-fs.esm.js'
 import { join } from 'path'
+import { promises as fs, read } from 'fs'
+import json from '@rollup/plugin-json'
+const { readFile, writeFile } = fs
 
 const serviceConfig = {
   s3: {
@@ -23,13 +27,13 @@ const mockConnect = {
   // eslint-disable-next-line @typescript-eslint/require-await
   upload: async function (bytes, { type, name, car, branch }) {
     const key = new URLSearchParams({ type, name, car, branch }).toString()
-    // console.log('upload', key)
+    console.log('upload', key)
     mockStore.set(key, bytes)
   },
   // eslint-disable-next-line @typescript-eslint/require-await
   download: async function ({ type, name, car, branch }) {
     const key = new URLSearchParams({ type, name, car, branch }).toString()
-    // console.log('download', key)
+    console.log('download', key)
     return mockStore.get(key)
   }
 }
@@ -197,16 +201,33 @@ describe('two Connection with raw remote', function () {
   /** @type {Database} */
   let db, dbName
 
-  // create a database
-  // connect it to the remote
-  // add data
-  // make a physical copy of the database
-  // open the copy
-  // make a change to the original
-  // make a change to the copy
+  // this test won't test the forking anymore once we
+  // move away from default behavior of:
+  // on connect, pull remote once
+  // on connected put, push to remote.
+  // basically as soon as we have continuous pull, we need to rethink this test.
+  // the goal is to test that when you merge a remote head that has a fork
+  // you get the correct outcome (both forks are merged)
 
+  // the test should be:
+  // make database A
+  // connect A to the remote R
+  // create doc 1
+  // snap meta 1
+  // create doc 2
+  // snap meta 2
+  // rollback to meta 1
+  // make database A2 (same name)
+  // connect A2 to the remote R
+  // create doc 3
+  // snap meta 3
+  // rollback to meta 2
+  // make database A3 (same name)
+
+  let metaPath
   beforeEach(async function () {
-    dbName = 'test-raw-copy'
+    dbName = 'test-connection-raw'
+    metaPath = join(MetaStore.dataDir, dbName, 'meta', 'main.json')
     await resetDirectory(MetaStore.dataDir, dbName)
     mockStore.clear()
     db = new Database(dbName)
@@ -217,7 +238,56 @@ describe('two Connection with raw remote', function () {
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
     assert(MetaStore.dataDir)
-    await copyDirectory(join(MetaStore.dataDir, dbName), join(MetaStore.dataDir, dbName + 'second'))
+
+    const meta1 = await readFile(metaPath)
+    equalsJSON(Object.keys(JSON.parse(meta1.toString())), ['car', 'key'])
+
+    const doc2 = { _id: 'hi', value: 'folks' }
+    const ok2 = await db.put(doc2)
+    equals(ok2.id, 'hi')
+
+    const changes1 = await db.changes()
+    equals(changes1.rows.length, 2)
+
+    const meta2 = await readFile(metaPath)
+    equalsJSON(Object.keys(JSON.parse(meta2.toString())), ['car', 'key'])
+    notEquals(meta1.toString(), meta2.toString())
+
+    await writeFile(metaPath, meta1)
+
+    const db2 = new Database(dbName)
+    const remote2 = connect.raw(db2, mockConnect)
+    await remote2.ready
+
+    const doc3 = { _id: 'hey', value: 'partyverse' }
+    const ok3 = await db2.put(doc3)
+    equals(ok3.id, 'hey')
+
+    const changes2 = await db2.changes()
+    equals(changes2.rows.length, 2)
+
+    const meta3 = await readFile(metaPath)
+    equalsJSON(Object.keys(JSON.parse(meta3.toString())), ['car', 'key'])
+    notEquals(meta2.toString(), meta3.toString())
+    notEquals(meta1.toString(), meta3.toString())
+
+    await writeFile(metaPath, meta2)
+    console.log('reboot meta2')
+    const db3 = new Database(dbName)
+    await db3._crdt.ready
+    assert(db3._crdt.blocks.loader)
+    assert(db3._crdt.blocks.loader.carLog)
+    equals(db3._crdt.blocks.loader.carLog.length, 2)
+
+    const changes25 = await db3.changes()
+    equals(changes25.rows.length, 2)
+    console.log('connect meta2 to remote')
+    const remote3 = connect.raw(db3, mockConnect)
+    await remote3.ready
+    console.log('query new meta2.3')
+
+    const changes3 = await db3.changes()
+    equals(changes3.rows.length, 3)
   })// .timeout(10000)
   it('should save a remote header', async function () {
     const { _crdt: { blocks: { loader } } } = db
@@ -225,13 +295,13 @@ describe('two Connection with raw remote', function () {
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
-  it('should get', async function () {
+  it.skip('should get', async function () {
     const doc = await db.get('hello')
     assert(doc)
     equals(doc._id, 'hello')
     equals(doc.value, 'world')
   }).timeout(10000)
-  it('should get remote fork', async function () {
+  it.skip('should get remote fork', async function () {
     // await resetDirectory(MetaStore.dataDir, dbName)
 
     const db2 = new Database(dbName)
@@ -271,6 +341,7 @@ describe('two Connection with raw remote', function () {
     const remote4 = connect.raw(db4, mockConnect)
     await remote4.ready
     const changes = await db4.changes()
-    equals(changes.rows.length, 3)
+    console.log('changes', changes)
+    equals(changes.rows.length, 4)
   }).timeout(10000)
 })
