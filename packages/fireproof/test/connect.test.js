@@ -27,13 +27,11 @@ const mockConnect = {
   // eslint-disable-next-line @typescript-eslint/require-await
   upload: async function (bytes, { type, name, car, branch }) {
     const key = new URLSearchParams({ type, name, car, branch }).toString()
-    console.log('upload', key)
     mockStore.set(key, bytes)
   },
   // eslint-disable-next-line @typescript-eslint/require-await
   download: async function ({ type, name, car, branch }) {
     const key = new URLSearchParams({ type, name, car, branch }).toString()
-    console.log('download', key)
     return mockStore.get(key)
   }
 }
@@ -244,16 +242,12 @@ describe('two Connection with raw remote', function () {
 
     // await writeFile(metaPath, meta1)
 
-    console.log('make db2')
     const db2 = new Database(dbName)
 
-    console.log('connect db2 to remote')
     const remote2 = connect.raw(db2, mockConnect)
 
     await remote2.ready
     // await db2._crdt.ready
-
-    console.log('db2 remote2 ready')
 
     const doc2 = { _id: 'hi', value: 'folks' }
     const ok2 = await db.put(doc2)
@@ -264,15 +258,11 @@ describe('two Connection with raw remote', function () {
     const changes1 = await db.changes()
     equals(changes1.rows.length, 2)
 
-    console.log('db1 changes', changes1.rows)
-
     const meta2 = await readFile(metaPath)
     equalsJSON(Object.keys(JSON.parse(meta2.toString())), ['car', 'key'])
     notEquals(meta1.toString(), meta2.toString())
 
     await db2._crdt.blocks.loader.ready
-
-    console.log('db2 loader ready') // should be able to get hello but not hi
 
     const docHello = await db2.get('hello')
     equals(docHello.value, 'world')
@@ -281,12 +271,10 @@ describe('two Connection with raw remote', function () {
     matches(docHi.message, /Missing/)
 
     const doc3 = { _id: 'hey', value: 'partyverse' }
-    console.log('put doc3')
 
     assert(db2._crdt.blocks.loader)
     assert(db2._crdt.blocks.loader.carLog)
     equals(db2._crdt.blocks.loader.carLog.length, 1)
-    console.log('carlog', db2._crdt.blocks.loader.carLog.toString())
 
     // this is intermittent, why?
     const ok3 = await db2.put(doc3)
@@ -297,11 +285,7 @@ describe('two Connection with raw remote', function () {
     const hey = await db2.get('hey')
     equals(hey.value, 'partyverse')
 
-    console.log('query changes')
-
     const changes2 = await db2.changes()
-
-    console.log('db2 changes', changes2.rows)
 
     equals(changes2.rows.length, 2)
 
@@ -311,7 +295,6 @@ describe('two Connection with raw remote', function () {
     notEquals(meta1.toString(), meta3.toString())
 
     await writeFile(metaPath, meta2)
-    console.log('reboot meta2')
     const db3 = new Database(dbName)
     await db3._crdt.ready
     assert(db3._crdt.blocks.loader)
@@ -319,18 +302,15 @@ describe('two Connection with raw remote', function () {
     equals(db3._crdt.blocks.loader.carLog.length, 2)
 
     const changes25 = await db3.changes()
-    console.log('db3 changes', changes25.rows)
     equals(changes25.rows.length, 2)
 
     equalsJSON(db3._crdt.clock.head, changes25.clock)
 
-    console.log('connect meta2 to remote')
     const remote3 = connect.raw(db3, mockConnect)
     await remote3.ready
     // await db3._crdt.blocks.loader.ready
     // await db3._crdt.ready
 
-    console.log('query new meta2.3')
     // equalsJSON(db3._crdt.clock.head, ok3.clock)
     equals(db3._crdt.clock.head.length, 2)
 
@@ -344,7 +324,6 @@ describe('two Connection with raw remote', function () {
     // equals(docHi3.value, 'world')
 
     const changes3 = await db3.changes()
-    console.log('db3 changes', changes3.rows)
 
     equals(changes3.rows.length, 3)
   })// .timeout(10000)
@@ -394,7 +373,6 @@ describe('two Connection with raw remote', function () {
     const remote4 = connect.raw(db4, mockConnect)
     await remote4.ready
     const changes = await db4.changes()
-    console.log('changes', changes)
     equals(changes.rows.length, 4)
   }).timeout(10000)
 })

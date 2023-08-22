@@ -217,7 +217,6 @@ describe('basic Loader with index commits', function () {
       hasher,
       codec
     }))
-    console.log('block', block.cid.toString())
 
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     indexerResult = {
@@ -239,8 +238,6 @@ describe('basic Loader with index commits', function () {
   it('should commit the index metadata', async function () {
     const { car: carCid } = await ib.transaction(async (t) => {
       await t.put(block.cid, block.bytes)
-      // const car = await loader.commit(t, indexerResult)
-      // console.log()
       return indexerResult.indexes.hello
     }, indexMap)
 

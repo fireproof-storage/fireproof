@@ -21,7 +21,6 @@ export async function applyBulkUpdateToCrdt(
     }
     head = result.head
   }
-  // console.log('applyBulkUpdateToCrdt', result?.event.cid, result?.event.value, result?.head.toString())
   return { head }
 }
 

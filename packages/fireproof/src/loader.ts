@@ -58,7 +58,6 @@ export abstract class Loader {
   }
 
   connectRemote(connection: Connection) {
-    console.log('connectRemote')
     this.remoteMetaStore = new RemoteMetaStore(this.name, connection)
     this.remoteCarStore = new RemoteDataStore(this, connection)
     // eslint-disable-next-line @typescript-eslint/require-await
@@ -70,7 +69,6 @@ export abstract class Loader {
     // todo put this where it can be used by crdt bulk
     const loaderReady = this.ready
     connection.ready = Promise.all([loaderReady, this.remoteMetaLoading]).then(() => {
-      console.log('connection ready')
     })
     // void this.ready.then(() => {
     //   setInterval(() => {
@@ -85,35 +83,24 @@ export abstract class Loader {
   }
 
   async mergeMetaFromRemote(meta: DbMeta): Promise<void> {
-    console.log('mergeMetaFromRemote', meta)
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
-      console.log('FF: this.carLog includes remote car')
       return
     }
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     const remoteCarLog = [meta.car, ...carHeader.cars]
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
-      console.log('FF: remoteCarLog includes local head car', this.carLog.map(c => c.toString()))
       this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
-      console.log('FF new carLog', this.carLog.map(c => c.toString()))
       void this.getMoreReaders(carHeader.cars)
-      console.log('_applyCarHeader m1', meta, carHeader)
       await this._applyCarHeader(carHeader)
     } else {
       // throw new Error('remote car log does not include local car log')
-      console.log('not ff, search for common ancestor', this.carLog.map(c => c.toString()))
       const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
-      console.log('not ff new carLog', this.carLog.map(c => c.toString()))
 
       void this.getMoreReaders(carHeader.cars)
-      // console.log('local car log', this.carLog.map(c => c.toString()))
-      // console.log('remote car log', remoteCarLog.map(c => c.toString()))
-      // console.log('remote meta', meta)
-      console.log('_applyCarHeader m2', meta)
       await this._applyCarHeader(carHeader)
     }
   }
@@ -135,7 +122,6 @@ export abstract class Loader {
   //   const carHeader = await this.loadCarHeaderFromMeta(meta)
   //   this.carLog = [meta.car, ...carHeader.cars]
   //   void this.getMoreReaders(carHeader.cars)
-  //   console.log('_applyCarHeader i', meta)
   //   await this._applyCarHeader(carHeader)
   //   // return carHeader
   // }
@@ -206,7 +192,6 @@ export abstract class Loader {
 
   protected async initializeStores() {
     const isBrowser = typeof window !== 'undefined'
-    // console.log('is browser?', isBrowser)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {

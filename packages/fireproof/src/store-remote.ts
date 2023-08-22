@@ -20,7 +20,6 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
-    // console.log('load car', carCid.toString())
     const bytes = await this.connection.download({
       type: 'data',
       name: this.prefix(),
@@ -66,7 +65,6 @@ export class RemoteMetaStore extends MetaStoreBase {
       name: this.prefix(),
       branch
     })
-    // console.log('load meta', bytes?.length)
     if (!bytes) return null
     try {
       return this.parseHeader(new TextDecoder().decode(bytes))
