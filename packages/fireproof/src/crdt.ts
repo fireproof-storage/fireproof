@@ -14,17 +14,22 @@ export class CRDTClock {
 
   blocks: TransactionBlockstore | null = null
 
+  setHead(head: ClockHead) {
+    console.log('setHead', head)
+    this.head = head
+  }
+
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     if (ogHead.toString() === newHead.toString()) {
-      console.log('applyHead noop')
+      console.log('applyHead noop', ogHead.toString(), newHead.toString())
       return
     }
     const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     console.log('applyHead', !!tblocks, { ogHead, newHead, ogPrev })
     if (ogHead.toString() === ogPrev.toString()) {
-      this.head = newHead
+      this.setHead(newHead)
       this.watchers.forEach((fn) => fn(updates))
       console.log('applyHead done: this.head = newHead')
       return
@@ -49,7 +54,7 @@ export class CRDTClock {
       return { head }
     })
 
-    this.head = head
+    this.setHead(head)
     console.log('onZoom', this.head)
     this.zoomers.forEach((fn) => fn())
     this.watchers.forEach((fn) => fn(updates))
@@ -83,6 +88,7 @@ export class CRDT {
     this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this, this.opts)
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
     this.clock.onZoom(() => {
+      console.log('reset indexes', [...this.indexers.keys()], this.clock.head.toString())
       for (const idx of this.indexers.values()) {
         idx._resetIndex()
       }
