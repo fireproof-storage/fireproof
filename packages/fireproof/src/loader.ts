@@ -105,7 +105,7 @@ export abstract class Loader {
       this._applyCarHeader(carHeader, false)
     } else {
       // throw new Error('remote car log does not include local car log')
-      console.log('not ff, search for common ancestor')
+      console.log('not ff, search for common ancestor', this.carLog.map(c => c.toString()))
       const newCarLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
       void this.getMoreReaders(carHeader.cars)
