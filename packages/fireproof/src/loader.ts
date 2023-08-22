@@ -51,16 +51,14 @@ export abstract class Loader {
     this.ready = this.initializeStores().then(async () => {
       if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
       const meta = await this.metaStore.load('main')
-      if (!meta) {
-        // await this._getKey() // generate a random key
-        return // this.defaultHeader
+      if (meta) {
+        await this.mergeMetaFromRemote(meta)
       }
-      await this.ingestKeyFromMeta(meta)
-      await this.ingestCarHeadFromMeta(meta)
     })
   }
 
   connectRemote(connection: Connection) {
+    console.log('connectRemote')
     this.remoteMetaStore = new RemoteMetaStore(this.name, connection)
     this.remoteCarStore = new RemoteDataStore(this, connection)
     // eslint-disable-next-line @typescript-eslint/require-await
@@ -71,10 +69,8 @@ export abstract class Loader {
     })
     // todo put this where it can be used by crdt bulk
     const loaderReady = this.ready
-    connection.ready = Promise.all([loaderReady, this.remoteMetaLoading])
-    this.ready = connection.ready.then(() => {
+    connection.ready = Promise.all([loaderReady, this.remoteMetaLoading]).then(() => {
       console.log('connection ready')
-      return loaderReady
     })
     // void this.ready.then(() => {
     //   setInterval(() => {
@@ -88,7 +84,7 @@ export abstract class Loader {
     return connection
   }
 
-  async mergeMetaFromRemote(meta: DbMeta) {
+  async mergeMetaFromRemote(meta: DbMeta): Promise<void> {
     console.log('mergeMetaFromRemote', meta)
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
@@ -100,16 +96,16 @@ export abstract class Loader {
     const remoteCarLog = [meta.car, ...carHeader.cars]
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
-      console.log('FF: remoteCarLog includes local head car', this.carLog.length)
-      this.carLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
+      console.log('FF: remoteCarLog includes local head car', this.carLog.map(c => c.toString()))
+      this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
       console.log('FF new carLog', this.carLog.map(c => c.toString()))
       void this.getMoreReaders(carHeader.cars)
-      console.log('_applyCarHeader m1', meta)
-      this._applyCarHeader(carHeader)
+      console.log('_applyCarHeader m1', meta, carHeader)
+      await this._applyCarHeader(carHeader)
     } else {
       // throw new Error('remote car log does not include local car log')
       console.log('not ff, search for common ancestor', this.carLog.map(c => c.toString()))
-      const newCarLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
+      const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
       console.log('not ff new carLog', this.carLog.map(c => c.toString()))
 
@@ -118,7 +114,7 @@ export abstract class Loader {
       // console.log('remote car log', remoteCarLog.map(c => c.toString()))
       // console.log('remote meta', meta)
       console.log('_applyCarHeader m2', meta)
-      this._applyCarHeader(carHeader)
+      await this._applyCarHeader(carHeader)
     }
   }
 
@@ -135,16 +131,16 @@ export abstract class Loader {
     return await parseCarFile(reader)
   }
 
-  protected async ingestCarHeadFromMeta(meta: DbMeta): Promise < AnyCarHeader > {
-    const carHeader = await this.loadCarHeaderFromMeta(meta)
-    this.carLog = [meta.car, ...carHeader.cars]
-    void this.getMoreReaders(carHeader.cars)
-    console.log('_applyCarHeader i', meta)
-    this._applyCarHeader(carHeader)
-    return carHeader
-  }
+  // protected async ingestCarHeadFromMeta(meta: DbMeta): Promise < void > {
+  //   const carHeader = await this.loadCarHeaderFromMeta(meta)
+  //   this.carLog = [meta.car, ...carHeader.cars]
+  //   void this.getMoreReaders(carHeader.cars)
+  //   console.log('_applyCarHeader i', meta)
+  //   await this._applyCarHeader(carHeader)
+  //   // return carHeader
+  // }
 
-  protected _applyCarHeader(_carHeader: AnyCarHeader) { }
+  protected async _applyCarHeader(_carHeader: AnyCarHeader) { }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
