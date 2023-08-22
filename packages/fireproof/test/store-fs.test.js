@@ -33,7 +33,7 @@ describe('DataStore', function () {
       bytes: new Uint8Array([55, 56, 57])
     }
     await store.save(car)
-    const path = join(DataStore.dataDir, store.loader.name, car.cid + '.car')
+    const path = join(DataStore.dataDir, store.loader.name, 'data', car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
@@ -51,7 +51,7 @@ describe('DataStore with a saved car', function () {
     await store.save(car)
   })
   it('should have a car', async function () {
-    const path = join(DataStore.dataDir, store.loader.name, car.cid + '.car')
+    const path = join(DataStore.dataDir, store.loader.name, 'data', car.cid + '.car')
     const data = await readFile(path)
     equals(data.toString(), decoder.decode(car.bytes))
   })
@@ -84,7 +84,7 @@ describe('MetaStore', function () {
       key: null
     }
     await store.save(h)
-    const path = join(testConfig.dataDir, store.name, 'main.json')
+    const path = join(testConfig.dataDir, store.name, 'meta', 'main.json')
     const file = await readFile(path)
     const header = JSON.parse(file.toString())
     assert(header)
@@ -102,7 +102,7 @@ describe('MetaStore with a saved header', function () {
     await store.save({ car: cid, key: null })
   })
   it('should have a header', async function () {
-    const path = join(testConfig.dataDir, store.name, 'main.json')
+    const path = join(testConfig.dataDir, store.name, 'meta', 'main.json')
     const data = await readFile(path)
     matches(data, /car/)
     const header = JSON.parse(data.toString())

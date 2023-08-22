@@ -36,7 +36,7 @@ export async function doResetDirectory(dir, name) {
   const files = await readdir(path)
 
   for (const file of files) {
-    await rm(join(path, file), { recursive: false, force: true })
+    await rm(join(path, file), { recursive: true, force: true })
   }
 }
 
