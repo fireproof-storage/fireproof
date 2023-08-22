@@ -39,7 +39,7 @@ export abstract class Loader {
   key: string | undefined
   keyId: string | undefined
 
-  private getBlockCache: Map<string, Promise<AnyBlock | undefined>> = new Map()
+  private getBlockCache: Map<string, AnyBlock> = new Map()
 
   static defaultHeader: AnyCarHeader
   abstract defaultHeader: AnyCarHeader
@@ -180,29 +180,25 @@ export abstract class Loader {
     return cid
   }
 
-  async getBlock(cid: CID): Promise < AnyBlock | undefined > {
+  async getBlock(cid: AnyLink): Promise < AnyBlock | undefined > {
     await this.ready
     const sCid = cid.toString()
-    if (!this.getBlockCache.has(sCid)) {
-      this.getBlockCache.set(sCid, (async () => {
-        // binds to old car log
-        // should remove self if missing
-        // we should go back to the version that
-        // only fills the cache on success
-        return Promise.any(this.carLog.map(async (carCid) => {
-          const reader = await this.carReaders.get(carCid.toString())
-          if (!reader) {
-            throw new Error(`missing car reader ${carCid.toString()}`)
-          }
-          const block = await reader.get(cid)
-          if (block) {
-            return block
-          }
-          throw new Error(`block not in reader: ${cid.toString()}`)
-        })).catch(() => undefined)
-      })())
+    if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+    const got = await Promise.any(this.carLog.map(async (carCid) => {
+      const reader = await this.carReaders.get(carCid.toString())
+      if (!reader) {
+        throw new Error(`missing car reader ${carCid.toString()}`)
+      }
+      const block = await reader.get(cid as CID)
+      if (block) {
+        return block
+      }
+      throw new Error(`block not in reader: ${cid.toString()}`)
+    })).catch(() => undefined)
+    if (got) {
+      this.getBlockCache.set(sCid, got)
     }
-    return this.getBlockCache.get(sCid)
+    return got
   }
 
   protected async initializeStores() {
