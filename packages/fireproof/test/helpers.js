@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import assert from 'assert'
 import { join } from 'path'
-import { promises } from 'fs'
+import { promises as fs } from 'fs'
 
-const { mkdir, readdir, rm } = promises
+const { mkdir, readdir, rm, copyFile } = fs
 
 export { assert }
 
@@ -37,5 +37,28 @@ export async function doResetDirectory(dir, name) {
 
   for (const file of files) {
     await rm(join(path, file), { recursive: false, force: true })
+  }
+}
+
+// Function to copy a directory
+export async function copyDirectory(source, destination) {
+  // Ensure the destination directory exists
+  await mkdir(destination, { recursive: true })
+
+  // Read the source directory
+  const entries = await readdir(source, { withFileTypes: true })
+
+  // Iterate through each entry in the directory
+  for (const entry of entries) {
+    const sourcePath = join(source, entry.name)
+    const destinationPath = join(destination, entry.name)
+
+    if (entry.isDirectory()) {
+      // If the entry is a directory, copy it recursively
+      await copyDirectory(sourcePath, destinationPath)
+    } else if (entry.isFile()) {
+      // If the entry is a file, copy it
+      await copyFile(sourcePath, destinationPath)
+    }
   }
 }

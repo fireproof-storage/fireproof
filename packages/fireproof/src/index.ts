@@ -94,6 +94,7 @@ export class Index {
   }
 
   async query(opts: QueryOpts = {}) {
+    // this._resetIndex()
     await this._updateIndex()
     await this._hydrateIndex()
     if (!this.byKey.root) return await applyQuery(this.crdt, { result: [] }, opts)
@@ -142,7 +143,8 @@ export class Index {
     if (this.initError) throw this.initError
     if (!this.mapFn) throw new Error('No map function defined')
     const { result, head } = await this.crdt.changes(this.indexHead)
-    console.log('changes', result.map((up) => up.key), head.toString(), this.indexHead?.toString())
+
+    console.log('index-changes', result.length, head.toString(), this.indexHead?.toString())
     if (result.length === 0) {
       this.indexHead = head
       return { byId: this.byId, byKey: this.byKey }

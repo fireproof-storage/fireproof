@@ -1,6 +1,6 @@
 import { TransactionBlockstore, IndexBlockstore } from './transaction'
 import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact } from './crdt-helpers'
-import type { DocUpdate, BulkResult, ClockHead, DbCarHeader, FireproofOptions } from './types'
+import type { DocUpdate, BulkResult, ClockHead, FireproofOptions } from './types'
 import type { Index } from './index'
 import { cidListIncludes, uniqueCids } from './loader'
 
@@ -11,10 +11,16 @@ export class CRDTClock {
   watchers: Set<((updates: DocUpdate[]) => void)> = new Set()
 
   applyHead(newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
-    const keepFromPrevHead = this.head.filter((link) => !cidListIncludes(prevHead, link))
-    this.head = [...(uniqueCids([...keepFromPrevHead, ...newHead]) as ClockHead)].sort((a, b) => a.toString().localeCompare(b.toString()))
-    if (keepFromPrevHead.length !== 0 && this.head.length !== 0) {
+    const ogHead = this.head
+    if (ogHead.toString() === newHead.toString()) return
+    const writtenConcurrentlyToTransaction = ogHead.filter((link) => !cidListIncludes(prevHead, link))
+    this.head = [...(uniqueCids([...writtenConcurrentlyToTransaction, ...newHead]) as ClockHead)].sort((a, b) => a.toString().localeCompare(b.toString()))
+    if (writtenConcurrentlyToTransaction.length !== 0) {
       this.zoomers.forEach((fn) => fn())
+      console.log('ZOOM ogHead', ogHead.toString(), 'newHead', newHead.toString(),
+        'prevHead', prevHead.toString(),
+        'this.head', this.head.toString(),
+        'concurrent', writtenConcurrentlyToTransaction.toString())
     }
     this.watchers.forEach((fn) => fn(updates))
   }
@@ -24,6 +30,7 @@ export class CRDTClock {
   }
 
   onZoom(fn: () => void) {
+    console.log('onZoom')
     this.zoomers.add(fn)
   }
 }
