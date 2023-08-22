@@ -4,11 +4,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory, copyDirectory } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 import { connect } from '../dist/test/connect.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 import { MetaStore } from '../dist/test/store-fs.esm.js'
+import { join } from 'path'
 
 const serviceConfig = {
   s3: {
@@ -129,7 +130,6 @@ describe('forked Connection with raw remote', function () {
     await resetDirectory(MetaStore.dataDir, dbName)
     mockStore.clear()
     db = new Database(dbName)
-    mockStore.clear()
     const remote = connect.raw(db, mockConnect)
     await remote.ready
     /** @type {Doc} */
@@ -196,18 +196,28 @@ describe('forked Connection with raw remote', function () {
 describe('two Connection with raw remote', function () {
   /** @type {Database} */
   let db, dbName
+
+  // create a database
+  // connect it to the remote
+  // add data
+  // make a physical copy of the database
+  // open the copy
+  // make a change to the original
+  // make a change to the copy
+
   beforeEach(async function () {
     dbName = 'test-raw-copy'
     await resetDirectory(MetaStore.dataDir, dbName)
     mockStore.clear()
     db = new Database(dbName)
-    mockStore.clear()
     const remote = connect.raw(db, mockConnect)
     await remote.ready
     /** @type {Doc} */
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
+    assert(MetaStore.dataDir)
+    await copyDirectory(join(MetaStore.dataDir, dbName), join(MetaStore.dataDir, dbName + 'second'))
   })// .timeout(10000)
   it('should save a remote header', async function () {
     const { _crdt: { blocks: { loader } } } = db

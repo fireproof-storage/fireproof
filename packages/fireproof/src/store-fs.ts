@@ -13,10 +13,14 @@ import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
-  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'meta')
+  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION)
+
+  filePathForBranch(branch: string): string {
+    return join(MetaStore.dataDir, this.name, 'meta', branch + '.json')
+  }
 
   async load(branch: string = 'main'): Promise<DbMeta | null> {
-    const filepath = join(MetaStore.dataDir, this.name, branch + '.json')
+    const filepath = this.filePathForBranch(branch)
     const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === 'ENOENT') return null
       throw e
@@ -25,7 +29,7 @@ export class MetaStore extends MetaStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
-    const filepath = join(MetaStore.dataDir, this.name, branch + '.json')
+    const filepath = this.filePathForBranch(branch)
     const bytes = this.makeHeader(meta)
     await writePathFile(filepath, bytes)
   }
@@ -37,7 +41,7 @@ export const testConfig = {
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-node-fs'
-  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION, 'data')
+  static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION)
 
   async save(car: AnyBlock): Promise<void> {
     const filepath = this.cidPath(car.cid)
@@ -45,7 +49,7 @@ export class DataStore extends DataStoreBase {
   }
 
   private cidPath(cid: AnyLink) {
-    return join(DataStore.dataDir, this.loader.name, cid.toString() + '.car')
+    return join(DataStore.dataDir, this.loader.name, 'data', cid.toString() + '.car')
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {

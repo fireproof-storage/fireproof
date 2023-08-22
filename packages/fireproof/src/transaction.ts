@@ -57,7 +57,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
       if (v) return v
     }
     if (!this.loader) return
-    return await this.loader.getBlock(cid as CID)
+    return await this.loader.getBlock(cid)
   }
 
   async commitCompaction(t: Transaction, head: ClockHead) {
