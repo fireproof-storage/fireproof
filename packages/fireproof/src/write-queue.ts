@@ -7,7 +7,11 @@ export type WriteQueue = {
 };
 
 export function writeQueue(worker: WorkerFunction, payload: number = Infinity): WriteQueue {
-  const queue: { task: DocUpdate; resolve: (result: BulkResult) => void; }[] = []
+  const queue: {
+    task: DocUpdate;
+    resolve: (result: BulkResult) => void;
+    reject: (error: Error) => void;
+  }[] = []
   let isProcessing = false
 
   async function process() {
@@ -17,9 +21,12 @@ export function writeQueue(worker: WorkerFunction, payload: number = Infinity): 
     const tasksToProcess = queue.splice(0, payload)
     const updates = tasksToProcess.map(item => item.task)
 
-    const result = await worker(updates)
-
-    tasksToProcess.forEach(task => task.resolve(result))
+    try {
+      const result = await worker(updates)
+      tasksToProcess.forEach(task => task.resolve(result))
+    } catch (error) {
+      tasksToProcess.forEach(task => task.reject(error as Error))
+    }
 
     isProcessing = false
     void process()
@@ -27,8 +34,8 @@ export function writeQueue(worker: WorkerFunction, payload: number = Infinity): 
 
   return {
     push(task: DocUpdate): Promise<BulkResult> {
-      return new Promise<BulkResult>((resolve) => {
-        queue.push({ task, resolve })
+      return new Promise<BulkResult>((resolve, reject) => {
+        queue.push({ task, resolve, reject })
         void process()
       })
     }

@@ -260,9 +260,10 @@ describe('two Connection with raw remote', function () {
     await remote2.ready
 
     const doc3 = { _id: 'hey', value: 'partyverse' }
+    console.log('put doc3')
     const ok3 = await db2.put(doc3)
     equals(ok3.id, 'hey')
-
+    console.log('query changes')
     const changes2 = await db2.changes()
     equals(changes2.rows.length, 2)
 

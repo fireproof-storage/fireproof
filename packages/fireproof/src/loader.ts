@@ -102,17 +102,17 @@ export abstract class Loader {
       console.log('FF: remoteCarLog includes local head car', this.carLog.length)
       this.carLog = remoteCarLog
       void this.getMoreReaders(carHeader.cars)
-      this._applyCarHeader(carHeader, false)
+      this._applyCarHeader(carHeader)
     } else {
       // throw new Error('remote car log does not include local car log')
       console.log('not ff, search for common ancestor', this.carLog.map(c => c.toString()))
       const newCarLog = [meta.car, ...uniqueCids([...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
       void this.getMoreReaders(carHeader.cars)
-      console.log('local car log', this.carLog.map(c => c.toString()))
-      console.log('remote car log', remoteCarLog.map(c => c.toString()))
-      console.log('remote meta', meta)
-      this._applyCarHeader(carHeader, true)
+      // console.log('local car log', this.carLog.map(c => c.toString()))
+      // console.log('remote car log', remoteCarLog.map(c => c.toString()))
+      // console.log('remote meta', meta)
+      this._applyCarHeader(carHeader)
     }
   }
 
@@ -133,11 +133,11 @@ export abstract class Loader {
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     this.carLog = [meta.car, ...carHeader.cars]
     void this.getMoreReaders(carHeader.cars)
-    this._applyCarHeader(carHeader, false)
+    this._applyCarHeader(carHeader)
     return carHeader
   }
 
-  protected _applyCarHeader(_carHeader: AnyCarHeader, _merge: boolean) { }
+  protected _applyCarHeader(_carHeader: AnyCarHeader) { }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
@@ -298,8 +298,8 @@ export class DbLoader extends Loader {
     this.clock = clock
   }
 
-  protected _applyCarHeader(carHeader: DbCarHeader, merge: boolean) {
-    this.clock.applyHead(carHeader.head, merge ? [] : this.clock.head)
+  protected async _applyCarHeader(carHeader: DbCarHeader) {
+    await this.clock.applyHead(null, carHeader.head, [])
   }
 
   protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {

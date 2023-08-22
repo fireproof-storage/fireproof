@@ -1,8 +1,10 @@
-import { TransactionBlockstore, IndexBlockstore } from './transaction'
+import { TransactionBlockstore, IndexBlockstore, Transaction } from './transaction'
 import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions } from './types'
 import type { Index } from './index'
-import { cidListIncludes, uniqueCids } from './loader'
+// import { cidListIncludes, uniqueCids } from './loader'
+import { advance } from '@alanshaw/pail/clock'
+import { root } from '@alanshaw/pail/crdt'
 
 export class CRDTClock {
   head: ClockHead = []
@@ -10,18 +12,41 @@ export class CRDTClock {
   zoomers: Set<(() => void)> = new Set()
   watchers: Set<((updates: DocUpdate[]) => void)> = new Set()
 
-  applyHead(newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
-    const ogHead = this.head
+  blocks: TransactionBlockstore | null = null
+
+  async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
+    const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
+    newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     if (ogHead.toString() === newHead.toString()) return
-    const writtenConcurrentlyToTransaction = ogHead.filter((link) => !cidListIncludes(prevHead, link))
-    this.head = [...(uniqueCids([...writtenConcurrentlyToTransaction, ...newHead]) as ClockHead)].sort((a, b) => a.toString().localeCompare(b.toString()))
-    if (writtenConcurrentlyToTransaction.length !== 0) {
-      this.zoomers.forEach((fn) => fn())
-      console.log('ZOOM ogHead', ogHead.toString(), 'newHead', newHead.toString(),
-        'prevHead', prevHead.toString(),
-        'this.head', this.head.toString(),
-        'concurrent', writtenConcurrentlyToTransaction.toString())
+    const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
+    console.log('applyHead', ogHead, newHead, ogPrev)
+    if (ogHead.toString() === ogPrev.toString()) {
+      this.head = newHead
+      this.watchers.forEach((fn) => fn(updates))
+      console.log('applyHead done')
+      return
     }
+
+    const withBlocks = async (tblocks: Transaction| null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
+      if (tblocks instanceof Transaction) return await fn(tblocks)
+      if (!this.blocks) throw new Error('missing blocks')
+      console.log('run own transaction')
+      return await this.blocks.transaction(fn)
+    }
+
+    const { head } = await withBlocks(tblocks, async (tblocks) => {
+      // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
+      let head = this.head
+      for (const cid of newHead) {
+        head = await advance(tblocks, this.head, cid)
+      }
+      const result = await root(tblocks, head)
+      result.additions.forEach(a => tblocks.putSync(a.cid, a.bytes))
+      return { head }
+    })
+
+    this.head = head
+    this.zoomers.forEach((fn) => fn())
     this.watchers.forEach((fn) => fn(updates))
   }
 
@@ -50,6 +75,7 @@ export class CRDT {
     this.name = name || null
     this.opts = opts || this.opts
     this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
+    this.clock.blocks = this.blocks
     this.indexBlocks = new IndexBlockstore(this.name ? this.name + '.idx' : null, this.opts)
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
     this.clock.onZoom(() => {
@@ -61,13 +87,12 @@ export class CRDT {
 
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
     await this.ready
-    const tResult = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
-      const beforeHead = [...this.clock.head]
+    return await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
+      const prevHead = [...this.clock.head]
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-      this.clock.applyHead(head, beforeHead, updates) // we need multi head support here if allowing calls to bulk in parallel
+      await this.clock.applyHead(tblocks, head, prevHead, updates) // we need multi head support here if allowing calls to bulk in parallel
       return { head }
     })
-    return tResult
   }
 
   // async getAll(rootCache: any = null): Promise<{root: any, cids: CIDCounter, clockCIDs: CIDCounter, result: T[]}> {

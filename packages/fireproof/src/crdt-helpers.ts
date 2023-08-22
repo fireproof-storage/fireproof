@@ -1,7 +1,7 @@
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
+import { put, get, root, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher } from '@alanshaw/pail/clock'
 import { TransactionBlockstore, Transaction } from './transaction'
 import { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult } from './types'
@@ -12,16 +12,20 @@ export async function applyBulkUpdateToCrdt(
   updates: DocUpdate[],
   options?: object
 ): Promise<BulkResult> {
+  let result
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
-    const result = await put(tblocks, head, update.key, link, options)
+    result = await put(tblocks, head, update.key, link, options)
     for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
       tblocks.putSync(cid, bytes)
     }
     head = result.head
   }
+  // console.log('applyBulkUpdateToCrdt', result?.event.cid, result?.event.value, result?.head.toString())
   return { head }
 }
+
+// root: (await root(tblocks, head)).root as AnyLink
 
 async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<AnyLink> {
   let value: DocValue
