@@ -4,11 +4,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Index, index } from '../dist/test/index.esm.js'
-import { Database, fireproof as database } from '../dist/test/database.esm.js'
+import { Database } from '../dist/test/database.esm.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals, resetDirectory, notEquals, equalsJSON } from './helpers.js'
+import { assert, matches, equals, resetDirectory, equalsJSON } from './helpers.js'
 
 import { testConfig } from '../dist/test/store-fs.esm.js'
 

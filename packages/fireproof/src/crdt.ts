@@ -7,6 +7,9 @@ import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
 
 export class CRDTClock {
+  // todo: keep the clock of remote and local changes separate, merge on read
+  // that way we can drop the whole remote if we need to
+  // should go with making sure the local clock only references locally available blocks on write
   head: ClockHead = []
 
   zoomers: Set<(() => void)> = new Set()

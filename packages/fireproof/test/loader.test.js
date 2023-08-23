@@ -15,13 +15,12 @@ import { assert, matches, equals, resetDirectory, notEquals } from './helpers.js
 
 import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
 
-import { IdxLoader, DbLoader } from '../dist/test/loader.esm.js'
-import { CRDT, CRDTClock } from '../dist/test/crdt.esm.js'
+import { DbLoader } from '../dist/test/loaders.esm.js'
+import { CRDT } from '../dist/test/crdt.esm.js'
 import { Transaction, IndexBlockstore } from '../dist/test/transaction.esm.js'
 
 import { testConfig } from '../dist/test/store-fs.esm.js'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
-import { index } from '../dist/test/index.esm.js'
 
 describe('basic Loader', function () {
   let loader, block, t

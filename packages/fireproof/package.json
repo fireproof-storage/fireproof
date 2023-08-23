@@ -63,7 +63,7 @@
     "test:browser": "node ./scripts/browser-test.js",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
-    "lint:fix": "eslint --fix 'src/**/*.{js,ts}'"
+    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'"
   },
   "keywords": [
     "database",
