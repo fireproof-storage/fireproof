@@ -138,4 +138,5 @@ export interface Connection {
   upload: UploadFn
   download: DownloadFn
   // remove: (params: DownloadFnParams) => Promise<void>
+  refresh?: () => Promise<void>
 }

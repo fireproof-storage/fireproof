@@ -8,12 +8,21 @@
     <script type="text/javascript">
       function todoApp() {
         const {connect, fireproof, index} = Fireproof;
+        let dbName
+        let db
+        let connection
 
-        const db = fireproof('todo-app-fps');
-        const connection = connect.s3(db, {
+        function setupDb(name) {
+          dbName = name;
+          db = fireproof(name);
+          connection = connect.s3(db, s3Info)
+          db.subscribe(redraw);
+          return db;
+        }
+        const s3Info = {
           upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
           download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-        })
+        }
 
         const redraw = async () => {
           const result = await index(db, 'created').query({includeDocs: true});
@@ -50,9 +59,22 @@
         }
 
         async function initialize() {
-          db.subscribe(redraw);
+          setupDb(localStorage.getItem('dbName') || 'my-list');
+          const input = document.querySelector('#list');
+          input.value = dbName;
           redraw()
         }
+
+        async function changeList(e) {
+          e.preventDefault();
+          const input = document.querySelector('#list');
+          dbName = input.value;
+          localStorage.setItem('dbName', dbName);
+          setupDb(dbName);
+          
+          redraw();
+        }
+        window.changeList = changeList;
 
         async function onButtonClick(e) {
           e.preventDefault();
@@ -61,6 +83,13 @@
           input.value = '';
         }
         window.onButtonClick = onButtonClick;
+
+        async function connectionRefresh(e) {
+          e.preventDefault();
+          await connection.refresh()
+        }
+        window.connectionRefresh = connectionRefresh;
+
         window.onload = initialize;
         window.db = db;
         window.redraw = redraw;
@@ -70,8 +99,13 @@
   </head>
   <body>
     <h1>Fireproof Todos</h1>
+    List:
+    <input type="text" name="list" id="list"/>
+    <button onclick="changeList(event)">Change List</button>
+    <h3>Todos</h3>
     <input type="text" name="todo" id="todo"/>
     <button onclick="onButtonClick(event)">Create Todo</button>
+    <button onclick="connectionRefresh(event)">Refresh</button>
     <ul></ul>
   </body>
 </html>
