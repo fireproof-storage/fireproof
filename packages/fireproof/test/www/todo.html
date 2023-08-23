@@ -45,10 +45,8 @@
           }
 
           const chgs = await db.changes();
-          console.log('changes', chgs.rows.length)
-          for (const r of chgs.rows) {
-            console.log(r.value._id, r.value.task);
-          }
+          console.log('changes', chgs.rows.map(r => r.value.task))
+
         }
 
         async function initialize() {
