@@ -145,7 +145,7 @@ export class Index {
     if (!this.mapFn) throw new Error('No map function defined')
     const { result, head } = await this.crdt.changes(this.indexHead)
 
-    console.log('index-changes', result.length, head.toString(), this.indexHead?.toString())
+    // console.log('index-changes', result.length, head.toString(), this.indexHead?.toString())
     if (result.length === 0) {
       this.indexHead = head
       return { byId: this.byId, byKey: this.byKey }
