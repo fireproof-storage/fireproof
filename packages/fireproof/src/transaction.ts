@@ -1,7 +1,7 @@
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import {
   BlockFetcher, AnyBlock, AnyLink, BulkResult, ClockHead,
-  DbCarHeader, IdxCarHeader, IdxMeta, CarCommit, CarMakeable, FireproofOptions
+  IdxMeta, CarCommit, CarMakeable, FireproofOptions
 } from './types'
 import { DbLoader, IdxLoader } from './loader'
 // import { CID } from 'multiformats'

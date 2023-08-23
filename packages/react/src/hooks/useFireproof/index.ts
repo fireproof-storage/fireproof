@@ -6,7 +6,7 @@ import type { Doc, DocFragment, Index, Database, FireproofOptions } from '@firep
 export interface FireproofCtxValue {
   database: Database;
   useLiveQuery: (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => { docs: Doc[], rows: any[] };
-  useDocument: (initialDoc: Doc) => [Doc, (newDoc: Doc) => void, () => Promise<void>]
+  useDocument: (initialDoc: Doc) => [Doc, (newDoc: Doc | false) => void, () => Promise<void>]
   ready: boolean;
 }
 
