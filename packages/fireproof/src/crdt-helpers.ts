@@ -39,15 +39,32 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 }
 
 export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
-  if (!head.length) throw new Error('No documents in a fresh database')
-  const link = await get(blocks, head, key)
+  if (!head.length) throw new Error('Getting from an empty database')
+  let link
+  try {
+    link = await get(blocks, head, key)
+  } catch (error) {
+    if (head.length > 1 && /missing block/.test((error as Error).message)) {
+      for (const h of head) {
+        try {
+          link = await get(blocks, [h], key)
+          break
+        } catch (error) {
+          if (!/missing block/.test((error as Error).message)) throw error
+        }
+      }
+    } else {
+      throw error
+    }
+    if (!link) throw new Error(`missing block while loading key ${key}`)
+  }
   if (!link) throw new Error(`Missing key ${key}`)
   return await getValueFromLink(blocks, link)
 }
 
 async function getValueFromLink(blocks: TransactionBlockstore, link: AnyLink): Promise<DocValue> {
   const block = await blocks.get(link)
-  if (!block) throw new Error(`Missing block ${link.toString()}`)
+  if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
   return value
 }
@@ -78,7 +95,11 @@ async function gatherUpdates(
     }
   }
   for (const link of head) {
-    const { value: event } = await eventsFetcher.get(link)
+    const { value: event } = await eventsFetcher.get(link).catch((e) => {
+      console.log('missing event', link.toString(), e)
+      return ({ value: null })
+    })
+    if (!event) continue
     const { key, value } = event.data
     if (keys.has(key)) {
       if (event.parents) {
