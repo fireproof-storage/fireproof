@@ -156,6 +156,14 @@ describe('named Database with record', function () {
 
     const { rows: rows2 } = await db.changes([])
     equals(rows2.length, numDocs + 1)
+
+    const ok7 = await db.del(`id-${7}`)
+    equals(ok7.id, `id-${7}`)
+
+    const { rows: rows3 } = await db.changes([])
+    equals(rows3.length, numDocs + 1)
+    equals(rows3[numDocs].key, `id-${7}`)
+    equals(rows3[numDocs].value._deleted, true)
   })
 })
 
