@@ -1,19 +1,25 @@
+import { uuidv7 } from 'uuidv7'
+
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
-import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions } from './types'
-import { uuidv7 } from 'uuidv7'
+import { index } from './index'
+
+import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts } from './types'
+
+type DbName = string | null
+
 export class Database {
   static databases: Map<string, Database> = new Map()
 
-  name: string
+  name: DbName
   opts: FireproofOptions = {}
 
   _listeners: Set<ListenerFn> = new Set()
   _crdt: CRDT
   _writeQueue: WriteQueue
 
-  constructor(name: string, opts?: FireproofOptions) {
-    this.name = name
+  constructor(name?: string, opts?: FireproofOptions) {
+    this.name = name || null
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
     this._crdt.clock.onTick((updates: DocUpdate[]) => {
@@ -62,6 +68,13 @@ export class Database {
     }
   }
 
+  async query(field: string | MapFn, opts: QueryOpts = {}) {
+    const idx = (typeof field === 'string')
+      ? index({ _crdt: this._crdt }, field)
+      : index({ _crdt: this._crdt }, makeName(field.toString()))
+    return await idx.query(opts)
+  }
+
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {
       const docs = updates.map(({ key, value }) => ({ _id: key, ...value }))
@@ -90,7 +103,29 @@ type ListenerFn = (docs: Doc[]) => Promise<void> | void
 
 export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
-    Database.databases.set(name, new Database(name, opts))
+    const db = new Database(name, opts)
+    // public API
+    ;['get', 'put', 'del', 'changes', 'subscribe', 'query'].forEach((fn) => {
+      // @ts-ignore
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+      db[fn] = db[fn].bind(db)
+    })
+    Database.databases.set(name, db)
   }
   return Database.databases.get(name)!
+}
+
+function makeName(fnString: string) {
+  const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g
+  let found: RegExpExecArray | null = null
+  const matches = Array.from(fnString.matchAll(regex), match => match[1].trim())
+  if (matches.length === 0) {
+    found = /=>\s*(.*)/.exec(fnString)
+  }
+  if (!found) {
+    return fnString
+  } else {
+    // it's a consise arrow function, match everythign after the arrow
+    return found[1]
+  }
 }

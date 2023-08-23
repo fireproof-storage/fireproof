@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable mocha/max-top-level-suites */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -82,6 +83,13 @@ describe('basic Database with record', function () {
     equals(rows.length, 1)
     equals(rows[0].key, 'hello')
     equals(rows[0].value._id, 'hello')
+  })
+  it('is not persisted', async function () {
+    const db2 = new Database()
+    const { rows } = await db2.changes([])
+    equals(rows.length, 0)
+    const doc = await db2.get('hello').catch(e => e)
+    assert(doc.message)
   })
 })
 

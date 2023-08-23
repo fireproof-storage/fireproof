@@ -15,6 +15,30 @@ import { index, Index } from '../dist/test/index.esm.js'
 import { testConfig } from '../dist/test/store-fs.esm.js'
 import { cidListIncludes } from '../dist/test/loader.esm.js'
 
+describe('dreamcode', function () {
+  let ok, doc, result, put, get, query
+  beforeEach(async function () {
+    await resetDirectory(testConfig.dataDir, 'test-db')
+    ;({ put, get, query } = fireproof('test-db'))
+    ok = await put({ _id: 'test-1', text: 'fireproof', dream: true })
+    doc = await get(ok.id)
+    result = await query('text', { range: ['a', 'z'] })
+  })
+  it('should put', function () {
+    assert(ok)
+    equals(ok.id, 'test-1')
+  })
+  it('should get', function () {
+    equals(doc.text, 'fireproof')
+  })
+  it('should query', function () {
+    assert(result)
+    assert(result.rows)
+    equals(result.rows.length, 1)
+    equals(result.rows[0].key, 'fireproof')
+  })
+})
+
 describe('public API', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-api')
@@ -70,7 +94,7 @@ describe('basic database', function () {
   it('can define an index', async function () {
     const ok = await db.put({ _id: 'test', foo: 'bar' })
     assert(ok)
-    const idx = index(db, 'test-index', (doc) => doc.foo)
+    const idx = index(db, 'test-index', doc => doc.foo)
     const result = await idx.query()
     assert(result)
     assert(result.rows)
@@ -151,20 +175,23 @@ describe('Reopening a database', function () {
   }).timeout(20000)
 
   // eslint-disable-next-line mocha/no-skipped-tests
-  it.skip('passing slow, should have the same data on reopen after reopen and update', async function () {
-    for (let i = 0; i < 100; i++) {
-      // console.log('iteration', i)
-      const db = new Database('test-reopen')
-      assert(db._crdt.ready)
-      await db._crdt.ready
-      equals(db._crdt.blocks.loader.carLog.length, i + 1)
-      const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
-      assert(ok)
-      equals(db._crdt.blocks.loader.carLog.length, i + 2)
-      const doc = await db.get(`test${i}`)
-      equals(doc.fire, 'proof'.repeat(50 * 1024))
+  it.skip(
+    'passing slow, should have the same data on reopen after reopen and update',
+    async function () {
+      for (let i = 0; i < 100; i++) {
+        // console.log('iteration', i)
+        const db = new Database('test-reopen')
+        assert(db._crdt.ready)
+        await db._crdt.ready
+        equals(db._crdt.blocks.loader.carLog.length, i + 1)
+        const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
+        assert(ok)
+        equals(db._crdt.blocks.loader.carLog.length, i + 2)
+        const doc = await db.get(`test${i}`)
+        equals(doc.fire, 'proof'.repeat(50 * 1024))
+      }
     }
-  }).timeout(20000)
+  ).timeout(20000)
 })
 
 describe('Reopening a database with indexes', function () {
