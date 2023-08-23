@@ -3,7 +3,7 @@ import {
   BlockFetcher, AnyBlock, AnyLink, BulkResult, ClockHead,
   IdxMeta, CarCommit, CarMakeable, FireproofOptions
 } from './types'
-import { DbLoader, IdxLoader } from './loader'
+import { DbLoader, IdxLoader } from './loaders'
 // import { CID } from 'multiformats'
 import { CRDT, CRDTClock } from './crdt'
 

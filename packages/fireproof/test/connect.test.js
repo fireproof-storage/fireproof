@@ -6,14 +6,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, copyDirectory, equalsJSON } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory, equalsJSON } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 import { connect } from '../dist/test/connect.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 import { MetaStore } from '../dist/test/store-fs.esm.js'
 import { join } from 'path'
-import { promises as fs, read } from 'fs'
-import json from '@rollup/plugin-json'
+import { promises as fs } from 'fs'
 const { readFile, writeFile } = fs
 
 const serviceConfig = {
@@ -37,6 +36,7 @@ const mockConnect = {
   }
 }
 
+// eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('basic Connection with s3 remote', function () {
   /** @type {Database} */
   let db, dbName

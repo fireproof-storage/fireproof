@@ -1,5 +1,5 @@
 import { ConnectS3 } from './connect-s3'
-import type { DbLoader } from './loader'
+import type { DbLoader } from './loaders'
 import { Connection, DownloadFn, UploadFn } from './types'
 
 export const connect = {

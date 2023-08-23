@@ -150,6 +150,7 @@ describe('Reopening a database', function () {
     }
   }).timeout(20000)
 
+  // eslint-disable-next-line mocha/no-skipped-tests
   it.skip('passing slow, should have the same data on reopen after reopen and update', async function () {
     for (let i = 0; i < 100; i++) {
       // console.log('iteration', i)
