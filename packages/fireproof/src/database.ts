@@ -75,6 +75,10 @@ export class Database {
     return await idx.query(opts)
   }
 
+  async compact() {
+    await this._crdt.compact()
+  }
+
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {
       const docs = updates.map(({ key, value }) => ({ _id: key, ...value }))
