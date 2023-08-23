@@ -35,7 +35,7 @@ export class ConnectS3 implements Connection {
     const { type, name, car, branch } = params
     const fetchFromUrl = new URL(`${type}/${name}/${type === 'data'
       ? car + '.car'
-      : branch + '.json'}`, this.downloadUrl)
+      : branch + '.json?cache=' + Math.floor(Math.random() * 1000000)}`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)
     const bytes = new Uint8Array(await response.arrayBuffer())
     return bytes
