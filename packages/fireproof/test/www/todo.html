@@ -15,6 +15,7 @@
         function setupDb(name) {
           dbName = name;
           db = fireproof(name);
+          window.db = db;
           connection = connect.s3(db, s3Info)
           db.subscribe(redraw);
           return db;
@@ -59,7 +60,9 @@
         }
 
         async function initialize() {
-          setupDb(localStorage.getItem('dbName') || 'my-list');
+          ps = new URLSearchParams(location.search)
+          const listQ = ps.get('list')
+          setupDb(listQ || 'my-list');
           const input = document.querySelector('#list');
           input.value = dbName;
           redraw()
@@ -69,9 +72,9 @@
           e.preventDefault();
           const input = document.querySelector('#list');
           dbName = input.value;
-          localStorage.setItem('dbName', dbName);
+          history.pushState(null, '', location.pathname + '?list=' + encodeURIComponent(dbName));
           setupDb(dbName);
-          
+
           redraw();
         }
         window.changeList = changeList;
@@ -81,6 +84,7 @@
           const input = document.querySelector('#todo');
           const ok = await db.put({created: Date.now(), task: input.value, completed: false});
           input.value = '';
+           await connection.refresh()
         }
         window.onButtonClick = onButtonClick;
 
