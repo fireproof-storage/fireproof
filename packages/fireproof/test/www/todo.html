@@ -81,10 +81,11 @@
 
         async function onButtonClick(e) {
           e.preventDefault();
+          connection.refresh().then(() => console.log('refreshed'))
           const input = document.querySelector('#todo');
           const ok = await db.put({created: Date.now(), task: input.value, completed: false});
           input.value = '';
-           await connection.refresh()
+           
         }
         window.onButtonClick = onButtonClick;
 
