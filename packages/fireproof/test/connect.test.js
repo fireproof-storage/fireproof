@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
@@ -100,6 +101,11 @@ describe('basic Connection with raw remote', function () {
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
+  it('should have a carLog', async function () {
+    const { _crdt: { blocks: { loader } } } = db
+    assert(loader.carLog)
+    equals(loader.carLog.length, 1)
+  }).timeout(10000)
   it('should get', async function () {
     const doc = await db.get('hello')
     assert(doc)
@@ -122,6 +128,56 @@ describe('basic Connection with raw remote', function () {
     equals(doc._id, 'hello')
     equals(doc.value, 'world')
   }).timeout(10000)
+  it('should be ok with a remote that has headers but not car files', async function () {
+    // create a database that is up to date with meta1 but not meta2
+    // add meta2 and poll it
+
+    let count = 0
+    const download = async function ({ type, name, car, branch }) {
+      if (car) {
+        count++
+        if (count) return
+      }
+      const key = new URLSearchParams({ type, name, car, branch }).toString()
+      return mockStore.get(key)
+    }
+    const badMockConnect = { ...mockConnect, download }
+
+    const db2 = new Database(dbName)
+    const connection = connect.raw(db2, badMockConnect)
+    await connection.ready
+
+    const changes = await db2.changes()
+    equals(changes.rows.length, 1)
+
+    const doc2 = { _id: 'hi', value: 'team' }
+    const ok2 = await db.put(doc2)
+    equals(ok2.id, 'hi')
+    await resetDirectory(MetaStore.dataDir, dbName)
+
+    const did = await connection.refresh().catch(e => e)
+    assert(did)
+    matches(did.message, /missing remote/)
+
+    const changes2 = await db2.changes()
+    equals(changes2.rows.length, 1)
+
+    const { _crdt: { blocks: { loader } } } = db2
+
+    assert(loader)
+    equals(loader.carLog.length, 1)
+    assert(loader.ready.then)
+
+    // heal with good connection
+    const connection2 = connect.raw(db2, mockConnect)
+    await connection2.ready
+    assert(connection2.refresh)
+
+    await connection2.refresh()
+
+    const changes3 = await db2.changes()
+    equals(changes3.rows.length, 2)
+  })
 })
 
 describe('forked Connection with raw remote', function () {
@@ -333,7 +389,7 @@ describe('two Connection with raw remote', function () {
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
-  it('should get remote fork', async function () {
+  it('continues to execute queries', async function () {
     // await resetDirectory(MetaStore.dataDir, dbName)
 
     const db2 = new Database(dbName)
