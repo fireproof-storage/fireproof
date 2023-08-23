@@ -4,7 +4,7 @@ import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher } from '@alanshaw/pail/clock'
 import { TransactionBlockstore, Transaction } from './transaction'
-import { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult } from './types'
+import { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions } from './types'
 
 export async function applyBulkUpdateToCrdt(
   tblocks: Transaction,
@@ -69,12 +69,27 @@ async function getValueFromLink(blocks: TransactionBlockstore, link: AnyLink): P
   return value
 }
 
+class DirtyEventFetcher<T> extends EventFetcher<T> {
+  // @ts-ignore
+  async get(link) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      return await super.get(link)
+    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+      console.log('missing event', link.toString(), e)
+      return ({ value: null })
+    }
+  }
+}
+
 export async function clockChangesSince(
   blocks: TransactionBlockstore,
   head: ClockHead,
-  since: ClockHead
+  since: ClockHead,
+  opts: ChangesOptions
 ): Promise<{ result: DocUpdate[], head: ClockHead }> {
-  const eventsFetcher = new EventFetcher<EventData>(blocks)
+  const eventsFetcher = (opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)) as EventFetcher<EventData>
   const keys: Set<string> = new Set()
   const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys)
   return { result: updates.reverse(), head }
@@ -95,10 +110,7 @@ async function gatherUpdates(
     }
   }
   for (const link of head) {
-    const { value: event } = await eventsFetcher.get(link).catch((e) => {
-      console.log('missing event', link.toString(), e)
-      return ({ value: null })
-    })
+    const { value: event } = await eventsFetcher.get(link)
     if (!event) continue
     const { key, value } = event.data
     if (keys.has(key)) {
