@@ -251,7 +251,7 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.11.5
+        specifier: ^0.11.14
         version: link:../fireproof
     devDependencies:
       '@jest/globals':
