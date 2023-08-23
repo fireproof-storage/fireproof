@@ -41,26 +41,10 @@ const topLevelUseLiveDocument = (...args) => {
 export const useDocument = topLevelUseLiveDocument;
 
 export function useFireproof(
-  name : string | Database = 'useFireproof',
-  setupDatabaseFn: null | ((db: Database) => Promise<void>) = null,
+  name: string | Database = 'useFireproof',
   config: FireproofOptions = {},
 ): FireproofCtxValue {
-  const [ready, setReady] = useState(false);
   const database = (typeof name === 'string') ? fireproof(name, config) : name;
-
-  useEffect(() => {
-    const doSetup = async () => {
-      if (ready) return;
-      if (setupDatabaseFn) {
-        const chs = await database.changes([])
-        if (chs.rows.length === 0) {
-          await setupDatabaseFn(database);
-        }
-      }
-      setReady(true);
-    };
-    doSetup();
-  }, [name]);
 
   function useDocument(initialDoc: Doc): [Doc, (newDoc: Doc) => void, () => Promise<void>] {
     const id = initialDoc._id;
@@ -133,7 +117,7 @@ export function useFireproof(
     useEffect(() => {
       if (typeof mapFn === 'string') {
         setIndex(defineIndex(database, mapFn));
-      // @ts-ignore
+        // @ts-ignore
       } else if (mapFn.crdt) {
         setIndex(mapFn as Index);
       } else {
@@ -150,7 +134,7 @@ export function useFireproof(
     // useLiveDocument : useDocument,
     useDocument,
     database,
-    ready,
+    ready : true,
   };
 }
 
