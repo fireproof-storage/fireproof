@@ -70,15 +70,13 @@ export abstract class Loader {
     const loaderReady = this.ready
     connection.ready = Promise.all([loaderReady, this.remoteMetaLoading]).then(() => {
     })
-    // void this.ready.then(() => {
-    //   setInterval(() => {
-    //     void this.remoteMetaStore!.load('main').then(async (meta) => {
-    //       if (meta) {
-    //         await this.mergeMetaFromRemote(meta)
-    //       }
-    //     })
-    //   }, 1000)
-    // })
+    connection.refresh = async () => {
+      await this.remoteMetaStore!.load('main').then(async (meta) => {
+        if (meta) {
+          await this.mergeMetaFromRemote(meta)
+        }
+      })
+    }
     return connection
   }
 
