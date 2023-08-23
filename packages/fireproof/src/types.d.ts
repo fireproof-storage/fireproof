@@ -140,3 +140,7 @@ export interface Connection {
   // remove: (params: DownloadFnParams) => Promise<void>
   refresh?: () => Promise<void>
 }
+
+export type ChangesOptions = {
+  dirty?: boolean
+}

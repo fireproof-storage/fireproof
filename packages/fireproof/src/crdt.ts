@@ -1,6 +1,6 @@
 import { TransactionBlockstore, IndexBlockstore, Transaction } from './transaction'
 import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact } from './crdt-helpers'
-import type { DocUpdate, BulkResult, ClockHead, FireproofOptions } from './types'
+import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
 // import { cidListIncludes, uniqueCids } from './loader'
 import { advance } from '@alanshaw/pail/clock'
@@ -106,9 +106,9 @@ export class CRDT {
     return result
   }
 
-  async changes(since: ClockHead = []) {
+  async changes(since: ClockHead = [], opts: ChangesOptions = {}) {
     await this.ready
-    return await clockChangesSince(this.blocks, this.clock.head, since)
+    return await clockChangesSince(this.blocks, this.clock.head, since, opts)
   }
 
   async compact() {
