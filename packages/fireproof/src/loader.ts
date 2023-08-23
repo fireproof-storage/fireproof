@@ -35,7 +35,7 @@ export abstract class Loader {
   metaStore: MetaStore | undefined
   carStore: DataStore | undefined
   carLog: AnyLink[] = []
-  carReaders: Map<string, Promise<CarReader>> = new Map()
+  carReaders: Map<string, CarReader> = new Map()
   ready: Promise<void>
   key: string | undefined
   keyId: string | undefined
@@ -68,8 +68,7 @@ export abstract class Loader {
     })
     // todo put this where it can be used by crdt bulk
     const loaderReady = this.ready
-    connection.ready = Promise.all([loaderReady, this.remoteMetaLoading]).then(() => {
-    })
+    connection.ready = Promise.all([loaderReady, this.remoteMetaLoading]).then(() => { })
     connection.refresh = async () => {
       await this.remoteMetaStore!.load('main').then(async (meta) => {
         if (meta) {
@@ -147,7 +146,7 @@ export abstract class Loader {
     return this.key
   }
 
-  async commit(t: Transaction, done: IndexerResult | BulkResult, compact: boolean = false): Promise < AnyLink > {
+  async commit(t: Transaction, done: IndexerResult | BulkResult, compact: boolean = false): Promise<AnyLink> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, compact)
     const theKey = await this._getKey()
@@ -167,12 +166,12 @@ export abstract class Loader {
     return cid
   }
 
-  async getBlock(cid: AnyLink): Promise < AnyBlock | undefined > {
+  async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
     await this.ready
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
     const got = await Promise.any(this.carLog.map(async (carCid) => {
-      const reader = await this.carReaders.get(carCid.toString())
+      const reader = this.carReaders.get(carCid.toString())
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
@@ -193,7 +192,7 @@ export abstract class Loader {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
     if (module) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.metaStore = new module.MetaStore(this.name) as MetaStore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.carStore = new module.DataStore(this) as DataStore
@@ -204,31 +203,53 @@ export abstract class Loader {
 
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader;
 
-  protected async loadCar(cid: AnyLink): Promise < CarReader > {
-    if (!this.carReaders.has(cid.toString())) {
-      this.carReaders.set(cid.toString(), (async () => {
-        if (!this.carStore) throw new Error('car store not initialized')
-        let loadedCar: AnyBlock | null = null
-        try {
-          loadedCar = await this.carStore.load(cid)
-        } catch (e) {
-          if (this.remoteCarStore) {
-            const remoteCar = await this.remoteCarStore.load(cid)
-            if (remoteCar) {
-              // todo test for this
-              await this.carStore.save(remoteCar)
-              loadedCar = remoteCar
-            }
-          }
+  protected async loadCar(cid: AnyLink): Promise<CarReader> {
+    if (this.carReaders.has(cid.toString())) { return this.carReaders.get(cid.toString()) as CarReader }
+    if (!this.carStore) throw new Error('car store not initialized')
+    let loadedCar: AnyBlock | null = null
+    try {
+      loadedCar = await this.carStore.load(cid)
+    } catch (e) {
+      if (this.remoteCarStore) {
+        const remoteCar = await this.remoteCarStore.load(cid)
+        if (remoteCar) {
+          // todo test for this
+          await this.carStore.save(remoteCar)
+          loadedCar = remoteCar
         }
-        if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
-        const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes)) as Promise<CarReader>
-        this.carReaders.set(cid.toString(), readerP)
-        return readerP
-      })())
+      }
     }
-    return this.carReaders.get(cid.toString()) as Promise<CarReader>
+    if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
+    const reader = await this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes))
+    this.carReaders.set(cid.toString(), reader)
+    return reader
   }
+
+  // protected async loadCar(cid: AnyLink): Promise < CarReader > {
+  //   if (!this.carReaders.has(cid.toString())) {
+  //     this.carReaders.set(cid.toString(), (async () => {
+  //       if (!this.carStore) throw new Error('car store not initialized')
+  //       let loadedCar: AnyBlock | null = null
+  //       try {
+  //         loadedCar = await this.carStore.load(cid)
+  //       } catch (e) {
+  //         if (this.remoteCarStore) {
+  //           const remoteCar = await this.remoteCarStore.load(cid)
+  //           if (remoteCar) {
+  //             // todo test for this
+  //             await this.carStore.save(remoteCar)
+  //             loadedCar = remoteCar
+  //           }
+  //         }
+  //       }
+  //       if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
+  //       const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes)) as Promise<CarReader>
+  //       this.carReaders.set(cid.toString(), readerP)
+  //       return readerP
+  //     })())
+  //   }
+  //   return this.carReaders.get(cid.toString()) as Promise<CarReader>
+  // }
 
   protected async ensureDecryptedReader(reader: CarReader) {
     const theKey = await this._getKey()
@@ -237,7 +258,7 @@ export abstract class Loader {
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks)
-    }
+    } as unknown as CarReader
   }
 
   protected async setKey(key: string) {
