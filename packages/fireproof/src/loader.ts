@@ -171,7 +171,7 @@ export abstract class Loader {
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
     const got = await Promise.any(this.carLog.map(async (carCid) => {
-      const reader = this.carReaders.get(carCid.toString())
+      const reader = await this.loadCar(carCid)
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
