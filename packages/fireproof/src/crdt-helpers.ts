@@ -1,7 +1,7 @@
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, root, entries, EventData } from '@alanshaw/pail/crdt'
+import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher } from '@alanshaw/pail/clock'
 import { TransactionBlockstore, Transaction } from './transaction'
 import { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult } from './types'
@@ -80,12 +80,17 @@ async function gatherUpdates(
   for (const link of head) {
     const { value: event } = await eventsFetcher.get(link)
     const { key, value } = event.data
-    if (keys.has(key)) continue
-    keys.add(key)
-    const docValue = await getValueFromLink(blocks, value)
-    updates.push({ key, value: docValue.doc, del: docValue.del })
-    if (event.parents) {
-      updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys)
+    if (keys.has(key)) {
+      if (event.parents) {
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys)
+      }
+    } else {
+      keys.add(key)
+      const docValue = await getValueFromLink(blocks, value)
+      updates.push({ key, value: docValue.doc, del: docValue.del })
+      if (event.parents) {
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys)
+      }
     }
   }
   return updates

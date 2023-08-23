@@ -133,6 +133,30 @@ describe('named Database with record', function () {
     equals(loader.keyId.length, 64)
     notEquals(loader.key, loader.keyId)
   })
+  it('should work right with a sequence of changes', async function () {
+    const numDocs = 10
+    for (let i = 0; i < numDocs; i++) {
+      const doc = { _id: `id-${i}`, hello: 'world' }
+      const ok = await db.put(doc)
+      equals(ok.id, `id-${i}`)
+    }
+    const { rows } = await db.changes([])
+    equals(rows.length, numDocs + 1)
+
+    const ok6 = await db.put({ _id: `id-${6}`, hello: 'block' })
+    equals(ok6.id, `id-${6}`)
+
+    for (let i = 0; i < numDocs; i++) {
+      const id = `id-${i}`
+      const doc = await db.get(id)
+      assert(doc)
+      equals(doc._id, id)
+      equals(doc.hello.length, 5)
+    }
+
+    const { rows: rows2 } = await db.changes([])
+    equals(rows2.length, numDocs + 1)
+  })
 })
 
 describe('basic Database parallel writes / public', function () {
