@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.11.18",
+  "version": "0.11.20",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -40,14 +40,10 @@
   ],
   "type": "module",
   "scripts": {
-    "test": "npm run build:test && npm run test:node && tsc",
-    "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build && npm run test:node\"",
-    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
-    "tsc:watch": "tsc --watch",
-    "build:all": " npm run build:version && npm run build && npm run test:browser",
     "analyze": "node ./scripts/analyze.js",
     "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
     "lint:all": "npm run lint:fix && npm run lint:exports",
+    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
     "prepublishOnly": "cp ../../README.md . && npm run build:all",
     "postpublish": "rm README.md",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
@@ -63,7 +59,11 @@
     "test:browser": "node ./scripts/browser-test.js",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
-    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'"
+    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
+    "tsc:watch": "tsc --watch",
+    "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build && npm run test:node\"",
+    "test": "npm run build:test && npm run test:node && tsc",
+    "build:all": " npm run build:version && npm run build && npm run test:browser"
   },
   "keywords": [
     "database",

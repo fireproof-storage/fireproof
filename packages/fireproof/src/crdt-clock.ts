@@ -22,6 +22,7 @@ export class CRDTClock {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     if (ogHead.toString() === newHead.toString()) {
+      this.watchers.forEach((fn) => fn(updates))
       return
     }
     const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
@@ -29,6 +30,10 @@ export class CRDTClock {
       this.setHead(newHead)
       this.watchers.forEach((fn) => fn(updates))
       return
+    }
+
+    if (updates.length > 0) {
+      throw new Error('if we are here we expected to be in a merge, and we should not have updates')
     }
 
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {

@@ -48,7 +48,7 @@ describe('public API', function () {
     this.doc = await this.db.get('test')
     this.query = await this.index.query()
   })
-  it('should have a database', function () {
+  it('should be a database instance', function () {
     assert(this.db)
     assert(this.db instanceof Database)
   })
@@ -294,6 +294,7 @@ describe('Reopening a database with indexes', function () {
 
 describe('basic js verify', function () {
   it('should include cids in arrays', async function () {
+    await resetDirectory(testConfig.dataDir, 'test-verify')
     const db = fireproof('test-verify')
     const ok = await db.put({ _id: 'test', foo: ['bar', 'bam'] })
     equals(ok.id, 'test')
