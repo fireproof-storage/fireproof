@@ -42,23 +42,23 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
   if (!head.length) throw new Error('Getting from an empty database')
   let link
-  try {
-    link = await get(blocks, head, key)
-  } catch (error) {
-    if (head.length > 1 && /missing block/.test((error as Error).message)) {
-      for (const h of head) {
-        try {
-          link = await get(blocks, [h], key)
-          break
-        } catch (error) {
-          if (!/missing block/.test((error as Error).message)) throw error
-        }
-      }
-    } else {
-      throw error
-    }
-    if (!link) throw new Error(`missing block while loading key ${key}`)
-  }
+  // try {
+  link = await get(blocks, head, key)
+  // } catch (error) {
+  //   if (head.length > 1 && /missing block/.test((error as Error).message)) {
+  //     for (const h of head) {
+  //       try {
+  //         link = await get(blocks, [h], key)
+  //         break
+  //       } catch (error) {
+  //         if (!/missing block/.test((error as Error).message)) throw error
+  //       }
+  //     }
+  //   } else {
+  //     throw error
+  //   }
+  //   if (!link) throw new Error(`missing block while loading key ${key}`)
+  // }
   if (!link) throw new Error(`Missing key ${key}`)
   return await getValueFromLink(blocks, link)
 }

@@ -5,7 +5,8 @@ import {
 } from './types'
 import { DbLoader, IdxLoader } from './loaders'
 // import { CID } from 'multiformats'
-import { CRDT, CRDTClock } from './crdt'
+import { CRDT } from './crdt'
+import { CRDTClock } from './crdt-clock'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
   constructor(private parent: BlockFetcher) {
