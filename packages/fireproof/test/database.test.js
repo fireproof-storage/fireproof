@@ -189,6 +189,9 @@ describe('named Database with record', function () {
 
     const { rows: rows3 } = await db.changes([], { dirty: true })
     equals(rows3.length, numDocs + 1)
+
+    const { rows: rows4 } = await db.changes([], { dirty: false })
+    equals(rows4.length, numDocs + 1)
   })
 })
 
