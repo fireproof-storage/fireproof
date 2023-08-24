@@ -1,7 +1,7 @@
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
+import { put, get, root, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
@@ -17,6 +17,15 @@ export async function applyBulkUpdateToCrdt(
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
+    const resRoot = result.root.toString()
+    const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
+    if (!isReturned) {
+      const hasRoot = await tblocks.get(result.root) // is a db-wide get
+      if (!hasRoot) {
+        console.error(`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
+        result.head = head
+      }
+    }
     for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
       tblocks.putSync(cid, bytes)
     }
@@ -41,9 +50,9 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 
 export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
   if (!head.length) throw new Error('Getting from an empty database')
-  let link
+  // let link
   // try {
-  link = await get(blocks, head, key)
+  const link = await get(blocks, head, key)
   // } catch (error) {
   //   if (head.length > 1 && /missing block/.test((error as Error).message)) {
   //     for (const h of head) {
@@ -78,7 +87,7 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
       return await super.get(link)
     } catch (e) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      console.log('missing event', link.toString(), e)
+      console.error('missing event', link.toString(), e)
       return ({ value: null })
     }
   }

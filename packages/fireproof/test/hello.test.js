@@ -18,8 +18,8 @@ describe('Hello World Test', function () {
 
 describe('public API', function () {
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-api')
-    this.db = database('test-api')
+    await resetDirectory(testConfig.dataDir, 'test-public-api')
+    this.db = database('test-public-api')
     this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })
     this.doc = await this.db.get('test')
