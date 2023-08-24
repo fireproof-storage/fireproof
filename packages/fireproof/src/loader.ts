@@ -1,16 +1,17 @@
 import { CarReader } from '@ipld/car'
 import { clearMakeCarFile, parseCarFile } from './loader-helpers'
-import { Transaction } from './transaction'
+import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
+import { getCrypto, randomBytes } from './encrypted-block'
+import { RemoteDataStore, RemoteMetaStore } from './store-remote'
+
+import type { CID } from 'multiformats'
+import type { Transaction } from './transaction'
 import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   Connection, DbMeta, FireproofOptions
 } from './types'
-import { CID } from 'multiformats'
-import { DataStore, MetaStore } from './store'
-import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
-import { getCrypto, randomBytes } from './encrypted-block'
-import { RemoteDataStore, RemoteMetaStore } from './store-remote'
-import { IndexerResult } from './loaders'
+import type { DataStore, MetaStore } from './store'
+import type { IndexerResult } from './loaders'
 
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
@@ -33,7 +34,7 @@ export abstract class Loader {
   metaStore: MetaStore | undefined
   carStore: DataStore | undefined
   carLog: AnyLink[] = []
-  carReaders: Map<string, CarReader> = new Map()
+  carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
   key: string | undefined
   keyId: string | undefined
@@ -201,53 +202,35 @@ export abstract class Loader {
 
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader;
 
-  protected async loadCar(cid: AnyLink): Promise<CarReader> {
-    if (this.carReaders.has(cid.toString())) { return this.carReaders.get(cid.toString()) as CarReader }
-    if (!this.carStore) throw new Error('car store not initialized')
-    let loadedCar: AnyBlock | null = null
-    try {
-      loadedCar = await this.carStore.load(cid)
-    } catch (e) {
-      if (this.remoteCarStore) {
-        const remoteCar = await this.remoteCarStore.load(cid)
-        if (remoteCar) {
-          // todo test for this
-          await this.carStore.save(remoteCar)
-          loadedCar = remoteCar
+  protected async loadCar(cid: AnyLink): Promise < CarReader > {
+    const cidString = cid.toString()
+    if (!this.carReaders.has(cidString)) {
+      this.carReaders.set(cidString, (async () => {
+        if (!this.carStore) throw new Error('car store not initialized')
+        let loadedCar: AnyBlock | null = null
+        try {
+          loadedCar = await this.carStore.load(cid)
+        } catch (e) {
+          if (this.remoteCarStore) {
+            const remoteCar = await this.remoteCarStore.load(cid)
+            if (remoteCar) {
+              // todo test for this
+              await this.carStore.save(remoteCar)
+              loadedCar = remoteCar
+            }
+          }
         }
-      }
+        if (!loadedCar) throw new Error(`missing car file ${cidString}`)
+        const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes))
+        this.carReaders.set(cidString, readerP)
+        return readerP
+      })().catch((e) => {
+        this.carReaders.delete(cidString)
+        throw e
+      }))
     }
-    if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
-    const reader = await this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes))
-    this.carReaders.set(cid.toString(), reader)
-    return reader
+    return this.carReaders.get(cidString) as Promise<CarReader>
   }
-
-  // protected async loadCar(cid: AnyLink): Promise < CarReader > {
-  //   if (!this.carReaders.has(cid.toString())) {
-  //     this.carReaders.set(cid.toString(), (async () => {
-  //       if (!this.carStore) throw new Error('car store not initialized')
-  //       let loadedCar: AnyBlock | null = null
-  //       try {
-  //         loadedCar = await this.carStore.load(cid)
-  //       } catch (e) {
-  //         if (this.remoteCarStore) {
-  //           const remoteCar = await this.remoteCarStore.load(cid)
-  //           if (remoteCar) {
-  //             // todo test for this
-  //             await this.carStore.save(remoteCar)
-  //             loadedCar = remoteCar
-  //           }
-  //         }
-  //       }
-  //       if (!loadedCar) throw new Error(`missing car file ${cid.toString()}`)
-  //       const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes)) as Promise<CarReader>
-  //       this.carReaders.set(cid.toString(), readerP)
-  //       return readerP
-  //     })())
-  //   }
-  //   return this.carReaders.get(cid.toString()) as Promise<CarReader>
-  // }
 
   protected async ensureDecryptedReader(reader: CarReader) {
     const theKey = await this._getKey()

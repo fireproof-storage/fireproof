@@ -2,7 +2,6 @@ import { TransactionBlockstore, IndexBlockstore, Transaction } from './transacti
 import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
-// import { cidListIncludes, uniqueCids } from './loader'
 import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
 

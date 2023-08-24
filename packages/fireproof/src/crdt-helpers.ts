@@ -2,9 +2,10 @@ import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
-import { EventFetcher } from '@alanshaw/pail/clock'
-import { TransactionBlockstore, Transaction } from './transaction'
-import { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions } from './types'
+import { EventFetcher, vis } from '@alanshaw/pail/clock'
+import { Transaction } from './transaction'
+import type { TransactionBlockstore } from './transaction'
+import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions } from './types'
 
 export async function applyBulkUpdateToCrdt(
   tblocks: Transaction,
@@ -137,6 +138,11 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
     const bl = await blocks.get(link)
     if (!bl) throw new Error('Missing block: ' + link.toString())
     await newBlocks.put(link, bl.bytes)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  for await (const _line of vis(blockLog, head)) {
+    void 1
   }
 
   for (const cid of blockLog.cids) {

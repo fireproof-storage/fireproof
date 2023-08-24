@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable mocha/max-top-level-suites */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
@@ -172,6 +173,25 @@ describe('named Database with record', function () {
     equals(rows3.length, numDocs + 1)
     equals(rows3[numDocs].key, `id-${7}`)
     equals(rows3[numDocs].value._deleted, true)
+  })
+
+  it('should work right after compaction', async function () {
+    const numDocs = 10
+    for (let i = 0; i < numDocs; i++) {
+      const doc = { _id: `id-${i}`, hello: 'world' }
+      const ok = await db.put(doc)
+      equals(ok.id, `id-${i}`)
+    }
+    const { rows } = await db.changes([])
+    equals(rows.length, numDocs + 1)
+
+    await db.compact()
+
+    const { rows: rows3 } = await db.changes([], { dirty: true })
+    equals(rows3.length, numDocs + 1)
+
+    const { rows: rows4 } = await db.changes([], { dirty: false })
+    equals(rows4.length, numDocs + 1)
   })
 })
 

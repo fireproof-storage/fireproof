@@ -188,7 +188,7 @@ describe('Compact a CRDT with writes', function () {
     for await (const blk of crdt.blocks.entries()) {
       blz.push(blk)
     }
-    equals(blz.length, 4)
+    equals(blz.length, 23)
   })
   it('should have data after compact', async function () {
     await crdt.compact()
