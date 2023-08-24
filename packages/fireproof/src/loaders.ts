@@ -3,7 +3,8 @@ import type {
   CarCommit, DbCarHeader, FireproofOptions, IdxCarHeader,
   IdxMeta, IdxMetaMap
 } from './types'
-import type { CRDT, CRDTClock } from './crdt'
+import type { CRDT } from './crdt'
+import type { CRDTClock } from './crdt-clock'
 import { Loader } from './loader'
 import { index } from './index'
 

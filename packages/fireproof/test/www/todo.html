@@ -27,13 +27,14 @@
 
         const redraw = async () => {
           try {
-            const result = await index(db, 'created').query({includeDocs: true});
+            const result = await index(db, 'created').query({includeDocs: false});
             document
               .querySelector('ul')
               .innerHTML = '';
 
             for (const row of result.rows) {
-              const doc = row.doc
+              const doc = await db.get(row.id);
+              // doc = row.doc
               const checkbox = document.createElement('input');
               checkbox.setAttribute('type', 'checkbox');
               if (doc.completed) {
