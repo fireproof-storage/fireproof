@@ -3,8 +3,9 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
-import { TransactionBlockstore, Transaction } from './transaction'
-import { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions } from './types'
+import { Transaction } from './transaction'
+import type { TransactionBlockstore } from './transaction'
+import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions } from './types'
 
 export async function applyBulkUpdateToCrdt(
   tblocks: Transaction,

@@ -3,9 +3,9 @@ import type {
   CarCommit, DbCarHeader, FireproofOptions, IdxCarHeader,
   IdxMeta, IdxMetaMap
 } from './types'
-import { CRDT, CRDTClock } from './crdt'
-import { index } from './index'
+import type { CRDT, CRDTClock } from './crdt'
 import { Loader } from './loader'
+import { index } from './index'
 
 export class IdxLoader extends Loader {
   // declare ready: Promise<IdxCarHeader>
