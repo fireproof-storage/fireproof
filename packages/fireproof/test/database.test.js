@@ -195,6 +195,21 @@ describe('named Database with record', function () {
   })
 })
 
+// describe('basic Database parallel writes / public', function () {
+//   /** @type {Database} */
+//   let db
+//   const writes = []
+//   beforeEach(async function () {
+//     await resetDirectory(MetaStore.dataDir, 'test-parallel-writes')
+//     db = new Database('test-parallel-writes', { public: true })
+//     /** @type {Doc} */
+//     for (let i = 0; i < 10; i++) {
+//       const doc = { _id: `id-${i}`, hello: 'world' }
+//       writes.push(db.put(doc))
+//     }
+//     await Promise.all(writes)
+//   })
+
 describe('basic Database parallel writes / public', function () {
   /** @type {Database} */
   let db

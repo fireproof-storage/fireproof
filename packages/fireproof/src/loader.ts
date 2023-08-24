@@ -4,7 +4,7 @@ import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
-import type { CID } from 'multiformats'
+import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
 import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
@@ -78,6 +78,17 @@ export abstract class Loader {
     return connection
   }
 
+  async snapToCar(carCid: AnyLink | string) {
+    await this.ready
+    if (typeof carCid === 'string') {
+      carCid = CID.parse(carCid)
+    }
+    const carHeader = await this.loadCarHeaderFromMeta({ car: carCid, key: this.key || null })
+    this.carLog = [carCid, ...carHeader.cars]
+    void this.getMoreReaders(carHeader.cars)
+    await this._applyCarHeader(carHeader, true)
+  }
+
   async mergeMetaFromRemote(meta: DbMeta): Promise<void> {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
@@ -108,21 +119,12 @@ export abstract class Loader {
     }
   }
 
-  async loadCarHeaderFromMeta(meta: DbMeta): Promise<AnyCarHeader> {
-    const { car: cid } = meta
+  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<AnyCarHeader> {
     const reader = await this.loadCar(cid)
     return await parseCarFile(reader)
   }
 
-  // protected async ingestCarHeadFromMeta(meta: DbMeta): Promise < void > {
-  //   const carHeader = await this.loadCarHeaderFromMeta(meta)
-  //   this.carLog = [meta.car, ...carHeader.cars]
-  //   void this.getMoreReaders(carHeader.cars)
-  //   await this._applyCarHeader(carHeader)
-  //   // return carHeader
-  // }
-
-  protected async _applyCarHeader(_carHeader: AnyCarHeader) { }
+  protected abstract _applyCarHeader(_carHeader: AnyCarHeader, snap?: boolean): Promise<void>;
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {

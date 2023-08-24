@@ -33,20 +33,20 @@
               .innerHTML = '';
 
             for (const row of result.rows) {
+              const doc = row.doc
               const checkbox = document.createElement('input');
               checkbox.setAttribute('type', 'checkbox');
-              if (row.doc.completed) {
+              if (doc.completed) {
                 checkbox.setAttribute('checked', true);
               }
               checkbox.onchange = () => {
-                row.doc.completed = !row
-                  .doc
+                doc.completed = !doc
                   .completed
                   db
                   .put(row.doc);
               }
               const textSpan = document.createElement('span');
-              textSpan.innerText = row.doc.task;
+              textSpan.innerText = doc.task;
               const li = document.createElement('li');
               li.appendChild(checkbox);
               li.appendChild(textSpan);
@@ -82,9 +82,7 @@
 
         async function onButtonClick(e) {
           e.preventDefault();
-          connection
-            .refresh()
-            .then(() => console.log('refreshed'))
+
           const input = document.querySelector('#todo');
           const ok = await db.put({created: Date.now(), task: input.value, completed: false});
           input.value = '';

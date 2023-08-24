@@ -44,8 +44,12 @@ export class DbLoader extends Loader {
     this.clock = clock
   }
 
-  protected async _applyCarHeader(carHeader: DbCarHeader) {
-    await this.clock.applyHead(null, carHeader.head, [])
+  protected async _applyCarHeader(carHeader: DbCarHeader, snap = false) {
+    if (snap) {
+      await this.clock.applyHead(null, carHeader.head, this.clock.head)
+    } else {
+      await this.clock.applyHead(null, carHeader.head, [])
+    }
   }
 
   protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
