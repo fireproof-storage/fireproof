@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fireproof Uploads</title>
+  <script src="../../dist/browser/fireproof.iife.js"></script>
+  <script type="text/javascript">
+    function testApp() {
+      const db = Fireproof.fireproof('uploads2-test');
+      window.db = db;
+
+      const draw = async () => {
+        const result = await db.changes()
+        document
+          .querySelector('ul')
+          .innerHTML = '';
+        for (const row of result.rows) {
+          const doc = row.value
+          const li = document
+            .querySelector('ul')
+            .appendChild(document.createElement('li'))
+          li.appendChild(document.createElement('span')).innerText = row.key;
+
+          for (const file of Object.keys(doc._files)) {
+            const meta = doc._files[file]
+            if (/image/.test(meta.type)) {
+              const img = document.createElement("img");
+              img.src = URL.createObjectURL(await meta.file());
+              img.height = 80;
+              img.onload = () => {
+                URL.revokeObjectURL(img.src);
+              };
+              li.appendChild(img);
+            }
+          }
+        }
+      }
+
+      function handleFiles() {
+        const fileList = this.files;
+        const doc = {
+          type: "files",
+          _files: {}
+        }
+        for (const file of fileList) {
+          doc._files[file.name] = file
+        }
+        const ok = db.put(doc);
+      }
+
+      async function initialize() {
+        const inputElement = document.getElementById("files-up");
+        inputElement.addEventListener("change", handleFiles, false);
+        db.subscribe(draw);
+        draw()
+      }
+
+      window.onload = initialize;
+
+    }
+    testApp();
+  </script>
+</head>
+
+<body>
+  <button onclick="onButtonClick(event)">Click to Upload</button>
+  <input type="file" id="files-up" multiple />
+  <ul></ul>
+</body>
+
+</html>
