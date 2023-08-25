@@ -5,6 +5,7 @@ import { CRDT } from './crdt'
 import { index } from './index'
 
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts } from './types'
+import { encodeFile } from './files'
 
 type DbName = string | null
 
@@ -38,15 +39,24 @@ export class Database {
     })
     if (!got) throw new Error(`Not found: ${id}`)
     const { doc } = got
-    return { _id: id, ...doc }
+    return { _id: id, ...doc } as Doc
   }
 
   async put(doc: Doc): Promise<DbResponse> {
     const { _id, ...value } = doc
-    const docId = _id || uuidv7() // 'f' + Math.random().toString(36).slice(2) // todo uuid v7
+    const docId = _id || uuidv7()
     const result: BulkResult = await this._writeQueue.push({ key: docId, value } as DocUpdate)
     return { id: docId, clock: result?.head } as DbResponse
   }
+
+  // async putFile(id: string, name: string|null, file: File): Promise<DbResponse> {
+  //   const doc = await this.get(id).catch(() => ({ _id: id } as Doc))
+  //   const { _id, ...value } = doc
+  //   const fileRecord = { [name || file.name]: file }
+  //   value._files = { ...doc._files, ...fileRecord }
+  //   const result: BulkResult = await this._writeQueue.push({ key: _id, value } as DocUpdate)
+  //   return { id, clock: result?.head } as DbResponse
+  // }
 
   async del(id: string): Promise<DbResponse> {
     const result = await this._writeQueue.push({ key: id, del: true })

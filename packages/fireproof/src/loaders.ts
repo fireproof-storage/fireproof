@@ -1,12 +1,15 @@
+import type { CarReader } from '@ipld/car'
 import type {
   AnyLink, BulkResult,
-  CarCommit, DbCarHeader, FireproofOptions, IdxCarHeader,
+  CarCommit, Connection, DbCarHeader, FileCarHeader, FileResult, FireproofOptions, IdxCarHeader,
   IdxMeta, IdxMetaMap
 } from './types'
 import type { CRDT } from './crdt'
 import type { CRDTClock } from './crdt-clock'
 import { Loader } from './loader'
 import { index } from './index'
+import { DataStore } from './store'
+import { RemoteDataStore } from './store-remote'
 
 export class IdxLoader extends Loader {
   // declare ready: Promise<IdxCarHeader>
@@ -40,9 +43,37 @@ export class DbLoader extends Loader {
 
   clock: CRDTClock
 
+  remoteFileStore: DataStore | undefined
+  fileStore: DataStore | undefined
+
   constructor(name: string, clock: CRDTClock, opts?: FireproofOptions) {
     super(name, opts)
     this.clock = clock
+  }
+
+  protected async initializeStores(): Promise<void> {
+    await super.initializeStores()
+
+    const isBrowser = typeof window !== 'undefined'
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
+    if (module) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      this.fileStore = new module.DataStore(this) as DataStore
+    } else {
+      throw new Error('Failed to initialize stores.')
+    }
+  }
+
+  connectRemote(connection: Connection) {
+    super.connectRemote(connection)
+    this.remoteFileStore = new RemoteDataStore(this, connection, 'file')
+    return connection
+  }
+
+  async loadFileCar(cid: AnyLink): Promise<CarReader> {
+    if (!this.fileStore) throw new Error('missing fileStore')
+    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore)
   }
 
   protected async _applyCarHeader(carHeader: DbCarHeader, snap = false) {
@@ -53,7 +84,28 @@ export class DbLoader extends Loader {
     }
   }
 
-  protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
-    return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
+  protected makeCarHeader(result: BulkResult|FileResult, cars: AnyLink[], compact: boolean = false): DbCarHeader | FileCarHeader {
+    if (isFileResult(result)) {
+      const files = new Map<string, {
+        cid: AnyLink
+        size: number
+        type: string
+      }>()
+      for (const [name, meta] of Object.entries(result.files)) {
+        files.set(name, {
+          cid: meta.cid,
+          size: meta.size,
+          type: meta.type
+        })
+      }
+      return { files } as FileCarHeader
+    } else {
+      const { head } = result
+      return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
+    }
   }
+}
+
+export function isFileResult(result: IndexerResult|BulkResult|FileResult): result is FileResult {
+  return result && (result as FileResult).files !== undefined
 }

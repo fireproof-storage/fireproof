@@ -15,8 +15,28 @@ export type Doc = DocBody & {
   _id?: string
 }
 
+export type DocFileMeta = {
+  type: string;
+  size: number;
+  cid: AnyLink;
+  car?: AnyLink;
+  file?: () => Promise<File>;
+}
+
+type DocFiles = {
+  [key: string]: File | DocFileMeta
+}
+
+export type FileCarHeader = {
+  files: Map<string, {
+    cid: AnyLink
+    size: number
+    type: string
+  }>
+}
 type DocBody = {
   [key: string]: DocFragment
+  _files?: DocFiles
 }
 
 type DocMeta = {
@@ -26,7 +46,7 @@ type DocMeta = {
 
 export type DocUpdate = {
   key: string
-  value?: { [key: string]: any}
+  value?: { [key: string]: any }
   del?: boolean
 }
 
@@ -63,6 +83,10 @@ export type BulkResult = {
   head: ClockHead
 }
 
+export type FileResult = {
+  files: { [key: string]: DocFileMeta }
+}
+
 type CarHeader = {
   cars: AnyLink[]
   compact: AnyLink[]
@@ -86,7 +110,9 @@ export type DbCarHeader = CarHeader & {
   head: ClockHead
 }
 
-export type AnyCarHeader = DbCarHeader | IdxCarHeader
+export type AnyCarHeader = DbCarHeader | IdxCarHeader | FileCarHeader
+
+export type CarLoaderHeader = DbCarHeader | IdxCarHeader
 
 export type QueryOpts = {
   descending?: boolean
@@ -115,7 +141,7 @@ export interface CarMakeable {
 }
 
 export type UploadFnParams = {
-  type: 'data' | 'meta',
+  type: 'data' | 'meta' | 'file',
   name: string,
   car?: string,
   branch?: string,
@@ -124,14 +150,16 @@ export type UploadFnParams = {
 
 export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<void>
 
+export type DownloadFnParamTypes = 'data' | 'meta' | 'file'
+
 export type DownloadFnParams = {
-  type: 'data' | 'meta',
+  type: DownloadFnParamTypes,
   name: string,
   car?: string,
   branch?: string,
 }
 
-export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array|null>
+export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null>
 
 export interface Connection {
   ready: Promise<any>

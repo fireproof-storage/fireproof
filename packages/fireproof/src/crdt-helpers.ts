@@ -1,3 +1,4 @@
+import type { CID } from 'multiformats'
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
@@ -5,7 +6,9 @@ import { put, get, root, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions } from './types'
+import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
+import { decodeFile, encodeFile } from './files'
+import { DbLoader } from './loaders'
 
 export async function applyBulkUpdateToCrdt(
   tblocks: Transaction,
@@ -34,13 +37,13 @@ export async function applyBulkUpdateToCrdt(
   return { head }
 }
 
-// root: (await root(tblocks, head)).root as AnyLink
-
+// this whole thing can get pulled outside of the write queue
 async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<AnyLink> {
   let value: DocValue
   if (update.del) {
     value = { del: true }
   } else {
+    await processFiles(blocks, update.value as Doc)
     value = { doc: update.value }
   }
   const block = await encode({ value, hasher, codec })
@@ -48,34 +51,73 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
   return block.cid
 }
 
+async function processFiles(blocks: Transaction, doc: Doc) {
+  if (doc._files) {
+    const dbBlockstore = blocks.parent as TransactionBlockstore
+    const t = new Transaction(dbBlockstore)
+    dbBlockstore.transactions.add(t)
+    const didPut = []
+    for (const filename in doc._files) {
+      if (File === doc._files[filename].constructor) {
+        const file = doc._files[filename] as File
+        const { cid, blocks: fileBlocks } = await encodeFile(file)
+        didPut.push(filename)
+        for (const block of fileBlocks) {
+          t.putSync(block.cid, block.bytes)
+        }
+        doc._files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta
+      }
+    }
+    if (didPut.length) {
+      const car = await dbBlockstore.loader?.commit(t, { files: doc._files } as FileResult)
+      if (car) {
+        for (const name of didPut) {
+          doc._files[name] = { car, ...doc._files[name] } as DocFileMeta
+        }
+      }
+    }
+  }
+}
+
 export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
   if (!head.length) throw new Error('Getting from an empty database')
-  // let link
-  // try {
   const link = await get(blocks, head, key)
-  // } catch (error) {
-  //   if (head.length > 1 && /missing block/.test((error as Error).message)) {
-  //     for (const h of head) {
-  //       try {
-  //         link = await get(blocks, [h], key)
-  //         break
-  //       } catch (error) {
-  //         if (!/missing block/.test((error as Error).message)) throw error
-  //       }
-  //     }
-  //   } else {
-  //     throw error
-  //   }
-  //   if (!link) throw new Error(`missing block while loading key ${key}`)
-  // }
   if (!link) throw new Error(`Missing key ${key}`)
   return await getValueFromLink(blocks, link)
+}
+
+function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
+  if (doc && doc._files) {
+    // console.log('readFiles', doc)
+    for (const filename in doc._files) {
+      const fileMeta = doc._files[filename] as DocFileMeta
+      if (fileMeta.cid) {
+        // const reader = blocks
+        if (fileMeta.car && blocks.loader) {
+          const ld = blocks.loader as DbLoader
+          fileMeta.file = async () => await decodeFile({
+            get: async (cid: AnyLink) => {
+              // console.log('filefile get', cid, fileMeta.car)
+              const reader = await ld.loadFileCar(fileMeta.car!)
+              // console.log('filefile reader', reader)
+              const block = await reader.get(cid as CID)
+              if (!block) throw new Error(`Missing block ${cid.toString()}`)
+              return block.bytes
+            }
+          }, fileMeta.cid, fileMeta)
+        }
+        // console.log('reading file', fileMeta)
+      }
+      doc._files[filename] = fileMeta
+    }
+  }
 }
 
 async function getValueFromLink(blocks: TransactionBlockstore, link: AnyLink): Promise<DocValue> {
   const block = await blocks.get(link)
   if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
+  readFiles(blocks, value)
   return value
 }
 
