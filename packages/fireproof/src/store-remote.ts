@@ -1,7 +1,7 @@
 /* eslint-disable import/first */
 // console.log('import store-s3')
 
-import { AnyBlock, AnyLink, Connection, DbMeta, UploadFnParams } from './types'
+import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, UploadFnParams } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import type { Loader } from './loader'
 // import type { Response } from 'cross-fetch'
@@ -9,10 +9,12 @@ import type { Loader } from './loader'
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'car-browser-s3'
   connection: Connection
+  type: DownloadFnParamTypes
 
-  constructor(loader: Loader, connection: Connection) {
+  constructor(loader: Loader, connection: Connection, type: DownloadFnParamTypes = 'data') {
     super(loader)
     this.connection = connection
+    this.type = type
   }
 
   prefix() {
@@ -21,7 +23,7 @@ export class RemoteDataStore extends DataStoreBase {
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
     const bytes = await this.connection.download({
-      type: 'data',
+      type: this.type,
       name: this.prefix(),
       car: carCid.toString()
     })
@@ -31,7 +33,7 @@ export class RemoteDataStore extends DataStoreBase {
 
   async save(car: AnyBlock): Promise<void> {
     const uploadParams: UploadFnParams = {
-      type: 'data',
+      type: this.type,
       name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()

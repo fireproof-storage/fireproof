@@ -19,7 +19,7 @@ export class ConnectS3 implements Connection {
     if (!name) throw new Error('name is required')
     if (car && branch) { throw new Error('car and branch are mutually exclusive') }
     if (!car && !branch) { throw new Error('car or branch is required') }
-    if (type !== 'data' && type !== 'meta') { throw new Error('type must be data or meta') }
+    if (type !== 'file' && type !== 'data' && type !== 'meta') { throw new Error('type must be data or meta') }
   }
 
   async upload(bytes: Uint8Array, params: UploadFnParams) {
