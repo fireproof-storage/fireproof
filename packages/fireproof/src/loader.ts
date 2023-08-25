@@ -8,7 +8,8 @@ import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
 import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
-  Connection, DbMeta, FireproofOptions
+  CarLoaderHeader,
+  Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { DataStore, MetaStore } from './store'
 import type { IndexerResult } from './loaders'
@@ -119,9 +120,9 @@ export abstract class Loader {
     }
   }
 
-  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<AnyCarHeader> {
+  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<CarLoaderHeader> {
     const reader = await this.loadCar(cid)
-    return await parseCarFile(reader)
+    return await parseCarFile(reader) as CarLoaderHeader
   }
 
   protected abstract _applyCarHeader(_carHeader: AnyCarHeader, snap?: boolean): Promise<void>;
@@ -147,7 +148,7 @@ export abstract class Loader {
     return this.key
   }
 
-  async commit(t: Transaction, done: IndexerResult | BulkResult, compact: boolean = false): Promise<AnyLink> {
+  async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, compact)
     const theKey = await this._getKey()
@@ -202,7 +203,7 @@ export abstract class Loader {
     }
   }
 
-  protected abstract makeCarHeader(_result: BulkResult | IndexerResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader;
+  protected abstract makeCarHeader(_result: BulkResult | IndexerResult | FileResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader | FileCarHeader;
 
   protected async loadCar(cid: AnyLink): Promise < CarReader > {
     const cidString = cid.toString()
