@@ -15,8 +15,20 @@ export type Doc = DocBody & {
   _id?: string
 }
 
+export type DocFileMeta = {
+    type: string;
+    size: number;
+    cid: AnyLink;
+    file?: () => Promise<File>;
+  }
+
+type DocFiles = {
+  [key: string]: File | DocFileMeta
+}
+
 type DocBody = {
   [key: string]: DocFragment
+  _files?: DocFiles
 }
 
 type DocMeta = {
@@ -26,7 +38,7 @@ type DocMeta = {
 
 export type DocUpdate = {
   key: string
-  value?: { [key: string]: any}
+  value?: { [key: string]: any }
   del?: boolean
 }
 
@@ -131,7 +143,7 @@ export type DownloadFnParams = {
   branch?: string,
 }
 
-export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array|null>
+export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null>
 
 export interface Connection {
   ready: Promise<any>

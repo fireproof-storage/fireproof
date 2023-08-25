@@ -89,7 +89,7 @@ console.log('cjs/node build');
         format: 'iife',
         globalName: 'Fireproof',
         platform: 'browser',
-        target: 'es2015',
+        target: 'es2020',
         entryPoints: [entryPoint],
         banner: bannerLog`
 console.log('browser/es2015 build');

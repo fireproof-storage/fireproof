@@ -14,7 +14,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
 import { ProllyNode as BaseNode } from 'prolly-trees/base'
 
-import { AnyLink, DocUpdate, MapFn, DocFragment, BlockFetcher, IndexKey, IndexUpdate, QueryOpts, IndexRow, AnyBlock } from './types'
+import { AnyLink, DocUpdate, MapFn, DocFragment, BlockFetcher, IndexKey, IndexUpdate, QueryOpts, IndexRow, AnyBlock, Doc } from './types'
 import { Transaction } from './transaction'
 import { CRDT } from './crdt'
 
@@ -133,7 +133,7 @@ export async function applyQuery(crdt: CRDT, resp: { result: IndexRow[] }, query
     resp.result = await Promise.all(
       resp.result.map(async row => {
         const val = await crdt.get(row.id)
-        const doc = val ? { _id: row.id, ...val.doc } : null
+        const doc = val ? ({ _id: row.id, ...val.doc } as Doc) : null
         return { ...row, doc }
       })
     )
