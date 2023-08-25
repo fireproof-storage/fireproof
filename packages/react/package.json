@@ -1,6 +1,6 @@
 {
   "name": "use-fireproof",
-  "version": "0.11.9",
+  "version": "0.11.10",
   "description": "React hooks: useLiveQuery and useDocument for Fireproof live database",
   "main": "dist/index.js",
   "scripts": {
@@ -24,7 +24,7 @@
   "license": "Apache-2.0 OR MIT",
   "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuergit ly(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
-    "@fireproof/core": "^0.11.20"
+    "@fireproof/core": "^0.11.21"
   },
   "peerDependencies": {
     "react": ">= 16.8.0",
