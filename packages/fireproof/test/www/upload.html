@@ -8,11 +8,38 @@
   <script src="../../dist/browser/fireproof.iife.js"></script>
   <script type="text/javascript">
     function testApp() {
-      const db = Fireproof.fireproof('uploads2-test');
-      window.db = db;
+      const { connect, fireproof, index } = Fireproof;
+      let dbName
+      let db
+      let connection
+
+      function setupDb(name) {
+        dbName = name;
+        db = fireproof(name);
+        window.db = db;
+        connection = connect.s3(db, s3Info)
+        db.subscribe(redraw);
+        return db;
+      }
+      const s3Info = {
+        upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+        download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+      }
+
+      let doing
+      const redraw = async () => {
+        if (doing) {
+          return doing
+        }
+        doing = draw().finally(() => doing = null)
+        return doing
+      }
 
       const draw = async () => {
         const result = await db.changes()
+        document
+              .querySelector('#filecount')
+              .innerText = db._crdt.blocks.loader.carLog.length
         document
           .querySelector('ul')
           .innerHTML = '';
@@ -22,21 +49,34 @@
             .querySelector('ul')
             .appendChild(document.createElement('li'))
           li.appendChild(document.createElement('span')).innerText = row.key;
-
           for (const file of Object.keys(doc._files)) {
-            const meta = doc._files[file]
-            if (/image/.test(meta.type)) {
-              const img = document.createElement("img");
-              img.src = URL.createObjectURL(await meta.file());
-              img.height = 80;
-              img.onload = () => {
-                URL.revokeObjectURL(img.src);
-              };
-              li.appendChild(img);
-            }
+            (async () => {
+              const meta = doc._files[file]
+              if (meta.file && /image/.test(meta.type)) {
+                const img = document.createElement("img");
+                img.src = URL.createObjectURL(await meta.file());
+                img.height = 200;
+                img.onload = () => {
+                  URL.revokeObjectURL(img.src);
+                };
+                li.appendChild(img);
+              }
+            })();
           }
         }
       }
+
+      async function changeList(e) {
+        e.preventDefault();
+        const input = document.querySelector('#list');
+        dbName = input.value;
+        history.pushState(null, '', location.pathname + '?db=' + encodeURIComponent(dbName));
+        setupDb(dbName);
+
+        redraw();
+      }
+      window.changeList = changeList;
+
 
       function handleFiles() {
         const fileList = this.files;
@@ -51,6 +91,12 @@
       }
 
       async function initialize() {
+        ps = new URLSearchParams(location.search)
+        const listQ = ps.get('db')
+        setupDb(listQ || 'hello-world');
+        const input = document.querySelector('#list');
+          input.value = dbName;
+
         const inputElement = document.getElementById("files-up");
         inputElement.addEventListener("change", handleFiles, false);
         db.subscribe(draw);
@@ -65,8 +111,12 @@
 </head>
 
 <body>
-  <button onclick="onButtonClick(event)">Click to Upload</button>
-  <input type="file" id="files-up" multiple />
+  List:
+  <input title="gallery" type="text" name="list" id="list" />
+  <button onclick="changeList(event)">Change Gallery</button>
+  <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
+
+  <input title="save to Fireproof" type="file" id="files-up" multiple />
   <ul></ul>
 </body>
 

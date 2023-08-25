@@ -16,25 +16,24 @@ export type Doc = DocBody & {
 }
 
 export type DocFileMeta = {
-    type: string;
-    size: number;
-    cid: AnyLink;
-    car?: AnyLink;
-    file?: () => Promise<File>;
-  }
+  type: string;
+  size: number;
+  cid: AnyLink;
+  car?: AnyLink;
+  file?: () => Promise<File>;
+}
 
 type DocFiles = {
   [key: string]: File | DocFileMeta
 }
 
 export type FileCarHeader = {
-  [key: string]: {
+  files: Map<string, {
     cid: AnyLink
     size: number
     type: string
-  }
+  }>
 }
-
 type DocBody = {
   [key: string]: DocFragment
   _files?: DocFiles
@@ -85,7 +84,7 @@ export type BulkResult = {
 }
 
 export type FileResult = {
-  [key: string]: DocFileMeta
+  files: { [key: string]: DocFileMeta }
 }
 
 type CarHeader = {
@@ -143,7 +142,7 @@ export interface CarMakeable {
 }
 
 export type UploadFnParams = {
-  type: 'data' | 'meta',
+  type: 'data' | 'meta' | 'file',
   name: string,
   car?: string,
   branch?: string,
@@ -152,8 +151,10 @@ export type UploadFnParams = {
 
 export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<void>
 
+export type DownloadFnParamTypes = 'data' | 'meta' | 'file'
+
 export type DownloadFnParams = {
-  type: 'data' | 'meta',
+  type: DownloadFnParamTypes,
   name: string,
   car?: string,
   branch?: string,

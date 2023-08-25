@@ -1,3 +1,4 @@
+import type { CID } from 'multiformats'
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
@@ -7,6 +8,7 @@ import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
 import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
 import { decodeFile, encodeFile } from './files'
+import { DbLoader } from './loaders'
 
 export async function applyBulkUpdateToCrdt(
   tblocks: Transaction,
@@ -69,7 +71,7 @@ async function processFiles(blocks: Transaction, doc: Doc) {
       }
     }
     if (didPut.length) {
-      const car = await dbBlockstore.loader?.commit(t, doc._files as FileResult)
+      const car = await dbBlockstore.loader?.commit(t, { files: doc._files } as FileResult)
       if (car) {
         for (const name of didPut) {
           doc._files[name] = { car, ...doc._files[name] } as DocFileMeta
@@ -81,24 +83,7 @@ async function processFiles(blocks: Transaction, doc: Doc) {
 
 export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
   if (!head.length) throw new Error('Getting from an empty database')
-  // let link
-  // try {
   const link = await get(blocks, head, key)
-  // } catch (error) {
-  //   if (head.length > 1 && /missing block/.test((error as Error).message)) {
-  //     for (const h of head) {
-  //       try {
-  //         link = await get(blocks, [h], key)
-  //         break
-  //       } catch (error) {
-  //         if (!/missing block/.test((error as Error).message)) throw error
-  //       }
-  //     }
-  //   } else {
-  //     throw error
-  //   }
-  //   if (!link) throw new Error(`missing block while loading key ${key}`)
-  // }
   if (!link) throw new Error(`Missing key ${key}`)
   return await getValueFromLink(blocks, link)
 }
@@ -109,14 +94,21 @@ function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
     for (const filename in doc._files) {
       const fileMeta = doc._files[filename] as DocFileMeta
       if (fileMeta.cid) {
+        // const reader = blocks
+        if (fileMeta.car && blocks.loader) {
+          const ld = blocks.loader as DbLoader
+          fileMeta.file = async () => await decodeFile({
+            get: async (cid: AnyLink) => {
+              console.log('filefile get', cid, fileMeta.car)
+              const reader = await ld.loadFileCar(fileMeta.car!)
+              console.log('filefile reader', reader)
+              const block = await reader.get(cid as CID)
+              if (!block) throw new Error(`Missing block ${cid.toString()}`)
+              return block.bytes
+            }
+          }, fileMeta.cid, fileMeta)
+        }
         // console.log('reading file', fileMeta)
-        fileMeta.file = async () => await decodeFile({
-          get: async (cid: AnyLink) => {
-            const block = await blocks.get(cid)
-            if (!block) throw new Error(`Missing block ${cid.toString()}`)
-            return block.bytes
-          }
-        }, fileMeta.cid, fileMeta)
       }
       doc._files[filename] = fileMeta
     }

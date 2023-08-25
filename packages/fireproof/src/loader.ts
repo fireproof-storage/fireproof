@@ -12,7 +12,7 @@ import type {
   Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { DataStore, MetaStore } from './store'
-import type { IndexerResult } from './loaders'
+import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
@@ -125,7 +125,7 @@ export abstract class Loader {
     return await parseCarFile(reader) as CarLoaderHeader
   }
 
-  protected abstract _applyCarHeader(_carHeader: AnyCarHeader, snap?: boolean): Promise<void>;
+  protected abstract _applyCarHeader(_carHeader: CarLoaderHeader, snap?: boolean): Promise<void>;
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
@@ -153,8 +153,25 @@ export abstract class Loader {
     const fp = this.makeCarHeader(done, this.carLog, compact)
     const theKey = await this._getKey()
     const { cid, bytes } = theKey ? await encryptedMakeCarFile(theKey, fp, t) : await clearMakeCarFile(fp, t)
+
+    if (isFileResult(done)) { // move to the db loader?
+      const dbLoader = this as unknown as DbLoader
+      console.log('saving file', done, dbLoader.fileStore, dbLoader.remoteFileStore)
+      await dbLoader.fileStore!.save({ cid, bytes })
+      dbLoader.remoteFileStore?.save({ cid, bytes }).catch((e: Error) => {
+        console.error('failed to save remote file', done, e)
+      })
+      return cid
+    }
+
     await this.carStore!.save({ cid, bytes })
-    await this.remoteCarStore?.save({ cid, bytes })
+    this.remoteCarStore?.save({ cid, bytes }).then(async () => {
+      await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
+    }).catch((e) => {
+      console.error('failed to save remote car or meta', e)
+    })
+    await this.metaStore!.save({ car: cid, key: theKey || null })
+
     if (compact) {
       for (const cid of this.carLog) {
         await this.carStore!.remove(cid)
@@ -163,8 +180,6 @@ export abstract class Loader {
     } else {
       this.carLog.unshift(cid)
     }
-    await this.metaStore!.save({ car: cid, key: theKey || null })
-    await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
     return cid
   }
 
@@ -205,20 +220,25 @@ export abstract class Loader {
 
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult | FileResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader | FileCarHeader;
 
-  protected async loadCar(cid: AnyLink): Promise < CarReader > {
+  protected async loadCar(cid: AnyLink): Promise<CarReader> {
+    if (!this.carStore) throw new Error('car store not initialized')
+    return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+  }
+
+  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
     const cidString = cid.toString()
     if (!this.carReaders.has(cidString)) {
       this.carReaders.set(cidString, (async () => {
-        if (!this.carStore) throw new Error('car store not initialized')
         let loadedCar: AnyBlock | null = null
         try {
-          loadedCar = await this.carStore.load(cid)
+          loadedCar = await local.load(cid)
         } catch (e) {
-          if (this.remoteCarStore) {
-            const remoteCar = await this.remoteCarStore.load(cid)
+          if (remote) {
+            console.log('loading remote car', cidString, remote)
+            const remoteCar = await remote.load(cid)
             if (remoteCar) {
               // todo test for this
-              await this.carStore.save(remoteCar)
+              await local.save(remoteCar)
               loadedCar = remoteCar
             }
           }
