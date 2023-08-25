@@ -5,7 +5,7 @@ import { put, get, root, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta } from './types'
+import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
 import { decodeFile, encodeFile } from './files'
 
 export async function applyBulkUpdateToCrdt(
@@ -52,15 +52,28 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 async function processFiles(blocks: Transaction, doc: Doc) {
   if (doc._files) {
     console.log('processing files', doc._files)
+    const dbBlockstore = blocks.parent as TransactionBlockstore
+    const t = new Transaction(dbBlockstore)
+    dbBlockstore.transactions.add(t)
+    const didPut = []
     for (const filename in doc._files) {
       if (File === doc._files[filename].constructor) {
         const file = doc._files[filename] as File
         const { cid, blocks: fileBlocks } = await encodeFile(file)
         console.log('encoded file', cid.toString(), filename)
+        didPut.push(filename)
         for (const block of fileBlocks) {
-          blocks.putSync(block.cid, block.bytes)
+          t.putSync(block.cid, block.bytes)
         }
         doc._files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta
+      }
+    }
+    if (didPut.length) {
+      const car = await dbBlockstore.loader?.commit(t, doc._files as FileResult)
+      if (car) {
+        for (const name of didPut) {
+          doc._files[name] = { car, ...doc._files[name] } as DocFileMeta
+        }
       }
     }
   }

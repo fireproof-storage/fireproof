@@ -19,11 +19,20 @@ export type DocFileMeta = {
     type: string;
     size: number;
     cid: AnyLink;
+    car?: AnyLink;
     file?: () => Promise<File>;
   }
 
 type DocFiles = {
   [key: string]: File | DocFileMeta
+}
+
+export type FileCarHeader = {
+  [key: string]: {
+    cid: AnyLink
+    size: number
+    type: string
+  }
 }
 
 type DocBody = {
@@ -75,6 +84,10 @@ export type BulkResult = {
   head: ClockHead
 }
 
+export type FileResult = {
+  [key: string]: DocFileMeta
+}
+
 type CarHeader = {
   cars: AnyLink[]
   compact: AnyLink[]
@@ -98,7 +111,10 @@ export type DbCarHeader = CarHeader & {
   head: ClockHead
 }
 
-export type AnyCarHeader = DbCarHeader | IdxCarHeader
+// not FileCarHeader?
+export type AnyCarHeader = DbCarHeader | IdxCarHeader | FileCarHeader
+
+export type CarLoaderHeader = DbCarHeader | IdxCarHeader
 
 export type QueryOpts = {
   descending?: boolean

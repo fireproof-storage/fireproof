@@ -1,6 +1,6 @@
 import type {
   AnyLink, BulkResult,
-  CarCommit, DbCarHeader, FireproofOptions, IdxCarHeader,
+  CarCommit, DbCarHeader, FileCarHeader, FileResult, FireproofOptions, IdxCarHeader,
   IdxMeta, IdxMetaMap
 } from './types'
 import type { CRDT } from './crdt'
@@ -53,7 +53,16 @@ export class DbLoader extends Loader {
     }
   }
 
-  protected makeCarHeader({ head }: BulkResult, cars: AnyLink[], compact: boolean = false): DbCarHeader {
-    return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
+  protected makeCarHeader(result: BulkResult|FileResult, cars: AnyLink[], compact: boolean = false): DbCarHeader | FileCarHeader {
+    if (isFileResult(result)) {
+      throw new Error('DbLoader.makeCarHeader: not implemented for FileResult')
+    } else {
+      const { head } = result
+      return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
+    }
   }
+}
+
+function isFileResult(result: BulkResult|FileResult): result is FileResult {
+  return result && (result as FileResult).root !== undefined
 }

@@ -9,7 +9,8 @@ import { CRDT } from './crdt'
 import { CRDTClock } from './crdt-clock'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
-  constructor(private parent: BlockFetcher) {
+  parent: BlockFetcher
+  constructor(parent: BlockFetcher) {
     super()
     this.parent = parent
   }
@@ -30,7 +31,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
   loader: DbLoader | IdxLoader | null = null
   opts: FireproofOptions = {}
 
-  private transactions: Set<Transaction> = new Set()
+  transactions: Set<Transaction> = new Set()
 
   constructor(name: string | null, loader?: DbLoader | IdxLoader, opts?: FireproofOptions) {
     this.opts = opts || this.opts
