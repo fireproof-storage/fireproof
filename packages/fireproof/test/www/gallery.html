@@ -37,9 +37,7 @@
 
       const draw = async () => {
         const result = await db.changes()
-        document
-              .querySelector('#filecount')
-              .innerText = db._crdt.blocks.loader.carLog.length
+
         document
           .querySelector('ul')
           .innerHTML = '';
@@ -96,7 +94,7 @@
         const listQ = ps.get('db')
         setupDb(listQ || 'hello-world');
         const input = document.querySelector('#list');
-          input.value = dbName;
+        input.value = dbName;
 
         const inputElement = document.getElementById("files-up");
         inputElement.addEventListener("change", handleFiles, false);
@@ -115,9 +113,16 @@
   List:
   <input title="gallery" type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change Gallery</button>
-  <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
-
-  <input title="save to Fireproof" type="file" id="files-up" multiple >
+  <h3>Files</h3>
+  <p>Data is stored locally and encrypted before upload to S3.
+    This is a demo so the encryption key is not managed securely.
+    Read more about <a href="https://use-fireproof.com/docs/database-api/replication">Fireproof
+      replication options.</a> You can also see a demo without images but <a
+      href="https://fireproof.storage/s3up-test.html">with
+      compaction and refresh buttons.</a>
+  </p>
+  <label for="files-up"><strong>Drop files:</strong></label>
+  <input accept="image/*" title="save to Fireproof" type="file" id="files-up" multiple>
   <ul></ul>
 </body>
 
