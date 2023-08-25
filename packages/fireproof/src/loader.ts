@@ -244,7 +244,9 @@ export abstract class Loader {
           }
         }
         if (!loadedCar) throw new Error(`missing car file ${cidString}`)
-        const readerP = this.ensureDecryptedReader(await CarReader.fromBytes(loadedCar.bytes))
+        const rawReader = await CarReader.fromBytes(loadedCar.bytes)
+        console.log('car reader', cidString, rawReader)
+        const readerP = this.ensureDecryptedReader(rawReader)
         this.carReaders.set(cidString, readerP)
         return readerP
       })().catch((e) => {

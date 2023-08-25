@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=1273"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -55,7 +55,7 @@
               if (meta.file && /image/.test(meta.type)) {
                 const img = document.createElement("img");
                 img.src = URL.createObjectURL(await meta.file());
-                img.height = 200;
+                img.height = 100;
                 img.onload = () => {
                   URL.revokeObjectURL(img.src);
                 };
@@ -116,7 +116,7 @@
   <button onclick="changeList(event)">Change Gallery</button>
   <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
 
-  <input title="save to Fireproof" type="file" id="files-up" multiple />
+  <input title="save to Fireproof" type="file" id="files-up" multiple >
   <ul></ul>
 </body>
 

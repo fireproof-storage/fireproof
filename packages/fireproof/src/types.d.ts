@@ -110,7 +110,6 @@ export type DbCarHeader = CarHeader & {
   head: ClockHead
 }
 
-// not FileCarHeader?
 export type AnyCarHeader = DbCarHeader | IdxCarHeader | FileCarHeader
 
 export type CarLoaderHeader = DbCarHeader | IdxCarHeader
