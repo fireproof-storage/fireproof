@@ -99,9 +99,9 @@ function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
           const ld = blocks.loader as DbLoader
           fileMeta.file = async () => await decodeFile({
             get: async (cid: AnyLink) => {
-              console.log('filefile get', cid, fileMeta.car)
+              // console.log('filefile get', cid, fileMeta.car)
               const reader = await ld.loadFileCar(fileMeta.car!)
-              console.log('filefile reader', reader)
+              // console.log('filefile reader', reader)
               const block = await reader.get(cid as CID)
               if (!block) throw new Error(`Missing block ${cid.toString()}`)
               return block.bytes
