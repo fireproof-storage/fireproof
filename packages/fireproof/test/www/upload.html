@@ -49,6 +49,7 @@
             .querySelector('ul')
             .appendChild(document.createElement('li'))
           li.appendChild(document.createElement('span')).innerText = row.key;
+          li.appendChild(document.createElement('br'))
           for (const file of Object.keys(doc._files)) {
             (async () => {
               const meta = doc._files[file]
