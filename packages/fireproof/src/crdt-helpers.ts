@@ -53,7 +53,6 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 
 async function processFiles(blocks: Transaction, doc: Doc) {
   if (doc._files) {
-    console.log('processing files', doc._files)
     const dbBlockstore = blocks.parent as TransactionBlockstore
     const t = new Transaction(dbBlockstore)
     dbBlockstore.transactions.add(t)
@@ -62,7 +61,6 @@ async function processFiles(blocks: Transaction, doc: Doc) {
       if (File === doc._files[filename].constructor) {
         const file = doc._files[filename] as File
         const { cid, blocks: fileBlocks } = await encodeFile(file)
-        console.log('encoded file', cid.toString(), filename)
         didPut.push(filename)
         for (const block of fileBlocks) {
           t.putSync(block.cid, block.bytes)

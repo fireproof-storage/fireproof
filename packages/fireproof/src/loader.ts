@@ -156,7 +156,6 @@ export abstract class Loader {
 
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
-      console.log('saving file', done, dbLoader.fileStore, dbLoader.remoteFileStore)
       await dbLoader.fileStore!.save({ cid, bytes })
       dbLoader.remoteFileStore?.save({ cid, bytes }).catch((e: Error) => {
         console.error('failed to save remote file', done, e)
@@ -234,7 +233,6 @@ export abstract class Loader {
           loadedCar = await local.load(cid)
         } catch (e) {
           if (remote) {
-            console.log('loading remote car', cidString, remote)
             const remoteCar = await remote.load(cid)
             if (remoteCar) {
               // todo test for this
@@ -245,7 +243,6 @@ export abstract class Loader {
         }
         if (!loadedCar) throw new Error(`missing car file ${cidString}`)
         const rawReader = await CarReader.fromBytes(loadedCar.bytes)
-        console.log('car reader', cidString, rawReader)
         const readerP = this.ensureDecryptedReader(rawReader)
         this.carReaders.set(cidString, readerP)
         return readerP
