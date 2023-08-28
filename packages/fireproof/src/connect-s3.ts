@@ -1,6 +1,3 @@
-/* eslint-disable import/first */
-// console.log('import store-s3')
-
 import { Connection, DownloadFnParams, UploadFnParams } from './types'
 import fetch from 'cross-fetch'
 import { validateParams } from './connect'

@@ -49,15 +49,15 @@
             .appendChild(document.createElement('li'))
           li.appendChild(document.createElement('span')).innerText = row.key;
           li.appendChild(document.createElement('br'))
-          let didDoc = 0
+          // let didDoc = 0
             for (const file of Object.keys(doc._files)) {
             (async () => {
-              if (didDoc) { return }
+              // if (didDoc) { return }
               const meta = doc._files[file]
               if (meta.file && /image/.test(meta.type)) {
                 console.log('file', meta)
                 const src =  URL.createObjectURL(await meta.file());
-                didDoc++
+                // didDoc++
                 const img = document.createElement("img");
                 img.src = src
                 img.height = 100;
