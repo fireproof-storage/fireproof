@@ -31,7 +31,7 @@ export class ConnectWeb3 implements Connection {
   async download(params: DownloadFnParams) {
     await this.ready
     validateParams(params)
-    const { type, name, car, branch } = params
+    // const { type, name, car, branch } = params
     // const fetchFromUrl = new URL(`${type}/${name}/${type === 'meta'
     //   ? branch + '.json?cache=' + Math.floor(Math.random() * 1000000)
     //   : car + '.car'}`, this.downloadUrl)
