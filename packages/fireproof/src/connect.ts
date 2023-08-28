@@ -20,7 +20,7 @@ export const connect = {
   },
   web3: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: DbLoader } } },
-  { email }: { email: string }) => {
+  { email }: { email: `${string}@${string}` }) => {
     const connection = new ConnectWeb3(email)
     loader.connectRemote(connection)
   }
