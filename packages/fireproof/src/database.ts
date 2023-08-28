@@ -4,8 +4,7 @@ import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
 
-import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts } from './types'
-// import { encodeFile } from './files'
+import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
 
 type DbName = string | null
 
@@ -49,15 +48,6 @@ export class Database {
     return { id: docId, clock: result?.head } as DbResponse
   }
 
-  // async putFile(id: string, name: string|null, file: File): Promise<DbResponse> {
-  //   const doc = await this.get(id).catch(() => ({ _id: id } as Doc))
-  //   const { _id, ...value } = doc
-  //   const fileRecord = { [name || file.name]: file }
-  //   value._files = { ...doc._files, ...fileRecord }
-  //   const result: BulkResult = await this._writeQueue.push({ key: _id, value } as DocUpdate)
-  //   return { id, clock: result?.head } as DbResponse
-  // }
-
   async del(id: string): Promise<DbResponse> {
     const result = await this._writeQueue.push({ key: id, del: true })
     return { id, clock: result?.head } as DbResponse
@@ -99,10 +89,6 @@ export class Database {
       }
     }
   }
-}
-
-type ChangesOptions = {
-  dirty?: boolean
 }
 
 type ChangesResponse = {

@@ -167,4 +167,5 @@ export interface Connection {
 
 export type ChangesOptions = {
   dirty?: boolean
+  limit?: number
 }
