@@ -143,7 +143,7 @@ export async function clockChangesSince(
 ): Promise<{ result: DocUpdate[], head: ClockHead }> {
   const eventsFetcher = (opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)) as EventFetcher<EventData>
   const keys: Set<string> = new Set()
-  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys)
+  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys, opts.limit || Infinity)
   return { result: updates.reverse(), head }
 }
 
@@ -153,8 +153,10 @@ async function gatherUpdates(
   head: ClockHead,
   since: ClockHead,
   updates: DocUpdate[] = [],
-  keys: Set<string>
+  keys: Set<string>,
+  limit: number
 ): Promise<DocUpdate[]> {
+  if (limit <= 0) return updates
   const sHead = head.map(l => l.toString())
   for (const link of since) {
     if (sHead.includes(link.toString())) {
@@ -167,14 +169,15 @@ async function gatherUpdates(
     const { key, value } = event.data
     if (keys.has(key)) {
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys)
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, limit)
       }
     } else {
       keys.add(key)
       const docValue = await getValueFromLink(blocks, value)
       updates.push({ key, value: docValue.doc, del: docValue.del })
+      limit--
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys)
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, limit)
       }
     }
   }

@@ -36,24 +36,30 @@
       }
 
       const draw = async () => {
-        const result = await db.changes()
+        const result = await db.changes([], {limit: 10})
 
         document
           .querySelector('ul')
           .innerHTML = '';
-        for (const row of result.rows) {
+        for (const row of result.rows.reverse()) {
           const doc = row.value
-          const li = document
+          if (doc._files ) {
+            const li = document
             .querySelector('ul')
             .appendChild(document.createElement('li'))
           li.appendChild(document.createElement('span')).innerText = row.key;
           li.appendChild(document.createElement('br'))
-          for (const file of Object.keys(doc._files)) {
+          let didDoc = 0
+            for (const file of Object.keys(doc._files)) {
             (async () => {
+              if (didDoc) { return }
               const meta = doc._files[file]
               if (meta.file && /image/.test(meta.type)) {
+                console.log('file', meta)
+                const src =  URL.createObjectURL(await meta.file());
+                didDoc++
                 const img = document.createElement("img");
-                img.src = URL.createObjectURL(await meta.file());
+                img.src = src
                 img.height = 100;
                 img.onload = () => {
                   URL.revokeObjectURL(img.src);
@@ -62,6 +68,8 @@
               }
             })();
           }
+          }
+
         }
       }
 
