@@ -2,9 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { create, Client } from '@web3-storage/w3up-client'
+import * as w3clock from '@web3-storage/clock/client'
 
 import { Connection, DownloadFnParams, UploadFnParams } from './types'
 import { validateParams } from './connect'
+import { CID } from 'multiformats'
 
 export class ConnectWeb3 implements Connection {
   email: `${string}@${string}`
@@ -36,6 +38,27 @@ export class ConnectWeb3 implements Connection {
 
   async upload(bytes: Uint8Array, params: UploadFnParams) {
     await this.ready
+    if (params.type === 'meta') {
+      console.log('w3 meta upload', params)
+      // w3clock
+      // we need the upload as an event block or the data that goes in one
+      const data = {
+        key: params.name,
+        branch: params.branch
+        // we could extract this from the input type but it silly to do so
+        // key:
+        // car:
+        //  parse('bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy')
+      }
+      const event = await EventBlock.create(data)
+
+      const advanced = await w3clock.advance({
+        issuer: this.client?._agent.issuer,
+        with: this.client?.currentSpace()
+      }, [])
+      return
+    }
+
     validateParams(params)
     console.log('w3 uploading', params)
     await this.client?.uploadFile(new Blob([bytes]))
