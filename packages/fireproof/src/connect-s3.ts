@@ -14,6 +14,7 @@ export class ConnectS3 implements Connection {
 
   async upload(bytes: Uint8Array, params: UploadFnParams) {
     validateParams(params)
+    console.log('s3 uploading', params)
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams(params).toString()}`)
     const response = await fetch(fetchUploadUrl)
     const { uploadURL } = await response.json() as { uploadURL: string }
@@ -22,6 +23,7 @@ export class ConnectS3 implements Connection {
 
   async download(params: DownloadFnParams) {
     validateParams(params)
+    console.log('s3 downloading', params)
     const { type, name, car, branch } = params
     const fetchFromUrl = new URL(`${type}/${name}/${type === 'meta'
       ? branch + '.json?cache=' + Math.floor(Math.random() * 1000000)
