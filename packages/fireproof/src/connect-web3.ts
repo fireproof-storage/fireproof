@@ -68,7 +68,7 @@ export class ConnectWeb3 implements Connection {
         proofs: []
       }, event.cid, { blocks: [event] })
 
-      console.log('advanced', advanced)
+      console.log('advanced', advanced.root.data?.ocm)
       return
     }
 
@@ -81,15 +81,20 @@ export class ConnectWeb3 implements Connection {
 export async function getClient(email: `${string}@${string}`) {
   const client = await create()
   if (client.currentSpace()?.registered()) {
+    const claims = await client.capability.access.claim()
+    console.log('claims', claims.map((c: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return c.data.model.att
+    }), claims)
     return client
   }
   console.log('authorizing', email)
   await client.authorize(email)
   console.log('authorized', client)
   let space = client.currentSpace()
+  const claims = await client.capability.access.claim()
+  console.log('claims', claims)
   if (space === undefined) {
-    const claims = await client.capability.access.claim()
-    console.log('claims', claims)
     const spaces = client.spaces()
     for (const s of spaces) {
       if (s.registered()) {
