@@ -44,6 +44,9 @@ export class ConnectWeb3 implements Connection {
 
 export async function getClient(email: `${string}@${string}`) {
   const client = await create()
+  if (client.currentSpace()?.registered()) {
+    return client
+  }
   console.log('authorizing', email)
   await client.authorize(email)
   console.log('authorized', client)
@@ -59,11 +62,13 @@ export async function getClient(email: `${string}@${string}`) {
         break
       }
     }
-
-    space = await client.createSpace()
+    if (space === undefined) {
+      space = await client.createSpace()
+    }
+    await client.setCurrentSpace(space.did())
   }
-  await client.setCurrentSpace(space.did())
   if (!space.registered()) {
+    console.log('registering space')
     await client.registerSpace(email)
   }
   console.log('space', space.did())
