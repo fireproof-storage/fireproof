@@ -47,19 +47,19 @@ export async function getClient(email: `${string}@${string}`) {
   console.log('authorizing', email)
   await client.authorize(email)
   console.log('authorized', client)
-  const claims = await client.capability.access.claim()
-  // console.log('claims', claims)
-  const spaces = client.spaces()
-  let space
-  for (const s of spaces) {
-    if (s.registered()) {
-      space = s
-      console.log('space', space.registered(), space.did(), space.meta())
-      break
-    }
-  }
-  // let space = client.currentSpace()
+  let space = client.currentSpace()
   if (space === undefined) {
+    const claims = await client.capability.access.claim()
+    console.log('claims', claims)
+    const spaces = client.spaces()
+    for (const s of spaces) {
+      if (s.registered()) {
+        space = s
+        console.log('space', space.registered(), space.did(), space.meta())
+        break
+      }
+    }
+
     space = await client.createSpace()
   }
   await client.setCurrentSpace(space.did())
