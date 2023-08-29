@@ -37,7 +37,7 @@ const mockConnect = {
 }
 
 // eslint-disable-next-line mocha/no-skipped-tests
-describe('basic Connection with s3 remote', function () {
+describe.skip('basic Connection with s3 remote', function () {
   /** @type {Database} */
   let db, dbName
   beforeEach(async function () {

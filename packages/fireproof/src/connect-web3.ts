@@ -6,7 +6,8 @@ import * as w3clock from '@web3-storage/clock/client'
 
 import { Connection, DownloadFnParams, UploadFnParams } from './types'
 import { validateParams } from './connect'
-import { CID } from 'multiformats'
+// import { CID } from 'multiformats'
+import { EventBlock } from '@alanshaw/pail/clock'
 
 export class ConnectWeb3 implements Connection {
   email: `${string}@${string}`
@@ -38,29 +39,41 @@ export class ConnectWeb3 implements Connection {
 
   async upload(bytes: Uint8Array, params: UploadFnParams) {
     await this.ready
+    if (!this.client) { throw new Error('client not initialized') }
     if (params.type === 'meta') {
       console.log('w3 meta upload', params)
       // w3clock
+      const space = this.client.currentSpace()
+      if (!space) { throw new Error('space not initialized') }
       // we need the upload as an event block or the data that goes in one
       const data = {
         key: params.name,
-        branch: params.branch
+        branch: params.branch,
+        name: params.name
         // we could extract this from the input type but it silly to do so
         // key:
         // car:
         //  parse('bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy')
       }
       const event = await EventBlock.create(data)
+      // @ts-ignore
+      const issuer = this.client._agent.issuer
+      console.log('issuer', issuer, issuer.signatureAlgorithm, issuer.did())
+
+      if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
 
       const advanced = await w3clock.advance({
-        issuer: this.client?._agent.issuer,
-        with: this.client?.currentSpace()
-      }, [])
+        issuer,
+        with: space.did(),
+        proofs: []
+      }, event.cid, { blocks: [event] })
+
+      console.log('advanced', advanced)
       return
     }
 
     validateParams(params)
-    console.log('w3 uploading', params)
+    console.log('w3 uploading car', params)
     await this.client?.uploadFile(new Blob([bytes]))
   }
 }

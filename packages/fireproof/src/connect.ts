@@ -23,7 +23,9 @@ export const connect = {
   email: `${string}@${string}`) => {
     console.log('connecting web3', email)
     const connection = new ConnectWeb3(email)
-    loader.connectRemoteStorage(connection)
+    loader.connectRemote(connection)
+
+    // loader.connectRemoteStorage(connection)
   }
 }
 
