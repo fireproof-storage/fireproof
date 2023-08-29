@@ -20,36 +20,52 @@ export class ConnectWeb3 implements Connection {
     this.client = await getClient(this.email)
   }
 
-  async upload(bytes: Uint8Array, params: UploadFnParams) {
-    console.log('awaiting upload', this.client)
-    await this.ready
+  async download(params: DownloadFnParams) {
     validateParams(params)
-    console.log('uploading', params)
-    await this.client?.uploadFile(new Blob([bytes]))
+    if (params.type === 'meta') { return false }
+    console.log('w3 downloading', params)
+    const url = `https://${params.car}.ipfs.w3s.link/`
+    const response = await fetch(url)
+    if (response.ok) {
+      return new Uint8Array(await response.arrayBuffer())
+    } else {
+      console.log('failed to download', url, response)
+      throw new Error(`Failed to download ${url}`)
+    }
   }
 
-  async download(params: DownloadFnParams) {
+  async upload(bytes: Uint8Array, params: UploadFnParams) {
     await this.ready
     validateParams(params)
-    // const { type, name, car, branch } = params
-    // const fetchFromUrl = new URL(`${type}/${name}/${type === 'meta'
-    //   ? branch + '.json?cache=' + Math.floor(Math.random() * 1000000)
-    //   : car + '.car'}`, this.downloadUrl)
-    // const response = await fetch(fetchFromUrl)
-    // const bytes = new Uint8Array(await response.arrayBuffer())
-    // return bytes
-    return new Uint8Array()
+    console.log('w3 uploading', params)
+    await this.client?.uploadFile(new Blob([bytes]))
   }
 }
 
 export async function getClient(email: `${string}@${string}`) {
   const client = await create()
+  console.log('authorizing', email)
   await client.authorize(email)
-  let space = client.currentSpace()
+  console.log('authorized', client)
+  const claims = await client.capability.access.claim()
+  // console.log('claims', claims)
+  const spaces = client.spaces()
+  let space
+  for (const s of spaces) {
+    if (s.registered()) {
+      space = s
+      console.log('space', space.registered(), space.did(), space.meta())
+      break
+    }
+  }
+  // let space = client.currentSpace()
   if (space === undefined) {
     space = await client.createSpace()
-    await client.setCurrentSpace(space.did())
+  }
+  await client.setCurrentSpace(space.did())
+  if (!space.registered()) {
     await client.registerSpace(email)
   }
+  console.log('space', space.did())
   return client
 }

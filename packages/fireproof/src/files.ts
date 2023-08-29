@@ -5,7 +5,7 @@ import { withMaxChunkSize } from '@ipld/unixfs/file/chunker/fixed'
 import { withWidth } from '@ipld/unixfs/file/layout/balanced'
 
 import type { View } from '@ipld/unixfs'
-import { AnyBlock, AnyLink, BlockFetcher, DocFileMeta } from './types'
+import { AnyBlock, AnyLink, DocFileMeta } from './types'
 // import type { Block } from 'multiformats/dist/types/src/block'
 
 import { exporter, ReadableStorage } from 'ipfs-unixfs-exporter'
@@ -39,7 +39,7 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   for await (const chunk of entry.content()) chunks.push(chunk as Buffer)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  return new File(chunks, entry.name as string, { type: entry.type as string, lastModified: 0 })
+  return new File(chunks, entry.name, { type: entry.type as string, lastModified: 0 })
 }
 
 function createFileEncoderStream(blob: BlobLike) {
