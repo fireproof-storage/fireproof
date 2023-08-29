@@ -84,6 +84,6 @@ export class RemoteMetaStore extends MetaStoreBase {
       branch,
       size: bytes.length.toString()
     }
-    await this.connection.uploadMeta(bytes, uploadParams as UploadFnParams)
+    await this.connection.upload(bytes, uploadParams as UploadFnParams)
   }
 }

@@ -158,6 +158,9 @@ importers:
         specifier: ^0.6.2
         version: 0.6.3
     devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.6(cjs-module-lexer@0.6.0)(esbuild@0.18.20)
       '@rollup/plugin-alias':
         specifier: ^5.0.0
         version: 5.1.1(rollup@3.29.5)
@@ -698,6 +701,16 @@ packages:
   '@humanwhocodes/object-schema@2.0.3':
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
     deprecated: Use @eslint/object-schema instead
+
+  '@hyrious/esbuild-plugin-commonjs@0.2.6':
+    resolution: {integrity: sha512-LIPT8Y6EbNaHdV7lS9Ki6nnK0G1fP4bhzlMU1fgbOEJkR+yOA6FCORnPhjbQyeRTjG/ALPXdqCMRxTGwroL9CQ==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      cjs-module-lexer: '*'
+      esbuild: '*'
+    peerDependenciesMeta:
+      cjs-module-lexer:
+        optional: true
 
   '@inquirer/figures@1.0.12':
     resolution: {integrity: sha512-MJttijd8rMFcKJC8NYmprWr6hD3r9Gd9qUC0XwPNwoEPWSMVJwA2MlXxF+nhZZNMY+HXsWa+o7KY2emWYIn0jQ==}
@@ -5947,6 +5960,12 @@ snapshots:
   '@humanwhocodes/module-importer@1.0.1': {}
 
   '@humanwhocodes/object-schema@2.0.3': {}
+
+  '@hyrious/esbuild-plugin-commonjs@0.2.6(cjs-module-lexer@0.6.0)(esbuild@0.18.20)':
+    dependencies:
+      esbuild: 0.18.20
+    optionalDependencies:
+      cjs-module-lexer: 0.6.0
 
   '@inquirer/figures@1.0.12': {}
 
