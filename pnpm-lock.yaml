@@ -130,6 +130,9 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.5.0
+      '@web3-storage/clock':
+        specifier: ^0.3.0
+        version: 0.3.0
       '@web3-storage/w3up-client':
         specifier: ^8.0.1
         version: 8.1.0(encoding@0.1.13)
