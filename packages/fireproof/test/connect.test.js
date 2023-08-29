@@ -37,7 +37,7 @@ const mockConnect = {
 }
 
 // eslint-disable-next-line mocha/no-skipped-tests
-describe.skip('basic Connection with s3 remote', function () {
+describe('basic Connection with s3 remote', function () {
   /** @type {Database} */
   let db, dbName
   beforeEach(async function () {
@@ -49,6 +49,8 @@ describe.skip('basic Connection with s3 remote', function () {
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
+    const { _crdt: { blocks: { loader } } } = db
+    await loader.remoteMetaLoading
   })// .timeout(10000)
   it('should save a remote header', async function () {
     const { _crdt: { blocks: { loader } } } = db
