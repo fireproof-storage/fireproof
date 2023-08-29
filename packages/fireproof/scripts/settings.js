@@ -5,6 +5,7 @@ import esbuildPluginTsc from 'esbuild-plugin-tsc'
 import fs from 'fs'
 import path from 'path'
 import { polyfillNode } from 'esbuild-plugin-polyfill-node'
+import { commonjs } from '@hyrious/esbuild-plugin-commonjs'
 
 // Obtain all .ts files in the src directory
 const entryPoints = fs
@@ -20,7 +21,7 @@ export function createBuildSettings(options) {
     plugins: [
       esbuildPluginTsc({
         force: true
-      })
+      }), commonjs({ filter: /^peculiar/ })
     ],
     ...options
   }
@@ -96,6 +97,7 @@ console.log('browser/es2015 build');
 `,
         plugins: [
           polyfillNode({
+            // todo remove crypto and test
             polyfills: { crypto: true, fs: true, process: 'empty' }
           }),
           // alias({
