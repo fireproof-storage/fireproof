@@ -3,6 +3,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { create, Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
+import { clock } from '@web3-storage/clock/capabilities'
+
+// import * as DID from '@ipld/dag-ucan/did'
 
 import { Connection, DownloadFnParams, UploadFnParams } from './types'
 import { validateParams } from './connect'
@@ -57,15 +60,27 @@ export class ConnectWeb3 implements Connection {
       }
       const event = await EventBlock.create(data)
       // @ts-ignore
-      const issuer = this.client._agent.issuer
+      const ag = this.client._agent
+      const issuer = ag.issuer
       console.log('issuer', issuer, issuer.signatureAlgorithm, issuer.did())
 
       if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
 
+      const claims = await this.client.capability.access.claim()
+
+      const delegated = await clock.delegate({
+        issuer: ag.issuer,
+        audience: ag.issuer, // DID.parse('did:web:clock.web3.storage'),
+        with: space.did(),
+        proofs: claims
+      })
+
+      console.log('delegated', delegated)
+
       const advanced = await w3clock.advance({
         issuer,
         with: space.did(),
-        proofs: []
+        proofs: [delegated]
       }, event.cid, { blocks: [event] })
 
       console.log('advanced', advanced.root.data?.ocm)

@@ -133,6 +133,7 @@
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",
+    "@ipld/dag-ucan": "^3.3.2",
     "@ipld/unixfs": "^2.1.1",
     "@peculiar/webcrypto": "^1.4.3",
     "@web3-storage/clock": "^0.3.0",

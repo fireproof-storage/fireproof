@@ -124,6 +124,9 @@ importers:
       '@ipld/dag-json':
         specifier: ^10.1.2
         version: 10.2.5
+      '@ipld/dag-ucan':
+        specifier: ^3.3.2
+        version: 3.4.5
       '@ipld/unixfs':
         specifier: ^2.1.1
         version: 2.2.0
