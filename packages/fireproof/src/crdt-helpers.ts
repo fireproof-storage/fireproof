@@ -86,13 +86,14 @@ export async function getValueFromCrdt(blocks: TransactionBlockstore, head: Cloc
   return await getValueFromLink(blocks, link)
 }
 
-function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
+export function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
   if (doc && doc._files) {
     // console.log('readFiles', doc)
     for (const filename in doc._files) {
       const fileMeta = doc._files[filename] as DocFileMeta
       if (fileMeta.cid) {
         // const reader = blocks
+        if (!blocks.loader) throw new Error('Missing loader')
         if (fileMeta.car && blocks.loader) {
           const ld = blocks.loader as DbLoader
           fileMeta.file = async () => await decodeFile({
