@@ -43,7 +43,10 @@ export class ConnectWeb3 implements Connection {
   async upload(bytes: Uint8Array, params: UploadFnParams) {
     await this.ready
     if (!this.client) { throw new Error('client not initialized') }
+
     if (params.type === 'meta') {
+      // @ts-ignore
+      const ag = this.client._agent
       console.log('w3 meta upload', params)
       // w3clock
       const space = this.client.currentSpace()
@@ -59,8 +62,7 @@ export class ConnectWeb3 implements Connection {
         //  parse('bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy')
       }
       const event = await EventBlock.create(data)
-      // @ts-ignore
-      const ag = this.client._agent
+
       const issuer = ag.issuer
       console.log('issuer', issuer, issuer.signatureAlgorithm, issuer.did())
 
@@ -80,7 +82,7 @@ export class ConnectWeb3 implements Connection {
       const advanced = await w3clock.advance({
         issuer,
         with: space.did(),
-        proofs: [delegated]
+        proofs: claims
       }, event.cid, { blocks: [event] })
 
       console.log('advanced', advanced.root.data?.ocm)
@@ -119,7 +121,12 @@ export async function getClient(email: `${string}@${string}`) {
       }
     }
     if (space === undefined) {
-      space = await client.createSpace()
+      // @ts-ignore
+      space = await client.createSpace('fp', [{
+        // @ts-ignore
+        audience: client._agent.issuer
+        // audience: DID.parse('did:web:clock.web3.storage')
+      }])
     }
     await client.setCurrentSpace(space.did())
   }
