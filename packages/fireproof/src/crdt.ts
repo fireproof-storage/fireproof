@@ -1,5 +1,5 @@
 import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact } from './crdt-helpers'
+import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact, readFiles } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
@@ -34,6 +34,10 @@ export class CRDT {
     return await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
       const prevHead = [...this.clock.head]
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
+      updates = updates.map(({ key, value, del }) => {
+        readFiles(this.blocks, { doc: value })
+        return { key, value, del }
+      })
       await this.clock.applyHead(tblocks, head, prevHead, updates) // we need multi head support here if allowing calls to bulk in parallel
       return { head }
     })
