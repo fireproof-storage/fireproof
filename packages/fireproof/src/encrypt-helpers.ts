@@ -7,19 +7,14 @@ import { Buffer } from 'buffer'
 import { bf } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
-import { encodeCarHeader, encodeCarFile } from './loader-helpers' // Import the existing function
-import type { AnyBlock, CarMakeable, AnyCarHeader, AnyLink, BlockFetcher } from './types'
-import type { Transaction } from './transaction'
+import { encodeCarFile } from './loader-helpers' // Import the existing function
+import type { AnyBlock, CarMakeable, AnyLink, BlockFetcher } from './types'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const chunker = bf(30)
 
-export async function encryptedMakeCarFile(key: string, cid: AnyLink, t: Transaction): Promise<AnyBlock> {
-  return encryptedEncodeCarFile(key, cid, t)
-}
-
-async function encryptedEncodeCarFile(key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
+export async function encryptedEncodeCarFile(key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
   const encryptionKeyBuffer = Buffer.from(key, 'hex')
   const encryptionKey = encryptionKeyBuffer.buffer.slice(encryptionKeyBuffer.byteOffset, encryptionKeyBuffer.byteOffset + encryptionKeyBuffer.byteLength)
   const encryptedBlocks = new MemoryBlockstore()

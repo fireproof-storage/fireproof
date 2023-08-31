@@ -1,6 +1,6 @@
 import { CarReader } from '@ipld/car'
-import { clearMakeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
-import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
+import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
+import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
@@ -151,11 +151,19 @@ export abstract class Loader {
   async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, compact)
-    const header = await encodeCarHeader(fp)
-    await t.put(header.cid, header.bytes)
+    let roots: AnyLink[] = []
+    // @ts-ignore
+    if (fp.files) {
+      // @ts-ignore
+      roots = fp.files as AnyLink[]
+    } else {
+      const header = await encodeCarHeader(fp)
+      await t.put(header.cid, header.bytes)
+      roots = [header.cid]
+    }
 
     const theKey = await this._getKey()
-    const { cid, bytes } = theKey ? await encryptedMakeCarFile(theKey, header.cid, t) : await clearMakeCarFile([header.cid], t)
+    const { cid, bytes } = theKey ? await encryptedEncodeCarFile(theKey, roots[0], t) : await encodeCarFile(roots, t)
 
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
