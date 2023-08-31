@@ -12,12 +12,12 @@ import { Transaction } from './transaction'
 export async function clearMakeCarFile(fp: AnyCarHeader, t: Transaction): Promise<AnyBlock> {
   const { cid, bytes } = await encodeCarHeader(fp)
   await t.put(cid, bytes)
-  return encodeCarFile(cid, t)
+  return encodeCarFile([cid], t)
 }
 
-export async function encodeCarFile(carHeaderBlockCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
+export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0
-  const headerSize = CBW.headerLength({ roots: [carHeaderBlockCid as CID<unknown, number, number, 1>] })
+  const headerSize = CBW.headerLength({ roots } as { roots: CID<unknown, number, number, 1>[]})
   size += headerSize
   for (const { cid, bytes } of t.entries()) {
     size += CBW.blockLength({ cid, bytes } as Block<unknown, number, number, 1>)
@@ -25,7 +25,9 @@ export async function encodeCarFile(carHeaderBlockCid: AnyLink, t: CarMakeable):
   const buffer = new Uint8Array(size)
   const writer = CBW.createWriter(buffer, { headerSize })
 
-  writer.addRoot(carHeaderBlockCid as CID<unknown, number, number, 1>)
+  for (const r of roots) {
+    writer.addRoot(r as CID<unknown, number, number, 1>)
+  }
 
   for (const { cid, bytes } of t.entries()) {
     writer.write({ cid, bytes } as Block<unknown, number, number, 1>)
