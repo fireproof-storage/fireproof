@@ -65,8 +65,8 @@ export class DbLoader extends Loader {
     }
   }
 
-  connectRemote(connection: Connection) {
-    super.connectRemote(connection)
+  connectRemoteStorage(connection: Connection) {
+    super.connectRemoteStorage(connection)
     this.remoteFileStore = new RemoteDataStore(this, connection, 'file')
     return connection
   }

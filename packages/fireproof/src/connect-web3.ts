@@ -44,53 +44,57 @@ export class ConnectWeb3 implements Connection {
     await this.ready
     if (!this.client) { throw new Error('client not initialized') }
 
-    if (params.type === 'meta') {
-      // @ts-ignore
-      const ag = this.client._agent
-      console.log('w3 meta upload', params)
-      // w3clock
-      const space = this.client.currentSpace()
-      if (!space) { throw new Error('space not initialized') }
-      // we need the upload as an event block or the data that goes in one
-      const data = {
-        key: params.name,
-        branch: params.branch,
-        name: params.name
-        // we could extract this from the input type but it silly to do so
-        // key:
-        // car:
-        //  parse('bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy')
-      }
-      const event = await EventBlock.create(data)
+    // if (params.type === 'meta') {
+    //   // @ts-ignore
+    //   const ag = this.client._agent
+    //   console.log('w3 meta upload', params)
+    //   // w3clock
+    //   const space = this.client.currentSpace()
+    //   if (!space) { throw new Error('space not initialized') }
+    //   // we need the upload as an event block or the data that goes in one
+    //   const data = {
+    //     key: params.name,
+    //     branch: params.branch,
+    //     name: params.name
+    //     // we could extract this from the input type but it silly to do so
+    //     // key:
+    //     // car:
+    //     //  parse('bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy')
+    //   }
+    //   const event = await EventBlock.create(data)
 
-      const issuer = ag.issuer
-      console.log('issuer', issuer, issuer.signatureAlgorithm, issuer.did())
+    //   const issuer = ag.issuer
+    //   console.log('issuer', issuer, issuer.signatureAlgorithm, issuer.did())
 
-      if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
+    //   if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
 
-      const claims = await this.client.capability.access.claim()
+    //   const claims = await this.client.capability.access.claim()
 
-      const delegated = await clock.delegate({
-        issuer: ag.issuer,
-        audience: ag.issuer, // DID.parse('did:web:clock.web3.storage'),
-        with: space.did(),
-        proofs: claims
-      })
+    //   const delegated = await clock.delegate({
+    //     issuer: ag.issuer,
+    //     audience: ag.issuer, // DID.parse('did:web:clock.web3.storage'),
+    //     with: space.did(),
+    //     proofs: claims
+    //   })
 
-      console.log('delegated', delegated)
+    //   console.log('delegated', delegated)
 
-      const advanced = await w3clock.advance({
-        issuer,
-        with: space.did(),
-        proofs: claims
-      }, event.cid, { blocks: [event] })
+    //   const advanced = await w3clock.advance({
+    //     issuer,
+    //     with: space.did(),
+    //     proofs: claims
+    //   }, event.cid, { blocks: [event] })
 
-      console.log('advanced', advanced.root.data?.ocm)
-      return
-    }
+    //   console.log('advanced', advanced.root.data?.ocm)
+    //   return
+    // }
 
     validateParams(params)
     console.log('w3 uploading car', params)
+    // uploadCar is processed so roots are reachable via CDN
+    // uploadFile makes the car itself available vis CDN
+
+    // await this.client?.uploadCAR(new Blob([bytes]))
     await this.client?.uploadFile(new Blob([bytes]))
   }
 }
