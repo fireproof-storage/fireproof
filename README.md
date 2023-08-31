@@ -1,6 +1,6 @@
 # Fireproof
 
-Simplify your application state with a live database. Automatically update your UI based on local or remote changes. Instead of dealing with React contexts and reducers, simple hooks make your JSON documents feel like `setState()` objects. Optionally integrate with any cloud for replication and sharing.
+Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
 
 
 <p align="center">
@@ -49,7 +49,7 @@ const doc = await db.get(id)
 
 ### React Example 
 
-Fireproof has React hooks so you can avoid boilerplate and write expressive code.
+Fireproof has React hooks so you can avoid boilerplate and write expressive code. Instead of dealing with React contexts and reducers, simple hooks make your JSON documents feel like `setState()` objects.
 
 <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React" > 
 
