@@ -14,8 +14,7 @@ Simplify your application state with a live database. Automatically update your 
 
 ### Features
 
-Embed a document database into your app. Data resides locally, with optional encrypted cloud storage and realtime collaboration.  Live queries, automatic updates, and file attachments make Fireproof ideal for browser-based apps big or small. 
-
+Embedded JavaScript document database for your app. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Live queries, easy sharing, and file attachments make Fireproof ideal for browser-based apps big or small.
 
 ## Get Started
 
