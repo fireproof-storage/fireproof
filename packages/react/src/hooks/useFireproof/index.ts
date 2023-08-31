@@ -3,12 +3,27 @@ import { fireproof } from '@fireproof/core';
 
 import type { Doc, DocFragment, Database, FireproofOptions } from '@fireproof/core';
 
+type LiveQueryFn = (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => { docs: Doc[], rows: any[] };
+
+type UseDocFn = (initialDoc: Doc) => [Doc, (newDoc: Doc | false) => void, () => Promise<void>]
+
+type TlUseLiveQuery = {
+  (...args: Parameters<LiveQueryFn>): ReturnType<LiveQueryFn>
+  database: Database
+}
+
+type TlUseDocument = {
+  (...args: Parameters<UseDocFn>): ReturnType<UseDocFn>
+  database: Database
+}
+
 export interface FireproofCtxValue {
   database: Database;
-  useLiveQuery: (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => { docs: Doc[], rows: any[] };
-  useDocument: (initialDoc: Doc) => [Doc, (newDoc: Doc | false) => void, () => Promise<void>]
+  useLiveQuery: LiveQueryFn
+  useDocument: UseDocFn
   ready: boolean;
 }
+
 
 /**
  * @deprecated useFireproofCtx is deprecated, use useFireproof instead
@@ -25,21 +40,21 @@ const topLevelUseLiveQuery = (...args) => {
   topLevelUseLiveQuery.database = database;
   // @ts-ignore
   return useLiveQuery(...args);
-};
-export const useLiveQuery = topLevelUseLiveQuery;
+}
+export const useLiveQuery = topLevelUseLiveQuery as TlUseLiveQuery;
 
 /**
  * Top level hook to initialize a Fireproof database and a document for it.
  * Uses default db name 'useFireproof'.
  */
-const topLevelUseLiveDocument = (...args) => {
+const topLevelUseDocument = (...args) => {
   const { useDocument, database } = useFireproof();
   // @ts-ignore
-  topLevelUseLiveDocument.database = database;
+  topLevelUseDocument.database = database;
   // @ts-ignore
   return useDocument(...args);
 };
-export const useDocument = topLevelUseLiveDocument;
+export const useDocument = topLevelUseDocument as TlUseDocument;
 
 export function useFireproof(
   name: string | Database = 'useFireproof',
