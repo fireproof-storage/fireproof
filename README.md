@@ -40,6 +40,7 @@ const { id } = await db.put({
 });
 
 const doc = await db.get(id)
+const result = await db.query("age", { range: [40, 52] })
 ```
 
 Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics) You can [find a real-world JavaScript app here.](https://github.com/mlc-ai/web-stable-diffusion/pull/52)
