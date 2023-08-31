@@ -9,10 +9,6 @@ import { CarReader } from '@ipld/car'
 import { AnyBlock, AnyCarHeader, AnyLink, CarMakeable } from './types'
 import { Transaction } from './transaction'
 
-export async function clearMakeCarFile(roots: AnyLink[], t: Transaction): Promise<AnyBlock> {
-  return encodeCarFile(roots, t)
-}
-
 export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0
   const headerSize = CBW.headerLength({ roots } as { roots: CID<unknown, number, number, 1>[]})
