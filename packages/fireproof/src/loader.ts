@@ -186,9 +186,8 @@ export abstract class Loader {
     }
 
     await this.carStore!.save({ cid, bytes })
-    console.log('saving remote car', cid.toString())
     this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
-      console.log('saving remote meta', cid.toString())
+      // console.log('saving remote meta', cid.toString())
 
       // await this.remoteMetaStore?.load('main').then(async (meta) => {
       await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
