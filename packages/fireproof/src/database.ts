@@ -81,7 +81,7 @@ export class Database {
 
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {
-      const docs = updates.map(({ key, value }) => ({ _id: key, ...value }))
+      const docs: Doc[] = updates.map(({ key, value }) => ({ _id: key, ...value }))
       for (const listener of this._listeners) {
         await (async () => await listener(docs))().catch((e: Error) => {
           console.error('listener error', e)
