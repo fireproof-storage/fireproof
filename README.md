@@ -1,4 +1,4 @@
-# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="20"> Fireproof
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> Fireproof
 
 Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
 
@@ -16,13 +16,11 @@ Fireproof is an embedded JavaScript document database designed to streamline app
 
 ## Get Started
 
-Install anywhere JavaScript goes:
-
 ```sh
 npm install use-fireproof
 ```
 
-or via HTML script tag:
+or install in any page via HTML script tag:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.iife.js"></script>
@@ -30,7 +28,7 @@ or via HTML script tag:
  
  ### JavaScript Example
 
-Fireproof works in any JavaScript environment.
+Fireproof has been tested in many JavaScript environments. Read more about [bundler support](https://use-fireproof.com/docs/bundling).
 
 ```js
 import { fireproof } from 'use-fireproof'
@@ -47,7 +45,7 @@ const doc = await db.get(id)
 
 [Jump to the docs site for more basics.](https://use-fireproof.com/docs/database-api/basics)
 
-### React Example <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React" > 
+### React Example 
 
 Fireproof has React hooks so you can avoid boilerplate and write expressive code. Instead of dealing with React contexts and reducers, simple hooks make your JSON documents feel like `setState()` objects.
 
@@ -79,18 +77,18 @@ Learn more about the [architecture](https://use-fireproof.com/docs/architecture)
 
 ### Use cases
 
-Fireproof is optimized to make [building React and other front-end apps](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) fast and fun, with reliable results. Suitable for mission-critical data workloads like [LLM orchestration](https://fireproof.storage/posts/why-proofs-matter-for-ai/), supply-chain provenance, and field data collection, [Fireproof is also great](https://fireproof.storage/posts/great-opportunites-to-use-fireproof/) for gaming, social media, collaborative world-building, and rapidly implementing [executive decision support tools](https://epiphany.fireproof.storage) that can stand up to blockchain levels of scrutiny.
+Fireproof is optimized to make [building React and other front-end apps](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) fast and fun, with reliable results. Suitable for mission-critical data workloads like [LLM orchestration](https://fireproof.storage/posts/why-proofs-matter-for-ai/), supply-chain provenance, and field data collection, [Fireproof is also great](https://fireproof.storage/posts/great-opportunites-to-use-fireproof/) for gaming, [generative AI](https://github.com/fireproof-storage/fireproof/discussions/11), social media, collaborative world-building, and rapidly implementing [executive decision support tools](https://epiphany.fireproof.storage) that can stand up to blockchain levels of scrutiny.
 
 With Fireproof, you **build first** and connect it to your cloud of choice when you are ready, so there's nothing holding you back from adding it to your existing apps, or writing something new.
 
-## AI Copilot Quick Start
+### AI Copilot Quick Start
 
 Because Fireproof is designed to let you get started in the browser and connect to the cloud when you're ready, it's ideal for AI-assisted app development.  If you are using GPT, Claude, or Bard, you can [easily enable the AI to write React apps using Fireproof](https://hackernoon.com/get-chatgpt-to-focus-on-coding-on-the-right-apis-with-gptdoc-strings). 
 
 Working with an AI assistant is a great way to get started on projects or try out new frameworks. Paste this line of code into your prompt, along with a detailed description of the app to build, and your app will be running without ever requiring a cloud.
 
 ```
-Fireproof/React/Usage: import { useFireproof } from '@fireproof/react'; function App() { const { useLiveQuery, useDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}
+Fireproof/React/Usage: import { useFireproof } from 'use-fireproof'; function App() { const { useLiveQuery, useDocument, database } = useFireproof(); const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, saveCountDocument] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveCountDocument({count: count + 1})} onSubmit={e => database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}
 ```
 
 For example prompts and inspiration [check out the illustrated version of this technique with links to saved chats](https://use-fireproof.com/docs/chatgpt-quick-start) that are ready to go.
