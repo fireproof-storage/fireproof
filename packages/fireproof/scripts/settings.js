@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import esbuildPluginTsc from 'esbuild-plugin-tsc'
-// import alias from 'esbuild-plugin-alias'
+import alias from 'esbuild-plugin-alias'
 import fs from 'fs'
-import path from 'path'
+import path, { dirname, join } from 'path'
 import { polyfillNode } from 'esbuild-plugin-polyfill-node'
+import { commonjs } from '@hyrious/esbuild-plugin-commonjs'
+
+import { fileURLToPath } from 'url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 // Obtain all .ts files in the src directory
 const entryPoints = fs
@@ -52,6 +57,8 @@ export function createBuildSettings(options) {
       format: 'esm',
       platform: 'node',
       entryPoints: [entryPoint],
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      plugins: [...commonSettings.plugins],
       banner: bannerLog(`
 console.log('esm/node build');`, `
 import { createRequire } from 'module'; 
@@ -59,7 +66,19 @@ const require = createRequire(import.meta.url);
         `)
     }
 
-    builds.push(esmConfig)
+    const testEsmConfig = {
+      ...esmConfig,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      plugins: [...esmConfig.plugins,
+        alias(
+          {
+            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js')
+          }
+        ),
+        commonjs({ filter: /^peculiar|ipfs-utils/ })]
+    }
+
+    builds.push(testEsmConfig)
 
     if (/fireproof\./.test(entryPoint)) {
       const esmPublishConfig = {
@@ -96,6 +115,7 @@ console.log('browser/es2015 build');
 `,
         plugins: [
           polyfillNode({
+            // todo remove crypto and test
             polyfills: { crypto: true, fs: true, process: 'empty' }
           }),
           // alias({

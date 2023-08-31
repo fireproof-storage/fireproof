@@ -173,6 +173,10 @@ describe('named Database with record', function () {
     equals(rows3.length, numDocs + 1)
     equals(rows3[numDocs].key, `id-${7}`)
     equals(rows3[numDocs].value._deleted, true)
+
+    // test limit
+    const { rows: rows4 } = await db.changes([], { limit: 5 })
+    equals(rows4.length, 5)
   })
 
   it('should work right after compaction', async function () {

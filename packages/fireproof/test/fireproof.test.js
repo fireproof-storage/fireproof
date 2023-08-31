@@ -19,7 +19,10 @@ describe('dreamcode', function () {
   let ok, doc, result, put, get, query
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-db')
-    ;({ put, get, query } = fireproof('test-db'))
+    ;({
+      put, get, query
+      // , useLiveQuery, useDocument
+    } = fireproof('test-db'))
     ok = await put({ _id: 'test-1', text: 'fireproof', dream: true })
     doc = await get(ok.id)
     result = await query('text', { range: ['a', 'z'] })

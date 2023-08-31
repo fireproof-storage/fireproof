@@ -1,6 +1,6 @@
 import { CarReader } from '@ipld/car'
-import { clearMakeCarFile, parseCarFile } from './loader-helpers'
-import { decodeEncryptedCar, encryptedMakeCarFile } from './encrypt-helpers'
+import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
+import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
@@ -57,25 +57,36 @@ export abstract class Loader {
     })
   }
 
-  connectRemote(connection: Connection) {
-    this.remoteMetaStore = new RemoteMetaStore(this.name, connection)
-    this.remoteCarStore = new RemoteDataStore(this, connection)
+  connectRemoteMeta(connection: Connection) {
+    const remote = new RemoteMetaStore(this.name, connection)
+    this.remoteMetaStore = remote
     // eslint-disable-next-line @typescript-eslint/require-await
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (meta) => {
       if (meta) {
         await this.mergeMetaFromRemote(meta)
       }
     })
-    // todo put this where it can be used by crdt bulk
-    const loaderReady = this.ready
-    connection.ready = Promise.all([loaderReady, this.remoteMetaLoading]).then(() => { })
+    connection.ready = Promise.all([this.remoteMetaLoading]).then(() => { })
     connection.refresh = async () => {
-      await this.remoteMetaStore!.load('main').then(async (meta) => {
+      await remote.load('main').then(async (meta) => {
         if (meta) {
           await this.mergeMetaFromRemote(meta)
         }
       })
     }
+    return connection
+  }
+
+  connectRemoteStorage(connection: Connection) {
+    this.remoteCarStore = new RemoteDataStore(this, connection)
+    return connection
+  }
+
+  connectRemote(connection: Connection) {
+    this.connectRemoteMeta(connection)
+    this.connectRemoteStorage(connection)
+    // todo put this where it can be used by crdt bulk
+    connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => { })
     return connection
   }
 
@@ -151,23 +162,41 @@ export abstract class Loader {
   async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, compact)
+    let roots: AnyLink[] = []
+    // @ts-ignore
+    if (fp.files) {
+      // @ts-ignore
+      roots = fp.files as AnyLink[]
+    } else {
+      const header = await encodeCarHeader(fp)
+      await t.put(header.cid, header.bytes)
+      roots = [header.cid]
+    }
+
     const theKey = await this._getKey()
-    const { cid, bytes } = theKey ? await encryptedMakeCarFile(theKey, fp, t) : await clearMakeCarFile(fp, t)
+    const { cid, bytes } = theKey ? await encryptedEncodeCarFile(theKey, roots[0], t) : await encodeCarFile(roots, t)
 
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
       await dbLoader.fileStore!.save({ cid, bytes })
       dbLoader.remoteFileStore?.save({ cid, bytes }).catch((e: Error) => {
-        console.error('failed to save remote file', done, e)
+        console.error('Failed to save remote file', done, e)
       })
       return cid
     }
 
     await this.carStore!.save({ cid, bytes })
-    this.remoteCarStore?.save({ cid, bytes }).then(async () => {
+    this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
+      // console.log('saving remote meta', cid.toString())
+
+      // await this.remoteMetaStore?.load('main').then(async (meta) => {
       await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
+      // if (meta) {
+      // await this.mergeMetaFromRemote(meta)
+      // }
+      // })
     }).catch((e) => {
-      console.error('failed to save remote car or meta', e)
+      console.error('Failed to save remote car or meta', e)
     })
     await this.metaStore!.save({ car: cid, key: theKey || null })
 

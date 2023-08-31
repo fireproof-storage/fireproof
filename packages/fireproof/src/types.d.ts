@@ -28,11 +28,7 @@ type DocFiles = {
 }
 
 export type FileCarHeader = {
-  files: Map<string, {
-    cid: AnyLink
-    size: number
-    type: string
-  }>
+  files: AnyLink[]
 }
 type DocBody = {
   [key: string]: DocFragment
@@ -148,7 +144,7 @@ export type UploadFnParams = {
   size: string
 }
 
-export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<void>
+export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<false | undefined | void>
 
 export type DownloadFnParamTypes = 'data' | 'meta' | 'file'
 
@@ -159,7 +155,7 @@ export type DownloadFnParams = {
   branch?: string,
 }
 
-export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null>
+export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null | false>
 
 export interface Connection {
   ready: Promise<any>
@@ -171,4 +167,5 @@ export interface Connection {
 
 export type ChangesOptions = {
   dirty?: boolean
+  limit?: number
 }

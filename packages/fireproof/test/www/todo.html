@@ -1,144 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fireproof Test</title>
-    <script src="../../dist/browser/fireproof.iife.js?935"></script>
-    <script type="text/javascript">
-      function todoApp() {
-        const {connect, fireproof, index} = Fireproof;
-        let dbName
-        let db
-        let connection
 
-        function setupDb(name) {
-          dbName = name;
-          db = fireproof(name);
-          window.db = db;
-          connection = connect.s3(db, s3Info)
-          db.subscribe(redraw);
-          return db;
-        }
-        const s3Info = {
-          upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-          download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-        }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fireproof Test</title>
+  <script src="../../dist/browser/fireproof.iife.js?259541"></script>
+  <script type="text/javascript">
+    function todoApp() {
+      const { connect, fireproof, index } = Fireproof;
+      let dbName
+      let db
+      let connection
 
-        let doing
-        const redraw = async () => {
-          if (doing) {
-            return doing
-          }
-          doing = doRedraw(). finally(() => doing = null)
+      function setupDb(name) {
+        dbName = name;
+        db = fireproof(name);
+        window.db = db;
+        // meta in w3, storage in web3
+        // connection = connect.s3(db, s3Info)
+        connection = connect.web3(db, "jchris+ucan2@fireproof.storage")
+        db.subscribe(redraw);
+        return db;
+      }
+      const s3Info = {
+        upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+        download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+      }
+
+      let doing
+      const redraw = async () => {
+        if (doing) {
           return doing
         }
+        doing = doRedraw().finally(() => doing = null)
+        return doing
+      }
 
-        const doRedraw = async () => {
-          try {
-            const result = await index(db, 'created').query({includeDocs: false});
-            document
-              .querySelector('ul')
-              .innerHTML = '';
+      const doRedraw = async () => {
+        try {
+          const result = await index(db, 'created').query({ includeDocs: false });
+          document
+            .querySelector('ul')
+            .innerHTML = '';
 
-            document
-              .querySelector('#filecount')
-              .innerText = db._crdt.blocks.loader.carLog.length
-            for (const row of result.rows) {
-              const doc = await db.get(row.id);
-              // doc = row.doc
-              const checkbox = document.createElement('input');
-              checkbox.setAttribute('type', 'checkbox');
-              if (doc.completed) {
-                checkbox.setAttribute('checked', true);
-              }
-              checkbox.onchange = () => {
-                doc.completed = !doc.completed;
-                db.put(doc);
-              }
-              const textSpan = document.createElement('span');
-              textSpan.innerText = doc.task;
-              const li = document.createElement('li');
-              li.appendChild(checkbox);
-              li.appendChild(textSpan);
-              document
-                .querySelector('ul')
-                .appendChild(li);
-            }
-          } finally {
-            const chgs = await db.changes([], {dirty: true});
-            console.log('changes', chgs.rows.map(r => r.value.task), chgs)
-          }
-        }
-
-        async function initialize() {
-          ps = new URLSearchParams(location.search)
-          const listQ = ps.get('list')
-          setupDb(listQ || 'my-list');
-          const input = document.querySelector('#list');
-          input.value = dbName;
-          redraw()
-        }
-
-        async function changeList(e) {
-          e.preventDefault();
-          const input = document.querySelector('#list');
-          dbName = input.value;
-          history.pushState(null, '', location.pathname + '?list=' + encodeURIComponent(dbName));
-          setupDb(dbName);
-
-          redraw();
-        }
-        window.changeList = changeList;
-
-        async function onButtonClick(e) {
-          e.preventDefault();
-
-          const input = document.querySelector('#todo');
-          const ok = await db.put({created: Date.now(), task: input.value, completed: false});
-          input.value = '';
-
-        }
-        window.onButtonClick = onButtonClick;
-
-        async function connectionRefresh(e) {
-          e.preventDefault();
-          await connection.refresh()
-        }
-        window.connectionRefresh = connectionRefresh;
-
-        async function doCompact(e) {
-          e.preventDefault();
-          await db.compact()
           document
             .querySelector('#filecount')
             .innerText = db._crdt.blocks.loader.carLog.length
+          for (const row of result.rows) {
+            const doc = await db.get(row.id);
+            // doc = row.doc
+            const checkbox = document.createElement('input');
+            checkbox.setAttribute('type', 'checkbox');
+            if (doc.completed) {
+              checkbox.setAttribute('checked', true);
+            }
+            checkbox.onchange = () => {
+              doc.completed = !doc.completed;
+              db.put(doc);
+            }
+            const textSpan = document.createElement('span');
+            textSpan.innerText = doc.task;
+            const li = document.createElement('li');
+            li.appendChild(checkbox);
+            li.appendChild(textSpan);
+            document
+              .querySelector('ul')
+              .appendChild(li);
+          }
+        } finally {
+          const chgs = await db.changes([], { dirty: true });
+          console.log('changes', chgs.rows.map(r => r.value.task), chgs)
         }
-        window.doCompact = doCompact;
-
-        window.onload = initialize;
-        window.db = db;
-        window.redraw = redraw;
       }
-      todoApp();
-    </script>
-  </head>
-  <body>
-    <h1>Fireproof Todos</h1>
-    List:
-    <input type="text" name="list" id="list"/>
-    <button onclick="changeList(event)">Change List</button>
-    <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
-    <p>
-      Fireproof stores data locally and encrypts it before sending it to the cloud.
-      This demo uses an S3 bucket, but you can easily run your own on s3 or another provider.
-      <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
-    </p>
 
-    <h3>Todos</h3>
-    <input type="text" name="todo" id="todo"/>
-    <button onclick="onButtonClick(event)">Create Todo</button>
-    <button onclick="connectionRefresh(event)">Refresh</button>
-    <ul></ul>
-  </body>
+      async function initialize() {
+        ps = new URLSearchParams(location.search)
+        const listQ = ps.get('list')
+        setupDb(listQ || 'my-list');
+        const input = document.querySelector('#list');
+        input.value = dbName;
+        redraw()
+      }
+
+      async function changeList(e) {
+        e.preventDefault();
+        const input = document.querySelector('#list');
+        dbName = input.value;
+        history.pushState(null, '', location.pathname + '?list=' + encodeURIComponent(dbName));
+        setupDb(dbName);
+
+        redraw();
+      }
+      window.changeList = changeList;
+
+      async function onButtonClick(e) {
+        e.preventDefault();
+
+        const input = document.querySelector('#todo');
+        const ok = await db.put({ created: Date.now(), task: input.value, completed: false });
+        input.value = '';
+
+      }
+      window.onButtonClick = onButtonClick;
+
+      async function connectionRefresh(e) {
+        e.preventDefault();
+        await connection.refresh()
+      }
+      window.connectionRefresh = connectionRefresh;
+
+      async function doCompact(e) {
+        e.preventDefault();
+        await db.compact()
+        document
+          .querySelector('#filecount')
+          .innerText = db._crdt.blocks.loader.carLog.length
+      }
+      window.doCompact = doCompact;
+
+      window.onload = initialize;
+      window.db = db;
+      window.redraw = redraw;
+    }
+    todoApp();
+  </script>
+</head>
+
+<body>
+  <h1>Fireproof Todos</h1>
+  List:
+  <input type="text" name="list" id="list" />
+  <button onclick="changeList(event)">Change List</button>
+  <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
+  <p>
+    Fireproof stores data locally and encrypts it before sending it to the cloud.
+    This demo uses an S3 bucket, but you can easily run your own on s3 or another provider.
+    <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
+  </p>
+
+  <h3>Todos</h3>
+  <input type="text" name="todo" id="todo" />
+  <button onclick="onButtonClick(event)">Create Todo</button>
+  <button onclick="connectionRefresh(event)">Refresh</button>
+  <ul></ul>
+</body>
+
 </html>

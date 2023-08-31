@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.11.21",
+  "version": "0.12.0",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -91,6 +91,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {
+    "@hyrious/esbuild-plugin-commonjs": "^0.2.2",
     "@rollup/plugin-alias": "^5.0.0",
     "@rollup/plugin-commonjs": "^25.0.4",
     "@rollup/plugin-json": "^6.0.0",
@@ -132,8 +133,11 @@
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",
+    "@ipld/dag-ucan": "^3.3.2",
     "@ipld/unixfs": "^2.1.1",
     "@peculiar/webcrypto": "^1.4.3",
+    "@web3-storage/clock": "^0.3.0",
+    "@web3-storage/w3up-client": "^8.0.1",
     "charwise": "^3.0.1",
     "cross-fetch": "^4.0.0",
     "idb": "^7.1.1",

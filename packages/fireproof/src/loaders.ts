@@ -65,8 +65,8 @@ export class DbLoader extends Loader {
     }
   }
 
-  connectRemote(connection: Connection) {
-    super.connectRemote(connection)
+  connectRemoteStorage(connection: Connection) {
+    super.connectRemoteStorage(connection)
     this.remoteFileStore = new RemoteDataStore(this, connection, 'file')
     return connection
   }
@@ -86,17 +86,10 @@ export class DbLoader extends Loader {
 
   protected makeCarHeader(result: BulkResult|FileResult, cars: AnyLink[], compact: boolean = false): DbCarHeader | FileCarHeader {
     if (isFileResult(result)) {
-      const files = new Map<string, {
-        cid: AnyLink
-        size: number
-        type: string
-      }>()
-      for (const [name, meta] of Object.entries(result.files)) {
-        files.set(name, {
-          cid: meta.cid,
-          size: meta.size,
-          type: meta.type
-        })
+      const files = [] as AnyLink[]
+
+      for (const [, meta] of Object.entries(result.files)) {
+        files.push(meta.cid)
       }
       return { files } as FileCarHeader
     } else {

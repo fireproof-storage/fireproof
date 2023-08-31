@@ -120,12 +120,21 @@ importers:
       '@ipld/dag-json':
         specifier: ^10.1.2
         version: 10.1.3
+      '@ipld/dag-ucan':
+        specifier: ^3.3.2
+        version: 3.3.2
       '@ipld/unixfs':
         specifier: ^2.1.1
         version: 2.1.1
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.4.3
+      '@web3-storage/clock':
+        specifier: ^0.3.0
+        version: 0.3.0
+      '@web3-storage/w3up-client':
+        specifier: ^8.0.1
+        version: 8.0.1
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -148,6 +157,9 @@ importers:
         specifier: ^0.6.2
         version: 0.6.2
     devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.2(esbuild@0.18.20)
       '@rollup/plugin-alias':
         specifier: ^5.0.0
         version: 5.0.0
@@ -257,7 +269,7 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.11.21
+        specifier: ^0.12.0
         version: link:../fireproof
     devDependencies:
       '@jest/globals':
@@ -1255,6 +1267,19 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
+  /@hyrious/esbuild-plugin-commonjs@0.2.2(esbuild@0.18.20):
+    resolution: {integrity: sha512-08RxncQ0S3vgVtj8bxx/TcG+4b6bLbWCiXQtRpkuO7U3dLi1pVvSOnIacVphWLCHudCvJL+05b/r1km+r3osWQ==}
+    engines: {node: '>=14'}
+    peerDependencies:
+      cjs-module-lexer: '*'
+      esbuild: '*'
+    peerDependenciesMeta:
+      cjs-module-lexer:
+        optional: true
+    dependencies:
+      esbuild: 0.18.20
+    dev: true
+
   /@ipld/car@5.1.0:
     resolution: {integrity: sha512-k9pO0YqJvmFGY5pJDhF2Ocz+mRp3C3r4ikr1NrUXkzN/z4JzhE7XbQzUCcm7daq8k4tRqap0fWPjxZwjS9PUcQ==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
@@ -1700,6 +1725,11 @@ packages:
 
   /@noble/ed25519@1.7.3:
     resolution: {integrity: sha512-iR8GBkDt0Q3GyaVcIu7mSsVIqnFbkbRzGLWlvhwunacoLwt4J3swfKhfaM6rN6WY+TBGoYT1GtT1mIh2/jGbRQ==}
+    dev: false
+
+  /@noble/hashes@1.3.2:
+    resolution: {integrity: sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==}
+    engines: {node: '>= 16'}
     dev: false
 
   /@nodelib/fs.scandir@2.1.5:
@@ -2580,6 +2610,39 @@ packages:
       - utf-8-validate
     dev: false
 
+  /@web3-storage/access@15.1.1:
+    resolution: {integrity: sha512-tnD/jLUbQx5Stg0bYJb4OZj6DuZBpCZVz8VwxDQ5H3hIpElyt3OCC6YLwStIbeqc5d7w9272VZAYKfZr4W5TTw==}
+    hasBin: true
+    dependencies:
+      '@ipld/car': 5.2.0
+      '@ipld/dag-ucan': 3.3.2
+      '@ucanto/client': 8.0.0
+      '@ucanto/core': 8.0.0
+      '@ucanto/interface': 8.0.0
+      '@ucanto/principal': 8.0.0
+      '@ucanto/transport': 8.0.0
+      '@ucanto/validator': 8.0.0
+      '@web3-storage/capabilities': 9.2.0
+      '@web3-storage/did-mailto': 2.0.0
+      bigint-mod-arith: 3.1.2
+      conf: 10.2.0
+      inquirer: 9.1.4
+      isomorphic-ws: 5.0.0(ws@8.13.0)
+      kysely: 0.23.4
+      multiformats: 11.0.2
+      one-webcrypto: 1.0.3
+      ora: 6.1.2
+      p-defer: 4.0.0
+      p-wait-for: 5.0.0
+      type-fest: 3.6.1
+      uint8arrays: 4.0.3
+      ws: 8.13.0
+      zod: 3.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
+
   /@web3-storage/access@9.4.0:
     resolution: {integrity: sha512-GwrSHhOigNI009DRmRtJjqQ3JS/a+rlU7wXM7k5+FwMR9Kqr/Ayid+Ida1tN7NPEIKBqfe9wfXbVMowi86YNYw==}
     hasBin: true
@@ -2644,6 +2707,27 @@ packages:
       '@ucanto/validator': 8.0.0
     dev: false
 
+  /@web3-storage/capabilities@7.0.0:
+    resolution: {integrity: sha512-pF6fpNduEDkHGVV+aP2+N7lbSD0C1LL1CyrhPEbhf9wUHOJXPWRMbfhIJVcdL06pTvZJDYoRpOWmhB+07QLYwg==}
+    dependencies:
+      '@ucanto/core': 8.0.0
+      '@ucanto/interface': 8.0.0
+      '@ucanto/principal': 8.0.0
+      '@ucanto/transport': 8.0.0
+      '@ucanto/validator': 8.0.0
+    dev: false
+
+  /@web3-storage/capabilities@9.2.0:
+    resolution: {integrity: sha512-Qm2OpH/zIRECrlrsq8ZMh9W8qtZecn+CmB6fbkDYL9CEWdm28s+UC+Dxt9yIPUCZZMC+eTrxwS7jUwalB7T+VA==}
+    dependencies:
+      '@ucanto/core': 8.0.0
+      '@ucanto/interface': 8.0.0
+      '@ucanto/principal': 8.0.0
+      '@ucanto/transport': 8.0.0
+      '@ucanto/validator': 8.0.0
+      '@web3-storage/data-segment': 3.0.1
+    dev: false
+
   /@web3-storage/clock@0.3.0:
     resolution: {integrity: sha512-O+1qbkLFj6Yfo4LYztN3HOJX5bsZRF43zIMIdTYPPTy2lEaCsLo596PGOc+y34g35tt4Aw5M2saK4pJSQNr3HA==}
     dependencies:
@@ -2659,6 +2743,13 @@ packages:
       hashlru: 2.3.0
       multiformats: 11.0.2
       p-retry: 5.1.2
+    dev: false
+
+  /@web3-storage/data-segment@3.0.1:
+    resolution: {integrity: sha512-+e0KeqofejZ/1JLCdNmlEMCCSNf0PeJFXA/2Vw5+vWj4Nfko8sVLIGva86L8hXzm4dZGhWYU5m6JhX2U2Wn5Dg==}
+    dependencies:
+      multiformats: 11.0.2
+      sync-multihash-sha2: 1.0.0
     dev: false
 
   /@web3-storage/did-mailto@2.0.0:
@@ -2710,6 +2801,24 @@ packages:
       '@ucanto/transport': 8.0.0
       '@web3-storage/access': 14.0.0
       '@web3-storage/capabilities': 6.0.1
+      '@web3-storage/upload-client': 9.1.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+    dev: false
+
+  /@web3-storage/w3up-client@8.0.1:
+    resolution: {integrity: sha512-diN+Cl98cVnJsRawfucU3t8fIOPWabvFHxcHqH47kKteLVT1Bofa1gQJ9oPM7e1ssoS4Xpqzeg4FzxkgVbqiBg==}
+    dependencies:
+      '@ipld/dag-ucan': 3.3.2
+      '@ucanto/client': 8.0.0
+      '@ucanto/core': 8.0.0
+      '@ucanto/interface': 8.0.0
+      '@ucanto/principal': 8.0.0
+      '@ucanto/transport': 8.0.0
+      '@web3-storage/access': 15.1.1
+      '@web3-storage/capabilities': 7.0.0
       '@web3-storage/upload-client': 9.1.0
     transitivePeerDependencies:
       - bufferutil
@@ -9556,6 +9665,12 @@ packages:
   /symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
     dev: true
+
+  /sync-multihash-sha2@1.0.0:
+    resolution: {integrity: sha512-A5gVpmtKF0ov+/XID0M0QRJqF2QxAsj3x/LlDC8yivzgoYCoWkV+XaZPfVu7Vj1T/hYzYS1tfjwboSbXjqocug==}
+    dependencies:
+      '@noble/hashes': 1.3.2
+    dev: false
 
   /tar-fs@3.0.4:
     resolution: {integrity: sha512-5AFQU8b9qLfZCX9zp2duONhPmZv0hGYiBPJsyUdqMjzq/mqVpy/rEUSeHk1+YitmxugaptgBh5oDGU3VsAJq4w==}
