@@ -1,85 +1,82 @@
+# Fireproof
 
-<h3 align="center">
-  Live database for the web
-</h3>
-<p align="center" >
-  <a href="https://fireproof.storage/">
-    <img src="https://fireproof.storage/static/img/logo-animated-black.svg" alt="Fireproof logo" width="160">
-  </a>
-</p>
+Simplify your application state with a live database. Automatically update your UI based on local or remote changes. Instead of dealing with React contexts and reducers, simple hooks make your JSON documents feel like `setState()` objects. Optionally integrate with any cloud for replication and sharing.
+
+
 <p align="center">
   <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml">
-    <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test" style="max-width: 100%;">
+    <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test status">
   </a>
   <a href="https://www.typescriptlang.org" rel="nofollow">
-    <img src="https://camo.githubusercontent.com/0d1fa0bafb9d3d26ac598799ca1d0bf767fc28a41d3f718d404433b392b9a5cd/68747470733a2f2f696d672e736869656c64732e696f2f6e706d2f74797065732f73637275622d6a732e737667" alt="Types exported"  style="max-width: 100%;">
+    <img src="https://camo.githubusercontent.com/0d1fa0bafb9d3d26ac598799ca1d0bf767fc28a41d3f718d404433b392b9a5cd/68747470733a2f2f696d672e736869656c64732e696f2f6e706d2f74797065732f73637275622d6a732e737667" alt="Types exported"  >
   </a>
 </p>
 
-Fireproof is the quickest way to add live data to your React or other front-end app. Install anywhere JavaScript goes:
+### Features
+
+Embed a document database into your app. Data resides locally, with optional encrypted cloud storage and realtime collaboration.  Live queries, automatic updates, and file attachments make Fireproof ideal for browser-based apps big or small. 
+
+
+## Get Started
+
+Install anywhere JavaScript goes:
 
 ```sh
-npm install @fireproof/core
+npm install use-fireproof
 ```
 
-or via `<script src="https://cdn.jsdelivr.net/npm/@fireproof/core@0.11.3/dist/browser/fireproof.iife.js"></script>` tag for plain old HTML apps.
+or via HTML script tag:
 
-<p align="center">
-  <a href="https://www.npmjs.com/package/use-fireproof">
-    <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React"  style="max-width: 100%;">
-  </a>
-</p>
+```html
+<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.iife.js"></script>
+```
+ 
+ ### JavaScript Example
 
-If you are using React, [jump to the `useFireproof` README](https://www.npmjs.com/package/use-fireproof), which is the preferred way to consume the database in client-side React code, or for a longer explanation, [try the step-by-step React tutorial.](https://use-fireproof.com/docs/react-tutorial)
-
-### Vanilla JS Example
-
-Fireproof uses end-to-end encryption, immutable data, and distributed protocols so your app is easy to start and seriously scales. Add a few lines to your front-end pages and you'll be developing with a live database with no other setup:
-
-Import (or require) the library:
+Fireproof is a JavaScript library that works in any environment.
 
 ```js
-import { database, index } from '@fireproof/core'
+import { fireproof } from 'use-fireproof'
+
+const db = fireproof('my-app-name')
+const { id } = await db.put({
+    _id: 'three-thousand'
+    name: 'André',
+    age: 47
+});
+
+const doc = await db.get(id)
 ```
 
-Initialize a database and optional index:
+[Jump to the docs site for more basics.](https://use-fireproof.com/docs/database-api/basics)
+
+### React Example 
+
+Fireproof has React hooks so you can avoid boilerplate and write expressive code.
+
+<img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React" > 
 
 ```js
-const db = database('my-app-name')
-const byAge = index(db, 'age')
-```
-Query the index anytime the database changes (great for automatically repainting UI):
+import { useLiveQuery, useDocument } from 'use-fireproof'
 
-```js
-const onChange(async () => {
-  const { rows } = await byAge.query({ range: [40, 52] })
-  console.log(rows)
-})
-db.subscribe(onChange)
-onChange()
+function App() {
+  const completedTodos = useLiveQuery('completed', { limit: 10 })
+  const [newTodo, setNewTodoData, saveNewTodo] = useDocument({type: 'todo', text: '', completed: false, created: Date.now() })
 ```
 
-Update documents based on user input:
+Jump to the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
 
-```js
-async function doChange(name, age)  {
-  await db.put({ name, age })
-}
-/// ... meanwhile ... 
-onClick = () => doChange(name, age)
-```
-
-This is even easier with [the Fireproof React hooks API](https://use-fireproof.com/docs/react-tutorial/) so it's OK to start there. Fireproof can be embedded in any page or app, and connect with any cloud (coming soon) via REST, S3, and web3.storage support. If you have particular storage needs, reach out and we can help you write a custom storage adapter.
 
 ## Why choose Fireproof
 
-Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols (what plants crave). This allows you to add live data to your app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started today connect to any environment when you are ready.
+Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols. This allows you to add live data to your app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started writing app features today, and connect to any environment when you are ready.
 
 ### Database Features
 
 The core features of the database are available on any platform in a compact JavaScript package and a foundational cloud storage service.
 
 * **JSON Documents** - Encrypted changes are persisted locally and to any connected storage. Store any JSON object using a familiar document database API. 
+* **File Attachments** - Share social media or manage uploads within Fireproof's [file attachment API](https://use-fireproof.com/docs/database-api/documents#put-with-files). Attachments are stored locally and in the cloud, and can be encrypted or public.
 * **Live Query** - Sort and filter any database with CouchDB-style `map` functions. The `useFireproof` React hook integrates so cleanly your code doesn't even have to import `useState` or `useEffect`, instead, [`useLiveQuery`](https://use-fireproof.com/docs/react-hooks/use-live-query) makes dynamic renders easy.
 * **Realtime Updates** - [Subscribe to query changes in your application](https://use-fireproof.com/docs/database-api/database#subscribing-to-changes), so your UI updates automatically. This makes vanilla JS apps super easy to build -- the `useFireproof` React hook handles this so you won't need `db.subscribe()` there.
 * **Cryptographic Proofs** - Fireproof's Merkle clocks and hash trees are immutable and self-validating, making all query results into offline-capable data slices. Fireproof makes cryptographic proofs available for all of its operations, accelerating replication and making trustless index sharing possible. This makes it a great choice for building custom document approval workflows or other situations where provenance is important.
@@ -88,17 +85,9 @@ Learn more about the [architecture](https://use-fireproof.com/docs/architecture)
 
 ### Use cases
 
-Fireproof is optimized to make [building React apps](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) fast and fun, with reliable results. Suitable for mission-critical data workloads like [LLM orchestration](https://fireproof.storage/posts/why-proofs-matter-for-ai/), supply-chain provenance, and field use of auditable data, [ Fireproof is also great](https://fireproof.storage/posts/great-opportunites-to-use-fireproof/) for social media, collaborative world-building, and rapidly implementing executive decision support tools that can stand up to blockchain levels of scrutiny.
+Fireproof is optimized to make [building React and other front-end apps](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) fast and fun, with reliable results. Suitable for mission-critical data workloads like [LLM orchestration](https://fireproof.storage/posts/why-proofs-matter-for-ai/), supply-chain provenance, and field data collection, [Fireproof is also great](https://fireproof.storage/posts/great-opportunites-to-use-fireproof/) for gaming, social media, collaborative world-building, and rapidly implementing [executive decision support tools](https://epiphany.fireproof.storage) that can stand up to blockchain levels of scrutiny.
 
 With Fireproof, you **build first** and connect it to your cloud of choice when you are ready, so there's nothing holding you back from adding it to your existing apps, or writing something new.
-
-## React Quick Start
-*One-line preview:* in the context of a React component render, `useLiveQuery` will automatically refresh (even on changes by remote collaborators):
-
-```js
-  const completedTodos = useLiveQuery('completed', { limit: 10 })
-```
-This is the README for the core database technology. [The `useFireproof` hook documentation has a getting started guide](https://use-fireproof.com/docs/react-tutorial). Don't forget to star 🌟 this repo on the way over.
 
 ## AI Copilot Quick Start
 
@@ -114,7 +103,7 @@ For example prompts and inspiration [check out the illustrated version of this t
 
 ## API Usage
 
-### Encrypted Documents
+### JSON Documents
 
 A simple put, get and delete interface for keeping track of all your JSON documents. Once your data is in Fireproof you can access it from any app or website. 
 
@@ -140,22 +129,18 @@ Fireproof tracks all versions so undo is easy to write, and cryptographically ve
 
 Fireproof provides a live query interface that allows you to subscribe to changes in your data. This means that your UI will automatically update whenever there is a change to your data. See the [useFireproof React hooks documentation](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) for the easiest way to use this feature.
 
-Fireproof indexes are defined by custom JavaScript functions that you write, allowing you to easily index and search your data in the way that works best for your application. Easily handle data variety and schema drift by normalizing any data to the desired index. The index function defines the sort order. You can use the index to query for a range of values or to find exact matches. This baseline functionality is all you need to build many kinds of complex queries.
 
 ```js
-const byAge = index(database, "age")
-const { rows } = await index.query({ range: [40, 52] })
+const { rows } = await database.query("age", { range: [40, 52] })
 ```
 
-By default you can specify your function as a string and Fireproof will interpret it as indexing that field on any documents. Read on for examples of how you can get more control when you want. The optional second argument to your map function allows you to specify both keys and values for the index:
+You can specify your function as a string and Fireproof will interpret it as indexing that field on all documents. You can also pass a function for more control:
 
 ```js
-const index = new Index(database, "namesByAge", function (doc, map) {
-  map(doc.age, doc.name)
-})
-const { rows, ref } = await index.query({ range: [40, 52] })
-// [ { key: 42, value: 'alice', id: 'a1s3b32a-3c3a-4b5e-9c1c-8c5c0c5c0c5c' },
-//   { key: 47, value: 'André', id: 'three-thousand' } ]
+const index = new Index(database, "namesByAge",)
+const { rows } = await index.query(function (doc, map) {
+    map(doc.age, doc.name)
+  }, { range: [40, 52] })
 ```
 
 The same mechanism that powers the built-in indexes can all be used to connect secondary [vector indexers](https://github.com/tantaraio/voy) or fulltext indexes to Fireproof. [Follow this tutorial to connect a secondary index](https://fireproof.storage/documentation/external-indexers/).
@@ -185,21 +170,24 @@ The React [useLiveQuery](https://use-fireproof.com/docs/react-hooks/use-live-que
 
 Fireproof's Merkle clocks and hash trees are immutable and self-validating, and all query results are offline-capable data slices. Fireproof makes cryptographic proofs available for all of its operations, accelerating replication and making trustless index sharing possible. If you are making a "DocuSign for _____", [proofs make Fireproof the ideal verifiable document database](https://fireproof.storage/posts/from-mlops-to-point-of-sale:-merkle-proofs-and-data-locality/) for smart contracts and other applications where unique, verifiable, and trustworthy data is required. [Proof chains provide performance benefits as well](https://purrfect-tracker-45c.notion.site/Data-Routing-23c37b269b4c4c3dacb60d0077113bcb), by allowing recipients to skip costly I/O operations and instead cryptographically verify that changes contain all of the required context.
 
-## Coming Soon
-
-The six-month roadmap for Fireproof includes these features to make it a complete offering for application data.
 
 ### Cloud Storage
 
 When you are ready to save your data to the cloud for sharing or backup:
 
 ```js
-import { connect } from '@fireproof/core'
+import { connect } from 'use-fireproof'
 
-const connection = await connect(db, 'my-account-email@example.com')
+const connection = await connect.web3(db, 'my-account-email@example.com')
 ```
 
 You can tie any app to your app developer storage account, or allow users to create personal storage accounts (at no cost to you).
+
+Currently, the web3 driver only stores database data, not metadata, but that still makes it great for sharing databases via direct links.
+
+## Coming Soon
+
+The six-month roadmap for Fireproof includes these features to make it a complete offering for application data.
 
 
 ### Automatic Replication
