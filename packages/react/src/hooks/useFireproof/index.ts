@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { fireproof } from '@fireproof/core';
-export { fireproof } from '@fireproof/core';
+export { fireproof, connect } from '@fireproof/core';
 
 import type { Doc, DocFragment, Database, FireproofOptions } from '@fireproof/core';
 
