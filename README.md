@@ -12,9 +12,7 @@ Simplify your application state with a live database. Automatically update your 
   </a>
 </p>
 
-Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small.
-
-## Get Started
+Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small. Get started with just the NPM module:
 
 ```sh
 npm install use-fireproof
@@ -200,7 +198,7 @@ Fireproof is a synthesis of work done by people in the web community over the ye
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle hash-tree clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
 
-# Contributing
+## Contributing
 
 To contribute please follow these steps for local setup and installation of the project
 
