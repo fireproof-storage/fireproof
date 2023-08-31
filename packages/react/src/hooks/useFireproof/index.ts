@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback, createContext } from 'react';
-import { fireproof, index as defineIndex } from '@fireproof/core';
+import { useEffect, useState, useCallback } from 'react';
+import { fireproof } from '@fireproof/core';
+export { fireproof } from '@fireproof/core';
 
-import type { Doc, DocFragment, Index, Database, FireproofOptions } from '@fireproof/core';
+import type { Doc, DocFragment, Database, FireproofOptions } from '@fireproof/core';
 
 export interface FireproofCtxValue {
   database: Database;
@@ -10,7 +11,10 @@ export interface FireproofCtxValue {
   ready: boolean;
 }
 
-export const FireproofCtx = createContext<FireproofCtxValue>({} as FireproofCtxValue);
+/**
+ * @deprecated useFireproofCtx is deprecated, use useFireproof instead
+ */
+export const FireproofCtx = {} as FireproofCtxValue
 
 /**
  * Top level hook to initialize a Fireproof database and a query for it.
@@ -23,7 +27,6 @@ const topLevelUseLiveQuery = (...args) => {
   // @ts-ignore
   return useLiveQuery(...args);
 };
-
 export const useLiveQuery = topLevelUseLiveQuery;
 
 /**
@@ -37,7 +40,6 @@ const topLevelUseLiveDocument = (...args) => {
   // @ts-ignore
   return useDocument(...args);
 };
-
 export const useDocument = topLevelUseLiveDocument;
 
 export function useFireproof(
@@ -53,7 +55,7 @@ export function useFireproof(
     const saveDoc = useCallback(
       async () => {
         const putDoc = id ? { ...doc, _id: id } : doc;
-        await database.put(putDoc)
+        await database.put(putDoc as Doc)
       },
       [id, doc],
     );
@@ -88,19 +90,16 @@ export function useFireproof(
     ];
   }
 
-  function useLiveQuery(mapFn: ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment) | string | Index, query = {}, initialRows: any[] = []) {
+  function useLiveQuery(mapFn: ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment) | string, query = {}, initialRows: any[] = []) {
     const [result, setResult] = useState({
       rows: initialRows,
       docs: initialRows.map((r) => r.doc),
     });
-    const [index, setIndex] = useState<Index | null>(null);
 
     const refreshRows = useCallback(async () => {
-      if (index) {
-        const res = await index.query(query);
+        const res = await database.query(mapFn, query)
         setResult({ ...res, docs: res.rows.map((r) => r.doc) });
-      }
-    }, [index, JSON.stringify(query)]);
+    }, [JSON.stringify(query)]);
 
     useEffect(
       <React.EffectCallback>(() =>
@@ -112,18 +111,6 @@ export function useFireproof(
 
     useEffect(() => {
       refreshRows();
-    }, [index]);
-
-    useEffect(() => {
-      if (typeof mapFn === 'string') {
-        setIndex(defineIndex(database, mapFn));
-        // @ts-ignore
-      } else if (mapFn.crdt) {
-        setIndex(mapFn as Index);
-      } else {
-        // @ts-ignore
-        setIndex(defineIndex(database, makeName(mapFn.toString()), mapFn));
-      }
     }, [mapFn.toString()]);
 
     return result;
@@ -131,25 +118,8 @@ export function useFireproof(
 
   return {
     useLiveQuery,
-    // useLiveDocument : useDocument,
     useDocument,
     database,
     ready : true,
   };
-}
-
-
-function makeName(fnString: string) {
-  const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g
-  let found: RegExpExecArray | null = null
-  let matches = Array.from(fnString.matchAll(regex), match => match[1].trim())
-  if (matches.length === 0) {
-    found = /=>\s*(.*)/.exec(fnString)
-  }
-  if (!found) {
-    return fnString
-  } else {
-    // it's a consise arrow function, match everythign after the arrow
-    return found[1]
-  }
 }
