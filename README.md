@@ -30,7 +30,7 @@ or via HTML script tag:
  
  ### JavaScript Example
 
-Fireproof is a JavaScript library that works in any environment.
+Fireproof works in any JavaScript environment.
 
 ```js
 import { fireproof } from 'use-fireproof'
@@ -47,11 +47,9 @@ const doc = await db.get(id)
 
 [Jump to the docs site for more basics.](https://use-fireproof.com/docs/database-api/basics)
 
-### React Example 
+### React Example <img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React" > 
 
 Fireproof has React hooks so you can avoid boilerplate and write expressive code. Instead of dealing with React contexts and reducers, simple hooks make your JSON documents feel like `setState()` objects.
-
-<img src="https://shields.io/badge/react-black?logo=react&style=for-the-badge%22" alt="React" > 
 
 ```js
 import { useLiveQuery, useDocument } from 'use-fireproof'
@@ -63,8 +61,7 @@ function App() {
 
 Jump to the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
 
-
-## Why choose Fireproof
+## <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="20"> Why choose Fireproof 
 
 Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols. This allows you to add live data to your app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started writing app features today, and connect to any environment when you are ready.
 
