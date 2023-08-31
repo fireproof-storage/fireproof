@@ -2,15 +2,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { create, Client } from '@web3-storage/w3up-client'
-import * as w3clock from '@web3-storage/clock/client'
-import { clock } from '@web3-storage/clock/capabilities'
+// import * as w3clock from '@web3-storage/clock/client'
+// import { clock } from '@web3-storage/clock/capabilities'
 
 // import * as DID from '@ipld/dag-ucan/did'
 
 import { Connection, DownloadFnParams, UploadFnParams } from './types'
 import { validateParams } from './connect'
 // import { CID } from 'multiformats'
-import { EventBlock } from '@alanshaw/pail/clock'
+// import { EventBlock } from '@alanshaw/pail/clock'
 
 export class ConnectWeb3 implements Connection {
   email: `${string}@${string}`
