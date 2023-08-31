@@ -43,7 +43,7 @@ const { id } = await db.put({
 const doc = await db.get(id)
 ```
 
-[Jump to the docs site for more basics.](https://use-fireproof.com/docs/database-api/basics)
+Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics)
 
 ### React Example 
 
@@ -57,7 +57,7 @@ function App() {
   const [newTodo, setNewTodoData, saveNewTodo] = useDocument({type: 'todo', text: '', completed: false, created: Date.now() })
 ```
 
-Jump to the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
+Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
 
 ## Why choose Fireproof 
 
