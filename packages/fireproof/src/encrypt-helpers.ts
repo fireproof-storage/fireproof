@@ -45,7 +45,7 @@ async function encryptedEncodeCarFile(key: string, rootCid: AnyLink, t: CarMakea
     last = block
   }
   if (!last) throw new Error('no blocks encrypted')
-  const encryptedCar = await encodeCarFile(last.cid, encryptedBlocks)
+  const encryptedCar = await encodeCarFile([last.cid], encryptedBlocks)
   return encryptedCar
 }
 
