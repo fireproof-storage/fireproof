@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -81,8 +81,8 @@
   ],
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
-  "homepage": "https://fireproof.storage",
-  "gptdoc": "import { database, index } from '@fireproof/core'; const db = database('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); useEffect(()=> db.subscribe(updateReactStateAsyncFn), []); const byAnyField = index(db, 'anyField'); const result = await byAnyField.query({range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "homepage": "https://use-fireproof.com",
+  "gptdoc": "import { fireproof } from 'use-fireproof; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); useEffect(()=> db.subscribe(updateReactStateAsyncFn), []); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fireproof-storage/fireproof.git"
