@@ -217,10 +217,11 @@ describe('basic Index upon cold start', function () {
     equals(result3.rows.length, 4)
     equals(didMap, 1)
   })
-  it('shouldnt allow map function definiton to change', async function () {
+  it('should ignore meta when map function definiton changes', async function () {
     const crdt2 = new CRDT('test-indexer-cold')
-    const e = await index({ _crdt: crdt2 }, 'hello', (doc) => doc.title).query().catch((e) => e)
-    matches(e.message, /cannot apply/)
+    const result = await index({ _crdt: crdt2 }, 'hello', (doc) => doc.title.split('').reverse().join('')).query()
+    equals(result.rows.length, 3)
+    equals(result.rows[0].key, 'evitaerc') // creative
   })
 })
 

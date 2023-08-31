@@ -5,7 +5,7 @@ import { CRDT } from './crdt'
 import { index } from './index'
 
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts } from './types'
-import { encodeFile } from './files'
+// import { encodeFile } from './files'
 
 type DbName = string | null
 

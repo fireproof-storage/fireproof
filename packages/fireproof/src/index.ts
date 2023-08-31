@@ -56,15 +56,23 @@ export class Index {
           this.indexHead.map(c => c.toString()).join() !== meta.head.map(c => c.toString()).join()) {
           throw new Error('cannot apply meta to existing index')
         }
-        this.byId.cid = meta.byId
-        this.byKey.cid = meta.byKey
-        this.indexHead = meta.head
+
         if (this.mapFnString) {
           // we already initialized from application code
-          if (this.mapFnString !== meta.map) throw new Error('cannot apply different mapFn meta')
+          if (this.mapFnString !== meta.map) {
+            console.log('cannot apply different mapFn meta: old mapFnString', this.mapFnString, 'new mapFnString', meta.map)
+            // throw new Error('cannot apply different mapFn meta')
+          } else {
+            this.byId.cid = meta.byId
+            this.byKey.cid = meta.byKey
+            this.indexHead = meta.head
+          }
         } else {
           // we are first
           this.mapFnString = meta.map
+          this.byId.cid = meta.byId
+          this.byKey.cid = meta.byKey
+          this.indexHead = meta.head
         }
       } else {
         if (this.mapFn) {
