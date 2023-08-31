@@ -1,4 +1,8 @@
-<p style="float:right" align="right">
+
+
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> Fireproof
+
+<p align="right">
   <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml">
     <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test status">
   </a>
@@ -7,12 +11,7 @@
   </a>
 </p>
 
-# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> Fireproof
-
 Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
-
-
-
 
 Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small. Get started with just the NPM module:
 
