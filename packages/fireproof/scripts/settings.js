@@ -58,13 +58,7 @@ export function createBuildSettings(options) {
       platform: 'node',
       entryPoints: [entryPoint],
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      plugins: [...commonSettings.plugins,
-        alias(
-          {
-            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js')
-          }
-        ),
-        commonjs({ filter: /^peculiar|ipfs-utils/ })],
+      plugins: [...commonSettings.plugins],
       banner: bannerLog(`
 console.log('esm/node build');`, `
 import { createRequire } from 'module'; 
@@ -72,7 +66,19 @@ const require = createRequire(import.meta.url);
         `)
     }
 
-    builds.push(esmConfig)
+    const testEsmConfig = {
+      ...esmConfig,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      plugins: [...esmConfig.plugins,
+        alias(
+          {
+            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js')
+          }
+        ),
+        commonjs({ filter: /^peculiar|ipfs-utils/ })]
+    }
+
+    builds.push(testEsmConfig)
 
     if (/fireproof\./.test(entryPoint)) {
       const esmPublishConfig = {
