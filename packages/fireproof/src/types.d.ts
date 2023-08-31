@@ -31,8 +31,8 @@ export type FileCarHeader = {
   files: AnyLink[]
 }
 type DocBody = {
-  [key: string]: DocFragment
   _files?: DocFiles
+  [key: string]: DocFragment
 }
 
 type DocMeta = {
