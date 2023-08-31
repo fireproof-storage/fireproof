@@ -42,7 +42,7 @@ const { id } = await db.put({
 const doc = await db.get(id)
 ```
 
-Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics)
+Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics) You can [find a real-world JavaScript app here.](https://github.com/mlc-ai/web-stable-diffusion/pull/52)
 
 ### React Example 
 
