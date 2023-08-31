@@ -1,4 +1,4 @@
-# Fireproof
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="20"> Fireproof
 
 Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
 
@@ -61,7 +61,7 @@ function App() {
 
 Jump to the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
 
-## <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="20"> Why choose Fireproof 
+## Why choose Fireproof 
 
 Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols. This allows you to add live data to your app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started writing app features today, and connect to any environment when you are ready.
 
