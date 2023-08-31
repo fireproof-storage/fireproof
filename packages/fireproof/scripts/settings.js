@@ -21,7 +21,7 @@ export function createBuildSettings(options) {
     plugins: [
       esbuildPluginTsc({
         force: true
-      }), commonjs({ filter: /^peculiar/ })
+      }), commonjs({ filter: /^peculiar|ipfs-utils/ })
     ],
     ...options
   }
