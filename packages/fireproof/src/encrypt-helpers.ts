@@ -15,9 +15,7 @@ import { MemoryBlockstore } from '@alanshaw/pail/block'
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const chunker = bf(30)
 
-export async function encryptedMakeCarFile(key: string, fp: AnyCarHeader, t: Transaction): Promise<AnyBlock> {
-  const { cid, bytes } = await encodeCarHeader(fp)
-  await t.put(cid, bytes)
+export async function encryptedMakeCarFile(key: string, cid: AnyLink, t: Transaction): Promise<AnyBlock> {
   return encryptedEncodeCarFile(key, cid, t)
 }
 
