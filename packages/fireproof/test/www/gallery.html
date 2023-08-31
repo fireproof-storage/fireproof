@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=12483"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=32493"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -15,7 +15,7 @@
 
       function setupDb(name) {
         dbName = name;
-        db = fireproof(name);
+        db = fireproof(name, { public: true });
         window.db = db;
         connection = connect.s3(db, s3Info)
         connect.web3(db, "jchris@fireproof.storage")
@@ -37,38 +37,38 @@
       }
 
       const draw = async () => {
-        const result = await db.changes([], {limit: 10})
+        const result = await db.changes([], { limit: 10 })
 
         document
           .querySelector('ul')
           .innerHTML = '';
         for (const row of result.rows.reverse()) {
           const doc = row.value
-          if (doc._files ) {
+          if (doc._files) {
             const li = document
-            .querySelector('ul')
-            .appendChild(document.createElement('li'))
-          li.appendChild(document.createElement('span')).innerText = row.key;
-          li.appendChild(document.createElement('br'))
-          // let didDoc = 0
+              .querySelector('ul')
+              .appendChild(document.createElement('li'))
+            li.appendChild(document.createElement('span')).innerText = row.key;
+            li.appendChild(document.createElement('br'))
+            // let didDoc = 0
             for (const file of Object.keys(doc._files)) {
-            (async () => {
-              // if (didDoc) { return }
-              const meta = doc._files[file]
-              if (meta.file && /image/.test(meta.type)) {
-                console.log('file', meta)
-                const src =  URL.createObjectURL(await meta.file());
-                // didDoc++
-                const img = document.createElement("img");
-                img.src = src
-                img.height = 100;
-                img.onload = () => {
-                  URL.revokeObjectURL(img.src);
-                };
-                li.appendChild(img);
-              }
-            })();
-          }
+              (async () => {
+                // if (didDoc) { return }
+                const meta = doc._files[file]
+                if (meta.file && /image/.test(meta.type)) {
+                  console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
+                  const src = URL.createObjectURL(await meta.file());
+                  // didDoc++
+                  const img = document.createElement("img");
+                  img.src = src
+                  img.height = 100;
+                  img.onload = () => {
+                    URL.revokeObjectURL(img.src);
+                  };
+                  li.appendChild(img);
+                }
+              })();
+            }
           }
 
         }
