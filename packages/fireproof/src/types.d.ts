@@ -28,11 +28,7 @@ type DocFiles = {
 }
 
 export type FileCarHeader = {
-  files: Map<string, {
-    cid: AnyLink
-    size: number
-    type: string
-  }>
+  files: AnyLink[]
 }
 type DocBody = {
   [key: string]: DocFragment
