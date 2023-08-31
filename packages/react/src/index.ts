@@ -1,1 +1,2 @@
-export { fireproof, connect, useFireproof, FireproofCtx, FireproofCtxValue, useLiveQuery, useDocument } from './hooks/useFireproof'
+export { useFireproof, FireproofCtx, FireproofCtxValue, useLiveQuery, useDocument } from './hooks/useFireproof'
+export { fireproof, connect } from '@fireproof/core';
