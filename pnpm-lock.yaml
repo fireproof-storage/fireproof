@@ -273,8 +273,8 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.11.21
-        version: 0.11.21
+        specifier: ^0.12.0-dev.2
+        version: 0.12.8(encoding@0.1.13)
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -683,8 +683,8 @@ packages:
     resolution: {integrity: sha512-d9zaMRSTIKDLhctzH12MtXvJKSSUhaHcjV+2Z+GK+EEY7XKpP5yR4x+N3TAcHTcu963nIr+TMcCb4DBCYX1z6Q==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  '@fireproof/core@0.11.21':
-    resolution: {integrity: sha512-+4uppsimlRFsGod6Vcxnw6mUCk323f1t4CXQxichYtN3veeiDt7fNdEOd9M9nj07ubPE8WX86HNt2Ky/Ed6Jmw==}
+  '@fireproof/core@0.12.8':
+    resolution: {integrity: sha512-DeUx2htbc48eyioh/6x3SAnRdtI8jouwm6Ah8urqcZT5sCY5K4UqK5IN0BrINLUhkPrjc1zGzhSluZoV65sW3w==}
 
   '@fireproof/core@0.7.2':
     resolution: {integrity: sha512-BFd4jqOw1dDzGCq/8U/KosQYjL4tQ09iA3KwOkNJXpg92wB4f8ZZ0IDsbEzOYKRB1BwsajvsQSD6MgmW99sd7Q==}
@@ -5890,14 +5890,17 @@ snapshots:
 
   '@eslint/js@8.57.1': {}
 
-  '@fireproof/core@0.11.21':
+  '@fireproof/core@0.12.8(encoding@0.1.13)':
     dependencies:
       '@alanshaw/pail': 0.3.4
       '@ipld/car': 5.4.2
       '@ipld/dag-cbor': 9.2.4
       '@ipld/dag-json': 10.2.5
+      '@ipld/dag-ucan': 3.4.5
       '@ipld/unixfs': 2.2.0
       '@peculiar/webcrypto': 1.5.0
+      '@web3-storage/clock': 0.3.0
+      '@web3-storage/w3up-client': 8.1.0(encoding@0.1.13)
       charwise: 3.0.1
       cross-fetch: 4.0.0(encoding@0.1.13)
       idb: 7.1.1
