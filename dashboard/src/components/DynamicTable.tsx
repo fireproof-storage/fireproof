@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Doc } from '@fireproof/core'
 import { useState } from 'react'
 
-export default function DynamicTable({ headers, rows, th = '_id', link = ['_id'] }: any) {
+export default function DynamicTable({ dbName, headers, rows, th = '_id', link = ['_id'] }: any) {
   const [columnLinks, setColumnLinks] = useState(link)
 
   function toggleColumnLinks(header: string) {
@@ -34,11 +33,11 @@ export default function DynamicTable({ headers, rows, th = '_id', link = ['_id']
                     scope="row"
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
                   >
-                    <TableCell link={columnLinks.includes(header)} label={fields[header]} />
+                    <TableCell dbName={dbName} link={columnLinks.includes(header)} label={fields[header]} />
                   </th>
                 ) : (
                   <td key={header} className="px-6 py-4">
-                    <TableCell link={columnLinks.includes(header)} label={fields[header]} />
+                    <TableCell dbName={dbName} link={columnLinks.includes(header)} label={fields[header]} />
                   </td>
                 )
               )}
@@ -50,9 +49,9 @@ export default function DynamicTable({ headers, rows, th = '_id', link = ['_id']
   )
 }
 
-function TableCell({ label, link = false } : { label : any, link : boolean }) {
+function TableCell({ label, link = false, dbName } : { label : any, link : boolean, dbName : string }) {
   if (link) {
-    const href = `doc?id=${label}`
+    const href = `/doc/${dbName}/${label}`
     return (
       <a className="underline" href={href}>
         {formatTableCellContent(label)}
@@ -66,18 +65,6 @@ function TableCell({ label, link = false } : { label : any, link : boolean }) {
 function formatTableCellContent(obj: any) {
   if (typeof obj === 'string') return obj
   return JSON.stringify(obj)
-}export function headersForDocs(docs: Doc[]) {
-  const headers = new Map();
-  for (const doc of docs) {
-    for (const key of Object.keys(doc)) {
-      if (headers.has(key)) {
-        headers.set(key, headers.get(key) + 1);
-      } else {
-        headers.set(key, 1);
-      }
-    }
-  }
-  headers.delete('_id');
-  return ['_id', ...Array.from(headers.entries()).sort((a, b) => b[1] - a[1]).map(([key]) => key)];
 }
+
 

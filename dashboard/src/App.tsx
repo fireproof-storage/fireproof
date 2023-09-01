@@ -7,6 +7,7 @@ import { Databases } from './pages/Databases'
 import { Sidebar } from './components/Sidebar'
 import { Database } from './pages/Database'
 import { Changes } from './pages/Changes'
+import { DocPage } from './pages/DocPage'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -42,6 +43,11 @@ function App() {
         <Route path="/changes/:dbName" element={
           <Layout>
             <Changes />
+          </Layout>
+        } />
+               <Route path="/doc/:dbName/:docId" element={
+          <Layout>
+            <DocPage />
           </Layout>
         } />
         <Route path="/" element={
