@@ -34,7 +34,7 @@ export function Changes() {
 
   return (
     <div className="flex flex-col">
-      <h2 className="text-2xl">Recent changes</h2>
+      <h1 className="text-2xl font-bold">Recent changes</h1>
       <DynamicTable dbName={dbName} headers={headersForDocs(changesDocs)} rows={changesDocs} />
     </div>
   )

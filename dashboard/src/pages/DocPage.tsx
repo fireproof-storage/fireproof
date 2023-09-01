@@ -7,15 +7,15 @@ import { useState } from 'react'
 export function DocPage() {
   const { dbName, docId } = useParams()
   // const db = fireproof(dbName as string)
-  const { useDocument } = useFireproof(dbName as string)
+  const { database, useDocument } = useFireproof(dbName as string)
 
-  const [doc, setDoc, saveDoc] = useDocument({ _id: docId as string })
+  const [doc, setDoc] = useDocument({ _id: docId as string })
   const [needsSave, setNeedsSave] = useState(false)
 
   console.log(dbName, docId, doc)
   const { data, meta } = dataAndMeta(doc)
 
-  const title = meta._id ? `Edit: ${meta._id}` : 'Create new document'
+  const title = meta._id ? `Edit: ${meta._id}` : 'Create document'
 
   function editorChanged({ code, valid }: { code: string; valid: boolean }) {
     setNeedsSave(valid)
@@ -25,11 +25,20 @@ export function DocPage() {
     console.log({code, valid})
   }
 
+  async function doSave() {
+    // const ok = await saveDoc()
+    const ok = await database.put(doc)
+    if (!docId) {
+      window.location.href = `/doc/${dbName}/${ok.id}`
+    }
+    setNeedsSave(false)
+  }
+
   return (
     <div className="flex flex-col">
-      <h1 className="text-2xl font-bold">{title}</h1>
+      <h1 className="text-2xl font-bold">{dbName} / {title}</h1>
       <EditableCodeHighlight code={JSON.stringify(data, null, 2)} onChange={editorChanged} />
-      <button title="Save" disabled={!needsSave} onClick={() => saveDoc()} className="btn btn-primary">Save</button>
+      <button title="Save" disabled={!needsSave} onClick={() => doSave()} className="btn btn-primary">Save</button>
       <CodeHighlight code={JSON.stringify(meta, null, 2)} />
     </div>
   )

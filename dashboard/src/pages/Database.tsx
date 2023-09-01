@@ -1,13 +1,20 @@
 import { useParams } from 'react-router-dom'
+import { headersForDocs } from '../components/dynamicTableHelpers'
+import DynamicTable from '../components/DynamicTable'
+import { Doc, ChangesResponse } from '@fireproof/core'
+import { useFireproof } from 'use-fireproof'
 
 export function Database() {
   const { dbName } = useParams()
+  const {database, useLiveQuery} = useFireproof(dbName as string)
+  window.db = database
 
+  const result = useLiveQuery('_id')
+  console.log(result)
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold text-center">Database</h1>
-      <p className="text-xl text-center">This is the database page.</p>
-      <p className="text-xl text-center">{dbName}</p>
+    <div className="flex flex-col">
+      <h2 className="text-2xl">{dbName} / All documents</h2>
+      <DynamicTable dbName={dbName} headers={headersForDocs(result.docs)} rows={result.docs} />
     </div>
   )
 }

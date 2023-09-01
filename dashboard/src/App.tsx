@@ -13,11 +13,9 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="MainContent flex-1 p-4 dark:bg-gray-700 bg-slate-200">
-        {children}
-      </div>
+      <div className="MainContent flex-1 p-4 ">{children}</div>
     </div>
-  );
+  )
 }
 
 function App() {
@@ -25,40 +23,65 @@ function App() {
     <>
       <Header />
       <Routes>
-        <Route path="/about" element={
-          <Layout>
-            <div>About</div>
-          </Layout>
-        } />
-        <Route path="/databases" element={
-          <Layout>
-            <Databases />
-          </Layout>
-        } />
-        <Route path="/db/:dbName" element={
-          <Layout>
-            <Database />
-          </Layout>
-        } />
-        <Route path="/changes/:dbName" element={
-          <Layout>
-            <Changes />
-          </Layout>
-        } />
-               <Route path="/doc/:dbName/:docId" element={
-          <Layout>
-            <DocPage />
-          </Layout>
-        } />
-        <Route path="/" element={
-          <Layout>
-            <Home />
-          </Layout>
-        } />
+        <Route
+          path="/about"
+          element={
+            <Layout>
+              <div>About</div>
+            </Layout>
+          }
+        />
+        <Route
+          path="/databases"
+          element={
+            <Layout>
+              <Databases />
+            </Layout>
+          }
+        />
+        <Route
+          path="/db/:dbName"
+          element={
+            <Layout>
+              <Database />
+            </Layout>
+          }
+        />
+        <Route
+          path="/changes/:dbName"
+          element={
+            <Layout>
+              <Changes />
+            </Layout>
+          }
+        />
+        <Route
+          path="/doc/:dbName/:docId"
+          element={
+            <Layout>
+              <DocPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/doc/:dbName"
+          element={
+            <Layout>
+              <DocPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <Layout>
+              <Home />
+            </Layout>
+          }
+        />
       </Routes>
     </>
-  );
+  )
 }
-
 
 export default App
