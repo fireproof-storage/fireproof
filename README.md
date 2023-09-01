@@ -94,6 +94,18 @@ For example prompts and inspiration [check out the illustrated version of this t
 
 ## API Usage
 
+Import from the package like this:
+
+```js
+import { fireproof } from 'use-fireproof'
+```
+and create a database:
+  
+```js
+const database = fireproof('my-app-name')
+```
+
+
 ### JSON Documents
 
 A simple put, get and delete interface for keeping track of all your JSON documents. Once your data is in Fireproof you can access it from any app or website. 
@@ -116,23 +128,24 @@ const doc = await database.get('three-thousand')
 Fireproof tracks all versions so undo is easy to write, and cryptographically verifiable snapshots of the database are as easy as web links.
 
 
-### Live Query
-
-Fireproof provides a live query interface that allows you to subscribe to changes in your data. This means that your UI will automatically update whenever there is a change to your data. See the [useFireproof React hooks documentation](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) for the easiest way to use this feature.
+### Flexible Query
 
 
 ```js
 const { rows } = await database.query("age", { range: [40, 52] })
 ```
 
+Fireproof provides a live query interface that allows you to subscribe to changes in your data. This means that your UI will automatically update whenever there is a change to your data. See the [useFireproof React hooks documentation](https://github.com/fireproof-storage/fireproof/blob/main/packages/react/README.md) for the easiest way to use this feature.
+
 You can specify your function as a string and Fireproof will interpret it as indexing that field on all documents. You can also pass a function for more control:
 
 ```js
-const index = new Index(database, "namesByAge",)
-const { rows } = await index.query(function (doc, map) {
+const { rows } = await database.query(function (doc, map) {
     map(doc.age, doc.name)
   }, { range: [40, 52] })
 ```
+
+
 
 The same mechanism that powers the built-in indexes can all be used to connect secondary [vector indexers](https://github.com/tantaraio/voy) or fulltext indexes to Fireproof. [Follow this tutorial to connect a secondary index](https://fireproof.storage/documentation/external-indexers/).
 
