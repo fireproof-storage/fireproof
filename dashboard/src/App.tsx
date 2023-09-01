@@ -4,20 +4,11 @@ import { Route, Routes } from 'react-router-dom'
 
 function App() {
   return (
-    <div className="App">
+    <div className="App bg-blue-500 text-white">
       <Routes>
-        <Route path="/about">
-          {/* Your About component */}
-          {'About'}
-        </Route>
-        <Route path="/contact">
-          {/* Your Contact component */}
-          {'Contact'}
-        </Route>
-        <Route path="/">
-          {/* Your Home component */}
-          {'Home'}
-        </Route>
+      <Route path="/about" element={<div>About</div>} />
+        <Route path="/contact" element={<div>Contact</div>} />
+        <Route path="/" element={<div>Home</div>} />
       </Routes>
     </div>
   )
