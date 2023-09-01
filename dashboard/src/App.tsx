@@ -5,6 +5,8 @@ import { Header } from './components/Header'
 import { Home } from './pages/Home'
 import { Databases } from './pages/Databases'
 import { Sidebar } from './components/Sidebar'
+import { Database } from './pages/Database'
+import { Changes } from './pages/Changes'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -34,7 +36,12 @@ function App() {
         } />
         <Route path="/db/:dbName" element={
           <Layout>
-            <div>Database</div>
+            <Database />
+          </Layout>
+        } />
+        <Route path="/changes/:dbName" element={
+          <Layout>
+            <Changes />
           </Layout>
         } />
         <Route path="/" element={

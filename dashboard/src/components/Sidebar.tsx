@@ -11,9 +11,15 @@ export function Sidebar() {
           {dbName && (
             <>
               {' '}
-              / <a href={'/db/' + dbName}><code>{dbName}</code></a>
+              /{' '}
+              <a href={'/db/' + dbName}>
+                <code>{dbName}</code>
+              </a>
             </>
           )}
+        </li>
+        <li className="mb-2">
+          <a href={'/changes/' + dbName}>Changes</a>
         </li>
       </ul>
     </div>
