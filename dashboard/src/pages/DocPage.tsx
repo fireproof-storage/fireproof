@@ -1,14 +1,50 @@
-import { useParams } from "react-router-dom"
+import { useParams } from 'react-router-dom'
+import { useFireproof } from 'use-fireproof'
+import { CodeHighlight, EditableCodeHighlight } from '../components/CodeHighlight'
+import { Doc, DocFragment } from '@fireproof/core'
 
 export function DocPage() {
   const { dbName, docId } = useParams()
-  console.log(dbName, docId)
+  // const db = fireproof(dbName as string)
+  const { useDocument } = useFireproof(dbName as string)
+
+  const [doc, setDoc, saveDoc] = useDocument({ _id: docId as string })
+
+  console.log(dbName, docId, doc)
+  const { data, meta } = dataAndMeta(doc)
+
+  const title = meta._id ? `Edit: ${meta._id}` : 'Create new document'
+
+  function editorChanged({ code, valid }: { code: string; valid: boolean }) {
+    // setNeedsSave(valid)
+    // setDocToSave(code)
+    console.log(code, valid)
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold text-center">Document</h1>
-      <p className="text-xl text-center">This is the document page.</p>
-      <p className="text-xl text-center">{dbName}</p>
-      <p className="text-xl text-center">{docId}</p>
+    <div className="flex flex-col">
+      <h1 className="text-2xl font-bold">{title}</h1>
+      <EditableCodeHighlight code={JSON.stringify(data, null, 2)} onChange={editorChanged} />
+      <CodeHighlight code={JSON.stringify(meta, null, 2)} />
     </div>
   )
+}
+
+function dataAndMeta(doc: Doc) {
+  const data = new Map<string, DocFragment>()
+  const meta = new Map<string, DocFragment>()
+  Object.keys(doc).forEach((key: string) => {
+    console.log(key.startsWith('_'))
+    if (key.startsWith('_')) {
+      meta.set(key, doc[key])
+    } else {
+      data.set(key, doc[key])
+    }
+  })
+  console.log(JSON.stringify(data), meta)
+  const { _id, ...metaObj } = Object.fromEntries(meta)
+  return {
+    data: Object.fromEntries(data),
+    meta: { _id, ...metaObj }
+  }
 }
