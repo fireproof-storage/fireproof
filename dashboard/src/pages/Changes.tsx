@@ -5,6 +5,7 @@ import {
   fireproof
   // , useFireproof
 } from 'use-fireproof'
+// @ts-ignore
 import type { ChangesResponse, Doc } from '@fireproof/core'
 import { useParams } from 'react-router-dom'
 import { headersForDocs } from '../components/dynamicTableHelpers'

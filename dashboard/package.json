@@ -10,9 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "prism-react-renderer": "^1.3.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.15.0",
+    "use-editable": "^2.3.3",
     "use-fireproof": "^0.12.2"
   },
   "devDependencies": {

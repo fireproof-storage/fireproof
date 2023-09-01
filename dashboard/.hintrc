@@ -3,6 +3,6 @@
     "development"
   ],
   "hints": {
-    
+    "no-inline-styles": "off"
   }
 }
