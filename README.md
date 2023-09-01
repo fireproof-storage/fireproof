@@ -27,8 +27,6 @@ or install in any page via HTML script tag:
  
  ### JavaScript Example
 
-Fireproof has been tested in many JavaScript environments. Read more about [bundler support](https://use-fireproof.com/docs/bundling).
-
 ```js
 import { fireproof } from 'use-fireproof'
 
@@ -43,7 +41,8 @@ const doc = await db.get(id)
 const result = await db.query("age", { range: [40, 52] })
 ```
 
-Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics) You can [find a real-world JavaScript app here.](https://github.com/mlc-ai/web-stable-diffusion/pull/52)
+Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics) You can [find a real-world JavaScript app here.](https://github.com/mlc-ai/web-stable-diffusion/pull/52) Fireproof has been tested in many JavaScript environments. Read more about [bundler support](https://use-fireproof.com/docs/bundling).
+
 
 ### React Example 
 
@@ -57,7 +56,7 @@ function App() {
   const [newTodo, setNewTodoData, saveNewTodo] = useDocument({type: 'todo', text: '', completed: false, created: Date.now() })
 ```
 
-Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
+Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started, or [check out this code sandbox example](https://codesandbox.io/s/fireproof-react-antd-twelve-nk63z6?file=/src/App.tsx) to see how easy it is to build a basic app.
 
 ## Why choose Fireproof 
 
