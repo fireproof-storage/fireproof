@@ -1,6 +1,6 @@
 export function Header() {
   return (
-    <header className="bg-gray-800 pt-3 pb-1 px-5 flex items-center justify-between">
+    <header className="pt-3 pb-1 px-5 flex items-center justify-between bg-slate-400">
       <a href="https://fireproof.storage/">
         <img
           src="https://fireproof.storage/static/img/logo-animated.svg"
@@ -8,16 +8,16 @@ export function Header() {
           className="logo"
         />
       </a>
-      <nav className="nav-menu text-white">
+      <nav >
         <ul className="flex">
           <li className="mr-6">
-            <a href="https://fireproof.storage/developer/">Docs</a>
+            <a href="https://use-fireproof.com">Docs</a>
           </li>
           <li className="mr-6">
             <a href="https://fireproof.storage/blog/">Blog</a>
           </li>
           <li className="mr-6">
-            <a href="https://fireproof.storage/thanks/">Community</a>
+            <a href="https://github.com/fireproof-storage/fireproof/discussions">Community</a>
           </li>
         </ul>
       </nav>

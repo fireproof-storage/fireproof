@@ -3,3 +3,32 @@
   width: auto;
   padding-right: 0.5em;
 }
+
+body a {
+  color: #112;
+  text-decoration: none;
+}
+
+body a:hover {
+  color: #112;
+  text-decoration: underline;
+}
+
+body nav a {
+  color: #fff;
+}
+
+body nav a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+@media (prefers-color-scheme: dark) {
+  body a {
+    color: #fff;
+  }
+  body a:hover {
+    color: #fff;
+    text-decoration: underline;
+  }
+}
