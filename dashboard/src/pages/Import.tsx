@@ -52,11 +52,6 @@ export function Import() {
     })
 
     await restore(name, { key: formData.key, car: formData.car })
-
-    // await snap._crdt.blocks.loader?.metaStore?.save({ key: formData.key, car: CID.parse(formData.car) })
-
-    // const snap = fireproof(name, { meta: { key: formData.key, car: CID.parse(formData.car) } })
-    // await snap._crdt.ready
   }
 
   return (
