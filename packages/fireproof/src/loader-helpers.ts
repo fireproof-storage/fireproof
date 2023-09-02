@@ -7,7 +7,7 @@ import * as codec from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car'
 
 import { AnyBlock, AnyCarHeader, AnyLink, CarMakeable } from './types'
-import { Transaction } from './transaction'
+// import { Transaction } from './transaction'
 
 export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0

@@ -83,11 +83,6 @@ export type FileResult = {
   files: { [key: string]: DocFileMeta }
 }
 
-type CarHeader = {
-  cars: AnyLink[]
-  compact: AnyLink[]
-}
-
 export type IdxMeta = {
   byId: AnyLink
   byKey: AnyLink
@@ -98,6 +93,11 @@ export type IdxMeta = {
 
 export type IdxMetaMap = {
   indexes: Map<string, IdxMeta>
+}
+
+type CarHeader = {
+  cars: AnyLink[]
+  compact: AnyLink[]
 }
 
 export type IdxCarHeader = CarHeader & IdxMetaMap
