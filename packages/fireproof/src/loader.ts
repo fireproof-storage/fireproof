@@ -50,7 +50,7 @@ export abstract class Loader {
     this.opts = opts || this.opts
     this.ready = this.initializeStores().then(async () => {
       if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
-      const meta = await this.metaStore.load('main')
+      const meta = this.opts.meta ? this.opts.meta : await this.metaStore.load('main')
       if (meta) {
         await this.mergeMetaFromRemote(meta)
       }
