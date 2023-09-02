@@ -153,7 +153,7 @@ describe('basic Index upon cold start', function () {
     await resetDirectory(testConfig.dataDir, 'test-indexer-cold.idx')
 
     // db = database()
-    crdt = new CRDT('test-indexer-cold')
+    crdt = new CRDT('test-indexer-cold', { persistIndexes: true })
     await crdt.bulk([
       { key: 'abc1', value: { title: 'amazing' } },
       { key: 'abc2', value: { title: 'creative' } },
@@ -178,7 +178,7 @@ describe('basic Index upon cold start', function () {
     equals(result.rows.length, 3)
   })
   it('should work on cold load', async function () {
-    const crdt2 = new CRDT('test-indexer-cold')
+    const crdt2 = new CRDT('test-indexer-cold', { persistIndexes: true })
     const { result, head } = await crdt2.changes()
     assert(result)
     await crdt2.ready
@@ -192,7 +192,7 @@ describe('basic Index upon cold start', function () {
   })
   it('should not rerun the map function on seen changes', async function () {
     didMap = 0
-    const crdt2 = new CRDT('test-indexer-cold')
+    const crdt2 = new CRDT('test-indexer-cold', { persistIndexes: true })
     const indexer2 = await index({ _crdt: crdt2 }, 'hello', mapFn)
     const { result, head } = await crdt2.changes([])
     equals(result.length, 3)
