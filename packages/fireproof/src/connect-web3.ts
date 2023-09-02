@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { create, Client } from '@web3-storage/w3up-client'
+import { create } from '@web3-storage/w3up-client'
+import type { Client } from '@web3-storage/w3up-client'
 // import * as w3clock from '@web3-storage/clock/client'
 // import { clock } from '@web3-storage/clock/capabilities'
 

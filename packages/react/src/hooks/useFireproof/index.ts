@@ -3,9 +3,11 @@ import { fireproof } from '@fireproof/core';
 
 import type { Doc, DocFragment, Database, FireproofOptions } from '@fireproof/core';
 
-type LiveQueryFn = (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => { docs: Doc[], rows: any[] };
+type LiveQueryFnReturn = { docs: Doc[], rows: any[] }
+type LiveQueryFn = (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => LiveQueryFnReturn;
 
-type UseDocFn = (initialDoc: Doc) => [Doc, (newDoc: Doc | false) => void, () => Promise<void>]
+type UseDocFnReturn = [Doc, (newDoc: Doc | false, replace?: boolean) => void, () => Promise<void>]
+type UseDocFn = (initialDoc: Doc) => UseDocFnReturn
 
 type TlUseLiveQuery = {
   (...args: Parameters<LiveQueryFn>): ReturnType<LiveQueryFn>
@@ -62,14 +64,14 @@ export function useFireproof(
 ): FireproofCtxValue {
   const database = (typeof name === 'string') ? fireproof(name, config) : name;
 
-  function useDocument(initialDoc: Doc): [Doc, (newDoc: Doc) => void, () => Promise<void>] {
+  function useDocument(initialDoc: Doc): UseDocFnReturn {
     const id = initialDoc._id;
     const [doc, setDoc] = useState(initialDoc);
 
     const saveDoc = useCallback(
       async () => {
         const putDoc = id ? { ...doc, _id: id } : doc;
-        await database.put(putDoc as Doc)
+        return await database.put(putDoc as Doc)
       },
       [id, doc],
     );
@@ -96,15 +98,15 @@ export function useFireproof(
 
     return [
       doc,
-      (newDoc) => {
-        if (newDoc) return setDoc((d) => ({ ...d, ...newDoc }));
+      (newDoc, replace) => {
+        if (newDoc) return replace ? setDoc(newDoc) :setDoc((d) => ({ ...d, ...newDoc }));
         else return setDoc(initialDoc);
       },
       saveDoc,
     ];
   }
 
-  function useLiveQuery(mapFn: ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment) | string, query = {}, initialRows: any[] = []) {
+  function useLiveQuery(mapFn: ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment) | string, query = {}, initialRows: any[] = []): LiveQueryFnReturn {
     const [result, setResult] = useState({
       rows: initialRows,
       docs: initialRows.map((r) => r.doc),

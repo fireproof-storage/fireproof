@@ -2,7 +2,7 @@ import type { CID } from 'multiformats'
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, root, entries, EventData } from '@alanshaw/pail/crdt'
+import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
@@ -26,6 +26,7 @@ export async function applyBulkUpdateToCrdt(
       const hasRoot = await tblocks.get(result.root) // is a db-wide get
       if (!hasRoot) {
         console.error(`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
+        // make sure https://github.com/alanshaw/pail/pull/20 is applied
         result.head = head
       }
     }

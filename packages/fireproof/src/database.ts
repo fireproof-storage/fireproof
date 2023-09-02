@@ -71,7 +71,7 @@ export class Database {
   async query(field: string | MapFn, opts: QueryOpts = {}) {
     const idx = (typeof field === 'string')
       ? index({ _crdt: this._crdt }, field)
-      : index({ _crdt: this._crdt }, makeName(field.toString()))
+      : index({ _crdt: this._crdt }, makeName(field.toString()), field)
     return await idx.query(opts)
   }
 
@@ -91,12 +91,12 @@ export class Database {
   }
 }
 
-type ChangesResponse = {
+export type ChangesResponse = {
   clock: ClockHead
   rows: { key: string; value: Doc }[]
 }
 
-type DbResponse = {
+export type DbResponse = {
   id: string
   clock: ClockHead
 }

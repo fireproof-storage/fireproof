@@ -21,7 +21,6 @@ describe('dreamcode', function () {
     await resetDirectory(testConfig.dataDir, 'test-db')
     ;({
       put, get, query
-      // , useLiveQuery, useDocument
     } = fireproof('test-db'))
     ok = await put({ _id: 'test-1', text: 'fireproof', dream: true })
     doc = await get(ok.id)
@@ -40,25 +39,32 @@ describe('dreamcode', function () {
     equals(result.rows.length, 1)
     equals(result.rows[0].key, 'fireproof')
   })
+  it('should query with function', async function () {
+    const result = await query((doc) => doc.dream)
+    assert(result)
+    assert(result.rows)
+    equals(result.rows.length, 1)
+    equals(result.rows[0].key, true)
+  })
 })
 
 describe('public API', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-api')
     this.db = fireproof('test-api')
-    this.index = index(this.db, 'test-index', (doc) => doc.foo)
+    // this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })
     this.doc = await this.db.get('test')
-    this.query = await this.index.query()
+    this.query = await this.db.query((doc) => doc.foo)
   })
   it('should be a database instance', function () {
     assert(this.db)
     assert(this.db instanceof Database)
   })
-  it('should have an index', function () {
-    assert(this.index)
-    assert(this.index instanceof Index)
-  })
+  // it('should have an index', function () {
+  //   assert(this.index)
+  //   assert(this.index instanceof Index)
+  // })
   it('should put', function () {
     assert(this.ok)
     equals(this.ok.id, 'test')
