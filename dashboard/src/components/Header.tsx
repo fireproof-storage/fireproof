@@ -1,6 +1,6 @@
 export function Header() {
   return (
-    <header className="pt-3 pb-1 px-5 flex items-center justify-between bg-slate-400 dark:bg-slate-900">
+    <header className="pt-3 pb-1 px-5 flex items-center justify-between bg-slate-700 dark:bg-slate-900">
       <a href="https://fireproof.storage/">
         <img
           src="https://fireproof.storage/static/img/logo-animated.svg"

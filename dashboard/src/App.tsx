@@ -8,6 +8,8 @@ import { Sidebar } from './components/Sidebar'
 import { Database } from './pages/Database'
 import { Changes } from './pages/Changes'
 import { DocPage } from './pages/DocPage'
+import { Import } from './pages/Import'
+import React from 'react'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,66 +21,28 @@ function Layout({ children }: { children: React.ReactNode }) {
 }
 
 function App() {
+  const routes = [
+    { path: '/import', component: Import },
+    { path: '/databases', component: Databases },
+    { path: '/db/:dbName', component: Database },
+    { path: '/all/:dbName', component: Database },
+    { path: '/changes/:dbName', component: Changes },
+    { path: '/doc/:dbName/:docId', component: DocPage },
+    { path: '/doc/:dbName', component: DocPage },
+    { path: '/', component: Home }
+  ]
+
   return (
     <>
       <Header />
       <Routes>
-        <Route
-          path="/about"
-          element={
-            <Layout>
-              <div>About</div>
-            </Layout>
-          }
-        />
-        <Route
-          path="/databases"
-          element={
-            <Layout>
-              <Databases />
-            </Layout>
-          }
-        />
-        <Route
-          path="/db/:dbName"
-          element={
-            <Layout>
-              <Database />
-            </Layout>
-          }
-        />
-        <Route
-          path="/changes/:dbName"
-          element={
-            <Layout>
-              <Changes />
-            </Layout>
-          }
-        />
-        <Route
-          path="/doc/:dbName/:docId"
-          element={
-            <Layout>
-              <DocPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/doc/:dbName"
-          element={
-            <Layout>
-              <DocPage />
-            </Layout>
-          }
-        />
-        <Route
-          path="/"
-          element={
-            <Layout>
-              <Home />
-            </Layout>
-          }
-        />
+        {routes.map(({ path, component }, index) => (
+          <Route
+            key={index}
+            path={path}
+            element={<Layout>{React.createElement(component)}</Layout>}
+          />
+        ))}
       </Routes>
     </>
   )

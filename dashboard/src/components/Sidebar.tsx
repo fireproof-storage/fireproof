@@ -19,7 +19,7 @@ export function Sidebar() {
           )}
         </li>
         <li className="mb-2">
-          <a href={'/db/' + dbName}>All documents</a>
+          <a href={'/all/' + dbName}>All documents</a>
         </li>
         <li className="mb-2">
           <a href={'/doc/' + dbName}>New document</a>
