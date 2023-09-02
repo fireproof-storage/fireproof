@@ -46,17 +46,21 @@ export function Import() {
       if (snapshot) {
         console.log('snapshot', snapshot)
         await dashDb.put({
-          type : 'snapshot', 
-          created : Date.now(),
+          type: 'snapshot',
+          created: Date.now(),
           name: formData.name,
           // @ts-ignore
           snapshot
         })
       }
-      
-
-    } else {
     }
+    await dashDb.put({
+      type: 'import',
+      import: { key: formData.key, car: formData.car },
+      name: formData.name
+    })
+    // const snap = fireproof(formData.name)
+
   }
 
   return (
