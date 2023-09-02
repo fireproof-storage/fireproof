@@ -10,6 +10,7 @@ import { Changes } from './pages/Changes'
 import { DocPage } from './pages/DocPage'
 import { Import } from './pages/Import'
 import React from 'react'
+import { AllDocs } from './pages/AllDocs'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -25,7 +26,7 @@ function App() {
     { path: '/import', component: Import },
     { path: '/databases', component: Databases },
     { path: '/db/:dbName', component: Database },
-    { path: '/all/:dbName', component: Database },
+    { path: '/all/:dbName', component: AllDocs },
     { path: '/changes/:dbName', component: Changes },
     { path: '/doc/:dbName/:docId', component: DocPage },
     { path: '/doc/:dbName', component: DocPage },
