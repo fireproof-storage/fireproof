@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useEffect, useState } from 'react'
 import { fireproof } from 'use-fireproof'
+import { CID } from 'multiformats'
+import { ensureNamed, restore, snapshot } from '../lib/db'
 
 export function Import() {
   const [formData, setFormData] = useState({ key: '', car: '', name: '' })
@@ -37,30 +39,24 @@ export function Import() {
   }
 
   const doImport = async () => {
-    const existing = await dashDb.get('db:' + formData.name).catch(() => false)
-    if (existing) {
-      console.log('snapshoting', existing)
-      const snap = fireproof(formData.name)
-      await snap._crdt.ready
-      const snapshot = await snap._crdt.blocks.loader?.metaStore?.load()
-      if (snapshot) {
-        console.log('snapshot', snapshot)
-        await dashDb.put({
-          type: 'snapshot',
-          created: Date.now(),
-          name: formData.name,
-          // @ts-ignore
-          snapshot
-        })
-      }
-    }
+    // console.log('snapshotting', existing)
+    const name = formData.name
+
+    await snapshot(dashDb, name)
+    await ensureNamed(dashDb, name)
+
     await dashDb.put({
       type: 'import',
       import: { key: formData.key, car: formData.car },
-      name: formData.name
+      name: name
     })
-    // const snap = fireproof(formData.name)
 
+    await restore(name, { key: formData.key, car: formData.car })
+
+    // await snap._crdt.blocks.loader?.metaStore?.save({ key: formData.key, car: CID.parse(formData.car) })
+
+    // const snap = fireproof(name, { meta: { key: formData.key, car: CID.parse(formData.car) } })
+    // await snap._crdt.ready
   }
 
   return (
