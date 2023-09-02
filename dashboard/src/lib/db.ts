@@ -24,6 +24,6 @@ export async function ensureNamed(db: Database, name: string) {
 
 export async function restore(dbName: string, {key, car}: {key: string, car: string}) {
   const snap = fireproof(dbName)
-  console.log('restoring', key, car)
+  console.log('restoring', key, car.toString())
   await snap._crdt.blocks.loader?.metaStore?.save({ key, car: CID.parse(car.toString()) })
 }
