@@ -2,11 +2,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { fireproof } from '@fireproof/core';
 
 import type { Doc, DocFragment, Database, FireproofOptions } from '@fireproof/core';
+import { DbResponse } from '@fireproof/core';
 
 type LiveQueryFnReturn = { docs: Doc[], rows: any[] }
 type LiveQueryFn = (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => LiveQueryFnReturn;
 
-type UseDocFnReturn = [Doc, (newDoc: Doc | false, replace?: boolean) => void, () => Promise<void>]
+type UseDocFnReturn = [Doc, (newDoc: Doc | false, replace?: boolean) => void, () => Promise<DbResponse>]
 type UseDocFn = (initialDoc: Doc) => UseDocFnReturn
 
 type TlUseLiveQuery = {
