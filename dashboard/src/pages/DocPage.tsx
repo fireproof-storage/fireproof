@@ -9,7 +9,8 @@ export function DocPage() {
   // const db = fireproof(dbName as string)
   const { database, useDocument } = useFireproof(dbName as string)
 
-  const [doc, setDoc] = useDocument({ _id: docId as string })
+  const initialDoc = docId ? { _id: docId } : {  }
+  const [doc, setDoc] = useDocument(initialDoc as Doc)
   const [needsSave, setNeedsSave] = useState(false)
 
   console.log(dbName, docId, doc)
