@@ -15,7 +15,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.15.0",
     "use-editable": "^2.3.3",
-    "use-fireproof": "^0.12.2"
+    "use-fireproof": "^0.12.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
