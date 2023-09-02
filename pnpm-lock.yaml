@@ -273,8 +273,8 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.12.3
-        version: 0.12.8
+        specifier: ^0.12.4
+        version: 0.12.8(encoding@0.1.13)
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -5890,7 +5890,7 @@ snapshots:
 
   '@eslint/js@8.57.1': {}
 
-  '@fireproof/core@0.12.8':
+  '@fireproof/core@0.12.8(encoding@0.1.13)':
     dependencies:
       '@alanshaw/pail': 0.3.4
       '@ipld/car': 5.4.2
@@ -9277,7 +9277,7 @@ snapshots:
       it-to-stream: 1.0.0
       merge-options: 3.0.4
       nanoid: 3.3.11
-      native-fetch: 3.0.0(node-fetch@2.7.0)
+      native-fetch: 3.0.0(node-fetch@2.7.0(encoding@0.1.13))
       node-fetch: 2.7.0(encoding@0.1.13)
       react-native-fetch-api: 3.0.0
       stream-to-it: 0.2.4
@@ -10433,7 +10433,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  native-fetch@3.0.0(node-fetch@2.7.0):
+  native-fetch@3.0.0(node-fetch@2.7.0(encoding@0.1.13)):
     dependencies:
       node-fetch: 2.7.0(encoding@0.1.13)
 
