@@ -39,7 +39,7 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   for await (const chunk of entry.content()) chunks.push(chunk as Buffer)
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  return new File(chunks, entry.name, { type: entry.type as string, lastModified: 0 })
+  return new File(chunks, entry.name, { type: meta.type, lastModified: 0 })
 }
 
 function createFileEncoderStream(blob: BlobLike) {

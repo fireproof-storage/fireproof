@@ -15,7 +15,7 @@
 
       function setupDb(name) {
         dbName = name;
-        db = fireproof(name, { public: true });
+        db = fireproof(name);
         window.db = db;
         connection = connect.s3(db, s3Info)
         connect.web3(db, "jchris@fireproof.storage")
@@ -59,6 +59,7 @@
                   console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
                   const src = URL.createObjectURL(await meta.file());
                   // didDoc++
+                  console.log('src', src.toString())
                   const img = document.createElement("img");
                   img.src = src
                   img.height = 100;

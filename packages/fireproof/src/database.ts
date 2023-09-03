@@ -79,6 +79,27 @@ export class Database {
     await this._crdt.compact()
   }
 
+  async dashboardURL() {
+    const baseUrl = 'https://dashboard.fireproof.storage/'
+    if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
+    const current = await this._crdt.blocks.loader?.metaStore?.load()
+    if (!current) throw new Error('Save data first')
+    const params = {
+      car: current.car.toString()
+    }
+    // @ts-ignore
+    if (current.key) { params.key = current.key.toString() }
+    // @ts-ignore
+    if (this.name) { params.name = this.name }
+    return new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+  }
+
+  popDashboard() {
+    void this.dashboardURL().then(url => {
+      if (url) window.open(url.toString(), '_blank')
+    })
+  }
+
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {
       const docs: Doc[] = updates.map(({ key, value }) => ({ _id: key, ...value }))
@@ -106,12 +127,12 @@ type ListenerFn = (docs: Doc[]) => Promise<void> | void
 export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
     const db = new Database(name, opts)
-    // public API
-    ;['get', 'put', 'del', 'changes', 'subscribe', 'query'].forEach((fn) => {
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      db[fn] = db[fn].bind(db)
-    })
+      // public API
+      ;['get', 'put', 'del', 'changes', 'subscribe', 'query'].forEach((fn) => {
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        db[fn] = db[fn].bind(db)
+      })
     Database.databases.set(name, db)
   }
   return Database.databases.get(name)!
