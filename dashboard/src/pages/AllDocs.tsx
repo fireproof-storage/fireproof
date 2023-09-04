@@ -8,10 +8,7 @@ import { inspectDb } from '../lib/db'
 export function AllDocs() {
   const { dbName } = useParams()
   const { useLiveQuery} = useFireproof(inspectDb(dbName as string))
-  // window.db = database
-
   const result = useLiveQuery('_id', {}, [{doc: {'Loading...': ''}}])
-  console.log(result)
   const headers = headersForDocs(result.docs)
   return (
     <div className="flex flex-col">
