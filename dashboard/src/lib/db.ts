@@ -8,14 +8,13 @@ export async function snapshot(db: Database, name: string) {
   if (snapshot) {
     // const snaps = await db.query((doc, emit) => { if (doc.type === 'snapshot') emit(doc.name) }, { key: name })
     // console.log('snaps', snaps)
-    const ok = await db.put({
+    await db.put({
       type: 'snapshot',
       created: Date.now(),
       name: name,
       // @ts-ignore
       snapshot
     })
-    console.log('ok', ok) 
   }
 }
 
