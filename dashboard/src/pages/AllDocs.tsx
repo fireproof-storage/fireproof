@@ -3,10 +3,11 @@ import { headersForDocs } from '../components/dynamicTableHelpers'
 import DynamicTable from '../components/DynamicTable'
 // import { Doc, ChangesResponse } from '@fireproof/core'
 import { useFireproof } from 'use-fireproof'
+import { inspectDb } from '../lib/db'
 
 export function AllDocs() {
   const { dbName } = useParams()
-  const { useLiveQuery} = useFireproof(dbName as string)
+  const { useLiveQuery} = useFireproof(inspectDb(dbName as string))
   // window.db = database
 
   const result = useLiveQuery('_id')

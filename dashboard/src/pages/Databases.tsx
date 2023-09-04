@@ -17,7 +17,6 @@ export function Databases() {
     setDbInfo(false)
   }
 
-  console.log(allDbs.docs)
 
   return (
     <div className="flex flex-col">
