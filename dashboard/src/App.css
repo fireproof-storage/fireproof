@@ -14,6 +14,10 @@ body a:hover {
   text-decoration: underline;
 }
 
+body p a {
+  text-decoration: underline;
+}
+
 body nav a {
   color: #fff;
 }
