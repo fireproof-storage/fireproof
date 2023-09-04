@@ -59,6 +59,7 @@ export class CRDT {
 
   async compact() {
     await this.ready
+    if (this.blocks.loader && this.blocks.loader.carLog.length < 2) return
     return await doCompact(this.blocks, this.clock.head)
   }
 }
