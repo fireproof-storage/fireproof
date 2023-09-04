@@ -35,7 +35,7 @@ void (async () => {
   // Reload the page to trigger initialize
   await page.reload()
 
-  await page.waitForSelector('li')
+  await page.waitForSelector('li', { timeout: 5000 })
 
   // Check if the list contains at least one item
   const result = await page.evaluate(() => {

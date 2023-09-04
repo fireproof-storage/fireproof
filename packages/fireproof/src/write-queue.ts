@@ -22,7 +22,11 @@ export function writeQueue(worker: WorkerFunction, payload: number = Infinity): 
     const updates = tasksToProcess.map(item => item.task)
 
     try {
+      console.log('writeQueue' + JSON.stringify(updates))
+
       const result = await worker(updates)
+      console.log('writeQueue' + JSON.stringify(result))
+
       tasksToProcess.forEach(task => task.resolve(result))
     } catch (error) {
       tasksToProcess.forEach(task => task.reject(error as Error))

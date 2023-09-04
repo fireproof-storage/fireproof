@@ -20,10 +20,7 @@ export class CRDT {
     this.opts = opts || this.opts
     this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
     this.clock.blocks = this.blocks
-    const nameArg = (this.name && this.opts.persistIndexes) ? this.name + '.idx' : null
-    // const nameArg = this.name ? this.name + '.idx' : null
-    console.log('nameArg', this.name, nameArg, this.opts.persistIndexes)
-    this.indexBlocks = new IndexBlockstore(nameArg, this, this.opts)
+    this.indexBlocks = new IndexBlockstore((this.opts.persistIndexes && this.name) ? this.name + '.idx' : null, this, this.opts)
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {

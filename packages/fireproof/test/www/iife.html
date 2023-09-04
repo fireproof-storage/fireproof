@@ -7,12 +7,10 @@
     <script src="../../dist/browser/fireproof.iife.js"></script>
     <script type="text/javascript">
       function testApp() {
-        const db = Fireproof.fireproof('iife-test');
+        const db = Fireproof.fireproof('iife-test',{persistIndexes: true});
 
         const draw = async () => {
-          const result = await Fireproof
-            .index(db, 'sort')
-            .query({includeDocs: true});
+          const result = await db.query('sort', {includeDocs: true});
           document
             .querySelector('ul')
             .innerHTML = '';
@@ -25,12 +23,14 @@
         }
 
         async function initialize() {
+          console.log('initialize')
           db.subscribe(draw);
           draw()
         }
 
         async function onButtonClick(e) {
           e.preventDefault();
+          console.log('put')
           const ok = await db.put({sort: Math.random(), test: 'test'});
           console.log('ok', ok.id);
         }
