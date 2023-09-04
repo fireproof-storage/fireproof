@@ -80,12 +80,12 @@ export class Database {
   }
 
   async getDashboardURL(compact = true) {
+    const baseUrl = 'https://dashboard.fireproof.storage/'
+    if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
     if (compact) {
       await this.compact()
       await this._crdt.blocks.loader?.remoteMetaLoading
     }
-    const baseUrl = 'https://dashboard.fireproof.storage/'
-    if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
     const current = await this._crdt.blocks.loader?.metaStore?.load()
     if (!current) throw new Error('Save data first')
     const params = {
