@@ -123,6 +123,27 @@ describe('basic Index with map fun', function () {
   })
 })
 
+describe('Index query with map and compound key', function () {
+  let db, indexer
+  beforeEach(async function () {
+    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    db = new Database('test-indexer')
+    await db.put({ title: 'amazing', score: 1 })
+    await db.put({ title: 'creative', score: 2 })
+    await db.put({ title: 'creative', score: 20 })
+    await db.put({ title: 'bazillas', score: 3 })
+    indexer = new Index(db._crdt, 'hello', (doc, emit) => {
+      emit([doc.title, doc.score])
+    })
+  })
+  it('should prefix query', async function () {
+    const { rows } = await indexer.query({ prefix: 'creative' })
+    equals(rows.length, 2)
+    equalsJSON(rows[0].key, ['creative', 2])
+    equalsJSON(rows[1].key, ['creative', 20])
+  })
+})
+
 describe('basic Index with string fun', function () {
   let db, indexer
   beforeEach(async function () {
