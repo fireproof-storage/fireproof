@@ -18,9 +18,9 @@ export function CodeHighlight({ code, theme = defaultProps.theme, language = 'js
           <code>
             <pre className={className + ' p-2'} style={style}>
               {tokens.map((line, i) => (
-                <div {...getLineProps({ line, key: i })}>
+                <div key={i} {...getLineProps({ line, key: i })}>
                   {line.map((token, key) => (
-                    <span {...getTokenProps({ token, key })} />
+                    <span key={key} {...getTokenProps({ token, key })} />
                   ))}
                 </div>
               ))}
@@ -72,10 +72,10 @@ export function EditableCodeHighlight({ code, onChange, theme = defaultProps.the
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre className={className + ' p-2'} style={style} ref={editorRef}>
             {tokens.map((line, i) => (
-              <div {...getLineProps({ line, key: i })}>
+              <div key={i} {...getLineProps({ line, key: i })}>
                 {line.map((token, key) => (
                   <>
-                    <span {...getTokenProps({ token, key })} />
+                    <span key={key} {...getTokenProps({ token, key })} />
                   </>
                 ))}
               </div>

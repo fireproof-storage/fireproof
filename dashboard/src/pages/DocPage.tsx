@@ -21,7 +21,7 @@ export function DocPage() {
 
   function editorChanged({ code, valid }: { code: string; valid: boolean }) {
     setNeedsSave(valid)
-    if (valid) setDoc(JSON.parse(code))
+    if (valid) setDoc({...meta, ...JSON.parse(code)}, true)
     // setDocToSave(code)
     // console.log({ code, valid })
   }

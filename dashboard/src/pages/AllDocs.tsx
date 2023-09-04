@@ -10,12 +10,13 @@ export function AllDocs() {
   const { useLiveQuery} = useFireproof(inspectDb(dbName as string))
   // window.db = database
 
-  const result = useLiveQuery('_id')
-  // console.log(result)
+  const result = useLiveQuery('_id', {}, [{doc: {'Loading...': ''}}])
+  console.log(result)
+  const headers = headersForDocs(result.docs)
   return (
     <div className="flex flex-col">
       <h2 className="text-2xl">{dbName} / All documents</h2>
-      <DynamicTable dbName={dbName} headers={headersForDocs(result.docs)} rows={result.docs} />
+      <DynamicTable dbName={dbName} headers={headers} rows={result.docs} />
     </div>
   )
 }

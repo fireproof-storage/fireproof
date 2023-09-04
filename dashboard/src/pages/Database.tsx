@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams } from 'react-router-dom'
 // import { headersForDocs } from '../components/dynamicTableHelpers'
 // import DynamicTable from '../components/DynamicTable'
-import { Doc, ChangesResponse } from '@fireproof/core'
-import { fireproof, useFireproof } from 'use-fireproof'
-import { CID } from 'multiformats'
+import { Doc } from '@fireproof/core'
+import { useFireproof } from 'use-fireproof'
+// import { CID } from 'multiformats'
 import { restore, snapshot } from '../lib/db'
 
 export function Database() {
@@ -31,8 +32,9 @@ export function Database() {
   )
 
   console.log({ snapshots, importLog })
-  const doRestore = data => async () => {
+  const doRestore = (data: Doc) => async () => {
     if (!data.snapshot) data.snapshot = data.import || {}
+    // @ts-ignore
     const {
       snapshot: { key, car }
     }: { snapshot: { key: string; car: string } } = data
