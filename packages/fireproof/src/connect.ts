@@ -1,5 +1,6 @@
 import { ConnectS3 } from './connect-s3'
 import { ConnectWeb3 } from './connect-web3'
+import { Database } from './database'
 import type { DbLoader } from './loaders'
 import { Connection, DownloadFn, DownloadFnParams, UploadFn, UploadFnParams } from './types'
 
@@ -18,13 +19,13 @@ export const connect = {
     loader.connectRemote(connection)
     return connection
   },
-  web3: ({ _crdt: { blocks: { loader } } }:
-    { _crdt: { blocks: { loader: DbLoader } } },
-  email: `${string}@${string}`) => {
+  web3: (db: Database,
+    email: `${string}@${string}`) => {
     console.log('connecting web3', email)
+    const { _crdt: { blocks: { loader } } } = db
     const connection = new ConnectWeb3(email)
     // loader.connectRemote(connection)
-    loader.connectRemoteStorage(connection)
+    loader!.connectRemoteStorage(connection)
   }
 }
 
