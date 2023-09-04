@@ -21,14 +21,14 @@ export function Databases() {
 
   return (
     <div className="flex flex-col">
-      <h1 className="text-2xl font-bold">Databases</h1>
+      <h1 className="text-2xl mb-4 font-bold">Databases</h1>
       <p>
         This is the list of databases managed by the dashboard. They may not all have copies on this
-        local device.
+        local device. <a href="/import">Import a database</a> from an existing app, or by calling{' '}
+        <code>db.getDashboardURL()</code> or <code>db.openDashboard()</code> in your application.
       </p>
-
-      {/* Create Database Form */}
-      <form className="mt-4 space-y-4 w-full max-w-md">
+      <form className="my-4 space-y-4 w-full max-w-md">
+        <h2 className="text-xl">Create a new database</h2>
         <div>
           <label htmlFor="dbName" className="block text-sm font-medium text-gray-700">
             Name

@@ -91,7 +91,7 @@ export function Import() {
           {isImporting ? 'Importing...' : 'Import'}
         </button>
         <p>
-          If a database with this name alreadyy exists, a snapshot will be taken before import.
+          If a database with this name already exists, a snapshot will be taken before import.
           After import completes, you'll be redirected to the new data.
         </p>
       </form>
