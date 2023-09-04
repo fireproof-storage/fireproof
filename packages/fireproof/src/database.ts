@@ -45,7 +45,6 @@ export class Database {
     const { _id, ...value } = doc
     const docId = _id || uuidv7()
     const result: BulkResult = await this._writeQueue.push({ key: docId, value } as DocUpdate)
-    console.log('got put' + result?.head)
     return { id: docId, clock: result?.head } as DbResponse
   }
 

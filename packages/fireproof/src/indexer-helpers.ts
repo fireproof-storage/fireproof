@@ -57,7 +57,7 @@ export function indexEntriesForChanges(
   changes.forEach(({ key: _id, value, del }) => {
     if (del || !value) return
     let mapCalled = false
-    const mapReturn = mapFn({ _id, ...value }, (k: string, v?: DocFragment) => {
+    const mapReturn = mapFn({ _id, ...value }, (k: DocFragment, v?: DocFragment) => {
       mapCalled = true
       if (typeof k === 'undefined') return
       indexEntries.push({
