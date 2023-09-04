@@ -47,12 +47,13 @@ export function Import() {
     await ensureNamed(dashDb, name)
     await dashDb.put({
       type: 'import',
-      created : Date.now(),
+      created: Date.now(),
       snapshot: { key: formData.key, car: formData.car },
       name: name
     })
     await restore(name, { key: formData.key, car: formData.car })
     setIsImporting(false)
+    document.location.href = `/all/${name}`
   }
 
   return (
@@ -60,7 +61,7 @@ export function Import() {
       <h1 className="text-2xl font-bold">Import</h1>
       <p>
         Import data from databases created anywhere. The easiest way fill these form values is by
-        calling <code>db.getDashboardURL()</code> or <code>db.popDashboard()</code> in your
+        calling <code>db.getDashboardURL()</code> or <code>db.openDashboard()</code> in your
         application.
       </p>
 
@@ -80,6 +81,7 @@ export function Import() {
             />
           </div>
         ))}
+
         <button
           type="button"
           onClick={doImport}
@@ -88,6 +90,10 @@ export function Import() {
         >
           {isImporting ? 'Importing...' : 'Import'}
         </button>
+        <p>
+          If a database with this name alreadyy exists, a snapshot will be taken before import.
+          After import completes, you'll be redirected to the new data.
+        </p>
       </form>
     </div>
   )

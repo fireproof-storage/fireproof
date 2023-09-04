@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Doc } from '@fireproof/core'
 import { useFireproof } from 'use-fireproof'
+import DynamicTable from '../components/DynamicTable'
 
 export function Databases() {
   const { useDocument, useLiveQuery } = useFireproof('_dashboard')
@@ -17,11 +19,13 @@ export function Databases() {
     setDbInfo(false)
   }
 
-
   return (
     <div className="flex flex-col">
-      <h1 className="text-4xl font-bold">Databases</h1>
-      <p className="text-xl">This is the databases page.</p>
+      <h1 className="text-2xl font-bold">Databases</h1>
+      <p>
+        This is the list of databases managed by the dashboard. They may not all have copies on this
+        local device.
+      </p>
 
       {/* Create Database Form */}
       <form className="mt-4 space-y-4 w-full max-w-md">
@@ -46,11 +50,20 @@ export function Databases() {
           Create
         </button>
       </form>
-      <ul className="mt-4">
-        {allDbs.docs.map((db: Doc) => (
-          <li key={db._id}><a href={`/db/${db._id!.slice(3)}`}>{db._id!.slice(3)}</a></li>
-        ))}
-      </ul>
+      <DynamicTable
+        dbName="_dashboard"
+        headers={['name', 'added']}
+        th="name"
+        link={['name']}
+        hrefFn={(dbName: string) => `/all/${dbName}`}
+        rows={allDbs.docs
+          // @ts-ignore
+          .sort(d => d.added)
+          .map(doc => {
+            // @ts-ignore
+            return { added: new Date(doc.added).toLocaleString(), name: doc._id!.slice(3) }
+          })}
+      />
     </div>
   )
 }
