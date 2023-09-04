@@ -1,11 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { fireproof } from '@fireproof/core';
-
-import type { Doc, DocFragment, Database, FireproofOptions } from '@fireproof/core';
-import { DbResponse } from '@fireproof/core';
+import type { Doc, Database, DbResponse, MapFn, FireproofOptions } from '@fireproof/core';
 
 type LiveQueryFnReturn = { docs: Doc[], rows: any[] }
-type LiveQueryFn = (mapFn: string | ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment), query?: object, initialRows?: any[]) => LiveQueryFnReturn;
+type LiveQueryFn = (mapFn: string | MapFn, query?: object, initialRows?: any[]) => LiveQueryFnReturn;
 
 type UseDocFnReturn = [Doc, (newDoc: Doc | false, replace?: boolean) => void, () => Promise<DbResponse>]
 type UseDocFn = (initialDoc: Doc) => UseDocFnReturn
@@ -107,7 +105,7 @@ export function useFireproof(
     ];
   }
 
-  function useLiveQuery(mapFn: ((doc: Doc, map: (key: string, value: DocFragment) => void) => DocFragment) | string, query = {}, initialRows: any[] = []): LiveQueryFnReturn {
+  function useLiveQuery(mapFn: MapFn | string, query = {}, initialRows: any[] = []): LiveQueryFnReturn {
     const [result, setResult] = useState({
       rows: initialRows,
       docs: initialRows.map((r) => r.doc),
