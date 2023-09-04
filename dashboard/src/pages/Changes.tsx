@@ -1,19 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useCallback, useEffect, useState } from 'react'
 import DynamicTable from '../components/DynamicTable'
-import {
-  fireproof
-  // , useFireproof
-} from 'use-fireproof'
+
 // @ts-ignore
 import type { ChangesResponse, Doc } from '@fireproof/core'
 import { useParams } from 'react-router-dom'
 import { headersForDocs } from '../components/dynamicTableHelpers'
+import { inspectDb } from '../lib/db'
 
 export function Changes() {
   const { dbName } = useParams()
   // const {database: db} = useFireproof(dbName)
-  const db = fireproof(dbName as string)
+  const db = inspectDb(dbName as string)
   // @ts-ignore
   window.db = db
   const [changes, setChanges] = useState({ clock: [], rows: [] } as ChangesResponse)

@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useEffect, useState } from 'react'
 import { fireproof } from 'use-fireproof'
-import { CID } from 'multiformats'
+// import { CID } from 'multiformats'
 import { ensureNamed, restore, snapshot } from '../lib/db'
 
 export function Import() {
   const [formData, setFormData] = useState({ key: '', car: '', name: '' })
+  const [isImporting, setIsImporting] = useState(false)
   const dashDb = fireproof('_dashboard')
 
   useEffect(() => {
@@ -39,25 +40,29 @@ export function Import() {
   }
 
   const doImport = async () => {
-    // console.log('snapshotting', existing)
+    if (!formData.key || !formData.car || !formData.name) return
+    setIsImporting(true)
     const name = formData.name
-
     await snapshot(dashDb, name)
     await ensureNamed(dashDb, name)
-
     await dashDb.put({
       type: 'import',
-      import: { key: formData.key, car: formData.car },
+      created : Date.now(),
+      snapshot: { key: formData.key, car: formData.car },
       name: name
     })
-
     await restore(name, { key: formData.key, car: formData.car })
+    setIsImporting(false)
   }
 
   return (
     <div className="flex flex-col">
       <h1 className="text-2xl font-bold">Import</h1>
-      <p>Import data from databases created anywhere</p>
+      <p>
+        Import data from databases created anywhere. The easiest way fill these form values is by
+        calling <code>db.getDashboardURL()</code> or <code>db.popDashboard()</code> in your
+        application.
+      </p>
 
       <form className="mt-4 space-y-4">
         {Object.keys(formData).map(key => (
@@ -78,9 +83,10 @@ export function Import() {
         <button
           type="button"
           onClick={doImport}
+          disabled={isImporting}
           className="mt-4 px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
         >
-          Import
+          {isImporting ? 'Importing...' : 'Import'}
         </button>
       </form>
     </div>

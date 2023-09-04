@@ -12,22 +12,34 @@ export function Database() {
   const { database: dashDb, useLiveQuery } = useFireproof('_dashboard')
   // const {database, useLiveQuery : ulq} = useFireproof(dbName as string)
 
-  const snapshots = useLiveQuery((doc, map) => {
-    if (doc.type === 'snapshot') {
-      map(doc.name!)
-    }
-  })
+  const snapshots = useLiveQuery(
+    (doc, map) => {
+      if (doc.type === 'snapshot') {
+        map(doc.name!)
+      }
+    },
+    { key: dbName }
+  )
 
-  const doRestore =
-    ({ snapshot: { key, car } }: { snapshot: { key: string; car: string } }) =>
-    async () => {
-      console.log('restoring', key, car)
-      await snapshot(dashDb, dbName!)
+  const importLog = useLiveQuery(
+    (doc, map) => {
+      if (doc.type === 'import') {
+        map(doc.name)
+      }
+    },
+    { key: dbName }
+  )
 
-      await restore(dbName!, { key, car })
-    }
+  console.log({ snapshots, importLog })
+  const doRestore = data => async () => {
+    if (!data.snapshot) data.snapshot = data.import || {}
+    const {
+      snapshot: { key, car }
+    }: { snapshot: { key: string; car: string } } = data
+    await snapshot(dashDb, dbName!)
+    await restore(dbName!, { key, car })
+  }
 
-  console.log(snapshots)
   return (
     <div className="flex flex-col">
       <h2 className="text-2xl">{dbName}</h2>
@@ -36,10 +48,16 @@ export function Database() {
       <ul>
         {snapshots.docs.map((doc: any) => (
           <li key={doc._id}>
-            <span>
-              Database: <strong>{doc.name}</strong> Snapped at:{' '}
-              {new Date(doc.created).toLocaleString()}
-            </span>
+            <span>Snapped at: {new Date(doc.created).toLocaleString()}</span>
+            <button onClick={doRestore(doc)}>Restore</button>
+          </li>
+        ))}
+      </ul>
+      <h3 className="text-xl mt-2">Imports</h3>
+      <ul>
+        {importLog.docs.map((doc: any) => (
+          <li key={doc._id}>
+            <span>Imported at: {new Date(doc.created).toLocaleString()}</span>
             <button onClick={doRestore(doc)}>Restore</button>
           </li>
         ))}
