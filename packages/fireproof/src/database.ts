@@ -3,7 +3,7 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-
+import { connect } from './connect'
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
 
 type DbName = string | null
@@ -77,6 +77,12 @@ export class Database {
 
   async compact() {
     await this._crdt.compact()
+  }
+
+  async connect(email: `${string}@${string}`) {
+    // const conn =
+    connect.web3(this, email)
+    return await this.getDashboardURL()
   }
 
   async getDashboardURL(compact = true) {
