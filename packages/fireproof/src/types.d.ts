@@ -126,7 +126,7 @@ export type AnyDecodedBlock = { cid: AnyLink; bytes: Uint8Array, value: any }
 
 export type BlockFetcher = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
 
-type CallbackFn = (k: string, v?: DocFragment) => void
+type CallbackFn = (k: DocFragment, v?: DocFragment) => void
 
 export type MapFn = (doc: Doc, map: CallbackFn) => DocFragment | void
 
