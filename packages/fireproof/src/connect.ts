@@ -4,6 +4,8 @@ import { Database } from './database'
 import type { DbLoader } from './loaders'
 import { Connection, DownloadFn, DownloadFnParams, UploadFn, UploadFnParams } from './types'
 
+const web3names = new Set<string>()
+
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: DbLoader } } },
@@ -22,10 +24,12 @@ export const connect = {
   web3: (db: Database,
     email: `${string}@${string}`) => {
     console.log('connecting web3', email)
-    const { _crdt: { blocks: { loader } } } = db
+    const { name, _crdt: { blocks: { loader } } } = db
+    if (web3names.has(name + email)) { return console.log(`already connecting to ${name} + ${email}`) }
     const connection = new ConnectWeb3(email)
     // loader.connectRemote(connection)
     loader!.connectRemoteStorage(connection)
+    web3names.add(name + email)
   }
 }
 
