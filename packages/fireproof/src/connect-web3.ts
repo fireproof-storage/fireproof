@@ -1,7 +1,7 @@
 import { create } from '@web3-storage/w3up-client'
 import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
-import { clock } from '@web3-storage/clock/capabilities'
+// import { clock } from '@web3-storage/clock/capabilities'
 
 // import * as DID from '@ipld/dag-ucan/did'
 
@@ -26,7 +26,9 @@ export class ConnectWeb3 implements Connection {
 
   async download(params: DownloadFnParams) {
     validateParams(params)
-    if (params.type === 'meta') { return false }
+    if (params.type === 'meta') {
+      return await this.metaDownload(params)
+    }
     console.log('w3 downloading', params)
     const url = `https://${params.car}.ipfs.w3s.link/`
     const response = await fetch(url)
@@ -44,62 +46,83 @@ export class ConnectWeb3 implements Connection {
 
     if (params.type === 'meta') {
       // @ts-ignore
-      const ag = this.client._agent
-      console.log('w3 meta upload', params)
-      // w3clock
-      const space = this.client.currentSpace()
-      if (!space) { throw new Error('space not initialized') }
-      // we need the upload as an event block or the data that goes in one
-      const data = {
-        key: params.name,
-        branch: params.branch,
-        name: params.name
-        // we could extract this from the input type but it silly to do so
-        // key:
-        // car:
-        //  parse('bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy')
-      }
-      const event = await EventBlock.create(data)
-
-      const issuer = ag.issuer
-      console.log('issuer', issuer, issuer.signatureAlgorithm, issuer.did())
-
-      if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
-
-      // const claims = await this.client.capability.access.claim()
-      // console.log('claims', JSON.stringify(claims))
-
-      console.log('DIDs', space.did(), ag.issuer.did())
-
-      // const delegated = await clock.delegate({
-      //   issuer: ag.issuer,
-      //   audience: ag.issuer, // DID.parse('did:web:clock.web3.storage'),
-      //   with: space.did(),
-      //   proofs: claims
-      // })
-
-      // console.log('delegated', delegated)
-
-      const clockx = this.client.proofs([{ can: 'clock/*', with: space.did() }])
-      console.log('clockx go', clockx)
-
-      const advanced = await w3clock.advance({
-        issuer: ag.issuer,
-        with: space.did(),
-        proofs: clockx
-      }, event.cid, { blocks: [event] })
-
-      console.log('advanced', advanced.root.data?.ocm)
-      return
+      return await this.uploadMeta(bytes, params)
     }
 
     validateParams(params)
     console.log('w3 uploading car', params)
     // uploadCar is processed so roots are reachable via CDN
-    // uploadFile makes the car itself available vis CDN
-
+    // uploadFile makes the car itself available via CDN
+    // todo if params.type === 'file' and database is public also uploadCAR
     // await this.client?.uploadCAR(new Blob([bytes]))
     await this.client?.uploadFile(new Blob([bytes]))
+  }
+
+  private async metaDownload(params: DownloadFnParams) {
+    await this.ready
+    console.log('w3 meta download', params)
+    // @ts-ignore
+    const { issuer } = this.client!._agent
+    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
+    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+    const space = this.client!.currentSpace()
+    if (!space) { throw new Error('space not initialized') }
+    const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
+    if (!clockProofs.length) { throw new Error('need clock/* capability') }
+    const head = await w3clock.head({
+      issuer,
+      with: space.did(),
+      proofs: clockProofs
+    })
+    console.log('head', head, head.out.ok)
+    if (head.out.ok) {
+      // fetch that block from the network
+      const remoteHead = head.out.ok.head
+      for (const cid of remoteHead) {
+        const url = `https://${cid.toString()}.ipfs.w3s.link/`
+        console.log('head', url)
+        const response = await fetch(url)
+        if (response.ok) {
+          const metaBlock = new Uint8Array(await response.arrayBuffer())
+          // parse the metablock and call mergeMetaFromRemote with it, then the next etc
+        }
+      }
+    }
+    return new Uint8Array()
+  }
+
+  // bytes is encoded {car, key}, not our job to decode, just return on download
+  private async uploadMeta(bytes: Uint8Array, params: UploadFnParams) {
+    // @ts-ignore
+    const { issuer } = this.client!._agent
+    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
+    console.log('w3 meta upload', params)
+
+    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+
+    // use branch and name to lookup the space
+
+    const space = this.client!.currentSpace()
+    if (!space) { throw new Error('space not initialized') }
+
+    // we need the upload as an event block or the data that goes in one
+    const data = {
+      dbMeta: bytes
+    }
+    const event = await EventBlock.create(data)
+
+    // console.log('DIDs', space.did(), issuer.did())
+    const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
+    console.log('clockProofs go', clockProofs)
+    if (!clockProofs.length) { throw new Error('need clock/* capability') }
+
+    const advanced = await w3clock.advance({
+      issuer,
+      with: space.did(),
+      proofs: clockProofs
+    }, event.cid, { blocks: [event] })
+
+    console.log('advanced', advanced.root.data?.ocm)
   }
 }
 
