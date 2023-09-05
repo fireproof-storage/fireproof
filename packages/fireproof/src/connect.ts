@@ -30,8 +30,8 @@ export const connect = {
       return
     }
     const connection = new ConnectWeb3(email)
-    // loader.connectRemote(connection)
-    loader!.connectRemoteStorage(connection)
+    loader!.connectRemote(connection)
+    // loader!.connectRemoteStorage(connection)
     web3names.add(name + email)
     return connection
   }

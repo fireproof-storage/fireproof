@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=32493"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=3593"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -18,7 +18,7 @@
         db = fireproof(name);
         window.db = db;
         connection = connect.s3(db, s3Info)
-        connect.web3(db, "jchris@fireproof.storage")
+        connect.web3(db, "jchris+gallery3@fireproof.storage")
         db.subscribe(redraw);
         return db;
       }
