@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=3593"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=376393"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -56,10 +56,10 @@
                 // if (didDoc) { return }
                 const meta = doc._files[file]
                 if (meta.file && /image/.test(meta.type)) {
-                  console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
+                  // console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
                   const src = URL.createObjectURL(await meta.file());
                   // didDoc++
-                  console.log('src', src.toString())
+                  // console.log('src', src.toString())
                   const img = document.createElement("img");
                   img.src = src
                   img.height = 100;
