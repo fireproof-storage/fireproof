@@ -93,7 +93,7 @@ export class Database {
       await this._crdt.blocks.loader?.remoteMetaLoading
     }
     const current = await this._crdt.blocks.loader?.metaStore?.load()
-    if (!current) throw new Error('Save data first')
+    if (!current) throw new Error('Can\'t sync empty database: save data first')
     const params = {
       car: current.car.toString()
     }
@@ -101,7 +101,9 @@ export class Database {
     if (current.key) { params.key = current.key.toString() }
     // @ts-ignore
     if (this.name) { params.name = this.name }
-    return new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+    const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+    console.log('Import to dashboard: ' + url.toString())
+    return url
   }
 
   openDashboard() {
