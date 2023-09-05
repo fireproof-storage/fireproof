@@ -27,7 +27,7 @@ export function Import() {
     }
   }, [])
 
-  const handleInputChange = e => {
+  const handleInputChange = (e: { target: { name: string; value: string } }) => {
     const { name, value } = e.target
     setFormData(prevData => ({
       ...prevData,

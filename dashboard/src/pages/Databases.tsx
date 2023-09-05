@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { Doc } from '@fireproof/core'
+// import { Doc } from '@fireproof/core'
 import { useFireproof } from 'use-fireproof'
 import DynamicTable from '../components/DynamicTable'
 
@@ -8,7 +8,7 @@ export function Databases() {
   const [dbInfo, setDbInfo, saveDbInfo] = useDocument({ type: 'db', added: Date.now() })
   const allDbs = useLiveQuery('type', { key: 'db' })
 
-  const handleDbNameChange = e => {
+  const handleDbNameChange = (e: { target: { value: string } }) => {
     const dbName = e.target.value
     setDbInfo({ _id: 'db:' + dbName })
   }
