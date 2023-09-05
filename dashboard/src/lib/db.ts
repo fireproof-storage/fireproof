@@ -7,6 +7,7 @@ export async function snapshot(db: Database, name: string) {
   const snapshot = await snap._crdt.blocks.loader?.metaStore?.load()
   if (snapshot) {
     const snaps = await db.query((doc, emit) => { if (doc.type === 'snapshot') emit(doc.name) }, { key: name })
+    // @ts-ignore
     if (snaps.rows.some((s) => s.doc.snapshot!.car.toString() === snapshot.car.toString())) {
       return
     }

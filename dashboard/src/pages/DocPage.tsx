@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useParams } from 'react-router-dom'
 import { useFireproof } from 'use-fireproof'
 import { CodeHighlight, EditableCodeHighlight } from '../components/CodeHighlight'
-import { Doc, DocFragment } from '@fireproof/core'
+import { Doc, DocFileMeta, DocFragment } from '@fireproof/core'
 import { useEffect, useState } from 'react'
 import { inspectDb } from '../lib/db'
 
@@ -21,7 +22,7 @@ export function DocPage() {
 
   function editorChanged({ code, valid }: { code: string; valid: boolean }) {
     setNeedsSave(valid)
-    if (valid) setDoc({...meta, ...JSON.parse(code)}, true)
+    if (valid) setDoc({ ...meta, ...JSON.parse(code) }, true)
     // setDocToSave(code)
     // console.log({ code, valid })
   }
@@ -79,7 +80,7 @@ function FileSection({ doc }: { doc: Doc }) {
     const fileLIs = Object.entries(doc._files).map(([key, meta]) => (
       <li key={key}>
         <span>{key}</span>
-        <ImgFile meta={meta} />
+        <ImgFile meta={meta as DocFileMeta} />
       </li>
     ))
     return <ul>{fileLIs}</ul>
@@ -87,7 +88,8 @@ function FileSection({ doc }: { doc: Doc }) {
   return <></>
 }
 
-function ImgFile({ meta, cache = false }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function ImgFile({ meta }: { meta: DocFileMeta; cache?: boolean }) {
   const [imgDataUrl, setImgDataUrl] = useState('')
 
   useEffect(() => {
@@ -103,26 +105,8 @@ function ImgFile({ meta, cache = false }) {
   }, [meta])
 
   if (imgDataUrl) {
-    return <img src={imgDataUrl} height={100} width={100} />
+    return <img alt="db-image" src={imgDataUrl} height={100} width={100} />
   } else {
     return <></>
-  }
-}
-
-function imgForFile(meta, opts = {}) {
-  if (meta.file && /image/.test(meta.type)) {
-    const img = document.createElement('img')
-    meta.file().then(file => {
-      const src = URL.createObjectURL(file)
-      img.src = src
-      if (!opts.cache) {
-        img.onload = () => {
-          URL.revokeObjectURL(img.src)
-        }
-      }
-    })
-    img.height = 100
-    img.width = 100
-    return img
   }
 }
