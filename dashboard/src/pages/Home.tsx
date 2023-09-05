@@ -5,7 +5,7 @@ export function Home() {
         Welcome to Fireproof!
       </h1>
       <p className="text-xl text-center">
-        This is the home page.
+       Vist the <a href="/databases">databases pag</a>e to create a new database.
       </p>
     </div>
   )
