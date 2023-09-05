@@ -25,11 +25,15 @@ export const connect = {
     email: `${string}@${string}`) => {
     console.log('connecting web3', email)
     const { name, _crdt: { blocks: { loader } } } = db
-    if (web3names.has(name + email)) { return console.log(`already connecting to ${name} + ${email}`) }
+    if (web3names.has(name + email)) {
+      // console.log(`already connecting to ${name} + ${email}`)
+      return
+    }
     const connection = new ConnectWeb3(email)
     // loader.connectRemote(connection)
     loader!.connectRemoteStorage(connection)
     web3names.add(name + email)
+    return connection
   }
 }
 
