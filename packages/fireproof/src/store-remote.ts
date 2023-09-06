@@ -1,7 +1,7 @@
 /* eslint-disable import/first */
 // console.log('import store-s3')
 
-import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, UploadFnParams } from './types'
+import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import type { Loader } from './loader'
 // import type { Response } from 'cross-fetch'
@@ -22,7 +22,7 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
-    const bytes = await this.connection.download({
+    const bytes = await this.connection.dataDownload({
       type: this.type,
       name: this.prefix(),
       car: carCid.toString()
@@ -32,13 +32,13 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   async save(car: AnyBlock): Promise<void> {
-    const uploadParams: UploadFnParams = {
+    const uploadParams: UploadDataFnParams = {
       type: this.type,
       name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
-    await this.connection.upload(car.bytes, uploadParams)
+    await this.connection.dataUpload(car.bytes, uploadParams)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -62,8 +62,7 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch: string = 'main'): Promise<DbMeta | null> {
-    const bytes = await this.connection.download({
-      type: 'meta',
+    const bytes = await this.connection.metaDownload({
       name: this.prefix(),
       branch
     })
@@ -78,12 +77,10 @@ export class RemoteMetaStore extends MetaStoreBase {
   // eslint-disable-next-line @typescript-eslint/require-await
   async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
-    const uploadParams = {
-      type: 'meta',
+    const uploadParams: UploadMetaFnParams = {
       name: this.prefix(),
-      branch,
-      size: bytes.length.toString()
+      branch
     }
-    await this.connection.upload(bytes, uploadParams as UploadFnParams)
+    await this.connection.metaUpload(bytes, uploadParams)
   }
 }

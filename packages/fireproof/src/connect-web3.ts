@@ -5,8 +5,8 @@ import * as w3clock from '@web3-storage/clock/client'
 
 // import * as DID from '@ipld/dag-ucan/did'
 
-import { Connection, DownloadFnParams, UploadFnParams } from './types'
-import { validateParams } from './connect'
+import { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
 import { EventBlock } from '@alanshaw/pail/clock'
 
@@ -24,11 +24,8 @@ export class ConnectWeb3 implements Connection {
     this.client = await getClient(this.email)
   }
 
-  async download(params: DownloadFnParams) {
-    validateParams(params)
-    if (params.type === 'meta') {
-      return await this.metaDownload(params)
-    }
+  async dataDownload(params: DownloadDataFnParams) {
+    validateDataParams(params)
     console.log('w3 downloading', params)
     const url = `https://${params.car}.ipfs.w3s.link/`
     const response = await fetch(url)
@@ -40,17 +37,13 @@ export class ConnectWeb3 implements Connection {
     }
   }
 
-  async upload(bytes: Uint8Array, params: UploadFnParams) {
+  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     await this.ready
     if (!this.client) { throw new Error('client not initialized') }
 
-    if (params.type === 'meta') {
-      // @ts-ignore
-      return await this.uploadMeta(bytes, params)
-    }
-
-    validateParams(params)
     console.log('w3 uploading car', params)
+    validateDataParams(params)
+
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
@@ -58,7 +51,7 @@ export class ConnectWeb3 implements Connection {
     await this.client?.uploadFile(new Blob([bytes]))
   }
 
-  private async metaDownload(params: DownloadFnParams) {
+  async metaDownload(params: DownloadMetaFnParams) {
     await this.ready
     console.log('w3 meta download', params)
     // @ts-ignore
@@ -99,7 +92,7 @@ export class ConnectWeb3 implements Connection {
   }
 
   // bytes is encoded {car, key}, not our job to decode, just return on download
-  private async uploadMeta(bytes: Uint8Array, params: UploadFnParams) {
+  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     // @ts-ignore
     const { issuer } = this.client!._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
