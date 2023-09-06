@@ -63,16 +63,16 @@ export class RemoteMetaStore extends MetaStoreBase {
   // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
     try {
-      console.log('metaDownload')
+      // console.log('metaDownload')
       const byteHeads = await this.connection.metaDownload({
         name: this.prefix(),
         branch
       })
-      console.log('byteHeads', byteHeads?.length, byteHeads && byteHeads[0])
+      // console.log('byteHeads', byteHeads?.length, byteHeads && byteHeads[0])
       if (!byteHeads) return null
       const dbMetas = byteHeads.map((bytes) => {
         const txt = new TextDecoder().decode(bytes)
-        console.log('txt', txt)
+        // console.log('txt', txt)
         return this.parseHeader(txt)
       })
       console.log('dbMetas', dbMetas.length, dbMetas)
