@@ -24,14 +24,22 @@ const serviceConfig = {
 
 const mockStore = new Map()
 const mockConnect = {
-  // eslint-disable-next-line @typescript-eslint/require-await
-  upload: async function (bytes, { type, name, car, branch }) {
-    const key = new URLSearchParams({ type, name, car, branch }).toString()
+  metaUpload: async function (bytes, { name, branch }) {
+    const key = new URLSearchParams({ name, branch }).toString()
     mockStore.set(key, bytes)
   },
   // eslint-disable-next-line @typescript-eslint/require-await
-  download: async function ({ type, name, car, branch }) {
-    const key = new URLSearchParams({ type, name, car, branch }).toString()
+  dataUpload: async function (bytes, { type, name, car }) {
+    const key = new URLSearchParams({ type, name, car }).toString()
+    mockStore.set(key, bytes)
+  },
+  // eslint-disable-next-line @typescript-eslint/require-await
+  metaDownload: async function ({ name, branch }) {
+    const key = new URLSearchParams({ name, branch }).toString()
+    return mockStore.get(key)
+  },
+  dataDownload: async function ({ type, name, car }) {
+    const key = new URLSearchParams({ type, name, car }).toString()
     return mockStore.get(key)
   }
 }
@@ -49,11 +57,19 @@ describe.skip('basic Connection with s3 remote', function () {
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
-    const { _crdt: { blocks: { loader } } } = db
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     await loader.remoteMetaLoading
-  })// .timeout(10000)
+  }) // .timeout(10000)
   it('should save a remote header', async function () {
-    const { _crdt: { blocks: { loader } } } = db
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
     equals(gotMain.key, loader.key)
@@ -69,7 +85,11 @@ describe.skip('basic Connection with s3 remote', function () {
     const db2 = new Database(dbName)
     const remote = connect.s3(db2, serviceConfig.s3)
     await remote.ready
-    const { _crdt: { blocks: { loader: loader2 } } } = db2
+    const {
+      _crdt: {
+        blocks: { loader: loader2 }
+      }
+    } = db2
     await loader2.ready
     const gotMain = await loader2.remoteMetaStore.load('main')
     equals(gotMain.key, loader2.key) // fails when remote not ingested
@@ -96,15 +116,23 @@ describe('basic Connection with raw remote', function () {
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
-  })// .timeout(10000)
+  }) // .timeout(10000)
   it('should save a remote header', async function () {
-    const { _crdt: { blocks: { loader } } } = db
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
   it('should have a carLog', async function () {
-    const { _crdt: { blocks: { loader } } } = db
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     assert(loader.carLog)
     equals(loader.carLog.length, 1)
   }).timeout(10000)
@@ -119,7 +147,11 @@ describe('basic Connection with raw remote', function () {
     const db2 = new Database(dbName)
     const remote = connect.raw(db2, mockConnect)
     await remote.ready
-    const { _crdt: { blocks: { loader: loader2 } } } = db2
+    const {
+      _crdt: {
+        blocks: { loader: loader2 }
+      }
+    } = db2
     await loader2.ready
     const gotMain = await loader2.remoteMetaStore.load('main')
     equals(gotMain.key, loader2.key) // fails when remote not ingested
@@ -134,16 +166,8 @@ describe('basic Connection with raw remote', function () {
     // create a database that is up to date with meta1 but not meta2
     // add meta2 and poll it
 
-    let count = 0
-    const download = async function ({ type, name, car, branch }) {
-      if (car) {
-        count++
-        if (count) return
-      }
-      const key = new URLSearchParams({ type, name, car, branch }).toString()
-      return mockStore.get(key)
-    }
-    const badMockConnect = { ...mockConnect, download }
+    const dataDownload = async function () {}
+    const badMockConnect = { ...mockConnect, dataDownload }
 
     const db2 = new Database(dbName)
     const connection = connect.raw(db2, badMockConnect)
@@ -164,7 +188,11 @@ describe('basic Connection with raw remote', function () {
     const changes2 = await db2.changes()
     equals(changes2.rows.length, 1)
 
-    const { _crdt: { blocks: { loader } } } = db2
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db2
 
     assert(loader)
     equals(loader.carLog.length, 1)
@@ -196,9 +224,13 @@ describe('forked Connection with raw remote', function () {
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
-  })// .timeout(10000)
+  }) // .timeout(10000)
   it('should save a remote header', async function () {
-    const { _crdt: { blocks: { loader } } } = db
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
     equals(gotMain.key, loader.key)
@@ -224,7 +256,11 @@ describe('forked Connection with raw remote', function () {
 
     const remote = connect.raw(db2, mockConnect)
     await remote.ready
-    const { _crdt: { blocks: { loader: loader2 } } } = db2
+    const {
+      _crdt: {
+        blocks: { loader: loader2 }
+      }
+    } = db2
     const gotMain = await loader2.remoteMetaStore.load('main')
     equals(gotMain.key, loader2.key) // fails when remote not ingested
 
@@ -384,9 +420,13 @@ describe('two Connection with raw remote', function () {
     const changes3 = await db3.changes()
 
     equals(changes3.rows.length, 3)
-  })// .timeout(10000)
+  }) // .timeout(10000)
   it('should save a remote header', async function () {
-    const { _crdt: { blocks: { loader } } } = db
+    const {
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
     equals(gotMain.key, loader.key)
@@ -406,7 +446,11 @@ describe('two Connection with raw remote', function () {
 
     const remote = connect.raw(db2, mockConnect)
     await remote.ready
-    const { _crdt: { blocks: { loader: loader2 } } } = db2
+    const {
+      _crdt: {
+        blocks: { loader: loader2 }
+      }
+    } = db2
     const gotMain = await loader2.remoteMetaStore.load('main')
     equals(gotMain.key, loader2.key) // fails when remote not ingested
 
