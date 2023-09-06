@@ -47,6 +47,8 @@ export class ConnectS3 implements Connection {
     const fetchFromUrl = new URL(`meta/${name}/${branch + '.json?cache=' + Math.floor(Math.random() * 1000000)}`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)
     const bytes = new Uint8Array(await response.arrayBuffer())
-    return bytes
+    // todo we could use a range list to make mvcc / crdt logic work in the s3 bucket
+    // we would name the meta files with a timestamp, eg using our UUIDv7 library
+    return [bytes]
   }
 }

@@ -19,13 +19,14 @@ export class MetaStore extends MetaStoreBase {
     return join(MetaStore.dataDir, this.name, 'meta', branch + '.json')
   }
 
-  async load(branch: string = 'main'): Promise<DbMeta | null> {
+  async load(branch: string = 'main'): Promise<DbMeta[] | null> {
     const filepath = this.filePathForBranch(branch)
     const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === 'ENOENT') return null
       throw e
     })
-    return bytes ? this.parseHeader(bytes.toString()) : null
+    // currently FS is last-write-wins, assumes single writer process
+    return bytes ? [this.parseHeader(bytes.toString())] : null
   }
 
   async save(meta: DbMeta, branch: string = 'main'): Promise<void> {

@@ -36,7 +36,7 @@ const mockConnect = {
   // eslint-disable-next-line @typescript-eslint/require-await
   metaDownload: async function ({ name, branch }) {
     const key = new URLSearchParams({ name, branch }).toString()
-    return mockStore.get(key)
+    return [mockStore.get(key)]
   },
   dataDownload: async function ({ type, name, car }) {
     const key = new URLSearchParams({ type, name, car }).toString()
@@ -123,7 +123,7 @@ describe('basic Connection with raw remote', function () {
         blocks: { loader }
       }
     } = db
-    const gotMain = await loader.remoteMetaStore.load('main')
+    const gotMain = (await loader.remoteMetaStore.load('main'))[0]
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
@@ -153,7 +153,7 @@ describe('basic Connection with raw remote', function () {
       }
     } = db2
     await loader2.ready
-    const gotMain = await loader2.remoteMetaStore.load('main')
+    const gotMain = (await loader2.remoteMetaStore.load('main'))[0]
     equals(gotMain.key, loader2.key) // fails when remote not ingested
 
     const doc = await db2.get('hello')
@@ -231,7 +231,7 @@ describe('forked Connection with raw remote', function () {
         blocks: { loader }
       }
     } = db
-    const gotMain = await loader.remoteMetaStore.load('main')
+    const gotMain = (await loader.remoteMetaStore.load('main'))[0]
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
@@ -261,7 +261,7 @@ describe('forked Connection with raw remote', function () {
         blocks: { loader: loader2 }
       }
     } = db2
-    const gotMain = await loader2.remoteMetaStore.load('main')
+    const gotMain = (await loader2.remoteMetaStore.load('main'))[0]
     equals(gotMain.key, loader2.key) // fails when remote not ingested
 
     const doc2 = await db2.get('greetings')
@@ -427,7 +427,7 @@ describe('two Connection with raw remote', function () {
         blocks: { loader }
       }
     } = db
-    const gotMain = await loader.remoteMetaStore.load('main')
+    const gotMain = (await loader.remoteMetaStore.load('main'))[0]
     assert(gotMain)
     equals(gotMain.key, loader.key)
   }).timeout(10000)
@@ -451,7 +451,7 @@ describe('two Connection with raw remote', function () {
         blocks: { loader: loader2 }
       }
     } = db2
-    const gotMain = await loader2.remoteMetaStore.load('main')
+    const gotMain = (await loader2.remoteMetaStore.load('main'))[0]
     equals(gotMain.key, loader2.key) // fails when remote not ingested
 
     const doc2 = await db2.get('greetings')
