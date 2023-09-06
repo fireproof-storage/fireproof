@@ -4,11 +4,11 @@ import * as w3clock from '@web3-storage/clock/client'
 // import { clock } from '@web3-storage/clock/capabilities'
 
 // import * as DID from '@ipld/dag-ucan/did'
-
-import { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import type { Link } from 'multiformats'
+import type { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
-import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
+import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
@@ -16,6 +16,8 @@ export class ConnectWeb3 implements Connection {
   email: `${string}@${string}`
   ready: Promise<void>
   client: Client | null = null
+
+  parents: Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[] = [] // almost ClockHead, different kind of clock
 
   constructor(email: `${string}@${string}`) {
     this.email = email
@@ -69,16 +71,17 @@ export class ConnectWeb3 implements Connection {
       with: space.did(),
       proofs: clockProofs
     })
-    console.log('head', head, head.out.ok)
+    // console.log('head', head, head.out.ok)
     if (head.out.ok) {
       // fetch that block from the network
       const remoteHead = head.out.ok.head
+      this.parents = remoteHead
       const outBytess = []
       for (const cid of remoteHead) {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
-        console.log('get head', url)
+        // console.log('get head', url)
         const response = await fetch(url, { redirect: 'follow' })
-        console.log('got head', response)
+        // console.log('got head', response)
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer())
           const event = await decodeEventBlock(metaBlock)
@@ -91,7 +94,7 @@ export class ConnectWeb3 implements Connection {
       }
       return outBytess
     } else {
-      console.log('bad head', params, head)
+      // console.log('bad head', params, head)
       throw new Error(`Failed to download ${params.name}`)
     }
   }
@@ -117,7 +120,7 @@ export class ConnectWeb3 implements Connection {
     const data = {
       dbMeta: bytes
     }
-    const event = await EventBlock.create(data)
+    const event = await EventBlock.create(data, this.parents)
     const eventBlocks = new MemoryBlockstore()
     await eventBlocks.put(event.cid, event.bytes)
 
@@ -131,7 +134,7 @@ export class ConnectWeb3 implements Connection {
       with: space.did(),
       proofs: clockProofs
     }, event.cid, { blocks: [event] })
-
+    this.parents = [event.cid]
     console.log('advanced', advanced.root.data?.ocm.out)
   }
 }
