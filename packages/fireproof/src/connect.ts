@@ -2,7 +2,7 @@ import { ConnectS3 } from './connect-s3'
 import { ConnectWeb3 } from './connect-web3'
 import { Database } from './database'
 import type { DbLoader } from './loaders'
-import { Connection, UploadDataFnParams, UploadMetaFn, UploadDataFn, UploadMetaFnParams, DownloadDataFn, DownloadMetaFn, DownloadDataFnParams, DownloadMetaFnParams } from './types'
+import { Connection, UploadDataFnParams, MetaUploadFn, DataUploadFn, UploadMetaFnParams, DataDownloadFn, MetaDownloadFn, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
 const web3names = new Set<string>()
 
@@ -16,8 +16,8 @@ export const connect = {
   },
   raw: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: DbLoader } } },
-  { metaUpload, metaDownload, dataUpload, dataDownload }: { dataUpload: UploadDataFn, dataDownload: DownloadDataFn,
-    metaUpload: UploadMetaFn, metaDownload: DownloadMetaFn }) => {
+  { metaUpload, metaDownload, dataUpload, dataDownload }: { dataUpload: DataUploadFn, dataDownload: DataDownloadFn,
+    metaUpload: MetaUploadFn, metaDownload: MetaDownloadFn }) => {
     const connection = { metaUpload, metaDownload, dataUpload, dataDownload, ready: Promise.resolve() } as Connection
     loader.connectRemote(connection)
     return connection

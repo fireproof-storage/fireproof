@@ -151,8 +151,8 @@ export type UploadDataFnParams = {
 
 // export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<false | undefined | void>
 
-export type UploadMetaFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<false | undefined | void>
-export type UploadDataFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<false | undefined | void>
+export type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<false | undefined | void>
+export type DataUploadFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<false | undefined | void>
 
 export type DownloadFnParamTypes = 'data' | 'file'
 
@@ -167,18 +167,16 @@ export type DownloadMetaFnParams = {
   branch: string,
 }
 
-export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null | false>
+export type MetaDownloadFn = (params: DownloadMetaFnParams) => Promise<Uint8Array | null>
 
-export type DownloadMetaFn = (params: DownloadMetaFnParams) => Promise<Uint8Array | null | false>
-
-export type DownloadDataFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null | false>
+export type DataDownloadFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null>
 
 export interface Connection {
   ready: Promise<any>
-  metaUpload: UploadMetaFn
-  dataUpload: UploadDataFn
-  metaDownload: DownloadMetaFn
-  dataDownload: DownloadDataFn
+  metaUpload: MetaUploadFn
+  dataUpload: DataUploadFn
+  metaDownload: MetaDownloadFn
+  dataDownload: DataDownloadFn
   // remove: (params: DownloadFnParams) => Promise<void>
   refresh?: () => Promise<void>
 }
