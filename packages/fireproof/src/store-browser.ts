@@ -60,11 +60,14 @@ export class MetaStore extends MetaStoreBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch: string = 'main'): Promise<DbMeta | null> {
+  async load(branch: string = 'main'): Promise<DbMeta[] | null> {
     try {
       const bytesString = localStorage.getItem(this.headerKey(branch))
       if (!bytesString) return null
-      return this.parseHeader(bytesString)
+      // browser assumes a single writer process
+      // to support concurrent updates to the same database across multiple tabs
+      // we need to implement the same kind of mvcc.crdt solution as in store-fs and connect-s3
+      return [this.parseHeader(bytesString)]
     } catch (e) {
       return null
     }

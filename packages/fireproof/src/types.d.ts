@@ -167,7 +167,7 @@ export type DownloadMetaFnParams = {
   branch: string,
 }
 
-export type MetaDownloadFn = (params: DownloadMetaFnParams) => Promise<Uint8Array | null>
+export type MetaDownloadFn = (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
 
 export type DataDownloadFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null>
 

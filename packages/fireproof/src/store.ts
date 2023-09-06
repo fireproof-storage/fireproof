@@ -28,7 +28,7 @@ export abstract class MetaStore extends VersionedStore {
     return got
   }
 
-  abstract load(branch?: string): Promise<DbMeta | null>
+  abstract load(branch?: string): Promise<DbMeta[] | null>
   abstract save(dbMeta: DbMeta, branch?: string): Promise<void>
 }
 

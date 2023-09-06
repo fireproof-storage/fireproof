@@ -84,7 +84,7 @@ export class ConnectWeb3 implements Connection {
           throw new Error(`Failed to download ${url}`)
         }
       }
-      return outBytess[0] // for now todo fix
+      return outBytess
     } else {
       console.log('bad head', params, head)
       throw new Error(`Failed to download ${params.name}`)
