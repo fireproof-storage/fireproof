@@ -17,8 +17,8 @@
         dbName = name;
         db = fireproof(name);
         window.db = db;
-        connection = connect.s3(db, s3Info)
-        connect.web3(db, "jchris+gallery3@fireproof.storage")
+        // connection = connect.s3(db, s3Info)
+        connection = connect.web3(db, "jchris+gallery4@fireproof.storage")
         db.subscribe(redraw);
         return db;
       }

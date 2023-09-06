@@ -8,7 +8,7 @@ import * as w3clock from '@web3-storage/clock/client'
 import { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
-import { EventBlock } from '@alanshaw/pail/clock'
+import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
@@ -76,11 +76,14 @@ export class ConnectWeb3 implements Connection {
       const outBytess = []
       for (const cid of remoteHead) {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
-        console.log('head', url)
-        const response = await fetch(url)
+        console.log('get head', url)
+        const response = await fetch(url, { redirect: 'follow' })
+        console.log('got head', response)
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer())
-          outBytess.push(metaBlock)
+          const event = await decodeEventBlock(metaBlock)
+          // @ts-ignore
+          outBytess.push(event.value.data.dbMeta as Uint8Array)
         } else {
           console.log('failed to download', url, response)
           throw new Error(`Failed to download ${url}`)
@@ -129,7 +132,7 @@ export class ConnectWeb3 implements Connection {
       proofs: clockProofs
     }, event.cid, { blocks: [event] })
 
-    console.log('advanced', advanced.root.data?.ocm)
+    console.log('advanced', advanced.root.data?.ocm.out)
   }
 }
 
@@ -143,7 +146,7 @@ export async function getClient(email: `${string}@${string}`) {
       return client
     }
   }
-  console.log('authorizing', email)
+  console.log('emailing', email)
   await client.authorize(email)//, { capabilities: [{ can: 'w3clock/*' }] })
   // await client.capability.access.claim()
   console.log('authorized', client)
