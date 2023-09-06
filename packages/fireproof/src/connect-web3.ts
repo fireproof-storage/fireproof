@@ -78,17 +78,24 @@ export class ConnectWeb3 implements Connection {
     if (head.out.ok) {
       // fetch that block from the network
       const remoteHead = head.out.ok.head
+      const outBytess = []
       for (const cid of remoteHead) {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
         console.log('head', url)
         const response = await fetch(url)
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer())
-          // parse the metablock and call mergeMetaFromRemote with it, then the next etc
+          outBytess.push(metaBlock)
+        } else {
+          console.log('failed to download', url, response)
+          throw new Error(`Failed to download ${url}`)
         }
       }
+      return outBytess[0] // for now todo fix
+    } else {
+      console.log('bad head', params, head)
+      throw new Error(`Failed to download ${params.name}`)
     }
-    return new Uint8Array()
   }
 
   // bytes is encoded {car, key}, not our job to decode, just return on download
