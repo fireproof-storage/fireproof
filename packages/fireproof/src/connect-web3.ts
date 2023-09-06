@@ -9,6 +9,8 @@ import { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnPar
 import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
 import { EventBlock } from '@alanshaw/pail/clock'
+import { encodeCarFile } from './loader-helpers'
+import { MemoryBlockstore } from '@alanshaw/pail/block'
 
 export class ConnectWeb3 implements Connection {
   email: `${string}@${string}`
@@ -100,21 +102,26 @@ export class ConnectWeb3 implements Connection {
 
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
 
-    // use branch and name to lookup the space
-
     const space = this.client!.currentSpace()
     if (!space) { throw new Error('space not initialized') }
+
+    // console.log('DIDs', space.did(), issuer.did())
+    const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
+    console.log('clockProofs go', clockProofs)
+    if (!clockProofs.length) { throw new Error('need clock/* capability') }
 
     // we need the upload as an event block or the data that goes in one
     const data = {
       dbMeta: bytes
     }
     const event = await EventBlock.create(data)
+    const eventBlocks = new MemoryBlockstore()
+    await eventBlocks.put(event.cid, event.bytes)
 
-    // console.log('DIDs', space.did(), issuer.did())
-    const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
-    console.log('clockProofs go', clockProofs)
-    if (!clockProofs.length) { throw new Error('need clock/* capability') }
+    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
+
+    await this.client?.uploadCAR(new Blob([carBytes]))
+    // await this.client?.uploadFile(new Blob([carBytes]))
 
     const advanced = await w3clock.advance({
       issuer,
