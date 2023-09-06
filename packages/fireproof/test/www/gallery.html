@@ -18,7 +18,7 @@
         db = fireproof(name);
         window.db = db;
         // connection = connect.s3(db, s3Info)
-        connection = connect.web3(db, "jchris+gallery4@fireproof.storage")
+        connection = db.connect("jchris+gallery4@fireproof.storage")
         db.subscribe(redraw);
         return db;
       }
@@ -86,6 +86,12 @@
       }
       window.changeList = changeList;
 
+      async function openDashboard(e) {
+        e.preventDefault();
+        db.openDashboard();
+      }
+      window.openDashboard = openDashboard;
+
 
       function handleFiles() {
         const fileList = this.files;
@@ -123,6 +129,7 @@
   List:
   <input title="gallery" type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change Gallery</button>
+  <button onclick="openDashboard(event)">Import to Dashbaord</button>
   <h3>Files</h3>
   <p>Data is stored locally and encrypted before upload to S3.
     This is a demo so the encryption key is not managed securely.

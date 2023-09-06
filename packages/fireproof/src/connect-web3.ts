@@ -30,7 +30,7 @@ export class ConnectWeb3 implements Connection {
 
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
-    console.log('w3 downloading', params)
+    console.log('w3 downloading', params.type, params.car)
     const url = `https://${params.car}.ipfs.w3s.link/`
     const response = await fetch(url)
     if (response.ok) {
@@ -145,11 +145,11 @@ export async function getClient(email: `${string}@${string}`) {
   if (existingSpace?.registered()) {
     const clockx = client.proofs([{ can: 'clock/*', with: existingSpace.did() }])
     if (clockx.length) {
-      console.log('already authorized', clockx)
+      console.log('already authorized', existingSpace.did(), clockx, client.spaces())
       return client
     }
   }
-  console.log('emailing', email)
+  console.log('emailing', email, client, client.spaces())
   await client.authorize(email)//, { capabilities: [{ can: 'w3clock/*' }] })
   // await client.capability.access.claim()
   console.log('authorized', client)
