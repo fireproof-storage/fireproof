@@ -2,7 +2,7 @@ import { ConnectS3 } from './connect-s3'
 import { ConnectWeb3 } from './connect-web3'
 import { Database } from './database'
 import type { DbLoader } from './loaders'
-import { Connection, DownloadFn, DownloadFnParams, UploadFn, UploadFnParams } from './types'
+import { Connection, UploadDataFnParams, UploadMetaFn, UploadDataFn, UploadMetaFnParams, DownloadDataFn, DownloadMetaFn, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
 const web3names = new Set<string>()
 
@@ -16,8 +16,9 @@ export const connect = {
   },
   raw: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: DbLoader } } },
-  { upload, download }: { upload: UploadFn, download: DownloadFn }) => {
-    const connection = { upload, download, ready: Promise.resolve() } as Connection
+  { metaUpload, metaDownload, dataUpload, dataDownload }: { dataUpload: UploadDataFn, dataDownload: DownloadDataFn,
+    metaUpload: UploadMetaFn, metaDownload: DownloadMetaFn }) => {
+    const connection = { metaUpload, metaDownload, dataUpload, dataDownload, ready: Promise.resolve() } as Connection
     loader.connectRemote(connection)
     return connection
   },
@@ -37,10 +38,15 @@ export const connect = {
   }
 }
 
-export function validateParams(params: DownloadFnParams | UploadFnParams) {
-  const { type, name, car, branch } = params
+export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
+  const { type, name, car } = params
   if (!name) throw new Error('name is required')
-  if (car && branch) { throw new Error('car and branch are mutually exclusive') }
-  if (!car && !branch) { throw new Error('car or branch is required') }
-  if (type !== 'file' && type !== 'data' && type !== 'meta') { throw new Error('type must be file, data or meta') }
+  if (!car) { throw new Error('car is required') }
+  if (type !== 'file' && type !== 'data') { throw new Error('type must be file or data') }
+}
+
+export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams) {
+  const { name, branch } = params
+  if (!name) throw new Error('name is required')
+  if (!branch) { throw new Error('branch is required') }
 }

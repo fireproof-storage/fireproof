@@ -137,31 +137,48 @@ export interface CarMakeable {
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
 
-export type UploadFnParams = {
-  type: 'data' | 'meta' | 'file',
+export type UploadMetaFnParams = {
   name: string,
-  car?: string,
-  branch?: string,
+  branch: string,
+}
+
+export type UploadDataFnParams = {
+  type: 'data' | 'file',
+  name: string,
+  car: string,
   size: string
 }
 
-export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<false | undefined | void>
+// export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<false | undefined | void>
 
-export type DownloadFnParamTypes = 'data' | 'meta' | 'file'
+export type UploadMetaFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<false | undefined | void>
+export type UploadDataFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<false | undefined | void>
 
-export type DownloadFnParams = {
+export type DownloadFnParamTypes = 'data' | 'file'
+
+export type DownloadDataFnParams = {
   type: DownloadFnParamTypes,
   name: string,
-  car?: string,
-  branch?: string,
+  car: string,
+}
+
+export type DownloadMetaFnParams = {
+  name: string,
+  branch: string,
 }
 
 export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null | false>
 
+export type DownloadMetaFn = (params: DownloadMetaFnParams) => Promise<Uint8Array | null | false>
+
+export type DownloadDataFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null | false>
+
 export interface Connection {
   ready: Promise<any>
-  upload: UploadFn
-  download: DownloadFn
+  metaUpload: UploadMetaFn
+  dataUpload: UploadDataFn
+  metaDownload: DownloadMetaFn
+  dataDownload: DownloadDataFn
   // remove: (params: DownloadFnParams) => Promise<void>
   refresh?: () => Promise<void>
 }
