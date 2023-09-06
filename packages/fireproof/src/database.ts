@@ -79,10 +79,10 @@ export class Database {
     await this._crdt.compact()
   }
 
-  async connect(email: `${string}@${string}`) {
-    // const conn =
-    connect.web3(this, email)
-    return await this.getDashboardURL()
+  connect(email: `${string}@${string}`) {
+    const conn = connect.web3(this, email)
+    // await this.getDashboardURL()
+    return conn
   }
 
   async getDashboardURL(compact = true) {
