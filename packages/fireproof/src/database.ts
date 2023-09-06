@@ -92,8 +92,10 @@ export class Database {
       await this.compact()
       await this._crdt.blocks.loader?.remoteMetaLoading
     }
-    const current = await this._crdt.blocks.loader?.metaStore?.load()
-    if (!current) throw new Error('Can\'t sync empty database: save data first')
+    const currents = await this._crdt.blocks.loader?.metaStore?.load()
+    if (!currents) throw new Error('Can\'t sync empty database: save data first')
+    if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make and update first')
+    const current = currents[0]
     const params = {
       car: current.car.toString()
     }

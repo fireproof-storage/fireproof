@@ -50,9 +50,9 @@ export abstract class Loader {
     this.opts = opts || this.opts
     this.ready = this.initializeStores().then(async () => {
       if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
-      const meta = this.opts.meta ? this.opts.meta : await this.metaStore.load('main')
-      if (meta) {
-        await this.mergeMetaFromRemote(meta)
+      const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
+      if (metas) {
+        await this.mergeMetasFromRemote(metas)
       }
     })
   }
@@ -61,16 +61,16 @@ export abstract class Loader {
     const remote = new RemoteMetaStore(this.name, connection)
     this.remoteMetaStore = remote
     // eslint-disable-next-line @typescript-eslint/require-await
-    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (meta) => {
-      if (meta) {
-        await this.mergeMetaFromRemote(meta)
+    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (metas) => {
+      if (metas) {
+        await this.mergeMetasFromRemote(metas)
       }
     })
     connection.ready = Promise.all([this.remoteMetaLoading]).then(() => { })
     connection.refresh = async () => {
-      await remote.load('main').then(async (meta) => {
-        if (meta) {
-          await this.mergeMetaFromRemote(meta)
+      await remote.load('main').then(async (metas) => {
+        if (metas) {
+          await this.mergeMetasFromRemote(metas)
         }
       })
     }
@@ -99,6 +99,12 @@ export abstract class Loader {
     this.carLog = [carCid, ...carHeader.cars]
     void this.getMoreReaders(carHeader.cars)
     await this._applyCarHeader(carHeader, true)
+  }
+
+  async mergeMetasFromRemote(metas: DbMeta[]): Promise<void> {
+    for (const meta of metas) {
+      await this.mergeMetaFromRemote(meta)
+    }
   }
 
   async mergeMetaFromRemote(meta: DbMeta): Promise<void> {
@@ -201,10 +207,10 @@ export abstract class Loader {
     this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
       // console.log('saving remote meta', cid.toString())
 
-      // await this.remoteMetaStore?.load('main').then(async (meta) => {
+      // await this.remoteMetaStore?.load('main').then(async (metas) => {
       await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
-      // if (meta) {
-      // await this.mergeMetaFromRemote(meta)
+      // if (metas) {
+      // await this.mergeMetasFromRemote(metas)
       // }
       // })
     }).catch((e) => {
