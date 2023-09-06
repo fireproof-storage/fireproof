@@ -47,7 +47,6 @@ export class ConnectWeb3 implements Connection {
 
     console.log('w3 uploading car', params)
     validateDataParams(params)
-
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
@@ -71,17 +70,13 @@ export class ConnectWeb3 implements Connection {
       with: space.did(),
       proofs: clockProofs
     })
-    // console.log('head', head, head.out.ok)
     if (head.out.ok) {
       // fetch that block from the network
       const remoteHead = head.out.ok.head
-      this.parents = remoteHead
       const outBytess = []
       for (const cid of remoteHead) {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
-        // console.log('get head', url)
         const response = await fetch(url, { redirect: 'follow' })
-        // console.log('got head', response)
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer())
           const event = await decodeEventBlock(metaBlock)
@@ -92,9 +87,9 @@ export class ConnectWeb3 implements Connection {
           throw new Error(`Failed to download ${url}`)
         }
       }
+      this.parents = remoteHead
       return outBytess
     } else {
-      // console.log('bad head', params, head)
       throw new Error(`Failed to download ${params.name}`)
     }
   }
@@ -111,12 +106,10 @@ export class ConnectWeb3 implements Connection {
     const space = this.client!.currentSpace()
     if (!space) { throw new Error('space not initialized') }
 
-    // console.log('DIDs', space.did(), issuer.did())
     const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
     console.log('clockProofs go', clockProofs)
     if (!clockProofs.length) { throw new Error('need clock/* capability') }
 
-    // we need the upload as an event block or the data that goes in one
     const data = {
       dbMeta: bytes
     }
@@ -127,7 +120,6 @@ export class ConnectWeb3 implements Connection {
     const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
 
     await this.client?.uploadCAR(new Blob([carBytes]))
-    // await this.client?.uploadFile(new Blob([carBytes]))
 
     const advanced = await w3clock.advance({
       issuer,
@@ -145,26 +137,20 @@ export async function getClient(email: `${string}@${string}`) {
   if (existingSpace?.registered()) {
     const clockx = client.proofs([{ can: 'clock/*', with: existingSpace.did() }])
     if (clockx.length) {
-      console.log('already authorized', existingSpace.did(), clockx, client.spaces())
+      console.log('already authorized!', existingSpace.did(), clockx, client)
       return client
     }
   }
   console.log('emailing', email, client, client.spaces())
-  await client.authorize(email)//, { capabilities: [{ can: 'w3clock/*' }] })
+  await client.authorize(email) //, { capabilities: [{ can: 'w3clock/*' }] })
   // await client.capability.access.claim()
   console.log('authorized', client)
   let space = client.currentSpace()
-
-  // console.log('claims', claims)
   if (space === undefined) {
     const spaces = client.spaces()
     for (const s of spaces) {
       if (s.registered()) {
         space = s
-        // use
-        // space.proofs()
-        // client.proofs({ can: 'w3clock/*' })
-        // has w3clock?
         console.log('space', space.registered(), space.did(), space.meta())
         break
       }
@@ -172,11 +158,6 @@ export async function getClient(email: `${string}@${string}`) {
     if (space === undefined) {
       // @ts-ignore
       space = await client.createSpace('fp')
-      // , [{
-      //   // @ts-ignore
-      //   audience: client._agent.issuer
-      //   // audience: DID.parse('did:web:clock.web3.storage')
-      // }])
     }
     await client.setCurrentSpace(space.did())
   }
@@ -187,6 +168,5 @@ export async function getClient(email: `${string}@${string}`) {
   console.log('space', space.did())
   const clockx = client.proofs([{ can: 'clock/*', with: space.did() }])
   console.log('clockx', clockx)
-
   return client
 }
