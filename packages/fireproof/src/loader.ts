@@ -159,8 +159,21 @@ export abstract class Loader {
     return this.key
   }
 
+  private committing: Promise<AnyLink> | undefined
   async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
+    if (this.committing) {
+      await this.committing
+    }
+    this.committing = this._commitInternal(t, done, compact)
+    const result = await this.committing
+    this.committing = undefined
+    return result
+  }
+
+  async _commitInternal(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
     await this.ready
+
+    // todo grab remoteMetaStore for parent? in case of internal concurrency?
     const fp = this.makeCarHeader(done, this.carLog, compact)
     let roots: AnyLink[] = []
     // @ts-ignore
