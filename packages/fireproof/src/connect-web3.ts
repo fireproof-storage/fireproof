@@ -142,7 +142,11 @@ export async function getClient(email: `${string}@${string}`) {
     }
   }
   console.log('emailing!!', email, client, client.spaces())
-  await client.authorize(email, { capabilities: [{ can: 'clock/*' }, { can: 'space/*' }, { can: 'provider/add' }, { can: 'store/*' }, { can: 'upload/*' }] })
+  await client.authorize(email, {
+    capabilities: [{ can: 'clock/*' },
+      { can: 'space/*' }, { can: 'provider/add' },
+      { can: 'store/*' }, { can: 'upload/*' }]
+  })
   // await client.capability.access.claim()
   console.log('authorized??', client)
   let space = client.currentSpace()
