@@ -79,8 +79,8 @@ export class Database {
     await this._crdt.compact()
   }
 
-  connect(email: `${string}@${string}`) {
-    const conn = connect.web3(this, email)
+  connect(email: `${string}@${string}`, schemaName?: string) {
+    const conn = connect.web3(this, email, schemaName)
     // await this.getDashboardURL()
     return conn
   }
