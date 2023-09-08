@@ -12,20 +12,39 @@ import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
+// almost ClockHead, different kind of clock
+type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
+
 export class ConnectWeb3 implements Connection {
+  dbName: string
   email: `${string}@${string}`
   ready: Promise<void>
   client: Client | null = null
+  schema: string
+  parents: CarClockHead = []
 
-  parents: Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[] = [] // almost ClockHead, different kind of clock
-
-  constructor(email: `${string}@${string}`) {
+  constructor(dbName: string, email: `${string}@${string}`, schemaName = 'unknown') {
+    this.dbName = dbName
     this.email = email
+    this.schema = schemaName
     this.ready = this.initializeClient()
   }
 
   async initializeClient() {
-    this.client = await getClient(this.email)
+    this.client = await this.getClient(this.email)
+  }
+
+  encodeSpaceName() {
+    const schemaPart = encodeURIComponent(this.schema)
+    const namePart = encodeURIComponent(this.dbName)
+    return `${schemaPart}/${namePart}`
+  }
+
+  decodeSpaceName(spaceName: `${string}/${string}`) {
+    const [schemaPart, namePart] = spaceName.split('/')
+    const schema = decodeURIComponent(schemaPart)
+    const name = decodeURIComponent(namePart)
+    return { schema, name }
   }
 
   async dataDownload(params: DownloadDataFnParams) {
@@ -128,49 +147,58 @@ export class ConnectWeb3 implements Connection {
     }, event.cid, { blocks: [event] })
     this.parents = [event.cid]
     console.log('advanced', advanced.root.data?.ocm.out)
+    // @ts-ignore
+    const { ok, error } = advanced.root.data?.ocm.out
+    if (error) { throw new Error(JSON.stringify(error)) }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const head = ok.head as CarClockHead
+    console.log('HEAD', head)
   }
-}
 
-export async function getClient(email: `${string}@${string}`) {
-  const client = await create()
-  const existingSpace = client.currentSpace()
-  if (existingSpace?.registered()) {
-    const clockx = client.proofs([{ can: 'clock/*', with: existingSpace.did() }])
-    if (clockx.length) {
-      console.log('already authorized!', existingSpace.did(), clockx, client)
-      return client
-    }
-  }
-  console.log('emailing!!', email, client, client.spaces())
-  await client.authorize(email, {
-    capabilities: [{ can: 'clock/*' },
-      { can: 'space/*' }, { can: 'provider/add' },
-      { can: 'store/*' }, { can: 'upload/*' }]
-  })
-  // await client.capability.access.claim()
-  console.log('authorized??', client)
-  let space = client.currentSpace()
-  if (space === undefined) {
-    const spaces = client.spaces()
-    for (const s of spaces) {
-      if (s.registered()) {
-        space = s
-        console.log('space', space.registered(), space.did(), space.meta())
-        break
+  async getClient(email: `${string}@${string}`) {
+    const client = await create()
+    const existingSpace = client.currentSpace()
+    if (existingSpace?.registered()) {
+      const clockx = client.proofs([{ can: 'clock/*', with: existingSpace.did() }])
+      if (clockx.length) {
+        console.log('already authorized!', clockx, client)
+        console.log('space', existingSpace.registered(), existingSpace.did(), existingSpace.meta())
+
+        return client
       }
     }
+    console.log('emailing!!', email, client, client.spaces())
+    await client.authorize(email, {
+      capabilities: [{ can: 'clock/*' },
+        { can: 'space/*' }, { can: 'provider/add' },
+        { can: 'store/*' }, { can: 'upload/*' }]
+    })
+    // await client.capability.access.claim()
+    console.log('authorized??', client)
+    let space = client.currentSpace()
     if (space === undefined) {
-      // @ts-ignore
-      space = await client.createSpace('fp')
+      const spaces = client.spaces()
+      for (const s of spaces) {
+        if (s.registered()) {
+          space = s
+          console.log('space', space.registered(), space.did(), space.meta())
+          break
+        }
+      }
+      if (space === undefined) {
+        // @ts-ignore
+        space = await client.createSpace(this.encodeSpaceName())
+      }
+      await client.setCurrentSpace(space.did())
     }
-    await client.setCurrentSpace(space.did())
+    if (!space.registered()) {
+      console.log('registering space')
+      await client.registerSpace(email)
+    }
+    console.log('space', space.registered(), space.did(), space.meta())
+
+    const clockx = client.proofs([{ can: 'clock/*', with: space.did() }])
+    console.log('clockx', clockx)
+    return client
   }
-  if (!space.registered()) {
-    console.log('registering space')
-    await client.registerSpace(email)
-  }
-  console.log('space', space.did())
-  const clockx = client.proofs([{ can: 'clock/*', with: space.did() }])
-  console.log('clockx', clockx)
-  return client
 }

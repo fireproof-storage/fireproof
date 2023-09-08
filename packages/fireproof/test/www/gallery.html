@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=7743393"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=7143393"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -18,15 +18,15 @@
         db = fireproof(name);
         window.db = db;
         // connection = connect.s3(db, s3Info)
-        connection = db.connect("jchris+gallery7@fireproof.storage")
+        connection = db.connect("jchris+gallery7@fireproof.storage", "files")
         window.connection = connection
         db.subscribe(redraw);
         return db;
       }
-      const s3Info = {
-        upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-        download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-      }
+      // const s3Info = {
+      //   upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+      //   download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+      // }
 
       let doing
       const redraw = async () => {
@@ -77,10 +77,8 @@
       }
 
       async function doRefresh(e) {
-        e.preventDefault();
-        await db.refresh();
-        // console.log('ok', ok)
-        // redraw();
+        // e.preventDefault();
+        await connection.refresh();
       }
       window.doRefresh = doRefresh;
 
@@ -105,7 +103,6 @@
       function handleFiles() {
         const fileList = this.files;
         const doc = {
-          type: "files",
           _files: {}
         }
         for (const file of fileList) {
@@ -139,7 +136,7 @@
   <input title="gallery" type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change Gallery</button>
   <button onclick="doRefresh(event)">Refresh</button>
-  <button onclick="openDashboard(event)">Import to Dashbaord</button>
+  <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
   <h3>Files</h3>
   <p>Data is stored locally and encrypted before upload to S3.
     This is a demo so the encryption key is not managed securely.
