@@ -6,7 +6,7 @@ import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
+import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult, ClockLink } from './types'
 import { decodeFile, encodeFile } from './files'
 import { DbLoader } from './loaders'
 
@@ -145,7 +145,7 @@ export async function clockChangesSince(
 ): Promise<{ result: DocUpdate[], head: ClockHead }> {
   const eventsFetcher = (opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)) as EventFetcher<EventData>
   const keys: Set<string> = new Set()
-  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys, opts.limit || Infinity)
+  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity)
   return { result: updates.reverse(), head }
 }
 
@@ -155,7 +155,7 @@ async function gatherUpdates(
   head: ClockHead,
   since: ClockHead,
   updates: DocUpdate[] = [],
-  keys: Set<string>,
+  keys: Set<string>, didLinks: Set<string>,
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
@@ -166,12 +166,14 @@ async function gatherUpdates(
     }
   }
   for (const link of head) {
+    if (didLinks.has(link.toString())) continue
+    didLinks.add(link.toString())
     const { value: event } = await eventsFetcher.get(link)
     if (!event) continue
     const { key, value } = event.data
     if (keys.has(key)) {
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, limit)
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
       }
     } else {
       keys.add(key)
@@ -179,7 +181,7 @@ async function gatherUpdates(
       updates.push({ key, value: docValue.doc, del: docValue.del })
       limit--
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, limit)
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
       }
     }
   }
