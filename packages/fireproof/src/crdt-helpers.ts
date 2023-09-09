@@ -188,6 +188,14 @@ async function gatherUpdates(
   return updates
 }
 
+export async function * getAllEntries(blocks: TransactionBlockstore, head: ClockHead) {
+  // return entries(blocks, head)
+  for await (const [key, link] of entries(blocks, head)) {
+    const docValue = await getValueFromLink(blocks, link)
+    yield { key, value: docValue.doc, del: docValue.del } as DocUpdate
+  }
+}
+
 export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) {
   const blockLog = new LoggingFetcher(blocks)
   const newBlocks = new Transaction(blocks)

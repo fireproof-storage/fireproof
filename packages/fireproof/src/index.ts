@@ -151,9 +151,12 @@ export class Index {
     await this.ready
     if (this.initError) throw this.initError
     if (!this.mapFn) throw new Error('No map function defined')
-    const { result, head } = await this.crdt.changes(this.indexHead)
-
-    // console.log('index-changes', result.length, head.toString(), this.indexHead?.toString())
+    let result: DocUpdate[], head: ClockHead
+    if (!this.indexHead || this.indexHead.length === 0) {
+      ;({ result, head } = await this.crdt.allDocs())
+    } else {
+      ;({ result, head } = await this.crdt.changes(this.indexHead))
+    }
     if (result.length === 0) {
       this.indexHead = head
       return { byId: this.byId, byKey: this.byKey }
