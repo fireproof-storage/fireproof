@@ -28,6 +28,7 @@ export class ConnectS3 implements Connection {
     const response = await fetch(fetchUploadUrl)
     const { uploadURL } = await response.json() as { uploadURL: string }
     await fetch(uploadURL, { method: 'PUT', body: bytes })
+    return null
   }
 
   async dataDownload(params: DownloadDataFnParams) {

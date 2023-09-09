@@ -29,10 +29,11 @@ export class MetaStore extends MetaStoreBase {
     return bytes ? [this.parseHeader(bytes.toString())] : null
   }
 
-  async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
+  async save(meta: DbMeta, branch: string = 'main') {
     const filepath = this.filePathForBranch(branch)
     const bytes = this.makeHeader(meta)
     await writePathFile(filepath, bytes)
+    return null
   }
 }
 

@@ -5,7 +5,7 @@ import * as w3clock from '@web3-storage/clock/client'
 
 // import * as DID from '@ipld/dag-ucan/did'
 import type { Link } from 'multiformats'
-import type { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import type { BlockFetcher, Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
@@ -91,8 +91,22 @@ export class ConnectWeb3 implements Connection {
     if (head.out.ok) {
       // fetch that block from the network
       const remoteHead = head.out.ok.head
-      const outBytess = []
-      for (const cid of remoteHead) {
+      return this.fetchAndUpdateHead(remoteHead)
+    } else {
+      throw new Error(`Failed to download ${params.name}`)
+    }
+  }
+
+  async fetchAndUpdateHead(remoteHead: CarClockHead, cache?: BlockFetcher) {
+    const outBytess = []
+    // todo, we should only ever fetch these once, and not if they are ones we made
+    for (const cid of remoteHead) {
+      const local = cache ? await cache.get(cid) : undefined
+      if (local) {
+        const event = await decodeEventBlock(local.bytes)
+        // @ts-ignore
+        outBytess.push(event.value.data.dbMeta as Uint8Array)
+      } else {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
         const response = await fetch(url, { redirect: 'follow' })
         if (response.ok) {
@@ -105,11 +119,9 @@ export class ConnectWeb3 implements Connection {
           throw new Error(`Failed to download ${url}`)
         }
       }
-      this.parents = remoteHead
-      return outBytess
-    } else {
-      throw new Error(`Failed to download ${params.name}`)
     }
+    this.parents = remoteHead
+    return outBytess
   }
 
   // bytes is encoded {car, key}, not our job to decode, just return on download
@@ -152,6 +164,7 @@ export class ConnectWeb3 implements Connection {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const head = ok.head as CarClockHead
     console.log('HEAD', head)
+    return this.fetchAndUpdateHead(head, eventBlocks)
   }
 
   async getClient(email: `${string}@${string}`) {

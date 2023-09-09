@@ -149,10 +149,8 @@ export type UploadDataFnParams = {
   size: string
 }
 
-// export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<false | undefined | void>
-
-export type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<false | undefined | void>
-export type DataUploadFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<false | undefined | void>
+export type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
+export type DataUploadFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void>
 
 export type DownloadFnParamTypes = 'data' | 'file'
 
