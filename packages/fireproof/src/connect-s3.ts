@@ -24,9 +24,15 @@ export class ConnectS3 implements Connection {
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     validateMetaParams(params)
     console.log('s3 uploading', params)
-    const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams(params).toString()}`)
+    const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ type: 'meta', ...params }).toString()}`)
     const response = await fetch(fetchUploadUrl)
+    if (!response.ok) {
+      console.log('failed to get upload url for meta', params, response)
+      throw new Error('failed to get upload url for meta')
+    }
     const { uploadURL } = await response.json() as { uploadURL: string }
+    console.log('uploadURL', uploadURL)
+    if (!uploadURL) throw new Error('missing uploadURL')
     await fetch(uploadURL, { method: 'PUT', body: bytes })
     return null
   }
@@ -47,6 +53,7 @@ export class ConnectS3 implements Connection {
     const { name, branch } = params
     const fetchFromUrl = new URL(`meta/${name}/${branch + '.json?cache=' + Math.floor(Math.random() * 1000000)}`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)
+    if (!response.ok) return null
     const bytes = new Uint8Array(await response.arrayBuffer())
     // todo we could use a range list to make mvcc / crdt logic work in the s3 bucket
     // we would name the meta files with a timestamp, eg using our UUIDv7 library

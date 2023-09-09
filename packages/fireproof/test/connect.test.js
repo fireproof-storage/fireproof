@@ -45,6 +45,8 @@ const mockConnect = {
   }
 }
 
+// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 // eslint-disable-next-line mocha/no-skipped-tests
 describe.skip('basic Connection with s3 remote', function () {
   /** @type {Database} */
@@ -64,7 +66,8 @@ describe.skip('basic Connection with s3 remote', function () {
       }
     } = db
     await loader.remoteMetaLoading
-  }) // .timeout(10000)
+    // await sleep(1000)
+  })// .timeout(10000)
   it('should save a remote header', async function () {
     const {
       _crdt: {
@@ -73,7 +76,8 @@ describe.skip('basic Connection with s3 remote', function () {
     } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
-    equals(gotMain.key, loader.key)
+    // console.log(gotMain)
+    equals(gotMain[0].key, loader.key)
   }).timeout(10000)
   it('should get', async function () {
     const doc = await db.get('hello')
@@ -93,7 +97,7 @@ describe.skip('basic Connection with s3 remote', function () {
     } = db2
     await loader2.ready
     const gotMain = await loader2.remoteMetaStore.load('main')
-    equals(gotMain.key, loader2.key) // fails when remote not ingested
+    equals(gotMain[0].key, loader2.key) // fails when remote not ingested
 
     const doc = await db2.get('hello')
 
