@@ -63,7 +63,6 @@ export class ConnectWeb3 implements Connection {
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     await this.ready
     if (!this.client) { throw new Error('client not initialized') }
-
     console.log('w3 uploading car', params)
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
@@ -157,48 +156,41 @@ export class ConnectWeb3 implements Connection {
 
   async getClient(email: `${string}@${string}`) {
     const client = await create()
-    const existingSpace = client.currentSpace()
-    if (existingSpace?.registered()) {
-      const clockx = client.proofs([{ can: 'clock/*', with: existingSpace.did() }])
-      if (clockx.length) {
-        console.log('already authorized!', clockx, client)
-        console.log('space', existingSpace.registered(), existingSpace.did(), existingSpace.meta())
+    const proofs = client.proofs()
+    if (proofs.length === 0) {
+      console.log('emailing', email, client, client.spaces(), client.proofs())
+      await client.authorize(email, {
+        capabilities: [{ can: 'clock/*' },
+          { can: 'space/*' }, { can: 'provider/add' },
+          { can: 'store/*' }, { can: 'upload/*' }]
+      })
+    }
 
-        return client
+    const spaces = client.spaces()
+    console.log('existing spaces', client.currentSpace(), spaces)
+    let space
+    for (const s of spaces) {
+      space = s
+      console.log('space', space.registered(), space.did(), space.name())
+      if (s.registered()) {
+        break
       }
     }
-    console.log('emailing!!', email, client, client.spaces())
-    await client.authorize(email, {
-      capabilities: [{ can: 'clock/*' },
-        { can: 'space/*' }, { can: 'provider/add' },
-        { can: 'store/*' }, { can: 'upload/*' }]
-    })
-    // await client.capability.access.claim()
-    console.log('authorized??', client)
-    let space = client.currentSpace()
     if (space === undefined) {
-      const spaces = client.spaces()
-      for (const s of spaces) {
-        if (s.registered()) {
-          space = s
-          console.log('space', space.registered(), space.did(), space.meta())
-          break
-        }
-      }
-      if (space === undefined) {
-        // @ts-ignore
-        space = await client.createSpace(this.encodeSpaceName())
-      }
-      await client.setCurrentSpace(space.did())
+      // @ts-ignore
+      space = await client.createSpace(this.encodeSpaceName())
     }
+    await client.setCurrentSpace(space.did())
+
     if (!space.registered()) {
       console.log('registering space')
       await client.registerSpace(email)
     }
-    console.log('space', space.registered(), space.did(), space.meta())
+    console.log('rspace', space.registered(), space.did(), space.name())
 
     const clockx = client.proofs([{ can: 'clock/*', with: space.did() }])
     console.log('clockx', clockx)
+
     return client
   }
 }
