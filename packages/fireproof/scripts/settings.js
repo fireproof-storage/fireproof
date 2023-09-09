@@ -18,6 +18,12 @@ const entryPoints = fs
   .map(file => path.join('src', file))
 
 export function createBuildSettings(options) {
+
+  //A good video to understand these configurations of esbuild- https://www.youtube.com/watch?v=2VtEDCz0vzQ
+  //The commonsetting include
+  //- the ts files to be included in the build process
+  //- whether to bundle these files or not
+  // generating source maps for these files. Learn more about source maps here-https://www.youtube.com/watch?v=FIYkjjFYvoI
   const commonSettings = {
     entryPoints,
     bundle: true,
@@ -51,6 +57,9 @@ export function createBuildSettings(options) {
 
     const builds = []
 
+    //The outfile specifies the name of the files after they are transpiled
+    //esbuild recommends using the es2015+ format as compared to the commonjs one that it doesn't support
+    //banner is used to insert an arbitrary string at the beginning of generated JavaScript and CSS files
     const esmConfig = {
       ...commonSettings,
       outfile: `dist/test/${filename}.esm.js`,
@@ -65,7 +74,12 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
         `)
     }
-
+    //What is alias?
+    //This feature lets you substitute one package for another when bundling.
+    // The example below substitutes the package oldpkg with the package newpkg:
+    //esbuild app.js --bundle --alias:oldpkg=newpkg
+    //These new substitutions happen first before all of esbuild's other path resolution logic.
+    // One use case for this feature is replacing a node-only package with a browser-friendly package in third-party code that you don't control.
     const testEsmConfig = {
       ...esmConfig,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -80,8 +94,23 @@ const require = createRequire(import.meta.url);
 
     builds.push(testEsmConfig)
 
+    // if (/encrypted-block\./.test(entryPoint)) {
+    //   const nodecryptoConfig={
+    //     ...esmConfig,
+    //     //Two options? Not sure which one would work
+    //     //1st
+    //     esmConfig.banner.push(`import { Crypto } from '@peculiar/webcrypto'`),
+
+    //     //2nd
+    //     // banner:bannerLog(
+    //     //   `import { Crypto } from '@peculiar/webcrypto'`
+    //     // )
+    //   }
+    // }
+
     if (/fireproof\./.test(entryPoint)) {
       const esmPublishConfig = {
+        // ...nodecryptoConfig,
         ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
         entryPoints: [entryPoint]
