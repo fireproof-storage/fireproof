@@ -70,11 +70,7 @@ export class RemoteMetaStore extends MetaStoreBase {
       })
       // console.log('byteHeads', byteHeads?.length, byteHeads && byteHeads[0])
       if (!byteHeads) return null
-      const dbMetas = byteHeads.map((bytes) => {
-        const txt = new TextDecoder().decode(bytes)
-        // console.log('txt', txt)
-        return this.parseHeader(txt)
-      })
+      const dbMetas = this.dbMetasForByteHeads(byteHeads)
       console.log('dbMetas', dbMetas.length, dbMetas)
       return dbMetas
     } catch (e) {
@@ -83,12 +79,21 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
+  async save(meta: DbMeta, branch: string = 'main') {
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
-    const uploadParams: UploadMetaFnParams = {
+    const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),
       branch
-    }
-    await this.connection.metaUpload(bytes, uploadParams)
+    })
+    if (!byteHeads) return null
+    const dbMetas = this.dbMetasForByteHeads(byteHeads)
+    return dbMetas
+  }
+
+  dbMetasForByteHeads(byteHeads: Uint8Array[]) {
+    return byteHeads.map((bytes) => {
+      const txt = new TextDecoder().decode(bytes)
+      return this.parseHeader(txt)
+    })
   }
 }

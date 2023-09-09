@@ -74,11 +74,14 @@ export class MetaStore extends MetaStoreBase {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
+  async save(meta: DbMeta, branch: string = 'main') {
     try {
       const headerKey = this.headerKey(branch)
       const bytes = this.makeHeader(meta)
-      return localStorage.setItem(headerKey, bytes)
-    } catch (e) {}
+      localStorage.setItem(headerKey, bytes)
+      return null
+    } catch (e) {
+      return null
+    }
   }
 }
