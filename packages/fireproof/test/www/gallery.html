@@ -13,13 +13,21 @@
       let db
       let connection
 
+      let cancelRefresh
+
       function setupDb(name) {
+        if (cancelRefresh) {
+          cancelRefresh()
+        }
         dbName = name;
         db = fireproof(name);
         window.db = db;
         // connection = connect.s3(db, s3Info)
-        connection = db.connect("jchris+gallery9@fireproof.storage", "files")
-        window.connection = connection
+
+        // connection = db.connect("jchris+gallery9@fireproof.storage", "files")
+        // window.connection = connection
+        // cancelRefresh = autoRefresh()
+
         db.subscribe(redraw);
         return db;
       }
@@ -76,11 +84,24 @@
         }
       }
 
-      async function doRefresh(e) {
-        // e.preventDefault();
-        await connection.refresh();
+
+
+      let autoCancelled = false
+      async function autoRefresh() {
+        if (autoCancelled) {
+          autoCancelled = false
+          return
+        }
+        connection.refresh().then(() => {
+          setTimeout(autoRefresh, 2000);
+        }).catch((err) => {
+          console.log('refresh err', err)
+          setTimeout(autoRefresh, 10000);
+        })
+        return () => autoCancelled = true
       }
-      window.doRefresh = doRefresh;
+
+
 
       async function changeList(e) {
         e.preventDefault();
