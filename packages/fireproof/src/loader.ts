@@ -52,7 +52,7 @@ export abstract class Loader {
       if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
       const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
       if (metas) {
-        await this.mergeMetasFromRemote(metas)
+        await this.handleDbMetasFromStore(metas)
       }
     })
   }
@@ -63,14 +63,14 @@ export abstract class Loader {
     // eslint-disable-next-line @typescript-eslint/require-await
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (metas) => {
       if (metas) {
-        await this.mergeMetasFromRemote(metas)
+        await this.handleDbMetasFromStore(metas)
       }
     })
     connection.ready = Promise.all([this.remoteMetaLoading]).then(() => { })
     connection.refresh = async () => {
       await remote.load('main').then(async (metas) => {
         if (metas) {
-          await this.mergeMetasFromRemote(metas)
+          await this.handleDbMetasFromStore(metas)
         }
       })
     }
@@ -101,13 +101,13 @@ export abstract class Loader {
     await this._applyCarHeader(carHeader, true)
   }
 
-  async mergeMetasFromRemote(metas: DbMeta[]): Promise<void> {
+  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
     for (const meta of metas) {
-      await this.mergeMetaFromRemote(meta)
+      await this.mergeDbMetaIntoClock(meta)
     }
   }
 
-  async mergeMetaFromRemote(meta: DbMeta): Promise<void> {
+  async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
@@ -207,7 +207,7 @@ export abstract class Loader {
     this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
       const metas = await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
       if (metas) {
-        await this.mergeMetasFromRemote(metas)
+        await this.handleDbMetasFromStore(metas)
       }
     }).catch((e) => {
       console.error('Failed to save remote car or meta', e)
