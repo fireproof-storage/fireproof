@@ -36,6 +36,7 @@ const mockConnect = {
   // eslint-disable-next-line @typescript-eslint/require-await
   metaDownload: async function ({ name, branch }) {
     const key = new URLSearchParams({ name, branch }).toString()
+    if (!mockStore.has(key)) return null
     return [mockStore.get(key)]
   },
   dataDownload: async function ({ type, name, car }) {
