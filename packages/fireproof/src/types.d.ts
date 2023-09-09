@@ -8,7 +8,8 @@ export type FireproofOptions = {
   persistIndexes?: boolean
 }
 
-export type ClockHead = EventLink<EventData>[]
+export type ClockLink = EventLink<EventData>
+export type ClockHead = ClockLink[]
 
 export type DocFragment = string | number | boolean | null | DocFragment[] | { [key: string]: DocFragment }
 
