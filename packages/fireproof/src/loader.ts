@@ -59,20 +59,18 @@ export abstract class Loader {
 
   connectRemoteMeta(connection: Connection) {
     const remote = new RemoteMetaStore(this.name, connection)
-    this.remoteMetaStore = remote
-    // eslint-disable-next-line @typescript-eslint/require-await
-    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (metas) => {
+    remote.onLoad('main', async (metas) => {
+      console.log('remote meta load', metas)
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
     })
-    connection.ready = Promise.all([this.remoteMetaLoading]).then(() => { })
+    this.remoteMetaStore = remote
+    // eslint-disable-next-line @typescript-eslint/require-await
+    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(() => {})
+    connection.ready = Promise.all([this.remoteMetaLoading]).then(() => {})
     connection.refresh = async () => {
-      await remote.load('main').then(async (metas) => {
-        if (metas) {
-          await this.handleDbMetasFromStore(metas)
-        }
-      })
+      await remote.load('main')
     }
     return connection
   }

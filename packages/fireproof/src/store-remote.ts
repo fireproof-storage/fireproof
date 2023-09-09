@@ -1,7 +1,7 @@
 /* eslint-disable import/first */
 // console.log('import store-s3')
 
-import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, UploadDataFnParams, UploadMetaFnParams } from './types'
+import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import type { Loader } from './loader'
 // import type { Response } from 'cross-fetch'
@@ -50,10 +50,22 @@ export class RemoteDataStore extends DataStoreBase {
 export class RemoteMetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
   connection: Connection
+  subscribers: Map<string, LoadHandler[]> = new Map()
 
   constructor(name: string, connection: Connection) {
     super(name)
     this.connection = connection
+  }
+
+  onLoad(branch: string, loadHandler: LoadHandler): () => void {
+    const subscribers = this.subscribers.get(branch) || []
+    subscribers.push(loadHandler)
+    this.subscribers.set(branch, subscribers)
+    return () => {
+      const subscribers = this.subscribers.get(branch) || []
+      const idx = subscribers.indexOf(loadHandler)
+      if (idx > -1) subscribers.splice(idx, 1)
+    }
   }
 
   prefix() {
@@ -62,20 +74,25 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
-    try {
-      // console.log('metaDownload')
-      const byteHeads = await this.connection.metaDownload({
-        name: this.prefix(),
-        branch
-      })
-      // console.log('byteHeads', byteHeads?.length, byteHeads && byteHeads[0])
-      if (!byteHeads) return null
-      const dbMetas = this.dbMetasForByteHeads(byteHeads)
-      console.log('dbMetas', dbMetas.length, dbMetas)
-      return dbMetas
-    } catch (e) {
-      return null
+    // try {
+    // console.log('metaDownload')
+    const byteHeads = await this.connection.metaDownload({
+      name: this.prefix(),
+      branch
+    })
+    // console.log('byteHeads', byteHeads?.length, byteHeads && byteHeads[0])
+    if (!byteHeads) return null
+    console.log('byteHeads', byteHeads.length, byteHeads)
+    const dbMetas = this.dbMetasForByteHeads(byteHeads)
+    console.log('dbMetas', dbMetas.length, dbMetas)
+    const subscribers = this.subscribers.get(branch) || []
+    for (const subscriber of subscribers) {
+      await subscriber(dbMetas)
     }
+    return dbMetas
+    // } catch (e) {
+    //   return null
+    // }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await

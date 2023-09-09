@@ -169,6 +169,8 @@ export type MetaDownloadFn = (params: DownloadMetaFnParams) => Promise<Uint8Arra
 
 export type DataDownloadFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null>
 
+export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
+
 export interface Connection {
   ready: Promise<any>
   metaUpload: MetaUploadFn
