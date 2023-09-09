@@ -205,14 +205,10 @@ export abstract class Loader {
 
     await this.carStore!.save({ cid, bytes })
     this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
-      // console.log('saving remote meta', cid.toString())
-
-      // await this.remoteMetaStore?.load('main').then(async (metas) => {
-      await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
-      // if (metas) {
-      // await this.mergeMetasFromRemote(metas)
-      // }
-      // })
+      const metas = await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
+      if (metas) {
+        await this.mergeMetasFromRemote(metas)
+      }
     }).catch((e) => {
       console.error('Failed to save remote car or meta', e)
     })

@@ -29,7 +29,7 @@ export abstract class MetaStore extends VersionedStore {
   }
 
   abstract load(branch?: string): Promise<DbMeta[] | null>
-  abstract save(dbMeta: DbMeta, branch?: string): Promise<void>
+  abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | null>
 }
 
 export abstract class DataStore {
