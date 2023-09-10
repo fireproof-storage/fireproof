@@ -113,14 +113,13 @@ export abstract class Loader {
     }
     console.log('new meta car', meta.car.toString())
     const carHeader = await this.loadCarHeaderFromMeta(meta)
-    const remoteCarLog = [meta.car, ...carHeader.cars]
+    const remoteCarLog = [meta.car, ...carHeader.cars, ...carHeader.compact]
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
       this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
       void this.getMoreReaders(carHeader.cars)
       await this._applyCarHeader(carHeader)
     } else {
-      // throw new Error('remote car log does not include local car log')
       const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
       this.carLog = newCarLog
 
@@ -193,6 +192,8 @@ export abstract class Loader {
     const theKey = await this._getKey()
     const { cid, bytes } = theKey ? await encryptedEncodeCarFile(theKey, roots[0], t) : await encodeCarFile(roots, t)
 
+    // save the car locally and remote
+
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
       await dbLoader.fileStore!.save({ cid, bytes })
@@ -209,7 +210,7 @@ export abstract class Loader {
         await this.handleDbMetasFromStore(metas)
       }
     }).catch((e) => {
-      console.error('Failed to save remote car or meta', e)
+      console.log('Failed to save remote car or meta', e, cid.toString())
     })
     await this.metaStore!.save({ car: cid, key: theKey || null })
 

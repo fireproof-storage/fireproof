@@ -17,7 +17,7 @@ export async function applyBulkUpdateToCrdt(
   options?: object
 ): Promise<BulkResult> {
   let result
-  console.log('applyBulkUpdateToCrdt', head.toString())
+  // console.log('applyBulkUpdateToCrdt', head.toString())
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
