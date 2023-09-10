@@ -95,6 +95,10 @@ export class RemoteMetaStore extends MetaStoreBase {
     })
     if (!byteHeads) return null
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
+    const subscribers = this.subscribers.get(branch) || []
+    for (const subscriber of subscribers) {
+      await subscriber(dbMetas)
+    }
     return dbMetas
   }
 

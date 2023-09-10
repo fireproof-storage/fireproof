@@ -198,6 +198,8 @@ export abstract class Loader {
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
       await dbLoader.fileStore!.save({ cid, bytes })
+
+      // instead of writing, enqueue
       dbLoader.remoteFileStore?.save({ cid, bytes }).catch((e: Error) => {
         console.error('Failed to save remote file', done, e)
       })
@@ -205,11 +207,15 @@ export abstract class Loader {
     }
 
     await this.carStore!.save({ cid, bytes })
+    // instead of writing the remote car and meta, we should enqueue them
+    // this shoould be to a car file with a name like _local_meta.car
+    // it would have a list of car cids to upload
+    // after we write the car, we should write the meta
+    // we can write all the cars and just the last meta
+    // await this.localStore.enqueue({ cid, bytes })
+
     this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
-      const metas = await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
-      if (metas) {
-        await this.handleDbMetasFromStore(metas)
-      }
+      await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
     }).catch((e) => {
       console.log('Failed to save remote car or meta', e, cid.toString())
     })
