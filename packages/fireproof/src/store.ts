@@ -8,7 +8,7 @@ const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
 
-const mockStore = new Map<string, ToString<WALState>>()
+// const mockStore = new Map<string, ToString<WALState>>()
 
 abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION
@@ -35,7 +35,7 @@ export abstract class MetaStore extends VersionedStore {
   abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | null>
 }
 
-type WALState = {
+export type WALState = {
   operations: DbMeta[]
 }
 
@@ -110,21 +110,22 @@ export abstract class RemoteWAL {
     await rmlp
   }
 
-  // abstract load(branch?: string): Promise<AnyBlock|null>
+  // eslint-disable-next-line @typescript-eslint/require-await
+  // async load(branch = 'main'): Promise<WALState | null> {
+  //   const got = mockStore.get(branch)
+  //   if (!got) return null
+  //   return parse<WALState>(got)
+  // }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch = 'main'): Promise<WALState | null> {
-    const got = mockStore.get(branch)
-    if (!got) return null
-    return parse<WALState>(got)
-  }
+  // async save(state: WALState, branch = 'main'): Promise<null> {
+  //   const encoded: ToString<WALState> = format(state)
+  //   mockStore.set(branch, encoded)
+  //   return null
+  // }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async save(state: WALState, branch = 'main'): Promise<null> {
-    const encoded: ToString<WALState> = format(state)
-    mockStore.set(branch, encoded)
-    return null
-  }
+  abstract load(branch?: string): Promise<WALState | null>
+  abstract save(state: WALState, branch?: string): Promise<void>
 }
 
 export abstract class DataStore {

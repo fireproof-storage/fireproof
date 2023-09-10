@@ -1,9 +1,9 @@
 /* eslint-disable import/first */
 // console.log('import store-browser')
-
+import { format, parse, ToString } from '@ipld/dag-json'
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase } from './store'
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase, WALState } from './store'
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-browser-idb'
@@ -52,15 +52,38 @@ export class DataStore extends DataStoreBase {
 }
 
 export class RemoteWAL extends RemoteWALBase {
+  tag: string = 'wal-browser-ls'
 
+  headerKey(branch: string) {
+    // remove 'public' on next storage version bump
+    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async load(branch = 'main'): Promise<WALState | null> {
+    try {
+      const bytesString = localStorage.getItem(this.headerKey(branch))
+      if (!bytesString) return null
+      return parse<WALState>(bytesString)
+    } catch (e) {
+      return null
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async save(state: WALState, branch = 'main'): Promise<void> {
+    try {
+      const encoded: ToString<WALState> = format(state)
+      localStorage.setItem(this.headerKey(branch), encoded)
+    } catch (e) {}
+  }
 }
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
 
   headerKey(branch: string) {
-    // remove 'public' on next storage version bump
-    return `fp.${this.STORAGE_VERSION}.public.${this.name}.${branch}`
+    return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
