@@ -8,6 +8,8 @@ const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
 
+const mockStore = new Map<string, ToString<WALState>>()
+
 abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION
   name: string
@@ -33,27 +35,38 @@ export abstract class MetaStore extends VersionedStore {
   abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | null>
 }
 
+type WALState = {
+  operations: DbMeta[]
+}
+
 export abstract class RemoteWAL {
   tag: string = 'rwal-base'
 
   STORAGE_VERSION: string = STORAGE_VERSION
   loader: Loader
+  ready: Promise<void>
 
   operations: DbMeta[] = []
   processing: Promise<void> | undefined = undefined
 
   constructor(loader: Loader) {
     this.loader = loader
+    this.ready = (async () => {
+      const walState = await this.load()
+      this.operations = walState?.operations || []
+    })()
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
+    await this.ready
     console.log('enqueue', !!this.processing, this.operations.length, dbMeta.car.toString())
     this.operations.push(dbMeta)
-    if (!opts.noLoader) { void this.process() }
+    await this.save({ operations: this.operations })
+    if (!opts.noLoader) { void this._process() }
   }
 
-  async process() {
+  async _process() {
     if (!this.loader.remoteCarStore) return
     if (this.processing) return this.processing
     const p = (async () => {
@@ -63,7 +76,7 @@ export abstract class RemoteWAL {
     await p
     this.processing = undefined
     console.log('this.operations.length', this.operations.length)
-    if (this.operations.length) setTimeout(() => void this.process(), 0)
+    if (this.operations.length) setTimeout(() => void this._process(), 0)
   }
 
   async _int_process() {
@@ -89,6 +102,7 @@ export abstract class RemoteWAL {
       console.log('mid ops', callId, operations.length, this.operations.length, this.operations.map(o => o.car.toString()))
       // this.operations =
       this.operations.splice(0, operations.length)
+      await this.save({ operations: this.operations })
       console.log('done uploading', callId, uploads.length, done.length, done.map(d => JSON.stringify(d)))
       console.log('remainging ops', callId, this.operations.length, this.operations.map(o => o.car.toString()))
     })()
@@ -96,8 +110,21 @@ export abstract class RemoteWAL {
     await rmlp
   }
 
-  // abstract load(branch?: string): Promise<AnyBlock>
-  // abstract save(car: AnyBlock, branch?: string): Promise<void>
+  // abstract load(branch?: string): Promise<AnyBlock|null>
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async load(branch = 'main'): Promise<WALState | null> {
+    const got = mockStore.get(branch)
+    if (!got) return null
+    return parse<WALState>(got)
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async save(state: WALState, branch = 'main'): Promise<null> {
+    const encoded: ToString<WALState> = format(state)
+    mockStore.set(branch, encoded)
+    return null
+  }
 }
 
 export abstract class DataStore {
