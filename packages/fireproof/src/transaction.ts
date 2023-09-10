@@ -137,3 +137,18 @@ export class TransactionBlockstore extends FireproofBlockstore {
 
 type IdxMetaCar = IdxMeta & CarCommit
 type BulkResultCar = BulkResult & CarCommit
+
+export class LoggingFetcher implements BlockFetcher {
+  blocks: TransactionBlockstore
+  loader: DbLoader | IdxLoader | null = null
+  cids: Set<AnyLink> = new Set()
+  constructor(blocks: TransactionBlockstore) {
+    this.blocks = blocks
+    this.loader = blocks.loader
+  }
+
+  async get(cid: AnyLink) {
+    this.cids.add(cid)
+    return await this.blocks.get(cid)
+  }
+}
