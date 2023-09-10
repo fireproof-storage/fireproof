@@ -46,7 +46,10 @@ export class CRDTClock {
       // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
       let head = this.head
       for (const cid of newHead) {
-        head = await advance(tblocks, this.head, cid)
+        head = await advance(tblocks, head, cid).catch((e) => {
+          console.error('failed to advance', e)
+          return head
+        })
       }
       const result = await root(tblocks, head)
       for (const { cid, bytes } of [...result.additions, ...result.removals]) {

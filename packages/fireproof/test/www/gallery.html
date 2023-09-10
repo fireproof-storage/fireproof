@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=7840000"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=7840"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -24,9 +24,9 @@
         window.db = db;
         // connection = connect.s3(db, s3Info)
 
-        connection = db.connect("jchris+gallery7@fireproof.storage", "files")
+        connection = db.connect("jchris+gallery10@fireproof.storage", "files")
         window.connection = connection
-        // cancelRefresh = autoRefresh()
+        cancelRefresh = autoRefresh()
 
         db.subscribe(redraw);
         return db;
@@ -92,7 +92,7 @@
           autoCancelled = false
           return
         }
-        console.log('autoRefresh')
+        // console.log('autoRefresh')
         connection.refresh().then(() => {
           setTimeout(autoRefresh, 2000);
         }).catch((err) => {
