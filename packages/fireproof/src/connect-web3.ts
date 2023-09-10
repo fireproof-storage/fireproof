@@ -5,7 +5,7 @@ import * as w3clock from '@web3-storage/clock/client'
 
 // import * as DID from '@ipld/dag-ucan/did'
 import type { Link } from 'multiformats'
-import type { BlockFetcher, Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import type { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
@@ -151,13 +151,19 @@ export class ConnectWeb3 implements Connection {
 
     const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
 
-    await this.client?.uploadCAR(new Blob([carBytes]))
+    await this.client!.uploadCAR(new Blob([carBytes]))
+
+    const blocks = []
+    for (const { bytes: eventBytes } of eventBlocks.entries()) {
+      // @ts-ignore
+      blocks.push(await decodeEventBlock(eventBytes))
+    }
 
     const advanced = await w3clock.advance({
       issuer,
       with: space.did(),
       proofs: clockProofs
-    }, event.cid, { blocks: [event] })
+    }, event.cid, { blocks })
     this.parents = [event.cid]
     // @ts-ignore
     const { ok, error } = advanced.root.data?.ocm.out
