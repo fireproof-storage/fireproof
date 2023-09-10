@@ -8,6 +8,7 @@ import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
 import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
+  CarHeader,
   CarLoaderHeader,
   CommitOpts,
   Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
@@ -113,21 +114,11 @@ export abstract class Loader {
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
-    console.log('new meta car', meta.car.toString())
+    console.log('merge meta car', meta.car.toString())
     const carHeader = await this.loadCarHeaderFromMeta(meta)
-    const remoteCarLog = [meta.car, ...carHeader.cars, ...carHeader.compact]
-    if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
-      // fast forward to remote
-      this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
-      void this.getMoreReaders(carHeader.cars)
-      await this._applyCarHeader(carHeader)
-    } else {
-      const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
-      this.carLog = newCarLog
-
-      void this.getMoreReaders(carHeader.cars)
-      await this._applyCarHeader(carHeader)
-    }
+    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
+    void this.getMoreReaders(carHeader.cars)
+    await this._applyCarHeader(carHeader)
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -224,10 +215,11 @@ export abstract class Loader {
     await this.metaStore!.save({ car: cid, key: theKey || null })
 
     if (opts.compact) {
-      for (const cid of this.carLog) {
+      const fpCar = fp as CarLoaderHeader
+      for (const cid of fpCar.compact) {
         await this.carStore!.remove(cid)
       }
-      this.carLog = [cid]
+      this.carLog = [...uniqueCids([cid, ...this.carLog], fpCar.compact)]
     } else {
       this.carLog.unshift(cid)
     }
