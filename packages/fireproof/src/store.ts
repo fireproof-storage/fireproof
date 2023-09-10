@@ -45,3 +45,12 @@ export abstract class DataStore {
   abstract save(car: AnyBlock): Promise<void>
   abstract remove(cid: AnyLink): Promise<void>
 }
+
+export abstract class LocalStore extends VersionedStore {
+  tag: string = 'local-base'
+
+  STORAGE_VERSION: string = STORAGE_VERSION
+
+  abstract load(branch?: string): Promise<AnyBlock>
+  abstract save(car: AnyBlock, branch?: string): Promise<void>
+}
