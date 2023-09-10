@@ -128,7 +128,6 @@ export class TransactionBlockstore extends FireproofBlockstore {
 
   async transaction(fn: (t: Transaction) => Promise<BulkResult>, _indexes?: undefined, opts = { noLoader: false }): Promise<BulkResultCar> {
     return this.executeTransaction(fn, async (t, done) => {
-      // if (opts.noLoader) return { done }
       const car = await this.loader?.commit(t, done, opts)
       return { car, done }
     })

@@ -31,14 +31,14 @@ export class RemoteDataStore extends DataStoreBase {
     return { cid: carCid, bytes }
   }
 
-  async save(car: AnyBlock): Promise<void> {
+  async save(car: AnyBlock) {
     const uploadParams: UploadDataFnParams = {
       type: this.type,
       name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
-    await this.connection.dataUpload(car.bytes, uploadParams)
+    return await this.connection.dataUpload(car.bytes, uploadParams)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -87,7 +87,7 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
-    console.log('save DbMeta', meta.car.toString())
+    // console.log('save DbMeta', meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),
