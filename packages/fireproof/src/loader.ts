@@ -60,7 +60,7 @@ export abstract class Loader {
   connectRemoteMeta(connection: Connection) {
     const remote = new RemoteMetaStore(this.name, connection)
     remote.onLoad('main', async (metas) => {
-      console.log('remote meta load', metas)
+      // console.log('remote meta load', metas)
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -111,6 +111,7 @@ export abstract class Loader {
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
+    console.log('new meta car', meta.car.toString())
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     const remoteCarLog = [meta.car, ...carHeader.cars]
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
