@@ -89,6 +89,7 @@ export abstract class Loader {
     // this.remoteWAL = new RemoteWAL(this.name, this.carStore!, this.remoteCarStore!, this.remoteMetaStore!)
     // todo put this where it can be used by crdt bulk
     connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => { })
+    void this.remoteWAL?._process()
     return connection
   }
 
