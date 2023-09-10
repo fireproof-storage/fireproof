@@ -68,6 +68,7 @@ export abstract class RemoteWAL {
 
   async _process() {
     if (!this.loader.remoteCarStore) return
+    await this.ready
     if (this.processing) return this.processing
     const p = (async () => {
       await this._int_process()
