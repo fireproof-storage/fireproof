@@ -133,6 +133,8 @@ export type MapFn = (doc: Doc, map: CallbackFn) => DocFragment | void
 
 export type DbMeta = { car: AnyLink, key: string | null }
 
+export type CommitOpts = { noLoader?: boolean, compact?: boolean }
+
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>
   get(cid: AnyLink): Promise<AnyBlock | undefined>

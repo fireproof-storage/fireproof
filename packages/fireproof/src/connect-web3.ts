@@ -154,7 +154,7 @@ export class ConnectWeb3 implements Connection {
     await this.client!.uploadCAR(new Blob([carBytes]))
 
     const blocks = []
-    for (const { bytes: eventBytes } of eventBlocks.entries()) {
+    for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
       // @ts-ignore
       blocks.push(await decodeEventBlock(eventBytes))
     }
