@@ -72,31 +72,22 @@ export class RemoteMetaStore extends MetaStoreBase {
     return `fp.${this.name}.${this.STORAGE_VERSION}`
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
-    // try {
-    // console.log('metaDownload')
     const byteHeads = await this.connection.metaDownload({
       name: this.prefix(),
       branch
     })
-    // console.log('byteHeads', byteHeads?.length, byteHeads && byteHeads[0])
     if (!byteHeads) return null
-    console.log('byteHeads', byteHeads.length, byteHeads)
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    console.log('dbMetas', dbMetas.length, dbMetas)
     const subscribers = this.subscribers.get(branch) || []
     for (const subscriber of subscribers) {
       await subscriber(dbMetas)
     }
     return dbMetas
-    // } catch (e) {
-    //   return null
-    // }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async save(meta: DbMeta, branch: string = 'main') {
+    console.log('save DbMeta', meta)
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),

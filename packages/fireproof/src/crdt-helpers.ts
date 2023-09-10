@@ -17,6 +17,7 @@ export async function applyBulkUpdateToCrdt(
   options?: object
 ): Promise<BulkResult> {
   let result
+  console.log('applyBulkUpdateToCrdt', head.toString())
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
@@ -159,6 +160,7 @@ async function gatherUpdates(
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
+  console.log('gatherUpdates', didLinks.size, keys.size)
   const sHead = head.map(l => l.toString())
   for (const link of since) {
     if (sHead.includes(link.toString())) {
@@ -193,6 +195,12 @@ export async function * getAllEntries(blocks: TransactionBlockstore, head: Clock
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link)
     yield { key, value: docValue.doc, del: docValue.del } as DocUpdate
+  }
+}
+
+export async function * clockVis(blocks: TransactionBlockstore, head: ClockHead) {
+  for await (const line of vis(blocks, head)) {
+    yield line
   }
 }
 
