@@ -17,9 +17,10 @@ import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
-export function uniqueCids(list: AnyLink[]): AnyLink[] {
+export function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
   const byString = new Map<string, AnyLink>()
   for (const cid of list) {
+    if (cidListIncludes(remove, cid)) continue
     byString.set(cid.toString(), cid)
   }
   return [...byString.values()]
@@ -116,11 +117,11 @@ export abstract class Loader {
     const remoteCarLog = [meta.car, ...carHeader.cars, ...carHeader.compact]
     if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
       // fast forward to remote
-      this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
+      this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
       void this.getMoreReaders(carHeader.cars)
       await this._applyCarHeader(carHeader)
     } else {
-      const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
+      const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
       this.carLog = newCarLog
 
       void this.getMoreReaders(carHeader.cars)
@@ -176,7 +177,7 @@ export abstract class Loader {
 
   async _commitInternal(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
     await this.ready
-
+    console.trace('_commitInternal', compact)
     const fp = this.makeCarHeader(done, this.carLog, compact)
     let roots: AnyLink[] = []
     // @ts-ignore

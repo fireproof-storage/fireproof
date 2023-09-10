@@ -41,6 +41,7 @@
 
       let doing
       const redraw = async () => {
+        console.log('redraw')
         if (doing) {
           return doing
         }
@@ -80,8 +81,8 @@
               .appendChild(li);
           }
         } finally {
-          const chgs = await db.changes([], { dirty: true });
-          console.log('changes', chgs.rows.map(r => r.value.task), chgs)
+          // const chgs = await db.changes([], { dirty: true });
+          // console.log('changes', chgs.rows.map(r => r.value.task), chgs)
         }
       }
 

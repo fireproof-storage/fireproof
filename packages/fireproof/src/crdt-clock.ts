@@ -39,7 +39,7 @@ export class CRDTClock {
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
       if (tblocks instanceof Transaction) return await fn(tblocks)
       if (!this.blocks) throw new Error('missing blocks')
-      return await this.blocks.transaction(fn)
+      return await this.blocks.transaction(fn, undefined, { noLoader: true })
     }
 
     const { head } = await withBlocks(tblocks, async (tblocks) => {

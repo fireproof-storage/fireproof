@@ -45,7 +45,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
     }
   }
 
-  abstract transaction(fn: (t: Transaction) => Promise<IdxMeta | BulkResult>, indexes?: Map<string, IdxMeta>): Promise<BulkResultCar | IdxMetaCar>
+  abstract transaction(fn: (t: Transaction) => Promise<IdxMeta | BulkResult>, indexes?: Map<string, IdxMeta>, opts?: { noLoader: boolean}): Promise<BulkResultCar | IdxMetaCar>
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async put() {
@@ -126,8 +126,9 @@ export class TransactionBlockstore extends FireproofBlockstore {
     }
   }
 
-  async transaction(fn: (t: Transaction) => Promise<BulkResult>): Promise<BulkResultCar> {
+  async transaction(fn: (t: Transaction) => Promise<BulkResult>, _indexes?: undefined, opts = { noLoader: false }): Promise<BulkResultCar> {
     return this.executeTransaction(fn, async (t, done) => {
+      if (opts.noLoader) return { done }
       const car = await this.loader?.commit(t, done)
       return { car, done }
     })
