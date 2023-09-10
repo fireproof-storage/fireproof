@@ -3,7 +3,7 @@
 
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase } from './store'
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-browser-idb'
@@ -49,6 +49,10 @@ export class DataStore extends DataStoreBase {
       return await tx.done
     })
   }
+}
+
+export class RemoteWAL extends RemoteWALBase {
+
 }
 
 export class MetaStore extends MetaStoreBase {
