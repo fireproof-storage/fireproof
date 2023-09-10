@@ -86,7 +86,7 @@ describe('basic Loader with two commits', function () {
     assert(parsed.head)
   })
   it('should compact', async function () {
-    const compactCid = await loader.commit(t, { head: [block2.cid] }, true)
+    const compactCid = await loader.commit(t, { head: [block2.cid] }, { compact: true })
     equals(loader.carLog.length, 1)
 
     const reader = await loader.loadCar(compactCid)
@@ -98,7 +98,7 @@ describe('basic Loader with two commits', function () {
     assert(parsed.head)
   })
   it('compact should erase old files', async function () {
-    await loader.commit(t, { head: [block2.cid] }, true)
+    await loader.commit(t, { head: [block2.cid] }, { compact: true })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)

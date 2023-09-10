@@ -65,7 +65,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
   async commitCompaction(t: Transaction, head: ClockHead) {
     this.transactions.clear()
     this.transactions.add(t)
-    return await this.loader?.commit(t, { head }, true)
+    return await this.loader?.commit(t, { head }, { compact: true })
   }
 
   async * entries(): AsyncIterableIterator<AnyBlock> {
@@ -128,8 +128,8 @@ export class TransactionBlockstore extends FireproofBlockstore {
 
   async transaction(fn: (t: Transaction) => Promise<BulkResult>, _indexes?: undefined, opts = { noLoader: false }): Promise<BulkResultCar> {
     return this.executeTransaction(fn, async (t, done) => {
-      if (opts.noLoader) return { done }
-      const car = await this.loader?.commit(t, done)
+      // if (opts.noLoader) return { done }
+      const car = await this.loader?.commit(t, done, opts)
       return { car, done }
     })
   }

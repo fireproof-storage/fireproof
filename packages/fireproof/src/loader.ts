@@ -9,6 +9,7 @@ import type { Transaction } from './transaction'
 import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   CarLoaderHeader,
+  CommitOpts,
   Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { DataStore, MetaStore } from './store'
@@ -165,20 +166,20 @@ export abstract class Loader {
   }
 
   private committing: Promise<AnyLink> | undefined
-  async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
+  async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, opts: CommitOpts = { noLoader: false, compact: false }): Promise<AnyLink> {
     if (this.committing) {
       await this.committing
     }
-    this.committing = this._commitInternal(t, done, compact)
+    this.committing = this._commitInternal(t, done, opts)
     const result = await this.committing
     this.committing = undefined
     return result
   }
 
-  async _commitInternal(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
+  async _commitInternal(t: Transaction, done: IndexerResult | BulkResult | FileResult, opts: CommitOpts = { noLoader: false, compact: false }): Promise<AnyLink> {
     await this.ready
-    console.trace('_commitInternal', compact)
-    const fp = this.makeCarHeader(done, this.carLog, compact)
+    // console.trace('_commitInternal', opts)
+    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
     let roots: AnyLink[] = []
     // @ts-ignore
     if (fp.files) {
@@ -215,13 +216,14 @@ export abstract class Loader {
     // await this.localStore.enqueue({ cid, bytes })
 
     this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
+      if (opts.noLoader) return
       await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
     }).catch((e) => {
       console.log('Failed to save remote car or meta', e, cid.toString())
     })
     await this.metaStore!.save({ car: cid, key: theKey || null })
 
-    if (compact) {
+    if (opts.compact) {
       for (const cid of this.carLog) {
         await this.carStore!.remove(cid)
       }
