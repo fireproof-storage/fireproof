@@ -5,11 +5,15 @@ import { join, dirname } from 'path'
 import { homedir } from 'os'
 import { mkdir, readFile, writeFile, unlink } from 'fs/promises'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
-import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase } from './store'
+import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase, RemoteWAL as RemoteWALBase } from './store'
 
 // todo refactor this system to the current store-remote is the new prototype
 // this would mean that there'd be a version of filesystem and browser access
 // that use the Connection interface
+
+export class RemoteWAL extends RemoteWALBase {
+
+}
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'

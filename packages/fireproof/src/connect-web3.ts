@@ -64,13 +64,13 @@ export class ConnectWeb3 implements Connection {
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     await this.ready
     if (!this.client) { throw new Error('client not initialized') }
-    // console.log('w3 uploading car', params)
+    console.log('w3 uploading car', params.car)
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
     // await this.client?.uploadCAR(new Blob([bytes]))
-    await this.client?.uploadFile(new Blob([bytes]))
+    return await this.client?.uploadFile(new Blob([bytes]))
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
@@ -151,7 +151,8 @@ export class ConnectWeb3 implements Connection {
 
     const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
 
-    await this.client!.uploadCAR(new Blob([carBytes]))
+    const uploaded = await this.client!.uploadCAR(new Blob([carBytes]))
+    console.log('uploaded', uploaded.toString(), bytes.length)
 
     const blocks = []
     for (const { bytes: eventBytes } of this.eventBlocks.entries()) {

@@ -21,7 +21,7 @@ export class CRDTClock {
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    console.log('applyHead', ogHead.toString(), newHead.toString(), prevHead.toString(), updates.length)
+    // console.log('applyHead', ogHead.toString(), newHead.toString(), prevHead.toString(), updates.length)
     if (ogHead.toString() === newHead.toString()) {
       this.watchers.forEach((fn) => fn(updates))
       return
@@ -47,16 +47,17 @@ export class CRDTClock {
       // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
       let head = this.head
       for (const cid of newHead) {
-        head = await advance(tblocks, head, cid).catch((e) => {
-          console.error('failed to advance', e)
-          return head
-        })
+        head = await advance(tblocks, head, cid)
+        // .catch((e) => {
+        //   console.error('failed to advance', e)
+        //   return head
+        // })
       }
       const result = await root(tblocks, head)
       for (const { cid, bytes } of [...result.additions, ...result.removals]) {
         tblocks.putSync(cid, bytes)
       }
-      console.log('applyHead ->', head.toString())
+      // console.log('applyHead ->', head.toString())
       return { head }
     })
 

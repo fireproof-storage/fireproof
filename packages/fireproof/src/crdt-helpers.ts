@@ -160,7 +160,7 @@ async function gatherUpdates(
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
-  console.log('gatherUpdates', didLinks.size, keys.size)
+  // console.log('gatherUpdates', didLinks.size, keys.size)
   const sHead = head.map(l => l.toString())
   for (const link of since) {
     if (sHead.includes(link.toString())) {
