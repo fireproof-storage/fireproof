@@ -2,7 +2,7 @@ import type { CID } from 'multiformats'
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
+import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
@@ -217,6 +217,11 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _line of vis(blockLog, head)) {
     void 1
+  }
+
+  const result = await root(blockLog, head)
+  for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+    newBlocks.putSync(cid, bytes)
   }
 
   for (const cid of blockLog.cids) {
