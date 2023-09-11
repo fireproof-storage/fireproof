@@ -11,42 +11,61 @@ import { validateDataParams } from './connect'
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { Database, fireproof } from './database'
 
 // almost ClockHead, different kind of clock
 type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
 
+type ConnectWeb3Params = { name: string, email: `${string}@${string}`, schema: string }
 export class ConnectWeb3 implements Connection {
-  dbName: string
-  email: `${string}@${string}`
+  params: ConnectWeb3Params
   ready: Promise<void>
   client: Client | null = null
-  schema: string
   parents: CarClockHead = []
   eventBlocks = new MemoryBlockstore()
+  accountDb: Database | null = null
+  accountConnection: ConnectWeb3 | null = null
+  inner = false
 
-  constructor(dbName: string, email: `${string}@${string}`, schemaName = 'unknown') {
-    this.dbName = dbName
-    this.email = email
-    this.schema = schemaName
+  constructor(params: ConnectWeb3Params, _database?: Database) {
+    this.params = params
+    if (_database) {
+      this.inner = true
+      this.accountDb = _database
+    }
     this.ready = this.initializeClient()
   }
 
   async initializeClient() {
-    this.client = await this.getClient(this.email)
+    if (this.inner) {
+      // we are an inner client
+      this.client = await this.connectClient(this.params.email)
+    } else {
+      this.accountDb = fireproof('_connect-web3')
+      this.accountConnection = new ConnectWeb3(this.params, this.accountDb)
+      const { _crdt: { blocks: { loader } } } = this.accountDb
+      loader?.connectRemote(this.accountConnection)
+    }
   }
 
-  encodeSpaceName() {
-    const schemaPart = encodeURIComponent(this.schema)
-    const namePart = encodeURIComponent(this.dbName)
-    return `${schemaPart}/${namePart}`
+  async clientForDb() {
+    if (this.inner) return this.client!
+    await this.accountConnection!.ready
+    return this.accountConnection!.client!
   }
 
-  decodeSpaceName(spaceName: `${string}/${string}`) {
-    const [schemaPart, namePart] = spaceName.split('/')
-    const schema = decodeURIComponent(schemaPart)
-    const name = decodeURIComponent(namePart)
-    return { schema, name }
-  }
+  // encodeSpaceName() {
+  //   const schemaPart = encodeURIComponent(this.schema)
+  //   const namePart = encodeURIComponent(this.dbName)
+  //   return `${schemaPart}/${namePart}`
+  // }
+
+  // decodeSpaceName(spaceName: `${string}/${string}`) {
+  //   const [schemaPart, namePart] = spaceName.split('/')
+  //   const schema = decodeURIComponent(schemaPart)
+  //   const name = decodeURIComponent(namePart)
+  //   return { schema, name }
+  // }
 
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
@@ -63,26 +82,28 @@ export class ConnectWeb3 implements Connection {
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     await this.ready
-    if (!this.client) { throw new Error('client not initialized') }
+    const client = await this.clientForDb()
+    if (!client) { throw new Error('client not initialized') }
     // console.log('w3 uploading car', params.car)
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
-    // await this.client?.uploadCAR(new Blob([bytes]))
-    return await this.client?.uploadFile(new Blob([bytes]))
+    // await client.uploadCAR(new Blob([bytes]))
+    return await client.uploadFile(new Blob([bytes]))
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
     await this.ready
+    const client = await this.clientForDb()
     // console.log('w3 meta download', params)
     // @ts-ignore
-    const { issuer } = this.client!._agent
+    const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
-    const space = this.client!.currentSpace()
+    const space = client.currentSpace() // use clock space
     if (!space) { throw new Error('space not initialized') }
-    const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
+    const clockProofs = client.proofs([{ can: 'clock/*', with: space.did() }])
     if (!clockProofs.length) { throw new Error('need clock/* capability') }
     const head = await w3clock.head({
       issuer,
@@ -130,15 +151,16 @@ export class ConnectWeb3 implements Connection {
 
   // bytes is encoded {car, key}, not our job to decode, just return on download
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
+    const client = await this.clientForDb()
     // @ts-ignore
-    const { issuer } = this.client!._agent
+    const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
 
-    const space = this.client!.currentSpace()
+    const space = client.currentSpace()
     if (!space) { throw new Error('space not initialized') }
 
-    const clockProofs = this.client!.proofs([{ can: 'clock/*', with: space.did() }])
+    const clockProofs = client.proofs([{ can: 'clock/*', with: space.did() }]) // use clock space
     if (!clockProofs.length) { throw new Error('need clock/* capability') }
 
     const data = {
@@ -151,7 +173,7 @@ export class ConnectWeb3 implements Connection {
 
     const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
 
-    await this.client!.uploadCAR(new Blob([carBytes]))
+    await client.uploadCAR(new Blob([carBytes]))
 
     const blocks = []
     for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
@@ -172,7 +194,7 @@ export class ConnectWeb3 implements Connection {
     return this.fetchAndUpdateHead(head)
   }
 
-  async getClient(email: `${string}@${string}`) {
+  async connectClient(email: `${string}@${string}`) {
     const client = await create()
     const proofs = client.proofs()
     if (proofs.length === 0) {
@@ -194,8 +216,7 @@ export class ConnectWeb3 implements Connection {
       }
     }
     if (space === undefined) {
-      // @ts-ignore
-      space = await client.createSpace(this.encodeSpaceName())
+      space = await client.createSpace()
     }
     await client.setCurrentSpace(space.did())
 
