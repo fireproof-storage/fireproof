@@ -4,6 +4,9 @@ import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './encrypted-block'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
+import { DataStore, MetaStore, RemoteWAL } from './store-fs'
+import type { DataStore as AbstractDataStore } from './store'
+
 import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
 import type {
@@ -13,7 +16,7 @@ import type {
   DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { Connection } from './connection'
-import type { DataStore, MetaStore, RemoteWAL } from './store'
+// import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
@@ -28,13 +31,19 @@ function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
   return [...byString.values()]
 }
 
+export function toHexString(byteArray: Uint8Array) {
+  return Array.from(byteArray)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+}
+
 export abstract class Loader {
   name: string
   opts: FireproofOptions = {}
 
   remoteMetaLoading: Promise<void> | undefined
-  remoteMetaStore: MetaStore | undefined
-  remoteCarStore: DataStore | undefined
+  remoteMetaStore: RemoteMetaStore | undefined
+  remoteCarStore: RemoteDataStore | undefined
   remoteWAL: RemoteWAL | undefined
   metaStore: MetaStore | undefined
   carStore: DataStore | undefined
@@ -145,7 +154,7 @@ export abstract class Loader {
     // generate a random key
     if (!this.opts.public) {
       if (getCrypto()) {
-        await this.setKey(randomBytes(32).toString('hex'))
+        await this.setKey(toHexString(randomBytes(32)))
       } else {
         console.warn('missing crypto module, using public mode')
       }
@@ -234,20 +243,24 @@ export abstract class Loader {
     return got
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   protected async initializeStores() {
-    const isBrowser = typeof window !== 'undefined'
+    // const isBrowser = typeof window !== 'undefined'
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
-    if (module) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.metaStore = new module.MetaStore(this.name) as MetaStore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.carStore = new module.DataStore(this) as DataStore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.remoteWAL = new module.RemoteWAL(this) as RemoteWAL
-    } else {
-      throw new Error('Failed to initialize stores.')
-    }
+    // const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
+    // if (module) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // this.metaStore = new module.MetaStore(this.name) as MetaStore
+    this.metaStore = new MetaStore(this.name)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // this.carStore = new module.DataStore(this) as DataStore
+    this.carStore = new DataStore(this)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // this.remoteWAL = new module.RemoteWAL(this) as RemoteWAL
+    this.remoteWAL = new RemoteWAL(this)
+    // } else {
+    // throw new Error('Failed to initialize stores.')
+    // }
   }
 
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult | FileResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader | FileCarHeader;
@@ -257,7 +270,7 @@ export abstract class Loader {
     return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
   }
 
-  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
+  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: AbstractDataStore): Promise<CarReader> {
     const cidString = cid.toString()
     if (!this.carReaders.has(cidString)) {
       this.carReaders.set(cidString, (async () => {
