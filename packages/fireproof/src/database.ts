@@ -27,7 +27,7 @@ export class Database {
     })
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
-    })//, Infinity, true)
+    })//, Infinity)
   }
 
   async get(id: string): Promise<Doc> {

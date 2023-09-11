@@ -192,9 +192,8 @@ export abstract class Loader {
       await dbLoader.fileStore!.save({ cid, bytes })
 
       // instead of writing, enqueue
-      dbLoader.remoteFileStore?.save({ cid, bytes }).catch((e: Error) => {
-        console.error('Failed to save remote file', done, e)
-      })
+      await this.remoteWAL!.enqueueFile(cid)
+
       return cid
     }
 
