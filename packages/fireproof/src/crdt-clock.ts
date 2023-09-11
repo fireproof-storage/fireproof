@@ -15,6 +15,7 @@ export class CRDTClock {
   blocks: TransactionBlockstore | null = null
 
   setHead(head: ClockHead) {
+    console.log('new db head', this.blocks?.name, head.toString())
     this.head = head
   }
 
@@ -31,10 +32,6 @@ export class CRDTClock {
       this.setHead(newHead)
       this.watchers.forEach((fn) => fn(updates))
       return
-    }
-
-    if (updates.length > 0) {
-      throw new Error('if we are here we expected to be in a merge, and we should not have updates')
     }
 
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {

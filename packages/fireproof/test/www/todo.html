@@ -128,7 +128,6 @@
           autoCancelled = false
           return
         }
-        // console.log('autoRefresh')
         connection.refresh().then(() => {
           setTimeout(autoRefresh, 2000);
         }).catch((err) => {
