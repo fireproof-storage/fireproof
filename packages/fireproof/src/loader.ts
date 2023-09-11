@@ -63,15 +63,12 @@ export abstract class Loader {
   _connectRemoteMeta(connection: Connection) {
     const remote = new RemoteMetaStore(this.name, connection)
     remote.onLoad('main', async (metas) => {
-      // console.log('remote meta load', metas)
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
     })
     this.remoteMetaStore = remote
-    // eslint-disable-next-line @typescript-eslint/require-await
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(() => { })
-    // connection.ready = Promise.all([this.remoteMetaLoading]).then(() => {})
     connection.refresh = async () => {
       await remote.load('main')
     }
@@ -86,10 +83,9 @@ export abstract class Loader {
   connectRemote(connection: Connection) {
     this._connectRemoteMeta(connection)
     this._connectRemoteStorage(connection)
-    // this.remoteWAL = new RemoteWAL(this.name, this.carStore!, this.remoteCarStore!, this.remoteMetaStore!)
-    // todo put this where it can be used by crdt bulk
-    connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => { })
-    void this.remoteWAL?._process()
+    connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
+      void this.remoteWAL?._process()
+    })
     return connection
   }
 
@@ -116,7 +112,6 @@ export abstract class Loader {
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
-    console.log('merge meta car', meta.car.toString())
     const carHeader = await this.loadCarHeaderFromMeta(meta)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this.getMoreReaders(carHeader.cars)
