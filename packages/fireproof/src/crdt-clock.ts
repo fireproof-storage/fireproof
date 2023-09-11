@@ -44,20 +44,14 @@ export class CRDTClock {
     }
 
     const { head } = await withBlocks(tblocks, async (tblocks) => {
-      // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
       let head = this.head
       for (const cid of newHead) {
         head = await advance(tblocks, head, cid)
-        // .catch((e) => {
-        //   console.error('failed to advance', e)
-        //   return head
-        // })
       }
       const result = await root(tblocks, head)
       for (const { cid, bytes } of [...result.additions, ...result.removals]) {
         tblocks.putSync(cid, bytes)
       }
-      // console.log('applyHead ->', head.toString())
       return { head }
     })
 

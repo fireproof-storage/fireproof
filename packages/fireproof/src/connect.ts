@@ -24,11 +24,9 @@ export const connect = {
   },
   web3: (db: Database,
     email: `${string}@${string}`, schemaName?: string) => {
-    console.log('connecting web3', email)
     const { name, _crdt: { blocks: { loader } } } = db
     if (!name) throw new Error('database name is required')
     if (web3names.has(name + email)) {
-      // console.log(`already connecting to ${name} + ${email}`)
       return
     }
     if (!schemaName && location) {

@@ -56,7 +56,7 @@ export class ConnectWeb3 implements Connection {
     if (response.ok) {
       return new Uint8Array(await response.arrayBuffer())
     } else {
-      console.log('failed to download', url, response)
+      // console.log('failed to download', url, response)
       throw new Error(`Failed to download ${url}`)
     }
   }
@@ -64,7 +64,7 @@ export class ConnectWeb3 implements Connection {
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     await this.ready
     if (!this.client) { throw new Error('client not initialized') }
-    console.log('w3 uploading car', params.car)
+    // console.log('w3 uploading car', params.car)
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
@@ -99,7 +99,7 @@ export class ConnectWeb3 implements Connection {
   }
 
   async fetchAndUpdateHead(remoteHead: CarClockHead) {
-    console.log('remoteHead', remoteHead.toString())
+    // console.log('remoteHead', remoteHead.toString())
     const outBytess = []
     const cache = this.eventBlocks
     // todo, we should only ever fetch these once, and not if they are ones we made
@@ -119,7 +119,7 @@ export class ConnectWeb3 implements Connection {
           // @ts-ignore
           outBytess.push(event.value.data.dbMeta as Uint8Array)
         } else {
-          console.log('failed to download', url, response)
+          // console.log('failed to download', url, response)
           throw new Error(`Failed to download ${url}`)
         }
       }
@@ -151,12 +151,10 @@ export class ConnectWeb3 implements Connection {
 
     const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
 
-    const uploaded = await this.client!.uploadCAR(new Blob([carBytes]))
-    console.log('uploaded', uploaded.toString(), bytes.length)
+    await this.client!.uploadCAR(new Blob([carBytes]))
 
     const blocks = []
     for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
-      // @ts-ignore
       blocks.push(await decodeEventBlock(eventBytes))
     }
 
