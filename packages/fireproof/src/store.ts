@@ -3,6 +3,7 @@ import { AnyBlock, AnyLink, CommitOpts, DbMeta } from './types'
 
 import { PACKAGE_VERSION } from './version'
 import type { Loader } from './loader'
+import { DbLoader } from './loaders'
 // import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
@@ -37,6 +38,7 @@ export abstract class MetaStore extends VersionedStore {
 
 export type WALState = {
   operations: DbMeta[]
+  fileOperations: AnyLink[]
 }
 
 export abstract class RemoteWAL {
@@ -46,23 +48,32 @@ export abstract class RemoteWAL {
   loader: Loader
   ready: Promise<void>
 
-  operations: DbMeta[] = []
+  walState: WALState = { operations: [], fileOperations: [] }
   processing: Promise<void> | undefined = undefined
 
   constructor(loader: Loader) {
     this.loader = loader
     this.ready = (async () => {
-      const walState = await this.load()
-      this.operations = walState?.operations || []
+      const walState = await this.load().catch(e => {
+        console.error('error loading wal', e)
+        return null
+      })
+      this.walState.operations = walState?.operations || []
+      this.walState.fileOperations = walState?.fileOperations || []
     })()
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready
-    this.operations.push(dbMeta)
-    await this.save({ operations: this.operations })
+    this.walState.operations.push(dbMeta)
+    await this.save(this.walState)
     if (!opts.noLoader) { void this._process() }
+  }
+
+  async enqueueFile(fileCid: AnyLink) {
+    await this.ready
+    this.walState.fileOperations.push(fileCid)
+    // await this.save(this.walState)
   }
 
   async _process() {
@@ -76,31 +87,48 @@ export abstract class RemoteWAL {
     await p
     this.processing = undefined
 
-    if (this.operations.length) setTimeout(() => void this._process(), 0)
+    if (this.walState.operations.length || this.walState.fileOperations.length) setTimeout(() => void this._process(), 0)
   }
 
   async _int_process() {
     // const callId = Math.random().toString(36).slice(2)
     if (!this.loader.remoteCarStore) return
     const rmlp = (async () => {
-      const operations = [...this.operations]
-      if (!operations.length) return
+      const operations = [...this.walState.operations]
+      const fileOperations = [...this.walState.fileOperations]
       const uploads: Promise<void|AnyLink>[] = []
-      for (const dbMeta of operations) {
-        const uploadP = (async () => {
-          // console.log('wal process', dbMeta.car.toString())
-          const car = await this.loader.carStore!.load(dbMeta.car)
-          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
-          return await this.loader.remoteCarStore!.save(car)
-        })()
-        uploads.push(uploadP)
+
+      if (operations.length) {
+        for (const dbMeta of operations) {
+          const uploadP = (async () => {
+            // console.log('wal process', dbMeta.car.toString())
+            const car = await this.loader.carStore!.load(dbMeta.car)
+            if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+            return await this.loader.remoteCarStore!.save(car)
+          })()
+          uploads.push(uploadP)
+        }
       }
+      if (fileOperations.length) {
+        const dbLoader = this.loader as DbLoader
+        for (const fileCid of fileOperations) {
+          const uploadP = (async () => {
+            const fileBlock = await dbLoader.fileStore!.load(fileCid)
+            await dbLoader.remoteFileStore?.save(fileBlock)
+          })()
+          uploads.push(uploadP)
+        }
+      }
+
       // const done =
       await Promise.all(uploads)
       // clear operations, leaving any new ones that came in while we were uploading
-      await this.loader.remoteMetaStore?.save(operations[operations.length - 1])
-      this.operations.splice(0, operations.length)
-      await this.save({ operations: this.operations })
+      if (operations.length) {
+        await this.loader.remoteMetaStore?.save(operations[operations.length - 1])
+      }
+      this.walState.operations.splice(0, operations.length)
+      this.walState.fileOperations.splice(0, fileOperations.length)
+      await this.save(this.walState)
       // console.log('done uploading', callId, uploads.length, done.length, done.map(d => JSON.stringify(d)))
       // console.log('remainging ops', callId, this.operations.length, this.operations.map(o => o.car.toString()))
     })()
