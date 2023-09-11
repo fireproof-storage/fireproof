@@ -60,15 +60,14 @@ export abstract class RemoteWAL {
   // eslint-disable-next-line @typescript-eslint/require-await
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready
-    console.log('enqueue', !!this.processing, this.operations.length, dbMeta.car.toString())
     this.operations.push(dbMeta)
     await this.save({ operations: this.operations })
     if (!opts.noLoader) { void this._process() }
   }
 
   async _process() {
-    if (!this.loader.remoteCarStore) return
     await this.ready
+    if (!this.loader.remoteCarStore) return
     if (this.processing) return this.processing
     const p = (async () => {
       await this._int_process()
@@ -76,12 +75,12 @@ export abstract class RemoteWAL {
     this.processing = p
     await p
     this.processing = undefined
-    console.log('this.operations.length', this.operations.length)
+
     if (this.operations.length) setTimeout(() => void this._process(), 0)
   }
 
   async _int_process() {
-    const callId = Math.random().toString(36).slice(2)
+    // const callId = Math.random().toString(36).slice(2)
     if (!this.loader.remoteCarStore) return
     const rmlp = (async () => {
       const operations = [...this.operations]
@@ -89,23 +88,20 @@ export abstract class RemoteWAL {
       const uploads: Promise<void|AnyLink>[] = []
       for (const dbMeta of operations) {
         const uploadP = (async () => {
-          console.log('wal process', callId, dbMeta.car.toString())
+          // console.log('wal process', callId, dbMeta.car.toString())
           const car = await this.loader.carStore!.load(dbMeta.car)
           if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
           return await this.loader.remoteCarStore!.save(car)
         })()
         uploads.push(uploadP)
       }
-      console.log('start uploading', callId, uploads.length, operations.length, operations.map(o => o.car.toString()))
       const done = await Promise.all(uploads)
       // clear operations, leaving any new ones that came in while we were uploading
       await this.loader.remoteMetaStore?.save(operations[operations.length - 1])
-      console.log('mid ops', callId, operations.length, this.operations.length, this.operations.map(o => o.car.toString()))
-      // this.operations =
       this.operations.splice(0, operations.length)
       await this.save({ operations: this.operations })
-      console.log('done uploading', callId, uploads.length, done.length, done.map(d => JSON.stringify(d)))
-      console.log('remainging ops', callId, this.operations.length, this.operations.map(o => o.car.toString()))
+      // console.log('done uploading', callId, uploads.length, done.length, done.map(d => JSON.stringify(d)))
+      // console.log('remainging ops', callId, this.operations.length, this.operations.map(o => o.car.toString()))
     })()
     this.loader.remoteMetaLoading = rmlp
     await rmlp
