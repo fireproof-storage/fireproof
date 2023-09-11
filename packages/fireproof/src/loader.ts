@@ -69,9 +69,7 @@ export abstract class Loader {
     })
     this.remoteMetaStore = remote
     this.remoteMetaLoading = this.remoteMetaStore.load('main').then(() => { })
-    connection.refresh = async () => {
-      await remote.load('main')
-    }
+
     return connection
   }
 
@@ -86,6 +84,10 @@ export abstract class Loader {
     connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
       void this.remoteWAL?._process()
     })
+    connection.refresh = async () => {
+      await this.remoteMetaStore!.load('main')
+      await this.remoteWAL?._process()
+    }
     return connection
   }
 
