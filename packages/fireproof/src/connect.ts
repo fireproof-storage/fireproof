@@ -32,9 +32,8 @@ export const connect = {
     if (!schemaName && location) {
       schemaName = location.origin
     }
-    const connection = new ConnectWeb3(name, email, schemaName)
+    const connection = new ConnectWeb3({ name, email, schema: schemaName! })
     loader!.connectRemote(connection)
-    // loader!.connectRemoteStorage(connection)
     web3names.add(name + email)
     return connection
   }
