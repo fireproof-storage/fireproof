@@ -27,7 +27,7 @@ export class Database {
     })
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
-    })
+    })//, Infinity)
   }
 
   async get(id: string): Promise<Doc> {
@@ -79,10 +79,10 @@ export class Database {
     await this._crdt.compact()
   }
 
-  async connect(email: `${string}@${string}`) {
-    // const conn =
-    connect.web3(this, email)
-    return await this.getDashboardURL()
+  connect(email: `${string}@${string}`, schemaName?: string) {
+    const conn = connect.web3(this, email, schemaName)
+    // await this.getDashboardURL()
+    return conn
   }
 
   async getDashboardURL(compact = true) {
@@ -92,8 +92,10 @@ export class Database {
       await this.compact()
       await this._crdt.blocks.loader?.remoteMetaLoading
     }
-    const current = await this._crdt.blocks.loader?.metaStore?.load()
-    if (!current) throw new Error('Can\'t sync empty database: save data first')
+    const currents = await this._crdt.blocks.loader?.metaStore?.load()
+    if (!currents) throw new Error('Can\'t sync empty database: save data first')
+    if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make and update first')
+    const current = currents[0]
     const params = {
       car: current.car.toString()
     }

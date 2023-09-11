@@ -45,7 +45,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
     }
   }
 
-  abstract transaction(fn: (t: Transaction) => Promise<IdxMeta | BulkResult>, indexes?: Map<string, IdxMeta>): Promise<BulkResultCar | IdxMetaCar>
+  abstract transaction(fn: (t: Transaction) => Promise<IdxMeta | BulkResult>, indexes?: Map<string, IdxMeta>, opts?: { noLoader: boolean}): Promise<BulkResultCar | IdxMetaCar>
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async put() {
@@ -65,7 +65,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
   async commitCompaction(t: Transaction, head: ClockHead) {
     this.transactions.clear()
     this.transactions.add(t)
-    return await this.loader?.commit(t, { head }, true)
+    return await this.loader?.commit(t, { head }, { compact: true })
   }
 
   async * entries(): AsyncIterableIterator<AnyBlock> {
@@ -126,9 +126,9 @@ export class TransactionBlockstore extends FireproofBlockstore {
     }
   }
 
-  async transaction(fn: (t: Transaction) => Promise<BulkResult>): Promise<BulkResultCar> {
+  async transaction(fn: (t: Transaction) => Promise<BulkResult>, _indexes?: undefined, opts = { noLoader: false }): Promise<BulkResultCar> {
     return this.executeTransaction(fn, async (t, done) => {
-      const car = await this.loader?.commit(t, done)
+      const car = await this.loader?.commit(t, done, opts)
       return { car, done }
     })
   }
@@ -136,3 +136,18 @@ export class TransactionBlockstore extends FireproofBlockstore {
 
 type IdxMetaCar = IdxMeta & CarCommit
 type BulkResultCar = BulkResult & CarCommit
+
+export class LoggingFetcher implements BlockFetcher {
+  blocks: TransactionBlockstore
+  loader: DbLoader | IdxLoader | null = null
+  cids: Set<AnyLink> = new Set()
+  constructor(blocks: TransactionBlockstore) {
+    this.blocks = blocks
+    this.loader = blocks.loader
+  }
+
+  async get(cid: AnyLink) {
+    this.cids.add(cid)
+    return await this.blocks.get(cid)
+  }
+}

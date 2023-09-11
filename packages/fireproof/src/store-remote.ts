@@ -1,7 +1,7 @@
 /* eslint-disable import/first */
 // console.log('import store-s3')
 
-import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, UploadFnParams } from './types'
+import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import type { Loader } from './loader'
 // import type { Response } from 'cross-fetch'
@@ -22,7 +22,7 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
-    const bytes = await this.connection.download({
+    const bytes = await this.connection.dataDownload({
       type: this.type,
       name: this.prefix(),
       car: carCid.toString()
@@ -31,14 +31,14 @@ export class RemoteDataStore extends DataStoreBase {
     return { cid: carCid, bytes }
   }
 
-  async save(car: AnyBlock): Promise<void> {
-    const uploadParams: UploadFnParams = {
+  async save(car: AnyBlock) {
+    const uploadParams: UploadDataFnParams = {
       type: this.type,
       name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
-    await this.connection.upload(car.bytes, uploadParams)
+    return await this.connection.dataUpload(car.bytes, uploadParams)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -50,40 +50,62 @@ export class RemoteDataStore extends DataStoreBase {
 export class RemoteMetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
   connection: Connection
+  subscribers: Map<string, LoadHandler[]> = new Map()
 
   constructor(name: string, connection: Connection) {
     super(name)
     this.connection = connection
   }
 
+  onLoad(branch: string, loadHandler: LoadHandler): () => void {
+    const subscribers = this.subscribers.get(branch) || []
+    subscribers.push(loadHandler)
+    this.subscribers.set(branch, subscribers)
+    return () => {
+      const subscribers = this.subscribers.get(branch) || []
+      const idx = subscribers.indexOf(loadHandler)
+      if (idx > -1) subscribers.splice(idx, 1)
+    }
+  }
+
   prefix() {
     return `fp.${this.name}.${this.STORAGE_VERSION}`
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch: string = 'main'): Promise<DbMeta | null> {
-    const bytes = await this.connection.download({
-      type: 'meta',
+  async load(branch: string = 'main'): Promise<DbMeta[] | null> {
+    const byteHeads = await this.connection.metaDownload({
       name: this.prefix(),
       branch
     })
-    if (!bytes) return null
-    try {
-      return this.parseHeader(new TextDecoder().decode(bytes))
-    } catch (e) {
-      return null
+    if (!byteHeads) return null
+    const dbMetas = this.dbMetasForByteHeads(byteHeads)
+    const subscribers = this.subscribers.get(branch) || []
+    for (const subscriber of subscribers) {
+      await subscriber(dbMetas)
     }
+    return dbMetas
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
+  async save(meta: DbMeta, branch: string = 'main') {
+    // console.log('save DbMeta', meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
-    const uploadParams = {
-      type: 'meta',
+    const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),
-      branch,
-      size: bytes.length.toString()
+      branch
+    })
+    if (!byteHeads) return null
+    const dbMetas = this.dbMetasForByteHeads(byteHeads)
+    const subscribers = this.subscribers.get(branch) || []
+    for (const subscriber of subscribers) {
+      await subscriber(dbMetas)
     }
-    await this.connection.upload(bytes, uploadParams as UploadFnParams)
+    return dbMetas
+  }
+
+  dbMetasForByteHeads(byteHeads: Uint8Array[]) {
+    return byteHeads.map((bytes) => {
+      const txt = new TextDecoder().decode(bytes)
+      return this.parseHeader(txt)
+    })
   }
 }

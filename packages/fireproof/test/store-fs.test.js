@@ -111,7 +111,8 @@ describe('MetaStore with a saved header', function () {
     equals(header.car['/'], cid.toString())
   })
   it('should load a header', async function () {
-    const loaded = await store.load()
+    const loadeds = await store.load()
+    const loaded = loadeds[0]
     assert(loaded)
     assert(loaded.car)
     equals(loaded.car.toString(), cid.toString())

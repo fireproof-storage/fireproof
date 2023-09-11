@@ -5,21 +5,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="../../dist/browser/fireproof.iife.js?259541"></script>
+  <script src="../../dist/browser/fireproof.iife.js?100"></script>
   <script type="text/javascript">
     function todoApp() {
+      const actorTag = Math.random().toString(36).substring(2, 7)
       const { connect, fireproof, index } = Fireproof;
       let dbName
       let db
       let connection
 
+      let cancelRefresh
+
+
       function setupDb(name) {
+        if (cancelRefresh) {
+          cancelRefresh()
+        }
         dbName = name;
         db = fireproof(name);
         window.db = db;
         // meta in w3, storage in web3
         // connection = connect.s3(db, s3Info)
-        connection = connect.web3(db, "jchris+ucan2@fireproof.storage")
+
+        connection = db.connect("jchris+todos-22@fireproof.storage", "todo-test")
+        window.connection = connection
+        cancelRefresh = autoRefresh()
+
         db.subscribe(redraw);
         return db;
       }
@@ -30,6 +41,7 @@
 
       let doing
       const redraw = async () => {
+        console.log('redraw')
         if (doing) {
           return doing
         }
@@ -55,12 +67,15 @@
             if (doc.completed) {
               checkbox.setAttribute('checked', true);
             }
-            checkbox.onchange = () => {
+            checkbox.onchange = async (e) => {
+              e.target.indeterminate = true;
               doc.completed = !doc.completed;
-              db.put(doc);
+              console.log('putting', doc.task, doc.completed)
+              await db.put(doc);
+              console.log('put', doc.task, doc.completed)
             }
             const textSpan = document.createElement('span');
-            textSpan.innerText = doc.task;
+            textSpan.innerText = doc.actor + ': ' + doc.task;
             const li = document.createElement('li');
             li.appendChild(checkbox);
             li.appendChild(textSpan);
@@ -69,8 +84,8 @@
               .appendChild(li);
           }
         } finally {
-          const chgs = await db.changes([], { dirty: true });
-          console.log('changes', chgs.rows.map(r => r.value.task), chgs)
+          // const chgs = await db.changes([], { dirty: true });
+          // console.log('changes', chgs.rows.map(r => r.value.task), chgs)
         }
       }
 
@@ -98,7 +113,7 @@
         e.preventDefault();
 
         const input = document.querySelector('#todo');
-        const ok = await db.put({ created: Date.now(), task: input.value, completed: false });
+        const ok = await db.put({ actor: actorTag,created: Date.now(), task: input.value, completed: false });
         input.value = '';
 
       }
@@ -109,6 +124,22 @@
         await connection.refresh()
       }
       window.connectionRefresh = connectionRefresh;
+
+      let autoCancelled = false
+      async function autoRefresh() {
+        if (autoCancelled) {
+          autoCancelled = false
+          return
+        }
+        connection.refresh().then(() => {
+          setTimeout(autoRefresh, 3000);
+        }).catch((err) => {
+          console.log('refresh err', err)
+          setTimeout(autoRefresh, 5000);
+        })
+        return () => autoCancelled = true
+      }
+
 
       async function doCompact(e) {
         e.preventDefault();

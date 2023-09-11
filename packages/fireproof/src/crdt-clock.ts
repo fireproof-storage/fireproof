@@ -15,12 +15,14 @@ export class CRDTClock {
   blocks: TransactionBlockstore | null = null
 
   setHead(head: ClockHead) {
+    console.log('new db head', this.blocks?.name, head.toString())
     this.head = head
   }
 
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
+    console.log('applyHead', updates.length, ogHead.toString(), newHead.toString(), prevHead.toString())
     if (ogHead.toString() === newHead.toString()) {
       this.watchers.forEach((fn) => fn(updates))
       return
@@ -32,21 +34,17 @@ export class CRDTClock {
       return
     }
 
-    if (updates.length > 0) {
-      throw new Error('if we are here we expected to be in a merge, and we should not have updates')
-    }
-
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
       if (tblocks instanceof Transaction) return await fn(tblocks)
       if (!this.blocks) throw new Error('missing blocks')
-      return await this.blocks.transaction(fn)
+      return await this.blocks.transaction(fn, undefined, { noLoader: true })
     }
 
     const { head } = await withBlocks(tblocks, async (tblocks) => {
-      // handles case where a sync came in during a bulk update, or somehow concurrent bulk updates happened
       let head = this.head
       for (const cid of newHead) {
-        head = await advance(tblocks, this.head, cid)
+        console.log('advance', cid.toString())
+        head = await advance(tblocks, head, cid)
       }
       const result = await root(tblocks, head)
       for (const { cid, bytes } of [...result.additions, ...result.removals]) {

@@ -9,17 +9,19 @@ import type { Transaction } from './transaction'
 import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   CarLoaderHeader,
+  CommitOpts,
   Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
-import type { DataStore, MetaStore } from './store'
+import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
-export function uniqueCids(list: AnyLink[]): AnyLink[] {
+export function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
   const byString = new Map<string, AnyLink>()
   for (const cid of list) {
+    if (cidListIncludes(remove, cid)) continue
     byString.set(cid.toString(), cid)
   }
   return [...byString.values()]
@@ -32,6 +34,7 @@ export abstract class Loader {
   remoteMetaLoading: Promise<void> | undefined
   remoteMetaStore: MetaStore | undefined
   remoteCarStore: DataStore | undefined
+  remoteWAL: RemoteWAL | undefined
   metaStore: MetaStore | undefined
   carStore: DataStore | undefined
   carLog: AnyLink[] = []
@@ -49,44 +52,42 @@ export abstract class Loader {
     this.name = name
     this.opts = opts || this.opts
     this.ready = this.initializeStores().then(async () => {
-      if (!this.metaStore || !this.carStore) throw new Error('stores not initialized')
-      const meta = this.opts.meta ? this.opts.meta : await this.metaStore.load('main')
-      if (meta) {
-        await this.mergeMetaFromRemote(meta)
+      if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error('stores not initialized')
+      const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
+      if (metas) {
+        await this.handleDbMetasFromStore(metas)
       }
     })
   }
 
-  connectRemoteMeta(connection: Connection) {
+  _connectRemoteMeta(connection: Connection) {
     const remote = new RemoteMetaStore(this.name, connection)
-    this.remoteMetaStore = remote
-    // eslint-disable-next-line @typescript-eslint/require-await
-    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(async (meta) => {
-      if (meta) {
-        await this.mergeMetaFromRemote(meta)
+    remote.onLoad('main', async (metas) => {
+      if (metas) {
+        await this.handleDbMetasFromStore(metas)
       }
     })
-    connection.ready = Promise.all([this.remoteMetaLoading]).then(() => { })
-    connection.refresh = async () => {
-      await remote.load('main').then(async (meta) => {
-        if (meta) {
-          await this.mergeMetaFromRemote(meta)
-        }
-      })
-    }
+    this.remoteMetaStore = remote
+    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(() => { })
+
     return connection
   }
 
-  connectRemoteStorage(connection: Connection) {
+  _connectRemoteStorage(connection: Connection) {
     this.remoteCarStore = new RemoteDataStore(this, connection)
     return connection
   }
 
   connectRemote(connection: Connection) {
-    this.connectRemoteMeta(connection)
-    this.connectRemoteStorage(connection)
-    // todo put this where it can be used by crdt bulk
-    connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => { })
+    this._connectRemoteMeta(connection)
+    this._connectRemoteStorage(connection)
+    connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
+      void this.remoteWAL?._process()
+    })
+    connection.refresh = async () => {
+      await this.remoteMetaStore!.load('main')
+      await this.remoteWAL?._process()
+    }
     return connection
   }
 
@@ -97,31 +98,26 @@ export abstract class Loader {
     }
     const carHeader = await this.loadCarHeaderFromMeta({ car: carCid, key: this.key || null })
     this.carLog = [carCid, ...carHeader.cars]
-    void this.getMoreReaders(carHeader.cars)
+    await this.getMoreReaders(carHeader.cars)
     await this._applyCarHeader(carHeader, true)
   }
 
-  async mergeMetaFromRemote(meta: DbMeta): Promise<void> {
+  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
+    for (const meta of metas) {
+      await this.mergeDbMetaIntoClock(meta)
+    }
+  }
+
+  async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
     const carHeader = await this.loadCarHeaderFromMeta(meta)
-    const remoteCarLog = [meta.car, ...carHeader.cars]
-    if (this.carLog.length === 0 || cidListIncludes(remoteCarLog, this.carLog[0])) {
-      // fast forward to remote
-      this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
-      void this.getMoreReaders(carHeader.cars)
-      await this._applyCarHeader(carHeader)
-    } else {
-      // throw new Error('remote car log does not include local car log')
-      const newCarLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars])]
-      this.carLog = newCarLog
-
-      void this.getMoreReaders(carHeader.cars)
-      await this._applyCarHeader(carHeader)
-    }
+    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
+    await this.getMoreReaders(carHeader.cars)
+    await this._applyCarHeader(carHeader)
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -159,9 +155,22 @@ export abstract class Loader {
     return this.key
   }
 
-  async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult, compact: boolean = false): Promise<AnyLink> {
+  private committing: Promise<AnyLink> | undefined
+  async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult,
+    opts: CommitOpts = { noLoader: false, compact: false }): Promise<AnyLink> {
+    if (this.committing) {
+      await this.committing
+    }
+    this.committing = this._commitInternal(t, done, opts)
+    const result = await this.committing
+    this.committing = undefined
+    return result
+  }
+
+  async _commitInternal(t: Transaction, done: IndexerResult | BulkResult | FileResult, opts: CommitOpts = { noLoader: false, compact: false }): Promise<AnyLink> {
     await this.ready
-    const fp = this.makeCarHeader(done, this.carLog, compact)
+    // console.trace('_commitInternal', opts)
+    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
     let roots: AnyLink[] = []
     // @ts-ignore
     if (fp.files) {
@@ -176,35 +185,41 @@ export abstract class Loader {
     const theKey = await this._getKey()
     const { cid, bytes } = theKey ? await encryptedEncodeCarFile(theKey, roots[0], t) : await encodeCarFile(roots, t)
 
+    // save the car locally and remote
+
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
       await dbLoader.fileStore!.save({ cid, bytes })
-      dbLoader.remoteFileStore?.save({ cid, bytes }).catch((e: Error) => {
-        console.error('Failed to save remote file', done, e)
-      })
+
+      // instead of writing, enqueue
+      await this.remoteWAL!.enqueueFile(cid)
+
       return cid
     }
 
     await this.carStore!.save({ cid, bytes })
-    this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
-      // console.log('saving remote meta', cid.toString())
+    // instead of writing the remote car and meta, we should enqueue them
+    // this shoould be to a car file with a name like _local_meta.car
+    // it would have a list of car cids to upload
+    // after we write the car, we should write the meta
+    // we can write all the cars and just the last meta
+    const newDbMeta = { car: cid, key: theKey || null } as DbMeta
 
-      // await this.remoteMetaStore?.load('main').then(async (meta) => {
-      await this.remoteMetaStore?.save({ car: cid, key: theKey || null })
-      // if (meta) {
-      // await this.mergeMetaFromRemote(meta)
-      // }
-      // })
-    }).catch((e) => {
-      console.error('Failed to save remote car or meta', e)
-    })
-    await this.metaStore!.save({ car: cid, key: theKey || null })
+    await this.remoteWAL!.enqueue(newDbMeta, opts)
+    // this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
+    //   if (opts.noLoader) return
+    //   await this.remoteMetaStore?.save(newDbMeta)
+    // }).catch((e) => {
+    //   console.log('Failed to save remote car or meta', e, cid.toString())
+    // })
+    await this.metaStore!.save(newDbMeta)
 
-    if (compact) {
-      for (const cid of this.carLog) {
+    if (opts.compact) {
+      const fpCar = fp as CarLoaderHeader
+      for (const cid of fpCar.compact) {
         await this.carStore!.remove(cid)
       }
-      this.carLog = [cid]
+      this.carLog = [...uniqueCids([cid, ...this.carLog], fpCar.compact)]
     } else {
       this.carLog.unshift(cid)
     }
@@ -241,6 +256,8 @@ export abstract class Loader {
       this.metaStore = new module.MetaStore(this.name) as MetaStore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       this.carStore = new module.DataStore(this) as DataStore
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      this.remoteWAL = new module.RemoteWAL(this) as RemoteWAL
     } else {
       throw new Error('Failed to initialize stores.')
     }

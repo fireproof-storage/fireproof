@@ -2,7 +2,7 @@ import { ConnectS3 } from './connect-s3'
 import { ConnectWeb3 } from './connect-web3'
 import { Database } from './database'
 import type { DbLoader } from './loaders'
-import { Connection, DownloadFn, DownloadFnParams, UploadFn, UploadFnParams } from './types'
+import { Connection, UploadDataFnParams, MetaUploadFn, DataUploadFn, UploadMetaFnParams, DataDownloadFn, MetaDownloadFn, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
 const web3names = new Set<string>()
 
@@ -16,31 +16,39 @@ export const connect = {
   },
   raw: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: DbLoader } } },
-  { upload, download }: { upload: UploadFn, download: DownloadFn }) => {
-    const connection = { upload, download, ready: Promise.resolve() } as Connection
+  { metaUpload, metaDownload, dataUpload, dataDownload }: { dataUpload: DataUploadFn, dataDownload: DataDownloadFn,
+    metaUpload: MetaUploadFn, metaDownload: MetaDownloadFn }) => {
+    const connection = { metaUpload, metaDownload, dataUpload, dataDownload, ready: Promise.resolve() } as Connection
     loader.connectRemote(connection)
     return connection
   },
   web3: (db: Database,
-    email: `${string}@${string}`) => {
-    console.log('connecting web3', email)
+    email: `${string}@${string}`, schemaName?: string) => {
     const { name, _crdt: { blocks: { loader } } } = db
+    if (!name) throw new Error('database name is required')
     if (web3names.has(name + email)) {
-      // console.log(`already connecting to ${name} + ${email}`)
       return
     }
-    const connection = new ConnectWeb3(email)
-    // loader.connectRemote(connection)
-    loader!.connectRemoteStorage(connection)
+    if (!schemaName && location) {
+      schemaName = location.origin
+    }
+    const connection = new ConnectWeb3(name, email, schemaName)
+    loader!.connectRemote(connection)
+    // loader!.connectRemoteStorage(connection)
     web3names.add(name + email)
     return connection
   }
 }
 
-export function validateParams(params: DownloadFnParams | UploadFnParams) {
-  const { type, name, car, branch } = params
+export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
+  const { type, name, car } = params
   if (!name) throw new Error('name is required')
-  if (car && branch) { throw new Error('car and branch are mutually exclusive') }
-  if (!car && !branch) { throw new Error('car or branch is required') }
-  if (type !== 'file' && type !== 'data' && type !== 'meta') { throw new Error('type must be file, data or meta') }
+  if (!car) { throw new Error('car is required') }
+  if (type !== 'file' && type !== 'data') { throw new Error('type must be file or data') }
+}
+
+export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams) {
+  const { name, branch } = params
+  if (!name) throw new Error('name is required')
+  if (!branch) { throw new Error('branch is required') }
 }

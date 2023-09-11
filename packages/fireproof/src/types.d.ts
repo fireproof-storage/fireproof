@@ -8,7 +8,8 @@ export type FireproofOptions = {
   persistIndexes?: boolean
 }
 
-export type ClockHead = EventLink<EventData>[]
+export type ClockLink = EventLink<EventData>
+export type ClockHead = ClockLink[]
 
 export type DocFragment = string | number | boolean | null | DocFragment[] | { [key: string]: DocFragment }
 
@@ -132,36 +133,53 @@ export type MapFn = (doc: Doc, map: CallbackFn) => DocFragment | void
 
 export type DbMeta = { car: AnyLink, key: string | null }
 
+export type CommitOpts = { noLoader?: boolean, compact?: boolean }
+
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
 
-export type UploadFnParams = {
-  type: 'data' | 'meta' | 'file',
+export type UploadMetaFnParams = {
   name: string,
-  car?: string,
-  branch?: string,
+  branch: string,
+}
+
+export type UploadDataFnParams = {
+  type: 'data' | 'file',
+  name: string,
+  car: string,
   size: string
 }
 
-export type UploadFn = (bytes: Uint8Array, params: UploadFnParams) => Promise<false | undefined | void>
+export type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
+export type DataUploadFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>
 
-export type DownloadFnParamTypes = 'data' | 'meta' | 'file'
+export type DownloadFnParamTypes = 'data' | 'file'
 
-export type DownloadFnParams = {
+export type DownloadDataFnParams = {
   type: DownloadFnParamTypes,
   name: string,
-  car?: string,
-  branch?: string,
+  car: string,
 }
 
-export type DownloadFn = (params: DownloadFnParams) => Promise<Uint8Array | null | false>
+export type DownloadMetaFnParams = {
+  name: string,
+  branch: string,
+}
+
+export type MetaDownloadFn = (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
+
+export type DataDownloadFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null>
+
+export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 
 export interface Connection {
   ready: Promise<any>
-  upload: UploadFn
-  download: DownloadFn
+  metaUpload: MetaUploadFn
+  dataUpload: DataUploadFn
+  metaDownload: MetaDownloadFn
+  dataDownload: DataDownloadFn
   // remove: (params: DownloadFnParams) => Promise<void>
   refresh?: () => Promise<void>
 }

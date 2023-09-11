@@ -1,9 +1,9 @@
 /* eslint-disable import/first */
 // console.log('import store-browser')
-
+import { format, parse, ToString } from '@ipld/dag-json'
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase, WALState } from './store'
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-browser-idb'
@@ -51,31 +51,64 @@ export class DataStore extends DataStoreBase {
   }
 }
 
-export class MetaStore extends MetaStoreBase {
-  tag: string = 'header-browser-ls'
+export class RemoteWAL extends RemoteWALBase {
+  tag: string = 'wal-browser-ls'
 
   headerKey(branch: string) {
     // remove 'public' on next storage version bump
-    return `fp.${this.STORAGE_VERSION}.public.${this.name}.${branch}`
+    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch: string = 'main'): Promise<DbMeta | null> {
+  async load(branch = 'main'): Promise<WALState | null> {
     try {
       const bytesString = localStorage.getItem(this.headerKey(branch))
       if (!bytesString) return null
-      return this.parseHeader(bytesString)
+      return parse<WALState>(bytesString)
     } catch (e) {
       return null
     }
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async save(meta: DbMeta, branch: string = 'main'): Promise<void> {
+  async save(state: WALState, branch = 'main'): Promise<void> {
+    try {
+      const encoded: ToString<WALState> = format(state)
+      localStorage.setItem(this.headerKey(branch), encoded)
+    } catch (e) {}
+  }
+}
+
+export class MetaStore extends MetaStoreBase {
+  tag: string = 'header-browser-ls'
+
+  headerKey(branch: string) {
+    return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async load(branch: string = 'main'): Promise<DbMeta[] | null> {
+    try {
+      const bytesString = localStorage.getItem(this.headerKey(branch))
+      if (!bytesString) return null
+      // browser assumes a single writer process
+      // to support concurrent updates to the same database across multiple tabs
+      // we need to implement the same kind of mvcc.crdt solution as in store-fs and connect-s3
+      return [this.parseHeader(bytesString)]
+    } catch (e) {
+      return null
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async save(meta: DbMeta, branch: string = 'main') {
     try {
       const headerKey = this.headerKey(branch)
       const bytes = this.makeHeader(meta)
-      return localStorage.setItem(headerKey, bytes)
-    } catch (e) {}
+      localStorage.setItem(headerKey, bytes)
+      return null
+    } catch (e) {
+      return null
+    }
   }
 }

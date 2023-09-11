@@ -2,11 +2,11 @@ import type { CID } from 'multiformats'
 import { encode, decode } from 'multiformats/block'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData } from '@alanshaw/pail/crdt'
+import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
-import { Transaction } from './transaction'
+import { LoggingFetcher, Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, BlockFetcher, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
+import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
 import { decodeFile, encodeFile } from './files'
 import { DbLoader } from './loaders'
 
@@ -17,6 +17,9 @@ export async function applyBulkUpdateToCrdt(
   options?: object
 ): Promise<BulkResult> {
   let result
+  // console.log('applyBulkUpdateToCrdt', head.toString())
+  console.log('applyBulkUpdateToCrdt', updates.length)
+  console.time('applyBulkUpdateToCrdt')
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
@@ -35,6 +38,7 @@ export async function applyBulkUpdateToCrdt(
     }
     head = result.head
   }
+  console.timeEnd('applyBulkUpdateToCrdt')
   return { head }
 }
 
@@ -87,7 +91,7 @@ export async function getValueFromCrdt(blocks: TransactionBlockstore, head: Cloc
   return await getValueFromLink(blocks, link)
 }
 
-export function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
+export function readFiles(blocks: TransactionBlockstore | LoggingFetcher, { doc }: DocValue) {
   if (doc && doc._files) {
     // console.log('readFiles', doc)
     for (const filename in doc._files) {
@@ -115,7 +119,7 @@ export function readFiles(blocks: TransactionBlockstore, { doc }: DocValue) {
   }
 }
 
-async function getValueFromLink(blocks: TransactionBlockstore, link: AnyLink): Promise<DocValue> {
+async function getValueFromLink(blocks: TransactionBlockstore | LoggingFetcher, link: AnyLink): Promise<DocValue> {
   const block = await blocks.get(link)
   if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
@@ -138,27 +142,28 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
 }
 
 export async function clockChangesSince(
-  blocks: TransactionBlockstore,
+  blocks: TransactionBlockstore | LoggingFetcher,
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions
 ): Promise<{ result: DocUpdate[], head: ClockHead }> {
   const eventsFetcher = (opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)) as EventFetcher<EventData>
   const keys: Set<string> = new Set()
-  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys, opts.limit || Infinity)
+  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity)
   return { result: updates.reverse(), head }
 }
 
 async function gatherUpdates(
-  blocks: TransactionBlockstore,
+  blocks: TransactionBlockstore | LoggingFetcher,
   eventsFetcher: EventFetcher<EventData>,
   head: ClockHead,
   since: ClockHead,
   updates: DocUpdate[] = [],
-  keys: Set<string>,
+  keys: Set<string>, didLinks: Set<string>,
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
+  // console.log('gatherUpdates', didLinks.size, keys.size)
   const sHead = head.map(l => l.toString())
   for (const link of since) {
     if (sHead.includes(link.toString())) {
@@ -166,12 +171,14 @@ async function gatherUpdates(
     }
   }
   for (const link of head) {
+    if (didLinks.has(link.toString())) continue
+    didLinks.add(link.toString())
     const { value: event } = await eventsFetcher.get(link)
     if (!event) continue
     const { key, value } = event.data
     if (keys.has(key)) {
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, limit)
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
       }
     } else {
       keys.add(key)
@@ -179,11 +186,25 @@ async function gatherUpdates(
       updates.push({ key, value: docValue.doc, del: docValue.del })
       limit--
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, limit)
+        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
       }
     }
   }
   return updates
+}
+
+export async function * getAllEntries(blocks: TransactionBlockstore, head: ClockHead) {
+  // return entries(blocks, head)
+  for await (const [key, link] of entries(blocks, head)) {
+    const docValue = await getValueFromLink(blocks, link)
+    yield { key, value: docValue.doc, del: docValue.del } as DocUpdate
+  }
+}
+
+export async function * clockVis(blocks: TransactionBlockstore, head: ClockHead) {
+  for await (const line of vis(blocks, head)) {
+    yield line
+  }
 }
 
 export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) {
@@ -191,15 +212,22 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   const newBlocks = new Transaction(blocks)
 
   for await (const [, link] of entries(blockLog, head)) {
-    const bl = await blocks.get(link)
+    const bl = await blockLog.get(link)
     if (!bl) throw new Error('Missing block: ' + link.toString())
-    await newBlocks.put(link, bl.bytes)
+    // await newBlocks.put(link, bl.bytes)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _line of vis(blockLog, head)) {
     void 1
   }
+
+  const result = await root(blockLog, head)
+  for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+    newBlocks.putSync(cid, bytes)
+  }
+
+  await clockChangesSince(blockLog, head, [], {})
 
   for (const cid of blockLog.cids) {
     const bl = await blocks.get(cid)
@@ -208,17 +236,4 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   }
 
   await blocks.commitCompaction(newBlocks, head)
-}
-
-class LoggingFetcher implements BlockFetcher {
-  blocks: BlockFetcher
-  cids: Set<AnyLink> = new Set()
-  constructor(blocks: BlockFetcher) {
-    this.blocks = blocks
-  }
-
-  async get(cid: AnyLink) {
-    this.cids.add(cid)
-    return await this.blocks.get(cid)
-  }
 }

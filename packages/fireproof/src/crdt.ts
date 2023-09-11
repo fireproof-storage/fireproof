@@ -1,5 +1,5 @@
 import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact, readFiles } from './crdt-helpers'
+import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact, readFiles, getAllEntries, clockVis } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
@@ -43,7 +43,23 @@ export class CRDT {
     })
   }
 
-  // async getAll(rootCache: any = null): Promise<{root: any, cids: CIDCounter, clockCIDs: CIDCounter, result: T[]}> {
+  async allDocs() {
+    await this.ready
+    const result: DocUpdate[] = []
+    for await (const entry of getAllEntries(this.blocks, this.clock.head)) {
+      result.push(entry)
+    }
+    return { result, head: this.clock.head }
+  }
+
+  async vis() {
+    await this.ready
+    const txt = []
+    for await (const line of clockVis(this.blocks, this.clock.head)) {
+      txt.push(line)
+    }
+    return txt.join('\n')
+  }
 
   async get(key: string) {
     await this.ready

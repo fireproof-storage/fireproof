@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=32493"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=75"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
@@ -13,19 +13,28 @@
       let db
       let connection
 
+      let cancelRefresh
+
       function setupDb(name) {
+        if (cancelRefresh) {
+          cancelRefresh()
+        }
         dbName = name;
         db = fireproof(name);
         window.db = db;
-        connection = connect.s3(db, s3Info)
-        connect.web3(db, "jchris@fireproof.storage")
+        // connection = connect.s3(db, s3Info)
+
+        connection = db.connect("jchris+gallery25@fireproof.storage", "files")
+        window.connection = connection
+        cancelRefresh = autoRefresh()
+
         db.subscribe(redraw);
         return db;
       }
-      const s3Info = {
-        upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-        download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-      }
+      // const s3Info = {
+      //   upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+      //   download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+      // }
 
       let doing
       const redraw = async () => {
@@ -37,13 +46,13 @@
       }
 
       const draw = async () => {
-        const result = await db.changes([], { limit: 10 })
-
+        const result = await db.query('_id', { descending: true, limit: 10 })
+        // console.log('result', result)
         document
           .querySelector('ul')
           .innerHTML = '';
-        for (const row of result.rows.reverse()) {
-          const doc = row.value
+        for (const row of result.rows) {
+          const doc = row.doc
           if (doc._files) {
             const li = document
               .querySelector('ul')
@@ -56,10 +65,10 @@
                 // if (didDoc) { return }
                 const meta = doc._files[file]
                 if (meta.file && /image/.test(meta.type)) {
-                  console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
+                  // console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
                   const src = URL.createObjectURL(await meta.file());
                   // didDoc++
-                  console.log('src', src.toString())
+                  // console.log('src', src.toString())
                   const img = document.createElement("img");
                   img.src = src
                   img.height = 100;
@@ -75,6 +84,26 @@
         }
       }
 
+
+
+      let autoCancelled = false
+      async function autoRefresh() {
+        if (autoCancelled) {
+          autoCancelled = false
+          return
+        }
+        // console.log('autoRefresh')
+        connection.refresh().then(() => {
+          setTimeout(autoRefresh, 2000);
+        }).catch((err) => {
+          console.log('refresh err', err)
+          setTimeout(autoRefresh, 10000);
+        })
+        return () => autoCancelled = true
+      }
+
+
+
       async function changeList(e) {
         e.preventDefault();
         const input = document.querySelector('#list');
@@ -86,11 +115,16 @@
       }
       window.changeList = changeList;
 
+      async function openDashboard(e) {
+        e.preventDefault();
+        db.openDashboard();
+      }
+      window.openDashboard = openDashboard;
+
 
       function handleFiles() {
         const fileList = this.files;
         const doc = {
-          type: "files",
           _files: {}
         }
         for (const file of fileList) {
@@ -123,6 +157,8 @@
   List:
   <input title="gallery" type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change Gallery</button>
+  <button onclick="doRefresh(event)">Refresh</button>
+  <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
   <h3>Files</h3>
   <p>Data is stored locally and encrypted before upload to S3.
     This is a demo so the encryption key is not managed securely.
