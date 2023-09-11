@@ -18,6 +18,8 @@ export async function applyBulkUpdateToCrdt(
 ): Promise<BulkResult> {
   let result
   // console.log('applyBulkUpdateToCrdt', head.toString())
+  console.log('applyBulkUpdateToCrdt', updates.length)
+  console.time('applyBulkUpdateToCrdt')
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
@@ -36,6 +38,7 @@ export async function applyBulkUpdateToCrdt(
     }
     head = result.head
   }
+  console.timeEnd('applyBulkUpdateToCrdt')
   return { head }
 }
 

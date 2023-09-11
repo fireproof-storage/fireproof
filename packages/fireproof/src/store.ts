@@ -88,7 +88,7 @@ export abstract class RemoteWAL {
       const uploads: Promise<void|AnyLink>[] = []
       for (const dbMeta of operations) {
         const uploadP = (async () => {
-          console.log('wal process', dbMeta.car.toString())
+          // console.log('wal process', dbMeta.car.toString())
           const car = await this.loader.carStore!.load(dbMeta.car)
           if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
           return await this.loader.remoteCarStore!.save(car)

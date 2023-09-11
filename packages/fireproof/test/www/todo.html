@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="../../dist/browser/fireproof.iife.js?97"></script>
+  <script src="../../dist/browser/fireproof.iife.js?98"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
@@ -27,9 +27,9 @@
         // meta in w3, storage in web3
         // connection = connect.s3(db, s3Info)
 
-        connection = db.connect("jchris+todos-21@fireproof.storage", "todo-test")
-        window.connection = connection
-        cancelRefresh = autoRefresh()
+        // connection = db.connect("jchris+todos-21@fireproof.storage", "todo-test")
+        // window.connection = connection
+        // cancelRefresh = autoRefresh()
 
         db.subscribe(redraw);
         return db;
@@ -67,9 +67,12 @@
             if (doc.completed) {
               checkbox.setAttribute('checked', true);
             }
-            checkbox.onchange = () => {
+            checkbox.onchange = async (e) => {
+              e.target.indeterminate = true;
               doc.completed = !doc.completed;
-              db.put(doc);
+              console.log('putting', doc.task, doc.completed)
+              await db.put(doc);
+              console.log('put', doc.task, doc.completed)
             }
             const textSpan = document.createElement('span');
             textSpan.innerText = doc.actor + ': ' + doc.task;
@@ -129,10 +132,10 @@
           return
         }
         connection.refresh().then(() => {
-          setTimeout(autoRefresh, 2000);
+          setTimeout(autoRefresh, 3000);
         }).catch((err) => {
           console.log('refresh err', err)
-          setTimeout(autoRefresh, 10000);
+          setTimeout(autoRefresh, 5000);
         })
         return () => autoCancelled = true
       }
