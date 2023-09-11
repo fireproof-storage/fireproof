@@ -4,7 +4,7 @@ import esbuildPluginTsc from 'esbuild-plugin-tsc'
 import alias from 'esbuild-plugin-alias'
 import fs from 'fs'
 import path, { dirname, join } from 'path'
-import { polyfillNode } from 'esbuild-plugin-polyfill-node'
+// import { polyfillNode } from 'esbuild-plugin-polyfill-node'
 import { commonjs } from '@hyrious/esbuild-plugin-commonjs'
 
 import { fileURLToPath } from 'url'
@@ -114,10 +114,15 @@ console.log('cjs/node build');
 console.log('browser/es2015 build');
 `,
         plugins: [
-          polyfillNode({
-            // todo remove crypto and test
-            polyfills: { crypto: true, fs: true, process: 'empty' }
-          }),
+          alias(
+            {
+              './store-fs': join(__dirname, '../src/store-browser.ts')
+            }
+          ),
+          // polyfillNode({
+          //   // todo remove crypto and test
+          //   polyfills: { crypto: false, fs: false, process: 'empty' }
+          // }),
           // alias({
           //   crypto: 'crypto-browserify'
           // }),
