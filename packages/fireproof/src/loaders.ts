@@ -80,6 +80,7 @@ export class DbLoader extends Loader {
     if (snap) {
       await this.clock.applyHead(null, carHeader.head, this.clock.head)
     } else {
+      console.log('applying carHeader', carHeader.head)
       await this.clock.applyHead(null, carHeader.head, [])
     }
   }
