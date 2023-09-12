@@ -5,13 +5,15 @@ import * as w3clock from '@web3-storage/clock/client'
 
 // import * as DID from '@ipld/dag-ucan/did'
 import type { Link } from 'multiformats'
-import type { Connection, Doc, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import type { Doc, DownloadDataFnParams, DownloadMetaFnParams, MapFn, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
+import { Connection } from './connection'
 // import { CID } from 'multiformats'
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Database, fireproof } from './database'
+import { Loader } from './loader'
 // import { Space } from '@web3-storage/w3up-client/dist/src/space'
 // import { clock } from '@web3-storage/clock/src/capabilities'
 
@@ -37,7 +39,7 @@ type AccessRequestDoc = Doc & {
 }
 
 type ConnectWeb3Params = { name: string, email: `${string}@${string}`, schema: string }
-export class ConnectWeb3 implements Connection {
+export class ConnectWeb3 extends Connection {
   params: ConnectWeb3Params
   ready: Promise<void>
   client: Client | null = null
@@ -48,8 +50,15 @@ export class ConnectWeb3 implements Connection {
   accountDb: Database | null = null
   accountConnection: ConnectWeb3 | null = null
   inner = false
+  loader: Loader | null = null
+
+  accessIndexFn: MapFn = (doc, emit) => {
+    const accessDoc = doc as AccessRequestDoc
+    if (doc.with) { emit(accessDoc.with + accessDoc.grantee) }
+  }
 
   constructor(params: ConnectWeb3Params, _database?: Database) {
+    super()
     this.params = params
     if (_database) {
       this.inner = true
@@ -91,13 +100,25 @@ export class ConnectWeb3 implements Connection {
     return this.clockSpaceDID!
   }
 
-  async waitForAccess(clockSpaceDID: `did:${string}:${string}`) {
-
+  async waitForAccess(clockSpaceDID: `did:${string}:${string}`, agentDID: `did:key:${string}`) {
+    const key = clockSpaceDID + agentDID
+    const { rows } = await this.accountDb!.query(this.accessIndexFn, { key })
+    if (rows.length) {
+      const doc = rows[0].doc as AccessRequestDoc
+      if (doc.state === 'granted') {
+        console.log('access granted', doc)
+        return
+      }
+    }
+    console.log('waiting for access', key, rows)
+    await this.accountConnection!.refresh()
   }
 
   async provisionClockSpace() {
     const { rows } = await this.accountDb!.query('clockName', { key: this.encodeSpaceName() })
     const client = this.accountConnection!.client!
+    // @ts-ignore
+    const thisAgentDID = client._agent.issuer.did()
     if (rows.length) {
       console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
       // load one
@@ -114,13 +135,8 @@ export class ConnectWeb3 implements Connection {
         this.clockSpaceDID = clockSpaceDID
       } else {
         // make a request
-        // @ts-ignore
-        const key = clockSpaceDID + client._agent.issuer.did()
-
-        const { rows } = await this.accountDb!.query((doc, emit) => {
-          const accessDoc = doc as AccessRequestDoc
-          if (doc.with) { emit(accessDoc.with + accessDoc.grantee) }
-        }, { key })
+        const key = clockSpaceDID + thisAgentDID
+        const { rows } = await this.accountDb!.query(this.accessIndexFn, { key })
 
         if (rows.length) {
           console.log('we already requested access', rows[0].doc)
@@ -131,15 +147,14 @@ export class ConnectWeb3 implements Connection {
             audience: doc.issuer,
             with: clockSpaceDID,
             capabilities: ['clock/*'],
-            // @ts-ignore
-            grantee: client._agent.issuer.did()
+            grantee: thisAgentDID
           }
           console.log('requesting access', accessRequestDoc)
           await this.accountDb!.put(accessRequestDoc)
         }
 
         console.log('now we wait for access, please refresh original tab to kickoff grant process')
-        await this.waitForAccess(clockSpaceDID)
+        await this.waitForAccess(clockSpaceDID, thisAgentDID)
       }
 
       // we could use this to keep local early start from conflicting with remote key
