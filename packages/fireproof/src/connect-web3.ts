@@ -45,6 +45,12 @@ export class ConnectWeb3 implements Connection {
       this.accountConnection = new ConnectWeb3(this.params, this.accountDb)
       const { _crdt: { blocks: { loader } } } = this.accountDb
       loader?.connectRemote(this.accountConnection)
+      await this.accountConnection.ready
+      const data = await this.accountDb.changes([], { limit: 1 })
+      console.log('accountConnection ready, accountDb.changes()', data)
+      // now get the clock for the params.name and params.schema
+      const allBySchema = await this.accountDb.query('schema', { key: this.params.schema })
+      console.log('allBySchema', allBySchema)
     }
   }
 
