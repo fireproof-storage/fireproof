@@ -5,22 +5,37 @@ import * as w3clock from '@web3-storage/clock/client'
 
 // import * as DID from '@ipld/dag-ucan/did'
 import type { Link } from 'multiformats'
-import type { Connection, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import type { Connection, Doc, DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
 // import { CID } from 'multiformats'
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Database, fireproof } from './database'
+// import { Space } from '@web3-storage/w3up-client/dist/src/space'
+// import { clock } from '@web3-storage/clock/src/capabilities'
 
 // almost ClockHead, different kind of clock
 type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
+
+type ClockSpaceDoc = Doc & {
+  clockName: `_clock/${string}/${string}`;
+  clockSpace: `did:${string}:${string}`;
+  accountSpace: `did:${string}:${string}`;
+  issuer: `did:key:${string}`;
+  created: number;
+  name: string;
+  email: `${string}@${string}`;
+  schema: string;
+}
 
 type ConnectWeb3Params = { name: string, email: `${string}@${string}`, schema: string }
 export class ConnectWeb3 implements Connection {
   params: ConnectWeb3Params
   ready: Promise<void>
   client: Client | null = null
+  clockSpaceDID: `did:${string}:${string}` | null = null
+
   parents: CarClockHead = []
   eventBlocks = new MemoryBlockstore()
   accountDb: Database | null = null
@@ -37,6 +52,7 @@ export class ConnectWeb3 implements Connection {
   }
 
   async initializeClient() {
+    console.log('initializeClient', this.inner, this.params)
     if (this.inner) {
       // we are an inner client
       this.client = await this.connectClient(this.params.email)
@@ -49,29 +65,78 @@ export class ConnectWeb3 implements Connection {
       const data = await this.accountDb.changes([], { limit: 1 })
       console.log('accountConnection ready, accountDb.changes()', data)
       // now get the clock for the params.name and params.schema
-      const allBySchema = await this.accountDb.query('schema', { key: this.params.schema })
-      console.log('allBySchema', allBySchema)
+      await this.provisionClockSpace()
+      // if length 0 make one
+      //
+      // if length 1 use it
     }
   }
 
   async clientForDb() {
+    await this.ready
     if (this.inner) return this.client!
     await this.accountConnection!.ready
     return this.accountConnection!.client!
   }
 
-  // encodeSpaceName() {
-  //   const schemaPart = encodeURIComponent(this.schema)
-  //   const namePart = encodeURIComponent(this.dbName)
-  //   return `${schemaPart}/${namePart}`
-  // }
+  clockSpaceDIDForDb() {
+    if (this.inner) return this.client!.currentSpace()!.did()
+    return this.clockSpaceDID!
+  }
 
-  // decodeSpaceName(spaceName: `${string}/${string}`) {
-  //   const [schemaPart, namePart] = spaceName.split('/')
-  //   const schema = decodeURIComponent(schemaPart)
-  //   const name = decodeURIComponent(namePart)
-  //   return { schema, name }
-  // }
+  async provisionClockSpace() {
+    const { rows } = await this.accountDb!.query('clockName', { key: this.encodeSpaceName() })
+    const client = this.accountConnection!.client!
+    if (rows.length) {
+      console.log('existing clock spaces for schema/name', this.params.schema, rows)
+      // load one
+
+      const doc = rows[0].doc as ClockSpaceDoc
+      const clockSpaceName = doc.clockName
+      const clockSpaceDID = doc.clockSpace
+      const proofs = client.proofs([{ can: 'clock/*', with: clockSpaceDID }])
+
+      console.log('proofs', clockSpaceDID, clockSpaceName, proofs)
+
+      if (proofs.length) {
+        // we are good
+        this.clockSpaceDID = clockSpaceDID
+      } else {
+        // make a request
+        throw new Error('need to request access to clock space')
+      }
+
+      // we could use this to keep local early start from conflicting with remote key
+      // reqeust access if needed
+    } else {
+      // make one and save it back
+      const clockSpace = await client.createSpace(this.encodeSpaceName())
+      this.clockSpaceDID = clockSpace.did()
+      const doc = {
+        ...this.params,
+        clockName: this.encodeSpaceName(),
+        clockSpace: this.clockSpaceDID,
+        accountSpace: client.currentSpace()!.did(),
+        // @ts-ignore
+        issuer: client._agent.issuer.did(),
+        created: Date.now()
+      }
+      await this.accountDb!.put(doc)
+    }
+  }
+
+  encodeSpaceName(): `_clock/${string}/${string}` {
+    const schemaPart = encodeURIComponent(this.params.schema)
+    const namePart = encodeURIComponent(this.params.name)
+    return `_clock/${schemaPart}/${namePart}`
+  }
+
+  decodeSpaceName(spaceName: `_clock/${string}/${string}`) {
+    const [, schemaPart, namePart] = spaceName.split('/')
+    const schema = decodeURIComponent(schemaPart)
+    const name = decodeURIComponent(namePart)
+    return { schema, name }
+  }
 
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
@@ -87,7 +152,6 @@ export class ConnectWeb3 implements Connection {
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    await this.ready
     const client = await this.clientForDb()
     if (!client) { throw new Error('client not initialized') }
     // console.log('w3 uploading car', params.car)
@@ -100,20 +164,17 @@ export class ConnectWeb3 implements Connection {
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
-    await this.ready
     const client = await this.clientForDb()
     // console.log('w3 meta download', params)
     // @ts-ignore
     const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
-    const space = client.currentSpace() // use clock space
-    if (!space) { throw new Error('space not initialized') }
-    const clockProofs = client.proofs([{ can: 'clock/*', with: space.did() }])
+    const clockProofs = client.proofs([{ can: 'clock/*', with: this.clockSpaceDIDForDb() }])
     if (!clockProofs.length) { throw new Error('need clock/* capability') }
     const head = await w3clock.head({
       issuer,
-      with: space.did(),
+      with: this.clockSpaceDIDForDb(),
       proofs: clockProofs
     })
     if (head.out.ok) {
@@ -123,6 +184,48 @@ export class ConnectWeb3 implements Connection {
     } else {
       throw new Error(`Failed to download ${params.name}`)
     }
+  }
+
+  // bytes is encoded {car, key}, not our job to decode, just return on download
+  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
+    const client = await this.clientForDb()
+    // @ts-ignore
+    const { issuer } = client._agent
+    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
+    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+
+    const clockProofs = client.proofs([{ can: 'clock/*', with: this.clockSpaceDIDForDb() }]) // use clock space
+    if (!clockProofs.length) { throw new Error('need clock/* capability') }
+
+    const data = {
+      dbMeta: bytes
+    }
+    const event = await EventBlock.create(data, this.parents)
+    const eventBlocks = new MemoryBlockstore()
+    await this.eventBlocks.put(event.cid, event.bytes)
+    await eventBlocks.put(event.cid, event.bytes)
+
+    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
+
+    await client.uploadCAR(new Blob([carBytes]))
+
+    const blocks = []
+    for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
+      blocks.push(await decodeEventBlock(eventBytes))
+    }
+
+    const advanced = await w3clock.advance({
+      issuer,
+      with: this.clockSpaceDIDForDb(),
+      proofs: clockProofs
+    }, event.cid, { blocks })
+    this.parents = [event.cid]
+    // @ts-ignore
+    const { ok, error } = advanced.root.data?.ocm.out
+    if (error) { throw new Error(JSON.stringify(error)) }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const head = ok.head as CarClockHead
+    return this.fetchAndUpdateHead(head)
   }
 
   async fetchAndUpdateHead(remoteHead: CarClockHead) {
@@ -155,51 +258,6 @@ export class ConnectWeb3 implements Connection {
     return outBytess
   }
 
-  // bytes is encoded {car, key}, not our job to decode, just return on download
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    const client = await this.clientForDb()
-    // @ts-ignore
-    const { issuer } = client._agent
-    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
-    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
-
-    const space = client.currentSpace()
-    if (!space) { throw new Error('space not initialized') }
-
-    const clockProofs = client.proofs([{ can: 'clock/*', with: space.did() }]) // use clock space
-    if (!clockProofs.length) { throw new Error('need clock/* capability') }
-
-    const data = {
-      dbMeta: bytes
-    }
-    const event = await EventBlock.create(data, this.parents)
-    const eventBlocks = new MemoryBlockstore()
-    await this.eventBlocks.put(event.cid, event.bytes)
-    await eventBlocks.put(event.cid, event.bytes)
-
-    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
-
-    await client.uploadCAR(new Blob([carBytes]))
-
-    const blocks = []
-    for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
-      blocks.push(await decodeEventBlock(eventBytes))
-    }
-
-    const advanced = await w3clock.advance({
-      issuer,
-      with: space.did(),
-      proofs: clockProofs
-    }, event.cid, { blocks })
-    this.parents = [event.cid]
-    // @ts-ignore
-    const { ok, error } = advanced.root.data?.ocm.out
-    if (error) { throw new Error(JSON.stringify(error)) }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const head = ok.head as CarClockHead
-    return this.fetchAndUpdateHead(head)
-  }
-
   async connectClient(email: `${string}@${string}`) {
     const client = await create()
     const proofs = client.proofs()
@@ -222,7 +280,7 @@ export class ConnectWeb3 implements Connection {
       }
     }
     if (space === undefined) {
-      space = await client.createSpace()
+      space = await client.createSpace('_account')
     }
     await client.setCurrentSpace(space.did())
 

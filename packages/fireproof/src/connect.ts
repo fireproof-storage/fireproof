@@ -4,7 +4,7 @@ import { Database } from './database'
 import type { DbLoader } from './loaders'
 import { Connection, UploadDataFnParams, MetaUploadFn, DataUploadFn, UploadMetaFnParams, DataDownloadFn, MetaDownloadFn, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
-const web3names = new Set<string>()
+const web3names = new Map<string, ConnectWeb3>()
 
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
@@ -27,14 +27,14 @@ export const connect = {
     const { name, _crdt: { blocks: { loader } } } = db
     if (!name) throw new Error('database name is required')
     if (web3names.has(name + email)) {
-      return
+      return web3names.get(name + email)!
     }
     if (!schemaName && location) {
       schemaName = location.origin
     }
     const connection = new ConnectWeb3({ name, email, schema: schemaName! })
     loader!.connectRemote(connection)
-    web3names.add(name + email)
+    web3names.set(name + email, connection)
     return connection
   }
 }
