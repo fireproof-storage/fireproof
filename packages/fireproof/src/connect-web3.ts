@@ -31,6 +31,7 @@ type ClockSpaceDoc = Doc & {
   created: number;
   name: string;
   email: `${string}@${string}`;
+  ua: string;
   schema: string;
 }
 
@@ -79,7 +80,7 @@ export class ConnectWeb3 extends Connection {
       this.accountDb = _database
     }
     this.ready = this.initializeClient()
-    this.ready.then(async () => {
+    this.ready.then(() => {
       void this.serviceAccessRequests()
     }).catch(e => {
       console.error('initializeClient or serviceAccessRequests error', e)
@@ -262,6 +263,7 @@ export class ConnectWeb3 extends Connection {
       accountSpace: client.currentSpace()!.did(),
       // @ts-ignore
       issuer: client._agent.issuer.did(),
+      ua: navigator.userAgent,
       created: Date.now()
     }
     await this.accountDb!.put(doc)
