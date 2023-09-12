@@ -201,7 +201,7 @@ export class ConnectWeb3 extends Connection {
         return
       }
     }
-    console.log('waiting for access, please ensure original tab is open', key, rows)
+    console.log('waiting for access, please ensure original tab is open', clockSpaceDID)
     await sleep(3000) // todo enable websockets on remote clock
     await this.accountConnection!.refresh()
     await this.waitForAccess(clockSpaceDID, agentDID)
