@@ -15,14 +15,13 @@ export class CRDTClock {
   blocks: TransactionBlockstore | null = null
 
   setHead(head: ClockHead) {
-    console.log('new db head', this.blocks?.name, head.toString())
     this.head = head
   }
 
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    console.log('applyHead', updates.length, ogHead.toString(), newHead.toString(), prevHead.toString())
+    // console.log('applyHead', updates.length, ogHead.toString(), newHead.toString(), prevHead.toString())
     if (ogHead.toString() === newHead.toString()) {
       this.watchers.forEach((fn) => fn(updates))
       return
@@ -43,7 +42,6 @@ export class CRDTClock {
     const { head } = await withBlocks(tblocks, async (tblocks) => {
       let head = this.head
       for (const cid of newHead) {
-        console.log('advance', cid.toString())
         head = await advance(tblocks, head, cid)
       }
       const result = await root(tblocks, head)
