@@ -1,13 +1,14 @@
-import { Connection, DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
-import fetch from 'cross-fetch'
+import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
 import { validateDataParams, validateMetaParams } from './connect'
+import { Connection } from './connection'
+import fetch from 'cross-fetch'
 
-export class ConnectS3 implements Connection {
+export class ConnectS3 extends Connection {
   uploadUrl: URL
   downloadUrl: URL
-  ready: Promise<any> = Promise.resolve()
 
   constructor(upload: string, download: string) {
+    super()
     this.uploadUrl = new URL(upload)
     this.downloadUrl = new URL(download)
   }

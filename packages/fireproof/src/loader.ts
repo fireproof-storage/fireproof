@@ -10,8 +10,9 @@ import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   CarLoaderHeader,
   CommitOpts,
-  Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
+  DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
+import type { Connection } from './connection'
 import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
@@ -79,15 +80,12 @@ export abstract class Loader {
   }
 
   connectRemote(connection: Connection) {
+    connection.loader = this
     this._connectRemoteMeta(connection)
     this._connectRemoteStorage(connection)
     connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
       void this.remoteWAL?._process()
     })
-    connection.refresh = async () => {
-      await this.remoteMetaStore!.load('main')
-      await this.remoteWAL?._process()
-    }
     return connection
   }
 

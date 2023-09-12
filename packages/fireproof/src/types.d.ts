@@ -152,9 +152,6 @@ export type UploadDataFnParams = {
   size: string
 }
 
-export type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
-export type DataUploadFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>
-
 export type DownloadFnParamTypes = 'data' | 'file'
 
 export type DownloadDataFnParams = {
@@ -168,21 +165,7 @@ export type DownloadMetaFnParams = {
   branch: string,
 }
 
-export type MetaDownloadFn = (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
-
-export type DataDownloadFn = (params: DownloadDataFnParams) => Promise<Uint8Array | null>
-
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
-
-export interface Connection {
-  ready: Promise<any>
-  metaUpload: MetaUploadFn
-  dataUpload: DataUploadFn
-  metaDownload: MetaDownloadFn
-  dataDownload: DataDownloadFn
-  // remove: (params: DownloadFnParams) => Promise<void>
-  refresh?: () => Promise<void>
-}
 
 export type ChangesOptions = {
   dirty?: boolean
