@@ -24,7 +24,7 @@
         window.db = db;
         // connection = connect.s3(db, s3Info)
 
-        connection = db.connect("jchris+gallery25@fireproof.storage", "files")
+        connection = db.connect("jchris+gallery26@fireproof.storage", "files")
         window.connection = connection
         cancelRefresh = autoRefresh()
 
@@ -90,7 +90,7 @@
       async function autoRefresh() {
         if (autoCancelled) {
           autoCancelled = false
-          return
+          return () => autoCancelled = true
         }
         // console.log('autoRefresh')
         connection.refresh().then(() => {
