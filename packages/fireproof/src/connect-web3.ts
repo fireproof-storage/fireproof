@@ -29,6 +29,13 @@ type ClockSpaceDoc = Doc & {
   schema: string;
 }
 
+type AccessRequestDoc = Doc & {
+  audience: `did:key:${string}`;
+  with: `did:${string}:${string}`;
+  capabilities: string[];
+  grantee: `did:key:${string}`;
+}
+
 type ConnectWeb3Params = { name: string, email: `${string}@${string}`, schema: string }
 export class ConnectWeb3 implements Connection {
   params: ConnectWeb3Params
@@ -84,11 +91,15 @@ export class ConnectWeb3 implements Connection {
     return this.clockSpaceDID!
   }
 
+  async waitForAccess(clockSpaceDID: `did:${string}:${string}`) {
+
+  }
+
   async provisionClockSpace() {
     const { rows } = await this.accountDb!.query('clockName', { key: this.encodeSpaceName() })
     const client = this.accountConnection!.client!
     if (rows.length) {
-      console.log('existing clock spaces for schema/name', this.params.schema, rows)
+      console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
       // load one
 
       const doc = rows[0].doc as ClockSpaceDoc
@@ -103,7 +114,32 @@ export class ConnectWeb3 implements Connection {
         this.clockSpaceDID = clockSpaceDID
       } else {
         // make a request
-        throw new Error('need to request access to clock space')
+        // @ts-ignore
+        const key = clockSpaceDID + client._agent.issuer.did()
+
+        const { rows } = await this.accountDb!.query((doc, emit) => {
+          const accessDoc = doc as AccessRequestDoc
+          if (doc.with) { emit(accessDoc.with + accessDoc.grantee) }
+        }, { key })
+
+        if (rows.length) {
+          console.log('we already requested access', rows[0].doc)
+        } else {
+        // write a document that the issuer can use to grant access
+          const accessRequestDoc = {
+            state: 'pending',
+            audience: doc.issuer,
+            with: clockSpaceDID,
+            capabilities: ['clock/*'],
+            // @ts-ignore
+            grantee: client._agent.issuer.did()
+          }
+          console.log('requesting access', accessRequestDoc)
+          await this.accountDb!.put(accessRequestDoc)
+        }
+
+        console.log('now we wait for access, please refresh original tab to kickoff grant process')
+        await this.waitForAccess(clockSpaceDID)
       }
 
       // we could use this to keep local early start from conflicting with remote key
@@ -112,7 +148,7 @@ export class ConnectWeb3 implements Connection {
       // make one and save it back
       const clockSpace = await client.createSpace(this.encodeSpaceName())
       this.clockSpaceDID = clockSpace.did()
-      const doc = {
+      const doc: ClockSpaceDoc = {
         ...this.params,
         clockName: this.encodeSpaceName(),
         clockSpace: this.clockSpaceDID,
