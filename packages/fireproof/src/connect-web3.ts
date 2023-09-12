@@ -80,11 +80,7 @@ export class ConnectWeb3 extends Connection {
       await this.accountConnection.ready
       const data = await this.accountDb.changes([], { limit: 1 })
       console.log('accountConnection ready, accountDb.changes()', data)
-      // now get the clock for the params.name and params.schema
       await this.provisionClockSpace()
-      // if length 0 make one
-      //
-      // if length 1 use it
     }
   }
 
@@ -121,7 +117,6 @@ export class ConnectWeb3 extends Connection {
     const thisAgentDID = client._agent.issuer.did()
     if (rows.length) {
       console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
-      // load one
 
       const doc = rows[0].doc as ClockSpaceDoc
       const clockSpaceName = doc.clockName
@@ -131,7 +126,6 @@ export class ConnectWeb3 extends Connection {
       console.log('proofs', clockSpaceDID, clockSpaceName, proofs)
 
       if (proofs.length) {
-        // we are good
         this.clockSpaceDID = clockSpaceDID
       } else {
         // make a request
