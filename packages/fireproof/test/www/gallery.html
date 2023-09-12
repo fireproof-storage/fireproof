@@ -28,9 +28,9 @@
         db = fireproof(name);
         window.db = db;
 
-        cx = db.connect("jchris+files-27@fireproof.storage", "todo-test")
-        window.cx = cx
-        // cancelRefresh = autoRefresh()
+        connection = db.connect("jchris+gallery26@fireproof.storage", "files")
+        window.connection = connection
+        cancelRefresh = autoRefresh()
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
