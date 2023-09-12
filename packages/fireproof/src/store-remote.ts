@@ -1,7 +1,8 @@
 /* eslint-disable import/first */
 // console.log('import store-s3')
 
-import { AnyBlock, AnyLink, Connection, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
+import { AnyBlock, AnyLink, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
+import { Connection } from './connection'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import type { Loader } from './loader'
 // import type { Response } from 'cross-fetch'
