@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="../../dist/browser/fireproof.iife.js?101"></script>
+  <script src="../../dist/browser/fireproof.iife.js?123"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
@@ -17,7 +17,6 @@
       let dbUnsubscribe = false
       let cancelRefresh = false
 
-
       function setupDb(name) {
         if (cancelRefresh) {
           cancelRefresh()
@@ -28,24 +27,17 @@
         dbName = name;
         db = fireproof(name);
         window.db = db;
-        // meta in w3, storage in web3
-        // connection = connect.s3(db, s3Info)
 
-        connection = db.connect("jchris+todos-23@fireproof.storage", "todo-test")
+        connection = db.connect("jchris+todos-27@fireproof.storage", "todo-test")
         window.connection = connection
         cancelRefresh = autoRefresh()
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
       }
-      // const s3Info = {
-      //   upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-      //   download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-      // }
 
       let doing
       const redraw = async () => {
-        console.log('redraw')
         if (doing) {
           return doing
         }
@@ -117,7 +109,7 @@
         e.preventDefault();
 
         const input = document.querySelector('#todo');
-        const ok = await db.put({ actor: actorTag,created: Date.now(), task: input.value, completed: false });
+        const ok = await db.put({ actor: actorTag, created: Date.now(), task: input.value, completed: false });
         input.value = '';
 
       }
@@ -136,6 +128,7 @@
           return () => autoCancelled = true
         }
         connection.refresh().then(() => {
+          // todo enable websockets on remote clock
           setTimeout(autoRefresh, 3000);
         }).catch((err) => {
           console.log('refresh err', err)
