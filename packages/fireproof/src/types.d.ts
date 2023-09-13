@@ -9,6 +9,7 @@ export type FireproofOptions = {
   persistIndexes?: boolean
 }
 
+// ts-unused-exports:disable-next-line
 export type ClockLink = EventLink<EventData>
 
 export type ClockHead = ClockLink[]
