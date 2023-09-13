@@ -30,7 +30,6 @@
 
         cx = db.connect("jchris+files-27@fireproof.storage", "todo-test")
         window.cx = cx
-        // cancelRefresh = autoRefresh()
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
