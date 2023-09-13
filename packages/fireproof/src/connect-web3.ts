@@ -100,6 +100,7 @@ export class ConnectWeb3 extends Connection {
       await this.accountConnection.ready
       await this.accountDb.changes([], { limit: 1 })
       await this.provisionClockSpace()
+      console.log('connected clockSpaceDID', this.clockSpaceDIDForDb())
     }
   }
 
@@ -115,6 +116,7 @@ export class ConnectWeb3 extends Connection {
       // await this.ready
       const client = this.client!
       const clockProofs = client.proofs([{ can: 'clock/*', with: this.clockSpaceDIDForDb() }])
+      if (!clockProofs.length) { throw new Error('missing clock/* capability on account space') }
       return clockProofs
     }
 
@@ -128,7 +130,7 @@ export class ConnectWeb3 extends Connection {
     if (clockProofs.length) {
       this.clockProofs = clockProofs
     }
-
+    if (!clockProofs.length) { throw new Error('need clock/* capability for ' + this.clockSpaceDIDForDb()) }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.clockProofs
   }
@@ -203,7 +205,9 @@ export class ConnectWeb3 extends Connection {
         if (!loadedDelegation.ok) throw new Error('missing loadedDelegation')
         const client = this.accountConnection!.client!
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+        console.log('adding proof', loadedDelegation.ok)
         await client.addProof(loadedDelegation.ok)
+        console.log('done adding')
         const theseClockProofs = client.proofs([{ can: 'clock/*', with: clockSpaceDID }])
         if (!theseClockProofs.length) { throw new Error('failed granting clock/* capability') }
         console.log('accepting delegation', doc)
@@ -238,6 +242,8 @@ export class ConnectWeb3 extends Connection {
 
     this.clockSpaceDID = clockSpaceDID
 
+    console.log('joining clock space', clockSpaceDID, proofs.length, doc.email, doc.clockName, rows.length)
+
     if (!proofs.length) {
       await this.handleRequestAccess(doc, clockSpaceDID, thisAgentDID)
     }
@@ -246,7 +252,7 @@ export class ConnectWeb3 extends Connection {
   async handleRequestAccess(doc: ClockSpaceDoc, clockSpaceDID: `did:${string}:${string}`, thisAgentDID: `did:key:${string}`) {
     const key = clockSpaceDID + thisAgentDID
     const { rows } = await this.accountDb!.query(this.accessIndexFn, { key })
-
+    console.log('requesting access', clockSpaceDID, rows.length)
     if (!rows.length) {
       const accessRequestDoc: AccessRequestDoc = {
         type: 'access-request',
@@ -320,7 +326,6 @@ export class ConnectWeb3 extends Connection {
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
     const clockProofs = this.clockProofsForDb()
-    if (!clockProofs.length) { throw new Error('need clock/* capability') }
     const head = await w3clock.head({
       issuer,
       with: this.clockSpaceDIDForDb(),
@@ -346,7 +351,6 @@ export class ConnectWeb3 extends Connection {
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
 
     const clockProofs = this.clockProofsForDb()
-    if (!clockProofs.length) { throw new Error('need clock/* capability') }
 
     const data = {
       dbMeta: bytes
@@ -412,18 +416,29 @@ export class ConnectWeb3 extends Connection {
     const client = await create()
     const proofs = client.proofs()
     if (proofs.length === 0) {
-      console.log('emailing', email, client, client.spaces(), client.proofs())
-      await client.authorize(email, {
+      console.log('emailing', email, client.spaces().length)
+      const autx = await client.authorize(email, {
         capabilities: [{ can: 'clock/*' },
           { can: 'space/*' }, { can: 'provider/add' },
           { can: 'store/*' }, { can: 'upload/*' }]
       })
+      console.log('auhtx', autx)
     }
 
     const spaces = client.spaces()
+    console.log('has spaces', spaces.length)
     let space
+    // this search is wrong, need to find account space first?
     for (const s of spaces) {
       space = s
+      console.log('space', s.did(), s.registered(), s.name())
+      // if (s.registered()) {
+      //   break
+      // }
+    }
+    for (const s of spaces) {
+      space = s
+      // console.log('space', s.did(), s.registered(), s.name())
       if (s.registered()) {
         break
       }
