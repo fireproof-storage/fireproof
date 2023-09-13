@@ -1,31 +1,7 @@
 // from https://github.com/mikeal/encrypted-block
-// import { Crypto } from '@peculiar/webcrypto'
 import { CID } from 'multiformats'
 import type { AnyLink } from './types'
-
-// const crypto = new Crypto()
-
-export function getCrypto() {
-  try {
-    if (window.crypto && window.crypto.subtle) {
-      return window.crypto
-    } else {
-      return new Crypto()
-    }
-  } catch (e) {
-    return null
-  }
-}
-
-const crypto = getCrypto()
-
-export function randomBytes(size: number) {
-  const bytes = new Uint8Array(size)
-  if (size > 0) {
-    crypto!.getRandomValues(bytes)
-  }
-  return bytes
-}
+import { crypto, randomBytes } from './crypto-web'
 
 const enc32 = (value: number) => {
   value = +value

@@ -1,10 +1,10 @@
 import { CarReader } from '@ipld/car'
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
-import { getCrypto, randomBytes } from './encrypted-block'
+import { getCrypto, randomBytes } from './crypto-web'
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
-import { DataStore, MetaStore, RemoteWAL } from './store-fs'
+import { DataStore, MetaStore, RemoteWAL } from './store-browser'
 import type { DataStore as AbstractDataStore } from './store'
 
 import { CID } from 'multiformats'
@@ -19,6 +19,7 @@ import type { Connection } from './connection'
 // import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
+// ts-unused-exports:disable-next-line
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
@@ -31,6 +32,7 @@ function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
   return [...byString.values()]
 }
 
+// ts-unused-exports:disable-next-line
 export function toHexString(byteArray: Uint8Array) {
   return Array.from(byteArray)
     .map(byte => byte.toString(16).padStart(2, '0'))
@@ -270,7 +272,7 @@ export abstract class Loader {
     return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
   }
 
-  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: AbstractDataStore): Promise<CarReader> {
+  protected async storesLoadCar(cid: AnyLink, local: AbstractDataStore, remote?: AbstractDataStore): Promise<CarReader> {
     const cidString = cid.toString()
     if (!this.carReaders.has(cidString)) {
       this.carReaders.set(cidString, (async () => {

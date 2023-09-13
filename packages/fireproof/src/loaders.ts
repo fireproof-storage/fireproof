@@ -12,7 +12,7 @@ import { index } from './index'
 // import type { DataStore as AbstractDataStore } from './store'
 import { RemoteDataStore } from './store-remote'
 
-import { DataStore, MetaStore, RemoteWAL } from './store-fs'
+import { DataStore } from './store-browser'
 
 export class IdxLoader extends Loader {
   // declare ready: Promise<IdxCarHeader>

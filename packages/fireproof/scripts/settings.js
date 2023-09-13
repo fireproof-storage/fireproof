@@ -4,7 +4,7 @@ import esbuildPluginTsc from 'esbuild-plugin-tsc'
 import alias from 'esbuild-plugin-alias'
 import fs from 'fs'
 import path, { dirname, join } from 'path'
-// import { polyfillNode } from 'esbuild-plugin-polyfill-node'
+import { polyfillNode } from 'esbuild-plugin-polyfill-node'
 import { commonjs } from '@hyrious/esbuild-plugin-commonjs'
 
 import { fileURLToPath } from 'url'
@@ -68,14 +68,22 @@ const require = createRequire(import.meta.url);
 
     const testEsmConfig = {
       ...esmConfig,
+      platform: 'node',
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...esmConfig.plugins,
         alias(
           {
-            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js')
+            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
+            './store-browser': join(__dirname, '../src/store-fs.ts'),
+            './crypto-web': join(__dirname, '../src/crypto-node.ts')
           }
         ),
-        commonjs({ filter: /^peculiar|ipfs-utils/ })]
+        commonjs({ filter: /^peculiar|ipfs-utils/ })
+        // polyfillNode({
+        //   polyfills: { crypto: false, fs: true, process: 'empty' }
+        // })
+      ]
+
     }
 
     builds.push(testEsmConfig)
@@ -114,11 +122,11 @@ console.log('cjs/node build');
 console.log('browser/es2015 build');
 `,
         plugins: [
-          alias(
-            {
-              './store-fs': join(__dirname, '../src/store-browser.ts')
-            }
-          ),
+          // alias(
+          //   {
+          //     './store-fs': join(__dirname, '../src/store-browser.ts')
+          //   }
+          // ),
           // polyfillNode({
           //   // todo remove crypto and test
           //   polyfills: { crypto: false, fs: false, process: 'empty' }

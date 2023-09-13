@@ -76,7 +76,6 @@ describe.skip('basic Connection with s3 remote', function () {
     } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
-    // console.log(gotMain)
     equals(gotMain[0].key, loader.key)
   }).timeout(10000)
   it('should get', async function () {

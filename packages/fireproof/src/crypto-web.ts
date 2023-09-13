@@ -1,5 +1,3 @@
-// const crypto = new Crypto()
-
 export function getCrypto() {
   try {
     if (window.crypto && window.crypto.subtle) {
