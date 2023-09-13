@@ -10,10 +10,10 @@ type RawConnectionParams = {
   dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>
   metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
   dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | null>,
-    }
+}
 
 // @ts-ignore
-export class ConnectRaw extends Connection {
+class ConnectRaw extends Connection {
   constructor({
     metaUpload, metaDownload,
     dataUpload, dataDownload

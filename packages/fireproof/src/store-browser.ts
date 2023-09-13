@@ -5,6 +5,7 @@ import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase, WALState } from './store'
 
+// ts-unused-exports:disable-next-line
 export class DataStore extends DataStoreBase {
   tag: string = 'car-browser-idb'
   idb: IDBPDatabase<unknown> | null = null
@@ -51,6 +52,8 @@ export class DataStore extends DataStoreBase {
   }
 }
 
+// ts-unused-exports:disable-next-line
+
 export class RemoteWAL extends RemoteWALBase {
   tag: string = 'wal-browser-ls'
 
@@ -79,6 +82,7 @@ export class RemoteWAL extends RemoteWALBase {
   }
 }
 
+// ts-unused-exports:disable-next-line
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-browser-ls'
 

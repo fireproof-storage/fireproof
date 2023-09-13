@@ -9,8 +9,9 @@ import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase
 
 // todo refactor this system to the current store-remote is the new prototype
 // this would mean that there'd be a version of filesystem and browser access
-// that use the Connection interface
 
+// that use the Connection interface
+// ts-unused-exports:disable-next-line
 export class RemoteWAL extends RemoteWALBase {
   filePathForBranch(branch: string): string {
     return join(MetaStore.dataDir, this.loader.name, 'wal', branch + '.json')
@@ -32,6 +33,7 @@ export class RemoteWAL extends RemoteWALBase {
   }
 }
 
+// ts-unused-exports:disable-next-line
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION)
@@ -58,10 +60,12 @@ export class MetaStore extends MetaStoreBase {
   }
 }
 
+// ts-unused-exports:disable-next-line
 export const testConfig = {
   dataDir: MetaStore.dataDir
 }
 
+// ts-unused-exports:disable-next-line
 export class DataStore extends DataStoreBase {
   tag: string = 'car-node-fs'
   static dataDir: string = join(homedir(), '.fireproof', 'v' + STORAGE_VERSION)

@@ -19,7 +19,7 @@ import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
-export function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
+function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
   const byString = new Map<string, AnyLink>()
   for (const cid of list) {
     if (cidListIncludes(remove, cid)) continue
