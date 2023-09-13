@@ -1,6 +1,7 @@
 import type { Link } from 'multiformats'
 import type { EventLink } from '@alanshaw/pail/clock'
 import type { EventData } from '@alanshaw/pail/crdt'
+import { ClockHead, Doc } from './types'
 
 export type FireproofOptions = {
   public?: boolean
@@ -9,6 +10,7 @@ export type FireproofOptions = {
 }
 
 export type ClockLink = EventLink<EventData>
+
 export type ClockHead = ClockLink[]
 
 export type DocFragment = Uint8Array | string | number | boolean | null | DocFragment[] | { [key: string]: DocFragment }
@@ -170,4 +172,14 @@ export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 export type ChangesOptions = {
   dirty?: boolean
   limit?: number
+}
+
+export type ChangesResponse = {
+  clock: ClockHead
+  rows: { key: string; value: Doc }[]
+}
+
+export type DbResponse = {
+  id: string
+  clock: ClockHead
 }

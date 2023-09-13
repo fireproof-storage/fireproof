@@ -158,7 +158,7 @@ export function encodeKey(key: string): string {
 }
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
-export interface ProllyNode extends BaseNode {
+interface ProllyNode extends BaseNode {
   getAllEntries(): PromiseLike<{ [x: string]: any; result: IndexRow[] }>
   getMany(removeIds: string[]): Promise<{ [x: string]: any; result: IndexKey[] }>
   range(a: IndexKey, b: IndexKey): Promise<{ result: IndexRow[] }>
@@ -171,7 +171,7 @@ export interface ProllyNode extends BaseNode {
   block: Promise<Block>
 }
 
-export interface StaticProllyOptions {
+interface StaticProllyOptions {
   cache: any
   chunker: (entry: any, distance: number) => boolean
   codec: any
