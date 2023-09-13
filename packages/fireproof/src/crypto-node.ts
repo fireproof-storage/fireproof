@@ -1,16 +1,8 @@
 import { Crypto } from '@peculiar/webcrypto'
 
-console.log('crypto-node.ts')
-
 export function getCrypto() {
   try {
-    if (window.crypto && window.crypto.subtle) {
-      return window.crypto
-    } else {
-      // todo shrink the size of this import
-      // we use subtle.importKey, encrypt, decrypt
-      return new Crypto()
-    }
+    return new Crypto()
   } catch (e) {
     return null
   }

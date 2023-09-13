@@ -8,19 +8,15 @@
   <script src="../../dist/browser/fireproof.iife.js?cache=79"></script>
   <script type="text/javascript">
     function testApp() {
-      const { connect, fireproof, index } = Fireproof;
+      const { fireproof, connect } = Fireproof;
       let dbName
       let db
       let cx
 
 
       let dbUnsubscribe = false
-      let cancelRefresh = false
 
       function setupDb(name) {
-        if (cancelRefresh) {
-          cancelRefresh()
-        }
         if (dbUnsubscribe) {
           dbUnsubscribe()
         }
@@ -35,12 +31,6 @@
         return db;
       }
 
-
-      // const s3Info = {
-      //   upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-      //   download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-      // }
-
       let doing
       const redraw = async () => {
         if (doing) {
@@ -52,7 +42,6 @@
 
       const draw = async () => {
         const result = await db.query('_id', { descending: true, limit: 10 })
-        // console.log('result', result)
         document
           .querySelector('ul')
           .innerHTML = '';
@@ -64,16 +53,11 @@
               .appendChild(document.createElement('li'))
             li.appendChild(document.createElement('span')).innerText = row.key;
             li.appendChild(document.createElement('br'))
-            // let didDoc = 0
             for (const file of Object.keys(doc._files)) {
               (async () => {
-                // if (didDoc) { return }
                 const meta = doc._files[file]
                 if (meta.file && /image/.test(meta.type)) {
-                  // console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
                   const src = URL.createObjectURL(await meta.file());
-                  // didDoc++
-                  // console.log('src', src.toString())
                   const img = document.createElement("img");
                   img.src = src
                   img.height = 100;
@@ -89,25 +73,6 @@
         }
       }
 
-
-
-      let autoCancelled = false
-      function autoRefresh() {
-        if (autoCancelled) {
-          autoCancelled = false
-          return () => autoCancelled = true
-        }
-        cx.refresh().then(() => {
-          // todo enable websockets on remote clock
-          setTimeout(autoRefresh, 3000);
-        }).catch((err) => {
-          console.log('refresh err', err)
-          setTimeout(autoRefresh, 5000);
-        })
-        return () => autoCancelled = true
-      }
-
-
       async function changeList(e) {
         e.preventDefault();
         const input = document.querySelector('#list');
@@ -120,7 +85,6 @@
       window.changeList = changeList;
 
       async function openDashboard(e) {
-        e.preventDefault();
         db.openDashboard();
       }
       window.openDashboard = openDashboard;
