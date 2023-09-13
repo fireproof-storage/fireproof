@@ -1,5 +1,4 @@
 /* eslint-disable import/first */
-// console.log('import store-browser')
 import { format, parse, ToString } from '@ipld/dag-json'
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'

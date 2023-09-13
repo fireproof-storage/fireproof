@@ -17,9 +17,6 @@ export async function applyBulkUpdateToCrdt(
   options?: object
 ): Promise<BulkResult> {
   let result
-  // console.log('applyBulkUpdateToCrdt', head.toString())
-  // console.log('applyBulkUpdateToCrdt', updates.length)
-  // console.time('applyBulkUpdateToCrdt')
   for (const update of updates) {
     const link = await makeLinkForDoc(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
@@ -38,7 +35,6 @@ export async function applyBulkUpdateToCrdt(
     }
     head = result.head
   }
-  // console.timeEnd('applyBulkUpdateToCrdt')
   return { head }
 }
 
@@ -93,26 +89,21 @@ export async function getValueFromCrdt(blocks: TransactionBlockstore, head: Cloc
 
 export function readFiles(blocks: TransactionBlockstore | LoggingFetcher, { doc }: DocValue) {
   if (doc && doc._files) {
-    // console.log('readFiles', doc)
     for (const filename in doc._files) {
       const fileMeta = doc._files[filename] as DocFileMeta
       if (fileMeta.cid) {
-        // const reader = blocks
         if (!blocks.loader) throw new Error('Missing loader')
         if (fileMeta.car && blocks.loader) {
           const ld = blocks.loader as DbLoader
           fileMeta.file = async () => await decodeFile({
             get: async (cid: AnyLink) => {
-              // console.log('filefile get', cid, fileMeta.car)
               const reader = await ld.loadFileCar(fileMeta.car!)
-              // console.log('filefile reader', reader)
               const block = await reader.get(cid as CID)
               if (!block) throw new Error(`Missing block ${cid.toString()}`)
               return block.bytes
             }
           }, fileMeta.cid, fileMeta)
         }
-        // console.log('reading file', fileMeta)
       }
       doc._files[filename] = fileMeta
     }
@@ -163,7 +154,6 @@ async function gatherUpdates(
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
-  // console.log('gatherUpdates', didLinks.size, keys.size)
   const sHead = head.map(l => l.toString())
   for (const link of since) {
     if (sHead.includes(link.toString())) {
