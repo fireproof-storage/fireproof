@@ -5,13 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=77"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=78"></script>
   <script type="text/javascript">
     function testApp() {
       const { connect, fireproof, index } = Fireproof;
       let dbName
       let db
-      let connection
+      let cx
 
 
       let dbUnsubscribe = false
@@ -28,9 +28,9 @@
         db = fireproof(name);
         window.db = db;
 
-        connection = db.connect("jchris+files-27@fireproof.storage", "todo-test")
-        window.connection = connection
-        cancelRefresh = autoRefresh()
+        cx = db.connect("jchris+files-27@fireproof.storage", "todo-test")
+        window.cx = cx
+        // cancelRefresh = autoRefresh()
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
@@ -98,7 +98,7 @@
           autoCancelled = false
           return () => autoCancelled = true
         }
-        connection.refresh().then(() => {
+        cx.refresh().then(() => {
           // todo enable websockets on remote clock
           setTimeout(autoRefresh, 3000);
         }).catch((err) => {
