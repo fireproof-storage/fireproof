@@ -82,6 +82,7 @@ export class ConnectWeb3 extends Connection {
     this.ready = this.initializeClient()
     this.ready.then(() => {
       void this.serviceAccessRequests()
+      void this.startBackgroundSync()
     }).catch(e => {
       console.error('initializeClient or serviceAccessRequests error', e)
     })
@@ -137,6 +138,13 @@ export class ConnectWeb3 extends Connection {
     return this.clockSpaceDID!
   }
 
+  async startBackgroundSync() {
+    if (this.inner) return
+    await sleep(5000) // todo enable websockets on remote clock
+    await this.refresh()
+    await this.startBackgroundSync()
+  }
+
   async serviceAccessRequests() {
     if (this.inner) return
     const client = this.accountConnection!.client!
@@ -169,7 +177,8 @@ export class ConnectWeb3 extends Connection {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           doc.delegation = delegationCarBytes.ok
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-          // doc._files = { delegation: new File([delegationCarBytes.ok], 'delegation', { type: 'application/ucanto' }) }
+          // if we do this the delegation can be read outside fireproof
+          doc._files = { delegation: new File([delegationCarBytes.ok], 'delegation', { type: 'application/ucanto' }) }
           doc.state = 'granted'
           console.log('granting delegation', doc)
 
