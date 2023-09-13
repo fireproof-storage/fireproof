@@ -1,6 +1,4 @@
 /* eslint-disable import/first */
-// console.log('import store-s3')
-
 import { AnyBlock, AnyLink, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
 import { Connection } from './connection'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
@@ -88,7 +86,6 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
-    // console.log('save DbMeta', meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),
