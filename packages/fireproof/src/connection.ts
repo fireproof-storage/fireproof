@@ -15,6 +15,7 @@ export abstract class Connection {
   loader?: Loader | null
 
   async refresh() {
+    console.log('refreshing', this.loader?.name)
     await this.loader!.remoteMetaStore!.load('main')
     await this.loader!.remoteWAL?._process()
   }
