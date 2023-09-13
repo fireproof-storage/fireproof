@@ -15,7 +15,6 @@ export class ConnectS3 extends Connection {
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     validateDataParams(params)
-    console.log('s3 uploading', params)
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams(params).toString()}`)
     const response = await fetch(fetchUploadUrl)
     const { uploadURL } = await response.json() as { uploadURL: string }
@@ -24,7 +23,6 @@ export class ConnectS3 extends Connection {
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     validateMetaParams(params)
-    console.log('s3 uploading', params)
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ type: 'meta', ...params }).toString()}`)
     const response = await fetch(fetchUploadUrl)
     if (!response.ok) {
@@ -32,7 +30,6 @@ export class ConnectS3 extends Connection {
       throw new Error('failed to get upload url for meta')
     }
     const { uploadURL } = await response.json() as { uploadURL: string }
-    console.log('uploadURL', uploadURL)
     if (!uploadURL) throw new Error('missing uploadURL')
     await fetch(uploadURL, { method: 'PUT', body: bytes })
     return null
@@ -40,7 +37,6 @@ export class ConnectS3 extends Connection {
 
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
-    console.log('s3 downloading', params)
     const { type, name, car } = params
     const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)
@@ -50,7 +46,6 @@ export class ConnectS3 extends Connection {
 
   async metaDownload(params: DownloadMetaFnParams) {
     validateMetaParams(params)
-    console.log('s3 downloading', params)
     const { name, branch } = params
     const fetchFromUrl = new URL(`meta/${name}/${branch + '.json?cache=' + Math.floor(Math.random() * 1000000)}`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)
