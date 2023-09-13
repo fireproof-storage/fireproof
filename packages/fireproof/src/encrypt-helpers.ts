@@ -1,7 +1,7 @@
 import type { CarReader } from '@ipld/car'
 
 import { sha256 } from 'multiformats/hashes/sha2'
-import { encrypt, decrypt } from './crypto'
+import { encrypt, decrypt } from './crypto-ipld'
 // @ts-ignore
 import { bf } from 'prolly-trees/utils'
 // @ts-ignore
