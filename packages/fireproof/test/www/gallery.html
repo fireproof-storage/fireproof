@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=86"></script>
+  <script src="../../dist/browser/fireproof.iife.js?cache=93"></script>
   <script type="text/javascript">
     function testApp() {
       const { fireproof, connect } = Fireproof;
@@ -24,7 +24,7 @@
         db = fireproof(name);
         window.db = db;
 
-        cx = db.connect("jchris+files-27@fireproof.storage", "todo-test")
+        cx = db.connect("jchris+files-30@fireproof.storage", "todo-test")
         window.cx = cx
 
         dbUnsubscribe = db.subscribe(redraw);
