@@ -5,6 +5,7 @@ import { CRDT } from './crdt'
 import { index } from './index'
 import { connect } from './connect'
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
+import { DbResponse, ChangesResponse } from './types'
 
 type DbName = string | null
 
@@ -124,16 +125,6 @@ export class Database {
       }
     }
   }
-}
-
-export type ChangesResponse = {
-  clock: ClockHead
-  rows: { key: string; value: Doc }[]
-}
-
-export type DbResponse = {
-  id: string
-  clock: ClockHead
 }
 
 type ListenerFn = (docs: Doc[]) => Promise<void> | void

@@ -206,7 +206,7 @@ describe('basic Connection with raw remote', function () {
     // heal with good connection
     const connection2 = connect.raw(db2, mockConnect)
     await connection2.ready
-    assert(connection2.refresh)
+    assert(!!connection2.refresh)
 
     await connection2.refresh()
 

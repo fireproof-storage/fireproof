@@ -86,7 +86,7 @@ class UnixFSFileBuilder {
       new WritableStream({
         async write(chunk) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-          await unixfsFileWriter.write(chunk)
+          await unixfsFileWriter.write(chunk as Uint8Array)
         }
       })
     )
@@ -95,6 +95,7 @@ class UnixFSFileBuilder {
   }
 }
 
+// ts-unused-exports:disable-next-line
 export interface BlobLike {
   /**
    * Returns a ReadableStream which yields the Blob data.
