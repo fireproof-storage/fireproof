@@ -1,9 +1,10 @@
 import type { CarReader } from '@ipld/car'
 import type {
   AnyLink, BulkResult,
-  CarCommit, Connection, DbCarHeader, FileCarHeader, FileResult, FireproofOptions, IdxCarHeader,
+  CarCommit, DbCarHeader, FileCarHeader, FileResult, FireproofOptions, IdxCarHeader,
   IdxMeta, IdxMetaMap
 } from './types'
+import type { Connection } from './connection'
 import type { CRDT } from './crdt'
 import type { CRDTClock } from './crdt-clock'
 import { Loader } from './loader'
@@ -80,7 +81,6 @@ export class DbLoader extends Loader {
     if (snap) {
       await this.clock.applyHead(null, carHeader.head, this.clock.head)
     } else {
-      console.log('applying carHeader', carHeader.head)
       await this.clock.applyHead(null, carHeader.head, [])
     }
   }

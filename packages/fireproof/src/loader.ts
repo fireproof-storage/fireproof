@@ -10,8 +10,9 @@ import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   CarLoaderHeader,
   CommitOpts,
-  Connection, DbMeta, FileCarHeader, FileResult, FireproofOptions
+  DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
+import type { Connection } from './connection'
 import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
@@ -79,15 +80,12 @@ export abstract class Loader {
   }
 
   connectRemote(connection: Connection) {
+    connection.loader = this
     this._connectRemoteMeta(connection)
     this._connectRemoteStorage(connection)
     connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
       void this.remoteWAL?._process()
     })
-    connection.refresh = async () => {
-      await this.remoteMetaStore!.load('main')
-      await this.remoteWAL?._process()
-    }
     return connection
   }
 
@@ -191,27 +189,16 @@ export abstract class Loader {
       const dbLoader = this as unknown as DbLoader
       await dbLoader.fileStore!.save({ cid, bytes })
 
-      // instead of writing, enqueue
       await this.remoteWAL!.enqueueFile(cid)
 
       return cid
     }
 
     await this.carStore!.save({ cid, bytes })
-    // instead of writing the remote car and meta, we should enqueue them
-    // this shoould be to a car file with a name like _local_meta.car
-    // it would have a list of car cids to upload
-    // after we write the car, we should write the meta
-    // we can write all the cars and just the last meta
-    const newDbMeta = { car: cid, key: theKey || null } as DbMeta
 
+    const newDbMeta = { car: cid, key: theKey || null } as DbMeta
     await this.remoteWAL!.enqueue(newDbMeta, opts)
-    // this.remoteMetaLoading = this.remoteCarStore?.save({ cid, bytes }).then(async () => {
-    //   if (opts.noLoader) return
-    //   await this.remoteMetaStore?.save(newDbMeta)
-    // }).catch((e) => {
-    //   console.log('Failed to save remote car or meta', e, cid.toString())
-    // })
+
     await this.metaStore!.save(newDbMeta)
 
     if (opts.compact) {

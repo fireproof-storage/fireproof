@@ -1,10 +1,32 @@
 import { ConnectS3 } from './connect-s3'
 import { ConnectWeb3 } from './connect-web3'
+import { Connection } from './connection'
 import { Database } from './database'
 import type { DbLoader } from './loaders'
-import { Connection, UploadDataFnParams, MetaUploadFn, DataUploadFn, UploadMetaFnParams, DataDownloadFn, MetaDownloadFn, DownloadDataFnParams, DownloadMetaFnParams } from './types'
+import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams, AnyLink } from './types'
 
-const web3names = new Set<string>()
+type RawConnectionParams = {
+  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>,
+  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>
+  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
+  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | null>,
+    }
+
+// @ts-ignore
+export class ConnectRaw extends Connection {
+  constructor({
+    metaUpload, metaDownload,
+    dataUpload, dataDownload
+  }: RawConnectionParams) {
+    super()
+    this.metaUpload = metaUpload
+    this.metaDownload = metaDownload
+    this.dataUpload = dataUpload
+    this.dataDownload = dataDownload
+  }
+}
+
+const web3names = new Map<string, ConnectWeb3>()
 
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
@@ -16,9 +38,8 @@ export const connect = {
   },
   raw: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: DbLoader } } },
-  { metaUpload, metaDownload, dataUpload, dataDownload }: { dataUpload: DataUploadFn, dataDownload: DataDownloadFn,
-    metaUpload: MetaUploadFn, metaDownload: MetaDownloadFn }) => {
-    const connection = { metaUpload, metaDownload, dataUpload, dataDownload, ready: Promise.resolve() } as Connection
+  params: RawConnectionParams) => {
+    const connection = new ConnectRaw(params)
     loader.connectRemote(connection)
     return connection
   },
@@ -27,15 +48,14 @@ export const connect = {
     const { name, _crdt: { blocks: { loader } } } = db
     if (!name) throw new Error('database name is required')
     if (web3names.has(name + email)) {
-      return
+      return web3names.get(name + email)!
     }
     if (!schemaName && location) {
       schemaName = location.origin
     }
-    const connection = new ConnectWeb3(name, email, schemaName)
+    const connection = new ConnectWeb3({ name, email, schema: schemaName! })
     loader!.connectRemote(connection)
-    // loader!.connectRemoteStorage(connection)
-    web3names.add(name + email)
+    web3names.set(name + email, connection)
     return connection
   }
 }
