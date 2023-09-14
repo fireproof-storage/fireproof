@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="../../dist/browser/fireproof.iife.js?123"></script>
+  <script src="./fireproof.iife.js?123"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
@@ -27,7 +27,7 @@
         db = fireproof(name);
         window.db = db;
 
-        cx = db.connect("jchris+todos-27@fireproof.storage", "todo-test")
+        cx = db.connect("jchris+todos-29@fireproof.storage", "todo-test")
         window.cx = cx
 
         cx.ready.then(() => {
