@@ -172,9 +172,10 @@ export class ConnectWeb3 extends Connection {
     await this.startBackgroundSync()
   }
 
-  // new logic
-  // first fimnd all my clockspaces
-  // then find any acces requests for those spaces
+  // todo move to a model where new account owner devices automatically get delegated access to all databases
+  // register a new device, all databases
+  // create a new database, all devices get access
+  // this will make everything feel faster
 
   async serviceAccessRequests() {
     if (this.inner) return
@@ -185,7 +186,6 @@ export class ConnectWeb3 extends Connection {
     const thisAgentDID = issuer.did()
 
     const { rows: owned } = await this.accountDb!.query(this.ownerIdxFn, { key: thisAgentDID })
-    console.log('serviceAccessRequests', owned)
 
     const spaceDids = owned.map(({ doc }) => doc!.with)
 
