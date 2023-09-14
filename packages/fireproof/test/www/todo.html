@@ -12,11 +12,14 @@
       const { connect, fireproof, index } = Fireproof;
       let dbName
       let db
-      let connection
+      let cx
 
       let dbUnsubscribe = false
 
       function setupDb(name) {
+        const input = document.querySelector('#todo');
+        input.disabled = true
+
         if (dbUnsubscribe) {
           dbUnsubscribe()
         }
@@ -24,8 +27,15 @@
         db = fireproof(name);
         window.db = db;
 
-        connection = db.connect("jchris+todos-27@fireproof.storage", "todo-test")
-        window.connection = connection
+        cx = db.connect("jchris+todos-27@fireproof.storage", "todo-test")
+        window.cx = cx
+
+        cx.ready.then(() => {
+          console.log('ready')
+          input.disabled = false
+        }).catch((e) => {
+          console.log('not ready', e)
+        })
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
@@ -41,42 +51,34 @@
       }
 
       const doRedraw = async () => {
-        try {
-          const result = await index(db, 'created').query({ includeDocs: false });
+        const result = await index(db, 'created').query({ includeDocs: false });
+        document
+          .querySelector('ul')
+          .innerHTML = '';
+
+        for (const row of result.rows) {
+          const doc = await db.get(row.id);
+          // doc = row.doc
+          const checkbox = document.createElement('input');
+          checkbox.setAttribute('type', 'checkbox');
+          if (doc.completed) {
+            checkbox.setAttribute('checked', true);
+          }
+          checkbox.onchange = async (e) => {
+            e.target.indeterminate = true;
+            doc.completed = !doc.completed;
+            console.log('putting', doc.task, doc.completed)
+            await db.put(doc);
+            console.log('put', doc.task, doc.completed)
+          }
+          const textSpan = document.createElement('span');
+          textSpan.innerText = doc.actor + ': ' + doc.task;
+          const li = document.createElement('li');
+          li.appendChild(checkbox);
+          li.appendChild(textSpan);
           document
             .querySelector('ul')
-            .innerHTML = '';
-
-          document
-            .querySelector('#filecount')
-            .innerText = db._crdt.blocks.loader.carLog.length
-          for (const row of result.rows) {
-            const doc = await db.get(row.id);
-            // doc = row.doc
-            const checkbox = document.createElement('input');
-            checkbox.setAttribute('type', 'checkbox');
-            if (doc.completed) {
-              checkbox.setAttribute('checked', true);
-            }
-            checkbox.onchange = async (e) => {
-              e.target.indeterminate = true;
-              doc.completed = !doc.completed;
-              console.log('putting', doc.task, doc.completed)
-              await db.put(doc);
-              console.log('put', doc.task, doc.completed)
-            }
-            const textSpan = document.createElement('span');
-            textSpan.innerText = doc.actor + ': ' + doc.task;
-            const li = document.createElement('li');
-            li.appendChild(checkbox);
-            li.appendChild(textSpan);
-            document
-              .querySelector('ul')
-              .appendChild(li);
-          }
-        } finally {
-          // const chgs = await db.changes([], { dirty: true });
-          // console.log('changes', chgs.rows.map(r => r.value.task), chgs)
+            .appendChild(li);
         }
       }
 
@@ -88,6 +90,11 @@
         input.value = dbName;
         redraw()
       }
+
+      async function openDashboard(e) {
+        db.openDashboard();
+      }
+      window.openDashboard = openDashboard;
 
       async function changeList(e) {
         e.preventDefault();
@@ -109,8 +116,6 @@
 
       }
       window.onButtonClick = onButtonClick;
-
-
 
       async function doCompact(e) {
         e.preventDefault();
@@ -134,17 +139,20 @@
   List:
   <input type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change List</button>
-  <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
+  <button disabled onclick="openDashboard(event)">🔥 Import to Dashboard</button>
+  <p>Work locally or verify your email address to sync.</p>
+  Email: <input title="email" placeholder="name@example.com" name="email" id="email" />
+  <button onclick="verifyEmail(event)">Verify email</button>
+
   <p>
     Fireproof stores data locally and encrypts it before sending it to the cloud.
-    This demo uses an S3 bucket, but you can easily run your own on s3 or another provider.
+    This demo uses web3.storage, but you can easily run Fireproof on S3 or another provider.
     <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
   </p>
 
   <h3>Todos</h3>
   <input type="text" name="todo" id="todo" />
   <button onclick="onButtonClick(event)">Create Todo</button>
-  <button onclick="connectionRefresh(event)">Refresh</button>
   <ul></ul>
 </body>
 
