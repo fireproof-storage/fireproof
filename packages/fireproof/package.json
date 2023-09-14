@@ -62,7 +62,7 @@
     "lint:all": "npm run lint:fix && npm run lint:exports",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
-    "build:test": "node ./scripts/build.js",
+    "build:test": "node ./scripts/build.js && cp dist/browser/fireproof.iife.js test/www/",
     "build:all": " npm run build:version && npm run build && npm run test:browser"
   },
   "keywords": [

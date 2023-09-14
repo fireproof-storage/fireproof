@@ -25,7 +25,7 @@ type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[
 type ClockSpaceDoc = Doc & {
   type: 'clock-space';
   clockName: `_clock/${string}/${string}`;
-  clockSpace: `did:${string}:${string}`;
+  with: `did:${string}:${string}`;
   accountSpace: `did:${string}:${string}`;
   issuer: `did:key:${string}`;
   created: number;
@@ -190,7 +190,11 @@ export class ConnectWeb3 extends Connection {
 
     const spaceDids = owned.map(({ doc }) => doc!.with)
 
+    // console.log('space dids', spaceDids, owned)
+
     const { rows } = await this.accountDb!.query(this.pendingWithIdxFn, { keys: spaceDids })
+
+    // console.log('pending access requests', rows)
 
     for (const { doc } of rows) {
       if (!doc) throw new Error('missing access request doc')
@@ -275,7 +279,7 @@ export class ConnectWeb3 extends Connection {
   async handleExistingSpace(rows: IndexRow[], client: Client, thisAgentDID: `did:key:${string}`) {
     // console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
     const doc = rows[0].doc as ClockSpaceDoc
-    const clockSpaceDID = doc.clockSpace
+    const clockSpaceDID = doc.with
     const proofs = client.proofs([{ can: 'clock/*', with: clockSpaceDID }])
 
     this.clockSpaceDID = clockSpaceDID
@@ -312,7 +316,7 @@ export class ConnectWeb3 extends Connection {
       type: 'clock-space',
       ...this.params,
       clockName: this.encodeSpaceName(),
-      clockSpace: this.clockSpaceDID,
+      with: this.clockSpaceDID,
       accountSpace: client.currentSpace()!.did(),
       // @ts-ignore
       issuer: client._agent.issuer.did(),
