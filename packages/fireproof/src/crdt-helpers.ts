@@ -58,9 +58,12 @@ async function processFiles(blocks: Transaction, doc: Doc) {
     const t = new Transaction(dbBlockstore)
     dbBlockstore.transactions.add(t)
     const didPut = []
+    let totalSize = 0
     for (const filename in doc._files) {
       if (File === doc._files[filename].constructor) {
         const file = doc._files[filename] as File
+
+        totalSize += file.size
         const { cid, blocks: fileBlocks } = await encodeFile(file)
         didPut.push(filename)
         for (const block of fileBlocks) {
@@ -69,6 +72,8 @@ async function processFiles(blocks: Transaction, doc: Doc) {
         doc._files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta
       }
     }
+    // todo option to bypass this limit
+    if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for encrypted files in a single update is 1MB')
     if (didPut.length) {
       const car = await dbBlockstore.loader?.commit(t, { files: doc._files } as FileResult)
       if (car) {
