@@ -86,6 +86,7 @@ export class Database {
     return conn
   }
 
+  // move this stuff to connect
   async getDashboardURL(compact = true) {
     const baseUrl = 'https://dashboard.fireproof.storage/'
     if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
