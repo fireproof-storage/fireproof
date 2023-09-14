@@ -47,24 +47,22 @@
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:esbuild": "node ./scripts/build.js",
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
-    "build:test": "node ./scripts/build.js",
     "build:rollup": "rollup -c scripts/rollup.js",
     "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build": "npm run build:tsc && npm run build:test",
-
     "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "test:node": "node ./scripts/test.js",
     "test:browser": "node ./scripts/browser-test.js",
     "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
     "lint": "eslint 'src/**/*.{js,ts}'",
-    
     "analyze": "node ./scripts/analyze.js",
     "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
     "tsc:watch": "tsc --watch",
     "lint:all": "npm run lint:fix && npm run lint:exports",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
+    "build:test": "node ./scripts/build.js",
     "build:all": " npm run build:version && npm run build && npm run test:browser"
   },
   "keywords": [
