@@ -133,7 +133,7 @@ export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
     const db = new Database(name, opts)
       // public API
-      ;['get', 'put', 'del', 'changes', 'subscribe', 'query'].forEach((fn) => {
+      ;['get', 'put', 'del', 'changes', 'subscribe', 'query', 'compact', 'connect', 'getDashboardURL', 'openDashboard'].forEach((fn) => {
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       db[fn] = db[fn].bind(db)
