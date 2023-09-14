@@ -1,9 +1,9 @@
-import type { ClockHead, DocUpdate, MapFn, IndexUpdate, QueryOpts, IdxMeta } from './types'
+import type { ClockHead, DocUpdate, MapFn, IndexUpdate, QueryOpts, IdxMeta, DocFragment } from './types'
 import { IndexBlockstore } from './transaction'
 import { bulkIndex, indexEntriesForChanges, byIdOpts, byKeyOpts, IndexTree, applyQuery, encodeRange, encodeKey, loadIndex } from './indexer-helpers'
 import { CRDT } from './crdt'
 
-export function index({ _crdt }: { _crdt: CRDT}, name: string, mapFn?: MapFn, meta?: IdxMeta): Index {
+export function index({ _crdt }: { _crdt: CRDT }, name: string, mapFn?: MapFn, meta?: IdxMeta): Index {
   if (mapFn && meta) throw new Error('cannot provide both mapFn and meta')
   if (mapFn && mapFn.constructor.name !== 'Function') throw new Error('mapFn must be a function')
   if (_crdt.indexers.has(name)) {
@@ -34,15 +34,15 @@ export class Index {
     this.crdt = crdt
     this.applyMapFn(name, mapFn, meta)
     if (!(this.mapFnString || this.initError)) throw new Error('missing mapFnString')
-    this.ready = this.blocks.ready.then(() => {})
-  // .then((header: IdxCarHeader) => {
-  //     // @ts-ignore
-  //     if (header.head) throw new Error('cannot have head in idx header')
-  //     if (header.indexes === undefined) throw new Error('missing indexes in idx header')
-  //     // for (const [name, idx] of Object.entries(header.indexes)) {
-  //     //   index({ _crdt: crdt }, name, undefined, idx as IdxMeta)
-  //     // }
-  //   })
+    this.ready = this.blocks.ready.then(() => { })
+    // .then((header: IdxCarHeader) => {
+    //     // @ts-ignore
+    //     if (header.head) throw new Error('cannot have head in idx header')
+    //     if (header.indexes === undefined) throw new Error('missing indexes in idx header')
+    //     // for (const [name, idx] of Object.entries(header.indexes)) {
+    //     //   index({ _crdt: crdt }, name, undefined, idx as IdxMeta)
+    //     // }
+    //   })
   }
 
   applyMapFn(name: string, mapFn?: MapFn, meta?: IdxMeta) {
@@ -118,6 +118,13 @@ export class Index {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       return await applyQuery(this.crdt, await this.byKey.root.get(encodedKey), opts)
     }
+    if (Array.isArray(opts.keys)) {
+      const results = await Promise.all(opts.keys.map(async (key: DocFragment) => {
+        const encodedKey = encodeKey(key)
+        return (await applyQuery(this.crdt, await this.byKey.root!.get(encodedKey), opts)).rows
+      }))
+      return { rows: results.flat() }
+    }
     if (opts.prefix) {
       if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix]
       const start = [...opts.prefix, NaN]
@@ -153,9 +160,9 @@ export class Index {
     if (!this.mapFn) throw new Error('No map function defined')
     let result: DocUpdate[], head: ClockHead
     if (!this.indexHead || this.indexHead.length === 0) {
-      ;({ result, head } = await this.crdt.allDocs())
+      ; ({ result, head } = await this.crdt.allDocs())
     } else {
-      ;({ result, head } = await this.crdt.changes(this.indexHead))
+      ; ({ result, head } = await this.crdt.changes(this.indexHead))
     }
     if (result.length === 0) {
       this.indexHead = head

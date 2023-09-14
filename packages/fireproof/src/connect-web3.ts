@@ -37,7 +37,6 @@ type ClockSpaceDoc = Doc & {
 
 type AccessRequestDoc = Doc & {
   type: 'access-request';
-  audience: `did:key:${string}`;
   with: `did:${string}:${string}`;
   capabilities: string[];
   grantee: `did:key:${string}`;
@@ -67,9 +66,35 @@ export class ConnectWeb3 extends Connection {
     if (doc.type === 'access-request') { emit(accessDoc.with + accessDoc.grantee) }
   }
 
-  requestIndexFn: MapFn = (doc, emit) => {
+  // requestIndexFn: MapFn = (doc, emit) => {
+  //   const accessDoc = doc as AccessRequestDoce
+  //   if (doc.type === 'access-request') {
+  //     if (doc.state === 'pending') {
+  //       emit(accessDoc.audience)
+  //     } else if (doc.state === 'granted') {
+  //       emit(accessDoc.grantee)
+  //     }
+  //   }
+  // }
+
+  pendingWithIdxFn: MapFn = (doc, emit) => {
     const accessDoc = doc as AccessRequestDoc
-    if (doc.type === 'access-request' && doc.state === 'pending') { emit(accessDoc.audience) }
+    if (doc.type === 'access-request' && doc.state === 'pending') { emit(accessDoc.with) }
+  }
+
+  // todo merge this and above into [with, state] index
+  // granteeIdxFn: MapFn = (doc, emit) => {
+  //   const accessDoc = doc as AccessRequestDoc
+  //   if (doc.type === 'access-request' && doc.state === 'granted') { emit(accessDoc.grantee) }
+  // }
+
+  ownerIdxFn: MapFn = (doc, emit) => {
+    const myDoc = doc as AccessRequestDoc | ClockSpaceDoc
+    if (myDoc.type === 'clock-space') {
+      emit(myDoc.issuer)
+    } else if (myDoc.type === 'access-request' && myDoc.state === 'granted') {
+      emit(myDoc.grantee)
+    }
   }
 
   constructor(params: ConnectWeb3Params, _database?: Database) {
@@ -147,13 +172,25 @@ export class ConnectWeb3 extends Connection {
     await this.startBackgroundSync()
   }
 
+  // new logic
+  // first fimnd all my clockspaces
+  // then find any acces requests for those spaces
+
   async serviceAccessRequests() {
     if (this.inner) return
     const client = this.accountConnection!.client!
     // @ts-ignore
     const { issuer } = client._agent
+
     const thisAgentDID = issuer.did()
-    const { rows } = await this.accountDb!.query(this.requestIndexFn, { key: thisAgentDID })
+
+    const { rows: owned } = await this.accountDb!.query(this.ownerIdxFn, { key: thisAgentDID })
+    console.log('serviceAccessRequests', owned)
+
+    const spaceDids = owned.map(({ doc }) => doc!.with)
+
+    const { rows } = await this.accountDb!.query(this.pendingWithIdxFn, { keys: spaceDids })
+    console.log('rows', rows)
     for (const { doc } of rows) {
       if (!doc) throw new Error('missing doc')
       const accessDoc = doc as AccessRequestDoc
@@ -177,14 +214,14 @@ export class ConnectWeb3 extends Connection {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
           if (!delegationCarBytes.ok) throw new Error('missing delegationCarBytes')
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-          doc.delegation = delegationCarBytes.ok
+          accessDoc.delegation = delegationCarBytes.ok
           // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
           // if we do this the delegation can be read outside fireproof
-          doc._files = { delegation: new File([delegationCarBytes.ok], 'delegation', { type: 'application/ucanto' }) }
-          doc.state = 'granted'
-          console.log('granting delegation', doc)
+          accessDoc._files = { delegation: new File([delegationCarBytes.ok], 'delegation', { type: 'application/ucanto' }) }
+          accessDoc.state = 'granted'
+          console.log('granting delegation', accessDoc)
 
-          await this.accountDb!.put(doc)
+          await this.accountDb!.put(accessDoc)
         }
       }
     }
@@ -257,7 +294,6 @@ export class ConnectWeb3 extends Connection {
       const accessRequestDoc: AccessRequestDoc = {
         type: 'access-request',
         state: 'pending',
-        audience: doc.issuer,
         with: clockSpaceDID,
         capabilities: ['clock/*'],
         grantee: thisAgentDID
