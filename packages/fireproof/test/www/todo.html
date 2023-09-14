@@ -15,12 +15,8 @@
       let connection
 
       let dbUnsubscribe = false
-      let cancelRefresh = false
 
       function setupDb(name) {
-        if (cancelRefresh) {
-          cancelRefresh()
-        }
         if (dbUnsubscribe) {
           dbUnsubscribe()
         }
@@ -30,7 +26,6 @@
 
         connection = db.connect("jchris+todos-27@fireproof.storage", "todo-test")
         window.connection = connection
-        cancelRefresh = autoRefresh()
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
@@ -115,27 +110,6 @@
       }
       window.onButtonClick = onButtonClick;
 
-      async function connectionRefresh(e) {
-        e.preventDefault();
-        await connection.refresh()
-      }
-      window.connectionRefresh = connectionRefresh;
-
-      let autoCancelled = false
-      function autoRefresh() {
-        if (autoCancelled) {
-          autoCancelled = false
-          return () => autoCancelled = true
-        }
-        connection.refresh().then(() => {
-          // todo enable websockets on remote clock
-          setTimeout(autoRefresh, 3000);
-        }).catch((err) => {
-          console.log('refresh err', err)
-          setTimeout(autoRefresh, 5000);
-        })
-        return () => autoCancelled = true
-      }
 
 
       async function doCompact(e) {
