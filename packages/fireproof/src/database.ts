@@ -120,7 +120,7 @@ export class Database {
       const docs: Doc[] = updates.map(({ key, value }) => ({ _id: key, ...value }))
       for (const listener of this._listeners) {
         await (async () => await listener(docs))().catch((e: Error) => {
-          console.error('listener error', e)
+          console.error('subscriber error', e)
         })
       }
     }

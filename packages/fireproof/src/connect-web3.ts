@@ -41,6 +41,7 @@ type AccessRequestDoc = Doc & {
   capabilities: string[];
   grantee: `did:key:${string}`;
   state: 'pending' | 'granted';
+  ua: string;
   delegation?: Uint8Array;
 }
 
@@ -109,7 +110,7 @@ export class ConnectWeb3 extends Connection {
       void this.serviceAccessRequests()
       void this.startBackgroundSync()
     }).catch(e => {
-      console.error('initializeClient or serviceAccessRequests error', e)
+      console.error('web3 client error', e)
     })
   }
 
@@ -190,9 +191,9 @@ export class ConnectWeb3 extends Connection {
     const spaceDids = owned.map(({ doc }) => doc!.with)
 
     const { rows } = await this.accountDb!.query(this.pendingWithIdxFn, { keys: spaceDids })
-    console.log('rows', rows)
+
     for (const { doc } of rows) {
-      if (!doc) throw new Error('missing doc')
+      if (!doc) throw new Error('missing access request doc')
       const accessDoc = doc as AccessRequestDoc
       if (accessDoc.state === 'pending') {
         const clockSpace = accessDoc.with
@@ -242,17 +243,17 @@ export class ConnectWeb3 extends Connection {
         if (!loadedDelegation.ok) throw new Error('missing loadedDelegation')
         const client = this.accountConnection!.client!
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-        console.log('adding proof', loadedDelegation.ok)
+        // console.log('adding proof', loadedDelegation.ok)
         await client.addProof(loadedDelegation.ok)
-        console.log('done adding')
         const theseClockProofs = client.proofs([{ can: 'clock/*', with: clockSpaceDID }])
         if (!theseClockProofs.length) { throw new Error('failed granting clock/* capability') }
         console.log('accepting delegation', doc)
         this.clockProofs = theseClockProofs
         return
+      } else {
+        console.log('waiting for access, please ensure another logged-in tab is open', clockSpaceDID)
       }
     }
-    console.log('waiting for access, please ensure original tab is open', clockSpaceDID)
     await sleep(3000) // todo enable websockets on remote clock
     await this.accountConnection!.refresh()
     await this.waitForAccess(clockSpaceDID, agentDID)
@@ -296,7 +297,8 @@ export class ConnectWeb3 extends Connection {
         state: 'pending',
         with: clockSpaceDID,
         capabilities: ['clock/*'],
-        grantee: thisAgentDID
+        grantee: thisAgentDID,
+        ua: navigator.userAgent
       }
       await this.accountDb!.put(accessRequestDoc)
     }
@@ -373,7 +375,7 @@ export class ConnectWeb3 extends Connection {
       const remoteHead = head.out.ok.head
       return this.fetchAndUpdateHead(remoteHead)
     } else {
-      console.log('head error', head.out.error)
+      console.log('w3clock error', head.out.error)
       throw new Error(`Failed to download ${params.name}`)
     }
   }
@@ -453,25 +455,15 @@ export class ConnectWeb3 extends Connection {
     const proofs = client.proofs()
     if (proofs.length === 0) {
       console.log('emailing', email, client.spaces().length)
-      const autx = await client.authorize(email, {
+      await client.authorize(email, {
         capabilities: [{ can: 'clock/*' },
           { can: 'space/*' }, { can: 'provider/add' },
           { can: 'store/*' }, { can: 'upload/*' }]
       })
-      console.log('auhtx', autx)
     }
 
     const spaces = client.spaces()
-    console.log('has spaces', spaces.length)
     let space
-    // this search is wrong, need to find account space first?
-    for (const s of spaces) {
-      space = s
-      console.log('space', s.did(), s.registered(), s.name())
-      // if (s.registered()) {
-      //   break
-      // }
-    }
     for (const s of spaces) {
       space = s
       // console.log('space', s.did(), s.registered(), s.name())
