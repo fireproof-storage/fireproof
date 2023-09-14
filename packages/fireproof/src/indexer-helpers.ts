@@ -152,7 +152,7 @@ export function encodeRange(range: [DocFragment, DocFragment]): [IndexKey, Index
   return range.map(key => charwise.encode(key) as IndexKey) as [IndexKey, IndexKey]
 }
 
-export function encodeKey(key: string): string {
+export function encodeKey(key: DocFragment): string {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   return charwise.encode(key) as string
 }

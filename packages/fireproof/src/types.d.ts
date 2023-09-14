@@ -120,8 +120,9 @@ export type QueryOpts = {
   limit?: number
   includeDocs?: boolean
   range?: [IndexKey, IndexKey]
-  key?: string // these two can be richer than keys...
-  prefix?: string | [string]
+  key?: DocFragment,
+  keys?: DocFragment[]
+  prefix?: DocFragment | [DocFragment]
 }
 
 export type AnyLink = Link<unknown, number, number, 1 | 0>
