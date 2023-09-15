@@ -15,6 +15,7 @@ import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Database, fireproof } from './database'
 import { Loader } from './loader'
+import { clock } from '@web3-storage/clock/src/capabilities'
 // import { clock } from '@web3-storage/clock/src/capabilities'
 // import { Space } from '@web3-storage/w3up-client/dist/src/space'
 // import { clock } from '@web3-storage/clock/src/capabilities'
@@ -98,10 +99,11 @@ export class ConnectWeb3 extends Connection {
       if (this.authorized) {
         this.authDone = () => {}
         this._onAuthorized()
+      } else {
+        return new Promise<void>(resolve => {
+          this.authDone = resolve
+        })
       }
-      return new Promise<void>(resolve => {
-        this.authDone = resolve
-      })
     })
   }
 
@@ -115,23 +117,30 @@ export class ConnectWeb3 extends Connection {
       const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb
       accountDbLoader?.connectRemote(this.accountConnection)
       await this.accountConnection.ready
-      await this.provisionClockSpace()
+
       this.authorized = this.accountConnection.authorized
-      console.log('connected clockSpaceDID', this.clockSpaceDIDForDb(), this.authorized)
+      // console.log('connected clockSpaceDID', this.clockSpaceDIDForDb(), this.authorized)
     }
   }
 
   _onAuthorized() {
-    console.log('_onAuthorized', this.inner)
+    console.log('_onAuthorized', { inner: this.inner, authorized: this.authorized })
     this.authDone?.()
 
     if (this.inner) {
+      // await accountDbLoader?.remoteMetaStore?.load('main')
       return
     }
-
-    this.connected.then(() => {
-      void this.serviceAccessRequests()
-      void this.startBackgroundSync()
+    console.log('connected _onAuthorized', this.authDone, this.connected, this.clockSpaceDIDForDb(), this.authorized)
+    this.connected.then(async () => {
+      if (!this.inner) {
+        const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb!
+        console.log('connected _onAuthorized', this.clockSpaceDIDForDb(), this.authorized)
+        await accountDbLoader?.remoteMetaStore?.load('main')
+        await this.provisionClockSpace()
+        void this.serviceAccessRequests()
+        void this.startBackgroundSync()
+      }
     }).catch(e => {
       console.error('web3 client error', e)
     })
@@ -146,7 +155,11 @@ export class ConnectWeb3 extends Connection {
         { can: 'space/*' }, { can: 'provider/add' },
         { can: 'store/*' }, { can: 'upload/*' }]
     })
-    const space = client.currentSpace()!
+    let space = client.currentSpace()
+    if (!space) {
+      space = await client.createSpace('_account')
+      await client.setCurrentSpace(space.did())
+    }
     if (!space.registered()) {
       await client.registerSpace(email)
     }
@@ -167,18 +180,28 @@ export class ConnectWeb3 extends Connection {
     if (this.inner) {
       return this.client!
     }
-    await this.accountConnection!.ready
+    await this.accountConnection!.connected
     return this.accountConnection!.client!
   }
 
-  clockProofsForDb() {
+  async clockProofsForDb() {
+    const callId = Math.random().toString(36).slice(2, 9)
+    await this.connected
+
     if (this.inner) {
       // await this.ready
+
+      const proofSpace = this.clockSpaceDIDForDb()
+      console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
       const client = this.client!
-      const clockProofs = client.proofs([{ can: 'clock/*', with: this.clockSpaceDIDForDb() }])
+      const clockProofs = client.proofs([{ can: 'clock/*', with: proofSpace }])
       if (!clockProofs.length) { throw new Error('missing clock/* capability on account space') }
       return clockProofs
     }
+    await this.accountConnection!.connected
+
+    const proofSpace = this.clockSpaceDIDForDb()
+    console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
 
     if (this.clockProofs.length) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -186,11 +209,13 @@ export class ConnectWeb3 extends Connection {
     }
 
     const client = this.accountConnection!.client!
-    const clockProofs = client.proofs([{ can: 'clock/*', with: this.clockSpaceDIDForDb() }])
+
+    const clockProofs = client.proofs([{ can: 'clock/*', with: proofSpace }])
     if (clockProofs.length) {
       this.clockProofs = clockProofs
     }
-    if (!clockProofs.length) { throw new Error('need clock/* capability for ' + this.clockSpaceDIDForDb()) }
+    console.trace('clockProofs', callId, clockProofs.length, this.inner ? 'inner' : 'outer')
+    if (!clockProofs.length) { throw new Error('need clock/* capability for ' + proofSpace) }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.clockProofs
   }
@@ -311,7 +336,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async handleExistingSpace(rows: IndexRow[], client: Client, thisAgentDID: `did:key:${string}`) {
-    // console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
+    console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
     const doc = rows[0].doc as ClockSpaceDoc
     const clockSpaceDID = doc.with
     const proofs = client.proofs([{ can: 'clock/*', with: clockSpaceDID }])
@@ -344,6 +369,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async handleCreateNewSpace(client: Client) {
+    console.log('creating new clock space', this.encodeSpaceName())
     const clockSpace = await client.createSpace(this.encodeSpaceName())
     this.clockSpaceDID = clockSpace.did()
     const doc: ClockSpaceDoc = {
@@ -396,12 +422,14 @@ export class ConnectWeb3 extends Connection {
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
+    const callId = Math.random().toString(36).slice(2, 9)
+    console.log('metadl', callId, params)
     const client = await this.connectedClientForDb()
     // @ts-ignore
     const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
-    const clockProofs = this.clockProofsForDb()
+    const clockProofs = await this.clockProofsForDb()
     const head = await w3clock.head({
       issuer,
       with: this.clockSpaceDIDForDb(),
@@ -411,6 +439,8 @@ export class ConnectWeb3 extends Connection {
     if (head.out.ok) {
       // fetch that block from the network
       const remoteHead = head.out.ok.head
+      console.log('metadl remoteHead', callId, remoteHead.toString())
+
       return this.fetchAndUpdateHead(remoteHead)
     } else {
       console.log('w3clock error', head.out.error)
@@ -426,7 +456,7 @@ export class ConnectWeb3 extends Connection {
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
 
-    const clockProofs = this.clockProofsForDb()
+    const clockProofs = await this.clockProofsForDb()
 
     const data = {
       dbMeta: bytes
@@ -501,13 +531,17 @@ export class ConnectWeb3 extends Connection {
         break
       }
     }
-    if (space === undefined) {
-      space = await client.createSpace('_account')
-    }
+    // if (space === undefined) {
+    //   space = await client.createSpace('_account')
+    // }
 
-    this.authorized = space.registered()
+    if (!!space && space.registered()) {
+      this.authorized = true
+      await client.setCurrentSpace(space.did())
+    } else {
+      this.authorized = false
+    }
     console.log('connectClient authorized', this.authorized)
-    await client.setCurrentSpace(space.did())
     return client
   }
 }
