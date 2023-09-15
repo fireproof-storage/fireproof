@@ -16,30 +16,44 @@
       let cx
 
       let dbUnsubscribe = false
-      function setupDb(name) {
+      function setupDb(name, newDb, newConn) {
         const input = document.querySelector('#todo');
         input.disabled = true
 
         if (dbUnsubscribe) {
           dbUnsubscribe()
         }
-        dbName = name;
-        db = fireproof(name);
-        window.db = db;
-
-        cx = db.connect("todo-test")
-        window.cx = cx
-
-        if (cx.authorized) {
-          document.querySelector('#login').hidden = true
-          document.querySelector('#authorized').hidden = false
+        if (newDb) {
+          name = newDb.name
+          dbName = newDb.name
+          db = newDb
+          cx = newConn
+          const input = document.querySelector('#list');
+        input.value = dbName;
         } else {
-          input.disabled = false
-          document.querySelector('#login').hidden = false
-          document.querySelector('#authorized').hidden = true
+          dbName = name;
+          db = fireproof(name);
+          cx = db.connect("todo-test")
+
         }
 
+        window.db = db;
+        window.cx = cx
+
         cx.ready.then(() => {
+          if (cx.authorized) {
+            document.querySelector('#login').hidden = true
+            document.querySelector('#authorized').hidden = false
+            console.log('authorized', cx.shareId())
+            document.querySelector('#agent').innerText = cx.shareId()
+          } else {
+            input.disabled = false
+            document.querySelector('#login').hidden = false
+            document.querySelector('#authorized').hidden = true
+          }
+        })
+
+        cx.authReady.then(() => {
           input.disabled = false
         }).catch((e) => {
           console.log('not ready', e)
@@ -106,6 +120,7 @@
 
       async function verifyEmail(e) {
         const input = document.querySelector('#email');
+        input.disabled = true
         await cx.authorize(input.value)
       }
       window.verifyEmail = verifyEmail;
@@ -132,6 +147,22 @@
       }
       window.createTodoClick = createTodoClick;
 
+      window.doShareWith = async (e) => {
+        e.preventDefault();
+        e.target.disabled = true
+        const input = document.querySelector('#share');
+        const did = await cx.shareWith(input.value)
+        document.querySelector('#share-code').innerText = did
+      }
+
+      window.doJoin = async (e) => {
+        e.preventDefault();
+        e.target.disabled = true
+        const input = document.querySelector('#join');
+        const { database: newDb, connection: newConn } = await cx.joinShared(input.value)
+        setupDb(null, newDb, newConn);
+      }
+
       window.onload = initialize;
       window.db = db;
     }
@@ -146,14 +177,12 @@
   <input type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change List</button>
 
-  <div id="authorized" hidden>
-    <button disabled onclick="openDashboard(event)">🔥 Import to Dashboard</button>    
-  </div>
+
 
   <div id="login">
     <p>Work locally or verify your email address to sync.</p>
     Email: <input title="email" placeholder="name@example.com" name="email" id="email" />
-    <button onclick="verifyEmail(event)">Verify email</button>  
+    <button onclick="verifyEmail(event)">Verify email</button>
   </div>
 
   <p>
@@ -161,6 +190,23 @@
     This demo uses web3.storage, but you can easily run Fireproof on S3 or another provider.
     <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
   </p>
+
+  <div id="authorized" hidden>
+    <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
+
+    <p>
+      Share this list to someone's share id: <input title="share" placeholder="did:key:..." name="share" id="share" />
+      <button onclick="doShareWith(event)">Share</button>
+      <code id="share-code"></code>
+    </p>
+    <p>
+      Join a shared list: <input title="join" placeholder="bafy..." name="join" id="join" />
+      <button onclick="doJoin(event)">Join</button>
+    </p>
+    <p>
+      Request access to other lists by sharing your share id:<br> <code id="agent"></code>
+    </p>
+  </div>
 
   <h3>Todos</h3>
   <input title="Create a todo" type="text" name="todo" id="todo" />
