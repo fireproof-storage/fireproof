@@ -149,7 +149,7 @@ console.log('cjs/node build');
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
-        minify: true,
+        // minify: true,
         banner: bannerLog`
 console.log('browser/es2015 build');
 `,
