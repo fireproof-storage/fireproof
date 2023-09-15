@@ -27,8 +27,11 @@
         db = fireproof(name);
         window.db = db;
 
-        cx = db.connect("jchris+todos-29@fireproof.storage", "todo-test")
+        cx = db.connect("todo-test")
         window.cx = cx
+
+        
+
 
         cx.ready.then(() => {
           console.log('ready')
@@ -96,6 +99,12 @@
       }
       window.openDashboard = openDashboard;
 
+      async function verifyEmail(e) {
+        console.log('verify email', e.targret.value)
+      }
+      window.verifyEmail = verifyEmail;
+
+
       async function changeList(e) {
         e.preventDefault();
         const input = document.querySelector('#list');
@@ -139,10 +148,17 @@
   List:
   <input type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change List</button>
-  <button disabled onclick="openDashboard(event)">🔥 Import to Dashboard</button>
-  <p>Work locally or verify your email address to sync.</p>
-  Email: <input title="email" placeholder="name@example.com" name="email" id="email" />
-  <button onclick="verifyEmail(event)">Verify email</button>
+
+  <div id="authorized" hidden>
+    <button disabled onclick="openDashboard(event)">🔥 Import to Dashboard</button>    
+  </div>
+
+  <div id="login">
+    <p>Work locally or verify your email address to sync.</p>
+    Email: <input title="email" placeholder="name@example.com" name="email" id="email" />
+    <button onclick="verifyEmail(event)">Verify email</button>  
+  </div>
+
 
   <p>
     Fireproof stores data locally and encrypts it before sending it to the cloud.
