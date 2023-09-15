@@ -10,12 +10,12 @@
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
       const { connect, fireproof, index } = Fireproof;
+
       let dbName
       let db
       let cx
 
       let dbUnsubscribe = false
-
       function setupDb(name) {
         const input = document.querySelector('#todo');
         input.disabled = true
@@ -30,11 +30,16 @@
         cx = db.connect("todo-test")
         window.cx = cx
 
-        
-
+        if (cx.authorized) {
+          document.querySelector('#login').hidden = true
+          document.querySelector('#authorized').hidden = false
+        } else {
+          input.disabled = false
+          document.querySelector('#login').hidden = false
+          document.querySelector('#authorized').hidden = true
+        }
 
         cx.ready.then(() => {
-          console.log('ready')
           input.disabled = false
         }).catch((e) => {
           console.log('not ready', e)
@@ -52,6 +57,8 @@
         doing = doRedraw().finally(() => doing = null)
         return doing
       }
+      window.redraw = redraw;
+
 
       const doRedraw = async () => {
         const result = await index(db, 'created').query({ includeDocs: false });
@@ -70,9 +77,7 @@
           checkbox.onchange = async (e) => {
             e.target.indeterminate = true;
             doc.completed = !doc.completed;
-            console.log('putting', doc.task, doc.completed)
             await db.put(doc);
-            console.log('put', doc.task, doc.completed)
           }
           const textSpan = document.createElement('span');
           textSpan.innerText = doc.actor + ': ' + doc.task;
@@ -100,7 +105,8 @@
       window.openDashboard = openDashboard;
 
       async function verifyEmail(e) {
-        console.log('verify email', e.targret.value)
+        const input = document.querySelector('#email');
+        await cx.authorize(input.value)
       }
       window.verifyEmail = verifyEmail;
 
@@ -116,7 +122,7 @@
       }
       window.changeList = changeList;
 
-      async function onButtonClick(e) {
+      async function createTodoClick(e) {
         e.preventDefault();
 
         const input = document.querySelector('#todo');
@@ -124,21 +130,12 @@
         input.value = '';
 
       }
-      window.onButtonClick = onButtonClick;
-
-      async function doCompact(e) {
-        e.preventDefault();
-        await db.compact()
-        document
-          .querySelector('#filecount')
-          .innerText = db._crdt.blocks.loader.carLog.length
-      }
-      window.doCompact = doCompact;
+      window.createTodoClick = createTodoClick;
 
       window.onload = initialize;
       window.db = db;
-      window.redraw = redraw;
     }
+
     todoApp();
   </script>
 </head>
@@ -159,7 +156,6 @@
     <button onclick="verifyEmail(event)">Verify email</button>  
   </div>
 
-
   <p>
     Fireproof stores data locally and encrypts it before sending it to the cloud.
     This demo uses web3.storage, but you can easily run Fireproof on S3 or another provider.
@@ -167,9 +163,10 @@
   </p>
 
   <h3>Todos</h3>
-  <input type="text" name="todo" id="todo" />
-  <button onclick="onButtonClick(event)">Create Todo</button>
+  <input title="Create a todo" type="text" name="todo" id="todo" />
+  <button onclick="createTodoClick(event)">Create Todo</button>
   <ul></ul>
+
 </body>
 
 </html>

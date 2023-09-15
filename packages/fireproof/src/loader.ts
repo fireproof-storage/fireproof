@@ -94,9 +94,7 @@ export abstract class Loader {
     connection.loader = this
     this._connectRemoteMeta(connection)
     this._connectRemoteStorage(connection)
-    connection.ready = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
-      void this.remoteWAL?._process()
-    })
+    void connection.ready.then(() => void this.remoteWAL?._process())
     return connection
   }
 
