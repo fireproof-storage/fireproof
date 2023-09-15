@@ -1,5 +1,5 @@
 // from https://github.com/mikeal/encrypted-block
-// import { Crypto } from '@peculiar/webcrypto'
+import { Crypto } from '@peculiar/webcrypto'
 import { CID } from 'multiformats'
 import { Buffer } from 'buffer'
 import type { AnyLink } from './types'
@@ -8,12 +8,14 @@ import type { AnyLink } from './types'
 
 export function getCrypto() {
   try {
-    if (window.crypto && window.crypto.subtle) {
-      return window.crypto;
-    }
-    else{
-       return new Crypto()
-    }
+    // if (window.crypto && window.crypto.subtle) {
+    //   return window.crypto;
+    // }
+    // else{
+    //    return new Crypto()
+    // }
+
+    return new Crypto()
    
   } catch (e) {
     console.log(e)

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import assert from 'assert'
-import { join } from 'path'
-import { promises as fs } from 'fs'
+import { join,dirname } from 'path'
+import { promises as fs,readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
 
 const { mkdir, readdir, rm, copyFile } = fs
 
@@ -24,6 +25,14 @@ export function matches(actual, expected) {
   assert(actual.toString().match(expected), `Expected '${actual}' to match ${expected}`)
 }
 
+//Function to get the directory name from the file url
+export function getDirectoryName(url)
+{
+  const path=fileURLToPath(url)
+  const dir_name=dirname(path);
+  return dir_name
+}
+
 export async function resetDirectory(dir, name) {
   await doResetDirectory(dir, name)
   await doResetDirectory(dir, name + '.idx')
@@ -38,6 +47,19 @@ export async function doResetDirectory(dir, name) {
   for (const file of files) {
     await rm(join(path, file), { recursive: true, force: true })
   }
+}
+
+export function readImages(directory,imagedirectoryname,imagenames)
+{
+  let images=[]
+  const imagesdirectorypath=join(directory,imagedirectoryname)
+  imagenames.forEach((image)=>
+  {
+    const data=readFileSync(join(imagesdirectorypath,image))
+    images.push(data)
+  })
+
+  return images
 }
 
 // Function to copy a directory

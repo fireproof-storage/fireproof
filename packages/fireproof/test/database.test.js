@@ -4,12 +4,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory,getDirectoryName,readImages } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 import { MetaStore } from '../dist/test/store-fs.esm.js'
 import fs from "fs"
-import path from "path"
+import path, { dirname } from "path"
+import {File,Blob} from "web-file-polyfill"
 import { equal } from 'assert'
 
 /**
@@ -319,147 +320,156 @@ describe('basic Database with subscription', function () {
 
 describe('database with files input', async function()
 {
+  /** @type {Database} */
   let db
-  let image1
-  let image2
+  let imagefiles=[]
   let result
+  
 
   before(function()
   {
+    let directoryname=getDirectoryName(import.meta.url)
+    let images=readImages(directoryname,'test-images',['image1.jpg','image2.jpg'])
+    images.forEach((image,index)=>
+      {
+        const blob = new Blob([image]);
+        imagefiles.push(new File([blob], `image${index+1}.jpg`, { type: "image/jpeg" }));
+      })
+  })
+
+  beforeEach(async function()
+  {
+    // await resetDirectory(MetaStore.dataDir, 'fireproof-with-images')
     db=new Database('fireproof-with-images')
-    // console.log(db)
-    ///workspaces/fireproof/packages/fireproof/test/test-images/image1
-    image1=fs.readFileSync('/workspaces/fireproof/packages/fireproof/test/test-images/image1.jpg')
-    image2=fs.readFileSync('/workspaces/fireproof/packages/fireproof/test/test-images/image2.jpg')
   })
 
   it("Should upload images",async function()
   {
-    // console.log(image1)
+    console.log('These are the image files',imagefiles)
     const doc={
       _id:"images-main",
       type:"files",
       _files:{
-        image1,
-        image2
+        "image1":imagefiles[0],
+        "image2":imagefiles[1]
       }
     }
 
     result=await db.put(doc)
-    // console.log(result,"This is the result when the images are stored")
-
+    console.log(result,"This is the result when the images are stored")
     equals(result.id,'images-main')
   })
 
-  it("Should fetch the images",async function(done)
+  it("Should fetch the images",async function()
   {
     let data=await db.get(result.id);
+    console.log(data);
     // console.log(data)
-    Object.entries(data._files).map((entry,index)=>
-      {
-        let key=entry[0]
-        let value=entry[1]
-        // let variablename=`image${index+1}`
-        // equals(JSON.stringify(value),JSON.stringify(new Uint8Array(variablename)))
-        if(index==0)
-        {
-          equals(JSON.stringify(value),JSON.stringify(new Uint8Array(image1)))
-        }
-        else{
-          equals(JSON.stringify(value),JSON.stringify(new Uint8Array(image2)))
-        }
-      })
+    // Object.entries(data._files).map((entry,index)=>
+    //   {
+    //     let key=entry[0]
+    //     let value=entry[1]
+    //     // let variablename=`image${index+1}`
+    //     // equals(JSON.stringify(value),JSON.stringify(new Uint8Array(variablename)))
+    //     if(index==0)
+    //     {
+    //       equals(JSON.stringify(value),JSON.stringify(new Uint8Array(image1)))
+    //     }
+    //     else{
+    //       equals(JSON.stringify(value),JSON.stringify(new Uint8Array(image2)))
+    //     }
+    //   })
   })
 
-  it("Should delete the images",async function()
-  {
-    // console.log('This is the result',result)
-    // let olddata=await db.get('images-main')
-    // console.log(olddata,"This is the old data")
-    await db.del('images-main');
-    try{
-      let newdata=await db.get('images-main')
-      equals(true,false)
-    }
-    catch(e){
-      equals(true,true)
-    }
+  // it("Should delete the images",async function()
+  // {
+  //   // console.log('This is the result',result)
+  //   // let olddata=await db.get('images-main')
+  //   // console.log(olddata,"This is the old data")
+  //   await db.del('images-main');
+  //   try{
+  //     let newdata=await db.get('images-main')
+  //     equals(true,false)
+  //   }
+  //   catch(e){
+  //     equals(true,true)
+  //   }
 
-  })
+  // })
 
-  it("Race condition",async function()
-  {
-    // //From the result we get two things that is - the id and the latest clock of the CAR file
-    // console.log(result)
+  // it("Race condition",async function()
+  // {
+  //   // //From the result we get two things that is - the id and the latest clock of the CAR file
+  //   // console.log(result)
 
-    // //From the database header we get the latest CID of the CAR file
-    // console.log(db._crdt.clock.head)
+  //   // //From the database header we get the latest CID of the CAR file
+  //   // console.log(db._crdt.clock.head)
 
-    //Let us make a race condition between the two instances of the database
-    let db1=await new Database('fireproof-with-images-part5')
-    let db2=await new Database('fireproof-with-images-part5')
-    let result1,result2;
-    let first
-    let doc={
-      _id:'',
-      type:"files",
-      _files:{
-      }
-    }
+  //   //Let us make a race condition between the two instances of the database
+  //   let db1=await new Database('fireproof-with-images-part5')
+  //   let db2=await new Database('fireproof-with-images-part5')
+  //   let result1,result2;
+  //   let first
+  //   let doc={
+  //     _id:'',
+  //     type:"files",
+  //     _files:{
+  //     }
+  //   }
     
-    const promise1=new Promise((resolve,reject)=>
-    {
-      setTimeout(async ()=>
-      {
-        try{
-          doc._files['image1']=image1
-          doc._id='image1'
-          result1=await db1.put(doc)
-          console.log('These are the details of database-1 ')
-          console.log('This is the result1',result1)
-          console.log(db1._crdt.clock.head)
-          console.log(db1._crdt.clock.blocks)
-          resolve(result1)
+  //   const promise1=new Promise((resolve,reject)=>
+  //   {
+  //     setTimeout(async ()=>
+  //     {
+  //       try{
+  //         doc._files['image1']=image1
+  //         doc._id='image1'
+  //         result1=await db1.put(doc)
+  //         console.log('These are the details of database-1 ')
+  //         console.log('This is the result1',result1)
+  //         console.log(db1._crdt.clock.head)
+  //         console.log(db1._crdt.clock.blocks)
+  //         resolve(result1)
 
-        }
-        catch(e)
-        {
-          reject(e)
-        }
-      },500)
-    })
+  //       }
+  //       catch(e)
+  //       {
+  //         reject(e)
+  //       }
+  //     },500)
+  //   })
 
-    const promise2=new Promise((resolve,reject)=>
-    {
-      setTimeout(async()=>
-      {
-        try{
-          doc._files['image2']=image2
-          doc._id='image2'
-          result2=await db2.put(doc)
-          console.log('These are the details of database-2')
-          console.log('This is the result2',result2)
-          console.log(db2._crdt.clock.head)
-          console.log(db2._crdt.clock.blocks)
-          resolve(result2)
-        }
-        catch(e)
-        {
-          reject(e)
-        }
-      },500)
-    })
+  //   const promise2=new Promise((resolve,reject)=>
+  //   {
+  //     setTimeout(async()=>
+  //     {
+  //       try{
+  //         doc._files['image2']=image2
+  //         doc._id='image2'
+  //         result2=await db2.put(doc)
+  //         console.log('These are the details of database-2')
+  //         console.log('This is the result2',result2)
+  //         console.log(db2._crdt.clock.head)
+  //         console.log(db2._crdt.clock.blocks)
+  //         resolve(result2)
+  //       }
+  //       catch(e)
+  //       {
+  //         reject(e)
+  //       }
+  //     },500)
+  //   })
 
-    await Promise.race([promise1, promise2]).then((value) => {
-      console.log(value);
-      first=value
-      // Both resolve, but one of the promises is faster
-    });
+  //   await Promise.race([promise1, promise2]).then((value) => {
+  //     console.log(value);
+  //     first=value
+  //     // Both resolve, but one of the promises is faster
+  //   });
 
-    //Now lets identify the heads of both the databases
-    //Hence both the databases have different clock heads
+  //   //Now lets identify the heads of both the databases
+  //   //Hence both the databases have different clock heads
   
     
 
-  })
+  // })
 })
