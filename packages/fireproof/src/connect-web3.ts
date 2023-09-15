@@ -94,11 +94,11 @@ export class ConnectWeb3 extends Connection {
       this.accountDb = _database
     }
     this.ready = this.initializeClient()
-    this.connected = this.ready.then(() => {
+    this.connected = this.ready.then(async () => {
       // if (this.inner) return
       if (this.authorized) {
-        this.authDone = () => {}
-        this._onAuthorized()
+        this.authDone = () => { }
+        await this._onAuthorized()
       } else {
         return new Promise<void>(resolve => {
           this.authDone = resolve
@@ -123,27 +123,23 @@ export class ConnectWeb3 extends Connection {
     }
   }
 
-  _onAuthorized() {
+  async _onAuthorized() {
     console.log('_onAuthorized', { inner: this.inner, authorized: this.authorized })
     this.authDone?.()
 
     if (this.inner) {
       // await accountDbLoader?.remoteMetaStore?.load('main')
-      return
+      const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb!
+      // console.log('connected _onAuthorized inner', this.clockSpaceDIDForDb(), this.authorized)
+      await accountDbLoader?.remoteMetaStore?.load('main')
+      await this.provisionClockSpace()
+      void this.serviceAccessRequests()
     }
-    console.log('connected _onAuthorized', this.authDone, this.connected, this.clockSpaceDIDForDb(), this.authorized)
-    this.connected.then(async () => {
-      if (!this.inner) {
-        const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb!
-        console.log('connected _onAuthorized', this.clockSpaceDIDForDb(), this.authorized)
-        await accountDbLoader?.remoteMetaStore?.load('main')
-        await this.provisionClockSpace()
-        void this.serviceAccessRequests()
-        void this.startBackgroundSync()
-      }
-    }).catch(e => {
-      console.error('web3 client error', e)
-    })
+    console.log('connected _onAuthorized', this.inner ? 'inner' : 'outer', this.authDone, this.connected, this.clockSpaceDIDForDb(), this.authorized)
+    if (!this.inner) {
+      await this.accountConnection!.ready
+      void this.startBackgroundSync()
+    }
   }
 
   async authorize(email: `${string}@${string}`) {
@@ -155,11 +151,11 @@ export class ConnectWeb3 extends Connection {
         { can: 'space/*' }, { can: 'provider/add' },
         { can: 'store/*' }, { can: 'upload/*' }]
     })
-    let space = client.currentSpace()
+    let space = this.bestSpace(client)
     if (!space) {
       space = await client.createSpace('_account')
-      await client.setCurrentSpace(space.did())
     }
+    await client.setCurrentSpace(space.did())
     if (!space.registered()) {
       await client.registerSpace(email)
     }
@@ -171,8 +167,10 @@ export class ConnectWeb3 extends Connection {
         await this.accountDb!.put(doc)
       }
     }
-    this.accountConnection!._onAuthorized()
-    this._onAuthorized()
+    await this.accountConnection!._onAuthorized()
+    console.log('inner setup', this.accountConnection!.clockSpaceDID)
+    this.clockSpaceDID = this.accountConnection!.clockSpaceDID
+    await this._onAuthorized()
   }
 
   async connectedClientForDb() {
@@ -185,14 +183,13 @@ export class ConnectWeb3 extends Connection {
   }
 
   async clockProofsForDb() {
-    const callId = Math.random().toString(36).slice(2, 9)
+    // const callId = Math.random().toString(36).slice(2, 9)
     await this.connected
 
     if (this.inner) {
       // await this.ready
-
       const proofSpace = this.clockSpaceDIDForDb()
-      console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
+      // console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
       const client = this.client!
       const clockProofs = client.proofs([{ can: 'clock/*', with: proofSpace }])
       if (!clockProofs.length) { throw new Error('missing clock/* capability on account space') }
@@ -201,7 +198,7 @@ export class ConnectWeb3 extends Connection {
     await this.accountConnection!.connected
 
     const proofSpace = this.clockSpaceDIDForDb()
-    console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
+    // console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
 
     if (this.clockProofs.length) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
@@ -214,7 +211,7 @@ export class ConnectWeb3 extends Connection {
     if (clockProofs.length) {
       this.clockProofs = clockProofs
     }
-    console.trace('clockProofs', callId, clockProofs.length, this.inner ? 'inner' : 'outer')
+    // console.trace('clockProofs', callId, clockProofs.length, this.inner ? 'inner' : 'outer')
     if (!clockProofs.length) { throw new Error('need clock/* capability for ' + proofSpace) }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return this.clockProofs
@@ -222,7 +219,7 @@ export class ConnectWeb3 extends Connection {
 
   clockSpaceDIDForDb() {
     if (this.inner) return this.client!.currentSpace()!.did()
-    return this.clockSpaceDID!
+    return this.accountConnection!.clockSpaceDID!
   }
 
   async startBackgroundSync() {
@@ -238,8 +235,7 @@ export class ConnectWeb3 extends Connection {
   // this will make everything feel faster
 
   async serviceAccessRequests() {
-    if (this.inner) return
-    const client = this.accountConnection!.client!
+    const client = this.client!
     // @ts-ignore
     const { issuer } = client._agent
 
@@ -290,7 +286,7 @@ export class ConnectWeb3 extends Connection {
       }
     }
     await sleep(5000) // todo enable websockets on remote clock
-    await this.accountConnection!.refresh()
+    await this.refresh()
     await this.serviceAccessRequests()
   }
 
@@ -304,7 +300,7 @@ export class ConnectWeb3 extends Connection {
         const loadedDelegation = await Delegation.extract(doc.delegation!)
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (!loadedDelegation.ok) throw new Error('missing loadedDelegation')
-        const client = this.accountConnection!.client!
+        const client = this.client!
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
         // console.log('adding proof', loadedDelegation.ok)
         await client.addProof(loadedDelegation.ok)
@@ -318,13 +314,13 @@ export class ConnectWeb3 extends Connection {
       }
     }
     await sleep(3000) // todo enable websockets on remote clock
-    await this.accountConnection!.refresh()
+    await this.refresh()
     await this.waitForAccess(clockSpaceDID, agentDID)
   }
 
   async provisionClockSpace() {
     const { rows } = await this.accountDb!.query('clockName', { key: this.encodeSpaceName() })
-    const client = this.accountConnection!.client!
+    const client = this.client!
     // @ts-ignore
     const thisAgentDID = client._agent.issuer.did()
 
@@ -521,7 +517,18 @@ export class ConnectWeb3 extends Connection {
   async connectClient() {
     const client = await create()
     console.log('connectClient proofs', client.currentSpace()?.did())
+    const space = this.bestSpace(client)
+    if (!!space && space.registered()) {
+      this.authorized = true
+      await client.setCurrentSpace(space.did())
+    } else {
+      this.authorized = false
+    }
+    console.log('connectClient authorized', this.authorized)
+    return client
+  }
 
+  bestSpace(client: Client) {
     const spaces = client.spaces()
     let space
     for (const s of spaces) {
@@ -531,17 +538,6 @@ export class ConnectWeb3 extends Connection {
         break
       }
     }
-    // if (space === undefined) {
-    //   space = await client.createSpace('_account')
-    // }
-
-    if (!!space && space.registered()) {
-      this.authorized = true
-      await client.setCurrentSpace(space.did())
-    } else {
-      this.authorized = false
-    }
-    console.log('connectClient authorized', this.authorized)
-    return client
+    return space
   }
 }
