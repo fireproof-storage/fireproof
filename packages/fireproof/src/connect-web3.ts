@@ -30,7 +30,7 @@ type ClockSpaceDoc = Doc & {
   issuer: `did:key:${string}`;
   created: number;
   name: string;
-  email: `${string}@${string}`;
+  email?: `${string}@${string}`;
   ua: string;
   schema: string;
 }
@@ -47,10 +47,11 @@ type AccessRequestDoc = Doc & {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-type ConnectWeb3Params = { name: string, email: `${string}@${string}`, schema: string }
+type ConnectWeb3Params = { name: string, schema: string }
 export class ConnectWeb3 extends Connection {
   params: ConnectWeb3Params
   ready: Promise<void>
+  connected: Promise<void>
   client: Client | null = null
   clockSpaceDID: `did:${string}:${string}` | null = null
   clockProofs: any[] = []
@@ -82,6 +83,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   authorized: boolean | null = null
+  authDone?: (value: void | PromiseLike<void>) => void
 
   constructor(params: ConnectWeb3Params, _database?: Database) {
     super()
@@ -91,6 +93,16 @@ export class ConnectWeb3 extends Connection {
       this.accountDb = _database
     }
     this.ready = this.initializeClient()
+    this.connected = this.ready.then(() => {
+      // if (this.inner) return
+      if (this.authorized) {
+        this.authDone = () => {}
+        this._onAuthorized()
+      }
+      return new Promise<void>(resolve => {
+        this.authDone = resolve
+      })
+    })
   }
 
   async initializeClient() {
@@ -103,16 +115,21 @@ export class ConnectWeb3 extends Connection {
       const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb
       accountDbLoader?.connectRemote(this.accountConnection)
       await this.accountConnection.ready
-      await this.accountDb.changes([], { limit: 1 })
       await this.provisionClockSpace()
-      console.log('connected clockSpaceDID', this.clockSpaceDIDForDb())
       this.authorized = this.accountConnection.authorized
-      if (this.authorized) this._onAuthorized()
+      console.log('connected clockSpaceDID', this.clockSpaceDIDForDb(), this.authorized)
     }
   }
 
   _onAuthorized() {
-    this.ready.then(() => {
+    console.log('_onAuthorized', this.inner)
+    this.authDone?.()
+
+    if (this.inner) {
+      return
+    }
+
+    this.connected.then(() => {
       void this.serviceAccessRequests()
       void this.startBackgroundSync()
     }).catch(e => {
@@ -120,9 +137,36 @@ export class ConnectWeb3 extends Connection {
     })
   }
 
-  async clientForDb() {
-    await this.ready
-    if (this.inner) return this.client!
+  async authorize(email: `${string}@${string}`) {
+    console.log('emailing', email)
+    await this.accountConnection!.ready
+    const client = this.accountConnection!.client!
+    await client.authorize(email, {
+      capabilities: [{ can: 'clock/*' },
+        { can: 'space/*' }, { can: 'provider/add' },
+        { can: 'store/*' }, { can: 'upload/*' }]
+    })
+    const space = client.currentSpace()!
+    if (!space.registered()) {
+      await client.registerSpace(email)
+    }
+    const { rows } = await this.accountDb!.query('accountSpace', { key: space.did() })
+    for (const row of rows) {
+      const doc = row.doc as ClockSpaceDoc
+      if (!doc.email) {
+        doc.email = email
+        await this.accountDb!.put(doc)
+      }
+    }
+    this.accountConnection!._onAuthorized()
+    this._onAuthorized()
+  }
+
+  async connectedClientForDb() {
+    await this.connected
+    if (this.inner) {
+      return this.client!
+    }
     await this.accountConnection!.ready
     return this.accountConnection!.client!
   }
@@ -341,7 +385,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    const client = await this.clientForDb()
+    const client = await this.connectedClientForDb()
     if (!client) { throw new Error('client not initialized') }
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
@@ -352,7 +396,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
-    const client = await this.clientForDb()
+    const client = await this.connectedClientForDb()
     // @ts-ignore
     const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
@@ -376,7 +420,7 @@ export class ConnectWeb3 extends Connection {
 
   // bytes is encoded {car, key}, not our job to decode, just return on download
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    const client = await this.clientForDb()
+    const client = await this.connectedClientForDb()
     // @ts-ignore
     const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
@@ -444,28 +488,10 @@ export class ConnectWeb3 extends Connection {
     return outBytess
   }
 
-  async authorize(email: `${string}@${string}`) {
-    console.log('emailing', email)
-    const client = await this.clientForDb()
-    await client.authorize(email, {
-      capabilities: [{ can: 'clock/*' },
-        { can: 'space/*' }, { can: 'provider/add' },
-        { can: 'store/*' }, { can: 'upload/*' }]
-    })
-    const space = client.currentSpace()!
-    if (!space.registered()) {
-      await client.registerSpace(email)
-    }
-  }
-
   async connectClient() {
     const client = await create()
-    const proofs = client.proofs()
-    if (proofs.length === 0) {
-      this.authorized = false
-    } else {
-      this.authorized = true
-    }
+    console.log('connectClient proofs', client.currentSpace()?.did())
+
     const spaces = client.spaces()
     let space
     for (const s of spaces) {
@@ -478,6 +504,9 @@ export class ConnectWeb3 extends Connection {
     if (space === undefined) {
       space = await client.createSpace('_account')
     }
+
+    this.authorized = space.registered()
+    console.log('connectClient authorized', this.authorized)
     await client.setCurrentSpace(space.did())
     return client
   }

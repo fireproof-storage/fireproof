@@ -44,18 +44,18 @@ export const connect = {
     return connection
   },
   web3: (db: Database,
-    email: `${string}@${string}`, schemaName?: string) => {
+    schemaName?: string) => {
     const { name, _crdt: { blocks: { loader } } } = db
     if (!name) throw new Error('database name is required')
-    if (web3names.has(name + email)) {
-      return web3names.get(name + email)!
+    if (web3names.has(name)) {
+      return web3names.get(name)!
     }
     if (!schemaName && location) {
       schemaName = location.origin
     }
-    const connection = new ConnectWeb3({ name, email, schema: schemaName! })
+    const connection = new ConnectWeb3({ name, schema: schemaName! })
     loader!.connectRemote(connection)
-    web3names.set(name + email, connection)
+    web3names.set(name, connection)
     return connection
   }
 }
