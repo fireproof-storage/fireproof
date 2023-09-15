@@ -49,6 +49,9 @@ type AccessRequestDoc = Doc & {
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 type ConnectWeb3Params = { name: string, schema: string }
+
+type ReuseWeb3Params = { did: `did:${string}:${string}`, connection: ConnectWeb3 }
+
 export class ConnectWeb3 extends Connection {
   params: ConnectWeb3Params
   ready: Promise<void>
@@ -87,8 +90,21 @@ export class ConnectWeb3 extends Connection {
   authDone?: (value: void | PromiseLike<void>) => void
   authReady: Promise<void>
 
-  constructor(params: ConnectWeb3Params, _database?: Database) {
+  constructor(params: ConnectWeb3Params, _database?: Database, _reuseParams?: ReuseWeb3Params) {
     super()
+    if (_reuseParams) {
+      // const conn = _reuseParams.connection
+      // this.params = params
+
+      // this.inner = false
+      // this.accountDb = conn.accountDb
+      // this.accountConnection = conn.accountConnection
+      // this.authorized = conn.authorized
+      // this.ready = conn.ready
+      // this.connected = conn.connected
+      this.clockSpaceDID = _reuseParams.did
+    }
+
     this.params = params
     if (_database) {
       this.inner = true
@@ -96,7 +112,6 @@ export class ConnectWeb3 extends Connection {
     }
     this.ready = this.initializeClient()
     this.connected = this.ready.then(async () => {
-      // if (this.inner) return
       if (this.authorized) {
         this.authDone = () => { }
       } else {
@@ -105,12 +120,101 @@ export class ConnectWeb3 extends Connection {
         })
       }
     })
+    // }
+
     this.authReady = this.connected.then(async () => {
       if (this.authorized) {
         await this._onAuthorized()
         void this.startBackgroundSync()
       }
     })
+  }
+
+  async authorize(email: `${string}@${string}`) {
+    console.log('emailing', email)
+    await this.accountConnection!.ready
+    const client = this.accountConnection!.client!
+    await client.authorize(email, {
+      capabilities: [{ can: 'clock/*' },
+        { can: 'space/*' }, { can: 'provider/add' },
+        { can: 'store/*' }, { can: 'upload/*' }]
+    })
+    let space = this.bestSpace(client)
+    if (!space) {
+      space = await client.createSpace('_account')
+    }
+    await client.setCurrentSpace(space.did())
+    if (!space.registered()) {
+      await client.registerSpace(email)
+    }
+    const { rows } = await this.accountDb!.query('accountSpace', { key: space.did() })
+    for (const row of rows) {
+      const doc = row.doc as ClockSpaceDoc
+      if (!doc.email) {
+        doc.email = email
+        await this.accountDb!.put(doc)
+      }
+    }
+    await this.accountConnection!._onAuthorized()
+    console.log('inner setup', this.accountConnection!.clockSpaceDID)
+    this.clockSpaceDID = this.accountConnection!.clockSpaceDID
+    await this._onAuthorized()
+  }
+
+  shareId() {
+    const client = this.accountConnection!.client
+    // @ts-ignore
+    const { issuer } = client._agent
+
+    return issuer.did()
+  }
+
+  async shareWith(shareId: `did:key:${string}`) {
+    const client = this.accountConnection!.client!
+    // @ts-ignore
+    const { issuer } = client._agent
+    const delegationParams = {
+      issuer,
+      lifetimeInSeconds: 60 * 60 * 24 * 365,
+      audience: { did: () => shareId },
+      capabilities: [{ can: 'clock/*', with: this.clockSpaceDIDForDb() }],
+      proofs: client.proofs()
+    }
+    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const delegation = await delegate(delegationParams)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const delegationCarBytes = await delegation.archive()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (!delegationCarBytes.ok) throw new Error('missing delegationCarBytes')
+    const cid = await client.uploadFile(new Blob([delegationCarBytes.ok]))
+    console.log('delegated', cid)
+    return cid
+  }
+
+  async joinShared(cid: string, name?: string, schemaName?: string) {
+    // todo
+    const data = await this.dataDownload({ car: cid, type: 'data', name: this.loader!.name })
+    const loaded = await Delegation.extract(data)
+    console.log('loaded', loaded)
+    if (!loaded.ok) throw new Error('missing delegation')
+    console.log('adding proof', loaded.ok)
+    const client = await this.connectedClientForDb()
+    await client.addProof(loaded.ok)
+    const newWith = loaded.ok.capabilities[0].with as `did:${string}:${string}`
+    console.log('newWith', newWith)
+    // make new empty database
+    name = name || 'shared:' + newWith
+    const db = fireproof(name)
+    if (!schemaName && location) {
+      schemaName = location.origin
+    }
+    const newParams: ConnectWeb3Params = { name, schema: schemaName! }
+    const newConn = new ConnectWeb3(newParams, db, { did: newWith, connection: this })
+    const { _crdt: { blocks: { loader: dbLoader } } } = db
+    dbLoader?.connectRemote(newConn)
+    await newConn.ready
+    return { database: db, connection: newConn }
   }
 
   async initializeClient() {
@@ -148,47 +252,16 @@ export class ConnectWeb3 extends Connection {
     // }
   }
 
-  async authorize(email: `${string}@${string}`) {
-    console.log('emailing', email)
-    await this.accountConnection!.ready
-    const client = this.accountConnection!.client!
-    await client.authorize(email, {
-      capabilities: [{ can: 'clock/*' },
-        { can: 'space/*' }, { can: 'provider/add' },
-        { can: 'store/*' }, { can: 'upload/*' }]
-    })
-    let space = this.bestSpace(client)
-    if (!space) {
-      space = await client.createSpace('_account')
-    }
-    await client.setCurrentSpace(space.did())
-    if (!space.registered()) {
-      await client.registerSpace(email)
-    }
-    const { rows } = await this.accountDb!.query('accountSpace', { key: space.did() })
-    for (const row of rows) {
-      const doc = row.doc as ClockSpaceDoc
-      if (!doc.email) {
-        doc.email = email
-        await this.accountDb!.put(doc)
-      }
-    }
-    await this.accountConnection!._onAuthorized()
-    console.log('inner setup', this.accountConnection!.clockSpaceDID)
-    this.clockSpaceDID = this.accountConnection!.clockSpaceDID
-    await this._onAuthorized()
-  }
-
   async connectedClientForDb() {
-    console.log('connectedClientForDb', this.inner ? 'inner' : 'outer')
+    // console.log('connectedClientForDb', this.inner ? 'inner' : 'outer')
     await this.connected
-    console.log('awaited connected')
+    // console.log('awaited connected')
     if (this.inner) {
       return this.client!
     }
-    console.log('awaiting accountConnection connected')
+    // console.log('awaiting accountConnection connected')
     await this.accountConnection!.connected
-    console.log('awaited accountConnection connected', this.accountConnection!.client!)
+    // console.log('awaited accountConnection connected', this.accountConnection!.client!)
     return this.accountConnection!.client!
   }
 
@@ -429,8 +502,8 @@ export class ConnectWeb3 extends Connection {
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
-    const callId = Math.random().toString(36).slice(2, 9)
-    console.log('metadl', callId, params)
+    // const callId = Math.random().toString(36).slice(2, 9)
+    // console.log('metadl', callId, params)
     const client = await this.connectedClientForDb()
     // @ts-ignore
     const { issuer } = client._agent
@@ -446,7 +519,7 @@ export class ConnectWeb3 extends Connection {
     if (head.out.ok) {
       // fetch that block from the network
       const remoteHead = head.out.ok.head
-      console.log('metadl remoteHead', callId, remoteHead.toString())
+      // console.log('metadl remoteHead', callId, remoteHead.toString())
 
       return this.fetchAndUpdateHead(remoteHead)
     } else {
@@ -527,7 +600,7 @@ export class ConnectWeb3 extends Connection {
 
   async connectClient() {
     const client = await create()
-    console.log('connectClient proofs', client.currentSpace()?.did())
+    // console.log('connectClient proofs', client.currentSpace()?.did())
     const space = this.bestSpace(client)
     if (!!space && space.registered()) {
       this.authorized = true
@@ -535,7 +608,7 @@ export class ConnectWeb3 extends Connection {
     } else {
       this.authorized = false
     }
-    console.log('connectClient authorized', this.authorized)
+    // console.log('connectClient authorized', this.authorized)
     return client
   }
 
