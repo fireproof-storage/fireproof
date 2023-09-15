@@ -67,27 +67,10 @@ export class ConnectWeb3 extends Connection {
     if (doc.type === 'access-request') { emit(accessDoc.with + accessDoc.grantee) }
   }
 
-  // requestIndexFn: MapFn = (doc, emit) => {
-  //   const accessDoc = doc as AccessRequestDoce
-  //   if (doc.type === 'access-request') {
-  //     if (doc.state === 'pending') {
-  //       emit(accessDoc.audience)
-  //     } else if (doc.state === 'granted') {
-  //       emit(accessDoc.grantee)
-  //     }
-  //   }
-  // }
-
   pendingWithIdxFn: MapFn = (doc, emit) => {
     const accessDoc = doc as AccessRequestDoc
     if (doc.type === 'access-request' && doc.state === 'pending') { emit(accessDoc.with) }
   }
-
-  // todo merge this and above into [with, state] index
-  // granteeIdxFn: MapFn = (doc, emit) => {
-  //   const accessDoc = doc as AccessRequestDoc
-  //   if (doc.type === 'access-request' && doc.state === 'granted') { emit(accessDoc.grantee) }
-  // }
 
   ownerIdxFn: MapFn = (doc, emit) => {
     const myDoc = doc as AccessRequestDoc | ClockSpaceDoc
@@ -98,6 +81,8 @@ export class ConnectWeb3 extends Connection {
     }
   }
 
+  authorized: boolean | null = null
+
   constructor(params: ConnectWeb3Params, _database?: Database) {
     super()
     this.params = params
@@ -106,28 +91,33 @@ export class ConnectWeb3 extends Connection {
       this.accountDb = _database
     }
     this.ready = this.initializeClient()
+  }
+
+  async initializeClient() {
+    if (this.inner) {
+      // we are an inner client
+      this.client = await this.connectClient()
+    } else {
+      this.accountDb = fireproof('_connect-web3')
+      this.accountConnection = new ConnectWeb3(this.params, this.accountDb)
+      const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb
+      accountDbLoader?.connectRemote(this.accountConnection)
+      await this.accountConnection.ready
+      await this.accountDb.changes([], { limit: 1 })
+      await this.provisionClockSpace()
+      console.log('connected clockSpaceDID', this.clockSpaceDIDForDb())
+      this.authorized = this.accountConnection.authorized
+      if (this.authorized) this._onAuthorized()
+    }
+  }
+
+  _onAuthorized() {
     this.ready.then(() => {
       void this.serviceAccessRequests()
       void this.startBackgroundSync()
     }).catch(e => {
       console.error('web3 client error', e)
     })
-  }
-
-  async initializeClient() {
-    if (this.inner) {
-      // we are an inner client
-      this.client = await this.connectClient(this.params.email)
-    } else {
-      this.accountDb = fireproof('_connect-web3')
-      this.accountConnection = new ConnectWeb3(this.params, this.accountDb)
-      const { _crdt: { blocks: { loader } } } = this.accountDb
-      loader?.connectRemote(this.accountConnection)
-      await this.accountConnection.ready
-      await this.accountDb.changes([], { limit: 1 })
-      await this.provisionClockSpace()
-      console.log('connected clockSpaceDID', this.clockSpaceDIDForDb())
-    }
   }
 
   async clientForDb() {
@@ -454,18 +444,28 @@ export class ConnectWeb3 extends Connection {
     return outBytess
   }
 
-  async connectClient(email: `${string}@${string}`) {
+  async authorize(email: `${string}@${string}`) {
+    console.log('emailing', email)
+    const client = await this.clientForDb()
+    await client.authorize(email, {
+      capabilities: [{ can: 'clock/*' },
+        { can: 'space/*' }, { can: 'provider/add' },
+        { can: 'store/*' }, { can: 'upload/*' }]
+    })
+    const space = client.currentSpace()!
+    if (!space.registered()) {
+      await client.registerSpace(email)
+    }
+  }
+
+  async connectClient() {
     const client = await create()
     const proofs = client.proofs()
     if (proofs.length === 0) {
-      console.log('emailing', email, client.spaces().length)
-      await client.authorize(email, {
-        capabilities: [{ can: 'clock/*' },
-          { can: 'space/*' }, { can: 'provider/add' },
-          { can: 'store/*' }, { can: 'upload/*' }]
-      })
+      this.authorized = false
+    } else {
+      this.authorized = true
     }
-
     const spaces = client.spaces()
     let space
     for (const s of spaces) {
@@ -479,10 +479,6 @@ export class ConnectWeb3 extends Connection {
       space = await client.createSpace('_account')
     }
     await client.setCurrentSpace(space.did())
-
-    if (!space.registered()) {
-      await client.registerSpace(email)
-    }
     return client
   }
 }
