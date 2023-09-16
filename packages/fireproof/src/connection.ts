@@ -4,7 +4,7 @@ import { UploadMetaFnParams, UploadDataFnParams, AnyLink, DownloadMetaFnParams, 
 export abstract class Connection {
   ready: Promise<any>
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
-  abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams): Promise<void | AnyLink>
+  abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: {public?: boolean}): Promise<void | AnyLink>
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>
 

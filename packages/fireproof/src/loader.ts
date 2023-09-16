@@ -189,7 +189,7 @@ export abstract class Loader {
       roots = [header.cid]
     }
 
-    const theKey = await this._getKey()
+    const theKey = opts.public ? null : await this._getKey()
     const { cid, bytes } = theKey ? await encryptedEncodeCarFile(theKey, roots[0], t) : await encodeCarFile(roots, t)
 
     // save the car locally and remote
@@ -197,9 +197,7 @@ export abstract class Loader {
     if (isFileResult(done)) { // move to the db loader?
       const dbLoader = this as unknown as DbLoader
       await dbLoader.fileStore!.save({ cid, bytes })
-
-      await this.remoteWAL!.enqueueFile(cid)
-
+      await this.remoteWAL!.enqueueFile(cid, opts.public)
       return cid
     }
 
@@ -270,7 +268,7 @@ export abstract class Loader {
     return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
   }
 
-  protected async storesLoadCar(cid: AnyLink, local: AbstractDataStore, remote?: AbstractDataStore): Promise<CarReader> {
+  protected async storesLoadCar(cid: AnyLink, local: AbstractDataStore, remote?: AbstractDataStore, publicFiles?: boolean): Promise<CarReader> {
     const cidString = cid.toString()
     if (!this.carReaders.has(cidString)) {
       this.carReaders.set(cidString, (async () => {
@@ -289,7 +287,7 @@ export abstract class Loader {
         }
         if (!loadedCar) throw new Error(`missing car file ${cidString}`)
         const rawReader = await CarReader.fromBytes(loadedCar.bytes)
-        const readerP = this.ensureDecryptedReader(rawReader)
+        const readerP = publicFiles ? Promise.resolve(rawReader) : this.ensureDecryptedReader(rawReader)
         this.carReaders.set(cidString, readerP)
         return readerP
       })().catch((e) => {

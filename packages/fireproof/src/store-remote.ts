@@ -30,14 +30,14 @@ export class RemoteDataStore extends DataStoreBase {
     return { cid: carCid, bytes }
   }
 
-  async save(car: AnyBlock) {
+  async save(car: AnyBlock, opts?: { public?: boolean }) {
     const uploadParams: UploadDataFnParams = {
       type: this.type,
       name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
-    return await this.connection.dataUpload(car.bytes, uploadParams)
+    return await this.connection.dataUpload(car.bytes, uploadParams, opts)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
