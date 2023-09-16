@@ -406,6 +406,7 @@ describe('two Connection with raw remote', function () {
 
     const remote3 = connect.raw(db3, mockConnect)
     await remote3.ready
+
     // await db3._crdt.blocks.loader.ready
     // await db3._crdt.ready
 
