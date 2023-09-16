@@ -47,8 +47,8 @@
           if (cx.authorized) {
             document.querySelector('#login').hidden = true
             document.querySelector('#authorized').hidden = false
-            console.log('authorized', await cx.shareId())
-            document.querySelector('#agent').innerText = await cx.shareId()
+            console.log('authorized', await cx.shareToken())
+            document.querySelector('#agent').innerText = await cx.shareToken()
           } else {
             input.disabled = false
             document.querySelector('#login').hidden = false

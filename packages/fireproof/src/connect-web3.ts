@@ -161,9 +161,9 @@ export class ConnectWeb3 extends Connection {
     await this._onAuthorized()
   }
 
-  async shareId() {
+  async shareToken() {
     await this.ready
-    console.log('shareId', this.inner)
+    console.log('shareToken', this.inner)
     await this.accountConnection!.ready
     const client = this.accountConnection!.client
     // @ts-ignore
@@ -172,14 +172,14 @@ export class ConnectWeb3 extends Connection {
     return issuer.did()
   }
 
-  async shareWith(shareId: `did:key:${string}`) {
+  async shareWith(shareToken: `did:key:${string}`) {
     const client = this.accountConnection!.client!
     // @ts-ignore
     const { issuer } = client._agent
     const delegationParams = {
       issuer,
       lifetimeInSeconds: 60 * 60 * 24 * 365,
-      audience: { did: () => shareId },
+      audience: { did: () => shareToken },
       capabilities: [{ can: 'clock/*', with: this.clockSpaceDIDForDb() }],
       proofs: client.proofs()
     }
