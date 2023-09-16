@@ -161,7 +161,10 @@ export class ConnectWeb3 extends Connection {
     await this._onAuthorized()
   }
 
-  shareId() {
+  async shareId() {
+    await this.ready
+    console.log('shareId', this.inner)
+    await this.accountConnection!.ready
     const client = this.accountConnection!.client
     // @ts-ignore
     const { issuer } = client._agent
@@ -210,10 +213,11 @@ export class ConnectWeb3 extends Connection {
       schemaName = location.origin
     }
     const newParams: ConnectWeb3Params = { name, schema: schemaName! }
-    const newConn = new ConnectWeb3(newParams, db, { did: newWith, connection: this })
+    const newConn = new ConnectWeb3(newParams, undefined, { did: newWith, connection: this })
     const { _crdt: { blocks: { loader: dbLoader } } } = db
     dbLoader?.connectRemote(newConn)
     await newConn.ready
+    console.log('newConn.inner', newConn.inner)
     return { database: db, connection: newConn }
   }
 
@@ -224,6 +228,9 @@ export class ConnectWeb3 extends Connection {
     } else {
       this.accountDb = fireproof('_connect-web3')
       this.accountConnection = new ConnectWeb3(this.params, this.accountDb)
+      if (this.clockSpaceDID) {
+        this.accountConnection.clockSpaceDID = this.clockSpaceDID
+      }
       const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb
       accountDbLoader?.connectRemote(this.accountConnection)
       await this.accountConnection.ready
@@ -403,15 +410,18 @@ export class ConnectWeb3 extends Connection {
   }
 
   async provisionClockSpace() {
-    const { rows } = await this.accountDb!.query('clockName', { key: this.encodeSpaceName() })
     const client = this.client!
     // @ts-ignore
     const thisAgentDID = client._agent.issuer.did()
-
-    if (rows.length) {
-      await this.handleExistingSpace(rows, client, thisAgentDID)
+    if (this.clockSpaceDID) {
+      await this.joinExistingSpace(client, this.clockSpaceDID, thisAgentDID)
     } else {
-      await this.handleCreateNewSpace(client)
+      const { rows } = await this.accountDb!.query('clockName', { key: this.encodeSpaceName() })
+      if (rows.length) {
+        await this.handleExistingSpace(rows, client, thisAgentDID)
+      } else {
+        await this.handleCreateNewSpace(client)
+      }
     }
   }
 
@@ -419,18 +429,20 @@ export class ConnectWeb3 extends Connection {
     console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
     const doc = rows[0].doc as ClockSpaceDoc
     const clockSpaceDID = doc.with
+    await this.joinExistingSpace(client, clockSpaceDID, thisAgentDID)
+  }
+
+  async joinExistingSpace(client: Client, clockSpaceDID: `did:${string}:${string}`, thisAgentDID: `did:key:${string}`) {
     const proofs = client.proofs([{ can: 'clock/*', with: clockSpaceDID }])
 
     this.clockSpaceDID = clockSpaceDID
 
-    console.log('joining clock space', clockSpaceDID, proofs.length, doc.email, doc.clockName, rows.length)
-
     if (!proofs.length) {
-      await this.handleRequestAccess(doc, clockSpaceDID, thisAgentDID)
+      await this.handleRequestAccess(clockSpaceDID, thisAgentDID)
     }
   }
 
-  async handleRequestAccess(doc: ClockSpaceDoc, clockSpaceDID: `did:${string}:${string}`, thisAgentDID: `did:key:${string}`) {
+  async handleRequestAccess(clockSpaceDID: `did:${string}:${string}`, thisAgentDID: `did:key:${string}`) {
     const key = clockSpaceDID + thisAgentDID
     const { rows } = await this.accountDb!.query(this.accessIndexFn, { key })
     console.log('requesting access', clockSpaceDID, rows.length)
