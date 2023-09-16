@@ -25,6 +25,7 @@ export type DocFileMeta = {
   size: number;
   cid: AnyLink;
   car?: AnyLink;
+  url?: string;
   file?: () => Promise<File>;
 }
 
@@ -37,6 +38,7 @@ export type FileCarHeader = {
 }
 type DocBody = {
   _files?: DocFiles
+  _publicFiles?: DocFiles
   [key: string]: DocFragment
 }
 
@@ -137,7 +139,7 @@ export type MapFn = (doc: Doc, map: CallbackFn) => DocFragment | void
 
 export type DbMeta = { car: AnyLink, key: string | null }
 
-export type CommitOpts = { noLoader?: boolean, compact?: boolean }
+export type CommitOpts = { noLoader?: boolean, compact?: boolean, public?: boolean }
 
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>

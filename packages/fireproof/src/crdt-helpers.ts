@@ -6,7 +6,7 @@ import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { LoggingFetcher, Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult } from './types'
+import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult, DocFiles } from './types'
 import { decodeFile, encodeFile } from './files'
 import { DbLoader } from './loaders'
 
@@ -18,7 +18,7 @@ export async function applyBulkUpdateToCrdt(
 ): Promise<BulkResult> {
   let result
   for (const update of updates) {
-    const link = await makeLinkForDoc(tblocks, update)
+    const link = await writeDocContent(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
     const resRoot = result.root.toString()
     const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
@@ -39,7 +39,7 @@ export async function applyBulkUpdateToCrdt(
 }
 
 // this whole thing can get pulled outside of the write queue
-async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<AnyLink> {
+async function writeDocContent(blocks: Transaction, update: DocUpdate): Promise<AnyLink> {
   let value: DocValue
   if (update.del) {
     value = { del: true }
@@ -54,32 +54,39 @@ async function makeLinkForDoc(blocks: Transaction, update: DocUpdate): Promise<A
 
 async function processFiles(blocks: Transaction, doc: Doc) {
   if (doc._files) {
-    const dbBlockstore = blocks.parent as TransactionBlockstore
-    const t = new Transaction(dbBlockstore)
-    dbBlockstore.transactions.add(t)
-    const didPut = []
-    let totalSize = 0
-    for (const filename in doc._files) {
-      if (File === doc._files[filename].constructor) {
-        const file = doc._files[filename] as File
+    await processFileset(blocks, doc._files)
+  }
+  if (doc._publicFiles) {
+    await processFileset(blocks, doc._publicFiles, true)
+  }
+}
 
-        totalSize += file.size
-        const { cid, blocks: fileBlocks } = await encodeFile(file)
-        didPut.push(filename)
-        for (const block of fileBlocks) {
-          t.putSync(block.cid, block.bytes)
-        }
-        doc._files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta
+async function processFileset(blocks: Transaction, files: DocFiles, publicFiles = false) {
+  const dbBlockstore = blocks.parent as TransactionBlockstore
+  const t = new Transaction(dbBlockstore)
+  dbBlockstore.transactions.add(t)
+  const didPut = []
+  let totalSize = 0
+  for (const filename in files) {
+    if (File === files[filename].constructor) {
+      const file = files[filename] as File
+
+      totalSize += file.size
+      const { cid, blocks: fileBlocks } = await encodeFile(file)
+      didPut.push(filename)
+      for (const block of fileBlocks) {
+        t.putSync(block.cid, block.bytes)
       }
+      files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta
     }
-    // todo option to bypass this limit
-    if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for encrypted files in a single update is 1MB')
-    if (didPut.length) {
-      const car = await dbBlockstore.loader?.commit(t, { files: doc._files } as FileResult)
-      if (car) {
-        for (const name of didPut) {
-          doc._files[name] = { car, ...doc._files[name] } as DocFileMeta
-        }
+  }
+  // todo option to bypass this limit
+  if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for files in a single update is 1MB')
+  if (didPut.length) {
+    const car = await dbBlockstore.loader?.commit(t, { files } as FileResult, { public: publicFiles })
+    if (car) {
+      for (const name of didPut) {
+        files[name] = { car, ...files[name] } as DocFileMeta
       }
     }
   }
@@ -93,25 +100,34 @@ export async function getValueFromCrdt(blocks: TransactionBlockstore, head: Cloc
 }
 
 export function readFiles(blocks: TransactionBlockstore | LoggingFetcher, { doc }: DocValue) {
-  if (doc && doc._files) {
-    for (const filename in doc._files) {
-      const fileMeta = doc._files[filename] as DocFileMeta
-      if (fileMeta.cid) {
-        if (!blocks.loader) throw new Error('Missing loader')
-        if (fileMeta.car && blocks.loader) {
-          const ld = blocks.loader as DbLoader
-          fileMeta.file = async () => await decodeFile({
-            get: async (cid: AnyLink) => {
-              const reader = await ld.loadFileCar(fileMeta.car!)
-              const block = await reader.get(cid as CID)
-              if (!block) throw new Error(`Missing block ${cid.toString()}`)
-              return block.bytes
-            }
-          }, fileMeta.cid, fileMeta)
-        }
+  if (!doc) return
+  if (doc._files) {
+    readFileset(blocks, doc._files)
+  }
+  if (doc._publicFiles) {
+    readFileset(blocks, doc._publicFiles, true)
+  }
+}
+
+function readFileset(blocks: TransactionBlockstore | LoggingFetcher, files: DocFiles, isPublic = false) {
+  for (const filename in files) {
+    const fileMeta = files[filename] as DocFileMeta
+    if (fileMeta.cid) {
+      // if (!blocks.loader) throw new Error('Missing loader')
+      if (isPublic) { fileMeta.url = `https://${fileMeta.cid.toString()}.ipfs.w3s.link/` }
+      if (fileMeta.car && blocks.loader) {
+        const ld = blocks.loader as DbLoader
+        fileMeta.file = async () => await decodeFile({
+          get: async (cid: AnyLink) => {
+            const reader = await ld.loadFileCar(fileMeta.car!, isPublic)
+            const block = await reader.get(cid as CID)
+            if (!block) throw new Error(`Missing block ${cid.toString()}`)
+            return block.bytes
+          }
+        }, fileMeta.cid, fileMeta)
       }
-      doc._files[filename] = fileMeta
     }
+    files[filename] = fileMeta
   }
 }
 

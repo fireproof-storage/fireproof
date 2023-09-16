@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=94"></script>
+  <script src="./fireproof.iife.js?cache=94"></script>
   <script type="text/javascript">
     function testApp() {
       const { fireproof, connect } = Fireproof;
@@ -47,15 +47,15 @@
           .innerHTML = '';
         for (const row of result.rows) {
           const doc = row.doc
-          if (doc._files) {
+          if (doc._publicFiles) {
             const li = document
               .querySelector('ul')
               .appendChild(document.createElement('li'))
             li.appendChild(document.createElement('span')).innerText = row.key;
             li.appendChild(document.createElement('br'))
-            for (const file of Object.keys(doc._files)) {
+            for (const file of Object.keys(doc._publicFiles)) {
               (async () => {
-                const meta = doc._files[file]
+                const meta = doc._publicFiles[file]
                 if (meta.file && /image/.test(meta.type)) {
                   const src = URL.createObjectURL(await meta.file());
                   const img = document.createElement("img");
@@ -64,6 +64,8 @@
                   img.onload = () => {
                     URL.revokeObjectURL(img.src);
                   };
+
+                  console.log('url', meta.url)
                   li.appendChild(img);
                 }
               })();
@@ -93,10 +95,10 @@
       function handleFiles() {
         const fileList = this.files;
         const doc = {
-          _files: {}
+          _publicFiles: {}
         }
         for (const file of fileList) {
-          doc._files[file.name] = file
+          doc._publicFiles[file.name] = file
         }
         const ok = db.put(doc);
       }

@@ -75,9 +75,9 @@ export class DbLoader extends Loader {
     return connection
   }
 
-  async loadFileCar(cid: AnyLink): Promise<CarReader> {
+  async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
     if (!this.fileStore) throw new Error('missing fileStore')
-    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore)
+    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic)
   }
 
   protected async _applyCarHeader(carHeader: DbCarHeader, snap = false) {
