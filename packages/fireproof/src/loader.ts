@@ -80,8 +80,6 @@ export abstract class Loader {
       }
     })
     this.remoteMetaStore = remote
-    this.remoteMetaLoading = this.remoteMetaStore.load('main').then(() => { })
-
     return connection
   }
 
@@ -94,7 +92,17 @@ export abstract class Loader {
     connection.loader = this
     this._connectRemoteMeta(connection)
     this._connectRemoteStorage(connection)
-    void connection.ready.then(() => void this.remoteWAL?._process())
+
+    this.remoteMetaLoading = this.remoteMetaStore!.load('main').then(() => {})
+
+    connection.loaded = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
+      void this.remoteWAL?._process()
+    })
+
+    // this.remoteMetaLoading = Promise.all([this.ready, this.remoteMetaStore!.load('main')]).then(() => {
+    //   void this.remoteWAL?._process()
+    // })
+
     return connection
   }
 

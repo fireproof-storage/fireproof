@@ -3,6 +3,7 @@ import { UploadMetaFnParams, UploadDataFnParams, AnyLink, DownloadMetaFnParams, 
 
 export abstract class Connection {
   ready: Promise<any>
+  loaded: Promise<any>
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: {public?: boolean}): Promise<void | AnyLink>
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
@@ -10,6 +11,7 @@ export abstract class Connection {
 
   constructor() {
     this.ready = Promise.resolve()
+    this.loaded = Promise.resolve()
   }
 
   loader?: Loader | null

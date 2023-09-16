@@ -37,7 +37,7 @@
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "build:rollup": "rollup -c scripts/rollup.js",
     "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
-    "build": "npm run build:tsc && npm run build:test",
+    "build": "npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.js test/www/",
     "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "test:node": "node ./scripts/test.js",
     "test:browser": "node ./scripts/browser-test.js",
@@ -50,7 +50,7 @@
     "lint:all": "npm run lint:fix && npm run lint:exports",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
-    "build:test": "node ./scripts/build.js && cp dist/browser/fireproof.iife.js test/www/",
+    "build:test": "node ./scripts/build.js",
     "build:all": " npm run build:version && npm run build && npm run test:browser"
   },
   "keywords": [
