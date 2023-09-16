@@ -502,14 +502,16 @@ export class ConnectWeb3 extends Connection {
     }
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
+  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean}) {
     const client = await this.connectedClientForDb()
     if (!client) { throw new Error('client not initialized') }
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
-    // await client.uploadCAR(new Blob([bytes]))
+    if (params.type === 'file' && opts.public) {
+      await client.uploadCAR(new Blob([bytes]))
+    }
     return await client.uploadFile(new Blob([bytes]))
   }
 
