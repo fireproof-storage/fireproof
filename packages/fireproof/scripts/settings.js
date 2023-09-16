@@ -68,14 +68,22 @@ const require = createRequire(import.meta.url);
 
     const testEsmConfig = {
       ...esmConfig,
+      platform: 'node',
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...esmConfig.plugins,
         alias(
           {
-            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js')
+            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
+            './store-browser': join(__dirname, '../src/store-fs.ts'),
+            './crypto-web': join(__dirname, '../src/crypto-node.ts')
           }
         ),
-        commonjs({ filter: /^peculiar|ipfs-utils/ })]
+        commonjs({ filter: /^peculiar|ipfs-utils/ })
+        // polyfillNode({
+        //   polyfills: { crypto: false, fs: true, process: 'empty' }
+        // })
+      ]
+
     }
 
     builds.push(testEsmConfig)
@@ -84,7 +92,8 @@ const require = createRequire(import.meta.url);
       const esmPublishConfig = {
         ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
-        entryPoints: [entryPoint]
+        entryPoints: [entryPoint],
+        minify: true
       }
       builds.push(esmPublishConfig)
 
@@ -94,6 +103,7 @@ const require = createRequire(import.meta.url);
         format: 'cjs',
         platform: 'node',
         entryPoints: [entryPoint],
+        minify: true,
         banner: bannerLog`
 console.log('cjs/node build');
 `
@@ -110,14 +120,20 @@ console.log('cjs/node build');
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
+        minify: true,
         banner: bannerLog`
 console.log('browser/es2015 build');
 `,
         plugins: [
-          polyfillNode({
-            // todo remove crypto and test
-            polyfills: { crypto: true, fs: true, process: 'empty' }
-          }),
+          // alias(
+          //   {
+          //     './store-fs': join(__dirname, '../src/store-browser.ts')
+          //   }
+          // ),
+          // polyfillNode({
+          //   // todo remove crypto and test
+          //   polyfills: { crypto: false, fs: false, process: 'empty' }
+          // }),
           // alias({
           //   crypto: 'crypto-browserify'
           // }),
@@ -133,6 +149,7 @@ console.log('browser/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.esm.js`,
         format: 'esm',
+        minify: true,
         banner: bannerLog`
 console.log('esm/es2015 build');
 `
@@ -145,6 +162,7 @@ console.log('esm/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.cjs`,
         format: 'cjs',
+        minify: true,
         banner: bannerLog`
 console.log('cjs/es2015 build');
 `

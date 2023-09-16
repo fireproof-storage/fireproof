@@ -5,32 +5,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="../../dist/browser/fireproof.iife.js?123"></script>
+  <script src="./fireproof.iife.js?123"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
       const { connect, fireproof, index } = Fireproof;
+
       let dbName
       let db
-      let connection
+      let cx
 
       let dbUnsubscribe = false
-      let cancelRefresh = false
+      function setupDb(name, newDb, newConn) {
+        const input = document.querySelector('#todo');
+        input.disabled = true
 
-      function setupDb(name) {
-        if (cancelRefresh) {
-          cancelRefresh()
-        }
         if (dbUnsubscribe) {
           dbUnsubscribe()
         }
-        dbName = name;
-        db = fireproof(name);
-        window.db = db;
+        if (newDb) {
+          console.log('new db', newDb, newConn)
+         name = newDb.name
+          dbName = newDb.name
+          db = newDb
+          cx = newConn
+          const input = document.querySelector('#list');
+        input.value = dbName;
+        } else {
+          dbName = name;
+          db = fireproof(name);
+          cx = db.connect("todo-test")
 
-        connection = db.connect("jchris+todos-27@fireproof.storage", "todo-test")
-        window.connection = connection
-        cancelRefresh = autoRefresh()
+        }
+
+        window.db = db;
+        window.cx = cx
+
+        cx.ready.then(async () => {
+          if (cx.authorized) {
+            document.querySelector('#login').hidden = true
+            document.querySelector('#authorized').hidden = false
+            console.log('authorized', await cx.shareId())
+            document.querySelector('#agent').innerText = await cx.shareId()
+          } else {
+            input.disabled = false
+            document.querySelector('#login').hidden = false
+            document.querySelector('#authorized').hidden = true
+          }
+        })
+
+        cx.authReady.then(() => {
+          input.disabled = false
+        }).catch((e) => {
+          console.log('not ready', e)
+        })
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
@@ -44,44 +72,36 @@
         doing = doRedraw().finally(() => doing = null)
         return doing
       }
+      window.redraw = redraw;
+
 
       const doRedraw = async () => {
-        try {
-          const result = await index(db, 'created').query({ includeDocs: false });
+        const result = await index(db, 'created').query({ includeDocs: false });
+        document
+          .querySelector('ul')
+          .innerHTML = '';
+
+        for (const row of result.rows) {
+          const doc = await db.get(row.id);
+          // doc = row.doc
+          const checkbox = document.createElement('input');
+          checkbox.setAttribute('type', 'checkbox');
+          if (doc.completed) {
+            checkbox.setAttribute('checked', true);
+          }
+          checkbox.onchange = async (e) => {
+            e.target.indeterminate = true;
+            doc.completed = !doc.completed;
+            await db.put(doc);
+          }
+          const textSpan = document.createElement('span');
+          textSpan.innerText = doc.actor + ': ' + doc.task;
+          const li = document.createElement('li');
+          li.appendChild(checkbox);
+          li.appendChild(textSpan);
           document
             .querySelector('ul')
-            .innerHTML = '';
-
-          document
-            .querySelector('#filecount')
-            .innerText = db._crdt.blocks.loader.carLog.length
-          for (const row of result.rows) {
-            const doc = await db.get(row.id);
-            // doc = row.doc
-            const checkbox = document.createElement('input');
-            checkbox.setAttribute('type', 'checkbox');
-            if (doc.completed) {
-              checkbox.setAttribute('checked', true);
-            }
-            checkbox.onchange = async (e) => {
-              e.target.indeterminate = true;
-              doc.completed = !doc.completed;
-              console.log('putting', doc.task, doc.completed)
-              await db.put(doc);
-              console.log('put', doc.task, doc.completed)
-            }
-            const textSpan = document.createElement('span');
-            textSpan.innerText = doc.actor + ': ' + doc.task;
-            const li = document.createElement('li');
-            li.appendChild(checkbox);
-            li.appendChild(textSpan);
-            document
-              .querySelector('ul')
-              .appendChild(li);
-          }
-        } finally {
-          // const chgs = await db.changes([], { dirty: true });
-          // console.log('changes', chgs.rows.map(r => r.value.task), chgs)
+            .appendChild(li);
         }
       }
 
@@ -94,6 +114,19 @@
         redraw()
       }
 
+      async function openDashboard(e) {
+        db.openDashboard();
+      }
+      window.openDashboard = openDashboard;
+
+      async function verifyEmail(e) {
+        const input = document.querySelector('#email');
+        input.disabled = true
+        await cx.authorize(input.value)
+      }
+      window.verifyEmail = verifyEmail;
+
+
       async function changeList(e) {
         e.preventDefault();
         const input = document.querySelector('#list');
@@ -105,7 +138,7 @@
       }
       window.changeList = changeList;
 
-      async function onButtonClick(e) {
+      async function createTodoClick(e) {
         e.preventDefault();
 
         const input = document.querySelector('#todo');
@@ -113,44 +146,28 @@
         input.value = '';
 
       }
-      window.onButtonClick = onButtonClick;
+      window.createTodoClick = createTodoClick;
 
-      async function connectionRefresh(e) {
+      window.doShareWith = async (e) => {
         e.preventDefault();
-        await connection.refresh()
-      }
-      window.connectionRefresh = connectionRefresh;
-
-      let autoCancelled = false
-      function autoRefresh() {
-        if (autoCancelled) {
-          autoCancelled = false
-          return () => autoCancelled = true
-        }
-        connection.refresh().then(() => {
-          // todo enable websockets on remote clock
-          setTimeout(autoRefresh, 3000);
-        }).catch((err) => {
-          console.log('refresh err', err)
-          setTimeout(autoRefresh, 5000);
-        })
-        return () => autoCancelled = true
+        e.target.disabled = true
+        const input = document.querySelector('#share');
+        const did = await cx.shareWith(input.value)
+        document.querySelector('#share-code').innerText = did
       }
 
-
-      async function doCompact(e) {
+      window.doJoin = async (e) => {
         e.preventDefault();
-        await db.compact()
-        document
-          .querySelector('#filecount')
-          .innerText = db._crdt.blocks.loader.carLog.length
+        e.target.disabled = true
+        const input = document.querySelector('#join');
+        const { database: newDb, connection: newConn } = await cx.joinShared(input.value)
+        setupDb(null, newDb, newConn);
       }
-      window.doCompact = doCompact;
 
       window.onload = initialize;
       window.db = db;
-      window.redraw = redraw;
     }
+
     todoApp();
   </script>
 </head>
@@ -160,18 +177,43 @@
   List:
   <input type="text" name="list" id="list" />
   <button onclick="changeList(event)">Change List</button>
-  <button onclick="doCompact(event)">Compact <span id='filecount'>0</span></button>
+
+
+
+  <div id="login">
+    <p>Work locally or verify your email address to sync.</p>
+    Email: <input title="email" placeholder="name@example.com" name="email" id="email" />
+    <button onclick="verifyEmail(event)">Verify email</button>
+  </div>
+
   <p>
     Fireproof stores data locally and encrypts it before sending it to the cloud.
-    This demo uses an S3 bucket, but you can easily run your own on s3 or another provider.
+    This demo uses web3.storage, but you can easily run Fireproof on S3 or another provider.
     <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
   </p>
 
+  <div id="authorized" hidden>
+    <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
+
+    <p>
+      Share this list to someone's share id: <input title="share" placeholder="did:key:..." name="share" id="share" />
+      <button onclick="doShareWith(event)">Share</button>
+      <code id="share-code"></code>
+    </p>
+    <p>
+      Join a shared list: <input title="join" placeholder="bafy..." name="join" id="join" />
+      <button onclick="doJoin(event)">Join</button>
+    </p>
+    <p>
+      Request access to other lists by sharing your share id:<br> <code id="agent"></code>
+    </p>
+  </div>
+
   <h3>Todos</h3>
-  <input type="text" name="todo" id="todo" />
-  <button onclick="onButtonClick(event)">Create Todo</button>
-  <button onclick="connectionRefresh(event)">Refresh</button>
+  <input title="Create a todo" type="text" name="todo" id="todo" />
+  <button onclick="createTodoClick(event)">Create Todo</button>
   <ul></ul>
+
 </body>
 
 </html>

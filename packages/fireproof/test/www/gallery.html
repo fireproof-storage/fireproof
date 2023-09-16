@@ -5,22 +5,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Uploads</title>
-  <script src="../../dist/browser/fireproof.iife.js?cache=78"></script>
+  <script src="./fireproof.iife.js?cache=94"></script>
   <script type="text/javascript">
     function testApp() {
-      const { connect, fireproof, index } = Fireproof;
+      const { fireproof, connect } = Fireproof;
       let dbName
       let db
       let cx
 
 
       let dbUnsubscribe = false
-      let cancelRefresh = false
 
       function setupDb(name) {
-        if (cancelRefresh) {
-          cancelRefresh()
-        }
         if (dbUnsubscribe) {
           dbUnsubscribe()
         }
@@ -28,18 +24,12 @@
         db = fireproof(name);
         window.db = db;
 
-        cx = db.connect("jchris+files-27@fireproof.storage", "todo-test")
+        cx = db.connect("jchris+files-30@fireproof.storage", "todo-test")
         window.cx = cx
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
       }
-
-
-      // const s3Info = {
-      //   upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-      //   download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-      // }
 
       let doing
       const redraw = async () => {
@@ -52,34 +42,30 @@
 
       const draw = async () => {
         const result = await db.query('_id', { descending: true, limit: 10 })
-        // console.log('result', result)
         document
           .querySelector('ul')
           .innerHTML = '';
         for (const row of result.rows) {
           const doc = row.doc
-          if (doc._files) {
+          if (doc._publicFiles) {
             const li = document
               .querySelector('ul')
               .appendChild(document.createElement('li'))
             li.appendChild(document.createElement('span')).innerText = row.key;
             li.appendChild(document.createElement('br'))
-            // let didDoc = 0
-            for (const file of Object.keys(doc._files)) {
+            for (const file of Object.keys(doc._publicFiles)) {
               (async () => {
-                // if (didDoc) { return }
-                const meta = doc._files[file]
+                const meta = doc._publicFiles[file]
                 if (meta.file && /image/.test(meta.type)) {
-                  // console.log('file', `https://${meta.cid}.ipfs.w3s.link/`)
                   const src = URL.createObjectURL(await meta.file());
-                  // didDoc++
-                  // console.log('src', src.toString())
                   const img = document.createElement("img");
                   img.src = src
                   img.height = 100;
                   img.onload = () => {
                     URL.revokeObjectURL(img.src);
                   };
+
+                  console.log('url', meta.url)
                   li.appendChild(img);
                 }
               })();
@@ -88,25 +74,6 @@
 
         }
       }
-
-
-
-      let autoCancelled = false
-      function autoRefresh() {
-        if (autoCancelled) {
-          autoCancelled = false
-          return () => autoCancelled = true
-        }
-        cx.refresh().then(() => {
-          // todo enable websockets on remote clock
-          setTimeout(autoRefresh, 3000);
-        }).catch((err) => {
-          console.log('refresh err', err)
-          setTimeout(autoRefresh, 5000);
-        })
-        return () => autoCancelled = true
-      }
-
 
       async function changeList(e) {
         e.preventDefault();
@@ -120,7 +87,6 @@
       window.changeList = changeList;
 
       async function openDashboard(e) {
-        e.preventDefault();
         db.openDashboard();
       }
       window.openDashboard = openDashboard;
@@ -129,10 +95,10 @@
       function handleFiles() {
         const fileList = this.files;
         const doc = {
-          _files: {}
+          _publicFiles: {}
         }
         for (const file of fileList) {
-          doc._files[file.name] = file
+          doc._publicFiles[file.name] = file
         }
         const ok = db.put(doc);
       }

@@ -76,7 +76,6 @@ describe.skip('basic Connection with s3 remote', function () {
     } = db
     const gotMain = await loader.remoteMetaStore.load('main')
     assert(gotMain)
-    // console.log(gotMain)
     equals(gotMain[0].key, loader.key)
   }).timeout(10000)
   it('should get', async function () {
@@ -288,7 +287,7 @@ describe('forked Connection with raw remote', function () {
     await resetDirectory(MetaStore.dataDir, dbName)
     const db4 = new Database(dbName)
     const remote4 = connect.raw(db4, mockConnect)
-    await remote4.ready
+    await remote4.loaded
     const changes = await db4.changes()
     equals(changes.rows.length, 3)
   }).timeout(10000)
@@ -406,8 +405,9 @@ describe('two Connection with raw remote', function () {
     equalsJSON(db3._crdt.clock.head, changes25.clock)
 
     const remote3 = connect.raw(db3, mockConnect)
-    await remote3.ready
-    // await db3._crdt.blocks.loader.ready
+    await remote3.loaded
+
+    // await db3._crdt.blocks.loader.remoteMetaLoading
     // await db3._crdt.ready
 
     // equalsJSON(db3._crdt.clock.head, ok3.clock)
@@ -478,7 +478,7 @@ describe('two Connection with raw remote', function () {
     await resetDirectory(MetaStore.dataDir, dbName)
     const db4 = new Database(dbName)
     const remote4 = connect.raw(db4, mockConnect)
-    await remote4.ready
+    await remote4.loaded
     const changes = await db4.changes()
     equals(changes.rows.length, 4)
   }).timeout(10000)

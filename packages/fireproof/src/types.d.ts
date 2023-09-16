@@ -9,6 +9,7 @@ export type FireproofOptions = {
   persistIndexes?: boolean
 }
 
+// ts-unused-exports:disable-next-line
 export type ClockLink = EventLink<EventData>
 
 export type ClockHead = ClockLink[]
@@ -24,6 +25,7 @@ export type DocFileMeta = {
   size: number;
   cid: AnyLink;
   car?: AnyLink;
+  url?: string;
   file?: () => Promise<File>;
 }
 
@@ -36,6 +38,7 @@ export type FileCarHeader = {
 }
 type DocBody = {
   _files?: DocFiles
+  _publicFiles?: DocFiles
   [key: string]: DocFragment
 }
 
@@ -119,8 +122,9 @@ export type QueryOpts = {
   limit?: number
   includeDocs?: boolean
   range?: [IndexKey, IndexKey]
-  key?: string // these two can be richer than keys...
-  prefix?: string | [string]
+  key?: DocFragment,
+  keys?: DocFragment[]
+  prefix?: DocFragment | [DocFragment]
 }
 
 export type AnyLink = Link<unknown, number, number, 1 | 0>
@@ -135,7 +139,7 @@ export type MapFn = (doc: Doc, map: CallbackFn) => DocFragment | void
 
 export type DbMeta = { car: AnyLink, key: string | null }
 
-export type CommitOpts = { noLoader?: boolean, compact?: boolean }
+export type CommitOpts = { noLoader?: boolean, compact?: boolean, public?: boolean }
 
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>

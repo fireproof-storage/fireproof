@@ -9,8 +9,10 @@ import type { CRDT } from './crdt'
 import type { CRDTClock } from './crdt-clock'
 import { Loader } from './loader'
 import { index } from './index'
-import { DataStore } from './store'
+// import type { DataStore as AbstractDataStore } from './store'
 import { RemoteDataStore } from './store-remote'
+
+import { DataStore } from './store-browser'
 
 export class IdxLoader extends Loader {
   // declare ready: Promise<IdxCarHeader>
@@ -44,7 +46,7 @@ export class DbLoader extends Loader {
 
   clock: CRDTClock
 
-  remoteFileStore: DataStore | undefined
+  remoteFileStore: RemoteDataStore | undefined
   fileStore: DataStore | undefined
 
   constructor(name: string, clock: CRDTClock, opts?: FireproofOptions) {
@@ -55,15 +57,16 @@ export class DbLoader extends Loader {
   protected async initializeStores(): Promise<void> {
     await super.initializeStores()
 
-    const isBrowser = typeof window !== 'undefined'
+    // const isBrowser = typeof window !== 'undefined'
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
-    if (module) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      this.fileStore = new module.DataStore(this) as DataStore
-    } else {
-      throw new Error('Failed to initialize stores.')
-    }
+    // const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
+    // if (module) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    // this.fileStore = new module.DataStore(this) as DataStore
+    this.fileStore = new DataStore(this)
+    // } else {
+    //   throw new Error('Failed to initialize stores.')
+    // }
   }
 
   _connectRemoteStorage(connection: Connection) {
@@ -72,9 +75,9 @@ export class DbLoader extends Loader {
     return connection
   }
 
-  async loadFileCar(cid: AnyLink): Promise<CarReader> {
+  async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
     if (!this.fileStore) throw new Error('missing fileStore')
-    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore)
+    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic)
   }
 
   protected async _applyCarHeader(carHeader: DbCarHeader, snap = false) {

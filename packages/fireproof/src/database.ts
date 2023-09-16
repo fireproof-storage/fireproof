@@ -80,22 +80,21 @@ export class Database {
     await this._crdt.compact()
   }
 
-  connect(email: `${string}@${string}`, schemaName?: string) {
-    const conn = connect.web3(this, email, schemaName)
-    // await this.getDashboardURL()
+  connect(schemaName?: string) {
+    const conn = connect.web3(this, schemaName)
     return conn
   }
 
+  // move this stuff to connect
   async getDashboardURL(compact = true) {
     const baseUrl = 'https://dashboard.fireproof.storage/'
     if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
     if (compact) {
       await this.compact()
-      await this._crdt.blocks.loader?.remoteMetaLoading
     }
     const currents = await this._crdt.blocks.loader?.metaStore?.load()
     if (!currents) throw new Error('Can\'t sync empty database: save data first')
-    if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make and update first')
+    if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make an update first')
     const current = currents[0]
     const params = {
       car: current.car.toString()
@@ -120,7 +119,7 @@ export class Database {
       const docs: Doc[] = updates.map(({ key, value }) => ({ _id: key, ...value }))
       for (const listener of this._listeners) {
         await (async () => await listener(docs))().catch((e: Error) => {
-          console.error('listener error', e)
+          console.error('subscriber error', e)
         })
       }
     }
@@ -133,7 +132,7 @@ export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
     const db = new Database(name, opts)
       // public API
-      ;['get', 'put', 'del', 'changes', 'subscribe', 'query'].forEach((fn) => {
+      ;['get', 'put', 'del', 'changes', 'subscribe', 'query', 'compact', 'connect', 'getDashboardURL', 'openDashboard'].forEach((fn) => {
       // @ts-ignore
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       db[fn] = db[fn].bind(db)

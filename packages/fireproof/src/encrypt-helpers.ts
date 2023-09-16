@@ -1,8 +1,7 @@
 import type { CarReader } from '@ipld/car'
 
 import { sha256 } from 'multiformats/hashes/sha2'
-import { encrypt, decrypt } from './crypto'
-import { Buffer } from 'buffer'
+import { encrypt, decrypt } from './crypto-ipld'
 // @ts-ignore
 import { bf } from 'prolly-trees/utils'
 // @ts-ignore
@@ -14,9 +13,18 @@ import { MemoryBlockstore } from '@alanshaw/pail/block'
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const chunker = bf(30)
 
+function hexStringToUint8Array(hexString: string) {
+  const length = hexString.length
+  const uint8Array = new Uint8Array(length / 2)
+  for (let i = 0; i < length; i += 2) {
+    uint8Array[i / 2] = parseInt(hexString.substring(i, i + 2), 16)
+  }
+  return uint8Array
+}
+
 export async function encryptedEncodeCarFile(key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
-  const encryptionKeyBuffer = Buffer.from(key, 'hex')
-  const encryptionKey = encryptionKeyBuffer.buffer.slice(encryptionKeyBuffer.byteOffset, encryptionKeyBuffer.byteOffset + encryptionKeyBuffer.byteLength)
+  const encryptionKeyUint8 = hexStringToUint8Array(key)
+  const encryptionKey = encryptionKeyUint8.buffer.slice(0, encryptionKeyUint8.byteLength)
   const encryptedBlocks = new MemoryBlockstore()
   const cidsToEncrypt = [] as AnyLink[]
   for (const { cid } of t.entries()) {
@@ -49,11 +57,11 @@ export async function decodeEncryptedCar(key: string, reader: CarReader) {
 }
 async function decodeCarBlocks(
   root: AnyLink,
-  get: (cid: any) => Promise<AnyBlock|undefined>,
+  get: (cid: any) => Promise<AnyBlock | undefined>,
   keyMaterial: string
 ): Promise<{ blocks: BlockFetcher; root: AnyLink }> {
-  const decryptionKeyBuffer = Buffer.from(keyMaterial, 'hex')
-  const decryptionKey = decryptionKeyBuffer.buffer.slice(decryptionKeyBuffer.byteOffset, decryptionKeyBuffer.byteOffset + decryptionKeyBuffer.byteLength)
+  const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial)
+  const decryptionKey = decryptionKeyUint8.buffer.slice(0, decryptionKeyUint8.byteLength)
 
   const decryptedBlocks = new MemoryBlockstore()
   let last: AnyBlock | null = null

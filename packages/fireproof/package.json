@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.13.0",
+  "version": "0.13.0-dev.2",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -17,18 +17,6 @@
       "types": "./dist/types/fireproof.d.ts",
       "script": "./dist/browser/fireproof.iife.js",
       "default": "./dist/node/fireproof.esm.js"
-    },
-    "./database": {
-      "import": "./dist/node/database.esm.js",
-      "require": "./dist/node/database.cjs",
-      "types": "./dist/types/database.d.ts",
-      "script": "./dist/browser/database.iife.js"
-    },
-    "./index": {
-      "import": "./dist/node/index.esm.js",
-      "require": "./dist/node/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js"
     }
   },
   "browser": "./dist/fireproof.browser.iife.js",
@@ -40,29 +28,29 @@
   ],
   "type": "module",
   "scripts": {
-    "analyze": "node ./scripts/analyze.js",
-    "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
-    "lint:all": "npm run lint:fix && npm run lint:exports",
-    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
+    
     "prepublishOnly": "cp ../../README.md . && npm run build:all",
     "postpublish": "rm README.md",
+    "clean": "rm -rf dist/*",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:esbuild": "node ./scripts/build.js",
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
-    "build:test": "node ./scripts/build.js",
     "build:rollup": "rollup -c scripts/rollup.js",
-    "build": "npm run build:tsc && npm run build:test",
     "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
-    "clean": "rm -rf dist/*",
-    "start": "node ./scripts/serve.js",
+    "build": "npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.js test/www/",
     "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "test:node": "node ./scripts/test.js",
     "test:browser": "node ./scripts/browser-test.js",
-    "tsc:watch": "tsc --watch",
-    "lint": "eslint 'src/**/*.{js,ts}'",
+    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
-    "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build && npm run test:node\"",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "analyze": "node ./scripts/analyze.js",
+    "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
+    "tsc:watch": "tsc --watch",
+    "lint:all": "npm run lint:fix && npm run lint:exports",
+    "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
+    "build:test": "node ./scripts/build.js",
     "build:all": " npm run build:version && npm run build && npm run test:browser"
   },
   "keywords": [

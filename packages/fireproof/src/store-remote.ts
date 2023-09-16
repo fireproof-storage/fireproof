@@ -1,6 +1,4 @@
 /* eslint-disable import/first */
-// console.log('import store-s3')
-
 import { AnyBlock, AnyLink, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
 import { Connection } from './connection'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
@@ -32,14 +30,14 @@ export class RemoteDataStore extends DataStoreBase {
     return { cid: carCid, bytes }
   }
 
-  async save(car: AnyBlock) {
+  async save(car: AnyBlock, opts?: { public?: boolean }) {
     const uploadParams: UploadDataFnParams = {
       type: this.type,
       name: this.prefix(),
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
-    return await this.connection.dataUpload(car.bytes, uploadParams)
+    return await this.connection.dataUpload(car.bytes, uploadParams, opts)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -88,7 +86,6 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
-    // console.log('save DbMeta', meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),

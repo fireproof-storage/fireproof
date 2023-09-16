@@ -1,28 +1,7 @@
 // from https://github.com/mikeal/encrypted-block
-import { Crypto } from '@peculiar/webcrypto'
 import { CID } from 'multiformats'
-import { Buffer } from 'buffer'
 import type { AnyLink } from './types'
-
-// const crypto = new Crypto()
-
-export function getCrypto() {
-  try {
-    return new Crypto()
-  } catch (e) {
-    return null
-  }
-}
-
-const crypto = getCrypto()
-
-export function randomBytes(size: number) {
-  const bytes = Buffer.allocUnsafe(size)
-  if (size > 0) {
-    crypto!.getRandomValues(bytes)
-  }
-  return bytes
-}
+import { crypto, randomBytes } from './crypto-web'
 
 const enc32 = (value: number) => {
   value = +value
@@ -42,7 +21,7 @@ const readUInt32LE = (buffer: Uint8Array) => {
     (buffer[offset + 3] * 0x1000000)
 }
 
-const concat = (buffers: Array<ArrayBuffer|Uint8Array>) => {
+const concat = (buffers: Array<ArrayBuffer | Uint8Array>) => {
   const uint8Arrays = buffers.map(b => b instanceof ArrayBuffer ? new Uint8Array(b) : b)
   const totalLength = uint8Arrays.reduce((sum, arr) => sum + arr.length, 0)
   const result = new Uint8Array(totalLength)
@@ -56,7 +35,7 @@ const concat = (buffers: Array<ArrayBuffer|Uint8Array>) => {
   return result
 }
 
-const encode = ({ iv, bytes }: {iv: Uint8Array, bytes: Uint8Array}) => concat([iv, bytes])
+const encode = ({ iv, bytes }: { iv: Uint8Array, bytes: Uint8Array }) => concat([iv, bytes])
 const decode = (bytes: Uint8Array) => {
   const iv = bytes.subarray(0, 12)
   bytes = bytes.slice(12)
@@ -76,8 +55,9 @@ async function subtleKey(key: ArrayBuffer) {
 }
 
 const decrypt = async ({ key, value }:
-  {key: ArrayBuffer, value: { bytes: Uint8Array, iv: Uint8Array}
- }): Promise<{ cid: AnyLink, bytes: Uint8Array }> => {
+  {
+    key: ArrayBuffer, value: { bytes: Uint8Array, iv: Uint8Array }
+  }): Promise<{ cid: AnyLink, bytes: Uint8Array }> => {
   let { bytes, iv } = value
   const cryKey = await subtleKey(key)
   const deBytes = await crypto!.subtle.decrypt(
