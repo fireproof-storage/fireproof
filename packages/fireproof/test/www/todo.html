@@ -42,6 +42,8 @@
         window.cx = cx
 
         cx.ready.then(async () => {
+          input.disabled = false
+
           if (cx.authorized) {
             document.querySelector('#login').hidden = true
             document.querySelector('#authorized').hidden = false
@@ -53,13 +55,7 @@
             document.querySelector('#authorized').hidden = true
           }
         })
-
-        cx.authReady.then(() => {
-          input.disabled = false
-        }).catch((e) => {
-          console.log('not ready', e)
-        })
-
+        
         dbUnsubscribe = db.subscribe(redraw);
         return db;
       }
