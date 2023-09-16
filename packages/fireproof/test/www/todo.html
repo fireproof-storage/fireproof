@@ -24,7 +24,8 @@
           dbUnsubscribe()
         }
         if (newDb) {
-          name = newDb.name
+          console.log('new db', newDb, newConn)
+         name = newDb.name
           dbName = newDb.name
           db = newDb
           cx = newConn
@@ -40,12 +41,12 @@
         window.db = db;
         window.cx = cx
 
-        cx.ready.then(() => {
+        cx.ready.then(async () => {
           if (cx.authorized) {
             document.querySelector('#login').hidden = true
             document.querySelector('#authorized').hidden = false
-            console.log('authorized', cx.shareId())
-            document.querySelector('#agent').innerText = cx.shareId()
+            console.log('authorized', await cx.shareId())
+            document.querySelector('#agent').innerText = await cx.shareId()
           } else {
             input.disabled = false
             document.querySelector('#login').hidden = false
