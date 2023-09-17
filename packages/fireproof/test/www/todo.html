@@ -24,7 +24,7 @@
           dbUnsubscribe()
         }
         if (newDb) {
-          console.log('new db', newDb, newConn)
+          // console.log('new db', newDb, newConn)
          name = newDb.name
           dbName = newDb.name
           db = newDb
@@ -47,7 +47,7 @@
           if (cx.authorized) {
             document.querySelector('#login').hidden = true
             document.querySelector('#authorized').hidden = false
-            console.log('authorized', await cx.shareToken())
+            // console.log('authorized', await cx.shareToken())
             document.querySelector('#agent').innerText = await cx.shareToken()
           } else {
             input.disabled = false
@@ -118,7 +118,11 @@
       async function verifyEmail(e) {
         const input = document.querySelector('#email');
         input.disabled = true
+        const val = input.value
+        const area = document.querySelector('#login')
+        area.innerHTML = 'Sending verification email to ' + val + '...'
         await cx.authorize(input.value)
+        location.reload()
       }
       window.verifyEmail = verifyEmail;
 
