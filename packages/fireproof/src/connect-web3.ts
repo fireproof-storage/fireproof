@@ -156,14 +156,14 @@ export class ConnectWeb3 extends Connection {
       }
     }
     await this.accountConnection!._onAuthorized()
-    console.log('inner setup', this.accountConnection!.clockSpaceDID)
+    // console.log('inner setup', this.accountConnection!.clockSpaceDID)
     this.clockSpaceDID = this.accountConnection!.clockSpaceDID
     await this._onAuthorized()
   }
 
   async shareToken() {
     await this.ready
-    console.log('shareToken', this.inner)
+    // console.log('shareToken', this.inner)
     await this.accountConnection!.ready
     const client = this.accountConnection!.client
     // @ts-ignore
@@ -199,13 +199,13 @@ export class ConnectWeb3 extends Connection {
     // todo
     const data = await this.dataDownload({ car: cid, type: 'data', name: this.loader!.name })
     const loaded = await Delegation.extract(data)
-    console.log('loaded', loaded)
+    // console.log('loaded', loaded)
     if (!loaded.ok) throw new Error('missing delegation')
-    console.log('adding proof', loaded.ok)
+    // console.log('adding proof', loaded.ok)
     const client = await this.connectedClientForDb()
     await client.addProof(loaded.ok)
     const newWith = loaded.ok.capabilities[0].with as `did:${string}:${string}`
-    console.log('newWith', newWith)
+    // console.log('newWith', newWith)
     // make new empty database
     name = name || 'shared:' + newWith
     const db = fireproof(name)
@@ -217,7 +217,7 @@ export class ConnectWeb3 extends Connection {
     const { _crdt: { blocks: { loader: dbLoader } } } = db
     dbLoader?.connectRemote(newConn)
     await newConn.ready
-    console.log('newConn.inner', newConn.inner)
+    // console.log('newConn.inner', newConn.inner)
     return { database: db, connection: newConn }
   }
 
@@ -241,7 +241,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async _onAuthorized() {
-    console.log('_onAuthorized', { inner: this.inner, authorized: this.authorized })
+    // console.log('_onAuthorized', { inner: this.inner, authorized: this.authorized })
     this.authDone?.()
     // this.accountConnection?.authDone?.()
 
@@ -313,7 +313,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async startBackgroundSync() {
-    console.log('startBackgroundSync', this.inner ? 'inner' : 'outer')
+    // console.log('startBackgroundSync', this.inner ? 'inner' : 'outer')
     if (this.inner) return
     await sleep(5000) // todo enable websockets on remote clock
     await this.refresh()
@@ -426,7 +426,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async handleExistingSpace(rows: IndexRow[], client: Client, thisAgentDID: `did:key:${string}`) {
-    console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
+    // console.log('existing clock spaces for schema/name', this.encodeSpaceName(), rows)
     const doc = rows[0].doc as ClockSpaceDoc
     const clockSpaceDID = doc.with
     await this.joinExistingSpace(client, clockSpaceDID, thisAgentDID)
@@ -445,7 +445,7 @@ export class ConnectWeb3 extends Connection {
   async handleRequestAccess(clockSpaceDID: `did:${string}:${string}`, thisAgentDID: `did:key:${string}`) {
     const key = clockSpaceDID + thisAgentDID
     const { rows } = await this.accountDb!.query(this.accessIndexFn, { key })
-    console.log('requesting access', clockSpaceDID, rows.length)
+    // console.log('requesting access', clockSpaceDID, rows.length)
     if (!rows.length) {
       const accessRequestDoc: AccessRequestDoc = {
         type: 'access-request',
@@ -461,7 +461,7 @@ export class ConnectWeb3 extends Connection {
   }
 
   async handleCreateNewSpace(client: Client) {
-    console.log('creating new clock space', this.encodeSpaceName())
+    // console.log('creating new clock space', this.encodeSpaceName())
     const clockSpace = await client.createSpace(this.encodeSpaceName())
     this.clockSpaceDID = clockSpace.did()
     const doc: ClockSpaceDoc = {
