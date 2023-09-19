@@ -126,7 +126,7 @@ export function useFireproof(
 
     useEffect(() => {
       refreshRows();
-    }, [mapFn.toString()]);
+    }, [mapFn.toString(), JSON.stringify(query)]);
 
     return result;
   }
