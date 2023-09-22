@@ -194,7 +194,7 @@ async function gatherUpdates(
     } else {
       keys.add(key)
       const docValue = await getValueFromLink(blocks, value)
-      updates.push({ key, value: docValue.doc, del: docValue.del })
+      updates.push({ key, value: docValue.doc, del: docValue.del, clock: link })
       limit--
       if (event.parents) {
         updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
@@ -204,7 +204,7 @@ async function gatherUpdates(
   return updates
 }
 
-export async function * getAllEntries(blocks: TransactionBlockstore, head: ClockHead) {
+export async function* getAllEntries(blocks: TransactionBlockstore, head: ClockHead) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link)
@@ -212,7 +212,7 @@ export async function * getAllEntries(blocks: TransactionBlockstore, head: Clock
   }
 }
 
-export async function * clockVis(blocks: TransactionBlockstore, head: ClockHead) {
+export async function* clockVis(blocks: TransactionBlockstore, head: ClockHead) {
   for await (const line of vis(blocks, head)) {
     yield line
   }

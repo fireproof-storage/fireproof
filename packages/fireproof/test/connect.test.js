@@ -170,7 +170,7 @@ describe('basic Connection with raw remote', function () {
     // create a database that is up to date with meta1 but not meta2
     // add meta2 and poll it
 
-    const dataDownload = async function () {}
+    const dataDownload = async function () { }
     const badMockConnect = { ...mockConnect, dataDownload }
 
     const db2 = new Database(dbName)
@@ -418,13 +418,12 @@ describe('two Connection with raw remote', function () {
 
     const docHello3 = await db3.get('hello')
     equals(docHello3.value, 'world')
-
     // const docHi3 = await db3.get('hi')
     // equals(docHi3.value, 'world')
-
+    const doc4 = { _id: 'gracias', value: 'techies' }
+    await db3.put(doc4)
     const changes3 = await db3.changes()
-
-    equals(changes3.rows.length, 3)
+    equals(changes3.rows.length, 4)
   }) // .timeout(10000)
   it('should save a remote header', async function () {
     const {
@@ -471,8 +470,8 @@ describe('two Connection with raw remote', function () {
     const db3 = new Database(dbName)
     const doc3 = await db3.get('hey')
     equals(doc3.value, 'partyverse')
-    const doc4 = await db3.get('greetings')
-    equals(doc4.value, 'universe')
+    const doc5 = await db3.get('greetings')
+    equals(doc5.value, 'universe')
 
     // reset files and open again
     await resetDirectory(MetaStore.dataDir, dbName)
@@ -480,6 +479,6 @@ describe('two Connection with raw remote', function () {
     const remote4 = connect.raw(db4, mockConnect)
     await remote4.loaded
     const changes = await db4.changes()
-    equals(changes.rows.length, 4)
+    equals(changes.rows.length, 5)
   }).timeout(10000)
 })

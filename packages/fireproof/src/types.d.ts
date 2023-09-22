@@ -50,7 +50,8 @@ type DocMeta = {
 export type DocUpdate = {
   key: string
   value?: { [key: string]: any }
-  del?: boolean
+  del?: boolean,
+  clock?: AnyLink
 }
 
 export type DocValue = {
