@@ -28,7 +28,6 @@
   ],
   "type": "module",
   "scripts": {
-    
     "prepublishOnly": "cp ../../README.md . && npm run build:all",
     "postpublish": "rm README.md",
     "clean": "rm -rf dist/*",
@@ -125,6 +124,7 @@
     "@ipld/unixfs": "^2.1.1",
     "@peculiar/webcrypto": "^1.4.3",
     "@ucanto/core": "^8.2.0",
+    "@ucanto/interface": "^8.1.0",
     "@web3-storage/clock": "^0.3.0",
     "@web3-storage/w3up-client": "^8.0.1",
     "charwise": "^3.0.1",

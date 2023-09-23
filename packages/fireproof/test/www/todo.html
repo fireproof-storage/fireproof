@@ -25,12 +25,12 @@
         }
         if (newDb) {
           // console.log('new db', newDb, newConn)
-         name = newDb.name
+          name = newDb.name
           dbName = newDb.name
           db = newDb
           cx = newConn
           const input = document.querySelector('#list');
-        input.value = dbName;
+          input.value = dbName;
         } else {
           dbName = name;
           db = fireproof(name);
@@ -49,13 +49,14 @@
             document.querySelector('#authorized').hidden = false
             // console.log('authorized', await cx.shareToken())
             document.querySelector('#agent').innerText = await cx.shareToken()
+            document.querySelector('#account-email').innerText = await cx.accountEmail()
           } else {
             input.disabled = false
             document.querySelector('#login').hidden = false
             document.querySelector('#authorized').hidden = true
           }
         })
-        
+
         dbUnsubscribe = db.subscribe(redraw);
         return db;
       }
@@ -193,6 +194,7 @@
   </p>
 
   <div id="authorized" hidden>
+    <p>Logged in as <span id="account-email">loading...</span></p>
     <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
 
     <p>
