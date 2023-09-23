@@ -132,6 +132,9 @@ importers:
       '@ucanto/core':
         specifier: ^8.2.0
         version: 8.2.0
+      '@ucanto/interface':
+        specifier: ^8.1.0
+        version: 8.1.0
       '@web3-storage/clock':
         specifier: ^0.3.0
         version: 0.3.0
@@ -3046,7 +3049,7 @@ packages:
       '@ipld/dag-ucan': 3.3.2
       '@ucanto/client': 8.0.0
       '@ucanto/core': 8.2.0
-      '@ucanto/interface': 8.0.0
+      '@ucanto/interface': 8.1.0
       '@ucanto/principal': 8.0.0
       '@ucanto/transport': 8.0.0
       '@web3-storage/access': 15.1.1

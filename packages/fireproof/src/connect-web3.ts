@@ -2,23 +2,15 @@ import { create } from '@web3-storage/w3up-client'
 import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
 import { delegate, Delegation } from '@ucanto/core'
-// import { clock } from '@web3-storage/clock/capabilities'
-
-// import * as DID from '@ipld/dag-ucan/did'
 import type { Link } from 'multiformats'
 import type { Doc, DownloadDataFnParams, DownloadMetaFnParams, IndexRow, MapFn, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { validateDataParams } from './connect'
 import { Connection } from './connection'
-// import { CID } from 'multiformats'
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Database, fireproof } from './database'
 import { Loader } from './loader'
-import { clock } from '@web3-storage/clock/src/capabilities'
-// import { clock } from '@web3-storage/clock/src/capabilities'
-// import { Space } from '@web3-storage/w3up-client/dist/src/space'
-// import { clock } from '@web3-storage/clock/src/capabilities'
 
 // almost ClockHead, different kind of clock
 type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
@@ -48,12 +40,12 @@ type AccessRequestDoc = Doc & {
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
-type ConnectWeb3Params = { name: string, schema: string }
+type ConnectIPFSParams = { name: string, schema: string }
 
-type ReuseWeb3Params = { did: `did:${string}:${string}`, connection: ConnectWeb3 }
+type ReuseIPFSParams = { did: `did:${string}:${string}`, connection: ConnectIPFS }
 
-export class ConnectWeb3 extends Connection {
-  params: ConnectWeb3Params
+class AbstractConnectIPFS extends Connection {
+  params: ConnectIPFSParams
   ready: Promise<void>
   connected: Promise<void>
   client: Client | null = null
@@ -63,7 +55,7 @@ export class ConnectWeb3 extends Connection {
   parents: CarClockHead = []
   eventBlocks = new MemoryBlockstore()
   accountDb: Database | null = null
-  accountConnection: ConnectWeb3 | null = null
+  accountConnection: AccountConnectIPFS | null = null
   inner = false
   loader: Loader | null = null
 
@@ -90,26 +82,15 @@ export class ConnectWeb3 extends Connection {
   authDone?: (value: void | PromiseLike<void>) => void
   authReady: Promise<void>
 
-  constructor(params: ConnectWeb3Params, _database?: Database, _reuseParams?: ReuseWeb3Params) {
+  constructor(params: ConnectIPFSParams, _database?: Database, _reuseParams?: ReuseIPFSParams) {
     super()
     if (_reuseParams) {
-      // const conn = _reuseParams.connection
-      // this.params = params
-
-      // this.inner = false
-      // this.accountDb = conn.accountDb
-      // this.accountConnection = conn.accountConnection
-      // this.authorized = conn.authorized
-      // this.ready = conn.ready
-      // this.connected = conn.connected
+      console.log('ingest shared did', _reuseParams.did)
       this.clockSpaceDID = _reuseParams.did
     }
 
     this.params = params
-    if (_database) {
-      this.inner = true
-      this.accountDb = _database
-    }
+
     this.ready = this.initializeClient()
     this.connected = this.ready.then(async () => {
       if (this.authorized) {
@@ -120,7 +101,6 @@ export class ConnectWeb3 extends Connection {
         })
       }
     })
-    // }
 
     this.authReady = this.connected.then(async () => {
       if (this.authorized) {
@@ -130,35 +110,16 @@ export class ConnectWeb3 extends Connection {
     })
   }
 
-  async authorize(email: `${string}@${string}`) {
-    console.log('emailing', email)
-    await this.accountConnection!.ready
-    const client = this.accountConnection!.client!
-    await client.authorize(email, {
-      capabilities: [{ can: 'clock/*' },
-        { can: 'space/*' }, { can: 'provider/add' },
-        { can: 'store/*' }, { can: 'upload/*' }]
-    })
-    let space = this.bestSpace(client)
-    if (!space) {
-      space = await client.createSpace('_account')
-    }
-    await client.setCurrentSpace(space.did())
-    if (!space.registered()) {
-      await client.registerSpace(email)
-    }
-    const { rows } = await this.accountDb!.query('accountSpace', { key: space.did() })
+  async accountEmail() {
+    await this.ready
+    console.log('accountEmail', this, this.clockSpaceDID, this.accountConnection?.clockSpaceDID)
+    const { rows } = await this.accountDb!.query('accountSpace', { key: this.accountConnection?.clockSpaceDID })
     for (const row of rows) {
       const doc = row.doc as ClockSpaceDoc
-      if (!doc.email) {
-        doc.email = email
-        await this.accountDb!.put(doc)
+      if (doc.email) {
+        return doc.email
       }
     }
-    await this.accountConnection!._onAuthorized()
-    // console.log('inner setup', this.accountConnection!.clockSpaceDID)
-    this.clockSpaceDID = this.accountConnection!.clockSpaceDID
-    await this._onAuthorized()
   }
 
   async shareToken() {
@@ -212,8 +173,8 @@ export class ConnectWeb3 extends Connection {
     if (!schemaName && location) {
       schemaName = location.origin
     }
-    const newParams: ConnectWeb3Params = { name, schema: schemaName! }
-    const newConn = new ConnectWeb3(newParams, undefined, { did: newWith, connection: this })
+    const newParams: ConnectIPFSParams = { name, schema: schemaName! }
+    const newConn = new ConnectIPFS(newParams, undefined, { did: newWith, connection: this })
     const { _crdt: { blocks: { loader: dbLoader } } } = db
     dbLoader?.connectRemote(newConn)
     await newConn.ready
@@ -227,7 +188,7 @@ export class ConnectWeb3 extends Connection {
       this.client = await this.connectClient()
     } else {
       this.accountDb = fireproof('_connect-web3')
-      this.accountConnection = new ConnectWeb3(this.params, this.accountDb)
+      this.accountConnection = new AccountConnectIPFS(this.params, this.accountDb)
       if (this.clockSpaceDID) {
         this.accountConnection.clockSpaceDID = this.clockSpaceDID
       }
@@ -240,32 +201,16 @@ export class ConnectWeb3 extends Connection {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   async _onAuthorized() {
-    // console.log('_onAuthorized', { inner: this.inner, authorized: this.authorized })
-    this.authDone?.()
-    // this.accountConnection?.authDone?.()
-
-    if (this.inner) {
-      // await accountDbLoader?.remoteMetaStore?.load('main')
-      const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb!
-      // console.log('connected _onAuthorized inner', this.clockSpaceDIDForDb(), this.authorized)
-      await accountDbLoader?.remoteMetaStore?.load('main')
-      await this.provisionClockSpace()
-      void this.serviceAccessRequests()
-    }
-    // console.log('connected _onAuthorized', this.inner ? 'inner' : 'outer', this.authDone, this.connected, this.clockSpaceDIDForDb(), this.authorized)
-    // if (!this.inner) {
-    //   await this.accountConnection!.ready
-    // }
+    void this.authDone?.()
   }
 
   async connectedClientForDb() {
     // console.log('connectedClientForDb', this.inner ? 'inner' : 'outer')
     await this.connected
     // console.log('awaited connected')
-    if (this.inner) {
-      return this.client!
-    }
+
     // console.log('awaiting accountConnection connected')
     await this.accountConnection!.connected
     // console.log('awaited accountConnection connected', this.accountConnection!.client!)
@@ -276,15 +221,6 @@ export class ConnectWeb3 extends Connection {
     // const callId = Math.random().toString(36).slice(2, 9)
     await this.connected
 
-    if (this.inner) {
-      // await this.ready
-      const proofSpace = this.clockSpaceDIDForDb()
-      // console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
-      const client = this.client!
-      const clockProofs = client.proofs([{ can: 'clock/*', with: proofSpace }])
-      if (!clockProofs.length) { throw new Error('missing clock/* capability on account space') }
-      return clockProofs
-    }
     await this.accountConnection!.authReady
 
     const proofSpace = this.clockSpaceDIDForDb()
@@ -308,16 +244,8 @@ export class ConnectWeb3 extends Connection {
   }
 
   clockSpaceDIDForDb() {
-    if (this.inner) return this.client!.currentSpace()!.did()
+    // if (this.inner) return this.client!.currentSpace()!.did()
     return this.accountConnection!.clockSpaceDID!
-  }
-
-  async startBackgroundSync() {
-    // console.log('startBackgroundSync', this.inner ? 'inner' : 'outer')
-    if (this.inner) return
-    await sleep(5000) // todo enable websockets on remote clock
-    await this.refresh()
-    await this.startBackgroundSync()
   }
 
   // todo move to a model where new account owner devices automatically get delegated access to all databases
@@ -490,152 +418,89 @@ export class ConnectWeb3 extends Connection {
     const name = decodeURIComponent(namePart)
     return { schema, name }
   }
+}
 
-  async dataDownload(params: DownloadDataFnParams) {
-    validateDataParams(params)
-    const url = `https://${params.car}.ipfs.w3s.link/`
-    const response = await fetch(url)
-    if (response.ok) {
-      return new Uint8Array(await response.arrayBuffer())
-    } else {
-      throw new Error(`Failed to download ${url}`)
-    }
+export class ConnectIPFS extends AbstractConnectIPFS {
+  constructor(params: ConnectIPFSParams, _database?: Database, _reuseParams?: ReuseIPFSParams) {
+    super()
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean}) {
-    const client = await this.connectedClientForDb()
-    if (!client) { throw new Error('client not initialized') }
-    validateDataParams(params)
-    // uploadCar is processed so roots are reachable via CDN
-    // uploadFile makes the car itself available via CDN
-    // todo if params.type === 'file' and database is public also uploadCAR
-    if (params.type === 'file' && opts.public) {
-      await client.uploadCAR(new Blob([bytes]))
-    }
-    return await client.uploadFile(new Blob([bytes]))
+  async startBackgroundSync() {
+    await sleep(5000) // todo enable websockets on remote clock
+    await this.refresh()
+    await this.startBackgroundSync()
   }
 
-  async metaDownload(params: DownloadMetaFnParams) {
-    // const callId = Math.random().toString(36).slice(2, 9)
-    // console.log('metadl', callId, params)
-    const client = await this.connectedClientForDb()
-    // @ts-ignore
-    const { issuer } = client._agent
-    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
-    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
-    const clockProofs = await this.clockProofsForDb()
-    const head = await w3clock.head({
-      issuer,
-      with: this.clockSpaceDIDForDb(),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      proofs: clockProofs
+  async authorize(email: `${string}@${string}`) {
+    console.log('emailing', email)
+    await this.accountConnection!.ready
+    const client = this.accountConnection!.client!
+    await client.authorize(email, {
+      capabilities: [{ can: 'clock/*' },
+        { can: 'space/*' }, { can: 'provider/add' },
+        { can: 'store/*' }, { can: 'upload/*' }]
     })
-    if (head.out.ok) {
-      // fetch that block from the network
-      const remoteHead = head.out.ok.head
-      // console.log('metadl remoteHead', callId, remoteHead.toString())
-
-      return this.fetchAndUpdateHead(remoteHead)
-    } else {
-      console.log('w3clock error', head.out.error)
-      throw new Error(`Failed to download ${params.name}`)
+    let space = this.bestSpace(client)
+    if (!space) {
+      space = await client.createSpace('_account')
     }
-  }
-
-  // bytes is encoded {car, key}, not our job to decode, just return on download
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    const client = await this.connectedClientForDb()
-    // @ts-ignore
-    const { issuer } = client._agent
-    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
-    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
-
-    const clockProofs = await this.clockProofsForDb()
-
-    const data = {
-      dbMeta: bytes
+    await client.setCurrentSpace(space.did())
+    if (!space.registered()) {
+      await client.registerSpace(email)
     }
-    const event = await EventBlock.create(data, this.parents)
-    const eventBlocks = new MemoryBlockstore()
-    await this.eventBlocks.put(event.cid, event.bytes)
-    await eventBlocks.put(event.cid, event.bytes)
-
-    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
-
-    await client.uploadCAR(new Blob([carBytes]))
-
-    const blocks = []
-    for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
-      blocks.push(await decodeEventBlock(eventBytes))
-    }
-
-    const advanced = await w3clock.advance({
-      issuer,
-      with: this.clockSpaceDIDForDb(),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      proofs: clockProofs
-    }, event.cid, { blocks })
-    this.parents = [event.cid]
-    // @ts-ignore
-    const { ok, error } = advanced.root.data?.ocm.out
-    if (error) { throw new Error(JSON.stringify(error)) }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const head = ok.head as CarClockHead
-    return this.fetchAndUpdateHead(head)
-  }
-
-  async fetchAndUpdateHead(remoteHead: CarClockHead) {
-    const outBytess = []
-    const cache = this.eventBlocks
-    // todo, we should only ever fetch these once, and not if they are ones we made
-    for (const cid of remoteHead) {
-      const local = await cache.get(cid)
-      if (local) {
-        const event = await decodeEventBlock(local.bytes)
-        // @ts-ignore
-        outBytess.push(event.value.data.dbMeta as Uint8Array)
-      } else {
-        const url = `https://${cid.toString()}.ipfs.w3s.link/`
-        const response = await fetch(url, { redirect: 'follow' })
-        if (response.ok) {
-          const metaBlock = new Uint8Array(await response.arrayBuffer())
-          await cache.put(cid, metaBlock)
-          const event = await decodeEventBlock(metaBlock)
-          // @ts-ignore
-          outBytess.push(event.value.data.dbMeta as Uint8Array)
-        } else {
-          throw new Error(`Failed to download ${url}`)
-        }
+    const { rows } = await this.accountDb!.query('accountSpace', { key: space.did() })
+    for (const row of rows) {
+      const doc = row.doc as ClockSpaceDoc
+      if (!doc.email) {
+        doc.email = email
+        console.log('updating email', doc)
+        await this.accountDb!.put(doc)
       }
     }
-    this.parents = remoteHead
-    return outBytess
+    await this.accountConnection!._onAuthorized()
+    // console.log('inner setup', this.accountConnection!.clockSpaceDID)
+    this.clockSpaceDID = this.accountConnection!.clockSpaceDID
+    await this._onAuthorized()
+  }
+}
+
+class AccountConnectIPFS extends AbstractConnectIPFS {
+  constructor(params: ConnectIPFSParams, database: Database) {
+    super(params, database)
+    this.inner = true
+    this.accountDb = database
   }
 
-  async connectClient() {
-    const client = await create()
-    // console.log('connectClient proofs', client.currentSpace()?.did())
-    const space = this.bestSpace(client)
-    if (!!space && space.registered()) {
-      this.authorized = true
-      await client.setCurrentSpace(space.did())
-    } else {
-      this.authorized = false
-    }
-    // console.log('connectClient authorized', this.authorized)
-    return client
+  async _onAuthorized() {
+    await super._onAuthorized()
+    // console.log('_onAuthorized', { inner: this.inner, authorized: this.authorized })
+    this.authDone?.()
+    const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb!
+    // console.log('connected _onAuthorized inner', this.clockSpaceDIDForDb(), this.authorized)
+    await accountDbLoader?.remoteMetaStore?.load('main')
+    await this.provisionClockSpace()
+    void this.serviceAccessRequests()
   }
 
-  bestSpace(client: Client) {
-    const spaces = client.spaces()
-    let space
-    for (const s of spaces) {
-      space = s
-      // console.log('space', s.did(), s.registered(), s.name())
-      if (s.registered()) {
-        break
-      }
-    }
-    return space
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async connectedClientForDb() {
+    return this.client!
+  }
+
+  async clockProofsForDb(): Promise<any[]> {
+    // const callId = Math.random().toString(36).slice(2, 9)
+    await this.connected
+
+    // await this.ready
+    const proofSpace = this.clockSpaceDIDForDb()
+    // console.log('proofSpace', callId, proofSpace, this.inner ? 'inner' : 'outer')
+    const client = this.client!
+    const clockProofs = client.proofs([{ can: 'clock/*', with: proofSpace }])
+    if (!clockProofs.length) { throw new Error('missing clock/* capability on account space') }
+    return clockProofs
+  }
+
+  clockSpaceDIDForDb() {
+    return this.client!.currentSpace()!.did()
   }
 }

@@ -1,0 +1,137 @@
+import type { Client } from '@web3-storage/w3up-client'
+import * as w3clock from '@web3-storage/clock/client'
+import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
+import { validateDataParams } from './connect'
+import { Connection } from './connection'
+import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
+import { encodeCarFile } from './loader-helpers'
+import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { Proof } from '@ucanto/interface'
+import { CarClockHead } from './connect-ipfs'
+
+export abstract class AbstractConnectIPFS extends Connection {
+  eventBlocks = new MemoryBlockstore() // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
+  parents: CarClockHead = []
+  abstract authorizedClientForDb(): Promise<Client>;
+  abstract clockProofsForDb(): Promise<Proof[]>;
+  abstract clockSpaceDIDForDb(): `did:${string}:${string}`;
+
+  issuer(client: Client) {
+    // @ts-ignore
+    const { issuer } = client._agent
+    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
+    return issuer
+  }
+
+  async dataDownload(params: DownloadDataFnParams) {
+    validateDataParams(params)
+    const url = `https://${params.car}.ipfs.w3s.link/`
+    const response = await fetch(url)
+    if (response.ok) {
+      return new Uint8Array(await response.arrayBuffer())
+    } else {
+      throw new Error(`Failed to download ${url}`)
+    }
+  }
+
+  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean; }) {
+    const client = await this.authorizedClientForDb()
+    if (!client) { throw new Error('client not initialized') }
+    validateDataParams(params)
+    // uploadCar is processed so roots are reachable via CDN
+    // uploadFile makes the car itself available via CDN
+    // todo if params.type === 'file' and database is public also uploadCAR
+    if (params.type === 'file' && opts.public) {
+      await client.uploadCAR(new Blob([bytes]))
+    }
+    return await client.uploadFile(new Blob([bytes]))
+  }
+
+  async metaDownload(params: DownloadMetaFnParams) {
+    // const callId = Math.random().toString(36).slice(2, 9)
+    // console.log('metadl', callId, params)
+    const client = await this.authorizedClientForDb()
+    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+    const clockProofs = await this.clockProofsForDb()
+    const head = await w3clock.head({
+      issuer: this.issuer(client),
+      with: this.clockSpaceDIDForDb(),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      proofs: clockProofs
+    })
+    if (head.out.ok) {
+      return this.fetchAndUpdateHead(head.out.ok.head)
+    } else {
+      console.log('w3clock error', head.out.error)
+      throw new Error(`Failed to download ${params.name}`)
+    }
+  }
+
+  // bytes is encoded {car, key}, not our job to decode, just return on download
+  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
+    const client = await this.authorizedClientForDb()
+    // @ts-ignore
+    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+
+    const clockProofs = await this.clockProofsForDb()
+
+    const data = {
+      dbMeta: bytes
+    }
+    const event = await EventBlock.create(data, this.parents)
+    const eventBlocks = new MemoryBlockstore()
+    await this.eventBlocks.put(event.cid, event.bytes)
+    await eventBlocks.put(event.cid, event.bytes)
+
+    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
+
+    await client.uploadCAR(new Blob([carBytes]))
+
+    const blocks = []
+    for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
+      blocks.push(await decodeEventBlock(eventBytes))
+    }
+
+    const advanced = await w3clock.advance({
+      issuer: this.issuer(client),
+      with: this.clockSpaceDIDForDb(),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      proofs: clockProofs
+    }, event.cid, { blocks })
+
+    this.parents = [event.cid]
+    // @ts-ignore
+    const { ok, error } = advanced.root.data?.ocm.out
+    if (error) { throw new Error(JSON.stringify(error)) }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const head = ok.head as CarClockHead
+    return this.fetchAndUpdateHead(head)
+  }
+
+  async fetchAndUpdateHead(remoteHead: CarClockHead) {
+    const outBytess = []
+    const cache = this.eventBlocks
+    for (const cid of remoteHead) {
+      const local = await cache.get(cid)
+      if (local) {
+        const event = await decodeEventBlock(local.bytes)
+        // @ts-ignore
+        outBytess.push(event.value.data.dbMeta as Uint8Array)
+      } else {
+        const url = `https://${cid.toString()}.ipfs.w3s.link/`
+        const response = await fetch(url, { redirect: 'follow' })
+        if (response.ok) {
+          const metaBlock = new Uint8Array(await response.arrayBuffer())
+          await cache.put(cid, metaBlock)
+          const event = await decodeEventBlock(metaBlock)
+          // @ts-ignore
+          outBytess.push(event.value.data.dbMeta as Uint8Array)
+        } else {
+          throw new Error(`Failed to download ${url}`)
+        }
+      }
+    }
+    this.parents = remoteHead
+    return outBytess
+  }
+}
