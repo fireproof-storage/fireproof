@@ -99,10 +99,6 @@ export abstract class Loader {
       void this.remoteWAL?._process()
     })
 
-    // this.remoteMetaLoading = Promise.all([this.ready, this.remoteMetaStore!.load('main')]).then(() => {
-    //   void this.remoteWAL?._process()
-    // })
-
     return connection
   }
 

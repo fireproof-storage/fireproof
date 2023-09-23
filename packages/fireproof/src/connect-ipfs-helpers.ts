@@ -12,7 +12,7 @@ import { CarClockHead } from './connect-ipfs'
 export abstract class AbstractConnectIPFS extends Connection {
   eventBlocks = new MemoryBlockstore() // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   parents: CarClockHead = []
-  abstract authorizedClientForDb(): Promise<Client>;
+  abstract authorizedClient(): Promise<Client>;
   abstract clockProofsForDb(): Promise<Proof[]>;
   abstract clockSpaceDIDForDb(): `did:${string}:${string}`;
 
@@ -35,7 +35,7 @@ export abstract class AbstractConnectIPFS extends Connection {
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean; }) {
-    const client = await this.authorizedClientForDb()
+    const client = await this.authorizedClient()
     if (!client) { throw new Error('client not initialized') }
     validateDataParams(params)
     // uploadCar is processed so roots are reachable via CDN
@@ -50,7 +50,7 @@ export abstract class AbstractConnectIPFS extends Connection {
   async metaDownload(params: DownloadMetaFnParams) {
     // const callId = Math.random().toString(36).slice(2, 9)
     // console.log('metadl', callId, params)
-    const client = await this.authorizedClientForDb()
+    const client = await this.authorizedClient()
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
     const clockProofs = await this.clockProofsForDb()
     const head = await w3clock.head({
@@ -69,7 +69,7 @@ export abstract class AbstractConnectIPFS extends Connection {
 
   // bytes is encoded {car, key}, not our job to decode, just return on download
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    const client = await this.authorizedClientForDb()
+    const client = await this.authorizedClient()
     // @ts-ignore
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
 
