@@ -38,6 +38,7 @@ export abstract class MetaStore extends VersionedStore {
 
 export type WALState = {
   operations: DbMeta[]
+  noLoaderOps: DbMeta[]
   fileOperations: {cid: AnyLink, public: boolean}[]
 }
 
@@ -48,7 +49,7 @@ export abstract class RemoteWAL {
   loader: Loader
   ready: Promise<void>
 
-  walState: WALState = { operations: [], fileOperations: [] }
+  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] }
   processing: Promise<void> | undefined = undefined
 
   constructor(loader: Loader) {
@@ -65,7 +66,11 @@ export abstract class RemoteWAL {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready
-    this.walState.operations.push(dbMeta)
+    if (opts.noLoader) {
+      this.walState.noLoaderOps.push(dbMeta)
+    } else {
+      this.walState.operations.push(dbMeta)
+    }
     await this.save(this.walState)
     if (!opts.noLoader) { void this._process() }
   }
@@ -95,10 +100,11 @@ export abstract class RemoteWAL {
     const rmlp = (async () => {
       const operations = [...this.walState.operations]
       const fileOperations = [...this.walState.fileOperations]
+      const noLoaderOps = [...this.walState.noLoaderOps]
       const uploads: Promise<void|AnyLink>[] = []
 
       if (operations.length) {
-        for (const dbMeta of operations) {
+        for (const dbMeta of noLoaderOps.concat(operations)) {
           const uploadP = (async () => {
             const car = await this.loader.carStore!.load(dbMeta.car)
             if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
@@ -122,6 +128,7 @@ export abstract class RemoteWAL {
       // clear operations, leaving any new ones that came in while we were uploading
       if (operations.length) {
         await this.loader.remoteMetaStore?.save(operations[operations.length - 1])
+        this.walState.noLoaderOps.splice(0, noLoaderOps.length)
       }
       this.walState.operations.splice(0, operations.length)
       this.walState.fileOperations.splice(0, fileOperations.length)

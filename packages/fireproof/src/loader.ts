@@ -76,6 +76,7 @@ export abstract class Loader {
     const remote = new RemoteMetaStore(this.name, connection)
     remote.onLoad('main', async (metas) => {
       if (metas) {
+        // console.log('got metas from remote', metas.map(m => m.car.toString()))
         await this.handleDbMetasFromStore(metas)
       }
     })
@@ -123,11 +124,12 @@ export abstract class Loader {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
+      // console.log('car log noop', meta.car.toString())
       return
     }
     const carHeader = await this.loadCarHeaderFromMeta(meta)
-    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this.getMoreReaders(carHeader.cars)
+    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
   }
 

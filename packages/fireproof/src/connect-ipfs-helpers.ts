@@ -99,10 +99,14 @@ export abstract class AbstractConnectIPFS extends Connection {
       proofs: clockProofs
     }, event.cid, { blocks })
 
-    this.parents = [event.cid]
     // @ts-ignore
     const { ok, error } = advanced.root.data?.ocm.out
-    if (error) { throw new Error(JSON.stringify(error)) }
+    if (error) {
+      // this.eventBlocks = new MemoryBlockstore()
+      throw new Error(JSON.stringify(error))
+    }
+    this.parents = [event.cid]
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const head = ok.head as CarClockHead
     return this.fetchAndUpdateHead(head)
@@ -118,6 +122,7 @@ export abstract class AbstractConnectIPFS extends Connection {
         // @ts-ignore
         outBytess.push(event.value.data.dbMeta as Uint8Array)
       } else {
+        console.log('fetchAndUpdateHead', cid.toString())
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
         const response = await fetch(url, { redirect: 'follow' })
         if (response.ok) {
@@ -156,15 +161,21 @@ export abstract class DatabaseConnectIPFS extends AbstractConnectIPFS {
       }
     })
     void this.authorizing.then(() => {
+      // @ts-expect-error
+      if (!this.accountConnection) return
       void this.startBackgroundSync()
     })
   }
 
   async startBackgroundSync() {
+    // console.log('startBackgroundSync')
     await new Promise(resolve =>
       // todo implement websocket on w3clock
       setTimeout(resolve, 1000))
-    await this.refresh()
+    await this.refresh().catch(async (e: Error) => {
+      console.log('refresh error', e)
+      await new Promise(resolve => setTimeout(resolve, 5000))
+    })
     await this.startBackgroundSync()
   }
 

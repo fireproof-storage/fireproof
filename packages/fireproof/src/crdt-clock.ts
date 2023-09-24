@@ -22,7 +22,7 @@ export class CRDTClock {
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null = null) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    // console.log('applyHead', updates.length, ogHead.toString(), newHead.toString(), prevHead.toString())
+    console.log('applyHead', updates?.length, ogHead.toString(), newHead.toString(), prevHead.toString())
     if (ogHead.toString() === newHead.toString()) {
       this.watchers.forEach((fn) => fn(updates || []))
       return
