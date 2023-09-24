@@ -115,7 +115,6 @@ export class Index {
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       return await applyQuery(this.crdt, await this.byKey.root.get(encodedKey), opts)
     }
     if (Array.isArray(opts.keys)) {
