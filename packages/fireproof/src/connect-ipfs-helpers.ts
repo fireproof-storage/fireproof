@@ -135,3 +135,48 @@ export abstract class AbstractConnectIPFS extends Connection {
     return outBytess
   }
 }
+
+export abstract class DatabaseConnectIPFS extends AbstractConnectIPFS {
+  activated: boolean | null = null
+  authorizing: Promise<void>
+  authorizingComplete!: () => void
+  authorizingFailed!: (reason: string) => void
+
+  constructor() {
+    super()
+    this.authorizing = new Promise<void>((resolve, reject) => {
+      this.authorizingComplete = resolve
+      this.authorizingFailed = reject
+    })
+    // defer this.initializeClient() to after constructor
+    this.ready = Promise.resolve().then(() => this.initializeClient())
+    void this.ready.then(() => {
+      if (this.activated) {
+        this.authorizingComplete()
+      }
+    })
+    void this.authorizing.then(() => {
+      void this.startBackgroundSync()
+    })
+  }
+
+  async startBackgroundSync() {
+    await new Promise(resolve =>
+      // todo implement websocket on w3clock
+      setTimeout(resolve, 1000))
+    await this.refresh()
+    await this.startBackgroundSync()
+  }
+
+  // should set activated to true if authorized
+  abstract initializeClient(): Promise<void>
+
+  // this could move upstairs but we want that class to be other stuff
+  async clockProofsForDb(): Promise<any[]> {
+    const client = await this.authorizedClient()
+    const proofSpace = this.clockSpaceDIDForDb()
+    const clockProofs = client.proofs([{ can: 'clock/*', with: proofSpace }])
+    if (!clockProofs.length) { throw new Error('missing clock/* capability on account space') }
+    return clockProofs
+  }
+}

@@ -3,7 +3,8 @@ import type { Client } from '@web3-storage/w3up-client'
 import { delegate, Delegation } from '@ucanto/core'
 
 import { Database, fireproof } from './database'
-import { ConnectIPFSParams, DatabaseConnectIPFS } from './connect-ipfs'
+import { ConnectIPFSParams } from './connect-ipfs'
+import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 import type { MapFn } from './types'
 import { Capabilities } from '@ucanto/interface'
 
@@ -15,7 +16,7 @@ type ClockSpaceDoc = {
   issuer: `did:key:${string}`;
   created: number;
   name: string;
-  email?: `${string}@${string}`;
+  email: `${string}@${string}` | null;
   ua: string;
   schema: string;
 }
@@ -49,6 +50,7 @@ const didKeyIdxFn: MapFn = (doc, emit) => {
 export class AccountConnectIPFS extends DatabaseConnectIPFS {
   accountDb: Database
   client: Client | null = null
+  email: `${string}@${string}` | null = null
 
   constructor() {
     super()
@@ -58,6 +60,18 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     void this.authorizing.then(() => {
       void this.serviceAccessRequests()
     })
+  }
+
+  async accountEmail() {
+    const client = await this.authorizedClient()
+    const space = client.currentSpace()!
+    const { rows } = await this.accountDb.query('accountSpace', { key: space.did() })
+    for (const row of rows) {
+      const doc = row.doc as ClockSpaceDoc
+      if (doc.email) {
+        return doc.email
+      }
+    }
   }
 
   async authorize(email: `${string}@${string}`) {
@@ -75,7 +89,6 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     if (!space.registered()) {
       await client.registerSpace(email)
     }
-    this.authorizingComplete()
     const { rows } = await this.accountDb.query('accountSpace', { key: space.did() })
     for (const row of rows) {
       const doc = row.doc as ClockSpaceDoc
@@ -84,6 +97,8 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
         await this.accountDb.put(doc)
       }
     }
+    this.email = email
+    this.authorizingComplete()
   }
 
   async initializeClient() {
@@ -126,7 +141,12 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async authorizedClockSpace(params: ConnectIPFSParams): Promise<`did:${string}:${string}`> {
+    const callId = Math.random().toString(36).substring(7)
+    console.log('authorizedClockSpace', this.constructor.name, this.authorizing, this.loaded, callId, params)
+    // we are waiting on authorising
+    // and waiting to query until we have synced the accountDb
     await this.loaded
+    console.log('authorizedClockSpace', this.constructor.name, callId, 'loaded')
     const { rows } = await this.accountDb.query('clockName', { key: this.encodeSpaceName(params) })
     if (rows.length) {
       const doc = rows[0].doc as ClockSpaceDoc
@@ -144,13 +164,14 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   async createNewSpace(params: ConnectIPFSParams) {
     const client = this.client!
     const spaceKey = this.encodeSpaceName(params)
-    // console.log('creating new clock space', this.encodeSpaceName())
+    console.log('creating new clock space', this.email, this.encodeSpaceName(params))
     const clockSpace = await client.createSpace(spaceKey)
 
     const doc: ClockSpaceDoc = {
       type: 'clock-space',
       ...params,
       clockName: spaceKey,
+      email: this.email,
       with: clockSpace.did(),
       accountSpace: client.currentSpace()!.did(),
       issuer: this.issuer(client).did(),
@@ -169,10 +190,12 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     const client = this.client!
     const proofs = client.proofs([{ can: 'clock/*', with: doc.with }])
     if (!proofs.length) {
+      console.log('requesting access for', doc.schema, doc.with)
       const agentDID = this.issuer(this.client!).did()
       await this.joinSchema(doc.schema, agentDID)
       await this.waitForAccess(doc, agentDID)
     }
+    console.log('joined existing space', doc.with)
     return doc.with
   }
 
