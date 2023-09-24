@@ -4,7 +4,7 @@ import esbuildPluginTsc from 'esbuild-plugin-tsc'
 import alias from 'esbuild-plugin-alias'
 import fs from 'fs'
 import path, { dirname, join } from 'path'
-import { polyfillNode } from 'esbuild-plugin-polyfill-node'
+// import { polyfillNode } from 'esbuild-plugin-polyfill-node'
 import { commonjs } from '@hyrious/esbuild-plugin-commonjs'
 
 import { fileURLToPath } from 'url'
@@ -120,7 +120,7 @@ console.log('cjs/node build');
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
-        minify: true,
+        minify: false,
         banner: bannerLog`
 console.log('browser/es2015 build');
 `,

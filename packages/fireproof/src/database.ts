@@ -81,7 +81,7 @@ export class Database {
   }
 
   connect(schemaName?: string) {
-    const conn = connect.web3(this, schemaName)
+    const conn = connect.ipfs(this, schemaName)
     return conn
   }
 
