@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="./fireproof.iife.js?123"></script>
+  <script src="./fireproof.iife.js?1234"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
@@ -122,7 +122,9 @@
         const area = document.querySelector('#login')
         area.innerHTML = 'Sending verification email to ' + val + '...'
         await cx.authorize(input.value)
-        // setupDb(dbName);
+        // setTimeout(() => {
+        //   setupDb(dbName);
+        // }, 1100)
       }
       window.verifyEmail = verifyEmail;
 

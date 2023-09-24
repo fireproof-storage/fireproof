@@ -22,6 +22,7 @@ type ClockSpaceDoc = {
 }
 
 type SchemaMemberDoc = {
+  _id: `schema-member/${string}/${string}`;
   type: 'schema-member';
   member: `did:key:${string}`;
   schema: string;
@@ -201,6 +202,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
 
   async joinSchema(schema: string, agentDID: `did:key:${string}`) {
     const joinDoc: SchemaMemberDoc = {
+      _id: `schema-member/${schema}/${agentDID}`,
       type: 'schema-member',
       member: agentDID,
       schema,
@@ -278,7 +280,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     // query for any access requests I can do
     const { rows: owned } = await this.accountDb.query(didKeyIdxFn, { includeDocs: true, key: this.issuer(this.client!).did() })
 
-    const schemas = [...new Set(owned.map(({ value }) => value as string))]
+    const schemas = [...new Set(owned.map(({ doc }) => doc!.schema))]
 
     // get all members of those schemas
     const { rows: members } = await this.accountDb.query((doc, emit) => {
@@ -286,7 +288,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
       if (myDoc.type === 'schema-member') {
         emit(myDoc.schema, myDoc.member)
       }
-    }, { keys: schemas, includeDocs: true })
+    }, { keys: schemas })
 
     const memberDidSet = new Set(members.map(({ value }) => value as `did:key:${string}`))
     memberDidSet.delete(this.issuer(this.client!).did())
@@ -340,6 +342,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
       capabilities: [{ can: 'clock/*', with: clockDoc.with }] as Capabilities,
       proofs: client.proofs() // proofs?
     }
+    console.log('delegating access', delegationParams)
     const delegation = await delegate(delegationParams)
     const delegationCarBytes = await delegation.archive()
     if (!delegationCarBytes.ok) throw new Error('missing delegationCarBytes')

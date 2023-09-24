@@ -77,6 +77,7 @@ export type IndexUpdate = {
 export type IndexRow = {
   id: string
   key: IndexKey
+  row?: DocFragment
   doc?: Doc | null
   value?: DocFragment
   del?: boolean
