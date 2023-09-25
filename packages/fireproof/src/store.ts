@@ -120,8 +120,8 @@ export abstract class RemoteWAL {
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
-          const car = await this.loader.carStore!.load(dbMeta.car)
-          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
+          if (!car) return // throw new Error(`missing car ${dbMeta.car.toString()}`)
           await this.loader.remoteCarStore!.save(car)
           this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
         })
@@ -130,8 +130,8 @@ export abstract class RemoteWAL {
 
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
-          const car = await this.loader.carStore!.load(dbMeta.car)
-          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
+          if (!car) return // throw new Error(`missing car ${dbMeta.car.toString()}`)
           await this.loader.remoteCarStore!.save(car)
           this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
         })
@@ -142,7 +142,7 @@ export abstract class RemoteWAL {
         const dbLoader = this.loader as DbLoader
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
           const uploadP = limit(async () => {
-            const fileBlock = await dbLoader.fileStore!.load(fileCid)
+            const fileBlock = await dbLoader.fileStore!.load(fileCid)// .catch(() => false)
             await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
             this.walState.fileOperations = this.walState.fileOperations.filter(op => op.cid !== fileCid)
           })
@@ -163,6 +163,7 @@ export abstract class RemoteWAL {
           // console.log('saving remote meta', lastOp.car.toString())
           await this.loader.remoteMetaStore?.save(lastOp).catch(e => {
             console.error('error saving remote meta', e)
+            this.walState.operations.push(lastOp)
             throw e
           })
         }

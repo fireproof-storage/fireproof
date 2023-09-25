@@ -1,3 +1,4 @@
+import pLimit from 'p-limit'
 import { CarReader } from '@ipld/car'
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
@@ -223,10 +224,13 @@ export abstract class Loader {
 
     if (opts.compact) {
       const fpCar = fp as CarLoaderHeader
-      for (const cid of fpCar.compact) {
-        await this.carStore!.remove(cid)
-      }
       this.carLog = [...uniqueCids([cid, ...this.carLog], fpCar.compact)]
+      void (async () => {
+        if (this.remoteMetaLoading) await this.remoteMetaLoading
+        for (const cid of fpCar.compact) {
+          await this.carStore!.remove(cid)
+        }
+      })()
     } else {
       this.carLog.unshift(cid)
     }
@@ -339,7 +343,8 @@ export abstract class Loader {
   }
 
   protected async getMoreReaders(cids: AnyLink[]) {
+    const limit = pLimit(5)
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
-    await Promise.all(missing.map(cid => this.loadCar(cid)))
+    await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
 }

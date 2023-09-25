@@ -30,6 +30,7 @@ type SchemaMemberDoc = {
 }
 
 type SpaceDelegationDoc = {
+  _id: `delegation/${string}/${string}`;
   type: 'member-delegation';
   audience: `did:key:${string}`;
   with: `did:${string}:${string}`;
@@ -224,7 +225,10 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
         accessDoc.status === 'pending') {
         emit(accessDoc.audience)
       }
-    }, { includeDocs: true })
+    }, {
+      key: agentDID,
+      includeDocs: true
+    })
     const docs = myPendingDelegations.rows.map(row => row.doc as SpaceDelegationDoc)
 
     let foundMine = false
@@ -333,7 +337,8 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     const client = this.client!
     const proofs = client.proofs([{ can: 'clock/*', with: clockDoc.with }])
     if (!proofs.length) {
-      throw new Error('missing clock/* capability, cannot delegate: ' + clockDoc.with)
+      console.log('missing clock/* capability, cannot delegate: ' + clockDoc.with)
+      return
     }
     const delegationParams = {
       issuer: this.issuer(client),
@@ -342,11 +347,18 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
       capabilities: [{ can: 'clock/*', with: clockDoc.with }] as Capabilities,
       proofs: client.proofs() // proofs?
     }
+    const delegationID = `delegation/${clockDoc.with}/${memberDid}` as `delegation/${string}/${string}`
+    const existingDelegation = await this.accountDb.get(delegationID).catch(() => null)
+    if (existingDelegation) {
+      console.log('delegation already exists', delegationID)
+      return
+    }
     console.log('delegating access', delegationParams)
     const delegation = await delegate(delegationParams)
     const delegationCarBytes = await delegation.archive()
     if (!delegationCarBytes.ok) throw new Error('missing delegationCarBytes')
     const accessDoc: SpaceDelegationDoc = {
+      _id: delegationID,
       type: 'member-delegation',
       audience: memberDid,
       with: clockDoc.with,
