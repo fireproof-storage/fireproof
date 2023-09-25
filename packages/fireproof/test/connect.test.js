@@ -120,6 +120,7 @@ describe('basic Connection with raw remote', function () {
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
+    await remote.loader.remoteMetaLoading
   }) // .timeout(10000)
   it('should save a remote header', async function () {
     const {
@@ -228,6 +229,7 @@ describe('forked Connection with raw remote', function () {
     const doc = { _id: 'hello', value: 'world' }
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
+    await remote.loader.remoteMetaLoading
   }) // .timeout(10000)
   it('should save a remote header', async function () {
     const {
