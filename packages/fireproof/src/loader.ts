@@ -68,7 +68,7 @@ export abstract class Loader {
       if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error('stores not initialized')
       const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
       if (metas) {
-        await this.handleDbMetasFromStore(metas)
+        await this.handleDbMetasFromStore(metas, 'init')
       }
     })
   }
@@ -78,7 +78,7 @@ export abstract class Loader {
     remote.onLoad('main', async (metas) => {
       if (metas) {
         // console.log('got metas from remote', metas.map(m => m.car.toString()))
-        await this.handleDbMetasFromStore(metas).catch(e => {
+        await this.handleDbMetasFromStore(metas, 'remote').catch(e => {
           console.error('error handling remote metas', e)
           throw e
         })
@@ -118,24 +118,24 @@ export abstract class Loader {
     await this._applyCarHeader(carHeader, true)
   }
 
-  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
+  async handleDbMetasFromStore(metas: DbMeta[], tag: string): Promise<void> {
     for (const meta of metas) {
-      await this.mergeDbMetaIntoClock(meta)
+      await this.mergeDbMetaIntoClock(meta, tag)
     }
   }
 
-  async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
+  async mergeDbMetaIntoClock(meta: DbMeta, tag: string): Promise<void> {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
-      console.log('car log noop', meta.car.toString())
+      // console.log('car log noop', tag, meta.car.toString())
       return
     }
-    console.log('car log merge', meta.car.toString())
+    console.log('car log merge', tag, meta.car.toString())
     const carHeader = await this.loadCarHeaderFromMeta(meta) as DbCarHeader
-    console.log('car header', carHeader.head.toString(), carHeader)
+    console.log('car header', tag, carHeader.head.toString(), carHeader)
     await this.getMoreReaders(carHeader.cars)
-    console.log('updating car log')
+    console.log('updating car log', tag)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
   }

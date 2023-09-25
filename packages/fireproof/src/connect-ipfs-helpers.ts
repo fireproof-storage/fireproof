@@ -163,8 +163,8 @@ export abstract class DatabaseConnectIPFS extends AbstractConnectIPFS {
       }
     })
     void this.authorizing.then(() => {
-      // @ts-expect-error
-      if (!this.accountConnection) return
+      // @ ts-expect-error
+      // if (!this.accountConnection) return
       void this.startBackgroundSync()
     })
   }
