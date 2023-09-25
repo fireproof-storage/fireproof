@@ -120,6 +120,38 @@ describe('basic Index with map fun', function () {
     assert(result)
     assert(result.rows)
     equals(result.rows.length, 3)
+    equals(result.rows[0].key, 'amazing')
+  })
+})
+
+describe('basic Index with map fun with value', function () {
+  let db, indexer
+  beforeEach(async function () {
+    await resetDirectory(testConfig.dataDir, 'test-indexer')
+
+    db = new Database('test-indexer')
+    await db.put({ title: 'amazing' })
+    await db.put({ title: 'creative' })
+    await db.put({ title: 'bazillas' })
+    indexer = new Index(db._crdt, 'hello', (doc, map) => {
+      map(doc.title, doc.title.length)
+    })
+  })
+  it('should get results', async function () {
+    const result = await indexer.query()
+    assert(result)
+    assert(result.rows)
+    equals(result.rows.length, 3)
+    equals(result.rows[0].key, 'amazing')
+    equals(result.rows[0].value, 7)
+  })
+  it('should include docs', async function () {
+    const { rows } = await indexer.query({ includeDocs: true })
+    assert(rows[0].doc)
+    equals(rows[0].doc._id, rows[0].id)
+    equals(rows.length, 3)
+    equals(rows[0].key, 'amazing')
+    equals(rows[0].value, 7)
   })
 })
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -50,6 +51,8 @@ describe('basic Loader', function () {
   })
 })
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
 describe('basic Loader with two commits', function () {
   let loader, block, block2, t, carCid
   beforeEach(async function () {
@@ -99,6 +102,7 @@ describe('basic Loader with two commits', function () {
   })
   it('compact should erase old files', async function () {
     await loader.commit(t, { head: [block2.cid] }, { compact: true })
+    sleep(10)
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)

@@ -1,3 +1,4 @@
+import pLimit from 'p-limit'
 import { CarReader } from '@ipld/car'
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
@@ -13,10 +14,10 @@ import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   CarLoaderHeader,
   CommitOpts,
+  DbCarHeader,
   DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { Connection } from './connection'
-// import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
 // ts-unused-exports:disable-next-line
@@ -88,20 +89,16 @@ export abstract class Loader {
     return connection
   }
 
-  connectRemote(connection: Connection) {
+  connectRemote(connection: Connection, storageConnection?: Connection) {
     connection.loader = this
     this._connectRemoteMeta(connection)
-    this._connectRemoteStorage(connection)
+    this._connectRemoteStorage(storageConnection || connection)
 
     this.remoteMetaLoading = this.remoteMetaStore!.load('main').then(() => {})
 
     connection.loaded = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
       void this.remoteWAL?._process()
     })
-
-    // this.remoteMetaLoading = Promise.all([this.ready, this.remoteMetaStore!.load('main')]).then(() => {
-    //   void this.remoteWAL?._process()
-    // })
 
     return connection
   }
@@ -125,13 +122,12 @@ export abstract class Loader {
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     if (meta.key) { await this.setKey(meta.key) }
-    // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
-    const carHeader = await this.loadCarHeaderFromMeta(meta)
-    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
+    const carHeader = await this.loadCarHeaderFromMeta(meta) as DbCarHeader
     await this.getMoreReaders(carHeader.cars)
+    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
   }
 
@@ -218,10 +214,13 @@ export abstract class Loader {
 
     if (opts.compact) {
       const fpCar = fp as CarLoaderHeader
-      for (const cid of fpCar.compact) {
-        await this.carStore!.remove(cid)
-      }
       this.carLog = [...uniqueCids([cid, ...this.carLog], fpCar.compact)]
+      void (async () => {
+        if (this.remoteMetaLoading) await this.remoteMetaLoading
+        for (const cid of fpCar.compact) {
+          await this.carStore!.remove(cid)
+        }
+      })()
     } else {
       this.carLog.unshift(cid)
     }
@@ -330,6 +329,8 @@ export abstract class Loader {
   }
 
   protected async getMoreReaders(cids: AnyLink[]) {
-    await Promise.all(cids.map(cid => this.loadCar(cid)))
+    const limit = pLimit(5)
+    const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
+    await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
 }

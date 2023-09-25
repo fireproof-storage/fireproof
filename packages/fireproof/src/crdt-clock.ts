@@ -1,3 +1,4 @@
+import { clockChangesSince } from './crdt-helpers'
 import { TransactionBlockstore, Transaction } from './transaction'
 import type { DocUpdate, BulkResult, ClockHead } from './types'
 import { advance } from '@alanshaw/pail/clock'
@@ -18,21 +19,20 @@ export class CRDTClock {
     this.head = head
   }
 
-  async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] = []) {
+  async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null = null) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    // console.log('applyHead', updates.length, ogHead.toString(), newHead.toString(), prevHead.toString())
+    // console.log('applyHead', updates?.length, 'og', ogHead.toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
     if (ogHead.toString() === newHead.toString()) {
-      this.watchers.forEach((fn) => fn(updates))
+      this.watchers.forEach((fn) => fn(updates || []))
       return
     }
     const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     if (ogHead.toString() === ogPrev.toString()) {
       this.setHead(newHead)
-      this.watchers.forEach((fn) => fn(updates))
+      this.watchers.forEach((fn) => fn(updates || []))
       return
     }
-
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
       if (tblocks instanceof Transaction) return await fn(tblocks)
       if (!this.blocks) throw new Error('missing blocks')
@@ -51,9 +51,14 @@ export class CRDTClock {
       return { head }
     })
 
+    if (this.watchers.size && !updates) {
+      const changes = await clockChangesSince(this.blocks!, head, prevHead, {})
+      updates = changes.result
+    }
+
     this.setHead(head)
     this.zoomers.forEach((fn) => fn())
-    this.watchers.forEach((fn) => fn(updates))
+    this.watchers.forEach((fn) => fn(updates || []))
   }
 
   onTick(fn: (updates: DocUpdate[]) => void) {

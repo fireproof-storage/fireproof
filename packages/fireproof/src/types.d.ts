@@ -16,8 +16,12 @@ export type ClockHead = ClockLink[]
 
 export type DocFragment = Uint8Array | string | number | boolean | null | DocFragment[] | { [key: string]: DocFragment }
 
-export type Doc = DocBody & {
+export type Doc = DocBody & DocBase
+
+export type DocBase = {
   _id?: string
+  _files?: DocFiles
+  _publicFiles?: DocFiles
 }
 
 export type DocFileMeta = {
@@ -73,6 +77,7 @@ export type IndexUpdate = {
 export type IndexRow = {
   id: string
   key: IndexKey
+  row?: DocFragment
   doc?: Doc | null
   value?: DocFragment
   del?: boolean

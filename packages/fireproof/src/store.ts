@@ -1,15 +1,13 @@
+import pLimit from 'p-limit'
 import { format, parse, ToString } from '@ipld/dag-json'
 import { AnyBlock, AnyLink, CommitOpts, DbMeta } from './types'
 
 import { PACKAGE_VERSION } from './version'
 import type { Loader } from './loader'
 import { DbLoader } from './loaders'
-// import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
-
-// const mockStore = new Map<string, ToString<WALState>>()
 
 abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION
@@ -38,7 +36,8 @@ export abstract class MetaStore extends VersionedStore {
 
 export type WALState = {
   operations: DbMeta[]
-  fileOperations: {cid: AnyLink, public: boolean}[]
+  noLoaderOps: DbMeta[]
+  fileOperations: { cid: AnyLink, public: boolean }[]
 }
 
 export abstract class RemoteWAL {
@@ -48,7 +47,7 @@ export abstract class RemoteWAL {
   loader: Loader
   ready: Promise<void>
 
-  walState: WALState = { operations: [], fileOperations: [] }
+  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] }
   processing: Promise<void> | undefined = undefined
 
   constructor(loader: Loader) {
@@ -65,7 +64,12 @@ export abstract class RemoteWAL {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready
-    this.walState.operations.push(dbMeta)
+    // console.log('enqueue', dbMeta.car.toString(), opts)
+    if (opts.noLoader) {
+      this.walState.noLoaderOps.push(dbMeta)
+    } else {
+      this.walState.operations.push(dbMeta)
+    }
     await this.save(this.walState)
     if (!opts.noLoader) { void this._process() }
   }
@@ -84,10 +88,16 @@ export abstract class RemoteWAL {
       await this._int_process()
     })()
     this.processing = p
-    await p
-    this.processing = undefined
-
-    if (this.walState.operations.length || this.walState.fileOperations.length) setTimeout(() => void this._process(), 0)
+    try {
+      await p
+    } finally {
+      this.processing = undefined
+    }
+    if (this.walState.operations.length ||
+      this.walState.fileOperations.length ||
+      this.walState.noLoaderOps.length) {
+      setTimeout(() => void this._process(), 0)
+    }
   }
 
   async _int_process() {
@@ -95,55 +105,67 @@ export abstract class RemoteWAL {
     const rmlp = (async () => {
       const operations = [...this.walState.operations]
       const fileOperations = [...this.walState.fileOperations]
-      const uploads: Promise<void|AnyLink>[] = []
+      const uploads: Promise<void | AnyLink>[] = []
+      const noLoaderOps = [...this.walState.noLoaderOps]
+      const limit = pLimit(5)
 
-      if (operations.length) {
-        for (const dbMeta of operations) {
-          const uploadP = (async () => {
-            const car = await this.loader.carStore!.load(dbMeta.car)
-            if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
-            return await this.loader.remoteCarStore!.save(car)
-          })()
-          uploads.push(uploadP)
-        }
+      if (operations.length + fileOperations.length + noLoaderOps.length === 0) return
+
+      for (const dbMeta of noLoaderOps) {
+        const uploadP = limit(async () => {
+          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
+          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+          await this.loader.remoteCarStore!.save(car)
+          this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
+        })
+        uploads.push(uploadP)
       }
+
+      for (const dbMeta of operations) {
+        const uploadP = limit(async () => {
+          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
+          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+          await this.loader.remoteCarStore!.save(car)
+          this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
+        })
+        uploads.push(uploadP)
+      }
+
       if (fileOperations.length) {
         const dbLoader = this.loader as DbLoader
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
-          const uploadP = (async () => {
-            const fileBlock = await dbLoader.fileStore!.load(fileCid)
+          const uploadP = limit(async () => {
+            const fileBlock = await dbLoader.fileStore!.load(fileCid)// .catch(() => false)
             await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
-          })()
+            this.walState.fileOperations = this.walState.fileOperations.filter(op => op.cid !== fileCid)
+          })
           uploads.push(uploadP)
         }
       }
 
-      await Promise.all(uploads)
-      // clear operations, leaving any new ones that came in while we were uploading
-      if (operations.length) {
-        await this.loader.remoteMetaStore?.save(operations[operations.length - 1])
+      try {
+        const res = await Promise.allSettled(uploads)
+        const errors = res.filter(r => r.status === 'rejected') as PromiseRejectedResult[]
+        if (errors.length) {
+          console.error('error uploading', errors)
+          throw errors[0].reason
+        }
+        if (operations.length) {
+          const lastOp = operations[operations.length - 1]
+          // console.log('saving remote meta', lastOp.car.toString())
+          await this.loader.remoteMetaStore?.save(lastOp).catch(e => {
+            console.error('error saving remote meta', e)
+            this.walState.operations.push(lastOp)
+            throw e
+          })
+        }
+      } finally {
+        await this.save(this.walState)
       }
-      this.walState.operations.splice(0, operations.length)
-      this.walState.fileOperations.splice(0, fileOperations.length)
-      await this.save(this.walState)
     })()
     this.loader.remoteMetaLoading = rmlp
     await rmlp
   }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  // async load(branch = 'main'): Promise<WALState | null> {
-  //   const got = mockStore.get(branch)
-  //   if (!got) return null
-  //   return parse<WALState>(got)
-  // }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  // async save(state: WALState, branch = 'main'): Promise<null> {
-  //   const encoded: ToString<WALState> = format(state)
-  //   mockStore.set(branch, encoded)
-  //   return null
-  // }
 
   abstract load(branch?: string): Promise<WALState | null>
   abstract save(state: WALState, branch?: string): Promise<void>
@@ -163,6 +185,6 @@ export abstract class DataStore {
   }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>
-  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise<void|AnyLink>
+  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise<void | AnyLink>
   abstract remove(cid: AnyLink): Promise<void>
 }

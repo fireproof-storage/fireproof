@@ -1,5 +1,5 @@
 import { ConnectS3 } from './connect-s3'
-import { ConnectWeb3 } from './connect-web3'
+import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
 import { Connection } from './connection'
 import { Database } from './database'
 import type { DbLoader } from './loaders'
@@ -26,7 +26,7 @@ class ConnectRaw extends Connection {
   }
 }
 
-const web3names = new Map<string, ConnectWeb3>()
+const ipfsCxs = new Map<string, ConnectIPFS>()
 
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
@@ -43,19 +43,40 @@ export const connect = {
     loader.connectRemote(connection)
     return connection
   },
-  web3: (db: Database,
+  ipfs: (db: Database,
     schemaName?: string) => {
     const { name, _crdt: { blocks: { loader } } } = db
     if (!name) throw new Error('database name is required')
-    if (web3names.has(name)) {
-      return web3names.get(name)!
+    if (ipfsCxs.has(name)) {
+      return ipfsCxs.get(name)!
     }
     if (!schemaName && location) {
       schemaName = location.origin
     }
-    const connection = new ConnectWeb3({ name, schema: schemaName! })
+    const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
     loader!.connectRemote(connection)
-    web3names.set(name, connection)
+    ipfsCxs.set(name, connection)
+    return connection
+  },
+  hybrid: (db: Database,
+    schemaName?: string) => {
+    const { name, _crdt: { blocks: { loader } } } = db
+    if (!name) throw new Error('database name is required')
+    if (ipfsCxs.has(name)) {
+      return ipfsCxs.get(name)!
+    }
+    if (!schemaName && location) {
+      schemaName = location.origin
+    }
+    const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
+    const s3conf = {
+      upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+      download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+    }
+    const s3conn = new ConnectS3(s3conf.upload, s3conf.download)
+
+    loader!.connectRemote(connection, s3conn)
+    ipfsCxs.set(name, connection)
     return connection
   }
 }

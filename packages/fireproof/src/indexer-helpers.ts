@@ -142,6 +142,10 @@ export async function applyQuery(crdt: CRDT, resp: { result: IndexRow[] }, query
     rows: resp.result.map(row => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       row.key = (charwise.decode(row.key) as IndexKey)
+      if (row.row && !row.value) {
+        row.value = row.row
+        delete row.row
+      }
       return row
     })
   }

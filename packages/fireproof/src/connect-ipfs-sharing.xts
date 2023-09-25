@@ -1,0 +1,60 @@
+
+  async shareToken() {
+    await this.ready
+    // console.log('shareToken', this.inner)
+    await this.accountConnection!.ready
+    const client = this.accountConnection!.client
+    // @ts-ignore
+    const { issuer } = client._agent
+
+    return issuer.did()
+  }
+
+  async shareWith(shareToken: `did:key:${string}`) {
+    const client = this.accountConnection!.client!
+    // @ts-ignore
+    const { issuer } = client._agent
+    const delegationParams = {
+      issuer,
+      lifetimeInSeconds: 60 * 60 * 24 * 365,
+      audience: { did: () => shareToken },
+      capabilities: [{ can: 'clock/*', with: this.clockSpaceDIDForDb() }],
+      proofs: client.proofs()
+    }
+    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const delegation = await delegate(delegationParams)
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const delegationCarBytes = await delegation.archive()
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (!delegationCarBytes.ok) throw new Error('missing delegationCarBytes')
+    const cid = await client.uploadFile(new Blob([delegationCarBytes.ok]))
+    console.log('delegated', cid)
+    return cid
+  }
+
+  async joinShared(cid: string, name?: string, schemaName?: string) {
+    // todo
+    const data = await this.dataDownload({ car: cid, type: 'data', name: this.loader!.name })
+    const loaded = await Delegation.extract(data)
+    // console.log('loaded', loaded)
+    if (!loaded.ok) throw new Error('missing delegation')
+    // console.log('adding proof', loaded.ok)
+    const client = await this.connectedClientForDb()
+    await client.addProof(loaded.ok)
+    const newWith = loaded.ok.capabilities[0].with as `did:${string}:${string}`
+    // console.log('newWith', newWith)
+    // make new empty database
+    name = name || 'shared:' + newWith
+    const db = fireproof(name)
+    if (!schemaName && location) {
+      schemaName = location.origin
+    }
+    const newParams: ConnectIPFSParams = { name, schema: schemaName! }
+    const newConn = new ConnectIPFS(newParams, undefined, { did: newWith, connection: this })
+    const { _crdt: { blocks: { loader: dbLoader } } } = db
+    dbLoader?.connectRemote(newConn)
+    await newConn.ready
+    // console.log('newConn.inner', newConn.inner)
+    return { database: db, connection: newConn }
+  }
