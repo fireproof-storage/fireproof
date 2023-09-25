@@ -110,40 +110,42 @@ export abstract class RemoteWAL {
       const fileOperations = [...this.walState.fileOperations]
       const noLoaderOps = [...this.walState.noLoaderOps]
       const uploads: Promise<void | AnyLink>[] = []
-      const opId = Math.random().toString(36).slice(2, 5)
+      const limit = pLimit(5) // Create a limiter with concurrency 5
+
+      // const opId = Math.random().toString(36).slice(2, 5)
 
       if (operations.length + fileOperations.length + noLoaderOps.length === 0) return
 
-      console.log('processing', opId, operations.length, fileOperations.length, noLoaderOps.length)
+      // console.log('processing', opId, operations.length, fileOperations.length, noLoaderOps.length)
 
       for (const dbMeta of noLoaderOps) {
-        const uploadP = (async () => {
+        const uploadP = limit(async () => {
           const car = await this.loader.carStore!.load(dbMeta.car)
           if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
           await this.loader.remoteCarStore!.save(car)
           this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
-        })()
+        })
         uploads.push(uploadP)
       }
 
       for (const dbMeta of operations) {
-        const uploadP = (async () => {
+        const uploadP = limit(async () => {
           const car = await this.loader.carStore!.load(dbMeta.car)
           if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
           await this.loader.remoteCarStore!.save(car)
           this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
-        })()
+        })
         uploads.push(uploadP)
       }
 
       if (fileOperations.length) {
         const dbLoader = this.loader as DbLoader
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
-          const uploadP = (async () => {
+          const uploadP = limit(async () => {
             const fileBlock = await dbLoader.fileStore!.load(fileCid)
             await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
             this.walState.fileOperations = this.walState.fileOperations.filter(op => op.cid !== fileCid)
-          })()
+          })
           uploads.push(uploadP)
         }
       }
@@ -165,7 +167,7 @@ export abstract class RemoteWAL {
           })
         }
       } finally {
-        console.log('processed', opId, this.walState.operations.length, this.walState.fileOperations.length, this.walState.noLoaderOps.length)
+        // console.log('processed', opId, this.walState.operations.length, this.walState.fileOperations.length, this.walState.noLoaderOps.length)
 
         await this.save(this.walState)
       }
