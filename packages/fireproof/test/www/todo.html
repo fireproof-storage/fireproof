@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="./fireproof.iife.js?9245"></script>
+  <script src="./fireproof.iife.js?14345"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
@@ -34,7 +34,7 @@
         } else {
           dbName = name;
           db = fireproof(name);
-          cx = connect.hybrid(db, "todo-test")
+          cx = connect.ipfs(db, "todo-test")
         }
 
         window.db = db;
@@ -72,14 +72,14 @@
 
 
       const doRedraw = async () => {
-        const result = await index(db, 'created').query({ includeDocs: false });
+        const result = await index(db, 'created').query({ includeDocs: true });
         document
           .querySelector('ul')
           .innerHTML = '';
 
         for (const row of result.rows) {
-          const doc = await db.get(row.id);
-          // doc = row.doc
+          // const doc = await db.get(row.id);
+          const doc = row.doc
           const checkbox = document.createElement('input');
           checkbox.setAttribute('type', 'checkbox');
           if (doc.completed) {
