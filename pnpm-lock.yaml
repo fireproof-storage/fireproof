@@ -160,6 +160,9 @@ importers:
       multiformats:
         specifier: ^12.0.1
         version: 12.1.3
+      p-limit:
+        specifier: ^4.0.0
+        version: 4.0.0
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
