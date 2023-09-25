@@ -38,6 +38,7 @@ export abstract class AbstractConnectIPFS extends Connection {
     const client = await this.authorizedClient()
     if (!client) { throw new Error('client not initialized') }
     validateDataParams(params)
+    console.log('dataUpload', params.car)
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
@@ -122,13 +123,14 @@ export abstract class AbstractConnectIPFS extends Connection {
         // @ts-ignore
         outBytess.push(event.value.data.dbMeta as Uint8Array)
       } else {
-        console.log('fetchAndUpdateHead', cid.toString())
+        console.log('fetchAndUpdateHead', remoteHead.toString(), cid.toString())
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
         const response = await fetch(url, { redirect: 'follow' })
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer())
           await cache.put(cid, metaBlock)
           const event = await decodeEventBlock(metaBlock)
+          console.log('fetchAndUpdateHead', event.value.data)
           // @ts-ignore
           outBytess.push(event.value.data.dbMeta as Uint8Array)
         } else {
@@ -171,7 +173,7 @@ export abstract class DatabaseConnectIPFS extends AbstractConnectIPFS {
     // console.log('startBackgroundSync')
     await new Promise(resolve =>
       // todo implement websocket on w3clock
-      setTimeout(resolve, 1000))
+      setTimeout(resolve, 1500))
     await this.refresh().catch(async (e: Error) => {
       console.log('refresh error', e)
       await new Promise(resolve => setTimeout(resolve, 5000))

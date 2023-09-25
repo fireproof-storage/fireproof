@@ -39,7 +39,7 @@ export abstract class MetaStore extends VersionedStore {
 export type WALState = {
   operations: DbMeta[]
   noLoaderOps: DbMeta[]
-  fileOperations: {cid: AnyLink, public: boolean}[]
+  fileOperations: { cid: AnyLink, public: boolean }[]
 }
 
 export abstract class RemoteWAL {
@@ -92,7 +92,11 @@ export abstract class RemoteWAL {
     await p
     this.processing = undefined
 
-    if (this.walState.operations.length || this.walState.fileOperations.length) setTimeout(() => void this._process(), 0)
+    if (this.walState.operations.length ||
+      this.walState.fileOperations.length ||
+      this.walState.noLoaderOps.length) {
+      setTimeout(() => void this._process(), 0)
+    }
   }
 
   async _int_process() {
@@ -101,24 +105,32 @@ export abstract class RemoteWAL {
       const operations = [...this.walState.operations]
       const fileOperations = [...this.walState.fileOperations]
       const noLoaderOps = [...this.walState.noLoaderOps]
-      const uploads: Promise<void|AnyLink>[] = []
+      const uploads: Promise<void | AnyLink>[] = []
 
-      if (operations.length) {
-        for (const dbMeta of noLoaderOps.concat(operations)) {
-          const uploadP = (async () => {
-            const car = await this.loader.carStore!.load(dbMeta.car)
-            if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
-            return await this.loader.remoteCarStore!.save(car)
-          })()
-          uploads.push(uploadP)
-        }
+      for (const dbMeta of noLoaderOps) {
+        const uploadP = (async () => {
+          const car = await this.loader.carStore!.load(dbMeta.car)
+          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+          return this.loader.remoteCarStore!.save(car)
+        })()
+        uploads.push(uploadP)
       }
+
+      for (const dbMeta of operations) {
+        const uploadP = (async () => {
+          const car = await this.loader.carStore!.load(dbMeta.car)
+          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
+          return this.loader.remoteCarStore!.save(car)
+        })()
+        uploads.push(uploadP)
+      }
+
       if (fileOperations.length) {
         const dbLoader = this.loader as DbLoader
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
           const uploadP = (async () => {
             const fileBlock = await dbLoader.fileStore!.load(fileCid)
-            await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
+            return dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
           })()
           uploads.push(uploadP)
         }
@@ -127,9 +139,14 @@ export abstract class RemoteWAL {
       await Promise.all(uploads)
       // clear operations, leaving any new ones that came in while we were uploading
       if (operations.length) {
-        await this.loader.remoteMetaStore?.save(operations[operations.length - 1])
-        this.walState.noLoaderOps.splice(0, noLoaderOps.length)
+        const lastOp = operations[operations.length - 1]
+        console.log('saving remote meta', lastOp.car.toString())
+        await this.loader.remoteMetaStore?.save(lastOp).catch(e => {
+          console.error('error saving remote meta', e)
+          throw e
+        })
       }
+      this.walState.noLoaderOps.splice(0, noLoaderOps.length)
       this.walState.operations.splice(0, operations.length)
       this.walState.fileOperations.splice(0, fileOperations.length)
       await this.save(this.walState)
@@ -170,6 +187,6 @@ export abstract class DataStore {
   }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>
-  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise<void|AnyLink>
+  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise<void | AnyLink>
   abstract remove(cid: AnyLink): Promise<void>
 }
