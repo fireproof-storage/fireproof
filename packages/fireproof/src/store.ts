@@ -121,7 +121,7 @@ export abstract class RemoteWAL {
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
           const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
-          if (!car) return // throw new Error(`missing car ${dbMeta.car.toString()}`)
+          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
           await this.loader.remoteCarStore!.save(car)
           this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
         })
@@ -131,7 +131,7 @@ export abstract class RemoteWAL {
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
           const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
-          if (!car) return // throw new Error(`missing car ${dbMeta.car.toString()}`)
+          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
           await this.loader.remoteCarStore!.save(car)
           this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
         })

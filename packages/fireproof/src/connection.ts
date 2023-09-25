@@ -18,10 +18,7 @@ export abstract class Connection {
 
   async refresh() {
     await this.loader!.remoteMetaStore!.load('main')
-    await this.loader!.remoteWAL?._process().catch(e => {
-      console.error('wal error', e)
-      throw e
-    })
+    await this.loader!.remoteWAL?._process()
   }
 }
 // type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
