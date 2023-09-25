@@ -93,10 +93,10 @@ export abstract class Loader {
     return connection
   }
 
-  connectRemote(connection: Connection) {
+  connectRemote(connection: Connection, storageConnection?: Connection) {
     connection.loader = this
     this._connectRemoteMeta(connection)
-    this._connectRemoteStorage(connection)
+    this._connectRemoteStorage(storageConnection || connection)
 
     this.remoteMetaLoading = this.remoteMetaStore!.load('main').then(() => {})
 

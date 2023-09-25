@@ -26,6 +26,7 @@ export abstract class AbstractConnectIPFS extends Connection {
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
     const url = `https://${params.car}.ipfs.w3s.link/`
+    console.log('dataDownload', url)
     const response = await fetch(url)
     if (response.ok) {
       return new Uint8Array(await response.arrayBuffer())
@@ -50,7 +51,6 @@ export abstract class AbstractConnectIPFS extends Connection {
 
   async metaDownload(params: DownloadMetaFnParams) {
     // const callId = Math.random().toString(36).slice(2, 9)
-    // console.log('metadl', callId, params)
     const client = await this.authorizedClient()
     if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
     const clockProofs = await this.clockProofsForDb()
