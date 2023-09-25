@@ -5,12 +5,9 @@ import { AnyBlock, AnyLink, CommitOpts, DbMeta } from './types'
 import { PACKAGE_VERSION } from './version'
 import type { Loader } from './loader'
 import { DbLoader } from './loaders'
-// import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
-
-// const mockStore = new Map<string, ToString<WALState>>()
 
 abstract class VersionedStore {
   STORAGE_VERSION: string = STORAGE_VERSION

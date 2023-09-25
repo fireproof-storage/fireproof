@@ -18,7 +18,6 @@ import type {
   DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { Connection } from './connection'
-// import type { DataStore, MetaStore, RemoteWAL } from './store'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 
 // ts-unused-exports:disable-next-line
