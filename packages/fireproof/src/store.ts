@@ -108,15 +108,11 @@ export abstract class RemoteWAL {
     const rmlp = (async () => {
       const operations = [...this.walState.operations]
       const fileOperations = [...this.walState.fileOperations]
-      const noLoaderOps = [...this.walState.noLoaderOps]
       const uploads: Promise<void | AnyLink>[] = []
-      const limit = pLimit(5) // Create a limiter with concurrency 5
-
-      // const opId = Math.random().toString(36).slice(2, 5)
+      const noLoaderOps = [...this.walState.noLoaderOps]
+      const limit = pLimit(5)
 
       if (operations.length + fileOperations.length + noLoaderOps.length === 0) return
-
-      // console.log('processing', opId, operations.length, fileOperations.length, noLoaderOps.length)
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
@@ -157,7 +153,6 @@ export abstract class RemoteWAL {
           console.error('error uploading', errors)
           throw errors[0].reason
         }
-        // clear operations, leaving any new ones that came in while we were uploading
         if (operations.length) {
           const lastOp = operations[operations.length - 1]
           // console.log('saving remote meta', lastOp.car.toString())
@@ -168,28 +163,12 @@ export abstract class RemoteWAL {
           })
         }
       } finally {
-        // console.log('processed', opId, this.walState.operations.length, this.walState.fileOperations.length, this.walState.noLoaderOps.length)
-
         await this.save(this.walState)
       }
     })()
     this.loader.remoteMetaLoading = rmlp
     await rmlp
   }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  // async load(branch = 'main'): Promise<WALState | null> {
-  //   const got = mockStore.get(branch)
-  //   if (!got) return null
-  //   return parse<WALState>(got)
-  // }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  // async save(state: WALState, branch = 'main'): Promise<null> {
-  //   const encoded: ToString<WALState> = format(state)
-  //   mockStore.set(branch, encoded)
-  //   return null
-  // }
 
   abstract load(branch?: string): Promise<WALState | null>
   abstract save(state: WALState, branch?: string): Promise<void>
