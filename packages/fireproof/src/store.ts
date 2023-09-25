@@ -66,7 +66,7 @@ export abstract class RemoteWAL {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready
-    console.log('enqueue', dbMeta.car.toString(), opts)
+    // console.log('enqueue', dbMeta.car.toString(), opts)
     if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta)
     } else {
@@ -141,7 +141,7 @@ export abstract class RemoteWAL {
       // clear operations, leaving any new ones that came in while we were uploading
       if (operations.length) {
         const lastOp = operations[operations.length - 1]
-        console.log('saving remote meta', lastOp.car.toString())
+        // console.log('saving remote meta', lastOp.car.toString())
         await this.loader.remoteMetaStore?.save(lastOp).catch(e => {
           console.error('error saving remote meta', e)
           throw e

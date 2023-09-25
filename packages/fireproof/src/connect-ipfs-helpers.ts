@@ -26,7 +26,6 @@ export abstract class AbstractConnectIPFS extends Connection {
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
     const url = `https://${params.car}.ipfs.w3s.link/`
-    console.log('dataDownload', url)
     const response = await fetch(url)
     if (response.ok) {
       return new Uint8Array(await response.arrayBuffer())
@@ -39,7 +38,6 @@ export abstract class AbstractConnectIPFS extends Connection {
     const client = await this.authorizedClient()
     if (!client) { throw new Error('client not initialized') }
     validateDataParams(params)
-    console.log('dataUpload', params.car)
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
@@ -123,14 +121,13 @@ export abstract class AbstractConnectIPFS extends Connection {
         // @ts-ignore
         outBytess.push(event.value.data.dbMeta as Uint8Array)
       } else {
-        console.log('fetchAndUpdateHead', remoteHead.toString(), cid.toString())
+        // console.log('fetchAndUpdateHead', remoteHead.toString(), cid.toString())
         const url = `https://${cid.toString()}.ipfs.w3s.link/`
         const response = await fetch(url, { redirect: 'follow' })
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer())
           await cache.put(cid, metaBlock)
           const event = await decodeEventBlock(metaBlock)
-          console.log('fetchAndUpdateHead', event.value.data)
           // @ts-ignore
           outBytess.push(event.value.data.dbMeta as Uint8Array)
         } else {
