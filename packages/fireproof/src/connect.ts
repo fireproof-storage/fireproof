@@ -54,7 +54,21 @@ export const connect = {
       schemaName = location.origin
     }
     const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
-    // hack time
+    loader!.connectRemote(connection)
+    ipfsCxs.set(name, connection)
+    return connection
+  },
+  hybrid: (db: Database,
+    schemaName?: string) => {
+    const { name, _crdt: { blocks: { loader } } } = db
+    if (!name) throw new Error('database name is required')
+    if (ipfsCxs.has(name)) {
+      return ipfsCxs.get(name)!
+    }
+    if (!schemaName && location) {
+      schemaName = location.origin
+    }
+    const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
     const s3conf = {
       upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
       download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'

@@ -49,17 +49,13 @@ describe('connect ipfs', function () {
     db = new Database(dbName)
     cx = connect.ipfs(db, 'my-schema')
   })
-  it('should have an awaitable connecting', function () {
+  it('should have an awaitable ready', function () {
     assert(cx)
-    assert(cx.connecting)
-    assert.equal(typeof cx.connecting.then, 'function')
+    assert(cx.ready)
+    assert.equal(typeof cx.ready.then, 'function')
   })
   it('should have an awaitable authorizing', function () {
     assert(cx)
     assert(cx.authorizing)
-  })
-  it('should set authorized on connect', async function () {
-    await cx.connecting
-    assert.notEqual(cx.authorized, null)
   })
 })

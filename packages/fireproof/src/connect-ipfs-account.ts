@@ -142,12 +142,12 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async authorizedClockSpace(params: ConnectIPFSParams): Promise<`did:${string}:${string}`> {
-    const callId = Math.random().toString(36).substring(7)
-    console.log('authorizedClockSpace', this.constructor.name, this.authorizing, this.loaded, callId, params)
+    // const callId = Math.random().toString(36).substring(7)
+    // console.log('authorizedClockSpace', this.constructor.name, this.authorizing, this.loaded, callId, params)
     // we are waiting on authorising
     // and waiting to query until we have synced the accountDb
     await this.loaded
-    console.log('authorizedClockSpace', this.constructor.name, callId, 'loaded')
+    // console.log('authorizedClockSpace', this.constructor.name, callId, 'loaded')
     const { rows } = await this.accountDb.query('clockName', { key: this.encodeSpaceName(params) })
     if (rows.length) {
       const doc = rows[0].doc as ClockSpaceDoc

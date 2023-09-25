@@ -124,18 +124,18 @@ export abstract class Loader {
     }
   }
 
-  async mergeDbMetaIntoClock(meta: DbMeta, tag: string): Promise<void> {
+  async mergeDbMetaIntoClock(meta: DbMeta, _tag: string): Promise<void> {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
       // console.log('car log noop', tag, meta.car.toString())
       return
     }
-    console.log('car log merge', tag, meta.car.toString())
+    // console.log('car log merge', tag, meta.car.toString())
     const carHeader = await this.loadCarHeaderFromMeta(meta) as DbCarHeader
-    console.log('car header', tag, carHeader.head.toString(), carHeader)
+    // console.log('car header', tag, carHeader.head.toString(), carHeader)
     await this.getMoreReaders(carHeader.cars)
-    console.log('updating car log', tag)
+    // console.log('updating car log', tag)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
   }
@@ -336,8 +336,6 @@ export abstract class Loader {
 
   protected async getMoreReaders(cids: AnyLink[]) {
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
-    console.log('getMoreReaders', missing)
-    await Promise.all(cids.map(cid => this.loadCar(cid)))
-    console.log('getMoreReaders done', missing)
+    await Promise.all(missing.map(cid => this.loadCar(cid)))
   }
 }

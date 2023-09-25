@@ -22,8 +22,7 @@ export class CRDTClock {
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null = null) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    console.log('applyHead', updates?.length,
-      'og', ogHead.toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
+    // console.log('applyHead', updates?.length, 'og', ogHead.toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
     if (ogHead.toString() === newHead.toString()) {
       this.watchers.forEach((fn) => fn(updates || []))
       return
@@ -34,7 +33,6 @@ export class CRDTClock {
       this.watchers.forEach((fn) => fn(updates || []))
       return
     }
-    console.log('applyHead...')
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
       if (tblocks instanceof Transaction) return await fn(tblocks)
       if (!this.blocks) throw new Error('missing blocks')
@@ -44,9 +42,7 @@ export class CRDTClock {
     const { head } = await withBlocks(tblocks, async (tblocks) => {
       let head = this.head
       for (const cid of newHead) {
-        console.log('applyHead', 'advance', cid.toString())
         head = await advance(tblocks, head, cid)
-        console.log('applyHead', 'advanced', head.toString())
       }
       const result = await root(tblocks, head)
       for (const { cid, bytes } of [...result.additions, ...result.removals]) {
@@ -54,7 +50,6 @@ export class CRDTClock {
       }
       return { head }
     })
-    console.log('applyHead!', 'new', head.toString(), 'og', ogHead.toString())
 
     if (this.watchers.size && !updates) {
       const changes = await clockChangesSince(this.blocks!, head, prevHead, {})
