@@ -13,6 +13,7 @@ import type {
   AnyBlock, AnyCarHeader, AnyLink, BulkResult,
   CarLoaderHeader,
   CommitOpts,
+  DbCarHeader,
   DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
 import type { Connection } from './connection'
@@ -77,7 +78,10 @@ export abstract class Loader {
     remote.onLoad('main', async (metas) => {
       if (metas) {
         // console.log('got metas from remote', metas.map(m => m.car.toString()))
-        await this.handleDbMetasFromStore(metas)
+        await this.handleDbMetasFromStore(metas).catch(e => {
+          console.error('error handling remote metas', e)
+          throw e
+        })
       }
     })
     this.remoteMetaStore = remote
@@ -124,11 +128,14 @@ export abstract class Loader {
     if (meta.key) { await this.setKey(meta.key) }
     // todo we should use a this.longCarLog() method that loads beyond compactions
     if (cidListIncludes(this.carLog, meta.car)) {
-      // console.log('car log noop', meta.car.toString())
+      console.log('car log noop', meta.car.toString())
       return
     }
-    const carHeader = await this.loadCarHeaderFromMeta(meta)
+    console.log('car log merge', meta.car.toString())
+    const carHeader = await this.loadCarHeaderFromMeta(meta) as DbCarHeader
+    console.log('car header', carHeader.head.toString(), carHeader)
     await this.getMoreReaders(carHeader.cars)
+    console.log('updating car log')
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
   }
@@ -328,6 +335,9 @@ export abstract class Loader {
   }
 
   protected async getMoreReaders(cids: AnyLink[]) {
+    const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
+    console.log('getMoreReaders', missing)
     await Promise.all(cids.map(cid => this.loadCar(cid)))
+    console.log('getMoreReaders done', missing)
   }
 }
