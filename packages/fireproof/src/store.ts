@@ -1,3 +1,4 @@
+import pLimit from 'p-limit'
 import { format, parse, ToString } from '@ipld/dag-json'
 import { AnyBlock, AnyLink, CommitOpts, DbMeta } from './types'
 
@@ -90,9 +91,11 @@ export abstract class RemoteWAL {
       await this._int_process()
     })()
     this.processing = p
-    await p
-    this.processing = undefined
-
+    try {
+      await p
+    } finally {
+      this.processing = undefined
+    }
     if (this.walState.operations.length ||
       this.walState.fileOperations.length ||
       this.walState.noLoaderOps.length) {
@@ -107,12 +110,18 @@ export abstract class RemoteWAL {
       const fileOperations = [...this.walState.fileOperations]
       const noLoaderOps = [...this.walState.noLoaderOps]
       const uploads: Promise<void | AnyLink>[] = []
+      const opId = Math.random().toString(36).slice(2, 5)
+
+      if (operations.length + fileOperations.length + noLoaderOps.length === 0) return
+
+      console.log('processing', opId, operations.length, fileOperations.length, noLoaderOps.length)
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = (async () => {
           const car = await this.loader.carStore!.load(dbMeta.car)
           if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
-          return this.loader.remoteCarStore!.save(car)
+          await this.loader.remoteCarStore!.save(car)
+          this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
         })()
         uploads.push(uploadP)
       }
@@ -121,7 +130,8 @@ export abstract class RemoteWAL {
         const uploadP = (async () => {
           const car = await this.loader.carStore!.load(dbMeta.car)
           if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`)
-          return this.loader.remoteCarStore!.save(car)
+          await this.loader.remoteCarStore!.save(car)
+          this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
         })()
         uploads.push(uploadP)
       }
@@ -131,26 +141,34 @@ export abstract class RemoteWAL {
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
           const uploadP = (async () => {
             const fileBlock = await dbLoader.fileStore!.load(fileCid)
-            return dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
+            await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile })
+            this.walState.fileOperations = this.walState.fileOperations.filter(op => op.cid !== fileCid)
           })()
           uploads.push(uploadP)
         }
       }
 
-      await Promise.all(uploads)
-      // clear operations, leaving any new ones that came in while we were uploading
-      if (operations.length) {
-        const lastOp = operations[operations.length - 1]
-        // console.log('saving remote meta', lastOp.car.toString())
-        await this.loader.remoteMetaStore?.save(lastOp).catch(e => {
-          console.error('error saving remote meta', e)
-          throw e
-        })
+      try {
+        const res = await Promise.allSettled(uploads)
+        const errors = res.filter(r => r.status === 'rejected') as PromiseRejectedResult[]
+        if (errors.length) {
+          console.error('error uploading', errors)
+          throw errors[0].reason
+        }
+        // clear operations, leaving any new ones that came in while we were uploading
+        if (operations.length) {
+          const lastOp = operations[operations.length - 1]
+          // console.log('saving remote meta', lastOp.car.toString())
+          await this.loader.remoteMetaStore?.save(lastOp).catch(e => {
+            console.error('error saving remote meta', e)
+            throw e
+          })
+        }
+      } finally {
+        console.log('processed', opId, this.walState.operations.length, this.walState.fileOperations.length, this.walState.noLoaderOps.length)
+
+        await this.save(this.walState)
       }
-      this.walState.noLoaderOps.splice(0, noLoaderOps.length)
-      this.walState.operations.splice(0, operations.length)
-      this.walState.fileOperations.splice(0, fileOperations.length)
-      await this.save(this.walState)
     })()
     this.loader.remoteMetaLoading = rmlp
     await rmlp

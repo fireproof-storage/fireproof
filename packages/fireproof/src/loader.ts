@@ -278,7 +278,11 @@ export abstract class Loader {
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')
-    return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+
+    return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore).catch(e => {
+      console.log('loadCar error', cid.toString(), e)
+      throw e
+    })
   }
 
   protected async storesLoadCar(cid: AnyLink, local: AbstractDataStore, remote?: AbstractDataStore, publicFiles?: boolean): Promise<CarReader> {

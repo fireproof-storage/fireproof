@@ -38,6 +38,7 @@ export abstract class AbstractConnectIPFS extends Connection {
     const client = await this.authorizedClient()
     if (!client) { throw new Error('client not initialized') }
     validateDataParams(params)
+    console.log('dataUpload', params.car.toString())
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
     // todo if params.type === 'file' and database is public also uploadCAR
