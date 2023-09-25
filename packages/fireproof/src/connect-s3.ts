@@ -15,7 +15,7 @@ export class ConnectS3 extends Connection {
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     validateDataParams(params)
-    console.log('s3 dataUpload', params.car.toString())
+    // console.log('s3 dataUpload', params.car.toString())
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`)
     const response = await fetch(fetchUploadUrl)
     if (!response.ok) {
@@ -24,7 +24,7 @@ export class ConnectS3 extends Connection {
     }
     const { uploadURL } = await response.json() as { uploadURL: string }
     const done = await fetch(uploadURL, { method: 'PUT', body: bytes })
-    console.log('s3 dataUpload done', params.car.toString(), done)
+    // console.log('s3 dataUpload done', params.car.toString(), done)
     if (!done.ok) throw new Error('failed to upload data ' + done.statusText)
   }
 
