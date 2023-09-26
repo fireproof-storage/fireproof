@@ -4,13 +4,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory,getDirectoryName,readImages } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory, getDirectoryName, readImages } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 import { MetaStore } from '../dist/test/store-fs.esm.js'
 import fs from "fs"
 import path, { dirname } from "path"
-import {File,Blob} from "web-file-polyfill"
+import { File, Blob } from "web-file-polyfill"
 import { equal } from 'assert'
 
 /**
@@ -271,6 +271,7 @@ describe('basic Database parallel writes / public', function () {
   })
   it('has changes', async function () {
     const { rows, clock } = await db.changes([])
+    // console.log(rows, 'These are the rows after the changes')
     equals(clock[0], db._crdt.clock.head[0])
     equals(rows.length, 10)
     for (let i = 0; i < 10; i++) {
@@ -320,52 +321,46 @@ describe('basic Database with subscription', function () {
   })
 })
 
-describe('database with files input', async function()
-{
+describe('database with files input', async function () {
   /** @type {Database} */
   let db
-  let imagefiles=[]
+  let imagefiles = []
   let result
-  
 
-  before(function()
-  {
-    let directoryname=getDirectoryName(import.meta.url)
-    let images=readImages(directoryname,'test-images',['image1.jpg','image2.jpg'])
-    images.forEach((image,index)=>
-      {
-        const blob = new Blob([image]);
-        imagefiles.push(new File([blob], `image${index+1}.jpg`, { type: "image/jpeg" }));
-      })
+
+  before(function () {
+    let directoryname = getDirectoryName(import.meta.url)
+    let images = readImages(directoryname, 'test-images', ['image1.jpg', 'image2.jpg'])
+    images.forEach((image, index) => {
+      const blob = new Blob([image]);
+      imagefiles.push(new File([blob], `image${index + 1}.jpg`, { type: "image/jpeg" }));
+    })
   })
 
-  beforeEach(async function()
-  {
+  beforeEach(async function () {
     // await resetDirectory(MetaStore.dataDir, 'fireproof-with-images')
-    db=new Database('fireproof-with-images')
+    db = new Database('fireproof-with-images')
   })
 
-  it("Should upload images",async function()
-  {
-    console.log('These are the image files',imagefiles)
-    const doc={
-      _id:"images-main",
-      type:"files",
-      _files:{
-        "image1":imagefiles[0],
-        "image2":imagefiles[1]
+  it("Should upload images", async function () {
+    // console.log('These are the image files', imagefiles)
+    const doc = {
+      _id: "images-main",
+      type: "files",
+      _files: {
+        "image1": imagefiles[0],
+        "image2": imagefiles[1]
       }
     }
 
-    result=await db.put(doc)
-    console.log(result,"This is the result when the images are stored")
-    equals(result.id,'images-main')
+    result = await db.put(doc)
+    // console.log(result, "This is the result when the images are stored")
+    equals(result.id, 'images-main')
   })
 
-  it("Should fetch the images",async function()
-  {
-    let data=await db.get(result.id);
-    console.log(data);
+  it("Should fetch the images", async function () {
+    let data = await db.get(result.id);
+    // console.log(data);
     // console.log(data)
     // Object.entries(data._files).map((entry,index)=>
     //   {
@@ -418,7 +413,7 @@ describe('database with files input', async function()
   //     _files:{
   //     }
   //   }
-    
+
   //   const promise1=new Promise((resolve,reject)=>
   //   {
   //     setTimeout(async ()=>
@@ -470,8 +465,8 @@ describe('database with files input', async function()
 
   //   //Now lets identify the heads of both the databases
   //   //Hence both the databases have different clock heads
-  
-    
+
+
 
   // })
 })
