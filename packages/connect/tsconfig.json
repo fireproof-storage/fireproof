@@ -1,8 +1,8 @@
 {
   "include": ["src", "test", ".eslintrc.cjs", "scripts"],
   "compilerOptions": {
-    "module": "esnext",
-    "target": "esnext",
+    "module": "commonjs",
+    "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "strict": true,
     "moduleResolution": "node",
