@@ -28,11 +28,12 @@
   ],
   "type": "module",
   "scripts": {
+    "prepublishOnly": "npm run build",
     "build:clean": "rm -rf dist/*",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
-    "build": "npm run build:tsc && npm run build:script"
+    "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.* ../fireproof/test/www/"
   },
   "keywords": [],
   "author": "",
