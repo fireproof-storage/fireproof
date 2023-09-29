@@ -1,5 +1,5 @@
-import { Loader } from './loader'
-import { UploadMetaFnParams, UploadDataFnParams, AnyLink, DownloadMetaFnParams, DownloadDataFnParams } from './types'
+import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from './types'
+import type { AnyLink, Loader } from '@fireproof/core'
 
 export abstract class Connection {
   ready: Promise<any>
@@ -21,5 +21,3 @@ export abstract class Connection {
     await this.loader!.remoteWAL?._process()
   }
 }
-// type MetaUploadFn = (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
-// type DataUploadFn = (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>

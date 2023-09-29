@@ -6,11 +6,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, equalsJSON } from './helpers.js'
-import { Database } from '../dist/test/database.esm.js'
-import { connect } from '../dist/test/connect.esm.js'
+import { assert, equals, notEquals, matches, resetDirectory, equalsJSON } from '../../fireproof/test/helpers.js'
+import { Database } from '../../fireproof/dist/test/database.esm.js'
+import { connect } from '../../fireproof/dist/test/connect.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
-import { MetaStore } from '../dist/test/store-fs.esm.js'
+import { MetaStore } from '../../fireproof/dist/test/store-fs.esm.js'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 import { type } from 'os'

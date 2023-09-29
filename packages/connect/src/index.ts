@@ -1,9 +1,13 @@
 import { ConnectS3 } from './connect-s3'
 import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
 import { Connection } from './connection'
-import { Database } from './database'
-import type { DbLoader } from './loaders'
-import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams, AnyLink } from './types'
+// import type { DbLoader, Database, AnyLink } from '@fireproof/core'
+import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams } from './types'
+
+// Declare types locally
+type DbLoader = any;
+type Database = any;
+type AnyLink = any;
 
 type RawConnectionParams = {
   metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>,

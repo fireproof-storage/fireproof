@@ -1,13 +1,14 @@
 import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
 import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
-import { validateDataParams } from './connect'
+import { validateDataParams } from '.'
 import { Connection } from './connection'
 import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Proof } from '@ucanto/interface'
 import { CarClockHead } from './connect-ipfs'
+
 
 export abstract class AbstractConnectIPFS extends Connection {
   eventBlocks = new MemoryBlockstore() // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js

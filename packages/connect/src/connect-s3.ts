@@ -1,5 +1,5 @@
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
-import { validateDataParams, validateMetaParams } from './connect'
+import { validateDataParams, validateMetaParams } from '.'
 import { Connection } from './connection'
 import fetch from 'cross-fetch'
 
@@ -53,6 +53,44 @@ export class ConnectS3 extends Connection {
     return bytes
   }
 
+  /**
+   * metaDownload Function
+   *
+   * This function downloads metadata for a specific name and branch.
+   *
+   * Proposed Algorithm for Efficient Reads:
+   *
+   * 1. Read the Directory:
+   *    - Fetch the list of keys in the directory, sorted by their timestamp in descending order—newest to oldest.
+   *
+   * 2. Initialize a Skip List:
+   *    - Create an empty set data structure to keep track of the parent nodes that can be skipped.
+   *
+   * 3. Iterate through Keys:
+   *    - Start from the newest key and move towards the oldest.
+   *    - If the key is in the skip list, skip the read and continue.
+   *    - Read the node and add its parents to the skip list.
+   *
+   * 4. Idempotent Application:
+   *    - Apply the nodes to your DAG. Given that your application is idempotent, there's no harm in reapplying nodes,
+   *      but the skip list should minimize this.
+   *
+   * 5. State Tracking:
+   *    - Keep track of the oldest key you've successfully processed. This becomes the starting point for your next read,
+   *      adjusted for the safety window.
+   *
+   * 6. Retry Logic:
+   *    - If a key is missing, you could either skip it (since the system is designed to be eventually consistent) or
+   *      implement some kind of retry logic.
+   *
+   * By implementing this algorithm, we aim to minimize the number of reads and work with the most current snapshot
+   * of the data. It also avoids the need to delete keys, thereby averting the read-modify-write race condition.
+   *
+   * Writes: https://chat.openai.com/share/5dd42b0e-cbb8-4006-823b-7269df05e9eb
+   *
+   * @param params - The parameters for the download, including the name and branch.
+   * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
+   */
   async metaDownload(params: DownloadMetaFnParams) {
     validateMetaParams(params)
     const { name, branch } = params
