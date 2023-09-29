@@ -3,7 +3,6 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-import { connect } from './connect'
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
 import { DbResponse, ChangesResponse } from './types'
 
@@ -69,6 +68,7 @@ export class Database {
     }
   }
 
+  // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   async query(field: string | MapFn, opts: QueryOpts = {}) {
     const idx = (typeof field === 'string')
       ? index({ _crdt: this._crdt }, field)
@@ -78,11 +78,6 @@ export class Database {
 
   async compact() {
     await this._crdt.compact()
-  }
-
-  connect(schemaName?: string) {
-    const conn = connect.ipfs(this, schemaName)
-    return conn
   }
 
   // move this stuff to connect
@@ -130,14 +125,7 @@ type ListenerFn = (docs: Doc[]) => Promise<void> | void
 
 export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
-    const db = new Database(name, opts)
-      // public API
-      ;['get', 'put', 'del', 'changes', 'subscribe', 'query', 'compact', 'connect', 'getDashboardURL', 'openDashboard'].forEach((fn) => {
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      db[fn] = db[fn].bind(db)
-    })
-    Database.databases.set(name, db)
+    Database.databases.set(name, new Database(name, opts))
   }
   return Database.databases.get(name)!
 }

@@ -1,13 +1,8 @@
 import { ConnectS3 } from './connect-s3'
 import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
 import { Connection } from './connection'
-// import type { DbLoader, Database, AnyLink } from '@fireproof/core'
+import type { Loader, Database, AnyLink } from '@fireproof/core'
 import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams } from './types'
-
-// Declare types locally
-type DbLoader = any;
-type Database = any;
-type AnyLink = any;
 
 type RawConnectionParams = {
   metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>,
@@ -34,17 +29,17 @@ const ipfsCxs = new Map<string, ConnectIPFS>()
 
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
-    { _crdt: { blocks: { loader: DbLoader } } },
-  { upload, download }: { upload: string, download: string }) => {
+    { _crdt: { blocks: { loader: Loader } } },
+    { upload, download }: { upload: string, download: string }) => {
     const connection = new ConnectS3(upload, download)
-    loader.connectRemote(connection)
+    connection.connect(loader!)
     return connection
   },
   raw: ({ _crdt: { blocks: { loader } } }:
-    { _crdt: { blocks: { loader: DbLoader } } },
-  params: RawConnectionParams) => {
+    { _crdt: { blocks: { loader: Loader } } },
+    params: RawConnectionParams) => {
     const connection = new ConnectRaw(params)
-    loader.connectRemote(connection)
+    connection.connect(loader!)
     return connection
   },
   ipfs: (db: Database,
@@ -58,7 +53,7 @@ export const connect = {
       schemaName = location.origin
     }
     const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
-    loader!.connectRemote(connection)
+    connection.connect(loader!)
     ipfsCxs.set(name, connection)
     return connection
   },
@@ -72,16 +67,16 @@ export const connect = {
     if (!schemaName && location) {
       schemaName = location.origin
     }
-    const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
     const s3conf = {
       upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
       download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
     }
     const s3conn = new ConnectS3(s3conf.upload, s3conf.download)
-
-    loader!.connectRemote(connection, s3conn)
-    ipfsCxs.set(name, connection)
-    return connection
+    s3conn.connectStorage(loader!)
+    const ipfsConn = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
+    ipfsConn.connectMeta(loader!)
+    ipfsCxs.set(name, ipfsConn)
+    return ipfsConn
   }
 }
 
