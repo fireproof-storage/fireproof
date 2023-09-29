@@ -4,10 +4,11 @@ import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, Up
 import { validateDataParams } from '.'
 import { Connection } from './connection'
 import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
-import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Proof } from '@ucanto/interface'
 import { CarClockHead } from './connect-ipfs'
+
+import { encodeCarFile } from '@fireproof/core'
 
 
 export abstract class AbstractConnectIPFS extends Connection {
@@ -18,7 +19,7 @@ export abstract class AbstractConnectIPFS extends Connection {
   abstract clockSpaceDIDForDb(): `did:${string}:${string}`;
 
   issuer(client: Client) {
-    // @ts-ignore
+    // @ts-ignoree
     const { issuer } = client._agent
     if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
     return issuer

@@ -1,8 +1,9 @@
 // ts-unused-exports:disable-next-line
-import { connect } from './connect'
-// ts-unused-exports:disable-next-line
 export * from './database'
 // ts-unused-exports:disable-next-line
 export * from './index'
 // ts-unused-exports:disable-next-line
-export { connect }
+export * from './loader-helpers'
+
+export * from './store'
+export * from './loader'

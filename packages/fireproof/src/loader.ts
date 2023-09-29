@@ -3,10 +3,9 @@ import { CarReader } from '@ipld/car'
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './crypto-web'
-import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
-import type { DataStore as AbstractDataStore } from './store'
+import type { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
 
 import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
@@ -17,8 +16,11 @@ import type {
   DbCarHeader,
   DbMeta, FileCarHeader, FileResult, FireproofOptions
 } from './types'
-import type { Connection } from './connection'
+// import type { Connection } from './connection'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
+
+
+
 
 // ts-unused-exports:disable-next-line
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
@@ -45,11 +47,11 @@ export abstract class Loader {
   opts: FireproofOptions = {}
 
   remoteMetaLoading: Promise<void> | undefined
-  remoteMetaStore: RemoteMetaStore | undefined
-  remoteCarStore: RemoteDataStore | undefined
-  remoteWAL: RemoteWAL | undefined
-  metaStore: MetaStore | undefined
-  carStore: DataStore | undefined
+  remoteMetaStore: AbstractMetaStore | undefined
+  remoteCarStore: AbstractDataStore | undefined
+  remoteWAL: RemoteWAL
+  metaStore: MetaStore
+  carStore: DataStore
   carLog: AnyLink[] = []
   carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
@@ -64,43 +66,16 @@ export abstract class Loader {
   constructor(name: string, opts?: FireproofOptions) {
     this.name = name
     this.opts = opts || this.opts
-    this.ready = this.initializeStores().then(async () => {
+    this.metaStore = new MetaStore(this.name)
+    this.carStore = new DataStore(this)
+    this.remoteWAL = new RemoteWAL(this)
+    this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error('stores not initialized')
       const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
     })
-  }
-
-  _connectRemoteMeta(connection: Connection) {
-    const remote = new RemoteMetaStore(this.name, connection)
-    remote.onLoad('main', async (metas) => {
-      if (metas) {
-        await this.handleDbMetasFromStore(metas)
-      }
-    })
-    this.remoteMetaStore = remote
-    return connection
-  }
-
-  _connectRemoteStorage(connection: Connection) {
-    this.remoteCarStore = new RemoteDataStore(this, connection)
-    return connection
-  }
-
-  connectRemote(connection: Connection, storageConnection?: Connection) {
-    connection.loader = this
-    this._connectRemoteMeta(connection)
-    this._connectRemoteStorage(storageConnection || connection)
-
-    this.remoteMetaLoading = this.remoteMetaStore!.load('main').then(() => {})
-
-    connection.loaded = Promise.all([this.ready, this.remoteMetaLoading]).then(() => {
-      void this.remoteWAL?._process()
-    })
-
-    return connection
   }
 
   async snapToCar(carCid: AnyLink | string) {
@@ -248,26 +223,6 @@ export abstract class Loader {
     return got
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  protected async initializeStores() {
-    // const isBrowser = typeof window !== 'undefined'
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    // const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
-    // if (module) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    // this.metaStore = new module.MetaStore(this.name) as MetaStore
-    this.metaStore = new MetaStore(this.name)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    // this.carStore = new module.DataStore(this) as DataStore
-    this.carStore = new DataStore(this)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    // this.remoteWAL = new module.RemoteWAL(this) as RemoteWAL
-    this.remoteWAL = new RemoteWAL(this)
-    // } else {
-    // throw new Error('Failed to initialize stores.')
-    // }
-  }
-
   protected abstract makeCarHeader(_result: BulkResult | IndexerResult | FileResult, _cars: AnyLink[], _compact: boolean): AnyCarHeader | FileCarHeader;
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
@@ -333,4 +288,9 @@ export abstract class Loader {
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
+}
+
+export interface Connection {
+  loader: Loader
+  loaded: Promise<void>
 }

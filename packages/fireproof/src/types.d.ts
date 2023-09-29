@@ -152,7 +152,6 @@ export interface CarMakeable {
 }
 
 
-export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 
 export type ChangesOptions = {
   dirty?: boolean

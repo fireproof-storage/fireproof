@@ -16,15 +16,13 @@ import { testConfig } from '../dist/test/store-fs.esm.js'
 import { cidListIncludes } from '../dist/test/loader.esm.js'
 
 describe('dreamcode', function () {
-  let ok, doc, result, put, get, query
+  let ok, doc, result, db
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-db')
-    ;({
-      put, get, query
-    } = fireproof('test-db'))
-    ok = await put({ _id: 'test-1', text: 'fireproof', dream: true })
-    doc = await get(ok.id)
-    result = await query('text', { range: ['a', 'z'] })
+    db = fireproof('test-db')
+    ok = await db.put({ _id: 'test-1', text: 'fireproof', dream: true })
+    doc = await db.get(ok.id)
+    result = await db.query('text', { range: ['a', 'z'] })
   })
   it('should put', function () {
     assert(ok)
@@ -40,7 +38,7 @@ describe('dreamcode', function () {
     equals(result.rows[0].key, 'fireproof')
   })
   it('should query with function', async function () {
-    const result = await query((doc) => doc.dream)
+    const result = await db.query((doc) => doc.dream)
     assert(result)
     assert(result.rows)
     equals(result.rows.length, 1)

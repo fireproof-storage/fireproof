@@ -1,9 +1,13 @@
 /* eslint-disable import/first */
-import { AnyBlock, AnyLink, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
+import { DownloadFnParamTypes, UploadDataFnParams } from './types'
+import type { Loader, AnyBlock, AnyLink, DbMeta } from '@fireproof/core'
+
+export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
+
 import { Connection } from './connection'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
-import type { Loader } from './loader'
-// import type { Response } from 'cross-fetch'
+
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/core'
+
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'car-browser-s3'
