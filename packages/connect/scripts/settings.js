@@ -117,7 +117,7 @@ console.log('cjs/node build');
         ...commonSettings,
         outfile: `dist/browser/${filename}.iife.js`,
         format: 'iife',
-        globalName: 'Fireproof',
+        globalName: 'FireproofConnect',
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],

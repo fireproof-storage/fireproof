@@ -6,10 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
   <script src="./fireproof.iife.js?14345"></script>
+  <script src="./index.iife.js?14345"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
-      const { connect, fireproof, index } = Fireproof;
+      const { fireproof, index } = Fireproof;
+      const { connect } = FireproofConnect;
 
       let dbName
       let db
