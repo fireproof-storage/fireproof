@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, dataDir } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 
@@ -351,5 +351,47 @@ describe('basic Database with no update subscription', function () {
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
     equals(didRun, 0)
+  })
+})
+
+describe('database with files input', async function () {
+  /** @type {Database} */
+  let db
+  let imagefiles = []
+  let result
+
+
+  before(function () {
+    let directoryname = getDirectoryName(import.meta.url)
+    let images = readImages(directoryname, 'test-images', ['image1.jpg', 'image2.jpg'])
+    images.forEach((image, index) => {
+      const blob = new Blob([image]);
+      imagefiles.push(new File([blob], `image${index + 1}.jpg`, { type: "image/jpeg" }));
+    })
+  })
+
+  beforeEach(async function () {
+    // await resetDirectory(MetaStore.dataDir, 'fireproof-with-images')
+    db = new Database('fireproof-with-images')
+  })
+
+  it("Should upload images", async function () {
+    // console.log('These are the image files', imagefiles)
+    const doc = {
+      _id: "images-main",
+      type: "files",
+      _files: {
+        "image1": imagefiles[0],
+        "image2": imagefiles[1]
+      }
+    }
+
+    result = await db.put(doc)
+    // console.log(result, "This is the result when the images are stored")
+    equals(result.id, 'images-main')
+  })
+
+  it("Should fetch the images", async function () {
+    let data = await db.get(result.id);
   })
 })

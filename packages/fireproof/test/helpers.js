@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import assert from 'assert'
-import { join } from 'path'
-import { promises as fs } from 'fs'
+import { join, dirname } from 'path'
+import { promises as fs, readFileSync } from 'fs'
+import { fileURLToPath } from 'url'
 
 import { MetaStore } from '../../encrypted-blockstore/dist/lib/store-node.js'
 
@@ -70,4 +71,21 @@ export async function copyDirectory(source, destination) {
       await copyFile(sourcePath, destinationPath)
     }
   }
+}
+
+export function getDirectoryName(url) {
+  const path = fileURLToPath(url)
+  const dir_name = dirname(path);
+  return dir_name
+}
+
+export function readImages(directory, imagedirectoryname, imagenames) {
+  let images = []
+  const imagesdirectorypath = join(directory, imagedirectoryname)
+  imagenames.forEach((image) => {
+    const data = readFileSync(join(imagesdirectorypath, image))
+    images.push(data)
+  })
+
+  return images
 }
