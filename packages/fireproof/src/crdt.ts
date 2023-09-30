@@ -21,7 +21,7 @@ export class CRDT {
     this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
     this.clock.blocks = this.blocks
     this.indexBlocks = new IndexBlockstore((this.opts.persistIndexes && this.name) ? this.name + '.idx' : null, this, this.opts)
-    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
+    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => { })
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex()
@@ -34,9 +34,9 @@ export class CRDT {
     return await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
       const prevHead = [...this.clock.head]
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-      updates = updates.map(({ key, value, del }) => {
+      updates = updates.map(({ key, value, del, clock }) => {
         readFiles(this.blocks, { doc: value })
-        return { key, value, del }
+        return { key, value, del, clock }
       })
       await this.clock.applyHead(tblocks, head, prevHead, updates) // we need multi head support here if allowing calls to bulk in parallel
       return { head }
