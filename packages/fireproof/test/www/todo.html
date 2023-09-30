@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fireproof Test</title>
-  <script src="./fireproof.iife.js?17445"></script>
-  <script src="./index.iife.js?13745"></script>
+  <script src="./fireproof.iife.js"></script>
+  <script src="./connect-partykit.iife.js"></script>
   <script type="text/javascript">
     function todoApp() {
       const actorTag = Math.random().toString(36).substring(2, 7)
@@ -62,14 +62,14 @@
 
 
       const doRedraw = async () => {
-        const result = await index(db, 'created').query({ includeDocs: true });
+        const result = await db.allDocs();
         document
           .querySelector('ul')
           .innerHTML = '';
 
         for (const row of result.rows) {
           // const doc = await db.get(row.id);
-          const doc = row.doc
+          const doc = row.value
           const checkbox = document.createElement('input');
           checkbox.setAttribute('type', 'checkbox');
           if (doc.completed) {
@@ -118,7 +118,9 @@
       async function createTodoClick(e) {
         e.preventDefault();
         const input = document.querySelector('#todo');
+        input.disabled = true
         const ok = await db.put({ actor: actorTag, created: Date.now(), task: input.value, completed: false });
+        input.disabled = false
         input.value = '';
       }
       window.createTodoClick = createTodoClick;

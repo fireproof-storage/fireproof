@@ -78,7 +78,10 @@ export class RemoteWAL extends RemoteWALBase {
     try {
       const encoded: ToString<WALState> = format(state)
       localStorage.setItem(this.headerKey(branch), encoded)
-    } catch (e) {}
+    } catch (e) {
+      console.error('error saving wal', e)
+      throw e
+    }
   }
 }
 

@@ -61,6 +61,14 @@ export class Database {
     return { rows, clock: head }
   }
 
+  async allDocs() {
+    const { result, head } = await this._crdt.allDocs()
+    const rows = result.map(({ key, value, del }) => ({
+      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
+    }))
+    return { rows, clock: head }
+  }
+
   subscribe(listener: ListenerFn): () => void {
     this._listeners.add(listener)
     return () => {

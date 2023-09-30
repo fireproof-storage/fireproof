@@ -17,10 +17,14 @@ const entryPoints = fs
   .filter(file => path.extname(file) === '.ts')
   .map(file => path.join('src', file))
 
+  const doMinify = false
+  const doLog = false
+
 export function createBuildSettings(options) {
   const commonSettings = {
     entryPoints,
     bundle: true,
+    minify: doMinify,
     sourcemap: true,
     plugins: [
       esbuildPluginTsc({
@@ -30,7 +34,7 @@ export function createBuildSettings(options) {
     ...options
   }
 
-  const doLog = false
+
   function bannerLog(banner, always = '') {
     if (doLog) {
       return {
@@ -93,7 +97,7 @@ const require = createRequire(import.meta.url);
         ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
         entryPoints: [entryPoint],
-        minify: true
+        minify: false
       }
       builds.push(esmPublishConfig)
 
@@ -103,7 +107,7 @@ const require = createRequire(import.meta.url);
         format: 'cjs',
         platform: 'node',
         entryPoints: [entryPoint],
-        minify: true,
+        
         banner: bannerLog`
 console.log('cjs/node build');
 `
@@ -120,7 +124,7 @@ console.log('cjs/node build');
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
-        minify: true,
+        
         banner: bannerLog`
 console.log('browser/es2015 build');
 `,
@@ -149,7 +153,7 @@ console.log('browser/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.esm.js`,
         format: 'esm',
-        minify: true,
+        
         banner: bannerLog`
 console.log('esm/es2015 build');
 `
@@ -162,7 +166,7 @@ console.log('esm/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.cjs`,
         format: 'cjs',
-        minify: true,
+        
         banner: bannerLog`
 console.log('cjs/es2015 build');
 `
