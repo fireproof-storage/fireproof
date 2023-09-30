@@ -35,14 +35,14 @@ export abstract class RemoteWAL {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready;
-    // console.log('enqueue', dbMeta.car.toString(), opts)
+    console.log('enqueue', dbMeta.car.toString(), opts)
     if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);
     }
     await this.save(this.walState);
-    if (!opts.noLoader) { void this._process(); }
+    void this._process()
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {

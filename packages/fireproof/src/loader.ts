@@ -26,7 +26,7 @@ import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
-function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
+export function uniqueCids(list: AnyLink[], remove: AnyLink[] = []): AnyLink[] {
   const byString = new Map<string, AnyLink>()
   for (const cid of list) {
     if (cidListIncludes(remove, cid)) continue
@@ -100,7 +100,8 @@ export abstract class Loader {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    // console.log('meta', meta.car.toString())
+    console.log('meta', meta)
+    console.log('meta', meta.car.toString())
 
     if (meta.key) { await this.setKey(meta.key) }
     if (cidListIncludes(this.carLog, meta.car)) {
@@ -207,6 +208,16 @@ export abstract class Loader {
       this.carLog.unshift(cid)
     }
     return cid
+  }
+
+  async remoteFlushCars() {
+    await this.ready
+    // for each cid in car log, make a dbMeta
+    for (const cid of this.carLog) {
+      const dbMeta = { car: cid, key: this.key || null } as DbMeta
+      await this.remoteWAL!.enqueue(dbMeta, { public: false })
+    }
+    
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
