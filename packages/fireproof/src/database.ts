@@ -56,8 +56,8 @@ export class Database {
 
   async changes(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse> {
     const { result, head } = await this._crdt.changes(since, opts)
-    const rows = result.map(({ key, value, del }) => ({
-      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
+    const rows = result.map(({ key, value, del, clock }) => ({
+      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc, clock
     }))
     return { rows, clock: head }
   }
@@ -133,10 +133,10 @@ export function fireproof(name: string, opts?: FireproofOptions): Database {
     const db = new Database(name, opts)
       // public API
       ;['get', 'put', 'del', 'changes', 'subscribe', 'query', 'compact', 'connect', 'getDashboardURL', 'openDashboard'].forEach((fn) => {
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      db[fn] = db[fn].bind(db)
-    })
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+        db[fn] = db[fn].bind(db)
+      })
     Database.databases.set(name, db)
   }
   return Database.databases.get(name)!
