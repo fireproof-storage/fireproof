@@ -32,14 +32,12 @@ export abstract class Connection {
 
   connect(loader: Loader) {
     this.loader = loader
-    this.connectMeta(loader)
     this.connectStorage(loader)
-    this.loaded = Promise.all([this.loader.ready, this.loader.remoteMetaLoading]).then(() => {
-      void this.loader!.remoteWAL?._process()
-    })
+    this.connectMeta(loader)
   }
 
   connectMeta(loader: Loader) {
+    this.loader = loader
     const remote = new RemoteMetaStore(loader.name, this)
     remote.onLoad('main', async (metas) => {
       if (metas) {
@@ -48,9 +46,13 @@ export abstract class Connection {
     })
     loader.remoteMetaStore = remote
     loader.remoteMetaLoading = remote!.load('main').then(() => { })
+    this.loaded = Promise.all([loader.ready, loader.remoteMetaLoading]).then(() => {
+      void this.loader!.remoteWAL?._process()
+    })
   }
 
   connectStorage(loader: Loader) {
+    this.loader = loader
     const remote = new RemoteDataStore(loader, this)
     loader.remoteCarStore = remote
     if (isDbLoader(loader)) {

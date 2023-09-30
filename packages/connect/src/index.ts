@@ -1,7 +1,6 @@
 import { ConnectS3 } from './connect-s3'
-import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
 import { Connection } from './connection'
-import type { Loader, Database, AnyLink } from '@fireproof/core'
+import type { Loader, AnyLink } from '@fireproof/core'
 import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
 type RawConnectionParams = {
@@ -25,7 +24,6 @@ class ConnectRaw extends Connection {
   }
 }
 
-const ipfsCxs = new Map<string, ConnectIPFS>()
 
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
@@ -42,42 +40,6 @@ export const connect = {
     connection.connect(loader!)
     return connection
   },
-  ipfs: (db: Database,
-    schemaName?: string) => {
-    const { name, _crdt: { blocks: { loader } } } = db
-    if (!name) throw new Error('database name is required')
-    if (ipfsCxs.has(name)) {
-      return ipfsCxs.get(name)!
-    }
-    if (!schemaName && location) {
-      schemaName = location.origin
-    }
-    const connection = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
-    connection.connect(loader!)
-    ipfsCxs.set(name, connection)
-    return connection
-  },
-  hybrid: (db: Database,
-    schemaName?: string) => {
-    const { name, _crdt: { blocks: { loader } } } = db
-    if (!name) throw new Error('database name is required')
-    if (ipfsCxs.has(name)) {
-      return ipfsCxs.get(name)!
-    }
-    if (!schemaName && location) {
-      schemaName = location.origin
-    }
-    const s3conf = {
-      upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
-      download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
-    }
-    const s3conn = new ConnectS3(s3conf.upload, s3conf.download)
-    s3conn.connectStorage(loader!)
-    const ipfsConn = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
-    ipfsConn.connectMeta(loader!)
-    ipfsCxs.set(name, ipfsConn)
-    return ipfsConn
-  }
 }
 
 export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
@@ -92,3 +54,5 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   if (!name) throw new Error('name is required')
   if (!branch) { throw new Error('branch is required') }
 }
+
+export { Connection, ConnectS3 }

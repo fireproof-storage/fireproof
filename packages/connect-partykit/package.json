@@ -1,6 +1,6 @@
 {
-  "name": "@fireproof/connect",
-  "version": "0.13.5",
+  "name": "@fireproof/partykit",
+  "version": "0.13.8",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -11,12 +11,12 @@
       "types": "./dist/types/index.d.ts",
       "script": "./dist/browser/index.iife.js"
     },
-    "./node": {
-      "import": "./dist/node/index.esm.js",
-      "require": "./dist/node/index.cjs",
+    "./server": {
+      "import": "./dist/node/server.esm.js",
+      "require": "./dist/node/server.cjs",
       "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js",
-      "default": "./dist/node/index.esm.js"
+      "script": "./dist/browser/server.iife.js",
+      "default": "./dist/node/server.esm.js"
     }
   },
   "browser": "./dist/index.browser.iife.js",
@@ -39,25 +39,26 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "partykit": "0.0.24",
     "@hyrious/esbuild-plugin-commonjs": "^0.2.2",
     "esbuild": "^0.19.4",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-tsc": "^0.4.0",
+    "partykit": "0.0.24",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "partysocket": "0.0.8",
     "@alanshaw/pail": "^0.3.3",
+    "@fireproof/connect": "^0.13.5",
     "@fireproof/core": "^0.13.4-dev",
     "@ucanto/core": "^8.2.0",
     "@ucanto/interface": "^8.1.0",
     "@web3-storage/clock": "^0.3.0",
     "@web3-storage/w3up-client": "^8.0.1",
     "cross-fetch": "^4.0.0",
-    "multiformats": "^12.0.1"
+    "multiformats": "^12.0.1",
+    "partysocket": "0.0.8"
   }
 }

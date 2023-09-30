@@ -5,7 +5,7 @@ import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './crypto-web'
 
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
-import type { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
+import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
 
 import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
@@ -42,12 +42,16 @@ export function toHexString(byteArray: Uint8Array) {
     .join('')
 }
 
+abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
+  abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>
+}
+
 export abstract class Loader {
   name: string
   opts: FireproofOptions = {}
 
   remoteMetaLoading: Promise<void> | undefined
-  remoteMetaStore: AbstractMetaStore | undefined
+  remoteMetaStore: AbstractRemoteMetaStore | undefined
   remoteCarStore: AbstractDataStore | undefined
   remoteWAL: RemoteWAL
   metaStore: MetaStore
@@ -96,11 +100,14 @@ export abstract class Loader {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
+    // console.log('meta', meta.car.toString())
+
     if (meta.key) { await this.setKey(meta.key) }
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
     const carHeader = await this.loadCarHeaderFromMeta(meta) as DbCarHeader
+    // console.log('carHeader', carHeader.head.toString(), carHeader)
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
