@@ -19,7 +19,6 @@ export class ConnectPartyKit extends Connection {
     this.name = params.name;
     this.host = params.host;
     this.party = new PartySocket({
-      party: 'fireproof',
       host: params.host,
       room: `fireproof:${params.name}`
     });
@@ -34,24 +33,7 @@ export class ConnectPartyKit extends Connection {
     });
     this.party.addEventListener("message", (event) => {
       const base64String = event.data;
-      let binaryString = "";
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-      let padding = 0;
-      for (let i = 0; i < base64String.length; i += 4) {
-        const index1 = chars.indexOf(base64String[i]);
-        const index2 = chars.indexOf(base64String[i + 1]);
-        const index3 = chars.indexOf(base64String[i + 2]);
-        const index4 = chars.indexOf(base64String[i + 3]);
-
-        const bin = (index1 << 18) | (index2 << 12) | (index3 << 6) | index4;
-
-        binaryString += String.fromCharCode((bin >> 16) & 255);
-        if (base64String[i + 2] !== '=') binaryString += String.fromCharCode((bin >> 8) & 255);
-        if (base64String[i + 3] !== '=') binaryString += String.fromCharCode(bin & 255);
-
-        if (base64String[i + 2] === '=') padding++;
-        if (base64String[i + 3] === '=') padding++;
-      }
+      const binaryString = atob(base64String);
       const len = binaryString.length;
       const uint8version = new Uint8Array(len);
       for (let i = 0; i < len; i++) {
@@ -83,15 +65,7 @@ export class ConnectPartyKit extends Connection {
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     validateMetaParams(params)
     await this.ready
-    let base64String = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-    const padding = bytes.length % 3;
-    for (let i = 0; i < bytes.length; i += 3) {
-      let combined = bytes[i] << 16 | (bytes[i + 1] || 0) << 8 | (bytes[i + 2] || 0);
-      base64String += characters[combined >> 18] + characters[(combined >> 12) & 63] + (bytes[i + 1] ? characters[(combined >> 6) & 63] : '=') + (bytes[i + 2] ? characters[combined & 63] : '=');
-    }
-    if (padding === 2) base64String = base64String.substring(0, base64String.length - 2) + '==';
-    else if (padding === 1) base64String = base64String.substring(0, base64String.length - 1) + '=';
+    let base64String = btoa(String.fromCharCode(...new Uint8Array(bytes)));
     this.party.send(base64String);
     return null
   }
