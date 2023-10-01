@@ -1,3 +1,4 @@
+import { Base64 } from 'js-base64';
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
 import { Connection, validateDataParams, validateMetaParams } from '@fireproof/connect'
 import PartySocket from "partysocket";
@@ -34,10 +35,9 @@ export class ConnectPartyKit extends Connection {
     });
     this.party.addEventListener("message", (event) => {
       const base64String = event.data;
-      const uint8ArrayBuffer = new TextEncoder().encode(base64String);
-      const uint8version = new Uint8Array(uint8ArrayBuffer);
-      this.loader?.remoteMetaStore?.handleByteHeads([uint8version])
-      this.messageResolve?.(uint8version)
+      const uint8ArrayBuffer = Base64.toUint8Array(base64String);
+      this.loader?.remoteMetaStore?.handleByteHeads([uint8ArrayBuffer])
+      this.messageResolve?.(uint8ArrayBuffer)
       this.messagePromise = new Promise<Uint8Array>((resolve, reject) => {
         this.messageResolve = resolve;
       });
@@ -62,9 +62,8 @@ export class ConnectPartyKit extends Connection {
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     validateMetaParams(params)
     await this.ready
-    const decoder = new TextDecoder();
-    let decodedString = decoder.decode(bytes);
-    this.party.send(decodedString);
+    let base64String = Base64.fromUint8Array(bytes);
+    this.party.send(base64String);
     return null
   }
 
