@@ -1,4 +1,4 @@
-import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock';
+import { decodeEventBlock } from '@alanshaw/pail/clock';
 import { Base64 } from 'js-base64';
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
 import { Connection, validateDataParams, validateMetaParams } from '@fireproof/connect'
@@ -35,12 +35,10 @@ export class ConnectPartyKit extends Connection {
       this.messageResolve = resolve;
     });
     this.party.addEventListener("message", async (event) => {
-      console.log('message', event)
       const base64String = event.data;
       const uint8ArrayBuffer = Base64.toUint8Array(base64String);
-      console.log('uint8ArrayBuffer', uint8ArrayBuffer)
       const eventBlock = await decodeEventBlock(uint8ArrayBuffer);
-      console.log('eventBlock', eventBlock)
+      await this.loader?.ready
       // @ts-ignore
       this.loader?.remoteMetaStore?.handleByteHeads([eventBlock.value.data.dbMeta as Uint8Array])
       // @ts-ignore
@@ -70,10 +68,7 @@ export class ConnectPartyKit extends Connection {
     validateMetaParams(params)
     await this.ready
     const event = await this.createEventBlock(bytes)
-    console.log('event', event)
-    
     let base64String = Base64.fromUint8Array(event.bytes);
-    console.log('base64String', base64String)
     this.party.send(base64String);
     this.parents = [event.cid]
     return null

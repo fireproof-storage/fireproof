@@ -3,6 +3,7 @@ import { AnyLink, CommitOpts, DbMeta } from './types';
 import type { Loader } from './loader';
 import { DbLoader } from './loaders';
 import { STORAGE_VERSION } from './store';
+import { CommitQueue } from './commit-queue'
 
 
 export type WALState = {
@@ -20,6 +21,7 @@ export abstract class RemoteWAL {
 
   walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
   processing: Promise<void> | undefined = undefined;
+  private processQueue = new CommitQueue<void>();
 
   constructor(loader: Loader) {
     this.loader = loader;
@@ -54,24 +56,17 @@ export abstract class RemoteWAL {
   async _process() {
     await this.ready;
     if (!this.loader.remoteCarStore) return;
-    if (this.processing) return this.processing;
-    const p = (async () => {
-      await this._int_process();
-    })();
-    this.processing = p;
-    try {
-      await p;
-    } finally {
-      this.processing = undefined;
-    }
-    if (this.walState.operations.length ||
-      this.walState.fileOperations.length ||
-      this.walState.noLoaderOps.length) {
-      setTimeout(() => void this._process(), 0);
-    }
+    await this.processQueue.enqueue(async () => {
+      await this._doProcess();
+      if (this.walState.operations.length ||
+        this.walState.fileOperations.length ||
+        this.walState.noLoaderOps.length) {
+        setTimeout(() => void this._process(), 0);
+      }
+    });
   }
 
-  async _int_process() {
+  async _doProcess() {
     if (!this.loader.remoteCarStore) return;
     const rmlp = (async () => {
       const operations = [...this.walState.operations];

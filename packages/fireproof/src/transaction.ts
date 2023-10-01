@@ -87,13 +87,6 @@ abstract class FireproofBlockstore implements BlockFetcher {
     this.transactions.add(t)
     const done: T = await fn(t)
     const { car, done: result } = await commitHandler(t, done)
-    // this.transactions.delete(t)
-    Promise.resolve().then(() => {
-      if (this.loader!.carLog.length > 100) {
-        // this.loader.
-        // how to trigger compaction?
-      }
-    })
     return car ? { ...result, car } : result
   }
 }

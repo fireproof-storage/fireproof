@@ -77,7 +77,7 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   async handleByteHeads(byteHeads: Uint8Array[], branch: string = 'main') {
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    // console.log('dbMetasForByteHeads', dbMetas.map((m) => m.car.toString()))
+    console.log('dbMetasForByteHeads notify', dbMetas.map((m) => m.car.toString()))
     const subscribers = this.subscribers.get(branch) || []
     for (const subscriber of subscribers) {
       await subscriber(dbMetas)
@@ -86,6 +86,7 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
+    console.log('remote load', branch)
     const byteHeads = await this.connection.metaDownload({
       name: this.prefix(),
       branch
@@ -95,18 +96,14 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
+    console.log('remote save', branch, meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),
       branch
     })
     if (!byteHeads) return null
-    const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    const subscribers = this.subscribers.get(branch) || []
-    for (const subscriber of subscribers) {
-      await subscriber(dbMetas)
-    }
-    return dbMetas
+    return this.handleByteHeads(byteHeads, branch)
   }
 
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {

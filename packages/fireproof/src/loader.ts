@@ -18,6 +18,7 @@ import type {
 } from './types'
 // import type { Connection } from './connection'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
+import { CommitQueue } from './commit-queue'
 
 
 
@@ -49,6 +50,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 export abstract class Loader {
   name: string
   opts: FireproofOptions = {}
+  commitQueue = new CommitQueue<AnyLink>();
 
   remoteMetaLoading: Promise<void> | undefined
   remoteMetaStore: AbstractRemoteMetaStore | undefined
@@ -63,6 +65,7 @@ export abstract class Loader {
   keyId: string | undefined
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
+  private seenMeta: Set<string> = new Set()
 
   static defaultHeader: AnyCarHeader
   abstract defaultHeader: AnyCarHeader
@@ -77,7 +80,10 @@ export abstract class Loader {
       if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error('stores not initialized')
       const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
       if (metas) {
+        console.log('loading', metas.length, 'metas')
+
         await this.handleDbMetasFromStore(metas)
+        console.log('loaded', metas.length, 'metas')
       }
     })
   }
@@ -101,6 +107,8 @@ export abstract class Loader {
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     console.log('meta', meta)
+    if (this.seenMeta.has(meta.car.toString())) return
+    this.seenMeta.add(meta.car.toString())
     console.log('meta', meta.car.toString())
 
     if (meta.key) { await this.setKey(meta.key) }
@@ -143,16 +151,9 @@ export abstract class Loader {
     return this.key
   }
 
-  private committing: Promise<AnyLink> | undefined
   async commit(t: Transaction, done: IndexerResult | BulkResult | FileResult,
     opts: CommitOpts = { noLoader: false, compact: false }): Promise<AnyLink> {
-    if (this.committing) {
-      await this.committing
-    }
-    this.committing = this._commitInternal(t, done, opts)
-    const result = await this.committing
-    this.committing = undefined
-    return result
+    return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts));
   }
 
   async _commitInternal(t: Transaction, done: IndexerResult | BulkResult | FileResult, opts: CommitOpts = { noLoader: false, compact: false }): Promise<AnyLink> {
@@ -171,7 +172,9 @@ export abstract class Loader {
     }
 
     const theKey = opts.public ? null : await this._getKey()
-    const { cid, bytes } = theKey ? await encryptedEncodeCarFile(theKey, roots[0], t) : await encodeCarFile(roots, t)
+    const { cid, bytes } = theKey ?
+      await encryptedEncodeCarFile(theKey, roots[0], t) :
+      await encodeCarFile(roots, t)
 
     // save the car locally and remote
 
@@ -211,7 +214,7 @@ export abstract class Loader {
       const dbMeta = { car: cid, key: this.key || null } as DbMeta
       await this.remoteWAL!.enqueue(dbMeta, { public: false })
     }
-    
+
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
@@ -306,3 +309,5 @@ export interface Connection {
   loader: Loader
   loaded: Promise<void>
 }
+
+

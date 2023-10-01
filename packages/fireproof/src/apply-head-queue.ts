@@ -1,19 +1,18 @@
 import { Transaction } from "./transaction";
 import { ClockHead, DocUpdate } from "./types";
 
-type ApplyHeadWorkerFunction = (tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null) => Promise<void>;
+type ApplyHeadWorkerFunction = (id: string, tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null) => Promise<void>;
 
 type ApplyHeadTask = {
+  id : string;
   tblocks: Transaction | null;
   newHead: ClockHead;
   prevHead: ClockHead;
   updates: DocUpdate[] | null;
-  resolve?: () => void;
-  reject?: (error: Error) => void;
 };
 
 export type ApplyHeadQueue = {
-  push(task: ApplyHeadTask): AsyncGenerator<{updates: DocUpdate[], all: boolean}, void, unknown>;
+  push(task: ApplyHeadTask): AsyncGenerator<{ updates: DocUpdate[], all: boolean }, void, unknown>;
 };
 
 export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue {
@@ -21,40 +20,52 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
   let isProcessing = false;
 
   async function* process() {
+    console.log('maybe process', isProcessing, queue.length)
     if (isProcessing || queue.length === 0) return;
     isProcessing = true;
-
-    // Collect all updates
     const allUpdates: DocUpdate[] = [];
 
-    while (queue.length > 0) {
-      // Prioritize tasks with updates
-      queue.sort((a, b) => (b.updates ? 1 : -1));
+    try {
+      while (queue.length > 0) {
+        // Prioritize tasks with updates
+        queue.sort((a, b) => (b.updates ? 1 : -1));
 
-      const task = queue[0];
-      try {
-        await worker(task.tblocks, task.newHead, task.prevHead, task.updates);
+        const task = queue.shift();
+        if (!task) continue;
+        console.log('start task', task.id, task.newHead.toString())
+        await worker(task.id, task.tblocks, task.newHead, task.prevHead, task.updates);
+        console.log('end task', task.id, task.newHead.toString())
         if (task.updates) {
           allUpdates.push(...task.updates);
         }
         // Yield the updates if there are no tasks with updates left in the queue or the current task has updates
         if (!queue.some(t => t.updates) || task.updates) {
           const allTasksHaveUpdates = queue.every(task => task.updates !== null);
+          console.log('yielding', task.id, allUpdates.length, allTasksHaveUpdates)
           yield { updates: allUpdates, all: allTasksHaveUpdates };
+          console.log('yielded', task.id, allUpdates.length, allTasksHaveUpdates)
           allUpdates.length = 0; // Clear the updates
-        }
-      } finally {
-        // Remove the processed task from the queue
-        queue.shift();
+        } 
+        // else {
+        //   yield { updates: [], all: false };
+        // }
+      }
+      // yield { updates: allUpdates, all: true };
+    } finally {
+      console.log('finally processing')
+      isProcessing = false;
+      // return process();
+      const generator = process();
+      let result = await generator.next();
+      while (!result.done) {
+        result = await generator.next();
       }
     }
-
-    isProcessing = false;
-    void process();
   }
 
   return {
-    push(task: ApplyHeadTask): AsyncGenerator<{updates: DocUpdate[], all: boolean}, void, unknown> {
+    push(task: ApplyHeadTask): AsyncGenerator<{ updates: DocUpdate[], all: boolean }, void, unknown> {
+      console.log('push task', task.id, task.newHead.toString())
       queue.push(task);
       return process();
     },
