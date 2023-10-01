@@ -55,6 +55,7 @@ export type DocUpdate = {
   key: string
   value?: { [key: string]: any }
   del?: boolean
+  clock?: AnyLink
 }
 
 export type DocValue = {

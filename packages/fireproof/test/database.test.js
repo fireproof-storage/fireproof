@@ -266,10 +266,12 @@ describe('basic Database parallel writes / public', function () {
     }
   })
   it('has changes', async function () {
-    const { rows } = await db.changes([])
+    const { rows, clock } = await db.changes([])
+    equals(clock[0], db._crdt.clock.head[0])
     equals(rows.length, 10)
     for (let i = 0; i < 10; i++) {
       equals(rows[i].key, 'id-' + i)
+      assert(rows[i].clock, 'The clock head is missing')
     }
   })
   it('should not have a key', async function () {
