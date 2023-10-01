@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.13.9",
+  "version": "0.13.14",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -24,7 +24,8 @@
   "files": [
     "dist/node",
     "dist/browser",
-    "dist/types"
+    "dist/types",
+    "src/server.ts"
   ],
   "type": "module",
   "scripts": {
@@ -53,11 +54,8 @@
     "@alanshaw/pail": "^0.3.3",
     "@fireproof/connect": "^0.13.5",
     "@fireproof/core": "^0.13.4-dev",
-    "@ucanto/core": "^8.2.0",
-    "@ucanto/interface": "^8.1.0",
-    "@web3-storage/clock": "^0.3.0",
-    "@web3-storage/w3up-client": "^8.0.1",
     "cross-fetch": "^4.0.0",
+    "js-base64": "^3.7.5",
     "multiformats": "^12.0.1",
     "partysocket": "0.0.8"
   }

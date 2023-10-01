@@ -190,9 +190,6 @@ importers:
       multiformats:
         specifier: ^12.0.1
         version: 12.0.1
-      partysocket:
-        specifier: 0.0.8
-        version: 0.0.8
     devDependencies:
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.2
@@ -233,21 +230,12 @@ importers:
       '@fireproof/core':
         specifier: ^0.13.4-dev
         version: link:../fireproof
-      '@ucanto/core':
-        specifier: ^8.2.0
-        version: 8.2.0
-      '@ucanto/interface':
-        specifier: ^8.1.0
-        version: 8.1.0
-      '@web3-storage/clock':
-        specifier: ^0.3.0
-        version: 0.3.0
-      '@web3-storage/w3up-client':
-        specifier: ^8.0.1
-        version: 8.0.1
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
+      js-base64:
+        specifier: ^3.7.5
+        version: 3.7.5
       multiformats:
         specifier: ^12.0.1
         version: 12.0.1
@@ -8006,6 +7994,10 @@ packages:
       - ts-node
       - utf-8-validate
     dev: true
+
+  /js-base64@3.7.5:
+    resolution: {integrity: sha512-3MEt5DTINKqfScXKfJFrRbxkrnk2AxPWGBL/ycjz4dK8iqiSJ06UxD8jh8xuh6p10TX4t2+7FsBYVxxQbMg+qA==}
+    dev: false
 
   /js-crypto-aes@1.0.4:
     resolution: {integrity: sha512-L2fh7Q55+8eS/ALbhgAZYZpTkuo+n12+3GpuUE+U6SGlObmwibG5rVtDTVSTNgV9VuzD2BaY4unTkRWTcfLYxg==}
