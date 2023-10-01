@@ -161,13 +161,74 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.88.2)
 
+  packages/connect-ipfs:
+    dependencies:
+      '@alanshaw/pail':
+        specifier: ^0.3.3
+        version: 0.3.3
+      '@fireproof/connect':
+        specifier: ^0.13.7
+        version: link:../connect
+      '@fireproof/core':
+        specifier: ^0.13.4-dev
+        version: link:../fireproof
+      '@ucanto/core':
+        specifier: ^8.2.0
+        version: 8.2.0
+      '@ucanto/interface':
+        specifier: ^8.1.0
+        version: 8.1.0
+      '@web3-storage/clock':
+        specifier: ^0.3.0
+        version: 0.3.0
+      '@web3-storage/w3up-client':
+        specifier: ^8.0.1
+        version: 8.0.1
+      cross-fetch:
+        specifier: ^4.0.0
+        version: 4.0.0
+      multiformats:
+        specifier: ^12.0.1
+        version: 12.0.1
+      partysocket:
+        specifier: 0.0.8
+        version: 0.0.8
+    devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.2(esbuild@0.19.4)
+      esbuild:
+        specifier: ^0.19.4
+        version: 0.19.4
+      esbuild-plugin-alias:
+        specifier: ^0.2.1
+        version: 0.2.1
+      esbuild-plugin-tsc:
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.2.2)
+      partykit:
+        specifier: 0.0.24
+        version: 0.0.24
+      ts-loader:
+        specifier: ^9.4.4
+        version: 9.4.4(typescript@5.2.2)(webpack@5.88.2)
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+      webpack:
+        specifier: ^5.88.2
+        version: 5.88.2(esbuild@0.19.4)(webpack-cli@5.1.4)
+      webpack-cli:
+        specifier: ^5.1.4
+        version: 5.1.4(webpack@5.88.2)
+
   packages/connect-partykit:
     dependencies:
       '@alanshaw/pail':
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/connect':
-        specifier: workspace:^0.13.5
+        specifier: ^0.13.5
         version: link:../connect
       '@fireproof/core':
         specifier: ^0.13.4-dev

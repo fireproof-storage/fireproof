@@ -1,6 +1,12 @@
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from './types'
 import type { AnyLink, Loader, DataStore } from '@fireproof/core'
+import { encodeCarFile } from '@fireproof/core'
+
+import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
+import { MemoryBlockstore } from '@alanshaw/pail/block'
+import type { Link } from 'multiformats'
+import { EventView } from '@alanshaw/pail/clock'
 
 interface DbLoader extends Loader {
   fileStore?: DataStore
@@ -9,6 +15,7 @@ interface DbLoader extends Loader {
 function isDbLoader(loader: Loader): loader is DbLoader {
   return (loader as DbLoader).fileStore !== undefined;
 }
+export type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
 
 export abstract class Connection {
   ready: Promise<any>
@@ -17,6 +24,8 @@ export abstract class Connection {
   abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void | AnyLink>
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>
+  eventBlocks = new MemoryBlockstore() // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
+  parents: CarClockHead = []
 
   constructor() {
     this.ready = Promise.resolve()
@@ -60,4 +69,16 @@ export abstract class Connection {
     }
   }
 
+  async createEventBlock(bytes: Uint8Array) {
+    const data = {
+      dbMeta: bytes
+    }
+    const event = await EventBlock.create(data, this.parents)
+    const eventBlocks = new MemoryBlockstore()
+    await this.eventBlocks.put(event.cid, event.bytes)
+    await eventBlocks.put(event.cid, event.bytes)
+
+    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
+    return { event, carBytes } as { event: EventBlock<{ dbMeta: Uint8Array }>, carBytes: Uint8Array }
+  }
 }

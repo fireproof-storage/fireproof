@@ -65,10 +65,10 @@ export class CRDTClock {
       for (const cid of newHead) {
         head = await advance(tblocks, head, cid)
       }
-      const result = await root(tblocks, head)
-      for (const { cid, bytes } of [...result.additions, ...result.removals]) {
-        tblocks.putSync(cid, bytes)
-      }
+      // const result = await root(tblocks, head)
+      // for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+      //   tblocks.putSync(cid, bytes)
+      // }
       return { head }
     })
     this.setHead(head)
