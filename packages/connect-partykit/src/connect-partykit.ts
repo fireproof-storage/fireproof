@@ -1,3 +1,4 @@
+import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock';
 import { Base64 } from 'js-base64';
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
 import { Connection, validateDataParams, validateMetaParams } from '@fireproof/connect'
@@ -12,8 +13,8 @@ export class ConnectPartyKit extends Connection {
   name: string;
   host: string;
   party: PartySocket;
-  messagePromise: Promise<Uint8Array>;
-  messageResolve?: (value: Uint8Array | PromiseLike<Uint8Array>) => void;
+  messagePromise: Promise<Uint8Array[]>;
+  messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void;
 
   constructor(params: ConnectPartyKitParams) {
     super()
@@ -30,15 +31,21 @@ export class ConnectPartyKit extends Connection {
       });
 
     });
-    this.messagePromise = new Promise<Uint8Array>((resolve, reject) => {
+    this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve;
     });
-    this.party.addEventListener("message", (event) => {
+    this.party.addEventListener("message", async (event) => {
+      console.log('message', event)
       const base64String = event.data;
       const uint8ArrayBuffer = Base64.toUint8Array(base64String);
-      this.loader?.remoteMetaStore?.handleByteHeads([uint8ArrayBuffer])
-      this.messageResolve?.(uint8ArrayBuffer)
-      this.messagePromise = new Promise<Uint8Array>((resolve, reject) => {
+      console.log('uint8ArrayBuffer', uint8ArrayBuffer)
+      const eventBlock = await decodeEventBlock(uint8ArrayBuffer);
+      console.log('eventBlock', eventBlock)
+      // @ts-ignore
+      this.loader?.remoteMetaStore?.handleByteHeads([eventBlock.value.data.dbMeta as Uint8Array])
+      // @ts-ignore
+      this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array])
+      this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
         this.messageResolve = resolve;
       });
     });
@@ -62,14 +69,19 @@ export class ConnectPartyKit extends Connection {
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     validateMetaParams(params)
     await this.ready
-    let base64String = Base64.fromUint8Array(bytes);
+    const event = await this.createEventBlock(bytes)
+    console.log('event', event)
+    
+    let base64String = Base64.fromUint8Array(event.bytes);
+    console.log('base64String', base64String)
     this.party.send(base64String);
+    this.parents = [event.cid]
     return null
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
     validateMetaParams(params)
-    const data = await this.messagePromise;
-    return [data]
+    const datas = await this.messagePromise;
+    return datas
   }
 }

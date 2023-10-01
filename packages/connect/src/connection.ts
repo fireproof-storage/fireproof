@@ -1,11 +1,10 @@
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from './types'
 import type { AnyLink, Loader, DataStore } from '@fireproof/core'
-import { encodeCarFile } from '@fireproof/core'
 
-import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
+import { EventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
-import type { Link } from 'multiformats'
+import type { BlockView, Link } from 'multiformats'
 import { EventView } from '@alanshaw/pail/clock'
 
 interface DbLoader extends Loader {
@@ -69,7 +68,10 @@ export abstract class Connection {
     }
   }
 
-  async createEventBlock(bytes: Uint8Array) {
+
+  async createEventBlock(bytes: Uint8Array): Promise<BlockView<EventView<{
+    dbMeta: Uint8Array;
+  }>, number, number, 1>> {
     const data = {
       dbMeta: bytes
     }
@@ -77,8 +79,6 @@ export abstract class Connection {
     const eventBlocks = new MemoryBlockstore()
     await this.eventBlocks.put(event.cid, event.bytes)
     await eventBlocks.put(event.cid, event.bytes)
-
-    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
-    return { event, carBytes } as { event: EventBlock<{ dbMeta: Uint8Array }>, carBytes: Uint8Array }
+    return event
   }
 }
