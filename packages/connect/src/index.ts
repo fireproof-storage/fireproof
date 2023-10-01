@@ -1,5 +1,5 @@
 import { ConnectS3 } from './connect-s3'
-import { Connection } from './connection'
+import { Connection, CarClockHead } from './connection'
 import type { Loader, AnyLink } from '@fireproof/core'
 import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
@@ -55,4 +55,4 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   if (!branch) { throw new Error('branch is required') }
 }
 
-export { Connection, ConnectS3 }
+export { Connection, ConnectS3, CarClockHead }

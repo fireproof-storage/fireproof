@@ -3,9 +3,6 @@ import { EventView } from '@alanshaw/pail/clock'
 import { AccountConnectIPFS } from './connect-ipfs-account'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 
-// almost ClockHead, different kind of clock
-export type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
-
 export type ConnectIPFSParams = { name: string, schema: string }
 
 export type ConnectIPFSCallbacks = {

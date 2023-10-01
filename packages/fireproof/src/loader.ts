@@ -110,7 +110,8 @@ export abstract class Loader {
     const carHeader = await this.loadCarHeaderFromMeta(meta) as DbCarHeader
     // console.log('carHeader', carHeader.head.toString(), carHeader)
     await this.getMoreReaders(carHeader.cars)
-    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], carHeader.compact)]
+    const uncompactedCarLog = this.carLog.filter(cid => !cidListIncludes(carHeader.compact, cid))
+    this.carLog = [...uniqueCids([meta.car, ...uncompactedCarLog, ...carHeader.cars], carHeader.compact)]
     await this._applyCarHeader(carHeader)
   }
 
@@ -131,13 +132,6 @@ export abstract class Loader {
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
     if (this.key) return this.key
-    // if (this.remoteMetaLoading) {
-    //   const meta = await this.remoteMetaLoading
-    //   if (meta && meta.key) {
-    //     await this.setKey(meta.key)
-    //     return this.key
-    //   }
-    // }
     // generate a random key
     if (!this.opts.public) {
       if (getCrypto()) {

@@ -25,7 +25,7 @@ importers:
         version: 17.0.2(react@17.0.2)
       use-fireproof:
         specifier: ^0.7.3
-        version: 0.7.3(encoding@0.1.13)(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
+        version: 0.7.3(react-dom@17.0.2(react@17.0.2))(react@17.0.2)
     devDependencies:
       servor:
         specifier: ^4.0.2
@@ -170,6 +170,9 @@ importers:
       '@alanshaw/pail':
         specifier: ^0.3.3
         version: 0.3.4
+      '@fireproof/connect':
+        specifier: ^0.13.7
+        version: 0.13.16(encoding@0.1.13)
       '@fireproof/core':
         specifier: ^0.13.4-dev
         version: 0.13.4-dev(encoding@0.1.13)
@@ -191,9 +194,6 @@ importers:
       multiformats:
         specifier: ^12.0.1
         version: 12.1.3
-      partysocket:
-        specifier: 0.0.8
-        version: 0.0.8
     devDependencies:
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.2
@@ -6838,7 +6838,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@fireproof/core@0.7.2(encoding@0.1.13)':
+  '@fireproof/core@0.7.2':
     dependencies:
       '@ipld/car': 5.4.2
       '@ipld/dag-cbor': 9.2.4
@@ -13124,9 +13124,9 @@ snapshots:
 
   urlpattern-polyfill@10.0.0: {}
 
-  use-fireproof@0.7.3(encoding@0.1.13)(react-dom@17.0.2(react@17.0.2))(react@17.0.2):
+  use-fireproof@0.7.3(react-dom@17.0.2(react@17.0.2))(react@17.0.2):
     dependencies:
-      '@fireproof/core': 0.7.2(encoding@0.1.13)
+      '@fireproof/core': 0.7.2
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     transitivePeerDependencies:
