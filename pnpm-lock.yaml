@@ -225,7 +225,7 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/connect':
-        specifier: ^0.13.8
+        specifier: ^0.13.12
         version: link:../connect
       '@fireproof/core':
         specifier: ^0.13.4-dev

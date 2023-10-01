@@ -14,6 +14,7 @@ export class Database {
   name: DbName
   opts: FireproofOptions = {}
 
+  _listening = false
   _listeners: Set<ListenerFn> = new Set()
   _crdt: CRDT
   _writeQueue: WriteQueue
@@ -22,9 +23,6 @@ export class Database {
     this.name = name || null
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
-    this._crdt.clock.onTick((updates: DocUpdate[]) => {
-      void this._notify(updates)
-    })
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
     })//, Infinity)
@@ -70,6 +68,12 @@ export class Database {
   }
 
   subscribe(listener: ListenerFn): () => void {
+    if (!this._listening) {
+      this._listening = true
+      this._crdt.clock.onTick((updates: DocUpdate[]) => {
+        void this._notify(updates)
+      })
+    }
     this._listeners.add(listener)
     return () => {
       this._listeners.delete(listener)

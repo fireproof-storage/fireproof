@@ -18,6 +18,7 @@
       let cx
 
       let dbUnsubscribe = false
+
       function setupDb(name, newDb, newConn) {
         const input = document.querySelector('#todo');
         input.disabled = true
@@ -66,7 +67,7 @@
         document
           .querySelector('ul')
           .innerHTML = '';
-
+        document.querySelector('#carLog').innerText = ` 🚗 ${cx.loader.carLog.length}`
         for (const row of result.rows) {
           // const doc = await db.get(row.id);
           const doc = row.value
@@ -77,11 +78,13 @@
           }
           checkbox.onchange = async (e) => {
             e.target.indeterminate = true;
+            const clicks = doc.clicks || 0;
+            doc.clicks = clicks + 1;
             doc.completed = !doc.completed;
             await db.put(doc);
           }
           const textSpan = document.createElement('span');
-          textSpan.innerText = doc.actor + ': ' + doc.task;
+          textSpan.innerText = `${doc.actor}:${doc.clicks || 0} ${doc.task}`
           const li = document.createElement('li');
           li.appendChild(checkbox);
           li.appendChild(textSpan);
@@ -125,6 +128,28 @@
       }
       window.createTodoClick = createTodoClick;
 
+      let worker
+      async function startWorker() {
+        const dcs = await db.allDocs()
+        console.log('start worker', dcs.rows.length)
+        worker = setInterval(async () => {
+          dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.clicks || 0) + 1, completed: Math.random() > 0.5 }))
+        }, 5000)
+      }
+      const stopWorker = () => {
+        console.log('stop worker')
+        clearInterval(worker)
+      }
+      const toggleWorker = (e) => {
+        e.preventDefault();
+        if (worker) {
+          stopWorker()
+        } else {
+          startWorker(e)
+        }
+      }
+      window.toggleWorker = toggleWorker;
+
       window.onload = initialize;
       window.db = db;
     }
@@ -146,6 +171,8 @@
   </p>
 
   <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
+  <button onclick="toggleWorker(event)">🤖</button><span id="carLog"></span>
+
 
   <h3>Todos</h3>
   <input title="Create a todo" type="text" name="todo" id="todo" />

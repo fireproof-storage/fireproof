@@ -48,15 +48,18 @@ export abstract class Connection {
     this.loader = loader
     const remote = new RemoteMetaStore(loader.name, this)
     remote.onLoad('main', async (metas) => {
+      console.log('remote metas', metas)
       if (metas) {
         await loader.handleDbMetasFromStore(metas)
       }
     })
     loader.remoteMetaStore = remote
-    loader.remoteMetaLoading = remote!.load('main').then(() => { })
-    this.loaded = Promise.all([loader.ready, loader.remoteMetaLoading]).then(() => {
-      void this.loader!.remoteWAL?._process()
-    })
+    this.loaded = loader.ready.then(async () => {
+      loader.remoteMetaLoading = remote!.load('main').then(() => { })
+      loader.remoteMetaLoading.then(() => {
+        void this.loader!.remoteWAL?._process()
+      })
+    }) 
   }
 
   connectStorage(loader: Loader) {
@@ -67,7 +70,6 @@ export abstract class Connection {
       loader.remoteFileStore = new RemoteDataStore(loader, this, 'file')
     }
   }
-
 
   async createEventBlock(bytes: Uint8Array): Promise<BlockView<EventView<{
     dbMeta: Uint8Array;
