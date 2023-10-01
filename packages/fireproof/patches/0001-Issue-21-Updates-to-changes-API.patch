@@ -1,0 +1,90 @@
+From 749bbd708ff721c0cb7420aaa0f1c6b7acc73827 Mon Sep 17 00:00:00 2001
+From: valorant-dhruv <78591597+valorant-dhruv@users.noreply.github.com>
+Date: Sun, 1 Oct 2023 00:40:51 +0000
+Subject: [PATCH] Issue #21: Updates to changes API
+
+---
+ packages/fireproof/src/crdt-helpers.ts   | 2 +-
+ packages/fireproof/src/crdt.ts           | 4 ++--
+ packages/fireproof/src/database.ts       | 4 ++--
+ packages/fireproof/src/types.d.ts        | 1 +
+ packages/fireproof/test/database.test.js | 4 +++-
+ 5 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/packages/fireproof/src/crdt-helpers.ts b/packages/fireproof/src/crdt-helpers.ts
+index aa0f5fc..b1e9cfa 100644
+--- a/packages/fireproof/src/crdt-helpers.ts
++++ b/packages/fireproof/src/crdt-helpers.ts
+@@ -194,7 +194,7 @@ async function gatherUpdates(
+     } else {
+       keys.add(key)
+       const docValue = await getValueFromLink(blocks, value)
+-      updates.push({ key, value: docValue.doc, del: docValue.del })
++      updates.push({ key, value: docValue.doc, del: docValue.del, clock: link })
+       limit--
+       if (event.parents) {
+         updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
+diff --git a/packages/fireproof/src/crdt.ts b/packages/fireproof/src/crdt.ts
+index 934e9e6..63217cb 100644
+--- a/packages/fireproof/src/crdt.ts
++++ b/packages/fireproof/src/crdt.ts
+@@ -34,9 +34,9 @@ export class CRDT {
+     return await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
+       const prevHead = [...this.clock.head]
+       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
+-      updates = updates.map(({ key, value, del }) => {
++      updates = updates.map(({ key, value, del, clock }) => {
+         readFiles(this.blocks, { doc: value })
+-        return { key, value, del }
++        return { key, value, del, clock }
+       })
+       await this.clock.applyHead(tblocks, head, prevHead, updates) // we need multi head support here if allowing calls to bulk in parallel
+       return { head }
+diff --git a/packages/fireproof/src/database.ts b/packages/fireproof/src/database.ts
+index 5d74b1e..12959d2 100644
+--- a/packages/fireproof/src/database.ts
++++ b/packages/fireproof/src/database.ts
+@@ -56,8 +56,8 @@ export class Database {
+ 
+   async changes(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse> {
+     const { result, head } = await this._crdt.changes(since, opts)
+-    const rows = result.map(({ key, value, del }) => ({
+-      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
++    const rows = result.map(({ key, value, del, clock }) => ({
++      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc, clock
+     }))
+     return { rows, clock: head }
+   }
+diff --git a/packages/fireproof/src/types.d.ts b/packages/fireproof/src/types.d.ts
+index a4629a6..f039888 100644
+--- a/packages/fireproof/src/types.d.ts
++++ b/packages/fireproof/src/types.d.ts
+@@ -55,6 +55,7 @@ export type DocUpdate = {
+   key: string
+   value?: { [key: string]: any }
+   del?: boolean
++  clock?: AnyLink
+ }
+ 
+ export type DocValue = {
+diff --git a/packages/fireproof/test/database.test.js b/packages/fireproof/test/database.test.js
+index f5c8b60..d293761 100644
+--- a/packages/fireproof/test/database.test.js
++++ b/packages/fireproof/test/database.test.js
+@@ -266,10 +266,12 @@ describe('basic Database parallel writes / public', function () {
+     }
+   })
+   it('has changes', async function () {
+-    const { rows } = await db.changes([])
++    const { rows, clock } = await db.changes([])
++    equals(clock[0], db._crdt.clock.head[0])
+     equals(rows.length, 10)
+     for (let i = 0; i < 10; i++) {
+       equals(rows[i].key, 'id-' + i)
++      assert(rows[i].clock, 'The clock head is missing')
+     }
+   })
+   it('should not have a key', async function () {
+-- 
+2.42.0
+
