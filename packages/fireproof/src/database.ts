@@ -57,8 +57,8 @@ export class Database {
 
   async changes(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse> {
     const { result, head } = await this._crdt.changes(since, opts)
-    const rows = result.map(({ key, value, del }) => ({
-      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
+    const rows = result.map(({ key, value, del, clock }) => ({
+      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc, clock
     }))
     return { rows, clock: head }
   }
