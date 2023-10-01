@@ -234,21 +234,12 @@ importers:
       '@fireproof/core':
         specifier: ^0.13.4-dev
         version: 0.13.4-dev(encoding@0.1.13)
-      '@ucanto/core':
-        specifier: ^8.2.0
-        version: 8.2.0
-      '@ucanto/interface':
-        specifier: ^8.1.0
-        version: 8.1.0
-      '@web3-storage/clock':
-        specifier: ^0.3.0
-        version: 0.3.0
-      '@web3-storage/w3up-client':
-        specifier: ^8.0.1
-        version: 8.1.0(encoding@0.1.13)
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
+      js-base64:
+        specifier: ^3.7.5
+        version: 3.7.7
       multiformats:
         specifier: ^12.0.1
         version: 12.1.3
@@ -4246,6 +4237,9 @@ packages:
     resolution: {integrity: sha512-lGS5PXGAzR4RF7V5+XObhqz2KZIDUA1yD0DG6pBVmy10eh0ZIXQImRuzocsI/N2XZ1GrLFwTS27In2i2jlpq1Q==}
     engines: {node: '>= 10.14.2'}
     hasBin: true
+
+  js-base64@3.7.7:
+    resolution: {integrity: sha512-7rCnleh0z2CkXhH67J8K1Ytz0b2Y+yxTPL+/KOJoa20hfnVQ/3/T6W/KflYI4bRHRagNeXeU2bkNGI3v1oS/lw==}
 
   js-crypto-aes@1.0.6:
     resolution: {integrity: sha512-E2hu9z5+YtpDg9Un/bDfmH+I5dv/8aN+ozxv9L0ybZldcQ9T5iYDbBKdlKGBUKI3IvzoWSBSdnZnhwZaRIN46w==}
@@ -11172,6 +11166,8 @@ snapshots:
       - supports-color
       - ts-node
       - utf-8-validate
+
+  js-base64@3.7.7: {}
 
   js-crypto-aes@1.0.6:
     dependencies:
