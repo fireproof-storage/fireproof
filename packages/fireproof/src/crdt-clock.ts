@@ -1,5 +1,5 @@
 import { clockChangesSince } from './crdt-helpers'
-import { uniqueCids } from './loader'
+// import { uniqueCids } from './loader'
 import { TransactionBlockstore, Transaction } from './transaction'
 import type { DocUpdate, BulkResult, ClockHead } from './types'
 import { advance } from '@alanshaw/pail/clock'
@@ -30,16 +30,14 @@ export class CRDTClock {
 
   async applyHead(tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null = null) {
     const taskId = Math.random().toString().slice(2, 8)
-    console.log('applyHead', taskId, updates?.length, 'og', this.head.sort((a, b) => a.toString().localeCompare(b.toString())).toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
+    // console.log('applyHead', taskId, updates?.length, 'og', this.head.sort((a, b) => a.toString().localeCompare(b.toString())).toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
     for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({ id: taskId, tblocks, newHead, prevHead, updates })) {
       Promise.resolve().then(async () => {
         if (this.watchers.size && !all) {
-          console.log('changes for watchers')
           console.time('changes for watchers'+ taskId)
           const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
           console.timeEnd('changes for watchers'+ taskId)
           updates = changes.result
-          // updates = []
         } else {
           updates = updatesAcc
         }
@@ -51,32 +49,41 @@ export class CRDTClock {
   async int_applyHead(taskId: string, tblocks: Transaction | null, newHead: ClockHead, prevHead: ClockHead, updates: DocUpdate[] | null = null) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    console.log('applyHead int', taskId, updates?.length, 'og', ogHead.toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
+    newHead.map((cid) => {
+      const got = this.blocks!.get(cid)
+      if (!got) {
+        throw new Error('int_applyHead missing block: '+ cid.toString())
+      }
+    })
     if (ogHead.toString() === newHead.toString()) {
       this.notifyWatchers(updates || [])
-      console.log('applyHead int', taskId, 'no change')
       return
     }
     const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
     if (ogHead.toString() === ogPrev.toString()) {
       this.setHead(newHead)
       this.notifyWatchers(updates || [])
-      console.log('applyHead int', taskId, 'no change')
       return
     }
     let head = this.head
+    // const noLoader = this.head.length === 1 && !updates?.length
+    const noLoader = true
+    // console.log('noLoader', noLoader, this.head.length, updates?.length)
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
-      if (tblocks instanceof Transaction) return await fn(tblocks)
+      // if (tblocks instanceof Transaction) {
+      //   throw new Error('using the tblocks')
+      //   // return await fn(tblocks)
+      // }
       if (!this.blocks) throw new Error('missing blocks')
-      return await this.blocks.transaction(fn, undefined, { noLoader: true })
+      return await this.blocks.transaction(fn, undefined, { noLoader })
     }
     await withBlocks(tblocks, async (tblocks) => {
       for (const cid of newHead) {
-        console.log('applyHead int', taskId, 'advance', cid.toString(), head.toString())
+        console.time('applyHead int' + taskId + cid.toString())
         head = await advance(tblocks, head, cid)
-        console.log('applyHead int', taskId, 'advanced', head.toString())
+        console.timeEnd('applyHead int' + taskId + cid.toString())
+        console.log('advanced head', cid.toString(), head.toString())
       }
-      console.log('root '+ taskId, head.toString())
       console.time('root' + taskId)
       const result = await root(tblocks, head)
       console.timeEnd('root' + taskId)
@@ -86,7 +93,6 @@ export class CRDTClock {
       return { head }
     })
     this.setHead(head)
-    console.log('applyHead int', taskId, 'done', this.head.toString())
   }
 
   notifyWatchers(updates: DocUpdate[]) {

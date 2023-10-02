@@ -24,7 +24,6 @@ class ConnectRaw extends Connection {
   }
 }
 
-
 export const connect = {
   s3: ({ _crdt: { blocks: { loader } } }:
     { _crdt: { blocks: { loader: Loader } } },
