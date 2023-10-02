@@ -16,6 +16,7 @@ export class Database {
 
   _listening = false
   _listeners: Set<ListenerFn> = new Set()
+  _noupdate_listeners: Set<ListenerFn> = new Set()
   _crdt: CRDT
   _writeQueue: WriteQueue
 
@@ -26,6 +27,9 @@ export class Database {
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
     })//, Infinity)
+    this._crdt.clock.onTock(() => {
+      this._no_update_notify()
+    })
   }
 
   async get(id: string): Promise<Doc> {
@@ -67,16 +71,23 @@ export class Database {
     return { rows, clock: head }
   }
 
-  subscribe(listener: ListenerFn): () => void {
-    if (!this._listening) {
-      this._listening = true
-      this._crdt.clock.onTick((updates: DocUpdate[]) => {
-        void this._notify(updates)
-      })
-    }
-    this._listeners.add(listener)
-    return () => {
-      this._listeners.delete(listener)
+  subscribe(listener: ListenerFn|NoUpdateListenerFn, updates?: boolean): () => void {
+    if (updates) {
+      if (!this._listening) {
+        this._listening = true
+        this._crdt.clock.onTick((updates: DocUpdate[]) => {
+          void this._notify(updates)
+        })
+      }
+      this._listeners.add(listener)
+      return () => {
+        this._listeners.delete(listener)
+      }
+    } else {
+      this._noupdate_listeners.add(listener)
+      return () => {
+        this._noupdate_listeners.delete(listener)
+      }
     }
   }
 
@@ -131,9 +142,21 @@ export class Database {
       }
     }
   }
+
+  async _no_update_notify() {
+    if (this._noupdate_listeners.size) {
+      for (const listener of this._noupdate_listeners) {
+        await (async () => await listener([]))().catch((e: Error) => {
+          console.error('subscriber error', e)
+        })
+      }
+    }
+  }
 }
 
-type ListenerFn = (docs: Doc[]) => Promise<void> | void
+type UpdateListenerFn = (docs: Doc[]) => Promise<void> | void
+type NoUpdateListenerFn = () => Promise<void> | void
+type ListenerFn = UpdateListenerFn | NoUpdateListenerFn
 
 export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {

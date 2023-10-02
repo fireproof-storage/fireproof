@@ -167,8 +167,13 @@ export abstract class Loader {
       roots = fp.files as AnyLink[]
     } else {
       const header = await encodeCarHeader(fp)
+      if (header.cid.toString() === 'bafyreiancllmgiou267b7pcj4igabkhnt5uitmwhz5et52mystzcuoazbu') {
+        console.log('encrypting', header.cid.toString(), header.bytes.byteLength)
+      }
       await t.put(header.cid, header.bytes)
       roots = [header.cid]
+      const got = await t.get(header.cid)
+      if (!got) throw new Error('missing header!!!')
     }
 
     const theKey = opts.public ? null : await this._getKey()
