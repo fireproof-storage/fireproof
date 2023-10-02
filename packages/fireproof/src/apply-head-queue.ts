@@ -20,7 +20,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
   let isProcessing = false;
 
   async function* process() {
-    console.log('maybe process', isProcessing, queue.length)
+    // console.log('maybe process', isProcessing, queue.length)
     if (isProcessing || queue.length === 0) return;
     isProcessing = true;
     const allUpdates: DocUpdate[] = [];
@@ -32,18 +32,19 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
 
         const task = queue.shift();
         if (!task) continue;
-        console.log('start task', task.id, queue.length + 1, task.newHead.toString())
+        // console.log('start task', task.id, queue.length + 1, task.newHead.toString())
+        // console.time('worker'+ task.id)
         await worker(task.id, task.tblocks, task.newHead, task.prevHead, task.updates);
-        console.log('end task', task.id, task.newHead.toString())
+        // console.timeEnd('worker'+ task.id)
         if (task.updates) {
           allUpdates.push(...task.updates);
         }
         // Yield the updates if there are no tasks with updates left in the queue or the current task has updates
         if (!queue.some(t => t.updates) || task.updates) {
           const allTasksHaveUpdates = queue.every(task => task.updates !== null);
-          console.log('yielding', task.id, allUpdates.length, allTasksHaveUpdates)
+          // console.time('yielding')
           yield { updates: allUpdates, all: allTasksHaveUpdates };
-          console.log('yielded', task.id, allUpdates.length, allTasksHaveUpdates)
+          // console.timeEnd('yielding')
           allUpdates.length = 0; // Clear the updates
         } 
         // else {
@@ -52,7 +53,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
       }
       // yield { updates: allUpdates, all: true };
     } finally {
-      console.log('finally processing')
+      // console.log('finally processing')
       isProcessing = false;
       // return process();
       const generator = process();
@@ -65,7 +66,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
 
   return {
     push(task: ApplyHeadTask): AsyncGenerator<{ updates: DocUpdate[], all: boolean }, void, unknown> {
-      console.log('push task', task.id, task.newHead.toString())
+      // console.log('push task', task.id, task.newHead.toString())
       queue.push(task);
       return process();
     },

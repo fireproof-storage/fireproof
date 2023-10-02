@@ -221,11 +221,25 @@ export async function * clockVis(blocks: TransactionBlockstore, head: ClockHead)
 export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) {
   const blockLog = new LoggingFetcher(blocks)
   const newBlocks = new Transaction(blocks)
+  console.log('BEGIN COMPACT')
 
   for (const cid of head) {
     const bl = await blockLog.get(cid)
     if (!bl) throw new Error('Missing head block: ' + cid.toString())
     // await newBlocks.put(cid, bl.bytes)
+  }
+
+  for await (const blk of  blocks.entries()) {
+    const bl = await blockLog.get(blk.cid)
+    if (!bl) throw new Error('Missing tblock: ' + blk.cid.toString())
+    // await newBlocks.put(blk.cid, bl.bytes)
+  }
+
+  // todo maybe remove
+  for await (const blk of blocks.loader!.entries()) {
+    const bl = await blockLog.get(blk.cid)
+    if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
+    // await newBlocks.put(blk.cid, bl.bytes)
   }
 
   for await (const [, link] of entries(blockLog, head)) {
@@ -258,5 +272,5 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
     await newBlocks.put(cid, bl.bytes)
   }
 
-  await blocks.commitCompaction(newBlocks, head)
+  return await blocks.commitCompaction(newBlocks, head)
 }

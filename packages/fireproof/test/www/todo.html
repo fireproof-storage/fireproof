@@ -43,9 +43,17 @@
         window.db = db;
         window.cx = cx
 
-        cx.ready.then(async () => {
-          input.disabled = false
+        db.changes([], { limit: 1 }).then((changes) => {
+          if (changes.clock.length > 0) {
+            input.disabled = false
+          } else {
+            cx.ready.then(async () => {
+              input.disabled = false
+            })
+          }
         })
+
+
 
         dbUnsubscribe = db.subscribe(redraw);
         return db;
@@ -61,13 +69,17 @@
       }
       window.redraw = redraw;
 
-
+      let compactor = '🚗'
+      function drawInfo() {
+        document.querySelector('#carLog').innerText = ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length} 📩 ${cx.taskManager.queue.length}`
+      }
       const doRedraw = async () => {
+        drawInfo()
         const result = await db.allDocs();
+        drawInfo()
         document
           .querySelector('ul')
           .innerHTML = '';
-        document.querySelector('#carLog').innerText = ` 🚗 ${cx.loader.carLog.length}`
         for (const row of result.rows) {
           // const doc = await db.get(row.id);
           const doc = row.value
@@ -154,6 +166,16 @@
       }
       window.toggleWorker = toggleWorker;
 
+      async function doCompact(e) {
+        e.preventDefault();
+        compactor = '🚕'
+        drawInfo()
+        await db.compact()
+        drawInfo()
+        compactor = '🚗'
+      }
+      window.doCompact = doCompact;
+
       window.onload = initialize;
       window.db = db;
     }
@@ -175,7 +197,9 @@
   </p>
 
   <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
-  <button id="robot" onclick="toggleWorker(event)">🤖</button><span id="carLog"></span>
+  <button id="robot" onclick="toggleWorker(event)">🤖</button>
+  <br />
+  <span id="carLog" onclick="doCompact(event)"></span>
 
 
   <h3>Todos</h3>

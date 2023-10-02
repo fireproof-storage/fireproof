@@ -75,6 +75,7 @@ export class DbLoader extends Loader {
       return { files } as FileCarHeader
     } else {
       const { head } = result
+      console.log('makeCarHeader', head.toString())
       return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
     }
   }

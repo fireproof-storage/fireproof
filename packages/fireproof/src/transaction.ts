@@ -46,7 +46,11 @@ abstract class FireproofBlockstore implements BlockFetcher {
     }
   }
 
-  abstract transaction(fn: (t: Transaction) => Promise<IdxMeta | BulkResult>, indexes?: Map<string, IdxMeta>, opts?: { noLoader: boolean}): Promise<BulkResultCar | IdxMetaCar>
+  abstract transaction(
+    fn: (t: Transaction) => Promise<IdxMeta | BulkResult>,
+    indexes?: Map<string, IdxMeta>,
+    opts?: { noLoader: boolean }
+  ): Promise<BulkResultCar | IdxMetaCar>
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async put() {
@@ -64,13 +68,13 @@ abstract class FireproofBlockstore implements BlockFetcher {
   }
 
   async commitCompaction(t: Transaction, head: ClockHead) {
-    const did = await this.loader?.commit(t, { head }, { compact: true })
-    this.transactions.clear()
-    this.transactions.add(t)
+    const did = await this.loader!.commit(t, { head }, { compact: true, noLoader: true })
+    // this.transactions.clear()
+    // this.transactions.add(t)
     return did
   }
 
-  async * entries(): AsyncIterableIterator<AnyBlock> {
+  async *entries(): AsyncIterableIterator<AnyBlock> {
     const seen: Set<string> = new Set()
     for (const t of this.transactions) {
       for await (const blk of t.entries()) {
@@ -83,10 +87,9 @@ abstract class FireproofBlockstore implements BlockFetcher {
 
   protected async executeTransaction<T, R>(
     fn: (t: Transaction) => Promise<T>,
-    commitHandler: (t: Transaction, done: T) => Promise<{ car?: AnyLink, done: R }>
+    commitHandler: (t: Transaction, done: T) => Promise<{ car?: AnyLink; done: R }>
   ): Promise<R> {
     const t = new Transaction(this)
-    // this.transactions.add(t)
     const done: T = await fn(t)
     const { car, done: result } = await commitHandler(t, done)
     return car ? { ...result, car } : result
@@ -127,8 +130,13 @@ export class TransactionBlockstore extends FireproofBlockstore {
     }
   }
 
-  async transaction(fn: (t: Transaction) => Promise<BulkResult>, _indexes?: undefined, opts = { noLoader: false }): Promise<BulkResultCar> {
+  async transaction(
+    fn: (t: Transaction) => Promise<BulkResult>,
+    _indexes?: undefined,
+    opts = { noLoader: false }
+  ): Promise<BulkResultCar> {
     return this.executeTransaction(fn, async (t, done) => {
+      // if the fn will change noLoader, it will show up on done
       const car = await this.loader?.commit(t, done, opts)
       return { car, done }
     })

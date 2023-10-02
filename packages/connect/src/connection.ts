@@ -48,7 +48,7 @@ export abstract class Connection {
     this.loader = loader
     const remote = new RemoteMetaStore(loader.name, this)
     remote.onLoad('main', async (metas) => {
-      console.log('remote metas', metas)
+      // console.log('remote metas', metas)
       if (metas) {
         await loader.handleDbMetasFromStore(metas)
       }

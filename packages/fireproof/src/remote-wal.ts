@@ -1,6 +1,6 @@
 import pLimit from 'p-limit';
 import { AnyLink, CommitOpts, DbMeta } from './types';
-import type { Loader } from './loader';
+import { cidListIncludes, type Loader } from './loader';
 import { DbLoader } from './loaders';
 import { STORAGE_VERSION } from './store';
 import { CommitQueue } from './commit-queue'
@@ -79,22 +79,30 @@ export abstract class RemoteWAL {
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
-          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null);
-          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`);
-          await this.loader.remoteCarStore!.save(car);
-          this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta);
-        });
-        uploads.push(uploadP);
+          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
+          if (!car) {
+            if (cidListIncludes(this.loader.carLog, dbMeta.car))
+              throw new Error(`missing car ${dbMeta.car.toString()}`)
+          } else {
+            await this.loader.remoteCarStore!.save(car)
+          }
+          this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
+        })
+        uploads.push(uploadP)
       }
 
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
-          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null);
-          if (!car) throw new Error(`missing car ${dbMeta.car.toString()}`);
-          await this.loader.remoteCarStore!.save(car);
-          this.walState.operations = this.walState.operations.filter(op => op !== dbMeta);
-        });
-        uploads.push(uploadP);
+          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
+          if (!car) {
+            if (cidListIncludes(this.loader.carLog, dbMeta.car))
+              throw new Error(`missing car ${dbMeta.car.toString()}`)
+          } else {
+            await this.loader.remoteCarStore!.save(car)
+          }
+          this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
+        })
+        uploads.push(uploadP)
       }
 
       if (fileOperations.length) {
@@ -113,12 +121,12 @@ export abstract class RemoteWAL {
         const res = await Promise.allSettled(uploads);
         const errors = res.filter(r => r.status === 'rejected') as PromiseRejectedResult[];
         if (errors.length) {
-          console.error('error uploading', errors);
+          console.error('error uploading', JSON.stringify(errors));
           throw errors[0].reason;
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
-          // console.log('saving remote meta', lastOp.car.toString())
+          console.log('saving remote meta', lastOp.car.toString())
           await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
             console.error('error saving remote meta', e);
             this.walState.operations.push(lastOp);
