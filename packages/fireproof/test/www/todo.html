@@ -130,13 +130,17 @@
 
       let worker
       async function startWorker() {
+        const button = document.querySelector('#robot')
+        button.innerText = '🦾'
         const dcs = await db.allDocs()
         console.log('start worker', dcs.rows.length)
         worker = setInterval(async () => {
-          dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.clicks || 0) + 1, completed: Math.random() > 0.5 }))
+          dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.value.clicks || 0) + 1, completed: Math.random() > 0.5 }))
         }, 5000)
       }
       const stopWorker = () => {
+        const button = document.querySelector('#robot')
+        button.innerText = '🤖'
         console.log('stop worker')
         clearInterval(worker)
       }
@@ -171,7 +175,7 @@
   </p>
 
   <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
-  <button onclick="toggleWorker(event)">🤖</button><span id="carLog"></span>
+  <button id="robot" onclick="toggleWorker(event)">🤖</button><span id="carLog"></span>
 
 
   <h3>Todos</h3>

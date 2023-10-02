@@ -9,9 +9,10 @@ import { CRDT } from './crdt'
 import { CRDTClock } from './crdt-clock'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
-  parent: BlockFetcher
-  constructor(parent: BlockFetcher) {
+  parent: FireproofBlockstore
+  constructor(parent: FireproofBlockstore) {
     super()
+    parent.transactions.add(this)
     this.parent = parent
   }
 
@@ -63,9 +64,10 @@ abstract class FireproofBlockstore implements BlockFetcher {
   }
 
   async commitCompaction(t: Transaction, head: ClockHead) {
+    const did = await this.loader?.commit(t, { head }, { compact: true })
     this.transactions.clear()
     this.transactions.add(t)
-    return await this.loader?.commit(t, { head }, { compact: true })
+    return did
   }
 
   async * entries(): AsyncIterableIterator<AnyBlock> {
@@ -84,7 +86,7 @@ abstract class FireproofBlockstore implements BlockFetcher {
     commitHandler: (t: Transaction, done: T) => Promise<{ car?: AnyLink, done: R }>
   ): Promise<R> {
     const t = new Transaction(this)
-    this.transactions.add(t)
+    // this.transactions.add(t)
     const done: T = await fn(t)
     const { car, done: result } = await commitHandler(t, done)
     return car ? { ...result, car } : result

@@ -32,7 +32,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
 
         const task = queue.shift();
         if (!task) continue;
-        console.log('start task', task.id, task.newHead.toString())
+        console.log('start task', task.id, queue.length + 1, task.newHead.toString())
         await worker(task.id, task.tblocks, task.newHead, task.prevHead, task.updates);
         console.log('end task', task.id, task.newHead.toString())
         if (task.updates) {

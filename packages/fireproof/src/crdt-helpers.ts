@@ -64,7 +64,7 @@ async function processFiles(blocks: Transaction, doc: Doc) {
 async function processFileset(blocks: Transaction, files: DocFiles, publicFiles = false) {
   const dbBlockstore = blocks.parent as TransactionBlockstore
   const t = new Transaction(dbBlockstore)
-  dbBlockstore.transactions.add(t)
+  // dbBlockstore.transactions.add(t)
   const didPut = []
   let totalSize = 0
   for (const filename in files) {
@@ -222,9 +222,15 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   const blockLog = new LoggingFetcher(blocks)
   const newBlocks = new Transaction(blocks)
 
+  for (const cid of head) {
+    const bl = await blockLog.get(cid)
+    if (!bl) throw new Error('Missing head block: ' + cid.toString())
+    // await newBlocks.put(cid, bl.bytes)
+  }
+
   for await (const [, link] of entries(blockLog, head)) {
     const bl = await blockLog.get(link)
-    if (!bl) throw new Error('Missing block: ' + link.toString())
+    if (!bl) throw new Error('Missing entry block: ' + link.toString())
     // await newBlocks.put(link, bl.bytes)
   }
 
@@ -235,6 +241,9 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
 
   const result = await root(blockLog, head)
   for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+    if (cid.toString() === 'bafyreiancllmgiou267b7pcj4igabkhnt5uitmwhz5et52mystzcuoazbu') {
+      console.log('compacting', cid.toString(), bytes)
+    }
     newBlocks.putSync(cid, bytes)
   }
 
@@ -242,7 +251,10 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
 
   for (const cid of blockLog.cids) {
     const bl = await blocks.get(cid)
-    if (!bl) throw new Error('Missing block: ' + cid.toString())
+    if (cid.toString() === 'bafyreiancllmgiou267b7pcj4igabkhnt5uitmwhz5et52mystzcuoazbu') {
+      console.log('compacting', cid.toString(), bl)
+    }
+    if (!bl) throw new Error('Missing logged block: ' + cid.toString())
     await newBlocks.put(cid, bl.bytes)
   }
 
