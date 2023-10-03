@@ -3,6 +3,7 @@ import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact, 
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions, AnyLink } from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
+import { DbLoader } from './loaders'
 
 export class CRDT {
   name: string | null
@@ -14,9 +15,9 @@ export class CRDT {
   indexers: Map<string, Index> = new Map()
 
   clock: CRDTClock = new CRDTClock()
-  isCompacting = false
-  compacting : Promise<AnyLink|void> = Promise.resolve()
-  writing: Promise<BulkResult|void> = Promise.resolve()
+  // isCompacting = false
+  // compacting : Promise<AnyLink|void> = Promise.resolve()
+  // writing: Promise<BulkResult|void> = Promise.resolve()
 
   constructor(name?: string, opts?: FireproofOptions) {
     this.name = name || null
@@ -42,10 +43,12 @@ export class CRDT {
 
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
     await this.ready
-    await this.compacting
+    const loader = this.blocks.loader as DbLoader
+
+    await loader?.compacting
     const prevHead = [...this.clock.head]
 
-    this.writing = (async () => {
+    const writing = (async () => {
       const { head } = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
         const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
         console.log('bulk head', this.blocks.loader?.carLog.length, head.toString())
@@ -58,8 +61,14 @@ export class CRDT {
       await this.clock.applyHead(null, head, prevHead, updates)
       return { head }
     })()
-
-    return (await this.writing)!
+    if (loader) {
+      const wr = loader.writing
+      loader.writing = wr.then(async () => {
+        await writing
+        wr
+      })
+    }
+    return (await writing)!
   }
 
   async allDocs() {
@@ -94,17 +103,8 @@ export class CRDT {
 
   async compact() {
     await this.ready
-    await this.writing
-    if (this.blocks.loader && this.blocks.loader.carLog.length < 2) return
-    if (this.isCompacting) return
-    this.isCompacting = true
-    try {
-      const compactHead = this.clock.head
-      this.compacting = doCompact(this.blocks, this.clock.head)
-      await this.clock.applyHead(null, compactHead, compactHead, null)
-      return await this.compacting
-    } finally {
-      this.isCompacting = false
+    if (this.blocks.loader) {
+      await (this.blocks.loader as DbLoader).compact(this.blocks)
     }
   }
 }

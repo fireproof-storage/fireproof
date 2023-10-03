@@ -51,6 +51,8 @@ export abstract class Loader {
   name: string
   opts: FireproofOptions = {}
   commitQueue = new CommitQueue<AnyLink>()
+  isCompacting = false
+  isWriting = false
 
   remoteMetaLoading: Promise<void> | undefined
   remoteMetaStore: AbstractRemoteMetaStore | undefined
@@ -101,15 +103,27 @@ export abstract class Loader {
     await this._applyCarHeader(carHeader, true)
   }
 
+  async _readyForMerge() {}
+  async _setWaitForWrite(_writing: Promise<void>) {}
+
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
-    for (const meta of metas) {
-      // should await compaction and set writing so compaction waits on it
-      await this.mergeDbMetaIntoClock(meta)
-    }
+    await this._readyForMerge()
+    this.isWriting = true
+    const writing = (async () => {
+      for (const meta of metas) {
+        await this.mergeDbMetaIntoClock(meta)
+      }
+    })()
+    this._setWaitForWrite(writing)
+    await writing
+    this.isWriting = false
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     // console.log('meta', meta)
+    if (this.isCompacting) {
+      throw new Error('cannot merge while compacting')
+    }
     if (this.seenMeta.has(meta.car.toString())) return
     this.seenMeta.add(meta.car.toString())
     // console.log('meta', meta.car.toString())
@@ -121,14 +135,12 @@ export abstract class Loader {
       return
     }
     const carHeader = (await this.loadCarHeaderFromMeta(meta)) as DbCarHeader
-    // fetch other cars down the compact log? 
+    // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars)
-    this.carLog = [
-      ...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)
-    ]
+    this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
     await this._applyCarHeader(carHeader)
   }
 
@@ -215,12 +227,12 @@ export abstract class Loader {
       const fpCar = fp as CarLoaderHeader
       fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
       this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
-      void (async () => {
+      setTimeout(async () => {
         if (this.remoteMetaLoading) await this.remoteMetaLoading
         for (const cid of fpCar.compact) {
           await this.carStore!.remove(cid)
         }
-      })()
+      }, 5000)
     } else {
       this.carLog.unshift(cid)
     }

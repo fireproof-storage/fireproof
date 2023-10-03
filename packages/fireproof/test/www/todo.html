@@ -146,15 +146,27 @@
         button.innerText = '🦾'
         const dcs = await db.allDocs()
         console.log('start worker', dcs.rows.length)
-        worker = setInterval(async () => {
-          dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.value.clicks || 0) + 1, completed: Math.random() > 0.5 }))
+        // worker = setInterval(async () => {
+        //   dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.value.clicks || 0) + 1, completed: Math.random() > 0.5 }))
+        // }, 5000)
+        goWorker(dcs)
+      }
+      const goWorker = (dcs) => {
+        worker = setTimeout(async () => {
+          await Promise.all(dcs.rows.map((r) => { 
+            r.value.clicks = (r.value.clicks || 0)
+            r.value.clicks += 1
+            r.value.completed = Math.random() > 0.5
+            db.put({ ...r.value }) }))
+          goWorker(dcs)
         }, 5000)
       }
+
       const stopWorker = () => {
         const button = document.querySelector('#robot')
         button.innerText = '🤖'
         console.log('stop worker')
-        clearInterval(worker)
+        clearTimeout(worker)
       }
       const toggleWorker = (e) => {
         e.preventDefault();
