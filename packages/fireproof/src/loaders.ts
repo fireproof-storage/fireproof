@@ -11,6 +11,8 @@ import { index } from './index'
 import type { DataStore as AbstractDataStore } from './store'
 
 import { DataStore } from './store-browser'
+import { doCompact } from './crdt-helpers'
+import { TransactionBlockstore } from './transaction'
 
 export class IdxLoader extends Loader {
   // declare ready: Promise<IdxCarHeader>
@@ -43,6 +45,8 @@ export class DbLoader extends Loader {
   defaultHeader = DbLoader.defaultHeader
 
   clock: CRDTClock
+  compacting: Promise<AnyLink | void> = Promise.resolve()
+  writing: Promise<BulkResult | void> = Promise.resolve()
 
   remoteFileStore: AbstractDataStore | undefined
   fileStore: DataStore
@@ -51,6 +55,42 @@ export class DbLoader extends Loader {
     super(name, opts)
     this.fileStore = new DataStore(this)
     this.clock = clock
+  }
+
+  async _readyForMerge() {
+    // await this.ready
+    await this.compacting
+  }
+
+  async _setWaitForWrite(_writing: Promise<any>) {
+    const wr = this.writing
+    this.writing = wr.then(async () => {
+      await _writing
+      wr
+    })
+  }
+
+  async compact(blocks: TransactionBlockstore) {
+    await this.ready
+    await this.writing
+    if (this.carLog.length < 2) return
+    if (this.isCompacting) return
+    const compactingP = (async () => {
+      if (this.isWriting) {
+        throw new Error('cannot compact while writing')
+      }
+      this.isCompacting = true
+      try {
+        const compactHead = this.clock.head
+        this.compacting = doCompact(blocks, this.clock.head)
+        await this.clock.applyHead(null, compactHead, compactHead, null)
+        return await this.compacting
+      } finally {
+        this.isCompacting = false
+      }
+    })()
+    this._setWaitForWrite(compactingP)
+    return await compactingP
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
@@ -65,7 +105,11 @@ export class DbLoader extends Loader {
     }
   }
 
-  protected makeCarHeader(result: BulkResult|FileResult, cars: AnyLink[], compact: boolean = false): DbCarHeader | FileCarHeader {
+  protected makeCarHeader(
+    result: BulkResult | FileResult,
+    cars: AnyLink[],
+    compact: boolean = false
+  ): DbCarHeader | FileCarHeader {
     if (isFileResult(result)) {
       const files = [] as AnyLink[]
 
