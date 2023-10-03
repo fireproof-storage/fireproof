@@ -52,8 +52,8 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
-    "@fireproof/connect": "^0.13.12",
-    "@fireproof/core": "^0.13.4-dev",
+    "@fireproof/connect": "^0.13.13",
+    "@fireproof/core": "^0.13.5-dev",
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
     "multiformats": "^12.0.1",

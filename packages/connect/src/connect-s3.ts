@@ -19,7 +19,7 @@ export class ConnectS3 extends Connection {
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`)
     const response = await fetch(fetchUploadUrl)
     if (!response.ok) {
-      console.log('failed to get upload url for data', params, response)
+      // console.log('failed to get upload url for data', params, response)
       throw new Error('failed to get upload url for data ' + new Date().toISOString() + ' ' + response.statusText)
     }
     const { uploadURL } = await response.json() as { uploadURL: string }
@@ -33,7 +33,7 @@ export class ConnectS3 extends Connection {
     const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ type: 'meta', ...params }).toString()}`)
     const response = await fetch(fetchUploadUrl)
     if (!response.ok) {
-      console.log('failed to get upload url for meta', params, response)
+      // console.log('failed to get upload url for meta', params, response)
       throw new Error('failed to get upload url for meta')
     }
     const { uploadURL } = await response.json() as { uploadURL: string }

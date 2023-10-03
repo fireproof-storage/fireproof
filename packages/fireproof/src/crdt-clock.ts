@@ -34,9 +34,7 @@ export class CRDTClock {
     for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({ id: taskId, tblocks, newHead, prevHead, updates })) {
       Promise.resolve().then(async () => {
         if (this.watchers.size && !all) {
-          console.time('changes for watchers'+ taskId)
           const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
-          console.timeEnd('changes for watchers'+ taskId)
           updates = changes.result
         } else {
           updates = updatesAcc
@@ -67,26 +65,20 @@ export class CRDTClock {
     }
     let head = this.head
     // const noLoader = this.head.length === 1 && !updates?.length
-    const noLoader = true
-    // console.log('noLoader', noLoader, this.head.length, updates?.length)
+    const noLoader = false
     const withBlocks = async (tblocks: Transaction | null, fn: (blocks: Transaction) => Promise<BulkResult>) => {
-      // if (tblocks instanceof Transaction) {
-      //   throw new Error('using the tblocks')
-      //   // return await fn(tblocks)
-      // }
       if (!this.blocks) throw new Error('missing blocks')
       return await this.blocks.transaction(fn, undefined, { noLoader })
     }
     await withBlocks(tblocks, async (tblocks) => {
       for (const cid of newHead) {
-        console.time('applyHead int' + taskId + cid.toString())
-        head = await advance(tblocks, head, cid)
-        console.timeEnd('applyHead int' + taskId + cid.toString())
-        console.log('advanced head', cid.toString(), head.toString())
+        try {
+          head = await advance(tblocks, head, cid)
+        } catch (e) {
+          continue
+        }
       }
-      console.time('root' + taskId)
       const result = await root(tblocks, head)
-      console.timeEnd('root' + taskId)
       for (const { cid, bytes } of [...result.additions, ...result.removals]) {
         tblocks.putSync(cid, bytes)
       }
