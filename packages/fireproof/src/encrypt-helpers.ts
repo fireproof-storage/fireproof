@@ -34,12 +34,8 @@ export async function encryptedEncodeCarFile(
   for (const { cid } of t.entries()) {
     cidsToEncrypt.push(cid)
     const g = await t.get(cid)
-    if (cid.toString() === 'bafyreiancllmgiou267b7pcj4igabkhnt5uitmwhz5et52mystzcuoazbu') {
-      console.log('encrypting', cid.toString(), g)
-    }
     if (!g) throw new Error('missing cid block')
   }
-  console.log('encrypting', cidsToEncrypt.length, 'blocks')
   let last: AnyBlock | null = null
   for await (const block of encrypt({
     cids: cidsToEncrypt,

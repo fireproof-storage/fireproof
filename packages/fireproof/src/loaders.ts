@@ -45,6 +45,7 @@ export class DbLoader extends Loader {
   defaultHeader = DbLoader.defaultHeader
 
   clock: CRDTClock
+  awaitingCompact = false
   compacting: Promise<AnyLink | void> = Promise.resolve()
   writing: Promise<BulkResult | void> = Promise.resolve()
 
@@ -62,35 +63,46 @@ export class DbLoader extends Loader {
     await this.compacting
   }
 
-  async _setWaitForWrite(_writing: Promise<any>) {
+  async _setWaitForWrite(_writingFn: () => Promise<any>) {
     const wr = this.writing
     this.writing = wr.then(async () => {
-      await _writing
-      wr
+      await _writingFn()
+      return wr
     })
+    return this.writing.then(() => {})
   }
 
   async compact(blocks: TransactionBlockstore) {
     await this.ready
-    await this.writing
     if (this.carLog.length < 2) return
-    if (this.isCompacting) return
-    const compactingP = (async () => {
-      if (this.isWriting) {
-        throw new Error('cannot compact while writing')
+    if (this.awaitingCompact) return
+    this.awaitingCompact = true
+    const compactingFn = async () => {
+      // await this.writing
+      if (this.isCompacting) {
+        return
       }
+
+      if (this.isWriting) {
+        return
+      }
+
       this.isCompacting = true
       try {
         const compactHead = this.clock.head
-        this.compacting = doCompact(blocks, this.clock.head)
+        const compactingResult = await doCompact(blocks, this.clock.head)
         await this.clock.applyHead(null, compactHead, compactHead, null)
-        return await this.compacting
+        return compactingResult
       } finally {
         this.isCompacting = false
       }
-    })()
-    this._setWaitForWrite(compactingP)
-    return await compactingP
+    }
+    this.compacting = this._setWaitForWrite(compactingFn)
+    
+    // const done = await compactingFn()
+    await this.compacting
+    this.awaitingCompact = false
+    // return done
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
@@ -119,7 +131,6 @@ export class DbLoader extends Loader {
       return { files } as FileCarHeader
     } else {
       const { head } = result
-      console.log('makeCarHeader', head.toString())
       return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
     }
   }

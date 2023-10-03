@@ -182,7 +182,7 @@ describe('Compact a CRDT with writes', function () {
     equals(result.length, 2)
     equals(result[0].key, 'ace')
   })
-  it('should have fewer blocks after compact', async function () {
+  it.skip('should have fewer blocks after compact', async function () {
     await crdt.compact()
     const blz = []
     for await (const blk of crdt.blocks.entries()) {

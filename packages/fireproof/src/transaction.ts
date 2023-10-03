@@ -149,14 +149,18 @@ type BulkResultCar = BulkResult & CarCommit
 export class LoggingFetcher implements BlockFetcher {
   blocks: TransactionBlockstore
   loader: DbLoader | IdxLoader | null = null
-  cids: Set<AnyLink> = new Set()
+  loggedBlocks : Transaction
+  
+
   constructor(blocks: TransactionBlockstore) {
     this.blocks = blocks
     this.loader = blocks.loader
+    this.loggedBlocks = new Transaction(blocks)
   }
 
   async get(cid: AnyLink) {
-    this.cids.add(cid)
-    return await this.blocks.get(cid)
+    const block = await this.blocks.get(cid)
+    if (block) this.loggedBlocks.putSync(cid, block.bytes)
+    return block
   }
 }

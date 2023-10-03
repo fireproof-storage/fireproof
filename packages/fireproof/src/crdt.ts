@@ -1,6 +1,6 @@
 import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, doCompact, readFiles, getAllEntries, clockVis } from './crdt-helpers'
-import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions, AnyLink } from './types'
+import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis } from './crdt-helpers'
+import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
 import { DbLoader } from './loaders'
@@ -45,27 +45,31 @@ export class CRDT {
     await this.ready
     const loader = this.blocks.loader as DbLoader
 
-    await loader?.compacting
     const prevHead = [...this.clock.head]
 
     const writing = (async () => {
-      const { head } = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
+      await loader?.compacting
+      if (loader?.isCompacting) {
+        throw new Error('cant bulk while compacting')
+      }
+      const got = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
         const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-        console.log('bulk head', this.blocks.loader?.carLog.length, head.toString())
         updates = updates.map(({ key, value, del }) => {
           readFiles(this.blocks, { doc: value })
           return { key, value, del }
         })
         return { head }
       })
-      await this.clock.applyHead(null, head, prevHead, updates)
-      return { head }
+      await this.clock.applyHead(null, got.head, prevHead, updates)
+      return got
     })()
     if (loader) {
       const wr = loader.writing
       loader.writing = wr.then(async () => {
+        loader.isWriting = true
         await writing
-        wr
+        loader.isWriting = false
+        return wr
       })
     }
     return (await writing)!

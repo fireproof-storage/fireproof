@@ -84,10 +84,7 @@ export abstract class Loader {
         throw new Error('stores not initialized')
       const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
       if (metas) {
-        console.log('loading', metas.length, 'metas')
-
         await this.handleDbMetasFromStore(metas)
-        console.log('loaded', metas.length, 'metas')
       }
     })
   }
@@ -104,29 +101,28 @@ export abstract class Loader {
   }
 
   async _readyForMerge() {}
-  async _setWaitForWrite(_writing: Promise<void>) {}
+  async _setWaitForWrite(_writing: () => Promise<void>) {}
 
-  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
-    await this._readyForMerge()
-    this.isWriting = true
-    const writing = (async () => {
-      for (const meta of metas) {
+  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {    
+    for (const meta of metas) {
+      const writingFn = async () => {
+        this.isWriting = true
         await this.mergeDbMetaIntoClock(meta)
+        this.isWriting = false
       }
-    })()
-    this._setWaitForWrite(writing)
-    await writing
-    this.isWriting = false
+      this._setWaitForWrite(writingFn)
+      await writingFn()
+    }
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    // console.log('meta', meta)
+    const ld = this as unknown as DbLoader
+    await ld.compacting
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }
     if (this.seenMeta.has(meta.car.toString())) return
     this.seenMeta.add(meta.car.toString())
-    // console.log('meta', meta.car.toString())
 
     if (meta.key) {
       await this.setKey(meta.key)
@@ -137,7 +133,7 @@ export abstract class Loader {
     const carHeader = (await this.loadCarHeaderFromMeta(meta)) as DbCarHeader
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
-    // console.log('merge carHeader', carHeader.head.toString(), meta.car.toString())
+    // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
@@ -186,7 +182,6 @@ export abstract class Loader {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    // console.trace('_commitInternal', opts)
     const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
     let roots: AnyLink[] = []
     // @ts-ignore
@@ -197,16 +192,14 @@ export abstract class Loader {
       const header = await encodeCarHeader(fp)
       await t.put(header.cid, header.bytes)
       roots = [header.cid]
-      const got = await t.get(header.cid)
-      if (!got) throw new Error('missing header!!!')
+      // const got = await t.get(header.cid)
+      // if (!got) throw new Error('missing header block: '+header.cid.toString())
     }
 
     const theKey = opts.public ? null : await this._getKey()
     const { cid, bytes } = theKey
       ? await encryptedEncodeCarFile(theKey, roots[0], t)
       : await encodeCarFile(roots, t)
-
-    // save the car locally and remote
 
     if (isFileResult(done)) {
       // move to the db loader?
@@ -215,7 +208,7 @@ export abstract class Loader {
       await this.remoteWAL!.enqueueFile(cid, opts.public)
       return cid
     }
-    console.log('saving car', cid.toString())
+    // console.log('saving car', cid.toString())
     await this.carStore!.save({ cid, bytes })
 
     const newDbMeta = { car: cid, key: theKey || null } as DbMeta
