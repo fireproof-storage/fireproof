@@ -1,25 +1,23 @@
 import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
 import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
-import { validateDataParams } from './connect'
-import { Connection } from './connection'
+import { CarClockHead, Connection, validateDataParams } from '@fireproof/connect'
 import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
-import { encodeCarFile } from './loader-helpers'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Proof } from '@ucanto/interface'
-import { CarClockHead } from './connect-ipfs'
+
+import { encodeCarFile } from '@fireproof/core'
+
 
 export abstract class AbstractConnectIPFS extends Connection {
-  eventBlocks = new MemoryBlockstore() // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
-  parents: CarClockHead = []
   abstract authorizedClient(): Promise<Client>;
   abstract clockProofsForDb(): Promise<Proof[]>;
   abstract clockSpaceDIDForDb(): `did:${string}:${string}`;
 
   issuer(client: Client) {
-    // @ts-ignore
+    // @ts-ignoree
     const { issuer } = client._agent
-    if (!issuer.signatureAlgorithm) { throw new Error('issuer not valid') }
+    if (!issuer.signatureAlgorithm) { throw new Error('issuer encodeCarFile valid') }
     return issuer
   }
 
@@ -36,7 +34,7 @@ export abstract class AbstractConnectIPFS extends Connection {
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean; }) {
     const client = await this.authorizedClient()
-    if (!client) { throw new Error('client not initialized') }
+    if (!client) { throw new Error('client encodeCarFile initialized') }
     validateDataParams(params)
     // console.log('dataUpload', params.car.toString())
     // uploadCar is processed so roots are reachable via CDN
@@ -75,15 +73,7 @@ export abstract class AbstractConnectIPFS extends Connection {
 
     const clockProofs = await this.clockProofsForDb()
 
-    const data = {
-      dbMeta: bytes
-    }
-    const event = await EventBlock.create(data, this.parents)
-    const eventBlocks = new MemoryBlockstore()
-    await this.eventBlocks.put(event.cid, event.bytes)
-    await eventBlocks.put(event.cid, event.bytes)
-
-    const { bytes: carBytes } = await encodeCarFile([event.cid], eventBlocks)
+    const { event, carBytes } = await this.createEventBlock(bytes)
 
     await client.uploadCAR(new Blob([carBytes]))
 

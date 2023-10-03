@@ -2,10 +2,11 @@ import { create } from '@web3-storage/w3up-client'
 import type { Client } from '@web3-storage/w3up-client'
 import { delegate, Delegation } from '@ucanto/core'
 
-import { Database, fireproof } from './database'
+import { fireproof } from '@fireproof/core'
+import type { Database, MapFn } from '@fireproof/core'
+
 import { ConnectIPFSParams } from './connect-ipfs'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
-import type { MapFn } from './types'
 import { Capabilities } from '@ucanto/interface'
 
 type ClockSpaceDoc = {
@@ -58,7 +59,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     super()
     this.accountDb = fireproof('_connect-web3')
     const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb
-    accountDbLoader?.connectRemote(this)
+    this.connect(accountDbLoader!)
     void this.authorizing.then(() => {
       void this.serviceAccessRequests()
     })

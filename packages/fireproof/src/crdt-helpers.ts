@@ -25,7 +25,8 @@ export async function applyBulkUpdateToCrdt(
     if (!isReturned) {
       const hasRoot = await tblocks.get(result.root) // is a db-wide get
       if (!hasRoot) {
-        console.error(`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
+        throw new Error (`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
+      
         // make sure https://github.com/alanshaw/pail/pull/20 is applied
         result.head = head
       }
@@ -64,7 +65,7 @@ async function processFiles(blocks: Transaction, doc: Doc) {
 async function processFileset(blocks: Transaction, files: DocFiles, publicFiles = false) {
   const dbBlockstore = blocks.parent as TransactionBlockstore
   const t = new Transaction(dbBlockstore)
-  dbBlockstore.transactions.add(t)
+  // dbBlockstore.transactions.add(t)
   const didPut = []
   let totalSize = 0
   for (const filename in files) {
@@ -218,14 +219,33 @@ export async function * clockVis(blocks: TransactionBlockstore, head: ClockHead)
   }
 }
 
+let isCompacting = false
 export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) {
+  if (isCompacting) {
+    return
+  }
+  isCompacting = true
   const blockLog = new LoggingFetcher(blocks)
-  const newBlocks = new Transaction(blocks)
+
+  for (const cid of head) {
+    const bl = await blockLog.get(cid)
+    if (!bl) throw new Error('Missing head block: ' + cid.toString())
+  }
+
+  // for await (const blk of  blocks.entries()) {
+  //   const bl = await blockLog.get(blk.cid)
+  //   if (!bl) throw new Error('Missing tblock: ' + blk.cid.toString())
+  // }
+
+  // todo maybe remove
+  // for await (const blk of blocks.loader!.entries()) {
+  //   const bl = await blockLog.get(blk.cid)
+  //   if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
+  // }
 
   for await (const [, link] of entries(blockLog, head)) {
     const bl = await blockLog.get(link)
-    if (!bl) throw new Error('Missing block: ' + link.toString())
-    // await newBlocks.put(link, bl.bytes)
+    if (!bl) throw new Error('Missing entry block: ' + link.toString())
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -235,16 +255,13 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
 
   const result = await root(blockLog, head)
   for (const { cid, bytes } of [...result.additions, ...result.removals]) {
-    newBlocks.putSync(cid, bytes)
+    blockLog.loggedBlocks.putSync(cid, bytes)
   }
 
   await clockChangesSince(blockLog, head, [], {})
 
-  for (const cid of blockLog.cids) {
-    const bl = await blocks.get(cid)
-    if (!bl) throw new Error('Missing block: ' + cid.toString())
-    await newBlocks.put(cid, bl.bytes)
-  }
-
-  await blocks.commitCompaction(newBlocks, head)
+  const done =  await blocks.commitCompaction(blockLog.loggedBlocks, head)
+  isCompacting = false
+  return done
 }
+

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fireproof Test</title>
+  <script src="./fireproof.iife.js?14345"></script>
+  <script src="./index.iife.js?14345"></script>
+  <script type="text/javascript">
+    function todoApp() {
+      const actorTag = Math.random().toString(36).substring(2, 7)
+      const { fireproof, index } = Fireproof;
+      const { connect } = FireproofConnect;
+
+      let dbName
+      let db
+      let cx
+
+      let dbUnsubscribe = false
+      function setupDb(name, newDb, newConn) {
+        const input = document.querySelector('#todo');
+        input.disabled = true
+
+        if (dbUnsubscribe) {
+          dbUnsubscribe()
+        }
+        if (newDb) {
+          // console.log('new db', newDb, newConn)
+          name = newDb.name
+          dbName = newDb.name
+          db = newDb
+          cx = newConn
+          const input = document.querySelector('#list');
+          input.value = dbName;
+        } else {
+          dbName = name;
+          db = fireproof(name);
+          cx = connect.ipfs(db, "todo-test")
+        }
+
+        window.db = db;
+        window.cx = cx
+
+        cx.ready.then(async () => {
+          input.disabled = false
+          console.log('ready', cx.authorized, cx)
+          if (cx.authorized) {
+            document.querySelector('#login').hidden = true
+            document.querySelector('#authorized').hidden = false
+            // console.log('authorized', await cx.shareToken())
+            // document.querySelector('#agent').innerText = await cx.shareToken()
+            document.querySelector('#account-email').innerText = await cx.accountEmail()
+          } else {
+            input.disabled = false
+            document.querySelector('#login').hidden = false
+            document.querySelector('#authorized').hidden = true
+          }
+        })
+
+        dbUnsubscribe = db.subscribe(redraw);
+        return db;
+      }
+
+      let doing
+      const redraw = async () => {
+        if (doing) {
+          return doing
+        }
+        doing = doRedraw().finally(() => doing = null)
+        return doing
+      }
+      window.redraw = redraw;
+
+
+      const doRedraw = async () => {
+        const result = await index(db, 'created').query({ includeDocs: true });
+        document
+          .querySelector('ul')
+          .innerHTML = '';
+
+        for (const row of result.rows) {
+          // const doc = await db.get(row.id);
+          const doc = row.doc
+          const checkbox = document.createElement('input');
+          checkbox.setAttribute('type', 'checkbox');
+          if (doc.completed) {
+            checkbox.setAttribute('checked', true);
+          }
+          checkbox.onchange = async (e) => {
+            e.target.indeterminate = true;
+            doc.completed = !doc.completed;
+            await db.put(doc);
+          }
+          const textSpan = document.createElement('span');
+          textSpan.innerText = doc.actor + ': ' + doc.task;
+          const li = document.createElement('li');
+          li.appendChild(checkbox);
+          li.appendChild(textSpan);
+          document
+            .querySelector('ul')
+            .appendChild(li);
+        }
+      }
+
+      async function initialize() {
+        ps = new URLSearchParams(location.search)
+        const listQ = ps.get('list')
+        setupDb(listQ || 'my-list');
+        const input = document.querySelector('#list');
+        input.value = dbName;
+        redraw()
+      }
+
+      async function openDashboard(e) {
+        db.openDashboard();
+      }
+      window.openDashboard = openDashboard;
+
+      async function verifyEmail(e) {
+        const input = document.querySelector('#email');
+        input.disabled = true
+        const val = input.value
+        const area = document.querySelector('#login')
+        area.innerHTML = 'Sending verification email to ' + val + '...'
+        await cx.authorize(input.value)
+        // setTimeout(() => {
+        //   setupDb(dbName);
+        // }, 1100)
+      }
+      window.verifyEmail = verifyEmail;
+
+
+      async function changeList(e) {
+        e.preventDefault();
+        const input = document.querySelector('#list');
+        dbName = input.value;
+        history.pushState(null, '', location.pathname + '?list=' + encodeURIComponent(dbName));
+        setupDb(dbName);
+        redraw();
+      }
+      window.changeList = changeList;
+
+      async function createTodoClick(e) {
+        e.preventDefault();
+
+        const input = document.querySelector('#todo');
+        const ok = await db.put({ actor: actorTag, created: Date.now(), task: input.value, completed: false });
+        input.value = '';
+
+      }
+      window.createTodoClick = createTodoClick;
+
+      window.doShareWith = async (e) => {
+        e.preventDefault();
+        e.target.disabled = true
+        const input = document.querySelector('#share');
+        const did = await cx.shareWith(input.value)
+        document.querySelector('#share-code').innerText = did
+      }
+
+      window.doJoin = async (e) => {
+        e.preventDefault();
+        e.target.disabled = true
+        const input = document.querySelector('#join');
+        const { database: newDb, connection: newConn } = await cx.joinShared(input.value)
+        setupDb(null, newDb, newConn);
+      }
+
+      window.onload = initialize;
+      window.db = db;
+    }
+
+    todoApp();
+  </script>
+</head>
+
+<body>
+  <h1>Fireproof Todos</h1>
+  List:
+  <input type="text" name="list" id="list" />
+  <button onclick="changeList(event)">Change List</button>
+
+
+
+  <div id="login">
+    <p>Work locally or verify your email address to sync.</p>
+    Email: <input title="email" placeholder="name@example.com" name="email" id="email" />
+    <button onclick="verifyEmail(event)">Verify email</button>
+  </div>
+
+  <p>
+    Fireproof stores data locally and encrypts it before sending it to the cloud.
+    This demo uses web3.storage, but you can easily run Fireproof on S3 or another provider.
+    <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
+  </p>
+
+  <div id="authorized" hidden>
+    <p>Logged in as <span id="account-email">loading...</span></p>
+    <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
+
+    <p>
+      Share this list to someone's share id: <input title="share" placeholder="did:key:..." name="share" id="share" />
+      <button onclick="doShareWith(event)">Share</button>
+      <code id="share-code"></code>
+    </p>
+    <p>
+      Join a shared list: <input title="join" placeholder="bafy..." name="join" id="join" />
+      <button onclick="doJoin(event)">Join</button>
+    </p>
+    <p>
+      Request access to other lists by sharing your share id:<br> <code id="agent"></code>
+    </p>
+  </div>
+
+  <h3>Todos</h3>
+  <input title="Create a todo" type="text" name="todo" id="todo" />
+  <button onclick="createTodoClick(event)">Create Todo</button>
+  <ul></ul>
+
+</body>
+
+</html>

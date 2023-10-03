@@ -3,7 +3,6 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-import { connect } from './connect'
 import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
 import { DbResponse, ChangesResponse } from './types'
 
@@ -15,7 +14,9 @@ export class Database {
   name: DbName
   opts: FireproofOptions = {}
 
+  _listening = false
   _listeners: Set<ListenerFn> = new Set()
+  _noupdate_listeners: Set<ListenerFn> = new Set()
   _crdt: CRDT
   _writeQueue: WriteQueue
 
@@ -23,12 +24,12 @@ export class Database {
     this.name = name || null
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
-    this._crdt.clock.onTick((updates: DocUpdate[]) => {
-      void this._notify(updates)
-    })
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
     })//, Infinity)
+    this._crdt.clock.onTock(() => {
+      this._no_update_notify()
+    })
   }
 
   async get(id: string): Promise<Doc> {
@@ -62,13 +63,35 @@ export class Database {
     return { rows, clock: head }
   }
 
-  subscribe(listener: ListenerFn): () => void {
-    this._listeners.add(listener)
-    return () => {
-      this._listeners.delete(listener)
+  async allDocs() {
+    const { result, head } = await this._crdt.allDocs()
+    const rows = result.map(({ key, value, del }) => ({
+      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
+    }))
+    return { rows, clock: head }
+  }
+
+  subscribe(listener: ListenerFn|NoUpdateListenerFn, updates?: boolean): () => void {
+    if (updates) {
+      if (!this._listening) {
+        this._listening = true
+        this._crdt.clock.onTick((updates: DocUpdate[]) => {
+          void this._notify(updates)
+        })
+      }
+      this._listeners.add(listener)
+      return () => {
+        this._listeners.delete(listener)
+      }
+    } else {
+      this._noupdate_listeners.add(listener)
+      return () => {
+        this._noupdate_listeners.delete(listener)
+      }
     }
   }
 
+  // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   async query(field: string | MapFn, opts: QueryOpts = {}) {
     const idx = (typeof field === 'string')
       ? index({ _crdt: this._crdt }, field)
@@ -78,11 +101,6 @@ export class Database {
 
   async compact() {
     await this._crdt.compact()
-  }
-
-  connect(schemaName?: string) {
-    const conn = connect.ipfs(this, schemaName)
-    return conn
   }
 
   // move this stuff to connect
@@ -124,20 +142,25 @@ export class Database {
       }
     }
   }
+
+  async _no_update_notify() {
+    if (this._noupdate_listeners.size) {
+      for (const listener of this._noupdate_listeners) {
+        await (async () => await listener([]))().catch((e: Error) => {
+          console.error('subscriber error', e)
+        })
+      }
+    }
+  }
 }
 
-type ListenerFn = (docs: Doc[]) => Promise<void> | void
+type UpdateListenerFn = (docs: Doc[]) => Promise<void> | void
+type NoUpdateListenerFn = () => Promise<void> | void
+type ListenerFn = UpdateListenerFn | NoUpdateListenerFn
 
 export function fireproof(name: string, opts?: FireproofOptions): Database {
   if (!Database.databases.has(name)) {
-    const db = new Database(name, opts)
-      // public API
-      ;['get', 'put', 'del', 'changes', 'subscribe', 'query', 'compact', 'connect', 'getDashboardURL', 'openDashboard'].forEach((fn) => {
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      db[fn] = db[fn].bind(db)
-    })
-    Database.databases.set(name, db)
+    Database.databases.set(name, new Database(name, opts))
   }
   return Database.databases.get(name)!
 }

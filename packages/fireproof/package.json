@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.13.2",
+  "version": "0.13.5-dev",
   "description": "Live database for the web",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -36,12 +36,12 @@
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "build:rollup": "rollup -c scripts/rollup.js",
     "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
-    "build": "npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.js test/www/",
     "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "test:node": "node ./scripts/test.js",
     "test:browser": "node ./scripts/browser-test.js",
     "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
+    "serve": "npx serve-http -p 8080 test/www",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "analyze": "node ./scripts/analyze.js",
     "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
@@ -50,7 +50,8 @@
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
     "build:test": "node ./scripts/build.js",
-    "build:all": " npm run build:version && npm run build && npm run test:browser"
+    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
+    "build:all": " npm run build && npm run test:browser"
   },
   "keywords": [
     "database",

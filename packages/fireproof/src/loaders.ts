@@ -4,15 +4,15 @@ import type {
   CarCommit, DbCarHeader, FileCarHeader, FileResult, FireproofOptions, IdxCarHeader,
   IdxMeta, IdxMetaMap
 } from './types'
-import type { Connection } from './connection'
 import type { CRDT } from './crdt'
 import type { CRDTClock } from './crdt-clock'
-import { Loader } from './loader'
+import { Loader, Connection } from './loader'
 import { index } from './index'
-// import type { DataStore as AbstractDataStore } from './store'
-import { RemoteDataStore } from './store-remote'
+import type { DataStore as AbstractDataStore } from './store'
 
 import { DataStore } from './store-browser'
+import { doCompact } from './crdt-helpers'
+import { TransactionBlockstore } from './transaction'
 
 export class IdxLoader extends Loader {
   // declare ready: Promise<IdxCarHeader>
@@ -45,38 +45,67 @@ export class DbLoader extends Loader {
   defaultHeader = DbLoader.defaultHeader
 
   clock: CRDTClock
+  awaitingCompact = false
+  compacting: Promise<AnyLink | void> = Promise.resolve()
+  writing: Promise<BulkResult | void> = Promise.resolve()
 
-  remoteFileStore: RemoteDataStore | undefined
-  fileStore: DataStore | undefined
+  remoteFileStore: AbstractDataStore | undefined
+  fileStore: DataStore
 
   constructor(name: string, clock: CRDTClock, opts?: FireproofOptions) {
     super(name, opts)
+    this.fileStore = new DataStore(this)
     this.clock = clock
   }
 
-  protected async initializeStores(): Promise<void> {
-    await super.initializeStores()
-
-    // const isBrowser = typeof window !== 'undefined'
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    // const module = isBrowser ? await require('./store-browser') : await require('./store-fs')
-    // if (module) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-    // this.fileStore = new module.DataStore(this) as DataStore
-    this.fileStore = new DataStore(this)
-    // } else {
-    //   throw new Error('Failed to initialize stores.')
-    // }
+  async _readyForMerge() {
+    // await this.ready
+    await this.compacting
   }
 
-  _connectRemoteStorage(connection: Connection) {
-    super._connectRemoteStorage(connection)
-    this.remoteFileStore = new RemoteDataStore(this, connection, 'file')
-    return connection
+  async _setWaitForWrite(_writingFn: () => Promise<any>) {
+    const wr = this.writing
+    this.writing = wr.then(async () => {
+      await _writingFn()
+      return wr
+    })
+    return this.writing.then(() => {})
+  }
+
+  async compact(blocks: TransactionBlockstore) {
+    await this.ready
+    if (this.carLog.length < 2) return
+    if (this.awaitingCompact) return
+    this.awaitingCompact = true
+    const compactingFn = async () => {
+      // await this.writing
+      if (this.isCompacting) {
+        return
+      }
+
+      if (this.isWriting) {
+        return
+      }
+
+      this.isCompacting = true
+      try {
+        const compactHead = this.clock.head
+        const compactingResult = await doCompact(blocks, this.clock.head)
+        await this.clock.applyHead(null, compactHead, compactHead, null)
+        return compactingResult
+      } finally {
+        this.isCompacting = false
+      }
+    }
+    this.compacting = this._setWaitForWrite(compactingFn)
+    
+    // const done = await compactingFn()
+    await this.compacting
+    this.awaitingCompact = false
+    // return done
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
-    if (!this.fileStore) throw new Error('missing fileStore')
     return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic)
   }
 
@@ -88,7 +117,11 @@ export class DbLoader extends Loader {
     }
   }
 
-  protected makeCarHeader(result: BulkResult|FileResult, cars: AnyLink[], compact: boolean = false): DbCarHeader | FileCarHeader {
+  protected makeCarHeader(
+    result: BulkResult | FileResult,
+    cars: AnyLink[],
+    compact: boolean = false
+  ): DbCarHeader | FileCarHeader {
     if (isFileResult(result)) {
       const files = [] as AnyLink[]
 

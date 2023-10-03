@@ -1,9 +1,13 @@
 /* eslint-disable import/first */
-import { AnyBlock, AnyLink, DbMeta, DownloadFnParamTypes, LoadHandler, UploadDataFnParams } from './types'
+import { DownloadFnParamTypes, UploadDataFnParams } from './types'
+import type { Loader, AnyBlock, AnyLink, DbMeta } from '@fireproof/core'
+
+export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
+
 import { Connection } from './connection'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
-import type { Loader } from './loader'
-// import type { Response } from 'cross-fetch'
+
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/core'
+
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'car-browser-s3'
@@ -71,13 +75,9 @@ export class RemoteMetaStore extends MetaStoreBase {
     return `fp.${this.name}.${this.STORAGE_VERSION}`
   }
 
-  async load(branch: string = 'main'): Promise<DbMeta[] | null> {
-    const byteHeads = await this.connection.metaDownload({
-      name: this.prefix(),
-      branch
-    })
-    if (!byteHeads) return null
+  async handleByteHeads(byteHeads: Uint8Array[], branch: string = 'main') {
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
+    // console.log('dbMetasForByteHeads notify', dbMetas.map((m) => m.car.toString()))
     const subscribers = this.subscribers.get(branch) || []
     for (const subscriber of subscribers) {
       await subscriber(dbMetas)
@@ -85,19 +85,25 @@ export class RemoteMetaStore extends MetaStoreBase {
     return dbMetas
   }
 
+  async load(branch: string = 'main'): Promise<DbMeta[] | null> {
+    // console.log('remote load', branch)
+    const byteHeads = await this.connection.metaDownload({
+      name: this.prefix(),
+      branch
+    })
+    if (!byteHeads) return null
+    return this.handleByteHeads(byteHeads, branch)
+  }
+
   async save(meta: DbMeta, branch: string = 'main') {
+    // console.log('remote save', branch, meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const byteHeads = await this.connection.metaUpload(bytes, {
       name: this.prefix(),
       branch
     })
     if (!byteHeads) return null
-    const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    const subscribers = this.subscribers.get(branch) || []
-    for (const subscriber of subscribers) {
-      await subscriber(dbMetas)
-    }
-    return dbMetas
+    return this.handleByteHeads(byteHeads, branch)
   }
 
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {

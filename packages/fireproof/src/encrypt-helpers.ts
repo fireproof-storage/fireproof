@@ -22,13 +22,19 @@ function hexStringToUint8Array(hexString: string) {
   return uint8Array
 }
 
-export async function encryptedEncodeCarFile(key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
+export async function encryptedEncodeCarFile(
+  key: string,
+  rootCid: AnyLink,
+  t: CarMakeable
+): Promise<AnyBlock> {
   const encryptionKeyUint8 = hexStringToUint8Array(key)
   const encryptionKey = encryptionKeyUint8.buffer.slice(0, encryptionKeyUint8.byteLength)
   const encryptedBlocks = new MemoryBlockstore()
   const cidsToEncrypt = [] as AnyLink[]
   for (const { cid } of t.entries()) {
     cidsToEncrypt.push(cid)
+    const g = await t.get(cid)
+    if (!g) throw new Error('missing cid block')
   }
   let last: AnyBlock | null = null
   for await (const block of encrypt({
@@ -59,7 +65,7 @@ async function decodeCarBlocks(
   root: AnyLink,
   get: (cid: any) => Promise<AnyBlock | undefined>,
   keyMaterial: string
-): Promise<{ blocks: BlockFetcher; root: AnyLink }> {
+): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
   const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial)
   const decryptionKey = decryptionKeyUint8.buffer.slice(0, decryptionKeyUint8.byteLength)
 

@@ -294,7 +294,7 @@ describe('basic Database with subscription', function () {
     unsubscribe = db.subscribe((docs) => {
       assert(docs[0]._id)
       didRun++
-    })
+    }, true)
   })
   it('should run on put', async function () {
     /** @type {Doc} */

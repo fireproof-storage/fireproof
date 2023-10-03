@@ -1,0 +1,58 @@
+{
+  "name": "@fireproof/connect",
+  "version": "0.13.13",
+  "description": "",
+  "main": "./dist/browser/index.cjs",
+  "module": "./dist/browser/index.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/browser/index.esm.js",
+      "require": "./dist/browser/index.cjs",
+      "types": "./dist/types/index.d.ts",
+      "script": "./dist/browser/index.iife.js"
+    },
+    "./node": {
+      "import": "./dist/node/index.esm.js",
+      "require": "./dist/node/index.cjs",
+      "types": "./dist/types/index.d.ts",
+      "script": "./dist/browser/index.iife.js",
+      "default": "./dist/node/index.esm.js"
+    }
+  },
+  "browser": "./dist/index.browser.iife.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist/node",
+    "dist/browser",
+    "dist/types"
+  ],
+  "type": "module",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build:clean": "rm -rf dist/*",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
+    "build:script": "node ./scripts/build.js",
+    "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/connect.iife.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "partykit": "0.0.24",
+    "@hyrious/esbuild-plugin-commonjs": "^0.2.2",
+    "esbuild": "^0.19.4",
+    "esbuild-plugin-alias": "^0.2.1",
+    "esbuild-plugin-tsc": "^0.4.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.2.2",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@alanshaw/pail": "^0.3.3",
+    "@fireproof/core": "^0.13.5-dev",
+    "cross-fetch": "^4.0.0",
+    "multiformats": "^12.0.1"
+  }
+}

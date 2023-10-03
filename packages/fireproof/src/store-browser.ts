@@ -2,7 +2,8 @@
 import { format, parse, ToString } from '@ipld/dag-json'
 import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase, WALState } from './store'
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
+import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
 
 // ts-unused-exports:disable-next-line
 export class DataStore extends DataStoreBase {
@@ -77,7 +78,10 @@ export class RemoteWAL extends RemoteWALBase {
     try {
       const encoded: ToString<WALState> = format(state)
       localStorage.setItem(this.headerKey(branch), encoded)
-    } catch (e) {}
+    } catch (e) {
+      console.error('error saving wal', e)
+      throw e
+    }
   }
 }
 
