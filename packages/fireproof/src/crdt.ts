@@ -58,6 +58,9 @@ export class CRDT {
           readFiles(this.blocks, { doc: value })
           return { key, value, del }
         })
+        if (loader?.awaitingCompact) {
+          console.log("missing?", head.toString())
+        }
         return { head }
       })
       await this.clock.applyHead(null, got.head, prevHead, updates)

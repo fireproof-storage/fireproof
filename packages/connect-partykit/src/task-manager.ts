@@ -16,18 +16,15 @@ export class TaskManager {
     this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     void this.processQueue();
   }
-  // change this to run one at a time and refilter between each run
+
   private async processQueue() {
     if (this.isProcessing) return;
     this.isProcessing = true;
     try {
       const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
-      const dbMetas = filteredQueue.map(
-        ({ eventBlock }) => eventBlock.value.data.dbMeta as Uint8Array
-      );
-      if (!dbMetas.length) return;
-      await filteredQueue[0]?.loader?.remoteMetaStore?.handleByteHeads(dbMetas);
-      filteredQueue.forEach(({ cid }) => this.eventsWeHandled.add(cid));
+      const first = filteredQueue[0]
+      await first.loader?.remoteMetaStore?.handleByteHeads(first.eventBlock.value.data.dbMeta)
+      this.eventsWeHandled.add(first.cid)
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {
       console.error(JSON.stringify(err));
@@ -40,5 +37,6 @@ export class TaskManager {
     }
   }
 }
+
 export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array} >
 

@@ -69,7 +69,7 @@ export class DbLoader extends Loader {
       await _writingFn()
       return wr
     })
-    return this.writing.then(() => {})
+    return this.writing.then(() => { })
   }
 
   async compact(blocks: TransactionBlockstore) {
@@ -78,14 +78,10 @@ export class DbLoader extends Loader {
     if (this.awaitingCompact) return
     this.awaitingCompact = true
     const compactingFn = async () => {
-      // await this.writing
-      if (this.isCompacting) {
-        return
-      }
 
-      if (this.isWriting) {
-        return
-      }
+      if (this.isCompacting) { return }
+
+      if (this.isWriting) { return }
 
       this.isCompacting = true
       try {
@@ -98,7 +94,7 @@ export class DbLoader extends Loader {
       }
     }
     this.compacting = this._setWaitForWrite(compactingFn)
-    
+
     // const done = await compactingFn()
     await this.compacting
     this.awaitingCompact = false
@@ -136,6 +132,6 @@ export class DbLoader extends Loader {
   }
 }
 
-export function isFileResult(result: IndexerResult|BulkResult|FileResult): result is FileResult {
+export function isFileResult(result: IndexerResult | BulkResult | FileResult): result is FileResult {
   return result && (result as FileResult).files !== undefined
 }
