@@ -237,8 +237,8 @@ describe('basic Index upon cold start', function () {
     await crdt2.ready
     const indexer2 = await index({ _crdt: crdt2 }, 'hello', mapFn)
     await indexer2.ready
-    equalsJSON(indexer2.indexHead, head)
     const result2 = await indexer2.query()
+    equalsJSON(indexer2.indexHead, head)
     assert(result2)
     equals(result2.rows.length, 3)
     equalsJSON(indexer2.indexHead, head)

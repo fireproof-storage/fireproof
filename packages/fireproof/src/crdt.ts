@@ -1,5 +1,5 @@
 import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis, getBlock } from './crdt-helpers'
+import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis, getBlock, getThatBlock } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
@@ -61,6 +61,9 @@ export class CRDT {
         if (loader?.awaitingCompact) {
           console.log("missing?", head.toString())
         }
+        if (loader?.isCompacting) {
+          console.log("compacting?", head.toString())
+        }
         return { head }
       })
       await this.clock.applyHead(null, got.head, prevHead, updates)
@@ -99,6 +102,11 @@ export class CRDT {
   async getBlock(cidString: string) {
     await this.ready
     return await getBlock(this.blocks, cidString)
+  }
+
+  async getThatBlock() {
+    const blockJson = {"cid":"bafyreib7ee4pscqpuioxobmh3ac5xbbslypmaqqbkugalhw67hnco6dvoa","bytes":"omRkYXRhpGNrZXl4JDAxOGFmNzdiLWZmMTUtNzI5Ny04ODZiLTYwMjViM2MxODI2ZWRyb2902CpYJQABcRIgKVLI53HO1TFDbPUoSaybd0mop2oX/CRFm1RrpiY4ne9kdHlwZWNwdXRldmFsdWXYKlglAAFxEiAGw53MVtPzeeGT/itfdLBfCVu6MTj96AHU6v9a3K/wYGdwYXJlbnRzgdgqWCUAAXESIJiL5qjdpgghUfbQLpKJeCgMX+ubhoTpYBoZHYdzbQJ/"}
+    return await getThatBlock(blockJson)
   }
 
   async get(key: string) {

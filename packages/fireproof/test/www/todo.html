@@ -38,10 +38,15 @@
           dbName = name;
           db = fireproof(name);
           cx = connect.partykit(db)
+          cx.ready.then(async () => {
+            const span = document.querySelector('#cxInfo')
+            span.innerText = `📡 ${cx.party.id}`
+          })
         }
 
         window.db = db;
         window.cx = cx
+
 
         db.changes([], { limit: 1 }).then((changes) => {
           if (changes.clock.length > 0) {
@@ -153,11 +158,12 @@
       }
       const goWorker = (dcs) => {
         worker = setTimeout(async () => {
-          await Promise.all(dcs.rows.slice(0,5).map((r) => { 
+          await Promise.all(dcs.rows.slice(0, 5).map((r) => {
             r.value.clicks = (r.value.clicks || 0)
             r.value.clicks += 1
             r.value.completed = Math.random() > 0.5
-            db.put({ ...r.value }) }))
+            db.put({ ...r.value })
+          }))
           goWorker(dcs)
         }, Math.floor(Math.random() * 5000) + 5000)
       }
@@ -212,6 +218,8 @@
   <button id="robot" onclick="toggleWorker(event)">🤖</button>
   <br />
   <span id="carLog" onclick="doCompact(event)"></span>
+  <br />
+  <span id="cxInfo"></span>
 
 
   <h3>Todos</h3>

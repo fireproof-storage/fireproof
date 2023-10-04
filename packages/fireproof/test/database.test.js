@@ -286,19 +286,58 @@ describe('basic Database parallel writes / public', function () {
 
 describe('basic Database with subscription', function () {
   /** @type {Database} */
-  let db, didRun, unsubscribe
+  let db, didRun, unsubscribe, lastDoc
   beforeEach(function () {
     db = new Database()
     didRun = 0
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     unsubscribe = db.subscribe((docs) => {
-      assert(docs[0]._id)
+      lastDoc = docs[0]
       didRun++
     }, true)
   })
   it('should run on put', async function () {
+    const all = await db.allDocs()
+    equals(all.rows.length, 0)
     /** @type {Doc} */
     const doc = { _id: 'hello', message: 'world' }
+    equals(didRun, 0)
+    const ok = await db.put(doc)
+    assert(didRun)
+    assert(lastDoc)
+    assert(lastDoc._id)
+    equals(ok.id, 'hello')
+    equals(didRun, 1)
+  })
+  it('should unsubscribe', async function () {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    unsubscribe()
+    /** @type {Doc} */
+    const doc = { _id: 'hello', message: 'again' }
+    const ok = await db.put(doc)
+    equals(ok.id, 'hello')
+    equals(didRun, 0)
+  })
+})
+
+
+describe('basic Database with no update subscription', function () {
+  /** @type {Database} */
+  let db, didRun, unsubscribe
+  beforeEach(function () {
+    db = new Database()
+    didRun = 0
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    unsubscribe = db.subscribe(() => {
+      didRun++
+    })
+  })
+  it('should run on put', async function () {
+    const all = await db.allDocs()
+    equals(all.rows.length, 0)
+    /** @type {Doc} */
+    const doc = { _id: 'hello', message: 'world' }
+    equals(didRun, 0)
     const ok = await db.put(doc)
     equals(ok.id, 'hello')
     equals(didRun, 1)
