@@ -1,5 +1,5 @@
 import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis } from './crdt-helpers'
+import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis, getBlock } from './crdt-helpers'
 import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
@@ -91,6 +91,11 @@ export class CRDT {
       txt.push(line)
     }
     return txt.join('\n')
+  }
+
+  async getBlock(cidString: string) {
+    await this.ready
+    return await getBlock(this.blocks, cidString)
   }
 
   async get(key: string) {

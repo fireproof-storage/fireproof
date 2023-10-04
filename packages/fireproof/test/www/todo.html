@@ -153,13 +153,13 @@
       }
       const goWorker = (dcs) => {
         worker = setTimeout(async () => {
-          await Promise.all(dcs.rows.map((r) => { 
+          await Promise.all(dcs.rows.slice(0,5).map((r) => { 
             r.value.clicks = (r.value.clicks || 0)
             r.value.clicks += 1
             r.value.completed = Math.random() > 0.5
             db.put({ ...r.value }) }))
           goWorker(dcs)
-        }, 5000)
+        }, Math.floor(Math.random() * 5000) + 5000)
       }
 
       const stopWorker = () => {

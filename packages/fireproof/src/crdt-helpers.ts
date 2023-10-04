@@ -1,12 +1,13 @@
 import type { CID } from 'multiformats'
-import { encode, decode } from 'multiformats/block'
+import { encode, decode, Block } from 'multiformats/block'
+import { parse } from 'multiformats/link'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { LoggingFetcher, Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult, DocFiles } from './types'
+import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult, DocFiles, BlockFetcher } from './types'
 import { decodeFile, encodeFile } from './files'
 import { DbLoader } from './loaders'
 
@@ -205,7 +206,7 @@ async function gatherUpdates(
   return updates
 }
 
-export async function * getAllEntries(blocks: TransactionBlockstore, head: ClockHead) {
+export async function * getAllEntries(blocks: TransactionBlockstore | LoggingFetcher, head: ClockHead) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link)
@@ -243,6 +244,10 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   //   if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
   // }
 
+  for await (const entry of getAllEntries(blockLog, head)) {
+    // result.push(entry)
+  }
+
   for await (const [, link] of entries(blockLog, head)) {
     const bl = await blockLog.get(link)
     if (!bl) throw new Error('Missing entry block: ' + link.toString())
@@ -263,5 +268,12 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   const done =  await blocks.commitCompaction(blockLog.loggedBlocks, head)
   isCompacting = false
   return done
+}
+
+export async function getBlock(blocks: BlockFetcher, cidString : string) {
+  const block = await blocks.get(parse(cidString))
+  if (!block) throw new Error(`Missing block ${cidString}`)
+  const { cid, value } = await decode({ bytes : block.bytes, codec, hasher })
+  return new Block({ cid, value, bytes : block.bytes })
 }
 

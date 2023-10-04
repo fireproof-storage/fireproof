@@ -16,7 +16,7 @@ export class TaskManager {
     this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     void this.processQueue();
   }
-
+  // change this to run one at a time and refilter between each run
   private async processQueue() {
     if (this.isProcessing) return;
     this.isProcessing = true;
@@ -30,7 +30,7 @@ export class TaskManager {
       filteredQueue.forEach(({ cid }) => this.eventsWeHandled.add(cid));
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {
-      console.error(err);
+      console.error(JSON.stringify(err));
       throw err;
     } finally {
       this.isProcessing = false;
