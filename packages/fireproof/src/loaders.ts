@@ -1,8 +1,15 @@
 import type { CarReader } from '@ipld/car'
 import type {
-  AnyLink, BulkResult,
-  CarCommit, DbCarHeader, FileCarHeader, FileResult, FireproofOptions, IdxCarHeader,
-  IdxMeta, IdxMetaMap
+  AnyLink,
+  BulkResult,
+  CarCommit,
+  DbCarHeader,
+  FileCarHeader,
+  FileResult,
+  FireproofOptions,
+  IdxCarHeader,
+  IdxMeta,
+  IdxMetaMap
 } from './types'
 import type { CRDT } from './crdt'
 import type { CRDTClock } from './crdt-clock'
@@ -33,11 +40,15 @@ export class IdxLoader extends Loader {
     }
   }
 
-  protected makeCarHeader({ indexes }: IndexerResult, cars: AnyLink[], compact: boolean = false): IdxCarHeader {
+  protected makeCarHeader(
+    { indexes }: IndexerResult,
+    cars: AnyLink[],
+    compact: boolean = false
+  ): IdxCarHeader {
     return compact ? { indexes, cars: [], compact: cars } : { indexes, cars, compact: [] }
   }
 }
-export type IndexerResult = CarCommit & IdxMetaMap;
+export type IndexerResult = CarCommit & IdxMetaMap
 
 export class DbLoader extends Loader {
   // declare ready: Promise<DbCarHeader> // todo this will be a map of headers by branch name
@@ -69,7 +80,7 @@ export class DbLoader extends Loader {
       await _writingFn()
       return wr
     })
-    return this.writing.then(() => { })
+    return this.writing.then(() => {})
   }
 
   async compact(blocks: TransactionBlockstore) {
@@ -78,27 +89,27 @@ export class DbLoader extends Loader {
     if (this.awaitingCompact) return
     this.awaitingCompact = true
     const compactingFn = async () => {
+      // await this.writing
+      if (this.isCompacting) {
+        return
+      }
 
-      if (this.isCompacting) { return }
-
-      if (this.isWriting) { return }
+      if (this.isWriting) {
+        return
+      }
 
       this.isCompacting = true
-      try {
-        const compactHead = this.clock.head
-        const compactingResult = await doCompact(blocks, this.clock.head)
-        await this.clock.applyHead(null, compactHead, compactHead, null)
-        return compactingResult
-      } finally {
-        this.isCompacting = false
-      }
+      const compactHead = this.clock.head
+      const compactingResult = await doCompact(blocks, this.clock.head)
+      await this.clock.applyHead(null, compactHead, compactHead, null)
+      return compactingResult
     }
     this.compacting = this._setWaitForWrite(compactingFn)
-
-    // const done = await compactingFn()
+    this.compacting.finally(() => {
+      this.isCompacting = false
+      this.awaitingCompact = false
+    })
     await this.compacting
-    this.awaitingCompact = false
-    // return done
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
@@ -132,6 +143,8 @@ export class DbLoader extends Loader {
   }
 }
 
-export function isFileResult(result: IndexerResult | BulkResult | FileResult): result is FileResult {
+export function isFileResult(
+  result: IndexerResult | BulkResult | FileResult
+): result is FileResult {
   return result && (result as FileResult).files !== undefined
 }

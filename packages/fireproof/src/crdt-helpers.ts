@@ -270,6 +270,12 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   return done
 }
 
+export async function getThatBlock({bytes}: {cid: string, bytes: string }) {
+  const realBytes = Uint8Array.from(atob(bytes), c => c.charCodeAt(0));
+  const { cid, value } = await decode({ bytes : realBytes, codec, hasher })
+  return new Block({ cid, value, bytes : realBytes })
+}
+
 export async function getBlock(blocks: BlockFetcher, cidString : string) {
   const block = await blocks.get(parse(cidString))
   if (!block) throw new Error(`Missing block ${cidString}`)

@@ -1,42 +1,48 @@
-import { EventBlock } from '@alanshaw/pail/src/clock';
-import { AnyLink, Loader } from '@fireproof/core';
+import { EventBlock } from '@alanshaw/pail/src/clock'
+import { AnyLink, Loader } from '@fireproof/core'
 
 export class TaskManager {
-  private eventsWeHandled: Set<string> = new Set();
-  private queue: any[] = [];
-  private isProcessing: boolean = false;
+  private eventsWeHandled: Set<string> = new Set()
+  private queue: any[] = []
+  private isProcessing: boolean = false
 
   async handleEvent(eventBlock: DbMetaEventBlock, loader: Loader) {
-    const cid = eventBlock.cid.toString();
-    const parents = eventBlock.value.parents.map((cid: AnyLink) => cid.toString());
+    const cid = eventBlock.cid.toString()
+    const parents = eventBlock.value.parents.map((cid: AnyLink) => cid.toString())
     for (const parent of parents) {
-      this.eventsWeHandled.add(parent);
+      this.eventsWeHandled.add(parent)
     }
-    this.queue.push({ cid, eventBlock, loader });
-    this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
-    void this.processQueue();
+    this.queue.push({ cid, eventBlock, loader, retries: 0 })
+    this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))
+    void this.processQueue()
   }
 
   private async processQueue() {
-    if (this.isProcessing) return;
-    this.isProcessing = true;
+    if (this.isProcessing) return
+    this.isProcessing = true
+    const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))
+    const first = filteredQueue[0]
+    if (!first) { return }
     try {
-      const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
-      const first = filteredQueue[0]
-      await first.loader?.remoteMetaStore?.handleByteHeads(first.eventBlock.value.data.dbMeta)
+
+      await first.loader?.remoteMetaStore?.handleByteHeads([first.eventBlock.value.data.dbMeta])
       this.eventsWeHandled.add(first.cid)
-      this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
+      this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))
     } catch (err) {
-      console.error(JSON.stringify(err));
-      throw err;
+      if (first.retries++ > 3) {
+        console.error('failed to process event block after 3 retries:' + first.cid)
+        this.queue = this.queue.filter(({ cid }) => cid !== first.cid)
+      }
+      await new Promise(resolve => setTimeout(resolve, 50))
+      console.error(JSON.stringify(err))
+      throw err
     } finally {
-      this.isProcessing = false;
+      this.isProcessing = false
       if (this.queue.length > 0) {
-        void this.processQueue();
+        void this.processQueue()
       }
     }
   }
 }
 
-export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array} >
-
+export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>

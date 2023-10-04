@@ -107,6 +107,7 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {
+    // console.log('dbMetasForByteHeads', byteHeads)
     return byteHeads.map((bytes) => {
       const txt = new TextDecoder().decode(bytes)
       return this.parseHeader(txt)

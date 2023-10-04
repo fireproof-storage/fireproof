@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.13.14",
+  "version": "0.13.15",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -34,7 +34,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
-    "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/connect-partykit.iife.js"
+    "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-partykit.iife.js",
+    "build": "npm run build:tsc && npm run build:script"
   },
   "keywords": [],
   "author": "",
