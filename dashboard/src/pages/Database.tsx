@@ -33,13 +33,9 @@ export function Database() {
 
   console.log({ snapshots, importLog })
   const doRestore = (data: Doc) => async () => {
-    if (!data.snapshot) data.snapshot = data.import || {}
-    // @ts-ignore
-    const {
-      snapshot: { key, car }
-    }: { snapshot: { key: string; car: string } } = data
+    const snapshotData = data.snapshot || data.import || {}
     await snapshot(dashDb, dbName!)
-    await restore(dbName!, { key, car })
+    await restore(dbName!, snapshotData as { key: string; car: string })
   }
 
   return (
