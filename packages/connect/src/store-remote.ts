@@ -21,7 +21,7 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   prefix() {
-    return `fp.${this.loader.name}.${this.STORAGE_VERSION}.${this.loader.keyId}`
+    return `fp.${this.loader.name}`
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {

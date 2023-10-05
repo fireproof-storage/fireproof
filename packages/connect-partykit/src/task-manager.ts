@@ -24,7 +24,6 @@ export class TaskManager {
     const first = filteredQueue[0]
     if (!first) { return }
     try {
-
       await first.loader?.remoteMetaStore?.handleByteHeads([first.eventBlock.value.data.dbMeta])
       this.eventsWeHandled.add(first.cid)
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))

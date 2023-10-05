@@ -109,7 +109,7 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/core':
-        specifier: ^0.13.5-dev
+        specifier: ^0.13.7-dev
         version: link:../fireproof
       cross-fetch:
         specifier: ^4.0.0
@@ -130,9 +130,6 @@ importers:
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.2.2)
-      partykit:
-        specifier: 0.0.24
-        version: 0.0.24
       ts-loader:
         specifier: ^9.4.4
         version: 9.4.4(typescript@5.2.2)(webpack@5.88.2)
@@ -210,10 +207,10 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/connect':
-        specifier: ^0.13.13
+        specifier: ^0.13.16
         version: link:../connect
       '@fireproof/core':
-        specifier: ^0.13.5-dev
+        specifier: ^0.13.7-dev
         version: link:../fireproof
       cross-fetch:
         specifier: ^4.0.0
@@ -428,8 +425,8 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.13.4-dev
-        version: 0.13.4-dev
+        specifier: ^0.13.7-dev
+        version: link:../fireproof
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
