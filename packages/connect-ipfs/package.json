@@ -51,8 +51,8 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
-    "@fireproof/connect": "^0.13.7",
-    "@fireproof/core": "^0.13.4-dev",
+    "@fireproof/connect": "^0.14.0",
+    "@fireproof/core": "^0.14.0",
     "@ucanto/core": "^8.2.0",
     "@ucanto/interface": "^8.1.0",
     "@web3-storage/clock": "^0.3.0",

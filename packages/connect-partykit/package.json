@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.13.19",
+  "version": "0.14.1",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -53,8 +53,8 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
-    "@fireproof/connect": "^0.13.16",
-    "@fireproof/core": "^0.13.7-dev",
+    "@fireproof/connect": "^0.14.0",
+    "@fireproof/core": "^0.14.0",
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
     "multiformats": "^12.0.1",

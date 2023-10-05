@@ -224,7 +224,7 @@ export abstract class Loader {
         if (this.remoteMetaLoading) await this.remoteMetaLoading
         for (const cid of fpCar.compact) {
           await this.carStore!.remove(cid)
-        }
+        } // todo instead we should have no delay, but delete previous compaction's old files
       }, 5000)
     } else {
       this.carLog.unshift(cid)

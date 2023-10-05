@@ -113,8 +113,8 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@fireproof/core':
-        specifier: ^0.13.7-dev
-        version: 0.13.7-dev(encoding@0.1.13)
+        specifier: ^0.14.0
+        version: 0.14.9
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
@@ -153,11 +153,11 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@fireproof/connect':
-        specifier: ^0.13.7
-        version: 0.13.16(encoding@0.1.13)
+        specifier: ^0.14.0
+        version: 0.14.2(encoding@0.1.13)
       '@fireproof/core':
-        specifier: ^0.13.4-dev
-        version: 0.13.4-dev(encoding@0.1.13)
+        specifier: ^0.14.0
+        version: 0.14.9
       '@ucanto/core':
         specifier: ^8.2.0
         version: 8.2.0
@@ -211,11 +211,11 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@fireproof/connect':
-        specifier: ^0.13.16
-        version: 0.13.16(encoding@0.1.13)
+        specifier: ^0.14.0
+        version: 0.14.2(encoding@0.1.13)
       '@fireproof/core':
-        specifier: ^0.13.7-dev
-        version: 0.13.7-dev(encoding@0.1.13)
+        specifier: ^0.14.0
+        version: 0.14.9
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
@@ -429,8 +429,8 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.13.7-dev
-        version: 0.13.7-dev(encoding@0.1.13)
+        specifier: ^0.14.0
+        version: 0.14.9
     devDependencies:
       '@jest/globals':
         specifier: ^29.5.0
@@ -1150,14 +1150,11 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/connect@0.13.16':
-    resolution: {integrity: sha512-OUa52oL7UwuBbp/oim0JsW8INLCbwj0gJiCbEoBExqbkZNyRnkG+xTkoz1+us1RYdwu86Isas5VPGSJbBBWe9w==}
+  '@fireproof/connect@0.14.2':
+    resolution: {integrity: sha512-2rlZK52Ld4S7G5+GeQq97VRYyokaSXRz1AxVT0fwfKhuM5q20ODeEd5njWmP9AkObM8X+7K8oOiQ6ts4xM7NSQ==}
 
-  '@fireproof/core@0.13.4-dev':
-    resolution: {integrity: sha512-cagmnka9QoMeu+zXr6Vdio9OdOTCWcnwskmTGAmjSKqpLayFjxhTUTL0fy+jobRc+wxioihHBneTzst17O1/UA==}
-
-  '@fireproof/core@0.13.7-dev':
-    resolution: {integrity: sha512-GASjKZfLgHWIcjJTPi3UNAmCxTa0LP6duqYm85yPuNFGlhW5Q96nJTMQMIKVc6660c0/F4to3bfV4YxvaYTJwQ==}
+  '@fireproof/core@0.14.9':
+    resolution: {integrity: sha512-wtOVFmXPgy4D3CjT4OLIkzSQ4v5Eqzs9uinfXEMMCE9Ejf1j/1gVgHM+YfN18SWipWnUruYk+HE+btnbQgU78g==}
 
   '@fireproof/core@0.7.2':
     resolution: {integrity: sha512-BFd4jqOw1dDzGCq/8U/KosQYjL4tQ09iA3KwOkNJXpg92wB4f8ZZ0IDsbEzOYKRB1BwsajvsQSD6MgmW99sd7Q==}
@@ -6757,62 +6754,30 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/connect@0.13.16(encoding@0.1.13)':
+  '@fireproof/connect@0.14.2(encoding@0.1.13)':
     dependencies:
       '@alanshaw/pail': 0.3.4
-      '@fireproof/core': 0.13.7-dev(encoding@0.1.13)
+      '@fireproof/core': 0.14.9
       cross-fetch: 4.0.0(encoding@0.1.13)
       multiformats: 12.1.3
     transitivePeerDependencies:
       - encoding
 
-  '@fireproof/core@0.13.4-dev(encoding@0.1.13)':
+  '@fireproof/core@0.14.9':
     dependencies:
       '@alanshaw/pail': 0.3.4
       '@ipld/car': 5.4.2
       '@ipld/dag-cbor': 9.2.4
       '@ipld/dag-json': 10.2.5
-      '@ipld/dag-ucan': 3.4.5
       '@ipld/unixfs': 2.2.0
       '@peculiar/webcrypto': 1.5.0
-      '@ucanto/core': 8.2.0
-      '@ucanto/interface': 8.1.0
-      '@web3-storage/clock': 0.3.0
-      '@web3-storage/w3up-client': 8.1.0(encoding@0.1.13)
       charwise: 3.0.1
-      cross-fetch: 4.0.0(encoding@0.1.13)
       idb: 7.1.1
       ipfs-unixfs-exporter: 13.6.2
       multiformats: 12.1.3
       p-limit: 4.0.0
       prolly-trees: 1.0.4
       uuidv7: 0.6.3
-    transitivePeerDependencies:
-      - encoding
-
-  '@fireproof/core@0.13.7-dev(encoding@0.1.13)':
-    dependencies:
-      '@alanshaw/pail': 0.3.4
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      '@ipld/dag-json': 10.2.5
-      '@ipld/dag-ucan': 3.4.5
-      '@ipld/unixfs': 2.2.0
-      '@peculiar/webcrypto': 1.5.0
-      '@ucanto/core': 8.2.0
-      '@ucanto/interface': 8.1.0
-      '@web3-storage/clock': 0.3.0
-      '@web3-storage/w3up-client': 8.1.0(encoding@0.1.13)
-      charwise: 3.0.1
-      cross-fetch: 4.0.0(encoding@0.1.13)
-      idb: 7.1.1
-      ipfs-unixfs-exporter: 13.6.2
-      multiformats: 12.1.3
-      p-limit: 4.0.0
-      prolly-trees: 1.0.4
-      uuidv7: 0.6.3
-    transitivePeerDependencies:
-      - encoding
 
   '@fireproof/core@0.7.2':
     dependencies:
