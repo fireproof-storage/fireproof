@@ -196,7 +196,7 @@ async function gatherUpdates(
     } else {
       keys.add(key)
       const docValue = await getValueFromLink(blocks, value)
-      updates.push({ key, value: docValue.doc, del: docValue.del })
+      updates.push({ key, value: docValue.doc, del: docValue.del, clock: link })
       limit--
       if (event.parents) {
         updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)

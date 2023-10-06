@@ -54,9 +54,9 @@ export class CRDT {
       }
       const got = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
         const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-        updates = updates.map(({ key, value, del }) => {
+        updates = updates.map(({ key, value, del, clock }) => {
           readFiles(this.blocks, { doc: value })
-          return { key, value, del }
+          return { key, value, del, clock }
         })
         if (loader?.awaitingCompact) {
           console.log("missing?", head.toString())
