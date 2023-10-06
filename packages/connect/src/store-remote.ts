@@ -1,13 +1,10 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
 import type { Loader, AnyBlock, AnyLink, DbMeta } from '@fireproof/core'
-
-export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
-
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/core'
 import { Connection } from './connection'
 
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/core'
-
+export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'car-browser-s3'
@@ -108,7 +105,7 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {
     // console.log('dbMetasForByteHeads', byteHeads)
-    return byteHeads.map((bytes) => {
+    return byteHeads.map(bytes => {
       const txt = new TextDecoder().decode(bytes)
       return this.parseHeader(txt)
     })
