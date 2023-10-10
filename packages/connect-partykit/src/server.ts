@@ -2,8 +2,10 @@ import type * as Party from "partykit/server";
 
 export default class Server implements Party.Server {
   lastMessage: string | null = null;
-  constructor(readonly party: Party.Party) { 
-    party.storage.get("head").then(head => {
+  constructor(public party: Party.Party) { }
+
+  async onStart() {
+    return this.party.storage.get("head").then(head => {
       if (head) {
         this.lastMessage = head as string;
       }
