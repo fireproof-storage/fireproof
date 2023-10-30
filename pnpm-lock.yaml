@@ -113,7 +113,7 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@fireproof/core':
-        specifier: ^0.14.0
+        specifier: ^0.14.1
         version: 0.14.9
       cross-fetch:
         specifier: ^4.0.0
@@ -429,7 +429,7 @@ importers:
   packages/react:
     dependencies:
       '@fireproof/core':
-        specifier: ^0.14.0
+        specifier: ^0.14.1
         version: 0.14.9
     devDependencies:
       '@jest/globals':
