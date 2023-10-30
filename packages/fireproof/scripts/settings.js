@@ -94,7 +94,7 @@ const require = createRequire(import.meta.url);
 
     if (/fireproof\./.test(entryPoint)) {
       const esmPublishConfig = {
-        ...esmConfig,
+        ...testEsmConfig,
         outfile: `dist/node/${filename}.esm.js`,
         entryPoints: [entryPoint],
         minify: false
@@ -102,7 +102,7 @@ const require = createRequire(import.meta.url);
       builds.push(esmPublishConfig)
 
       const cjsConfig = {
-        ...commonSettings,
+        ...testEsmConfig,
         outfile: `dist/node/${filename}.cjs`,
         format: 'cjs',
         platform: 'node',
