@@ -26,8 +26,8 @@ export async function applyBulkUpdateToCrdt(
     if (!isReturned) {
       const hasRoot = await tblocks.get(result.root) // is a db-wide get
       if (!hasRoot) {
-        throw new Error (`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
-      
+        throw new Error(`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
+
         // make sure https://github.com/alanshaw/pail/pull/20 is applied
         result.head = head
       }
@@ -68,12 +68,12 @@ async function processFileset(blocks: Transaction, files: DocFiles, publicFiles 
   const t = new Transaction(dbBlockstore)
   // dbBlockstore.transactions.add(t)
   const didPut = []
-  let totalSize = 0
+  // let totalSize = 0
   for (const filename in files) {
     if (File === files[filename].constructor) {
       const file = files[filename] as File
 
-      totalSize += file.size
+      // totalSize += file.size
       const { cid, blocks: fileBlocks } = await encodeFile(file)
       didPut.push(filename)
       for (const block of fileBlocks) {
@@ -83,7 +83,7 @@ async function processFileset(blocks: Transaction, files: DocFiles, publicFiles 
     }
   }
   // todo option to bypass this limit
-  if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for files in a single update is 1MB')
+  // if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for files in a single update is 1MB')
   if (didPut.length) {
     const car = await dbBlockstore.loader?.commit(t, { files } as FileResult, { public: publicFiles })
     if (car) {
@@ -265,21 +265,20 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
 
   await clockChangesSince(blockLog, head, [], {})
 
-  const done =  await blocks.commitCompaction(blockLog.loggedBlocks, head)
+  const done = await blocks.commitCompaction(blockLog.loggedBlocks, head)
   isCompacting = false
   return done
 }
 
-export async function getThatBlock({bytes}: {cid: string, bytes: string }) {
-  const realBytes = Uint8Array.from(atob(bytes), c => c.charCodeAt(0));
-  const { cid, value } = await decode({ bytes : realBytes, codec, hasher })
-  return new Block({ cid, value, bytes : realBytes })
+export async function getThatBlock({ bytes }: {cid: string, bytes: string }) {
+  const realBytes = Uint8Array.from(atob(bytes), c => c.charCodeAt(0))
+  const { cid, value } = await decode({ bytes: realBytes, codec, hasher })
+  return new Block({ cid, value, bytes: realBytes })
 }
 
-export async function getBlock(blocks: BlockFetcher, cidString : string) {
+export async function getBlock(blocks: BlockFetcher, cidString: string) {
   const block = await blocks.get(parse(cidString))
   if (!block) throw new Error(`Missing block ${cidString}`)
-  const { cid, value } = await decode({ bytes : block.bytes, codec, hasher })
-  return new Block({ cid, value, bytes : block.bytes })
+  const { cid, value } = await decode({ bytes: block.bytes, codec, hasher })
+  return new Block({ cid, value, bytes: block.bytes })
 }
-
