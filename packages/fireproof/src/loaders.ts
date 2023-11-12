@@ -101,7 +101,7 @@ export class DbLoader extends Loader {
       this.isCompacting = true
       const compactHead = this.clock.head
       const compactingResult = await doCompact(blocks, this.clock.head)
-      await this.clock.applyHead(null, compactHead, compactHead, null)
+      await this.clock.applyHead(compactHead, compactHead, null)
       return compactingResult
     }
     this.compacting = this._setWaitForWrite(compactingFn)
@@ -118,9 +118,9 @@ export class DbLoader extends Loader {
 
   protected async _applyCarHeader(carHeader: DbCarHeader, snap = false) {
     if (snap) {
-      await this.clock.applyHead(null, carHeader.head, this.clock.head)
+      await this.clock.applyHead(carHeader.head, this.clock.head)
     } else {
-      await this.clock.applyHead(null, carHeader.head, [])
+      await this.clock.applyHead(carHeader.head, [])
     }
   }
 

@@ -1,9 +1,9 @@
-import { Transaction } from './transaction'
+// import { Transaction } from './transaction'
 import { ClockHead, DocUpdate } from './types'
 
 type ApplyHeadWorkerFunction = (
   id: string,
-  tblocks: Transaction | null,
+  // tblocks: Transaction | null,
   newHead: ClockHead,
   prevHead: ClockHead,
   updates: DocUpdate[] | null
@@ -11,7 +11,7 @@ type ApplyHeadWorkerFunction = (
 
 type ApplyHeadTask = {
   id: string
-  tblocks: Transaction | null
+  // tblocks: Transaction | null
   newHead: ClockHead
   prevHead: ClockHead
   updates: DocUpdate[] | null
@@ -25,7 +25,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
   const queue: ApplyHeadTask[] = []
   let isProcessing = false
 
-  async function* process() {
+  async function * process() {
     if (isProcessing || queue.length === 0) return
     isProcessing = true
     const allUpdates: DocUpdate[] = []
@@ -35,8 +35,8 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
         const task = queue.shift()
         if (!task) continue
 
-        await worker(task.id, task.tblocks, task.newHead, task.prevHead, task.updates)
-        
+        await worker(task.id, task.newHead, task.prevHead, task.updates)
+
         if (task.updates) {
           allUpdates.push(...task.updates)
         }
@@ -45,7 +45,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
           const allTasksHaveUpdates = queue.every(task => task.updates !== null)
           // console.log('yielding', allUpdates.length, allTasksHaveUpdates)
           yield { updates: allUpdates, all: allTasksHaveUpdates }
-          allUpdates.length = 0;
+          allUpdates.length = 0
         }
       }
     } finally {

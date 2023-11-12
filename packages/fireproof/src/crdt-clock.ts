@@ -29,7 +29,7 @@ export class CRDTClock {
   }
 
   async applyHead(
-    tblocks: Transaction | null,
+    // tblocks: Transaction | null,
     newHead: ClockHead,
     prevHead: ClockHead,
     updates: DocUpdate[] | null = null
@@ -38,13 +38,13 @@ export class CRDTClock {
     // console.log('applyHead', taskId, updates?.length, 'og', this.head.sort((a, b) => a.toString().localeCompare(b.toString())).toString(), 'new', newHead.toString(), 'prev', prevHead.toString())
     for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({
       id: taskId,
-      tblocks,
+      // tblocks,
       newHead,
       prevHead,
       updates
     })) {
-      ;(async (updatesAcc, all) => {
-        Promise.resolve().then(async () => {
+      ;((updatesAcc, all) => {
+        void Promise.resolve().then(async () => {
           let intUpdates = updatesAcc
           if (this.watchers.size && !all) {
             const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
@@ -56,17 +56,18 @@ export class CRDTClock {
       })([...updatesAcc], all)
     }
   }
+
   async int_applyHead(
     taskId: string,
-    tblocks: Transaction | null,
+    // tblocks: Transaction | null,
     newHead: ClockHead,
-    prevHead: ClockHead,
-    updates: DocUpdate[] | null = null
+    prevHead: ClockHead
+    // updates: DocUpdate[] | null = null
   ) {
     const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
     newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    newHead.map(cid => {
-      const got = this.blocks!.get(cid)
+    newHead.map(async cid => {
+      const got = await this.blocks!.get(cid)
       if (!got) {
         throw new Error('int_applyHead missing block: ' + cid.toString())
       }
@@ -85,13 +86,12 @@ export class CRDTClock {
     // const noLoader = this.head.length === 1 && !updates?.length
     const noLoader = false
     const withBlocks = async (
-      tblocks: Transaction | null,
       fn: (blocks: Transaction) => Promise<BulkResult>
     ) => {
       if (!this.blocks) throw new Error('missing blocks')
       return await this.blocks.transaction(fn, undefined, { noLoader })
     }
-    await withBlocks(tblocks, async tblocks => {
+    await withBlocks(async tblocks => {
       for (const cid of newHead) {
         try {
           head = await advance(tblocks, head, cid)

@@ -5,9 +5,13 @@ import { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
 const partyCxs = new Map<string, ConnectPartyKit>()
 
 export const connect = {
-  partykit: (db: Database,
-    partyHost?: string) => {
-    const { name, _crdt: { blocks: { loader } } } = db
+  partykit: (db: Database, partyHost?: string) => {
+    const {
+      name,
+      _crdt: {
+        blocks: { loader }
+      }
+    } = db
     if (!name) throw new Error('database name is required')
     if (partyCxs.has(name)) {
       return partyCxs.get(name)!
@@ -23,10 +27,9 @@ export const connect = {
       console.warn('partyHost not provided, using localhost:1999')
       partyHost = 'http://localhost:1999'
     }
-    const connection = new ConnectPartyKit({ name, host: partyHost! } as ConnectPartyKitParams)
+    const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
     connection.connectMeta(loader!)
     partyCxs.set(name, connection)
     return connection
   }
 }
-

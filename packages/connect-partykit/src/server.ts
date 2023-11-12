@@ -1,28 +1,40 @@
-import type * as Party from "partykit/server";
+import type * as Party from 'partykit/server'
+
+type PartyMessage = {
+  data: string
+  cid: string
+  parents: string[]
+}
 
 export default class Server implements Party.Server {
-  lastMessage: string | null = null;
-  constructor(public party: Party.Party) { }
+  clockHead: Map<string, string> = new Map()
+  constructor(public party: Party.Party) {}
 
   async onStart() {
-    return this.party.storage.get("head").then(head => {
+    return this.party.storage.get('main').then(head => {
       if (head) {
-        this.lastMessage = head as string;
+        this.clockHead = head as Map<string, string>
       }
-    });
+    })
   }
 
   onConnect(conn: Party.Connection) {
-    if (this.lastMessage) {
-      conn.send(this.lastMessage);
+    for (const value of this.clockHead.values()) {
+      conn.send(value)
     }
   }
 
   onMessage(message: string, sender: Party.Connection) {
-    this.lastMessage = message;
-    this.party.broadcast(message, [sender.id]);
-    this.party.storage.put("head", message);
+    const { data, cid, parents } = JSON.parse(message) as PartyMessage
+
+    for (const p of parents) {
+      this.clockHead.delete(p)
+    }
+    this.clockHead.set(cid, data)
+
+    this.party.broadcast(data, [sender.id])
+    void this.party.storage.put('main', this.clockHead)
   }
 }
 
-Server satisfies Party.Worker;
+Server satisfies Party.Worker
