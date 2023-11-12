@@ -59,14 +59,14 @@ export class CRDT {
           return { key, value, del, clock }
         })
         if (loader?.awaitingCompact) {
-          console.log("missing?", head.toString())
+          console.log('missing?', head.toString())
         }
         if (loader?.isCompacting) {
-          console.log("compacting?", head.toString())
+          console.log('compacting?', head.toString())
         }
         return { head }
       })
-      await this.clock.applyHead(null, got.head, prevHead, updates)
+      await this.clock.applyHead(got.head, prevHead, updates)
       return got
     })()
     if (loader) {
@@ -105,7 +105,7 @@ export class CRDT {
   }
 
   async getThatBlock() {
-    const blockJson = {"cid":"bafyreib7ee4pscqpuioxobmh3ac5xbbslypmaqqbkugalhw67hnco6dvoa","bytes":"omRkYXRhpGNrZXl4JDAxOGFmNzdiLWZmMTUtNzI5Ny04ODZiLTYwMjViM2MxODI2ZWRyb2902CpYJQABcRIgKVLI53HO1TFDbPUoSaybd0mop2oX/CRFm1RrpiY4ne9kdHlwZWNwdXRldmFsdWXYKlglAAFxEiAGw53MVtPzeeGT/itfdLBfCVu6MTj96AHU6v9a3K/wYGdwYXJlbnRzgdgqWCUAAXESIJiL5qjdpgghUfbQLpKJeCgMX+ubhoTpYBoZHYdzbQJ/"}
+    const blockJson = { cid: 'bafyreib7ee4pscqpuioxobmh3ac5xbbslypmaqqbkugalhw67hnco6dvoa', bytes: 'omRkYXRhpGNrZXl4JDAxOGFmNzdiLWZmMTUtNzI5Ny04ODZiLTYwMjViM2MxODI2ZWRyb2902CpYJQABcRIgKVLI53HO1TFDbPUoSaybd0mop2oX/CRFm1RrpiY4ne9kdHlwZWNwdXRldmFsdWXYKlglAAFxEiAGw53MVtPzeeGT/itfdLBfCVu6MTj96AHU6v9a3K/wYGdwYXJlbnRzgdgqWCUAAXESIJiL5qjdpgghUfbQLpKJeCgMX+ubhoTpYBoZHYdzbQJ/' }
     return await getThatBlock(blockJson)
   }
 

@@ -40,19 +40,26 @@ export class ConnectPartyKit extends Connection {
     this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve
     })
-    this.party.addEventListener('message', async event => {
-      const base64String = event.data
-      const uint8ArrayBuffer = Base64.toUint8Array(base64String)
-      const eventBlock = await decodeEventBlock(uint8ArrayBuffer)
-      await this.loader?.ready
+    this.party.addEventListener('message', (event: MessageEvent<string>) => {
+      const afn = async () => {
+        const base64String = event.data
+        const uint8ArrayBuffer = Base64.toUint8Array(base64String)
+        const eventBlock = await decodeEventBlock(uint8ArrayBuffer)
+        await this.loader?.ready
 
-      await this.taskManager.handleEvent(eventBlock as DbMetaEventBlock, this.loader!)
+        await this.taskManager.handleEvent(eventBlock as DbMetaEventBlock, this.loader!)
 
-      // @ts-ignore
-      this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array])
-      this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
-        this.messageResolve = resolve
-      })
+        // @ts-ignore
+        this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array])
+
+        // add the cid to our parents so we delete it when we send the update
+        this.parents.push(eventBlock.cid)
+
+        this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
+          this.messageResolve = resolve
+        })
+      }
+      void afn()
     })
   }
 
@@ -75,8 +82,13 @@ export class ConnectPartyKit extends Connection {
     validateMetaParams(params)
     await this.ready
     const event = await this.createEventBlock(bytes)
-    let base64String = Base64.fromUint8Array(event.bytes)
-    this.party.send(base64String)
+    const base64String = Base64.fromUint8Array(event.bytes)
+    const partyMessage = {
+      data: base64String,
+      cid: event.cid,
+      parents: this.parents.map(p => p.toString())
+    }
+    this.party.send(JSON.stringify(partyMessage))
     this.parents = [event.cid]
     return null
   }
