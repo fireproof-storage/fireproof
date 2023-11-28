@@ -90,6 +90,27 @@ const require = createRequire(import.meta.url);
 
     }
 
+
+    const memEsmConfig = {
+      ...esmConfig,
+      // platform: 'node',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      plugins: [...esmConfig.plugins,
+        alias(
+          {
+            // 'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
+            './store-browser': join(__dirname, '../src/store-memory.ts'),
+            // './crypto-web': join(__dirname, '../src/crypto-node.ts')
+          }
+        ),
+        commonjs({ filter: /^peculiar|ipfs-utils/ })
+        // polyfillNode({
+        //   polyfills: { crypto: false, fs: true, process: 'empty' }
+        // })
+      ]
+
+    }
+
     builds.push(testEsmConfig)
 
     if (/fireproof\./.test(entryPoint)) {
@@ -100,6 +121,16 @@ const require = createRequire(import.meta.url);
         minify: false
       }
       builds.push(esmPublishConfig)
+
+      const memConfig = {
+        ...memEsmConfig,
+        outfile: `dist/memory/${filename}.esm.js`,
+        format: 'esm',
+        // platform: 'node',
+        entryPoints: [entryPoint]}
+        
+        builds.push(memConfig)
+
 
       const cjsConfig = {
         ...testEsmConfig,

@@ -18,7 +18,7 @@ export default class Server implements Party.Server {
     })
   }
 
-  onConnect(conn: Party.Connection) {
+  async onConnect(conn: Party.Connection) {
     for (const value of this.clockHead.values()) {
       conn.send(value)
     }
