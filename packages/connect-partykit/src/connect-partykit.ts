@@ -30,7 +30,7 @@ export class ConnectPartyKit extends Connection {
     this.party = new PartySocket({
       party: 'fireproof',
       host: params.host,
-      room: `fireproof:${params.name}`
+      room: params.name
     })
     this.ready = new Promise<void>((resolve, reject) => {
       this.party.addEventListener('open', () => {
@@ -85,7 +85,7 @@ export class ConnectPartyKit extends Connection {
     const base64String = Base64.fromUint8Array(event.bytes)
     const partyMessage = {
       data: base64String,
-      cid: event.cid,
+      cid: event.cid.toString(),
       parents: this.parents.map(p => p.toString())
     }
     this.party.send(JSON.stringify(partyMessage))
