@@ -1,7 +1,7 @@
 export function getCrypto() {
   try {
-    if (window.crypto && window.crypto.subtle) {
-      return window.crypto
+    if (crypto && crypto.subtle) {
+      return crypto
     } else {
       return new Crypto()
     }
@@ -9,7 +9,9 @@ export function getCrypto() {
     return null
   }
 }
-export const crypto = getCrypto()
+const gotCrypto = getCrypto()
+
+export { gotCrypto as crypto }
 
 export function randomBytes(size: number) {
   const bytes = new Uint8Array(size)
