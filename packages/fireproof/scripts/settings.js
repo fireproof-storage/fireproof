@@ -107,7 +107,8 @@ const require = createRequire(import.meta.url);
         // polyfillNode({
         //   polyfills: { crypto: false, fs: true, process: 'empty' }
         // })
-      ]
+      
+      ], banner: {}
 
     }
 
@@ -126,7 +127,7 @@ const require = createRequire(import.meta.url);
         ...memEsmConfig,
         outfile: `dist/memory/${filename}.esm.js`,
         format: 'esm',
-        // platform: 'node',
+        platform: 'browser',
         entryPoints: [entryPoint]}
         
         builds.push(memConfig)

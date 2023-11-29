@@ -32,6 +32,7 @@ export class ConnectPartyKit extends Connection {
       host: params.host,
       room: params.name
     })
+    
     this.ready = new Promise<void>((resolve, reject) => {
       this.party.addEventListener('open', () => {
         resolve()
