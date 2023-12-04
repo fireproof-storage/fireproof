@@ -41,6 +41,7 @@ export class ConnectPartyKit extends Connection {
     this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve
     })
+    // this.ready = this.messagePromise.then(() => {})
     this.party.addEventListener('message', (event: MessageEvent<string>) => {
       const afn = async () => {
         const base64String = event.data

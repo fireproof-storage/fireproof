@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/partykit",
+  "name": "@fireproof/netlify",
   "version": "0.14.13",
   "description": "",
   "main": "./dist/browser/index.cjs",
@@ -10,13 +10,6 @@
       "require": "./dist/browser/index.cjs",
       "types": "./dist/types/index.d.ts",
       "script": "./dist/browser/index.iife.js"
-    },
-    "./server": {
-      "import": "./dist/node/server.esm.js",
-      "require": "./dist/node/server.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/server.iife.js",
-      "default": "./dist/node/server.esm.js"
     }
   },
   "browser": "./dist/index.browser.iife.js",
@@ -34,7 +27,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
-    "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-partykit.iife.js",
+    "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-netlify.iife.js",
     "build": "npm run build:tsc && npm run build:script"
   },
   "keywords": [],
@@ -45,20 +38,16 @@
     "esbuild": "^0.19.4",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-tsc": "^0.4.0",
-    "partykit": "0.0.24",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.3",
     "@fireproof/connect": "^0.14.0",
     "@fireproof/core": "^0.14.0",
-    "@fireproof/netlify": "^0.14.13",
+    "@netlify/blobs": "^6.3.1",
     "cross-fetch": "^4.0.0",
-    "js-base64": "^3.7.5",
-    "multiformats": "^12.0.1",
-    "partysocket": "0.0.8"
+    "js-base64": "^3.7.5"
   }
 }
