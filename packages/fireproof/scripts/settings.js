@@ -4,6 +4,7 @@ import esbuildPluginTsc from 'esbuild-plugin-tsc'
 import alias from 'esbuild-plugin-alias'
 import fs from 'fs'
 import path, { dirname, join } from 'path'
+import flow from 'esbuild-plugin-flow';
 // import { polyfillNode } from 'esbuild-plugin-polyfill-node'
 import { commonjs } from '@hyrious/esbuild-plugin-commonjs'
 
@@ -17,8 +18,8 @@ const entryPoints = fs
   .filter(file => path.extname(file) === '.ts')
   .map(file => path.join('src', file))
 
-  const doMinify = false
-  const doLog = false
+const doMinify = false
+const doLog = false
 
 export function createBuildSettings(options) {
   const commonSettings = {
@@ -31,9 +32,19 @@ export function createBuildSettings(options) {
         force: true
       })
     ],
-    ...options
-  }
-
+    external: [
+      'react',
+      'react/jsx-runtime',
+      'react-dom',
+      'react-native',
+      'react-native-fs',
+      'react-native-quick-base64',
+      'react-native-quick-crypto',
+      'react-native-mmkv-storage',
+      "@craftzdog/react-native-buffer",
+    ],
+    ...options,
+  };
 
   function bannerLog(banner, always = '') {
     if (doLog) {
@@ -65,7 +76,7 @@ export function createBuildSettings(options) {
       plugins: [...commonSettings.plugins],
       banner: bannerLog(`
 console.log('esm/node build');`, `
-import { createRequire } from 'module'; 
+import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
         `)
     }
@@ -75,6 +86,8 @@ const require = createRequire(import.meta.url);
       platform: 'node',
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...esmConfig.plugins,
+        // reactNative(),
+        flow(),
         alias(
           {
             'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
@@ -107,7 +120,7 @@ const require = createRequire(import.meta.url);
         // polyfillNode({
         //   polyfills: { crypto: false, fs: true, process: 'empty' }
         // })
-      
+
       ], banner: {}
 
     }
@@ -129,7 +142,7 @@ const require = createRequire(import.meta.url);
         format: 'esm',
         platform: 'browser',
         entryPoints: [entryPoint]}
-        
+
         builds.push(memConfig)
 
 
@@ -139,11 +152,9 @@ const require = createRequire(import.meta.url);
         format: 'cjs',
         platform: 'node',
         entryPoints: [entryPoint],
-        
         banner: bannerLog`
 console.log('cjs/node build');
 `
-
       }
       builds.push(cjsConfig)
 
@@ -156,7 +167,7 @@ console.log('cjs/node build');
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
-        
+
         banner: bannerLog`
 console.log('browser/es2015 build');
 `,
@@ -185,7 +196,7 @@ console.log('browser/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.esm.js`,
         format: 'esm',
-        
+
         banner: bannerLog`
 console.log('esm/es2015 build');
 `
@@ -198,12 +209,44 @@ console.log('esm/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.cjs`,
         format: 'cjs',
-        
+
         banner: bannerLog`
 console.log('cjs/es2015 build');
 `
       }
       builds.push(browserCJSConfig)
+
+      // react native
+      const reactNativeEsmConfig = {
+        ...esmConfig,
+        outfile: `dist/native/${filename}.esm.js`,
+        format: 'esm',
+        plugins: [...esmConfig.plugins,
+          // myPlugin(),
+          alias(
+            {
+              'crypto': join(__dirname, '../node_modules/react-native-quick-crypto/lib/module/index.js'),
+              'stream': join(__dirname, '../node_modules/readable-stream/lib/ours/index.js'),
+              'buffer': join(__dirname, '../node_modules/@craftzdog/react-native-buffer/index.js'),
+              './buffer-reader.js': join(__dirname, '../node_modules/@ipld/car/src/buffer-reader-browser.js'),
+              './reader.js': join(__dirname, '../node_modules/@ipld/car/src/reader-browser.js'),
+              './writer.js': join(__dirname, '../node_modules/@ipld/car/src/writer-browser.js'),
+              './store-browser': join(__dirname, '../src/store-native.ts'),
+              }),
+        ],
+        inject: [join(__dirname, './react-native-polyfill-globals.js')],
+        banner: bannerLog`console.log('react-native ESM build');`,
+      };
+
+      builds.push(reactNativeEsmConfig);
+
+      const reactNativeCjsConfig = {
+        ...reactNativeEsmConfig,
+        outfile: `dist/native/${filename}.cjs`,
+        format: 'cjs',
+        banner: bannerLog`console.log('react-native CJS build');`,
+      };
+      builds.push(reactNativeCjsConfig);
     }
 
     return builds
@@ -211,3 +254,22 @@ console.log('cjs/es2015 build');
 
   return configs.flat()
 }
+
+// used for debugging/development
+const myPlugin = () => {
+  return {
+    name: 'my-plugin',
+    setup(build) {
+      build.onResolve({ filter: /./ }, (args) => {
+        if (args.importer.includes('@ipld/car') && (
+             args.path === './buffer-reader.js'
+          || args.path === './buffer-writer.js'
+          || args.path === './indexed-reader.js'
+        )) {
+          console.log(args.importer, args.path);
+          return { external: true };
+        }
+      })
+    },
+  };
+};

@@ -22,5 +22,5 @@ export default {
     }
   ],
   plugins: [typescript(), uglify()],
-  external: ['react', 'react-dom']
+  external: ['react', 'react-dom', 'react-native'],
 }

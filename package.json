@@ -30,5 +30,10 @@
   "bugs": {
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "homepage": "https://github.com/fireproof-storage/fireproof#readme"
+  "homepage": "https://github.com/fireproof-storage/fireproof#readme",
+  "pnpm": {
+    "patchedDependencies": {
+      "react-native-fs@2.20.0": "patches/react-native-fs@2.20.0.patch"
+    }
+  }
 }
