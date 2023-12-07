@@ -6,10 +6,10 @@
   "module": "./dist/browser/fireproof.esm.js",
   "exports": {
     ".": {
-      "import": "./dist/native/fireproof.esm.js",
-      "require": "./dist/native/fireproof.cjs",
+      "import": "./dist/browser/fireproof.esm.js",
+      "require": "./dist/browser/fireproof.cjs",
       "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/native/fireproof.iife.js"
+      "script": "./dist/browser/fireproof.iife.js"
     },
     "./node": {
       "import": "./dist/node/fireproof.esm.js",
@@ -24,16 +24,16 @@
       "default": "./dist/memory/fireproof.esm.js"
     },
     "./native": {
-      "import": "./dist/native/fireproof.esm.js",
-      "require": "./dist/native/fireproof.cjs",
+      "import": "./src/fireproof.native.ts",
       "types": "./dist/types/fireproof.d.ts",
-      "default": "./dist/native/fireproof.esm.js"
+      "default": "./src/fireproof.native.ts"
     }
   },
   "browser": "./dist/fireproof.browser.iife.js",
-  "react-native": "./dist/native/fireproof.esm.js",
+  "react-native": "./src/fireproof.native.ts",
   "types": "./dist/types/fireproof.d.ts",
   "files": [
+    "src",
     "dist/node",
     "dist/memory",
     "dist/browser",

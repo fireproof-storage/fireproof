@@ -6,7 +6,7 @@
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
-    "start": "react-native start",
+    "start": "react-native start --experimental-debugger",
     "test": "jest"
   },
   "dependencies": {
@@ -14,7 +14,7 @@
     "@fireproof/core": "file:.yalc/@fireproof/core",
     "events": "^3.3.0",
     "react": "18.2.0",
-    "react-native": "0.72.6",
+    "react-native": "0.73.0",
     "react-native-fs": "^2.20.0",
     "react-native-mmkv-storage": "^0.9.1",
     "react-native-quick-base64": "^2.0.7",
@@ -27,26 +27,24 @@
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
+    "@react-native/babel-preset": "^0.73.18",
+    "@react-native/eslint-config": "^0.73.1",
+    "@react-native/metro-config": "^0.73.2",
+    "@react-native/typescript-config": "^0.73.1",
     "@react-native-community/cli-platform-android": "^11.3.9",
     "@react-native-community/cli-platform-ios": "^11.3.9",
-    "@react-native/eslint-config": "^0.72.2",
-    "@react-native/metro-config": "^0.72.11",
-    "@tsconfig/react-native": "^3.0.0",
-    "@types/react": "^18.0.24",
+    "@types/react": "^18.2.16",
     "@types/react-test-renderer": "^18.0.0",
-    "babel-jest": "^29.2.1",
+    "babel-jest": "^29.6.3",
     "babel-plugin-module-resolver": "^5.0.0",
     "eslint": "^8.19.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "jest": "^29.2.1",
-    "metro-react-native-babel-preset": "0.77.0",
-    "open": "^9.1.0",
-    "prettier": "^2.4.1",
+    "jest": "^29.6.3",
+    "prettier": "^2.8.8",
     "react-test-renderer": "18.2.0",
-    "typescript": "4.8.4"
+    "typescript": "5.0.4"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   },
   "resolutions": {
     "buck-worker-tool": "0.80.1",

@@ -1,15 +1,15 @@
 {
   "version": "0.2.0",
   "configurations": [
-    {
-      "name": "example rn app",
-      "request": "launch",
-      "type": "reactnative",
-      "cwd": "${workspaceFolder}/examples/native",
-      "platform": "ios",
-      "runArguments": ["--simulator", "iPhone 15"],
-      "internalConsoleOptions": "openOnSessionStart",
-    },
+    // {
+    //   "name": "example rn app",
+    //   "request": "launch",
+    //   "type": "reactnative",
+    //   "cwd": "${workspaceFolder}/examples/native",
+    //   "platform": "ios",
+    //   "runArguments": ["--simulator", "iPhone 15"],
+    //   "internalConsoleOptions": "openOnSessionStart",
+    // },
     {
       "name": "esbuild (@fireproof/core)",
       "type": "node",
