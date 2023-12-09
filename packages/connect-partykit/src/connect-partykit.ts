@@ -71,13 +71,43 @@ export class ConnectPartyKit extends Connection {
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     validateDataParams(params)
-    throw new Error('not implemented')
+    // throw new Error('not implemented')
+    //Implementing data upload so that it uses partykit server's persistent storage
+    //This is different from meta upload in the sense that here we are not using a websocket connection instead using HTTP requests
+
+    //Step-1 Prepare the data
+    //This step is taken from the connect-netlify script
+    const base64String = Base64.fromUint8Array(bytes)
+
+    //Step-2 Find the right URL
+    const protocol = this.host.startsWith("localhost") ? "http" : "https";
+    let uploadUrl=`${protocol}://${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+
+    //Step-3 Send the data using fetch API's PUT request
+    const done = await fetch(uploadUrl, { method: 'PUT', body: base64String })
+    if(done.status===404)
+    {
+      throw new Error('Failure in uploading data!');
+    }
+
   }
 
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
-    throw new Error('not implemented')
-    return null
+    // throw new Error('not implemented')
+    // return null
+
+    //For downloading again we make use of the same URL to make a GET request
+    const protocol = this.host.startsWith("localhost") ? "http" : "https";
+    let uploadUrl=`${protocol}://${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    const response = await fetch(uploadUrl, { method: 'GET'})
+    if(response.status===404)
+    {
+      throw new Error('Failure in downloading data!');
+    }
+    const base64String = await response.text()
+    const data = Base64.toUint8Array(base64String)
+    return data
   }
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
