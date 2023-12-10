@@ -10,8 +10,8 @@ import {
   View,
 } from 'react-native';
 // import { useFireproof } from 'use-fireproof';
-import { fireproof } from '@fireproof/core';
-import { Database } from '@fireproof/core/dist/types/database';
+import { fireproof } from '@fireproof/core/react-native';
+import type { Database } from '@fireproof/core/react-native';
 
 type Todo = {
   completed?: boolean;
@@ -23,12 +23,14 @@ const Todos = () => {
   let database: Database;
 
   try {
+    console.log('fireproof', fireproof);
     database = fireproof('todos');
   } catch(e) {
     console.error(e);
   }
 
-  const todos: ArrayLike<Todo> | null | undefined = []; //useLiveQuery('date', {limit: 10, descending: true}).docs;
+  const todos: ArrayLike<Todo> | null | undefined = [];
+  // const todos: ArrayLike<Todo> | null | undefined = useLiveQuery('date', {limit: 10, descending: true}).docs;
   const [text, onChangeText] = useState<string>("test fireproof");
 
   const renderTodo = ({item}: ListRenderItemInfo<Todo>) => {

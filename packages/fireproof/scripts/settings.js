@@ -219,7 +219,7 @@ console.log('cjs/es2015 build');
       // react native
       const reactNativeEsmConfig = {
         ...esmConfig,
-        outfile: `dist/native/${filename}.esm.js`,
+        outfile: `dist/react-native/${filename}.esm.js`,
         format: 'esm',
         plugins: [...esmConfig.plugins,
           // myPlugin(),
@@ -232,6 +232,10 @@ console.log('cjs/es2015 build');
               './reader.js': join(__dirname, '../node_modules/@ipld/car/src/reader-browser.js'),
               './writer.js': join(__dirname, '../node_modules/@ipld/car/src/writer-browser.js'),
               './store-browser': join(__dirname, '../src/store-native.ts'),
+              'react-native-quick-base64': join(__dirname, '../node_modules/react-native-quick-base64/src/index.tsx'),
+              'events': join(__dirname, '../node_modules/events/events.js'),
+              'string_decoder': join(__dirname, '../node_modules/string_decoder/lib/string_decoder.js'),
+              'util': join(__dirname, '../node_modules/util/util.js'),
               }),
         ],
         inject: [join(__dirname, './react-native-polyfill-globals.js')],
@@ -242,7 +246,7 @@ console.log('cjs/es2015 build');
 
       const reactNativeCjsConfig = {
         ...reactNativeEsmConfig,
-        outfile: `dist/native/${filename}.cjs`,
+        outfile: `dist/react-native/${filename}.cjs`,
         format: 'cjs',
         banner: bannerLog`console.log('react-native CJS build');`,
       };
@@ -261,13 +265,10 @@ const myPlugin = () => {
     name: 'my-plugin',
     setup(build) {
       build.onResolve({ filter: /./ }, (args) => {
-        if (args.importer.includes('@ipld/car') && (
-             args.path === './buffer-reader.js'
-          || args.path === './buffer-writer.js'
-          || args.path === './indexed-reader.js'
-        )) {
-          console.log(args.importer, args.path);
-          return { external: true };
+        if (args.path.includes('react-native-quick-base64')) {
+          const target = ''; //path.;
+          // console.log(args.importer, args.path, target);
+          return { path: target };
         }
       })
     },
