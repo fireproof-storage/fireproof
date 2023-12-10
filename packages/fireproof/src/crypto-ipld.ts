@@ -1,10 +1,10 @@
-import * as codec from './encrypted-block.js'
+import * as codec from './encrypted-block'
 import * as dagcbor from '@ipld/dag-cbor'
 // @ts-ignore
 import { create, load } from 'prolly-trees/cid-set'
 import { CID } from 'multiformats'
 import { encode, decode, create as mfCreate } from 'multiformats/block'
-import type { AnyBlock, AnyDecodedBlock, AnyLink } from './types.js'
+import type { AnyBlock, AnyDecodedBlock, AnyLink } from './types'
 import type { MultihashHasher, ToString } from 'multiformats'
 
 const encrypt = async function * ({

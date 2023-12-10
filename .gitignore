@@ -5,3 +5,6 @@ pail.car
 .DS_Store
 out/
 *.zip
+
+.yalc
+yalc.lock

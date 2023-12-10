@@ -2,11 +2,23 @@
   "name": "use-fireproof",
   "version": "0.14.2",
   "description": "Fireproof live database, JavaScript API and React hooks",
-  "main": "dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.esm.js",
+  "react-native": "./dist/index.native.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
+    "clean": "rm -rf dist/*",
     "build": "rollup -c",
     "start": "rollup -c -w",
-    "prepublishOnly": "cp ../../README.md . && npm run build",
+    "esbuild": "node ./scripts/build.js",
+    "esbuild:watch": "nodemon -w src -w scripts -e ts,js --exec \"yarn run clean && yarn run esbuild && yalc push\"",
+    "prepublishOnly": "cp ../../README.md . && npm run esbuild",
     "postpublish": "rm README.md",
     "test": "jest"
   },
@@ -25,11 +37,11 @@
   "license": "Apache-2.0 OR MIT",
   "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
-    "@fireproof/core": "^0.14.2"
+    "@fireproof/core": "link:../fireproof"
   },
   "peerDependencies": {
-    "react": ">= 16.8.0",
-    "react-dom": ">= 16.8.0"
+    "react": ">= 16.12.0",
+    "react-dom": ">= 16.12.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.5.0",
@@ -40,8 +52,10 @@
     "@types/testing-library__react-hooks": "^4.0.0",
     "babel-core": "^6.26.3",
     "babel-runtime": "^6.26.0",
-    "eslint-plugin-react-hooks": "^4.0.8",
+    "esbuild": "^0.19.5",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "jest": "^26.1.0",
+    "nodemon": "^3.0.1",
     "randombytes": "^2.1.0",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",

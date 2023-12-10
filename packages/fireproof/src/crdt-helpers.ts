@@ -3,7 +3,7 @@ import { encode, decode, Block } from 'multiformats/block'
 import { parse } from 'multiformats/link'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
+import { put, get, entries, EventData, root, Result } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { LoggingFetcher, Transaction } from './transaction'
 import type { TransactionBlockstore } from './transaction'
@@ -17,7 +17,7 @@ export async function applyBulkUpdateToCrdt(
   updates: DocUpdate[],
   options?: object
 ): Promise<BulkResult> {
-  let result
+  let result: Result
   for (const update of updates) {
     const link = await writeDocContent(tblocks, update)
     result = await put(tblocks, head, update.key, link, options)
@@ -32,7 +32,7 @@ export async function applyBulkUpdateToCrdt(
         result.head = head
       }
     }
-    for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
+    for (const { cid, bytes } of [...result.additions, ...result.removals]) { // TODO: removed `, result.event` from array
       tblocks.putSync(cid, bytes)
     }
     head = result.head
