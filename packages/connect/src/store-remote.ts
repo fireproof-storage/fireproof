@@ -11,14 +11,14 @@ export class RemoteDataStore extends DataStoreBase {
   connection: Connection
   type: DownloadFnParamTypes
 
-  constructor(loader: Loader, connection: Connection, type: DownloadFnParamTypes = 'data') {
-    super(loader)
+  constructor(name: string, connection: Connection, type: DownloadFnParamTypes = 'data') {
+    super(name)
     this.connection = connection
     this.type = type
   }
 
   prefix() {
-    return `fp.${this.loader.name}`
+    return `fp.${this.name}`
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {

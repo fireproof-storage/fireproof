@@ -65,7 +65,7 @@ export class DbLoader extends Loader {
 
   constructor(name: string, clock: CRDTClock, opts?: FireproofOptions) {
     super(name, opts)
-    this.fileStore = new DataStore(this)
+    this.fileStore = new DataStore(this.name)
     this.clock = clock
   }
 
