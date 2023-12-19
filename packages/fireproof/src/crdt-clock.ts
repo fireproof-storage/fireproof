@@ -1,6 +1,6 @@
 import { clockChangesSince } from './crdt-helpers'
 import { TransactionBlockstore, Transaction } from './transaction'
-import type { DocUpdate, BulkResult, ClockHead } from './types'
+import type { DocUpdate, BulkResult, ClockHead, BlockFetcher } from './types'
 import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
 import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
@@ -47,48 +47,6 @@ export class CRDTClock {
     }
   }
 
-  async int_applyHead(newHead: ClockHead, prevHead: ClockHead) {
-    const ogHead = this.head.sort((a, b) => a.toString().localeCompare(b.toString()))
-    newHead = newHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    newHead.map(async cid => {
-      const got = await this.blocks!.get(cid)
-      if (!got) {
-        throw new Error('int_applyHead missing block: ' + cid.toString())
-      }
-    })
-    if (ogHead.toString() === newHead.toString()) {
-      return
-    }
-    const ogPrev = prevHead.sort((a, b) => a.toString().localeCompare(b.toString()))
-    if (ogHead.toString() === ogPrev.toString()) {
-      this.setHead(newHead)
-      return
-    }
-    let head = this.head
-    // const noLoader = this.head.length === 1 && !updates?.length
-    const noLoader = false
-    const withBlocks = async (fn: (blocks: Transaction) => Promise<BulkResult>) => {
-      if (!this.blocks) throw new Error('missing blocks')
-      return await this.blocks.transaction(fn, undefined, { noLoader })
-    }
-    await withBlocks(async tblocks => {
-      for (const cid of newHead) {
-        try {
-          head = await advance(tblocks, head, cid)
-        } catch (e) {
-          console.error('failed to advance', cid.toString(), e)
-          continue
-        }
-      }
-      const result = await root(tblocks, head)
-      for (const { cid, bytes } of [...result.additions, ...result.removals]) {
-        tblocks.putSync(cid, bytes)
-      }
-      return { head }
-    })
-    this.setHead(head)
-  }
-
   notifyWatchers(updates: DocUpdate[]) {
     this.emptyWatchers.forEach(fn => fn())
     this.watchers.forEach(fn => fn(updates || []))
@@ -105,4 +63,64 @@ export class CRDTClock {
   onZoom(fn: () => void) {
     this.zoomers.add(fn)
   }
+
+  async int_applyHead(newHead: ClockHead, prevHead: ClockHead) {
+    const ogHead = sortClockHead(this.head)
+    newHead = sortClockHead(newHead)
+    await validateBlocks(newHead, this.blocks)
+    if (compareClockHeads(ogHead, newHead)) {
+      return
+    }
+    const ogPrev = sortClockHead(prevHead)
+    if (compareClockHeads(ogHead, ogPrev)) {
+      this.setHead(newHead)
+      return
+    }
+    let head = this.head
+    const noLoader = false
+    if (!this.blocks) throw new Error('missing blocks')
+    await this.blocks.transaction(
+      async tblocks => {
+        head = await advanceBlocks(newHead, tblocks, head)
+        const result = await root(tblocks, head)
+        for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+          tblocks.putSync(cid, bytes)
+        }
+        return { head }
+      },
+      undefined,
+      { noLoader }
+    )
+    this.setHead(head)
+  }
+}
+
+// Helper functions
+function sortClockHead(clockHead: ClockHead) {
+  return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()))
+}
+
+async function validateBlocks(newHead: ClockHead, blocks: TransactionBlockstore | null) {
+  newHead.map(async cid => {
+    const got = await blocks!.get(cid)
+    if (!got) {
+      throw new Error('int_applyHead missing block: ' + cid.toString())
+    }
+  })
+}
+
+function compareClockHeads(head1: ClockHead, head2: ClockHead) {
+  return head1.toString() === head2.toString()
+}
+
+async function advanceBlocks(newHead: ClockHead, tblocks: BlockFetcher, head: ClockHead) {
+  for (const cid of newHead) {
+    try {
+      head = await advance(tblocks, head, cid)
+    } catch (e) {
+      console.error('failed to advance', cid.toString(), e)
+      continue
+    }
+  }
+  return head
 }
