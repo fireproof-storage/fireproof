@@ -33,18 +33,18 @@ export class CRDTClock {
       prevHead,
       updates
     })) {
-      ;((updatesAcc, all) => {
-        void Promise.resolve().then(async () => {
-          let intUpdates = updatesAcc
-          if (this.watchers.size && !all) {
-            const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
-            intUpdates = changes.result
-          }
-          this.zoomers.forEach(fn => fn())
-          this.notifyWatchers(intUpdates || [])
-        })
-      })([...updatesAcc], all)
+      this.processUpdates(updatesAcc, all, prevHead)
     }
+  }
+
+  async processUpdates(updatesAcc: DocUpdate[], all: boolean, prevHead: ClockHead) {
+    let internalUpdates = updatesAcc
+    if (this.watchers.size && !all) {
+      const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
+      internalUpdates = changes.result
+    }
+    this.zoomers.forEach(fn => fn())
+    this.notifyWatchers(internalUpdates || [])
   }
 
   notifyWatchers(updates: DocUpdate[]) {
@@ -78,6 +78,7 @@ export class CRDTClock {
     }
     let head = this.head
     const noLoader = false
+    // const noLoader = this.head.length === 1 && !updates?.length
     if (!this.blocks) throw new Error('missing blocks')
     await this.blocks.transaction(
       async tblocks => {
