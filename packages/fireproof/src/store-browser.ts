@@ -12,7 +12,7 @@ export class DataStore extends DataStoreBase {
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
     if (!this.idb) {
-      const dbName = `fp.${this.STORAGE_VERSION}.${this.loader.keyId}.${this.loader.name}`
+      const dbName = `fp.${this.STORAGE_VERSION}.${this.name}`
       this.idb = await openDB(dbName, 1, {
         upgrade(db): void {
           db.createObjectStore('cars')
