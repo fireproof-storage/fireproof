@@ -71,6 +71,10 @@ export class Database {
     return { rows, clock: head }
   }
 
+  async allDocuments() {
+    return this.allDocs()
+  }
+
   subscribe(listener: ListenerFn|NoUpdateListenerFn, updates?: boolean): () => void {
     if (updates) {
       if (!this._listening) {
