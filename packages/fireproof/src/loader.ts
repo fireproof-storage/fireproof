@@ -77,7 +77,7 @@ export abstract class Loader {
     this.name = name
     this.opts = opts || this.opts
     this.metaStore = new MetaStore(this.name)
-    this.carStore = new DataStore(this)
+    this.carStore = new DataStore(this.name)
     this.remoteWAL = new RemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
