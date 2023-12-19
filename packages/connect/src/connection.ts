@@ -2,10 +2,9 @@ import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from './types'
 import type { AnyLink, Loader, DataStore } from '@fireproof/core'
 
-import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
+import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import type { BlockView, Link } from 'multiformats'
-import { EventView } from '@alanshaw/pail/clock'
 
 interface DbLoader extends Loader {
   fileStore?: DataStore
@@ -108,4 +107,3 @@ export abstract class Connection {
     return event
   }
 }
-  
