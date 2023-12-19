@@ -208,7 +208,7 @@ importers:
   packages/connect-netlify:
     dependencies:
       '@fireproof/connect':
-        specifier: ^0.14.0
+        specifier: ^0.14.2
         version: link:../connect
       '@fireproof/core':
         specifier: ^0.14.0
@@ -317,33 +317,15 @@ importers:
       '@ipld/dag-json':
         specifier: ^10.1.2
         version: 10.1.3
-      '@ipld/dag-ucan':
-        specifier: ^3.3.2
-        version: 3.3.2
       '@ipld/unixfs':
         specifier: ^2.1.1
         version: 2.1.1
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.4.3
-      '@ucanto/core':
-        specifier: ^8.2.0
-        version: 8.2.0
-      '@ucanto/interface':
-        specifier: ^8.1.0
-        version: 8.1.0
-      '@web3-storage/clock':
-        specifier: ^0.3.0
-        version: 0.3.0
-      '@web3-storage/w3up-client':
-        specifier: ^8.0.1
-        version: 8.0.1
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
-      cross-fetch:
-        specifier: ^4.0.0
-        version: 4.0.0
       idb:
         specifier: ^7.1.1
         version: 7.1.1
@@ -1998,14 +1980,6 @@ packages:
 
   /@ipld/dag-ucan@3.2.0:
     resolution: {integrity: sha512-CTClaGx4F3iEMJgYaYVOVBEvtNXzPc77Mi6p3vBtylSzDWhbf1Gou9ij7PlblOqWKA1H7XI8fp6yweTb6iXNKQ==}
-    dependencies:
-      '@ipld/dag-cbor': 9.0.4
-      '@ipld/dag-json': 10.1.3
-      multiformats: 11.0.2
-    dev: false
-
-  /@ipld/dag-ucan@3.3.2:
-    resolution: {integrity: sha512-EhuOrAfnudsVYIbzEIgi3itHAEo3WZNOt1VNPsYhxKBhOzDMeoTXh6/IHc7ZKBW1T2vDQHdgj4m1r64z6MssGA==}
     dependencies:
       '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-json': 10.1.3
