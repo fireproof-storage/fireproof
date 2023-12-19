@@ -1,6 +1,6 @@
 import { clockChangesSince } from './crdt-helpers'
-import { TransactionBlockstore, Transaction } from './transaction'
-import type { DocUpdate, BulkResult, ClockHead, BlockFetcher } from './types'
+import { TransactionBlockstore } from './transaction'
+import type { DocUpdate, ClockHead, BlockFetcher } from './types'
 import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
 import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
