@@ -40,9 +40,9 @@ export abstract class DataStore {
   tag: string = 'car-base'
 
   STORAGE_VERSION: string = STORAGE_VERSION
-  loader: Loader
-  constructor(loader: Loader) {
-    this.loader = loader
+  name: string
+  constructor(name: string) {
+    this.name = name
   }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>

@@ -25,39 +25,6 @@ export class DataStore extends DataStoreBase {
 }
 
 // ts-unused-exports:disable-next-line
-export class RemoteWAL extends RemoteWALBase {
-  tag: string = 'wal-mem'
-  store = new Map<string, string>()
-
-  headerKey(branch: string) {
-    // remove 'public' on next storage version bump
-    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
-  }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch = 'main'): Promise<WALState | null> {
-    try {
-      const bytesString = this.store.get(this.headerKey(branch))
-      if (!bytesString) return null
-      return parse<WALState>(bytesString)
-    } catch (e) {
-      return null
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async save(state: WALState, branch = 'main'): Promise<void> {
-    try {
-      const encoded: ToString<WALState> = format(state)
-      this.store.set(this.headerKey(branch), encoded)
-    } catch (e) {
-      console.error('error saving wal', e)
-      throw e
-    }
-  }
-}
-
-// ts-unused-exports:disable-next-line
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-mem'
   store = new Map<string, string>()
@@ -89,6 +56,38 @@ export class MetaStore extends MetaStoreBase {
       return null
     } catch (e) {
       return null
+    }
+  }
+}
+
+// // ts-unused-exports:disable-next-line
+export class RemoteWAL extends RemoteWALBase {
+  tag: string = 'wal-mem'
+  store = new Map<string, string>()
+
+  headerKey(branch: string) {
+    // remove 'public' on next storage version bump
+    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async load(branch = 'main'): Promise<WALState | null> {
+    try {
+      const bytesString = this.store.get(this.headerKey(branch))
+      if (!bytesString) return null
+      return parse<WALState>(bytesString)
+    } catch (e) {
+      return null
+    }
+  }
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async save(state: WALState, branch = 'main'): Promise<void> {
+    try {
+      const encoded: ToString<WALState> = format(state)
+      this.store.set(this.headerKey(branch), encoded)
+    } catch (e) {
+      console.error('error saving wal', e)
+      throw e
     }
   }
 }
