@@ -7,7 +7,7 @@ import { Connection } from './connection'
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 
 export class RemoteDataStore extends DataStoreBase {
-  tag: string = 'car-browser-s3'
+  tag: string = 'remote-data'
   connection: Connection
   type: DownloadFnParamTypes
 
@@ -48,7 +48,7 @@ export class RemoteDataStore extends DataStoreBase {
 }
 
 export class RemoteMetaStore extends MetaStoreBase {
-  tag: string = 'header-browser-ls'
+  tag: string = 'remote-meta'
   connection: Connection
   subscribers: Map<string, LoadHandler[]> = new Map()
 
