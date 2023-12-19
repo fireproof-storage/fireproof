@@ -75,6 +75,6 @@ export class ConnectNetlify extends Connection {
     )
     const cids = events.map((e) => e.cid)
     this.parents = [...new Set([...this.parents, ...cids])]
-    return null
+    return events.map((e) => e.bytes)
   }
 }
