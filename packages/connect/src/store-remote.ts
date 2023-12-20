@@ -1,6 +1,6 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
-import type { Loader, AnyBlock, AnyLink, DbMeta } from '@fireproof/core'
+import type { AnyBlock, AnyLink, DbMeta } from '@fireproof/core'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/core'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
