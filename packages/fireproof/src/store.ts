@@ -1,8 +1,7 @@
 import { format, parse, ToString } from '@ipld/dag-json'
-import { AnyBlock, AnyLink, DbMeta } from './types'
+import type { AnyBlock, AnyLink, DbMeta } from './types'
 
 import { PACKAGE_VERSION } from './version'
-import type { Loader } from './loader'
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/)
 if (!match) throw new Error('invalid version: ' + PACKAGE_VERSION)
 export const STORAGE_VERSION = match[0]
