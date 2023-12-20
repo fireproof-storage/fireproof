@@ -1,8 +1,11 @@
 {
-  "name": "@fireproof/partykit-experimental",
-  "version": "0.14.14",
+  "name": "connect-partykit-experimental",
+  "version": "1.0.5",
   "description": "",
   "main": "./dist/browser/index.cjs",
+  "publishConfig": {
+    "access": "public"
+  },
   "module": "./dist/browser/index.esm.js",
   "exports": {
     ".": {
@@ -30,9 +33,9 @@
   "type": "module",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build:clean": "rm -rf dist/*",
+    "build:clean": "rmdir dist",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
+    "build:tsc": "tsc && mkdir dist\\tsc && move dist\\*.js dist\\tsc\\ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
     "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-partykit.iife.js",
     "build": "npm run build:tsc && npm run build:script"
@@ -45,7 +48,9 @@
     "esbuild": "^0.19.4",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-tsc": "^0.4.0",
+    "fs-extra": "^11.2.0",
     "partykit": "0.0.24",
+    "rimraf": "^5.0.5",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
