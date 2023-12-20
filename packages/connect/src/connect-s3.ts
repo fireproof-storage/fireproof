@@ -1,5 +1,4 @@
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
-import { validateDataParams, validateMetaParams } from '.'
 import { Connection } from './connection'
 import fetch from 'cross-fetch'
 
@@ -14,9 +13,8 @@ export class ConnectS3 extends Connection {
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    validateDataParams(params)
     // console.log('s3 dataUpload', params.car.toString())
-    const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`)
+    const fetchUploadUrl = new URL(`?${new URLSearchParams({ cache: Math.random().toString(), ...params }).toString()}`, this.uploadUrl)
     const response = await fetch(fetchUploadUrl)
     if (!response.ok) {
       // console.log('failed to get upload url for data', params, response)
@@ -29,8 +27,7 @@ export class ConnectS3 extends Connection {
   }
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    validateMetaParams(params)
-    const fetchUploadUrl = new URL(`${this.uploadUrl.toString()}?${new URLSearchParams({ type: 'meta', ...params }).toString()}`)
+    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: 'meta', ...params }).toString()}`, this.uploadUrl)
     const response = await fetch(fetchUploadUrl)
     if (!response.ok) {
       // console.log('failed to get upload url for meta', params, response)
@@ -44,7 +41,6 @@ export class ConnectS3 extends Connection {
   }
 
   async dataDownload(params: DownloadDataFnParams) {
-    validateDataParams(params)
     const { type, name, car } = params
     const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)
@@ -92,7 +88,6 @@ export class ConnectS3 extends Connection {
    * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
    */
   async metaDownload(params: DownloadMetaFnParams) {
-    validateMetaParams(params)
     const { name, branch } = params
     const fetchFromUrl = new URL(`meta/${name}/${branch + '.json?cache=' + Math.floor(Math.random() * 1000000)}`, this.downloadUrl)
     const response = await fetch(fetchFromUrl)

@@ -1,5 +1,10 @@
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
-import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from './types'
+import type {
+  UploadMetaFnParams,
+  UploadDataFnParams,
+  DownloadMetaFnParams,
+  DownloadDataFnParams
+} from './types'
 import type { AnyLink, Loader, DataStore } from '@fireproof/core'
 
 import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
@@ -7,17 +12,23 @@ import { MemoryBlockstore } from '@alanshaw/pail/block'
 import type { BlockView, Link } from 'multiformats'
 
 interface DbLoader extends Loader {
+  name: string
   fileStore?: DataStore
   remoteFileStore?: RemoteDataStore
 }
 function isDbLoader(loader: Loader): loader is DbLoader {
-  return (loader as DbLoader).fileStore !== undefined;
+  return (loader as DbLoader).fileStore !== undefined
 }
-export type CarClockHead = Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[]
+export type CarClockHead = Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]
 
 export abstract class Connection {
   ready: Promise<any>
   loaded: Promise<any>
+  // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
+  eventBlocks = new MemoryBlockstore()
+  parents: CarClockHead = []
+  loader?: Loader | null
+
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataUpload(
     bytes: Uint8Array,
@@ -26,15 +37,11 @@ export abstract class Connection {
   ): Promise<void | AnyLink>
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>
-  eventBlocks = new MemoryBlockstore() // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
-  parents: CarClockHead = []
 
   constructor() {
     this.ready = Promise.resolve()
     this.loaded = Promise.resolve()
   }
-
-  loader?: Loader | null
 
   async refresh() {
     await this.loader!.remoteMetaStore!.load('main')
@@ -42,7 +49,6 @@ export abstract class Connection {
   }
 
   connect(loader: Loader) {
-    this.loader = loader
     this.connectStorage(loader)
     this.connectMeta(loader)
   }
@@ -66,10 +72,9 @@ export abstract class Connection {
 
   connectStorage(loader: Loader) {
     this.loader = loader
-    const remote = new RemoteDataStore(loader, this)
-    loader.remoteCarStore = remote
+    loader.remoteCarStore = new RemoteDataStore(loader.name, this)
     if (isDbLoader(loader)) {
-      loader.remoteFileStore = new RemoteDataStore(loader, this, 'file')
+      loader.remoteFileStore = new RemoteDataStore(loader.name, this, 'file')
     }
   }
 
@@ -87,9 +92,9 @@ export abstract class Connection {
       dbMeta: bytes
     }
     const event = await EventBlock.create(data, this.parents)
-    const eventBlocks = new MemoryBlockstore()
+    // const eventBlocks = new MemoryBlockstore()
     await this.eventBlocks.put(event.cid, event.bytes)
-    await eventBlocks.put(event.cid, event.bytes)
+    // await eventBlocks.put(event.cid, event.bytes)
     return event
   }
 

@@ -3,6 +3,7 @@ import { DownloadFnParamTypes, UploadDataFnParams } from './types'
 import type { Loader, AnyBlock, AnyLink, DbMeta } from '@fireproof/core'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/core'
 import { Connection } from './connection'
+import { validateDataParams, validateMetaParams } from '.'
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 
@@ -22,11 +23,13 @@ export class RemoteDataStore extends DataStoreBase {
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
-    const bytes = await this.connection.dataDownload({
+    const params = {
       type: this.type,
       name: this.prefix(),
       car: carCid.toString()
-    })
+    }
+    validateDataParams(params)
+    const bytes = await this.connection.dataDownload(params)
     if (!bytes) throw new Error(`missing remote car ${carCid.toString()}`)
     return { cid: carCid, bytes }
   }
@@ -38,6 +41,7 @@ export class RemoteDataStore extends DataStoreBase {
       car: car.cid.toString(),
       size: car.bytes.length.toString()
     }
+    validateDataParams(uploadParams)
     return await this.connection.dataUpload(car.bytes, uploadParams, opts)
   }
 
@@ -84,10 +88,12 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
     // console.log('remote load', branch)
-    const byteHeads = await this.connection.metaDownload({
+    const params = {
       name: this.prefix(),
       branch
-    })
+    }
+    validateMetaParams(params)
+    const byteHeads = await this.connection.metaDownload(params)
     if (!byteHeads) return null
     return this.handleByteHeads(byteHeads, branch)
   }
@@ -95,10 +101,9 @@ export class RemoteMetaStore extends MetaStoreBase {
   async save(meta: DbMeta, branch: string = 'main') {
     // console.log('remote save', branch, meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
-    const byteHeads = await this.connection.metaUpload(bytes, {
-      name: this.prefix(),
-      branch
-    })
+    const params = { name: this.prefix(), branch }
+    validateMetaParams(params)
+    const byteHeads = await this.connection.metaUpload(bytes, params)
     if (!byteHeads) return null
     return this.handleByteHeads(byteHeads, branch)
   }

@@ -5,31 +5,25 @@ import {
   UploadMetaFnParams,
   UploadDataFnParams
 } from './types'
-import { Connection, validateDataParams, validateMetaParams } from '@fireproof/connect'
-
-export interface ConnectNetlifyParams {
-  name: string
-}
+import { Connection } from '@fireproof/connect'
 
 export class ConnectNetlify extends Connection {
   name: string
 
-  constructor(params: ConnectNetlifyParams) {
+  constructor(name: string) {
     super()
-    this.name = params.name
+    this.name = name
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    validateDataParams(params)
-    const fetchUploadUrl = new URL(`/fireproof?car=${params.car}`, document.location.origin)
+  async dataUpload(bytes: Uint8Array, { car }: UploadDataFnParams) {
+    const fetchUploadUrl = new URL(`/fireproof?car=${car}`, document.location.origin)
     const base64String = Base64.fromUint8Array(bytes)
     const done = await fetch(fetchUploadUrl, { method: 'PUT', body: base64String })
     if (!done.ok) throw new Error('failed to upload data ' + done.statusText)
   }
 
-  async dataDownload(params: DownloadDataFnParams) {
-    validateDataParams(params)
-    const fetchDownloadUrl = new URL(`/fireproof?car=${params.car}`, document.location.origin)
+  async dataDownload({ car }: DownloadDataFnParams) {
+    const fetchDownloadUrl = new URL(`/fireproof?car=${car}`, document.location.origin)
     const response = await fetch(fetchDownloadUrl)
     if (!response.ok) throw new Error('failed to download data ' + response.statusText)
     const base64String = await response.text()
@@ -37,34 +31,27 @@ export class ConnectNetlify extends Connection {
     return data
   }
 
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
-    validateMetaParams(params)
+  async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | null> {
     const event = await this.createEventBlock(bytes)
     const base64String = Base64.fromUint8Array(event.bytes)
 
     const crdtEntry = {
       cid: event.cid.toString(),
       data: base64String,
-      parents: this.parents.map((p) => p.toString())
+      parents: this.parents.map(p => p.toString())
     }
-    const fetchUploadUrl = new URL(`/fireproof?meta=${params.name}`, document.location.origin)
-
+    const fetchUploadUrl = new URL(`/fireproof?meta=${name}`, document.location.origin)
     const done = await fetch(fetchUploadUrl, { method: 'PUT', body: JSON.stringify(crdtEntry) })
-
     if (!done.ok) throw new Error('failed to upload meta ' + done.statusText)
-
     this.parents = [event.cid]
-
     return null
   }
 
-  async metaDownload(params: DownloadMetaFnParams) {
-    validateMetaParams(params)
-    const fetchDownloadUrl = new URL(`/fireproof?meta=${params.name}`, document.location.origin)
+  async metaDownload({ name }: DownloadMetaFnParams) {
+    const fetchDownloadUrl = new URL(`/fireproof?meta=${name}`, document.location.origin)
     const response = await fetch(fetchDownloadUrl)
     if (!response.ok) throw new Error('failed to download meta ' + response.statusText)
     const crdtEntries = await response.json()
-
     const events = await Promise.all(
       crdtEntries.map(async (entry: any) => {
         const base64String = entry.data
@@ -73,8 +60,8 @@ export class ConnectNetlify extends Connection {
         return event
       })
     )
-    const cids = events.map((e) => e.cid)
+    const cids = events.map(e => e.cid)
     this.parents = [...new Set([...this.parents, ...cids])]
-    return events.map((e) => e.bytes)
+    return events.map(e => e.bytes)
   }
 }

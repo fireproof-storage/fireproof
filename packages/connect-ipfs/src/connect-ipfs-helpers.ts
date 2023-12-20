@@ -1,7 +1,7 @@
 import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
 import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
-import { CarClockHead, Connection, validateDataParams } from '@fireproof/connect'
+import { CarClockHead, Connection } from '@fireproof/connect'
 import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Proof } from '@ucanto/interface'
@@ -22,7 +22,6 @@ export abstract class AbstractConnectIPFS extends Connection {
   }
 
   async dataDownload(params: DownloadDataFnParams) {
-    validateDataParams(params)
     const url = `https://${params.car}.ipfs.w3s.link/`
     const response = await fetch(url)
     if (response.ok) {
@@ -35,7 +34,6 @@ export abstract class AbstractConnectIPFS extends Connection {
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean; }) {
     const client = await this.authorizedClient()
     if (!client) { throw new Error('client encodeCarFile initialized') }
-    validateDataParams(params)
     // console.log('dataUpload', params.car.toString())
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
@@ -73,9 +71,9 @@ export abstract class AbstractConnectIPFS extends Connection {
 
     const clockProofs = await this.clockProofsForDb()
 
-    const { event, carBytes } = await this.createEventBlock(bytes)
+    const event = await this.createEventBlock(bytes)
 
-    await client.uploadCAR(new Blob([carBytes]))
+    await client.uploadCAR(new Blob([event.bytes]))
 
     const blocks = []
     for (const { bytes: eventBytes } of this.eventBlocks.entries()) {
