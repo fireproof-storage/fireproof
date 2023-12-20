@@ -65,9 +65,9 @@ export class ConnectPartyKit extends Connection {
     })
   }
 
-  async connectStorage() {
-    throw new Error('not implemented')
-  }
+  // async connectStorage() {
+  //   throw new Error('not implemented')
+  // }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     validateDataParams(params)
@@ -77,11 +77,12 @@ export class ConnectPartyKit extends Connection {
 
     //Step-1 Prepare the data
     //This step is taken from the connect-netlify script
+    //Maybe try putting the bytes through instead of encoding it into Base64
     const base64String = Base64.fromUint8Array(bytes)
 
     //Step-2 Find the right URL
-    const protocol = this.host.startsWith("localhost") ? "http" : "https";
-    let uploadUrl=`${protocol}://${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    const protocol = this.host.startsWith("localhost") ? "http" : null;
+    let uploadUrl=`${this.host}/parties/fireproof/${this.name}?car=${params.car}`
 
     //Step-3 Send the data using fetch API's PUT request
     const done = await fetch(uploadUrl, { method: 'PUT', body: base64String })
@@ -99,7 +100,7 @@ export class ConnectPartyKit extends Connection {
 
     //For downloading again we make use of the same URL to make a GET request
     const protocol = this.host.startsWith("localhost") ? "http" : "https";
-    let uploadUrl=`${protocol}://${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    let uploadUrl=`${this.host}/parties/fireproof/${this.name}?car=${params.car}`
     const response = await fetch(uploadUrl, { method: 'GET'})
     if(response.status===404)
     {
