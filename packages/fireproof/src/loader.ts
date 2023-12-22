@@ -54,7 +54,7 @@ export abstract class Loader {
   isCompacting = false
   isWriting = false
 
-  remoteMetaLoading: Promise<void> | undefined
+  // remoteMetaLoading: Promise<void> | undefined
   remoteMetaStore: AbstractRemoteMetaStore | undefined
   remoteCarStore: AbstractDataStore | undefined
   remoteWAL: RemoteWAL
@@ -89,16 +89,16 @@ export abstract class Loader {
     })
   }
 
-  async snapToCar(carCid: AnyLink | string) {
-    await this.ready
-    if (typeof carCid === 'string') {
-      carCid = CID.parse(carCid)
-    }
-    const carHeader = await this.loadCarHeaderFromMeta({ car: carCid, key: this.key || null })
-    this.carLog = [carCid, ...carHeader.cars]
-    await this.getMoreReaders(carHeader.cars)
-    await this._applyCarHeader(carHeader, true)
-  }
+  // async snapToCar(carCid: AnyLink | string) {
+  //   await this.ready
+  //   if (typeof carCid === 'string') {
+  //     carCid = CID.parse(carCid)
+  //   }
+  //   const carHeader = await this.loadCarHeaderFromMeta({ car: carCid, key: this.key || null })
+  //   this.carLog = [carCid, ...carHeader.cars]
+  //   await this.getMoreReaders(carHeader.cars)
+  //   await this._applyCarHeader(carHeader, true)
+  // }
 
   async _readyForMerge() {}
   async _setWaitForWrite(_writing: () => Promise<void>) {}
@@ -218,18 +218,29 @@ export abstract class Loader {
 
     if (opts.compact) {
       const fpCar = fp as CarLoaderHeader
+      const previousCompactCid = this.carLog[this.carLog.length - 1]
+
       fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
       this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
-      setTimeout(async () => {
-        if (this.remoteMetaLoading) await this.remoteMetaLoading
-        for (const cid of fpCar.compact) {
-          await this.carStore!.remove(cid)
-        } // todo instead we should have no delay, but delete previous compaction's old files
-      }, 5000)
+      void this.removeCidsForCompact(previousCompactCid)
+      // setTimeout(async () => {
+      //   if (this.remoteMetaLoading) await this.remoteMetaLoading
+      //   for (const cid of fpCar.compact) {
+      //     await this.carStore!.remove(cid)
+      //   } // todo instead we should have no delay, but delete previous compaction's old files
+      //   // to do that we load the oldest car header in fpCopmact
+      // }, 5000)
     } else {
       this.carLog.unshift(cid)
     }
     return cid
+  }
+
+  async removeCidsForCompact(cid: AnyLink) {
+    const carHeader = await this.loadCarHeaderFromMeta({cid} as unknown as DbMeta) as DbCarHeader
+    for (const cid of carHeader.compact) {
+      await this.carStore!.remove(cid)
+    } 
   }
 
   async flushCars() {
