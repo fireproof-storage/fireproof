@@ -136,7 +136,7 @@ export abstract class RemoteWAL {
         await this.save(this.walState);
       }
     })();
-    this.loader.remoteMetaLoading = rmlp;
+    // this.loader.remoteMetaLoading = rmlp;
     await rmlp;
   }
 

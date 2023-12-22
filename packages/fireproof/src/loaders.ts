@@ -22,7 +22,6 @@ import { doCompact } from './crdt-helpers'
 import { TransactionBlockstore } from './transaction'
 
 export class IdxLoader extends Loader {
-  // declare ready: Promise<IdxCarHeader>
   crdt: CRDT
 
   static defaultHeader = { cars: [], compact: [], indexes: new Map() as Map<string, IdxMeta> }
@@ -51,7 +50,6 @@ export class IdxLoader extends Loader {
 export type IndexerResult = CarCommit & IdxMetaMap
 
 export class DbLoader extends Loader {
-  // declare ready: Promise<DbCarHeader> // todo this will be a map of headers by branch name
   static defaultHeader = { cars: [], compact: [], head: [] }
   defaultHeader = DbLoader.defaultHeader
 
@@ -89,7 +87,6 @@ export class DbLoader extends Loader {
     if (this.awaitingCompact) return
     this.awaitingCompact = true
     const compactingFn = async () => {
-      // await this.writing
       if (this.isCompacting) {
         return
       }
@@ -99,9 +96,14 @@ export class DbLoader extends Loader {
       }
 
       this.isCompacting = true
+
+      // these three lines are different for indexes and dbs
+      // file compaction would be different than both because you crawl the db to determine which files are still referenced
       const compactHead = this.clock.head
       const compactingResult = await doCompact(blocks, this.clock.head)
       await this.clock.applyHead(compactHead, compactHead, null)
+      
+
       return compactingResult
     }
     this.compacting = this._setWaitForWrite(compactingFn)

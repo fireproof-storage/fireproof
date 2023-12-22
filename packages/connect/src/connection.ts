@@ -63,8 +63,7 @@ export abstract class Connection {
     })
     loader.remoteMetaStore = remote
     this.loaded = loader.ready.then(async () => {
-      loader.remoteMetaLoading = remote!.load('main').then(() => {})
-      loader.remoteMetaLoading.then(() => {
+      remote!.load('main').then(() => {
         void this.loader!.remoteWAL?._process()
       })
     })
