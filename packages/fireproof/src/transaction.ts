@@ -99,14 +99,11 @@ abstract class FireproofBlockstore implements LoaderFetcher {
 }
 
 export class IndexBlockstore extends FireproofBlockstore {
-  // declare ready: Promise<IdxCarHeader>
-
   constructor(name: string | null, crdt: CRDT, opts?: FireproofOptions) {
     if (name) {
       super(name, new IdxLoader(name, crdt, opts), opts)
     } else {
       super(null)
-      // this.ready = Promise.resolve(IdxLoader.defaultHeader as IdxCarHeader)
     }
   }
 
@@ -120,15 +117,12 @@ export class IndexBlockstore extends FireproofBlockstore {
 }
 
 export class TransactionBlockstore extends FireproofBlockstore {
-  // declare ready: Promise<DbCarHeader>
-
   constructor(name: string | null, clock: CRDTClock, opts?: FireproofOptions) {
     // todo this will be a map of headers by branch name
     if (name) {
       super(name, new DbLoader(name, clock, opts), opts)
     } else {
       super(null)
-      // this.ready = Promise.resolve(DbLoader.defaultHeader as DbCarHeader)
     }
   }
 
@@ -138,7 +132,6 @@ export class TransactionBlockstore extends FireproofBlockstore {
     opts = { noLoader: false }
   ): Promise<BulkResultCar> {
     return this.executeTransaction(fn, async (t, done) => {
-      // if the fn will change noLoader, it will show up on done
       const car = await this.loader?.commit(t, done, opts)
       return { car, done }
     })
