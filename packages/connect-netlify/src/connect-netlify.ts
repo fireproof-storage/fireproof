@@ -33,7 +33,7 @@ export class ConnectNetlify extends Connection {
 
   async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | null> {
     const event = await this.createEventBlock(bytes)
-    const base64String = Base64.fromUint8Array(event.bytes)
+    const base64String = Base64.fromUint8Array(bytes)
     const crdtEntry = {
       cid: event.cid.toString(),
       data: base64String,
@@ -55,8 +55,8 @@ export class ConnectNetlify extends Connection {
       crdtEntries.map(async (entry: any) => {
         const base64String = entry.data
         const bytes = Base64.toUint8Array(base64String)
-        const event = await this.decodeEventBlock(bytes)
-        return event
+        // const event = await this.createEventBlock(bytes)
+        return {cid: entry.cid, bytes}
       })
     )
     const cids = events.map(e => e.cid)
