@@ -6,7 +6,7 @@ import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
 import { LoggingFetcher, Transaction } from './transaction'
-import type { TransactionBlockstore } from './transaction'
+import type { TransactionBlockstore, LoaderFetcher } from './transaction'
 import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult, DocFiles, BlockFetcher } from './types'
 import { decodeFile, encodeFile } from './files'
 import { DbLoader } from './loaders'
@@ -101,7 +101,7 @@ export async function getValueFromCrdt(blocks: TransactionBlockstore, head: Cloc
   return await getValueFromLink(blocks, link)
 }
 
-export function readFiles(blocks: TransactionBlockstore | LoggingFetcher, { doc }: DocValue) {
+export function readFiles(blocks: LoaderFetcher, { doc }: DocValue) {
   if (!doc) return
   if (doc._files) {
     readFileset(blocks, doc._files)
@@ -111,7 +111,7 @@ export function readFiles(blocks: TransactionBlockstore | LoggingFetcher, { doc 
   }
 }
 
-function readFileset(blocks: TransactionBlockstore | LoggingFetcher, files: DocFiles, isPublic = false) {
+function readFileset(blocks: LoaderFetcher, files: DocFiles, isPublic = false) {
   for (const filename in files) {
     const fileMeta = files[filename] as DocFileMeta
     if (fileMeta.cid) {
@@ -133,7 +133,7 @@ function readFileset(blocks: TransactionBlockstore | LoggingFetcher, files: DocF
   }
 }
 
-async function getValueFromLink(blocks: TransactionBlockstore | LoggingFetcher, link: AnyLink): Promise<DocValue> {
+async function getValueFromLink(blocks: LoaderFetcher, link: AnyLink): Promise<DocValue> {
   const block = await blocks.get(link)
   if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
@@ -156,7 +156,7 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
 }
 
 export async function clockChangesSince(
-  blocks: TransactionBlockstore | LoggingFetcher,
+  blocks: LoaderFetcher,
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions
@@ -168,7 +168,7 @@ export async function clockChangesSince(
 }
 
 async function gatherUpdates(
-  blocks: TransactionBlockstore | LoggingFetcher,
+  blocks: LoaderFetcher,
   eventsFetcher: EventFetcher<EventData>,
   head: ClockHead,
   since: ClockHead,
@@ -206,7 +206,7 @@ async function gatherUpdates(
   return updates
 }
 
-export async function * getAllEntries(blocks: TransactionBlockstore | LoggingFetcher, head: ClockHead) {
+export async function * getAllEntries(blocks: LoaderFetcher, head: ClockHead) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link)
@@ -268,12 +268,6 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
   const done = await blocks.commitCompaction(blockLog.loggedBlocks, head)
   isCompacting = false
   return done
-}
-
-export async function getThatBlock({ bytes }: {cid: string, bytes: string }) {
-  const realBytes = Uint8Array.from(atob(bytes), c => c.charCodeAt(0))
-  const { cid, value } = await decode({ bytes: realBytes, codec, hasher })
-  return new Block({ cid, value, bytes: realBytes })
 }
 
 export async function getBlock(blocks: BlockFetcher, cidString: string) {

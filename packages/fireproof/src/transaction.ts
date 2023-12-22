@@ -25,7 +25,9 @@ export class Transaction extends MemoryBlockstore implements CarMakeable {
   }
 }
 
-abstract class FireproofBlockstore implements BlockFetcher {
+export type LoaderFetcher = BlockFetcher & { loader: DbLoader | IdxLoader | null }
+
+abstract class FireproofBlockstore implements LoaderFetcher {
   ready: Promise<void>
   name: string | null = null
 
@@ -146,7 +148,7 @@ export class TransactionBlockstore extends FireproofBlockstore {
 type IdxMetaCar = IdxMeta & CarCommit
 type BulkResultCar = BulkResult & CarCommit
 
-export class LoggingFetcher implements BlockFetcher {
+export class LoggingFetcher implements LoaderFetcher {
   blocks: TransactionBlockstore
   loader: DbLoader | IdxLoader | null = null
   loggedBlocks : Transaction
