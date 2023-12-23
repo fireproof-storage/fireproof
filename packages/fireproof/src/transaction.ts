@@ -105,13 +105,14 @@ export class IndexBlockstore extends FireproofBlockstore {
   }
   async transaction(
     fn: (t: Transaction) => Promise<IdxMeta>,
-    indexes: Map<string, IdxMeta>
+    indexes: Map<string, IdxMeta>,
+    opts = { noLoader: false }
   ): Promise<IdxMetaCar> {
     const t = new Transaction(this)
     const done: IdxMeta = await fn(t)
     const { car, done: result } = await (async (t, done) => {
       indexes.set(done.name, done)
-      const car = await this.loader?.commit(t, { indexes })
+      const car = await this.loader?.commit(t, { indexes }, opts)
       return { car, done }
     })(t, done)
     return car ? { ...result, car } : result
