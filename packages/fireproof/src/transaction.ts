@@ -1,7 +1,14 @@
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import {
-  BlockFetcher, AnyBlock, AnyLink, BulkResult, ClockHead,
-  IdxMeta, CarCommit, CarMakeable, FireproofOptions
+  BlockFetcher,
+  AnyBlock,
+  AnyLink,
+  BulkResult,
+  ClockHead,
+  IdxMeta,
+  CarCommit,
+  CarMakeable,
+  FireproofOptions
 } from './types'
 import { DbLoader, IdxLoader } from './loaders'
 // import { CID } from 'multiformats'
@@ -86,16 +93,6 @@ abstract class FireproofBlockstore implements LoaderFetcher {
       }
     }
   }
-
-  protected async executeTransaction<T, R>(
-    fn: (t: Transaction) => Promise<T>,
-    commitHandler: (t: Transaction, done: T) => Promise<{ car?: AnyLink; done: R }>
-  ): Promise<R> {
-    const t = new Transaction(this)
-    const done: T = await fn(t)
-    const { car, done: result } = await commitHandler(t, done)
-    return car ? { ...result, car } : result
-  }
 }
 
 export class IndexBlockstore extends FireproofBlockstore {
@@ -106,13 +103,18 @@ export class IndexBlockstore extends FireproofBlockstore {
       super(null)
     }
   }
-
-  async transaction(fn: (t: Transaction) => Promise<IdxMeta>, indexes: Map<string, IdxMeta>): Promise<IdxMetaCar> {
-    return this.executeTransaction(fn, async (t, done) => {
+  async transaction(
+    fn: (t: Transaction) => Promise<IdxMeta>,
+    indexes: Map<string, IdxMeta>
+  ): Promise<IdxMetaCar> {
+    const t = new Transaction(this)
+    const done: IdxMeta = await fn(t)
+    const { car, done: result } = await (async (t, done) => {
       indexes.set(done.name, done)
       const car = await this.loader?.commit(t, { indexes })
       return { car, done }
-    })
+    })(t, done)
+    return car ? { ...result, car } : result
   }
 }
 
@@ -131,10 +133,13 @@ export class TransactionBlockstore extends FireproofBlockstore {
     _indexes?: undefined,
     opts = { noLoader: false }
   ): Promise<BulkResultCar> {
-    return this.executeTransaction(fn, async (t, done) => {
+    const t = new Transaction(this)
+    const done: BulkResult = await fn(t)
+    const { car, done: result } = await (async (t, done) => {
       const car = await this.loader?.commit(t, done, opts)
       return { car, done }
-    })
+    })(t, done)
+    return car ? { ...result, car } : result
   }
 }
 
@@ -144,8 +149,7 @@ type BulkResultCar = BulkResult & CarCommit
 export class LoggingFetcher implements LoaderFetcher {
   blocks: TransactionBlockstore
   loader: DbLoader | IdxLoader | null = null
-  loggedBlocks : Transaction
-  
+  loggedBlocks: Transaction
 
   constructor(blocks: TransactionBlockstore) {
     this.blocks = blocks
