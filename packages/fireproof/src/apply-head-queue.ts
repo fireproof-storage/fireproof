@@ -1,17 +1,8 @@
-// import { Transaction } from './transaction'
 import { ClockHead, DocUpdate } from './types'
 
-type ApplyHeadWorkerFunction = (
-  id: string,
-  // tblocks: Transaction | null,
-  newHead: ClockHead,
-  prevHead: ClockHead,
-  updates: DocUpdate[] | null
-) => Promise<void>
+type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead) => Promise<void>
 
 type ApplyHeadTask = {
-  id: string
-  // tblocks: Transaction | null
   newHead: ClockHead
   prevHead: ClockHead
   updates: DocUpdate[] | null
@@ -25,7 +16,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
   const queue: ApplyHeadTask[] = []
   let isProcessing = false
 
-  async function * process() {
+  async function* process() {
     if (isProcessing || queue.length === 0) return
     isProcessing = true
     const allUpdates: DocUpdate[] = []
@@ -35,7 +26,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
         const task = queue.shift()
         if (!task) continue
 
-        await worker(task.id, task.newHead, task.prevHead, task.updates)
+        await worker(task.newHead, task.prevHead)
 
         if (task.updates) {
           allUpdates.push(...task.updates)
@@ -43,7 +34,6 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
         // Yield the updates if there are no tasks with updates left in the queue or the current task has updates
         if (!queue.some(t => t.updates) || task.updates) {
           const allTasksHaveUpdates = queue.every(task => task.updates !== null)
-          // console.log('yielding', allUpdates.length, allTasksHaveUpdates)
           yield { updates: allUpdates, all: allTasksHaveUpdates }
           allUpdates.length = 0
         }
