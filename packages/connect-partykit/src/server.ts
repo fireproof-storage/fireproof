@@ -80,7 +80,7 @@ export default class Server implements Party.Server {
     this.clockHead.set(cid, data)
 
     this.party.broadcast(data, [sender.id])
-    void this.party.storage.put("main", this.clockHead)
+    void this.party.storage.put('main', this.clockHead)
   }
 }
 
