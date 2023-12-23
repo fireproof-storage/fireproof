@@ -10,18 +10,21 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from '
 import { CID } from 'multiformats'
 import type { Transaction } from './transaction'
 import type {
-  AnyBlock, AnyCarHeader, AnyLink, BulkResult,
+  AnyBlock,
+  AnyCarHeader,
+  AnyLink,
+  BulkResult,
   CarLoaderHeader,
   CommitOpts,
   DbCarHeader,
-  DbMeta, FileCarHeader, FileResult, FireproofOptions
+  DbMeta,
+  FileCarHeader,
+  FileResult,
+  FireproofOptions
 } from './types'
 // import type { Connection } from './connection'
 import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
 import { CommitQueue } from './commit-queue'
-
-
-
 
 // ts-unused-exports:disable-next-line
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
@@ -103,7 +106,7 @@ export abstract class Loader {
   async _readyForMerge() {}
   async _setWaitForWrite(_writing: () => Promise<void>) {}
 
-  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {    
+  async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
     for (const meta of metas) {
       const writingFn = async () => {
         this.isWriting = true
@@ -183,64 +186,85 @@ export abstract class Loader {
   ): Promise<AnyLink> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
-    let roots: AnyLink[] = []
-    // @ts-ignore
-    if (fp.files) {
-      // @ts-ignore
-      roots = fp.files as AnyLink[]
-    } else {
-      const header = await encodeCarHeader(fp)
-      await t.put(header.cid, header.bytes)
-      roots = [header.cid]
-      // const got = await t.get(header.cid)
-      // if (!got) throw new Error('missing header block: '+header.cid.toString())
-    }
+    let roots: AnyLink[] = await this.prepareRoots(fp, t)
+    const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
 
-    const theKey = opts.public ? null : await this._getKey()
-    const { cid, bytes } = theKey
-      ? await encryptedEncodeCarFile(theKey, roots[0], t)
-      : await encodeCarFile(roots, t)
-
-    if (isFileResult(done)) {
-      // move to the db loader?
-      const dbLoader = this as unknown as DbLoader
-      await dbLoader.fileStore!.save({ cid, bytes })
-      await this.remoteWAL!.enqueueFile(cid, opts.public)
+    if (await this.handleFileResult(done, cid, bytes, !!opts.public)) {
       return cid
     }
-    // console.log('saving car', cid.toString())
-    await this.carStore!.save({ cid, bytes })
 
-    const newDbMeta = { car: cid, key: theKey || null } as DbMeta
-    await this.remoteWAL!.enqueue(newDbMeta, opts)
-
-    await this.metaStore!.save(newDbMeta)
-
-    if (opts.compact) {
-      const fpCar = fp as CarLoaderHeader
-      const previousCompactCid = this.carLog[this.carLog.length - 1]
-
-      fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
-      this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
-      void this.removeCidsForCompact(previousCompactCid)
-      // setTimeout(async () => {
-      //   if (this.remoteMetaLoading) await this.remoteMetaLoading
-      //   for (const cid of fpCar.compact) {
-      //     await this.carStore!.remove(cid)
-      //   } // todo instead we should have no delay, but delete previous compaction's old files
-      //   // to do that we load the oldest car header in fpCopmact
-      // }, 5000)
-    } else {
-      this.carLog.unshift(cid)
-    }
+    await this.saveToStores(cid, bytes, opts)
+    await this.updateCarLog(cid, fp, !!opts.compact)
     return cid
   }
 
+  async prepareRoots(fp: AnyCarHeader | FileCarHeader, t: Transaction): Promise<AnyLink[]> {
+    if ('files' in fp) {
+      return fp.files as AnyLink[]
+    } else {
+      const header = await encodeCarHeader(fp)
+      await t.put(header.cid, header.bytes)
+      const got = await t.get(header.cid)
+      // if (!got) throw new Error('missing header block: ' + header.cid.toString())
+      return [header.cid]
+    }
+  }
+
+  async prepareCarFile(
+    root: AnyLink,
+    t: Transaction,
+    isPublic: boolean
+  ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
+    const theKey = isPublic ? null : await this._getKey()
+    return theKey ? await encryptedEncodeCarFile(theKey, root, t) : await encodeCarFile([root], t)
+  }
+
+  async handleFileResult(
+    done: IndexerResult | BulkResult | FileResult,
+    cid: AnyLink,
+    bytes: Uint8Array,
+    isPublic: boolean
+  ): Promise<boolean> {
+    if (isFileResult(done)) {
+      const dbLoader = this as unknown as DbLoader
+      await dbLoader.fileStore!.save({ cid, bytes })
+      await this.remoteWAL!.enqueueFile(cid, isPublic)
+      return true
+    } else {
+      await this.carStore!.save({ cid, bytes })
+      return false
+    }
+  }
+
+  async saveToStores(cid: AnyLink, bytes: Uint8Array, opts: CommitOpts): Promise<void> {
+    const newDbMeta = { car: cid, key: this.key || null } as DbMeta
+    await this.remoteWAL!.enqueue(newDbMeta, opts)
+    await this.metaStore!.save(newDbMeta)
+  }
+
+  async updateCarLog(
+    cid: AnyLink,
+    fp: AnyCarHeader | FileCarHeader,
+    compact: boolean
+  ): Promise<void> {
+    if (compact) {
+      const fpCar = fp as CarLoaderHeader
+      const previousCompactCid = this.carLog[this.carLog.length - 1]
+      fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
+      this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
+      void this.removeCidsForCompact(previousCompactCid)
+    } else {
+      this.carLog.unshift(cid)
+    }
+  }
+
   async removeCidsForCompact(cid: AnyLink) {
-    const carHeader = await this.loadCarHeaderFromMeta({cid} as unknown as DbMeta) as DbCarHeader
+    const carHeader = (await this.loadCarHeaderFromMeta({
+      cid
+    } as unknown as DbMeta)) as DbCarHeader
     for (const cid of carHeader.compact) {
       await this.carStore!.remove(cid)
-    } 
+    }
   }
 
   async flushCars() {
@@ -372,5 +396,3 @@ export interface Connection {
   loader: Loader
   loaded: Promise<void>
 }
-
-
