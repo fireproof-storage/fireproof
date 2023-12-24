@@ -65,19 +65,32 @@ export class ConnectPartyKit extends Connection {
     })
   }
 
-  async connectStorage() {
-    throw new Error('not implemented')
-  }
+  // async connectStorage() {
+  //   throw new Error('not implemented')
+  // }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     validateDataParams(params)
-    throw new Error('not implemented')
+    const base64String = Base64.fromUint8Array(bytes)
+    let uploadUrl=`${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    const response = await fetch(uploadUrl, { method: 'PUT', body: base64String })
+    if(response.status===404)
+    {
+      throw new Error('Failure in uploading data!')
+    }
   }
 
   async dataDownload(params: DownloadDataFnParams) {
     validateDataParams(params)
-    throw new Error('not implemented')
-    return null
+    let uploadUrl=`${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    const response = await fetch(uploadUrl, { method: 'GET'})
+    if(response.status===404)
+    {
+      throw new Error('Failure in downloading data!');
+    }
+    const base64String = await response.text()
+    const data = Base64.toUint8Array(base64String)
+    return data
   }
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
