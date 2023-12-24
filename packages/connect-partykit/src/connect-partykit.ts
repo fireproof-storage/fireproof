@@ -5,7 +5,7 @@ import {
   UploadMetaFnParams,
   UploadDataFnParams
 } from './types'
-import { Connection, validateDataParams, validateMetaParams } from '@fireproof/connect'
+import { Connection } from '@fireproof/connect'
 import PartySocket from 'partysocket'
 
 export interface ConnectPartyKitParams {
@@ -29,7 +29,7 @@ export class ConnectPartyKit extends Connection {
       host: params.host,
       room: params.name
     })
-    
+
     this.ready = new Promise<void>((resolve, reject) => {
       this.party.addEventListener('open', () => {
         resolve()
@@ -62,36 +62,27 @@ export class ConnectPartyKit extends Connection {
     })
   }
 
-  // async connectStorage() {
-  //   throw new Error('not implemented')
-  // }
-
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    validateDataParams(params)
-    const base64String = Base64.fromUint8Array(bytes)
-    let uploadUrl=`${this.host}/parties/fireproof/${this.name}?car=${params.car}`
-    const response = await fetch(uploadUrl, { method: 'PUT', body: base64String })
-    if(response.status===404)
-    {
+    // const base64String = Base64.fromUint8Array(bytes)
+    let uploadUrl = `${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    const response = await fetch(uploadUrl, { method: 'PUT', body: bytes })
+    if (response.status === 404) {
       throw new Error('Failure in uploading data!')
     }
   }
 
   async dataDownload(params: DownloadDataFnParams) {
-    validateDataParams(params)
-    let uploadUrl=`${this.host}/parties/fireproof/${this.name}?car=${params.car}`
-    const response = await fetch(uploadUrl, { method: 'GET'})
-    if(response.status===404)
-    {
-      throw new Error('Failure in downloading data!');
+    let uploadUrl = `${this.host}/parties/fireproof/${this.name}?car=${params.car}`
+    const response = await fetch(uploadUrl, { method: 'GET' })
+    if (response.status === 404) {
+      throw new Error('Failure in downloading data!')
     }
-    const base64String = await response.text()
-    const data = Base64.toUint8Array(base64String)
-    return data
+    const data = await response.arrayBuffer()
+    // const data = Base64.toUint8Array(base64String)
+    return new Uint8Array(data)
   }
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    validateMetaParams(params)
     await this.ready
     const event = await this.createEventBlock(bytes)
     const base64String = Base64.fromUint8Array(event.bytes)
@@ -107,7 +98,6 @@ export class ConnectPartyKit extends Connection {
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
-    validateMetaParams(params)
     const datas = await this.messagePromise
     return datas
   }

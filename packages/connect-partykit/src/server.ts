@@ -14,6 +14,14 @@ type PartyMessage = {
   parents: string[]
 }
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT,  DELETE'
+}
+
+const json = <T>(data: T, status = 200) => Response.json(data, { status, headers: CORS })
+
+const ok = () => json({ ok: true })
 export default class Server implements Party.Server {
   clockHead: Map<string, string> = new Map()
   constructor(public party: Party.Party) {}
@@ -37,7 +45,7 @@ export default class Server implements Party.Server {
 
     if (carId) {
       if (request.method === 'PUT') {
-        const carArrayBuffer = new Uint8Array(await request.arrayBuffer())
+        const carArrayBuffer = await request.arrayBuffer()
         if (carArrayBuffer) {
           await this.party.storage.put(`car-${carId}`, carArrayBuffer)
           return json({ ok: true }, 201)
