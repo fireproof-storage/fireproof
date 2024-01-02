@@ -22,8 +22,7 @@ import type {
   FileResult,
   FireproofOptions
 } from './types'
-// import type { Connection } from './connection'
-import { isFileResult, type DbLoader, type IndexerResult } from './loaders'
+import type { DbLoader, IndexerResult } from './loaders'
 import { CommitQueue } from './commit-queue'
 
 // ts-unused-exports:disable-next-line
@@ -171,9 +170,31 @@ export abstract class Loader {
     return this.key
   }
 
+  async commitFiles(
+    t: Transaction,
+    done: FileResult,
+    opts: CommitOpts = { noLoader: false, compact: false }
+  ): Promise<AnyLink> {
+    return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
+  }
+  // can these skip the queue? or have a file queue?
+  async _commitInternalFiles(
+    t: Transaction,
+    done: FileResult,
+    opts: CommitOpts = { noLoader: false, compact: false }
+  ): Promise<AnyLink> {
+    await this.ready
+    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact)
+    const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
+    const dbLoader = this as unknown as DbLoader
+    await dbLoader.fileStore!.save({ cid, bytes })
+    await this.remoteWAL!.enqueueFile(cid, !!opts.public)
+    return cid
+  }
+
   async commit(
     t: Transaction,
-    done: IndexerResult | BulkResult | FileResult,
+    done: IndexerResult | BulkResult,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts))
@@ -188,26 +209,20 @@ export abstract class Loader {
     const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-
-    if (await this.handleFileResult(done, cid, bytes, !!opts.public)) {
-      return cid
-    }
-
-    await this.saveToStores(cid, bytes, opts)
+    await this.carStore!.save({ cid, bytes })
+    const newDbMeta = { car: cid, key: this.key || null } as DbMeta
+    await this.remoteWAL!.enqueue(newDbMeta, opts)
+    await this.metaStore!.save(newDbMeta)
     await this.updateCarLog(cid, fp, !!opts.compact)
     return cid
   }
 
   async prepareRoots(fp: AnyCarHeader | FileCarHeader, t: Transaction): Promise<AnyLink[]> {
-    if ('files' in fp) {
-      return fp.files as AnyLink[]
-    } else {
-      const header = await encodeCarHeader(fp)
-      await t.put(header.cid, header.bytes)
-      const got = await t.get(header.cid)
-      // if (!got) throw new Error('missing header block: ' + header.cid.toString())
-      return [header.cid]
-    }
+    const header = await encodeCarHeader(fp)
+    await t.put(header.cid, header.bytes)
+    // const got = await t.get(header.cid)
+    // if (!got) throw new Error('missing header block: ' + header.cid.toString())
+    return [header.cid]
   }
 
   async prepareCarFile(
@@ -219,27 +234,16 @@ export abstract class Loader {
     return theKey ? await encryptedEncodeCarFile(theKey, root, t) : await encodeCarFile([root], t)
   }
 
-  async handleFileResult(
-    done: IndexerResult | BulkResult | FileResult,
-    cid: AnyLink,
-    bytes: Uint8Array,
-    isPublic: boolean
-  ): Promise<boolean> {
-    if (isFileResult(done)) {
-      const dbLoader = this as unknown as DbLoader
-      await dbLoader.fileStore!.save({ cid, bytes })
-      await this.remoteWAL!.enqueueFile(cid, isPublic)
-      return true
-    } else {
-      await this.carStore!.save({ cid, bytes })
-      return false
+  protected makeFileCarHeader(
+    result: FileResult,
+    cars: AnyLink[],
+    compact: boolean = false
+  ): FileCarHeader {
+    const files = [] as AnyLink[]
+    for (const [, meta] of Object.entries(result.files)) {
+      files.push(meta.cid)
     }
-  }
-
-  async saveToStores(cid: AnyLink, bytes: Uint8Array, opts: CommitOpts): Promise<void> {
-    const newDbMeta = { car: cid, key: this.key || null } as DbMeta
-    await this.remoteWAL!.enqueue(newDbMeta, opts)
-    await this.metaStore!.save(newDbMeta)
+    return { files } as FileCarHeader
   }
 
   async updateCarLog(
@@ -311,10 +315,10 @@ export abstract class Loader {
   }
 
   protected abstract makeCarHeader(
-    _result: BulkResult | IndexerResult | FileResult,
+    _result: BulkResult | IndexerResult,
     _cars: AnyLink[],
     _compact: boolean
-  ): AnyCarHeader | FileCarHeader
+  ): AnyCarHeader
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')

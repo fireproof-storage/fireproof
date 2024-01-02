@@ -66,7 +66,6 @@ async function processFiles(blocks: Transaction, doc: Doc) {
 async function processFileset(blocks: Transaction, files: DocFiles, publicFiles = false) {
   const dbBlockstore = blocks.parent as TransactionBlockstore
   const t = new Transaction(dbBlockstore)
-  // dbBlockstore.transactions.add(t)
   const didPut = []
   // let totalSize = 0
   for (const filename in files) {
@@ -85,7 +84,7 @@ async function processFileset(blocks: Transaction, files: DocFiles, publicFiles 
   // todo option to bypass this limit
   // if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for files in a single update is 1MB')
   if (didPut.length) {
-    const car = await dbBlockstore.loader?.commit(t, { files } as FileResult, { public: publicFiles })
+    const car = await dbBlockstore.loader?.commitFiles(t, { files } as FileResult, { public: publicFiles })
     if (car) {
       for (const name of didPut) {
         files[name] = { car, ...files[name] } as DocFileMeta
