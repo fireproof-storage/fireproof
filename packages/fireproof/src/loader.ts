@@ -202,7 +202,7 @@ export abstract class Loader {
 
   async _commitInternal(
     t: Transaction,
-    done: IndexerResult | BulkResult | FileResult,
+    done: IndexerResult | BulkResult,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
