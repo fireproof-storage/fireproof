@@ -57,7 +57,7 @@ export class FireproofBlockstore implements LoaderFetcher {
     this.tOpts = tOpts
     if (name) {
       this.name = name
-      this.loader = new Loader(name, this.opts)
+      this.loader = new Loader(name, this.tOpts, this.opts)
       this.ready = this.loader.ready
     } else {
       this.ready = Promise.resolve() // Promise.reject(new Error('implement default header in subclass'))
@@ -70,10 +70,12 @@ export class FireproofBlockstore implements LoaderFetcher {
   ): Promise<BulkResultCar | IdxMetaCar> {
     const t = new Transaction(this)
     const done: BulkResult | IdxMetaMap = await fn(t)
-    const car = await this.loader?.commit(t, done, opts)
-    // return car ? { ...done, car } : done // do we want to error instead?
-    if (car) return { ...done, car }
-    throw new Error('failed to commit car')
+    if (this.loader) {
+      const car = await this.loader.commit(t, done, opts)
+      if (car) return { ...done, car }
+      throw new Error('failed to commit car')
+    }
+    return done
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -93,6 +95,7 @@ export class FireproofBlockstore implements LoaderFetcher {
 
   async commitCompaction(t: Transaction, head: ClockHead) {
     const did = await this.loader!.commit(t, { head }, { compact: true, noLoader: true })
+    // todo uncomment this under load generation
     // this.transactions.clear()
     // this.transactions.add(t)
     return did
@@ -110,75 +113,75 @@ export class FireproofBlockstore implements LoaderFetcher {
   }
 }
 
-export class IndexBlockstore extends FireproofBlockstore {
-  constructor(name: string | null, crdt: CRDT, opts?: FireproofOptions) {
-    if (name) {
-      super(name, new IdxLoader(name, crdt, opts), opts)
-    } else {
-      super(null)
-    }
-  }
-  async transaction(
-    fn: (t: Transaction) => Promise<IdxMeta>,
-    indexes: Map<string, IdxMeta>,
-    opts = { noLoader: false }
-  ): Promise<IdxMetaCar> {
-    const t = new Transaction(this)
-    const done: IdxMeta = await fn(t)
-    const { car, done: result } = await (async (t, done) => {
-      indexes.set(done.name, done)
-      const car = await this.loader?.commit(t, { indexes }, opts)
-      return { car, done }
-    })(t, done)
-    return car ? { ...result, car } : result
-  }
-}
+// export class IndexBlockstore extends FireproofBlockstore {
+//   constructor(name: string | null, crdt: CRDT, opts?: FireproofOptions) {
+//     if (name) {
+//       super(name, new IdxLoader(name, crdt, opts), opts)
+//     } else {
+//       super(null)
+//     }
+//   }
+//   async transaction(
+//     fn: (t: Transaction) => Promise<IdxMeta>,
+//     indexes: Map<string, IdxMeta>,
+//     opts = { noLoader: false }
+//   ): Promise<IdxMetaCar> {
+//     const t = new Transaction(this)
+//     const done: IdxMeta = await fn(t)
+//     const { car, done: result } = await (async (t, done) => {
+//       indexes.set(done.name, done)
+//       const car = await this.loader?.commit(t, { indexes }, opts)
+//       return { car, done }
+//     })(t, done)
+//     return car ? { ...result, car } : result
+//   }
+// }
 
-export class TransactionBlockstore extends FireproofBlockstore {
-  constructor(name: string | null, clock: CRDTClock, opts?: FireproofOptions) {
-    // todo this will be a map of headers by branch name
-    if (name) {
-      super(name, new DbLoader(name, clock, opts), opts)
-    } else {
-      super(null)
-    }
-  }
+// export class TransactionBlockstore extends FireproofBlockstore {
+//   constructor(name: string | null, clock: CRDTClock, opts?: FireproofOptions) {
+//     // todo this will be a map of headers by branch name
+//     if (name) {
+//       super(name, new DbLoader(name, clock, opts), opts)
+//     } else {
+//       super(null)
+//     }
+//   }
 
-  // async transaction(
-  //   fn: (t: Transaction) => Promise<BulkResult>,
-  //   _indexes?: undefined,
-  //   opts = { noLoader: false }
-  // ): Promise<BulkResultCar> {
-  //   const t = new Transaction(this)
-  //   const done: BulkResult = await fn(t)
-  //   const { car, done: result } = await (async (t, done) => {
-  //     const car = await this.loader?.commit(t, done, opts)
-  //     return { car, done }
-  //   })(t, done)
-  //   return car ? { ...result, car } : result
-  // }
+//   // async transaction(
+//   //   fn: (t: Transaction) => Promise<BulkResult>,
+//   //   _indexes?: undefined,
+//   //   opts = { noLoader: false }
+//   // ): Promise<BulkResultCar> {
+//   //   const t = new Transaction(this)
+//   //   const done: BulkResult = await fn(t)
+//   //   const { car, done: result } = await (async (t, done) => {
+//   //     const car = await this.loader?.commit(t, done, opts)
+//   //     return { car, done }
+//   //   })(t, done)
+//   //   return car ? { ...result, car } : result
+//   // }
 
-  // version that uses transactionCustomizer
-  // async transaction(opts = { noLoader: false }): Promise<BulkResultCar | IdxMetaCar> {
-  //   const t = new Transaction(this);
-  //   const done: BulkResult | IdxMeta = await this.transactionCustomizer(t);
-  //   const { car, done: result } = await (async (t, done) => {
-  //     const car = await this.loader?.commit(t, done, opts)
-  //     return { car, done }
-  //   })(t, done)
-  //   return car ? { ...result, car } : result
-  // }
-}
+//   // version that uses transactionCustomizer
+//   // async transaction(opts = { noLoader: false }): Promise<BulkResultCar | IdxMetaCar> {
+//   //   const t = new Transaction(this);
+//   //   const done: BulkResult | IdxMeta = await this.transactionCustomizer(t);
+//   //   const { car, done: result } = await (async (t, done) => {
+//   //     const car = await this.loader?.commit(t, done, opts)
+//   //     return { car, done }
+//   //   })(t, done)
+//   //   return car ? { ...result, car } : result
+//   // }
+// }
 
 type IdxMetaCar = IdxMetaMap & CarCommit
 type BulkResultCar = BulkResult & CarCommit
 
 export class LoggingFetcher implements LoaderFetcher {
-  blocks: TransactionBlockstore
-  loader: DbLoader | IdxLoader | null = null
+  blocks: FireproofBlockstore
+  loader: Loader | null = null
   loggedBlocks: Transaction
 
-  constructor(blocks: TransactionBlockstore) {
+  constructor(blocks: FireproofBlockstore) {
     this.blocks = blocks
     this.loader = blocks.loader
     this.loggedBlocks = new Transaction(blocks)

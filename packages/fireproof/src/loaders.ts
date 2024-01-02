@@ -19,7 +19,7 @@ import type { DataStore as AbstractDataStore } from './store'
 
 import { DataStore } from './store-browser'
 import { doCompact } from './crdt-helpers'
-import { TransactionBlockstore } from './transaction'
+import { FireproofBlockstore } from './transaction'
 
 export class IdxLoader extends Loader {
   crdt: CRDT
@@ -83,7 +83,7 @@ export class DbLoader extends Loader {
     return this.writing.then(() => {})
   }
 
-  async compact(blocks: TransactionBlockstore) {
+  async compact(blocks: FireproofBlockstore) {
     await this.ready
     if (this.carLog.length < 2) return
     if (this.awaitingCompact) return

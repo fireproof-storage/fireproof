@@ -8,7 +8,7 @@ import type {
   DocFragment,
   IdxMetaMap
 } from './types'
-import { FireproofBlockstore, IndexBlockstore } from './transaction'
+import { FireproofBlockstore } from './transaction'
 import {
   bulkIndex,
   indexEntriesForChanges,

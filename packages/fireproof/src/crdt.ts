@@ -28,7 +28,7 @@ export class CRDT {
   opts: FireproofOptions = {}
   ready: Promise<void>
   blocks: FireproofBlockstore
-  indexBlocks: IndexBlockstore
+  indexBlocks: FireproofBlockstore
 
   indexers: Map<string, Index> = new Map()
 
@@ -51,16 +51,16 @@ export class CRDT {
         },
         makeCarHeaderCustomizer: (
           result: BulkResult | IndexerResult,
-          cars: AnyLink[],
-          compact: boolean = false
+          // cars: AnyLink[],
+          // compact: boolean = false
         ) => {
           // Custom makeCarHeader function for blocks
           const { head } = result as BulkResult
           return { head }
-        },
-        compact: async (blocks: TransactionBlockstore) => {
-          await doCompact(blocks, this.clock.head)
         }
+        // compact: async (blocks: TransactionBlockstore) => {
+        //   await doCompact(blocks, this.clock.head)
+        // }
       },
       this.opts
     )
@@ -71,19 +71,18 @@ export class CRDT {
         defaultHeader: { cars: [], compact: [], indexes: new Map() },
         applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
           const idxCarHeader = carHeader as AnyCarHeader
-          for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
-            index({ _crdt: this }, name, undefined, idx as any)
-          }
+          // for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
+          //   index({ _crdt: this }, name, undefined, idx as any)
+          // }
         },
         makeCarHeaderCustomizer: (
           result: BulkResult | IndexerResult,
-          cars: AnyLink[],
-          compact: boolean = false
+          // cars: AnyLink[],
+          // compact: boolean = false
         ) => {
           // Custom makeCarHeader function for indexes
           const { indexes } = result as IndexerResult
-          const carHeader = { indexes }
-          return carHeader
+          return { indexes }
         }
       },
       this.opts
@@ -112,7 +111,7 @@ export class CRDT {
       if (loader?.isCompacting) {
         throw new Error('cant bulk while compacting')
       }
-      const got = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
+      const got = (await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
         const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
         updates = updates.map(({ key, value, del, clock }) => {
           readFiles(this.blocks, { doc: value })
@@ -125,7 +124,7 @@ export class CRDT {
           console.log('compacting?', head.toString())
         }
         return { head }
-      })
+      })) as BulkResult
       await this.clock.applyHead(got.head, prevHead, updates)
       return got
     })()

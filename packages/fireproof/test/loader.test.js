@@ -18,7 +18,7 @@ import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
 
 import { DbLoader } from '../dist/test/loaders.esm.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
-import { Transaction, IndexBlockstore } from '../dist/test/transaction.esm.js'
+import { Transaction, FireproofBlockstore } from '../dist/test/transaction.esm.js'
 
 import { testConfig } from '../dist/test/store-fs.esm.js'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
