@@ -5,18 +5,15 @@ import {
   AnyLink,
   BulkResult,
   ClockHead,
-  IdxMeta,
   CarCommit,
   CarMakeable,
   FireproofOptions,
   TransactionOpts,
   IdxMetaMap
 } from './types'
-import { DbLoader, IdxLoader } from './loaders'
-// import { CID } from 'multiformats'
-import { CRDT } from './crdt'
-import { CRDTClock } from './crdt-clock'
+
 import { Loader } from './loader'
+import { CID } from 'multiformats'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
   parent: FireproofBlockstore
@@ -93,6 +90,16 @@ export class FireproofBlockstore implements LoaderFetcher {
     return await this.loader.getBlock(cid)
   }
 
+  async getFile(car: AnyLink, cid: AnyLink, isPublic = false) {
+    await this.ready
+    if (!this.loader) throw new Error('loader required to get file')
+    const reader = await this.loader.loadFileCar(car, isPublic)
+            const block = await reader.get(cid as CID)
+            if (!block) throw new Error(`Missing block ${cid.toString()}`)
+            return block.bytes
+  }
+
+
   async commitCompaction(t: Transaction, head: ClockHead) {
     const did = await this.loader!.commit(t, { head }, { compact: true, noLoader: true })
     // todo uncomment this under load generation
@@ -112,66 +119,6 @@ export class FireproofBlockstore implements LoaderFetcher {
     }
   }
 }
-
-// export class IndexBlockstore extends FireproofBlockstore {
-//   constructor(name: string | null, crdt: CRDT, opts?: FireproofOptions) {
-//     if (name) {
-//       super(name, new IdxLoader(name, crdt, opts), opts)
-//     } else {
-//       super(null)
-//     }
-//   }
-//   async transaction(
-//     fn: (t: Transaction) => Promise<IdxMeta>,
-//     indexes: Map<string, IdxMeta>,
-//     opts = { noLoader: false }
-//   ): Promise<IdxMetaCar> {
-//     const t = new Transaction(this)
-//     const done: IdxMeta = await fn(t)
-//     const { car, done: result } = await (async (t, done) => {
-//       indexes.set(done.name, done)
-//       const car = await this.loader?.commit(t, { indexes }, opts)
-//       return { car, done }
-//     })(t, done)
-//     return car ? { ...result, car } : result
-//   }
-// }
-
-// export class TransactionBlockstore extends FireproofBlockstore {
-//   constructor(name: string | null, clock: CRDTClock, opts?: FireproofOptions) {
-//     // todo this will be a map of headers by branch name
-//     if (name) {
-//       super(name, new DbLoader(name, clock, opts), opts)
-//     } else {
-//       super(null)
-//     }
-//   }
-
-//   // async transaction(
-//   //   fn: (t: Transaction) => Promise<BulkResult>,
-//   //   _indexes?: undefined,
-//   //   opts = { noLoader: false }
-//   // ): Promise<BulkResultCar> {
-//   //   const t = new Transaction(this)
-//   //   const done: BulkResult = await fn(t)
-//   //   const { car, done: result } = await (async (t, done) => {
-//   //     const car = await this.loader?.commit(t, done, opts)
-//   //     return { car, done }
-//   //   })(t, done)
-//   //   return car ? { ...result, car } : result
-//   // }
-
-//   // version that uses transactionCustomizer
-//   // async transaction(opts = { noLoader: false }): Promise<BulkResultCar | IdxMetaCar> {
-//   //   const t = new Transaction(this);
-//   //   const done: BulkResult | IdxMeta = await this.transactionCustomizer(t);
-//   //   const { car, done: result } = await (async (t, done) => {
-//   //     const car = await this.loader?.commit(t, done, opts)
-//   //     return { car, done }
-//   //   })(t, done)
-//   //   return car ? { ...result, car } : result
-//   // }
-// }
 
 type IdxMetaCar = IdxMetaMap & CarCommit
 type BulkResultCar = BulkResult & CarCommit

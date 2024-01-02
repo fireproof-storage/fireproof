@@ -59,10 +59,10 @@ export class Loader {
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
-
-  // remoteMetaLoading: Promise<void> | undefined
   remoteMetaStore: AbstractRemoteMetaStore | undefined
   remoteCarStore: AbstractDataStore | undefined
+  fileStore: DataStore
+  remoteFileStore: AbstractDataStore | undefined
   remoteWAL: RemoteWAL
   metaStore: MetaStore
   carStore: DataStore
@@ -76,14 +76,13 @@ export class Loader {
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
 
-  static defaultHeader: AnyCarHeader
-
   constructor(name: string, tOpts: TransactionOpts, opts?: FireproofOptions) {
     this.name = name
     this.tOpts = tOpts
     this.opts = opts || this.opts
     this.metaStore = new MetaStore(this.name)
     this.carStore = new DataStore(this.name)
+    this.fileStore = new DataStore(this.name)
     this.remoteWAL = new RemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
@@ -195,6 +194,10 @@ export class Loader {
     return cid
   }
 
+  async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
+    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic)
+  }
+
   async commit(
     t: Transaction,
     done: IndexerResult | BulkResult,
@@ -211,7 +214,6 @@ export class Loader {
     await this.ready
     const header = this.tOpts.makeCarHeaderCustomizer(done)
     const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as AnyCarHeader
-    // console.log('fp', fp)
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
@@ -402,8 +404,6 @@ export class Loader {
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
-
-  
 }
 
 export interface Connection {

@@ -1,4 +1,4 @@
-import { FireproofBlockstore, Transaction } from './transaction'
+import { FireproofBlockstore } from './transaction'
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -16,10 +16,11 @@ import type {
   ChangesOptions,
   AnyCarHeader,
   DbCarHeader,
-  AnyLink,
-  CarHeader
+  CarHeader,
+  IdxCarHeader
 } from './types'
 import type { Index } from './index'
+import { index } from './index'
 import { CRDTClock } from './crdt-clock'
 import { DbLoader, IndexerResult } from './loaders'
 
@@ -51,10 +52,7 @@ export class CRDT {
         },
         makeCarHeaderCustomizer: (
           result: BulkResult | IndexerResult,
-          // cars: AnyLink[],
-          // compact: boolean = false
         ) => {
-          // Custom makeCarHeader function for blocks
           const { head } = result as BulkResult
           return { head }
         }
@@ -70,17 +68,14 @@ export class CRDT {
       {
         defaultHeader: { cars: [], compact: [], indexes: new Map() },
         applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
-          const idxCarHeader = carHeader as AnyCarHeader
-          // for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
-          //   index({ _crdt: this }, name, undefined, idx as any)
-          // }
+          const idxCarHeader = carHeader as IdxCarHeader
+          for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
+            index({ _crdt: this }, name, undefined, idx as any)
+          }
         },
         makeCarHeaderCustomizer: (
           result: BulkResult | IndexerResult,
-          // cars: AnyLink[],
-          // compact: boolean = false
         ) => {
-          // Custom makeCarHeader function for indexes
           const { indexes } = result as IndexerResult
           return { indexes }
         }
