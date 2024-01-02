@@ -11,14 +11,10 @@ export type FireproofOptions = {
 }
 
 export type TransactionOpts = {
-  defaultHeader: AnyCarHeader
+  defaultHeaderMeta: DocFragment
   // transactionCustomizer: (t: Transaction) => Promise<BulkResult | IdxMeta>
   applyCarHeaderCustomizer: (carHeader: CarHeader, snap?: boolean) => Promise<void>
-  makeCarHeaderCustomizer: (
-    result: BulkResult | IndexerResult,
-    // cars: AnyLink[],
-    // compact?: boolean
-  ) => BulkResult | IdxMetaMap
+  makeCarHeaderCustomizer: (result: DocFragment) => DocFragment
   compact?: (blocks: TransactionBlockstore) => Promise<void>
 }
 
@@ -131,11 +127,12 @@ export type IdxMetaMap = {
 type CarHeader = {
   cars: AnyLink[]
   compact: AnyLink[]
+  meta: DocFragment
 }
 
-export type IdxCarHeader = CarHeader & IdxMetaMap
+export type IdxCarHeader = CarHeader & { meta: IdxMetaMap }
 
-export type DbCarHeader = CarHeader & BulkResult
+export type DbCarHeader = CarHeader & { meta: BulkResult }
 
 export type AnyTransactionHeader = IdxMetaMap
 

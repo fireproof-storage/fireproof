@@ -17,7 +17,9 @@ import type {
   AnyCarHeader,
   DbCarHeader,
   CarHeader,
-  IdxCarHeader
+  IdxCarHeader,
+  IdxMetaMap,
+  DocFragment
 } from './types'
 import type { Index } from './index'
 import { index } from './index'
@@ -41,9 +43,9 @@ export class CRDT {
     this.blocks = new FireproofBlockstore(
       this.name,
       {
-        defaultHeader: { cars: [], compact: [], head: [] },
+        defaultHeaderMeta: {head: []} ,
         applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
-          const dbCarHeader = carHeader as DbCarHeader
+          const dbCarHeader = carHeader.meta as unknown as BulkResult
           if (snap) {
             await this.clock.applyHead(dbCarHeader.head, this.clock.head)
           } else {
@@ -51,10 +53,10 @@ export class CRDT {
           }
         },
         makeCarHeaderCustomizer: (
-          result: BulkResult | IndexerResult,
+          result: DocFragment,
         ) => {
-          const { head } = result as BulkResult
-          return { head }
+          const { head } = result as unknown as BulkResult
+          return { head } as unknown as DocFragment
         }
         // compact: async (blocks: TransactionBlockstore) => {
         //   await doCompact(blocks, this.clock.head)
@@ -66,18 +68,18 @@ export class CRDT {
     this.indexBlocks = new FireproofBlockstore(
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
-        defaultHeader: { cars: [], compact: [], indexes: new Map() },
+        defaultHeaderMeta: { indexes: {} },
         applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
-          const idxCarHeader = carHeader as IdxCarHeader
+          const idxCarHeader = carHeader.meta as unknown as IdxMetaMap
           for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
             index({ _crdt: this }, name, undefined, idx as any)
           }
         },
         makeCarHeaderCustomizer: (
-          result: BulkResult | IndexerResult,
+          result: DocFragment,
         ) => {
-          const { indexes } = result as IndexerResult
-          return { indexes }
+          const { indexes } = result as unknown as IndexerResult
+          return { indexes } as unknown as DocFragment
         }
       },
       this.opts

@@ -12,6 +12,8 @@ import type {
   CommitOpts,
   DbCarHeader,
   DbMeta,
+  DocFileMeta,
+  DocFragment,
   FileCarHeader,
   FileResult,
   FireproofOptions,
@@ -121,8 +123,8 @@ export class Loader {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    const ld = this as unknown as DbLoader
-    await ld.compacting
+    const ld = this
+    // await ld.compacting
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }
@@ -153,9 +155,9 @@ export class Loader {
     }
   }
 
-  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<CarLoaderHeader> {
+  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<AnyCarHeader> {
     const reader = await this.loadCar(cid)
-    return (await parseCarFile(reader)) as CarLoaderHeader
+    return (await parseCarFile(reader))
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -208,7 +210,7 @@ export class Loader {
 
   async _commitInternal(
     t: Transaction,
-    done: IndexerResult | BulkResult,
+    done: DocFragment,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
@@ -322,12 +324,12 @@ export class Loader {
   }
 
   protected makeCarHeader(
-    result: BulkResult | IdxMetaMap,
+    result:DocFragment,
     cars: AnyLink[],
     compact: boolean = false
   ): CarHeader {
     const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] }
-    return { ...coreHeader, ...result }
+    return { ...coreHeader, meta : result }
   }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
