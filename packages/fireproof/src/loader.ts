@@ -14,6 +14,7 @@ import type {
   AnyCarHeader,
   AnyLink,
   BulkResult,
+  CarHeader,
   CarLoaderHeader,
   CommitOpts,
   DbCarHeader,
@@ -206,7 +207,7 @@ export abstract class Loader {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
+    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as AnyCarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
@@ -314,11 +315,13 @@ export abstract class Loader {
     return got
   }
 
-  protected abstract makeCarHeader(
-    _result: BulkResult | IndexerResult,
-    _cars: AnyLink[],
-    _compact: boolean
-  ): AnyCarHeader
+  protected makeCarHeader(
+    result: BulkResult | IndexerResult,
+    cars: AnyLink[],
+    compact: boolean = false
+  ): CarHeader {
+    return compact ? { cars: [], compact: cars } : { cars, compact: [] }
+  }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')

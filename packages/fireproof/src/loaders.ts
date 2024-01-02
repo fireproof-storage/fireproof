@@ -40,11 +40,13 @@ export class IdxLoader extends Loader {
   }
 
   protected makeCarHeader(
-    { indexes }: IndexerResult,
+    result: IndexerResult,
     cars: AnyLink[],
     compact: boolean = false
   ): IdxCarHeader {
-    return compact ? { indexes, cars: [], compact: cars } : { indexes, cars, compact: [] }
+    const { indexes } = result
+    const carHeader = super.makeCarHeader(result, cars, compact)
+    return { ...carHeader, indexes }
   }
 }
 export type IndexerResult = CarCommit & IdxMetaMap
@@ -131,6 +133,7 @@ export class DbLoader extends Loader {
     compact: boolean = false
   ): DbCarHeader {
     const { head } = result
-    return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
+    const carHeader = super.makeCarHeader(result, cars, compact)
+    return { ...carHeader, head }
   }
 }
