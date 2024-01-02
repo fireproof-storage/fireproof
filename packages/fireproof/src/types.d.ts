@@ -14,7 +14,11 @@ export type TransactionOpts = {
   defaultHeader: AnyCarHeader
   // transactionCustomizer: (t: Transaction) => Promise<BulkResult | IdxMeta>
   applyCarHeaderCustomizer: (carHeader: CarHeader, snap?: boolean) => Promise<void>
-  makeCarHeaderCustomizer: (result: BulkResult|IndexerResult, cars: AnyLink[], compact?: boolean) => AnyCarHeader
+  makeCarHeaderCustomizer: (
+    result: BulkResult | IndexerResult,
+    // cars: AnyLink[],
+    // compact?: boolean
+  ) => BulkResult | IdxMetaMap
   compact?: (blocks: TransactionBlockstore) => Promise<void>
 }
 
@@ -23,7 +27,14 @@ export type ClockLink = EventLink<EventData>
 
 export type ClockHead = ClockLink[]
 
-export type DocFragment = Uint8Array | string | number | boolean | null | DocFragment[] | { [key: string]: DocFragment }
+export type DocFragment =
+  | Uint8Array
+  | string
+  | number
+  | boolean
+  | null
+  | DocFragment[]
+  | { [key: string]: DocFragment }
 
 export type Doc = DocBody & DocBase
 
@@ -34,12 +45,12 @@ export type DocBase = {
 }
 
 export type DocFileMeta = {
-  type: string;
-  size: number;
-  cid: AnyLink;
-  car?: AnyLink;
-  url?: string;
-  file?: () => Promise<File>;
+  type: string
+  size: number
+  cid: AnyLink
+  car?: AnyLink
+  url?: string
+  file?: () => Promise<File>
 }
 
 type DocFiles = {
@@ -124,9 +135,9 @@ type CarHeader = {
 
 export type IdxCarHeader = CarHeader & IdxMetaMap
 
-export type DbCarHeader = CarHeader & {
-  head: ClockHead
-}
+export type DbCarHeader = CarHeader & BulkResult
+
+export type AnyTransactionHeader = IdxMetaMap
 
 export type AnyCarHeader = DbCarHeader | IdxCarHeader | FileCarHeader
 
@@ -137,14 +148,14 @@ export type QueryOpts = {
   limit?: number
   includeDocs?: boolean
   range?: [IndexKey, IndexKey]
-  key?: DocFragment,
+  key?: DocFragment
   keys?: DocFragment[]
   prefix?: DocFragment | [DocFragment]
 }
 
 export type AnyLink = Link<unknown, number, number, 1 | 0>
 export type AnyBlock = { cid: AnyLink; bytes: Uint8Array }
-export type AnyDecodedBlock = { cid: AnyLink; bytes: Uint8Array, value: any }
+export type AnyDecodedBlock = { cid: AnyLink; bytes: Uint8Array; value: any }
 
 export type BlockFetcher = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
 
@@ -152,16 +163,14 @@ type CallbackFn = (k: DocFragment, v?: DocFragment) => void
 
 export type MapFn = (doc: Doc, map: CallbackFn) => DocFragment | void
 
-export type DbMeta = { car: AnyLink, key: string | null }
+export type DbMeta = { car: AnyLink; key: string | null }
 
-export type CommitOpts = { noLoader?: boolean, compact?: boolean, public?: boolean }
+export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
-
-
 
 export type ChangesOptions = {
   dirty?: boolean

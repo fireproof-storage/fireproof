@@ -20,6 +20,7 @@ describe('dreamcode', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-db')
     db = fireproof('test-db')
+    console.log('db', db)
     ok = await db.put({ _id: 'test-1', text: 'fireproof', dream: true })
     doc = await db.get(ok.id)
     result = await db.query('text', { range: ['a', 'z'] })

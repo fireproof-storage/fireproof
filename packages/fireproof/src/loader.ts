@@ -1,14 +1,7 @@
 import pLimit from 'p-limit'
 import { CarReader } from '@ipld/car'
-import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
-import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
-import { getCrypto, randomBytes } from './crypto-web'
-
-import { DataStore, MetaStore, RemoteWAL } from './store-browser'
-import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-
 import { CID } from 'multiformats'
-import type { Transaction } from './transaction'
+
 import type {
   AnyBlock,
   AnyCarHeader,
@@ -22,8 +15,16 @@ import type {
   FileCarHeader,
   FileResult,
   FireproofOptions,
-  IdxMetaMap
+  IdxMetaMap,
+  TransactionOpts
 } from './types'
+
+import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
+import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
+import { getCrypto, randomBytes } from './crypto-web'
+import { DataStore, MetaStore, RemoteWAL } from './store-browser'
+import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
+import type { Transaction } from './transaction'
 import type { DbLoader, IndexerResult } from './loaders'
 import { CommitQueue } from './commit-queue'
 
@@ -54,6 +55,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 export class Loader {
   name: string
   opts: FireproofOptions = {}
+  tOpts: TransactionOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
@@ -76,8 +78,9 @@ export class Loader {
 
   static defaultHeader: AnyCarHeader
 
-  constructor(name: string, opts?: FireproofOptions) {
+  constructor(name: string, tOpts: TransactionOpts, opts?: FireproofOptions) {
     this.name = name
+    this.tOpts = tOpts
     this.opts = opts || this.opts
     this.metaStore = new MetaStore(this.name)
     this.carStore = new DataStore(this.name)
@@ -140,7 +143,8 @@ export class Loader {
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
-    await this._applyCarHeader(carHeader)
+    // await this._applyCarHeader(carHeader)
+    await this.tOpts.applyCarHeaderCustomizer(carHeader)
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -205,7 +209,9 @@ export class Loader {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as AnyCarHeader
+    const header = this.tOpts.makeCarHeaderCustomizer(done)
+    const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as AnyCarHeader
+  
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
@@ -396,6 +402,8 @@ export class Loader {
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
+
+  
 }
 
 export interface Connection {
