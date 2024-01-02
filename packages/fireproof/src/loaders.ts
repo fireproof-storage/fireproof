@@ -102,7 +102,6 @@ export class DbLoader extends Loader {
       const compactHead = this.clock.head
       const compactingResult = await doCompact(blocks, this.clock.head)
       await this.clock.applyHead(compactHead, compactHead, null)
-      
 
       return compactingResult
     }
@@ -127,26 +126,11 @@ export class DbLoader extends Loader {
   }
 
   protected makeCarHeader(
-    result: BulkResult | FileResult,
+    result: BulkResult,
     cars: AnyLink[],
     compact: boolean = false
-  ): DbCarHeader | FileCarHeader {
-    if (isFileResult(result)) {
-      const files = [] as AnyLink[]
-
-      for (const [, meta] of Object.entries(result.files)) {
-        files.push(meta.cid)
-      }
-      return { files } as FileCarHeader
-    } else {
-      const { head } = result
-      return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
-    }
+  ): DbCarHeader {
+    const { head } = result
+    return compact ? { head, cars: [], compact: cars } : { head, cars, compact: [] }
   }
-}
-
-export function isFileResult(
-  result: IndexerResult | BulkResult | FileResult
-): result is FileResult {
-  return result && (result as FileResult).files !== undefined
 }
