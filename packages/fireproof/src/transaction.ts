@@ -9,7 +9,9 @@ import {
   CarMakeable,
   FireproofOptions,
   TransactionOpts,
-  IdxMetaMap
+  IdxMetaMap,
+  DocFragment,
+  TransactionMeta
 } from './types'
 
 import { Loader } from './loader'
@@ -62,11 +64,11 @@ export class FireproofBlockstore implements LoaderFetcher {
   }
 
   async transaction(
-    fn: (t: Transaction) => Promise<BulkResult | IdxMetaMap>,
+    fn: (t: Transaction) => Promise<TransactionMeta>,
     opts = { noLoader: false }
-  ): Promise<BulkResultCar | IdxMetaCar> {
+  ): Promise<TransactionMeta> {
     const t = new Transaction(this)
-    const done: BulkResult | IdxMetaMap = await fn(t)
+    const done: TransactionMeta = await fn(t)
     if (this.loader) {
       const car = await this.loader.commit(t, done, opts)
       if (car) return { ...done, car }
@@ -101,7 +103,8 @@ export class FireproofBlockstore implements LoaderFetcher {
 
 
   async commitCompaction(t: Transaction, head: ClockHead) {
-    const did = await this.loader!.commit(t, { head }, { compact: true, noLoader: true })
+    // todo this should use the customizer to get head or indexes
+    const did = await this.loader!.commit(t, { head } as unknown as TransactionMeta, { compact: true, noLoader: true })
     // todo uncomment this under load generation
     // this.transactions.clear()
     // this.transactions.add(t)

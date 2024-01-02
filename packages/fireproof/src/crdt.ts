@@ -19,7 +19,8 @@ import type {
   CarHeader,
   IdxCarHeader,
   IdxMetaMap,
-  DocFragment
+  DocFragment,
+  TransactionMeta
 } from './types'
 import type { Index } from './index'
 import { index } from './index'
@@ -43,7 +44,7 @@ export class CRDT {
     this.blocks = new FireproofBlockstore(
       this.name,
       {
-        defaultHeaderMeta: {head: []} ,
+        defaultHeaderMeta: { head: [] },
         applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
           const dbCarHeader = carHeader.meta as unknown as BulkResult
           if (snap) {
@@ -52,11 +53,9 @@ export class CRDT {
             await this.clock.applyHead(dbCarHeader.head, [])
           }
         },
-        makeCarHeaderCustomizer: (
-          result: DocFragment,
-        ) => {
+        makeCarHeaderCustomizer: (result: TransactionMeta) => {
           const { head } = result as unknown as BulkResult
-          return { head } as unknown as DocFragment
+          return { head } as unknown as TransactionMeta
         }
         // compact: async (blocks: TransactionBlockstore) => {
         //   await doCompact(blocks, this.clock.head)
@@ -75,11 +74,9 @@ export class CRDT {
             index({ _crdt: this }, name, undefined, idx as any)
           }
         },
-        makeCarHeaderCustomizer: (
-          result: DocFragment,
-        ) => {
+        makeCarHeaderCustomizer: (result: TransactionMeta) => {
           const { indexes } = result as unknown as IndexerResult
-          return { indexes } as unknown as DocFragment
+          return { indexes } as unknown as TransactionMeta
         }
       },
       this.opts
@@ -108,7 +105,7 @@ export class CRDT {
       // if (loader?.isCompacting) {
       //   throw new Error('cant bulk while compacting')
       // }
-      const got = (await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
+      const got = (await this.blocks.transaction(async (tblocks): Promise<TransactionMeta> => {
         const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
         updates = updates.map(({ key, value, del, clock }) => {
           readFiles(this.blocks, { doc: value })
@@ -120,7 +117,7 @@ export class CRDT {
         // if (loader?.isCompacting) {
         //   console.log('compacting?', head.toString())
         // }
-        return { head }
+        return { head } as TransactionMeta
       })) as BulkResult
       await this.clock.applyHead(got.head, prevHead, updates)
       return got
