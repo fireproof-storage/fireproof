@@ -211,7 +211,7 @@ export class Loader {
     await this.ready
     const header = this.tOpts.makeCarHeaderCustomizer(done)
     const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as AnyCarHeader
-  
+    // console.log('fp', fp)
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })

@@ -16,12 +16,30 @@ import { assert, matches, equals, resetDirectory, notEquals } from './helpers.js
 
 import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
 
-import { DbLoader } from '../dist/test/loaders.esm.js'
+import { Loader } from '../dist/test/loader.esm.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
 import { Transaction, FireproofBlockstore } from '../dist/test/transaction.esm.js'
 
 import { testConfig } from '../dist/test/store-fs.esm.js'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
+
+const loaderOpts = { 
+  makeCarHeaderCustomizer : (result) => { 
+    const { head } = result
+      return { head }
+   }
+ }
+
+const indexLoaderOpts = {
+  makeCarHeaderCustomizer : (result) => {
+    // console.log('makeCarHeaderCustomizer', result)
+    const name = result.name
+    const indexes = new Map()
+    indexes.set(name, result)
+    // const { indexes } = result
+    return { indexes }
+  }
+}  
 
 describe('basic Loader', function () {
   let loader, block, t
@@ -30,7 +48,7 @@ describe('basic Loader', function () {
     const mockM= new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new Transaction(mockM)
-    loader = new DbLoader('test-loader-commit', { head: [] }, { public: true })
+    loader = new Loader('test-loader-commit', loaderOpts, { public: true })
     block = (await encode({
       value: { hello: 'world' },
       hasher,
@@ -62,7 +80,7 @@ describe('basic Loader with two commits', function () {
     const mockM= new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new Transaction(mockM)
-    loader = new DbLoader('test-loader-two-commit', { head: [] }, { public: true })
+    loader = new Loader('test-loader-two-commit', loaderOpts, { public: true })
     block = (await encode({
       value: { hello: 'world' },
       hasher,
@@ -218,7 +236,7 @@ describe('basic Loader with index commits', function () {
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-index')
     // t = new Transaction()
-    ib = new IndexBlockstore('test-loader-index', new CRDT(), {})
+    ib = new FireproofBlockstore('test-loader-index', indexLoaderOpts, {})
     // loader = new IdxLoader('test-loader-index', { indexers: new Map() }, { public: true })
     block = (await encode({
       value: { hello: 'world' },
