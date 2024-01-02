@@ -62,6 +62,8 @@ Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tuto
 
 Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols. This allows you to add live data to your app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started writing app features today, and connect to any environment when you are ready.
 
+[Read more about the thinking behind Fireproof on our blog.](https://fireproof.storage/blog/) The community is active on [Discord](https://discord.gg/cCryrNHePH) and [X](https://twitter.com/FireproofStorge), among other places.
+
 ### Database Features
 
 The core features of the database are available on any platform in a compact JavaScript package and a foundational cloud storage service.
