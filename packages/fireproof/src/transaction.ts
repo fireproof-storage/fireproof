@@ -8,12 +8,15 @@ import {
   IdxMeta,
   CarCommit,
   CarMakeable,
-  FireproofOptions
+  FireproofOptions,
+  TransactionOpts,
+  IdxMetaMap
 } from './types'
 import { DbLoader, IdxLoader } from './loaders'
 // import { CID } from 'multiformats'
 import { CRDT } from './crdt'
 import { CRDTClock } from './crdt-clock'
+import { Loader } from './loader'
 
 export class Transaction extends MemoryBlockstore implements CarMakeable {
   parent: FireproofBlockstore
@@ -32,34 +35,46 @@ export class Transaction extends MemoryBlockstore implements CarMakeable {
   }
 }
 
-export type LoaderFetcher = BlockFetcher & { loader: DbLoader | IdxLoader | null }
+// this type can go away
+export type LoaderFetcher = BlockFetcher & { loader: Loader | null }
 
-abstract class FireproofBlockstore implements LoaderFetcher {
+const CarTransaction = Transaction
+
+export { CarTransaction }
+
+export class FireproofBlockstore implements LoaderFetcher {
   ready: Promise<void>
   name: string | null = null
 
-  loader: DbLoader | IdxLoader | null = null
+  loader: Loader | null = null
   opts: FireproofOptions = {}
+  tOpts: TransactionOpts
 
   transactions: Set<Transaction> = new Set()
 
-  constructor(name: string | null, loader?: DbLoader | IdxLoader, opts?: FireproofOptions) {
+  constructor(name: string | null, tOpts: TransactionOpts, opts?: FireproofOptions) {
     this.opts = opts || this.opts
+    this.tOpts = tOpts
     if (name) {
       this.name = name
-      if (!loader) throw new Error('missing loader')
-      this.loader = loader
+      this.loader = new Loader(name, this.opts)
       this.ready = this.loader.ready
     } else {
       this.ready = Promise.resolve() // Promise.reject(new Error('implement default header in subclass'))
     }
   }
 
-  abstract transaction(
-    fn: (t: Transaction) => Promise<IdxMeta | BulkResult>,
-    indexes?: Map<string, IdxMeta>,
-    opts?: { noLoader: boolean }
-  ): Promise<BulkResultCar | IdxMetaCar>
+  async transaction(
+    fn: (t: Transaction) => Promise<BulkResult | IdxMetaMap>,
+    opts = { noLoader: false }
+  ): Promise<BulkResultCar | IdxMetaCar> {
+    const t = new Transaction(this)
+    const done: BulkResult | IdxMetaMap = await fn(t)
+    const car = await this.loader?.commit(t, done, opts)
+    // return car ? { ...done, car } : done // do we want to error instead?
+    if (car) return { ...done, car }
+    throw new Error('failed to commit car')
+  }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async put() {
@@ -129,22 +144,33 @@ export class TransactionBlockstore extends FireproofBlockstore {
     }
   }
 
-  async transaction(
-    fn: (t: Transaction) => Promise<BulkResult>,
-    _indexes?: undefined,
-    opts = { noLoader: false }
-  ): Promise<BulkResultCar> {
-    const t = new Transaction(this)
-    const done: BulkResult = await fn(t)
-    const { car, done: result } = await (async (t, done) => {
-      const car = await this.loader?.commit(t, done, opts)
-      return { car, done }
-    })(t, done)
-    return car ? { ...result, car } : result
-  }
+  // async transaction(
+  //   fn: (t: Transaction) => Promise<BulkResult>,
+  //   _indexes?: undefined,
+  //   opts = { noLoader: false }
+  // ): Promise<BulkResultCar> {
+  //   const t = new Transaction(this)
+  //   const done: BulkResult = await fn(t)
+  //   const { car, done: result } = await (async (t, done) => {
+  //     const car = await this.loader?.commit(t, done, opts)
+  //     return { car, done }
+  //   })(t, done)
+  //   return car ? { ...result, car } : result
+  // }
+
+  // version that uses transactionCustomizer
+  // async transaction(opts = { noLoader: false }): Promise<BulkResultCar | IdxMetaCar> {
+  //   const t = new Transaction(this);
+  //   const done: BulkResult | IdxMeta = await this.transactionCustomizer(t);
+  //   const { car, done: result } = await (async (t, done) => {
+  //     const car = await this.loader?.commit(t, done, opts)
+  //     return { car, done }
+  //   })(t, done)
+  //   return car ? { ...result, car } : result
+  // }
 }
 
-type IdxMetaCar = IdxMeta & CarCommit
+type IdxMetaCar = IdxMetaMap & CarCommit
 type BulkResultCar = BulkResult & CarCommit
 
 export class LoggingFetcher implements LoaderFetcher {

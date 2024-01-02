@@ -21,7 +21,8 @@ import type {
   DbMeta,
   FileCarHeader,
   FileResult,
-  FireproofOptions
+  FireproofOptions,
+  IdxMetaMap
 } from './types'
 import type { DbLoader, IndexerResult } from './loaders'
 import { CommitQueue } from './commit-queue'
@@ -50,7 +51,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
   abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>
 }
 
-export abstract class Loader {
+export class Loader {
   name: string
   opts: FireproofOptions = {}
   commitQueue = new CommitQueue<AnyLink>()
@@ -74,7 +75,6 @@ export abstract class Loader {
   private seenMeta: Set<string> = new Set()
 
   static defaultHeader: AnyCarHeader
-  abstract defaultHeader: AnyCarHeader
 
   constructor(name: string, opts?: FireproofOptions) {
     this.name = name
@@ -154,8 +154,6 @@ export abstract class Loader {
     const reader = await this.loadCar(cid)
     return (await parseCarFile(reader)) as CarLoaderHeader
   }
-
-  protected abstract _applyCarHeader(_carHeader: CarLoaderHeader, snap?: boolean): Promise<void>
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
@@ -316,11 +314,12 @@ export abstract class Loader {
   }
 
   protected makeCarHeader(
-    result: BulkResult | IndexerResult,
+    result: BulkResult | IdxMetaMap,
     cars: AnyLink[],
     compact: boolean = false
   ): CarHeader {
-    return compact ? { cars: [], compact: cars } : { cars, compact: [] }
+    const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] }
+    return { ...coreHeader, ...result }
   }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {

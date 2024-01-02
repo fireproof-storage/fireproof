@@ -1,32 +1,91 @@
-import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis, getBlock } from './crdt-helpers'
-import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
+import { FireproofBlockstore, Transaction } from './transaction'
+import {
+  clockChangesSince,
+  applyBulkUpdateToCrdt,
+  getValueFromCrdt,
+  readFiles,
+  getAllEntries,
+  clockVis,
+  getBlock
+} from './crdt-helpers'
+import type {
+  DocUpdate,
+  BulkResult,
+  ClockHead,
+  FireproofOptions,
+  ChangesOptions,
+  AnyCarHeader,
+  DbCarHeader,
+  AnyLink,
+  CarHeader
+} from './types'
 import type { Index } from './index'
 import { CRDTClock } from './crdt-clock'
-import { DbLoader } from './loaders'
+import { DbLoader, IndexerResult } from './loaders'
 
 export class CRDT {
   name: string | null
   opts: FireproofOptions = {}
   ready: Promise<void>
-  blocks: TransactionBlockstore
+  blocks: FireproofBlockstore
   indexBlocks: IndexBlockstore
 
   indexers: Map<string, Index> = new Map()
 
   clock: CRDTClock = new CRDTClock()
-  // isCompacting = false
-  // compacting : Promise<AnyLink|void> = Promise.resolve()
-  // writing: Promise<BulkResult|void> = Promise.resolve()
 
   constructor(name?: string, opts?: FireproofOptions) {
     this.name = name || null
     this.opts = opts || this.opts
-    this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
+    this.blocks = new FireproofBlockstore(
+      this.name,
+      {
+        defaultHeader: { cars: [], compact: [], head: [] },
+        applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
+          const dbCarHeader = carHeader as DbCarHeader
+          if (snap) {
+            await this.clock.applyHead(dbCarHeader.head, this.clock.head)
+          } else {
+            await this.clock.applyHead(dbCarHeader.head, [])
+          }
+        },
+        makeCarHeaderCustomizer: (
+          result: BulkResult | IndexerResult,
+          cars: AnyLink[],
+          compact: boolean = false
+        ) => {
+          // Custom makeCarHeader function for blocks
+          const { head } = result as BulkResult
+          return { head }
+        },
+        compact: async (blocks: TransactionBlockstore) => {
+          await doCompact(blocks, this.clock.head)
+        }
+      },
+      this.opts
+    )
     this.clock.blocks = this.blocks
-    this.indexBlocks = new IndexBlockstore(
+    this.indexBlocks = new FireproofBlockstore(
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
-      this,
+      {
+        defaultHeader: { cars: [], compact: [], indexes: new Map() },
+        applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
+          const idxCarHeader = carHeader as AnyCarHeader
+          for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
+            index({ _crdt: this }, name, undefined, idx as any)
+          }
+        },
+        makeCarHeaderCustomizer: (
+          result: BulkResult | IndexerResult,
+          cars: AnyLink[],
+          compact: boolean = false
+        ) => {
+          // Custom makeCarHeader function for indexes
+          const { indexes } = result as IndexerResult
+          const carHeader = { indexes }
+          return carHeader
+        }
+      },
       this.opts
     )
     this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
@@ -43,6 +102,7 @@ export class CRDT {
 
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
     await this.ready
+    // this error handling belongs in the transaction blockstore
     const loader = this.blocks.loader as DbLoader
 
     const prevHead = [...this.clock.head]

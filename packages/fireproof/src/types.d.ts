@@ -2,11 +2,20 @@ import type { Link } from 'multiformats'
 import type { EventLink } from '@alanshaw/pail/clock'
 import type { EventData } from '@alanshaw/pail/crdt'
 import { ClockHead, Doc } from './types'
+import { IndexerResult } from './loaders'
 
 export type FireproofOptions = {
   public?: boolean
   meta?: DbMeta
   persistIndexes?: boolean
+}
+
+export type TransactionOpts = {
+  defaultHeader: AnyCarHeader
+  // transactionCustomizer: (t: Transaction) => Promise<BulkResult | IdxMeta>
+  applyCarHeaderCustomizer: (carHeader: CarHeader, snap?: boolean) => Promise<void>
+  makeCarHeaderCustomizer: (result: BulkResult|IndexerResult, cars: AnyLink[], compact?: boolean) => AnyCarHeader
+  compact?: (blocks: TransactionBlockstore) => Promise<void>
 }
 
 // ts-unused-exports:disable-next-line
