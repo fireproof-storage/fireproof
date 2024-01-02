@@ -11,10 +11,10 @@ export type FireproofOptions = {
 }
 
 export type TransactionOpts = {
-  defaultHeaderMeta: DocFragment
+  defaultHeaderMeta: TransactionMeta
   // transactionCustomizer: (t: Transaction) => Promise<BulkResult | IdxMeta>
   applyCarHeaderCustomizer: (carHeader: CarHeader, snap?: boolean) => Promise<void>
-  makeCarHeaderCustomizer: (result: DocFragment) => DocFragment
+  makeCarHeaderCustomizer: (result: TransactionMeta) => TransactionMeta
   compact?: (blocks: TransactionBlockstore) => Promise<void>
 }
 
@@ -23,12 +23,17 @@ export type ClockLink = EventLink<EventData>
 
 export type ClockHead = ClockLink[]
 
+export type TransactionMeta = {
+  [key: string]: DocFragment
+}
+
 export type DocFragment =
   | Uint8Array
   | string
   | number
   | boolean
   | null
+  | AnyLink
   | DocFragment[]
   | { [key: string]: DocFragment }
 
@@ -127,7 +132,7 @@ export type IdxMetaMap = {
 type CarHeader = {
   cars: AnyLink[]
   compact: AnyLink[]
-  meta: DocFragment
+  meta: TransactionMeta
 }
 
 export type IdxCarHeader = CarHeader & { meta: IdxMetaMap }

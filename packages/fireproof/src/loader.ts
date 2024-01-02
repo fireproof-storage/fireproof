@@ -18,6 +18,7 @@ import type {
   FileResult,
   FireproofOptions,
   IdxMetaMap,
+  TransactionMeta,
   TransactionOpts
 } from './types'
 
@@ -137,7 +138,7 @@ export class Loader {
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
-    const carHeader = (await this.loadCarHeaderFromMeta(meta)) as DbCarHeader
+    const carHeader = (await this.loadCarHeaderFromMeta(meta)) as CarHeader
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
@@ -155,7 +156,7 @@ export class Loader {
     }
   }
 
-  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<AnyCarHeader> {
+  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<CarHeader> {
     const reader = await this.loadCar(cid)
     return (await parseCarFile(reader))
   }
@@ -202,7 +203,7 @@ export class Loader {
 
   async commit(
     t: Transaction,
-    done: IndexerResult | BulkResult,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts))
@@ -210,7 +211,7 @@ export class Loader {
 
   async _commitInternal(
     t: Transaction,
-    done: DocFragment,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
@@ -274,7 +275,7 @@ export class Loader {
   async removeCidsForCompact(cid: AnyLink) {
     const carHeader = (await this.loadCarHeaderFromMeta({
       cid
-    } as unknown as DbMeta)) as DbCarHeader
+    } as unknown as DbMeta))
     for (const cid of carHeader.compact) {
       await this.carStore!.remove(cid)
     }
@@ -324,7 +325,7 @@ export class Loader {
   }
 
   protected makeCarHeader(
-    result:DocFragment,
+    result:TransactionMeta,
     cars: AnyLink[],
     compact: boolean = false
   ): CarHeader {

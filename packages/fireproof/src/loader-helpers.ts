@@ -6,7 +6,7 @@ import * as CBW from '@ipld/car/buffer-writer'
 import * as codec from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car'
 
-import { AnyBlock, AnyCarHeader, AnyLink, CarMakeable } from './types'
+import { AnyBlock, AnyCarHeader, AnyLink, CarHeader, CarMakeable } from './types'
 // import { Transaction } from './transaction'
 
 export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
@@ -38,13 +38,13 @@ export async function encodeCarHeader(fp: AnyCarHeader) {
   })) as AnyBlock
 }
 
-export async function parseCarFile(reader: CarReader): Promise<AnyCarHeader> {
+export async function parseCarFile(reader: CarReader): Promise<CarHeader> {
   const roots = await reader.getRoots()
   const header = await reader.get(roots[0])
   if (!header) throw new Error('missing header block')
   const { value } = await decode({ bytes: header.bytes, hasher, codec })
   // @ts-ignore
   if (value && value.fp === undefined) throw new Error('missing fp')
-  const { fp } = value as { fp: AnyCarHeader }
+  const { fp } = value as { fp: CarHeader }
   return fp
 }

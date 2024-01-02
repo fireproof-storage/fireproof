@@ -6,7 +6,8 @@ import type {
   QueryOpts,
   IdxMeta,
   DocFragment,
-  IdxMetaMap
+  IdxMetaMap,
+  TransactionMeta
 } from './types'
 import { FireproofBlockstore } from './transaction'
 import {
@@ -233,7 +234,7 @@ export class Index {
         } as IdxMeta)
       }
     }
-    return await this.blocks.transaction(async (tblocks): Promise<IdxMetaMap> => {
+    return await this.blocks.transaction(async (tblocks): Promise<TransactionMeta> => {
       this.byId = await bulkIndex(
         tblocks,
         this.byId,
@@ -255,7 +256,7 @@ export class Index {
         name: this.name
       } as IdxMeta
       indexerMeta.indexes.set(this.name!, idxMeta) // should this move to after commit?
-      return indexerMeta 
+      return indexerMeta as unknown as TransactionMeta
     })
   }
 }
