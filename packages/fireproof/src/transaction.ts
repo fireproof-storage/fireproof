@@ -3,14 +3,10 @@ import {
   BlockFetcher,
   AnyBlock,
   AnyLink,
-  BulkResult,
   ClockHead,
-  CarCommit,
   CarMakeable,
   FireproofOptions,
   TransactionOpts,
-  IdxMetaMap,
-  DocFragment,
   TransactionMeta
 } from './types'
 
@@ -122,9 +118,6 @@ export class FireproofBlockstore implements LoaderFetcher {
     }
   }
 }
-
-type IdxMetaCar = IdxMetaMap & CarCommit
-type BulkResultCar = BulkResult & CarCommit
 
 export class LoggingFetcher implements LoaderFetcher {
   blocks: FireproofBlockstore

@@ -6,18 +6,13 @@ import type {
   AnyBlock,
   AnyCarHeader,
   AnyLink,
-  BulkResult,
   CarHeader,
   CarLoaderHeader,
   CommitOpts,
-  DbCarHeader,
   DbMeta,
-  DocFileMeta,
-  DocFragment,
   FileCarHeader,
   FileResult,
   FireproofOptions,
-  IdxMetaMap,
   TransactionMeta,
   TransactionOpts
 } from './types'
@@ -28,7 +23,6 @@ import { getCrypto, randomBytes } from './crypto-web'
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
 import type { Transaction } from './transaction'
-import type { DbLoader, IndexerResult } from './loaders'
 import { CommitQueue } from './commit-queue'
 
 // ts-unused-exports:disable-next-line
@@ -191,8 +185,7 @@ export class Loader {
     await this.ready
     const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    const dbLoader = this as unknown as DbLoader
-    await dbLoader.fileStore!.save({ cid, bytes })
+    await this.fileStore!.save({ cid, bytes })
     await this.remoteWAL!.enqueueFile(cid, !!opts.public)
     return cid
   }
