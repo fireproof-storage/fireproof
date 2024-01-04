@@ -41,13 +41,13 @@ export class CRDT {
       this.name,
       {
         defaultHeaderMeta: { head: [] },
-        applyMeta: async (meta: TransactionMeta, snap = false) => {
+        applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as unknown as BulkResult
-          if (snap) {
-            await this.clock.applyHead(crdtMeta.head, this.clock.head)
-          } else {
-            await this.clock.applyHead(crdtMeta.head, [])
-          }
+          // if (snap) {
+          //   await this.clock.applyHead(crdtMeta.head, this.clock.head)
+          // } else {
+          await this.clock.applyHead(crdtMeta.head, [])
+          // }
         }
       },
       this.opts
@@ -57,7 +57,7 @@ export class CRDT {
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
         defaultHeaderMeta: { indexes: {} },
-        applyMeta: async (meta: TransactionMeta, snap = false) => {
+        applyMeta: async (meta: TransactionMeta) => {
           const idxCarMeta = meta as unknown as IdxMetaMap
           for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
             index({ _crdt: this }, name, undefined, idx as any)

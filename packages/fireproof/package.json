@@ -57,7 +57,9 @@
     "test": "npm run build:test && npm run test:node && tsc",
     "build:test": "node ./scripts/build.js",
     "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
-    "build:all": " npm run build && npm run test:browser"
+    "build:all": " npm run build && npm run test:browser",
+
+    "test:serve":"npx serve-http test/www -p 8080"
   },
   "keywords": [
     "database",
