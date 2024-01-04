@@ -40,7 +40,7 @@ export class CRDT {
     this.blocks = new FireproofBlockstore(
       this.name,
       {
-        defaultHeaderMeta: { head: [] },
+        defaultMeta: { head: [] },
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as unknown as BulkResult
           // if (snap) {
@@ -56,7 +56,7 @@ export class CRDT {
     this.indexBlocks = new FireproofBlockstore(
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
-        defaultHeaderMeta: { indexes: {} },
+        defaultMeta: { indexes: {} },
         applyMeta: async (meta: TransactionMeta) => {
           const idxCarMeta = meta as unknown as IdxMetaMap
           for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
