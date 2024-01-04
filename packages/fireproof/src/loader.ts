@@ -137,7 +137,7 @@ export class Loader {
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
     // await this._applyCarHeader(carHeader)
-    await this.tOpts.applyCarHeaderCustomizer(carHeader)
+    await this.tOpts.applyMeta(carHeader.meta)
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -205,7 +205,7 @@ export class Loader {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const header = this.tOpts.makeCarHeaderCustomizer(done)
+    const header = (done)
     const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as AnyCarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
@@ -443,7 +443,7 @@ export class Loader {
   //     const compactingResult = await compactFn(blockLog)
 
   //     //  call the new head callback...
-  //     await this.tOpts.applyCarHeaderCustomizer(compactHead)
+  //     await this.tOpts.applyMeta(compactHead)
   //     // await this.clock.applyHead(compactHead, compactHead, null)
 
   //     return compactingResult
