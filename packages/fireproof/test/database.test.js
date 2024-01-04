@@ -179,7 +179,7 @@ describe('named Database with record', function () {
     equals(rows4.length, 5)
   })
 
-  it.skip('should work right after compaction', async function () {
+  it('should work right after compaction', async function () {
     const numDocs = 10
     for (let i = 0; i < numDocs; i++) {
       const doc = { _id: `id-${i}`, hello: 'world' }

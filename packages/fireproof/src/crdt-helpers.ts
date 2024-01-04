@@ -21,7 +21,6 @@ import type {
   BlockFetcher
 } from './types'
 import { decodeFile, encodeFile } from './files'
-import { DbLoader } from './loaders'
 
 export async function applyBulkUpdateToCrdt(
   tblocks: Transaction,
@@ -274,12 +273,12 @@ export async function* clockVis(blocks: FireproofBlockstore, head: ClockHead) {
 }
 
 let isCompacting = false
-export async function doCompact(blocks: FireproofBlockstore, head: ClockHead) {
+export async function doCompact(blockLog: LoggingFetcher, head: ClockHead) {
   if (isCompacting) {
+    console.log('already compacting')
     return
   }
   isCompacting = true
-  const blockLog = new LoggingFetcher(blocks)
 
   for (const cid of head) {
     const bl = await blockLog.get(cid)
@@ -318,9 +317,7 @@ export async function doCompact(blocks: FireproofBlockstore, head: ClockHead) {
 
   await clockChangesSince(blockLog, head, [], {})
 
-  const done = await blocks.commitCompaction(blockLog.loggedBlocks, head)
   isCompacting = false
-  return done
 }
 
 export async function getBlock(blocks: BlockFetcher, cidString: string) {

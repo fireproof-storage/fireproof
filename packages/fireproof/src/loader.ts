@@ -22,7 +22,7 @@ import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './crypto-web'
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-import type { Transaction } from './transaction'
+import { CompactFn, LoggingFetcher, type Transaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
 // ts-unused-exports:disable-next-line
@@ -102,9 +102,6 @@ export class Loader {
   //   await this._applyCarHeader(carHeader, true)
   // }
 
-  async _readyForMerge() {}
-  async _setWaitForWrite(_writing: () => Promise<void>) {}
-
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
     for (const meta of metas) {
       const writingFn = async () => {
@@ -118,7 +115,7 @@ export class Loader {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    const ld = this
+    // const ld = this
     // await ld.compacting
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
@@ -152,7 +149,7 @@ export class Loader {
 
   async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<CarHeader> {
     const reader = await this.loadCar(cid)
-    return (await parseCarFile(reader))
+    return await parseCarFile(reader)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -266,9 +263,9 @@ export class Loader {
   }
 
   async removeCidsForCompact(cid: AnyLink) {
-    const carHeader = (await this.loadCarHeaderFromMeta({
-      cid
-    } as unknown as DbMeta))
+    const carHeader = await this.loadCarHeaderFromMeta({
+      car: cid
+    } as unknown as DbMeta)
     for (const cid of carHeader.compact) {
       await this.carStore!.remove(cid)
     }
@@ -318,17 +315,18 @@ export class Loader {
   }
 
   protected makeCarHeader(
-    result:TransactionMeta,
+    result: TransactionMeta,
     cars: AnyLink[],
     compact: boolean = false
   ): CarHeader {
     const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] }
-    return { ...coreHeader, meta : result }
+    return { ...coreHeader, meta: result }
   }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')
-    return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+    const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+    return loaded
   }
 
   protected async storesLoadCar(
@@ -400,6 +398,63 @@ export class Loader {
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
+
+  // compaction
+  awaitingCompact = false
+  compacting: Promise<AnyLink | void> = Promise.resolve()
+  writing: Promise<TransactionMeta | void> = Promise.resolve()
+
+  async _readyForMerge() {
+    // await this.ready
+    await this.compacting
+  }
+
+  async _setWaitForWrite(_writingFn: () => Promise<any>) {
+    const wr = this.writing
+    this.writing = wr.then(async () => {
+      await _writingFn()
+      return wr
+    })
+    return this.writing.then(() => {})
+  }
+
+  // async compact(compactFn: CompactFn) {
+  //   const blocks = this.blocks
+  //   await this.ready
+  //   if (this.carLog.length < 2) return
+  //   if (this.awaitingCompact) return
+  //   this.awaitingCompact = true
+  //   const compactingFn = async () => {
+  //     if (this.isCompacting) {
+  //       return
+  //     }
+
+  //     if (this.isWriting) {
+  //       return
+  //     }
+
+  //     this.isCompacting = true
+
+  //     const blockLog = new LoggingFetcher(blocks)
+
+  //     // these three lines are different for indexes and dbs
+  //     // file compaction would be different than both because you crawl the db to determine which files are still referenced
+  //     // const compactHead = this.clock.head
+  //     const compactingResult = await compactFn(blockLog)
+
+  //     //  call the new head callback...
+  //     await this.tOpts.applyCarHeaderCustomizer(compactHead)
+  //     // await this.clock.applyHead(compactHead, compactHead, null)
+
+  //     return compactingResult
+  //   }
+  //   this.compacting = this._setWaitForWrite(compactingFn)
+  //   this.compacting.finally(() => {
+  //     this.isCompacting = false
+  //     this.awaitingCompact = false
+  //   })
+  //   await this.compacting
+  // }
 }
 
 export interface Connection {

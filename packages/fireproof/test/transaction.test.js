@@ -114,11 +114,4 @@ describe('TransactionBlockstore with a completed transaction', function () {
     }
     equals(blz.length, 2)
   })
-  it.skip('should compact', async function () {
-    const compactT = new Transaction(blocks)
-    await compactT.put(cid2, 'valueX')
-    await blocks.commitCompaction(compactT)
-    equals(blocks.transactions.size, 1)
-    assert(blocks.transactions.has(compactT))
-  })
 })

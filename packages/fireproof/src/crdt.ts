@@ -1,4 +1,4 @@
-import { FireproofBlockstore } from './transaction'
+import { FireproofBlockstore, LoggingFetcher } from './transaction'
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -6,7 +6,8 @@ import {
   readFiles,
   getAllEntries,
   clockVis,
-  getBlock
+  getBlock,
+  doCompact
 } from './crdt-helpers'
 import type {
   DocUpdate,
@@ -14,18 +15,13 @@ import type {
   ClockHead,
   FireproofOptions,
   ChangesOptions,
-  AnyCarHeader,
-  DbCarHeader,
   CarHeader,
-  IdxCarHeader,
   IdxMetaMap,
-  DocFragment,
   TransactionMeta
 } from './types'
 import type { Index } from './index'
 import { index } from './index'
 import { CRDTClock } from './crdt-clock'
-import { DbLoader, IndexerResult } from './loaders'
 
 export class CRDT {
   name: string | null
@@ -55,6 +51,7 @@ export class CRDT {
         },
         makeCarHeaderCustomizer: (result: TransactionMeta) => {
           const { head } = result as unknown as BulkResult
+          // todo this function can go away, and just be part of the transaction return value
           return { head } as unknown as TransactionMeta
         }
         // compact: async (blocks: TransactionBlockstore) => {
@@ -75,7 +72,7 @@ export class CRDT {
           }
         },
         makeCarHeaderCustomizer: (result: TransactionMeta) => {
-          const { indexes } = result as unknown as IndexerResult
+          const { indexes } = result as unknown as IdxMetaMap
           return { indexes } as unknown as TransactionMeta
         }
       },
@@ -170,9 +167,9 @@ export class CRDT {
   }
 
   async compact() {
-    await this.ready
-    if (this.blocks.loader) {
-      await (this.blocks.loader as DbLoader).compact(this.blocks)
-    }
+    return await this.blocks.compact(async (blockLog: LoggingFetcher) => {
+      await doCompact(blockLog, this.clock.head)
+      return { head: this.clock.head } as TransactionMeta
+    })
   }
 }

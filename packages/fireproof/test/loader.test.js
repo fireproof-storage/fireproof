@@ -75,7 +75,7 @@ describe('basic Loader', function () {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('basic Loader with two commits', function () {
-  let loader, block, block2, t, carCid
+  let loader, block, block2, block3, block4, t, carCid
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-two-commit')
     const mockM= new MemoryBlockstore()
@@ -98,6 +98,23 @@ describe('basic Loader with two commits', function () {
 
     await t.put(block2.cid, block2.bytes)
     carCid = await loader.commit(t, { head: [block2.cid] })
+
+    block3 = (await encode({
+      value: { hello: 'multiverse' },
+      hasher,
+      codec
+    }))
+
+    await t.put(block3.cid, block3.bytes)
+
+    block4 = (await encode({
+      value: { hello: 'megaverse' },
+      hasher,
+      codec
+    }))
+
+    await t.put(block4.cid, block4.bytes)
+
   })
   it('should have a car log', function () {
     equals(loader.carLog.length, 2)
@@ -125,9 +142,13 @@ describe('basic Loader with two commits', function () {
     assert(parsed.meta)
     assert(parsed.meta.head)
   })
-  it.skip('compact should erase old files', async function () {
+  it('compact should erase old files', async function () {
     await loader.commit(t, { head: [block2.cid] }, { compact: true })
-    await sleep(6000)
+    await loader.commit(t, { head: [block3.cid] }, { compact: false })
+    await loader.commit(t, { head: [block3.cid] }, { compact: true })
+    await loader.commit(t, { head: [block4.cid] }, { compact: false })
+    await loader.commit(t, { head: [block4.cid] }, { compact: true })
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)

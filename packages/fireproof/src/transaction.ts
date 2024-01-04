@@ -97,15 +97,23 @@ export class FireproofBlockstore implements LoaderFetcher {
             return block.bytes
   }
 
-
-  async commitCompaction(t: Transaction, head: ClockHead) {
-    // todo this should use the customizer to get head or indexes
-    const did = await this.loader!.commit(t, { head } as unknown as TransactionMeta, { compact: true, noLoader: true })
-    // todo uncomment this under load generation
-    // this.transactions.clear()
-    // this.transactions.add(t)
-    return did
+  async compact(compactFn: CompactFn) {
+    await this.ready
+    if (!this.loader) throw new Error('loader required to compact')
+    if (this.loader.carLog.length < 2) return
+    const blockLog = new LoggingFetcher(this)
+    const meta = await compactFn(blockLog)
+    const did = await this.loader!.commit(blockLog.loggedBlocks, meta, { compact: true, noLoader: true })
   }
+
+  // async commitCompaction(t: Transaction, head: ClockHead) {
+  //   // todo this should use the customizer to get head or indexes
+  //   const did = await this.loader!.commit(t, { head } as unknown as TransactionMeta, { compact: true, noLoader: true })
+  //   // todo uncomment this under load generation
+  //   // this.transactions.clear()
+  //   // this.transactions.add(t)
+  //   return did
+  // }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
     const seen: Set<string> = new Set()
@@ -118,6 +126,8 @@ export class FireproofBlockstore implements LoaderFetcher {
     }
   }
 }
+
+export type CompactFn = (blocks: LoggingFetcher) => Promise<TransactionMeta>
 
 export class LoggingFetcher implements LoaderFetcher {
   blocks: FireproofBlockstore
