@@ -12,9 +12,7 @@ export type FireproofOptions = {
 
 export type TransactionOpts = {
   defaultHeaderMeta: TransactionMeta
-  // transactionCustomizer: (t: Transaction) => Promise<BulkResult | IdxMeta>
-  applyCarHeaderCustomizer: (carHeader: CarHeader, snap?: boolean) => Promise<void>
-  makeCarHeaderCustomizer: (result: TransactionMeta) => TransactionMeta
+  applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
   compact?: (blocks: TransactionBlockstore) => Promise<void>
 }
 

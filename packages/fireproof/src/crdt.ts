@@ -41,22 +41,14 @@ export class CRDT {
       this.name,
       {
         defaultHeaderMeta: { head: [] },
-        applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
-          const dbCarHeader = carHeader.meta as unknown as BulkResult
+        applyMeta: async (meta: TransactionMeta, snap = false) => {
+          const crdtMeta = meta as unknown as BulkResult
           if (snap) {
-            await this.clock.applyHead(dbCarHeader.head, this.clock.head)
+            await this.clock.applyHead(crdtMeta.head, this.clock.head)
           } else {
-            await this.clock.applyHead(dbCarHeader.head, [])
+            await this.clock.applyHead(crdtMeta.head, [])
           }
-        },
-        makeCarHeaderCustomizer: (result: TransactionMeta) => {
-          const { head } = result as unknown as BulkResult
-          // todo this function can go away, and just be part of the transaction return value
-          return { head } as unknown as TransactionMeta
         }
-        // compact: async (blocks: TransactionBlockstore) => {
-        //   await doCompact(blocks, this.clock.head)
-        // }
       },
       this.opts
     )
@@ -65,15 +57,11 @@ export class CRDT {
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
         defaultHeaderMeta: { indexes: {} },
-        applyCarHeaderCustomizer: async (carHeader: CarHeader, snap = false) => {
-          const idxCarHeader = carHeader.meta as unknown as IdxMetaMap
-          for (const [name, idx] of Object.entries(idxCarHeader.indexes)) {
+        applyMeta: async (meta: TransactionMeta, snap = false) => {
+          const idxCarMeta = meta as unknown as IdxMetaMap
+          for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
             index({ _crdt: this }, name, undefined, idx as any)
           }
-        },
-        makeCarHeaderCustomizer: (result: TransactionMeta) => {
-          const { indexes } = result as unknown as IdxMetaMap
-          return { indexes } as unknown as TransactionMeta
         }
       },
       this.opts
