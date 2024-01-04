@@ -80,43 +80,20 @@ export class CRDT {
 
   async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
     await this.ready
-    // this error handling belongs in the transaction blockstore
-    // const loader = this.blocks.loader as DbLoader
 
     const prevHead = [...this.clock.head]
 
-    const writing = (async () => {
-      // await loader?.compacting
-      // if (loader?.isCompacting) {
-      //   throw new Error('cant bulk while compacting')
-      // }
-      const got = (await this.blocks.transaction(async (tblocks): Promise<TransactionMeta> => {
-        const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-        updates = updates.map(({ key, value, del, clock }) => {
-          readFiles(this.blocks, { doc: value })
-          return { key, value, del, clock }
-        })
-        // if (loader?.awaitingCompact) {
-        //   console.log('missing?', head.toString())
-        // }
-        // if (loader?.isCompacting) {
-        //   console.log('compacting?', head.toString())
-        // }
-        return { head } as TransactionMeta
-      })) as BulkResult
-      await this.clock.applyHead(got.head, prevHead, updates)
-      return got
-    })()
-    // if (loader) {
-    //   const wr = loader.writing
-    //   loader.writing = wr.then(async () => {
-    //     loader.isWriting = true
-    //     await writing
-    //     loader.isWriting = false
-    //     return wr
-    //   })
-    // }
-    return (await writing)!
+    const got = (await this.blocks.transaction(async (tblocks): Promise<TransactionMeta> => {
+      const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
+      updates = updates.map(({ key, value, del, clock }) => {
+        readFiles(this.blocks, { doc: value })
+        return { key, value, del, clock }
+      })
+
+      return { head } as TransactionMeta
+    })) as BulkResult
+    await this.clock.applyHead(got.head, prevHead, updates)
+    return got
   }
 
   async allDocs() {
