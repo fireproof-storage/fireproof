@@ -7,7 +7,7 @@ import { bf } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
 import { encodeCarFile } from './loader-helpers' // Import the existing function
-import type { AnyBlock, CarMakeable, AnyLink, BlockFetcher } from './types'
+import type { AnyBlock, CarMakeable, AnyLink } from './types'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call

@@ -8,7 +8,7 @@ import {
   FireproofOptions,
   TransactionOpts,
   TransactionMeta
-} from './types'
+} from '../../fireproof/src/types'
 
 import { Loader } from './loader'
 import { CID } from 'multiformats'
