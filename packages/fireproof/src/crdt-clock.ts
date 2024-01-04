@@ -1,5 +1,5 @@
 import { clockChangesSince } from './crdt-helpers'
-import { FireproofBlockstore, Transaction } from './transaction'
+import { EncryptedBlockstore, BlockstoreTransaction } from './transaction'
 import type { DocUpdate, ClockHead, BlockFetcher } from './types'
 import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
@@ -15,7 +15,7 @@ export class CRDTClock {
   watchers: Set<(updates: DocUpdate[]) => void> = new Set()
   emptyWatchers: Set<() => void> = new Set()
 
-  blocks: FireproofBlockstore | null = null
+  blocks: EncryptedBlockstore | null = null
 
   applyHeadQueue: ApplyHeadQueue
 
@@ -81,7 +81,7 @@ export class CRDTClock {
     // const noLoader = this.head.length === 1 && !updates?.length
     if (!this.blocks) throw new Error('missing blocks')
     await this.blocks.transaction(
-      async (tblocks: Transaction) => {
+      async (tblocks: BlockstoreTransaction) => {
         head = await advanceBlocks(newHead, tblocks, head)
         const result = await root(tblocks, head)
         for (const { cid, bytes } of [...result.additions, ...result.removals]) {
@@ -100,7 +100,7 @@ function sortClockHead(clockHead: ClockHead) {
   return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()))
 }
 
-async function validateBlocks(newHead: ClockHead, blocks: FireproofBlockstore | null) {
+async function validateBlocks(newHead: ClockHead, blocks: EncryptedBlockstore | null) {
   newHead.map(async cid => {
     const got = await blocks!.get(cid)
     if (!got) {

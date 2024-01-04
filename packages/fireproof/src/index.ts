@@ -9,7 +9,7 @@ import type {
   IdxMetaMap,
   TransactionMeta
 } from './types'
-import { FireproofBlockstore } from './transaction'
+import { EncryptedBlockstore } from './transaction'
 import {
   bulkIndex,
   indexEntriesForChanges,
@@ -42,7 +42,7 @@ export function index(
 }
 
 export class Index {
-  blocks: FireproofBlockstore
+  blocks: EncryptedBlockstore
   crdt: CRDT
   name: string | null = null
   mapFn: MapFn | null = null

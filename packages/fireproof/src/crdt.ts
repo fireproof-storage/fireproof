@@ -1,4 +1,4 @@
-import { FireproofBlockstore, LoggingFetcher } from './transaction'
+import { EncryptedBlockstore, LoggingBlockstoreReader } from './transaction'
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -27,8 +27,8 @@ export class CRDT {
   name: string | null
   opts: FireproofOptions = {}
   ready: Promise<void>
-  blocks: FireproofBlockstore
-  indexBlocks: FireproofBlockstore
+  blocks: EncryptedBlockstore
+  indexBlocks: EncryptedBlockstore
 
   indexers: Map<string, Index> = new Map()
 
@@ -37,7 +37,7 @@ export class CRDT {
   constructor(name?: string, opts?: FireproofOptions) {
     this.name = name || null
     this.opts = opts || this.opts
-    this.blocks = new FireproofBlockstore(
+    this.blocks = new EncryptedBlockstore(
       this.name,
       {
         defaultMeta: { head: [] },
@@ -53,7 +53,7 @@ export class CRDT {
       this.opts
     )
     this.clock.blocks = this.blocks
-    this.indexBlocks = new FireproofBlockstore(
+    this.indexBlocks = new EncryptedBlockstore(
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
         defaultMeta: { indexes: {} },
@@ -155,7 +155,7 @@ export class CRDT {
   }
 
   async compact() {
-    return await this.blocks.compact(async (blockLog: LoggingFetcher) => {
+    return await this.blocks.compact(async (blockLog: LoggingBlockstoreReader) => {
       await doCompact(blockLog, this.clock.head)
       return { head: this.clock.head } as TransactionMeta
     })

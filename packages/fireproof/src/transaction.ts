@@ -13,9 +13,9 @@ import {
 import { Loader } from './loader'
 import { CID } from 'multiformats'
 
-export class Transaction extends MemoryBlockstore implements CarMakeable {
-  parent: FireproofBlockstore
-  constructor(parent: FireproofBlockstore) {
+export class BlockstoreTransaction extends MemoryBlockstore implements CarMakeable {
+  parent: EncryptedBlockstore
+  constructor(parent: EncryptedBlockstore) {
     super()
     parent.transactions.add(this)
     this.parent = parent
@@ -30,14 +30,14 @@ export class Transaction extends MemoryBlockstore implements CarMakeable {
   }
 }
 
-// this type can go away
-export type LoaderFetcher = BlockFetcher & { loader: Loader | null }
+// this type can go away or should talk about getFile
+export type BlockstoreReader = BlockFetcher & { loader: Loader | null }
 
-const CarTransaction = Transaction
+const CarTransaction = BlockstoreTransaction
 
 export { CarTransaction }
 
-export class FireproofBlockstore implements LoaderFetcher {
+export class EncryptedBlockstore implements BlockstoreReader {
   ready: Promise<void>
   name: string | null = null
 
@@ -45,7 +45,7 @@ export class FireproofBlockstore implements LoaderFetcher {
   opts: FireproofOptions = {}
   tOpts: TransactionOpts
 
-  transactions: Set<Transaction> = new Set()
+  transactions: Set<BlockstoreTransaction> = new Set()
 
   constructor(name: string | null, tOpts: TransactionOpts, opts?: FireproofOptions) {
     this.opts = opts || this.opts
@@ -60,10 +60,10 @@ export class FireproofBlockstore implements LoaderFetcher {
   }
 
   async transaction(
-    fn: (t: Transaction) => Promise<TransactionMeta>,
+    fn: (t: BlockstoreTransaction) => Promise<TransactionMeta>,
     opts = { noLoader: false }
   ): Promise<TransactionMeta> {
-    const t = new Transaction(this)
+    const t = new BlockstoreTransaction(this)
     const done: TransactionMeta = await fn(t)
     if (this.loader) {
       const car = await this.loader.commit(t, done, opts)
@@ -92,28 +92,22 @@ export class FireproofBlockstore implements LoaderFetcher {
     await this.ready
     if (!this.loader) throw new Error('loader required to get file')
     const reader = await this.loader.loadFileCar(car, isPublic)
-            const block = await reader.get(cid as CID)
-            if (!block) throw new Error(`Missing block ${cid.toString()}`)
-            return block.bytes
+    const block = await reader.get(cid as CID)
+    if (!block) throw new Error(`Missing block ${cid.toString()}`)
+    return block.bytes
   }
 
   async compact(compactFn: CompactFn) {
     await this.ready
     if (!this.loader) throw new Error('loader required to compact')
     if (this.loader.carLog.length < 2) return
-    const blockLog = new LoggingFetcher(this)
+    const blockLog = new LoggingBlockstoreReader(this)
     const meta = await compactFn(blockLog)
-    const did = await this.loader!.commit(blockLog.loggedBlocks, meta, { compact: true, noLoader: true })
+    const did = await this.loader!.commit(blockLog.loggedBlocks, meta, {
+      compact: true,
+      noLoader: true
+    })
   }
-
-  // async commitCompaction(t: Transaction, head: ClockHead) {
-  //   // todo this should use the customizer to get head or indexes
-  //   const did = await this.loader!.commit(t, { head } as unknown as TransactionMeta, { compact: true, noLoader: true })
-  //   // todo uncomment this under load generation
-  //   // this.transactions.clear()
-  //   // this.transactions.add(t)
-  //   return did
-  // }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
     const seen: Set<string> = new Set()
@@ -127,17 +121,17 @@ export class FireproofBlockstore implements LoaderFetcher {
   }
 }
 
-export type CompactFn = (blocks: LoggingFetcher) => Promise<TransactionMeta>
+export type CompactFn = (blocks: LoggingBlockstoreReader) => Promise<TransactionMeta>
 
-export class LoggingFetcher implements LoaderFetcher {
-  blocks: FireproofBlockstore
+export class LoggingBlockstoreReader implements BlockstoreReader {
+  blocks: EncryptedBlockstore
   loader: Loader | null = null
-  loggedBlocks: Transaction
+  loggedBlocks: BlockstoreTransaction
 
-  constructor(blocks: FireproofBlockstore) {
+  constructor(blocks: EncryptedBlockstore) {
     this.blocks = blocks
     this.loader = blocks.loader
-    this.loggedBlocks = new Transaction(blocks)
+    this.loggedBlocks = new BlockstoreTransaction(blocks)
   }
 
   async get(cid: AnyLink) {
