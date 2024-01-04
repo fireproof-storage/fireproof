@@ -1,0 +1,142 @@
+{
+  "name": "@fireproof/core",
+  "version": "0.16.0-rc.1",
+  "description": "Live database for the web.",
+  "main": "./dist/browser/fireproof.cjs",
+  "module": "./dist/browser/fireproof.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/browser/fireproof.esm.js",
+      "require": "./dist/browser/fireproof.cjs",
+      "types": "./dist/types/fireproof.d.ts",
+      "script": "./dist/browser/fireproof.iife.js"
+    },
+    "./node": {
+      "import": "./dist/node/fireproof.esm.js",
+      "require": "./dist/node/fireproof.cjs",
+      "types": "./dist/types/fireproof.d.ts",
+      "script": "./dist/browser/fireproof.iife.js",
+      "default": "./dist/node/fireproof.esm.js"
+    },
+    "./memory": {
+      "import": "./dist/memory/fireproof.esm.js",
+      "types": "./dist/types/fireproof.d.ts",
+      "default": "./dist/memory/fireproof.esm.js"
+    }
+  },
+  "browser": "./dist/fireproof.browser.iife.js",
+  "types": "./dist/types/fireproof.d.ts",
+  "files": [
+    "dist/node",
+    "dist/memory",
+    "dist/browser",
+    "dist/types"
+  ],
+  "type": "module",
+  "scripts": {
+    "prepublishOnly": "cp ../../README.md . && npm run build:all",
+    "postpublish": "rm README.md",
+    "clean": "rm -rf dist/*",
+    "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "build:esbuild": "node ./scripts/build.js",
+    "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
+    "build:rollup": "rollup -c scripts/rollup.js",
+    "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
+    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
+    "test:node": "node ./scripts/test.js",
+    "test:browser": "node ./scripts/browser-test.js",
+    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
+    "lint:exports": "ts-unused-exports tsconfig.json",
+    "serve": "npx serve-http -p 8080 test/www",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "analyze": "node ./scripts/analyze.js",
+    "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
+    "tsc:watch": "tsc --watch",
+    "lint:all": "npm run lint:fix && npm run lint:exports",
+    "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
+    "test": "npm run build:test && npm run test:node && tsc",
+    "build:test": "node ./scripts/build.js",
+    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
+    "build:all": " npm run build && npm run test:browser",
+
+    "test:serve":"npx serve-http test/www -p 8080"
+  },
+  "keywords": [
+    "database",
+    "JSON",
+    "document",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "contributors": [
+    "J Chris Anderson",
+    "Alan Shaw",
+    "Travis Vachon",
+    "Mikeal Rogers"
+  ],
+  "author": "J Chris Anderson",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://use-fireproof.com",
+  "gptdoc": "import { fireproof } from 'use-fireproof; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); useEffect(()=> db.subscribe(updateReactStateAsyncFn), []); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "devDependencies": {
+    "@hyrious/esbuild-plugin-commonjs": "^0.2.2",
+    "@rollup/plugin-alias": "^5.0.0",
+    "@rollup/plugin-commonjs": "^25.0.4",
+    "@rollup/plugin-json": "^6.0.0",
+    "@rollup/plugin-node-resolve": "^15.2.0",
+    "@types/async": "^3.2.20",
+    "@types/mocha": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^6.1.0",
+    "@typescript-eslint/parser": "^6.1.0",
+    "browser-assert": "^1.2.1",
+    "c8": "^8.0.1",
+    "crypto-browserify": "^3.12.0",
+    "esbuild": "^0.18.14",
+    "esbuild-plugin-alias": "^0.2.1",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
+    "esbuild-plugin-tsc": "^0.4.0",
+    "eslint": "^8.45.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-mocha": "^10.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "memfs": "^4.2.1",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.0.1",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "puppeteer": "^21.0.3",
+    "rollup-plugin-polyfill-node": "^0.12.0",
+    "rollup-plugin-visualizer": "^5.9.2",
+    "stream-browserify": "^3.0.0",
+    "ts-unused-exports": "^10.0.0",
+    "tslib": "^2.6.0",
+    "typescript": "^5.1.6",
+    "util": "^0.12.5"
+  },
+  "dependencies": {
+    "@alanshaw/pail": "^0.3.4",
+    "@ipld/car": "^5.2.0",
+    "@ipld/dag-cbor": "^9.0.3",
+    "@ipld/dag-json": "^10.1.2",
+    "@ipld/unixfs": "^2.1.1",
+    "@peculiar/webcrypto": "^1.4.3",
+    "charwise": "^3.0.1",
+    "idb": "^7.1.1",
+    "ipfs-unixfs-exporter": "^13.1.7",
+    "multiformats": "^12.0.1",
+    "p-limit": "^4.0.0",
+    "prolly-trees": "^1.0.4",
+    "uuidv7": "^0.6.2"
+  }
+}
