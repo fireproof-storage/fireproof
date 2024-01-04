@@ -18,7 +18,7 @@ import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
 
 import { Loader } from '../dist/test/loader.esm.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
-import { Transaction, FireproofBlockstore } from '../dist/test/transaction.esm.js'
+import { BlockstoreTransaction, EncryptedBlockstore } from '../dist/test/transaction.esm.js'
 
 import { testConfig } from '../dist/test/store-fs.esm.js'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
@@ -47,7 +47,7 @@ describe('basic Loader', function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-commit')
     const mockM= new MemoryBlockstore()
     mockM.transactions = new Set()
-    t = new Transaction(mockM)
+    t = new BlockstoreTransaction(mockM)
     loader = new Loader('test-loader-commit', loaderOpts, { public: true })
     block = (await encode({
       value: { hello: 'world' },
@@ -80,7 +80,7 @@ describe('basic Loader with two commits', function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-two-commit')
     const mockM= new MemoryBlockstore()
     mockM.transactions = new Set()
-    t = new Transaction(mockM)
+    t = new BlockstoreTransaction(mockM)
     loader = new Loader('test-loader-two-commit', loaderOpts, { public: true })
     block = (await encode({
       value: { hello: 'world' },
@@ -262,8 +262,8 @@ describe('basic Loader with index commits', function () {
   let block, ib, indexerResult, cid, indexMap
   beforeEach(async function () {
     await resetDirectory(testConfig.dataDir, 'test-loader-index')
-    // t = new Transaction()
-    ib = new FireproofBlockstore('test-loader-index', indexLoaderOpts, {})
+    // t = new BlockstoreTransaction()
+    ib = new EncryptedBlockstore('test-loader-index', indexLoaderOpts, {})
     // loader = new IdxLoader('test-loader-index', { indexers: new Map() }, { public: true })
     block = (await encode({
       value: { hello: 'world' },

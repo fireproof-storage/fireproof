@@ -306,7 +306,7 @@ importers:
   packages/fireproof:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
+        specifier: ^0.3.4
         version: 0.3.4
       '@ipld/car':
         specifier: ^5.2.0

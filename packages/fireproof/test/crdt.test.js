@@ -177,7 +177,7 @@ describe('Compact a named CRDT with writes', function () {
     for await (const blk of crdt.blocks.entries()) {
       blz.push(blk)
     }
-    equals(blz.length, 35)
+    equals(blz.length, 17)
   })
   it('should start with changes', async function () {
     const { result } = await crdt.changes()

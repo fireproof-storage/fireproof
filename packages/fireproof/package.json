@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.15.1",
+  "version": "0.16.0-rc.1",
   "description": "Live database for the web.",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -125,7 +125,7 @@
     "util": "^0.12.5"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.3",
+    "@alanshaw/pail": "^0.3.4",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",

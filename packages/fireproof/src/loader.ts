@@ -22,7 +22,7 @@ import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './crypto-web'
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-import { CompactFn, LoggingFetcher, type Transaction } from './transaction'
+import type { BlockstoreTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
 // ts-unused-exports:disable-next-line
@@ -167,7 +167,7 @@ export class Loader {
   }
 
   async commitFiles(
-    t: Transaction,
+    t: BlockstoreTransaction,
     done: FileResult,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
@@ -175,7 +175,7 @@ export class Loader {
   }
   // can these skip the queue? or have a file queue?
   async _commitInternalFiles(
-    t: Transaction,
+    t: BlockstoreTransaction,
     done: FileResult,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
@@ -192,7 +192,7 @@ export class Loader {
   }
 
   async commit(
-    t: Transaction,
+    t: BlockstoreTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
@@ -200,12 +200,12 @@ export class Loader {
   }
 
   async _commitInternal(
-    t: Transaction,
+    t: BlockstoreTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const header = (done)
+    const header = done
     const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as AnyCarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
@@ -217,7 +217,7 @@ export class Loader {
     return cid
   }
 
-  async prepareRoots(fp: AnyCarHeader | FileCarHeader, t: Transaction): Promise<AnyLink[]> {
+  async prepareRoots(fp: AnyCarHeader | FileCarHeader, t: BlockstoreTransaction): Promise<AnyLink[]> {
     const header = await encodeCarHeader(fp)
     await t.put(header.cid, header.bytes)
     // const got = await t.get(header.cid)
@@ -227,7 +227,7 @@ export class Loader {
 
   async prepareCarFile(
     root: AnyLink,
-    t: Transaction,
+    t: BlockstoreTransaction,
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     const theKey = isPublic ? null : await this._getKey()
@@ -435,7 +435,7 @@ export class Loader {
 
   //     this.isCompacting = true
 
-  //     const blockLog = new LoggingFetcher(blocks)
+  //     const blockLog = new LoggingBlockstoreReader(blocks)
 
   //     // these three lines are different for indexes and dbs
   //     // file compaction would be different than both because you crawl the db to determine which files are still referenced

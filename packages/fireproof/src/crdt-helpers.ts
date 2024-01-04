@@ -5,8 +5,8 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
-import { LoggingFetcher, Transaction } from './transaction'
-import type { FireproofBlockstore, LoaderFetcher } from './transaction'
+import { LoggingBlockstoreReader, BlockstoreTransaction } from './transaction'
+import type { EncryptedBlockstore, BlockstoreReader } from './transaction'
 import type {
   DocUpdate,
   ClockHead,
@@ -23,7 +23,7 @@ import type {
 import { decodeFile, encodeFile } from './files'
 
 export async function applyBulkUpdateToCrdt(
-  tblocks: Transaction,
+  tblocks: BlockstoreTransaction,
   head: ClockHead,
   updates: DocUpdate[],
   options?: object
@@ -47,16 +47,18 @@ export async function applyBulkUpdateToCrdt(
         result.head = head
       }
     }
-    for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
-      tblocks.putSync(cid, bytes)
+    if (result.event) {
+      for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
+        tblocks.putSync(cid, bytes)
+      }
+      head = result.head
     }
-    head = result.head
   }
   return { head }
 }
 
 // this whole thing can get pulled outside of the write queue
-async function writeDocContent(blocks: Transaction, update: DocUpdate): Promise<AnyLink> {
+async function writeDocContent(blocks: BlockstoreTransaction, update: DocUpdate): Promise<AnyLink> {
   let value: DocValue
   if (update.del) {
     value = { del: true }
@@ -69,7 +71,7 @@ async function writeDocContent(blocks: Transaction, update: DocUpdate): Promise<
   return block.cid
 }
 
-async function processFiles(blocks: Transaction, doc: Doc) {
+async function processFiles(blocks: BlockstoreTransaction, doc: Doc) {
   if (doc._files) {
     await processFileset(blocks, doc._files)
   }
@@ -78,9 +80,9 @@ async function processFiles(blocks: Transaction, doc: Doc) {
   }
 }
 
-async function processFileset(blocks: Transaction, files: DocFiles, publicFiles = false) {
-  const dbBlockstore = blocks.parent as FireproofBlockstore
-  const t = new Transaction(dbBlockstore)
+async function processFileset(blocks: BlockstoreTransaction, files: DocFiles, publicFiles = false) {
+  const dbBlockstore = blocks.parent as EncryptedBlockstore
+  const t = new BlockstoreTransaction(dbBlockstore)
   const didPut = []
   // let totalSize = 0
   for (const filename in files) {
@@ -111,7 +113,7 @@ async function processFileset(blocks: Transaction, files: DocFiles, publicFiles 
 }
 
 export async function getValueFromCrdt(
-  blocks: FireproofBlockstore,
+  blocks: EncryptedBlockstore,
   head: ClockHead,
   key: string
 ): Promise<DocValue> {
@@ -121,7 +123,7 @@ export async function getValueFromCrdt(
   return await getValueFromLink(blocks, link)
 }
 
-export function readFiles(blocks: FireproofBlockstore, { doc }: DocValue) {
+export function readFiles(blocks: EncryptedBlockstore, { doc }: DocValue) {
   if (!doc) return
   if (doc._files) {
     readFileset(blocks, doc._files)
@@ -131,7 +133,7 @@ export function readFiles(blocks: FireproofBlockstore, { doc }: DocValue) {
   }
 }
 
-function readFileset(blocks: FireproofBlockstore, files: DocFiles, isPublic = false) {
+function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = false) {
   for (const filename in files) {
     const fileMeta = files[filename] as DocFileMeta
     if (fileMeta.cid) {
@@ -155,11 +157,11 @@ function readFileset(blocks: FireproofBlockstore, files: DocFiles, isPublic = fa
   }
 }
 
-async function getValueFromLink(blocks: LoaderFetcher, link: AnyLink): Promise<DocValue> {
+async function getValueFromLink(blocks: BlockstoreReader, link: AnyLink): Promise<DocValue> {
   const block = await blocks.get(link)
   if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
-  readFiles(blocks as FireproofBlockstore, value)
+  readFiles(blocks as EncryptedBlockstore, value)
   return value
 }
 
@@ -178,7 +180,7 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
 }
 
 export async function clockChangesSince(
-  blocks: LoaderFetcher,
+  blocks: BlockstoreReader,
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions
@@ -201,7 +203,7 @@ export async function clockChangesSince(
 }
 
 async function gatherUpdates(
-  blocks: LoaderFetcher,
+  blocks: BlockstoreReader,
   eventsFetcher: EventFetcher<EventData>,
   head: ClockHead,
   since: ClockHead,
@@ -258,7 +260,7 @@ async function gatherUpdates(
   return updates
 }
 
-export async function* getAllEntries(blocks: LoaderFetcher, head: ClockHead) {
+export async function* getAllEntries(blocks: BlockstoreReader, head: ClockHead) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link)
@@ -266,14 +268,14 @@ export async function* getAllEntries(blocks: LoaderFetcher, head: ClockHead) {
   }
 }
 
-export async function* clockVis(blocks: FireproofBlockstore, head: ClockHead) {
+export async function* clockVis(blocks: EncryptedBlockstore, head: ClockHead) {
   for await (const line of vis(blocks, head)) {
     yield line
   }
 }
 
 let isCompacting = false
-export async function doCompact(blockLog: LoggingFetcher, head: ClockHead) {
+export async function doCompact(blockLog: LoggingBlockstoreReader, head: ClockHead) {
   if (isCompacting) {
     console.log('already compacting')
     return

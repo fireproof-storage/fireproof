@@ -8,7 +8,7 @@ import { CID } from 'multiformats'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, equals, notEquals, matches, equalsJSON } from './helpers.js'
-import { FireproofBlockstore as Blockstore, Transaction } from '../dist/test/transaction.esm.js'
+import { EncryptedBlockstore as Blockstore, BlockstoreTransaction } from '../dist/test/transaction.esm.js'
 
 describe('Fresh TransactionBlockstore', function () {
   /** @type {Blockstore} */
@@ -29,7 +29,7 @@ describe('Fresh TransactionBlockstore', function () {
   it('should yield a transaction', async function () {
     const txR = await blocks.transaction((tblocks) => {
       assert(tblocks)
-      assert(tblocks instanceof Transaction)
+      assert(tblocks instanceof BlockstoreTransaction)
       return { head: [] }
     })
     assert(txR)
@@ -59,11 +59,11 @@ describe('TransactionBlockstore with name', function () {
 })
 
 describe('A transaction', function () {
-  /** @type {Transaction} */
+  /** @type {BlockstoreTransaction} */
   let tblocks, blocks
   beforeEach(async function () {
     blocks = new Blockstore()
-    tblocks = new Transaction(blocks)
+    tblocks = new BlockstoreTransaction(blocks)
     blocks.transactions.add(tblocks)
   })
   it('should put and get', async function () {
