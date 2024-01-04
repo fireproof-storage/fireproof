@@ -69,6 +69,8 @@ export class Loader {
   key: string | undefined
   keyId: string | undefined
   seenCompacted: Set<string> = new Set()
+  writing: Promise<TransactionMeta | void> = Promise.resolve()
+
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
@@ -115,8 +117,6 @@ export class Loader {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    // const ld = this
-    // await ld.compacting
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }
@@ -136,7 +136,6 @@ export class Loader {
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
-    // await this._applyCarHeader(carHeader)
     await this.tOpts.applyMeta(carHeader.meta)
   }
 
@@ -399,15 +398,7 @@ export class Loader {
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
 
-  // compaction
-  awaitingCompact = false
-  compacting: Promise<AnyLink | void> = Promise.resolve()
-  writing: Promise<TransactionMeta | void> = Promise.resolve()
 
-  async _readyForMerge() {
-    // await this.ready
-    await this.compacting
-  }
 
   async _setWaitForWrite(_writingFn: () => Promise<any>) {
     const wr = this.writing
@@ -417,44 +408,6 @@ export class Loader {
     })
     return this.writing.then(() => {})
   }
-
-  // async compact(compactFn: CompactFn) {
-  //   const blocks = this.blocks
-  //   await this.ready
-  //   if (this.carLog.length < 2) return
-  //   if (this.awaitingCompact) return
-  //   this.awaitingCompact = true
-  //   const compactingFn = async () => {
-  //     if (this.isCompacting) {
-  //       return
-  //     }
-
-  //     if (this.isWriting) {
-  //       return
-  //     }
-
-  //     this.isCompacting = true
-
-  //     const blockLog = new LoggingBlockstoreReader(blocks)
-
-  //     // these three lines are different for indexes and dbs
-  //     // file compaction would be different than both because you crawl the db to determine which files are still referenced
-  //     // const compactHead = this.clock.head
-  //     const compactingResult = await compactFn(blockLog)
-
-  //     //  call the new head callback...
-  //     await this.tOpts.applyMeta(compactHead)
-  //     // await this.clock.applyHead(compactHead, compactHead, null)
-
-  //     return compactingResult
-  //   }
-  //   this.compacting = this._setWaitForWrite(compactingFn)
-  //   this.compacting.finally(() => {
-  //     this.isCompacting = false
-  //     this.awaitingCompact = false
-  //   })
-  //   await this.compacting
-  // }
 }
 
 export interface Connection {
