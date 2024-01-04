@@ -18,7 +18,7 @@ export const connect = {
       return partyCxs.get(name)!
     }
     if (!partyHost) {
-      console.warn('partyHost not provided, using localhost:1999')
+      console.warn('Party host not provided, using localhost:1999')
       partyHost = 'http://localhost:1999'
     }
     const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
