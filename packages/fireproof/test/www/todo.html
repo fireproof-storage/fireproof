@@ -13,6 +13,8 @@
       const { fireproof, index } = Fireproof;
       const { connect } = FireproofConnect;
 
+      console.log('connect', connect)
+
       let dbName
       let db
       let cx
@@ -37,7 +39,7 @@
         } else {
           dbName = name;
           db = fireproof(name);
-          cx = connect.partykit(db)
+          cx = connect.partykitS3(db)
           cx.ready.then(async () => {
             const span = document.querySelector('#cxInfo')
             span.innerText = `📡 ${cx.party.id}`
