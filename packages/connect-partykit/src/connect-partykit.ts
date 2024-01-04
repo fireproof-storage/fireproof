@@ -103,7 +103,7 @@ export class ConnectPartyKit extends Connection {
       cid: event.cid.toString(),
       parents: this.parents.map(p => p.toString())
     }
-    console.log('Sending message', partyMessage)
+    // console.log('Sending message', partyMessage)
     this.party.send(JSON.stringify(partyMessage))
     this.parents = [event.cid]
     return null
