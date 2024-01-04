@@ -11,7 +11,7 @@ export type FireproofOptions = {
 }
 
 export type TransactionOpts = {
-  defaultHeaderMeta: TransactionMeta
+  defaultMeta: TransactionMeta
   applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
   compact?: (blocks: TransactionBlockstore) => Promise<void>
 }
