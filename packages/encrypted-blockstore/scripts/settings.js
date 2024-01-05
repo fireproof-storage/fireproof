@@ -93,7 +93,7 @@ const require = createRequire(import.meta.url);
 
     builds.push(testEsmConfig)
 
-    if (/index\./.test(entryPoint)) {
+    if (/(index|store|crypto)\./.test(entryPoint)) {
       const esmPublishConfig = {
         ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
