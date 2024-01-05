@@ -112,10 +112,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
   const cryptoFn = (key: Uint8Array) => {
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return {
-      encrypt: opts => encrypt({ key, ...opts }),
-      decrypt: opts => decrypt({ key, ...opts })
-    }
+    return { encrypt: opts => encrypt({ key, ...opts }), decrypt: opts => decrypt({ key, ...opts }) }
   }
 
   const name = 'jchris@encrypted-block:aes-gcm'

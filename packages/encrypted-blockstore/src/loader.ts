@@ -229,7 +229,9 @@ export class Loader {
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     const theKey = isPublic ? null : await this._getKey()
-    return theKey ? await encryptedEncodeCarFile(theKey, root, t) : await encodeCarFile([root], t)
+    return (theKey && this.tOpts.crypto)
+      ? await encryptedEncodeCarFile(this.tOpts.crypto, theKey, root, t)
+      : await encodeCarFile([root], t)
   }
 
   protected makeFileCarHeader(
@@ -367,8 +369,8 @@ export class Loader {
 
   protected async ensureDecryptedReader(reader: CarReader) {
     const theKey = await this._getKey()
-    if (!theKey) return reader
-    const { blocks, root } = await decodeEncryptedCar(theKey, reader)
+    if (!(theKey && this.tOpts.crypto)) return reader
+    const { blocks, root } = await decodeEncryptedCar(this.tOpts.crypto, theKey, reader)
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),

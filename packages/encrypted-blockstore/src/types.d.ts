@@ -29,10 +29,16 @@ export type TransactionMeta = {
   [key: string]: NestedData
 }
 
+export type CryptoOpts = {
+  crypto: any,
+  randomBytes: (size: number) => Uint8Array
+}
+
 export type TransactionOpts = {
   defaultMeta: TransactionMeta
   applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
   compact?: (blocks: TransactionBlockstore) => Promise<void>
+  crypto?: CryptoOpts
 }
 
 export type FireproofOptions = {
