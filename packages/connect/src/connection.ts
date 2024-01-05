@@ -54,7 +54,6 @@ export abstract class Connection {
 
   connectMeta(loader: Loader) {
     this.setLoader(loader)
-
     const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {

@@ -152,7 +152,7 @@ function makeName(fnString: string) {
   if (!found) {
     return fnString
   } else {
-    // it's a consise arrow function, match everythign after the arrow
+    // it's a consise arrow function, match everything after the arrow
     return found[1]
   }
 }

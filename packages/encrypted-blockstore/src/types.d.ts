@@ -15,10 +15,6 @@ type CarHeader = {
   meta: TransactionMeta
 }
 
-export type TransactionMeta = {
-  [key: string]: NestedData
-}
-
 type NestedData =
   | Uint8Array
   | string
@@ -28,6 +24,10 @@ type NestedData =
   | AnyLink
   | NestedData[]
   | { [key: string]: NestedData }
+
+export type TransactionMeta = {
+  [key: string]: NestedData
+}
 
 export type TransactionOpts = {
   defaultMeta: TransactionMeta
@@ -43,4 +43,3 @@ export type FireproofOptions = {
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
 export type DbMeta = { car: AnyLink; key: string | null }
-

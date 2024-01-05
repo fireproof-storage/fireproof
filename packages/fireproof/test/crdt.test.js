@@ -228,3 +228,108 @@ describe('CRDT with an index', function () {
     matches(e.message, /cannot apply/)
   })
 })
+
+
+
+describe('Loader with a committed transaction', function () {
+  /** @type {Loader} */
+  let loader, blockstore, crdt, done
+  const dbname = 'test-loader'
+  beforeEach(async function () {
+    await resetDirectory(dataDir, 'test-loader')
+    crdt = new CRDT(dbname)
+    blockstore = crdt.blocks
+    loader = blockstore.loader
+    console.log('loader', loader)
+    done = await crdt.bulk([{ key: 'foo', value: { foo: 'bar' } }])
+  })
+  it('should have a name', function () {
+    equals(loader.name, dbname)
+  })
+  it('should commit a transaction', function () {
+    assert(done.head)
+    assert(done.car)
+    equals(loader.carLog.length, 1)
+  })
+  it('can load the car', async function () {
+    const reader = await loader.loadCar(done.car)
+    assert(reader)
+    const parsed = await parseCarFile(reader)
+    assert(parsed.cars)
+    equals(parsed.cars.length, 0)
+    assert(parsed.meta)
+    assert(parsed.meta.head)
+  })
+})
+
+describe('Loader with two committed transactions', function () {
+  /** @type {Loader} */
+  let loader, crdt, blockstore, done1, done2
+  const dbname = 'test-loader'
+  beforeEach(async function () {
+    await resetDirectory(dataDir, 'test-loader')
+    crdt = new CRDT(dbname)
+    blockstore = crdt.blocks
+    loader = blockstore.loader
+    done1 = await crdt.bulk([{ key: 'apple', value: { foo: 'bar' } }])
+    done2 = await crdt.bulk([{ key: 'orange', value: { foo: 'bar' } }])
+  })
+  it('should commit two transactions', function () {
+    assert(done1.head)
+    assert(done1.car)
+    assert(done2.head)
+    assert(done2.car)
+    notEquals(done1.head, done2.head)
+    notEquals(done1.car, done2.car)
+    equals(blockstore.transactions.size, 2)
+    equals(loader.carLog.length, 2)
+    equals(loader.carLog.indexOf(done1.car), 1)
+    equals(loader.carLog.indexOf(done2.car), 0)
+  })
+  it('can load the car', async function () {
+    const reader = await loader.loadCar(done2.car)
+    assert(reader)
+    const parsed = await parseCarFile(reader)
+    assert(parsed.cars)
+    equals(parsed.cars.length, 1)
+    assert(parsed.meta)
+    assert(parsed.meta.head)
+  })
+})
+
+describe('Loader with many committed transactions', function () {
+  /** @type {Loader} */
+  let loader, blockstore, crdt, dones
+  const dbname = 'test-loader'
+  const count = 10
+  beforeEach(async function () {
+    await resetDirectory(dataDir, 'test-loader')
+    // loader = new DbLoader(dbname)
+    crdt = new CRDT(dbname)
+    blockstore = crdt.blocks
+    loader = blockstore.loader
+    dones = []
+    for (let i = 0; i < count; i++) {
+      const did = await crdt.bulk([{ key: `apple${i}`, value: { foo: 'bar' } }])
+      dones.push(did)
+    }
+  })
+  it('should commit many transactions', function () {
+    for (const done of dones) {
+      assert(done.head)
+      assert(done.car)
+    }
+    equals(blockstore.transactions.size, count)
+    equals(loader.carLog.length, count)
+  })
+  it('can load the car', async function () {
+    assert(dones[5].car)
+    const reader = await loader.loadCar(dones[5].car)
+    assert(reader)
+    const parsed = await parseCarFile(reader)
+    assert(parsed.cars)
+    equals(parsed.cars.length, 5)
+    assert(parsed.meta)
+    assert(parsed.meta.head)
+  })
+})
