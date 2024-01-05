@@ -1,18 +1,21 @@
 import { ConnectS3 } from '@fireproof/connect'
-import type { Database } from '@fireproof/core'
+import type { Loader } from '@fireproof/encrypted-blockstore'
 import { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
 import { ConnectNetlify, ConnectNetlifyParams } from '@fireproof/netlify'
 
 const partyCxs = new Map<string, ConnectPartyKit>()
 
 export const connect = {
-  partykit: (db: Database, partyHost?: string, refresh?: boolean) => {
-    const {
+  partykit: (
+    {
       name,
       _crdt: {
         blocks: { loader }
       }
-    } = db
+    }: { name: string; _crdt: { blocks: { loader: Loader } } },
+    partyHost?: string,
+    refresh?: boolean
+  ) => {
     if (!name) throw new Error('database name is required')
     if (!refresh && partyCxs.has(name)) {
       return partyCxs.get(name)!
@@ -26,13 +29,16 @@ export const connect = {
     partyCxs.set(name, connection)
     return connection
   },
-  partykitS3: (db: Database, partyHost?: string, refresh?: boolean) => {
-    const {
+  partykitS3: (
+    {
       name,
       _crdt: {
         blocks: { loader }
       }
-    } = db
+    }: { name: string; _crdt: { blocks: { loader: Loader } } },
+    partyHost?: string,
+    refresh?: boolean
+  ) => {
     if (!name) throw new Error('database name is required')
     if (!refresh && partyCxs.has(name)) {
       return partyCxs.get(name)!
@@ -53,13 +59,16 @@ export const connect = {
     partyCxs.set(name, connection)
     return connection
   },
-  partykitNetlify: (db: Database, partyHost?: string, refresh?: boolean) => {
-    const {
+  partykitNetlify: (
+    {
       name,
       _crdt: {
         blocks: { loader }
       }
-    } = db
+    }: { name: string; _crdt: { blocks: { loader: Loader } } },
+    partyHost?: string,
+    refresh?: boolean
+  ) => {
     if (!name) throw new Error('database name is required')
     if (!refresh && partyCxs.has(name)) {
       return partyCxs.get(name)!
