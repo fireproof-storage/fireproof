@@ -12,15 +12,14 @@ import { encode } from 'multiformats/block'
 import { CID } from 'multiformats/cid'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals, resetDirectory, notEquals } from './helpers.js'
+import { assert, matches, equals, resetDirectory, notEquals, dataDir } from '../../fireproof/test/helpers.js'
 
 import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
 
 import { Loader } from '../dist/test/loader.esm.js'
-import { CRDT } from '../dist/test/crdt.esm.js'
+import { CRDT } from '../../fireproof/dist/test/crdt.esm.js'
 import { CarTransaction, EncryptedBlockstore } from '../dist/test/transaction.esm.js'
 
-import { testConfig } from '../dist/test/store-fs.esm.js'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
 const loaderOpts = { 
@@ -44,7 +43,7 @@ const indexLoaderOpts = {
 describe('basic Loader', function () {
   let loader, block, t
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-loader-commit')
+    await resetDirectory(dataDir, 'test-loader-commit')
     const mockM= new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new CarTransaction(mockM)
@@ -77,7 +76,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 describe('basic Loader with two commits', function () {
   let loader, block, block2, block3, block4, t, carCid
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-loader-two-commit')
+    await resetDirectory(dataDir, 'test-loader-two-commit')
     const mockM= new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new CarTransaction(mockM)
@@ -161,7 +160,7 @@ describe('Loader with a committed transaction', function () {
   let loader, blockstore, crdt, done
   const dbname = 'test-loader'
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-loader')
+    await resetDirectory(dataDir, 'test-loader')
     crdt = new CRDT(dbname)
     blockstore = crdt.blocks
     loader = blockstore.loader
@@ -191,7 +190,7 @@ describe('Loader with two committed transactions', function () {
   let loader, crdt, blockstore, done1, done2
   const dbname = 'test-loader'
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-loader')
+    await resetDirectory(dataDir, 'test-loader')
     crdt = new CRDT(dbname)
     blockstore = crdt.blocks
     loader = blockstore.loader
@@ -227,7 +226,7 @@ describe('Loader with many committed transactions', function () {
   const dbname = 'test-loader'
   const count = 10
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-loader')
+    await resetDirectory(dataDir, 'test-loader')
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname)
     blockstore = crdt.blocks
@@ -261,7 +260,7 @@ describe('Loader with many committed transactions', function () {
 describe('basic Loader with index commits', function () {
   let block, ib, indexerResult, cid, indexMap
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-loader-index')
+    await resetDirectory(dataDir, 'test-loader-index')
     // t = new CarTransaction()
     ib = new EncryptedBlockstore('test-loader-index', indexLoaderOpts, {})
     // loader = new IdxLoader('test-loader-index', { indexers: new Map() }, { public: true })

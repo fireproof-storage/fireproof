@@ -8,14 +8,12 @@ import { Database } from '../dist/test/database.esm.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals, resetDirectory, equalsJSON } from './helpers.js'
-
-import { testConfig } from '../dist/test/store-fs.esm.js'
+import { assert, matches, equals, resetDirectory, equalsJSON, dataDir } from './helpers.js'
 
 describe('basic Index', function () {
   let db, indexer, didMap
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
 
     db = new Database('test-indexer')
     await db.put({ title: 'amazing' })
@@ -84,7 +82,7 @@ describe('basic Index', function () {
 describe('Index query with compound key', function () {
   let db, indexer
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
     db = new Database('test-indexer')
     await db.put({ title: 'amazing', score: 1 })
     await db.put({ title: 'creative', score: 2 })
@@ -105,7 +103,7 @@ describe('Index query with compound key', function () {
 describe('basic Index with map fun', function () {
   let db, indexer
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
 
     db = new Database('test-indexer')
     await db.put({ title: 'amazing' })
@@ -127,7 +125,7 @@ describe('basic Index with map fun', function () {
 describe('basic Index with map fun with value', function () {
   let db, indexer
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
 
     db = new Database('test-indexer')
     await db.put({ title: 'amazing' })
@@ -158,7 +156,7 @@ describe('basic Index with map fun with value', function () {
 describe('Index query with map and compound key', function () {
   let db, indexer
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
     db = new Database('test-indexer')
     await db.put({ title: 'amazing', score: 1 })
     await db.put({ title: 'creative', score: 2 })
@@ -179,7 +177,7 @@ describe('Index query with map and compound key', function () {
 describe('basic Index with string fun', function () {
   let db, indexer
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
 
     db = new Database('test-indexer')
     await db.put({ title: 'amazing' })
@@ -202,8 +200,8 @@ describe('basic Index with string fun', function () {
 describe('basic Index upon cold start', function () {
   let crdt, indexer, result, didMap, mapFn
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer-cold')
-    await resetDirectory(testConfig.dataDir, 'test-indexer-cold.idx')
+    await resetDirectory(dataDir, 'test-indexer-cold')
+    await resetDirectory(dataDir, 'test-indexer-cold.idx')
 
     // db = database()
     crdt = new CRDT('test-indexer-cold', { persistIndexes: true })
@@ -282,7 +280,7 @@ describe('basic Index upon cold start', function () {
 describe('basic Index with no data', function () {
   let db, indexer, didMap
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-indexer')
+    await resetDirectory(dataDir, 'test-indexer')
 
     db = new Database('test-indexer')
     indexer = new Index(db._crdt, 'hello', (doc) => {

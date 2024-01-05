@@ -4,10 +4,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable mocha/max-top-level-suites */
-import { assert, equals, resetDirectory } from './helpers.js'
+import { assert, equals, resetDirectory, dataDir } from './helpers.js'
 import { fireproof as database, Database } from '../dist/test/database.esm.js'
 import { index, Index } from '../dist/test/index.esm.js'
-import { testConfig } from '../dist/test/store-fs.esm.js'
 
 describe('Hello World Test', function () {
   it('should pass the hello world test', function () {
@@ -18,7 +17,7 @@ describe('Hello World Test', function () {
 
 describe('public API', function () {
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-public-api')
+    await resetDirectory(dataDir, 'test-public-api')
     this.db = database('test-public-api')
     this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })

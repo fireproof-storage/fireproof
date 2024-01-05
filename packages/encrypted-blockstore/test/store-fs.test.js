@@ -10,9 +10,9 @@ import { promises } from 'fs'
 import { CID } from 'multiformats'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals } from './helpers.js'
+import { assert, matches, equals, dataDir } from '../../fireproof/test/helpers.js'
 
-import { DataStore, testConfig, MetaStore } from '../dist/test/store-fs.esm.js'
+import { DataStore, MetaStore } from '../dist/test/store-fs.esm.js'
 
 const { readFile } = promises
 
@@ -84,7 +84,7 @@ describe('MetaStore', function () {
       key: null
     }
     await store.save(h)
-    const path = join(testConfig.dataDir, store.name, 'meta', 'main.json')
+    const path = join(dataDir, store.name, 'meta', 'main.json')
     const file = await readFile(path)
     const header = JSON.parse(file.toString())
     assert(header)
@@ -102,7 +102,7 @@ describe('MetaStore with a saved header', function () {
     await store.save({ car: cid, key: null })
   })
   it('should have a header', async function () {
-    const path = join(testConfig.dataDir, store.name, 'meta', 'main.json')
+    const path = join(dataDir, store.name, 'meta', 'main.json')
     const data = await readFile(path)
     matches(data, /car/)
     const header = JSON.parse(data.toString())
