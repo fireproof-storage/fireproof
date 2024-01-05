@@ -21,8 +21,7 @@ import type {
   ChangesOptions,
   IdxMetaMap
 } from './types'
-import type { Index } from './index'
-import { index } from './index'
+import { index, type Index } from './index'
 import { CRDTClock } from './crdt-clock'
 
 export class CRDT {
