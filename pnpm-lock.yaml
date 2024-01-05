@@ -112,12 +112,9 @@ importers:
       '@alanshaw/pail':
         specifier: ^0.3.3
         version: 0.3.3
-      '@fireproof/core':
-        specifier: ^0.15.1
-        version: 0.15.1
       '@fireproof/encrypted-blockstore':
         specifier: 0.16.5
-        version: link:../encrypted-blockstore
+        version: 0.16.5
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -463,7 +460,7 @@ importers:
         specifier: ^0.3.4
         version: 0.3.4
       '@fireproof/encrypted-blockstore':
-        specifier: ^0.16.4
+        specifier: ^0.16.6
         version: link:../encrypted-blockstore
       '@ipld/car':
         specifier: ^5.2.0
@@ -2106,6 +2103,24 @@ packages:
       - encoding
       - supports-color
       - utf-8-validate
+    dev: false
+
+  /@fireproof/encrypted-blockstore@0.16.5:
+    resolution: {integrity: sha512-9THvr3VT3+VaO4Cmd0uSjh83Qn00DG8sJc9gfxth2uAwpgTJmFojZzT8jHoxHifJ9Efy/JgJQFYfpyGnonWwGQ==}
+    dependencies:
+      '@alanshaw/pail': 0.3.4
+      '@ipld/car': 5.2.0
+      '@ipld/dag-cbor': 9.0.4
+      '@ipld/dag-json': 10.1.3
+      '@ipld/unixfs': 2.1.1
+      '@peculiar/webcrypto': 1.4.3
+      charwise: 3.0.1
+      idb: 7.1.1
+      ipfs-unixfs-exporter: 13.1.7
+      multiformats: 12.1.3
+      p-limit: 4.0.0
+      prolly-trees: 1.0.4
+      uuidv7: 0.6.2
     dev: false
 
   /@fireproof/netlify@0.14.14:

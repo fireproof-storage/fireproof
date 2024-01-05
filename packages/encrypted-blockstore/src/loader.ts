@@ -15,8 +15,10 @@ import type {
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
+
 import { getCrypto, randomBytes } from './crypto-web'
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
+
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
 import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'

@@ -11,7 +11,7 @@ import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir
 import { CID } from 'multiformats/cid'
 
 import { fireproof, Database } from '../dist/test/database.esm.js'
-import { index, Index } from '../dist/test/index.esm.js'
+import { index } from '../dist/test/index.esm.js'
 
 export function cidListIncludes(list, cid) {
   return list.some(c => c.equals(cid))
@@ -61,10 +61,6 @@ describe('public API', function () {
     assert(this.db)
     assert(this.db instanceof Database)
   })
-  // it('should have an index', function () {
-  //   assert(this.index)
-  //   assert(this.index instanceof Index)
-  // })
   it('should put', function () {
     assert(this.ok)
     equals(this.ok.id, 'test')
@@ -84,9 +80,7 @@ describe('basic database', function () {
   /** @type {Database} */
   let db
   beforeEach(async function () {
-    // erase the existing test data
     await resetDirectory(dataDir, 'test-basic')
-
     db = new Database('test-basic')
   })
   it('can put with id', async function () {
@@ -113,7 +107,6 @@ describe('basic database', function () {
   it('can define an index with a default function', async function () {
     const ok = await db.put({ _id: 'test', foo: 'bar' })
     assert(ok)
-
     const idx = index(db, 'foo')
     const result = await idx.query()
     assert(result)
