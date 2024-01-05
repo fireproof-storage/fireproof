@@ -32,24 +32,17 @@ import { MemoryBlockstore } from '@alanshaw/pail/block'
 import * as nodeCrypto from '../dist/test/crypto-node.esm.js'
 import * as nodeStore from '../dist/test/store-node.esm.js'
 
-const randomBytes = size => {
-  throw new Error('randomBytes not implemented')
-}
-
-
-// now we make new stores and pass them in?
-// meta, car, file, remoteWAL
-
-
-
+// const randomBytes = size => {
+//   throw new Error('randomBytes not implemented')
+// }
 
 const loaderOpts = {
-  store : nodeStore,
-  crypto: {...nodeCrypto, randomBytes}
+  store: nodeStore,
+  crypto: nodeCrypto
 }
 
 const indexLoaderOpts = {
-  store : nodeStore,
+  store: nodeStore,
   crypto: nodeCrypto
 }
 
