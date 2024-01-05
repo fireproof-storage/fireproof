@@ -1,4 +1,8 @@
-import { EncryptedBlockstore, LoggingBlockstoreReader } from './transaction'
+import {
+  EncryptedBlockstore,
+  type CompactionFetcher,
+  type TransactionMeta
+} from '@fireproof/encrypted-blockstore'
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -11,13 +15,11 @@ import {
 } from './crdt-helpers'
 import type {
   DocUpdate,
-  BulkResult,
+  CRDTMeta,
   ClockHead,
   FireproofOptions,
   ChangesOptions,
-  CarHeader,
-  IdxMetaMap,
-  TransactionMeta
+  IdxMetaMap
 } from './types'
 import type { Index } from './index'
 import { index } from './index'
@@ -42,7 +44,7 @@ export class CRDT {
       {
         defaultMeta: { head: [] },
         applyMeta: async (meta: TransactionMeta) => {
-          const crdtMeta = meta as unknown as BulkResult
+          const crdtMeta = meta as unknown as CRDTMeta
           // if (snap) {
           //   await this.clock.applyHead(crdtMeta.head, this.clock.head)
           // } else {
@@ -78,7 +80,7 @@ export class CRDT {
     })
   }
 
-  async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
+  async bulk(updates: DocUpdate[], options?: object): Promise<CRDTMeta> {
     await this.ready
 
     const prevHead = [...this.clock.head]
@@ -91,7 +93,7 @@ export class CRDT {
       })
 
       return { head } as TransactionMeta
-    })) as BulkResult
+    })) as CRDTMeta
     await this.clock.applyHead(got.head, prevHead, updates)
     return got
   }
@@ -132,7 +134,7 @@ export class CRDT {
   }
 
   async compact() {
-    return await this.blocks.compact(async (blockLog: LoggingBlockstoreReader) => {
+    return await this.blocks.compact(async (blockLog: CompactionFetcher) => {
       await doCompact(blockLog, this.clock.head)
       return { head: this.clock.head } as TransactionMeta
     })

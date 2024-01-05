@@ -1,5 +1,5 @@
 {
-  "include": ["src", "test", ".eslintrc.cjs", "scripts"],
+  "include": ["src", "test", ".eslintrc.cjs", "scripts", "../connect/src/task-manager.ts"],
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",

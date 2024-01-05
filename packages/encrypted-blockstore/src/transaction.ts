@@ -1,19 +1,19 @@
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import {
-  BlockFetcher,
   AnyBlock,
   AnyLink,
-  ClockHead,
   CarMakeable,
   FireproofOptions,
   TransactionOpts,
   TransactionMeta
-} from '../../fireproof/src/types'
+} from './types'
 
 import { Loader } from './loader'
 import { CID } from 'multiformats'
 
-export class BlockstoreTransaction extends MemoryBlockstore implements CarMakeable {
+export type BlockFetcher = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
+
+export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   parent: EncryptedBlockstore
   constructor(parent: EncryptedBlockstore) {
     super()
@@ -30,14 +30,7 @@ export class BlockstoreTransaction extends MemoryBlockstore implements CarMakeab
   }
 }
 
-// this type can go away or should talk about getFile
-export type BlockstoreReader = BlockFetcher & { loader: Loader | null }
-
-const CarTransaction = BlockstoreTransaction
-
-export { CarTransaction }
-
-export class EncryptedBlockstore implements BlockstoreReader {
+export class EncryptedBlockstore implements BlockFetcher {
   ready: Promise<void>
   name: string | null = null
 
@@ -45,7 +38,7 @@ export class EncryptedBlockstore implements BlockstoreReader {
   opts: FireproofOptions = {}
   tOpts: TransactionOpts
 
-  transactions: Set<BlockstoreTransaction> = new Set()
+  transactions: Set<CarTransaction> = new Set()
 
   constructor(name: string | null, tOpts: TransactionOpts, opts?: FireproofOptions) {
     this.opts = opts || this.opts
@@ -60,10 +53,10 @@ export class EncryptedBlockstore implements BlockstoreReader {
   }
 
   async transaction(
-    fn: (t: BlockstoreTransaction) => Promise<TransactionMeta>,
+    fn: (t: CarTransaction) => Promise<TransactionMeta>,
     opts = { noLoader: false }
   ): Promise<TransactionMeta> {
-    const t = new BlockstoreTransaction(this)
+    const t = new CarTransaction(this)
     const done: TransactionMeta = await fn(t)
     if (this.loader) {
       const car = await this.loader.commit(t, done, opts)
@@ -101,7 +94,7 @@ export class EncryptedBlockstore implements BlockstoreReader {
     await this.ready
     if (!this.loader) throw new Error('loader required to compact')
     if (this.loader.carLog.length < 2) return
-    const blockLog = new LoggingBlockstoreReader(this)
+    const blockLog = new CompactionFetcher(this)
     const meta = await compactFn(blockLog)
     const did = await this.loader!.commit(blockLog.loggedBlocks, meta, {
       compact: true,
@@ -121,17 +114,17 @@ export class EncryptedBlockstore implements BlockstoreReader {
   }
 }
 
-export type CompactFn = (blocks: LoggingBlockstoreReader) => Promise<TransactionMeta>
+export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>
 
-export class LoggingBlockstoreReader implements BlockstoreReader {
+export class CompactionFetcher implements BlockFetcher {
   blocks: EncryptedBlockstore
   loader: Loader | null = null
-  loggedBlocks: BlockstoreTransaction
+  loggedBlocks: CarTransaction
 
   constructor(blocks: EncryptedBlockstore) {
     this.blocks = blocks
     this.loader = blocks.loader
-    this.loggedBlocks = new BlockstoreTransaction(blocks)
+    this.loggedBlocks = new CarTransaction(blocks)
   }
 
   async get(cid: AnyLink) {

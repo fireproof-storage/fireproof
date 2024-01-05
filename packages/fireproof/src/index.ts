@@ -7,9 +7,8 @@ import type {
   IdxMeta,
   DocFragment,
   IdxMetaMap,
-  TransactionMeta
 } from './types'
-import { EncryptedBlockstore } from './transaction'
+import { EncryptedBlockstore, TransactionMeta } from '@fireproof/encrypted-blockstore'
 import {
   bulkIndex,
   indexEntriesForChanges,

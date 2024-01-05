@@ -9,7 +9,7 @@ import path from 'path'
 function generateIndexFile() {
   const typesDir = path.resolve('dist/types')
   const srcTypesPath = path.resolve('src/types.d.ts')
-  const typeIndexPath = path.resolve('dist/types/fireproof.d.ts')
+  const typeIndexPath = path.resolve('dist/types/index.d.ts')
 
   // Read the contents of src/types.d.ts
   const srcTypesContent = fs.readFileSync(srcTypesPath, 'utf8')

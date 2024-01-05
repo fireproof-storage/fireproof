@@ -1,6 +1,6 @@
 import { clockChangesSince } from './crdt-helpers'
-import { EncryptedBlockstore, BlockstoreTransaction } from './transaction'
-import type { DocUpdate, ClockHead, BlockFetcher } from './types'
+import type { EncryptedBlockstore, CarTransaction } from '@fireproof/encrypted-blockstore'
+import type { DocUpdate, ClockHead } from './types'
 import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
 import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
@@ -67,7 +67,6 @@ export class CRDTClock {
   async int_applyHead(newHead: ClockHead, prevHead: ClockHead) {
     const ogHead = sortClockHead(this.head)
     newHead = sortClockHead(newHead)
-    await validateBlocks(newHead, this.blocks)
     if (compareClockHeads(ogHead, newHead)) {
       return
     }
@@ -80,8 +79,9 @@ export class CRDTClock {
     const noLoader = false
     // const noLoader = this.head.length === 1 && !updates?.length
     if (!this.blocks) throw new Error('missing blocks')
+    await validateBlocks(newHead, this.blocks)
     await this.blocks.transaction(
-      async (tblocks: BlockstoreTransaction) => {
+      async (tblocks: CarTransaction) => {
         head = await advanceBlocks(newHead, tblocks, head)
         const result = await root(tblocks, head)
         for (const { cid, bytes } of [...result.additions, ...result.removals]) {
@@ -113,7 +113,7 @@ function compareClockHeads(head1: ClockHead, head2: ClockHead) {
   return head1.toString() === head2.toString()
 }
 
-async function advanceBlocks(newHead: ClockHead, tblocks: BlockFetcher, head: ClockHead) {
+async function advanceBlocks(newHead: ClockHead, tblocks: CarTransaction, head: ClockHead) {
   for (const cid of newHead) {
     try {
       head = await advance(tblocks, head, cid)

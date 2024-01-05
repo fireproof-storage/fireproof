@@ -3,7 +3,7 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
+import type { CRDTMeta, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
 import { DbResponse, ChangesResponse } from './types'
 
 type DbName = string | null
@@ -46,7 +46,7 @@ export class Database {
   async put(doc: Doc): Promise<DbResponse> {
     const { _id, ...value } = doc
     const docId = _id || uuidv7()
-    const result: BulkResult = await this._writeQueue.push({ key: docId, value } as DocUpdate)
+    const result: CRDTMeta = await this._writeQueue.push({ key: docId, value } as DocUpdate)
     return { id: docId, clock: result?.head } as DbResponse
   }
 

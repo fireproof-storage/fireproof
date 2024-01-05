@@ -43,3 +43,4 @@ export type FireproofOptions = {
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
 export type DbMeta = { car: AnyLink; key: string | null }
+
