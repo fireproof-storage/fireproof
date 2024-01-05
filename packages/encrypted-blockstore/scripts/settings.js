@@ -46,6 +46,16 @@ export function createBuildSettings(options) {
     }
   }
 
+  // make browser builds
+  // index, store-web, crypto-web
+  // -- iife, esm, cjs
+
+  // make node builds
+  // index, store-node, crypto-node
+
+  // make edge builds...
+  // index, store-edge, crypto-edge
+
   // Generate build configs for each entry point
   const configs = entryPoints.map(entryPoint => {
     const filename = path.basename(entryPoint, '.ts')
@@ -60,74 +70,58 @@ export function createBuildSettings(options) {
       entryPoints: [entryPoint],
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...commonSettings.plugins],
-      banner: bannerLog(`
-console.log('eb esm/node build');`, `
-import { createRequire } from 'module'; 
-const require = createRequire(import.meta.url);
-        `)
+      banner: bannerLog(
+        `
+console.log('eb esm/node build');`
+      )
     }
 
-    const testEsmConfig = {
-      ...esmConfig,
-      platform: 'node',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      plugins: [...esmConfig.plugins,
-        alias(
-          {
-            'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
-            './store-browser': join(__dirname, '../src/store-fs.ts'),
-            './crypto-web': join(__dirname, '../src/crypto-node.ts')
-          }
-        ),
-        commonjs({ filter: /^peculiar|ipfs-utils/ }),
-        // polyfillNode({
-        //   polyfills: { crypto: false, fs: true, process: 'empty' }
-        // })
-      ],
-      banner: bannerLog(`
-      console.log('teb esm/node build');`, `
-      import { createRequire } from 'module'; 
-      const require = createRequire(import.meta.url);
-              `)
-    }
-
-    builds.push(testEsmConfig)
-
-    if (/(index|store|crypto)\./.test(entryPoint)) {
-      const esmPublishConfig = {
+    if (!/.*-web.*/.test(entryPoint)) {
+      const testEsmConfig = {
         ...esmConfig,
-        outfile: `dist/node/${filename}.esm.js`,
-        entryPoints: [entryPoint],
-        minify: true
-      }
-      builds.push(esmPublishConfig)
-
-      const cjsConfig = {
-        ...commonSettings,
-        outfile: `dist/node/${filename}.cjs`,
-        format: 'cjs',
         platform: 'node',
-        entryPoints: [entryPoint],
-        minify: true,
-        banner: bannerLog`
-console.log('eb cjs/node build');
-`
-
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        plugins: [
+          ...esmConfig.plugins,
+          alias({
+            'ipfs-utils/src/http/fetch.js': join(
+              __dirname,
+              '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'
+            )
+            // './store-browser': join(__dirname, '../src/store-fs.ts'),
+            // './crypto-web': join(__dirname, '../src/crypto-node.ts')
+          }),
+          commonjs({ filter: /^peculiar|ipfs-utils/ })
+          // polyfillNode({
+          //   polyfills: { crypto: false, fs: true, process: 'empty' }
+          // })
+        ],
+        banner: bannerLog(
+          `
+        console.log('teb esm/node build');`,
+          `
+        import { createRequire } from 'module'; 
+        const require = createRequire(import.meta.url);
+                `
+        )
       }
-      builds.push(cjsConfig)
 
-      // popular builds inherit here
+      builds.push(testEsmConfig)
+    }
+
+    if (/.*-web.*|.*index.*/.test(entryPoint)) {
+      // browser builds inherit here
       const browserIIFEConfig = {
         ...commonSettings,
-        outfile: `dist/browser/${filename}.iife.js`,
+        outfile: `dist/web/${filename}.iife.js`,
         format: 'iife',
         globalName: 'FireproofConnect',
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
-        minify: true,
+        minify: false,
         banner: bannerLog`
-console.log('eb browser/es2015 build');
+console.log('eb web/es2015 build');
 `,
         plugins: [
           // alias(
@@ -152,9 +146,9 @@ console.log('eb browser/es2015 build');
       // create react app uses this
       const browserESMConfig = {
         ...browserIIFEConfig,
-        outfile: `dist/browser/${filename}.esm.js`,
+        outfile: `dist/web/${filename}.esm.js`,
         format: 'esm',
-        minify: true,
+        minify: false,
         banner: bannerLog`
 console.log('eb esm/es2015 build');
 `
@@ -165,14 +159,37 @@ console.log('eb esm/es2015 build');
       // most popular
       const browserCJSConfig = {
         ...browserIIFEConfig,
-        outfile: `dist/browser/${filename}.cjs`,
+        outfile: `dist/web/${filename}.cjs`,
         format: 'cjs',
-        minify: true,
+        minify: false,
         banner: bannerLog`
 console.log('eb cjs/es2015 build');
 `
       }
       builds.push(browserCJSConfig)
+    }
+
+    if (/.*-node.*|.*index.*/.test(entryPoint)) {
+      const esmPublishConfig = {
+        ...esmConfig,
+        outfile: `dist/node/${filename}.esm.js`,
+        entryPoints: [entryPoint],
+        minify: false
+      }
+      builds.push(esmPublishConfig)
+
+      const cjsConfig = {
+        ...commonSettings,
+        outfile: `dist/node/${filename}.cjs`,
+        format: 'cjs',
+        platform: 'node',
+        entryPoints: [entryPoint],
+        minify: false,
+        banner: bannerLog`
+console.log('eb cjs/node build');
+`
+      }
+      builds.push(cjsConfig)
     }
 
     return builds

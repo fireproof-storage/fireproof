@@ -52,7 +52,7 @@ export default class Server implements Party.Server {
           `car-${carId}`
         )) as Uint8Array;
         if (carArrayBuffer) {
-          return json(carArrayBuffer);
+          return new Response(carArrayBuffer, { status: 200, headers: CORS });
         }
         return json(JSON.stringify({ ok: false }),404);
       }

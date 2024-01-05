@@ -17,7 +17,8 @@ import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 
 import { getCrypto, randomBytes } from './crypto-web'
-import { DataStore, MetaStore, RemoteWAL } from './store-browser'
+import { DataStore, MetaStore } from './store'
+import { RemoteWAL } from './remote-wal'
 
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
 import type { CarTransaction } from './transaction'
@@ -76,10 +77,10 @@ export class Loader {
     this.name = name
     this.tOpts = tOpts
     this.opts = opts || this.opts
-    this.metaStore = new MetaStore(this.name)
-    this.carStore = new DataStore(this.name)
-    this.fileStore = new DataStore(this.name)
-    this.remoteWAL = new RemoteWAL(this)
+    this.metaStore = new tOpts.store.MetaStore(this.name)
+    this.carStore = new tOpts.store.DataStore(this.name)
+    this.fileStore = new tOpts.store.DataStore(this.name)
+    this.remoteWAL = new tOpts.store.RemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')

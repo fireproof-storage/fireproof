@@ -7,7 +7,7 @@ import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
 
 // ts-unused-exports:disable-next-line
 export class DataStore extends DataStoreBase {
-  tag: string = 'car-browser-idb'
+  tag: string = 'car-web-idb'
   idb: IDBPDatabase<unknown> | null = null
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
@@ -55,7 +55,7 @@ export class DataStore extends DataStoreBase {
 // ts-unused-exports:disable-next-line
 
 export class RemoteWAL extends RemoteWALBase {
-  tag: string = 'wal-browser-ls'
+  tag: string = 'wal-web-ls'
 
   headerKey(branch: string) {
     // remove 'public' on next storage version bump
@@ -87,7 +87,7 @@ export class RemoteWAL extends RemoteWALBase {
 
 // ts-unused-exports:disable-next-line
 export class MetaStore extends MetaStoreBase {
-  tag: string = 'header-browser-ls'
+  tag: string = 'header-web-ls'
 
   headerKey(branch: string) {
     return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`

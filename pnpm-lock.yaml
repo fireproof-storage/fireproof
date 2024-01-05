@@ -460,7 +460,7 @@ importers:
         specifier: ^0.3.4
         version: 0.3.4
       '@fireproof/encrypted-blockstore':
-        specifier: ^0.16.6
+        specifier: ^0.16.9
         version: link:../encrypted-blockstore
       '@ipld/car':
         specifier: ^5.2.0

@@ -12,7 +12,7 @@ import { CID } from 'multiformats'
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, matches, equals, dataDir } from '../../fireproof/test/helpers.js'
 
-import { DataStore, MetaStore } from '../dist/test/store-fs.esm.js'
+import { DataStore, MetaStore } from '../dist/test/store-node.esm.js'
 
 const { readFile } = promises
 

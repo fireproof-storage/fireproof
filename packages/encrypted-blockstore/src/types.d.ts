@@ -35,10 +35,16 @@ export type CryptoOpts = {
 }
 
 export type TransactionOpts = {
-  defaultMeta: TransactionMeta
   applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
   compact?: (blocks: TransactionBlockstore) => Promise<void>
-  crypto?: CryptoOpts
+  crypto: CryptoOpts,
+  store: StoreOpts
+}
+
+export type StoreOpts = {
+  MetaStore: any
+  DataStore: any
+  RemoteWAL: any
 }
 
 export type FireproofOptions = {

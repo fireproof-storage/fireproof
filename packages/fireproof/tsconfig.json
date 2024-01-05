@@ -1,5 +1,5 @@
 {
-  "include": ["src", "test", ".eslintrc.cjs", "scripts", "../encrypted-blockstore/test/loader.test.js", "../encrypted-blockstore/test/store-fs.test.js", "../encrypted-blockstore/test/transaction.test.js"],
+  "include": ["src", "test", ".eslintrc.cjs", "scripts", "../encrypted-blockstore/test/loader.test.js", "../encrypted-blockstore/test/store-node.test.js", "../encrypted-blockstore/test/transaction.test.js"],
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",

@@ -4,6 +4,11 @@ import {
   type TransactionMeta,
   type CarTransaction
 } from '@fireproof/encrypted-blockstore'
+
+import * as webCrypto  from '@fireproof/encrypted-blockstore/crypto-node'
+import * as webStore from  '@fireproof/encrypted-blockstore/store-node'
+
+
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -25,6 +30,8 @@ import type {
 import { index, type Index } from './index'
 import { CRDTClock } from './crdt-clock'
 
+
+
 export class CRDT {
   name: string | null
   opts: FireproofOptions = {}
@@ -42,11 +49,12 @@ export class CRDT {
     this.blocks = new EncryptedBlockstore(
       this.name,
       {
-        defaultMeta: { head: [] },
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as unknown as CRDTMeta
           await this.clock.applyHead(crdtMeta.head, [])
-        }
+        },
+        crypto: webCrypto,
+        store: webStore
       },
       this.opts
     )
@@ -54,13 +62,14 @@ export class CRDT {
     this.indexBlocks = new EncryptedBlockstore(
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
-        defaultMeta: { indexes: {} },
         applyMeta: async (meta: TransactionMeta) => {
           const idxCarMeta = meta as unknown as IdxMetaMap
           for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
             index({ _crdt: this }, name, undefined, idx as any)
           }
-        }
+        },
+        crypto: webCrypto,
+        store: webStore
       },
       this.opts
     )
