@@ -31,7 +31,7 @@ export function createBuildSettings(options) {
     ...options
   }
 
-  const doLog = false
+  const doLog = true
   function bannerLog(banner, always = '') {
     if (doLog) {
       return {
@@ -61,7 +61,7 @@ export function createBuildSettings(options) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...commonSettings.plugins],
       banner: bannerLog(`
-console.log('esm/node build');`, `
+console.log('eb esm/node build');`, `
 import { createRequire } from 'module'; 
 const require = createRequire(import.meta.url);
         `)
@@ -79,12 +79,16 @@ const require = createRequire(import.meta.url);
             './crypto-web': join(__dirname, '../src/crypto-node.ts')
           }
         ),
-        commonjs({ filter: /^peculiar|ipfs-utils/ })
+        commonjs({ filter: /^peculiar|ipfs-utils/ }),
         // polyfillNode({
         //   polyfills: { crypto: false, fs: true, process: 'empty' }
         // })
-      ]
-
+      ],
+      banner: bannerLog(`
+      console.log('teb esm/node build');`, `
+      import { createRequire } from 'module'; 
+      const require = createRequire(import.meta.url);
+              `)
     }
 
     builds.push(testEsmConfig)
