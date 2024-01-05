@@ -110,7 +110,7 @@ const require = createRequire(import.meta.url);
         entryPoints: [entryPoint],
         minify: true,
         banner: bannerLog`
-console.log('cjs/node build');
+console.log('eb cjs/node build');
 `
 
       }
@@ -127,7 +127,7 @@ console.log('cjs/node build');
         entryPoints: [entryPoint],
         minify: true,
         banner: bannerLog`
-console.log('browser/es2015 build');
+console.log('eb browser/es2015 build');
 `,
         plugins: [
           // alias(
@@ -156,7 +156,7 @@ console.log('browser/es2015 build');
         format: 'esm',
         minify: true,
         banner: bannerLog`
-console.log('esm/es2015 build');
+console.log('eb esm/es2015 build');
 `
       }
 
@@ -169,7 +169,7 @@ console.log('esm/es2015 build');
         format: 'cjs',
         minify: true,
         banner: bannerLog`
-console.log('cjs/es2015 build');
+console.log('eb cjs/es2015 build');
 `
       }
       builds.push(browserCJSConfig)

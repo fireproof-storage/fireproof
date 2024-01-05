@@ -5,13 +5,15 @@ import {
   CarMakeable,
   FireproofOptions,
   TransactionOpts,
-  TransactionMeta
+  TransactionMeta as TM
 } from './types'
 
 import { Loader } from './loader'
 import { CID } from 'multiformats'
 
 export type BlockFetcher = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
+
+export type TransactionMeta = TM
 
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   parent: EncryptedBlockstore
@@ -48,7 +50,7 @@ export class EncryptedBlockstore implements BlockFetcher {
       this.loader = new Loader(name, this.tOpts, this.opts)
       this.ready = this.loader.ready
     } else {
-      this.ready = Promise.resolve() // Promise.reject(new Error('implement default header in subclass'))
+      this.ready = Promise.resolve()
     }
   }
 

@@ -64,7 +64,7 @@ export function createBuildSettings(options) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...commonSettings.plugins],
       banner: bannerLog(`
-console.log('esm/node build');`, `
+console.log('fb esm/node build');`, `
 import { createRequire } from 'module'; 
 const require = createRequire(import.meta.url);
         `)
@@ -86,7 +86,12 @@ const require = createRequire(import.meta.url);
         // polyfillNode({
         //   polyfills: { crypto: false, fs: true, process: 'empty' }
         // })
-      ]
+      ],
+      banner: bannerLog(`
+      console.log('tfb esm/node build');`, `
+      import { createRequire } from 'module'; 
+      const require = createRequire(import.meta.url);
+              `)
 
     }
 
@@ -158,7 +163,7 @@ console.log('cjs/node build');
         entryPoints: [entryPoint],
         
         banner: bannerLog`
-console.log('browser/es2015 build');
+console.log('fp browser/es2015 build');
 `,
         plugins: [
           // alias(
@@ -187,7 +192,7 @@ console.log('browser/es2015 build');
         format: 'esm',
         
         banner: bannerLog`
-console.log('esm/es2015 build');
+console.log('fp esm/es2015 build');
 `
       }
 
@@ -200,7 +205,7 @@ console.log('esm/es2015 build');
         format: 'cjs',
         
         banner: bannerLog`
-console.log('cjs/es2015 build');
+console.log('fp cjs/es2015 build');
 `
       }
       builds.push(browserCJSConfig)

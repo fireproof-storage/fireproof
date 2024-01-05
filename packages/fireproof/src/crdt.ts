@@ -1,7 +1,8 @@
 import {
   EncryptedBlockstore,
   type CompactionFetcher,
-  type TransactionMeta
+  type TransactionMeta,
+  type CarTransaction
 } from '@fireproof/encrypted-blockstore'
 import {
   clockChangesSince,
@@ -44,11 +45,7 @@ export class CRDT {
         defaultMeta: { head: [] },
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as unknown as CRDTMeta
-          // if (snap) {
-          //   await this.clock.applyHead(crdtMeta.head, this.clock.head)
-          // } else {
           await this.clock.applyHead(crdtMeta.head, [])
-          // }
         }
       },
       this.opts
@@ -81,21 +78,20 @@ export class CRDT {
 
   async bulk(updates: DocUpdate[], options?: object): Promise<CRDTMeta> {
     await this.ready
-
     const prevHead = [...this.clock.head]
-
-    const got = (await this.blocks.transaction(async (tblocks): Promise<TransactionMeta> => {
+    const meta = (await this.blocks.transaction(async (tblocks: CarTransaction): Promise<TransactionMeta> => {
       const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
       updates = updates.map(({ key, value, del, clock }) => {
         readFiles(this.blocks, { doc: value })
         return { key, value, del, clock }
       })
-
       return { head } as TransactionMeta
     })) as CRDTMeta
-    await this.clock.applyHead(got.head, prevHead, updates)
-    return got
+    await this.clock.applyHead(meta.head, prevHead, updates)
+    return meta
   }
+
+  // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
   async allDocs() {
     await this.ready
