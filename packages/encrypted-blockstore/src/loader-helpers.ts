@@ -6,7 +6,7 @@ import * as CBW from '@ipld/car/buffer-writer'
 import * as codec from '@ipld/dag-cbor'
 import { CarReader } from '@ipld/car'
 
-import { AnyBlock, AnyCarHeader, AnyLink, CarHeader, CarMakeable } from './types'
+import { AnyBlock, AnyLink, CarHeader, CarMakeable } from './types'
 
 export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0
@@ -29,7 +29,7 @@ export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<A
   return await encode({ value: writer.bytes, hasher, codec: raw })
 }
 
-export async function encodeCarHeader(fp: AnyCarHeader) {
+export async function encodeCarHeader(fp: CarHeader) {
   return (await encode({
     value: { fp },
     hasher,

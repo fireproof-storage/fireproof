@@ -254,11 +254,11 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@fireproof/connect':
-        specifier: ^0.14.0
-        version: 0.14.2(encoding@0.1.13)
+        specifier: workspace:*
+        version: link:../connect
       '@fireproof/core':
-        specifier: ^0.14.0
-        version: 0.14.9
+        specifier: workspace:*
+        version: link:../fireproof
       '@fireproof/netlify':
         specifier: ^0.14.13
         version: 0.14.14(encoding@0.1.13)
@@ -303,11 +303,165 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.99.9)
 
+  packages/encrypted-blockstore:
+    dependencies:
+      '@alanshaw/pail':
+        specifier: ^0.3.4
+        version: 0.3.4
+      '@ipld/car':
+        specifier: ^5.2.0
+        version: 5.4.2
+      '@ipld/dag-cbor':
+        specifier: ^9.0.3
+        version: 9.2.4
+      '@ipld/dag-json':
+        specifier: ^10.1.2
+        version: 10.2.5
+      '@ipld/unixfs':
+        specifier: ^2.1.1
+        version: 2.2.0
+      '@peculiar/webcrypto':
+        specifier: ^1.4.3
+        version: 1.5.0
+      charwise:
+        specifier: ^3.0.1
+        version: 3.0.1
+      idb:
+        specifier: ^7.1.1
+        version: 7.1.1
+      ipfs-unixfs-exporter:
+        specifier: ^13.1.7
+        version: 13.6.2
+      multiformats:
+        specifier: ^12.0.1
+        version: 12.1.3
+      p-limit:
+        specifier: ^4.0.0
+        version: 4.0.0
+      prolly-trees:
+        specifier: ^1.0.4
+        version: 1.0.4
+      uuidv7:
+        specifier: ^0.6.2
+        version: 0.6.3
+    devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.6(cjs-module-lexer@0.6.0)(esbuild@0.18.20)
+      '@rollup/plugin-alias':
+        specifier: ^5.0.0
+        version: 5.1.1(rollup@3.29.5)
+      '@rollup/plugin-commonjs':
+        specifier: ^25.0.4
+        version: 25.0.8(rollup@3.29.5)
+      '@rollup/plugin-json':
+        specifier: ^6.0.0
+        version: 6.1.0(rollup@3.29.5)
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.2.0
+        version: 15.3.1(rollup@3.29.5)
+      '@types/async':
+        specifier: ^3.2.20
+        version: 3.2.24
+      '@types/mocha':
+        specifier: ^10.0.1
+        version: 10.0.10
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^6.1.0
+        version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)(typescript@5.8.3)
+      '@typescript-eslint/parser':
+        specifier: ^6.1.0
+        version: 6.21.0(eslint@8.57.1)(typescript@5.8.3)
+      browser-assert:
+        specifier: ^1.2.1
+        version: 1.2.1
+      c8:
+        specifier: ^8.0.1
+        version: 8.0.1
+      crypto-browserify:
+        specifier: ^3.12.0
+        version: 3.12.1
+      esbuild:
+        specifier: ^0.18.14
+        version: 0.18.20
+      esbuild-plugin-alias:
+        specifier: ^0.2.1
+        version: 0.2.1
+      esbuild-plugin-polyfill-node:
+        specifier: ^0.3.0
+        version: 0.3.0(esbuild@0.18.20)
+      esbuild-plugin-tsc:
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.8.3)
+      eslint:
+        specifier: ^8.45.0
+        version: 8.57.1
+      eslint-config-standard:
+        specifier: ^17.1.0
+        version: 17.1.0(eslint-plugin-import@2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint-plugin-promise@6.6.0(eslint@8.57.1))(eslint@8.57.1)
+      eslint-plugin-import:
+        specifier: ^2.27.5
+        version: 2.31.0(@typescript-eslint/parser@6.21.0(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)
+      eslint-plugin-mocha:
+        specifier: ^10.1.0
+        version: 10.5.0(eslint@8.57.1)
+      eslint-plugin-node:
+        specifier: ^11.1.0
+        version: 11.1.0(eslint@8.57.1)
+      eslint-plugin-promise:
+        specifier: ^6.1.1
+        version: 6.6.0(eslint@8.57.1)
+      memfs:
+        specifier: ^4.2.1
+        version: 4.17.2
+      mocha:
+        specifier: ^10.2.0
+        version: 10.8.2
+      nodemon:
+        specifier: ^3.0.1
+        version: 3.1.10
+      os-browserify:
+        specifier: ^0.3.0
+        version: 0.3.0
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
+      process:
+        specifier: ^0.11.10
+        version: 0.11.10
+      puppeteer:
+        specifier: ^21.0.3
+        version: 21.11.0(typescript@5.8.3)
+      rollup-plugin-polyfill-node:
+        specifier: ^0.12.0
+        version: 0.12.0(rollup@3.29.5)
+      rollup-plugin-visualizer:
+        specifier: ^5.9.2
+        version: 5.14.0(rollup@3.29.5)
+      stream-browserify:
+        specifier: ^3.0.0
+        version: 3.0.0
+      ts-unused-exports:
+        specifier: ^10.0.0
+        version: 10.1.0(typescript@5.8.3)
+      tslib:
+        specifier: ^2.6.0
+        version: 2.8.1
+      typescript:
+        specifier: ^5.1.6
+        version: 5.8.3
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
+
   packages/fireproof:
     dependencies:
       '@alanshaw/pail':
         specifier: ^0.3.4
         version: 0.3.4
+      '@fireproof/encrypted-blockstore':
+        specifier: ^0.16.4
+        version: 0.16.12
       '@ipld/car':
         specifier: ^5.2.0
         version: 5.4.2
@@ -1195,6 +1349,9 @@ packages:
 
   '@fireproof/core@0.8.0':
     resolution: {integrity: sha512-lB9e1MBGCl2Es2jbGsUro8OCC1lQQlb5TybihGuei8FmxiNmTkaorBgfc49YJAXM7NF8qfJsOA2gh1Q8IUY7FQ==}
+
+  '@fireproof/encrypted-blockstore@0.16.12':
+    resolution: {integrity: sha512-5FXkg355FlEsNnRe7Nbd0z1bmGVL30Fg6zEbBYMLUUYiXeOZwbJ9+T4w38C8/+1aWmS468u1D+pNlWtl7YoMUA==}
 
   '@fireproof/netlify@0.14.14':
     resolution: {integrity: sha512-VLC9g79Nq3lRa2PX7aGHIubCArClIR8Mt/b06V9XE5N99Ar37t6mZf1tV8g7pN7HP3A/r1Tf5kNwfXR+loAN5w==}
@@ -6868,6 +7025,22 @@ snapshots:
       - encoding
       - supports-color
       - utf-8-validate
+
+  '@fireproof/encrypted-blockstore@0.16.12':
+    dependencies:
+      '@alanshaw/pail': 0.3.4
+      '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.4
+      '@ipld/dag-json': 10.2.5
+      '@ipld/unixfs': 2.2.0
+      '@peculiar/webcrypto': 1.5.0
+      charwise: 3.0.1
+      idb: 7.1.1
+      ipfs-unixfs-exporter: 13.6.2
+      multiformats: 12.1.3
+      p-limit: 4.0.0
+      prolly-trees: 1.0.4
+      uuidv7: 0.6.3
 
   '@fireproof/netlify@0.14.14(encoding@0.1.13)':
     dependencies:

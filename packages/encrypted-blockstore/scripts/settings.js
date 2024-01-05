@@ -17,14 +17,11 @@ const entryPoints = fs
   .filter(file => path.extname(file) === '.ts')
   .map(file => path.join('src', file))
 
-  const doMinify = false
-  const doLog = false
-
 export function createBuildSettings(options) {
   const commonSettings = {
     entryPoints,
+    logLevel: 'error',
     bundle: true,
-    minify: doMinify,
     sourcemap: true,
     plugins: [
       esbuildPluginTsc({
@@ -34,7 +31,7 @@ export function createBuildSettings(options) {
     ...options
   }
 
-
+  const doLog = false
   function bannerLog(banner, always = '') {
     if (doLog) {
       return {
@@ -90,56 +87,24 @@ const require = createRequire(import.meta.url);
 
     }
 
-
-    const memEsmConfig = {
-      ...esmConfig,
-      // platform: 'node',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      plugins: [...esmConfig.plugins,
-        alias(
-          {
-            // 'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
-            './store-browser': join(__dirname, '../src/store-memory.ts'),
-            // './crypto-web': join(__dirname, '../src/crypto-node.ts')
-          }
-        ),
-        commonjs({ filter: /^peculiar|ipfs-utils/ })
-        // polyfillNode({
-        //   polyfills: { crypto: false, fs: true, process: 'empty' }
-        // })
-      
-      ], banner: {}
-
-    }
-
     builds.push(testEsmConfig)
 
-    if (/fireproof\./.test(entryPoint)) {
+    if (/index\./.test(entryPoint)) {
       const esmPublishConfig = {
-        ...testEsmConfig,
+        ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
         entryPoints: [entryPoint],
-        minify: false
+        minify: true
       }
       builds.push(esmPublishConfig)
 
-      const memConfig = {
-        ...memEsmConfig,
-        outfile: `dist/memory/${filename}.esm.js`,
-        format: 'esm',
-        platform: 'browser',
-        entryPoints: [entryPoint]}
-        
-        builds.push(memConfig)
-
-
       const cjsConfig = {
-        ...testEsmConfig,
+        ...commonSettings,
         outfile: `dist/node/${filename}.cjs`,
         format: 'cjs',
         platform: 'node',
         entryPoints: [entryPoint],
-        
+        minify: true,
         banner: bannerLog`
 console.log('cjs/node build');
 `
@@ -152,11 +117,11 @@ console.log('cjs/node build');
         ...commonSettings,
         outfile: `dist/browser/${filename}.iife.js`,
         format: 'iife',
-        globalName: 'Fireproof',
+        globalName: 'FireproofConnect',
         platform: 'browser',
         target: 'es2020',
         entryPoints: [entryPoint],
-        
+        minify: true,
         banner: bannerLog`
 console.log('browser/es2015 build');
 `,
@@ -185,7 +150,7 @@ console.log('browser/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.esm.js`,
         format: 'esm',
-        
+        minify: true,
         banner: bannerLog`
 console.log('esm/es2015 build');
 `
@@ -198,7 +163,7 @@ console.log('esm/es2015 build');
         ...browserIIFEConfig,
         outfile: `dist/browser/${filename}.cjs`,
         format: 'cjs',
-        
+        minify: true,
         banner: bannerLog`
 console.log('cjs/es2015 build');
 `

@@ -53,8 +53,8 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
-    "@fireproof/connect": "^0.14.0",
-    "@fireproof/core": "^0.14.0",
+    "@fireproof/connect": "workspace:*",
+    "@fireproof/core": "workspace:*",
     "@fireproof/netlify": "^0.14.13",
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",

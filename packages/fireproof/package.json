@@ -58,8 +58,7 @@
     "build:test": "node ./scripts/build.js",
     "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
     "build:all": " npm run build && npm run test:browser",
-
-    "test:serve":"npx serve-http test/www -p 8080"
+    "test:serve": "npx serve-http test/www -p 8080"
   },
   "keywords": [
     "database",
@@ -126,6 +125,7 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.4",
+    "@fireproof/encrypted-blockstore": "^0.16.4",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",

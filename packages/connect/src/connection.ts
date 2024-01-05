@@ -5,21 +5,14 @@ import type {
   DownloadMetaFnParams,
   DownloadDataFnParams
 } from './types'
-import type { AnyLink, Loader, DataStore } from '@fireproof/core'
+import type { AnyLink, Loader } from '@fireproof/core'
 
-import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
+import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
-import type { BlockView, Link } from 'multiformats'
+import type { Link } from 'multiformats'
+import { TaskManager } from './task-manager'
 
-interface DbLoader extends Loader {
-  name: string
-  fileStore?: DataStore
-  remoteFileStore?: RemoteDataStore
-}
-function isDbLoader(loader: Loader): loader is DbLoader {
-  return (loader as DbLoader).fileStore !== undefined
-}
-export type CarClockHead = Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]
+export type CarClockHead = Link<DbMetaEventBlock>[]
 
 export abstract class Connection {
   ready: Promise<any>
@@ -27,7 +20,8 @@ export abstract class Connection {
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   eventBlocks = new MemoryBlockstore()
   parents: CarClockHead = []
-  loader?: Loader | null
+  loader?: Loader
+  taskManager?: TaskManager
 
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataUpload(
@@ -43,6 +37,11 @@ export abstract class Connection {
     this.loaded = Promise.resolve()
   }
 
+  setLoader(loader: Loader) {
+    this.loader = loader
+    this.taskManager = new TaskManager(loader)
+  }
+
   async refresh() {
     await this.loader!.remoteMetaStore!.load('main')
     await this.loader!.remoteWAL?._process()
@@ -54,15 +53,16 @@ export abstract class Connection {
   }
 
   connectMeta(loader: Loader) {
-    this.loader = loader
-    const remote = new RemoteMetaStore(loader.name, this)
+    this.setLoader(loader)
+
+    const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {
-        await loader.handleDbMetasFromStore(metas)
+        await this.loader!.handleDbMetasFromStore(metas)
       }
     })
-    loader.remoteMetaStore = remote
-    this.loaded = loader.ready.then(async () => {
+    this.loader!.remoteMetaStore = remote
+    this.loaded = this.loader!.ready.then(async () => {
       remote!.load('main').then(() => {
         void this.loader!.remoteWAL?._process()
       })
@@ -70,44 +70,24 @@ export abstract class Connection {
   }
 
   connectStorage(loader: Loader) {
-    this.loader = loader
-    loader.remoteCarStore = new RemoteDataStore(loader.name, this)
-    if (isDbLoader(loader)) {
-      loader.remoteFileStore = new RemoteDataStore(loader.name, this, 'file')
-    }
+    this.setLoader(loader)
+    this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
+    this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }
 
-  async createEventBlock(bytes: Uint8Array): Promise<
-    BlockView<
-      EventView<{
-        dbMeta: Uint8Array
-      }>,
-      number,
-      number,
-      1
-    >
-  > {
+  async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
     const data = {
       dbMeta: bytes
     }
     const event = await EventBlock.create(data, this.parents)
-    // const eventBlocks = new MemoryBlockstore()
     await this.eventBlocks.put(event.cid, event.bytes)
-    // await eventBlocks.put(event.cid, event.bytes)
-    return event
+    return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
 
-  async decodeEventBlock(bytes: Uint8Array): Promise<
-    BlockView<
-      EventView<{
-        dbMeta: Uint8Array
-      }>,
-      number,
-      number,
-      1
-    >
-  > {
+  async decodeEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
     const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes)
-    return event
+    return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
 }
+
+export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>

@@ -1,31 +1,31 @@
 {
-  "name": "@fireproof/core",
-  "version": "0.16.0-rc.1",
-  "description": "Live database for the web.",
-  "main": "./dist/browser/fireproof.cjs",
-  "module": "./dist/browser/fireproof.esm.js",
+  "name": "@fireproof/encrypted-blockstore",
+  "version": "0.16.4",
+  "description": "Content-addressed blockstore with pluggable CRDT storage connectors.",
+  "main": "./dist/browser/index.cjs", 
+  "module": "./dist/browser/index.esm.js",
   "exports": {
     ".": {
-      "import": "./dist/browser/fireproof.esm.js",
-      "require": "./dist/browser/fireproof.cjs",
-      "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/browser/fireproof.iife.js"
+      "import": "./dist/browser/index.esm.js",
+      "require": "./dist/browser/index.cjs",
+      "types": "./dist/types/index.d.ts",
+      "script": "./dist/browser/index.iife.js"
     },
     "./node": {
-      "import": "./dist/node/fireproof.esm.js",
-      "require": "./dist/node/fireproof.cjs",
-      "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/browser/fireproof.iife.js",
-      "default": "./dist/node/fireproof.esm.js"
+      "import": "./dist/node/index.esm.js",
+      "require": "./dist/node/index.cjs",
+      "types": "./dist/types/index.d.ts",
+      "script": "./dist/browser/index.iife.js",
+      "default": "./dist/node/index.esm.js"
     },
     "./memory": {
-      "import": "./dist/memory/fireproof.esm.js",
-      "types": "./dist/types/fireproof.d.ts",
-      "default": "./dist/memory/fireproof.esm.js"
+      "import": "./dist/memory/index.esm.js",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/memory/index.esm.js"
     }
   },
-  "browser": "./dist/fireproof.browser.iife.js",
-  "types": "./dist/types/fireproof.d.ts",
+  "browser": "./dist/index.browser.iife.js",
+  "types": "./dist/types/index.d.ts",
   "files": [
     "dist/node",
     "dist/memory",
@@ -34,7 +34,7 @@
   ],
   "type": "module",
   "scripts": {
-    "prepublishOnly": "cp ../../README.md . && npm run build:all",
+    "prepublishOnly": "cp ../../README.md . && npm run build",
     "postpublish": "rm README.md",
     "clean": "rm -rf dist/*",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
@@ -56,9 +56,7 @@
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
     "build:test": "node ./scripts/build.js",
-    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
-    "build:all": " npm run build && npm run test:browser",
-
+    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
     "test:serve":"npx serve-http test/www -p 8080"
   },
   "keywords": [

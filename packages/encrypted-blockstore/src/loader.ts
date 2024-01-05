@@ -4,14 +4,10 @@ import { CID } from 'multiformats'
 
 import type {
   AnyBlock,
-  AnyCarHeader,
   AnyLink,
   CarHeader,
-  CarLoaderHeader,
   CommitOpts,
   DbMeta,
-  FileCarHeader,
-  FileResult,
   FireproofOptions,
   TransactionMeta,
   TransactionOpts
@@ -22,7 +18,7 @@ import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 import { getCrypto, randomBytes } from './crypto-web'
 import { DataStore, MetaStore, RemoteWAL } from './store-browser'
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-import type { BlockstoreTransaction } from './transaction'
+import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
 // ts-unused-exports:disable-next-line
@@ -70,7 +66,6 @@ export class Loader {
   keyId: string | undefined
   seenCompacted: Set<string> = new Set()
   writing: Promise<TransactionMeta | void> = Promise.resolve()
-
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
@@ -166,20 +161,22 @@ export class Loader {
   }
 
   async commitFiles(
-    t: BlockstoreTransaction,
-    done: FileResult,
+    t: CarTransaction,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
   }
   // can these skip the queue? or have a file queue?
   async _commitInternalFiles(
-    t: BlockstoreTransaction,
-    done: FileResult,
+    t: CarTransaction,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact)
+    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact) as {
+      files: AnyLink[]
+    }
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.fileStore!.save({ cid, bytes })
     await this.remoteWAL!.enqueueFile(cid, !!opts.public)
@@ -191,7 +188,7 @@ export class Loader {
   }
 
   async commit(
-    t: BlockstoreTransaction,
+    t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
@@ -199,13 +196,13 @@ export class Loader {
   }
 
   async _commitInternal(
-    t: BlockstoreTransaction,
+    t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
     const header = done
-    const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as AnyCarHeader
+    const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as CarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
@@ -216,7 +213,7 @@ export class Loader {
     return cid
   }
 
-  async prepareRoots(fp: AnyCarHeader | FileCarHeader, t: BlockstoreTransaction): Promise<AnyLink[]> {
+  async prepareRoots(fp: CarHeader, t: CarTransaction): Promise<AnyLink[]> {
     const header = await encodeCarHeader(fp)
     await t.put(header.cid, header.bytes)
     // const got = await t.get(header.cid)
@@ -226,7 +223,7 @@ export class Loader {
 
   async prepareCarFile(
     root: AnyLink,
-    t: BlockstoreTransaction,
+    t: CarTransaction,
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     const theKey = isPublic ? null : await this._getKey()
@@ -234,24 +231,22 @@ export class Loader {
   }
 
   protected makeFileCarHeader(
-    result: FileResult,
+    result: TransactionMeta,
     cars: AnyLink[],
     compact: boolean = false
-  ): FileCarHeader {
-    const files = [] as AnyLink[]
-    for (const [, meta] of Object.entries(result.files)) {
-      files.push(meta.cid)
+  ): TransactionMeta {
+    const files: AnyLink[] = []
+    for (const [, meta] of Object.entries(result.files!)) {
+      if (meta && typeof meta === 'object' && 'cid' in meta && meta !== null) {
+        files.push(meta.cid as AnyLink)
+      }
     }
-    return { files } as FileCarHeader
+    return { files }
   }
 
-  async updateCarLog(
-    cid: AnyLink,
-    fp: AnyCarHeader | FileCarHeader,
-    compact: boolean
-  ): Promise<void> {
+  async updateCarLog(cid: AnyLink, fp: CarHeader, compact: boolean): Promise<void> {
     if (compact) {
-      const fpCar = fp as CarLoaderHeader
+      const fpCar = fp as CarHeader
       const previousCompactCid = this.carLog[this.carLog.length - 1]
       fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
       this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
@@ -397,8 +392,6 @@ export class Loader {
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
-
-
 
   async _setWaitForWrite(_writingFn: () => Promise<any>) {
     const wr = this.writing

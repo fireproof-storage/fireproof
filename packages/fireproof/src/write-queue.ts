@@ -1,15 +1,15 @@
-import { BulkResult, DocUpdate } from './types'
+import { CRDTMeta, DocUpdate } from './types'
 
-type WorkerFunction = (tasks: DocUpdate[]) => Promise<BulkResult>;
+type WorkerFunction = (tasks: DocUpdate[]) => Promise<CRDTMeta>;
 
 export type WriteQueue = {
-  push(task: DocUpdate): Promise<BulkResult>;
+  push(task: DocUpdate): Promise<CRDTMeta>;
 };
 
 export function writeQueue(worker: WorkerFunction, payload: number = Infinity, unbounded: boolean = false): WriteQueue {
   const queue: {
     task: DocUpdate;
-    resolve: (result: BulkResult) => void;
+    resolve: (result: CRDTMeta) => void;
     reject: (error: Error) => void;
   }[] = []
   let isProcessing = false
@@ -48,8 +48,8 @@ export function writeQueue(worker: WorkerFunction, payload: number = Infinity, u
   }
 
   return {
-    push(task: DocUpdate): Promise<BulkResult> {
-      return new Promise<BulkResult>((resolve, reject) => {
+    push(task: DocUpdate): Promise<CRDTMeta> {
+      return new Promise<CRDTMeta>((resolve, reject) => {
         queue.push({ task, resolve, reject })
         void process()
       })

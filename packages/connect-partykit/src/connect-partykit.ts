@@ -1,4 +1,3 @@
-import { decodeEventBlock } from '@alanshaw/pail/clock'
 import { Base64 } from 'js-base64'
 import {
   DownloadMetaFnParams,
@@ -8,7 +7,6 @@ import {
 } from './types'
 import { Connection, validateDataParams, validateMetaParams } from '@fireproof/connect'
 import PartySocket from 'partysocket'
-import { TaskManager, DbMetaEventBlock } from './task-manager'
 
 export interface ConnectPartyKitParams {
   name: string
@@ -21,7 +19,6 @@ export class ConnectPartyKit extends Connection {
   party: PartySocket
   messagePromise: Promise<Uint8Array[]>
   messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void
-  taskManager: TaskManager = new TaskManager()
 
   constructor(params: ConnectPartyKitParams) {
     super()
@@ -46,10 +43,10 @@ export class ConnectPartyKit extends Connection {
       const afn = async () => {
         const base64String = JSON.parse(event.data).data
         const uint8ArrayBuffer = Base64.toUint8Array(base64String)
-        const eventBlock = await decodeEventBlock(uint8ArrayBuffer)
+        const eventBlock = await this.decodeEventBlock(uint8ArrayBuffer)
         await this.loader?.ready
 
-        await this.taskManager.handleEvent(eventBlock as DbMetaEventBlock, this.loader!)
+        await this.taskManager!.handleEvent(eventBlock)
 
         // @ts-ignore
         this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array])
