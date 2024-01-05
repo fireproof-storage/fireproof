@@ -5,10 +5,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable mocha/max-top-level-suites */
-import { assert, equals, matches, notEquals, resetDirectory } from './helpers.js'
+import { assert, equals, matches, notEquals, resetDirectory, dataDir } from './helpers.js'
 import { CRDT } from '../dist/test/crdt.esm.js'
 import { index } from '../dist/test/index.esm.js'
-import { testConfig } from '../dist/test/store-fs.esm.js'
 
 describe('Fresh crdt', function () {
   /** @type {CRDT} */
@@ -160,7 +159,7 @@ describe('Compact a named CRDT with writes', function () {
   /** @type {CRDT} */
   let crdt
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'named-crdt-compaction')
+    await resetDirectory(dataDir, 'named-crdt-compaction')
     crdt = new CRDT('named-crdt-compaction')
     for (let i = 0; i < 10; i++) {
       const bulk = [{ key: 'ace', value: { points: 11 } }, { key: 'king', value: { points: 10 } }]

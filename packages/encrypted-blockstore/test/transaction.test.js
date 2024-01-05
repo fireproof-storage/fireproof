@@ -7,7 +7,7 @@
 import { CID } from 'multiformats'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, equalsJSON } from './helpers.js'
+import { assert, equals, notEquals, matches, equalsJSON } from '../../fireproof/test/helpers.js'
 import { EncryptedBlockstore as Blockstore, CarTransaction } from '../dist/test/transaction.esm.js'
 
 describe('Fresh TransactionBlockstore', function () {

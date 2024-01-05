@@ -4,10 +4,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory } from './helpers.js'
+import { assert, equals, notEquals, matches, resetDirectory, dataDir } from './helpers.js'
 import { Database } from '../dist/test/database.esm.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
-import { MetaStore } from '../dist/test/store-fs.esm.js'
 
 /**
  * @typedef {Object.<string, any>} DocBody
@@ -98,7 +97,7 @@ describe('named Database with record', function () {
   /** @type {Database} */
   let db
   beforeEach(async function () {
-    await resetDirectory(MetaStore.dataDir, 'test-db-name')
+    await resetDirectory(dataDir, 'test-db-name')
 
     db = new Database('test-db-name')
     /** @type {Doc} */
@@ -204,7 +203,7 @@ describe('named Database with record', function () {
 //   let db
 //   const writes = []
 //   beforeEach(async function () {
-//     await resetDirectory(MetaStore.dataDir, 'test-parallel-writes')
+//     await resetDirectory(dataDir, 'test-parallel-writes')
 //     db = new Database('test-parallel-writes', { public: true })
 //     /** @type {Doc} */
 //     for (let i = 0; i < 10; i++) {
@@ -219,7 +218,7 @@ describe('basic Database parallel writes / public', function () {
   let db
   const writes = []
   beforeEach(async function () {
-    await resetDirectory(MetaStore.dataDir, 'test-parallel-writes')
+    await resetDirectory(dataDir, 'test-parallel-writes')
     db = new Database('test-parallel-writes', { public: true })
     /** @type {Doc} */
     for (let i = 0; i < 10; i++) {

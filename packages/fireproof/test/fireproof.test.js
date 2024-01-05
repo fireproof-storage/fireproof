@@ -6,19 +6,21 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, equalsJSON, resetDirectory } from './helpers.js'
+import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir } from './helpers.js'
 
 import { CID } from 'multiformats/cid'
 
 import { fireproof, Database } from '../dist/test/database.esm.js'
 import { index, Index } from '../dist/test/index.esm.js'
-import { testConfig } from '../dist/test/store-fs.esm.js'
-import { cidListIncludes } from '../dist/test/loader.esm.js'
+
+export function cidListIncludes(list, cid) {
+  return list.some(c => c.equals(cid))
+}
 
 describe('dreamcode', function () {
   let ok, doc, result, db
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-db')
+    await resetDirectory(dataDir, 'test-db')
     db = fireproof('test-db')
     ok = await db.put({ _id: 'test-1', text: 'fireproof', dream: true })
     doc = await db.get(ok.id)
@@ -48,7 +50,7 @@ describe('dreamcode', function () {
 
 describe('public API', function () {
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-api')
+    await resetDirectory(dataDir, 'test-api')
     this.db = fireproof('test-api')
     // this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })
@@ -83,7 +85,7 @@ describe('basic database', function () {
   let db
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(testConfig.dataDir, 'test-basic')
+    await resetDirectory(dataDir, 'test-basic')
 
     db = new Database('test-basic')
   })
@@ -126,7 +128,7 @@ describe('Reopening a database', function () {
   let db
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(testConfig.dataDir, 'test-reopen')
+    await resetDirectory(dataDir, 'test-reopen')
 
     db = new Database('test-reopen')
     const ok = await db.put({ _id: 'test', foo: 'bar' })
@@ -206,8 +208,8 @@ describe('Reopening a database with indexes', function () {
   let db, idx, didMap, mapFn
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(testConfig.dataDir, 'test-reopen-idx')
-    await resetDirectory(testConfig.dataDir, 'test-reopen-idx.idx')
+    await resetDirectory(dataDir, 'test-reopen-idx')
+    await resetDirectory(dataDir, 'test-reopen-idx.idx')
 
     db = fireproof('test-reopen-idx')
     const ok = await db.put({ _id: 'test', foo: 'bar' })
@@ -301,7 +303,7 @@ describe('Reopening a database with indexes', function () {
 
 describe('basic js verify', function () {
   it('should include cids in arrays', async function () {
-    await resetDirectory(testConfig.dataDir, 'test-verify')
+    await resetDirectory(dataDir, 'test-verify')
     const db = fireproof('test-verify')
     const ok = await db.put({ _id: 'test', foo: ['bar', 'bam'] })
     equals(ok.id, 'test')
