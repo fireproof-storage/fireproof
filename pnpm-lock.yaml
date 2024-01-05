@@ -115,6 +115,9 @@ importers:
       '@fireproof/core':
         specifier: ^0.15.1
         version: 0.15.1
+      '@fireproof/encrypted-blockstore':
+        specifier: 0.16.5
+        version: link:../encrypted-blockstore
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0

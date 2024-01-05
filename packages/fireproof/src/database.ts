@@ -107,34 +107,7 @@ export class Database {
     await this._crdt.compact()
   }
 
-  // move this stuff to connect
-  async getDashboardURL(compact = true) {
-    const baseUrl = 'https://dashboard.fireproof.storage/'
-    if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
-    if (compact) {
-      await this.compact()
-    }
-    const currents = await this._crdt.blocks.loader?.metaStore?.load()
-    if (!currents) throw new Error('Can\'t sync empty database: save data first')
-    if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make an update first')
-    const current = currents[0]
-    const params = {
-      car: current.car.toString()
-    }
-    // @ts-ignore
-    if (current.key) { params.key = current.key.toString() }
-    // @ts-ignore
-    if (this.name) { params.name = this.name }
-    const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
-    console.log('Import to dashboard: ' + url.toString())
-    return url
-  }
 
-  openDashboard() {
-    void this.getDashboardURL().then(url => {
-      if (url) window.open(url.toString(), '_blank')
-    })
-  }
 
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {

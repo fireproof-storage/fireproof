@@ -1,6 +1,6 @@
 import { ConnectS3 } from './connect-s3'
 import { Connection, CarClockHead } from './connection'
-import type { Loader, AnyLink } from '@fireproof/core'
+import type { Loader, AnyLink } from '@fireproof/encrypted-blockstore'
 import {
   UploadDataFnParams,
   UploadMetaFnParams,

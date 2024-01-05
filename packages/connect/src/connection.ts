@@ -5,7 +5,7 @@ import type {
   DownloadMetaFnParams,
   DownloadDataFnParams
 } from './types'
-import type { AnyLink, Loader } from '@fireproof/core'
+import type { AnyLink, Loader } from '@fireproof/encrypted-blockstore'
 
 import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
@@ -88,6 +88,36 @@ export abstract class Connection {
     const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes)
     return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
+
+    // move this stuff to connect
+    async getDashboardURL(compact = true) {
+      const baseUrl = 'https://dashboard.fireproof.storage/'
+      if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
+      // if (compact) {
+      //   await this.compact()
+      // }
+      const currents = await this.loader?.metaStore?.load()
+      if (!currents) throw new Error('Can\'t sync empty database: save data first')
+      if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make an update first')
+      const current = currents[0]
+      const params = {
+        car: current.car.toString()
+      }
+      // @ts-ignore
+      if (current.key) { params.key = current.key.toString() }
+      // @ts-ignore
+      if (this.name) { params.name = this.name }
+      const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+      console.log('Import to dashboard: ' + url.toString())
+      return url
+    }
+  
+    openDashboard() {
+      void this.getDashboardURL().then(url => {
+        if (url) window.open(url.toString(), '_blank')
+      })
+    }
+
 }
 
 export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>

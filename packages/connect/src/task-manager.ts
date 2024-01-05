@@ -1,5 +1,5 @@
 import { DbMetaEventBlock } from './connection'
-import { AnyLink, Loader } from '@fireproof/core'
+import { AnyLink, Loader } from '@fireproof/encrypted-blockstore'
 
 export class TaskManager {
   private eventsWeHandled: Set<string> = new Set()
