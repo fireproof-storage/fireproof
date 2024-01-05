@@ -78,8 +78,8 @@ const require = createRequire(import.meta.url);
         alias(
           {
             'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
-            './store-browser': join(__dirname, '../src/store-fs.ts'),
-            './crypto-web': join(__dirname, '../src/crypto-node.ts')
+            // './store-browser': join(__dirname, '../src/store-fs.ts'),
+            // './crypto-web': join(__dirname, '../src/crypto-node.ts')
           }
         ),
         commonjs({ filter: /^peculiar|ipfs-utils/ })
@@ -88,7 +88,7 @@ const require = createRequire(import.meta.url);
         // })
       ],
       banner: bannerLog(`
-      console.log('tfb esm/node build');`, `
+      console.log('tfp esm/node build');`, `
       import { createRequire } from 'module'; 
       const require = createRequire(import.meta.url);
               `)

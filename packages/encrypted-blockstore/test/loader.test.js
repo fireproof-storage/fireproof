@@ -29,22 +29,28 @@ import { CarTransaction, EncryptedBlockstore } from '../dist/test/transaction.es
 
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
+import * as nodeCrypto from '../dist/test/crypto-node.esm.js'
+import * as nodeStore from '../dist/test/store-node.esm.js'
+
+const randomBytes = size => {
+  throw new Error('randomBytes not implemented')
+}
+
+
+// now we make new stores and pass them in?
+// meta, car, file, remoteWAL
+
+
+
+
 const loaderOpts = {
-  makeCarHeaderCustomizer: result => {
-    const { head } = result
-    return { head }
-  }
+  store : nodeStore,
+  crypto: {...nodeCrypto, randomBytes}
 }
 
 const indexLoaderOpts = {
-  makeCarHeaderCustomizer: result => {
-    // console.log('makeCarHeaderCustomizer', result)
-    const name = result.name
-    const indexes = new Map()
-    indexes.set(name, result)
-    // const { indexes } = result
-    return { indexes }
-  }
+  store : nodeStore,
+  crypto: nodeCrypto
 }
 
 describe('basic Loader', function () {

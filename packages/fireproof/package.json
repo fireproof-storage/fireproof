@@ -125,7 +125,7 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.4",
-    "@fireproof/encrypted-blockstore": "^0.16.6",
+    "@fireproof/encrypted-blockstore": "^0.16.9",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",

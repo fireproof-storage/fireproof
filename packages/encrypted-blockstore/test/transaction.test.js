@@ -10,11 +10,21 @@ import { CID } from 'multiformats'
 import { assert, equals, notEquals, matches, equalsJSON } from '../../fireproof/test/helpers.js'
 import { EncryptedBlockstore as Blockstore, CarTransaction } from '../dist/test/transaction.esm.js'
 
+import * as nodeCrypto from '../dist/test/crypto-node.esm.js'
+
+import * as nodeStore from '../dist/test/store-node.esm.js'
+
+
+const loaderOpts = {
+  store : nodeStore,
+  crypto: nodeCrypto
+}
+
 describe('Fresh TransactionBlockstore', function () {
   /** @type {Blockstore} */
   let blocks
   beforeEach(function () {
-    blocks = new Blockstore()
+    blocks = new Blockstore(null, loaderOpts)
   })
   it('should not have a name', function () {
     assert(!blocks.name)
@@ -41,7 +51,7 @@ describe('TransactionBlockstore with name', function () {
   /** @type {Blockstore} */
   let blocks
   beforeEach(function () {
-    blocks = new Blockstore('test')
+    blocks = new Blockstore('test', loaderOpts)
   })
   it('should have a name', function () {
     equals(blocks.name, 'test')

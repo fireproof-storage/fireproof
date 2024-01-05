@@ -7,7 +7,7 @@ import { createBuildSettings } from './settings.js'
 const mode = process.env.npm_config_mode
 
 async function analyzeProject() {
-  const buildConfigs = createBuildSettings({ minify: true, metafile: true })
+  const buildConfigs = createBuildSettings({ minify: false, metafile: true })
 
   for (const config of buildConfigs) {
     if (!/fireproof\.iife/.test(config.outfile)) continue

@@ -1,35 +1,54 @@
 {
   "name": "@fireproof/encrypted-blockstore",
-  "version": "0.16.6",
+  "version": "0.16.9",
   "description": "Content-addressed blockstore with pluggable CRDT storage connectors.",
-  "main": "./dist/browser/index.cjs", 
-  "module": "./dist/browser/index.esm.js",
+  "main": "./dist/web/index.cjs", 
+  "module": "./dist/web/index.esm.js",
   "exports": {
     ".": {
-      "import": "./dist/browser/index.esm.js",
-      "require": "./dist/browser/index.cjs",
+      "import": "./dist/web/index.esm.js",
+      "require": "./dist/web/index.cjs",
       "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js"
+      "script": "./dist/web/index.iife.js"
     },
     "./node": {
       "import": "./dist/node/index.esm.js",
       "require": "./dist/node/index.cjs",
       "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js",
+      "script": "./dist/web/index.iife.js",
       "default": "./dist/node/index.esm.js"
     },
-    "./memory": {
-      "import": "./dist/memory/index.esm.js",
-      "types": "./dist/types/index.d.ts",
-      "default": "./dist/memory/index.esm.js"
+    "./store-node": {
+      "import": "./dist/node/store-node.esm.js",
+      "require": "./dist/node/store-node.cjs",
+      "types": "./dist/types/store-node.d.ts",
+      "default": "./dist/node/store-node.esm.js"
+    },
+    "./store-web": {
+      "import": "./dist/web/store-web.esm.js",
+      "require": "./dist/web/store-web.cjs",
+      "types": "./dist/types/store-web.d.ts",
+      "default": "./dist/web/store-web.esm.js"
+    },
+    "./crypto-node": {
+      "import": "./dist/node/crypto-node.esm.js",
+      "require": "./dist/node/crypto-node.cjs",
+      "types": "./dist/types/crypto-node.d.ts",
+      "default": "./dist/node/crypto-node.esm.js"
+    },
+    "./crypto-web": {
+      "import": "./dist/web/crypto-web.esm.js",
+      "require": "./dist/web/crypto-web.cjs",
+      "types": "./dist/types/crypto-web.d.ts",
+      "default": "./dist/web/crypto-web.esm.js"
     }
+    
   },
-  "browser": "./dist/index.browser.iife.js",
+  "browser": "./dist/web/index.iife.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "dist/node",
-    "dist/memory",
-    "dist/browser",
+    "dist/web",
     "dist/types"
   ],
   "type": "module",
@@ -56,7 +75,7 @@
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
     "build:test": "node ./scripts/build.js",
-    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
+    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
     "test:serve":"npx serve-http test/www -p 8080"
   },
   "keywords": [
