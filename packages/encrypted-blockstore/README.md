@@ -2,7 +2,7 @@
 
 Multi-writer self-hosted local-first [IPFS-compatible blockstore](https://ipfs.tech) with end-to-end encryption. If you have code that expects a JavaScript blockstore, you can instantiate one of these instead and get superpowers. What kind of superpowers? 
 
-By default, encrypted blockstores are backed by the browser or the local filesystem. Each transaction is committed as a new immutable CAR file (content addressed archive), which can be replicated and hosted anywhere. The blockstore has connectors for a range of cloud storage providers, so you can easily sync your data using AWS, Netlify, Cloudflare, web3.storage, or any other cloud storage provider. [See the full list of connectors](#connectors).
+By default, encrypted blockstores are backed by the browser or the local filesystem. Each transaction is committed as a new immutable CAR file (content addressed archive), which can be replicated and hosted anywhere. The blockstore has connectors for a range of cloud storage providers, so you can easily sync your data using AWS, Netlify, Cloudflare, web3.storage, or any other cloud storage provider. 
 
 ## Usage
 
