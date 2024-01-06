@@ -113,7 +113,7 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/encrypted-blockstore':
-        specifier: 0.16.9
+        specifier: workspace:^
         version: link:../encrypted-blockstore
       cross-fetch:
         specifier: ^4.0.0
@@ -256,12 +256,9 @@ importers:
       '@fireproof/connect':
         specifier: workspace:*
         version: link:../connect
-      '@fireproof/core':
-        specifier: workspace:*
-        version: link:../fireproof
-      '@fireproof/netlify':
-        specifier: ^0.14.13
-        version: 0.14.14
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -460,7 +457,7 @@ importers:
         specifier: ^0.3.4
         version: 0.3.4
       '@fireproof/encrypted-blockstore':
-        specifier: ^0.16.9
+        specifier: workspace:^
         version: link:../encrypted-blockstore
       '@ipld/car':
         specifier: ^5.2.0
@@ -1999,17 +1996,6 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@fireproof/connect@0.14.2:
-    resolution: {integrity: sha512-2rlZK52Ld4S7G5+GeQq97VRYyokaSXRz1AxVT0fwfKhuM5q20ODeEd5njWmP9AkObM8X+7K8oOiQ6ts4xM7NSQ==}
-    dependencies:
-      '@alanshaw/pail': 0.3.4
-      '@fireproof/core': 0.14.9
-      cross-fetch: 4.0.0
-      multiformats: 12.1.3
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /@fireproof/connect@0.15.1:
     resolution: {integrity: sha512-EdzdF6o+whGteEV9LVzmLHusZcoOb4u5yqu16onFbaeQAo7FOGJclSb3Q0nfOtHDGh2JMJXEBzvFi6HV3lMbRg==}
     dependencies:
@@ -2103,18 +2089,6 @@ packages:
       - encoding
       - supports-color
       - utf-8-validate
-    dev: false
-
-  /@fireproof/netlify@0.14.14:
-    resolution: {integrity: sha512-VLC9g79Nq3lRa2PX7aGHIubCArClIR8Mt/b06V9XE5N99Ar37t6mZf1tV8g7pN7HP3A/r1Tf5kNwfXR+loAN5w==}
-    dependencies:
-      '@fireproof/connect': 0.14.2
-      '@fireproof/core': 0.14.9
-      '@netlify/blobs': 6.3.1
-      cross-fetch: 4.0.0
-      js-base64: 3.7.5
-    transitivePeerDependencies:
-      - encoding
     dev: false
 
   /@humanwhocodes/config-array@0.11.10:

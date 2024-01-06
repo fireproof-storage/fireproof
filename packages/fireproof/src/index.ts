@@ -54,11 +54,11 @@ export class Index {
   ready: Promise<void>
 
   constructor(crdt: CRDT, name: string, mapFn?: MapFn, meta?: IdxMeta) {
-    this.blocks = crdt.indexBlocks
+    this.blockstore = crdt.indexBlocks
     this.crdt = crdt
     this.applyMapFn(name, mapFn, meta)
     if (!(this.mapFnString || this.initError)) throw new Error('missing mapFnString')
-    this.ready = this.blocks.ready.then(() => {})
+    this.ready = this.blockstore.ready.then(() => {})
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -187,8 +187,8 @@ export class Index {
   async _hydrateIndex() {
     if (this.byId.root && this.byKey.root) return
     if (!this.byId.cid || !this.byKey.cid) return
-    this.byId.root = await loadIndex(this.blocks, this.byId.cid, byIdOpts)
-    this.byKey.root = await loadIndex(this.blocks, this.byKey.cid, byKeyOpts)
+    this.byId.root = await loadIndex(this.blockstore, this.byId.cid, byIdOpts)
+    this.byKey.root = await loadIndex(this.blockstore, this.byKey.cid, byKeyOpts)
   }
 
   async _updateIndex() {
@@ -233,7 +233,7 @@ export class Index {
         } as IdxMeta)
       }
     }
-    return await this.blocks.transaction(async (tblocks): Promise<TransactionMeta> => {
+    return await this.blockstore.transaction(async (tblocks): Promise<TransactionMeta> => {
       this.byId = await bulkIndex(
         tblocks,
         this.byId,

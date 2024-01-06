@@ -40,7 +40,7 @@ export class CRDTClock {
   async processUpdates(updatesAcc: DocUpdate[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
+      const changes = await clockChangesSince(this.blockstore!, this.head, prevHead, {})
       internalUpdates = changes.result
     }
     this.zoomers.forEach(fn => fn())
@@ -78,9 +78,9 @@ export class CRDTClock {
     let head = this.head
     const noLoader = false
     // const noLoader = this.head.length === 1 && !updates?.length
-    if (!this.blocks) throw new Error('missing blocks')
-    await validateBlocks(newHead, this.blocks)
-    await this.blocks.transaction(
+    if (!this.blockstore) throw new Error('missing blocks')
+    await validateBlocks(newHead, this.blockstore)
+    await this.blockstore.transaction(
       async (tblocks: CarTransaction) => {
         head = await advanceBlocks(newHead, tblocks, head)
         const result = await root(tblocks, head)

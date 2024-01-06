@@ -14,6 +14,11 @@ import { TaskManager } from './task-manager'
 
 export type CarClockHead = Link<DbMetaEventBlock>[]
 
+export type Connectable = {
+  blockstore: { loader: Loader }
+  name: string
+}
+
 export abstract class Connection {
   ready: Promise<any>
   loaded: Promise<any>
@@ -47,12 +52,12 @@ export abstract class Connection {
     await this.loader!.remoteWAL?._process()
   }
 
-  connect(loader: Loader) {
-    this.connectStorage(loader)
-    this.connectMeta(loader)
+  connect({ loader }: { loader: Loader }) {
+    this.connectStorage({ loader })
+    this.connectMeta({ loader })
   }
 
-  connectMeta(loader: Loader) {
+  connectMeta({ loader }: { loader: Loader }) {
     this.setLoader(loader)
     const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
@@ -68,7 +73,7 @@ export abstract class Connection {
     })
   }
 
-  connectStorage(loader: Loader) {
+  connectStorage({ loader }: { loader: Loader }) {
     this.setLoader(loader)
     this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
     this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
@@ -88,35 +93,40 @@ export abstract class Connection {
     return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
 
-    // move this stuff to connect
-    async getDashboardURL(compact = true) {
-      const baseUrl = 'https://dashboard.fireproof.storage/'
-      if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
-      // if (compact) {
-      //   await this.compact()
-      // }
-      const currents = await this.loader?.metaStore?.load()
-      if (!currents) throw new Error('Can\'t sync empty database: save data first')
-      if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make an update first')
-      const current = currents[0]
-      const params = {
-        car: current.car.toString()
-      }
-      // @ts-ignore
-      if (current.key) { params.key = current.key.toString() }
-      // @ts-ignore
-      if (this.name) { params.name = this.name }
-      const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
-      console.log('Import to dashboard: ' + url.toString())
-      return url
+  // move this stuff to connect
+  async getDashboardURL(compact = true) {
+    const baseUrl = 'https://dashboard.fireproof.storage/'
+    if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
+    // if (compact) {
+    //   await this.compact()
+    // }
+    const currents = await this.loader?.metaStore?.load()
+    if (!currents) throw new Error("Can't sync empty database: save data first")
+    if (currents.length > 1)
+      throw new Error("Can't sync database with split heads: make an update first")
+    const current = currents[0]
+    const params = {
+      car: current.car.toString()
     }
-  
-    openDashboard() {
-      void this.getDashboardURL().then(url => {
-        if (url) window.open(url.toString(), '_blank')
-      })
+    if (current.key) {
+      // @ts-ignore
+      params.key = current.key.toString()
     }
+    // @ts-ignore
+    if (this.name) {
+      // @ts-ignore
+      params.name = this.name
+    }
+    const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+    console.log('Import to dashboard: ' + url.toString())
+    return url
+  }
 
+  openDashboard() {
+    void this.getDashboardURL().then(url => {
+      if (url) window.open(url.toString(), '_blank')
+    })
+  }
 }
 
 export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>
