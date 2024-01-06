@@ -1,21 +1,10 @@
-import { ConnectS3 } from '@fireproof/connect'
-import type { Loader } from '@fireproof/encrypted-blockstore'
+import { ConnectS3, Connectable } from '@fireproof/connect'
 import { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
-import { ConnectNetlify, ConnectNetlifyParams } from '@fireproof/netlify'
 
 const partyCxs = new Map<string, ConnectPartyKit>()
 
 export const connect = {
-  partykit: (
-    {
-      name,
-      _crdt: {
-        blocks: { loader }
-      }
-    }: { name: string; _crdt: { blocks: { loader: Loader } } },
-    partyHost?: string,
-    refresh?: boolean
-  ) => {
+  partykit: ({ name, blockstore }: Connectable, partyHost?: string, refresh?: boolean) => {
     if (!name) throw new Error('database name is required')
     if (!refresh && partyCxs.has(name)) {
       return partyCxs.get(name)!
@@ -25,17 +14,12 @@ export const connect = {
       partyHost = 'http://localhost:1999'
     }
     const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
-    connection.connect(loader!)
+    connection.connect(blockstore)
     partyCxs.set(name, connection)
     return connection
   },
   partykitS3: (
-    {
-      name,
-      _crdt: {
-        blocks: { loader }
-      }
-    }: { name: string; _crdt: { blocks: { loader: Loader } } },
+    { name, blockstore }: Connectable,
     partyHost?: string,
     refresh?: boolean
   ) => {
@@ -48,41 +32,14 @@ export const connect = {
       download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
     }
     const s3conn = new ConnectS3(s3conf.upload, s3conf.download)
-    s3conn.connectStorage(loader!)
+    s3conn.connectStorage(blockstore)
 
     if (!partyHost) {
       console.warn('partyHost not provided, using localhost:1999')
       partyHost = 'http://localhost:1999'
     }
     const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
-    connection.connectMeta(loader!)
-    partyCxs.set(name, connection)
-    return connection
-  },
-  partykitNetlify: (
-    {
-      name,
-      _crdt: {
-        blocks: { loader }
-      }
-    }: { name: string; _crdt: { blocks: { loader: Loader } } },
-    partyHost?: string,
-    refresh?: boolean
-  ) => {
-    if (!name) throw new Error('database name is required')
-    if (!refresh && partyCxs.has(name)) {
-      return partyCxs.get(name)!
-    }
-
-    const netlifyConn = new ConnectNetlify({ name } as ConnectNetlifyParams)
-    netlifyConn.connectStorage(loader!)
-
-    if (!partyHost) {
-      console.warn('partyHost not provided, using localhost:1999')
-      partyHost = 'http://localhost:1999'
-    }
-    const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
-    connection.connectMeta(loader!)
+    connection.connectMeta(blockstore)
     partyCxs.set(name, connection)
     return connection
   }

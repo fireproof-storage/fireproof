@@ -5,6 +5,7 @@ import { CRDT } from './crdt'
 import { index } from './index'
 import type { CRDTMeta, DocUpdate, ClockHead, Doc, ConfigOpts, MapFn, QueryOpts, ChangesOptions } from './types'
 import { DbResponse, ChangesResponse } from './types'
+import { EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
 
 type DbName = string | null
 
@@ -20,10 +21,13 @@ export class Database {
   _crdt: CRDT
   _writeQueue: WriteQueue
 
+  blockstore: EncryptedBlockstore
+
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name || null
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
+    this.blockstore = this._crdt.blockstore // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
     })//, Infinity)

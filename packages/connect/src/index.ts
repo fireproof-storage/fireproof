@@ -1,6 +1,6 @@
 import { ConnectS3 } from './connect-s3'
-import { Connection, CarClockHead } from './connection'
-import type { Loader, AnyLink } from '@fireproof/encrypted-blockstore'
+import { Connection, CarClockHead, Connectable } from './connection'
+import type { AnyLink } from '@fireproof/encrypted-blockstore'
 import {
   UploadDataFnParams,
   UploadMetaFnParams,
@@ -27,28 +27,14 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
-  s3: (
-    {
-      _crdt: {
-        blocks: { loader }
-      }
-    }: { _crdt: { blocks: { loader: Loader } } },
-    { upload, download }: { upload: string; download: string }
-  ) => {
+  s3: ({ blockstore }: Connectable, { upload, download }: { upload: string; download: string }) => {
     const connection = new ConnectS3(upload, download)
-    connection.connect(loader!)
+    connection.connect(blockstore)
     return connection
   },
-  raw: (
-    {
-      _crdt: {
-        blocks: { loader }
-      }
-    }: { _crdt: { blocks: { loader: Loader } } },
-    params: RawConnectionParams
-  ) => {
+  raw: ({ blockstore }: Connectable, params: RawConnectionParams) => {
     const connection = new ConnectRaw(params)
-    connection.connect(loader!)
+    connection.connect(blockstore)
     return connection
   }
 }

@@ -118,13 +118,13 @@ export class CompactionFetcher implements BlockFetcher {
   loggedBlocks: CarTransaction
 
   constructor(blocks: EncryptedBlockstore) {
-    this.blocks = blocks
+    this.blockstore = blocks
     // this.loader = blocks.loader
     this.loggedBlocks = new CarTransaction(blocks)
   }
 
   async get(cid: AnyLink) {
-    const block = await this.blocks.get(cid)
+    const block = await this.blockstore.get(cid)
     if (block) this.loggedBlocks.putSync(cid, block.bytes)
     return block
   }
