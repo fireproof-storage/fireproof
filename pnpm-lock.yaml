@@ -113,8 +113,8 @@ importers:
         specifier: ^0.3.3
         version: 0.3.4
       '@fireproof/encrypted-blockstore':
-        specifier: 0.16.5
-        version: 0.16.5
+        specifier: 0.16.9
+        version: 0.16.9
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
@@ -1353,8 +1353,8 @@ packages:
   '@fireproof/encrypted-blockstore@0.16.12':
     resolution: {integrity: sha512-5FXkg355FlEsNnRe7Nbd0z1bmGVL30Fg6zEbBYMLUUYiXeOZwbJ9+T4w38C8/+1aWmS468u1D+pNlWtl7YoMUA==}
 
-  '@fireproof/encrypted-blockstore@0.16.5':
-    resolution: {integrity: sha512-9THvr3VT3+VaO4Cmd0uSjh83Qn00DG8sJc9gfxth2uAwpgTJmFojZzT8jHoxHifJ9Efy/JgJQFYfpyGnonWwGQ==}
+  '@fireproof/encrypted-blockstore@0.16.9':
+    resolution: {integrity: sha512-KIuL4xXXj+5ccSKvJlUCfkYVealL32yM4Th4h3FiPqShgS2w/Dv74OWTdaEPatUGBS/gV8PCWfu0LsRRFHfWhQ==}
 
   '@fireproof/netlify@0.14.14':
     resolution: {integrity: sha512-VLC9g79Nq3lRa2PX7aGHIubCArClIR8Mt/b06V9XE5N99Ar37t6mZf1tV8g7pN7HP3A/r1Tf5kNwfXR+loAN5w==}
@@ -7045,7 +7045,7 @@ snapshots:
       prolly-trees: 1.0.4
       uuidv7: 0.6.3
 
-  '@fireproof/encrypted-blockstore@0.16.5':
+  '@fireproof/encrypted-blockstore@0.16.9':
     dependencies:
       '@alanshaw/pail': 0.3.4
       '@ipld/car': 5.4.2
