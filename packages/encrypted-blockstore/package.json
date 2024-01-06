@@ -53,8 +53,7 @@
   ],
   "type": "module",
   "scripts": {
-    "prepublishOnly": "cp ../../README.md . && npm run build",
-    "postpublish": "rm README.md",
+    "prepublishOnly": "npm run build",
     "clean": "rm -rf dist/*",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:esbuild": "node ./scripts/build.js",
