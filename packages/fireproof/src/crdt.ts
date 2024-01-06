@@ -49,6 +49,10 @@ export class CRDT {
           const crdtMeta = meta as unknown as CRDTMeta
           await this.clock.applyHead(crdtMeta.head, [])
         },
+        compact: async (blocks: CompactionFetcher) => {
+          await doCompact(blocks, this.clock.head)
+          return { head: this.clock.head } as TransactionMeta
+        },
         crypto,
         store
       },
@@ -136,9 +140,6 @@ export class CRDT {
   }
 
   async compact() {
-    return await this.blocks.compact(async (blockLog: CompactionFetcher) => {
-      await doCompact(blockLog, this.clock.head)
-      return { head: this.clock.head } as TransactionMeta
-    })
+    return await this.blocks.compact()
   }
 }

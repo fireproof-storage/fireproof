@@ -9,9 +9,8 @@ import type {
   CommitOpts,
   DbMeta,
   ConfigOpts,
-  TransactionMeta,
-  TransactionOpts
-} from './types'
+  TransactionMeta} from './types'
+import type { TransactionOpts } from './transaction'
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'

@@ -4,12 +4,13 @@ import {
   AnyLink,
   CarMakeable,
   ConfigOpts,
-  TransactionOpts,
   TransactionMeta as TM
 } from './types'
 
+
 import { Loader } from './loader'
 import { CID } from 'multiformats'
+import { CryptoOpts, StoreOpts } from './types'
 
 export type BlockFetcher = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
 
@@ -92,13 +93,15 @@ export class EncryptedBlockstore implements BlockFetcher {
     return block.bytes
   }
 
-  async compact(compactFn: CompactFn) {
+  async compact() {
     await this.ready
     if (!this.loader) throw new Error('loader required to compact')
     if (this.loader.carLog.length < 2) return
+    const compactFn = this.tOpts.compact
+    if (!compactFn) return
     const blockLog = new CompactionFetcher(this)
     const meta = await compactFn(blockLog)
-    const did = await this.loader!.commit(blockLog.loggedBlocks, meta, {
+    await this.loader!.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true
     })
@@ -116,16 +119,15 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 }
 
-export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>
 
 export class CompactionFetcher implements BlockFetcher {
   blocks: EncryptedBlockstore
-  loader: Loader | null = null
+  // loader: Loader | null = null
   loggedBlocks: CarTransaction
 
   constructor(blocks: EncryptedBlockstore) {
     this.blocks = blocks
-    this.loader = blocks.loader
+    // this.loader = blocks.loader
     this.loggedBlocks = new CarTransaction(blocks)
   }
 
@@ -135,3 +137,13 @@ export class CompactionFetcher implements BlockFetcher {
     return block
   }
 }
+
+export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>
+
+export type TransactionOpts = {
+  applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
+  compact?: CompactFn;
+  crypto: CryptoOpts;
+  store: StoreOpts;
+};
+
