@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { fireproof } from '@fireproof/core';
-import type { Doc, Database, DbResponse, MapFn, FireproofOptions } from '@fireproof/core';
+import type { Doc, Database, DbResponse, MapFn, ConfigOpts } from '@fireproof/core';
 
 type LiveQueryFnReturn = { docs: Doc[], rows: any[] }
 type LiveQueryFn = (mapFn: string | MapFn, query?: object, initialRows?: any[]) => LiveQueryFnReturn;
@@ -59,7 +59,7 @@ export const useDocument = topLevelUseDocument as TlUseDocument;
 
 export function useFireproof(
   name: string | Database = 'useFireproof',
-  config: FireproofOptions = {},
+  config: ConfigOpts = {},
 ): FireproofCtxValue {
   const database = (typeof name === 'string') ? fireproof(name, config) : name;
 

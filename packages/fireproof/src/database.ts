@@ -3,7 +3,7 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-import type { CRDTMeta, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
+import type { CRDTMeta, DocUpdate, ClockHead, Doc, ConfigOpts, MapFn, QueryOpts, ChangesOptions } from './types'
 import { DbResponse, ChangesResponse } from './types'
 
 type DbName = string | null
@@ -12,7 +12,7 @@ export class Database {
   static databases: Map<string, Database> = new Map()
 
   name: DbName
-  opts: FireproofOptions = {}
+  opts: ConfigOpts = {}
 
   _listening = false
   _listeners: Set<ListenerFn> = new Set()
@@ -20,7 +20,7 @@ export class Database {
   _crdt: CRDT
   _writeQueue: WriteQueue
 
-  constructor(name?: string, opts?: FireproofOptions) {
+  constructor(name?: string, opts?: ConfigOpts) {
     this.name = name || null
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
@@ -135,7 +135,7 @@ type UpdateListenerFn = (docs: Doc[]) => Promise<void> | void
 type NoUpdateListenerFn = () => Promise<void> | void
 type ListenerFn = UpdateListenerFn | NoUpdateListenerFn
 
-export function fireproof(name: string, opts?: FireproofOptions): Database {
+export function fireproof(name: string, opts?: ConfigOpts): Database {
   if (!Database.databases.has(name)) {
     Database.databases.set(name, new Database(name, opts))
   }

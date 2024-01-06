@@ -5,7 +5,7 @@ import {
   type CarTransaction
 } from '@fireproof/encrypted-blockstore'
 
-import { store, crypto} from './eb-web'
+import { store, crypto } from './eb-web'
 
 import {
   clockChangesSince,
@@ -21,17 +21,16 @@ import type {
   DocUpdate,
   CRDTMeta,
   ClockHead,
-  FireproofOptions,
+  ConfigOpts,
   ChangesOptions,
   IdxMetaMap
 } from './types'
 import { index, type Index } from './index'
 import { CRDTClock } from './crdt-clock'
 
-
 export class CRDT {
   name: string | null
-  opts: FireproofOptions = {}
+  opts: ConfigOpts = {}
   ready: Promise<void>
   blocks: EncryptedBlockstore
   indexBlocks: EncryptedBlockstore
@@ -40,7 +39,7 @@ export class CRDT {
 
   clock: CRDTClock = new CRDTClock()
 
-  constructor(name?: string, opts?: FireproofOptions) {
+  constructor(name?: string, opts?: ConfigOpts) {
     this.name = name || null
     this.opts = opts || this.opts
     this.blocks = new EncryptedBlockstore(
@@ -65,7 +64,7 @@ export class CRDT {
             index({ _crdt: this }, name, undefined, idx as any)
           }
         },
-        crypto ,
+        crypto,
         store
       },
       this.opts
