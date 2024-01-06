@@ -8,7 +8,7 @@ import type {
   CarHeader,
   CommitOpts,
   DbMeta,
-  FireproofOptions,
+  ConfigOpts,
   TransactionMeta,
   TransactionOpts
 } from './types'
@@ -50,7 +50,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 
 export class Loader {
   name: string
-  opts: FireproofOptions = {}
+  opts: ConfigOpts = {}
   tOpts: TransactionOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
@@ -73,7 +73,7 @@ export class Loader {
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
 
-  constructor(name: string, tOpts: TransactionOpts, opts?: FireproofOptions) {
+  constructor(name: string, tOpts: TransactionOpts, opts?: ConfigOpts) {
     this.name = name
     this.tOpts = tOpts
     this.opts = opts || this.opts

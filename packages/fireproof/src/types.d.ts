@@ -4,7 +4,7 @@ import type { EventData } from '@alanshaw/pail/crdt'
 
 import type { TransactionMeta } from '@fireproof/encrypted-blockstore'
 
-export type FireproofOptions = {
+export type ConfigOpts = {
   public?: boolean
   meta?: DbMeta
   persistIndexes?: boolean

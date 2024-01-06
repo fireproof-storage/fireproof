@@ -47,7 +47,7 @@ export type StoreOpts = {
   RemoteWAL: any
 }
 
-export type FireproofOptions = {
+export type ConfigOpts = {
   public?: boolean
   meta?: DbMeta
   persistIndexes?: boolean // move elsewhere?

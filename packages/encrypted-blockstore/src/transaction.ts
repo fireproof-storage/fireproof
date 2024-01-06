@@ -3,7 +3,7 @@ import {
   AnyBlock,
   AnyLink,
   CarMakeable,
-  FireproofOptions,
+  ConfigOpts,
   TransactionOpts,
   TransactionMeta as TM
 } from './types'
@@ -37,12 +37,12 @@ export class EncryptedBlockstore implements BlockFetcher {
   name: string | null = null
 
   loader: Loader | null = null
-  opts: FireproofOptions = {}
+  opts: ConfigOpts = {}
   tOpts: TransactionOpts
 
   transactions: Set<CarTransaction> = new Set()
 
-  constructor(name: string | null, tOpts: TransactionOpts, opts?: FireproofOptions) {
+  constructor(name: string | null, tOpts: TransactionOpts, opts?: ConfigOpts) {
     this.opts = opts || this.opts
     this.tOpts = tOpts
     if (name) {
