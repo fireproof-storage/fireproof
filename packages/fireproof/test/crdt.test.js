@@ -241,7 +241,6 @@ describe('Loader with a committed transaction', function () {
     crdt = new CRDT(dbname)
     blockstore = crdt.blocks
     loader = blockstore.loader
-    console.log('loader', loader)
     done = await crdt.bulk([{ key: 'foo', value: { foo: 'bar' } }])
   })
   it('should have a name', function () {

@@ -4,7 +4,13 @@ import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
-import  { type EncryptedBlockstore, type CompactionFetcher, CarTransaction, TransactionMeta, BlockFetcher } from '@fireproof/encrypted-blockstore'
+import {
+  type EncryptedBlockstore,
+  type CompactionFetcher,
+  CarTransaction,
+  TransactionMeta,
+  BlockFetcher
+} from '@fireproof/encrypted-blockstore'
 import type {
   DocUpdate,
   ClockHead,
