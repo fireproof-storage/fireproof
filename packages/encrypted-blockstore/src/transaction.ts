@@ -1,12 +1,5 @@
 import { MemoryBlockstore } from '@alanshaw/pail/block'
-import {
-  AnyBlock,
-  AnyLink,
-  CarMakeable,
-  ConfigOpts,
-  TransactionMeta as TM
-} from './types'
-
+import { AnyBlock, AnyLink, CarMakeable, ConfigOpts, TransactionMeta as TM } from './types'
 
 import { Loader } from './loader'
 import { CID } from 'multiformats'
@@ -119,7 +112,6 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 }
 
-
 export class CompactionFetcher implements BlockFetcher {
   blocks: EncryptedBlockstore
   // loader: Loader | null = null
@@ -141,9 +133,8 @@ export class CompactionFetcher implements BlockFetcher {
 export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>
 
 export type TransactionOpts = {
-  applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  compact?: CompactFn;
-  crypto: CryptoOpts;
-  store: StoreOpts;
-};
-
+  applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
+  compact?: CompactFn
+  crypto: CryptoOpts
+  store: StoreOpts
+}
