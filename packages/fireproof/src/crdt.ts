@@ -5,9 +5,7 @@ import {
   type CarTransaction
 } from '@fireproof/encrypted-blockstore'
 
-import * as webCrypto  from '@fireproof/encrypted-blockstore/crypto-node'
-import * as webStore from  '@fireproof/encrypted-blockstore/store-node'
-
+import { store, crypto} from './eb-web'
 
 import {
   clockChangesSince,
@@ -31,7 +29,6 @@ import { index, type Index } from './index'
 import { CRDTClock } from './crdt-clock'
 
 
-
 export class CRDT {
   name: string | null
   opts: FireproofOptions = {}
@@ -53,8 +50,8 @@ export class CRDT {
           const crdtMeta = meta as unknown as CRDTMeta
           await this.clock.applyHead(crdtMeta.head, [])
         },
-        crypto: webCrypto,
-        store: webStore
+        crypto,
+        store
       },
       this.opts
     )
@@ -68,8 +65,8 @@ export class CRDT {
             index({ _crdt: this }, name, undefined, idx as any)
           }
         },
-        crypto: webCrypto,
-        store: webStore
+        crypto ,
+        store
       },
       this.opts
     )
@@ -88,14 +85,16 @@ export class CRDT {
   async bulk(updates: DocUpdate[], options?: object): Promise<CRDTMeta> {
     await this.ready
     const prevHead = [...this.clock.head]
-    const meta = (await this.blocks.transaction(async (tblocks: CarTransaction): Promise<TransactionMeta> => {
-      const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
-      updates = updates.map(({ key, value, del, clock }) => {
-        readFiles(this.blocks, { doc: value })
-        return { key, value, del, clock }
-      })
-      return { head } as TransactionMeta
-    })) as CRDTMeta
+    const meta = (await this.blocks.transaction(
+      async (tblocks: CarTransaction): Promise<TransactionMeta> => {
+        const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
+        updates = updates.map(({ key, value, del, clock }) => {
+          readFiles(this.blocks, { doc: value })
+          return { key, value, del, clock }
+        })
+        return { head } as TransactionMeta
+      }
+    )) as CRDTMeta
     await this.clock.applyHead(meta.head, prevHead, updates)
     return meta
   }
