@@ -34,13 +34,6 @@ export type CryptoOpts = {
   randomBytes: (size: number) => Uint8Array
 }
 
-export type TransactionOpts = {
-  applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
-  compact?: (blocks: TransactionBlockstore) => Promise<void>
-  crypto: CryptoOpts,
-  store: StoreOpts
-}
-
 export type StoreOpts = {
   MetaStore: any
   DataStore: any

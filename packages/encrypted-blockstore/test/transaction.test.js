@@ -125,3 +125,5 @@ describe('TransactionBlockstore with a completed transaction', function () {
     equals(blz.length, 2)
   })
 })
+
+// test compact 
