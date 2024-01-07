@@ -22,6 +22,11 @@ import {
 } from './indexer-helpers'
 import { CRDT } from './crdt'
 
+type UpdateIndexResult = Promise<TransactionMeta | {
+  readonly byId: IndexTree;
+  readonly byKey: IndexTree;
+}>
+
 export function index(
   { _crdt }: { _crdt: CRDT },
   name: string,
@@ -191,7 +196,7 @@ export class Index {
     this.byKey.root = await loadIndex(this.blockstore, this.byKey.cid, byKeyOpts)
   }
 
-  async _updateIndex() {
+  async _updateIndex(): UpdateIndexResult {
     await this.ready
     if (this.initError) throw this.initError
     if (!this.mapFn) throw new Error('No map function defined')

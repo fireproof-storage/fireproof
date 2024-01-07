@@ -2,56 +2,47 @@
   "name": "@fireproof/encrypted-blockstore",
   "version": "0.16.10",
   "description": "Content-addressed blockstore with pluggable CRDT storage connectors.",
-  "main": "./dist/web/index.cjs", 
-  "module": "./dist/web/index.esm.js",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "browser": "./dist/index.global.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/web/index.esm.js",
-      "require": "./dist/web/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/web/index.iife.js"
-    },
-    "./node": {
-      "import": "./dist/node/index.esm.js",
-      "require": "./dist/node/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/web/index.iife.js",
-      "default": "./dist/node/index.esm.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts",
+      "script": "./dist/index.global.js",
+      "default": "./dist/index.js"
     },
     "./store-node": {
-      "import": "./dist/node/store-node.esm.js",
-      "require": "./dist/node/store-node.cjs",
-      "types": "./dist/types/store-node.d.ts",
-      "default": "./dist/node/store-node.esm.js"
+      "import": "./dist/store-node.js",
+      "require": "./dist/store-node.cjs",
+      "types": "./dist/store-node.d.ts",
+      "default": "./dist/store-node.js"
     },
     "./store-web": {
-      "import": "./dist/web/store-web.esm.js",
-      "require": "./dist/web/store-web.cjs",
-      "types": "./dist/types/store-web.d.ts",
-      "default": "./dist/web/store-web.esm.js"
+      "import": "./dist/store-web.js",
+      "require": "./dist/store-web.cjs",
+      "types": "./dist/store-web.d.ts",
+      "default": "./dist/store-web.js"
     },
     "./crypto-node": {
-      "import": "./dist/node/crypto-node.esm.js",
-      "require": "./dist/node/crypto-node.cjs",
-      "types": "./dist/types/crypto-node.d.ts",
-      "default": "./dist/node/crypto-node.esm.js"
+      "import": "./dist/crypto-node.js",
+      "require": "./dist/crypto-node.cjs",
+      "types": "./dist/crypto-node.d.ts",
+      "default": "./dist/crypto-node.js"
     },
     "./crypto-web": {
-      "import": "./dist/web/crypto-web.esm.js",
-      "require": "./dist/web/crypto-web.cjs",
-      "types": "./dist/types/crypto-web.d.ts",
-      "default": "./dist/web/crypto-web.esm.js"
+      "import": "./dist/crypto-web.js",
+      "require": "./dist/crypto-web.cjs",
+      "types": "./dist/crypto-web.d.ts",
+      "default": "./dist/crypto-web.js"
     }
-    
   },
-  "browser": "./dist/web/index.iife.js",
-  "types": "./dist/types/index.d.ts",
-  "files": [
-    "dist/node",
-    "dist/web",
-    "dist/types"
-  ],
-  "type": "module",
   "scripts": {
     "prepublishOnly": "npm run build",
     "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
@@ -60,6 +51,7 @@
     "build:rollup": "rollup -c scripts/rollup.js",
     "build:test": "node ./scripts/build.js",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
+    "build:tsup": "tsup",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "clean": "rm -rf node_modules",
