@@ -174,7 +174,7 @@ describe('Compact a named CRDT with writes', function () {
   })
   it('should start with blocks', async function () {
     const blz = []
-    for await (const blk of crdt.blocks.entries()) {
+    for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk)
     }
     equals(blz.length, 17)
@@ -187,7 +187,7 @@ describe('Compact a named CRDT with writes', function () {
   it.skip('should have fewer blocks after compact', async function () {
     await crdt.compact()
     const blz = []
-    for await (const blk of crdt.blocks.entries()) {
+    for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk)
     }
     equals(blz.length, 23)
@@ -239,7 +239,7 @@ describe('Loader with a committed transaction', function () {
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader')
     crdt = new CRDT(dbname)
-    blockstore = crdt.blocks
+    blockstore = crdt.blockstore
     loader = blockstore.loader
     done = await crdt.bulk([{ key: 'foo', value: { foo: 'bar' } }])
   })
@@ -269,7 +269,7 @@ describe('Loader with two committed transactions', function () {
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader')
     crdt = new CRDT(dbname)
-    blockstore = crdt.blocks
+    blockstore = crdt.blockstore
     loader = blockstore.loader
     done1 = await crdt.bulk([{ key: 'apple', value: { foo: 'bar' } }])
     done2 = await crdt.bulk([{ key: 'orange', value: { foo: 'bar' } }])
@@ -306,7 +306,7 @@ describe('Loader with many committed transactions', function () {
     await resetDirectory(dataDir, 'test-loader')
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname)
-    blockstore = crdt.blocks
+    blockstore = crdt.blockstore
     loader = blockstore.loader
     dones = []
     for (let i = 0; i < count; i++) {

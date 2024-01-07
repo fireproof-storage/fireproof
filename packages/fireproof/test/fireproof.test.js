@@ -148,17 +148,17 @@ describe('Reopening a database', function () {
 
   it('should have a car in the car log', async function () {
     await db._crdt.ready
-    assert(db._crdt.blocks.loader)
-    assert(db._crdt.blocks.loader.carLog)
-    equals(db._crdt.blocks.loader.carLog.length, 1)
+    assert(db._crdt.blockstore.loader)
+    assert(db._crdt.blockstore.loader.carLog)
+    equals(db._crdt.blockstore.loader.carLog.length, 1)
   })
 
   it('should have carlog after reopen', async function () {
     const db2 = new Database('test-reopen')
     await db2._crdt.ready
-    assert(db2._crdt.blocks.loader)
-    assert(db2._crdt.blocks.loader.carLog)
-    equals(db2._crdt.blocks.loader.carLog.length, 1)
+    assert(db2._crdt.blockstore.loader)
+    assert(db2._crdt.blockstore.loader.carLog)
+    equals(db2._crdt.blockstore.loader.carLog.length, 1)
   })
 
   it('faster, should have the same data on reopen after reopen and update', async function () {
@@ -167,10 +167,10 @@ describe('Reopening a database', function () {
       const db = new Database('test-reopen')
       assert(db._crdt.ready)
       await db._crdt.ready
-      equals(db._crdt.blocks.loader.carLog.length, i + 1)
+      equals(db._crdt.blockstore.loader.carLog.length, i + 1)
       const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
       assert(ok)
-      equals(db._crdt.blocks.loader.carLog.length, i + 2)
+      equals(db._crdt.blockstore.loader.carLog.length, i + 2)
       const doc = await db.get(`test${i}`)
       equals(doc.fire, 'proof'.repeat(50 * 1024))
     }
@@ -185,10 +185,10 @@ describe('Reopening a database', function () {
         const db = new Database('test-reopen')
         assert(db._crdt.ready)
         await db._crdt.ready
-        equals(db._crdt.blocks.loader.carLog.length, i + 1)
+        equals(db._crdt.blockstore.loader.carLog.length, i + 1)
         const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
         assert(ok)
-        equals(db._crdt.blocks.loader.carLog.length, i + 2)
+        equals(db._crdt.blockstore.loader.carLog.length, i + 2)
         const doc = await db.get(`test${i}`)
         equals(doc.fire, 'proof'.repeat(50 * 1024))
       }
@@ -302,7 +302,7 @@ describe('basic js verify', function () {
     equals(ok.id, 'test')
     const ok2 = await db.put({ _id: 'test2', foo: ['bar', 'bam'] })
     equals(ok2.id, 'test2')
-    const cid = db._crdt.blocks.loader.carLog[0]
+    const cid = db._crdt.blockstore.loader.carLog[0]
     const cid2 = db._crdt.clock.head[0]
     notEquals(cid, cid2)
     assert(cid !== cid2)

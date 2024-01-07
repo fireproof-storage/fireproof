@@ -171,8 +171,7 @@ describe('basic Loader with index commits', function () {
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader-index')
     // t = new CarTransaction()
-    ib = new EncryptedBlockstore('test-loader-index', indexLoaderOpts, {})
-    // loader = new IdxLoader('test-loader-index', { indexers: new Map() }, { public: true })
+    ib = new EncryptedBlockstore({...indexLoaderOpts, name: 'test-loader-index'})
     block = await encode({
       value: { hello: 'world' },
       hasher,
