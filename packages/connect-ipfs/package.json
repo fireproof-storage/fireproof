@@ -29,11 +29,11 @@
   "type": "module",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build:clean": "rm -rf dist/*",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:clean": "rm -rf dist",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
-    "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/ipfs.iife.js"
+    "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/ipfs.iife.js",
+    "clean": "rm -rf node_modules"
   },
   "keywords": [],
   "author": "",
@@ -52,7 +52,7 @@
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
     "@fireproof/core": "workspace:^",
-    "@fireproof/connect": "workspace:*",
+    "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ucanto/core": "^8.2.0",
     "@ucanto/interface": "^8.1.0",

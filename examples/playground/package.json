@@ -4,7 +4,6 @@
   "description": "starter for react using esbuild as a bundler",
   "main": "app.jsx",
   "scripts": {
-    "test": "test",
     "build": "node build.js -build",
     "start": "node build.js -watch"
   },
@@ -20,7 +19,7 @@
     "esbuild": "^0.8.46",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
-    "use-fireproof": "^0.7.3"
+    "use-fireproof": "workspace:^"
   },
   "devDependencies": {
     "servor": "^4.0.2"

@@ -30,12 +30,12 @@
   "type": "module",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build:clean": "rm -rf dist/*",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:clean": "rm -rf dist",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
     "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-partykit.iife.js",
-    "build": "npm run build:tsc && npm run build:script"
+    "build": "npm run build:tsc && npm run build:script",
+    "clean": "rm -rf node_modules"
   },
   "keywords": [],
   "author": "",
@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
-    "@fireproof/connect": "workspace:*",
+    "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
