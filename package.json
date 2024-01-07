@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Live database for the web",
   "scripts": {
-    "build": "pnpm -r build",
+    "build:recursive": "pnpm -r build",
+    "build": "pnpm build:blockstore && pnpm build:core",
     "build:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build",
     "build:clean": "pnpm -r build:clean",
     "build:clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build:clean",
@@ -16,7 +17,8 @@
     "clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore clean",
     "clean:core": "pnpm --filter @fireproof/core clean",
     "clean:react": "pnpm --filter use-fireproof clean",
-    "test": "pnpm -r test",
+    "test:recursive": "pnpm -r test",
+    "test": "pnpm test:blockstore && pnpm test:core",
     "test:blockstore": "pnpm --filter @fireproof/encrypted-blockstore test",
     "test:core": "pnpm --filter @fireproof/core test",
     "test:react": "pnpm --filter use-fireproof test"
