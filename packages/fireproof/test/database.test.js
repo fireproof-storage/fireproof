@@ -135,7 +135,7 @@ describe('named Database with record', function () {
   it('should have a key', async function () {
     const { rows } = await db.changes([])
     equals(rows.length, 1)
-    const loader = db._crdt.blocks.loader
+    const loader = db._crdt.blockstore.loader
     await loader.ready
     equals(loader.key.length, 64)
     equals(loader.keyId.length, 64)
@@ -278,7 +278,7 @@ describe('basic Database parallel writes / public', function () {
     equals(rows.length, 10)
     assert(db.opts.public)
     assert(db._crdt.opts.public)
-    const loader = db._crdt.blocks.loader
+    const loader = db._crdt.blockstore.loader
     await loader.ready
     equals(loader.key, undefined)
     equals(loader.keyId, undefined)

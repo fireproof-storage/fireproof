@@ -8,14 +8,14 @@ import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
 export class CRDTClock {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
-  // should go with making sure the local clock only references locally available blocks on write
+  // should go with making sure the local clock only references locally available blockstore on write
   head: ClockHead = []
 
   zoomers: Set<() => void> = new Set()
   watchers: Set<(updates: DocUpdate[]) => void> = new Set()
   emptyWatchers: Set<() => void> = new Set()
 
-  blocks: EncryptedBlockstore | null = null
+  blockstore: EncryptedBlockstore | null = null
 
   applyHeadQueue: ApplyHeadQueue
 
@@ -78,7 +78,7 @@ export class CRDTClock {
     let head = this.head
     const noLoader = false
     // const noLoader = this.head.length === 1 && !updates?.length
-    if (!this.blockstore) throw new Error('missing blocks')
+    if (!this.blockstore) throw new Error('missing blockstore')
     await validateBlocks(newHead, this.blockstore)
     await this.blockstore.transaction(
       async (tblocks: CarTransaction) => {
@@ -100,9 +100,9 @@ function sortClockHead(clockHead: ClockHead) {
   return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()))
 }
 
-async function validateBlocks(newHead: ClockHead, blocks: EncryptedBlockstore | null) {
+async function validateBlocks(newHead: ClockHead, blockstore: EncryptedBlockstore | null) {
   newHead.map(async cid => {
-    const got = await blocks!.get(cid)
+    const got = await blockstore!.get(cid)
     if (!got) {
       throw new Error('int_applyHead missing block: ' + cid.toString())
     }

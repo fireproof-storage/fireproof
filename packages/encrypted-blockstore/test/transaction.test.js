@@ -24,7 +24,7 @@ describe('Fresh TransactionBlockstore', function () {
   /** @type {Blockstore} */
   let blocks
   beforeEach(function () {
-    blocks = new Blockstore(null, loaderOpts)
+    blocks = new Blockstore(loaderOpts)
   })
   it('should not have a name', function () {
     assert(!blocks.name)
@@ -51,7 +51,7 @@ describe('TransactionBlockstore with name', function () {
   /** @type {Blockstore} */
   let blocks
   beforeEach(function () {
-    blocks = new Blockstore('test', loaderOpts)
+    blocks = new Blockstore({name:'test', ...loaderOpts})
   })
   it('should have a name', function () {
     equals(blocks.name, 'test')
@@ -72,7 +72,7 @@ describe('A transaction', function () {
   /** @type {CarTransaction} */
   let tblocks, blocks
   beforeEach(async function () {
-    blocks = new Blockstore()
+    blocks = new Blockstore(loaderOpts)
     tblocks = new CarTransaction(blocks)
     blocks.transactions.add(tblocks)
   })
@@ -95,7 +95,7 @@ describe('TransactionBlockstore with a completed transaction', function () {
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     cid2 = CID.parse('bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm')
 
-    blocks = new Blockstore()
+    blocks = new Blockstore(loaderOpts)
     await blocks.transaction(async (tblocks) => {
       await tblocks.put(cid, 'value')
       return await tblocks.put(cid2, 'value2')

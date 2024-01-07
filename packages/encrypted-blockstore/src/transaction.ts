@@ -30,11 +30,13 @@ export class EncryptedBlockstore implements BlockFetcher {
   ready: Promise<void>
   name: string | null = null
   loader: Loader | null = null
+  compacting = false
   ebOpts: BlockstoreOpts
   transactions: Set<CarTransaction> = new Set()
 
-  constructor(name: string | null, ebOpts: BlockstoreOpts) {
+  constructor(ebOpts: BlockstoreOpts) {
     this.ebOpts = ebOpts
+    const { name } = ebOpts
     if (name) {
       this.name = name
       this.loader = new Loader(name, this.ebOpts)
@@ -52,6 +54,9 @@ export class EncryptedBlockstore implements BlockFetcher {
     const done: TransactionMeta = await fn(t)
     if (this.loader) {
       const car = await this.loader.commit(t, done, opts)
+      if (this.loader.carLog.length > 100) {
+        setTimeout(() => void this.compact(), 10)
+      }
       if (car) return { ...done, car }
       throw new Error('failed to commit car')
     }
@@ -86,14 +91,16 @@ export class EncryptedBlockstore implements BlockFetcher {
     await this.ready
     if (!this.loader) throw new Error('loader required to compact')
     if (this.loader.carLog.length < 2) return
-    const compactFn = this.ebOpts.compact
-    if (!compactFn) return
+    const compactFn = this.ebOpts.compact // todo add default compaction function
+    if (!compactFn || this.compacting) return
     const blockLog = new CompactionFetcher(this)
+    this.compacting = true
     const meta = await compactFn(blockLog)
     await this.loader!.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true
     })
+    this.compacting = false
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
@@ -135,4 +142,5 @@ export type BlockstoreOpts = {
   store: StoreOpts
   public?: boolean
   meta?: DbMeta
+  name?: string
 }

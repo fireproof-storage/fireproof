@@ -43,8 +43,8 @@ export class CRDT {
     this.name = name || null
     this.opts = opts || this.opts
     this.blockstore = new EncryptedBlockstore(
-      this.name,
       {
+        name,
         applyMeta: async (meta: TransactionMeta) => {
           const crdtMeta = meta as unknown as CRDTMeta
           await this.clock.applyHead(crdtMeta.head, [])
@@ -54,14 +54,16 @@ export class CRDT {
           return { head: this.clock.head } as TransactionMeta
         },
         crypto,
-        store
-      },
-      this.opts
+        store,
+        public: this.opts.public,
+        meta: this.opts.meta
+      }
+      
     )
-    this.clock.blocks = this.blockstore
+    this.clock.blockstore = this.blockstore
     this.indexBlockstore = new EncryptedBlockstore(
-      this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
+        name: this.opts.persistIndexes && this.name ? this.name + '.idx' : undefined,
         applyMeta: async (meta: TransactionMeta) => {
           const idxCarMeta = meta as unknown as IdxMetaMap
           for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
@@ -69,9 +71,9 @@ export class CRDT {
           }
         },
         crypto,
+        public: this.opts.public,
         store
-      },
-      this.opts
+      }
     )
     this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {})
     this.clock.onZoom(() => {
