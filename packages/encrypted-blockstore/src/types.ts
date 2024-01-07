@@ -9,7 +9,7 @@ export interface CarMakeable {
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
 
-type CarHeader = {
+export type CarHeader = {
   cars: AnyLink[]
   compact: AnyLink[]
   meta: TransactionMeta
@@ -25,9 +25,7 @@ type NestedData =
   | NestedData[]
   | { [key: string]: NestedData }
 
-export type TransactionMeta = {
-  [key: string]: NestedData
-}
+export type TransactionMeta = Record<string, NestedData>;
 
 export type CryptoOpts = {
   crypto: any,

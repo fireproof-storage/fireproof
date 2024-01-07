@@ -42,14 +42,11 @@ export type DocFileMeta = {
   file?: () => Promise<File>
 }
 
-type DocFiles = {
-  [key: string]: File | DocFileMeta
-}
+export type DocFiles = Record<string, DocFileMeta | File>;
 
-type DocBody = {
-  _files?: DocFiles
-  _publicFiles?: DocFiles
-  [key: string]: DocFragment
+type DocBody = Record<string, DocFragment> & {
+  _files?: DocFiles;
+  _publicFiles?: DocFiles;
 }
 
 // type DocMeta = {
