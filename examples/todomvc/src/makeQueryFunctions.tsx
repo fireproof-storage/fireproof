@@ -1,4 +1,4 @@
-import { Fireproof } from '@fireproof/core'
+import { Fireproof } from "use-fireproof"
 
 export function makeQueryFunctions({ ready, database }): {
   fetchAllLists: () => Promise<any>

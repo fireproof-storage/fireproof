@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import './style.css'
 // import { Fireproof } from '../../../packages/fireproof/src/fireproof.js'
 // import { useFireproof } from '../../../packages/react/dist/index.mjs'
-import { Fireproof } from '../../../packages/fireproof/dist/src/fireproof.mjs'
+import { Fireproof } from 'use-fireproof'
 // import { useFireproof } from '../../../packages/react/dist/index.mjs'
 // import { useFireproof } from 'use-fireproof'
 // console.log(Fireproof, useFireproof)

@@ -1,6 +1,6 @@
 const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
 const clockLog = new Set<string>()
-import { Fireproof } from '@fireproof/core'
+import { Fireproof } from 'use-fireproof'
 
 export const TimeTravel = ({ database }) => {
   database.clock && database.clock.length && clockLog.add(database.clock.toString())
