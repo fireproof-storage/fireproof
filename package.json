@@ -12,6 +12,7 @@
     "build:clean:react": "pnpm --filter use-fireproof build:clean",
     "build:clean:solid": "pnpm --filter @fireproof/solid-js build:clean",
     "build:core": "pnpm --filter @fireproof/core build",
+    "build:ipfs": "pnpm --filter @fireproof/ipfs build",
     "build:react": "pnpm --filter use-fireproof build",
     "build:scripts": "pnpm -r build:scripts",
     "build:scripts:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build:scripts",

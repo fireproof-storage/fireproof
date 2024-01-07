@@ -30,6 +30,7 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "build:clean": "rm -rf dist",
+    "build:tsup": "tsup",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:script": "node ./scripts/build.js",
     "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/ipfs.iife.js",
@@ -51,8 +52,8 @@
   },
   "dependencies": {
     "@web3-storage/pail": "^0.4.0",
-    "@fireproof/core": "workspace:^",
     "@fireproof/connect": "workspace:^",
+    "@fireproof/core": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ucanto/core": "^8.2.0",
     "@ucanto/interface": "^8.1.0",
