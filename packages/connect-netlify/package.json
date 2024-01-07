@@ -44,7 +44,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@fireproof/connect": "workspace:*",
+    "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@netlify/blobs": "^6.3.1",
     "cross-fetch": "^4.0.0",
