@@ -4,7 +4,6 @@
   "description": "starter for react using esbuild as a bundler",
   "main": "app.jsx",
   "scripts": {
-    "test": "test",
     "build": "node build.js -build",
     "start": "node build.js -watch"
   },

@@ -54,12 +54,15 @@
   "type": "module",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "clean": "rm -rf dist/*",
-    "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
+    "build:clean": "rm -rf dist",
     "build:esbuild": "node ./scripts/build.js",
-    "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "build:rollup": "rollup -c scripts/rollup.js",
-    "build:tsc": "npm run clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
+    "build:test": "node ./scripts/build.js",
+    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
+    "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
+    "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
+    "clean": "rm -rf node_modules",
     "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "test:node": "node ./scripts/test.js",
     "test:browser": "node ./scripts/browser-test.js",
@@ -73,8 +76,6 @@
     "lint:all": "npm run lint:fix && npm run lint:exports",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
     "test": "npm run build:test && npm run test:node && tsc",
-    "build:test": "node ./scripts/build.js",
-    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
     "test:serve":"npx serve-http test/www -p 8080"
   },
   "keywords": [

@@ -3,8 +3,23 @@
   "version": "1.0.0",
   "description": "Live database for the web",
   "scripts": {
-    "build": "cd packages/encrypted-blockstore && npm test && npm run build",
-    "test": "npm run build && cd packages/fireproof && pnpm i && npm test"
+    "build": "pnpm -r build",
+    "build:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build",
+    "build:clean": "pnpm -r build:clean",
+    "build:clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build:clean",
+    "build:clean:core": "pnpm --filter @fireproof/core build:clean",
+    "build:clean:react": "pnpm --filter use-fireproof build:clean",
+    "build:core": "pnpm --filter @fireproof/core build",
+    "build:react": "pnpm --filter use-fireproof build",
+    "clean": "rm -rf node_modules && pnpm -r clean",
+    "clean:all": "pnpm build:clean && pnpm clean",
+    "clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore clean",
+    "clean:core": "pnpm --filter @fireproof/core clean",
+    "clean:react": "pnpm --filter use-fireproof clean",
+    "test": "pnpm -r test",
+    "test:blockstore": "pnpm --filter @fireproof/encrypted-blockstore test",
+    "test:core": "pnpm --filter @fireproof/core test",
+    "test:react": "pnpm --filter use-fireproof test"
   },
   "keywords": [
     "database",
