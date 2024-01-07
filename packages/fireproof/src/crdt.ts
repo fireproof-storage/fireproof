@@ -42,39 +42,34 @@ export class CRDT {
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name || null
     this.opts = opts || this.opts
-    this.blockstore = new EncryptedBlockstore(
-      {
-        name,
-        applyMeta: async (meta: TransactionMeta) => {
-          const crdtMeta = meta as unknown as CRDTMeta
-          await this.clock.applyHead(crdtMeta.head, [])
-        },
-        compact: async (blocks: CompactionFetcher) => {
-          await doCompact(blocks, this.clock.head)
-          return { head: this.clock.head } as TransactionMeta
-        },
-        crypto,
-        store,
-        public: this.opts.public,
-        meta: this.opts.meta
-      }
-      
-    )
+    this.blockstore = new EncryptedBlockstore({
+      name,
+      applyMeta: async (meta: TransactionMeta) => {
+        const crdtMeta = meta as unknown as CRDTMeta
+        await this.clock.applyHead(crdtMeta.head, [])
+      },
+      compact: async (blocks: CompactionFetcher) => {
+        await doCompact(blocks, this.clock.head)
+        return { head: this.clock.head } as TransactionMeta
+      },
+      crypto,
+      store,
+      public: this.opts.public,
+      meta: this.opts.meta
+    })
     this.clock.blockstore = this.blockstore
-    this.indexBlockstore = new EncryptedBlockstore(
-      {
-        name: this.opts.persistIndexes && this.name ? this.name + '.idx' : undefined,
-        applyMeta: async (meta: TransactionMeta) => {
-          const idxCarMeta = meta as unknown as IdxMetaMap
-          for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-            index({ _crdt: this }, name, undefined, idx as any)
-          }
-        },
-        crypto,
-        public: this.opts.public,
-        store
-      }
-    )
+    this.indexBlockstore = new EncryptedBlockstore({
+      name: this.opts.persistIndexes && this.name ? this.name + '.idx' : undefined,
+      applyMeta: async (meta: TransactionMeta) => {
+        const idxCarMeta = meta as unknown as IdxMetaMap
+        for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
+          index({ _crdt: this }, name, undefined, idx as any)
+        }
+      },
+      crypto,
+      public: this.opts.public,
+      store
+    })
     this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {})
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
@@ -113,7 +108,7 @@ export class CRDT {
 
   async vis() {
     await this.ready
-    const txt : string[] = []
+    const txt: string[] = []
     for await (const line of clockVis(this.blockstore, this.clock.head)) {
       txt.push(line)
     }

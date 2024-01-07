@@ -4,7 +4,7 @@
   "description": "Live database for the web",
   "scripts": {
     "build": "cd packages/encrypted-blockstore && npm test && npm run build",
-    "test": "npm run build && cd packages/fireproof && npm test"
+    "test": "npm run build && cd packages/fireproof && pnpm i && npm test"
   },
   "keywords": [
     "database",
