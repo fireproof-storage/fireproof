@@ -257,8 +257,8 @@ importers:
   packages/connect-partykit:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
         version: link:../connect
