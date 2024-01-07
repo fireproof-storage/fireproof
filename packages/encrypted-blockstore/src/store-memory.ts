@@ -66,7 +66,6 @@ export class RemoteWAL extends RemoteWALBase {
   store = new Map<string, string>()
 
   headerKey(branch: string) {
-    // remove 'public' on next storage version bump
     return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
   }
 

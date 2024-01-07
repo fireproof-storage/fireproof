@@ -215,7 +215,7 @@ describe('basic Index upon cold start', function () {
       return doc.title
     }
     indexer = await index({ _crdt: crdt }, 'hello', mapFn)
-    // new Index(db._crdt.indexBlocks, db._crdt, 'hello', mapFn)
+    // new Index(db._crdt.indexBlockstore, db._crdt, 'hello', mapFn)
     result = await indexer.query()
     equalsJSON(indexer.indexHead, crdt.clock.head)
   })

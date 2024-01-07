@@ -53,7 +53,7 @@ describe('basic Loader', function () {
     const mockM = new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new CarTransaction(mockM)
-    loader = new Loader('test-loader-commit', loaderOpts, { public: true })
+    loader = new Loader('test-loader-commit', { ...loaderOpts,  public: true })
     block = await encode({
       value: { hello: 'world' },
       hasher,
@@ -86,7 +86,7 @@ describe('basic Loader with two commits', function () {
     const mockM = new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new CarTransaction(mockM)
-    loader = new Loader('test-loader-two-commit', loaderOpts, { public: true })
+    loader = new Loader('test-loader-two-commit', { ...loaderOpts, public: true })
     block = await encode({
       value: { hello: 'world' },
       hasher,

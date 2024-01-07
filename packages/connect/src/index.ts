@@ -1,6 +1,7 @@
 import { ConnectS3 } from './connect-s3'
 import { Connection, CarClockHead, Connectable } from './connection'
 import type { AnyLink } from '@fireproof/encrypted-blockstore'
+export type { AnyLink }
 import {
   UploadDataFnParams,
   UploadMetaFnParams,

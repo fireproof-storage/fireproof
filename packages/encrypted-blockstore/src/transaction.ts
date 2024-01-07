@@ -1,5 +1,5 @@
 import { MemoryBlockstore } from '@alanshaw/pail/block'
-import { AnyBlock, AnyLink, CarMakeable, ConfigOpts, TransactionMeta as TM } from './types'
+import { AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
 
 import { Loader } from './loader'
 import { CID } from 'multiformats'
@@ -29,19 +29,15 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
 export class EncryptedBlockstore implements BlockFetcher {
   ready: Promise<void>
   name: string | null = null
-
   loader: Loader | null = null
-  opts: ConfigOpts = {}
-  tOpts: TransactionOpts
-
+  ebOpts: BlockstoreOpts
   transactions: Set<CarTransaction> = new Set()
 
-  constructor(name: string | null, tOpts: TransactionOpts, opts?: ConfigOpts) {
-    this.opts = opts || this.opts
-    this.tOpts = tOpts
+  constructor(name: string | null, ebOpts: BlockstoreOpts) {
+    this.ebOpts = ebOpts
     if (name) {
       this.name = name
-      this.loader = new Loader(name, this.tOpts, this.opts)
+      this.loader = new Loader(name, this.ebOpts)
       this.ready = this.loader.ready
     } else {
       this.ready = Promise.resolve()
@@ -90,7 +86,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     await this.ready
     if (!this.loader) throw new Error('loader required to compact')
     if (this.loader.carLog.length < 2) return
-    const compactFn = this.tOpts.compact
+    const compactFn = this.ebOpts.compact
     if (!compactFn) return
     const blockLog = new CompactionFetcher(this)
     const meta = await compactFn(blockLog)
@@ -113,7 +109,7 @@ export class EncryptedBlockstore implements BlockFetcher {
 }
 
 export class CompactionFetcher implements BlockFetcher {
-  blocks: EncryptedBlockstore
+  blockstore: EncryptedBlockstore
   // loader: Loader | null = null
   loggedBlocks: CarTransaction
 
@@ -132,9 +128,11 @@ export class CompactionFetcher implements BlockFetcher {
 
 export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>
 
-export type TransactionOpts = {
+export type BlockstoreOpts = {
   applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
   compact?: CompactFn
   crypto: CryptoOpts
   store: StoreOpts
+  public?: boolean
+  meta?: DbMeta
 }
