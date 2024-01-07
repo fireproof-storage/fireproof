@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -52,7 +52,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.3",
+    "@alanshaw/pail": "^0.3.4",
     "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "cross-fetch": "^4.0.0",
