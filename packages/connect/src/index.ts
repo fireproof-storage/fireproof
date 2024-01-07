@@ -59,4 +59,4 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   }
 }
 
-export { Connection, ConnectS3, CarClockHead }
+export { Connection, ConnectS3, CarClockHead, Connectable }

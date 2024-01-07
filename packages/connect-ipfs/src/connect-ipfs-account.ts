@@ -8,6 +8,7 @@ import type { Database, MapFn } from '@fireproof/core'
 import { ConnectIPFSParams } from './connect-ipfs'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 import { Capabilities } from '@ucanto/interface'
+import { Loader } from '@fireproof/encrypted-blockstore'
 
 type ClockSpaceDoc = {
   type: 'clock-space';
@@ -58,8 +59,8 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   constructor() {
     super()
     this.accountDb = fireproof('_connect-web3')
-    const { _crdt: { blocks: { loader: accountDbLoader } } } = this.accountDb
-    this.connect(accountDbLoader!)
+    const { _crdt: { blockstore: { loader: accountDbLoader } } } = this.accountDb
+    this.connect({ loader: accountDbLoader! })
     void this.authorizing.then(() => {
       void this.serviceAccessRequests()
     })
