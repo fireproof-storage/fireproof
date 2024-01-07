@@ -18,7 +18,7 @@
     "clean:core": "pnpm --filter @fireproof/core clean",
     "clean:react": "pnpm --filter use-fireproof clean",
     "test:recursive": "pnpm -r test",
-    "test": "pnpm test:blockstore && pnpm test:core",
+    "test": "pnpm test:recursive",
     "test:blockstore": "pnpm --filter @fireproof/encrypted-blockstore test",
     "test:core": "pnpm --filter @fireproof/core test",
     "test:react": "pnpm --filter use-fireproof test"
