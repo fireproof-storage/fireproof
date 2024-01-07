@@ -1,18 +1,23 @@
-import { EventBlock } from '@alanshaw/pail/src/clock'
-import { AnyLink, Loader } from '@fireproof/core'
+import { DbMetaEventBlock } from './connection'
+import { AnyLink, Loader } from '@fireproof/encrypted-blockstore'
 
 export class TaskManager {
   private eventsWeHandled: Set<string> = new Set()
   private queue: any[] = []
   private isProcessing: boolean = false
+  private loader: Loader
 
-  async handleEvent(eventBlock: DbMetaEventBlock, loader: Loader) {
+  constructor(loader: Loader) {
+    this.loader = loader
+  }
+
+  async handleEvent(eventBlock: DbMetaEventBlock) {
     const cid = eventBlock.cid.toString()
     const parents = eventBlock.value.parents.map((cid: AnyLink) => cid.toString())
     for (const parent of parents) {
       this.eventsWeHandled.add(parent)
     }
-    this.queue.push({ cid, eventBlock, loader, retries: 0 })
+    this.queue.push({ cid, eventBlock, retries: 0 })
     this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))
     void this.processQueue()
   }
@@ -22,9 +27,11 @@ export class TaskManager {
     this.isProcessing = true
     const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))
     const first = filteredQueue[0]
-    if (!first) { return }
+    if (!first) {
+      return
+    }
     try {
-      await first.loader?.remoteMetaStore?.handleByteHeads([first.eventBlock.value.data.dbMeta])
+      this.loader?.remoteMetaStore?.handleByteHeads([first.eventBlock.value.data.dbMeta])
       this.eventsWeHandled.add(first.cid)
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))
     } catch (err) {
@@ -43,5 +50,3 @@ export class TaskManager {
     }
   }
 }
-
-export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>

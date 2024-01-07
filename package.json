@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Live database for the web",
   "scripts": {
-    "test": "cd packages/fireproof && npm test"
+    "build": "cd packages/encrypted-blockstore && npm test && npm run build",
+    "test": "npm run build && cd packages/fireproof && pnpm i && npm test"
   },
   "keywords": [
     "database",

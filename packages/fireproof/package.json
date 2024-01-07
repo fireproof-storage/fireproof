@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.15.1",
+  "version": "0.16.1",
   "description": "Live database for the web.",
   "main": "./dist/browser/fireproof.cjs",
   "module": "./dist/browser/fireproof.esm.js",
@@ -57,7 +57,8 @@
     "test": "npm run build:test && npm run test:node && tsc",
     "build:test": "node ./scripts/build.js",
     "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
-    "build:all": " npm run build && npm run test:browser"
+    "build:all": " npm run build && npm run test:browser",
+    "test:serve": "npx serve-http test/www -p 8080"
   },
   "keywords": [
     "database",
@@ -123,7 +124,8 @@
     "util": "^0.12.5"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.3",
+    "@alanshaw/pail": "^0.3.4",
+    "@fireproof/encrypted-blockstore": "workspace:^",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",

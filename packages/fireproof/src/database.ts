@@ -3,8 +3,9 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-import type { BulkResult, DocUpdate, ClockHead, Doc, FireproofOptions, MapFn, QueryOpts, ChangesOptions } from './types'
+import type { CRDTMeta, DocUpdate, ClockHead, Doc, ConfigOpts, MapFn, QueryOpts, ChangesOptions } from './types'
 import { DbResponse, ChangesResponse } from './types'
+import { EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
 
 type DbName = string | null
 
@@ -12,7 +13,7 @@ export class Database {
   static databases: Map<string, Database> = new Map()
 
   name: DbName
-  opts: FireproofOptions = {}
+  opts: ConfigOpts = {}
 
   _listening = false
   _listeners: Set<ListenerFn> = new Set()
@@ -20,10 +21,13 @@ export class Database {
   _crdt: CRDT
   _writeQueue: WriteQueue
 
-  constructor(name?: string, opts?: FireproofOptions) {
+  blockstore: EncryptedBlockstore
+
+  constructor(name?: string, opts?: ConfigOpts) {
     this.name = name || null
     this.opts = opts || this.opts
     this._crdt = new CRDT(name, this.opts)
+    this.blockstore = this._crdt.blockstore // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
     })//, Infinity)
@@ -46,7 +50,7 @@ export class Database {
   async put(doc: Doc): Promise<DbResponse> {
     const { _id, ...value } = doc
     const docId = _id || uuidv7()
-    const result: BulkResult = await this._writeQueue.push({ key: docId, value } as DocUpdate)
+    const result: CRDTMeta = await this._writeQueue.push({ key: docId, value } as DocUpdate)
     return { id: docId, clock: result?.head } as DbResponse
   }
 
@@ -107,34 +111,7 @@ export class Database {
     await this._crdt.compact()
   }
 
-  // move this stuff to connect
-  async getDashboardURL(compact = true) {
-    const baseUrl = 'https://dashboard.fireproof.storage/'
-    if (!this._crdt.blocks.loader?.remoteCarStore) return new URL('/howto', baseUrl)
-    if (compact) {
-      await this.compact()
-    }
-    const currents = await this._crdt.blocks.loader?.metaStore?.load()
-    if (!currents) throw new Error('Can\'t sync empty database: save data first')
-    if (currents.length > 1) throw new Error('Can\'t sync database with split heads: make an update first')
-    const current = currents[0]
-    const params = {
-      car: current.car.toString()
-    }
-    // @ts-ignore
-    if (current.key) { params.key = current.key.toString() }
-    // @ts-ignore
-    if (this.name) { params.name = this.name }
-    const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
-    console.log('Import to dashboard: ' + url.toString())
-    return url
-  }
 
-  openDashboard() {
-    void this.getDashboardURL().then(url => {
-      if (url) window.open(url.toString(), '_blank')
-    })
-  }
 
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {
@@ -162,7 +139,7 @@ type UpdateListenerFn = (docs: Doc[]) => Promise<void> | void
 type NoUpdateListenerFn = () => Promise<void> | void
 type ListenerFn = UpdateListenerFn | NoUpdateListenerFn
 
-export function fireproof(name: string, opts?: FireproofOptions): Database {
+export function fireproof(name: string, opts?: ConfigOpts): Database {
   if (!Database.databases.has(name)) {
     Database.databases.set(name, new Database(name, opts))
   }
@@ -179,7 +156,7 @@ function makeName(fnString: string) {
   if (!found) {
     return fnString
   } else {
-    // it's a consise arrow function, match everythign after the arrow
+    // it's a consise arrow function, match everything after the arrow
     return found[1]
   }
 }

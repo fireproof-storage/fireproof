@@ -112,9 +112,9 @@ importers:
       '@alanshaw/pail':
         specifier: ^0.3.3
         version: 0.3.3
-      '@fireproof/core':
-        specifier: ^0.15.1
-        version: link:../fireproof
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -153,11 +153,14 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/connect':
-        specifier: ^0.15.1
+        specifier: workspace:*
         version: link:../connect
       '@fireproof/core':
-        specifier: ^0.15.1
+        specifier: workspace:^
         version: link:../fireproof
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       '@ucanto/core':
         specifier: ^8.2.0
         version: 8.2.0
@@ -208,11 +211,11 @@ importers:
   packages/connect-netlify:
     dependencies:
       '@fireproof/connect':
-        specifier: ^0.15.1
+        specifier: workspace:*
         version: link:../connect
-      '@fireproof/core':
-        specifier: ^0.15.1
-        version: link:../fireproof
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       '@netlify/blobs':
         specifier: ^6.3.1
         version: 6.3.1
@@ -254,14 +257,11 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/connect':
-        specifier: ^0.14.0
-        version: 0.14.2
-      '@fireproof/core':
-        specifier: ^0.14.0
-        version: 0.14.9
-      '@fireproof/netlify':
-        specifier: ^0.14.13
-        version: 0.14.14
+        specifier: workspace:*
+        version: link:../connect
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -303,11 +303,165 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.88.2)
 
+  packages/encrypted-blockstore:
+    dependencies:
+      '@alanshaw/pail':
+        specifier: ^0.3.4
+        version: 0.3.4
+      '@ipld/car':
+        specifier: ^5.2.0
+        version: 5.2.0
+      '@ipld/dag-cbor':
+        specifier: ^9.0.3
+        version: 9.0.4
+      '@ipld/dag-json':
+        specifier: ^10.1.2
+        version: 10.1.3
+      '@ipld/unixfs':
+        specifier: ^2.1.1
+        version: 2.1.1
+      '@peculiar/webcrypto':
+        specifier: ^1.4.3
+        version: 1.4.3
+      charwise:
+        specifier: ^3.0.1
+        version: 3.0.1
+      idb:
+        specifier: ^7.1.1
+        version: 7.1.1
+      ipfs-unixfs-exporter:
+        specifier: ^13.1.7
+        version: 13.1.7
+      multiformats:
+        specifier: ^12.0.1
+        version: 12.1.3
+      p-limit:
+        specifier: ^4.0.0
+        version: 4.0.0
+      prolly-trees:
+        specifier: ^1.0.4
+        version: 1.0.4
+      uuidv7:
+        specifier: ^0.6.2
+        version: 0.6.2
+    devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.2(esbuild@0.18.20)
+      '@rollup/plugin-alias':
+        specifier: ^5.0.0
+        version: 5.0.0
+      '@rollup/plugin-commonjs':
+        specifier: ^25.0.4
+        version: 25.0.4
+      '@rollup/plugin-json':
+        specifier: ^6.0.0
+        version: 6.0.0
+      '@rollup/plugin-node-resolve':
+        specifier: ^15.2.0
+        version: 15.2.0
+      '@types/async':
+        specifier: ^3.2.20
+        version: 3.2.20
+      '@types/mocha':
+        specifier: ^10.0.1
+        version: 10.0.1
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^6.1.0
+        version: 6.4.0(@typescript-eslint/parser@6.4.0)(eslint@8.47.0)(typescript@5.2.2)
+      '@typescript-eslint/parser':
+        specifier: ^6.1.0
+        version: 6.4.0(eslint@8.47.0)(typescript@5.2.2)
+      browser-assert:
+        specifier: ^1.2.1
+        version: 1.2.1
+      c8:
+        specifier: ^8.0.1
+        version: 8.0.1
+      crypto-browserify:
+        specifier: ^3.12.0
+        version: 3.12.0
+      esbuild:
+        specifier: ^0.18.14
+        version: 0.18.20
+      esbuild-plugin-alias:
+        specifier: ^0.2.1
+        version: 0.2.1
+      esbuild-plugin-polyfill-node:
+        specifier: ^0.3.0
+        version: 0.3.0(esbuild@0.18.20)
+      esbuild-plugin-tsc:
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.2.2)
+      eslint:
+        specifier: ^8.45.0
+        version: 8.47.0
+      eslint-config-standard:
+        specifier: ^17.1.0
+        version: 17.1.0(eslint-plugin-import@2.27.5)(eslint-plugin-promise@6.1.1)(eslint@8.47.0)
+      eslint-plugin-import:
+        specifier: ^2.27.5
+        version: 2.27.5(@typescript-eslint/parser@6.4.0)(eslint@8.47.0)
+      eslint-plugin-mocha:
+        specifier: ^10.1.0
+        version: 10.1.0(eslint@8.47.0)
+      eslint-plugin-node:
+        specifier: ^11.1.0
+        version: 11.1.0(eslint@8.47.0)
+      eslint-plugin-promise:
+        specifier: ^6.1.1
+        version: 6.1.1(eslint@8.47.0)
+      memfs:
+        specifier: ^4.2.1
+        version: 4.2.1(tslib@2.6.1)
+      mocha:
+        specifier: ^10.2.0
+        version: 10.2.0
+      nodemon:
+        specifier: ^3.0.1
+        version: 3.0.1
+      os-browserify:
+        specifier: ^0.3.0
+        version: 0.3.0
+      path-browserify:
+        specifier: ^1.0.1
+        version: 1.0.1
+      process:
+        specifier: ^0.11.10
+        version: 0.11.10
+      puppeteer:
+        specifier: ^21.0.3
+        version: 21.0.3
+      rollup-plugin-polyfill-node:
+        specifier: ^0.12.0
+        version: 0.12.0
+      rollup-plugin-visualizer:
+        specifier: ^5.9.2
+        version: 5.9.2
+      stream-browserify:
+        specifier: ^3.0.0
+        version: 3.0.0
+      ts-unused-exports:
+        specifier: ^10.0.0
+        version: 10.0.0(typescript@5.2.2)
+      tslib:
+        specifier: ^2.6.0
+        version: 2.6.1
+      typescript:
+        specifier: ^5.1.6
+        version: 5.2.2
+      util:
+        specifier: ^0.12.5
+        version: 0.12.5
+
   packages/fireproof:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       '@ipld/car':
         specifier: ^5.2.0
         version: 5.2.0
@@ -540,6 +694,18 @@ packages:
       archy: 1.0.0
       cli-color: 2.0.3
       multiformats: 11.0.2
+      sade: 1.8.1
+    dev: false
+
+  /@alanshaw/pail@0.3.4:
+    resolution: {integrity: sha512-9hxffjZazBQ7AvfuLQZ4KnXEBdrtK0xEJFCX1XTViPwRe/abo/hIyCkrs/F4plXD6WiFZljvXEWM7bLGV9Ux7g==}
+    hasBin: true
+    dependencies:
+      '@ipld/car': 5.2.0
+      '@ipld/dag-cbor': 9.0.4
+      archy: 1.0.0
+      cli-color: 2.0.3
+      multiformats: 12.1.3
       sade: 1.8.1
     dev: false
 
@@ -1833,21 +1999,10 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@fireproof/connect@0.14.2:
-    resolution: {integrity: sha512-2rlZK52Ld4S7G5+GeQq97VRYyokaSXRz1AxVT0fwfKhuM5q20ODeEd5njWmP9AkObM8X+7K8oOiQ6ts4xM7NSQ==}
-    dependencies:
-      '@alanshaw/pail': 0.3.3
-      '@fireproof/core': 0.14.9
-      cross-fetch: 4.0.0
-      multiformats: 12.0.1
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /@fireproof/core@0.14.9:
     resolution: {integrity: sha512-wtOVFmXPgy4D3CjT4OLIkzSQ4v5Eqzs9uinfXEMMCE9Ejf1j/1gVgHM+YfN18SWipWnUruYk+HE+btnbQgU78g==}
     dependencies:
-      '@alanshaw/pail': 0.3.3
+      '@alanshaw/pail': 0.3.4
       '@ipld/car': 5.2.0
       '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-json': 10.1.3
@@ -1856,7 +2011,7 @@ packages:
       charwise: 3.0.1
       idb: 7.1.1
       ipfs-unixfs-exporter: 13.1.7
-      multiformats: 12.0.1
+      multiformats: 12.1.3
       p-limit: 4.0.0
       prolly-trees: 1.0.4
       uuidv7: 0.6.2
@@ -1865,7 +2020,7 @@ packages:
   /@fireproof/core@0.7.2:
     resolution: {integrity: sha512-BFd4jqOw1dDzGCq/8U/KosQYjL4tQ09iA3KwOkNJXpg92wB4f8ZZ0IDsbEzOYKRB1BwsajvsQSD6MgmW99sd7Q==}
     dependencies:
-      '@ipld/car': 5.1.0
+      '@ipld/car': 5.2.0
       '@ipld/dag-cbor': 9.0.4
       '@jsonlines/core': 1.0.2
       async: 3.2.4
@@ -1908,18 +2063,6 @@ packages:
       - encoding
       - supports-color
       - utf-8-validate
-    dev: false
-
-  /@fireproof/netlify@0.14.14:
-    resolution: {integrity: sha512-VLC9g79Nq3lRa2PX7aGHIubCArClIR8Mt/b06V9XE5N99Ar37t6mZf1tV8g7pN7HP3A/r1Tf5kNwfXR+loAN5w==}
-    dependencies:
-      '@fireproof/connect': 0.14.2
-      '@fireproof/core': 0.14.9
-      '@netlify/blobs': 6.3.1
-      cross-fetch: 4.0.0
-      js-base64: 3.7.5
-    transitivePeerDependencies:
-      - encoding
     dev: false
 
   /@humanwhocodes/config-array@0.11.10:
@@ -2001,7 +2144,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 2.0.4
-      multiformats: 12.0.1
+      multiformats: 12.1.3
     dev: false
 
   /@ipld/dag-json@10.1.3:
@@ -2009,7 +2152,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 2.0.4
-      multiformats: 12.0.1
+      multiformats: 12.1.3
     dev: false
 
   /@ipld/dag-pb@4.0.2:
@@ -2418,7 +2561,7 @@ packages:
     resolution: {integrity: sha512-etjrdN/gJ1PhIg3vv+4QypYgXsqBQCfTFEMzSclz3t1YwLSnd9i8R1nL50CIznUraVlsKzbcH/xCB9dC0XbFow==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
-      multiformats: 12.0.1
+      multiformats: 12.1.3
       murmurhash3js-revisited: 3.0.0
     dev: false
 
@@ -2933,6 +3076,35 @@ packages:
       - supports-color
     dev: true
 
+  /@typescript-eslint/eslint-plugin@6.4.0(@typescript-eslint/parser@6.4.0)(eslint@8.47.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-62o2Hmc7Gs3p8SLfbXcipjWAa6qk2wZGChXG2JbBtYpwSRmti/9KHLqfbLs9uDigOexG+3PaQ9G2g3201FWLKg==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    peerDependencies:
+      '@typescript-eslint/parser': ^6.0.0 || ^6.0.0-alpha
+      eslint: ^7.0.0 || ^8.0.0
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@eslint-community/regexpp': 4.6.2
+      '@typescript-eslint/parser': 6.4.0(eslint@8.47.0)(typescript@5.2.2)
+      '@typescript-eslint/scope-manager': 6.4.0
+      '@typescript-eslint/type-utils': 6.4.0(eslint@8.47.0)(typescript@5.2.2)
+      '@typescript-eslint/utils': 6.4.0(eslint@8.47.0)(typescript@5.2.2)
+      '@typescript-eslint/visitor-keys': 6.4.0
+      debug: 4.3.4(supports-color@8.1.1)
+      eslint: 8.47.0
+      graphemer: 1.4.0
+      ignore: 5.2.4
+      natural-compare: 1.4.0
+      semver: 7.5.4
+      ts-api-utils: 1.0.1(typescript@5.2.2)
+      typescript: 5.2.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@typescript-eslint/parser@6.4.0(eslint@8.47.0)(typescript@5.1.6):
     resolution: {integrity: sha512-I1Ah1irl033uxjxO9Xql7+biL3YD7w9IU8zF+xlzD/YxY6a4b7DYA08PXUUCbm2sEljwJF6ERFy2kTGAGcNilg==}
     engines: {node: ^16.0.0 || >=18.0.0}
@@ -2950,6 +3122,27 @@ packages:
       debug: 4.3.4(supports-color@8.1.1)
       eslint: 8.47.0
       typescript: 5.1.6
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
+  /@typescript-eslint/parser@6.4.0(eslint@8.47.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-I1Ah1irl033uxjxO9Xql7+biL3YD7w9IU8zF+xlzD/YxY6a4b7DYA08PXUUCbm2sEljwJF6ERFy2kTGAGcNilg==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    peerDependencies:
+      eslint: ^7.0.0 || ^8.0.0
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/scope-manager': 6.4.0
+      '@typescript-eslint/types': 6.4.0
+      '@typescript-eslint/typescript-estree': 6.4.0(typescript@5.2.2)
+      '@typescript-eslint/visitor-keys': 6.4.0
+      debug: 4.3.4(supports-color@8.1.1)
+      eslint: 8.47.0
+      typescript: 5.2.2
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -2982,6 +3175,26 @@ packages:
       - supports-color
     dev: true
 
+  /@typescript-eslint/type-utils@6.4.0(eslint@8.47.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-TvqrUFFyGY0cX3WgDHcdl2/mMCWCDv/0thTtx/ODMY1QhEiyFtv/OlLaNIiYLwRpAxAtOLOY9SUf1H3Q3dlwAg==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    peerDependencies:
+      eslint: ^7.0.0 || ^8.0.0
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/typescript-estree': 6.4.0(typescript@5.2.2)
+      '@typescript-eslint/utils': 6.4.0(eslint@8.47.0)(typescript@5.2.2)
+      debug: 4.3.4(supports-color@8.1.1)
+      eslint: 8.47.0
+      ts-api-utils: 1.0.1(typescript@5.2.2)
+      typescript: 5.2.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@typescript-eslint/types@6.4.0:
     resolution: {integrity: sha512-+FV9kVFrS7w78YtzkIsNSoYsnOtrYVnKWSTVXoL1761CsCRv5wpDOINgsXpxD67YCLZtVQekDDyaxfjVWUJmmg==}
     engines: {node: ^16.0.0 || >=18.0.0}
@@ -3008,6 +3221,27 @@ packages:
       - supports-color
     dev: true
 
+  /@typescript-eslint/typescript-estree@6.4.0(typescript@5.2.2):
+    resolution: {integrity: sha512-iDPJArf/K2sxvjOR6skeUCNgHR/tCQXBsa+ee1/clRKr3olZjZ/dSkXPZjG6YkPtnW6p5D1egeEPMCW6Gn4yLA==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    peerDependencies:
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+    dependencies:
+      '@typescript-eslint/types': 6.4.0
+      '@typescript-eslint/visitor-keys': 6.4.0
+      debug: 4.3.4(supports-color@8.1.1)
+      globby: 11.1.0
+      is-glob: 4.0.3
+      semver: 7.5.4
+      ts-api-utils: 1.0.1(typescript@5.2.2)
+      typescript: 5.2.2
+    transitivePeerDependencies:
+      - supports-color
+    dev: true
+
   /@typescript-eslint/utils@6.4.0(eslint@8.47.0)(typescript@5.1.6):
     resolution: {integrity: sha512-BvvwryBQpECPGo8PwF/y/q+yacg8Hn/2XS+DqL/oRsOPK+RPt29h5Ui5dqOKHDlbXrAeHUTnyG3wZA0KTDxRZw==}
     engines: {node: ^16.0.0 || >=18.0.0}
@@ -3020,6 +3254,25 @@ packages:
       '@typescript-eslint/scope-manager': 6.4.0
       '@typescript-eslint/types': 6.4.0
       '@typescript-eslint/typescript-estree': 6.4.0(typescript@5.1.6)
+      eslint: 8.47.0
+      semver: 7.5.4
+    transitivePeerDependencies:
+      - supports-color
+      - typescript
+    dev: true
+
+  /@typescript-eslint/utils@6.4.0(eslint@8.47.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-BvvwryBQpECPGo8PwF/y/q+yacg8Hn/2XS+DqL/oRsOPK+RPt29h5Ui5dqOKHDlbXrAeHUTnyG3wZA0KTDxRZw==}
+    engines: {node: ^16.0.0 || >=18.0.0}
+    peerDependencies:
+      eslint: ^7.0.0 || ^8.0.0
+    dependencies:
+      '@eslint-community/eslint-utils': 4.4.0(eslint@8.47.0)
+      '@types/json-schema': 7.0.12
+      '@types/semver': 7.5.0
+      '@typescript-eslint/scope-manager': 6.4.0
+      '@typescript-eslint/types': 6.4.0
+      '@typescript-eslint/typescript-estree': 6.4.0(typescript@5.2.2)
       eslint: 8.47.0
       semver: 7.5.4
     transitivePeerDependencies:
@@ -5648,7 +5901,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 6.4.0(eslint@8.47.0)(typescript@5.1.6)
+      '@typescript-eslint/parser': 6.4.0(eslint@8.47.0)(typescript@5.2.2)
       debug: 3.2.7(supports-color@5.5.0)
       eslint: 8.47.0
       eslint-import-resolver-node: 0.3.7
@@ -5677,7 +5930,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 6.4.0(eslint@8.47.0)(typescript@5.1.6)
+      '@typescript-eslint/parser': 6.4.0(eslint@8.47.0)(typescript@5.2.2)
       array-includes: 3.1.6
       array.prototype.flat: 1.3.1
       array.prototype.flatmap: 1.3.1
@@ -6768,7 +7021,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       interface-store: 5.1.3
-      multiformats: 12.0.1
+      multiformats: 12.1.3
     dev: false
 
   /interface-store@5.1.3:
@@ -6821,7 +7074,7 @@ packages:
       it-parallel: 3.0.4
       it-pipe: 3.0.1
       it-pushable: 3.2.1
-      multiformats: 12.0.1
+      multiformats: 12.1.3
       p-queue: 7.3.4
       progress-events: 1.0.0
       uint8arrays: 4.0.3
@@ -8568,6 +8821,11 @@ packages:
 
   /multiformats@12.0.1:
     resolution: {integrity: sha512-s01wijBJoDUqESWSzePY0lvTw7J3PVO9x2Cc6ASI5AMZM2Gnhh7BC17+nlFhHKU7dDzaCaRfb+NiqNzOsgPUoQ==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+    dev: false
+
+  /multiformats@12.1.3:
+    resolution: {integrity: sha512-eajQ/ZH7qXZQR2AgtfpmSMizQzmyYVmCql7pdhldPuYQi4atACekbJaQplk6dWyIi10jCaFnd6pqvcEFXjbaJw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dev: false
 
@@ -10689,6 +10947,15 @@ packages:
       typescript: 5.1.6
     dev: true
 
+  /ts-api-utils@1.0.1(typescript@5.2.2):
+    resolution: {integrity: sha512-lC/RGlPmwdrIBFTX59wwNzqh7aR2otPNPR/5brHZm/XKFYKsfqxihXUe9pU3JI+3vGkl+vyCoNNnPhJn3aLK1A==}
+    engines: {node: '>=16.13.0'}
+    peerDependencies:
+      typescript: '>=4.2.0'
+    dependencies:
+      typescript: 5.2.2
+    dev: true
+
   /ts-jest@26.5.6(jest@26.6.3)(typescript@3.9.10):
     resolution: {integrity: sha512-rua+rCP8DxpA8b4DQD/6X2HQS8Zy/xzViVYfEs2OQu68tkCuKLV0Md8pmX55+W24uRIyAsf/BajRfxOs+R2MKA==}
     engines: {node: '>= 10'}
@@ -10735,6 +11002,17 @@ packages:
       chalk: 4.1.2
       tsconfig-paths: 3.14.2
       typescript: 5.1.6
+    dev: true
+
+  /ts-unused-exports@10.0.0(typescript@5.2.2):
+    resolution: {integrity: sha512-SFRQEBJ/2kUXdt/XAzjXsd2gcWOjYViR1zkXeqI0nPL4r6wyyayZCh/++nlFxNjCkdeGar3cPDHq9K/NBOzTZA==}
+    hasBin: true
+    peerDependencies:
+      typescript: '>=3.8.3'
+    dependencies:
+      chalk: 4.1.2
+      tsconfig-paths: 3.14.2
+      typescript: 5.2.2
     dev: true
 
   /tsconfig-paths@3.14.2:

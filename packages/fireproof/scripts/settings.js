@@ -64,7 +64,7 @@ export function createBuildSettings(options) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...commonSettings.plugins],
       banner: bannerLog(`
-console.log('esm/node build');`, `
+console.log('fb esm/node build');`, `
 import { createRequire } from 'module'; 
 const require = createRequire(import.meta.url);
         `)
@@ -78,15 +78,20 @@ const require = createRequire(import.meta.url);
         alias(
           {
             'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
-            './store-browser': join(__dirname, '../src/store-fs.ts'),
-            './crypto-web': join(__dirname, '../src/crypto-node.ts')
+            // './store-browser': join(__dirname, '../src/store-fs.ts'),
+            './eb-web': join(__dirname, '../src/eb-node.ts')
           }
         ),
         commonjs({ filter: /^peculiar|ipfs-utils/ })
         // polyfillNode({
         //   polyfills: { crypto: false, fs: true, process: 'empty' }
         // })
-      ]
+      ],
+      banner: bannerLog(`
+      console.log('tfp esm/node build');`, `
+      import { createRequire } from 'module'; 
+      const require = createRequire(import.meta.url);
+              `)
 
     }
 
@@ -99,8 +104,8 @@ const require = createRequire(import.meta.url);
         alias(
           {
             // 'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
-            './store-browser': join(__dirname, '../src/store-memory.ts'),
-            // './crypto-web': join(__dirname, '../src/crypto-node.ts')
+            // './store-browser': join(__dirname, '../src/store-memory.ts'),
+            './eb-web': join(__dirname, '../src/eb-node.ts')
           }
         ),
         commonjs({ filter: /^peculiar|ipfs-utils/ })
@@ -119,18 +124,20 @@ const require = createRequire(import.meta.url);
         ...testEsmConfig,
         outfile: `dist/node/${filename}.esm.js`,
         entryPoints: [entryPoint],
-        minify: false
+        minify: false,
+        platform: 'node',
+
       }
       builds.push(esmPublishConfig)
 
-      const memConfig = {
-        ...memEsmConfig,
-        outfile: `dist/memory/${filename}.esm.js`,
-        format: 'esm',
-        platform: 'browser',
-        entryPoints: [entryPoint]}
+      // const memConfig = {
+      //   ...memEsmConfig,
+      //   outfile: `dist/memory/${filename}.esm.js`,
+      //   format: 'esm',
+      //   platform: 'browser',
+      //   entryPoints: [entryPoint]}
         
-        builds.push(memConfig)
+      //   builds.push(memConfig)
 
 
       const cjsConfig = {
@@ -147,6 +154,7 @@ console.log('cjs/node build');
       }
       builds.push(cjsConfig)
 
+      console.log('filename - browser', filename)
       // popular builds inherit here
       const browserIIFEConfig = {
         ...commonSettings,
@@ -158,7 +166,7 @@ console.log('cjs/node build');
         entryPoints: [entryPoint],
         
         banner: bannerLog`
-console.log('browser/es2015 build');
+console.log('fp browser/es2015 build');
 `,
         plugins: [
           // alias(
@@ -187,7 +195,7 @@ console.log('browser/es2015 build');
         format: 'esm',
         
         banner: bannerLog`
-console.log('esm/es2015 build');
+console.log('fp esm/es2015 build');
 `
       }
 
@@ -200,7 +208,7 @@ console.log('esm/es2015 build');
         format: 'cjs',
         
         banner: bannerLog`
-console.log('cjs/es2015 build');
+console.log('fp cjs/es2015 build');
 `
       }
       builds.push(browserCJSConfig)

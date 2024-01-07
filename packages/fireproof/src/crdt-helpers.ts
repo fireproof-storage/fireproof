@@ -1,22 +1,35 @@
-import type { CID } from 'multiformats'
 import { encode, decode, Block } from 'multiformats/block'
 import { parse } from 'multiformats/link'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
 import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
 import { EventFetcher, vis } from '@alanshaw/pail/clock'
-import { LoggingFetcher, Transaction } from './transaction'
-import type { TransactionBlockstore, LoaderFetcher } from './transaction'
-import type { DocUpdate, ClockHead, AnyLink, DocValue, BulkResult, ChangesOptions, Doc, DocFileMeta, FileResult, DocFiles, BlockFetcher } from './types'
+import {
+  type EncryptedBlockstore,
+  type CompactionFetcher,
+  CarTransaction,
+  TransactionMeta,
+  BlockFetcher
+} from '@fireproof/encrypted-blockstore'
+import type {
+  DocUpdate,
+  ClockHead,
+  AnyLink,
+  DocValue,
+  CRDTMeta,
+  ChangesOptions,
+  Doc,
+  DocFileMeta,
+  DocFiles
+} from './types'
 import { decodeFile, encodeFile } from './files'
-import { DbLoader } from './loaders'
 
 export async function applyBulkUpdateToCrdt(
-  tblocks: Transaction,
+  tblocks: CarTransaction,
   head: ClockHead,
   updates: DocUpdate[],
   options?: object
-): Promise<BulkResult> {
+): Promise<CRDTMeta> {
   let result
   for (const update of updates) {
     const link = await writeDocContent(tblocks, update)
@@ -26,22 +39,28 @@ export async function applyBulkUpdateToCrdt(
     if (!isReturned) {
       const hasRoot = await tblocks.get(result.root) // is a db-wide get
       if (!hasRoot) {
-        throw new Error(`missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates.map(u => u.key).toString()}`)
+        throw new Error(
+          `missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates
+            .map(u => u.key)
+            .toString()}`
+        )
 
         // make sure https://github.com/alanshaw/pail/pull/20 is applied
         result.head = head
       }
     }
-    for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
-      tblocks.putSync(cid, bytes)
+    if (result.event) {
+      for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
+        tblocks.putSync(cid, bytes)
+      }
+      head = result.head
     }
-    head = result.head
   }
   return { head }
 }
 
 // this whole thing can get pulled outside of the write queue
-async function writeDocContent(blocks: Transaction, update: DocUpdate): Promise<AnyLink> {
+async function writeDocContent(blocks: CarTransaction, update: DocUpdate): Promise<AnyLink> {
   let value: DocValue
   if (update.del) {
     value = { del: true }
@@ -54,7 +73,7 @@ async function writeDocContent(blocks: Transaction, update: DocUpdate): Promise<
   return block.cid
 }
 
-async function processFiles(blocks: Transaction, doc: Doc) {
+async function processFiles(blocks: CarTransaction, doc: Doc) {
   if (doc._files) {
     await processFileset(blocks, doc._files)
   }
@@ -63,9 +82,9 @@ async function processFiles(blocks: Transaction, doc: Doc) {
   }
 }
 
-async function processFileset(blocks: Transaction, files: DocFiles, publicFiles = false) {
-  const dbBlockstore = blocks.parent as TransactionBlockstore
-  const t = new Transaction(dbBlockstore)
+async function processFileset(blocks: CarTransaction, files: DocFiles, publicFiles = false) {
+  const dbBlockstore = blocks.parent
+  const t = new CarTransaction(dbBlockstore) // maybe this should move to encrypted-blockstore
   const didPut = []
   // let totalSize = 0
   for (const filename in files) {
@@ -84,7 +103,9 @@ async function processFileset(blocks: Transaction, files: DocFiles, publicFiles 
   // todo option to bypass this limit
   // if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for files in a single update is 1MB')
   if (didPut.length) {
-    const car = await dbBlockstore.loader?.commitFiles(t, { files } as FileResult, { public: publicFiles })
+    const car = await dbBlockstore.loader?.commitFiles(t, { files } as unknown as TransactionMeta, {
+      public: publicFiles
+    })
     if (car) {
       for (const name of didPut) {
         files[name] = { car, ...files[name] } as DocFileMeta
@@ -93,14 +114,18 @@ async function processFileset(blocks: Transaction, files: DocFiles, publicFiles 
   }
 }
 
-export async function getValueFromCrdt(blocks: TransactionBlockstore, head: ClockHead, key: string): Promise<DocValue> {
+export async function getValueFromCrdt(
+  blocks: EncryptedBlockstore,
+  head: ClockHead,
+  key: string
+): Promise<DocValue> {
   if (!head.length) throw new Error('Getting from an empty database')
   const link = await get(blocks, head, key)
   if (!link) throw new Error(`Missing key ${key}`)
   return await getValueFromLink(blocks, link)
 }
 
-export function readFiles(blocks: LoaderFetcher, { doc }: DocValue) {
+export function readFiles(blocks: EncryptedBlockstore, { doc }: DocValue) {
   if (!doc) return
   if (doc._files) {
     readFileset(blocks, doc._files)
@@ -110,33 +135,35 @@ export function readFiles(blocks: LoaderFetcher, { doc }: DocValue) {
   }
 }
 
-function readFileset(blocks: LoaderFetcher, files: DocFiles, isPublic = false) {
+function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = false) {
   for (const filename in files) {
     const fileMeta = files[filename] as DocFileMeta
     if (fileMeta.cid) {
-      // if (!blocks.loader) throw new Error('Missing loader')
-      if (isPublic) { fileMeta.url = `https://${fileMeta.cid.toString()}.ipfs.w3s.link/` }
-      if (fileMeta.car && blocks.loader) {
-        const ld = blocks.loader as DbLoader
-        fileMeta.file = async () => await decodeFile({
-          get: async (cid: AnyLink) => {
-            const reader = await ld.loadFileCar(fileMeta.car!, isPublic)
-            const block = await reader.get(cid as CID)
-            if (!block) throw new Error(`Missing block ${cid.toString()}`)
-            return block.bytes
-          }
-        }, fileMeta.cid, fileMeta)
+      if (isPublic) {
+        fileMeta.url = `https://${fileMeta.cid.toString()}.ipfs.w3s.link/`
+      }
+      if (fileMeta.car) {
+        fileMeta.file = async () =>
+          await decodeFile(
+            {
+              get: async (cid: AnyLink) => {
+                return await blocks.getFile(fileMeta.car!, cid, isPublic)
+              }
+            },
+            fileMeta.cid,
+            fileMeta
+          )
       }
     }
     files[filename] = fileMeta
   }
 }
 
-async function getValueFromLink(blocks: LoaderFetcher, link: AnyLink): Promise<DocValue> {
+async function getValueFromLink(blocks: BlockFetcher, link: AnyLink): Promise<DocValue> {
   const block = await blocks.get(link)
   if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
-  readFiles(blocks, value)
+  readFiles(blocks as EncryptedBlockstore, value)
   return value
 }
 
@@ -149,30 +176,42 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
     } catch (e) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       console.error('missing event', link.toString(), e)
-      return ({ value: null })
+      return { value: null }
     }
   }
 }
 
 export async function clockChangesSince(
-  blocks: LoaderFetcher,
+  blocks: BlockFetcher,
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions
-): Promise<{ result: DocUpdate[], head: ClockHead }> {
-  const eventsFetcher = (opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)) as EventFetcher<EventData>
+): Promise<{ result: DocUpdate[]; head: ClockHead }> {
+  const eventsFetcher = (
+    opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)
+  ) as EventFetcher<EventData>
   const keys: Set<string> = new Set()
-  const updates = await gatherUpdates(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity)
+  const updates = await gatherUpdates(
+    blocks,
+    eventsFetcher,
+    head,
+    since,
+    [],
+    keys,
+    new Set<string>(),
+    opts.limit || Infinity
+  )
   return { result: updates.reverse(), head }
 }
 
 async function gatherUpdates(
-  blocks: LoaderFetcher,
+  blocks: BlockFetcher,
   eventsFetcher: EventFetcher<EventData>,
   head: ClockHead,
   since: ClockHead,
   updates: DocUpdate[] = [],
-  keys: Set<string>, didLinks: Set<string>,
+  keys: Set<string>,
+  didLinks: Set<string>,
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
@@ -190,7 +229,16 @@ async function gatherUpdates(
     const { key, value } = event.data
     if (keys.has(key)) {
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
+        updates = await gatherUpdates(
+          blocks,
+          eventsFetcher,
+          event.parents,
+          since,
+          updates,
+          keys,
+          didLinks,
+          limit
+        )
       }
     } else {
       keys.add(key)
@@ -198,14 +246,23 @@ async function gatherUpdates(
       updates.push({ key, value: docValue.doc, del: docValue.del, clock: link })
       limit--
       if (event.parents) {
-        updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit)
+        updates = await gatherUpdates(
+          blocks,
+          eventsFetcher,
+          event.parents,
+          since,
+          updates,
+          keys,
+          didLinks,
+          limit
+        )
       }
     }
   }
   return updates
 }
 
-export async function * getAllEntries(blocks: LoaderFetcher, head: ClockHead) {
+export async function* getAllEntries(blocks: BlockFetcher, head: ClockHead) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link)
@@ -213,19 +270,19 @@ export async function * getAllEntries(blocks: LoaderFetcher, head: ClockHead) {
   }
 }
 
-export async function * clockVis(blocks: TransactionBlockstore, head: ClockHead) {
+export async function* clockVis(blocks: EncryptedBlockstore, head: ClockHead) {
   for await (const line of vis(blocks, head)) {
     yield line
   }
 }
 
 let isCompacting = false
-export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) {
+export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   if (isCompacting) {
+    console.log('already compacting')
     return
   }
   isCompacting = true
-  const blockLog = new LoggingFetcher(blocks)
 
   for (const cid of head) {
     const bl = await blockLog.get(cid)
@@ -264,9 +321,7 @@ export async function doCompact(blocks: TransactionBlockstore, head: ClockHead) 
 
   await clockChangesSince(blockLog, head, [], {})
 
-  const done = await blocks.commitCompaction(blockLog.loggedBlocks, head)
   isCompacting = false
-  return done
 }
 
 export async function getBlock(blocks: BlockFetcher, cidString: string) {

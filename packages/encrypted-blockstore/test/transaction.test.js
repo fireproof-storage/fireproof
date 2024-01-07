@@ -7,14 +7,24 @@
 import { CID } from 'multiformats'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, equalsJSON } from './helpers.js'
-import { TransactionBlockstore as Blockstore, Transaction } from '../dist/test/transaction.esm.js'
+import { assert, equals, notEquals, matches, equalsJSON } from '../../fireproof/test/helpers.js'
+import { EncryptedBlockstore as Blockstore, CarTransaction } from '../dist/test/transaction.esm.js'
+
+import * as nodeCrypto from '../dist/test/crypto-node.esm.js'
+
+import * as nodeStore from '../dist/test/store-node.esm.js'
+
+
+const loaderOpts = {
+  store : nodeStore,
+  crypto: nodeCrypto
+}
 
 describe('Fresh TransactionBlockstore', function () {
   /** @type {Blockstore} */
   let blocks
   beforeEach(function () {
-    blocks = new Blockstore()
+    blocks = new Blockstore(loaderOpts)
   })
   it('should not have a name', function () {
     assert(!blocks.name)
@@ -29,7 +39,7 @@ describe('Fresh TransactionBlockstore', function () {
   it('should yield a transaction', async function () {
     const txR = await blocks.transaction((tblocks) => {
       assert(tblocks)
-      assert(tblocks instanceof Transaction)
+      assert(tblocks instanceof CarTransaction)
       return { head: [] }
     })
     assert(txR)
@@ -41,7 +51,7 @@ describe('TransactionBlockstore with name', function () {
   /** @type {Blockstore} */
   let blocks
   beforeEach(function () {
-    blocks = new Blockstore('test')
+    blocks = new Blockstore({name:'test', ...loaderOpts})
   })
   it('should have a name', function () {
     equals(blocks.name, 'test')
@@ -59,11 +69,11 @@ describe('TransactionBlockstore with name', function () {
 })
 
 describe('A transaction', function () {
-  /** @type {Transaction} */
+  /** @type {CarTransaction} */
   let tblocks, blocks
   beforeEach(async function () {
-    blocks = new Blockstore()
-    tblocks = new Transaction(blocks)
+    blocks = new Blockstore(loaderOpts)
+    tblocks = new CarTransaction(blocks)
     blocks.transactions.add(tblocks)
   })
   it('should put and get', async function () {
@@ -85,7 +95,7 @@ describe('TransactionBlockstore with a completed transaction', function () {
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     cid2 = CID.parse('bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm')
 
-    blocks = new Blockstore()
+    blocks = new Blockstore(loaderOpts)
     await blocks.transaction(async (tblocks) => {
       await tblocks.put(cid, 'value')
       return await tblocks.put(cid2, 'value2')
@@ -114,11 +124,6 @@ describe('TransactionBlockstore with a completed transaction', function () {
     }
     equals(blz.length, 2)
   })
-  it.skip('should compact', async function () {
-    const compactT = new Transaction(blocks)
-    await compactT.put(cid2, 'valueX')
-    await blocks.commitCompaction(compactT)
-    equals(blocks.transactions.size, 1)
-    assert(blocks.transactions.has(compactT))
-  })
 })
+
+// test compact 

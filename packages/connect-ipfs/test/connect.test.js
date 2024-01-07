@@ -362,7 +362,7 @@ describe('two Connection with raw remote', function () {
     equalsJSON(Object.keys(JSON.parse(meta2.toString())), ['car', 'key'])
     notEquals(meta1.toString(), meta2.toString())
 
-    await db2._crdt.blocks.loader.ready
+    await db2._crdt.blockstore.loader.ready
 
     const docHello = await db2.get('hello')
     equals(docHello.value, 'world')
@@ -372,9 +372,9 @@ describe('two Connection with raw remote', function () {
 
     const doc3 = { _id: 'hey', value: 'partyverse' }
 
-    assert(db2._crdt.blocks.loader)
-    assert(db2._crdt.blocks.loader.carLog)
-    equals(db2._crdt.blocks.loader.carLog.length, 1)
+    assert(db2._crdt.blockstore.loader)
+    assert(db2._crdt.blockstore.loader.carLog)
+    equals(db2._crdt.blockstore.loader.carLog.length, 1)
 
     // this is intermittent, why?
     const ok3 = await db2.put(doc3)
@@ -397,9 +397,9 @@ describe('two Connection with raw remote', function () {
     await writeFile(metaPath, meta2)
     const db3 = new Database(dbName)
     await db3._crdt.ready
-    assert(db3._crdt.blocks.loader)
-    assert(db3._crdt.blocks.loader.carLog)
-    // equals(db3._crdt.blocks.loader.carLog.length, 2)
+    assert(db3._crdt.blockstore.loader)
+    assert(db3._crdt.blockstore.loader.carLog)
+    // equals(db3._crdt.blockstore.loader.carLog.length, 2)
 
     const changes25 = await db3.changes()
     equals(changes25.rows.length, 2)
@@ -409,7 +409,7 @@ describe('two Connection with raw remote', function () {
     const remote3 = connect.raw(db3, mockConnect)
     await remote3.loaded
 
-    // await db3._crdt.blocks.loader.remoteMetaLoading
+    // await db3._crdt.blockstore.loader.remoteMetaLoading
     // await db3._crdt.ready
 
     // equalsJSON(db3._crdt.clock.head, ok3.clock)

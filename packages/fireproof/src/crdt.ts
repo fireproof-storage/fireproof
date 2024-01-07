@@ -1,90 +1,106 @@
-import { TransactionBlockstore, IndexBlockstore } from './transaction'
-import { clockChangesSince, applyBulkUpdateToCrdt, getValueFromCrdt, readFiles, getAllEntries, clockVis, getBlock } from './crdt-helpers'
-import type { DocUpdate, BulkResult, ClockHead, FireproofOptions, ChangesOptions } from './types'
-import type { Index } from './index'
+import {
+  EncryptedBlockstore,
+  type CompactionFetcher,
+  type TransactionMeta,
+  type CarTransaction
+} from '@fireproof/encrypted-blockstore'
+
+import { store, crypto } from './eb-web'
+
+import {
+  clockChangesSince,
+  applyBulkUpdateToCrdt,
+  getValueFromCrdt,
+  readFiles,
+  getAllEntries,
+  clockVis,
+  getBlock,
+  doCompact
+} from './crdt-helpers'
+import type {
+  DocUpdate,
+  CRDTMeta,
+  ClockHead,
+  ConfigOpts,
+  ChangesOptions,
+  IdxMetaMap
+} from './types'
+import { index, type Index } from './index'
 import { CRDTClock } from './crdt-clock'
-import { DbLoader } from './loaders'
 
 export class CRDT {
   name: string | null
-  opts: FireproofOptions = {}
+  opts: ConfigOpts = {}
   ready: Promise<void>
-  blocks: TransactionBlockstore
-  indexBlocks: IndexBlockstore
+  blockstore: EncryptedBlockstore
+  indexBlockstore: EncryptedBlockstore
 
   indexers: Map<string, Index> = new Map()
 
   clock: CRDTClock = new CRDTClock()
-  // isCompacting = false
-  // compacting : Promise<AnyLink|void> = Promise.resolve()
-  // writing: Promise<BulkResult|void> = Promise.resolve()
 
-  constructor(name?: string, opts?: FireproofOptions) {
+  constructor(name?: string, opts?: ConfigOpts) {
     this.name = name || null
     this.opts = opts || this.opts
-    this.blocks = new TransactionBlockstore(this.name, this.clock, this.opts)
-    this.clock.blocks = this.blocks
-    this.indexBlocks = new IndexBlockstore(
-      this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
-      this,
-      this.opts
-    )
-    this.ready = Promise.all([this.blocks.ready, this.indexBlocks.ready]).then(() => {})
+    this.blockstore = new EncryptedBlockstore({
+      name,
+      applyMeta: async (meta: TransactionMeta) => {
+        const crdtMeta = meta as unknown as CRDTMeta
+        await this.clock.applyHead(crdtMeta.head, [])
+      },
+      compact: async (blocks: CompactionFetcher) => {
+        await doCompact(blocks, this.clock.head)
+        return { head: this.clock.head } as TransactionMeta
+      },
+      crypto,
+      store,
+      public: this.opts.public,
+      meta: this.opts.meta
+    })
+    this.clock.blockstore = this.blockstore
+    this.indexBlockstore = new EncryptedBlockstore({
+      name: this.opts.persistIndexes && this.name ? this.name + '.idx' : undefined,
+      applyMeta: async (meta: TransactionMeta) => {
+        const idxCarMeta = meta as unknown as IdxMetaMap
+        for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
+          index({ _crdt: this }, name, undefined, idx as any)
+        }
+      },
+      crypto,
+      public: this.opts.public,
+      store
+    })
+    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {})
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex()
       }
     })
-    this.clock.onTock(async () => {
-      if (this.blocks.loader && this.blocks.loader.carLog.length < 100) return
-      await this.compact()
-    })
   }
 
-  async bulk(updates: DocUpdate[], options?: object): Promise<BulkResult> {
+  async bulk(updates: DocUpdate[], options?: object): Promise<CRDTMeta> {
     await this.ready
-    const loader = this.blocks.loader as DbLoader
-
     const prevHead = [...this.clock.head]
-
-    const writing = (async () => {
-      await loader?.compacting
-      if (loader?.isCompacting) {
-        throw new Error('cant bulk while compacting')
-      }
-      const got = await this.blocks.transaction(async (tblocks): Promise<BulkResult> => {
-        const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
+    const meta = (await this.blockstore.transaction(
+      async (blocks: CarTransaction): Promise<TransactionMeta> => {
+        const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates, options)
         updates = updates.map(({ key, value, del, clock }) => {
-          readFiles(this.blocks, { doc: value })
+          readFiles(this.blockstore, { doc: value })
           return { key, value, del, clock }
         })
-        if (loader?.awaitingCompact) {
-          console.log('missing?', head.toString())
-        }
-        if (loader?.isCompacting) {
-          console.log('compacting?', head.toString())
-        }
-        return { head }
-      })
-      await this.clock.applyHead(got.head, prevHead, updates)
-      return got
-    })()
-    if (loader) {
-      const wr = loader.writing
-      loader.writing = wr.then(async () => {
-        loader.isWriting = true
-        await writing
-        loader.isWriting = false
-        return wr
-      })
-    }
-    return (await writing)!
+        return { head } as TransactionMeta
+      }
+    )) as CRDTMeta
+    await this.clock.applyHead(meta.head, prevHead, updates)
+    return meta
   }
+
+  // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
   async allDocs() {
     await this.ready
     const result: DocUpdate[] = []
-    for await (const entry of getAllEntries(this.blocks, this.clock.head)) {
+    for await (const entry of getAllEntries(this.blockstore, this.clock.head)) {
       result.push(entry)
     }
     return { result, head: this.clock.head }
@@ -92,8 +108,8 @@ export class CRDT {
 
   async vis() {
     await this.ready
-    const txt = []
-    for await (const line of clockVis(this.blocks, this.clock.head)) {
+    const txt: string[] = []
+    for await (const line of clockVis(this.blockstore, this.clock.head)) {
       txt.push(line)
     }
     return txt.join('\n')
@@ -101,25 +117,22 @@ export class CRDT {
 
   async getBlock(cidString: string) {
     await this.ready
-    return await getBlock(this.blocks, cidString)
+    return await getBlock(this.blockstore, cidString)
   }
 
   async get(key: string) {
     await this.ready
-    const result = await getValueFromCrdt(this.blocks, this.clock.head, key)
+    const result = await getValueFromCrdt(this.blockstore, this.clock.head, key)
     if (result.del) return null
     return result
   }
 
   async changes(since: ClockHead = [], opts: ChangesOptions = {}) {
     await this.ready
-    return await clockChangesSince(this.blocks, this.clock.head, since, opts)
+    return await clockChangesSince(this.blockstore, this.clock.head, since, opts)
   }
 
   async compact() {
-    await this.ready
-    if (this.blocks.loader) {
-      await (this.blocks.loader as DbLoader).compact(this.blocks)
-    }
+    return await this.blockstore.compact()
   }
 }

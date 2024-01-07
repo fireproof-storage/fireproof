@@ -6,7 +6,7 @@ import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import { Proof } from '@ucanto/interface'
 
-import { encodeCarFile } from '@fireproof/core'
+// import { encodeCarFile } from '@fireproof/core'
 
 
 export abstract class AbstractConnectIPFS extends Connection {

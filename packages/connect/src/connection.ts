@@ -5,21 +5,19 @@ import type {
   DownloadMetaFnParams,
   DownloadDataFnParams
 } from './types'
-import type { AnyLink, Loader, DataStore } from '@fireproof/core'
+import type { AnyLink, Loader } from '@fireproof/encrypted-blockstore'
 
-import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
+import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
-import type { BlockView, Link } from 'multiformats'
+import type { Link } from 'multiformats'
+import { TaskManager } from './task-manager'
 
-interface DbLoader extends Loader {
+export type CarClockHead = Link<DbMetaEventBlock>[]
+
+export type Connectable = {
+  blockstore: { loader: Loader }
   name: string
-  fileStore?: DataStore
-  remoteFileStore?: RemoteDataStore
 }
-function isDbLoader(loader: Loader): loader is DbLoader {
-  return (loader as DbLoader).fileStore !== undefined
-}
-export type CarClockHead = Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]
 
 export abstract class Connection {
   ready: Promise<any>
@@ -27,7 +25,8 @@ export abstract class Connection {
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   eventBlocks = new MemoryBlockstore()
   parents: CarClockHead = []
-  loader?: Loader | null
+  loader?: Loader
+  taskManager?: TaskManager
 
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataUpload(
@@ -43,71 +42,91 @@ export abstract class Connection {
     this.loaded = Promise.resolve()
   }
 
+  setLoader(loader: Loader) {
+    this.loader = loader
+    this.taskManager = new TaskManager(loader)
+  }
+
   async refresh() {
     await this.loader!.remoteMetaStore!.load('main')
     await this.loader!.remoteWAL?._process()
   }
 
-  connect(loader: Loader) {
-    this.connectStorage(loader)
-    this.connectMeta(loader)
+  connect({ loader }: { loader: Loader }) {
+    this.connectStorage({ loader })
+    this.connectMeta({ loader })
   }
 
-  connectMeta(loader: Loader) {
-    this.loader = loader
-    const remote = new RemoteMetaStore(loader.name, this)
+  connectMeta({ loader }: { loader: Loader }) {
+    this.setLoader(loader)
+    const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {
-        await loader.handleDbMetasFromStore(metas)
+        await this.loader!.handleDbMetasFromStore(metas)
       }
     })
-    loader.remoteMetaStore = remote
-    this.loaded = loader.ready.then(async () => {
+    this.loader!.remoteMetaStore = remote
+    this.loaded = this.loader!.ready.then(async () => {
       remote!.load('main').then(() => {
         void this.loader!.remoteWAL?._process()
       })
     })
   }
 
-  connectStorage(loader: Loader) {
-    this.loader = loader
-    loader.remoteCarStore = new RemoteDataStore(loader.name, this)
-    if (isDbLoader(loader)) {
-      loader.remoteFileStore = new RemoteDataStore(loader.name, this, 'file')
-    }
+  connectStorage({ loader }: { loader: Loader }) {
+    this.setLoader(loader)
+    this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
+    this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }
 
-  async createEventBlock(bytes: Uint8Array): Promise<
-    BlockView<
-      EventView<{
-        dbMeta: Uint8Array
-      }>,
-      number,
-      number,
-      1
-    >
-  > {
+  async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
     const data = {
       dbMeta: bytes
     }
     const event = await EventBlock.create(data, this.parents)
-    // const eventBlocks = new MemoryBlockstore()
     await this.eventBlocks.put(event.cid, event.bytes)
-    // await eventBlocks.put(event.cid, event.bytes)
-    return event
+    return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
 
-  async decodeEventBlock(bytes: Uint8Array): Promise<
-    BlockView<
-      EventView<{
-        dbMeta: Uint8Array
-      }>,
-      number,
-      number,
-      1
-    >
-  > {
+  async decodeEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
     const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes)
-    return event
+    return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
+  }
+
+  // move this stuff to connect
+  async getDashboardURL(compact = true) {
+    const baseUrl = 'https://dashboard.fireproof.storage/'
+    if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
+    // if (compact) {
+    //   await this.compact()
+    // }
+    const currents = await this.loader?.metaStore?.load()
+    if (!currents) throw new Error("Can't sync empty database: save data first")
+    if (currents.length > 1)
+      throw new Error("Can't sync database with split heads: make an update first")
+    const current = currents[0]
+    const params = {
+      car: current.car.toString()
+    }
+    if (current.key) {
+      // @ts-ignore
+      params.key = current.key.toString()
+    }
+    // @ts-ignore
+    if (this.name) {
+      // @ts-ignore
+      params.name = this.name
+    }
+    const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+    console.log('Import to dashboard: ' + url.toString())
+    return url
+  }
+
+  openDashboard() {
+    void this.getDashboardURL().then(url => {
+      if (url) window.open(url.toString(), '_blank')
+    })
   }
 }
+
+export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>

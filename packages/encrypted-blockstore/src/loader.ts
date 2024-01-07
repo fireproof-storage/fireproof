@@ -1,29 +1,25 @@
 import pLimit from 'p-limit'
 import { CarReader } from '@ipld/car'
-import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
-import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
-import { getCrypto, randomBytes } from './crypto-web'
-
-import { DataStore, MetaStore, RemoteWAL } from './store-browser'
-import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-
 import { CID } from 'multiformats'
-import type { Transaction } from './transaction'
+
 import type {
   AnyBlock,
-  AnyCarHeader,
   AnyLink,
-  BulkResult,
   CarHeader,
-  CarLoaderHeader,
   CommitOpts,
-  DbCarHeader,
   DbMeta,
-  FileCarHeader,
-  FileResult,
-  FireproofOptions
-} from './types'
-import type { DbLoader, IndexerResult } from './loaders'
+  TransactionMeta} from './types'
+import type { BlockstoreOpts } from './transaction'
+
+import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
+import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
+
+import { getCrypto, randomBytes } from './crypto-web'
+import { DataStore, MetaStore } from './store'
+import { RemoteWAL } from './remote-wal'
+
+import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
+import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
 // ts-unused-exports:disable-next-line
@@ -50,16 +46,17 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
   abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>
 }
 
-export abstract class Loader {
+export class Loader {
   name: string
-  opts: FireproofOptions = {}
+  
+  ebOpts: BlockstoreOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
-
-  // remoteMetaLoading: Promise<void> | undefined
   remoteMetaStore: AbstractRemoteMetaStore | undefined
   remoteCarStore: AbstractDataStore | undefined
+  fileStore: DataStore
+  remoteFileStore: AbstractDataStore | undefined
   remoteWAL: RemoteWAL
   metaStore: MetaStore
   carStore: DataStore
@@ -69,23 +66,22 @@ export abstract class Loader {
   key: string | undefined
   keyId: string | undefined
   seenCompacted: Set<string> = new Set()
+  writing: Promise<TransactionMeta | void> = Promise.resolve()
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
 
-  static defaultHeader: AnyCarHeader
-  abstract defaultHeader: AnyCarHeader
-
-  constructor(name: string, opts?: FireproofOptions) {
+  constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
-    this.opts = opts || this.opts
-    this.metaStore = new MetaStore(this.name)
-    this.carStore = new DataStore(this.name)
-    this.remoteWAL = new RemoteWAL(this)
+    this.ebOpts = ebOpts
+    this.metaStore = new ebOpts.store.MetaStore(this.name)
+    this.carStore = new ebOpts.store.DataStore(this.name)
+    this.fileStore = new ebOpts.store.DataStore(this.name)
+    this.remoteWAL = new ebOpts.store.RemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
-      const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -103,9 +99,6 @@ export abstract class Loader {
   //   await this._applyCarHeader(carHeader, true)
   // }
 
-  async _readyForMerge() {}
-  async _setWaitForWrite(_writing: () => Promise<void>) {}
-
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
     for (const meta of metas) {
       const writingFn = async () => {
@@ -119,8 +112,6 @@ export abstract class Loader {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    const ld = this as unknown as DbLoader
-    await ld.compacting
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }
@@ -133,14 +124,14 @@ export abstract class Loader {
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
-    const carHeader = (await this.loadCarHeaderFromMeta(meta)) as DbCarHeader
+    const carHeader = (await this.loadCarHeaderFromMeta(meta)) as CarHeader
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
-    await this._applyCarHeader(carHeader)
+    await this.ebOpts.applyMeta(carHeader.meta)
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -150,18 +141,16 @@ export abstract class Loader {
     }
   }
 
-  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<CarLoaderHeader> {
+  async loadCarHeaderFromMeta({ car: cid }: DbMeta): Promise<CarHeader> {
     const reader = await this.loadCar(cid)
-    return (await parseCarFile(reader)) as CarLoaderHeader
+    return await parseCarFile(reader)
   }
-
-  protected abstract _applyCarHeader(_carHeader: CarLoaderHeader, snap?: boolean): Promise<void>
 
   // eslint-disable-next-line @typescript-eslint/require-await
   async _getKey() {
     if (this.key) return this.key
     // generate a random key
-    if (!this.opts.public) {
+    if (!this.ebOpts.public) {
       if (getCrypto()) {
         await this.setKey(toHexString(randomBytes(32)))
       } else {
@@ -172,42 +161,48 @@ export abstract class Loader {
   }
 
   async commitFiles(
-    t: Transaction,
-    done: FileResult,
+    t: CarTransaction,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
   }
   // can these skip the queue? or have a file queue?
   async _commitInternalFiles(
-    t: Transaction,
-    done: FileResult,
+    t: CarTransaction,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact)
+    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact) as {
+      files: AnyLink[]
+    }
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    const dbLoader = this as unknown as DbLoader
-    await dbLoader.fileStore!.save({ cid, bytes })
+    await this.fileStore!.save({ cid, bytes })
     await this.remoteWAL!.enqueueFile(cid, !!opts.public)
     return cid
   }
 
+  async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
+    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic)
+  }
+
   async commit(
-    t: Transaction,
-    done: IndexerResult | BulkResult,
+    t: CarTransaction,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts))
   }
 
   async _commitInternal(
-    t: Transaction,
-    done: IndexerResult | BulkResult,
+    t: CarTransaction,
+    done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as AnyCarHeader
+    const header = done
+    const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as CarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
@@ -218,7 +213,7 @@ export abstract class Loader {
     return cid
   }
 
-  async prepareRoots(fp: AnyCarHeader | FileCarHeader, t: Transaction): Promise<AnyLink[]> {
+  async prepareRoots(fp: CarHeader, t: CarTransaction): Promise<AnyLink[]> {
     const header = await encodeCarHeader(fp)
     await t.put(header.cid, header.bytes)
     // const got = await t.get(header.cid)
@@ -228,32 +223,32 @@ export abstract class Loader {
 
   async prepareCarFile(
     root: AnyLink,
-    t: Transaction,
+    t: CarTransaction,
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     const theKey = isPublic ? null : await this._getKey()
-    return theKey ? await encryptedEncodeCarFile(theKey, root, t) : await encodeCarFile([root], t)
+    return (theKey && this.ebOpts.crypto)
+      ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, root, t)
+      : await encodeCarFile([root], t)
   }
 
   protected makeFileCarHeader(
-    result: FileResult,
+    result: TransactionMeta,
     cars: AnyLink[],
     compact: boolean = false
-  ): FileCarHeader {
-    const files = [] as AnyLink[]
-    for (const [, meta] of Object.entries(result.files)) {
-      files.push(meta.cid)
+  ): TransactionMeta {
+    const files: AnyLink[] = []
+    for (const [, meta] of Object.entries(result.files!)) {
+      if (meta && typeof meta === 'object' && 'cid' in meta && meta !== null) {
+        files.push(meta.cid as AnyLink)
+      }
     }
-    return { files } as FileCarHeader
+    return { files }
   }
 
-  async updateCarLog(
-    cid: AnyLink,
-    fp: AnyCarHeader | FileCarHeader,
-    compact: boolean
-  ): Promise<void> {
+  async updateCarLog(cid: AnyLink, fp: CarHeader, compact: boolean): Promise<void> {
     if (compact) {
-      const fpCar = fp as CarLoaderHeader
+      const fpCar = fp as CarHeader
       const previousCompactCid = this.carLog[this.carLog.length - 1]
       fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
       this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
@@ -264,9 +259,9 @@ export abstract class Loader {
   }
 
   async removeCidsForCompact(cid: AnyLink) {
-    const carHeader = (await this.loadCarHeaderFromMeta({
-      cid
-    } as unknown as DbMeta)) as DbCarHeader
+    const carHeader = await this.loadCarHeaderFromMeta({
+      car: cid
+    } as unknown as DbMeta)
     for (const cid of carHeader.compact) {
       await this.carStore!.remove(cid)
     }
@@ -316,16 +311,18 @@ export abstract class Loader {
   }
 
   protected makeCarHeader(
-    result: BulkResult | IndexerResult,
+    result: TransactionMeta,
     cars: AnyLink[],
     compact: boolean = false
   ): CarHeader {
-    return compact ? { cars: [], compact: cars } : { cars, compact: [] }
+    const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] }
+    return { ...coreHeader, meta: result }
   }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')
-    return await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+    const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+    return loaded
   }
 
   protected async storesLoadCar(
@@ -370,8 +367,8 @@ export abstract class Loader {
 
   protected async ensureDecryptedReader(reader: CarReader) {
     const theKey = await this._getKey()
-    if (!theKey) return reader
-    const { blocks, root } = await decodeEncryptedCar(theKey, reader)
+    if (!(theKey && this.ebOpts.crypto)) return reader
+    const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader)
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),
@@ -396,6 +393,15 @@ export abstract class Loader {
     const limit = pLimit(5)
     const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
+  }
+
+  async _setWaitForWrite(_writingFn: () => Promise<any>) {
+    const wr = this.writing
+    this.writing = wr.then(async () => {
+      await _writingFn()
+      return wr
+    })
+    return this.writing.then(() => {})
   }
 }
 

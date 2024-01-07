@@ -1,5 +1,4 @@
-import type { Link } from 'multiformats'
-import { EventView } from '@alanshaw/pail/clock'
+
 import { AccountConnectIPFS } from './connect-ipfs-account'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 

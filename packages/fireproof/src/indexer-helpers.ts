@@ -14,8 +14,8 @@ import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
 import { ProllyNode as BaseNode } from 'prolly-trees/base'
 
-import { AnyLink, DocUpdate, MapFn, DocFragment, BlockFetcher, IndexKey, IndexUpdate, QueryOpts, IndexRow, AnyBlock, Doc } from './types'
-import { Transaction } from './transaction'
+import { AnyLink, DocUpdate, MapFn, DocFragment, IndexKey, IndexUpdate, QueryOpts, IndexRow, AnyBlock, Doc } from './types'
+import { CarTransaction, BlockFetcher } from '@fireproof/encrypted-blockstore'
 import { CRDT } from './crdt'
 
 export class IndexTree {
@@ -86,7 +86,7 @@ function makeProllyGetBlock(blocks: BlockFetcher): (address: AnyLink) => Promise
   }
 }
 
-export async function bulkIndex(tblocks: Transaction, inIndex: IndexTree, indexEntries: IndexUpdate[], opts: StaticProllyOptions): Promise<IndexTree> {
+export async function bulkIndex(tblocks: CarTransaction, inIndex: IndexTree, indexEntries: IndexUpdate[], opts: StaticProllyOptions): Promise<IndexTree> {
   if (!indexEntries.length) return inIndex
   if (!inIndex.root) {
     if (!inIndex.cid) {

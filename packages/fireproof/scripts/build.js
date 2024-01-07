@@ -8,7 +8,7 @@ async function buildProject() {
 
   for (const config of buildConfigs) {
     console.log('Building', config.outfile)
-    build(config).catch(() => {
+    await build(config).catch(() => {
       console.log('Error', config.outfile)
     })
   }

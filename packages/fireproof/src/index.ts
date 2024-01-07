@@ -1,9 +1,33 @@
-import type { ClockHead, DocUpdate, MapFn, IndexUpdate, QueryOpts, IdxMeta, DocFragment } from './types'
-import { IndexBlockstore } from './transaction'
-import { bulkIndex, indexEntriesForChanges, byIdOpts, byKeyOpts, IndexTree, applyQuery, encodeRange, encodeKey, loadIndex } from './indexer-helpers'
+import type {
+  ClockHead,
+  DocUpdate,
+  MapFn,
+  IndexUpdate,
+  QueryOpts,
+  IdxMeta,
+  DocFragment,
+  IdxMetaMap,
+} from './types'
+import { EncryptedBlockstore, TransactionMeta } from '@fireproof/encrypted-blockstore'
+import {
+  bulkIndex,
+  indexEntriesForChanges,
+  byIdOpts,
+  byKeyOpts,
+  IndexTree,
+  applyQuery,
+  encodeRange,
+  encodeKey,
+  loadIndex
+} from './indexer-helpers'
 import { CRDT } from './crdt'
 
-export function index({ _crdt }: { _crdt: CRDT }, name: string, mapFn?: MapFn, meta?: IdxMeta): Index {
+export function index(
+  { _crdt }: { _crdt: CRDT },
+  name: string,
+  mapFn?: MapFn,
+  meta?: IdxMeta
+): Index {
   if (mapFn && meta) throw new Error('cannot provide both mapFn and meta')
   if (mapFn && mapFn.constructor.name !== 'Function') throw new Error('mapFn must be a function')
   if (_crdt.indexers.has(name)) {
@@ -17,7 +41,7 @@ export function index({ _crdt }: { _crdt: CRDT }, name: string, mapFn?: MapFn, m
 }
 
 export class Index {
-  blocks: IndexBlockstore
+  blockstore: EncryptedBlockstore
   crdt: CRDT
   name: string | null = null
   mapFn: MapFn | null = null
@@ -30,11 +54,11 @@ export class Index {
   ready: Promise<void>
 
   constructor(crdt: CRDT, name: string, mapFn?: MapFn, meta?: IdxMeta) {
-    this.blocks = crdt.indexBlocks
+    this.blockstore = crdt.indexBlockstore
     this.crdt = crdt
     this.applyMapFn(name, mapFn, meta)
     if (!(this.mapFnString || this.initError)) throw new Error('missing mapFnString')
-    this.ready = this.blocks.ready.then(() => { })
+    this.ready = this.blockstore.ready.then(() => {})
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -52,15 +76,22 @@ export class Index {
     try {
       if (meta) {
         // hydrating from header
-        if (this.indexHead &&
-          this.indexHead.map(c => c.toString()).join() !== meta.head.map(c => c.toString()).join()) {
+        if (
+          this.indexHead &&
+          this.indexHead.map(c => c.toString()).join() !== meta.head.map(c => c.toString()).join()
+        ) {
           throw new Error('cannot apply meta to existing index')
         }
 
         if (this.mapFnString) {
           // we already initialized from application code
           if (this.mapFnString !== meta.map) {
-            console.log('cannot apply different mapFn meta: old mapFnString', this.mapFnString, 'new mapFnString', meta.map)
+            console.log(
+              'cannot apply different mapFn meta: old mapFnString',
+              this.mapFnString,
+              'new mapFnString',
+              meta.map
+            )
             // throw new Error('cannot apply different mapFn meta')
           } else {
             this.byId.cid = meta.byId
@@ -78,7 +109,8 @@ export class Index {
         if (this.mapFn) {
           // we already initialized from application code
           if (mapFn) {
-            if (this.mapFn.toString() !== mapFn.toString()) throw new Error('cannot apply different mapFn app2')
+            if (this.mapFn.toString() !== mapFn.toString())
+              throw new Error('cannot apply different mapFn app2')
           }
         } else {
           // application code is creating an index
@@ -87,7 +119,8 @@ export class Index {
           }
           if (this.mapFnString) {
             // we already loaded from a header
-            if (this.mapFnString !== mapFn.toString()) throw new Error('cannot apply different mapFn app')
+            if (this.mapFnString !== mapFn.toString())
+              throw new Error('cannot apply different mapFn app')
           } else {
             // we are first
             this.mapFnString = mapFn.toString()
@@ -118,10 +151,12 @@ export class Index {
       return await applyQuery(this.crdt, await this.byKey.root.get(encodedKey), opts)
     }
     if (Array.isArray(opts.keys)) {
-      const results = await Promise.all(opts.keys.map(async (key: DocFragment) => {
-        const encodedKey = encodeKey(key)
-        return (await applyQuery(this.crdt, await this.byKey.root!.get(encodedKey), opts)).rows
-      }))
+      const results = await Promise.all(
+        opts.keys.map(async (key: DocFragment) => {
+          const encodedKey = encodeKey(key)
+          return (await applyQuery(this.crdt, await this.byKey.root!.get(encodedKey), opts)).rows
+        })
+      )
       return { rows: results.flat() }
     }
     if (opts.prefix) {
@@ -133,11 +168,14 @@ export class Index {
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const { result, ...all } = await this.byKey.root.getAllEntries() // funky return type
-    return await applyQuery(this.crdt, {
-      result: result.map(({ key: [k, id], value }) =>
-        ({ key: k, id, value })),
-      ...all
-    }, opts)
+    return await applyQuery(
+      this.crdt,
+      {
+        result: result.map(({ key: [k, id], value }) => ({ key: k, id, value })),
+        ...all
+      },
+      opts
+    )
   }
 
   _resetIndex() {
@@ -149,8 +187,8 @@ export class Index {
   async _hydrateIndex() {
     if (this.byId.root && this.byKey.root) return
     if (!this.byId.cid || !this.byKey.cid) return
-    this.byId.root = await loadIndex(this.blocks, this.byId.cid, byIdOpts)
-    this.byKey.root = await loadIndex(this.blocks, this.byKey.cid, byKeyOpts)
+    this.byId.root = await loadIndex(this.blockstore, this.byId.cid, byIdOpts)
+    this.byKey.root = await loadIndex(this.blockstore, this.byKey.cid, byKeyOpts)
   }
 
   async _updateIndex() {
@@ -159,9 +197,9 @@ export class Index {
     if (!this.mapFn) throw new Error('No map function defined')
     let result: DocUpdate[], head: ClockHead
     if (!this.indexHead || this.indexHead.length === 0) {
-      ; ({ result, head } = await this.crdt.allDocs())
+      ;({ result, head } = await this.crdt.allDocs())
     } else {
-      ; ({ result, head } = await this.crdt.changes(this.indexHead))
+      ;({ result, head } = await this.crdt.changes(this.indexHead))
     }
     if (result.length === 0) {
       this.indexHead = head
@@ -171,17 +209,22 @@ export class Index {
     let removeIdIndexEntries: IndexUpdate[] = []
     if (this.byId.root) {
       const removeIds = result.map(({ key }) => key)
-      const { result: oldChangeEntries } = await this.byId.root.getMany(removeIds) as { result: Array<[string, string] | string> }
+      const { result: oldChangeEntries } = (await this.byId.root.getMany(removeIds)) as {
+        result: Array<[string, string] | string>
+      }
       staleKeyIndexEntries = oldChangeEntries.map(key => ({ key, del: true }))
-      removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }))
+      removeIdIndexEntries = oldChangeEntries.map(key => ({ key: key[1], del: true }))
     }
     const indexEntries = indexEntriesForChanges(result, this.mapFn) // use a getter to translate from string
-    const byIdIndexEntries: DocUpdate[] = indexEntries.map(({ key }) => ({ key: key[1], value: key }))
-    const indexerMeta: Map<string, IdxMeta> = new Map()
+    const byIdIndexEntries: DocUpdate[] = indexEntries.map(({ key }) => ({
+      key: key[1],
+      value: key
+    }))
+    const indexerMeta: IdxMetaMap = {indexes: new Map()}
 
     for (const [name, indexer] of this.crdt.indexers) {
       if (indexer.indexHead) {
-        indexerMeta.set(name, {
+        indexerMeta.indexes.set(name, {
           byId: indexer.byId.cid,
           byKey: indexer.byKey.cid,
           head: indexer.indexHead,
@@ -190,22 +233,35 @@ export class Index {
         } as IdxMeta)
       }
     }
-    return await this.blocks.transaction(async (tblocks): Promise<IdxMeta> => {
+    return await this.blockstore.transaction(async (tblocks): Promise<TransactionMeta> => {
       this.byId = await bulkIndex(
         tblocks,
         this.byId,
         removeIdIndexEntries.concat(byIdIndexEntries),
         byIdOpts
       )
-      this.byKey = await bulkIndex(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts)
+      this.byKey = await bulkIndex(
+        tblocks,
+        this.byKey,
+        staleKeyIndexEntries.concat(indexEntries),
+        byKeyOpts
+      )
       this.indexHead = head
-      return { byId: this.byId.cid, byKey: this.byKey.cid, head, map: this.mapFnString, name: this.name } as IdxMeta
-    }, indexerMeta)
+      const idxMeta = {
+        byId: this.byId.cid,
+        byKey: this.byKey.cid,
+        head,
+        map: this.mapFnString,
+        name: this.name
+      } as IdxMeta
+      indexerMeta.indexes.set(this.name!, idxMeta) // should this move to after commit?
+      return indexerMeta as unknown as TransactionMeta
+    })
   }
 }
 
 function makeMapFnFromName(name: string): MapFn {
-  return (doc) => {
+  return doc => {
     if (doc[name]) return doc[name]
   }
 }

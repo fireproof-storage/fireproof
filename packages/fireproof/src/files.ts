@@ -28,17 +28,13 @@ const settings = UnixFS.configure({
 export async function encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }> {
   const readable = createFileEncoderStream(blob)
   const blocks = await collect(readable)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
   return { cid: blocks.at(-1).cid, blocks }
 }
 
 export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   const entry = await exporter(cid.toString(), blocks as ReadableStorage, { length: meta.size })
   const chunks = []
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
   for await (const chunk of entry.content()) chunks.push(chunk as Buffer)
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
   return new File(chunks, entry.name, { type: meta.type, lastModified: 0 })
 }
 

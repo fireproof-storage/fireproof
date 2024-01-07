@@ -1,6 +1,6 @@
 import { clockChangesSince } from './crdt-helpers'
-import { TransactionBlockstore } from './transaction'
-import type { DocUpdate, ClockHead, BlockFetcher } from './types'
+import type { EncryptedBlockstore, CarTransaction } from '@fireproof/encrypted-blockstore'
+import type { DocUpdate, ClockHead } from './types'
 import { advance } from '@alanshaw/pail/clock'
 import { root } from '@alanshaw/pail/crdt'
 import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
@@ -8,14 +8,14 @@ import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
 export class CRDTClock {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
-  // should go with making sure the local clock only references locally available blocks on write
+  // should go with making sure the local clock only references locally available blockstore on write
   head: ClockHead = []
 
   zoomers: Set<() => void> = new Set()
   watchers: Set<(updates: DocUpdate[]) => void> = new Set()
   emptyWatchers: Set<() => void> = new Set()
 
-  blocks: TransactionBlockstore | null = null
+  blockstore: EncryptedBlockstore | null = null
 
   applyHeadQueue: ApplyHeadQueue
 
@@ -40,7 +40,7 @@ export class CRDTClock {
   async processUpdates(updatesAcc: DocUpdate[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince(this.blocks!, this.head, prevHead, {})
+      const changes = await clockChangesSince(this.blockstore!, this.head, prevHead, {})
       internalUpdates = changes.result
     }
     this.zoomers.forEach(fn => fn())
@@ -67,7 +67,6 @@ export class CRDTClock {
   async int_applyHead(newHead: ClockHead, prevHead: ClockHead) {
     const ogHead = sortClockHead(this.head)
     newHead = sortClockHead(newHead)
-    await validateBlocks(newHead, this.blocks)
     if (compareClockHeads(ogHead, newHead)) {
       return
     }
@@ -79,9 +78,10 @@ export class CRDTClock {
     let head = this.head
     const noLoader = false
     // const noLoader = this.head.length === 1 && !updates?.length
-    if (!this.blocks) throw new Error('missing blocks')
-    await this.blocks.transaction(
-      async tblocks => {
+    if (!this.blockstore) throw new Error('missing blockstore')
+    await validateBlocks(newHead, this.blockstore)
+    await this.blockstore.transaction(
+      async (tblocks: CarTransaction) => {
         head = await advanceBlocks(newHead, tblocks, head)
         const result = await root(tblocks, head)
         for (const { cid, bytes } of [...result.additions, ...result.removals]) {
@@ -89,7 +89,6 @@ export class CRDTClock {
         }
         return { head }
       },
-      undefined,
       { noLoader }
     )
     this.setHead(head)
@@ -101,9 +100,9 @@ function sortClockHead(clockHead: ClockHead) {
   return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()))
 }
 
-async function validateBlocks(newHead: ClockHead, blocks: TransactionBlockstore | null) {
+async function validateBlocks(newHead: ClockHead, blockstore: EncryptedBlockstore | null) {
   newHead.map(async cid => {
-    const got = await blocks!.get(cid)
+    const got = await blockstore!.get(cid)
     if (!got) {
       throw new Error('int_applyHead missing block: ' + cid.toString())
     }
@@ -114,7 +113,7 @@ function compareClockHeads(head1: ClockHead, head2: ClockHead) {
   return head1.toString() === head2.toString()
 }
 
-async function advanceBlocks(newHead: ClockHead, tblocks: BlockFetcher, head: ClockHead) {
+async function advanceBlocks(newHead: ClockHead, tblocks: CarTransaction, head: ClockHead) {
   for (const cid of newHead) {
     try {
       head = await advance(tblocks, head, cid)

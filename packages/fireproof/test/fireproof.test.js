@@ -6,19 +6,21 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, equalsJSON, resetDirectory } from './helpers.js'
+import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir } from './helpers.js'
 
 import { CID } from 'multiformats/cid'
 
 import { fireproof, Database } from '../dist/test/database.esm.js'
-import { index, Index } from '../dist/test/index.esm.js'
-import { testConfig } from '../dist/test/store-fs.esm.js'
-import { cidListIncludes } from '../dist/test/loader.esm.js'
+import { index } from '../dist/test/index.esm.js'
+
+export function cidListIncludes(list, cid) {
+  return list.some(c => c.equals(cid))
+}
 
 describe('dreamcode', function () {
   let ok, doc, result, db
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-db')
+    await resetDirectory(dataDir, 'test-db')
     db = fireproof('test-db')
     ok = await db.put({ _id: 'test-1', text: 'fireproof', dream: true })
     doc = await db.get(ok.id)
@@ -48,7 +50,7 @@ describe('dreamcode', function () {
 
 describe('public API', function () {
   beforeEach(async function () {
-    await resetDirectory(testConfig.dataDir, 'test-api')
+    await resetDirectory(dataDir, 'test-api')
     this.db = fireproof('test-api')
     // this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })
@@ -59,10 +61,6 @@ describe('public API', function () {
     assert(this.db)
     assert(this.db instanceof Database)
   })
-  // it('should have an index', function () {
-  //   assert(this.index)
-  //   assert(this.index instanceof Index)
-  // })
   it('should put', function () {
     assert(this.ok)
     equals(this.ok.id, 'test')
@@ -82,9 +80,7 @@ describe('basic database', function () {
   /** @type {Database} */
   let db
   beforeEach(async function () {
-    // erase the existing test data
-    await resetDirectory(testConfig.dataDir, 'test-basic')
-
+    await resetDirectory(dataDir, 'test-basic')
     db = new Database('test-basic')
   })
   it('can put with id', async function () {
@@ -111,7 +107,6 @@ describe('basic database', function () {
   it('can define an index with a default function', async function () {
     const ok = await db.put({ _id: 'test', foo: 'bar' })
     assert(ok)
-
     const idx = index(db, 'foo')
     const result = await idx.query()
     assert(result)
@@ -126,7 +121,7 @@ describe('Reopening a database', function () {
   let db
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(testConfig.dataDir, 'test-reopen')
+    await resetDirectory(dataDir, 'test-reopen')
 
     db = new Database('test-reopen')
     const ok = await db.put({ _id: 'test', foo: 'bar' })
@@ -153,17 +148,17 @@ describe('Reopening a database', function () {
 
   it('should have a car in the car log', async function () {
     await db._crdt.ready
-    assert(db._crdt.blocks.loader)
-    assert(db._crdt.blocks.loader.carLog)
-    equals(db._crdt.blocks.loader.carLog.length, 1)
+    assert(db._crdt.blockstore.loader)
+    assert(db._crdt.blockstore.loader.carLog)
+    equals(db._crdt.blockstore.loader.carLog.length, 1)
   })
 
   it('should have carlog after reopen', async function () {
     const db2 = new Database('test-reopen')
     await db2._crdt.ready
-    assert(db2._crdt.blocks.loader)
-    assert(db2._crdt.blocks.loader.carLog)
-    equals(db2._crdt.blocks.loader.carLog.length, 1)
+    assert(db2._crdt.blockstore.loader)
+    assert(db2._crdt.blockstore.loader.carLog)
+    equals(db2._crdt.blockstore.loader.carLog.length, 1)
   })
 
   it('faster, should have the same data on reopen after reopen and update', async function () {
@@ -172,10 +167,10 @@ describe('Reopening a database', function () {
       const db = new Database('test-reopen')
       assert(db._crdt.ready)
       await db._crdt.ready
-      equals(db._crdt.blocks.loader.carLog.length, i + 1)
+      equals(db._crdt.blockstore.loader.carLog.length, i + 1)
       const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
       assert(ok)
-      equals(db._crdt.blocks.loader.carLog.length, i + 2)
+      equals(db._crdt.blockstore.loader.carLog.length, i + 2)
       const doc = await db.get(`test${i}`)
       equals(doc.fire, 'proof'.repeat(50 * 1024))
     }
@@ -190,10 +185,10 @@ describe('Reopening a database', function () {
         const db = new Database('test-reopen')
         assert(db._crdt.ready)
         await db._crdt.ready
-        equals(db._crdt.blocks.loader.carLog.length, i + 1)
+        equals(db._crdt.blockstore.loader.carLog.length, i + 1)
         const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
         assert(ok)
-        equals(db._crdt.blocks.loader.carLog.length, i + 2)
+        equals(db._crdt.blockstore.loader.carLog.length, i + 2)
         const doc = await db.get(`test${i}`)
         equals(doc.fire, 'proof'.repeat(50 * 1024))
       }
@@ -206,8 +201,8 @@ describe('Reopening a database with indexes', function () {
   let db, idx, didMap, mapFn
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(testConfig.dataDir, 'test-reopen-idx')
-    await resetDirectory(testConfig.dataDir, 'test-reopen-idx.idx')
+    await resetDirectory(dataDir, 'test-reopen-idx')
+    await resetDirectory(dataDir, 'test-reopen-idx.idx')
 
     db = fireproof('test-reopen-idx')
     const ok = await db.put({ _id: 'test', foo: 'bar' })
@@ -301,13 +296,13 @@ describe('Reopening a database with indexes', function () {
 
 describe('basic js verify', function () {
   it('should include cids in arrays', async function () {
-    await resetDirectory(testConfig.dataDir, 'test-verify')
+    await resetDirectory(dataDir, 'test-verify')
     const db = fireproof('test-verify')
     const ok = await db.put({ _id: 'test', foo: ['bar', 'bam'] })
     equals(ok.id, 'test')
     const ok2 = await db.put({ _id: 'test2', foo: ['bar', 'bam'] })
     equals(ok2.id, 'test2')
-    const cid = db._crdt.blocks.loader.carLog[0]
+    const cid = db._crdt.blockstore.loader.carLog[0]
     const cid2 = db._crdt.clock.head[0]
     notEquals(cid, cid2)
     assert(cid !== cid2)
