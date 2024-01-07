@@ -81,10 +81,6 @@ export class CRDT {
         idx._resetIndex()
       }
     })
-    this.clock.onTock(async () => {
-      if (this.blockstore.loader && this.blockstore.loader.carLog.length < 100) return
-      await this.compact()
-    })
   }
 
   async bulk(updates: DocUpdate[], options?: object): Promise<CRDTMeta> {
