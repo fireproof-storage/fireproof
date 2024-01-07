@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/encrypted-blockstore",
-  "version": "0.16.9",
+  "version": "0.16.10",
   "description": "Content-addressed blockstore with pluggable CRDT storage connectors.",
   "main": "./dist/web/index.cjs", 
   "module": "./dist/web/index.esm.js",
