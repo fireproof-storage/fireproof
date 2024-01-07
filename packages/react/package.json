@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "rollup -c",
+    "build:clean": "rm -rf dist",
+    "clean": "rm -rf node_modules",
     "start": "rollup -c -w",
     "prepublishOnly": "cp ../../README.md . && npm run build",
     "postpublish": "rm README.md",
