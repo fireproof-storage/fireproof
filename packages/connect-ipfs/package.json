@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@alanshaw/pail": "^0.3.3",
+    "@fireproof/core": "workspace:^",
     "@fireproof/connect": "workspace:*",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ucanto/core": "^8.2.0",

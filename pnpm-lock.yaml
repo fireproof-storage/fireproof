@@ -153,11 +153,14 @@ importers:
         specifier: ^0.3.3
         version: 0.3.3
       '@fireproof/connect':
-        specifier: ^0.15.1
-        version: 0.15.1
+        specifier: workspace:*
+        version: link:../connect
       '@fireproof/core':
-        specifier: ^0.15.1
-        version: 0.15.1
+        specifier: workspace:^
+        version: link:../fireproof
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       '@ucanto/core':
         specifier: ^8.2.0
         version: 8.2.0
@@ -208,11 +211,11 @@ importers:
   packages/connect-netlify:
     dependencies:
       '@fireproof/connect':
-        specifier: ^0.15.1
-        version: 0.15.1
-      '@fireproof/core':
-        specifier: ^0.15.1
-        version: 0.15.1
+        specifier: workspace:*
+        version: link:../connect
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
       '@netlify/blobs':
         specifier: ^6.3.1
         version: 6.3.1
@@ -1996,17 +1999,6 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@fireproof/connect@0.15.1:
-    resolution: {integrity: sha512-EdzdF6o+whGteEV9LVzmLHusZcoOb4u5yqu16onFbaeQAo7FOGJclSb3Q0nfOtHDGh2JMJXEBzvFi6HV3lMbRg==}
-    dependencies:
-      '@alanshaw/pail': 0.3.4
-      '@fireproof/core': 0.15.1
-      cross-fetch: 4.0.0
-      multiformats: 12.1.3
-    transitivePeerDependencies:
-      - encoding
-    dev: false
-
   /@fireproof/core@0.14.9:
     resolution: {integrity: sha512-wtOVFmXPgy4D3CjT4OLIkzSQ4v5Eqzs9uinfXEMMCE9Ejf1j/1gVgHM+YfN18SWipWnUruYk+HE+btnbQgU78g==}
     dependencies:
@@ -2020,24 +2012,6 @@ packages:
       idb: 7.1.1
       ipfs-unixfs-exporter: 13.1.7
       multiformats: 12.1.3
-      p-limit: 4.0.0
-      prolly-trees: 1.0.4
-      uuidv7: 0.6.2
-    dev: false
-
-  /@fireproof/core@0.15.1:
-    resolution: {integrity: sha512-RkOmxwH5LFVDHdER8Qx9tCNpJvJmcMgANVvKmfepbXXWsunDGzdeOM1yEm6Q1BdcFVXRLKKZ7gyrV/XTMs0Ezg==}
-    dependencies:
-      '@alanshaw/pail': 0.3.3
-      '@ipld/car': 5.2.0
-      '@ipld/dag-cbor': 9.0.4
-      '@ipld/dag-json': 10.1.3
-      '@ipld/unixfs': 2.1.1
-      '@peculiar/webcrypto': 1.4.3
-      charwise: 3.0.1
-      idb: 7.1.1
-      ipfs-unixfs-exporter: 13.1.7
-      multiformats: 12.0.1
       p-limit: 4.0.0
       prolly-trees: 1.0.4
       uuidv7: 0.6.2

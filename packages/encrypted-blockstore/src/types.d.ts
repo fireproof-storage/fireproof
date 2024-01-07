@@ -40,11 +40,6 @@ export type StoreOpts = {
   RemoteWAL: any
 }
 
-export type ConfigOpts = {
-  public?: boolean
-  meta?: DbMeta
-  persistIndexes?: boolean // move elsewhere?
-}
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
 export type DbMeta = { car: AnyLink; key: string | null }

@@ -2,7 +2,7 @@ import type { Link } from 'multiformats'
 import type { EventLink } from '@alanshaw/pail/clock'
 import type { EventData } from '@alanshaw/pail/crdt'
 
-import type { TransactionMeta } from '@fireproof/encrypted-blockstore'
+import type { DbMeta } from '@fireproof/encrypted-blockstore'
 
 export type ConfigOpts = {
   public?: boolean

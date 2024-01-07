@@ -1,19 +1,6 @@
 import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
-import { Connectable, ConnectS3 } from '@fireproof/connect'
-import type { Loader, Database, AnyLink } from '@fireproof/core'
-import {
-  UploadDataFnParams,
-  UploadMetaFnParams,
-  DownloadDataFnParams,
-  DownloadMetaFnParams
-} from './types'
-
-type RawConnectionParams = {
-  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
-  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>
-  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
-  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | null>
-}
+import { ConnectS3 } from '@fireproof/connect'
+import type { Connectable } from '@fireproof/connect'
 
 const ipfsCxs = new Map<string, ConnectIPFS>()
 

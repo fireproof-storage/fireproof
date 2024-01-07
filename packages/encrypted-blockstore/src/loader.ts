@@ -8,9 +8,8 @@ import type {
   CarHeader,
   CommitOpts,
   DbMeta,
-  ConfigOpts,
   TransactionMeta} from './types'
-import type { TransactionOpts } from './transaction'
+import type { BlockstoreOpts } from './transaction'
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
@@ -49,8 +48,8 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 
 export class Loader {
   name: string
-  opts: ConfigOpts = {}
-  tOpts: TransactionOpts
+  
+  ebOpts: BlockstoreOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
@@ -72,18 +71,17 @@ export class Loader {
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
 
-  constructor(name: string, tOpts: TransactionOpts, opts?: ConfigOpts) {
+  constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
-    this.tOpts = tOpts
-    this.opts = opts || this.opts
-    this.metaStore = new tOpts.store.MetaStore(this.name)
-    this.carStore = new tOpts.store.DataStore(this.name)
-    this.fileStore = new tOpts.store.DataStore(this.name)
-    this.remoteWAL = new tOpts.store.RemoteWAL(this)
+    this.ebOpts = ebOpts
+    this.metaStore = new ebOpts.store.MetaStore(this.name)
+    this.carStore = new ebOpts.store.DataStore(this.name)
+    this.fileStore = new ebOpts.store.DataStore(this.name)
+    this.remoteWAL = new ebOpts.store.RemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
-      const metas = this.opts.meta ? [this.opts.meta] : await this.metaStore.load('main')
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -133,7 +131,7 @@ export class Loader {
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars)
     this.carLog = [...uniqueCids([meta.car, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
-    await this.tOpts.applyMeta(carHeader.meta)
+    await this.ebOpts.applyMeta(carHeader.meta)
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -152,7 +150,7 @@ export class Loader {
   async _getKey() {
     if (this.key) return this.key
     // generate a random key
-    if (!this.opts.public) {
+    if (!this.ebOpts.public) {
       if (getCrypto()) {
         await this.setKey(toHexString(randomBytes(32)))
       } else {
@@ -229,8 +227,8 @@ export class Loader {
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     const theKey = isPublic ? null : await this._getKey()
-    return (theKey && this.tOpts.crypto)
-      ? await encryptedEncodeCarFile(this.tOpts.crypto, theKey, root, t)
+    return (theKey && this.ebOpts.crypto)
+      ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, root, t)
       : await encodeCarFile([root], t)
   }
 
@@ -369,8 +367,8 @@ export class Loader {
 
   protected async ensureDecryptedReader(reader: CarReader) {
     const theKey = await this._getKey()
-    if (!(theKey && this.tOpts.crypto)) return reader
-    const { blocks, root } = await decodeEncryptedCar(this.tOpts.crypto, theKey, reader)
+    if (!(theKey && this.ebOpts.crypto)) return reader
+    const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader)
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),

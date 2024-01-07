@@ -41,7 +41,7 @@ export function index(
 }
 
 export class Index {
-  blocks: EncryptedBlockstore
+  blockstore: EncryptedBlockstore
   crdt: CRDT
   name: string | null = null
   mapFn: MapFn | null = null
@@ -54,7 +54,7 @@ export class Index {
   ready: Promise<void>
 
   constructor(crdt: CRDT, name: string, mapFn?: MapFn, meta?: IdxMeta) {
-    this.blockstore = crdt.indexBlocks
+    this.blockstore = crdt.indexBlockstore
     this.crdt = crdt
     this.applyMapFn(name, mapFn, meta)
     if (!(this.mapFnString || this.initError)) throw new Error('missing mapFnString')

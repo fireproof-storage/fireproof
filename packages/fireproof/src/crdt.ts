@@ -59,7 +59,7 @@ export class CRDT {
       this.opts
     )
     this.clock.blocks = this.blockstore
-    this.indexBlocks = new EncryptedBlockstore(
+    this.indexBlockstore = new EncryptedBlockstore(
       this.opts.persistIndexes && this.name ? this.name + '.idx' : null,
       {
         applyMeta: async (meta: TransactionMeta) => {
@@ -73,7 +73,7 @@ export class CRDT {
       },
       this.opts
     )
-    this.ready = Promise.all([this.blockstore.ready, this.indexBlocks.ready]).then(() => {})
+    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {})
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex()
@@ -89,8 +89,8 @@ export class CRDT {
     await this.ready
     const prevHead = [...this.clock.head]
     const meta = (await this.blockstore.transaction(
-      async (tblocks: CarTransaction): Promise<TransactionMeta> => {
-        const { head } = await applyBulkUpdateToCrdt(tblocks, this.clock.head, updates, options)
+      async (blocks: CarTransaction): Promise<TransactionMeta> => {
+        const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates, options)
         updates = updates.map(({ key, value, del, clock }) => {
           readFiles(this.blockstore, { doc: value })
           return { key, value, del, clock }
@@ -115,7 +115,7 @@ export class CRDT {
 
   async vis() {
     await this.ready
-    const txt = []
+    const txt : string[] = []
     for await (const line of clockVis(this.blockstore, this.clock.head)) {
       txt.push(line)
     }
