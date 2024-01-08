@@ -28,7 +28,7 @@ await blockstore.transaction(async (blocks) => {
 const block = await blockstore.get(cid1)
 ```
 
-You can see that once you are in a transaction, the blocks look just like an IFPS blockstore. In addition to `put` `get` and `delete`, you can also use `putSync` and `getSync`, and list blocks with `entries`.
+You can see that once you are in a transaction, the blocks look just like an IPFS blockstore. In addition to `put` `get` and `delete`, you can also use `putSync` and `getSync`, and list blocks with `entries`.
 
 This blockstore is excellent for any data structure that you want to persist locally and replicate online. It is especially useful for [CRDTs](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type) and [DAGs](https://en.wikipedia.org/wiki/Directed_acyclic_graph), but should work for any IPFS CID storage and retrieval.
 
