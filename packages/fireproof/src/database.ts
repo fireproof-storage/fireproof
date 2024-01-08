@@ -3,7 +3,16 @@ import { uuidv7 } from 'uuidv7'
 import { WriteQueue, writeQueue } from './write-queue'
 import { CRDT } from './crdt'
 import { index } from './index'
-import type { CRDTMeta, DocUpdate, ClockHead, Doc, ConfigOpts, MapFn, QueryOpts, ChangesOptions } from './types'
+import type {
+  CRDTMeta,
+  DocUpdate,
+  ClockHead,
+  Doc,
+  ConfigOpts,
+  MapFn,
+  QueryOpts,
+  ChangesOptions
+} from './types'
 import { DbResponse, ChangesResponse } from './types'
 import { EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
 
@@ -30,7 +39,7 @@ export class Database {
     this.blockstore = this._crdt.blockstore // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
       return await this._crdt.bulk(updates)
-    })//, Infinity)
+    }) //, Infinity)
     this._crdt.clock.onTock(() => {
       this._no_update_notify()
     })
@@ -62,7 +71,9 @@ export class Database {
   async changes(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse> {
     const { result, head } = await this._crdt.changes(since, opts)
     const rows = result.map(({ key, value, del, clock }) => ({
-      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc, clock
+      key,
+      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc,
+      clock
     }))
     return { rows, clock: head }
   }
@@ -70,7 +81,8 @@ export class Database {
   async allDocs() {
     const { result, head } = await this._crdt.allDocs()
     const rows = result.map(({ key, value, del }) => ({
-      key, value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
+      key,
+      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
     }))
     return { rows, clock: head }
   }
@@ -79,7 +91,7 @@ export class Database {
     return this.allDocs()
   }
 
-  subscribe(listener: ListenerFn|NoUpdateListenerFn, updates?: boolean): () => void {
+  subscribe(listener: ListenerFn | NoUpdateListenerFn, updates?: boolean): () => void {
     if (updates) {
       if (!this._listening) {
         this._listening = true
@@ -101,17 +113,16 @@ export class Database {
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   async query(field: string | MapFn, opts: QueryOpts = {}) {
-    const idx = (typeof field === 'string')
-      ? index({ _crdt: this._crdt }, field)
-      : index({ _crdt: this._crdt }, makeName(field.toString()), field)
+    const idx =
+      typeof field === 'string'
+        ? index({ _crdt: this._crdt }, field)
+        : index({ _crdt: this._crdt }, makeName(field.toString()), field)
     return await idx.query(opts)
   }
 
   async compact() {
     await this._crdt.compact()
   }
-
-
 
   async _notify(updates: DocUpdate[]) {
     if (this._listeners.size) {
