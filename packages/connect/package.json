@@ -49,7 +49,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.3",
+    "@alanshaw/pail": "^0.3.4",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "cross-fetch": "^4.0.0",
     "multiformats": "^12.0.1"
