@@ -113,8 +113,8 @@ importers:
   packages/connect:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -153,8 +153,8 @@ importers:
   packages/connect-ipfs:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
-        version: 0.3.3
+        specifier: ^0.3.4
+        version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
         version: link:../connect
@@ -687,18 +687,6 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
     dev: true
-
-  /@alanshaw/pail@0.3.3:
-    resolution: {integrity: sha512-h5xaKe5d5/S4MxzvYVKzfd7LlY7u8zErMlZFMjIvkKKB/zS+yYOZeA4QVOG1wVClhmWAP999UDH6PmUHRs1bAg==}
-    hasBin: true
-    dependencies:
-      '@ipld/car': 5.2.0
-      '@ipld/dag-cbor': 9.0.4
-      archy: 1.0.0
-      cli-color: 2.0.3
-      multiformats: 11.0.2
-      sade: 1.8.1
-    dev: false
 
   /@alanshaw/pail@0.3.4:
     resolution: {integrity: sha512-9hxffjZazBQ7AvfuLQZ4KnXEBdrtK0xEJFCX1XTViPwRe/abo/hIyCkrs/F4plXD6WiFZljvXEWM7bLGV9Ux7g==}
@@ -3598,7 +3586,7 @@ packages:
   /@web3-storage/clock@0.3.0:
     resolution: {integrity: sha512-O+1qbkLFj6Yfo4LYztN3HOJX5bsZRF43zIMIdTYPPTy2lEaCsLo596PGOc+y34g35tt4Aw5M2saK4pJSQNr3HA==}
     dependencies:
-      '@alanshaw/pail': 0.3.3
+      '@alanshaw/pail': 0.3.4
       '@ipld/dag-cbor': 9.0.4
       '@ipld/dag-ucan': 3.4.0
       '@ucanto/client': 7.0.1
