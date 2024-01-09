@@ -25,7 +25,7 @@ export type DocFragment =
   | DocFragment[]
   | { [key: string]: DocFragment }
 
-export type Doc = DocBody & DocBase
+export type Doc<T = any> = DocBody<T> & DocBase
 
 export type DocBase = {
   _id?: string
@@ -44,10 +44,10 @@ export type DocFileMeta = {
 
 export type DocFiles = Record<string, DocFileMeta | File>;
 
-type DocBody = Record<string, DocFragment> & {
+type DocBody<T extends Record<keyof T, any> = {}> = Record<string, DocFragment> & {
   _files?: DocFiles;
   _publicFiles?: DocFiles;
-}
+} & T
 
 // type DocMeta = {
 //   proof?: DocFragment
