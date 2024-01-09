@@ -12,6 +12,9 @@
     "build:clean:react": "pnpm --filter use-fireproof build:clean",
     "build:core": "pnpm --filter @fireproof/core build",
     "build:react": "pnpm --filter use-fireproof build",
+    "build:tsup": "pnpm -r build:tsup",
+    "build:tsup:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build:tsup",
+    "build:tsup:core": "pnpm --filter @fireproof/core build:tsup",
     "clean": "rm -rf node_modules && pnpm -r clean",
     "clean:all": "pnpm build:clean && pnpm clean",
     "clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore clean",
@@ -39,7 +42,8 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
-    "c8": "^7.12.0"
+    "c8": "^7.12.0",
+    "tsup": "^8.0.1"
   },
   "repository": {
     "type": "git",
