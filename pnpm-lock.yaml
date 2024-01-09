@@ -113,7 +113,7 @@ importers:
   packages/connect:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
+        specifier: ^0.3.4
         version: 0.3.4
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
@@ -153,7 +153,7 @@ importers:
   packages/connect-ipfs:
     dependencies:
       '@alanshaw/pail':
-        specifier: ^0.3.3
+        specifier: ^0.3.4
         version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
