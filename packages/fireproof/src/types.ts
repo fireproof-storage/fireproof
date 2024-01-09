@@ -25,7 +25,7 @@ export type DocFragment =
   | DocFragment[]
   | { [key: string]: DocFragment }
 
-export type Doc = DocBody & DocBase
+export type Doc<T extends Record<string, unknown> = {}> = DocBody<T> & DocBase
 
 export type DocBase = {
   _id?: string
@@ -44,15 +44,10 @@ export type DocFileMeta = {
 
 export type DocFiles = Record<string, DocFileMeta | File>;
 
-type DocBody = Record<string, DocFragment> & {
+type DocBody<T extends Record<string, unknown> = {}> = {
   _files?: DocFiles;
   _publicFiles?: DocFiles;
-}
-
-// type DocMeta = {
-//   proof?: DocFragment
-//   clock?: ClockHead
-// }
+} & Record<string, DocFragment> & T
 
 export type DocUpdate = {
   key: string
@@ -86,10 +81,6 @@ export type IndexRow = {
 export type CRDTMeta = {
   head: ClockHead
 }
-
-// export type FileMeta = {
-//   files: { [key: string]: DocFileMeta }
-// }
 
 export type IdxMeta = {
   byId: AnyLink
