@@ -130,14 +130,14 @@ const require = createRequire(import.meta.url);
       }
       builds.push(esmPublishConfig)
 
-      // const memConfig = {
-      //   ...memEsmConfig,
-      //   outfile: `dist/memory/${filename}.esm.js`,
-      //   format: 'esm',
-      //   platform: 'browser',
-      //   entryPoints: [entryPoint]}
-        
-      //   builds.push(memConfig)
+      const memConfig = {
+        ...memEsmConfig,
+        outfile: `dist/memory/${filename}.esm.js`,
+        format: 'esm',
+        platform: 'browser',
+        entryPoints: [entryPoint]}
+    
+      builds.push(memConfig)
 
 
       const cjsConfig = {
