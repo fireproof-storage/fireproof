@@ -10,17 +10,27 @@
 
 Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
 
-Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small. Get started with just the NPM module:
+Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small. 
+
+Get started with just the NPM module:
 
 ```sh
 npm install use-fireproof
 ```
 
-or install in any page via HTML script tag:
+or target specific builds via:
+
+```sh
+npm install @fireproof/core
+```
+
+or add the database to to any web page via HTML script tag:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.iife.js"></script>
 ```
+
+You can go ahead and write features now, and connect to any cloud backend later.
  
  ### JavaScript Example
 
@@ -224,7 +234,7 @@ To contribute please follow these steps for local setup and installation of the 
 7. Also change directory to `examples/todomvc` and run the command `npm run dev` to load up a simple application to understand the use of Fireproof as a real-time database.
 8. Keep contributing :) See [issues](https://github.com/fireproof-storage/fireproof/issues) for ideas how to get started.
 
-Feel free to join in. All welcome. 
+Feel free to [join in the conversation on Discord. All welcome.](https://discord.gg/cCryrNHePH)
 
 # License
 
