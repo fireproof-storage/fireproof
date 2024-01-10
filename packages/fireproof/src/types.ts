@@ -25,7 +25,8 @@ export type DocFragment =
   | DocFragment[]
   | { [key: string]: DocFragment }
 
-export type Doc<T extends Record<string, unknown> = {}> = DocBody<T> & DocBase
+export type DocRecord = Record<string, DocFragment>;
+export type Doc<T extends DocRecord = {}> = DocBase & DocBody<T>
 
 export type DocBase = {
   _id?: string
@@ -44,20 +45,19 @@ export type DocFileMeta = {
 
 export type DocFiles = Record<string, DocFileMeta | File>;
 
-type DocBody<T extends Record<string, unknown> = {}> = {
-  _files?: DocFiles;
-  _publicFiles?: DocFiles;
-} & Record<string, DocFragment> & T
+export type DocBody<T extends DocRecord = {}> = {
+  _id?: string;
+} & { [K in Exclude<keyof T, keyof DocBase>]: DocFragment } & T
 
 export type DocUpdate = {
   key: string
-  value?: { [key: string]: any }
+  value?: Record<string, any>
   del?: boolean
   clock?: AnyLink
 }
 // todo merge into above
 export type DocValue = {
-  doc?: DocBody
+  doc?: DocBase
   del?: boolean
 }
 
@@ -69,11 +69,11 @@ export type IndexUpdate = {
   del?: boolean
 }
 
-export type IndexRow = {
+export type IndexRow<T extends DocRecord = {}> = {
   id: string
   key: IndexKey
   row?: DocFragment
-  doc?: Doc | null
+  doc?: Doc<T> | null
   value?: DocFragment
   del?: boolean
 }
@@ -109,16 +109,19 @@ export type AnyBlock = { cid: AnyLink; bytes: Uint8Array }
 export type AnyDecodedBlock = { cid: AnyLink; bytes: Uint8Array; value: any }
 
 type EmitFn = (k: DocFragment, v?: DocFragment) => void
-export type MapFn = (doc: Doc, emit: EmitFn) => DocFragment | void
+export type MapFn = <T extends DocRecord = {}>(doc: Doc<T>, emit: EmitFn) => DocFragment | void
 
 export type ChangesOptions = {
   dirty?: boolean
   limit?: number
 }
 
-export type ChangesResponse = {
+export type ChangesResponse<T extends DocRecord = {}> = {
   clock: ClockHead
-  rows: { key: string; value: Doc }[]
+  rows: { 
+    key: string; 
+    value: Doc<T> 
+  }[]
 }
 
 export type DbResponse = {
