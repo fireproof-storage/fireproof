@@ -98,14 +98,15 @@ const require = createRequire(import.meta.url);
 
     const memEsmConfig = {
       ...esmConfig,
-      // platform: 'node',
+      platform: 'node',
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       plugins: [...esmConfig.plugins,
         alias(
           {
             // 'ipfs-utils/src/http/fetch.js': join(__dirname, '../../../node_modules/.pnpm/ipfs-utils@9.0.14/node_modules/ipfs-utils/src/http/fetch.node.js'),
             // './store-browser': join(__dirname, '../src/store-memory.ts'),
-            './eb-web': join(__dirname, '../src/eb-node.ts')
+            // './eb-web': join(__dirname, '../src/eb-memory.ts')
+            './eb-web': join(__dirname, '../src/eb-edge.ts')
           }
         ),
         commonjs({ filter: /^peculiar|ipfs-utils/ })

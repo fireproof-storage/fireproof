@@ -169,10 +169,11 @@ console.log('eb cjs/es2015 build');
       builds.push(browserCJSConfig)
     }
 
-    if (/.*-node.*|.*index.*/.test(entryPoint)) {
+    if (/.*-node.*|.*-memory.*|.*index.*/.test(entryPoint)) {
       const esmPublishConfig = {
         ...esmConfig,
         outfile: `dist/node/${filename}.esm.js`,
+        platform: 'node',
         entryPoints: [entryPoint],
         minify: false
       }

@@ -30,6 +30,12 @@
       "types": "./dist/types/store-web.d.ts",
       "default": "./dist/web/store-web.esm.js"
     },
+    "./store-memory": {
+      "import": "./dist/node/store-memory.esm.js",
+      "require": "./dist/node/store-memory.cjs",
+      "types": "./dist/types/store-memory.d.ts",
+      "default": "./dist/node/store-memory.esm.js"
+    },
     "./crypto-node": {
       "import": "./dist/node/crypto-node.esm.js",
       "require": "./dist/node/crypto-node.cjs",
