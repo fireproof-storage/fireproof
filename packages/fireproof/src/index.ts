@@ -7,6 +7,9 @@ import type {
   IdxMeta,
   DocFragment,
   IdxMetaMap,
+  IndexRow,
+  Doc,
+  DocRecord,
 } from './types'
 import { EncryptedBlockstore, TransactionMeta } from '@fireproof/encrypted-blockstore'
 import {
@@ -69,7 +72,7 @@ export class Index {
     //   })
   }
 
-  applyMapFn(name: string, mapFn?: MapFn, meta?: IdxMeta) {
+  applyMapFn<T extends Record<string, any> = {}>(name: string, mapFn?: MapFn, meta?: IdxMeta) {
     if (mapFn && meta) throw new Error('cannot provide both mapFn and meta')
     if (this.name && this.name !== name) throw new Error('cannot change name')
     this.name = name
@@ -135,7 +138,7 @@ export class Index {
     }
   }
 
-  async query(opts: QueryOpts = {}) {
+  async query<T extends DocRecord = {}>(opts: QueryOpts = {}): Promise<{ rows: IndexRow<T>[] }> {
     // this._resetIndex()
     await this._updateIndex()
     await this._hydrateIndex()
@@ -143,7 +146,7 @@ export class Index {
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true
     if (opts.range) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      const { result, ...all } = await this.byKey.root.range(...encodeRange(opts.range))
+      const { result, ...all } = await this.byKey.root.range<T>(...encodeRange(opts.range))
       return await applyQuery(this.crdt, { result, ...all }, opts)
     }
     if (opts.key) {
@@ -154,7 +157,7 @@ export class Index {
       const results = await Promise.all(
         opts.keys.map(async (key: DocFragment) => {
           const encodedKey = encodeKey(key)
-          return (await applyQuery(this.crdt, await this.byKey.root!.get(encodedKey), opts)).rows
+          return (await applyQuery(this.crdt, await this.byKey.root!.get<T>(encodedKey), opts)).rows
         })
       )
       return { rows: results.flat() }
@@ -167,7 +170,7 @@ export class Index {
       return await applyQuery(this.crdt, await this.byKey.root.range(...encodedR), opts)
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const { result, ...all } = await this.byKey.root.getAllEntries() // funky return type
+    const { result, ...all } = await this.byKey.root.getAllEntries<T>() // funky return type
     return await applyQuery(
       this.crdt,
       {
@@ -260,8 +263,6 @@ export class Index {
   }
 }
 
-function makeMapFnFromName(name: string): MapFn {
-  return doc => {
-    if (doc[name]) return doc[name]
-  }
+function makeMapFnFromName<T extends DocRecord = {}>(name: keyof Doc<T>): MapFn {
+  return doc => doc[name] ?? undefined
 }
