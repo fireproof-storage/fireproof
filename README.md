@@ -27,7 +27,7 @@ npm install @fireproof/core
 or add the database to to any web page via HTML script tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/web/fireproof.iife.js"></script>
 ```
 
 You can go ahead and write features now, and connect to any cloud backend later.
