@@ -11,7 +11,8 @@ import type {
   ConfigOpts,
   MapFn,
   QueryOpts,
-  ChangesOptions
+  ChangesOptions,
+  DocRecord
 } from './types'
 import { DbResponse, ChangesResponse } from './types'
 import { EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
@@ -45,7 +46,7 @@ export class Database {
     })
   }
 
-  async get(id: string): Promise<Doc> {
+  async get<T extends DocRecord = {}>(id: string): Promise<Doc<T>> {
     const got = await this._crdt.get(id).catch(e => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       e.message = `Not found: ${id} - ` + e.message
@@ -53,10 +54,10 @@ export class Database {
     })
     if (!got) throw new Error(`Not found: ${id}`)
     const { doc } = got
-    return { _id: id, ...doc } as Doc
+    return { _id: id, ...doc } as Doc<T>
   }
 
-  async put(doc: Doc): Promise<DbResponse> {
+  async put<T extends DocRecord = {}>(doc: Doc<T>): Promise<DbResponse> {
     const { _id, ...value } = doc
     const docId = _id || uuidv7()
     const result: CRDTMeta = await this._writeQueue.push({ key: docId, value } as DocUpdate)
@@ -68,27 +69,27 @@ export class Database {
     return { id, clock: result?.head } as DbResponse
   }
 
-  async changes(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse> {
+  async changes<T extends DocRecord = {}>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     const { result, head } = await this._crdt.changes(since, opts)
     const rows = result.map(({ key, value, del, clock }) => ({
       key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc,
+      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc<T>,
       clock
     }))
     return { rows, clock: head }
   }
 
-  async allDocs() {
+  async allDocs<T extends DocRecord = {}>() {
     const { result, head } = await this._crdt.allDocs()
     const rows = result.map(({ key, value, del }) => ({
       key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc
+      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc<T>
     }))
     return { rows, clock: head }
   }
 
-  async allDocuments() {
-    return this.allDocs()
+  async allDocuments<T extends DocRecord = {}>() {
+    return this.allDocs<T>()
   }
 
   subscribe(listener: ListenerFn | NoUpdateListenerFn, updates?: boolean): () => void {
@@ -112,12 +113,12 @@ export class Database {
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query(field: string | MapFn, opts: QueryOpts = {}) {
+  async query<T extends DocRecord = {}>(field: string | MapFn, opts: QueryOpts = {}) {
     const idx =
       typeof field === 'string'
         ? index({ _crdt: this._crdt }, field)
         : index({ _crdt: this._crdt }, makeName(field.toString()), field)
-    return await idx.query(opts)
+    return await idx.query<T>(opts)
   }
 
   async compact() {
@@ -146,7 +147,7 @@ export class Database {
   }
 }
 
-type UpdateListenerFn = (docs: Doc[]) => Promise<void> | void
+type UpdateListenerFn = <T extends DocRecord = {}>(docs: Doc<T>[]) => Promise<void> | void
 type NoUpdateListenerFn = () => Promise<void> | void
 type ListenerFn = UpdateListenerFn | NoUpdateListenerFn
 
