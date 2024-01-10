@@ -6,9 +6,6 @@
   <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml">
     <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml/badge.svg" alt="Test status">
   </a>
-  <a href="https://www.typescriptlang.org" rel="nofollow">
-    <img src="https://camo.githubusercontent.com/0d1fa0bafb9d3d26ac598799ca1d0bf767fc28a41d3f718d404433b392b9a5cd/68747470733a2f2f696d672e736869656c64732e696f2f6e706d2f74797065732f73637275622d6a732e737667" alt="Types exported"  >
-  </a>
 </p>
 
 Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
