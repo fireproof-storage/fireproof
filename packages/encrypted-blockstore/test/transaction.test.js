@@ -1,19 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable mocha/max-top-level-suites */
 import { CID } from 'multiformats'
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, equalsJSON } from '../../fireproof/test/helpers.js'
-import { EncryptedBlockstore as Blockstore, CarTransaction } from '../dist/test/transaction.esm.js'
+import { assert, equals, matches, equalsJSON } from '../../fireproof/test/helpers.js'
+import { EncryptedBlockstore as Blockstore, CarTransaction } from '../dist/test/transaction.js'
 
-import * as nodeCrypto from '../dist/test/crypto-node.esm.js'
-
-import * as nodeStore from '../dist/test/store-node.esm.js'
-
+import * as nodeCrypto from '../dist/lib/crypto-node.js'
+import * as nodeStore from '../dist/lib/store-node.js'
 
 const loaderOpts = {
   store : nodeStore,

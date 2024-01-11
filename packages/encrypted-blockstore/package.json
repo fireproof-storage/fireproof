@@ -2,81 +2,86 @@
   "name": "@fireproof/encrypted-blockstore",
   "version": "0.16.10",
   "description": "Content-addressed blockstore with pluggable CRDT storage connectors.",
-  "main": "./dist/web/index.cjs", 
-  "module": "./dist/web/index.esm.js",
+  "type": "module",
+  "main": "./dist/lib/index.cjs",
+  "module": "./dist/lib/index.js",
+  "browser": "./dist/lib/index.global.js",
+  "types": "./dist/lib/index.d.ts",
+  "files": [
+    "dist/lib"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/web/index.esm.js",
-      "require": "./dist/web/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/web/index.iife.js"
-    },
-    "./node": {
-      "import": "./dist/node/index.esm.js",
-      "require": "./dist/node/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/web/index.iife.js",
-      "default": "./dist/node/index.esm.js"
-    },
-    "./store-node": {
-      "import": "./dist/node/store-node.esm.js",
-      "require": "./dist/node/store-node.cjs",
-      "types": "./dist/types/store-node.d.ts",
-      "default": "./dist/node/store-node.esm.js"
-    },
-    "./store-web": {
-      "import": "./dist/web/store-web.esm.js",
-      "require": "./dist/web/store-web.cjs",
-      "types": "./dist/types/store-web.d.ts",
-      "default": "./dist/web/store-web.esm.js"
+      "import": "./dist/lib/index.js",
+      "require": "./dist/lib/index.cjs",
+      "types": "./dist/lib/index.d.ts",
+      "script": "./dist/lib/index.global.js",
+      "default": "./dist/lib/index.js"
     },
     "./crypto-node": {
-      "import": "./dist/node/crypto-node.esm.js",
-      "require": "./dist/node/crypto-node.cjs",
-      "types": "./dist/types/crypto-node.d.ts",
-      "default": "./dist/node/crypto-node.esm.js"
+      "import": "./dist/lib/crypto-node.js",
+      "require": "./dist/lib/crypto-node.cjs",
+      "types": "./dist/lib/crypto-node.d.ts",
+      "script": "./dist/lib/crypto-node.global.js",
+      "default": "./dist/lib/crypto-node.js"
     },
     "./crypto-web": {
-      "import": "./dist/web/crypto-web.esm.js",
-      "require": "./dist/web/crypto-web.cjs",
-      "types": "./dist/types/crypto-web.d.ts",
-      "default": "./dist/web/crypto-web.esm.js"
+      "import": "./dist/lib/crypto-web.js",
+      "require": "./dist/lib/crypto-web.cjs",
+      "types": "./dist/lib/crypto-web.d.ts",
+      "script": "./dist/lib/crypto-web.global.js",
+      "default": "./dist/lib/crypto-web.js"
+    },
+    "./store-memory": {
+      "import": "./dist/lib/store-memory.js",
+      "require": "./dist/lib/store-memory.cjs",
+      "types": "./dist/lib/store-memory.d.ts",
+      "script": "./dist/lib/store-memory.global.js",
+      "default": "./dist/lib/store-memory.js"
+    },
+    "./store-node": {
+      "import": "./dist/lib/store-node.js",
+      "require": "./dist/lib/store-node.cjs",
+      "types": "./dist/lib/store-node.d.ts",
+      "script": "./dist/lib/store-node.global.js",
+      "default": "./dist/lib/store-node.js"
+    },
+    "./store-web": {
+      "import": "./dist/lib/store-web.js",
+      "require": "./dist/lib/store-web.cjs",
+      "types": "./dist/lib/store-web.d.ts",
+      "script": "./dist/lib/store-web.global.js",
+      "default": "./dist/lib/store-web.js"
     }
-    
   },
-  "browser": "./dist/web/index.iife.js",
-  "types": "./dist/types/index.d.ts",
-  "files": [
-    "dist/node",
-    "dist/web",
-    "dist/types"
-  ],
-  "type": "module",
   "scripts": {
     "prepublishOnly": "npm run build",
-    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
+    "analyze": "node ./scripts/analyze.js",
+    "build": "tsup && npm run cp:artifacts",
     "build:clean": "rm -rf dist",
     "build:esbuild": "node ./scripts/build.js",
     "build:rollup": "rollup -c scripts/rollup.js",
+    "build:scripts": "npm run build:version && npm run build:tsc && npm run build:test && npm run cp:artifacts:scripts",
     "build:test": "node ./scripts/build.js",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "clean": "rm -rf node_modules",
-    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
-    "test:node": "node ./scripts/test.js",
-    "test:browser": "node ./scripts/browser-test.js",
+    "cp:artifacts": "cp dist/lib/index.global.js ../fireproof/test/www/encrypted-blockstore.iife.js",
+    "cp:artifacts:scripts": "cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
+    "lint": "eslint 'src/**/*.{js,ts}'",
+    "lint:all": "npm run lint:fix && npm run lint:exports",
     "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
     "lint:exports": "ts-unused-exports tsconfig.json",
     "serve": "npx serve-http -p 8080 test/www",
-    "lint": "eslint 'src/**/*.{js,ts}'",
-    "analyze": "node ./scripts/analyze.js",
-    "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
-    "tsc:watch": "tsc --watch",
-    "lint:all": "npm run lint:fix && npm run lint:exports",
+    "test": "npm run build && npm run test:node",
+    "test:browser": "node ./scripts/browser-test.js",
+    "test:coverage": "c8 --reporter=html --include='dist/lib/*' node ./scripts/test.js && open coverage/src/index.html",
+    "test:node": "node ./scripts/test.js",
+    "test:serve":"npx serve-http test/www -p 8080",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
-    "test": "npm run build:test && npm run test:node && tsc",
-    "test:serve":"npx serve-http test/www -p 8080"
+    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
+    "tsc:watch": "tsc --watch"
   },
   "keywords": [
     "database",
