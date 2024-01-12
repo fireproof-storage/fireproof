@@ -148,7 +148,7 @@
     "util": "^0.12.5"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.4",
+    "@web3-storage/pail": "^0.4.0",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",

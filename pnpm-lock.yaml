@@ -115,12 +115,12 @@ importers:
 
   packages/connect:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.2
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
@@ -155,9 +155,6 @@ importers:
 
   packages/connect-ipfs:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
         version: link:../connect
@@ -176,6 +173,9 @@ importers:
       '@web3-storage/clock':
         specifier: ^0.3.0
         version: 0.3.0
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.2
       '@web3-storage/w3up-client':
         specifier: ^8.0.1
         version: 8.1.0(encoding@0.1.13)
@@ -259,15 +259,15 @@ importers:
 
   packages/connect-partykit:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
         version: link:../connect
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.2
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
@@ -311,9 +311,6 @@ importers:
 
   packages/encrypted-blockstore:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@ipld/car':
         specifier: ^5.2.0
         version: 5.4.2
@@ -329,6 +326,9 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.5.0
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.2
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -437,7 +437,7 @@ importers:
         version: 0.11.10
       puppeteer:
         specifier: ^21.0.3
-        version: 21.11.0(encoding@0.1.13)(typescript@5.8.3)
+        version: 21.11.0(typescript@5.8.3)
       rollup-plugin-polyfill-node:
         specifier: ^0.12.0
         version: 0.12.0(rollup@4.42.0)
@@ -462,9 +462,6 @@ importers:
 
   packages/fireproof:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -483,6 +480,9 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.5.0
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.2
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -594,7 +594,7 @@ importers:
         version: 0.11.10
       puppeteer:
         specifier: ^21.0.3
-        version: 21.11.0(encoding@0.1.13)(typescript@5.8.3)
+        version: 21.11.0(typescript@5.8.3)
       rollup-plugin-polyfill-node:
         specifier: ^0.12.0
         version: 0.12.0(rollup@4.42.0)
@@ -2194,6 +2194,10 @@ packages:
   '@web3-storage/did-mailto@2.1.0':
     resolution: {integrity: sha512-TRmfSXj1IhtX3ESurSNOylZSBKi0z/VJNoMLpof+AVRdovgZjjocpiePQTs2pfHKqHTHfJXc9AboWyK4IKTWMw==}
     engines: {node: '>=16.15'}
+
+  '@web3-storage/pail@0.4.2':
+    resolution: {integrity: sha512-zhjxAzK9cID51rMKjMWVppB/f6e7qyfDHUcgNHp1cGTMaIBoRK40F3ixrdG/VxUAJXPNp4+/mMpvBdYcZj8ftA==}
+    hasBin: true
 
   '@web3-storage/upload-client@6.0.0':
     resolution: {integrity: sha512-oJ1/cLBSap25j2ZfC1RNOW9IisOnWMX2ay7sAWY9KPDiWe/coBXDOQB3vXxtPWSIBID6+SOSGaHh3+kXv8b4yg==}
@@ -5883,7 +5887,7 @@ snapshots:
       '@babel/traverse': 7.27.4
       '@babel/types': 7.27.6
       convert-source-map: 2.0.0
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -5964,7 +5968,7 @@ snapshots:
       '@babel/parser': 7.27.5
       '@babel/template': 7.27.2
       '@babel/types': 7.27.6
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -6370,7 +6374,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       espree: 9.6.1
       globals: 13.24.0
       ignore: 5.3.2
@@ -6388,7 +6392,7 @@ snapshots:
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -6792,7 +6796,7 @@ snapshots:
       '@typescript-eslint/type-utils': 6.21.0(eslint@8.57.1)(typescript@5.8.3)
       '@typescript-eslint/utils': 6.21.0(eslint@8.57.1)(typescript@5.8.3)
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       eslint: 8.57.1
       graphemer: 1.4.0
       ignore: 5.3.2
@@ -6810,7 +6814,7 @@ snapshots:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.8.3)
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       eslint: 8.57.1
     optionalDependencies:
       typescript: 5.8.3
@@ -6826,7 +6830,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.21.0(typescript@5.8.3)
       '@typescript-eslint/utils': 6.21.0(eslint@8.57.1)(typescript@5.8.3)
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       eslint: 8.57.1
       ts-api-utils: 1.4.3(typescript@5.8.3)
     optionalDependencies:
@@ -6840,7 +6844,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 6.21.0
       '@typescript-eslint/visitor-keys': 6.21.0
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.3
@@ -7086,7 +7090,7 @@ snapshots:
 
   '@vitest/coverage-istanbul@1.6.1(vitest@1.6.1(@types/node@22.15.30)(jsdom@23.2.0)(terser@5.41.0))':
     dependencies:
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       istanbul-lib-coverage: 3.2.2
       istanbul-lib-instrument: 6.0.3
       istanbul-lib-report: 3.0.1
@@ -7254,6 +7258,16 @@ snapshots:
       sync-multihash-sha2: 1.0.0
 
   '@web3-storage/did-mailto@2.1.0': {}
+
+  '@web3-storage/pail@0.4.2':
+    dependencies:
+      '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.4
+      archy: 1.0.0
+      cborg: 4.2.11
+      cli-color: 2.0.4
+      multiformats: 12.1.3
+      sade: 1.8.1
 
   '@web3-storage/upload-client@6.0.0':
     dependencies:
@@ -7790,7 +7804,7 @@ snapshots:
 
   capnp-ts@0.7.0:
     dependencies:
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
@@ -8082,10 +8096,6 @@ snapshots:
   debug@4.3.4:
     dependencies:
       ms: 2.1.2
-
-  debug@4.4.1:
-    dependencies:
-      ms: 2.1.3
 
   debug@4.4.1(supports-color@5.5.0):
     dependencies:
@@ -8701,7 +8711,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.2.2
@@ -8820,7 +8830,7 @@ snapshots:
 
   extract-zip@2.0.1:
     dependencies:
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       get-stream: 5.2.0
       yauzl: 2.10.0
     optionalDependencies:
@@ -8989,7 +8999,7 @@ snapshots:
     dependencies:
       basic-ftp: 5.0.5
       data-uri-to-buffer: 6.0.2
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9113,7 +9123,7 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9122,7 +9132,7 @@ snapshots:
   https-proxy-agent@7.0.6:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9453,7 +9463,7 @@ snapshots:
   istanbul-lib-source-maps@5.0.6:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.25
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       istanbul-lib-coverage: 3.2.2
     transitivePeerDependencies:
       - supports-color
@@ -10120,7 +10130,7 @@ snapshots:
     dependencies:
       '@tootallnate/quickjs-emscripten': 0.23.0
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       get-uri: 6.0.4
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
@@ -10320,7 +10330,7 @@ snapshots:
   proxy-agent@6.3.1:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       http-proxy-agent: 7.0.2
       https-proxy-agent: 7.0.6
       lru-cache: 7.18.3
@@ -10356,7 +10366,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  puppeteer-core@21.11.0(encoding@0.1.13):
+  puppeteer-core@21.11.0:
     dependencies:
       '@puppeteer/browsers': 1.9.1
       chromium-bidi: 0.5.8(devtools-protocol@0.0.1232444)
@@ -10370,11 +10380,11 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  puppeteer@21.11.0(encoding@0.1.13)(typescript@5.8.3):
+  puppeteer@21.11.0(typescript@5.8.3):
     dependencies:
       '@puppeteer/browsers': 1.9.1
       cosmiconfig: 9.0.0(typescript@5.8.3)
-      puppeteer-core: 21.11.0(encoding@0.1.13)
+      puppeteer-core: 21.11.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -10757,7 +10767,7 @@ snapshots:
   socks-proxy-agent@8.0.5:
     dependencies:
       agent-base: 7.1.3
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       socks: 2.8.4
     transitivePeerDependencies:
       - supports-color
@@ -11101,7 +11111,7 @@ snapshots:
       cac: 6.7.14
       chokidar: 4.0.3
       consola: 3.4.2
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       esbuild: 0.25.5
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
@@ -11264,7 +11274,7 @@ snapshots:
   vite-node@1.6.1(@types/node@22.15.30)(terser@5.41.0):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       pathe: 1.1.2
       picocolors: 1.1.1
       vite: 5.4.19(@types/node@22.15.30)(terser@5.41.0)
@@ -11316,7 +11326,7 @@ snapshots:
       '@vitest/utils': 1.6.1
       acorn-walk: 8.3.4
       chai: 4.5.0
-      debug: 4.4.1
+      debug: 4.4.1(supports-color@5.5.0)
       execa: 8.0.1
       local-pkg: 0.5.1
       magic-string: 0.30.17
