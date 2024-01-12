@@ -1,8 +1,8 @@
 import { clockChangesSince } from './crdt-helpers'
 import type { EncryptedBlockstore, CarTransaction } from '@fireproof/encrypted-blockstore'
 import type { DocUpdate, ClockHead } from './types'
-import { advance } from '@alanshaw/pail/clock'
-import { root } from '@alanshaw/pail/crdt'
+import { advance } from '@web3-storage/pail/clock'
+import { root } from '@web3-storage/pail/crdt'
 import { applyHeadQueue, ApplyHeadQueue } from './apply-head-queue'
 
 export class CRDTClock {

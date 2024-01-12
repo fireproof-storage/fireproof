@@ -2,8 +2,10 @@ import { encode, decode, Block } from 'multiformats/block'
 import { parse } from 'multiformats/link'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
-import { EventFetcher, vis } from '@alanshaw/pail/clock'
+import { put, get, entries, EventData, root } from '@web3-storage/pail/crdt'
+import { EventFetcher, vis } from '@web3-storage/pail/clock'
+import * as Batch from '@web3-storage/pail/crdt/batch'
+
 import {
   type EncryptedBlockstore,
   type CompactionFetcher,
@@ -23,6 +25,7 @@ import type {
   DocFiles
 } from './types'
 import { decodeFile, encodeFile } from './files'
+import { Result } from '@web3-storage/pail/src/crdt/api'
 
 function time(tag:string) {
   // console.time(tag)
@@ -39,33 +42,46 @@ export async function applyBulkUpdateToCrdt(
   updates: DocUpdate[],
   options?: object
 ): Promise<CRDTMeta> {
-  let result
-  for (const update of updates) {
-    const link = await writeDocContent(tblocks, update)
-    // console.time('crdt put')
-    result = await put(tblocks, head, update.key, link, options)
-    // console.timeEnd('crdt put')
-    const resRoot = result.root.toString()
-    const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
-    if (!isReturned) {
-      const hasRoot = await tblocks.get(result.root) // is a db-wide get
-      if (!hasRoot) {
-        throw new Error(
-          `missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates
-            .map(u => u.key)
-            .toString()}`
-        )
-
-        // make sure https://github.com/alanshaw/pail/pull/20 is applied
-        result.head = head
-      }
+  let result: Result | null = null
+  // const batch = await Batch.create(tblocks, init.cid)
+   if (updates.length > 1) {
+    // throw new Error('batch not implemented')
+    const batch = await Batch.create(tblocks, head)
+    for (const update of updates) {
+      const link = await writeDocContent(tblocks, update)
+      await batch.put(update.key, link)
     }
-    if (result.event) { // ...result.removals can be used to mark slabs for compaction
-      for (const { cid, bytes } of [...result.additions, result.event]) {
+    result = await batch.commit()
+    console.log('batch result', result)
+   } else {
+    for (const update of updates) {
+      const link = await writeDocContent(tblocks, update)
+      result = await put(tblocks, head, update.key, link, options)
+      const resRoot = result.root.toString()
+      const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
+      if (!isReturned) {
+        const hasRoot = await tblocks.get(result.root) // is a db-wide get
+        if (!hasRoot) {
+          throw new Error(
+            `missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates
+              .map(u => u.key)
+              .toString()}`
+          )
+  
+          // make sure https://github.com/alanshaw/pail/pull/20 is applied
+          // result.head = head
+        }
+      }
+   }
+   if (!result) throw new Error('Missing result')
+
+    if (result.event) {
+      for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
         tblocks.putSync(cid, bytes)
       }
-      head = result.head
     }
+    head = result.head
+
   }
   return { head }
 }

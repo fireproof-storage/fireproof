@@ -27,7 +27,7 @@ import { Loader } from '../dist/test/loader.js'
 // import { CRDT } from '../../fireproof/dist/test/crdt.esm.js'
 import { CarTransaction, EncryptedBlockstore } from '../dist/test/transaction.js'
 
-import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { MemoryBlockstore } from '@web3-storage/pail/block'
 
 import * as nodeCrypto from '../dist/lib/crypto-node.js'
 import * as nodeStore from '../dist/lib/store-node.js'
