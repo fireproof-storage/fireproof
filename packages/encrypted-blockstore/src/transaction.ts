@@ -1,4 +1,4 @@
-import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { MemoryBlockstore } from '@web3-storage/pail/block'
 import { AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
 
 import { Loader } from './loader'

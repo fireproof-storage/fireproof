@@ -1,6 +1,6 @@
 import type { Link } from 'multiformats'
 
-export type AnyLink = Link<unknown, number, number, 1 | 0>
+export type AnyLink = Link<any, number, number, 1 | 0>
 export type AnyBlock = { cid: AnyLink; bytes: Uint8Array }
 export type AnyDecodedBlock = { cid: AnyLink; bytes: Uint8Array; value: any }
 

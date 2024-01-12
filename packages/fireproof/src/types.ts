@@ -1,6 +1,6 @@
 import type { Link } from 'multiformats'
-import type { EventLink } from '@alanshaw/pail/clock'
-import type { EventData } from '@alanshaw/pail/crdt'
+import type { EventLink } from '@web3-storage/pail/clock'
+import type { EventData } from '@web3-storage/pail/crdt'
 
 import type { DbMeta } from '@fireproof/encrypted-blockstore'
 
