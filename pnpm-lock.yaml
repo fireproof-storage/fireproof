@@ -115,12 +115,12 @@ importers:
 
   packages/connect:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.0
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -155,9 +155,6 @@ importers:
 
   packages/connect-ipfs:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
         version: link:../connect
@@ -176,6 +173,9 @@ importers:
       '@web3-storage/clock':
         specifier: ^0.3.0
         version: 0.3.0
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.0
       '@web3-storage/w3up-client':
         specifier: ^8.0.1
         version: 8.1.0
@@ -259,15 +259,15 @@ importers:
 
   packages/connect-partykit:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/connect':
         specifier: workspace:^
         version: link:../connect
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.0
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -311,9 +311,6 @@ importers:
 
   packages/encrypted-blockstore:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@ipld/car':
         specifier: ^5.2.0
         version: 5.2.6
@@ -329,6 +326,9 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.4.3
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.0
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -462,9 +462,6 @@ importers:
 
   packages/fireproof:
     dependencies:
-      '@alanshaw/pail':
-        specifier: ^0.3.4
-        version: 0.3.4
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -483,6 +480,9 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.4.3
         version: 1.4.3
+      '@web3-storage/pail':
+        specifier: ^0.4.0
+        version: 0.4.0
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -1675,6 +1675,16 @@ packages:
     dependencies:
       esbuild: 0.19.11
     dev: true
+
+  /@ipld/car@5.2.6:
+    resolution: {integrity: sha512-ZiIYan7UFLLQsR90GpKOrZ0t6/6owrevJI7dCG8McNj0zUO4vGzsPumpKRBP4pdBgek4oXt4TbFOwxqTPEh5mA==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+    dependencies:
+      '@ipld/dag-cbor': 9.0.8
+      cborg: 4.0.7
+      multiformats: 13.0.1
+      varint: 6.0.0
+    dev: false
 
   /@ipld/car@5.2.6:
     resolution: {integrity: sha512-ZiIYan7UFLLQsR90GpKOrZ0t6/6owrevJI7dCG8McNj0zUO4vGzsPumpKRBP4pdBgek4oXt4TbFOwxqTPEh5mA==}
@@ -2898,6 +2908,19 @@ packages:
   /@web3-storage/did-mailto@2.1.0:
     resolution: {integrity: sha512-TRmfSXj1IhtX3ESurSNOylZSBKi0z/VJNoMLpof+AVRdovgZjjocpiePQTs2pfHKqHTHfJXc9AboWyK4IKTWMw==}
     engines: {node: '>=16.15'}
+    dev: false
+
+  /@web3-storage/pail@0.4.0:
+    resolution: {integrity: sha512-Q28/NxHfdavJCWAgs9LaxlRnFU5KYOqjsfelcDejDME2i2JPxiuTjMnAdiAJ1H1Vq4FMR6Sy17G+VuUn4v9kKQ==}
+    hasBin: true
+    dependencies:
+      '@ipld/car': 5.2.6
+      '@ipld/dag-cbor': 9.0.8
+      archy: 1.0.0
+      cborg: 4.0.7
+      cli-color: 2.0.3
+      multiformats: 12.1.3
+      sade: 1.8.1
     dev: false
 
   /@web3-storage/upload-client@6.0.0:

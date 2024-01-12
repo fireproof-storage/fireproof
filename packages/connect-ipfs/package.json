@@ -50,7 +50,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@alanshaw/pail": "^0.3.4",
+    "@web3-storage/pail": "^0.4.0",
     "@fireproof/core": "workspace:^",
     "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
