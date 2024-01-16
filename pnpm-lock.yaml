@@ -550,6 +550,9 @@ importers:
       esbuild-plugin-polyfill-node:
         specifier: ^0.3.0
         version: 0.3.0(esbuild@0.18.20)
+      esbuild-plugin-resolve:
+        specifier: ^2.0.0
+        version: 2.0.0
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.3.3)
@@ -5443,6 +5446,10 @@ packages:
       '@jspm/core': 2.0.1
       esbuild: 0.18.20
       import-meta-resolve: 3.1.1
+    dev: true
+
+  /esbuild-plugin-resolve@2.0.0:
+    resolution: {integrity: sha512-eJy9B8yDW5X/J48eWtR1uVmv+DKfHvYYnrrcqQoe/nUkVHVOTZlJnSevkYyGOz6hI90t036Y5QIPDrGzmppxfg==}
     dev: true
 
   /esbuild-plugin-tsc@0.4.0(typescript@5.3.3):

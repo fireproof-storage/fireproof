@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from './helpers.js'
-import { Database } from '../dist/test/database.esm.js'
+import { Database } from '../dist/test/database.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 
 /**
