@@ -550,6 +550,9 @@ importers:
       esbuild-plugin-polyfill-node:
         specifier: ^0.3.0
         version: 0.3.0(esbuild@0.18.20)
+      esbuild-plugin-resolve:
+        specifier: ^2.0.0
+        version: 2.0.0
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.8.3)
@@ -3437,6 +3440,9 @@ packages:
     resolution: {integrity: sha512-SHG6CKUfWfYyYXGpW143NEZtcVVn8S/WHcEOxk62LuDXnY4Zpmc+WmxJKN6GMTgTClXJXhEM5KQlxKY6YjbucQ==}
     peerDependencies:
       esbuild: '*'
+
+  esbuild-plugin-resolve@2.0.0:
+    resolution: {integrity: sha512-eJy9B8yDW5X/J48eWtR1uVmv+DKfHvYYnrrcqQoe/nUkVHVOTZlJnSevkYyGOz6hI90t036Y5QIPDrGzmppxfg==}
 
   esbuild-plugin-tsc@0.4.0:
     resolution: {integrity: sha512-q9gWIovt1nkwchMLc2zhyksaiHOv3kDK4b0AUol8lkMCRhJ1zavgfb2fad6BKp7FT9rh/OHmEBXVjczLoi/0yw==}
@@ -9984,6 +9990,8 @@ snapshots:
       '@jspm/core': 2.1.0
       esbuild: 0.18.20
       import-meta-resolve: 3.1.1
+
+  esbuild-plugin-resolve@2.0.0: {}
 
   esbuild-plugin-tsc@0.4.0(typescript@5.8.3):
     dependencies:

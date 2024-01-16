@@ -1,6 +1,7 @@
 {
-  "include": ["src"],
+  "include": ["src", "test", "scripts", ".eslintrc.cjs"],
   "compilerOptions": {
+    "baseUrl": ".",
     "module": "esnext",
     "target": "esnext",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -11,7 +12,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "emitDeclarationOnly": false,
-    "declarationDir": "dist/types",
     "declaration": true,
     "outDir": "dist",
     "rootDir": "src",

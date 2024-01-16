@@ -3,9 +3,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Index, index } from '../dist/test/index.esm.js'
-import { Database } from '../dist/test/database.esm.js'
-import { CRDT } from '../dist/test/crdt.esm.js'
+import { Index, index } from '../dist/test/index.js'
+import { Database } from '../dist/test/database.js'
+import { CRDT } from '../dist/test/crdt.js'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, matches, equals, resetDirectory, equalsJSON, dataDir } from './helpers.js'

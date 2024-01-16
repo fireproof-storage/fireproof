@@ -5,8 +5,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable mocha/max-top-level-suites */
 import { assert, equals, resetDirectory, dataDir } from './helpers.js'
-import { fireproof as database, Database } from '../dist/test/database.esm.js'
-import { index, Index } from '../dist/test/index.esm.js'
+import { fireproof as database, Database } from '../dist/test/database.js'
+import { index, Index } from '../dist/test/index.js'
 
 describe('Hello World Test', function () {
   it('should pass the hello world test', function () {

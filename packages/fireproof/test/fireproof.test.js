@@ -10,8 +10,8 @@ import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir
 
 import { CID } from 'multiformats/cid'
 
-import { fireproof, Database } from '../dist/test/database.esm.js'
-import { index } from '../dist/test/index.esm.js'
+import { fireproof, Database } from '../dist/test/database.js'
+import { index } from '../dist/test/index.js'
 
 export function cidListIncludes(list, cid) {
   return list.some(c => c.equals(cid))
