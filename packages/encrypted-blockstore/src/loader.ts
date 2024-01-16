@@ -297,6 +297,7 @@ export class Loader {
         if (!reader) {
           throw new Error(`missing car reader ${carCid.toString()}`)
         }
+        // @ts-ignore -- TODO: TypeScript does not like this casting
         const block = await reader.get(cid as CID)
         if (block) {
           return block

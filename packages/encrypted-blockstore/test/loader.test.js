@@ -21,16 +21,16 @@ import {
   dataDir
 } from '../../fireproof/test/helpers.js'
 
-import { parseCarFile } from '../dist/test/loader-helpers.esm.js'
+import { parseCarFile } from '../dist/test/loader-helpers.js'
 
-import { Loader } from '../dist/test/loader.esm.js'
+import { Loader } from '../dist/test/loader.js'
 // import { CRDT } from '../../fireproof/dist/test/crdt.esm.js'
-import { CarTransaction, EncryptedBlockstore } from '../dist/test/transaction.esm.js'
+import { CarTransaction, EncryptedBlockstore } from '../dist/test/transaction.js'
 
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 
-import * as nodeCrypto from '../dist/test/crypto-node.esm.js'
-import * as nodeStore from '../dist/test/store-node.esm.js'
+import * as nodeCrypto from '../dist/lib/crypto-node.js'
+import * as nodeStore from '../dist/lib/store-node.js'
 
 // const randomBytes = size => {
 //   throw new Error('randomBytes not implemented')
@@ -48,6 +48,7 @@ const indexLoaderOpts = {
 
 describe('basic Loader', function () {
   let loader, block, t
+
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader-commit')
     const mockM = new MemoryBlockstore()
@@ -81,6 +82,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 describe('basic Loader with two commits', function () {
   let loader, block, block2, block3, block4, t, carCid, carCid0
+
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader-two-commit')
     const mockM = new MemoryBlockstore()
@@ -120,11 +122,13 @@ describe('basic Loader with two commits', function () {
 
     await t.put(block4.cid, block4.bytes)
   })
+
   it('should have a car log', function () {
     equals(loader.carLog.length, 2)
     equals(loader.carLog[0].toString(), carCid.toString())
     equals(loader.carLog[1].toString(), carCid0.toString())
   })
+
   it('should commit', async function () {
     const reader = await loader.loadCar(carCid)
     assert(reader)
@@ -135,6 +139,7 @@ describe('basic Loader with two commits', function () {
     assert(parsed.meta)
     assert(parsed.meta.head)
   })
+
   it('should compact', async function () {
     const compactCid = await loader.commit(t, { head: [block2.cid] }, { compact: true })
     equals(loader.carLog.length, 1)
@@ -148,6 +153,7 @@ describe('basic Loader with two commits', function () {
     assert(parsed.meta)
     assert(parsed.meta.head)
   })
+
   it('compact should erase old files', async function () {
     await loader.commit(t, { head: [block2.cid] }, { compact: true })
     equals(loader.carLog.length, 1)
@@ -163,11 +169,12 @@ describe('basic Loader with two commits', function () {
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)
     matches(e.message, 'missing car file')
-  }).timeout(10000)
+  }, { timeout: 10000 })
 })
 
 describe('basic Loader with index commits', function () {
   let block, ib, indexerResult, cid, indexMap
+
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader-index')
     // t = new CarTransaction()
@@ -192,9 +199,11 @@ describe('basic Loader with index commits', function () {
     }
     indexMap = new Map()
   })
+  
   it('should start with an empty car log', function () {
     equals(ib.loader.carLog.length, 0)
   })
+
   it('should commit the index metadata', async function () {
     const { car: carCid } = await ib.transaction(async t => {
       await t.put(block.cid, block.bytes)

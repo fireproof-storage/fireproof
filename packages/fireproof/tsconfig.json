@@ -1,5 +1,5 @@
 {
-  "include": ["src", "test", ".eslintrc.cjs", "scripts", "../encrypted-blockstore/test/loader.test.js", "../encrypted-blockstore/test/store-node.test.js", "../encrypted-blockstore/test/transaction.test.js"],
+  "include": ["src"],
   "compilerOptions": {
     "module": "esnext",
     "target": "esnext",
@@ -15,6 +15,9 @@
     "declaration": true,
     "outDir": "dist",
     "rootDir": "src",
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@fireproof/encrypted-blockstore/*": ["./node_modules/@fireproof/encrypted-blockstore/dist/lib/*"]
+    }
   }
 }
