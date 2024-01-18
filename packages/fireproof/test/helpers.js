@@ -3,7 +3,7 @@ import assert from 'assert'
 import { join } from 'path'
 import { promises as fs } from 'fs'
 
-import { MetaStore } from '../../encrypted-blockstore/dist/test/store-node.esm.js'
+import { MetaStore } from '../../encrypted-blockstore/dist/lib/store-node.js'
 
 
 const dataDir = MetaStore.dataDir

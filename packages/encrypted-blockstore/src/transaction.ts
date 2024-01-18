@@ -82,6 +82,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     await this.ready
     if (!this.loader) throw new Error('loader required to get file')
     const reader = await this.loader.loadFileCar(car, isPublic)
+    // @ts-ignore -- TODO: TypeScript does not like this casting
     const block = await reader.get(cid as CID)
     if (!block) throw new Error(`Missing block ${cid.toString()}`)
     return block.bytes
