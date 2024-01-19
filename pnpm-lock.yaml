@@ -278,8 +278,8 @@ importers:
         specifier: ^12.0.1
         version: 12.1.3
       partysocket:
-        specifier: 0.0.8
-        version: 0.0.8
+        specifier: 0.0.21
+        version: 0.0.21
     devDependencies:
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.2
@@ -5883,6 +5883,11 @@ packages:
       es5-ext: 0.10.62
     dev: false
 
+  /event-target-shim@6.0.2:
+    resolution: {integrity: sha512-8q3LsZjRezbFZ2PN+uP+Q7pnHUMmAOziU2vA2OwoFaKIXxlxl38IylhSSgUorWu/rf4er67w0ikBqjBFk/pomA==}
+    engines: {node: '>=10.13.0'}
+    dev: false
+
   /eventemitter3@5.0.1:
     resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
     dev: false
@@ -9118,10 +9123,10 @@ packages:
       - utf-8-validate
     dev: true
 
-  /partysocket@0.0.8:
-    resolution: {integrity: sha512-i+N0Zn+Zfy5vPTbW3NTYQp+lsW4+hvosLlfZkBzEyA6uHF131pXpjlr5FukPhSOLTbRGSM59SmIub240eu5XIg==}
+  /partysocket@0.0.21:
+    resolution: {integrity: sha512-l+pFM1cOZlc+wzHpnjh1VL4LdhtSvBZQdUbUhaw5lEkbF6916c17vGAMKhiAarcTghHSX9FiO+K3vB7LxLkoVA==}
     dependencies:
-      react: 18.2.0
+      event-target-shim: 6.0.2
     dev: false
 
   /pascalcase@0.1.1:
