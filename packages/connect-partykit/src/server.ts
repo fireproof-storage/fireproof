@@ -1,13 +1,5 @@
 import type * as Party from 'partykit/server'
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS, PUT,  DELETE'
-}
-
-const json = <T>(data: T, status = 200) => Response.json(data, { status, headers: CORS })
-const ok = () => json({ ok: true })
-
 type PartyMessage = {
   data: string
   cid: string
