@@ -39,7 +39,7 @@
         } else {
           dbName = name;
           db = fireproof(name);
-          cx = connect.partykitS3(db)
+          cx = connect.partykit(db)
           cx.ready.then(async () => {
             const span = document.querySelector('#cxInfo')
             span.innerText = `📡 ${cx.party.id}`

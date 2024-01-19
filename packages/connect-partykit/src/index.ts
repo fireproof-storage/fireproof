@@ -44,5 +44,3 @@ export const connect = {
     return connection
   }
 }
-
-connect.partykit = connect.partykitS3
