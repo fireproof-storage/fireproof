@@ -68,7 +68,8 @@ export function useFireproof(
     const [doc, setDoc] = useState(initialDoc);
 
     const saveDoc = useCallback(
-      async () => {
+      async (newDoc) => {
+        //
         const putDoc = id ? { ...doc, _id: id } : doc;
         return await database.put(putDoc as Doc)
       },
