@@ -13,7 +13,7 @@
       const { fireproof, index } = Fireproof;
       const { connect } = FireproofConnect;
 
-      console.log('connect', connect)
+      // console.log('connect', connect)
 
       let dbName
       let db
@@ -167,7 +167,7 @@
             db.put({ ...r.value })
           }))
           goWorker(dcs)
-        }, Math.floor(Math.random() * 5000) + 5000)
+        }, Math.floor(Math.random() * 1000) + 1000)
       }
 
       const stopWorker = () => {
