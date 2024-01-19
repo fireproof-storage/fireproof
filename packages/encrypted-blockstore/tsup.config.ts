@@ -81,30 +81,37 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   },
 ]
 
+const TEST_BUNDLE_OPTIONS: Options = {
+  outDir: "dist/test",
+  format: ["esm"],
+  target: ["esnext"],
+  platform: "node",
+  clean: true,
+  sourcemap: true,
+  minify: false,
+}
+
 const TEST_BUNDLES: readonly Options[] = [
   {
-    ...CORE_OPTIONS,
+    ...TEST_BUNDLE_OPTIONS,
     name: "test/transaction",
     entry: ['src/transaction.ts'],
-    outDir: "dist/test",
     dts: {
       footer: "declare module '@fireproof/encrypted-blockstore/transaction'"
     },
   },
   {
-    ...CORE_OPTIONS,
+    ...TEST_BUNDLE_OPTIONS,
     name: "test/loader",
     entry: ['src/loader.ts'],
-    outDir: "dist/test",
     dts: {
       footer: "declare module '@fireproof/encrypted-blockstore/loader'"
     },
   },
   {
-    ...CORE_OPTIONS,
+    ...TEST_BUNDLE_OPTIONS,
     name: "test/loader-helpers",
     entry: ['src/loader-helpers.ts'],
-    outDir: "dist/test",
     dts: {
       footer: "declare module '@fireproof/encrypted-blockstore/loader-helpers'"
     },

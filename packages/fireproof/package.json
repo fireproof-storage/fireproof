@@ -2,64 +2,68 @@
   "name": "@fireproof/core",
   "version": "0.16.2",
   "description": "Live database for the web.",
+  "type": "module",
+  "module": "./dist/browser/fireproof.js",
   "main": "./dist/browser/fireproof.cjs",
-  "module": "./dist/browser/fireproof.esm.js",
+  "browser": "./dist/browser/fireproof.global.js",
+  "types": "./dist/browser/fireproof.d.ts",
+  "files": [
+    "dist/browser",
+    "dist/memory",
+    "dist/node"
+  ],
   "exports": {
     ".": {
-      "import": "./dist/browser/fireproof.esm.js",
+      "import": "./dist/browser/fireproof.js",
       "require": "./dist/browser/fireproof.cjs",
-      "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/browser/fireproof.iife.js"
+      "script": "./dist/browser/fireproof.global.js",
+      "types": "./dist/browser/fireproof.d.ts"
     },
     "./node": {
-      "import": "./dist/node/fireproof.esm.js",
+      "import": "./dist/node/fireproof.js",
       "require": "./dist/node/fireproof.cjs",
-      "types": "./dist/types/fireproof.d.ts",
-      "script": "./dist/browser/fireproof.iife.js",
-      "default": "./dist/node/fireproof.esm.js"
+      "script": "./dist/node/fireproof.global.js",
+      "types": "./dist/node/fireproof.d.ts",
+      "default": "./dist/node/fireproof.js"
     },
     "./memory": {
-      "import": "./dist/memory/fireproof.esm.js",
-      "types": "./dist/types/fireproof.d.ts",
-      "default": "./dist/memory/fireproof.esm.js"
+      "import": "./dist/memory/fireproof.js",
+      "require": "./dist/memory/fireproof.cjs",
+      "types": "./dist/memory/fireproof.d.ts",
+      "default": "./dist/memory/fireproof.js"
     }
   },
-  "browser": "./dist/fireproof.browser.iife.js",
-  "types": "./dist/types/fireproof.d.ts",
-  "files": [
-    "dist/node",
-    "dist/memory",
-    "dist/browser",
-    "dist/types"
-  ],
-  "type": "module",
   "scripts": {
     "prepublishOnly": "cp ../../README.md . && npm run build:all",
     "postpublish": "rm README.md",
-    "build": "npm run build:version && npm run build:tsc && npm run build:test && cp dist/browser/fireproof.iife.* test/www/",
+    "analyze": "node ./scripts/analyze.js",
+    "build": "tsup && npm run cp:artifacts",
     "build:all": " npm run build && npm run test:browser",
     "build:clean": "rm -rf dist",
     "build:esbuild": "node ./scripts/build.js",
     "build:rollup": "rollup -c scripts/rollup.js",
+    "build:scripts": "npm run build:version && npm run build:tsc && npm run build:test && npm run cp:artifacts:scripts",
     "build:test": "node ./scripts/build.js",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
     "build:version": "node -p \"'export const PACKAGE_VERSION = ' + JSON.stringify(require('./package.json').version) + ';'\" > src/version.ts",
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "clean": "rm -rf node_modules",
-    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
-    "test:node": "node ./scripts/test.js",
-    "test:browser": "node ./scripts/browser-test.js",
-    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
-    "lint:exports": "ts-unused-exports tsconfig.json",
-    "serve": "npx serve-http -p 8080 test/www",
+    "cp:artifacts": "cp dist/browser/fireproof.global.js test/www/fireproof.iife.js",
+    "cp:artifacts:scripts": "cp dist/browser/fireproof.iife.* test/www/",
     "lint": "eslint 'src/**/*.{js,ts}'",
-    "analyze": "node ./scripts/analyze.js",
-    "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
-    "tsc:watch": "tsc --watch",
     "lint:all": "npm run lint:fix && npm run lint:exports",
+    "lint:exports": "ts-unused-exports tsconfig.json",
+    "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",
+    "serve": "npx serve-http -p 8080 test/www",
+    "test": "npm run build && npm run test:node",
+    "test:scripts": "npm run test && tsc",
+    "test:browser": "node ./scripts/browser-test.js",
+    "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
+    "test:node": "node ./scripts/test.js",
+    "test:serve": "npx serve-http test/www -p 8080",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
-    "test": "npm run build:test && npm run test:node && tsc",
-    "test:serve": "npx serve-http test/www -p 8080"
+    "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
+    "tsc:watch": "tsc --watch"
   },
   "keywords": [
     "database",
@@ -102,6 +106,7 @@
     "esbuild": "^0.18.14",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-polyfill-node": "^0.3.0",
+    "esbuild-plugin-resolve": "^2.0.0",
     "esbuild-plugin-tsc": "^0.4.0",
     "eslint": "^8.45.0",
     "eslint-config-standard": "^17.1.0",
