@@ -41,7 +41,7 @@ export class ConnectPartyKit extends Connection {
     // this.ready = this.messagePromise.then(() => {})
     this.party.addEventListener('message', (event: MessageEvent<string>) => {
       const afn = async () => {
-        const base64String = JSON.parse(event.data).data
+        const base64String = event.data
         const uint8ArrayBuffer = Base64.toUint8Array(base64String)
         const eventBlock = await this.decodeEventBlock(uint8ArrayBuffer)
         await this.loader?.ready
