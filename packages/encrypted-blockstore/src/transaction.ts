@@ -54,7 +54,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     const done: TransactionMeta = await fn(t)
     if (this.loader) {
       const car = await this.loader.commit(t, done, opts)
-      if (this.loader.carLog.length > 100) {
+      if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
         setTimeout(() => void this.compact(), 10)
       }
       if (car) return { ...done, car }
@@ -139,6 +139,7 @@ export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>
 export type BlockstoreOpts = {
   applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>
   compact?: CompactFn
+  autoCompact?: number
   crypto: CryptoOpts
   store: StoreOpts
   public?: boolean

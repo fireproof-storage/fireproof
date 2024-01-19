@@ -49,8 +49,8 @@ export async function applyBulkUpdateToCrdt(
         result.head = head
       }
     }
-    if (result.event) {
-      for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
+    if (result.event) { // ...result.removals can be used to mark slabs for compaction
+      for (const { cid, bytes } of [...result.additions, result.event]) {
         tblocks.putSync(cid, bytes)
       }
       head = result.head
