@@ -38,7 +38,7 @@
           input.value = dbName;
         } else {
           dbName = name;
-          db = fireproof(name);
+          db = fireproof(name, { autoCompact: 0 });
           cx = connect.partykit(db)
           cx.ready.then(async () => {
             const span = document.querySelector('#cxInfo')

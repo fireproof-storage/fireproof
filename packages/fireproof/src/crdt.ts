@@ -52,7 +52,7 @@ export class CRDT {
         await doCompact(blocks, this.clock.head)
         return { head: this.clock.head } as TransactionMeta
       },
-      autoCompact: 100,
+      autoCompact: this.opts.autoCompact || 100,
       crypto,
       store,
       public: this.opts.public,

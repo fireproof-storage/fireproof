@@ -8,6 +8,7 @@ export type ConfigOpts = {
   public?: boolean
   meta?: DbMeta
   persistIndexes?: boolean
+  autoCompact?: number
 }
 
 // ts-unused-exports:disable-next-line
