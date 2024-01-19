@@ -35,6 +35,7 @@
     "build:script": "node ./scripts/build.js",
     "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-partykit.iife.js",
     "build": "npm run build:tsc && npm run build:script",
+    "dev": "cd test/app && npm i && npm run dev",
     "clean": "rm -rf node_modules"
   },
   "keywords": [],
@@ -58,6 +59,6 @@
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
     "multiformats": "^12.0.1",
-    "partysocket": "0.0.8"
+    "partysocket": "0.0.21"
   }
 }
