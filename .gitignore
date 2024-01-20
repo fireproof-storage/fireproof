@@ -1,8 +1,18 @@
-node_modules
-coverage
+# Files
+.DS_Store
+.eslintcache
 pail.car
 
-.DS_Store
-dist/
-out/
+# Directories
+.nyc_output
+build
+coverage
+dist
+node_modules
+out
+logs
+
+# Artifacts
+*.log
+*.tgz
 *.zip
