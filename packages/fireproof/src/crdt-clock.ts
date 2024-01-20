@@ -64,7 +64,7 @@ export class CRDTClock {
     this.zoomers.add(fn)
   }
 
-  async int_applyHead(newHead: ClockHead, prevHead: ClockHead) {
+  async int_applyHead(newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) {
     const ogHead = sortClockHead(this.head)
     newHead = sortClockHead(newHead)
     if (compareClockHeads(ogHead, newHead)) {
@@ -76,7 +76,7 @@ export class CRDTClock {
       return
     }
     let head = this.head
-    const noLoader = false
+    const noLoader = !localUpdates
     // const noLoader = this.head.length === 1 && !updates?.length
     if (!this.blockstore) throw new Error('missing blockstore')
     await validateBlocks(newHead, this.blockstore)

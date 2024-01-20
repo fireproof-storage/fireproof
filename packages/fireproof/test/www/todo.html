@@ -39,7 +39,7 @@
         } else {
           dbName = name;
           db = fireproof(name, { autoCompact: 0 });
-          cx = connect.partykit(db)
+          cx = connect.partykitS3(db)
           cx.ready.then(async () => {
             const span = document.querySelector('#cxInfo')
             span.innerText = `📡 ${cx.party.id}`
@@ -167,7 +167,7 @@
             db.put({ ...r.value })
           }))
           goWorker(dcs)
-        }, Math.floor(Math.random() * 1000) + 1000)
+        }, Math.floor(Math.random() * 2000) + 2000)
       }
 
       const stopWorker = () => {
