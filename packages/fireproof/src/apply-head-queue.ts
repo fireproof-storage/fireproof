@@ -1,6 +1,6 @@
 import { ClockHead, DocUpdate } from './types'
 
-type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead) => Promise<void>
+type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) => Promise<void>
 
 type ApplyHeadTask = {
   newHead: ClockHead
@@ -26,7 +26,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
         const task = queue.shift()
         if (!task) continue
 
-        await worker(task.newHead, task.prevHead)
+        await worker(task.newHead, task.prevHead, task.updates !== null)
 
         if (task.updates) {
           allUpdates.push(...task.updates)
