@@ -7,7 +7,7 @@ import type {
 } from './types'
 import type { AnyLink, Loader } from '@fireproof/encrypted-blockstore'
 
-import { EventBlock, decodeEventBlock } from '@alanshaw/pail/clock'
+import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
 import { MemoryBlockstore } from '@alanshaw/pail/block'
 import type { Link } from 'multiformats'
 import { TaskManager } from './task-manager'
@@ -83,7 +83,7 @@ export abstract class Connection {
     const data = {
       dbMeta: bytes
     }
-    const event = await EventBlock.create(data, this.parents)
+    const event = await EventBlock.create(data, this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[])
     await this.eventBlocks.put(event.cid, event.bytes)
     return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
