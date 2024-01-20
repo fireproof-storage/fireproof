@@ -400,7 +400,7 @@ describe('database with files input', async function () {
     equals(fileMeta.cid.toString(), 'bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm')
     equals(typeof fileMeta.file, "function")
     let file = await fileMeta.file()
-    console.log(file, "This is the file")
+    
     equals(file.type, 'image/jpeg')
     equals(file.size, 5315)
     // equals(file.name, 'image.jpg') // see https://github.com/fireproof-storage/fireproof/issues/70
@@ -411,7 +411,7 @@ describe('database with files input', async function () {
     equals(fileMeta.cid.toString(), 'bafkreiculdb2bq7tg7jaxl6m5gf4vh5ta3kqck6knc7lotm3a7u6qvpoje')
     equals(typeof fileMeta.file, "function")
     file = await fileMeta.file()
-    console.log(file, "This is the file")
+    
     equals(file.type, 'image/png')
     equals(file.size, 29917)
     // equals(file.name, 'fireproof.png') // see https://github.com/fireproof-storage/fireproof/issues/70
