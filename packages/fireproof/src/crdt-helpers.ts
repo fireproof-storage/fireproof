@@ -24,6 +24,15 @@ import type {
 } from './types'
 import { decodeFile, encodeFile } from './files'
 
+function time(tag:string) {
+  console.time(tag)
+}
+
+function timeEnd(tag:string) {
+  console.timeEnd(tag)
+}
+
+
 export async function applyBulkUpdateToCrdt(
   tblocks: CarTransaction,
   head: ClockHead,
@@ -33,7 +42,9 @@ export async function applyBulkUpdateToCrdt(
   let result
   for (const update of updates) {
     const link = await writeDocContent(tblocks, update)
+    console.time('crdt put')
     result = await put(tblocks, head, update.key, link, options)
+    console.timeEnd('crdt put')
     const resRoot = result.root.toString()
     const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
     if (!isReturned) {
@@ -284,10 +295,12 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   }
   isCompacting = true
 
+  time("compact head")
   for (const cid of head) {
     const bl = await blockLog.get(cid)
     if (!bl) throw new Error('Missing head block: ' + cid.toString())
   }
+  timeEnd("compact head")
 
   // for await (const blk of  blocks.entries()) {
   //   const bl = await blockLog.get(blk.cid)
@@ -300,26 +313,40 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   //   if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
   // }
 
-  for await (const entry of getAllEntries(blockLog, head)) {
+  time("compact all entries")
+  for await (const _entry of getAllEntries(blockLog, head)) {
     // result.push(entry)
+    void 1
   }
+  timeEnd("compact all entries")
 
-  for await (const [, link] of entries(blockLog, head)) {
-    const bl = await blockLog.get(link)
-    if (!bl) throw new Error('Missing entry block: ' + link.toString())
-  }
+  // time("compact crdt entries")
+  // for await (const [, link] of entries(blockLog, head)) {
+  //   const bl = await blockLog.get(link)
+  //   if (!bl) throw new Error('Missing entry block: ' + link.toString())
+  // }
+  // timeEnd("compact crdt entries")
 
+  time("compact clock vis")
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _line of vis(blockLog, head)) {
     void 1
   }
+  timeEnd("compact clock vis")
 
+  time("compact root")
   const result = await root(blockLog, head)
+  timeEnd("compact root")
+
+  time("compact root blocks")
   for (const { cid, bytes } of [...result.additions, ...result.removals]) {
     blockLog.loggedBlocks.putSync(cid, bytes)
   }
+  timeEnd("compact root blocks")
 
+  time("compact changes")
   await clockChangesSince(blockLog, head, [], {})
+  timeEnd("compact changes")
 
   isCompacting = false
 }
@@ -330,3 +357,4 @@ export async function getBlock(blocks: BlockFetcher, cidString: string) {
   const { cid, value } = await decode({ bytes: block.bytes, codec, hasher })
   return new Block({ cid, value, bytes: block.bytes })
 }
+
