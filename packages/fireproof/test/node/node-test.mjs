@@ -1,4 +1,4 @@
-import { fireproof } from '@fireproof/core'
+import { fireproof } from '@fireproof/core/node'
 
 console.log(fireproof)
 

@@ -29,6 +29,11 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     entry: ["src/fireproof.ts"],
     platform: "node",
     outDir: "dist/node",
+    esbuildPlugins: [
+      resolve({
+        "./eb-web": path.join(__dirname, './src/eb-node.ts'),
+      })
+    ],
     dts: {
       footer: "declare module '@fireproof/core'"
     },
