@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.16.5",
+  "version": "0.16.6",
   "description": "Live database for the web.",
   "type": "module",
   "module": "./dist/browser/fireproof.js",
