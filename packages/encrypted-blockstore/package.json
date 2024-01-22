@@ -80,6 +80,7 @@
     "test:node": "node ./scripts/test.js",
     "test:serve":"npx serve-http test/www -p 8080",
     "test:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build:test && npm run test:node\"",
+    "build:watch": "nodemon -w src -w test -e ts,js --exec \"npm run build\"",
     "test:watch:follow": "nodemon -w src -w test -e ts,js --exec \"sleep 2 && npm run test:node\"",
     "tsc:watch": "tsc --watch"
   },
