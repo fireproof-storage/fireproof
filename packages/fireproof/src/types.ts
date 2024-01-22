@@ -1,6 +1,6 @@
 import type { Link } from 'multiformats'
-import type { EventLink } from '@alanshaw/pail/clock'
-import type { EventData } from '@alanshaw/pail/crdt'
+import type { EventLink } from '@web3-storage/pail/clock/api'
+import type { Operation } from '@web3-storage/pail/crdt/api'
 
 import type { DbMeta } from '@fireproof/encrypted-blockstore'
 
@@ -11,7 +11,7 @@ export type ConfigOpts = {
   autoCompact?: number
 }
 
-export type ClockLink = EventLink<EventData>
+export type ClockLink = EventLink<Operation>
 
 export type ClockHead = ClockLink[]
 

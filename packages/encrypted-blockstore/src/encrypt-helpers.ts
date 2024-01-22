@@ -6,7 +6,7 @@ import type { MultihashHasher, ToString } from 'multiformats'
 import type { CarReader } from '@ipld/car'
 import * as dagcbor from '@ipld/dag-cbor'
 
-import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { MemoryBlockstore } from '@web3-storage/pail/block'
 
 // @ts-ignore
 import { bf } from 'prolly-trees/utils'

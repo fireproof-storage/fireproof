@@ -2,8 +2,11 @@ import { encode, decode, Block } from 'multiformats/block'
 import { parse } from 'multiformats/link'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData, root } from '@alanshaw/pail/crdt'
-import { EventFetcher, vis } from '@alanshaw/pail/clock'
+import { put, get, entries, root } from '@web3-storage/pail/crdt'
+import { Operation, PutOperation } from '@web3-storage/pail/src/crdt/api'
+import { EventFetcher, vis } from '@web3-storage/pail/clock'
+import * as Batch from '@web3-storage/pail/crdt/batch'
+
 import {
   type EncryptedBlockstore,
   type CompactionFetcher,
@@ -23,51 +26,59 @@ import type {
   DocFiles
 } from './types'
 import { decodeFile, encodeFile } from './files'
+import { Result } from '@web3-storage/pail/src/crdt/api'
 
-function time(tag:string) {
+function time(tag: string) {
   // console.time(tag)
 }
 
-function timeEnd(tag:string) {
+function timeEnd(tag: string) {
   // console.timeEnd(tag)
 }
-
 
 export async function applyBulkUpdateToCrdt(
   tblocks: CarTransaction,
   head: ClockHead,
-  updates: DocUpdate[],
-  options?: object
+  updates: DocUpdate[]
 ): Promise<CRDTMeta> {
-  let result
-  for (const update of updates) {
-    const link = await writeDocContent(tblocks, update)
-    // console.time('crdt put')
-    result = await put(tblocks, head, update.key, link, options)
-    // console.timeEnd('crdt put')
-    const resRoot = result.root.toString()
-    const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
-    if (!isReturned) {
-      const hasRoot = await tblocks.get(result.root) // is a db-wide get
-      if (!hasRoot) {
-        throw new Error(
-          `missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates
-            .map(u => u.key)
-            .toString()}`
-        )
-
-        // make sure https://github.com/alanshaw/pail/pull/20 is applied
-        result.head = head
-      }
+  let result: Result | null = null
+  // const batch = await Batch.create(tblocks, init.cid)
+  // console.log('applyBulkUpdateToCrdt', updates.length)
+  if (updates.length > 1) {
+    // throw new Error('batch not implemented')
+    const batch = await Batch.create(tblocks, head)
+    for (const update of updates) {
+      const link = await writeDocContent(tblocks, update)
+      await batch.put(update.key, link)
     }
-    if (result.event) { // ...result.removals can be used to mark slabs for compaction
-      for (const { cid, bytes } of [...result.additions, result.event]) {
-        tblocks.putSync(cid, bytes)
+    result = await batch.commit()
+    // console.log('batch result', result)
+  } else {
+    for (const update of updates) {
+      const link = await writeDocContent(tblocks, update)
+      result = await put(tblocks, head, update.key, link)
+      const resRoot = result.root.toString()
+      const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
+      if (!isReturned) {
+        const hasRoot = await tblocks.get(result.root) // is a db-wide get
+        if (!hasRoot) {
+          throw new Error(
+            `missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates
+              .map(u => u.key)
+              .toString()}`
+          )
+        }
       }
-      head = result.head
     }
   }
-  return { head }
+  if (!result) throw new Error('Missing result')
+
+  if (result.event) {
+    for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
+      tblocks.putSync(cid, bytes)
+    }
+  }
+  return { head: result.head } as CRDTMeta
 }
 
 // this whole thing can get pulled outside of the write queue
@@ -199,8 +210,8 @@ export async function clockChangesSince(
   opts: ChangesOptions
 ): Promise<{ result: DocUpdate[]; head: ClockHead }> {
   const eventsFetcher = (
-    opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)
-  ) as EventFetcher<EventData>
+    opts.dirty ? new DirtyEventFetcher<Operation>(blocks) : new EventFetcher<Operation>(blocks)
+  ) as EventFetcher<Operation>
   const keys: Set<string> = new Set()
   const updates = await gatherUpdates(
     blocks,
@@ -217,7 +228,7 @@ export async function clockChangesSince(
 
 async function gatherUpdates(
   blocks: BlockFetcher,
-  eventsFetcher: EventFetcher<EventData>,
+  eventsFetcher: EventFetcher<Operation>,
   head: ClockHead,
   since: ClockHead,
   updates: DocUpdate[] = [],
@@ -238,37 +249,34 @@ async function gatherUpdates(
     didLinks.add(link.toString())
     const { value: event } = await eventsFetcher.get(link)
     if (!event) continue
-    const { key, value } = event.data
-    if (keys.has(key)) {
-      if (event.parents) {
-        updates = await gatherUpdates(
-          blocks,
-          eventsFetcher,
-          event.parents,
-          since,
-          updates,
-          keys,
-          didLinks,
-          limit
-        )
+    const { type } = event.data
+    let ops = [] as PutOperation[]
+    if (type === 'batch') {
+      ops = event.data.ops as PutOperation[]
+    } else if (type === 'put') {
+      ops = [event.data] as PutOperation[]
+    }
+    for (let i = ops.length - 1; i >= 0; i--) {
+      const { key, value } = ops[i];
+      if (!keys.has(key)) {
+        // todo option to see all updates
+        const docValue = await getValueFromLink(blocks, value)
+        updates.push({ key, value: docValue.doc, del: docValue.del, clock: link })
+        limit--
+        keys.add(key)
       }
-    } else {
-      keys.add(key)
-      const docValue = await getValueFromLink(blocks, value)
-      updates.push({ key, value: docValue.doc, del: docValue.del, clock: link })
-      limit--
-      if (event.parents) {
-        updates = await gatherUpdates(
-          blocks,
-          eventsFetcher,
-          event.parents,
-          since,
-          updates,
-          keys,
-          didLinks,
-          limit
-        )
-      }
+    }
+    if (event.parents) {
+      updates = await gatherUpdates(
+        blocks,
+        eventsFetcher,
+        event.parents,
+        since,
+        updates,
+        keys,
+        didLinks,
+        limit
+      )
     }
   }
   return updates
@@ -296,12 +304,12 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   }
   isCompacting = true
 
-  time("compact head")
+  time('compact head')
   for (const cid of head) {
     const bl = await blockLog.get(cid)
     if (!bl) throw new Error('Missing head block: ' + cid.toString())
   }
-  timeEnd("compact head")
+  timeEnd('compact head')
 
   // for await (const blk of  blocks.entries()) {
   //   const bl = await blockLog.get(blk.cid)
@@ -314,12 +322,12 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   //   if (!bl) throw new Error('Missing db block: ' + blk.cid.toString())
   // }
 
-  time("compact all entries")
+  time('compact all entries')
   for await (const _entry of getAllEntries(blockLog, head)) {
     // result.push(entry)
     void 1
   }
-  timeEnd("compact all entries")
+  timeEnd('compact all entries')
 
   // time("compact crdt entries")
   // for await (const [, link] of entries(blockLog, head)) {
@@ -328,26 +336,26 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   // }
   // timeEnd("compact crdt entries")
 
-  time("compact clock vis")
+  time('compact clock vis')
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _line of vis(blockLog, head)) {
     void 1
   }
-  timeEnd("compact clock vis")
+  timeEnd('compact clock vis')
 
-  time("compact root")
+  time('compact root')
   const result = await root(blockLog, head)
-  timeEnd("compact root")
+  timeEnd('compact root')
 
-  time("compact root blocks")
+  time('compact root blocks')
   for (const { cid, bytes } of [...result.additions, ...result.removals]) {
     blockLog.loggedBlocks.putSync(cid, bytes)
   }
-  timeEnd("compact root blocks")
+  timeEnd('compact root blocks')
 
-  time("compact changes")
+  time('compact changes')
   await clockChangesSince(blockLog, head, [], {})
-  timeEnd("compact changes")
+  timeEnd('compact changes')
 
   isCompacting = false
 }
@@ -358,4 +366,3 @@ export async function getBlock(blocks: BlockFetcher, cidString: string) {
   const { cid, value } = await decode({ bytes: block.bytes, codec, hasher })
   return new Block({ cid, value, bytes: block.bytes })
 }
-
