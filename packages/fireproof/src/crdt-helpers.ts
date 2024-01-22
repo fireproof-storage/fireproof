@@ -42,9 +42,9 @@ export async function applyBulkUpdateToCrdt(
   let result
   for (const update of updates) {
     const link = await writeDocContent(tblocks, update)
-    console.time('crdt put')
+    // console.time('crdt put')
     result = await put(tblocks, head, update.key, link, options)
-    console.timeEnd('crdt put')
+    // console.timeEnd('crdt put')
     const resRoot = result.root.toString()
     const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
     if (!isReturned) {

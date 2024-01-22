@@ -291,7 +291,7 @@ export class Loader {
     await this.ready
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-    console.time('getBlock loader')
+    
     const got = await Promise.any(
       // maybe worth taking this in chunks of 5? to allow cache to favor recent files, carLog order is newest first
       this.carLog.map(async carCid => {
@@ -307,7 +307,7 @@ export class Loader {
         throw new Error(`block not in reader: ${cid.toString()}`)
       })
     ).catch(() => undefined)
-    console.timeEnd('getBlock loader')
+    
     if (got) {
       this.getBlockCache.set(sCid, got)
     }
