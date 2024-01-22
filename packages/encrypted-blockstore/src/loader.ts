@@ -48,7 +48,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 
 export class Loader {
   name: string
-  
+
   ebOpts: BlockstoreOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
@@ -195,6 +195,24 @@ export class Loader {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts))
   }
 
+  async cacheTransaction(t: CarTransaction) {
+    for await (const block of t.entries()) {
+      const sBlock = block.cid.toString()
+      if (!this.getBlockCache.has(sBlock)) {
+        this.getBlockCache.set(sBlock, block)
+      }
+    }
+  }
+
+  async cacheCarReader(reader: CarReader) {
+    for await (const block of reader.blocks()) {
+      const sBlock = block.cid.toString()
+      if (!this.getBlockCache.has(sBlock)) {
+        this.getBlockCache.set(sBlock, block)
+      }
+    }
+  }
+
   async _commitInternal(
     t: CarTransaction,
     done: TransactionMeta,
@@ -206,6 +224,7 @@ export class Loader {
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
+    await this.cacheTransaction(t)
     const newDbMeta = { car: cid, key: this.key || null } as DbMeta
     await this.remoteWAL!.enqueue(newDbMeta, opts)
     await this.metaStore!.save(newDbMeta)
@@ -278,21 +297,23 @@ export class Loader {
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
     await this.ready
-    for (const cid of this.carLog) {
-      const reader = await this.loadCar(cid)
-      if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
-      for await (const block of reader.blocks()) {
-        yield block
-      }
+    for (const [, block] of this.getBlockCache) {
+      yield block
     }
+    // assumes we cache all blocks in the carLog
+    // for (const cid of this.carLog) {
+    //   const reader = await this.loadCar(cid)
+    //   if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
+    //   for await (const block of reader.blocks()) {
+    //     yield block
+    //   }
+    // }
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
     await this.ready
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-    const doTime = Math.random() < 0.001
-    if (doTime) console.time('getBlock loader')
     const got = await Promise.any(
       // maybe worth taking this in chunks of 5? to allow cache to favor recent files, carLog order is newest first
       this.carLog.map(async carCid => {
@@ -302,19 +323,13 @@ export class Loader {
         }
 
         // get all the blocks in the car and put them in this.getBlockCache
-        for await (const block of reader.blocks()) {
-          const sBlock = block.cid.toString()
-          if (!this.getBlockCache.has(sBlock)) {
-            this.getBlockCache.set(sBlock, block)
-          }
-        }
+        await this.cacheCarReader(reader)
 
         if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
 
         throw new Error(`block not in reader: ${cid.toString()}`)
       })
     ).catch(() => undefined)
-    if (doTime) console.timeEnd('getBlock loader')
     if (got) {
       this.getBlockCache.set(sCid, got)
     }

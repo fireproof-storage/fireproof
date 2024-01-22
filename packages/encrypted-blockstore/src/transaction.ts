@@ -13,7 +13,7 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   parent: EncryptedBlockstore
   constructor(parent: EncryptedBlockstore) {
     super()
-    parent.transactions.add(this)
+    parent.addTransaction(this)
     this.parent = parent
   }
 
@@ -46,6 +46,10 @@ export class EncryptedBlockstore implements BlockFetcher {
     }
   }
 
+  addTransaction(t: CarTransaction) {
+    this.transactions.add(t)
+  }
+
   async transaction(
     fn: (t: CarTransaction) => Promise<TransactionMeta>,
     opts = { noLoader: false }
@@ -57,7 +61,10 @@ export class EncryptedBlockstore implements BlockFetcher {
       if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
         setTimeout(() => void this.compact(), 10)
       }
-      if (car) return { ...done, car }
+      if (car) {
+        this.transactions.delete(t)
+        return { ...done, car }
+      }
       throw new Error('failed to commit car')
     }
     return done
@@ -71,6 +78,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   async get(cid: AnyLink): Promise<AnyBlock | undefined> {
     if (!cid) throw new Error('required cid')
     for (const f of this.transactions) {
+      // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
       const v = await f.superGet(cid)
       if (v) return v
     }
@@ -106,11 +114,19 @@ export class EncryptedBlockstore implements BlockFetcher {
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
     const seen: Set<string> = new Set()
-    for (const t of this.transactions) {
-      for await (const blk of t.entries()) {
-        if (seen.has(blk.cid.toString())) continue
-        seen.add(blk.cid.toString())
+    if (this.loader) {
+      for await (const blk of this.loader.entries()) {
+        // if (seen.has(blk.cid.toString())) continue
+        // seen.add(blk.cid.toString())
         yield blk
+      }
+    } else {
+      for (const t of this.transactions) {
+        for await (const blk of t.entries()) {
+          if (seen.has(blk.cid.toString())) continue
+          seen.add(blk.cid.toString())
+          yield blk
+        }
       }
     }
   }
