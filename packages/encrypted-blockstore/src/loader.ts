@@ -291,6 +291,8 @@ export class Loader {
     await this.ready
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+    const doTime = Math.random() < 0.001
+    if (doTime) console.time('getBlock loader')
     const got = await Promise.any(
       // maybe worth taking this in chunks of 5? to allow cache to favor recent files, carLog order is newest first
       this.carLog.map(async carCid => {
@@ -298,14 +300,21 @@ export class Loader {
         if (!reader) {
           throw new Error(`missing car reader ${carCid.toString()}`)
         }
-        // @ts-ignore -- TODO: TypeScript does not like this casting
-        const block = await reader.get(cid as CID)
-        if (block) {
-          return block
+
+        // get all the blocks in the car and put them in this.getBlockCache
+        for await (const block of reader.blocks()) {
+          const sBlock = block.cid.toString()
+          if (!this.getBlockCache.has(sBlock)) {
+            this.getBlockCache.set(sBlock, block)
+          }
         }
+
+        if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+
         throw new Error(`block not in reader: ${cid.toString()}`)
       })
     ).catch(() => undefined)
+    if (doTime) console.timeEnd('getBlock loader')
     if (got) {
       this.getBlockCache.set(sCid, got)
     }
