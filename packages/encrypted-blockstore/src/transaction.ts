@@ -1,11 +1,15 @@
 import { MemoryBlockstore } from '@web3-storage/pail/block'
-import { AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
+
+import { BlockFetcher as BlockFetcherAPI } from '@web3-storage/pail/api'
+
+import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
 
 import { Loader } from './loader'
-import { CID } from 'multiformats'
+import { CID, Link } from 'multiformats'
 import { CryptoOpts, StoreOpts } from './types'
 
-export type BlockFetcher = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
+export type BlockFetcher = BlockFetcherAPI
+// = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
 
 export type TransactionMeta = TM
 
@@ -17,7 +21,7 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
     this.parent = parent
   }
 
-  async get(cid: AnyLink): Promise<AnyBlock | undefined> {
+  async get(cid: AnyAnyLink): Promise<AnyAnyBlock | undefined> {
     return this.parent.get(cid)
   }
 
@@ -71,7 +75,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     throw new Error('use a transaction to put')
   }
 
-  async get(cid: AnyLink): Promise<AnyBlock | undefined> {
+  async get(cid: AnyAnyLink): Promise<AnyAnyBlock | undefined> {
     if (!cid) throw new Error('required cid')
     for (const f of this.transactions) {
       // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
