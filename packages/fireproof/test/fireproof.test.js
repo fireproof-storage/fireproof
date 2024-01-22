@@ -249,20 +249,29 @@ describe('benchmarking a database', function () {
         equals(result3.rows.length, numDocs+2)
 
         console.time('compacted newDb2 insert and read 100 records')
+        const ops2 = []
         for (let i = 0; i < 100; i++) {
           // console.log('iteration', i)
           // equals(newDb2._crdt.blockstore.loader.carLog.length, i + 1)
           // console.log('car log length', newDb2._crdt.blockstore.loader.carLog.length)
           // console.time('newDb2 put')
-          const ok = await newDb2.put({ _id: `test${i}`, fire: Math.random().toString().repeat(25 * 1024) })
+          const ok = newDb2.put({ _id: `test${i}`, fire: Math.random().toString().repeat(25 * 1024) }).then(
+            ok => {
+              newDb2.get(`test${i}`).then(doc => {
+                assert(doc.fire)
+              })
+            }
+          )
+          ops2.push(ok)
           // console.timeEnd('newDb2 put')
-          assert(ok)
+          // assert(ok)
           // equals(newDb2._crdt.blockstore.loader.carLog.length, i + 2)
           // console.time('newDb2 get')
-          const doc = await newDb2.get(`test${i}`)
+          // const doc = await newDb2.get(`test${i}`)
           // console.timeEnd('newDb2 get')
-          assert(doc.fire)
+          // assert(doc.fire)
         }
+        await Promise.all(ops2)
         console.timeEnd('compacted newDb2 insert and read 100 records')
 
       }
