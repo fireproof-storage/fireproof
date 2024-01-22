@@ -2,21 +2,16 @@ import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
 import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
 import { CarClockHead, Connection } from '@fireproof/connect'
-import { EventBlock, decodeEventBlock } from '@web3-storage/pail/clock'
-import { MemoryBlockstore } from '@web3-storage/pail/block'
-import { Proof } from '@ucanto/interface'
-
-// import { encodeCarFile } from '@fireproof/core'
-
-
+import { decodeEventBlock } from '@web3-storage/pail/clock'
+import { Proof, Principal } from '@ucanto/interface'
 export abstract class AbstractConnectIPFS extends Connection {
   abstract authorizedClient(): Promise<Client>;
   abstract clockProofsForDb(): Promise<Proof[]>;
   abstract clockSpaceDIDForDb(): `did:${string}:${string}`;
 
   issuer(client: Client) {
-    // @ts-ignoree
-    const { issuer } = client._agent
+    // @ts-ignore
+    const { issuer } = client._agent as Principal
     if (!issuer.signatureAlgorithm) { throw new Error('issuer encodeCarFile valid') }
     return issuer
   }
