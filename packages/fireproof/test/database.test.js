@@ -7,6 +7,7 @@
 import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from './helpers.js'
 import { Database } from '../dist/test/database.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
+// import { MetaStore } from '../../fireproof/dist/test/store-fs.esm.js'
 
 /**
  * @typedef {Object.<string, any>} DocBody
@@ -369,7 +370,7 @@ describe('database with files input', async function () {
   })
 
   beforeEach(async function () {
-    // await resetDirectory(MetaStore.dataDir, 'fireproof-with-images')
+    await resetDirectory(dataDir, 'fireproof-with-images')
     db = new Database('fireproof-with-images')
     const doc = {
       _id: "images-main",
