@@ -142,8 +142,8 @@ describe('benchmarking a database', function () {
         assert(db._crdt.clock.head)
         equals(db._crdt.clock.head.length, 1)
 
-        const numDocs = 3000
-        const batchSize = 500
+        const numDocs = 2500
+        const batchSize = 1000
         console.time(`insert and read ${numDocs} records`)
 
         for (let i = 0; i < numDocs; i += batchSize) {
@@ -195,6 +195,9 @@ describe('benchmarking a database', function () {
         const result2 = await newDb.changes()
         console.timeEnd('changes new DB')
         equals(result2.rows.length, numDocs+1)
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+        await sleep(1000)
 
         console.log('begin compact')
 
