@@ -25,11 +25,11 @@ import type {
 import { decodeFile, encodeFile } from './files'
 
 function time(tag:string) {
-  console.time(tag)
+  // console.time(tag)
 }
 
 function timeEnd(tag:string) {
-  console.timeEnd(tag)
+  // console.timeEnd(tag)
 }
 
 
