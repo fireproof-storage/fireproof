@@ -6,7 +6,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir } from './helpers.js'
+import {
+  assert,
+  equals,
+  notEquals,
+  matches,
+  equalsJSON,
+  resetDirectory,
+  dataDir
+} from './helpers.js'
 
 import { CID } from 'multiformats/cid'
 
@@ -40,7 +48,7 @@ describe('dreamcode', function () {
     equals(result.rows[0].key, 'fireproof')
   })
   it('should query with function', async function () {
-    const result = await db.query((doc) => doc.dream)
+    const result = await db.query(doc => doc.dream)
     assert(result)
     assert(result.rows)
     equals(result.rows.length, 1)
@@ -55,7 +63,7 @@ describe('public API', function () {
     // this.index = index(this.db, 'test-index', (doc) => doc.foo)
     this.ok = await this.db.put({ _id: 'test', foo: 'bar' })
     this.doc = await this.db.get('test')
-    this.query = await this.db.query((doc) => doc.foo)
+    this.query = await this.db.query(doc => doc.foo)
   })
   it('should be a database instance', function () {
     assert(this.db)
@@ -122,73 +130,67 @@ describe('benchmarking a database', function () {
   beforeEach(async function () {
     // erase the existing test data
     await resetDirectory(dataDir, 'test-benchmark')
-    db = new Database('test-benchmark', {autoCompact: 100000})
+    db = new Database('test-benchmark', { autoCompact: 100000, public: true })
     // db = new Database(null, {autoCompact: 100000})
   })
-    // run benchmarking tests
-    // remove skip below
-    // run: 
-    //      npm test -- --grep 'insert and read many records'
-    //
-    // eslint-disable-next-line mocha/no-skipped-tests
-    it.skip(
-      // it(
-      'insert and read many records',
-      async function () {
-        const ok = await db.put({ _id: 'test', foo: 'fast' })
-        assert(ok)
-        equals(ok.id, 'test')
-    
-        assert(db._crdt.clock.head)
-        equals(db._crdt.clock.head.length, 1)
+  // run benchmarking tests
+  // remove skip below
+  // run:
+  //      npm test -- --grep 'insert and read many records'
+  //
+  // eslint-disable-next-line mocha/no-skipped-tests
+  it.skip(
+  // it(
+    'insert and read many records', async function () {
+    const ok = await db.put({ _id: 'test', foo: 'fast' })
+    assert(ok)
+    equals(ok.id, 'test')
 
-        const numDocs = 2500
-        const batchSize = 1000
-        console.time(`insert and read ${numDocs} records`)
+    assert(db._crdt.clock.head)
+    equals(db._crdt.clock.head.length, 1)
 
-        for (let i = 0; i < numDocs; i += batchSize) {
-          const ops = []
-          for (let j = 0; j < batchSize && i + j < numDocs; j++) {
-            ops.push(
-              db.put({ _id: `test${i + j}`, fire: Math.random().toString().repeat(25 * 1024) }).then(ok => {
-                db.get(`test${i + j}`).then(doc => {
-                  assert(doc.fire)
-                })
+    const numDocs = 2500
+    const batchSize = 500
+    console.time(`insert and read ${numDocs} records`)
+
+    for (let i = 0; i < numDocs; i += batchSize) {
+      const ops = []
+      for (let j = 0; j < batchSize && i + j < numDocs; j++) {
+        ops.push(
+          db
+            .put({
+              _id: `test${i + j}`,
+              fire: Math.random()
+                .toString()
+                .repeat(25 * 1024)
+            })
+            .then(ok => {
+              db.get(`test${i + j}`).then(doc => {
+                assert(doc.fire)
               })
-            )
-          }
-          await Promise.all(ops)
-        }
+            })
+        )
+      }
+      await Promise.all(ops)
+    }
 
-        console.timeEnd(`insert and read ${numDocs} records`)
+    console.timeEnd(`insert and read ${numDocs} records`)
 
-        // console.time('allDocs')
-        // const allDocsResult2 = await db.allDocs()
-        // console.timeEnd('allDocs')
-        // equals(allDocsResult2.rows.length, numDocs+1)
+    // console.time('allDocs')
+    // const allDocsResult2 = await db.allDocs()
+    // console.timeEnd('allDocs')
+    // equals(allDocsResult2.rows.length, numDocs+1)
 
+    console.time('open new DB')
+    const newDb = new Database('test-benchmark', { autoCompact: 100000, public: true })
+    const doc = await newDb.get('test')
+    equals(doc.foo, 'fast')
+    console.timeEnd('open new DB')
 
-        console.time('open new DB')
-        const newDb = new Database('test-benchmark')
-        const doc = await newDb.get('test')
-        equals(doc.foo, 'fast')
-        console.timeEnd('open new DB')
-
-        // // console.time('allDocs new DB') // takes forever on 5k
-        // // const allDocsResult = await newDb.allDocs()
-        // // console.timeEnd('allDocs new DB')
-        // // equals(allDocsResult.rows.length, numDocs+1)
-        // // console.time('get all new DB')
-        // // for (let i = 0; i < numDocs; i++) {
-        // //   const doc = await newDb.get(`test${i}`)
-        // //   assert(doc.fire)
-        // // }
-        // // console.timeEnd('get all new DB')
-
-        console.time('changes')
-        const result = await db.changes() // takes 1.5 seconds (doesn't have to load blocks from cars)
-        console.timeEnd('changes')
-        equals(result.rows.length, numDocs+1)
+    console.time('changes')
+    const result = await db.changes() // takes 1.5 seconds (doesn't have to load blocks from cars)
+    console.timeEnd('changes')
+    equals(result.rows.length, numDocs + 1)
 
         // this takes 1 minute w 1000 docs
         console.time('changes new DB')
@@ -199,79 +201,76 @@ describe('benchmarking a database', function () {
         const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
         await sleep(1000)
 
-        console.log('begin compact')
+    console.log('begin compact')
 
-        console.time('COMPACT')
-        await db.compact()
-        console.timeEnd('COMPACT')
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+    await sleep(100)
 
-        // todo compaction should not need this write to show in the new db
-        await db.put({ _id: 'compacted-test', foo: 'bar' })
+    console.time('COMPACT')
+    await db.compact()
+    console.timeEnd('COMPACT')
 
-        // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-        equals(db._crdt.blockstore.loader.carLog.length, 2)
+    // todo compaction should not need this write to show in the new db
+    await db.put({ _id: 'compacted-test', foo: 'bar' })
 
-        console.time('compacted reopen again')
-        const newDb2 = new Database('test-benchmark')
-        const doc21 = await newDb2.get('test')
-        equals(doc21.foo, 'fast')
+    // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+    equals(db._crdt.blockstore.loader.carLog.length, 2)
 
-        equals(newDb2._crdt.blockstore.loader.carLog.length, 2)
+    // console.time('allDocs new DB') // takes forever on 5k
+    // const allDocsResult = await newDb.allDocs()
+    // console.timeEnd('allDocs new DB')
+    // equals(allDocsResult.rows.length, numDocs+1)
+    await sleep(100)
 
-        const doc2 = await newDb2.get('compacted-test')
-    
-        equals(doc2.foo, 'bar')
+    console.time('compacted reopen again')
+    const newDb2 = new Database('test-benchmark', { autoCompact: 100000, public: true })
+    const doc21 = await newDb2.get('test')
+    equals(doc21.foo, 'fast')
 
-        equals(doc2.foo, 'bar')
-        console.timeEnd('compacted reopen again')
+    equals(newDb2._crdt.blockstore.loader.carLog.length, 2)
 
-        console.time('compacted allDocs new DB2')
-        const allDocsResult3 = await newDb2.allDocs()
-        console.timeEnd('compacted allDocs new DB2')
-        equals(allDocsResult3.rows.length, numDocs+2)
+    const doc2 = await newDb2.get('compacted-test')
 
-        console.time('compacted get all new DB2')
-        for (let i = 0; i < numDocs; i++) {
-          const doc = await newDb2.get(`test${i}`)
-          assert(doc.fire)
-        }
-        console.timeEnd('compacted get all new DB2')
+    equals(doc2.foo, 'bar')
 
-        console.time('compacted changes new DB2')
-        const result3 = await newDb2.changes()
-        console.timeEnd('compacted changes new DB2')
-        equals(result3.rows.length, numDocs+2)
+    equals(doc2.foo, 'bar')
+    console.timeEnd('compacted reopen again')
 
-        console.time('compacted newDb2 insert and read 100 records')
-        const ops2 = []
-        for (let i = 0; i < 100; i++) {
-          // console.log('iteration', i)
-          // equals(newDb2._crdt.blockstore.loader.carLog.length, i + 1)
-          // console.log('car log length', newDb2._crdt.blockstore.loader.carLog.length)
-          // console.time('newDb2 put')
-          const ok = newDb2.put({ _id: `test${i}`, fire: Math.random().toString().repeat(25 * 1024) }).then(
-            ok => {
-              newDb2.get(`test${i}`).then(doc => {
-                assert(doc.fire)
-              })
-            }
-          )
-          ops2.push(ok)
-          // console.timeEnd('newDb2 put')
-          // assert(ok)
-          // equals(newDb2._crdt.blockstore.loader.carLog.length, i + 2)
-          // console.time('newDb2 get')
-          // const doc = await newDb2.get(`test${i}`)
-          // console.timeEnd('newDb2 get')
-          // assert(doc.fire)
-        }
-        await Promise.all(ops2)
-        console.timeEnd('compacted newDb2 insert and read 100 records')
+    await sleep(100)
 
-      }
-    ).timeout(20000000)
+    console.time('compacted changes new DB2')
+    const result3 = await newDb2.changes()
+    console.timeEnd('compacted changes new DB2')
+    equals(result3.rows.length, numDocs + 2)
+
+    console.time('compacted newDb2 insert and read 100 records')
+    const ops2 = []
+    for (let i = 0; i < 100; i++) {
+      const ok = newDb2
+        .put({
+          _id: `test${i}`,
+          fire: Math.random()
+            .toString()
+            .repeat(25 * 1024)
+        })
+        .then(ok => {
+          newDb2.get(`test${i}`).then(doc => {
+            assert(doc.fire)
+          })
+        })
+      ops2.push(ok)
+    }
+    await Promise.all(ops2)
+    console.timeEnd('compacted newDb2 insert and read 100 records')
+
+    // triggers OOM on my machine
+    // await sleep(100)
+    // console.time('compacted allDocs new DB2')
+    // const allDocsResult3 = await newDb2.allDocs()
+    // console.timeEnd('compacted allDocs new DB2')
+    // equals(allDocsResult3.rows.length, numDocs+2)
+  }).timeout(20000000)
 })
-
 
 describe('Reopening a database', function () {
   /** @type {Database} */
@@ -280,7 +279,7 @@ describe('Reopening a database', function () {
     // erase the existing test data
     await resetDirectory(dataDir, 'test-reopen')
 
-    db = new Database('test-reopen', {autoCompact: 100000})
+    db = new Database('test-reopen', { autoCompact: 100000 })
     const ok = await db.put({ _id: 'test', foo: 'bar' })
     assert(ok)
     equals(ok.id, 'test')
@@ -340,7 +339,7 @@ describe('Reopening a database', function () {
       for (let i = 0; i < 200; i++) {
         console.log('iteration', i)
         console.time('db open')
-        const db = new Database('test-reopen', {autoCompact: 1000}) // try with 10
+        const db = new Database('test-reopen', { autoCompact: 1000 }) // try with 10
         assert(db._crdt.ready)
         await db._crdt.ready
         console.timeEnd('db open')
@@ -358,8 +357,6 @@ describe('Reopening a database', function () {
       }
     }
   ).timeout(20000)
-
-
 })
 
 describe('Reopening a database with indexes', function () {
@@ -376,7 +373,7 @@ describe('Reopening a database with indexes', function () {
 
     didMap = false
 
-    const mapFn = (doc) => {
+    const mapFn = doc => {
       didMap = true
       return doc.foo
     }

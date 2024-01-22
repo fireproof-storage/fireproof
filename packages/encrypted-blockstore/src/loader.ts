@@ -392,7 +392,7 @@ export class Loader {
 
   protected async ensureDecryptedReader(reader: CarReader) {
     const theKey = await this._getKey()
-    if (!(theKey && this.ebOpts.crypto)) return reader
+    if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) return reader
     const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader)
     return {
       getRoots: () => [root],
