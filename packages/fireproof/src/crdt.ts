@@ -79,12 +79,12 @@ export class CRDT {
     })
   }
 
-  async bulk(updates: DocUpdate[], options?: object): Promise<CRDTMeta> {
+  async bulk(updates: DocUpdate[]): Promise<CRDTMeta> {
     await this.ready
     const prevHead = [...this.clock.head]
     const meta = (await this.blockstore.transaction(
       async (blocks: CarTransaction): Promise<TransactionMeta> => {
-        const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates, options)
+        const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates)
         updates = updates.map(({ key, value, del, clock }) => {
           readFiles(this.blockstore, { doc: value })
           return { key, value, del, clock }
