@@ -678,6 +678,7 @@ packages:
 
   /@alanshaw/pail@0.3.4:
     resolution: {integrity: sha512-9hxffjZazBQ7AvfuLQZ4KnXEBdrtK0xEJFCX1XTViPwRe/abo/hIyCkrs/F4plXD6WiFZljvXEWM7bLGV9Ux7g==}
+    deprecated: Moved to @web3-storage/pail
     hasBin: true
     dependencies:
       '@ipld/car': 5.2.6
@@ -1675,16 +1676,6 @@ packages:
     dependencies:
       esbuild: 0.19.11
     dev: true
-
-  /@ipld/car@5.2.6:
-    resolution: {integrity: sha512-ZiIYan7UFLLQsR90GpKOrZ0t6/6owrevJI7dCG8McNj0zUO4vGzsPumpKRBP4pdBgek4oXt4TbFOwxqTPEh5mA==}
-    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
-    dependencies:
-      '@ipld/dag-cbor': 9.0.8
-      cborg: 4.0.7
-      multiformats: 13.0.1
-      varint: 6.0.0
-    dev: false
 
   /@ipld/car@5.2.6:
     resolution: {integrity: sha512-ZiIYan7UFLLQsR90GpKOrZ0t6/6owrevJI7dCG8McNj0zUO4vGzsPumpKRBP4pdBgek4oXt4TbFOwxqTPEh5mA==}
