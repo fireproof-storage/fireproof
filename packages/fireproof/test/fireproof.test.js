@@ -131,8 +131,8 @@ describe('benchmarking a database', function () {
     //      npm test -- --grep 'insert and read many records'
     //
     // eslint-disable-next-line mocha/no-skipped-tests
-    // it.skip(
-      it(
+    it.skip(
+      // it(
       'insert and read many records',
       async function () {
         const ok = await db.put({ _id: 'test', foo: 'fast' })
