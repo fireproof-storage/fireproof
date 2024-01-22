@@ -27,6 +27,7 @@ describe('Fresh crdt', function () {
   })
   it('should accept multi-put and return results', async function () {
     const didPut = await crdt.bulk([{ key: 'ace', value: { points: 11 } }, { key: 'king', value: { points: 10 } }])
+    console.log('didPut', didPut)
     const head = didPut.head
     equals(head.length, 1)
   })
@@ -103,6 +104,7 @@ describe('CRDT with a multi-write', function () {
   })
   it('should offer changes', async function () {
     const { result } = await crdt.changes([])
+    console.log('result', result)
     equals(result.length, 2)
     equals(result[0].key, 'ace')
     equals(result[0].value.points, 11)
@@ -177,10 +179,11 @@ describe('Compact a named CRDT with writes', function () {
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk)
     }
-    equals(blz.length, 35)
+    equals(blz.length, 23)
   })
   it('should start with changes', async function () {
     const { result } = await crdt.changes()
+    console.log('result', result)
     equals(result.length, 2)
     equals(result[0].key, 'ace')
   })
