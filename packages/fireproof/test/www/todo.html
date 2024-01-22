@@ -38,7 +38,7 @@
           input.value = dbName;
         } else {
           dbName = name;
-          db = fireproof(name, { autoCompact: 0 });
+          db = fireproof(name, { autoCompact: 100 });
           cx = connect.partykitS3(db)
           cx.ready.then(async () => {
             const span = document.querySelector('#cxInfo')
@@ -159,6 +159,8 @@
         goWorker(dcs)
       }
       const goWorker = (dcs) => {
+        const timeout = 10 + (db._crdt.clock.head.length * (Math.floor(Math.random() * 2000) + 2000))
+        // console.log('go worker', timeout)
         worker = setTimeout(async () => {
           await Promise.all(dcs.rows.slice(0, 5).map((r) => {
             r.value.clicks = (r.value.clicks || 0)
@@ -167,7 +169,7 @@
             db.put({ ...r.value })
           }))
           goWorker(dcs)
-        }, Math.floor(Math.random() * 2000) + 2000)
+        }, timeout)
       }
 
       const stopWorker = () => {
