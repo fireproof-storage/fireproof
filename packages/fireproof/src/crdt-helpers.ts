@@ -2,7 +2,8 @@ import { encode, decode, Block } from 'multiformats/block'
 import { parse } from 'multiformats/link'
 import { sha256 as hasher } from 'multiformats/hashes/sha2'
 import * as codec from '@ipld/dag-cbor'
-import { put, get, entries, EventData, root } from '@web3-storage/pail/crdt'
+import { put, get, entries, root } from '@web3-storage/pail/crdt'
+import { Operation } from '@web3-storage/pail/src/crdt/api'
 import { EventFetcher, vis } from '@web3-storage/pail/clock'
 import * as Batch from '@web3-storage/pail/crdt/batch'
 
@@ -39,8 +40,7 @@ function timeEnd(tag:string) {
 export async function applyBulkUpdateToCrdt(
   tblocks: CarTransaction,
   head: ClockHead,
-  updates: DocUpdate[],
-  options?: object
+  updates: DocUpdate[]
 ): Promise<CRDTMeta> {
   let result: Result | null = null
   // const batch = await Batch.create(tblocks, init.cid)
@@ -56,7 +56,7 @@ export async function applyBulkUpdateToCrdt(
    } else {
     for (const update of updates) {
       const link = await writeDocContent(tblocks, update)
-      result = await put(tblocks, head, update.key, link, options)
+      result = await put(tblocks, head, update.key, link)
       const resRoot = result.root.toString()
       const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
       if (!isReturned) {
@@ -215,8 +215,8 @@ export async function clockChangesSince(
   opts: ChangesOptions
 ): Promise<{ result: DocUpdate[]; head: ClockHead }> {
   const eventsFetcher = (
-    opts.dirty ? new DirtyEventFetcher<EventData>(blocks) : new EventFetcher<EventData>(blocks)
-  ) as EventFetcher<EventData>
+    opts.dirty ? new DirtyEventFetcher<Operation>(blocks) : new EventFetcher<Operation>(blocks)
+  ) as EventFetcher<Operation>
   const keys: Set<string> = new Set()
   const updates = await gatherUpdates(
     blocks,
@@ -233,7 +233,7 @@ export async function clockChangesSince(
 
 async function gatherUpdates(
   blocks: BlockFetcher,
-  eventsFetcher: EventFetcher<EventData>,
+  eventsFetcher: EventFetcher<Operation>,
   head: ClockHead,
   since: ClockHead,
   updates: DocUpdate[] = [],
@@ -254,6 +254,7 @@ async function gatherUpdates(
     didLinks.add(link.toString())
     const { value: event } = await eventsFetcher.get(link)
     if (!event) continue
+    // @ts-ignore
     const { key, value } = event.data
     if (keys.has(key)) {
       if (event.parents) {
