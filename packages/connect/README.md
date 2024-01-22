@@ -1,6 +1,8 @@
 # `@fireproof/connect`
 
-[Fireproof](https://use-fireproof.com) is an embedded JavaScript document database that runs in the browser (or anywhere with JavaScript) and **connects to any cloud**. Read on for pointers to connect to PartyKit, S3, IPFS, and more.
+The connectors work with Fireproof's [encrypted blockstore](https://www.npmjs.com/package/@fireproof/encrypted-blockstore) allowing you to select the best cloud provider for your app. The blockstore itself can be used with any CID-based workload, providing a pluggable alternative to [Helia](https://docs.ipfs.tech/reference/js/api/).
+
+[Fireproof](https://use-fireproof.com) is an embedded JavaScript document database that runs in the browser (or anywhere with JavaScript) and **connects to any cloud**. Read on for pointers to connect to PartyKit, S3, IPFS, and more. [Learn about the connector architecture in the concept guide.](https://use-fireproof.com/docs/concept-guide/cloud-connectors)
 
 This is the base module, so you likely won't install it directly, but rather one of the connectors below. They are split into separate modules to keep the bundle size down.
 
