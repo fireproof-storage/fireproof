@@ -116,6 +116,160 @@ describe('basic database', function () {
   })
 })
 
+describe('benchmarking a database', function () {
+  /** @type {Database} */
+  let db
+  beforeEach(async function () {
+    // erase the existing test data
+    await resetDirectory(dataDir, 'test-benchmark')
+    db = new Database('test-benchmark', {autoCompact: 100000})
+    // db = new Database(null, {autoCompact: 100000})
+  })
+    // run benchmarking tests
+    // remove skip below
+    // run: 
+    //      npm test -- --grep 'insert and read many records'
+    //
+    // eslint-disable-next-line mocha/no-skipped-tests
+    it.skip(
+      'insert and read many records',
+      async function () {
+        const ok = await db.put({ _id: 'test', foo: 'fast' })
+        assert(ok)
+        equals(ok.id, 'test')
+    
+        assert(db._crdt.clock.head)
+        equals(db._crdt.clock.head.length, 1)
+
+        const numDocs = 3000
+        console.time(`insert and read ${numDocs} records`)
+        const ops = []
+        for (let i = 0; i < numDocs; i++) {
+          // if (Math.random() < 0.01) {
+          //   console.log('iteration', i)
+          // }
+          // equals(db._crdt.blockstore.loader.carLog.length, i + 1)
+          // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+          // console.time('db put')
+          // await db.put({ _id: `test${i}`, fire: Math.random().toString().repeat(25 * 1024) })
+          // console.timeEnd('db put')
+          ops.push( 
+            db.put({ _id: `test${i}`, fire: Math.random().toString().repeat(25 * 1024) }).then(ok => {
+              db.get(`test${i}`).then(doc => {
+                assert(doc.fire)
+              })
+            })
+          )
+          
+          // assert(ok)
+          // equals(db._crdt.blockstore.loader.carLog.length, i + 2)
+          // // console.time('db get')
+          // const doc = await db.get(`test${i}`)
+          // // console.timeEnd('db get')
+          // assert(doc.fire)
+        }
+        await Promise.all(ops)
+        console.timeEnd(`insert and read ${numDocs} records`)
+
+        // console.time('allDocs')
+        // const allDocsResult2 = await db.allDocs()
+        // console.timeEnd('allDocs')
+        // equals(allDocsResult2.rows.length, numDocs+1)
+
+
+        // console.time('open new DB')
+        // const newDb = new Database('test-benchmark')
+        // const doc = await newDb.get('test')
+        // equals(doc.foo, 'fast')
+        // console.timeEnd('open new DB')
+
+        // // console.time('allDocs new DB') // takes forever on 5k
+        // // const allDocsResult = await newDb.allDocs()
+        // // console.timeEnd('allDocs new DB')
+        // // equals(allDocsResult.rows.length, numDocs+1)
+        // // console.time('get all new DB')
+        // // for (let i = 0; i < numDocs; i++) {
+        // //   const doc = await newDb.get(`test${i}`)
+        // //   assert(doc.fire)
+        // // }
+        // // console.timeEnd('get all new DB')
+
+        // console.time('changes')
+        // const result = await db.changes() // takes 1.5 seconds (doesn't have to load blocks from cars)
+        // console.timeEnd('changes')
+        // equals(result.rows.length, numDocs+1)
+
+        // this takes 1 minute w 1000 docs
+        // console.time('changes new DB')
+        // const result2 = await newDb.changes()
+        // console.timeEnd('changes new DB')
+        // equals(result2.rows.length, numDocs+1)
+
+        console.log('begin compact')
+
+        console.time('COMPACT')
+        await db.compact()
+        console.timeEnd('COMPACT')
+
+        // todo compaction should not need this write to show in the new db
+        await db.put({ _id: 'compacted-test', foo: 'bar' })
+
+        // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+        equals(db._crdt.blockstore.loader.carLog.length, 2)
+
+        console.time('compacted reopen again')
+        const newDb2 = new Database('test-benchmark')
+        const doc21 = await newDb2.get('test')
+        equals(doc21.foo, 'fast')
+
+        equals(newDb2._crdt.blockstore.loader.carLog.length, 2)
+
+        const doc2 = await newDb2.get('compacted-test')
+    
+        equals(doc2.foo, 'bar')
+
+        equals(doc2.foo, 'bar')
+        console.timeEnd('compacted reopen again')
+
+        console.time('compacted allDocs new DB2')
+        const allDocsResult3 = await newDb2.allDocs()
+        console.timeEnd('compacted allDocs new DB2')
+        equals(allDocsResult3.rows.length, numDocs+2)
+
+        console.time('compacted get all new DB2')
+        for (let i = 0; i < numDocs; i++) {
+          const doc = await newDb2.get(`test${i}`)
+          assert(doc.fire)
+        }
+        console.timeEnd('compacted get all new DB2')
+
+        console.time('compacted changes new DB2')
+        const result3 = await newDb2.changes()
+        console.timeEnd('compacted changes new DB2')
+        equals(result3.rows.length, numDocs+2)
+
+        console.time('compacted newDb2 insert and read 100 records')
+        for (let i = 0; i < 100; i++) {
+          // console.log('iteration', i)
+          // equals(newDb2._crdt.blockstore.loader.carLog.length, i + 1)
+          // console.log('car log length', newDb2._crdt.blockstore.loader.carLog.length)
+          // console.time('newDb2 put')
+          const ok = await newDb2.put({ _id: `test${i}`, fire: Math.random().toString().repeat(25 * 1024) })
+          // console.timeEnd('newDb2 put')
+          assert(ok)
+          // equals(newDb2._crdt.blockstore.loader.carLog.length, i + 2)
+          // console.time('newDb2 get')
+          const doc = await newDb2.get(`test${i}`)
+          // console.timeEnd('newDb2 get')
+          assert(doc.fire)
+        }
+        console.timeEnd('compacted newDb2 insert and read 100 records')
+
+      }
+    ).timeout(20000000)
+})
+
+
 describe('Reopening a database', function () {
   /** @type {Database} */
   let db
@@ -123,7 +277,7 @@ describe('Reopening a database', function () {
     // erase the existing test data
     await resetDirectory(dataDir, 'test-reopen')
 
-    db = new Database('test-reopen')
+    db = new Database('test-reopen', {autoCompact: 100000})
     const ok = await db.put({ _id: 'test', foo: 'bar' })
     assert(ok)
     equals(ok.id, 'test')
@@ -180,20 +334,29 @@ describe('Reopening a database', function () {
   it.skip(
     'passing slow, should have the same data on reopen after reopen and update',
     async function () {
-      for (let i = 0; i < 100; i++) {
-        // console.log('iteration', i)
-        const db = new Database('test-reopen')
+      for (let i = 0; i < 200; i++) {
+        console.log('iteration', i)
+        console.time('db open')
+        const db = new Database('test-reopen', {autoCompact: 1000}) // try with 10
         assert(db._crdt.ready)
         await db._crdt.ready
+        console.timeEnd('db open')
         equals(db._crdt.blockstore.loader.carLog.length, i + 1)
+        // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+        console.time('db put')
         const ok = await db.put({ _id: `test${i}`, fire: 'proof'.repeat(50 * 1024) })
+        console.timeEnd('db put')
         assert(ok)
         equals(db._crdt.blockstore.loader.carLog.length, i + 2)
+        console.time('db get')
         const doc = await db.get(`test${i}`)
+        console.timeEnd('db get')
         equals(doc.fire, 'proof'.repeat(50 * 1024))
       }
     }
   ).timeout(20000)
+
+
 })
 
 describe('Reopening a database with indexes', function () {
