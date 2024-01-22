@@ -13,7 +13,7 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   parent: EncryptedBlockstore
   constructor(parent: EncryptedBlockstore) {
     super()
-    parent.addTransaction(this)
+    parent.transactions.add(this)
     this.parent = parent
   }
 
@@ -44,10 +44,6 @@ export class EncryptedBlockstore implements BlockFetcher {
     } else {
       this.ready = Promise.resolve()
     }
-  }
-
-  addTransaction(t: CarTransaction) {
-    this.transactions.add(t)
   }
 
   async transaction(

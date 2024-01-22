@@ -48,7 +48,6 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 
 export class Loader {
   name: string
-
   ebOpts: BlockstoreOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false

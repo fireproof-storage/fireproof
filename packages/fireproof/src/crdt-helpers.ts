@@ -25,11 +25,11 @@ import type {
 import { decodeFile, encodeFile } from './files'
 
 function time(tag:string) {
-  console.time(tag)
+  // console.time(tag)
 }
 
 function timeEnd(tag:string) {
-  console.timeEnd(tag)
+  // console.timeEnd(tag)
 }
 
 
@@ -226,7 +226,7 @@ async function gatherUpdates(
   limit: number
 ): Promise<DocUpdate[]> {
   if (limit <= 0) return updates
-  if (Math.random() < 0.001) console.log('gatherUpdates', head.length, since.length, updates.length)
+  // if (Math.random() < 0.001) console.log('gatherUpdates', head.length, since.length, updates.length)
   const sHead = head.map(l => l.toString())
   for (const link of since) {
     if (sHead.includes(link.toString())) {
