@@ -68,7 +68,7 @@
     "build:_types": "tsc --declaration --outDir dist/types && node ./scripts/types.js",
     "clean": "rm -rf node_modules",
     "cp:artifacts": "cp dist/lib/index.global.js ../fireproof/test/www/encrypted-blockstore.iife.js",
-    "cp:artifacts:scripts": "cp dist/web/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
+    "cp:artifacts:scripts": "cp dist/browser/index.iife.js ../fireproof/test/www/encrypted-blockstore.iife.js",
     "lint": "eslint 'src/**/*.{js,ts}'",
     "lint:all": "npm run lint:fix && npm run lint:exports",
     "lint:fix": "eslint --fix '{src,test}/**/*.{js,ts}'",

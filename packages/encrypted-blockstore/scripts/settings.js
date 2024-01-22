@@ -113,7 +113,7 @@ console.log('eb esm/node build');`
       // browser builds inherit here
       const browserIIFEConfig = {
         ...commonSettings,
-        outfile: `dist/web/${filename}.iife.js`,
+        outfile: `dist/browser/${filename}.iife.js`,
         format: 'iife',
         globalName: 'FireproofConnect',
         platform: 'browser',
@@ -146,7 +146,7 @@ console.log('eb web/es2015 build');
       // create react app uses this
       const browserESMConfig = {
         ...browserIIFEConfig,
-        outfile: `dist/web/${filename}.esm.js`,
+        outfile: `dist/browser/${filename}.esm.js`,
         format: 'esm',
         minify: false,
         banner: bannerLog`
@@ -159,7 +159,7 @@ console.log('eb esm/es2015 build');
       // most popular
       const browserCJSConfig = {
         ...browserIIFEConfig,
-        outfile: `dist/web/${filename}.cjs`,
+        outfile: `dist/browser/${filename}.cjs`,
         format: 'cjs',
         minify: false,
         banner: bannerLog`
