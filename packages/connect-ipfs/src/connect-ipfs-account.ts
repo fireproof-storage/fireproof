@@ -3,14 +3,14 @@ import type { Client } from '@web3-storage/w3up-client'
 import { delegate, Delegation } from '@ucanto/core'
 
 import { fireproof } from '@fireproof/core'
-import type { Database, MapFn } from '@fireproof/core'
+import type { Doc, Database, MapFn } from '@fireproof/core'
 
 import { ConnectIPFSParams } from './connect-ipfs'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 import { Capabilities } from '@ucanto/interface'
 import { Loader } from '@fireproof/encrypted-blockstore'
 
-type ClockSpaceDoc = {
+type ClockSpaceDoc = Doc<{
   type: 'clock-space';
   clockName: `_clock/${string}/${string}`;
   with: `did:${string}:${string}`;
@@ -21,17 +21,17 @@ type ClockSpaceDoc = {
   email: `${string}@${string}` | null;
   ua: string;
   schema: string;
-}
+}>
 
-type SchemaMemberDoc = {
+type SchemaMemberDoc = Doc<{
   _id: `schema-member/${string}/${string}`;
   type: 'schema-member';
   member: `did:key:${string}`;
   schema: string;
   ua: string;
-}
+}>
 
-type SpaceDelegationDoc = {
+type SpaceDelegationDoc = Doc<{
   _id: `delegation/${string}/${string}`;
   type: 'member-delegation';
   audience: `did:key:${string}`;
@@ -39,7 +39,7 @@ type SpaceDelegationDoc = {
   schema: string;
   status: 'pending' | 'applied';
   delegation?: Uint8Array;
-}
+}>
 
 const didKeyIdxFn: MapFn = (doc, emit) => {
   const myDoc = doc as SpaceDelegationDoc | ClockSpaceDoc
