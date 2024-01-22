@@ -21,6 +21,9 @@ import { CID } from 'multiformats/cid'
 import { fireproof, Database } from '../dist/test/database.js'
 import { index } from '../dist/test/index.js'
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
+
+
 export function cidListIncludes(list, cid) {
   return list.some(c => c.equals(cid))
 }
@@ -198,12 +201,10 @@ describe('benchmarking a database', function () {
         console.timeEnd('changes new DB')
         equals(result2.rows.length, numDocs+1)
 
-        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms))
         await sleep(1000)
 
     console.log('begin compact')
 
-    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
     await sleep(100)
 
     console.time('COMPACT')

@@ -104,7 +104,6 @@ describe('CRDT with a multi-write', function () {
   })
   it('should offer changes', async function () {
     const { result } = await crdt.changes([])
-    console.log('result', result)
     equals(result.length, 2)
     equals(result[0].key, 'ace')
     equals(result[0].value.points, 11)
@@ -183,7 +182,6 @@ describe('Compact a named CRDT with writes', function () {
   })
   it('should start with changes', async function () {
     const { result } = await crdt.changes()
-    console.log('result', result)
     equals(result.length, 2)
     equals(result[0].key, 'ace')
   })
