@@ -34,10 +34,10 @@ The default build is optimized for browsers, to load the node build add `/node`:
 import { fireproof } from '@fireproof/core/node'
 ```
 
-Add the database to any web page via HTML script tag:
+Add the database to any web page via HTML script tag (global is `Fireproof`):
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/web/fireproof.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.global.js"></script>
 ```
 
 Go ahead and write features, then [connect to any cloud backend](https://www.npmjs.com/package/@fireproof/connect) later.
