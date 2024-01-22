@@ -1,6 +1,6 @@
 
 
-# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> Fireproof
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) – live database for the web
 
 <p align="right">
   <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/test.yml">
@@ -10,7 +10,11 @@
 
 Simplify your application state with a live database. Automatically update your UI based on local or remote changes, and optionally integrate with any cloud for replication and sharing.
 
-Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and realtime collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small. 
+Fireproof is an embedded JavaScript document database designed to streamline app development. Data resides locally, with optional encrypted cloud storage and real-time sync and collaboration. Features like live queries, database branches and snapshots, and file attachments make Fireproof ideal for browser-based apps big or small. 
+
+Fireproof works in the browser, server, edge function, and any other JavaScript environment, with [connectors for popular backend services like AWS, Netlify, and PartyKit.]()
+
+### Install Anywhere
 
 Get started with just the NPM module:
 
@@ -24,13 +28,19 @@ or target specific builds via:
 npm install @fireproof/core
 ```
 
-or add the database to to any web page via HTML script tag:
+The default build is optimized for browsers, to load the node build add `/node`:
+
+```js
+import { fireproof } from '@fireproof/core/node'
+```
+
+Add the database to any web page via HTML script tag:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/web/fireproof.iife.js"></script>
 ```
 
-You can go ahead and write features now, and connect to any cloud backend later.
+Go ahead and write features, then [connect to any cloud backend](https://www.npmjs.com/package/@fireproof/connect) later.
  
  ### JavaScript Example
 
@@ -50,7 +60,6 @@ const result = await db.query("age", { range: [40, 52] })
 
 Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics) You can [find a real-world JavaScript app here.](https://github.com/mlc-ai/web-stable-diffusion/pull/52) Fireproof has been tested in many JavaScript environments. Read more about [bundler support](https://use-fireproof.com/docs/bundling).
 
-
 ### React Example 
 
 Fireproof has React hooks so you can avoid boilerplate and write expressive code. Instead of dealing with React contexts and reducers, simple hooks make your JSON documents feel like `setState()` objects.
@@ -67,7 +76,7 @@ Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tuto
 
 ## Why choose Fireproof 
 
-Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols. This allows you to add live data to your app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started writing app features today, and connect to any environment when you are ready.
+Fireproof has a unique take on distributed data integrity, rooted in immutable data and cryptographically verifiable protocols. This allows you to add live data to any app without complex configuration or installation (it's just an npm module) and if you decide to connect to the cloud you can easily choose storage providers or connect to your own S3 bucket. End-to-end encryption allows you to manage keys separately from data, defining custom security policies, so you can get started writing app features today, and connect to any environment when you are ready. This infrastructure independence makes Fireproof great for brownfield and greenfield projects alike.
 
 [Read more about the thinking behind Fireproof on our blog.](https://fireproof.storage/blog/) The community is active on [Discord](https://discord.gg/cCryrNHePH) and [X](https://twitter.com/FireproofStorge), among other places.
 
