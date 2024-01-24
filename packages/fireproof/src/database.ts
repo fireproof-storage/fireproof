@@ -46,7 +46,7 @@ export class Database {
     })
   }
 
-  async get<T extends DocRecord = {}>(id: string): Promise<Doc<T>> {
+  async get<T extends DocRecord<T> = {}>(id: string): Promise<Doc<T>> {
     const got = await this._crdt.get(id).catch(e => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       e.message = `Not found: ${id} - ` + e.message
@@ -57,7 +57,7 @@ export class Database {
     return { _id: id, ...doc } as Doc<T>
   }
 
-  async put<T extends DocRecord = {}>(doc: Doc<T>): Promise<DbResponse> {
+  async put<T extends DocRecord<T> = {}>(doc: Doc<T>): Promise<DbResponse> {
     const { _id, ...value } = doc
     const docId = _id || uuidv7()
     const result: CRDTMeta = await this._writeQueue.push({ key: docId, value } as DocUpdate)
@@ -69,7 +69,7 @@ export class Database {
     return { id, clock: result?.head } as DbResponse
   }
 
-  async changes<T extends DocRecord = {}>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
+  async changes<T extends DocRecord<T> = {}>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     const { result, head } = await this._crdt.changes(since, opts)
     const rows = result.map(({ key, value, del, clock }) => ({
       key,
@@ -79,7 +79,7 @@ export class Database {
     return { rows, clock: head }
   }
 
-  async allDocs<T extends DocRecord = {}>() {
+  async allDocs<T extends DocRecord<T> = {}>() {
     const { result, head } = await this._crdt.allDocs()
     const rows = result.map(({ key, value, del }) => ({
       key,
@@ -88,7 +88,7 @@ export class Database {
     return { rows, clock: head }
   }
 
-  async allDocuments<T extends DocRecord = {}>() {
+  async allDocuments<T extends DocRecord<T> = {}>() {
     return this.allDocs<T>()
   }
 
@@ -113,7 +113,7 @@ export class Database {
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<T extends DocRecord = {}>(field: string | MapFn, opts: QueryOpts = {}) {
+  async query<T extends DocRecord<T> = {}>(field: string | MapFn, opts: QueryOpts = {}) {
     const idx =
       typeof field === 'string'
         ? index({ _crdt: this._crdt }, field)
@@ -147,7 +147,7 @@ export class Database {
   }
 }
 
-type UpdateListenerFn = <T extends DocRecord = {}>(docs: Doc<T>[]) => Promise<void> | void
+type UpdateListenerFn = <T extends DocRecord<T>>(docs: Doc<T>[]) => Promise<void> | void
 type NoUpdateListenerFn = () => Promise<void> | void
 type ListenerFn = UpdateListenerFn | NoUpdateListenerFn
 
