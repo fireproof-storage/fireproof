@@ -122,7 +122,7 @@ export async function loadIndex(tblocks: BlockFetcher, cid: AnyLink, opts: Stati
   return await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts }) as ProllyNode
 }
 
-export async function applyQuery<T extends DocRecord = {}>(crdt: CRDT, resp: { result: IndexRow<T>[] }, query: QueryOpts) {
+export async function applyQuery<T extends DocRecord<T> = {}>(crdt: CRDT, resp: { result: IndexRow<T>[] }, query: QueryOpts) {
   if (query.descending) {
     resp.result = resp.result.reverse()
   }
@@ -163,10 +163,10 @@ export function encodeKey(key: DocFragment): string {
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
 interface ProllyNode extends BaseNode {
-  getAllEntries<T extends DocRecord = {}>(): PromiseLike<{ [x: string]: any; result: IndexRow<T>[] }>
+  getAllEntries<T extends DocRecord<T> = {}>(): PromiseLike<{ [x: string]: any; result: IndexRow<T>[] }>
   getMany(removeIds: string[]): Promise<{ [x: string]: any; result: IndexKey[] }>
-  range<T extends DocRecord = {}>(a: IndexKey, b: IndexKey): Promise<{ result: IndexRow<T>[] }>
-  get<T extends DocRecord = {}>(key: string): Promise<{ result: IndexRow<T>[] }>
+  range<T extends DocRecord<T> = {}>(a: IndexKey, b: IndexKey): Promise<{ result: IndexRow<T>[] }>
+  get<T extends DocRecord<T> = {}>(key: string): Promise<{ result: IndexRow<T>[] }>
   bulk(bulk: IndexUpdate[]): PromiseLike<{ root: ProllyNode | null; blocks: Block[] }>
   address: Promise<Link>
   distance: number

@@ -72,7 +72,7 @@ export class Index {
     //   })
   }
 
-  applyMapFn<T extends Record<string, any> = {}>(name: string, mapFn?: MapFn, meta?: IdxMeta) {
+  applyMapFn<T extends DocRecord<T> = {}>(name: string, mapFn?: MapFn, meta?: IdxMeta) {
     if (mapFn && meta) throw new Error('cannot provide both mapFn and meta')
     if (this.name && this.name !== name) throw new Error('cannot change name')
     this.name = name
@@ -118,7 +118,7 @@ export class Index {
         } else {
           // application code is creating an index
           if (!mapFn) {
-            mapFn = makeMapFnFromName(name)
+            mapFn = (doc) => doc[name as keyof Doc<T>] ?? undefined
           }
           if (this.mapFnString) {
             // we already loaded from a header
@@ -138,7 +138,7 @@ export class Index {
     }
   }
 
-  async query<T extends DocRecord = {}>(opts: QueryOpts = {}): Promise<{ rows: IndexRow<T>[] }> {
+  async query<T extends DocRecord<T> = {}>(opts: QueryOpts = {}): Promise<{ rows: IndexRow<T>[] }> {
     // this._resetIndex()
     await this._updateIndex()
     await this._hydrateIndex()
@@ -261,8 +261,4 @@ export class Index {
       return indexerMeta as unknown as TransactionMeta
     })
   }
-}
-
-function makeMapFnFromName<T extends DocRecord = {}>(name: keyof Doc<T>): MapFn {
-  return doc => doc[name] ?? undefined
 }
