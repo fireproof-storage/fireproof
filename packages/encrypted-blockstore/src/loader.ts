@@ -218,8 +218,7 @@ export class Loader {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const header = done
-    const fp = this.makeCarHeader(header, this.carLog, !!opts.compact) as CarHeader
+    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.carStore!.save({ cid, bytes })
@@ -266,10 +265,9 @@ export class Loader {
 
   async updateCarLog(cid: AnyLink, fp: CarHeader, compact: boolean): Promise<void> {
     if (compact) {
-      const fpCar = fp as CarHeader
-      const previousCompactCid = this.carLog[this.carLog.length - 1]
-      fpCar.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
-      this.carLog = [...uniqueCids([cid, ...this.carLog], this.seenCompacted)]
+      const previousCompactCid = fp.compact[fp.compact.length - 1]
+      fp.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
+      this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cid], this.seenCompacted)]
       void this.removeCidsForCompact(previousCompactCid)
     } else {
       this.carLog.unshift(cid)
@@ -285,14 +283,14 @@ export class Loader {
     }
   }
 
-  async flushCars() {
-    await this.ready
-    // for each cid in car log, make a dbMeta
-    for (const cid of this.carLog) {
-      const dbMeta = { car: cid, key: this.key || null } as DbMeta
-      await this.remoteWAL!.enqueue(dbMeta, { public: false })
-    }
-  }
+  // async flushCars() {
+  //   await this.ready
+  //   // for each cid in car log, make a dbMeta
+  //   for (const cid of this.carLog) {
+  //     const dbMeta = { car: cid, key: this.key || null } as DbMeta
+  //     await this.remoteWAL!.enqueue(dbMeta, { public: false })
+  //   }
+  // }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
     await this.ready

@@ -29,11 +29,11 @@ import { decodeFile, encodeFile } from './files'
 import { Result } from '@web3-storage/pail/src/crdt/api'
 
 function time(tag: string) {
-  // console.time(tag)
+  console.time(tag)
 }
 
 function timeEnd(tag: string) {
-  // console.timeEnd(tag)
+  console.timeEnd(tag)
 }
 
 export async function applyBulkUpdateToCrdt(

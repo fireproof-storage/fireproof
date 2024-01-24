@@ -60,7 +60,7 @@
     "test:coverage": "c8 --reporter=html --include='dist/*' node ./scripts/test.js && open coverage/src/index.html",
     "test:node": "node ./scripts/test.js",
     "test:serve": "npx serve-http test/www -p 8080",
-    "test:watch": "nodemon -w src -e ts,js --exec \"npm run build && npm run test:node\"",
+    "test:watch": "nodemon -w src -w test -e ts,js --exec \"tsup && npm run test:node\"",
     "tsc:watch": "tsc --watch"
   },
   "keywords": [
