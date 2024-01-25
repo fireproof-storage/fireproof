@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/core",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "description": "Live database for the web.",
   "type": "module",
   "module": "./dist/browser/fireproof.js",
@@ -128,7 +128,7 @@
     "util": "^0.12.5"
   },
   "dependencies": {
-    "@web3-storage/pail": "^0.4.0",
+    "@web3-storage/pail": "^0.4.1",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
