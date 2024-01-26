@@ -311,22 +311,32 @@ export class Loader {
     await this.ready
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-    const got = await Promise.any(
-      // maybe worth taking this in chunks of 5? to allow cache to favor recent files, carLog order is newest first
-      this.carLog.map(async carCid => {
-        const reader = await this.loadCar(carCid)
-        if (!reader) {
-          throw new Error(`missing car reader ${carCid.toString()}`)
+
+    const getCarCid = (async (carCid : AnyLink) => {
+      const reader = await this.loadCar(carCid)
+      if (!reader) {
+        throw new Error(`missing car reader ${carCid.toString()}`)
+      }
+      // get all the blocks in the car and put them in this.getBlockCache
+      await this.cacheCarReader(reader)
+      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+      throw new Error(`block not in reader: ${cid.toString()}`)
+    })
+
+    let got;
+    const batchSize = 5;
+    for (let i = 0; i < this.carLog.length; i += batchSize) {
+      for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
+        try {
+          got = await getCarCid(this.carLog[j]);
+          if (got) break;
+        } catch {
+          // Ignore the error and continue with the next iteration
         }
-
-        // get all the blocks in the car and put them in this.getBlockCache
-        await this.cacheCarReader(reader)
-
-        if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-
-        throw new Error(`block not in reader: ${cid.toString()}`)
-      })
-    ).catch(() => undefined)
+      }
+      if (got) break; // If we got a block, no need to continue with the next batch
+    }
+    
     if (got) {
       this.getBlockCache.set(sCid, got)
     }

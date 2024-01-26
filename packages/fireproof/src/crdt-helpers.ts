@@ -185,6 +185,7 @@ async function getValueFromLink(blocks: BlockFetcher, link: AnyLink): Promise<Do
   const block = await blocks.get(link)
   if (!block) throw new Error(`Missing linked block ${link.toString()}`)
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue }
+  value.cid = link
   readFiles(blocks as EncryptedBlockstore, value)
   return value
 }
