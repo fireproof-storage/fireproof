@@ -52,13 +52,14 @@ export type DocUpdate = {
   key: string
   value?: Record<string, any>
   del?: boolean
-  clock?: AnyLink
+  clock?: AnyLink // would be useful to give ClockLinks a type
 }
 
 // todo merge into above
 export type DocValue = {
   doc?: DocBase
   del?: boolean
+  cid?: AnyLink
 }
 
 export type IndexKey = [string, string] | string
