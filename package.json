@@ -36,6 +36,7 @@
     "lint:fix:react": "pnpm --filter use-fireproof lint:fix",
     "lint:fix:solid": "pnpm --filter @fireproof/solid-js lint:fix",
     "start:react": "pnpm --filter @fireproof-example/react start",
+    "start:solid": "pnpm --filter @fireproof-example/solid-js start",
     "test": "pnpm -r test",
     "test:blockstore": "pnpm --filter @fireproof/encrypted-blockstore test",
     "test:core": "pnpm --filter @fireproof/core test",
