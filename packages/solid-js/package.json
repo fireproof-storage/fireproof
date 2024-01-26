@@ -1,0 +1,106 @@
+{
+  "name": "@fireproof/solid-js",
+  "version": "0.17.0",
+  "description": "The official SolidJS adapter for Fireproof. Light up your data with an embedded live database for your SolidJS web app.",
+  "type": "module",
+  "module": "./dist/server.js",
+  "main": "./dist/server.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "browser": {
+    "./dist/server.js": "./dist/index.js"
+  },
+  "exports": {
+    "worker": {
+      "solid": "./dist/server.jsx",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/server.js"
+      }
+    },
+    "browser": {
+      "solid": "./dist/index.jsx",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "deno": {
+      "solid": "./dist/server.jsx",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/server.js"
+      }
+    },
+    "node": {
+      "solid": "./dist/server.jsx",
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/server.js"
+      }
+    },
+    "solid": "./dist/index.jsx",
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "typesVersions": {},
+  "author": "Daniel Sanchez",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://use-fireproof.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "scripts": {
+    "prepublishOnly": "cp ../../README.md . && pnpm build",
+    "postpublish": "rm README.md",
+    "build": "tsup",
+    "build:clean": "rm -rf dist",
+    "build:watch:solid": "tsup --watch",
+    "clean": "rm -rf node_modules",
+    "format:check": "prettier . --check",
+    "format:fix": "prettier . --write",
+    "lint:check": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "test": "vitest run",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@fireproof/core": "workspace:^",
+    "deepmerge-ts": "^5.1.0"
+  },
+  "peerDependencies": {
+    "solid-js": ">=1.8.0"
+  },
+  "devDependencies": {
+    "@solidjs/router": "^0.10.5",
+    "@vitest/coverage-istanbul": "^1.1.0",
+    "buffer": "^6.0.3",
+    "esbuild": "^0.19.10",
+    "eslint": "^8.56.0",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "eslint-plugin-solid": "^0.13.0",
+    "fake-indexeddb": "^5.0.1",
+    "prettier": "^3.1.1",
+    "solid-js": "^1.8.7",
+    "tsup-preset-solid": "^2.2.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12",
+    "vite-plugin-solid": "^2.9.1",
+    "vitest": "^1.2.2"
+  },
+  "keywords": [
+    "solid",
+    "database",
+    "json",
+    "live",
+    "sync"
+  ]
+}
