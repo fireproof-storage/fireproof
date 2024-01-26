@@ -2,13 +2,7 @@ import pLimit from 'p-limit'
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats'
 
-import type {
-  AnyBlock,
-  AnyLink,
-  CarHeader,
-  CommitOpts,
-  DbMeta,
-  TransactionMeta} from './types'
+import type { AnyBlock, AnyLink, CarHeader, CommitOpts, DbMeta, TransactionMeta } from './types'
 import type { BlockstoreOpts } from './transaction'
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
@@ -244,7 +238,7 @@ export class Loader {
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     const theKey = isPublic ? null : await this._getKey()
-    return (theKey && this.ebOpts.crypto)
+    return theKey && this.ebOpts.crypto
       ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, root, t)
       : await encodeCarFile([root], t)
   }
@@ -312,7 +306,7 @@ export class Loader {
     const sCid = cid.toString()
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
 
-    const getCarCid = (async (carCid : AnyLink) => {
+    const getCarCid = async (carCid: AnyLink) => {
       const reader = await this.loadCar(carCid)
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
@@ -321,22 +315,23 @@ export class Loader {
       await this.cacheCarReader(reader)
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       throw new Error(`block not in reader: ${cid.toString()}`)
-    })
-
-    let got;
-    const batchSize = 5;
-    for (let i = 0; i < this.carLog.length; i += batchSize) {
-      for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-        try {
-          got = await getCarCid(this.carLog[j]);
-          if (got) break;
-        } catch {
-          // Ignore the error and continue with the next iteration
-        }
-      }
-      if (got) break; // If we got a block, no need to continue with the next batch
     }
-    
+
+    let got
+    const batchSize = 5
+    for (let i = 0; i < this.carLog.length; i += batchSize) {
+      const promises = []
+      for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
+        promises.push(getCarCid(this.carLog[j]))
+      }
+      try {
+        got = await Promise.any(promises)
+      } catch {
+        // Ignore the error and continue with the next iteration
+      }
+      if (got) break // If we got a block, no need to continue with the next batch
+    }
+
     if (got) {
       this.getBlockCache.set(sCid, got)
     }
