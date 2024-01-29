@@ -1,5 +1,6 @@
 import { ConnectS3, Connectable } from '@fireproof/connect'
 import { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
+export { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
 
 const partyCxs = new Map<string, ConnectPartyKit>()
 
