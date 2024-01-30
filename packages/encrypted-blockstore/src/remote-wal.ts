@@ -23,14 +23,15 @@ export abstract class RemoteWAL {
 
   constructor(loader: Loadable) {
     this.loader = loader
-    this.ready = (async () => {
+    
+    this.ready = Promise.resolve().then((async () => {
       const walState = await this.load().catch(e => {
         console.error('error loading wal', e)
         return null
       })
       this.walState.operations = walState?.operations || []
       this.walState.fileOperations = walState?.fileOperations || []
-    })()
+    }))
   }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {

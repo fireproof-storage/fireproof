@@ -1,9 +1,15 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
 import type { AnyBlock, AnyLink, DbMeta, Loadable } from '@fireproof/encrypted-blockstore'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase } from '@fireproof/encrypted-blockstore'
+import {
+  DataStore as DataStoreBase,
+  MetaStore as MetaStoreBase,
+  RemoteWAL as RemoteWALBase,
+  WALState
+} from '@fireproof/encrypted-blockstore'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
+import { format, parse, ToString } from '@ipld/dag-json'
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 
@@ -11,10 +17,9 @@ export function makeStores(storage: Connection, meta: Connection) {
   return {
     makeDataStore: (name: string) => new RemoteDataStore(name, storage),
     makeMetaStore: (name: string) => new RemoteMetaStore(name, meta),
-    makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader),
+    makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader)
   }
 }
-
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'remote-data'
@@ -126,34 +131,28 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 }
 
-
 export class RemoteWAL extends RemoteWALBase {
-  tag: string = 'wal-web-ls'
+  tag: string = 'wal-mem'
+  store: Map<string, string>
+
+  constructor(loader: Loadable) {
+    super(loader)
+    this.store = new Map<string, string>()
+    console.log('remote wal constructor', this.store)
+  }
 
   headerKey(branch: string) {
-    // remove 'public' on next storage version bump
     return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch = 'main'): Promise<WALState | null> {
-    try {
-      const bytesString = XlocalStorage.getItem(this.headerKey(branch))
-      if (!bytesString) return null
-      return parse<WALState>(bytesString)
-    } catch (e) {
-      return null
-    }
+    console.log('remote wal load!', branch, this.store)
+    const bytesString = this.store.get(this.headerKey(branch))
+    if (!bytesString) return null
+    return parse<WALState>(bytesString)
   }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
   async save(state: WALState, branch = 'main'): Promise<void> {
-    try {
-      const encoded: ToString<WALState> = format(state)
-      XlocalStorage.setItem(this.headerKey(branch), encoded)
-    } catch (e) {
-      console.error('error saving wal', e)
-      throw e
-    }
+    const encoded: ToString<WALState> = format(state)
+    this.store.set(this.headerKey(branch), encoded)
   }
 }
