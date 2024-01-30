@@ -30,7 +30,6 @@ export class Database {
   _noupdate_listeners: Set<ListenerFn> = new Set()
   _crdt: CRDT
   _writeQueue: WriteQueue
-
   blockstore: EncryptedBlockstore
 
   constructor(name?: string, opts?: ConfigOpts) {
