@@ -1,34 +1,34 @@
-type QueueFunction = () => Promise<void>;
+type QueueFunction = () => Promise<void>
 
 export class CommitQueue<T = void> {
-  private queue: QueueFunction[] = [];
-  private processing = false;
+  queue: QueueFunction[] = []
+  processing = false
 
   async enqueue(fn: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const queueFn = async () => {
         try {
-          resolve(await fn());
+          resolve(await fn())
         } catch (e) {
-          reject(e);
+          reject(e)
         } finally {
-          this.processing = false;
-          this.processNext();
+          this.processing = false
+          this.processNext()
         }
-      };
-      this.queue.push(queueFn);
-      if (!this.processing) {
-        this.processNext();
       }
-    });
+      this.queue.push(queueFn)
+      if (!this.processing) {
+        this.processNext()
+      }
+    })
   }
 
-  private processNext() {
+  processNext() {
     if (this.queue.length > 0 && !this.processing) {
-      this.processing = true;
-      const queueFn = this.queue.shift();
+      this.processing = true
+      const queueFn = this.queue.shift()
       if (queueFn) {
-        queueFn();
+        queueFn()
       }
     }
   }

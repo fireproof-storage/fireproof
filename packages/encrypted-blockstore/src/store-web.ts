@@ -4,11 +4,11 @@ import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
-import type { Loader } from './loader'
+import type { Loadable } from './loader'
 
 export const makeDataStore = (name: string) => new DataStore(name);
 export const makeMetaStore = (name: string) => new MetaStore(name);
-export const makeRemoteWAL = (loader: Loader) => new RemoteWAL(loader);
+export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
 
 
 export class DataStore extends DataStoreBase {

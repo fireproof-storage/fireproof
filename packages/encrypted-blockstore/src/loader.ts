@@ -40,24 +40,34 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
   abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>
 }
 
-export class Loader {
+export abstract class Loadable {
+  name: string = ''
+  remoteCarStore?: DataStore
+  carStore?: DataStore
+  carLog: AnyLink[] = []
+  remoteMetaStore?: AbstractRemoteMetaStore
+  remoteFileStore?: AbstractDataStore
+  fileStore?: DataStore
+}
+
+export class Loader implements Loadable {
   name: string
   ebOpts: BlockstoreOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
-  remoteMetaStore: AbstractRemoteMetaStore | undefined
-  remoteCarStore: AbstractDataStore | undefined
+  remoteMetaStore?: AbstractRemoteMetaStore
+  remoteCarStore?: AbstractDataStore
   fileStore: DataStore
-  remoteFileStore: AbstractDataStore | undefined
+  remoteFileStore?: AbstractDataStore
   remoteWAL: RemoteWAL
   metaStore: MetaStore
   carStore: DataStore
   carLog: AnyLink[] = []
   carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
-  key: string | undefined
-  keyId: string | undefined
+  key?: string
+  keyId?: string
   seenCompacted: Set<string> = new Set()
   writing: Promise<TransactionMeta | void> = Promise.resolve()
 

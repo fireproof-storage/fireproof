@@ -1,7 +1,7 @@
 import type { Link } from 'multiformats'
 import { DataStore, MetaStore } from './store';
 import { RemoteWAL } from './remote-wal';
-import { Loader } from './loader';
+import type { Loader } from './loader';
 
 export type AnyLink = Link<any, number, number, 1 | 0>
 export type AnyAnyLink = Link<any, any, any, any>
