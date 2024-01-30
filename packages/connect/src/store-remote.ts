@@ -1,6 +1,6 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
-import type { AnyBlock, AnyLink, DbMeta, Loader } from '@fireproof/encrypted-blockstore'
+import type { AnyBlock, AnyLink, DbMeta, Loadable } from '@fireproof/encrypted-blockstore'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase } from '@fireproof/encrypted-blockstore'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
@@ -11,7 +11,7 @@ export function makeStores(storage: Connection, meta: Connection) {
   return {
     makeDataStore: (name: string) => new RemoteDataStore(name, storage),
     makeMetaStore: (name: string) => new RemoteMetaStore(name, meta),
-    makeRemoteWAL: (loader: Loader) => new RemoteWAL(loader),
+    makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader),
   }
 }
 
