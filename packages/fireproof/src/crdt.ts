@@ -53,8 +53,8 @@ export class CRDT {
         return { head: this.clock.head } as TransactionMeta
       },
       autoCompact: this.opts.autoCompact || 100,
-      crypto,
-      store,
+      crypto: this.opts.crypto || crypto,
+      store: this.opts.store || store,
       public: this.opts.public,
       meta: this.opts.meta
     })

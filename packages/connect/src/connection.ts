@@ -75,6 +75,7 @@ export abstract class Connection {
 
   connectStorage({ loader }: { loader: Loader }) {
     this.setLoader(loader)
+    // todo move this to use factory
     this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
     this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }
