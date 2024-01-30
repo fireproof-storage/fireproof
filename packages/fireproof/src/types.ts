@@ -2,13 +2,15 @@ import type { Link } from 'multiformats'
 import type { EventLink } from '@web3-storage/pail/clock/api'
 import type { Operation } from '@web3-storage/pail/crdt/api'
 
-import type { DbMeta } from '@fireproof/encrypted-blockstore'
+import type { DbMeta, CryptoOpts, StoreOpts } from '@fireproof/encrypted-blockstore'
 
 export type ConfigOpts = {
   public?: boolean
   meta?: DbMeta
   persistIndexes?: boolean
   autoCompact?: number
+  crypto?: CryptoOpts
+  store?: StoreOpts
 }
 
 export type ClockLink = EventLink<Operation>
@@ -26,10 +28,10 @@ export type DocFragment =
   | { [key: string]: DocFragment }
 
 export type DocRecord<T> = {
-  [K in keyof T]: DocFragment;
-};
+  [K in keyof T]: DocFragment
+}
 
-export type DocFiles = Record<string, DocFileMeta | File>;
+export type DocFiles = Record<string, DocFileMeta | File>
 
 export type DocBase = {
   _id?: string
@@ -119,9 +121,9 @@ export type ChangesOptions = {
 
 export type ChangesResponse<T extends DocRecord<T> = {}> = {
   clock: ClockHead
-  rows: { 
-    key: string; 
-    value: Doc<T> 
+  rows: {
+    key: string
+    value: Doc<T>
   }[]
 }
 

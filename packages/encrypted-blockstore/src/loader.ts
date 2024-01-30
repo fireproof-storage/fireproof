@@ -16,7 +16,7 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from '
 import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
-// ts-unused-exports:disable-next-line
+
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
@@ -29,7 +29,7 @@ export function uniqueCids(list: AnyLink[], remove: Set<string> = new Set()): An
   return [...byString.values()]
 }
 
-// ts-unused-exports:disable-next-line
+
 export function toHexString(byteArray: Uint8Array) {
   return Array.from(byteArray)
     .map(byte => byte.toString(16).padStart(2, '0'))
@@ -67,10 +67,10 @@ export class Loader {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
     this.ebOpts = ebOpts
-    this.metaStore = new ebOpts.store.MetaStore(this.name)
-    this.carStore = new ebOpts.store.DataStore(this.name)
-    this.fileStore = new ebOpts.store.DataStore(this.name)
-    this.remoteWAL = new ebOpts.store.RemoteWAL(this)
+    this.metaStore = ebOpts.store.makeMetaStore(this.name)
+    this.carStore = ebOpts.store.makeDataStore(this.name)
+    this.fileStore = ebOpts.store.makeDataStore(this.name)
+    this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
@@ -433,7 +433,45 @@ export class Loader {
   }
 }
 
+// duplicated in @fireproof/connect
+export type UploadMetaFnParams = {
+  name: string
+  branch: string
+}
+
+export type UploadDataFnParams = {
+  type: 'data' | 'file'
+  name: string
+  car: string
+  size: string
+}
+
+export type DownloadFnParamTypes = 'data' | 'file'
+
+export type DownloadDataFnParams = {
+  type: DownloadFnParamTypes
+  name: string
+  car: string
+}
+
+export type DownloadMetaFnParams = {
+  name: string
+  branch: string
+}
+
+
 export interface Connection {
   loader: Loader
   loaded: Promise<void>
+  connectMeta({ loader }: { loader: Loader }): void
+  connectStorage({ loader }: { loader: Loader }): void
+
+  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
+  dataUpload(
+    bytes: Uint8Array,
+    params: UploadDataFnParams,
+    opts?: { public?: boolean }
+  ): Promise<void | AnyLink>
+  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
+  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>
 }

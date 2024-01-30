@@ -1,11 +1,20 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
-import type { AnyBlock, AnyLink, DbMeta } from '@fireproof/encrypted-blockstore'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/encrypted-blockstore'
+import type { AnyBlock, AnyLink, DbMeta, Loader } from '@fireproof/encrypted-blockstore'
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, RemoteWAL as RemoteWALBase } from '@fireproof/encrypted-blockstore'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
+
+export function makeStores(storage: Connection, meta: Connection) {
+  return {
+    makeDataStore: (name: string) => new RemoteDataStore(name, storage),
+    makeMetaStore: (name: string) => new RemoteMetaStore(name, meta),
+    makeRemoteWAL: (loader: Loader) => new RemoteWAL(loader),
+  }
+}
+
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'remote-data'
@@ -114,5 +123,37 @@ export class RemoteMetaStore extends MetaStoreBase {
       const txt = new TextDecoder().decode(bytes)
       return this.parseHeader(txt)
     })
+  }
+}
+
+
+export class RemoteWAL extends RemoteWALBase {
+  tag: string = 'wal-web-ls'
+
+  headerKey(branch: string) {
+    // remove 'public' on next storage version bump
+    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async load(branch = 'main'): Promise<WALState | null> {
+    try {
+      const bytesString = XlocalStorage.getItem(this.headerKey(branch))
+      if (!bytesString) return null
+      return parse<WALState>(bytesString)
+    } catch (e) {
+      return null
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async save(state: WALState, branch = 'main'): Promise<void> {
+    try {
+      const encoded: ToString<WALState> = format(state)
+      XlocalStorage.setItem(this.headerKey(branch), encoded)
+    } catch (e) {
+      console.error('error saving wal', e)
+      throw e
+    }
   }
 }
