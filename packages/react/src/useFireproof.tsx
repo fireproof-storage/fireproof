@@ -1,14 +1,31 @@
-import type { ConfigOpts, Database, DbResponse, Doc, MapFn } from "@fireproof/core";
+import type { ConfigOpts, Database, DbResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-type LiveQueryFnReturn = { docs: Doc[]; rows: any[] };
-export type LiveQueryFn = (mapFn: string | MapFn, query?: object, initialRows?: any[]) => LiveQueryFnReturn;
+export type LiveQueryResult<T extends DocRecord<T>> = {
+  readonly docs: Doc<T>[];
+  readonly rows: IndexRow<T>[];
+};
 
-type UseDocFnReturn = [Doc, (newDoc: Doc | false, replace?: boolean) => void, () => Promise<DbResponse>];
-export type UseDocFn = (initialDoc: Doc) => UseDocFnReturn;
+export type UseLiveQuery = <T extends DocRecord<T>>(
+  mapFn: string | MapFn,
+  query?: QueryOpts,
+  initialRows?: IndexRow<T>[]
+) => LiveQueryResult<T>;
 
-export type FireproofCtxValue = {
+type UpdateDocFnOptions = {
+  readonly replace?: boolean;
+};
+
+type UpdateDocFn<T extends DocRecord<T>> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
+
+type StoreDocFn<T extends DocRecord<T>> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+
+export type UseDocumentResult<T extends DocRecord<T>> = [Doc<T>, UpdateDocFn<T>, StoreDocFn<T>];
+
+export type UseDocument = <T extends DocRecord<T>>(initialDocFn: () => Doc<T>) => UseDocumentResult<T>;
+
+export type UseFireproof = {
   readonly database: Database;
   /**
    * ## Summary
@@ -41,17 +58,17 @@ export type FireproofCtxValue = {
    * when you use the `useLiveQuery` and `useDocument` APIs. By default, Fireproof stores data in the browser's
    * local storage.
    */
-  readonly useDocument: UseDocFn;
+  readonly useDocument: UseDocument;
   /**
    * ## Summary
    * React hook that provides access to live query results, enabling real-time updates in your app.
    *
    * ## Usage
    * ```tsx
-   * const results = useLiveQuery("date"); // using string key
-   * const results = useLiveQuery('date', { limit: 10, descending: true }) // key + options
-   * const results = useLiveQuery<CustomType>("date"); // using generics
-   * const results = useLiveQuery((doc) => doc.date)); // using map function
+   * const result = useLiveQuery("date"); // using string key
+   * const result = useLiveQuery('date', { limit: 10, descending: true }) // key + options
+   * const result = useLiveQuery<CustomType>("date"); // using generics
+   * const result = useLiveQuery((doc) => doc.date)); // using map function
    * ```
    *
    * ## Overview
@@ -59,13 +76,13 @@ export type FireproofCtxValue = {
    * when you use the `useLiveQuery` and `useDocument` APIs. By default, Fireproof stores data in the browser's
    * local storage.
    */
-  readonly useLiveQuery: LiveQueryFn;
+  readonly useLiveQuery: UseLiveQuery;
 };
 
 /**
  * @deprecated Use the `useFireproof` hook instead
  */
-export const FireproofCtx = {} as FireproofCtxValue;
+export const FireproofCtx = {} as UseFireproof;
 
 /**
  *
@@ -91,74 +108,99 @@ export const FireproofCtx = {} as FireproofCtxValue;
  * custom database.
  *
  */
-export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): FireproofCtxValue {
+export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument(initialDoc: Doc): UseDocFnReturn {
-    const id = initialDoc._id;
+  function useDocument<T extends DocRecord<T>>(initialDocFn: () => Doc<T>): UseDocumentResult<T> {
+    // We purposely refetch the docId everytime to check if it has changed
+    const docId = initialDocFn()._id ?? "";
+
+    // We do not want to force consumers to memoize their initial document so we do it for them.
+    // We use the stringified generator function to ensure that the memoization is stable across renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
     const [doc, setDoc] = useState(initialDoc);
 
-    const saveDoc = useCallback(async () => {
-      const putDoc = id ? { ...doc, _id: id } : doc;
-      return await database.put(putDoc as Doc);
-    }, [id, doc]);
-
     const refreshDoc = useCallback(async () => {
-      if (!id) return;
-
       // todo add option for mvcc checks
-      setDoc(await database.get(id).catch(() => initialDoc));
-    }, [id, initialDoc]);
+      setDoc(await database.get<T>(docId).catch(() => initialDocFn()));
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [docId]);
+
+    const saveDoc: StoreDocFn<T> = useCallback(
+      async (existingDoc) => {
+        const res = await database.put(existingDoc ?? doc);
+
+        // If the document was created, then we need to update the local state with the new `_id`
+        if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
+
+        return res;
+      },
+      [doc]
+    );
+
+    const updateDoc: UpdateDocFn<T> = useCallback(
+      (newDoc, opts = { replace: false }) => {
+        if (!newDoc) return void refreshDoc();
+        setDoc((d) => (opts.replace ? (newDoc as Doc<T>) : { ...d, ...newDoc }));
+      },
+      [refreshDoc]
+    );
 
     useEffect(() => {
-      database.subscribe((changes) => {
-        if (changes.find((c) => c.key === id)) {
-          refreshDoc(); // todo use change.value
+      if (!docId) return;
+
+      const unsubscribe = database.subscribe((changes) => {
+        if (changes.find((c) => c._id === docId)) {
+          void refreshDoc(); // todo use change.value
         }
       });
-    }, [id, refreshDoc]);
+
+      return () => {
+        unsubscribe();
+      };
+    }, [docId, refreshDoc]);
 
     useEffect(() => {
-      refreshDoc();
-    }, []);
+      void refreshDoc();
+    }, [refreshDoc]);
 
-    return [
-      doc,
-      (newDoc, replace) => {
-        if (newDoc) return replace ? setDoc(newDoc) : setDoc((d) => ({ ...d, ...newDoc }));
-        else return setDoc(initialDoc);
-      },
-      saveDoc,
-    ];
+    return [doc, updateDoc, saveDoc];
   }
 
-  function useLiveQuery(mapFn: MapFn | string, query = {}, initialRows: any[] = []): LiveQueryFnReturn {
+  function useLiveQuery<T extends DocRecord<T>>(
+    mapFn: MapFn | string,
+    query = {},
+    initialRows: IndexRow<T>[] = []
+  ): LiveQueryResult<T> {
     const [result, setResult] = useState({
       rows: initialRows,
-      docs: initialRows.map((r) => r.doc),
+      docs: initialRows.map((r) => r.doc as Doc<T>),
     });
 
+    const queryString = useMemo(() => JSON.stringify(query), [query]);
+    const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
+
     const refreshRows = useCallback(async () => {
-      const res = await database.query(mapFn, query);
-      setResult({ ...res, docs: res.rows.map((r) => r.doc) });
-    }, [JSON.stringify(query)]);
+      const res = await database.query<T>(mapFn, query);
+      setResult({ ...res, docs: res.rows.map((r) => r.doc as Doc<T>) });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [mapFnString, queryString]);
 
     useEffect(() => {
-      database.subscribe(() => {
-        refreshRows();
-      });
-    }, [database, refreshRows]);
+      const unsubscribe = database.subscribe(refreshRows);
+
+      return () => {
+        unsubscribe();
+      };
+    }, [refreshRows]);
 
     useEffect(() => {
       refreshRows();
-    }, [mapFn.toString(), JSON.stringify(query)]);
+    }, [refreshRows]);
 
     return result;
   }
 
-  return {
-    database,
-    useLiveQuery,
-    useDocument,
-  };
+  return { database, useLiveQuery, useDocument };
 }

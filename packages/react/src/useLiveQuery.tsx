@@ -1,17 +1,18 @@
-import { Database } from "@fireproof/core";
+/* eslint-disable react-hooks/rules-of-hooks */
+import { Database, DocRecord } from "@fireproof/core";
 
-import { LiveQueryFn, useFireproof } from "./useFireproof";
+import { LiveQueryResult, useFireproof, UseLiveQuery } from "./useFireproof";
 
 export type TLUseLiveQuery = {
-  (...args: Parameters<LiveQueryFn>): ReturnType<LiveQueryFn>;
+  <T extends DocRecord<T>>(...args: Parameters<UseLiveQuery>): LiveQueryResult<T>;
   database: Database;
 };
 
-const topLevelUseLiveQuery = (...args: Parameters<LiveQueryFn>) => {
+function topLevelUseLiveQuery(...args: Parameters<UseLiveQuery>) {
   const { useLiveQuery, database } = useFireproof();
   (topLevelUseLiveQuery as TLUseLiveQuery).database = database;
   return useLiveQuery(...args);
-};
+}
 
 /**
  * ## Summary
