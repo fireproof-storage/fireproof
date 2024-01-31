@@ -5,6 +5,7 @@
     "plugin:react-hooks/recommended",
     "plugin:@typescript-eslint/recommended"
   ],
+  "ignorePatterns": ["node_modules", "coverage", "dist"],
   "plugins": ["simple-import-sort"],
   "parser": "@typescript-eslint/parser",
   "env": { "browser": true, "node": true, "es6": true },

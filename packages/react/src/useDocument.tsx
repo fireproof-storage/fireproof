@@ -1,17 +1,18 @@
-import { Database } from "@fireproof/core";
+/* eslint-disable react-hooks/rules-of-hooks */
+import { Database, Doc, DocRecord } from "@fireproof/core";
 
-import { UseDocFn, useFireproof } from "./useFireproof";
+import { UseDocument, UseDocumentResult, useFireproof } from "./useFireproof";
 
 export type TLUseDocument = {
-  (...args: Parameters<UseDocFn>): ReturnType<UseDocFn>;
+  <T extends DocRecord<T>>(initialDoc: Doc<T>): UseDocumentResult<T>;
   database: Database;
 };
 
-const topLevelUseDocument = (...args: Parameters<UseDocFn>) => {
+function topLevelUseDocument(...args: Parameters<UseDocument>) {
   const { useDocument, database } = useFireproof();
   (topLevelUseDocument as TLUseDocument).database = database;
   return useDocument(...args);
-};
+}
 
 /**
  * ## Summary
@@ -24,18 +25,18 @@ const topLevelUseDocument = (...args: Parameters<UseDocFn>) => {
  * ## Usage
  *
  * ```tsx
- * const [todo, setTodo, saveTodo] = useDocument({
+ * const [todo, setTodo, saveTodo] = useDocument(() => ({
  *   text: '',
  *   date: Date.now(),
  *   completed: false
- * })
+ * }))
  *
- * const [doc, setDoc, saveDoc] = useDocument({
+ * const [doc, setDoc, saveDoc] = useDocument(() => ({
  *   _id: `${props.customerId}-profile`, // you can imagine `customerId` as a prop passed in
  *   name: "",
  *   company: "",
  *   startedAt: Date.now()
- * })
+ * }))
  *
  * const database = useDocument.database; // underlying "useFireproof" database accessor
  * ```
