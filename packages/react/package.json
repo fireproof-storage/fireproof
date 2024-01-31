@@ -30,6 +30,8 @@
     "postpublish": "rm README.md",
     "build": "tsup",
     "build:clean": "rm -rf dist",
+    "build:watch": "tsup --watch",
+    "build:watch:react": "pnpm build:watch",
     "clean": "rm -rf node_modules",
     "format:check": "prettier . --check",
     "format:fix": "prettier . --write",
