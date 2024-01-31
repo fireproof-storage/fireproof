@@ -14,6 +14,7 @@
     "build:react": "pnpm --filter use-fireproof build",
     "build:scripts": "pnpm -r build:scripts",
     "build:scripts:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build:scripts",
+    "build:watch:react": "pnpm --parallel build:watch:react",
     "clean": "rm -rf node_modules && pnpm -r clean",
     "clean:all": "pnpm build:clean && pnpm clean",
     "clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore clean",
