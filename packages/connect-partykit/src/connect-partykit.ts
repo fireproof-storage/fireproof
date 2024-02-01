@@ -98,6 +98,7 @@ export class ConnectPartyKit extends Connection {
   }
 
   async metaDownload(params: DownloadMetaFnParams) {
+    console.log('metaDownload', this.messagePromise)
     const datas = await this.messagePromise
     return datas
   }

@@ -101,19 +101,20 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
-    // console.log('remote load', branch)
+    console.log('remote load', branch)
     const params = {
       name: this.prefix(),
       branch
     }
     validateMetaParams(params)
     const byteHeads = await this.connection.metaDownload(params)
+    console.log('remote load byteHeads', byteHeads)
     if (!byteHeads) return null
     return this.handleByteHeads(byteHeads, branch)
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
-    // console.log('remote save', branch, meta.car.toString())
+    console.log('remote save', branch, meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const params = { name: this.prefix(), branch }
     validateMetaParams(params)
