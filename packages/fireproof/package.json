@@ -37,7 +37,7 @@
     "prepublishOnly": "cp ../../README.md . && npm run build:all",
     "postpublish": "rm README.md",
     "analyze": "node ./scripts/analyze.js",
-    "build": "tsup && npm run cp:artifacts",
+    "build": "npm run build:version && tsup && npm run cp:artifacts",
     "build:all": " npm run build && npm run test:browser && npm run test:node_build",
     "build:clean": "rm -rf dist",
     "build:esbuild": "node ./scripts/build.js",
