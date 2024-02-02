@@ -80,9 +80,7 @@ export class CRDT {
   }
 
   async bulk(updates: DocUpdate[]): Promise<CRDTMeta> {
-    console.log('bulk', this.ready)
     await this.ready
-    console.log('bulk', this.ready)
     const prevHead = [...this.clock.head]
     
     const meta = (await this.blockstore.transaction(

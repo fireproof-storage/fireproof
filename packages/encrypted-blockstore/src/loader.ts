@@ -85,10 +85,8 @@ export class Loader implements Loadable {
       this.metaStore = ebOpts.store.makeMetaStore(this)
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
-      console.log('loader load')
       const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore!.load('main')
       if (metas) {
-        console.log('loader load metas', metas.length)
         await this.handleDbMetasFromStore(metas)
       }
     })
@@ -106,7 +104,6 @@ export class Loader implements Loadable {
   // }
 
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
-    console.log('handleDbMetasFromStore', metas.length)
     for (const meta of metas) {
       const writingFn = async () => {
         this.isWriting = true
@@ -119,7 +116,6 @@ export class Loader implements Loadable {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
-    console.log('mergeDbMetaIntoClock', meta.car.toString())
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }

@@ -72,7 +72,7 @@ export default class Server implements Party.Server {
     }
 
     this.party.broadcast(data, [sender.id])
-    console.log('clockHead', sender.id, [...this.clockHead.keys()])
+    // console.log('clockHead', sender.id, [...this.clockHead.keys()])
     void this.party.storage.put('main', this.clockHead)
   }
 }

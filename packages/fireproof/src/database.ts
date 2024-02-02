@@ -59,7 +59,6 @@ export class Database {
   async put<T extends DocRecord<T> = {}>(doc: Doc<T>): Promise<DbResponse> {
     const { _id, ...value } = doc
     const docId = _id || uuidv7()
-    console.log('put', docId, value)
     const result: CRDTMeta = await this._writeQueue.push({ key: docId, value } as DocUpdate)
     return { id: docId, clock: result?.head } as DbResponse
   }
