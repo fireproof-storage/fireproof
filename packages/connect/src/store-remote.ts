@@ -73,14 +73,11 @@ export class RemoteDataStore extends DataStoreBase {
 export class RemoteMetaStore extends MetaStoreBase {
   tag: string = 'remote-meta'
   connection: Connection
-  
   subscribers: Map<string, LoadHandler[]> = new Map()
 
   constructor(name: string, connection: Connection) {
     super(name)
     this.connection = connection
-    // this.loader = loader
-    // this.connection.connectMeta({ loader : this.loader })
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
