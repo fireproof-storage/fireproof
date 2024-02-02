@@ -12,7 +12,6 @@ export class TaskManager {
   }
 
   async handleEvent(eventBlock: DbMetaEventBlock) {
-    console.log('handling event block', eventBlock)
     const cid = eventBlock.cid.toString()
     const parents = eventBlock.value.parents.map((cid: AnyLink) => cid.toString())
     for (const parent of parents) {
@@ -32,7 +31,6 @@ export class TaskManager {
       return
     }
     try {
-      console.log('processing event block', first.cid)
       this.loader?.remoteMetaStore?.handleByteHeads([first.eventBlock.value.data.dbMeta])
       this.eventsWeHandled.add(first.cid)
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid))

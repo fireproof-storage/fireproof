@@ -53,11 +53,9 @@ export abstract class Connection {
   }
 
   connectMeta({ loader }: { loader: Loader }) {
-    console.log('connectMeta', loader)
     this.loader = loader
     this.taskManager = new TaskManager(loader)
     this.onConnect()
-    console.log('connectMeta ready', this.loader.ready)
     const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {
@@ -65,7 +63,6 @@ export abstract class Connection {
       }
     })
     this.loader!.remoteMetaStore = remote
-    console.log('remoteMetaStoreready', this.loader.ready)
     this.loaded = this.loader!.ready.then(async () => {
       remote!.load('main').then(() => {
         void this.loader!.remoteWAL?._process()
@@ -73,9 +70,7 @@ export abstract class Connection {
     })
   }
 
-  async onConnect() {
-    console.log('onConnect base')
-  }
+  async onConnect() {  }
 
   connectStorage({ loader }: { loader: Loader }) {
     if (this.loader && this.loader !== loader) { throw new Error('Already connected') } 

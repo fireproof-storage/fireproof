@@ -100,7 +100,6 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   async handleByteHeads(byteHeads: Uint8Array[], branch: string = 'main') {
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    console.log('dbMetasForByteHeads', dbMetas.map((m) => m.car.toString()))
     const subscribers = this.subscribers.get(branch) || []
     for (const subscriber of subscribers) {
       await subscriber(dbMetas)
@@ -109,21 +108,17 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
-    console.log('remote load', branch)
     const params = {
       name: this.prefix(),
       branch
     }
     validateMetaParams(params)
-    console.log('remote load params', params, this.connection.metaDownload)
     const byteHeads = await this.connection.metaDownload(params)
-    console.log('remote load byteHeads', byteHeads)
     if (!byteHeads) return null
     return this.handleByteHeads(byteHeads, branch)
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
-    console.log('remote save', branch, meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const params = { name: this.prefix(), branch }
     validateMetaParams(params)
@@ -133,7 +128,6 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {
-    // console.log('dbMetasForByteHeads', byteHeads)
     return byteHeads.map(bytes => {
       const txt = new TextDecoder().decode(bytes)
       return this.parseHeader(txt)
@@ -148,7 +142,6 @@ export class RemoteWAL extends RemoteWALBase {
   constructor(loader: Loadable) {
     super(loader)
     this.store = new Map<string, string>()
-    console.log('remote wal constructor', this.store)
   }
 
   headerKey(branch: string) {
@@ -156,7 +149,6 @@ export class RemoteWAL extends RemoteWALBase {
   }
 
   async load(branch = 'main'): Promise<WALState | null> {
-    console.log('remote wal load!', branch, this.store)
     const bytesString = this.store.get(this.headerKey(branch))
     if (!bytesString) return null
     return parse<WALState>(bytesString)
