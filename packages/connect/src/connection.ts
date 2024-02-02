@@ -73,12 +73,9 @@ export abstract class Connection {
   async onConnect() {  }
 
   connectStorage({ loader }: { loader: Loader }) {
-    if (this.loader && this.loader !== loader) { throw new Error('Already connected') } 
-    this.loader = loader
-
     // todo move this to use factory
-    this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
-    this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
+    loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
+    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
