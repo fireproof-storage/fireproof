@@ -42,11 +42,6 @@ export abstract class Connection {
     this.loaded = Promise.resolve()
   }
 
-  setLoader(loader: Loader) {
-    this.loader = loader
-    this.taskManager = new TaskManager(loader)
-  }
-
   async refresh() {
     await this.loader!.remoteMetaStore!.load('main')
     await this.loader!.remoteWAL?._process()
@@ -58,7 +53,11 @@ export abstract class Connection {
   }
 
   connectMeta({ loader }: { loader: Loader }) {
-    this.setLoader(loader)
+    console.log('connectMeta', loader)
+    this.loader = loader
+    this.taskManager = new TaskManager(loader)
+    this.onConnect()
+    console.log('connectMeta ready', this.loader.ready)
     const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {
@@ -66,6 +65,7 @@ export abstract class Connection {
       }
     })
     this.loader!.remoteMetaStore = remote
+    console.log('remoteMetaStoreready', this.loader.ready)
     this.loaded = this.loader!.ready.then(async () => {
       remote!.load('main').then(() => {
         void this.loader!.remoteWAL?._process()
@@ -73,8 +73,14 @@ export abstract class Connection {
     })
   }
 
+  async onConnect() {
+    console.log('onConnect base')
+  }
+
   connectStorage({ loader }: { loader: Loader }) {
-    this.setLoader(loader)
+    if (this.loader && this.loader !== loader) { throw new Error('Already connected') } 
+    this.loader = loader
+
     // todo move this to use factory
     this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
     this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')

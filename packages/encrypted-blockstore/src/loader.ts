@@ -61,7 +61,7 @@ export class Loader implements Loadable {
   fileStore: DataStore
   remoteFileStore?: AbstractDataStore
   remoteWAL: RemoteWAL
-  metaStore: MetaStore
+  metaStore?: MetaStore
   carStore: DataStore
   carLog: AnyLink[] = []
   carReaders: Map<string, Promise<CarReader>> = new Map()
@@ -77,15 +77,18 @@ export class Loader implements Loadable {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
     this.ebOpts = ebOpts
-    this.metaStore = ebOpts.store.makeMetaStore(this.name)
+    
     this.carStore = ebOpts.store.makeDataStore(this.name)
     this.fileStore = ebOpts.store.makeDataStore(this.name)
     this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
+      this.metaStore = ebOpts.store.makeMetaStore(this)
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load('main')
+      console.log('loader load')
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore!.load('main')
       if (metas) {
+        console.log('loader load metas', metas.length)
         await this.handleDbMetasFromStore(metas)
       }
     })
@@ -103,6 +106,7 @@ export class Loader implements Loadable {
   // }
 
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
+    console.log('handleDbMetasFromStore', metas.length)
     for (const meta of metas) {
       const writingFn = async () => {
         this.isWriting = true
@@ -115,6 +119,7 @@ export class Loader implements Loadable {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
+    console.log('mergeDbMetaIntoClock', meta.car.toString())
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }

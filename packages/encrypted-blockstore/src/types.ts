@@ -38,7 +38,7 @@ export type CryptoOpts = {
 }
 
 export type StoreOpts = {
-  makeMetaStore: (name: string) => MetaStore
+  makeMetaStore: (loader: Loader) => MetaStore
   makeDataStore: (name: string) => DataStore
   makeRemoteWAL: (loader: Loader) => RemoteWAL
 }
