@@ -1,6 +1,6 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
-import type { AnyBlock, AnyLink, DbMeta, Loadable } from '@fireproof/encrypted-blockstore'
+import type { AnyBlock, AnyLink, DbMeta, Loadable, Loader } from '@fireproof/encrypted-blockstore'
 import {
   DataStore as DataStoreBase,
   MetaStore as MetaStoreBase,
@@ -16,7 +16,12 @@ export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
 export function makeStores(storage: Connection, meta: Connection) {
   return {
     makeDataStore: (name: string) => new RemoteDataStore(name, storage),
-    makeMetaStore: (name: string) => new RemoteMetaStore(name, meta),
+    makeMetaStore: (loader: Loader) => {
+      // const store = new RemoteMetaStore(loader.name, meta)
+      meta.connectMeta({ loader })
+      return loader.remoteMetaStore as RemoteMetaStore
+      // return store
+    }, // this needs to connection.connectMeta({ loader }) with the db loader, so the db has to do it, not the caller
     makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader)
   }
 }
@@ -68,11 +73,14 @@ export class RemoteDataStore extends DataStoreBase {
 export class RemoteMetaStore extends MetaStoreBase {
   tag: string = 'remote-meta'
   connection: Connection
+  
   subscribers: Map<string, LoadHandler[]> = new Map()
 
   constructor(name: string, connection: Connection) {
     super(name)
     this.connection = connection
+    // this.loader = loader
+    // this.connection.connectMeta({ loader : this.loader })
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -92,7 +100,7 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   async handleByteHeads(byteHeads: Uint8Array[], branch: string = 'main') {
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    // console.log('dbMetasForByteHeads notify', dbMetas.map((m) => m.car.toString()))
+    console.log('dbMetasForByteHeads', dbMetas.map((m) => m.car.toString()))
     const subscribers = this.subscribers.get(branch) || []
     for (const subscriber of subscribers) {
       await subscriber(dbMetas)
@@ -107,6 +115,7 @@ export class RemoteMetaStore extends MetaStoreBase {
       branch
     }
     validateMetaParams(params)
+    console.log('remote load params', params, this.connection.metaDownload)
     const byteHeads = await this.connection.metaDownload(params)
     console.log('remote load byteHeads', byteHeads)
     if (!byteHeads) return null

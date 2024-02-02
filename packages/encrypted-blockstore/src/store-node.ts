@@ -6,10 +6,10 @@ import { mkdir, readFile, writeFile, unlink } from 'fs/promises'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
 import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase } from './store'
 import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
-import type { Loadable } from './loader'
+import type { Loadable, Loader } from './loader'
 
 export const makeDataStore = (name: string) => new DataStore(name);
-export const makeMetaStore = (name: string) => new MetaStore(name);
+export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
 export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
 
 
