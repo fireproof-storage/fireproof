@@ -73,7 +73,6 @@ export abstract class Connection {
   async onConnect() {  }
 
   connectStorage({ loader }: { loader: Loader }) {
-    // todo move this to use factory
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
     loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }

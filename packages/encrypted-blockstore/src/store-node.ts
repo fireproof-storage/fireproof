@@ -8,11 +8,9 @@ import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase
 import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
 import type { Loadable, Loader } from './loader'
 
-export const makeDataStore = (name: string) => new DataStore(name);
-export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
-export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
-
-
+export const makeDataStore = (name: string) => new DataStore(name)
+export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name)
+export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader)
 
 export class RemoteWAL extends RemoteWALBase {
   filePathForBranch(branch: string): string {
@@ -34,7 +32,6 @@ export class RemoteWAL extends RemoteWALBase {
     await writePathFile(filepath, encoded)
   }
 }
-
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-node-fs'
@@ -62,11 +59,9 @@ export class MetaStore extends MetaStoreBase {
   }
 }
 
-
 export const testConfig = {
   dataDir: MetaStore.dataDir
 }
-
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-node-fs'

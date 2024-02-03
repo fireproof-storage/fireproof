@@ -17,11 +17,9 @@ export function makeStores(storage: Connection, meta: Connection) {
   return {
     makeDataStore: (name: string) => new RemoteDataStore(name, storage),
     makeMetaStore: (loader: Loader) => {
-      // const store = new RemoteMetaStore(loader.name, meta)
       meta.connectMeta({ loader })
       return loader.remoteMetaStore as RemoteMetaStore
-      // return store
-    }, // this needs to connection.connectMeta({ loader }) with the db loader, so the db has to do it, not the caller
+    },
     makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader)
   }
 }
