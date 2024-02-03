@@ -6,10 +6,9 @@ import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
 import type { Loadable, Loader } from './loader'
 
-export const makeDataStore = (name: string) => new DataStore(name);
-export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
-export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
-
+export const makeDataStore = (name: string) => new DataStore(name)
+export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name)
+export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader)
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-web-idb'
@@ -57,8 +56,6 @@ export class DataStore extends DataStoreBase {
   }
 }
 
-
-
 export class RemoteWAL extends RemoteWALBase {
   tag: string = 'wal-web-ls'
 
@@ -89,7 +86,6 @@ export class RemoteWAL extends RemoteWALBase {
     }
   }
 }
-
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-web-ls'

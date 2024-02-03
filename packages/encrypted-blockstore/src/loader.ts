@@ -16,7 +16,6 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from '
 import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
-
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
@@ -28,7 +27,6 @@ export function uniqueCids(list: AnyLink[], remove: Set<string> = new Set()): An
   }
   return [...byString.values()]
 }
-
 
 export function toHexString(byteArray: Uint8Array) {
   return Array.from(byteArray)
@@ -77,7 +75,7 @@ export class Loader implements Loadable {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
     this.ebOpts = ebOpts
-    
+
     this.carStore = ebOpts.store.makeDataStore(this.name)
     this.fileStore = ebOpts.store.makeDataStore(this.name)
     this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
@@ -469,7 +467,6 @@ export type DownloadMetaFnParams = {
   name: string
   branch: string
 }
-
 
 export interface Connection {
   loader: Loader
