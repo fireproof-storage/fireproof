@@ -91,7 +91,7 @@ class UnixFSFileBuilder {
   }
 }
 
-// ts-unused-exports:disable-next-line
+
 export interface BlobLike {
   /**
    * Returns a ReadableStream which yields the Blob data.

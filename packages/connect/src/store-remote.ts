@@ -1,11 +1,30 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
-import type { AnyBlock, AnyLink, DbMeta } from '@fireproof/encrypted-blockstore'
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from '@fireproof/encrypted-blockstore'
+import type { AnyBlock, AnyLink, DbMeta, Loadable, Loader } from '@fireproof/encrypted-blockstore'
+import {
+  DataStore as DataStoreBase,
+  MetaStore as MetaStoreBase,
+  RemoteWAL as RemoteWALBase,
+  WALState
+} from '@fireproof/encrypted-blockstore'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
+import { format, parse, ToString } from '@ipld/dag-json'
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>
+
+export function makeStores(storage: Connection, meta: Connection) {
+  return {
+    makeDataStore: (name: string) => new RemoteDataStore(name, storage),
+    makeMetaStore: (loader: Loader) => {
+      // const store = new RemoteMetaStore(loader.name, meta)
+      meta.connectMeta({ loader })
+      return loader.remoteMetaStore as RemoteMetaStore
+      // return store
+    }, // this needs to connection.connectMeta({ loader }) with the db loader, so the db has to do it, not the caller
+    makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader)
+  }
+}
 
 export class RemoteDataStore extends DataStoreBase {
   tag: string = 'remote-data'
@@ -78,7 +97,6 @@ export class RemoteMetaStore extends MetaStoreBase {
 
   async handleByteHeads(byteHeads: Uint8Array[], branch: string = 'main') {
     const dbMetas = this.dbMetasForByteHeads(byteHeads)
-    // console.log('dbMetasForByteHeads notify', dbMetas.map((m) => m.car.toString()))
     const subscribers = this.subscribers.get(branch) || []
     for (const subscriber of subscribers) {
       await subscriber(dbMetas)
@@ -87,7 +105,6 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async load(branch: string = 'main'): Promise<DbMeta[] | null> {
-    // console.log('remote load', branch)
     const params = {
       name: this.prefix(),
       branch
@@ -99,7 +116,6 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   async save(meta: DbMeta, branch: string = 'main') {
-    // console.log('remote save', branch, meta.car.toString())
     const bytes = new TextEncoder().encode(this.makeHeader(meta))
     const params = { name: this.prefix(), branch }
     validateMetaParams(params)
@@ -109,10 +125,33 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {
-    // console.log('dbMetasForByteHeads', byteHeads)
     return byteHeads.map(bytes => {
       const txt = new TextDecoder().decode(bytes)
       return this.parseHeader(txt)
     })
+  }
+}
+
+export class RemoteWAL extends RemoteWALBase {
+  tag: string = 'wal-mem'
+  store: Map<string, string>
+
+  constructor(loader: Loadable) {
+    super(loader)
+    this.store = new Map<string, string>()
+  }
+
+  headerKey(branch: string) {
+    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`
+  }
+
+  async load(branch = 'main'): Promise<WALState | null> {
+    const bytesString = this.store.get(this.headerKey(branch))
+    if (!bytesString) return null
+    return parse<WALState>(bytesString)
+  }
+  async save(state: WALState, branch = 'main'): Promise<void> {
+    const encoded: ToString<WALState> = format(state)
+    this.store.set(this.headerKey(branch), encoded)
   }
 }

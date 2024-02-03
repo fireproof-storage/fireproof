@@ -1,4 +1,7 @@
 import type { Link } from 'multiformats'
+import { DataStore, MetaStore } from './store';
+import { RemoteWAL } from './remote-wal';
+import type { Loader } from './loader';
 
 export type AnyLink = Link<any, number, number, 1 | 0>
 export type AnyAnyLink = Link<any, any, any, any>
@@ -35,11 +38,10 @@ export type CryptoOpts = {
 }
 
 export type StoreOpts = {
-  MetaStore: any
-  DataStore: any
-  RemoteWAL: any
+  makeMetaStore: (loader: Loader) => MetaStore
+  makeDataStore: (name: string) => DataStore
+  makeRemoteWAL: (loader: Loader) => RemoteWAL
 }
-
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
 export type DbMeta = { car: AnyLink; key: string | null }

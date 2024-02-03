@@ -1,11 +1,11 @@
 import { MemoryBlockstore } from '@web3-storage/pail/block'
-
+// todo get these from multiformats?
 import { BlockFetcher as BlockFetcherAPI } from '@web3-storage/pail/api'
 
 import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
 
 import { Loader } from './loader'
-import { CID, Link } from 'multiformats'
+import type { CID } from 'multiformats'
 import { CryptoOpts, StoreOpts } from './types'
 
 export type BlockFetcher = BlockFetcherAPI

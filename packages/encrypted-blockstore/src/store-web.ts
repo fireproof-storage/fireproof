@@ -4,8 +4,13 @@ import { openDB, IDBPDatabase } from 'idb'
 import { AnyBlock, AnyLink, DbMeta } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
+import type { Loadable, Loader } from './loader'
 
-// ts-unused-exports:disable-next-line
+export const makeDataStore = (name: string) => new DataStore(name);
+export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
+export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
+
+
 export class DataStore extends DataStoreBase {
   tag: string = 'car-web-idb'
   idb: IDBPDatabase<unknown> | null = null
@@ -52,7 +57,7 @@ export class DataStore extends DataStoreBase {
   }
 }
 
-// ts-unused-exports:disable-next-line
+
 
 export class RemoteWAL extends RemoteWALBase {
   tag: string = 'wal-web-ls'
@@ -85,7 +90,7 @@ export class RemoteWAL extends RemoteWALBase {
   }
 }
 
-// ts-unused-exports:disable-next-line
+
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-web-ls'
 

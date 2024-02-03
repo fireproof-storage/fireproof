@@ -53,8 +53,8 @@ export class CRDT {
         return { head: this.clock.head } as TransactionMeta
       },
       autoCompact: this.opts.autoCompact || 100,
-      crypto,
-      store,
+      crypto: this.opts.crypto || crypto,
+      store: this.opts.store || store,
       public: this.opts.public,
       meta: this.opts.meta
     })
@@ -82,6 +82,7 @@ export class CRDT {
   async bulk(updates: DocUpdate[]): Promise<CRDTMeta> {
     await this.ready
     const prevHead = [...this.clock.head]
+    
     const meta = (await this.blockstore.transaction(
       async (blocks: CarTransaction): Promise<TransactionMeta> => {
         const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates)

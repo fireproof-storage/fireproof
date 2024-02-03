@@ -4,7 +4,13 @@ import { AnyBlock, AnyLink, DbMeta } from './types'
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from './store'
 import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
 
-// ts-unused-exports:disable-next-line
+import type { Loadable, Loader } from './loader'
+
+export const makeDataStore = (name: string) => new DataStore(name);
+export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
+export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
+
+
 export class DataStore extends DataStoreBase {
   tag: string = 'car-mem'
   store = new Map<string, Uint8Array>()
@@ -24,7 +30,7 @@ export class DataStore extends DataStoreBase {
   }
 }
 
-// ts-unused-exports:disable-next-line
+
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-mem'
   store = new Map<string, string>()
@@ -60,7 +66,7 @@ export class MetaStore extends MetaStoreBase {
   }
 }
 
-// // ts-unused-exports:disable-next-line
+// 
 export class RemoteWAL extends RemoteWALBase {
   tag: string = 'wal-mem'
   store = new Map<string, string>()

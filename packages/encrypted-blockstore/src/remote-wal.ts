@@ -1,6 +1,6 @@
 import pLimit from 'p-limit'
 import { AnyLink, CommitOpts, DbMeta } from './types'
-import { cidListIncludes, type Loader } from './loader'
+import { type Loadable, cidListIncludes } from './loader'
 import { STORAGE_VERSION } from './store'
 import { CommitQueue } from './commit-queue'
 
@@ -14,23 +14,24 @@ export abstract class RemoteWAL {
   tag: string = 'rwal-base'
 
   STORAGE_VERSION: string = STORAGE_VERSION
-  loader: Loader
+  loader: Loadable
   ready: Promise<void>
 
   walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] }
   processing: Promise<void> | undefined = undefined
-  private processQueue = new CommitQueue<void>()
+  processQueue = new CommitQueue<void>()
 
-  constructor(loader: Loader) {
+  constructor(loader: Loadable) {
     this.loader = loader
-    this.ready = (async () => {
+    
+    this.ready = Promise.resolve().then((async () => {
       const walState = await this.load().catch(e => {
         console.error('error loading wal', e)
         return null
       })
       this.walState.operations = walState?.operations || []
       this.walState.fileOperations = walState?.fileOperations || []
-    })()
+    }))
   }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {

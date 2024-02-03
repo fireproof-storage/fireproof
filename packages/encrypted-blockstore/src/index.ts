@@ -1,4 +1,5 @@
 export { EncryptedBlockstore, CompactionFetcher, BlockFetcher, CarTransaction, TransactionMeta } from './transaction'
-export { Loader } from './loader'
+export { Loader, Loadable } from './loader'
 export { DataStore, MetaStore } from './store'
-export { DbMeta, AnyBlock, AnyLink } from "./types"
+export { RemoteWAL, WALState } from './remote-wal'
+export { DbMeta, AnyBlock, AnyLink, CryptoOpts, StoreOpts, CommitOpts } from './types'

@@ -16,7 +16,7 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from '
 import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
-// ts-unused-exports:disable-next-line
+
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
   return list.some(c => c.equals(cid))
 }
@@ -29,7 +29,7 @@ export function uniqueCids(list: AnyLink[], remove: Set<string> = new Set()): An
   return [...byString.values()]
 }
 
-// ts-unused-exports:disable-next-line
+
 export function toHexString(byteArray: Uint8Array) {
   return Array.from(byteArray)
     .map(byte => byte.toString(16).padStart(2, '0'))
@@ -40,24 +40,34 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
   abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>
 }
 
-export class Loader {
+export abstract class Loadable {
+  name: string = ''
+  remoteCarStore?: DataStore
+  carStore?: DataStore
+  carLog: AnyLink[] = []
+  remoteMetaStore?: AbstractRemoteMetaStore
+  remoteFileStore?: AbstractDataStore
+  fileStore?: DataStore
+}
+
+export class Loader implements Loadable {
   name: string
   ebOpts: BlockstoreOpts
   commitQueue = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
-  remoteMetaStore: AbstractRemoteMetaStore | undefined
-  remoteCarStore: AbstractDataStore | undefined
+  remoteMetaStore?: AbstractRemoteMetaStore
+  remoteCarStore?: AbstractDataStore
   fileStore: DataStore
-  remoteFileStore: AbstractDataStore | undefined
+  remoteFileStore?: AbstractDataStore
   remoteWAL: RemoteWAL
-  metaStore: MetaStore
+  metaStore?: MetaStore
   carStore: DataStore
   carLog: AnyLink[] = []
   carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
-  key: string | undefined
-  keyId: string | undefined
+  key?: string
+  keyId?: string
   seenCompacted: Set<string> = new Set()
   writing: Promise<TransactionMeta | void> = Promise.resolve()
 
@@ -67,14 +77,15 @@ export class Loader {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
     this.ebOpts = ebOpts
-    this.metaStore = new ebOpts.store.MetaStore(this.name)
-    this.carStore = new ebOpts.store.DataStore(this.name)
-    this.fileStore = new ebOpts.store.DataStore(this.name)
-    this.remoteWAL = new ebOpts.store.RemoteWAL(this)
+    
+    this.carStore = ebOpts.store.makeDataStore(this.name)
+    this.fileStore = ebOpts.store.makeDataStore(this.name)
+    this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
+      this.metaStore = ebOpts.store.makeMetaStore(this)
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load('main')
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore!.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -433,7 +444,45 @@ export class Loader {
   }
 }
 
+// duplicated in @fireproof/connect
+export type UploadMetaFnParams = {
+  name: string
+  branch: string
+}
+
+export type UploadDataFnParams = {
+  type: 'data' | 'file'
+  name: string
+  car: string
+  size: string
+}
+
+export type DownloadFnParamTypes = 'data' | 'file'
+
+export type DownloadDataFnParams = {
+  type: DownloadFnParamTypes
+  name: string
+  car: string
+}
+
+export type DownloadMetaFnParams = {
+  name: string
+  branch: string
+}
+
+
 export interface Connection {
   loader: Loader
   loaded: Promise<void>
+  connectMeta({ loader }: { loader: Loader }): void
+  connectStorage({ loader }: { loader: Loader }): void
+
+  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
+  dataUpload(
+    bytes: Uint8Array,
+    params: UploadDataFnParams,
+    opts?: { public?: boolean }
+  ): Promise<void | AnyLink>
+  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
+  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>
 }

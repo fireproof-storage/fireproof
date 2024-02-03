@@ -42,11 +42,6 @@ export abstract class Connection {
     this.loaded = Promise.resolve()
   }
 
-  setLoader(loader: Loader) {
-    this.loader = loader
-    this.taskManager = new TaskManager(loader)
-  }
-
   async refresh() {
     await this.loader!.remoteMetaStore!.load('main')
     await this.loader!.remoteWAL?._process()
@@ -58,7 +53,9 @@ export abstract class Connection {
   }
 
   connectMeta({ loader }: { loader: Loader }) {
-    this.setLoader(loader)
+    this.loader = loader
+    this.taskManager = new TaskManager(loader)
+    this.onConnect()
     const remote = new RemoteMetaStore(this.loader!.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {
@@ -73,10 +70,12 @@ export abstract class Connection {
     })
   }
 
+  async onConnect() {  }
+
   connectStorage({ loader }: { loader: Loader }) {
-    this.setLoader(loader)
-    this.loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
-    this.loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
+    // todo move this to use factory
+    loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
+    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
