@@ -1,0 +1,26 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["simple-import-sort", "solid"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:solid/typescript"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "rules": {
+    "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_" }],
+    "no-unused-vars": "off",
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error"
+  },
+  "ignorePatterns": ["dist", "node_modules"]
+}

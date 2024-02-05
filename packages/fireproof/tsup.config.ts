@@ -126,4 +126,7 @@ const TEST_BUNDLES: readonly Options[] = [
   },
 ]
 
-export default defineConfig([ ...LIBRARY_BUNDLES, ...TEST_BUNDLES ]);
+export default defineConfig((options) => [
+  ...LIBRARY_BUNDLES,
+  ...(options.watch ? [] : TEST_BUNDLES)
+]);
