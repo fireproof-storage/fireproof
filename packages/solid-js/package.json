@@ -59,8 +59,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "scripts": {
-    "prepublishOnly": "cp ../../README.md . && pnpm build",
-    "postpublish": "rm README.md",
+    "prepublishOnly": "pnpm build",
     "build": "tsup",
     "build:clean": "rm -rf dist",
     "build:watch:solid": "tsup --watch",
