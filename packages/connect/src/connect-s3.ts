@@ -95,6 +95,7 @@ export class ConnectS3 extends Connection {
     const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: 'meta', ...params }).toString()}`, this.uploadUrl)
     const data=await fetch(fetchUploadUrl)
     let response=await data.json();
+    if(response.status!=200) throw new Error("Failed to download data");
     response=JSON.parse(response.body).items
     console.log("This is the response",response)
     const events=await Promise.all(
