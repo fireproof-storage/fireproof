@@ -1,6 +1,7 @@
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
 import { Connection } from './connection'
 import fetch from 'cross-fetch'
+import { Base64 } from 'js-base64'
 
 export class ConnectS3 extends Connection {
   uploadUrl: URL
@@ -27,16 +28,18 @@ export class ConnectS3 extends Connection {
   }
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
-    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: 'meta', ...params }).toString()}`, this.uploadUrl)
-    const response = await fetch(fetchUploadUrl)
-    if (!response.ok) {
-      // console.log('failed to get upload url for meta', params, response)
-      throw new Error('failed to get upload url for meta')
+    const event = await this.createEventBlock(bytes)
+    const base64String = Base64.fromUint8Array(bytes)
+    const crdtEntry = {
+      cid: event.cid.toString(),
+      data: base64String,
+      parents: this.parents.map(p => p.toString())
     }
-    const { uploadURL } = await response.json() as { uploadURL: string }
-    if (!uploadURL) throw new Error('missing uploadURL')
-    const done = await fetch(uploadURL, { method: 'PUT', body: bytes })
-    if (!done.ok) throw new Error('failed to upload data ' + done.statusText)
+    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: 'meta', ...params }).toString()}`, this.uploadUrl)
+    const done = await fetch(fetchUploadUrl, { method: 'PUT', body: JSON.stringify(crdtEntry) })
+    const result=await done.json();
+    if (result.status!=201) throw new Error('failed to upload data ' + JSON.parse(result.body).message)
+    this.parents = [event.cid]
     return null
   }
 
@@ -89,12 +92,19 @@ export class ConnectS3 extends Connection {
    */
   async metaDownload(params: DownloadMetaFnParams) {
     const { name, branch } = params
-    const fetchFromUrl = new URL(`meta/${name}/${branch + '.json?cache=' + Math.floor(Math.random() * 1000000)}`, this.downloadUrl)
-    const response = await fetch(fetchFromUrl)
-    if (!response.ok) return null
-    const bytes = new Uint8Array(await response.arrayBuffer())
-    // todo we could use a range list to make mvcc / crdt logic work in the s3 bucket
-    // we would name the meta files with a timestamp, eg using our UUIDv7 library
-    return [bytes]
+    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: 'meta', ...params }).toString()}`, this.uploadUrl)
+    const data=await fetch(fetchUploadUrl)
+    let response=await data.json();
+    response=JSON.parse(response.body).items
+    console.log("This is the response",response)
+    const events=await Promise.all(
+    response.map(async (element: any)=>
+    {
+      const base64String = element.data
+      const bytes = Base64.toUint8Array(base64String)
+      return {cid: element.cid, bytes}
+    })
+    )
+    return events.map(e => e.bytes)
   }
 }
