@@ -153,17 +153,21 @@ export class ConnectS3 extends Connection {
    */
   async metaDownload(params: DownloadMetaFnParams) {
     const { name, branch } = params;
-    const fetchFromUrl = new URL(
-      `meta/${name}/${
-        branch + ".json?cache=" + Math.floor(Math.random() * 1000000)
-      }`,
-      this.downloadUrl
+    const fetchUploadUrl = new URL(
+      `?${new URLSearchParams({ type: "meta", ...params }).toString()}`,
+      this.uploadUrl
     );
-    const response = await fetch(fetchFromUrl);
-    if (!response.ok) return null;
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    // todo we could use a range list to make mvcc / crdt logic work in the s3 bucket
-    // we would name the meta files with a timestamp, eg using our UUIDv7 library
-    return [bytes];
+    const data = await fetch(fetchUploadUrl);
+    let response = await data.json();
+    response = JSON.parse(response.body).items;
+    console.log("This is the response", response);
+    const events = await Promise.all(
+      response.map(async (element: any) => {
+        const base64String = element.data;
+        const bytes = Base64.toUint8Array(base64String);
+        return { cid: element.cid, bytes };
+      })
+    );
+    return events.map((e) => e.bytes);
   }
 }
