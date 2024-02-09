@@ -7,8 +7,10 @@ import type {
 } from './types'
 import type { AnyLink, Loader } from '@fireproof/encrypted-blockstore'
 
-import { EventBlock, EventView, decodeEventBlock } from '@alanshaw/pail/clock'
-import { MemoryBlockstore } from '@alanshaw/pail/block'
+import { EventBlock, decodeEventBlock } from '@web3-storage/pail/clock'
+import { EventView } from '@web3-storage/pail/clock/api'
+
+import { MemoryBlockstore } from '@web3-storage/pail/block'
 import type { Link } from 'multiformats'
 import { TaskManager } from './task-manager'
 
@@ -70,7 +72,7 @@ export abstract class Connection {
     })
   }
 
-  async onConnect() {  }
+  async onConnect() {}
 
   connectStorage({ loader }: { loader: Loader }) {
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
@@ -81,7 +83,10 @@ export abstract class Connection {
     const data = {
       dbMeta: bytes
     }
-    const event = await EventBlock.create(data, this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array; }>, number, number, 1>[])
+    const event = await EventBlock.create(
+      data,
+      this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]
+    )
     await this.eventBlocks.put(event.cid, event.bytes)
     return event as EventBlock<{ dbMeta: Uint8Array }> // todo test these `as` casts
   }
