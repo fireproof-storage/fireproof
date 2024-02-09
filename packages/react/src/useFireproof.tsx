@@ -150,7 +150,6 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     useEffect(() => {
       if (!docId) return;
-      e;
       const unsubscribe = database.subscribe((changes) => {
         if (changes.find((c) => c._id === docId)) {
           void refreshDoc(); // todo use change.value
