@@ -50,8 +50,8 @@ export abstract class Connection {
   }
 
   connect({ loader }: { loader: Loader }) {
-    this.connectStorage({ loader })
     this.connectMeta({ loader })
+    this.connectStorage({ loader })
   }
 
   connectMeta({ loader }: { loader: Loader }) {
