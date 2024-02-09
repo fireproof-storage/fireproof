@@ -15,6 +15,7 @@ export type UseLiveQuery = <T extends DocRecord<T>>(
 
 type UpdateDocFnOptions = {
   readonly replace?: boolean;
+  readonly reset?: boolean;
 };
 
 type UpdateDocFn<T extends DocRecord<T>> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
@@ -140,9 +141,9 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     );
 
     const updateDoc: UpdateDocFn<T> = useCallback(
-      (newDoc, opts = { replace: false }) => {
+      (newDoc, opts = { replace: false, reset: false }) => {
         if (!newDoc) return void refreshDoc();
-        setDoc((d) => (opts.replace ? (newDoc as Doc<T>) : { ...d, ...newDoc }));
+        setDoc((d) => (opts.reset ? initialDoc : (opts.replace ? (newDoc as Doc<T>) : { ...d, ...newDoc })));
       },
       [refreshDoc]
     );
