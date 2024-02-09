@@ -142,15 +142,15 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const updateDoc: UpdateDocFn<T> = useCallback(
       (newDoc, opts = { replace: false, reset: false }) => {
-        if (!newDoc) return void refreshDoc();
-        setDoc((d) => (opts.reset ? initialDoc : (opts.replace ? (newDoc as Doc<T>) : { ...d, ...newDoc })));
+        if (!newDoc) return void (opts.reset ? setDoc(initialDoc) : refreshDoc());
+        setDoc((d) => (opts.replace ? (newDoc as Doc<T>) : { ...d, ...newDoc }));
       },
       [refreshDoc]
     );
 
     useEffect(() => {
       if (!docId) return;
-
+      e;
       const unsubscribe = database.subscribe((changes) => {
         if (changes.find((c) => c._id === docId)) {
           void refreshDoc(); // todo use change.value
