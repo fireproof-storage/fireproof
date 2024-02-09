@@ -186,6 +186,9 @@ importers:
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
+      '@ipld/dag-json':
+        specifier: ^10.1.2
+        version: 10.1.7
       '@web3-storage/pail':
         specifier: ^0.4.0
         version: 0.4.0
