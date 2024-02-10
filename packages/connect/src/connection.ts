@@ -49,12 +49,14 @@ export abstract class Connection {
     await this.loader!.remoteWAL?._process()
   }
 
-  connect({ loader }: { loader: Loader }) {
+  connect({ loader }: { loader: Loader | undefined }) {
+    if (!loader) throw new Error('loader is required')
     this.connectMeta({ loader })
     this.connectStorage({ loader })
   }
 
-  connectMeta({ loader }: { loader: Loader }) {
+  connectMeta({ loader }: { loader: Loader | undefined}) {
+    if (!loader) throw new Error('loader is required')
     this.loader = loader
     this.taskManager = new TaskManager(loader)
     this.onConnect()
@@ -74,7 +76,8 @@ export abstract class Connection {
 
   async onConnect() {}
 
-  connectStorage({ loader }: { loader: Loader }) {
+  connectStorage({ loader }: { loader?: Loader }) {
+    if (!loader) throw new Error('loader is required')
     this.loader = loader
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
     loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
