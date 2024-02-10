@@ -75,6 +75,7 @@ export abstract class Connection {
   async onConnect() {}
 
   connectStorage({ loader }: { loader: Loader }) {
+    this.loader = loader
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
     loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
   }
