@@ -145,7 +145,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
         if (!newDoc) return void (opts.reset ? setDoc(initialDoc) : refreshDoc());
         setDoc((d) => (opts.replace ? (newDoc as Doc<T>) : { ...d, ...newDoc }));
       },
-      [refreshDoc]
+      [refreshDoc, initialDoc]
     );
 
     useEffect(() => {
