@@ -190,7 +190,7 @@ importers:
         specifier: ^10.1.2
         version: 10.2.5
       '@web3-storage/pail':
-        specifier: ^0.4.0
+        specifier: ^0.4.2
         version: 0.4.2
       cross-fetch:
         specifier: ^4.0.0
@@ -245,7 +245,7 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0
       '@web3-storage/pail':
-        specifier: ^0.4.0
+        specifier: ^0.4.2
         version: 0.4.2
       '@web3-storage/w3up-client':
         specifier: ^8.0.1
@@ -337,7 +337,7 @@ importers:
         specifier: workspace:^
         version: link:../encrypted-blockstore
       '@web3-storage/pail':
-        specifier: ^0.4.0
+        specifier: ^0.4.2
         version: 0.4.2
       cross-fetch:
         specifier: ^4.0.0
@@ -398,7 +398,7 @@ importers:
         specifier: ^1.4.3
         version: 1.5.0
       '@web3-storage/pail':
-        specifier: ^0.4.0
+        specifier: ^0.4.2
         version: 0.4.2
       charwise:
         specifier: ^3.0.1
@@ -552,7 +552,7 @@ importers:
         specifier: ^1.4.3
         version: 1.5.0
       '@web3-storage/pail':
-        specifier: ^0.4.1
+        specifier: ^0.4.2
         version: 0.4.2
       charwise:
         specifier: ^3.0.1
