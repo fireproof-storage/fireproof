@@ -29,7 +29,6 @@ export class ConnectS3 extends Connection {
     );
     const response = await fetch(fetchUploadUrl);
     if (!response.ok) {
-      // console.log('failed to get upload url for data', params, response)
       throw new Error(
         "failed to get upload url for data " +
           new Date().toISOString() +
@@ -60,10 +59,11 @@ export class ConnectS3 extends Connection {
       body: JSON.stringify(crdtEntry),
     });
     const result = await done.json();
-    if (result.status != 201)
+    if (result.status != 201) {
       throw new Error(
         "failed to upload data " + JSON.parse(result.body).message
       );
+    }
     this.parents = [event.cid];
     return null;
   }
@@ -128,7 +128,6 @@ export class ConnectS3 extends Connection {
     let response = await data.json();
     if (response.status != 200) throw new Error("Failed to download data");
     response = JSON.parse(response.body).items;
-    console.log("This is the response", response);
     const events = await Promise.all(
       response.map(async (element: any) => {
         const base64String = element.data;
@@ -136,6 +135,11 @@ export class ConnectS3 extends Connection {
         return { cid: element.cid, bytes };
       })
     );
+    const cids = events.map((e) => e.cid);
+    const uniqueParentsMap = new Map(
+      [...this.parents, ...cids].map((p) => [p.toString(), p])
+    );
+    this.parents = Array.from(uniqueParentsMap.values());
     return events.map((e) => e.bytes);
   }
 }
