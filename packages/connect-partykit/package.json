@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.17.3",
+  "version": "0.17.5",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -46,14 +46,14 @@
     "esbuild": "^0.19.4",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-tsc": "^0.4.0",
-    "partykit": "0.0.24",
+    "partykit": "0.0.85",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@web3-storage/pail": "^0.4.0",
+    "@web3-storage/pail": "^0.4.2",
     "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "cross-fetch": "^4.0.0",
