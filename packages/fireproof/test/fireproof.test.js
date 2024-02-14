@@ -134,7 +134,7 @@ describe('benchmarking with compaction', function () {
     await resetDirectory(dataDir, 'test-benchmark-compaction')
     db = new Database('test-benchmark-compaction', { autoCompact: 3, public: true })
   })
-  it.skip('insert during compaction', async function () {
+  it.skip('passing: insert during compaction', async function () {
     const ok = await db.put({ _id: 'test', foo: 'fast' })
     assert(ok)
     equals(ok.id, 'test')
@@ -143,9 +143,9 @@ describe('benchmarking with compaction', function () {
 
     const numDocs = 20000
     const batchSize = 500
-        console.time(`insert and read ${numDocs} records`)
+    console.time(`insert and read ${numDocs} records`)
 
-        let doing = null
+    let doing = null
     for (let i = 0; i < numDocs; i += batchSize) {
       const ops = []
       db.put({ foo: 'fast' })
@@ -154,26 +154,23 @@ describe('benchmarking with compaction', function () {
       db.put({ foo: 'fast' })
       for (let j = 0; j < batchSize && i + j < numDocs; j++) {
         ops.push(
-          db
-            .put({
-              data: Math.random(),
-              fire: Math.random()
-                .toString()
-                .repeat(25 * 1024)
-            })
-           
+          db.put({
+            data: Math.random(),
+            fire: Math.random()
+              .toString()
+              .repeat(25 * 1024)
+          })
         )
       }
       const label = `write ${i} log ${db._crdt.blockstore.loader.carLog.length}`
       console.time(label)
       db.put({
-              data: Math.random(),
-              fire: Math.random()
-                .toString()
-                .repeat(25 * 1024)
-            })
-           
-        
+        data: Math.random(),
+        fire: Math.random()
+          .toString()
+          .repeat(25 * 1024)
+      })
+
       await Promise.all(ops)
       console.timeEnd(label)
     }
@@ -198,137 +195,133 @@ describe('benchmarking a database', function () {
   //      npm test -- --grep 'insert and read many records'
   //
   // eslint-disable-next-line mocha/no-skipped-tests
-  it.skip(
-    // it(
-    'insert and read many records',
-    async function () {
-      const ok = await db.put({ _id: 'test', foo: 'fast' })
-      assert(ok)
-      equals(ok.id, 'test')
+  it.skip('passing: insert and read many records', async function () {
+    const ok = await db.put({ _id: 'test', foo: 'fast' })
+    assert(ok)
+    equals(ok.id, 'test')
 
-      assert(db._crdt.clock.head)
-      equals(db._crdt.clock.head.length, 1)
+    assert(db._crdt.clock.head)
+    equals(db._crdt.clock.head.length, 1)
 
-      const numDocs = 2500
-      const batchSize = 500
-      console.time(`insert and read ${numDocs} records`)
+    const numDocs = 2500
+    const batchSize = 500
+    console.time(`insert and read ${numDocs} records`)
 
-      for (let i = 0; i < numDocs; i += batchSize) {
-        const ops = []
-        for (let j = 0; j < batchSize && i + j < numDocs; j++) {
-          ops.push(
-            db
-              .put({
-                _id: `test${i + j}`,
-                fire: Math.random()
-                  .toString()
-                  .repeat(25 * 1024)
-              })
-              .then(ok => {
-                db.get(`test${i + j}`).then(doc => {
-                  assert(doc.fire)
-                })
-              })
-          )
-        }
-        await Promise.all(ops)
-      }
-
-      console.timeEnd(`insert and read ${numDocs} records`)
-
-      // console.time('allDocs')
-      // const allDocsResult2 = await db.allDocs()
-      // console.timeEnd('allDocs')
-      // equals(allDocsResult2.rows.length, numDocs+1)
-
-      console.time('open new DB')
-      const newDb = new Database('test-benchmark', { autoCompact: 100000, public: true })
-      const doc = await newDb.get('test')
-      equals(doc.foo, 'fast')
-      console.timeEnd('open new DB')
-
-      console.time('changes')
-      const result = await db.changes() // takes 1.5 seconds (doesn't have to load blocks from cars)
-      console.timeEnd('changes')
-      equals(result.rows.length, numDocs + 1)
-
-      // this takes 1 minute w 1000 docs
-      console.time('changes new DB')
-      const result2 = await newDb.changes()
-      console.timeEnd('changes new DB')
-      equals(result2.rows.length, numDocs + 1)
-
-      await sleep(1000)
-
-      console.log('begin compact')
-
-      await sleep(100)
-
-      console.time('COMPACT')
-      await db.compact()
-      console.timeEnd('COMPACT')
-
-      // todo compaction should not need this write to show in the new db
-      await db.put({ _id: 'compacted-test', foo: 'bar' })
-
-      // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-      equals(db._crdt.blockstore.loader.carLog.length, 2)
-
-      // console.time('allDocs new DB') // takes forever on 5k
-      // const allDocsResult = await newDb.allDocs()
-      // console.timeEnd('allDocs new DB')
-      // equals(allDocsResult.rows.length, numDocs+1)
-      await sleep(100)
-
-      console.time('compacted reopen again')
-      const newDb2 = new Database('test-benchmark', { autoCompact: 100000, public: true })
-      const doc21 = await newDb2.get('test')
-      equals(doc21.foo, 'fast')
-
-      equals(newDb2._crdt.blockstore.loader.carLog.length, 2)
-
-      const doc2 = await newDb2.get('compacted-test')
-
-      equals(doc2.foo, 'bar')
-
-      equals(doc2.foo, 'bar')
-      console.timeEnd('compacted reopen again')
-
-      await sleep(100)
-
-      console.time('compacted changes new DB2')
-      const result3 = await newDb2.changes()
-      console.timeEnd('compacted changes new DB2')
-      equals(result3.rows.length, numDocs + 2)
-
-      console.time('compacted newDb2 insert and read 100 records')
-      const ops2 = []
-      for (let i = 0; i < 100; i++) {
-        const ok = newDb2
-          .put({
-            _id: `test${i}`,
-            fire: Math.random()
-              .toString()
-              .repeat(25 * 1024)
-          })
-          .then(ok => {
-            newDb2.get(`test${i}`).then(doc => {
-              assert(doc.fire)
+    for (let i = 0; i < numDocs; i += batchSize) {
+      const ops = []
+      for (let j = 0; j < batchSize && i + j < numDocs; j++) {
+        ops.push(
+          db
+            .put({
+              _id: `test${i + j}`,
+              fire: Math.random()
+                .toString()
+                .repeat(25 * 1024)
             })
-          })
-        ops2.push(ok)
+            .then(ok => {
+              db.get(`test${i + j}`).then(doc => {
+                assert(doc.fire)
+              })
+            })
+        )
       }
-      await Promise.all(ops2)
-      console.timeEnd('compacted newDb2 insert and read 100 records')
-
-      // triggers OOM on my machine
-      // await sleep(100)
-      // console.time('compacted allDocs new DB2')
-      // const allDocsResult3 = await newDb2.allDocs()
-      // console.timeEnd('compacted allDocs new DB2')
-      // equals(allDocsResult3.rows.length, numDocs+2)
+      await Promise.all(ops)
     }
-  ).timeout(20000000)
+
+    console.timeEnd(`insert and read ${numDocs} records`)
+
+    // console.time('allDocs')
+    // const allDocsResult2 = await db.allDocs()
+    // console.timeEnd('allDocs')
+    // equals(allDocsResult2.rows.length, numDocs+1)
+
+    console.time('open new DB')
+    const newDb = new Database('test-benchmark', { autoCompact: 100000, public: true })
+    const doc = await newDb.get('test')
+    equals(doc.foo, 'fast')
+    console.timeEnd('open new DB')
+
+    console.time('changes')
+    const result = await db.changes() // takes 1.5 seconds (doesn't have to load blocks from cars)
+    console.timeEnd('changes')
+    equals(result.rows.length, numDocs + 1)
+
+    // this takes 1 minute w 1000 docs
+    console.time('changes new DB')
+    const result2 = await newDb.changes()
+    console.timeEnd('changes new DB')
+    equals(result2.rows.length, numDocs + 1)
+
+    await sleep(1000)
+
+    console.log('begin compact')
+
+    await sleep(100)
+
+    console.time('COMPACT')
+    await db.compact()
+    console.timeEnd('COMPACT')
+
+    // todo compaction should not need this write to show in the new db
+    await db.put({ _id: 'compacted-test', foo: 'bar' })
+
+    // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+    equals(db._crdt.blockstore.loader.carLog.length, 2)
+
+    // console.time('allDocs new DB') // takes forever on 5k
+    // const allDocsResult = await newDb.allDocs()
+    // console.timeEnd('allDocs new DB')
+    // equals(allDocsResult.rows.length, numDocs+1)
+    await sleep(100)
+
+    console.time('compacted reopen again')
+    const newDb2 = new Database('test-benchmark', { autoCompact: 100000, public: true })
+    const doc21 = await newDb2.get('test')
+    equals(doc21.foo, 'fast')
+
+    equals(newDb2._crdt.blockstore.loader.carLog.length, 2)
+
+    const doc2 = await newDb2.get('compacted-test')
+
+    equals(doc2.foo, 'bar')
+
+    equals(doc2.foo, 'bar')
+    console.timeEnd('compacted reopen again')
+
+    await sleep(100)
+
+    console.time('compacted changes new DB2')
+    const result3 = await newDb2.changes()
+    console.timeEnd('compacted changes new DB2')
+    equals(result3.rows.length, numDocs + 2)
+
+    console.time('compacted newDb2 insert and read 100 records')
+    const ops2 = []
+    for (let i = 0; i < 100; i++) {
+      const ok = newDb2
+        .put({
+          _id: `test${i}`,
+          fire: Math.random()
+            .toString()
+            .repeat(25 * 1024)
+        })
+        .then(ok => {
+          newDb2.get(`test${i}`).then(doc => {
+            assert(doc.fire)
+          })
+        })
+      ops2.push(ok)
+    }
+    await Promise.all(ops2)
+    console.timeEnd('compacted newDb2 insert and read 100 records')
+
+    // triggers OOM on my machine
+    // await sleep(100)
+    // console.time('compacted allDocs new DB2')
+    // const allDocsResult3 = await newDb2.allDocs()
+    // console.timeEnd('compacted allDocs new DB2')
+    // equals(allDocsResult3.rows.length, numDocs+2)
+  }).timeout(20000000)
 })
 
 describe('Reopening a database', function () {
