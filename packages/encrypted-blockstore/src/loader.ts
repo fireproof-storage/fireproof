@@ -176,7 +176,7 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact) as {
+    const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[]
     }
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
@@ -252,11 +252,7 @@ export class Loader implements Loadable {
       : await encodeCarFile([root], t)
   }
 
-  protected makeFileCarHeader(
-    result: TransactionMeta,
-    cars: AnyLink[],
-    compact: boolean = false
-  ): TransactionMeta {
+  protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
     const files: AnyLink[] = []
     for (const [, meta] of Object.entries(result.files!)) {
       if (meta && typeof meta === 'object' && 'cid' in meta && meta !== null) {
