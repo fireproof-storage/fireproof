@@ -80,7 +80,7 @@ export abstract class Connection {
     if (!loader) throw new Error('loader is required')
     this.loader = loader
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
-    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
+    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this)
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
