@@ -10,6 +10,7 @@ type ApplyHeadTask = {
 
 export type ApplyHeadQueue = {
   push(task: ApplyHeadTask): AsyncGenerator<{ updates: DocUpdate[]; all: boolean }, void, unknown>
+  size(): number
 }
 
 export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue {
@@ -26,7 +27,12 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
         const task = queue.shift()
         if (!task) continue
 
-        await worker(task.newHead, task.prevHead, task.updates !== null)
+        // console.time('int_applyHead worker')
+        await worker(task.newHead, task.prevHead, task.updates !== null).catch(e => {
+          console.error('int_applyHead worker error', e)
+          throw e
+        })
+        // console.timeEnd('int_applyHead worker')
 
         if (task.updates) {
           allUpdates.push(...task.updates)
@@ -54,6 +60,9 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
     ): AsyncGenerator<{ updates: DocUpdate[]; all: boolean }, void, unknown> {
       queue.push(task)
       return process()
+    },
+    size() {
+      return queue.length
     }
   }
 }

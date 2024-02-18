@@ -82,7 +82,7 @@ export abstract class RemoteWAL {
           const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
           if (!car) {
             if (cidListIncludes(this.loader.carLog, dbMeta.car))
-              throw new Error(`missing car ${dbMeta.car.toString()}`)
+              throw new Error(`missing local car ${dbMeta.car.toString()}`)
           } else {
             await this.loader.remoteCarStore!.save(car)
           }
@@ -96,7 +96,7 @@ export abstract class RemoteWAL {
           const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
           if (!car) {
             if (cidListIncludes(this.loader.carLog, dbMeta.car))
-              throw new Error(`missing car ${dbMeta.car.toString()}`)
+              throw new Error(`missing local car ${dbMeta.car.toString()}`)
           } else {
             await this.loader.remoteCarStore!.save(car)
           }
@@ -123,7 +123,7 @@ export abstract class RemoteWAL {
         const res = await Promise.allSettled(uploads)
         const errors = res.filter(r => r.status === 'rejected') as PromiseRejectedResult[]
         if (errors.length) {
-          console.error('error uploading', JSON.stringify(errors))
+          console.error('error uploading', JSON.stringify(errors.map(e => e.reason)))
           throw errors[0].reason
         }
         if (operations.length) {
