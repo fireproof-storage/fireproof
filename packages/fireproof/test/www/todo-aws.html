@@ -78,7 +78,7 @@
         let compactor = '🚗'
         function drawInfo() {
           document.querySelector('#carLog').innerText =
-            ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length} 📩 ${cx.taskManager.queue.length}`
+            ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length} 📩 ${cx.loader.remoteWAL.walState.operations.length}`
         }
         const doRedraw = async () => {
           drawInfo()
@@ -211,22 +211,18 @@
   </head>
 
   <body>
-    <h1>Fireproof Todos</h1>
-    List:
+    <h1><a href="https://use-fireproof.com/">Fireproof</a> Test App</h1>
+    Database:
     <input title="Change list" type="text" name="list" id="list" />
-    <button onclick="changeList(event)">Change List</button>
+    <button onclick="changeList(event)">Switch</button>
 
     <p>
-      Fireproof stores data locally and encrypts it before sending it to the cloud. This demo uses
-      web3.storage, but you can easily run Fireproof on S3 or another provider.
-      <a href="https://use-fireproof.com/">Learn more in the Fireproof developer docs.</a>
+      This version of the Fireprof test app uses AWS S3 as the
+      storage backend. Click the 📡 to refresh the latest data from other clients.
     </p>
 
-    <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
     <button id="robot" onclick="toggleWorker(event)">🤖</button>
-    <br />
-    <span id="carLog" onclick="doCompact(event)"></span>
-    <br />
+    <span id="carLog" onclick="doCompact(event)"></span>    
     <span id="cxInfo"></span>
 
     <h3>Todos</h3>
