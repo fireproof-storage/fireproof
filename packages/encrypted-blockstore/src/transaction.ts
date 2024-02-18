@@ -37,6 +37,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   compacting = false
   ebOpts: BlockstoreOpts
   transactions: Set<CarTransaction> = new Set()
+  lastTxMeta: TransactionMeta | null = null
 
   constructor(ebOpts: BlockstoreOpts) {
     this.ebOpts = ebOpts
@@ -56,6 +57,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   ): Promise<TransactionMeta> {
     const t = new CarTransaction(this)
     const done: TransactionMeta = await fn(t)
+    this.lastTxMeta = done
     if (this.loader) {
       const car = await this.loader.commit(t, done, opts)
       if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
@@ -100,7 +102,8 @@ export class EncryptedBlockstore implements BlockFetcher {
     await this.ready
     if (!this.loader) throw new Error('loader required to compact')
     if (this.loader.carLog.length < 2) return
-    const compactFn = this.ebOpts.compact // todo add default compaction function
+    const compactFn =
+      this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks))
     if (!compactFn || this.compacting) return
     const blockLog = new CompactionFetcher(this)
     this.compacting = true
@@ -110,6 +113,25 @@ export class EncryptedBlockstore implements BlockFetcher {
       noLoader: true
     })
     this.compacting = false
+  }
+
+  async defaultCompact(blocks: CompactionFetcher) {
+    // console.log('eb compact')
+    if (!this.loader) {
+      throw new Error('no loader')
+    }
+    if (!this.lastTxMeta) {
+      throw new Error('no lastTxMeta')
+    }
+    for await (const blk of this.loader.entries(false)) {
+      blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
+    }
+    for (const t of this.transactions) {
+      for await (const blk of t.entries()) {
+        blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
+      }
+    }
+    return this.lastTxMeta as TransactionMeta
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {

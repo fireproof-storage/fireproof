@@ -291,19 +291,27 @@ export class Loader implements Loadable {
   //   }
   // }
 
-  async *entries(): AsyncIterableIterator<AnyBlock> {
+  async *entries(cache = true): AsyncIterableIterator<AnyBlock> {
     await this.ready
-    for (const [, block] of this.getBlockCache) {
-      yield block
+    if (cache) {
+      for (const [, block] of this.getBlockCache) {
+        yield block
+      }
+    } else {
+      for (const [, block] of this.getBlockCache) {
+        yield block
+      }
+      for (const cid of this.carLog) {
+        const reader = await this.loadCar(cid)
+        if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
+        for await (const block of reader.blocks()) {
+          const sCid = block.cid.toString()
+          if (!this.getBlockCache.has(sCid)) {
+            yield block
+          }
+        }
+      }
     }
-    // assumes we cache all blocks in the carLog
-    // for (const cid of this.carLog) {
-    //   const reader = await this.loadCar(cid)
-    //   if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
-    //   for await (const block of reader.blocks()) {
-    //     yield block
-    //   }
-    // }
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
@@ -317,9 +325,11 @@ export class Loader implements Loadable {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
       // get all the blocks in the car and put them in this.getBlockCache
-      await this.cacheCarReader(reader)
-      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-      throw new Error(`block not in reader: ${cid.toString()}`)
+      // await this.cacheCarReader(reader)
+      // @ts-expect-error -- TODO: TypeScript does not like this casting
+      return reader.get(CID.parse(sCid))
+      // if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+      // throw new Error(`block not in reader: ${cid.toString()}`)
     }
 
     let got
