@@ -29,7 +29,7 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
-  s3temporary: ({ blockstore }: Connectable) => {
+  s3free: ({ blockstore }: Connectable) => {
     const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
     const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
     const connection = new ConnectS3(upload, download)
