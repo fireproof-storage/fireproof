@@ -53,6 +53,7 @@
     "@ipld/dag-json": "^10.1.2",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "cross-fetch": "^4.0.0",
-    "multiformats": "^12.0.1"
+    "multiformats": "^12.0.1",
+    "js-base64": "^3.7.5"
   }
 }
