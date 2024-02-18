@@ -258,7 +258,7 @@ async function gatherUpdates(
       ops = [event.data] as PutOperation[]
     }
     for (let i = ops.length - 1; i >= 0; i--) {
-      const { key, value } = ops[i];
+      const { key, value } = ops[i]
       if (!keys.has(key)) {
         // todo option to see all updates
         const docValue = await getValueFromLink(blocks, value)
@@ -306,12 +306,15 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   isCompacting = true
 
   time('compact head')
-  for (const cid of head) {
-    const bl = await blockLog.get(cid)
-    if (!bl) throw new Error('Missing head block: ' + cid.toString())
+  try {
+    for (const cid of head) {
+      const bl = await blockLog.get(cid)
+      if (!bl) throw new Error('Missing head block: ' + cid.toString())
+    }
+  } catch (e) {
+    console.log('compact head error', e)
   }
   timeEnd('compact head')
-
   // for await (const blk of  blocks.entries()) {
   //   const bl = await blockLog.get(blk.cid)
   //   if (!bl) throw new Error('Missing tblock: ' + blk.cid.toString())
@@ -324,12 +327,15 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   // }
 
   time('compact all entries')
-  for await (const _entry of getAllEntries(blockLog, head)) {
-    // result.push(entry)
-    void 1
+  try {
+    for await (const _entry of getAllEntries(blockLog, head)) {
+      // result.push(entry)
+      void 1
+    }
+  } catch (e) {
+    console.log('compact getAllEntries error', e)
   }
   timeEnd('compact all entries')
-
   // time("compact crdt entries")
   // for await (const [, link] of entries(blockLog, head)) {
   //   const bl = await blockLog.get(link)
@@ -338,26 +344,37 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   // timeEnd("compact crdt entries")
 
   time('compact clock vis')
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _line of vis(blockLog, head)) {
-    void 1
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    for await (const _line of vis(blockLog, head)) {
+      void 1
+    }
+  } catch (e) {
+    console.log('compact vis error', e)
   }
+
   timeEnd('compact clock vis')
 
-  time('compact root')
-  const result = await root(blockLog, head)
-  timeEnd('compact root')
-
-  time('compact root blocks')
-  for (const { cid, bytes } of [...result.additions, ...result.removals]) {
-    blockLog.loggedBlocks.putSync(cid, bytes)
+  try {
+    time('compact root')
+    const result = await root(blockLog, head)
+    timeEnd('compact root')
+    time('compact root blocks')
+    for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+      blockLog.loggedBlocks.putSync(cid, bytes)
+    }
+    timeEnd('compact root blocks')
+  } catch (e) {
+    console.log('compact root error', e)
   }
-  timeEnd('compact root blocks')
 
   time('compact changes')
-  await clockChangesSince(blockLog, head, [], {})
+  try {
+    await clockChangesSince(blockLog, head, [], { dirty: false })
+  } catch (e) {
+    console.log('clockChangesSince error', e)
+  }
   timeEnd('compact changes')
-
   isCompacting = false
 }
 

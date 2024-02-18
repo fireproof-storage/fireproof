@@ -68,6 +68,7 @@ export class Loader implements Loadable {
   keyId?: string
   seenCompacted: Set<string> = new Set()
   writing: Promise<TransactionMeta | void> = Promise.resolve()
+  compacting: Promise<unknown> = Promise.resolve()
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
   private seenMeta: Set<string> = new Set()
@@ -114,6 +115,7 @@ export class Loader implements Loadable {
   }
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
+    await this.compacting
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }
@@ -349,6 +351,9 @@ export class Loader implements Loadable {
 
     if (got) {
       this.getBlockCache.set(sCid, got)
+    } else {
+      console.log('missing loader block', cid.toString())
+      // todo try compact lookup
     }
     return got
   }

@@ -2,7 +2,15 @@ import { MemoryBlockstore } from '@web3-storage/pail/block'
 // todo get these from multiformats?
 import { BlockFetcher as BlockFetcherAPI } from '@web3-storage/pail/api'
 
-import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
+import {
+  AnyAnyBlock,
+  AnyAnyLink,
+  AnyBlock,
+  AnyLink,
+  CarMakeable,
+  DbMeta,
+  TransactionMeta as TM
+} from './types'
 
 import { Loader } from './loader'
 import type { CID } from 'multiformats'
@@ -85,7 +93,9 @@ export class EncryptedBlockstore implements BlockFetcher {
       if (v) return v
     }
     if (!this.loader) return
-    return await this.loader.getBlock(cid)
+    const b = await this.loader.getBlock(cid)
+    if (b) return b
+    console.log('missing t block', cid.toString())
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false) {
@@ -99,20 +109,55 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 
   async compact() {
-    await this.ready
-    if (!this.loader) throw new Error('loader required to compact')
-    if (this.loader.carLog.length < 2) return
-    const compactFn =
-      this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks))
-    if (!compactFn || this.compacting) return
-    const blockLog = new CompactionFetcher(this)
-    this.compacting = true
-    const meta = await compactFn(blockLog)
-    await this.loader!.commit(blockLog.loggedBlocks, meta, {
-      compact: true,
-      noLoader: true
-    })
-    this.compacting = false
+    let resolveCompacting: (value: unknown) => void = () => {}
+    let rejectCompacting: (e: Error) => void = () => {}
+    try {
+      await this.ready
+      if (!this.loader) throw new Error('loader required to compact')
+      if (this.loader.carLog.length < 2) return
+      const compactFn =
+        this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks))
+      if (!compactFn || this.compacting) return
+      const blockLog = new CompactionFetcher(this)
+      this.loader.isCompacting = true
+      const compPromise = new Promise((resolve, reject) => {
+        resolveCompacting = resolve
+        rejectCompacting = reject
+      })
+      this.loader.compacting = compPromise
+      this.compacting = true
+      const meta = await compactFn(blockLog)
+      await this.loader!.commit(blockLog.loggedBlocks, meta, {
+        compact: true,
+        noLoader: true
+      })
+      this.compacting = false
+      this.loader!.isCompacting = false
+      if (resolveCompacting) resolveCompacting(null)
+    } finally {
+      this.compacting = false
+      this.loader!.isCompacting = false
+      if (rejectCompacting) rejectCompacting(new Error('compacting failed'))
+    }
+  }
+
+  async defaultCompact(blocks: CompactionFetcher) {
+    // console.log('eb compact')
+    if (!this.loader) {
+      throw new Error('no loader')
+    }
+    if (!this.lastTxMeta) {
+      throw new Error('no lastTxMeta')
+    }
+    for await (const blk of this.loader.entries(false)) {
+      blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
+    }
+    for (const t of this.transactions) {
+      for await (const blk of t.entries()) {
+        blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
+      }
+    }
+    return this.lastTxMeta as TransactionMeta
   }
 
   async defaultCompact(blocks: CompactionFetcher) {
