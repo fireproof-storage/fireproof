@@ -325,11 +325,11 @@ export class Loader implements Loadable {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
       // get all the blocks in the car and put them in this.getBlockCache
-      // await this.cacheCarReader(reader)
-      // @ts-expect-error -- TODO: TypeScript does not like this casting
-      return reader.get(CID.parse(sCid))
-      // if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-      // throw new Error(`block not in reader: ${cid.toString()}`)
+      await this.cacheCarReader(reader)
+      // @ ts-expect-error -- TODO: TypeScript does not like this casting
+      // return reader.get(CID.parse(sCid))
+      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+      throw new Error(`block not in reader: ${cid.toString()}`)
     }
 
     let got
