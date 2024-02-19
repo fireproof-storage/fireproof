@@ -160,25 +160,6 @@ export class EncryptedBlockstore implements BlockFetcher {
     return this.lastTxMeta as TransactionMeta
   }
 
-  async defaultCompact(blocks: CompactionFetcher) {
-    // console.log('eb compact')
-    if (!this.loader) {
-      throw new Error('no loader')
-    }
-    if (!this.lastTxMeta) {
-      throw new Error('no lastTxMeta')
-    }
-    for await (const blk of this.loader.entries(false)) {
-      blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
-    }
-    for (const t of this.transactions) {
-      for await (const blk of t.entries()) {
-        blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
-      }
-    }
-    return this.lastTxMeta as TransactionMeta
-  }
-
   async *entries(): AsyncIterableIterator<AnyBlock> {
     const seen: Set<string> = new Set()
     if (this.loader) {
