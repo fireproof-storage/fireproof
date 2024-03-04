@@ -67,6 +67,7 @@ export class Loader implements Loadable {
   key?: string
   keyId?: string
   seenCompacted: Set<string> = new Set()
+  processedCars: Set<string> = new Set()
   writing: Promise<TransactionMeta | void> = Promise.resolve()
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
@@ -206,7 +207,9 @@ export class Loader implements Loadable {
     }
   }
 
-  async cacheCarReader(reader: CarReader) {
+  async cacheCarReader(carCidStr: string, reader: CarReader) {
+    if (this.processedCars.has(carCidStr)) return
+    this.processedCars.add(carCidStr)
     for await (const block of reader.blocks()) {
       const sBlock = block.cid.toString()
       if (!this.getBlockCache.has(sBlock)) {
@@ -327,7 +330,7 @@ export class Loader implements Loadable {
       }
       // get all the blocks in the car and put them in this.getBlockCache
       // console.time('cacheCarReader' + carCid + cid)
-      await this.cacheCarReader(reader).catch(e => {
+      await this.cacheCarReader(carCid.toString(), reader).catch(e => {
         console.log('cacheCarReader error', e)
       })
       // console.timeEnd('cacheCarReader' + carCid + cid)
