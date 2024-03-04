@@ -94,28 +94,37 @@ const TEST_BUNDLE_OPTIONS: Options = {
 const TEST_BUNDLES: readonly Options[] = [
   {
     ...TEST_BUNDLE_OPTIONS,
-    name: "test/transaction",
+    name: 'test/transaction',
     entry: ['src/transaction.ts'],
     dts: {
       footer: "declare module '@fireproof/encrypted-blockstore/transaction'"
-    },
+    }
   },
   {
     ...TEST_BUNDLE_OPTIONS,
-    name: "test/loader",
+    name: 'test/loader',
     entry: ['src/loader.ts'],
     dts: {
       footer: "declare module '@fireproof/encrypted-blockstore/loader'"
-    },
+    }
   },
   {
     ...TEST_BUNDLE_OPTIONS,
-    name: "test/loader-helpers",
+    name: 'test/loader-helpers',
     entry: ['src/loader-helpers.ts'],
     dts: {
       footer: "declare module '@fireproof/encrypted-blockstore/loader-helpers'"
-    },
+    }
   },
+  {
+    ...TEST_BUNDLE_OPTIONS,
+    name: 'test/store-node',
+    entry: ['src/store-node.ts'],
+    platform: 'node',
+    dts: {
+      footer: "declare module '@fireproof/encrypted-blockstore/store-node'"
+    }
+  }
 ]
 
 export default defineConfig((options) => [

@@ -1,4 +1,5 @@
 import { ConnectS3 } from './connect-s3'
+import { ConnectREST } from './connect-rest'
 import { Connection, CarClockHead, Connectable } from './connection'
 import type { AnyLink } from '@fireproof/encrypted-blockstore'
 export type { AnyLink }
@@ -67,4 +68,4 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   }
 }
 
-export { Connection, ConnectS3, CarClockHead, Connectable }
+export { Connection, ConnectS3, ConnectREST, CarClockHead, Connectable }
