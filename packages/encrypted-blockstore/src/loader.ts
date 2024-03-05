@@ -323,25 +323,18 @@ export class Loader implements Loadable {
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
 
     const getCarCid = async (carCid: AnyLink) => {
-      // console.log(`getCarCid ${cid.toString()} ${carCid.toString()}`)
       const reader = await this.loadCar(carCid)
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
-      // get all the blocks in the car and put them in this.getBlockCache
-      // console.time('cacheCarReader' + carCid + cid)
       await this.cacheCarReader(carCid.toString(), reader).catch(e => {
         console.log('cacheCarReader error', e)
       })
-      // console.timeEnd('cacheCarReader' + carCid + cid)
-      // @ ts-expect-error -- TODO: TypeScript does not like this casting
-      // return reader.get(CID.parse(sCid))
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       throw new Error(`block not in reader: ${cid.toString()}`)
     }
 
     const getCompactCarCids = async (carCid: AnyLink) => {
-      // console.log(`getCompactCarCids ${cid.toString()} ${carCid.toString()}`)
       const reader = await this.loadCar(carCid)
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
@@ -363,12 +356,9 @@ export class Loader implements Loadable {
         } catch {
           // Ignore the error and continue with the next iteration
         }
-        if (got) break // If we got a block, no need to continue with the next batch
+        if (got) break
       }
 
-      // console.timeEnd('cacheCarReader' + carCid + cid)
-      // @ ts-expect-error -- TODO: TypeScript does not like this casting
-      // return reader.get(CID.parse(sCid))
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       throw new Error(`block not in compact reader: ${cid.toString()}`)
     }
@@ -385,12 +375,10 @@ export class Loader implements Loadable {
       } catch {
         // Ignore the error and continue with the next iteration
       }
-      if (got) break // If we got a block, no need to continue with the next batch
+      if (got) break
     }
 
-    if (got) {
-      this.getBlockCache.set(sCid, got)
-    } else {
+    if (!got) {
       for (let i = 0; i < this.carLog.length; i += batchSize) {
         const promises = []
         for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
@@ -401,10 +389,8 @@ export class Loader implements Loadable {
         } catch {
           // Ignore the error and continue with the next iteration
         }
-        if (got) break // If we got a block, no need to continue with the next batch
+        if (got) break
       }
-
-      // throw new Error('look in compactor')
     }
     return got
   }
