@@ -317,96 +317,75 @@ export class Loader implements Loadable {
     }
   }
 
+  private async getCarCid(sCid: string, carCid: AnyLink): Promise<AnyBlock | undefined> {
+    const reader = await this.loadCar(carCid)
+    if (!reader) {
+      throw new Error(`missing car reader ${carCid.toString()}`)
+    }
+    await this.cacheCarReader(carCid.toString(), reader)
+    return this.getBlockCache.get(sCid)
+  }
+
+  private async getCompactCarCids(sCid: string, carCid: AnyLink): Promise<AnyBlock | undefined> {
+    const reader = await this.loadCar(carCid)
+    if (!reader) {
+      throw new Error(`missing car reader ${carCid.toString()}`)
+    }
+    const header = await parseCarFile(reader)
+    const compacts = header.compact
+    for (let i = 0; i < compacts.length; i++) {
+      const got = await this.getCarCid(sCid, compacts[i])
+      if (got) return got
+    }
+    return undefined
+  }
+
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
     await this.ready
     const sCid = cid.toString()
+
+    // Check if the block is already in the cache
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
 
-    const getCarCid = async (carCid: AnyLink) => {
-      // console.log(`getCarCid ${cid.toString()} ${carCid.toString()}`)
-      const reader = await this.loadCar(carCid)
-      if (!reader) {
-        throw new Error(`missing car reader ${carCid.toString()}`)
-      }
-      // get all the blocks in the car and put them in this.getBlockCache
-      // console.time('cacheCarReader' + carCid + cid)
-      await this.cacheCarReader(carCid.toString(), reader).catch(e => {
-        console.log('cacheCarReader error', e)
-      })
-      // console.timeEnd('cacheCarReader' + carCid + cid)
-      // @ ts-expect-error -- TODO: TypeScript does not like this casting
-      // return reader.get(CID.parse(sCid))
-      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-      throw new Error(`block not in reader: ${cid.toString()}`)
-    }
+    let retrievedBlock: AnyBlock | undefined
 
-    const getCompactCarCids = async (carCid: AnyLink) => {
-      // console.log(`getCompactCarCids ${cid.toString()} ${carCid.toString()}`)
-      const reader = await this.loadCar(carCid)
-      if (!reader) {
-        throw new Error(`missing car reader ${carCid.toString()}`)
-      }
-
-      const header = await parseCarFile(reader)
-
-      const compacts = header.compact
-
-      let got
-      const batchSize = 5
-      for (let i = 0; i < compacts.length; i += batchSize) {
-        const promises = []
-        for (let j = i; j < Math.min(i + batchSize, compacts.length); j++) {
-          promises.push(getCarCid(compacts[j]))
-        }
-        try {
-          got = await Promise.any(promises)
-        } catch {
-          // Ignore the error and continue with the next iteration
-        }
-        if (got) break // If we got a block, no need to continue with the next batch
-      }
-
-      // console.timeEnd('cacheCarReader' + carCid + cid)
-      // @ ts-expect-error -- TODO: TypeScript does not like this casting
-      // return reader.get(CID.parse(sCid))
-      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
-      throw new Error(`block not in compact reader: ${cid.toString()}`)
-    }
-
-    let got
+    // Try to get the block from the car log
     const batchSize = 5
     for (let i = 0; i < this.carLog.length; i += batchSize) {
       const promises = []
       for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-        promises.push(getCarCid(this.carLog[j]))
+        promises.push(this.getCarCid(sCid, this.carLog[j]))
       }
       try {
-        got = await Promise.any(promises)
-      } catch {
-        // Ignore the error and continue with the next iteration
+        retrievedBlock = await Promise.any(promises)
+      } catch (error) {
+        console.error(`Error getting block from car log: ${error}`)
       }
-      if (got) break // If we got a block, no need to continue with the next batch
+      if (retrievedBlock) break
     }
 
-    if (got) {
-      this.getBlockCache.set(sCid, got)
-    } else {
+    // If the block was not found in the car log, try to get it from the compact car cids
+    if (!retrievedBlock) {
       for (let i = 0; i < this.carLog.length; i += batchSize) {
         const promises = []
         for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-          promises.push(getCompactCarCids(this.carLog[j]))
+          promises.push(this.getCompactCarCids(sCid, this.carLog[j]))
         }
         try {
-          got = await Promise.any(promises)
-        } catch {
-          // Ignore the error and continue with the next iteration
+          retrievedBlock = await Promise.any(promises)
+        } catch (error) {
+          console.error(`Error getting block from compact car cids: ${error}`)
         }
-        if (got) break // If we got a block, no need to continue with the next batch
+        if (retrievedBlock) break
       }
-
-      // throw new Error('look in compactor')
     }
-    return got
+
+    // If the block was found, add it to the cache
+    if (retrievedBlock) {
+      this.getBlockCache.set(sCid, retrievedBlock)
+    }
+
+    return retrievedBlock
   }
 
   protected makeCarHeader(
