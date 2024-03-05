@@ -29,8 +29,8 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
-  s3: ({ blockstore }: Connectable, { upload, download }: { upload: string; download: string }) => {
-    const connection = new ConnectS3(upload, download)
+  s3: ({ blockstore }: Connectable, { upload, download,websocket }: { upload: string; download: string,websocket:string }) => {
+    const connection = new ConnectS3(upload, download,websocket)
     connection.connect(blockstore)
     return connection
   },
