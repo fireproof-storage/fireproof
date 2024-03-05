@@ -333,11 +333,14 @@ export class Loader implements Loadable {
     }
     const header = await parseCarFile(reader)
     const compacts = header.compact
-    for (let i = 0; i < compacts.length; i++) {
-      const got = await this.getCarCid(sCid, compacts[i])
-      if (got) return got
+    const promises = compacts.map(compactCid => this.getCarCid(sCid, compactCid))
+    let got: AnyBlock | undefined
+    try {
+      got = await Promise.any(promises)
+    } catch (error) {
+      // Ignore the error and return undefined
     }
-    return undefined
+    return got
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
