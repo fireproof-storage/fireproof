@@ -44,9 +44,8 @@
               download:
                 "https://fireproof-aws-connector-v1-s3uploadbucket-osbywa8svf97.s3.amazonaws.com",
               websocket: `wss://mqnxbdkh4g.execute-api.us-east-1.amazonaws.com/Prod?database=${dbName}`,
-              
             });
-            console.log("This is the connection object",cx);
+            console.log("This is the connection object", cx);
             cx.ready.then(async () => {
               const span = document.querySelector("#cxInfo");
               span.innerText = `📡 ${cx.party.id}`;
@@ -242,7 +241,19 @@
     <span id="carLog" onclick="doCompact(event)"></span>
     <br />
     <span id="cxInfo"></span>
+    <h1><a href="https://use-fireproof.com/">Fireproof</a> Test App</h1>
+    Database:
+    <input title="Change list" type="text" name="list" id="list" />
+    <button onclick="changeList(event)">Switch</button>
 
+    <p>
+      This version of the Fireprof test app uses S3 as the storage backend.
+      Refresh is automatic and live.
+    </p>
+
+    <button id="robot" onclick="toggleWorker(event)">🤖</button>
+    <span id="carLog" onclick="doCompact(event)"></span>
+    <span id="cxInfo"></span>
     <h3>Todos</h3>
     <input title="Create a todo" type="text" name="todo" id="todo" />
     <button onclick="createTodoClick(event)">Create Todo</button>

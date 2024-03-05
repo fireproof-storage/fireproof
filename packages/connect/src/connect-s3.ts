@@ -8,6 +8,7 @@ import { Connection } from "./connection";
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
 
+
 export class ConnectS3 extends Connection {
   uploadUrl: URL;
   downloadUrl: URL;
@@ -48,9 +49,11 @@ export class ConnectS3 extends Connection {
   }
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
+
     const event = await this.createEventBlock(bytes);
     const base64String = Base64.fromUint8Array(bytes);
     console.log("The base64 string when data was uploaded",base64String);
+
     const crdtEntry = {
       cid: event.cid.toString(),
       data: base64String,
@@ -71,6 +74,7 @@ export class ConnectS3 extends Connection {
       );
     }
     this.parents = [event.cid];
+
     return null;
   }
 
@@ -191,5 +195,6 @@ export class ConnectS3 extends Connection {
     );
     this.parents = Array.from(uniqueParentsMap.values());
     return events.map((e) => e.bytes);
+
   }
 }

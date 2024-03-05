@@ -65,6 +65,10 @@ export class CRDTClock {
   }
 
   async int_applyHead(newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) {
+    // console.log(
+    //   'int_applyHead',
+    //   this.applyHeadQueue.size(),
+    // )
     const ogHead = sortClockHead(this.head)
     newHead = sortClockHead(newHead)
     if (compareClockHeads(ogHead, newHead)) {
@@ -118,7 +122,7 @@ async function advanceBlocks(newHead: ClockHead, tblocks: CarTransaction, head: 
     try {
       head = await advance(tblocks, head, cid)
     } catch (e) {
-      console.log('failed to advance head:', cid.toString())
+      // console.log('failed to advance head:', cid.toString(), e)
       continue
     }
   }

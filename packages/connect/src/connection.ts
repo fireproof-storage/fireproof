@@ -80,7 +80,7 @@ export abstract class Connection {
     if (!loader) throw new Error('loader is required')
     this.loader = loader
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
-    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this, 'file')
+    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this)
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
@@ -101,39 +101,39 @@ export abstract class Connection {
   }
 
   // move this stuff to connect
-  async getDashboardURL(compact = true) {
-    const baseUrl = 'https://dashboard.fireproof.storage/'
-    if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
-    // if (compact) {
-    //   await this.compact()
-    // }
-    const currents = await this.loader?.metaStore?.load()
-    if (!currents) throw new Error("Can't sync empty database: save data first")
-    if (currents.length > 1)
-      throw new Error("Can't sync database with split heads: make an update first")
-    const current = currents[0]
-    const params = {
-      car: current.car.toString()
-    }
-    if (current.key) {
-      // @ts-ignore
-      params.key = current.key.toString()
-    }
-    // @ts-ignore
-    if (this.name) {
-      // @ts-ignore
-      params.name = this.name
-    }
-    const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
-    console.log('Import to dashboard: ' + url.toString())
-    return url
-  }
+  // async getDashboardURL(compact = true) {
+  //   const baseUrl = 'https://dashboard.fireproof.storage/'
+  //   if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
+  //   // if (compact) {
+  //   //   await this.compact()
+  //   // }
+  //   const currents = await this.loader?.metaStore?.load()
+  //   if (!currents) throw new Error("Can't sync empty database: save data first")
+  //   if (currents.length > 1)
+  //     throw new Error("Can't sync database with split heads: make an update first")
+  //   const current = currents[0]
+  //   const params = {
+  //     car: current.car.toString()
+  //   }
+  //   if (current.key) {
+  //     // @ts-ignore
+  //     params.key = current.key.toString()
+  //   }
+  //   // @ts-ignore
+  //   if (this.name) {
+  //     // @ts-ignore
+  //     params.name = this.name
+  //   }
+  //   const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
+  //   console.log('Import to dashboard: ' + url.toString())
+  //   return url
+  // }
 
-  openDashboard() {
-    void this.getDashboardURL().then(url => {
-      if (url) window.open(url.toString(), '_blank')
-    })
-  }
+  // openDashboard() {
+  //   void this.getDashboardURL().then(url => {
+  //     if (url) window.open(url.toString(), '_blank')
+  //   })
+  // }
 }
 
 export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>

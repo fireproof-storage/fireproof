@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.17.5",
+  "version": "0.17.8",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -59,6 +59,6 @@
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
     "multiformats": "^12.0.1",
-    "partysocket": "0.0.21"
+    "partysocket": "0.0.25"
   }
 }

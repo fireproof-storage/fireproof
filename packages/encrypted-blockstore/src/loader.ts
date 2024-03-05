@@ -67,6 +67,7 @@ export class Loader implements Loadable {
   key?: string
   keyId?: string
   seenCompacted: Set<string> = new Set()
+  processedCars: Set<string> = new Set()
   writing: Promise<TransactionMeta | void> = Promise.resolve()
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
@@ -176,7 +177,7 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const { files: roots } = this.makeFileCarHeader(done, this.carLog, !!opts.compact) as {
+    const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[]
     }
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
@@ -206,7 +207,9 @@ export class Loader implements Loadable {
     }
   }
 
-  async cacheCarReader(reader: CarReader) {
+  async cacheCarReader(carCidStr: string, reader: CarReader) {
+    if (this.processedCars.has(carCidStr)) return
+    this.processedCars.add(carCidStr)
     for await (const block of reader.blocks()) {
       const sBlock = block.cid.toString()
       if (!this.getBlockCache.has(sBlock)) {
@@ -252,11 +255,7 @@ export class Loader implements Loadable {
       : await encodeCarFile([root], t)
   }
 
-  protected makeFileCarHeader(
-    result: TransactionMeta,
-    cars: AnyLink[],
-    compact: boolean = false
-  ): TransactionMeta {
+  protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
     const files: AnyLink[] = []
     for (const [, meta] of Object.entries(result.files!)) {
       if (meta && typeof meta === 'object' && 'cid' in meta && meta !== null) {
@@ -295,19 +294,27 @@ export class Loader implements Loadable {
   //   }
   // }
 
-  async *entries(): AsyncIterableIterator<AnyBlock> {
+  async *entries(cache = true): AsyncIterableIterator<AnyBlock> {
     await this.ready
-    for (const [, block] of this.getBlockCache) {
-      yield block
+    if (cache) {
+      for (const [, block] of this.getBlockCache) {
+        yield block
+      }
+    } else {
+      for (const [, block] of this.getBlockCache) {
+        yield block
+      }
+      for (const cid of this.carLog) {
+        const reader = await this.loadCar(cid)
+        if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
+        for await (const block of reader.blocks()) {
+          const sCid = block.cid.toString()
+          if (!this.getBlockCache.has(sCid)) {
+            yield block
+          }
+        }
+      }
     }
-    // assumes we cache all blocks in the carLog
-    // for (const cid of this.carLog) {
-    //   const reader = await this.loadCar(cid)
-    //   if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
-    //   for await (const block of reader.blocks()) {
-    //     yield block
-    //   }
-    // }
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
@@ -320,16 +327,44 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
-      // get all the blocks in the car and put them in this.getBlockCache
-      await this.cacheCarReader(reader)
+      await this.cacheCarReader(carCid.toString(), reader).catch(e => {})
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       throw new Error(`block not in reader: ${cid.toString()}`)
+    }
+
+    const getCompactCarCids = async (carCid: AnyLink) => {
+      const reader = await this.loadCar(carCid)
+      if (!reader) {
+        throw new Error(`missing car reader ${carCid.toString()}`)
+      }
+
+      const header = await parseCarFile(reader)
+
+      const compacts = header.compact
+
+      let got: AnyBlock | undefined
+      const batchSize = 5
+      for (let i = 0; i < compacts.length; i += batchSize) {
+        const promises: Promise<AnyBlock | undefined>[] = []
+        for (let j = i; j < Math.min(i + batchSize, compacts.length); j++) {
+          promises.push(getCarCid(compacts[j]))
+        }
+        try {
+          got = await Promise.any(promises)
+        } catch {
+          // Ignore the error and continue with the next iteration
+        }
+        if (got) break
+      }
+
+      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
+      throw new Error(`block not in compact reader: ${cid.toString()}`)
     }
 
     let got
     const batchSize = 5
     for (let i = 0; i < this.carLog.length; i += batchSize) {
-      const promises = []
+      const promises: Promise<AnyBlock | undefined>[] = []
       for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
         promises.push(getCarCid(this.carLog[j]))
       }
@@ -338,11 +373,22 @@ export class Loader implements Loadable {
       } catch {
         // Ignore the error and continue with the next iteration
       }
-      if (got) break // If we got a block, no need to continue with the next batch
+      if (got) break
     }
 
-    if (got) {
-      this.getBlockCache.set(sCid, got)
+    if (!got) {
+      for (let i = 0; i < this.carLog.length; i += batchSize) {
+        const promises: Promise<AnyBlock | undefined>[] = []
+        for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
+          promises.push(getCompactCarCids(this.carLog[j]))
+        }
+        try {
+          got = await Promise.any(promises)
+        } catch {
+          // Ignore the error and continue with the next iteration
+        }
+        if (got) break
+      }
     }
     return got
   }

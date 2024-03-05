@@ -3,6 +3,7 @@
 # <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) – live database for the web
 
 <p align="right">
+  <img src="https://img.shields.io/bundlephobia/minzip/%40fireproof%2Fcore" alt="Package size">
   <a href="https://github.com/fireproof-storage/fireproof/actions/workflows/ci.yaml">
     <img src="https://github.com/fireproof-storage/fireproof/actions/workflows/ci.yaml/badge.svg" alt="Build status">
   </a>

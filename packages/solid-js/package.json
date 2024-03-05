@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/solid-js",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "The official SolidJS adapter for Fireproof. Light up your data with an embedded live database for your SolidJS web app.",
   "type": "module",
   "module": "./dist/server.js",

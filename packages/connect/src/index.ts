@@ -1,4 +1,5 @@
 import { ConnectS3 } from './connect-s3'
+import { ConnectREST } from './connect-rest'
 import { Connection, CarClockHead, Connectable } from './connection'
 import type { AnyLink } from '@fireproof/encrypted-blockstore'
 export type { AnyLink }
@@ -29,6 +30,7 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
+
   s3: ({ blockstore }: Connectable, { upload, download,websocket }: { upload: string; download: string,websocket:string }) => {
     const connection = new ConnectS3(upload, download,websocket)
     connection.connect(blockstore)
@@ -60,4 +62,4 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   }
 }
 
-export { Connection, ConnectS3, CarClockHead, Connectable }
+export { Connection, ConnectS3, ConnectREST, CarClockHead, Connectable }
