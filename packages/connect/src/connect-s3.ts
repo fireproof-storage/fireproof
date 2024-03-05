@@ -7,15 +7,6 @@ import {
 import { Connection } from "./connection";
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
-import {
-  DownloadMetaFnParams,
-  DownloadDataFnParams,
-  UploadMetaFnParams,
-  UploadDataFnParams,
-} from "./types";
-import { Connection } from "./connection";
-import fetch from "cross-fetch";
-import { Base64 } from "js-base64";
 
 export class ConnectS3 extends Connection {
   uploadUrl: URL;
@@ -38,6 +29,7 @@ export class ConnectS3 extends Connection {
     );
     const response = await fetch(fetchUploadUrl);
     if (!response.ok) {
+      // console.log('failed to get upload url for data', params, response)
       throw new Error(
         "failed to get upload url for data " +
           new Date().toISOString() +
