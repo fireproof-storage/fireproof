@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.17.7",
+  "version": "0.17.8",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
