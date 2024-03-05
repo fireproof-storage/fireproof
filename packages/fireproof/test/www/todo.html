@@ -161,8 +161,8 @@
         }
         const goWorker = dcs => {
           const timeout =
-            10 + Math.pow(db._crdt.clock.head.length + cx.loader.remoteWAL.walState.operations.length, 2) * (Math.floor(Math.random() * 1000) + 500)
-          // console.log('go worker', timeout)
+            10 + Math.pow(db._crdt.clock.head.length + cx.loader.remoteWAL.walState.operations.length, 2) * (Math.floor(Math.random() * 1000) + 1000)
+          // console.log('go worker', timeout/ 1000)
           worker = setTimeout(async () => {
             await Promise.all(
               dcs.rows.slice(0, 5).map(r => {
