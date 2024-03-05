@@ -122,7 +122,7 @@ async function advanceBlocks(newHead: ClockHead, tblocks: CarTransaction, head: 
     try {
       head = await advance(tblocks, head, cid)
     } catch (e) {
-      console.log('failed to advance head:', cid.toString(), e)
+      // console.log('failed to advance head:', cid.toString(), e)
       continue
     }
   }

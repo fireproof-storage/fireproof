@@ -300,7 +300,7 @@ export async function* clockVis(blocks: EncryptedBlockstore, head: ClockHead) {
 let isCompacting = false
 export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   if (isCompacting) {
-    console.log('already compacting')
+    // console.log('already compacting')
     return
   }
   isCompacting = true

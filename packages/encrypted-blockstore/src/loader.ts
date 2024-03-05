@@ -327,9 +327,7 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
-      await this.cacheCarReader(carCid.toString(), reader).catch(e => {
-        console.log('cacheCarReader error', e)
-      })
+      await this.cacheCarReader(carCid.toString(), reader).catch(e => {})
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       throw new Error(`block not in reader: ${cid.toString()}`)
     }
@@ -344,10 +342,10 @@ export class Loader implements Loadable {
 
       const compacts = header.compact
 
-      let got
+      let got: AnyBlock | undefined
       const batchSize = 5
       for (let i = 0; i < compacts.length; i += batchSize) {
-        const promises = []
+        const promises: Promise<AnyBlock | undefined>[] = []
         for (let j = i; j < Math.min(i + batchSize, compacts.length); j++) {
           promises.push(getCarCid(compacts[j]))
         }
@@ -366,7 +364,7 @@ export class Loader implements Loadable {
     let got
     const batchSize = 5
     for (let i = 0; i < this.carLog.length; i += batchSize) {
-      const promises = []
+      const promises: Promise<AnyBlock | undefined>[] = []
       for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
         promises.push(getCarCid(this.carLog[j]))
       }
@@ -380,7 +378,7 @@ export class Loader implements Loadable {
 
     if (!got) {
       for (let i = 0; i < this.carLog.length; i += batchSize) {
-        const promises = []
+        const promises: Promise<AnyBlock | undefined>[] = []
         for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
           promises.push(getCompactCarCids(this.carLog[j]))
         }
