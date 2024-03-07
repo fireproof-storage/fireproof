@@ -45,7 +45,8 @@
                 "https://04cqe6md3e.execute-api.us-east-1.amazonaws.com/uploads",
               download:
                 "https://fireproof-aws-connector-v1-s3uploadbucket-osbywa8svf97.s3.amazonaws.com",
-              websocket: `wss://mqnxbdkh4g.execute-api.us-east-1.amazonaws.com/Prod?database=${dbName}`,
+              websocket: 'wss://mqnxbdkh4g.execute-api.us-east-1.amazonaws.com/Prod',
+              databasename: dbName
             });
             cx.ready.then(async () => {
               const span = document.querySelector('#cxInfo')
