@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fireproof Test</title>
     <script src="./fireproof.iife.js"></script>
-    <script src="./connect-partykit.iife.js"></script>
     <script type="text/javascript">
       function todoApp() {
         const actorTag = Math.random().toString(36).substring(2, 7)
         const { fireproof, index } = Fireproof
-        const { connect } = FireproofConnect
 
         // console.log('connect', connect)
 
@@ -20,7 +18,7 @@
 
         let dbUnsubscribe = false
 
-        function setupDb(name, newDb, newConn) {
+        function setupDb(name, newDb) {
           const input = document.querySelector('#todo')
           input.disabled = true
 
@@ -32,30 +30,20 @@
             name = newDb.name
             dbName = newDb.name
             db = newDb
-            cx = newConn
+          
             const input = document.querySelector('#list')
             input.value = dbName
           } else {
             dbName = name
             db = fireproof(name, { autoCompact: 100 })
-            cx = connect.partykitRest(db)
-            cx.ready.then(async () => {
-              const span = document.querySelector('#cxInfo')
-              span.innerText = `📡 ${cx.party.id}`
-            })
+
           }
 
           window.db = db
-          window.cx = cx
+          
 
           db.changes([], { limit: 1 }).then(changes => {
-            if (changes.clock.length > 0) {
-              input.disabled = false
-            } else {
-              cx.ready.then(async () => {
-                input.disabled = false
-              })
-            }
+            input.disabled = false
           })
 
           dbUnsubscribe = db.subscribe(redraw)
@@ -75,12 +63,12 @@
         let compactor = '🚗'
         function drawInfo() {
           document.querySelector('#carLog').innerText =
-            ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`
+            ` ⏰ ${db._crdt.clock.head.length} ${compactor}`
         }
         const doRedraw = async () => {
           drawInfo()
           const result = await db.allDocs().catch(e => {
-            console.error('allDocs error', e, ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`)
+            console.error('allDocs error', e, ` ⏰ ${db._crdt.clock.head.length} ${compactor}`)
             return { rows: [] }
           })
           drawInfo()
@@ -161,8 +149,8 @@
         }
         const goWorker = dcs => {
           const timeout =
-            10 + Math.pow(db._crdt.clock.head.length + cx.loader.remoteWAL.walState.operations.length, 2) * (Math.floor(Math.random() * 1000) + 1000)
-          // console.log('go worker', timeout/ 1000)
+            10 + Math.pow(db._crdt.clock.head.length, 2) * (Math.floor(Math.random() * 50) + 50)
+          console.log('go worker', timeout/ 1000)
           worker = setTimeout(async () => {
             await Promise.all(
               dcs.rows.slice(0, 5).map(r => {
@@ -172,7 +160,7 @@
                 db.put({ ...r.value })
               })
             )
-            goWorker(await db.allDocs())
+            goWorker(dcs)
           }, timeout)
         }
 
