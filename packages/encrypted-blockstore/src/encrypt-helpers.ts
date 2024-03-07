@@ -19,6 +19,11 @@ import { encodeCarFile } from './loader-helpers'
 import { makeCodec } from './encrypt-codec.js'
 import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from './types'
 
+type AsyncBlock = {
+  cid: AnyLink
+  bytes: () => Promise<Uint8Array>
+}
+
 function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   const codec = makeCodec(crypto, randomBytes)
 
@@ -123,7 +128,67 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     yield* promises
     yield unwrap(rootBlock)
   }
-  return { encrypt, decrypt }
+
+  const lazyDecrypt = async function* ({
+    root,
+    get,
+    key,
+    cache,
+    chunker,
+    hasher
+  }: {
+    root: AnyLink
+    get: (cid: AnyLink) => Promise<AnyBlock | undefined>
+    key: ArrayBuffer
+    cache: (cid: AnyLink) => Promise<AnyBlock>
+    chunker: (bytes: Uint8Array) => AsyncGenerator<Uint8Array>
+    hasher: MultihashHasher<number>
+  }): AsyncGenerator<AsyncBlock, void, undefined> {
+    const getWithDecode = async (cid: AnyLink) =>
+      get(cid).then(async block => {
+        if (!block) return
+        const decoded = await decode({ ...block, codec: dagcbor, hasher })
+        return decoded
+      })
+    const getWithDecrypt = async (cid: AnyLink) =>
+      get(cid).then(async block => {
+        if (!block) return
+        const decoded = await decode({ ...block, codec, hasher })
+        return decoded
+      })
+    const decodedRoot = await getWithDecode(root)
+    if (!decodedRoot) throw new Error('missing root')
+    if (!decodedRoot.bytes) throw new Error('missing bytes')
+    const {
+      value: [eroot, tree]
+    } = decodedRoot as { value: [AnyLink, AnyLink] }
+    const rootBlock = (await get(eroot)) as AnyDecodedBlock
+    if (!rootBlock) throw new Error('missing root block')
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+    const cidset = await load({ cid: tree, get: getWithDecode, cache, chunker, codec, hasher })
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const { result: nodes } = (await cidset.getAllEntries()) as { result: { cid: CID }[] }
+    const unwrap = async (eblock: AnyDecodedBlock | undefined) => {
+      if (!eblock) throw new Error('missing block')
+      if (!eblock.value) {
+        eblock = (await decode({ ...eblock, codec, hasher })) as AnyDecodedBlock
+      }
+      const { bytes, cid } = await codec.decrypt({ ...eblock, key }).catch(e => {
+        throw e
+      })
+      const block = await mfCreate({ cid, bytes, hasher, codec })
+      return block
+    }
+    const getters = []
+    for (const { cid } of nodes) {
+      if (!rootBlock.cid.equals(cid))
+        getters.push({ cid, bytes: async () => (await getWithDecrypt(cid).then(unwrap)).bytes })
+    }
+    yield* getters
+    yield { cid: rootBlock.cid, bytes: async () => (await unwrap(rootBlock)).bytes }
+  }
+
+  return { encrypt, decrypt, lazyDecrypt }
 }
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const chunker = bf(30)
@@ -183,16 +248,18 @@ async function decodeCarBlocks(
   root: AnyLink,
   get: (cid: any) => Promise<AnyBlock | undefined>,
   keyMaterial: string
-): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
+): Promise<{ blocks: AsyncBlockstore; root: AnyLink }> {
   const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial)
   const decryptionKey = decryptionKeyUint8.buffer.slice(0, decryptionKeyUint8.byteLength)
 
-  const decryptedBlocks = new MemoryBlockstore()
-  let last: AnyBlock | null = null
+  // todo do a lazy decrypt on get, with a DecryptingBlockstore
+  // it will need an async entries() method, callers already await
+  const decryptedBlocks = new AsyncBlockstore()
+  let last: AsyncBlock | null = null
 
-  const { decrypt } = makeEncDec(crypto.crypto, crypto.randomBytes)
+  const { lazyDecrypt } = makeEncDec(crypto.crypto, crypto.randomBytes)
 
-  for await (const block of decrypt({
+  for await (const asyncBlock of lazyDecrypt({
     root,
     get,
     key: decryptionKey,
@@ -202,9 +269,33 @@ async function decodeCarBlocks(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     cache
   })) {
-    await decryptedBlocks.put(block.cid, block.bytes)
-    last = block
+    await decryptedBlocks.put(asyncBlock.cid, asyncBlock.bytes)
+    last = asyncBlock
   }
   if (!last) throw new Error('no blocks decrypted')
   return { blocks: decryptedBlocks, root: last.cid }
+}
+
+class AsyncBlockstore {
+  #blocks = new Map()
+
+  constructor() {}
+
+  async get(cid: AnyLink) {
+    console.log('async block get', cid.toString())
+    const bytes = this.#blocks.get(cid.toString())
+    if (!bytes) return
+    return { cid, bytes: await bytes() }
+  }
+
+  async put(cid: AnyLink, bytes: () => Promise<Uint8Array>) {
+    this.#blocks.set(cid.toString(), bytes)
+  }
+
+  async *entries() {
+    console.log('async entries')
+    for (const [str, bytes] of this.#blocks) {
+      yield { cid: CID.parse(str), bytes: await bytes() }
+    }
+  }
 }
