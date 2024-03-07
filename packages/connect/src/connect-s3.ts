@@ -6,11 +6,19 @@ import { Base64 } from "js-base64"
 export class ConnectS3 extends Connection {
   uploadUrl: URL
   downloadUrl: URL
+  ws: WebSocket
+  messagePromise: Promise<Uint8Array[]>
+  messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void
 
-  constructor(upload: string, download: string) {
+
+  constructor(upload: string, download: string,websocket: string) {
     super()
     this.uploadUrl = new URL(upload)
     this.downloadUrl = new URL(download)
+    this.ws = new WebSocket(websocket)
+    this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
+      this.messageResolve = resolve;
+    })
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
@@ -56,6 +64,41 @@ export class ConnectS3 extends Connection {
     if (!response.ok) return null // throw new Error('failed to download data ' + response.statusText)
     const bytes = new Uint8Array(await response.arrayBuffer())
     return bytes
+  }
+
+  async onConnect() {
+    console.log("Is the onconnect function being called?")
+    if (!this.loader || !this.taskManager) {
+      throw new Error("loader and taskManager must be set")
+    }
+    this.ws.addEventListener("message", async (event: any) => {
+      const { data } = JSON.parse(event.data)
+      const bytes = Base64.toUint8Array(data)
+      // console.log("This is the returned Base64String data",data)
+      // console.log("This is the event data", event.data)
+      // console.log("The Uint8Array Bytes",bytes)
+
+      //A hack to workaround for now
+      // this.refresh()
+
+      const afn = async () => {
+        console.log("Inside the afn");
+        const uint8ArrayBuffer = bytes as Uint8Array
+        const eventBlock = await this.decodeEventBlock(uint8ArrayBuffer)
+        await this.taskManager!.handleEvent(eventBlock)
+        // @ts-ignore
+        this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array])
+        // add the cid to our parents so we delete it when we send the update
+        this.parents.push(eventBlock.cid);
+        setTimeout(() => {
+          this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
+            this.messageResolve = resolve
+          })
+        }, 0)
+      }
+
+      void afn();
+    });
   }
 
   /**

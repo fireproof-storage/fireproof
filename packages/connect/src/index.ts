@@ -30,15 +30,18 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
-  s3free: ({ blockstore }: Connectable) => {
-    const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
-    const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
-    const connection = new ConnectS3(upload, download)
+  s3free: ({ blockstore }: Connectable,database:string) => {
+    // const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
+    const upload = 'https://04cqe6md3e.execute-api.us-east-1.amazonaws.com/uploads'
+    // const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
+    const download = 'https://fireproof-aws-connector-v1-s3uploadbucket-osbywa8svf97.s3.amazonaws.com'
+    const websocket=`wss://mqnxbdkh4g.execute-api.us-east-1.amazonaws.com/Prod?database=${database}`
+    const connection = new ConnectS3(upload, download, websocket)
     connection.connect(blockstore)
     return connection
   },
-  s3: ({ blockstore }: Connectable, { upload, download }: { upload: string; download: string }) => {
-    const connection = new ConnectS3(upload, download)
+  s3: ({ blockstore }: Connectable, { upload, download, websocket }: { upload: string; download: string; websocket: string }) => {
+    const connection = new ConnectS3(upload, download, websocket)
     connection.connect(blockstore)
     return connection
   },
