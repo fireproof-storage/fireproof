@@ -1,0 +1,5 @@
+{
+  "name": "@fireproof/encrypted-blockstore",
+  "version": "0.17.6",
+  "exports": "./src/index.ts"
+}

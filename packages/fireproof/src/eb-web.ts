@@ -10,6 +10,6 @@ const store = {
   makeDataStore,
   makeMetaStore,
   makeRemoteWAL
-} as StoreOpts
+} as unknown as StoreOpts
 
 export { store, crypto }
