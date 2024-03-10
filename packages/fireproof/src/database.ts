@@ -12,7 +12,8 @@ import type {
   MapFn,
   QueryOpts,
   ChangesOptions,
-  DocRecord
+  DocRecord,
+  IndexRow
 } from './types'
 import { DbResponse, ChangesResponse } from './types'
 import { EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
@@ -68,7 +69,10 @@ export class Database {
     return { id, clock: result?.head } as DbResponse
   }
 
-  async changes<T extends DocRecord<T> = {}>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
+  async changes<T extends DocRecord<T> = {}>(
+    since: ClockHead = [],
+    opts: ChangesOptions = {}
+  ): Promise<ChangesResponse<T>> {
     const { result, head } = await this._crdt.changes(since, opts)
     const rows = result.map(({ key, value, del, clock }) => ({
       key,
@@ -78,7 +82,13 @@ export class Database {
     return { rows, clock: head }
   }
 
-  async allDocs<T extends DocRecord<T> = {}>() {
+  async allDocs<T extends DocRecord<T> = {}>(): Promise<{
+    rows: {
+      key: string
+      value: Doc<T>
+    }[]
+    clock: ClockHead
+  }> {
     const { result, head } = await this._crdt.allDocs()
     const rows = result.map(({ key, value, del }) => ({
       key,
@@ -87,7 +97,13 @@ export class Database {
     return { rows, clock: head }
   }
 
-  async allDocuments<T extends DocRecord<T> = {}>() {
+  async allDocuments<T extends DocRecord<T> = {}>(): Promise<{
+    rows: {
+      key: string
+      value: Doc<T>
+    }[]
+    clock: ClockHead
+  }> {
     return this.allDocs<T>()
   }
 
@@ -112,7 +128,12 @@ export class Database {
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<T extends DocRecord<T> = {}>(field: string | MapFn, opts: QueryOpts = {}) {
+  async query<T extends DocRecord<T> = {}>(
+    field: string | MapFn,
+    opts: QueryOpts = {}
+  ): Promise<{
+    rows: IndexRow<T>[]
+  }> {
     const idx =
       typeof field === 'string'
         ? index({ _crdt: this._crdt }, field)

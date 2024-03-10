@@ -12,7 +12,7 @@ import { bf, simpleCompare } from 'prolly-trees/utils'
 // @ts-ignore
 import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
-import { ProllyNode as BaseNode } from 'prolly-trees/base'
+import { ProllyNode as BaseNode } from 'prolly-trees/db-index'
 
 import { AnyLink, DocUpdate, MapFn, DocFragment, IndexKey, IndexUpdate, QueryOpts, IndexRow, AnyBlock, Doc, DocRecord } from './types'
 import { CarTransaction, BlockFetcher } from '@fireproof/encrypted-blockstore'
