@@ -23,10 +23,12 @@ import type {
   ClockHead,
   ConfigOpts,
   ChangesOptions,
-  IdxMetaMap
+  IdxMetaMap,
+  DocValue
 } from './types'
 import { index, type Index } from './index'
 import { CRDTClock } from './crdt-clock'
+import { Block } from 'multiformats'
 
 export class CRDT {
   name: string | null
@@ -82,7 +84,7 @@ export class CRDT {
   async bulk(updates: DocUpdate[]): Promise<CRDTMeta> {
     await this.ready
     const prevHead = [...this.clock.head]
-    
+
     const meta = (await this.blockstore.transaction(
       async (blocks: CarTransaction): Promise<TransactionMeta> => {
         const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates)
@@ -99,7 +101,7 @@ export class CRDT {
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
-  async allDocs() {
+  async allDocs(): Promise<{ result: DocUpdate[]; head: ClockHead }> {
     await this.ready
     const result: DocUpdate[] = []
     for await (const entry of getAllEntries(this.blockstore, this.clock.head)) {
@@ -108,7 +110,7 @@ export class CRDT {
     return { result, head: this.clock.head }
   }
 
-  async vis() {
+  async vis(): Promise<string> {
     await this.ready
     const txt: string[] = []
     for await (const line of clockVis(this.blockstore, this.clock.head)) {
@@ -117,24 +119,30 @@ export class CRDT {
     return txt.join('\n')
   }
 
-  async getBlock(cidString: string) {
+  async getBlock(cidString: string): Promise<Block> {
     await this.ready
     return await getBlock(this.blockstore, cidString)
   }
 
-  async get(key: string) {
+  async get(key: string): Promise<DocValue | null> {
     await this.ready
     const result = await getValueFromCrdt(this.blockstore, this.clock.head, key)
     if (result.del) return null
     return result
   }
 
-  async changes(since: ClockHead = [], opts: ChangesOptions = {}) {
+  async changes(
+    since: ClockHead = [],
+    opts: ChangesOptions = {}
+  ): Promise<{
+    result: DocUpdate[]
+    head: ClockHead
+  }> {
     await this.ready
     return await clockChangesSince(this.blockstore, this.clock.head, since, opts)
   }
 
-  async compact() {
+  async compact(): Promise<void> {
     return await this.blockstore.compact()
   }
 }

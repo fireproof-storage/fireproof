@@ -1,0 +1,5 @@
+{
+  "name": "@fireproof/core",
+  "version": "0.17.6",
+  "exports": "./src/fireproof.ts"
+}

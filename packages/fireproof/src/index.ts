@@ -49,8 +49,8 @@ export class Index {
   name: string | null = null
   mapFn: MapFn | null = null
   mapFnString: string = ''
-  byKey = new IndexTree()
-  byId = new IndexTree()
+  byKey: IndexTree = new IndexTree()
+  byId: IndexTree = new IndexTree()
   indexHead: ClockHead | undefined = undefined
   includeDocsDefault: boolean = false
   initError: Error | null = null
@@ -118,7 +118,7 @@ export class Index {
         } else {
           // application code is creating an index
           if (!mapFn) {
-            mapFn = (doc) => doc[name as keyof Doc<T>] ?? undefined
+            mapFn = doc => doc[name as keyof Doc<T>] ?? undefined
           }
           if (this.mapFnString) {
             // we already loaded from a header
@@ -194,7 +194,7 @@ export class Index {
     this.byKey.root = await loadIndex(this.blockstore, this.byKey.cid, byKeyOpts)
   }
 
-  async _updateIndex() {
+  async _updateIndex(): Promise<TransactionMeta> {
     await this.ready
     if (this.initError) throw this.initError
     if (!this.mapFn) throw new Error('No map function defined')
@@ -206,7 +206,7 @@ export class Index {
     }
     if (result.length === 0) {
       this.indexHead = head
-      return { byId: this.byId, byKey: this.byKey }
+      return { byId: this.byId, byKey: this.byKey } as unknown as TransactionMeta
     }
     let staleKeyIndexEntries: IndexUpdate[] = []
     let removeIdIndexEntries: IndexUpdate[] = []
@@ -223,7 +223,7 @@ export class Index {
       key: key[1],
       value: key
     }))
-    const indexerMeta: IdxMetaMap = {indexes: new Map()}
+    const indexerMeta: IdxMetaMap = { indexes: new Map() }
 
     for (const [name, indexer] of this.crdt.indexers) {
       if (indexer.indexHead) {
