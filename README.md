@@ -39,7 +39,7 @@ Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/doc
 
 ### Live React Hooks 
 
-Fireproof has [React hooks for live data](https://www.npmjs.com/package/use-fireproof) so you can avoid boilerplate and write expressive code. Instead of dealing with React contexts and reducers, these hooks make building collaborative apps a breeze, so your team can keep the code simple.
+Fireproof [React hooks for live data](https://www.npmjs.com/package/use-fireproof) avoid boilerplate and make building collaborative apps a breeze, so your app stays simple.
 
 ```js
 import { useLiveQuery, useDocument } from 'use-fireproof'
@@ -105,8 +105,6 @@ Add the database to any web page via HTML script tag (global is `Fireproof`):
 ```
 
 Go ahead and write features, then [connect to any cloud backend](https://www.npmjs.com/package/@fireproof/connect) later.
-
-
 
 
 ## Thanks 🙏
