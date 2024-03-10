@@ -132,7 +132,7 @@
   },
   "dependencies": {
     "@web3-storage/pail": "^0.4.2",
-    "@fireproof/encrypted-blockstore": "^0.17.6",
+    "@fireproof/encrypted-blockstore": "workspace:^",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",
