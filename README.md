@@ -9,7 +9,7 @@
   </a>
 </p>
 
-Every Fireproof app is collaborative by default. Live queries update your UI  automatically when the database changes, and realtime sync means those changes can come from local or remote writers.
+Add collaboration to any app with Fireproof. Live queries update your UI  automatically when the database changes, and realtime sync means those changes can come from local or remote writers.
 
 The database can be embedded in your browser, server, or edge function, and syncs using any cloud, with [connectors for popular backend services like AWS, Netlify, and PartyKit.](https://www.npmjs.com/package/@fireproof/connect)
 
