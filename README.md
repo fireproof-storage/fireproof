@@ -39,7 +39,7 @@ Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/doc
 
 ### Live React Hooks 
 
-Fireproof [React hooks for live data](https://www.npmjs.com/package/use-fireproof) avoid boilerplate and make building collaborative apps a breeze.
+Fireproof [React hooks for live data](https://use-fireproof.com/docs/category/react-hooks) avoid boilerplate and make building collaborative apps a breeze.
 
 ```js
 import { useLiveQuery, useDocument } from 'use-fireproof'
