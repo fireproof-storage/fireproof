@@ -4,7 +4,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from './helpers.js'
+import {
+  assert,
+  equals,
+  notEquals,
+  matches,
+  resetDirectory,
+  dataDir,
+  getDirectoryName,
+  readImages
+} from './helpers.js'
 import { Database } from '../dist/test/database.js'
 // import { Doc } from '../dist/test/types.d.esm.js'
 // import { MetaStore } from '../../fireproof/dist/test/store-fs.esm.js'
@@ -33,13 +42,13 @@ describe('basic Database', function () {
   })
   it('get missing should throw', async function () {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
-    const e = await (db.get('missing')).catch(e => e)
+    const e = await db.get('missing').catch(e => e)
     matches(e.message, /Not found/)
   })
   it('del missing should result in deleted state', async function () {
     await db.del('missing')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
-    const e = await (db.get('missing')).catch(e => e)
+    const e = await db.get('missing').catch(e => e)
     matches(e.message, /Not found/)
   })
   it('has no changes', async function () {
@@ -76,7 +85,7 @@ describe('basic Database with record', function () {
     const ok = await db.del('hello')
     equals(ok.id, 'hello')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    const e = await (db.get('hello')).catch(e => e)
+    const e = await db.get('hello').catch(e => e)
     matches(e.message, /Not found/)
   })
   it('has changes', async function () {
@@ -124,7 +133,7 @@ describe('named Database with record', function () {
     const ok = await db.del('hello')
     equals(ok.id, 'hello')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    const e = await (db.get('hello')).catch(e => e)
+    const e = await db.get('hello').catch(e => e)
     matches(e.message, /Not found/)
   })
   it('has changes', async function () {
@@ -247,7 +256,7 @@ describe('basic Database parallel writes / public', function () {
       const ok = await db.del(id)
       equals(ok.id, id)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      const e = await (db.get(id)).catch(e => e)
+      const e = await db.get(id).catch(e => e)
       matches(e.message, /Not found/)
     }
   })
@@ -261,7 +270,7 @@ describe('basic Database parallel writes / public', function () {
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      const e = await (db.get(id)).catch(e => e)
+      const e = await db.get(id).catch(e => e)
       matches(e.message, /Not found/)
     }
   })
@@ -293,7 +302,7 @@ describe('basic Database with subscription', function () {
     db = new Database()
     didRun = 0
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    unsubscribe = db.subscribe((docs) => {
+    unsubscribe = db.subscribe(docs => {
       lastDoc = docs[0]
       didRun++
     }, true)
@@ -321,7 +330,6 @@ describe('basic Database with subscription', function () {
     equals(didRun, 0)
   })
 })
-
 
 describe('basic Database with no update subscription', function () {
   /** @type {Database} */
@@ -361,47 +369,46 @@ describe('database with files input', async function () {
   let imagefiles = []
   let result
 
-
   before(function () {
     let directoryname = getDirectoryName(import.meta.url)
-    let [jpg, png] = readImages(directoryname, 'test-images', ['image1.jpg', 'fireproof.png'])    
-    imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: "image/jpeg" }))
-    imagefiles.push(new File([new Blob([png])], `fireproof.png`, { type: "image/png" }))
+    let [jpg, png] = readImages(directoryname, 'test-images', ['image1.jpg', 'fireproof.png'])
+    imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: 'image/jpeg' }))
+    imagefiles.push(new File([new Blob([png])], `fireproof.png`, { type: 'image/png' }))
   })
 
   beforeEach(async function () {
     await resetDirectory(dataDir, 'fireproof-with-images')
     db = new Database('fireproof-with-images')
     const doc = {
-      _id: "images-main",
-      type: "files",
+      _id: 'images-main',
+      type: 'files',
       _files: {
-        "one": imagefiles[0],
-        "two": imagefiles[1]
+        one: imagefiles[0],
+        two: imagefiles[1]
       }
     }
 
     result = await db.put(doc)
   })
 
-  it("Should upload images", async function () {
+  it('Should upload images', async function () {
     // console.log('These are the image files', imagefiles)
 
     // console.log(result, "This is the result when the images are stored")
     equals(result.id, 'images-main')
   })
 
-  it("Should fetch the images", async function () {
-    let doc = await db.get(result.id);
+  it('Should fetch the images', async function () {
+    let doc = await db.get(result.id)
     let files = doc._files
     let keys = Object.keys(files)
     let fileMeta = files[keys[0]]
     equals(fileMeta.type, 'image/jpeg')
     equals(fileMeta.size, 5315)
     equals(fileMeta.cid.toString(), 'bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm')
-    equals(typeof fileMeta.file, "function")
+    equals(typeof fileMeta.file, 'function')
     let file = await fileMeta.file()
-    
+
     equals(file.type, 'image/jpeg')
     equals(file.size, 5315)
     // equals(file.name, 'image.jpg') // see https://github.com/fireproof-storage/fireproof/issues/70
@@ -410,11 +417,43 @@ describe('database with files input', async function () {
     equals(fileMeta.type, 'image/png')
     equals(fileMeta.size, 29917)
     equals(fileMeta.cid.toString(), 'bafkreiculdb2bq7tg7jaxl6m5gf4vh5ta3kqck6knc7lotm3a7u6qvpoje')
-    equals(typeof fileMeta.file, "function")
+    equals(typeof fileMeta.file, 'function')
     file = await fileMeta.file()
-    
+
     equals(file.type, 'image/png')
     equals(file.size, 29917)
     // equals(file.name, 'fireproof.png') // see https://github.com/fireproof-storage/fireproof/issues/70
+  })
+
+  it('should update the file document data without changing the files', async function () {
+    let doc = await db.get(result.id)
+    let files = doc._files
+    let keys = Object.keys(files)
+    let fileMeta = files[keys[0]]
+    equals(fileMeta.type, 'image/jpeg')
+    equals(fileMeta.size, 5315)
+    equals(fileMeta.cid.toString(), 'bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm')
+    equals(typeof fileMeta.file, 'function')
+    let file = await fileMeta.file()
+
+    equals(file.type, 'image/jpeg')
+    equals(file.size, 5315)
+
+    doc.type = 'images'
+    let r2 = await db.put(doc)
+    equals(r2.id, 'images-main')
+    let readDoc = await db.get(r2.id)
+    equals(readDoc.type, 'images')
+    files = readDoc._files
+    keys = Object.keys(files)
+    fileMeta = files[keys[0]]
+    equals(fileMeta.type, 'image/jpeg')
+    equals(fileMeta.size, 5315)
+    equals(fileMeta.cid.toString(), 'bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm')
+    equals(typeof fileMeta.file, 'function')
+    file = await fileMeta.file()
+
+    equals(file.type, 'image/jpeg')
+    equals(file.size, 5315)
   })
 })

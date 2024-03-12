@@ -120,10 +120,14 @@ async function processFileset(blocks: CarTransaction, files: DocFiles, publicFil
         t.putSync(block.cid, block.bytes)
       }
       files[filename] = { cid, type: file.type, size: file.size } as DocFileMeta
+    } else {
+      const { cid, type, size, car } = files[filename] as DocFileMeta
+      if (cid && type && size && car) {
+        files[filename] = { cid, type, size, car }
+      }
     }
   }
-  // todo option to bypass this limit
-  // if (totalSize > 1024 * 1024 * 1) throw new Error('Sync limit for files in a single update is 1MB')
+  
   if (didPut.length) {
     const car = await dbBlockstore.loader?.commitFiles(t, { files } as unknown as TransactionMeta, {
       public: publicFiles
