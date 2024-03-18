@@ -9,12 +9,12 @@
   </a>
 </p>
 
-Add collaboration to any app with Fireproof. Live queries update your UI  automatically when the database changes, and realtime sync means those changes can come from local or remote writers.
+### No setup: write features first, access your data anywhere
 
-The database can be embedded in your browser, server, or edge function, and syncs using any cloud, with [connectors for popular backend services like AWS, Netlify, and PartyKit.](https://www.npmjs.com/package/@fireproof/connect)
+Add collaboration to any app with Fireproof. Access data from JavaScript servers and edge functions. Use live queries to update your UI automatically when the database changes. [Connect realtime sync](https://www.npmjs.com/package/@fireproof/connect) and those changes will sync between browsers and backend functions. Apps built this way are multi-player by default.
 
  
- ### JavaScript Example
+ ### JavaScript quick start
 
 The document database API will feel familiar. Queries use dynamic indexes, and the database can refresh your UI, as seen in the `db.subscribe` call below, as well as the React liveQuery hook.
 
@@ -37,7 +37,7 @@ await db.put(beyonceDoc)
 
 Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics)
 
-### Live React Hooks 
+### Live data hooks for React
 
 Fireproof [React hooks for live data](https://use-fireproof.com/docs/category/react-hooks) avoid boilerplate and make building collaborative apps a breeze.
 
@@ -61,7 +61,7 @@ Compared to other embedded databases, Fireproof:
 
 Deliver interactive experiences without waiting on the backend. Fireproof runs in any cloud, browser, or edge environment, so your application can access data anywhere.
 
-[Get the latest updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the database [architecture](https://use-fireproof.com/docs/architecture).
+[Get the latest roadmap updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the database [architecture](https://use-fireproof.com/docs/architecture).
 
 ### Use cases
 
