@@ -131,13 +131,13 @@
     "util": "^0.12.5"
   },
   "dependencies": {
-    "@web3-storage/pail": "^0.4.2",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ipld/car": "^5.2.0",
     "@ipld/dag-cbor": "^9.0.3",
     "@ipld/dag-json": "^10.1.2",
     "@ipld/unixfs": "^2.1.1",
     "@peculiar/webcrypto": "^1.4.3",
+    "@web3-storage/pail": "^0.5.0",
     "charwise": "^3.0.1",
     "idb": "^7.1.1",
     "ipfs-unixfs-exporter": "^13.1.7",
