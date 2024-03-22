@@ -50,13 +50,13 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@web3-storage/pail": "^0.4.2",
-    "@fireproof/core": "workspace:^",
     "@fireproof/connect": "workspace:^",
+    "@fireproof/core": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ucanto/core": "^8.2.0",
     "@ucanto/interface": "^8.1.0",
     "@web3-storage/clock": "^0.3.0",
+    "@web3-storage/pail": "^0.5.0",
     "@web3-storage/w3up-client": "^8.0.1",
     "cross-fetch": "^4.0.0",
     "multiformats": "^12.0.1"
