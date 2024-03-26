@@ -87,6 +87,11 @@ export class ConnectS3 extends Connection {
       throw new Error(
         "failed to upload data " + JSON.parse(result.body).message
       );
+    })
+    const result = await done.json()
+    if (result.status != 201)
+    {
+      throw new Error("failed to upload data " + JSON.parse(result.body).message)
     }
     this.parents = [event.cid];
     return null;
