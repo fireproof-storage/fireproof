@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fireproof Test</title>
     <script src="./fireproof.iife.js"></script>
-    <script src="./connect-partykit.iife.js"></script>
+    <!-- <script src="./connect-partykit.iife.js"></script> -->
+    <script src="./connect.iife.js"></script>
     <script type="text/javascript">
       function todoApp() {
         const actorTag = Math.random().toString(36).substring(2, 7);
         const { fireproof, index } = Fireproof;
         const { connect } = FireproofConnect;
-
         // console.log('connect', connect)
 
         let dbName;
@@ -38,7 +38,16 @@
           } else {
             dbName = name;
             db = fireproof(name, { autoCompact: 100 });
-            cx = connect.partykitS3(db);
+            // cx = connect.partykitRest(db)
+            cx = connect.s3(db, {
+              upload:
+                "https://aq0pbyfywg.execute-api.us-east-1.amazonaws.com/uploads",
+              download:
+                "https://fireproof-aws-connector-s3uploadbucket-yll7d1l9zlyh.s3.amazonaws.com",
+              websocket:
+                "wss://fhpo61crph.execute-api.us-east-1.amazonaws.com/Prod",
+              databasename: dbName,
+            });
             cx.ready.then(async () => {
               const span = document.querySelector("#cxInfo");
               span.innerText = `📡 ${cx.party.id}`;
@@ -76,11 +85,18 @@
         function drawInfo() {
           document.querySelector(
             "#carLog"
-          ).innerText = ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length} 📩 ${cx.taskManager.queue.length}`;
+          ).innerText = ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`;
         }
         const doRedraw = async () => {
           drawInfo();
-          const result = await db.allDocs();
+          const result = await db.allDocs().catch((e) => {
+            console.error(
+              "allDocs error",
+              e,
+              ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`
+            );
+            return { rows: [] };
+          });
           drawInfo();
           document.querySelector("ul").innerHTML = "";
           for (const row of result.rows) {
@@ -164,9 +180,13 @@
         const goWorker = (dcs) => {
           const timeout =
             10 +
-            db._crdt.clock.head.length *
-              (Math.floor(Math.random() * 2000) + 2000);
-          // console.log('go worker', timeout)
+            Math.pow(
+              db._crdt.clock.head.length +
+                cx.loader.remoteWAL.walState.operations.length,
+              2
+            ) *
+              (Math.floor(Math.random() * 1000) + 1000);
+          // console.log('go worker', timeout/ 1000)
           worker = setTimeout(async () => {
             await Promise.all(
               dcs.rows.slice(0, 5).map((r) => {
@@ -176,7 +196,7 @@
                 db.put({ ...r.value });
               })
             );
-            goWorker(dcs);
+            goWorker(await db.allDocs());
           }, timeout);
         };
 
@@ -215,25 +235,18 @@
   </head>
 
   <body>
-    <h1>Fireproof Todos</h1>
-    List:
+    <h1><a href="https://use-fireproof.com/">Fireproof</a> Test App</h1>
+    Database:
     <input title="Change list" type="text" name="list" id="list" />
-    <button onclick="changeList(event)">Change List</button>
+    <button onclick="changeList(event)">Switch</button>
 
     <p>
-      Fireproof stores data locally and encrypts it before sending it to the
-      cloud. This demo uses web3.storage, but you can easily run Fireproof on S3
-      or another provider.
-      <a href="https://use-fireproof.com/"
-        >Learn more in the Fireproof developer docs.</a
-      >
+      This version of the Fireprof test app uses PartyKit as the storage
+      backend. Refresh is automatic and live.
     </p>
 
-    <button onclick="openDashboard(event)">🔥 Import to Dashboard</button>
     <button id="robot" onclick="toggleWorker(event)">🤖</button>
-    <br />
     <span id="carLog" onclick="doCompact(event)"></span>
-    <br />
     <span id="cxInfo"></span>
 
     <h3>Todos</h3>
