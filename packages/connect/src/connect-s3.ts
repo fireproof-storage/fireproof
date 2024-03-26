@@ -6,7 +6,7 @@ import { Base64 } from "js-base64"
 export class ConnectS3 extends Connection {
   uploadUrl: URL
   downloadUrl: URL
-  ws: WebSocket
+  ws: WebSocket | undefined
   messagePromise: Promise<Uint8Array[]>
   messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void
 
@@ -14,7 +14,13 @@ export class ConnectS3 extends Connection {
     super()
     this.uploadUrl = new URL(upload)
     this.downloadUrl = new URL(download)
-    this.ws = new WebSocket(websocket)
+    if(websocket.length!=0)
+    {
+      this.ws = new WebSocket(websocket)
+    }
+    else{
+      this.ws=undefined
+    }
     this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve;
     })
@@ -48,7 +54,8 @@ export class ConnectS3 extends Connection {
       body: JSON.stringify(crdtEntry),
     })
     const result = await done.json()
-    if (result.status != 201) {
+    if (result.status != 201) 
+    {
       throw new Error("failed to upload data " + JSON.parse(result.body).message)
     }
     this.parents = [event.cid]
@@ -66,15 +73,18 @@ export class ConnectS3 extends Connection {
 
 
   async onConnect() {
-    console.log("Is the onconnect function being called?")
     if (!this.loader || !this.taskManager) {
       throw new Error("loader and taskManager must be set")
+    }
+
+    if(this.ws==undefined)
+    {
+      return;
     }
     this.ws.addEventListener("message", async (event: any) => {
       const data = JSON.parse(event.data);
       const bytes = Base64.toUint8Array(data.items[0].data)
       const afn = async () => {
-        console.log("Inside the afn");
         const uint8ArrayBuffer = bytes as Uint8Array
         const eventBlock = await this.createEventBlock(uint8ArrayBuffer)
         await this.taskManager!.handleEvent(eventBlock)

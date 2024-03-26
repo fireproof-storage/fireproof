@@ -39,6 +39,7 @@
             dbName = name
             db = fireproof(name, { autoCompact: 100 })
             cx = connect.s3(db,{ upload: 'https://aq0pbyfywg.execute-api.us-east-1.amazonaws.com/uploads', download:'https://fireproof-aws-connector-s3uploadbucket-yll7d1l9zlyh.s3.amazonaws.com', websocket:'wss://fhpo61crph.execute-api.us-east-1.amazonaws.com/Prod',databasename: dbName })
+            // cx=connect.s3free(db);
             cx.ready.then(async () => {
               const span = document.querySelector('#cxInfo')
               span.innerText = `📡`
