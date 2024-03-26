@@ -51,7 +51,7 @@ export abstract class Loadable {
 export class Loader implements Loadable {
   name: string
   ebOpts: BlockstoreOpts
-  commitQueue = new CommitQueue<AnyLink>()
+  commitQueue: CommitQueue<AnyLink> = new CommitQueue<AnyLink>()
   isCompacting = false
   isWriting = false
   remoteMetaStore?: AbstractRemoteMetaStore
@@ -150,7 +150,7 @@ export class Loader implements Loadable {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async _getKey() {
+  async _getKey(): Promise<string | undefined> {
     if (this.key) return this.key
     // generate a random key
     if (!this.ebOpts.public) {
@@ -448,7 +448,7 @@ export class Loader implements Loadable {
     return this.carReaders.get(cidString) as Promise<CarReader>
   }
 
-  protected async ensureDecryptedReader(reader: CarReader) {
+  protected async ensureDecryptedReader(reader: CarReader): Promise<CarReader> {
     const theKey = await this._getKey()
     if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) return reader
     const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader)
@@ -478,7 +478,7 @@ export class Loader implements Loadable {
     await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
   }
 
-  async _setWaitForWrite(_writingFn: () => Promise<any>) {
+  async _setWaitForWrite(_writingFn: () => Promise<any>): Promise<void> {
     const wr = this.writing
     this.writing = wr.then(async () => {
       await _writingFn()

@@ -88,7 +88,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     return await this.loader.getBlock(cid)
   }
 
-  async getFile(car: AnyLink, cid: AnyLink, isPublic = false) {
+  async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
     await this.ready
     if (!this.loader) throw new Error('loader required to get file')
     const reader = await this.loader.loadFileCar(car, isPublic)
@@ -115,7 +115,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     this.compacting = false
   }
 
-  async defaultCompact(blocks: CompactionFetcher) {
+  async defaultCompact(blocks: CompactionFetcher): Promise<TransactionMeta> {
     // console.log('eb compact')
     if (!this.loader) {
       throw new Error('no loader')
@@ -165,7 +165,7 @@ export class CompactionFetcher implements BlockFetcher {
     this.loggedBlocks = new CarTransaction(blocks)
   }
 
-  async get(cid: AnyLink) {
+  async get(cid: AnyLink): Promise<AnyAnyBlock | undefined> {
     const block = await this.blockstore.get(cid)
     if (block) this.loggedBlocks.putSync(cid, block.bytes)
     return block
