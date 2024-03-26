@@ -54,7 +54,7 @@ export class ConnectS3 extends Connection {
       body: JSON.stringify(crdtEntry),
     })
     const result = await done.json()
-    if (result.status != 201) 
+    if (result.status != 201)
     {
       throw new Error("failed to upload data " + JSON.parse(result.body).message)
     }
@@ -143,7 +143,7 @@ export class ConnectS3 extends Connection {
    */
   async metaDownload(params: DownloadMetaFnParams) {
     const { name, branch } = params
-    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl)
+    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`,this.uploadUrl)
     const data = await fetch(fetchUploadUrl)
     let response = await data.json()
     if (response.status != 200) throw new Error("Failed to download data")
