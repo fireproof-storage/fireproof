@@ -23,13 +23,17 @@ export class ConnectS3 extends Connection {
   ws: WebSocket;
   messagePromise: Promise<Uint8Array[]>;
   messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void;
+  uploadUrl: URL;
+  downloadUrl: URL;
+  ws: WebSocket | undefined;
+  messagePromise: Promise<Uint8Array[]>;
+  messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void;
 
   constructor(upload: string, download: string, websocket: string) {
     super();
     this.uploadUrl = new URL(upload);
     this.downloadUrl = new URL(download);
     this.ws = new WebSocket(websocket);
-
     this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve;
     });
@@ -104,6 +108,14 @@ export class ConnectS3 extends Connection {
     console.log("Is the onconnect function being called?");
     if (!this.loader || !this.taskManager) {
       throw new Error("loader and taskManager must be set");
+    }
+
+    if (this.ws == undefined) {
+      return;
+    }
+
+    if (this.ws == undefined) {
+      return;
     }
     this.ws.addEventListener("message", async (event: any) => {
       const data = JSON.parse(event.data);
