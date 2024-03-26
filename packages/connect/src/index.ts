@@ -32,16 +32,16 @@ class ConnectRaw extends Connection {
 export const connect = {
   s3free: ({ blockstore }: Connectable, databasename: string) => {
     // const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
-    const upload = 'https://04cqe6md3e.execute-api.us-east-1.amazonaws.com/uploads'
+    const upload = 'https://aq0pbyfywg.execute-api.us-east-1.amazonaws.com/uploads'
     // const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
-    const download = 'https://fireproof-aws-connector-v1-s3uploadbucket-osbywa8svf97.s3.amazonaws.com'
-    const websocket=`wss://mqnxbdkh4g.execute-api.us-east-1.amazonaws.com/Prod?database=${databasename}`
+    const download = 'https://fireproof-aws-connector-s3uploadbucket-yll7d1l9zlyh.s3.amazonaws.com'
+    const websocket = `wss://fhpo61crph.execute-api.us-east-1.amazonaws.com/Prod?database=${databasename}`
     const connection = new ConnectS3(upload, download, websocket)
     connection.connect(blockstore)
     return connection
   },
   s3: ({ blockstore }: Connectable, { upload, download, websocket, databasename }: { upload: string; download: string; websocket: string; databasename: string }) => {
-    const updatedwebsocket= `${websocket}?database=${databasename}`
+    const updatedwebsocket = `${websocket}?database=${databasename}`
     const connection = new ConnectS3(upload, download, updatedwebsocket)
     connection.connect(blockstore)
     return connection
