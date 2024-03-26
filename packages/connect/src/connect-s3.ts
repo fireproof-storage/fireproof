@@ -11,11 +11,14 @@ export class ConnectS3 extends Connection {
   messageResolve?: (value: Uint8Array[] | PromiseLike<Uint8Array[]>) => void
 
 
-  constructor(upload: string, download: string,websocket: string) {
+  constructor(upload: string, download: string, websocket: string) {
+    console.log("The constructor is being called")
     super()
     this.uploadUrl = new URL(upload)
     this.downloadUrl = new URL(download)
+    console.log('This is the websocket API', websocket)
     this.ws = new WebSocket(websocket)
+
     this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve;
     })
@@ -49,8 +52,7 @@ export class ConnectS3 extends Connection {
       body: JSON.stringify(crdtEntry),
     })
     const result = await done.json()
-    if (result.status != 201)
-    {
+    if (result.status != 201) {
       throw new Error("failed to upload data " + JSON.parse(result.body).message)
     }
     this.parents = [event.cid]
@@ -66,25 +68,24 @@ export class ConnectS3 extends Connection {
     return bytes
   }
 
+
+
   async onConnect() {
     console.log("Is the onconnect function being called?")
     if (!this.loader || !this.taskManager) {
       throw new Error("loader and taskManager must be set")
     }
     this.ws.addEventListener("message", async (event: any) => {
-      const { data } = JSON.parse(event.data)
-      const bytes = Base64.toUint8Array(data)
-      // console.log("This is the returned Base64String data",data)
-      // console.log("This is the event data", event.data)
-      // console.log("The Uint8Array Bytes",bytes)
-
-      //A hack to workaround for now
-      // this.refresh()
+      console.log("The event", event)
+      console.log("This is the data", JSON.parse(event.data))
+      const data = JSON.parse(event.data);
+      const bytes = Base64.toUint8Array(data.items[0].data)
 
       const afn = async () => {
         console.log("Inside the afn");
         const uint8ArrayBuffer = bytes as Uint8Array
-        const eventBlock = await this.decodeEventBlock(uint8ArrayBuffer)
+        const eventBlock = await this.createEventBlock(uint8ArrayBuffer)
+        // const eventBlock = await this.decodeEventBlock(uint8ArrayBuffer)
         await this.taskManager!.handleEvent(eventBlock)
         // @ts-ignore
         this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array])
@@ -141,7 +142,7 @@ export class ConnectS3 extends Connection {
    */
   async metaDownload(params: DownloadMetaFnParams) {
     const { name, branch } = params
-    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`,this.uploadUrl)
+    const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl)
     const data = await fetch(fetchUploadUrl)
     let response = await data.json()
     if (response.status != 200) throw new Error("Failed to download data")
