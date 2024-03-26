@@ -1,243 +1,233 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fireproof Test</title>
+    <script src="./fireproof.iife.js"></script>
+    <script src="./connect-partykit.iife.js"></script>
+    <script type="text/javascript">
+      function todoApp() {
+        const actorTag = Math.random().toString(36).substring(2, 7)
+        const { fireproof, index } = Fireproof
+        const { connect } = FireproofConnect
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fireproof Test</title>
-  <script src="./fireproof.iife.js"></script>
-  <!-- <script src="./connect-partykit.iife.js"></script> -->
-  <script src="./connect.iife.js"></script>
-  <script type="text/javascript">
-    function todoApp() {
-      const actorTag = Math.random().toString(36).substring(2, 7)
-      const { fireproof, index } = Fireproof
-      const { connect } = FireproofConnect
-      // console.log('connect', connect)
+        // console.log('connect', connect)
 
-      let dbName
-      let db
-      let cx
+        let dbName
+        let db
+        let cx
 
-      let dbUnsubscribe = false
+        let dbUnsubscribe = false
 
-      function setupDb(name, newDb, newConn) {
-        const input = document.querySelector('#todo')
-        input.disabled = true
+        function setupDb(name, newDb, newConn) {
+          const input = document.querySelector('#todo')
+          input.disabled = true
 
-        if (dbUnsubscribe) {
-          dbUnsubscribe()
-        }
-        if (newDb) {
-          // console.log('new db', newDb, newConn)
-          name = newDb.name
-          dbName = newDb.name
-          db = newDb
-          cx = newConn
-          const input = document.querySelector('#list')
-          input.value = dbName
-        } else {
-          dbName = name
-          db = fireproof(name, { autoCompact: 100 })
-          // cx = connect.partykitRest(db)
-          cx = connect.s3(db, {
-            upload:
-              "https://aq0pbyfywg.execute-api.us-east-1.amazonaws.com/uploads",
-            download:
-              "https://fireproof-aws-connector-s3uploadbucket-yll7d1l9zlyh.s3.amazonaws.com",
-            websocket: "wss://fhpo61crph.execute-api.us-east-1.amazonaws.com/Prod",
-            databasename: dbName
-          });
-          cx.ready.then(async () => {
-            const span = document.querySelector('#cxInfo')
-            span.innerText = `📡 ${cx.party.id}`
-          })
-        }
-
-        window.db = db
-        window.cx = cx
-
-        db.changes([], { limit: 1 }).then(changes => {
-          if (changes.clock.length > 0) {
-            input.disabled = false
+          if (dbUnsubscribe) {
+            dbUnsubscribe()
+          }
+          if (newDb) {
+            // console.log('new db', newDb, newConn)
+            name = newDb.name
+            dbName = newDb.name
+            db = newDb
+            cx = newConn
+            const input = document.querySelector('#list')
+            input.value = dbName
           } else {
+            dbName = name
+            db = fireproof(name, { autoCompact: 100 })
+            cx = connect.partykitRest(db)
             cx.ready.then(async () => {
-              input.disabled = false
+              const span = document.querySelector('#cxInfo')
+              span.innerText = `📡 ${cx.party.id}`
             })
           }
-        })
 
-        dbUnsubscribe = db.subscribe(redraw)
-        return db
-      }
+          window.db = db
+          window.cx = cx
 
-      let doing
-      const redraw = async () => {
-        if (doing) {
+          db.changes([], { limit: 1 }).then(changes => {
+            if (changes.clock.length > 0) {
+              input.disabled = false
+            } else {
+              cx.ready.then(async () => {
+                input.disabled = false
+              })
+            }
+          })
+
+          dbUnsubscribe = db.subscribe(redraw)
+          return db
+        }
+
+        let doing
+        const redraw = async () => {
+          if (doing) {
+            return doing
+          }
+          doing = doRedraw().finally(() => (doing = null))
           return doing
         }
-        doing = doRedraw().finally(() => (doing = null))
-        return doing
-      }
-      window.redraw = redraw
+        window.redraw = redraw
 
-      let compactor = '🚗'
-      function drawInfo() {
-        document.querySelector('#carLog').innerText =
-          ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`
-      }
-      const doRedraw = async () => {
-        drawInfo()
-        const result = await db.allDocs().catch(e => {
-          console.error('allDocs error', e, ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`)
-          return { rows: [] }
-        })
-        drawInfo()
-        document.querySelector('ul').innerHTML = ''
-        for (const row of result.rows) {
-          // const doc = await db.get(row.id);
-          const doc = row.value
-          const checkbox = document.createElement('input')
-          checkbox.setAttribute('type', 'checkbox')
-          if (doc.completed) {
-            checkbox.setAttribute('checked', true)
-          }
-          checkbox.onchange = async e => {
-            e.target.indeterminate = true
-            const clicks = doc.clicks || 0
-            doc.clicks = clicks + 1
-            doc.completed = !doc.completed
-            await db.put(doc)
-          }
-          const textSpan = document.createElement('span')
-          textSpan.innerText = `${doc.actor}:${doc.clicks || 0} ${doc.task}`
-          const li = document.createElement('li')
-          li.appendChild(checkbox)
-          li.appendChild(textSpan)
-          document.querySelector('ul').appendChild(li)
+        let compactor = '🚗'
+        function drawInfo() {
+          document.querySelector('#carLog').innerText =
+            ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`
         }
-      }
-
-      async function initialize() {
-        ps = new URLSearchParams(location.search)
-        const listQ = ps.get('list')
-        setupDb(listQ || 'my-list')
-        const input = document.querySelector('#list')
-        input.value = dbName
-        redraw()
-      }
-
-      async function openDashboard(e) {
-        db.openDashboard()
-      }
-      window.openDashboard = openDashboard
-
-      async function changeList(e) {
-        e.preventDefault()
-        const input = document.querySelector('#list')
-        dbName = input.value
-        history.pushState(null, '', location.pathname + '?list=' + encodeURIComponent(dbName))
-        setupDb(dbName)
-        redraw()
-      }
-      window.changeList = changeList
-
-      async function createTodoClick(e) {
-        e.preventDefault()
-        const input = document.querySelector('#todo')
-        input.disabled = true
-        const ok = await db.put({
-          actor: actorTag,
-          created: Date.now(),
-          task: input.value,
-          completed: false
-        })
-        input.disabled = false
-        input.value = ''
-      }
-      window.createTodoClick = createTodoClick
-
-      let worker
-      async function startWorker() {
-        const button = document.querySelector('#robot')
-        button.innerText = '🦾'
-        const dcs = await db.allDocs()
-        console.log('start worker', dcs.rows.length)
-        // worker = setInterval(async () => {
-        //   dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.value.clicks || 0) + 1, completed: Math.random() > 0.5 }))
-        // }, 5000)
-        goWorker(dcs)
-      }
-      const goWorker = dcs => {
-        const timeout =
-          10 + Math.pow(db._crdt.clock.head.length + cx.loader.remoteWAL.walState.operations.length, 2) * (Math.floor(Math.random() * 1000) + 1000)
-        // console.log('go worker', timeout/ 1000)
-        worker = setTimeout(async () => {
-          await Promise.all(
-            dcs.rows.slice(0, 5).map(r => {
-              r.value.clicks = r.value.clicks || 0
-              r.value.clicks += 1
-              r.value.completed = Math.random() > 0.5
-              db.put({ ...r.value })
-            })
-          )
-          goWorker(await db.allDocs())
-        }, timeout)
-      }
-
-      const stopWorker = () => {
-        const button = document.querySelector('#robot')
-        button.innerText = '🤖'
-        console.log('stop worker')
-        clearTimeout(worker)
-      }
-      const toggleWorker = e => {
-        e.preventDefault()
-        if (worker) {
-          stopWorker()
-        } else {
-          startWorker(e)
+        const doRedraw = async () => {
+          drawInfo()
+          const result = await db.allDocs().catch(e => {
+            console.error('allDocs error', e, ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`)
+            return { rows: [] }
+          })
+          drawInfo()
+          document.querySelector('ul').innerHTML = ''
+          for (const row of result.rows) {
+            // const doc = await db.get(row.id);
+            const doc = row.value
+            const checkbox = document.createElement('input')
+            checkbox.setAttribute('type', 'checkbox')
+            if (doc.completed) {
+              checkbox.setAttribute('checked', true)
+            }
+            checkbox.onchange = async e => {
+              e.target.indeterminate = true
+              const clicks = doc.clicks || 0
+              doc.clicks = clicks + 1
+              doc.completed = !doc.completed
+              await db.put(doc)
+            }
+            const textSpan = document.createElement('span')
+            textSpan.innerText = `${doc.actor}:${doc.clicks || 0} ${doc.task}`
+            const li = document.createElement('li')
+            li.appendChild(checkbox)
+            li.appendChild(textSpan)
+            document.querySelector('ul').appendChild(li)
+          }
         }
+
+        async function initialize() {
+          ps = new URLSearchParams(location.search)
+          const listQ = ps.get('list')
+          setupDb(listQ || 'my-list')
+          const input = document.querySelector('#list')
+          input.value = dbName
+          redraw()
+        }
+
+        async function openDashboard(e) {
+          db.openDashboard()
+        }
+        window.openDashboard = openDashboard
+
+        async function changeList(e) {
+          e.preventDefault()
+          const input = document.querySelector('#list')
+          dbName = input.value
+          history.pushState(null, '', location.pathname + '?list=' + encodeURIComponent(dbName))
+          setupDb(dbName)
+          redraw()
+        }
+        window.changeList = changeList
+
+        async function createTodoClick(e) {
+          e.preventDefault()
+          const input = document.querySelector('#todo')
+          input.disabled = true
+          const ok = await db.put({
+            actor: actorTag,
+            created: Date.now(),
+            task: input.value,
+            completed: false
+          })
+          input.disabled = false
+          input.value = ''
+        }
+        window.createTodoClick = createTodoClick
+
+        let worker
+        async function startWorker() {
+          const button = document.querySelector('#robot')
+          button.innerText = '🦾'
+          const dcs = await db.allDocs()
+          console.log('start worker', dcs.rows.length)
+          // worker = setInterval(async () => {
+          //   dcs.rows.map((r) => db.put({ ...r.value, clicks: (r.value.clicks || 0) + 1, completed: Math.random() > 0.5 }))
+          // }, 5000)
+          goWorker(dcs)
+        }
+        const goWorker = dcs => {
+          const timeout =
+            10 + Math.pow(db._crdt.clock.head.length + cx.loader.remoteWAL.walState.operations.length, 2) * (Math.floor(Math.random() * 1000) + 1000)
+          // console.log('go worker', timeout/ 1000)
+          worker = setTimeout(async () => {
+            await Promise.all(
+              dcs.rows.slice(0, 5).map(r => {
+                r.value.clicks = r.value.clicks || 0
+                r.value.clicks += 1
+                r.value.completed = Math.random() > 0.5
+                db.put({ ...r.value })
+              })
+            )
+            goWorker(await db.allDocs())
+          }, timeout)
+        }
+
+        const stopWorker = () => {
+          const button = document.querySelector('#robot')
+          button.innerText = '🤖'
+          console.log('stop worker')
+          clearTimeout(worker)
+        }
+        const toggleWorker = e => {
+          e.preventDefault()
+          if (worker) {
+            stopWorker()
+          } else {
+            startWorker(e)
+          }
+        }
+        window.toggleWorker = toggleWorker
+
+        async function doCompact(e) {
+          e.preventDefault()
+          compactor = '🚕'
+          drawInfo()
+          await db.compact()
+          drawInfo()
+          compactor = '🚗'
+        }
+        window.doCompact = doCompact
+
+        window.onload = initialize
+        window.db = db
       }
-      window.toggleWorker = toggleWorker
 
-      async function doCompact(e) {
-        e.preventDefault()
-        compactor = '🚕'
-        drawInfo()
-        await db.compact()
-        drawInfo()
-        compactor = '🚗'
-      }
-      window.doCompact = doCompact
+      todoApp()
+    </script>
+  </head>
 
-      window.onload = initialize
-      window.db = db
-    }
+  <body>
+    <h1><a href="https://use-fireproof.com/">Fireproof</a> Test App</h1>
+    Database:
+    <input title="Change list" type="text" name="list" id="list" />
+    <button onclick="changeList(event)">Switch</button>
+    
+    <p>
+      This version of the Fireprof test app uses PartyKit as the
+      storage backend. Refresh is automatic and live.
+    </p>
 
-    todoApp()
-  </script>
-</head>
+    <button id="robot" onclick="toggleWorker(event)">🤖</button>
+    <span id="carLog" onclick="doCompact(event)"></span>    
+    <span id="cxInfo"></span>
 
-<body>
-  <h1><a href="https://use-fireproof.com/">Fireproof</a> Test App</h1>
-  Database:
-  <input title="Change list" type="text" name="list" id="list" />
-  <button onclick="changeList(event)">Switch</button>
-
-  <p>
-    This version of the Fireprof test app uses PartyKit as the
-    storage backend. Refresh is automatic and live.
-  </p>
-
-  <button id="robot" onclick="toggleWorker(event)">🤖</button>
-  <span id="carLog" onclick="doCompact(event)"></span>
-  <span id="cxInfo"></span>
-
-  <h3>Todos</h3>
-  <input title="Create a todo" type="text" name="todo" id="todo" />
-  <button onclick="createTodoClick(event)">Create Todo</button>
-  <ul></ul>
-</body>
-
+    <h3>Todos</h3>
+    <input title="Create a todo" type="text" name="todo" id="todo" />
+    <button onclick="createTodoClick(event)">Create Todo</button>
+    <ul></ul>
+  </body>
 </html>
