@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/connect",
-  "version": "0.17.6",
+  "version": "0.17.7",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
