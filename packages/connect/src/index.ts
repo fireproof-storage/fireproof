@@ -30,24 +30,27 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
-  s3: ({ blockstore }: Connectable) => {
+  s3free: ({ blockstore }: Connectable) => {
     const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
     const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
-    const websocket=""
+    const websocket = ''
     const connection = new ConnectS3(upload, download, websocket)
     connection.connect(blockstore)
     return connection
   },
-  aws: ({ blockstore }: Connectable, databasename: string) => {
-    const upload = 'https://aq0pbyfywg.execute-api.us-east-1.amazonaws.com/uploads'
-    const download = 'https://fireproof-aws-connector-s3uploadbucket-yll7d1l9zlyh.s3.amazonaws.com'
-    const websocket = `wss://fhpo61crph.execute-api.us-east-1.amazonaws.com/Prod?database=${databasename}`
+  awsFree: ({ blockstore, name }: Connectable) => {
+    const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
+    const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
+    const websocket = `wss://v7eax67rm6.execute-api.us-east-2.amazonaws.com/Prod?database=${name}`
     const connection = new ConnectS3(upload, download, websocket)
     connection.connect(blockstore)
     return connection
   },
-  awscustom: ({ blockstore }: Connectable, { upload, download, websocket, databasename }: { upload: string; download: string; websocket: string; databasename: string }) => {
-    const updatedwebsocket = `${websocket}?database=${databasename}`
+  aws: (
+    { blockstore, name }: Connectable,
+    { upload, download, websocket }: { upload: string; download: string; websocket: string }
+  ) => {
+    const updatedwebsocket = `${websocket}?database=${name}`
     const connection = new ConnectS3(upload, download, updatedwebsocket)
     connection.connect(blockstore)
     return connection
