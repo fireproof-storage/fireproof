@@ -33,12 +33,25 @@ export const connect = {
   s3free: ({ blockstore }: Connectable) => {
     const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
     const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
-    const connection = new ConnectS3(upload, download)
+    const websocket = ''
+    const connection = new ConnectS3(upload, download, websocket)
     connection.connect(blockstore)
     return connection
   },
-  s3: ({ blockstore }: Connectable, { upload, download }: { upload: string; download: string }) => {
-    const connection = new ConnectS3(upload, download)
+  awsFree: ({ blockstore, name }: Connectable) => {
+    const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
+    const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
+    const websocket = `wss://v7eax67rm6.execute-api.us-east-2.amazonaws.com/Prod?database=${name}`
+    const connection = new ConnectS3(upload, download, websocket)
+    connection.connect(blockstore)
+    return connection
+  },
+  aws: (
+    { blockstore, name }: Connectable,
+    { upload, download, websocket }: { upload: string; download: string; websocket: string }
+  ) => {
+    const updatedwebsocket = `${websocket}?database=${name}`
+    const connection = new ConnectS3(upload, download, updatedwebsocket)
     connection.connect(blockstore)
     return connection
   },
