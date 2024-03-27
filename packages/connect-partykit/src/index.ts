@@ -28,7 +28,7 @@ export const connect = {
       upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
       download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
     }
-    const s3conn = new ConnectS3(s3conf.upload, s3conf.download)
+    const s3conn = new ConnectS3(s3conf.upload, s3conf.download, '')
     s3conn.connectStorage(blockstore)
 
     if (!partyHost) {
