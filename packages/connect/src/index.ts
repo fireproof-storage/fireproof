@@ -41,7 +41,7 @@ class ConnectRaw extends Connection {
 }
 
 export const connect = {
-  s3free: ({ blockstore }: Connectable) => {
+  s3: ({ blockstore }: Connectable) => {
     const upload =
       "https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads";
     const download =
@@ -51,7 +51,7 @@ export const connect = {
     connection.connect(blockstore);
     return connection;
   },
-  awsfree: ({ blockstore }: Connectable, databasename: string) => {
+  aws: ({ blockstore }: Connectable, databasename: string) => {
     const upload =
       "https://aq0pbyfywg.execute-api.us-east-1.amazonaws.com/uploads";
     const download =
@@ -61,7 +61,7 @@ export const connect = {
     connection.connect(blockstore);
     return connection;
   },
-  s3: (
+  awscustom: (
     { blockstore }: Connectable,
     {
       upload,
