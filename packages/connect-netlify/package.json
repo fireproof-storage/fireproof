@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/netlify",
-  "version": "0.17.3",
+  "version": "0.17.4",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
