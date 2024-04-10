@@ -1,6 +1,7 @@
-import { ConnectS3, ConnectREST, Connectable } from '@fireproof/connect'
+import { ConnectREST, Connectable } from '@fireproof/encrypted-blockstore'
 import { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
 export { ConnectPartyKit, ConnectPartyKitParams } from './connect-partykit'
+import { ConnectS3 } from "@fireproof/aws";
 
 const partyCxs = new Map<string, ConnectPartyKit>()
 

@@ -1,6 +1,6 @@
 {
-  "name": "@fireproof/connect",
-  "version": "0.17.7",
+  "name": "@fireproof/aws",
+  "version": "1.0.0",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -30,27 +30,23 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "build:clean": "rm -rf dist",
-    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../connectors-helper/scripts/types.js",
-    "build:script": "node ../connectors-helper/scripts/build.js",
+    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../encrypted-blockstore/scripts/types.js",
+    "build:script": "node ../encrypted-blockstore/scripts/build.js",
     "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/connect.iife.js",
     "clean": "rm -rf node_modules",
-    "test": "node ../connectors-helper/scripts/test.js"
+    "test": "node ../encrypted-blockstore/scripts/test.js",
+    "browser-test": "node ../connectors-helper/scripts/browser-test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devDependencies": {
-    "ts-loader": "^9.4.4",
-    "typescript": "^5.2.2",
-    "webpack": "^5.88.2",
-    "webpack-cli": "^5.1.4"
-  },
   "dependencies": {
     "@fireproof/encrypted-blockstore": "workspace:^",
-    "@ipld/dag-json": "^10.1.2",
-    "@web3-storage/pail": "^0.5.0",
     "cross-fetch": "^4.0.0",
-    "js-base64": "^3.7.5",
-    "multiformats": "^12.0.1"
+    "js-base64": "^3.7.5"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.4.4"
   }
 }

@@ -45,3 +45,29 @@ export type StoreOpts = {
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
 export type DbMeta = { car: AnyLink; key: string | null }
+
+export type UploadMetaFnParams = {
+  name: string
+  branch: string
+}
+
+export type UploadDataFnParams = {
+  type: 'data' | 'file'
+  name: string
+  car: string
+  size: string
+}
+
+export type DownloadFnParamTypes = 'data' | 'file'
+
+export type DownloadDataFnParams = {
+  type: DownloadFnParamTypes
+  name: string
+  car: string
+}
+
+export type DownloadMetaFnParams = {
+  name: string
+  branch: string
+}
+

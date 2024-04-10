@@ -31,10 +31,12 @@
     "prepublishOnly": "npm run build",
     "build:clean": "rm -rf dist",
     "build:watch": "tsc -w",
-    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
-    "build:script": "node ./scripts/build.js",
+    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../encrypted-blockstore/scripts/types.js",
+    "build:script": "node ../encrypted-blockstore/scripts/build.js",
     "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/ipfs.iife.js",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules",
+    "test": "node ../encrypted-blockstore/scripts/test.js",
+    "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
   },
   "keywords": [],
   "author": "",
@@ -51,6 +53,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@fireproof/aws": "workspace:^",
     "@fireproof/connect": "workspace:^",
     "@fireproof/core": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",

@@ -1,7 +1,7 @@
 import type { Client } from '@web3-storage/w3up-client'
 import * as w3clock from '@web3-storage/clock/client'
 import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from './types'
-import { CarClockHead, Connection } from '@fireproof/connect'
+import { CarClockHead, Connection } from '@fireproof/encrypted-blockstore'
 import { decodeEventBlock } from '@web3-storage/pail/clock'
 import { Proof, Principal } from '@ucanto/interface'
 import { Link } from 'multiformats/link'

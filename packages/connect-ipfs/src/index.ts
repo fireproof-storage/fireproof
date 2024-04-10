@@ -1,6 +1,6 @@
 import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
-import { ConnectS3 } from '@fireproof/connect'
-import type { Connectable } from '@fireproof/connect'
+import { ConnectS3 } from '@fireproof/aws'
+import type { Connectable } from '@fireproof/encrypted-blockstore'
 
 const ipfsCxs = new Map<string, ConnectIPFS>()
 
@@ -30,7 +30,7 @@ export const connect = {
       upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
       download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
     }
-    const s3conn = new ConnectS3(s3conf.upload, s3conf.download)
+    const s3conn = new ConnectS3(s3conf.upload, s3conf.download,'')
     s3conn.connectStorage(blockstore)
     const ipfsConn = new ConnectIPFS({ name, schema: schemaName! } as ConnectIPFSParams)
     ipfsConn.connectMeta(blockstore)
