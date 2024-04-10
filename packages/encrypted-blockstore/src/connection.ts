@@ -6,7 +6,7 @@ import type {
   DownloadDataFnParams
 } from './types'
 import type { AnyLink } from './types'
-import { type Loader } from '@fireproof/encrypted-blockstore'
+import { type Loader } from './loader'
 import { EventBlock, decodeEventBlock } from '@web3-storage/pail/clock'
 import { EventView } from '@web3-storage/pail/clock/api'
 import { MemoryBlockstore } from '@web3-storage/pail/block'
