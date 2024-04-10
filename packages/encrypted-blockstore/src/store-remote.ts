@@ -1,7 +1,7 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
 import type { AnyBlock, AnyLink, DbMeta } from './types'
-import { type Loadable, type Loader } from '@fireproof/encrypted-blockstore'
+import { type Loadable, type Loader } from './loader'
 import {
   DataStore as DataStoreBase,
   MetaStore as MetaStoreBase,
