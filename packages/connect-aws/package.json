@@ -35,7 +35,7 @@
     "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/connect.iife.js",
     "clean": "rm -rf node_modules",
     "test": "node ../encrypted-blockstore/scripts/test.js",
-    "browser-test": "node ../connectors-helper/scripts/browser-test.js"
+    "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
   },
   "keywords": [],
   "author": "",
