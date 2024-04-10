@@ -5,7 +5,7 @@ import {
   UploadMetaFnParams,
   UploadDataFnParams
 } from './types'
-import { Connection } from '@fireproof/connect'
+import { Connection } from '@fireproof/encrypted-blockstore'
 
 export class ConnectNetlify extends Connection {
   name: string

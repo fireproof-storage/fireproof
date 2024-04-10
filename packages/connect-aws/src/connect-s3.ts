@@ -1,5 +1,5 @@
 import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from './types'
-import { Connection } from "./connection"
+import { Connection } from '@fireproof/encrypted-blockstore'
 import fetch from "cross-fetch"
 import { Base64 } from "js-base64"
 
