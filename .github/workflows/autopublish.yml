@@ -1,8 +1,6 @@
 name: Auto publish updated npm packages
 on:
   push:
-    branches:
-      -main
   pull_request:
     branches:
       -main
