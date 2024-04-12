@@ -2,10 +2,18 @@ const path = require('path');
 const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 
 const extraNodeModules = {
-  modules: path.resolve(path.join(__dirname, '../../node_modules')),
+  modules: [
+    path.resolve(path.join(__dirname, '../../node_modules/.pnpm')),
+    path.resolve(path.join(__dirname, '../../packages')),
+    path.resolve(path.join(__dirname, '../../packages/react')),
+  ],
 };
 
-const watchFolders = [path.resolve(path.join(__dirname, '../../node_modules'))];
+const watchFolders = [
+  path.resolve(path.join(__dirname, '../../node_modules/.pnpm')),
+  path.resolve(path.join(__dirname, '../../packages')),
+  path.resolve(path.join(__dirname, '../../packages/react')),
+];
 
 const nodeModulesPaths = [path.resolve(path.join(__dirname, './node_modules'))];
 
