@@ -46,6 +46,7 @@
     "esbuild": "^0.19.4",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-tsc": "^0.4.0",
+    "mocha": "^10.4.0",
     "partykit": "0.0.24",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
@@ -54,7 +55,6 @@
   },
   "dependencies": {
     "@fireproof/aws": "workspace:^",
-    "@fireproof/connect": "workspace:^",
     "@fireproof/core": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ucanto/core": "^10.0.1",

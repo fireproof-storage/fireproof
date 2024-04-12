@@ -46,6 +46,7 @@
     "js-base64": "^3.7.5"
   },
   "devDependencies": {
+    "mocha": "^10.4.0",
     "ts-loader": "^9.4.4",
     "typescript": "^5.4.4"
   }

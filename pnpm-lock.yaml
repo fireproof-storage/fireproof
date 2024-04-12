@@ -187,40 +187,6 @@ importers:
         specifier: ^0.7.0
         version: 0.7.0(rollup@4.42.0)(vite@4.5.14(@types/node@22.15.30)(terser@5.41.0))
 
-  packages/connect:
-    dependencies:
-      '@fireproof/encrypted-blockstore':
-        specifier: workspace:^
-        version: link:../encrypted-blockstore
-      '@ipld/dag-json':
-        specifier: ^10.1.2
-        version: 10.2.5
-      '@web3-storage/pail':
-        specifier: ^0.5.0
-        version: 0.5.0
-      cross-fetch:
-        specifier: ^4.0.0
-        version: 4.0.0(encoding@0.1.13)
-      js-base64:
-        specifier: ^3.7.5
-        version: 3.7.7
-      multiformats:
-        specifier: ^12.0.1
-        version: 12.1.3
-    devDependencies:
-      ts-loader:
-        specifier: ^9.4.4
-        version: 9.5.2(typescript@5.8.3)(webpack@5.99.9)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.8.3
-      webpack:
-        specifier: ^5.88.2
-        version: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
-      webpack-cli:
-        specifier: ^5.1.4
-        version: 5.1.4(webpack@5.99.9)
-
   packages/connect-aws:
     dependencies:
       '@fireproof/encrypted-blockstore':
@@ -233,6 +199,9 @@ importers:
         specifier: ^3.7.5
         version: 3.7.7
     devDependencies:
+      mocha:
+        specifier: ^10.4.0
+        version: 10.8.2
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.2(typescript@5.8.3)(webpack@5.99.9(esbuild@0.25.5))
@@ -245,9 +214,6 @@ importers:
       '@fireproof/aws':
         specifier: workspace:^
         version: link:../connect-aws
-      '@fireproof/connect':
-        specifier: workspace:^
-        version: link:../connect
       '@fireproof/core':
         specifier: workspace:^
         version: link:../fireproof
@@ -288,6 +254,9 @@ importers:
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.8.3)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.8.2
       partykit:
         specifier: 0.0.24
         version: 0.0.24
@@ -306,9 +275,6 @@ importers:
 
   packages/connect-netlify:
     dependencies:
-      '@fireproof/connect':
-        specifier: workspace:^
-        version: link:../connect
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -322,6 +288,9 @@ importers:
         specifier: ^3.7.5
         version: 3.7.7
     devDependencies:
+      mocha:
+        specifier: ^10.4.0
+        version: 10.8.2
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.2(typescript@5.8.3)(webpack@5.99.9)
@@ -340,9 +309,6 @@ importers:
       '@fireproof/aws':
         specifier: workspace:^
         version: link:../connect-aws
-      '@fireproof/connect':
-        specifier: workspace:^
-        version: link:../connect
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -362,6 +328,9 @@ importers:
         specifier: ^1.0.1
         version: 1.1.4
     devDependencies:
+      mocha:
+        specifier: ^10.4.0
+        version: 10.8.2
       partykit:
         specifier: 0.0.85
         version: 0.0.85
@@ -8188,17 +8157,17 @@ snapshots:
 
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.99.9)':
     dependencies:
-      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.99.9)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.99.9)':
     dependencies:
-      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.99.9)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.99.9)':
     dependencies:
-      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.99.9)
 
   '@xtuc/ieee754@1.2.0': {}
@@ -12143,7 +12112,7 @@ snapshots:
       semver: 7.7.2
       source-map: 0.7.4
       typescript: 5.8.3
-      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
 
   ts-unused-exports@10.1.0(typescript@5.8.3):
     dependencies:
@@ -12480,7 +12449,7 @@ snapshots:
       import-local: 3.2.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
 
   webpack-merge@5.10.0:
