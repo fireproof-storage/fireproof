@@ -11,7 +11,7 @@ import {
 
 
 export const connect = {
-  s3Free: ({ blockstore }: Connectable) => {
+  s3free: ({ blockstore }: Connectable) => {
     const upload = 'https://udvtu5wy39.execute-api.us-east-2.amazonaws.com/uploads'
     const download = 'https://crdt-s3uploadbucket-dcjyurxwxmba.s3.us-east-2.amazonaws.com'
     const websocket = ''
