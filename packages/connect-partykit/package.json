@@ -44,6 +44,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "mocha": "^10.4.0",
     "partykit": "0.0.85",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
@@ -52,7 +53,6 @@
   },
   "dependencies": {
     "@fireproof/aws": "workspace:^",
-    "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@web3-storage/pail": "^0.5.0",
     "cross-fetch": "^4.0.0",

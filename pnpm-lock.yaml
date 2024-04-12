@@ -233,6 +233,9 @@ importers:
         specifier: ^3.7.5
         version: 3.7.5
     devDependencies:
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.1(typescript@5.4.4)(webpack@5.91.0)
@@ -245,9 +248,6 @@ importers:
       '@fireproof/aws':
         specifier: workspace:^
         version: link:../connect-aws
-      '@fireproof/connect':
-        specifier: workspace:^
-        version: link:../connect
       '@fireproof/core':
         specifier: workspace:^
         version: link:../fireproof
@@ -288,6 +288,9 @@ importers:
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.3.3)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       partykit:
         specifier: 0.0.24
         version: 0.0.24
@@ -306,9 +309,6 @@ importers:
 
   packages/connect-netlify:
     dependencies:
-      '@fireproof/connect':
-        specifier: workspace:^
-        version: link:../connect
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -322,6 +322,9 @@ importers:
         specifier: ^3.7.5
         version: 3.7.5
     devDependencies:
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.1(typescript@5.3.3)(webpack@5.89.0)
@@ -340,9 +343,6 @@ importers:
       '@fireproof/aws':
         specifier: workspace:^
         version: link:../connect-aws
-      '@fireproof/connect':
-        specifier: workspace:^
-        version: link:../connect
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
@@ -362,6 +362,9 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
     devDependencies:
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       partykit:
         specifier: 0.0.85
         version: 0.0.85
@@ -12960,7 +12963,7 @@ packages:
       require-directory: 2.1.1
       string-width: 4.2.3
       y18n: 5.0.8
-      yargs-parser: 20.2.4
+      yargs-parser: 20.2.9
     dev: true
 
   /yargs@17.7.2:
