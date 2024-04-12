@@ -1,15 +1,17 @@
 {
-  "name": "ReactNative",
+  "name": "react-native",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
     "lint": "eslint .",
+    "pods": "bundle install && bundle exec pod install --project-directory=ios/",
     "start": "react-native start",
     "test": "jest"
   },
   "dependencies": {
+    "use-fireproof": "../../packages/react",
     "react": "18.2.0",
     "react-native": "0.73.6"
   },
@@ -29,6 +31,10 @@
     "prettier": "2.8.8",
     "react-test-renderer": "18.2.0",
     "typescript": "5.0.4"
+  },
+  "resolutions": {
+    "@fireproof/encrypted-blockstore": "../../packages/encrypted-blockstore",
+    "@fireproof/core": "../../packages/fireproof"
   },
   "engines": {
     "node": ">=18"
