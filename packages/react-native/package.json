@@ -1,10 +1,11 @@
 {
-  "name": "use-fireproof",
-  "version": "0.18.0",
-  "description": "Fireproof live database, JavaScript API and React hooks",
+  "name": "@fireproof/react-native",
+  "version": "0.17.11",
+  "description": "Fireproof live database, JavaScript API and React Native hooks",
   "type": "module",
-  "module": "dist/index.js",
-  "main": "dist/index.js",
+  "module": "src/index.tsx",
+  "main": "src/index.tsx",
+  "react-native": "src/index.tsx",
   "types": "dist/index.d.ts",
   "homepage": "https://use-fireproof.com",
   "repository": {
@@ -19,10 +20,10 @@
   ],
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "script": "./dist/index.global.js",
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./src/index.tsx",
+      "types": "./src/index.d.ts",
+      "default": "./src/index.tsx",
+      "react-native": "./src/index.tsx"
     }
   },
   "scripts": {
@@ -43,33 +44,30 @@
   },
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
-  "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
+  "gptdoc": "Fireproof/React Native/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
-    "@fireproof/core": "workspace:^"
+    "use-fireproof": "workspace:^"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react-native": "*"
   },
   "devDependencies": {
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
     "@vitest/coverage-istanbul": "^1.2.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-simple-import-sort": "^10.0.0",
-    "jsdom": "^23.2.0",
     "prettier": "^3.2.4",
     "randombytes": "^2.1.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "typescript": "^5.3.3",
     "vitest": "^1.2.1"
   },
   "keywords": [
-    "react",
+    "react-native",
     "database",
     "json",
     "live",

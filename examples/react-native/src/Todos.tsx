@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {fireproof, Database} from 'use-fireproof';
+import {fireproof, Database} from '@fireproof/react-native';
 // import {Database} from '@fireproof/core';
 
 type Todo = {
