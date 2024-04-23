@@ -9,6 +9,7 @@ import { ConnectIPFSParams } from './connect-ipfs'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 import { Capabilities } from '@ucanto/interface'
 import { Loader } from '@fireproof/encrypted-blockstore'
+import { OwnedSpace, Space } from '@web3-storage/w3up-client/dist/src/space'
 
 type ClockSpaceDoc = Doc<{
   type: 'clock-space'
@@ -93,14 +94,14 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
         { can: 'upload/*' }
       ]
     })
-    let space = this.bestSpace(client)
+    let space: OwnedSpace | Space | undefined = this.bestSpace(client)
     if (!space) {
       space = await client.createSpace('_account')
     }
     await client.setCurrentSpace(space.did())
-    if (!space.registered()) {
-      await client.registerSpace(email)
-    }
+    // if (!space.name) {
+    //   // await client.registerSpace(email)
+    // }
     const { rows } = await this.accountDb.query('accountSpace', { key: space.did() })
     for (const row of rows) {
       const doc = row.doc as ClockSpaceDoc
@@ -130,7 +131,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     const client = await create()
     // console.log('connectClient proofs', client.currentSpace()?.did())
     const space = this.bestSpace(client)
-    if (!!space && space.registered()) {
+    if (!!space && space.usage) {
       this.activated = true
       await client.setCurrentSpace(space.did())
     } else {
@@ -142,7 +143,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
 
   bestSpace(client: Client) {
     const spaces = client.spaces()
-    const space = spaces.find(s => s.registered())
+    const space = spaces.find(s => s.name === '_account')
     return space
   }
 
