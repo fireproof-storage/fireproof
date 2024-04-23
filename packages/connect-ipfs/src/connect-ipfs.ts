@@ -41,7 +41,6 @@ export class ConnectIPFS extends DatabaseConnectIPFS {
     return this.clockSpaceDID
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async initializeClient() {
     await this.accountConnection.ready
     this.authorized = this.accountConnection.activated

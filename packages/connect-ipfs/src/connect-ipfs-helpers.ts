@@ -151,15 +151,18 @@ export abstract class DatabaseConnectIPFS extends AbstractConnectIPFS {
   }
 
   async startBackgroundSync() {
-    // console.log('startBackgroundSync')
-    await new Promise(resolve =>
-      // todo implement websocket on w3clock
-      setTimeout(resolve, 1500))
-    await this.refresh().catch(async (e: Error) => {
-      console.log('refresh error', e)
-      await new Promise(resolve => setTimeout(resolve, 5000))
-    })
-    await this.startBackgroundSync()
+    while (true) {
+      await new Promise(resolve =>
+        // todo implement websocket on w3clock
+        setTimeout(resolve, 1500)
+      )
+      try {
+        await this.refresh()
+      } catch (e: any) {
+        console.log('refresh error', e)
+        await new Promise(resolve => setTimeout(resolve, 5000))
+      }
+    }
   }
 
   // should set activated to true if authorized
