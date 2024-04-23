@@ -149,8 +149,10 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     // console.log('authorizedClockSpace', this.constructor.name, this.authorizing, this.loaded, callId, params)
     // we are waiting on authorising
     // and waiting to query until we have synced the accountDb
+    // if we dont do something like this all Fireproof databases for the same web3.storage user will have the same clock, across apps, etc...
     await this.loaded
     // console.log('authorizedClockSpace', this.constructor.name, callId, 'loaded')
+    // instead of accountdb we can use the web3 storage delegation features
     const { rows } = await this.accountDb.query('clockName', { key: this.encodeSpaceName(params) })
     if (rows.length) {
       const doc = rows[0].doc as ClockSpaceDoc
