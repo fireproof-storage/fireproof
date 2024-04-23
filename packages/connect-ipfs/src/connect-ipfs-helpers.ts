@@ -4,15 +4,19 @@ import type { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, Up
 import { CarClockHead, Connection } from '@fireproof/connect'
 import { decodeEventBlock } from '@web3-storage/pail/clock'
 import { Proof, Principal } from '@ucanto/interface'
+import { Link } from 'multiformats/link'
+import { DbMetaEventBlock } from '../../connect/dist/types/connection'
 export abstract class AbstractConnectIPFS extends Connection {
-  abstract authorizedClient(): Promise<Client>;
-  abstract clockProofsForDb(): Promise<Proof[]>;
-  abstract clockSpaceDIDForDb(): `did:${string}:${string}`;
+  abstract authorizedClient(): Promise<Client>
+  abstract clockProofsForDb(): Promise<Proof[]>
+  abstract clockSpaceDIDForDb(): `did:${string}:${string}`
 
   issuer(client: Client) {
     // @ts-ignore
     const { issuer } = client._agent as Principal
-    if (!issuer.signatureAlgorithm) { throw new Error('issuer encodeCarFile valid') }
+    if (!issuer.signatureAlgorithm) {
+      throw new Error('issuer encodeCarFile valid')
+    }
     return issuer
   }
 
@@ -26,9 +30,11 @@ export abstract class AbstractConnectIPFS extends Connection {
     }
   }
 
-  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean; }) {
+  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts: { public?: boolean }) {
     const client = await this.authorizedClient()
-    if (!client) { throw new Error('client encodeCarFile initialized') }
+    if (!client) {
+      throw new Error('client encodeCarFile initialized')
+    }
     // console.log('dataUpload', params.car.toString())
     // uploadCar is processed so roots are reachable via CDN
     // uploadFile makes the car itself available via CDN
@@ -42,7 +48,9 @@ export abstract class AbstractConnectIPFS extends Connection {
   async metaDownload(params: DownloadMetaFnParams) {
     // const callId = Math.random().toString(36).slice(2, 9)
     const client = await this.authorizedClient()
-    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+    if (params.branch !== 'main') {
+      throw new Error('todo, implement space per branch')
+    }
     const clockProofs = await this.clockProofsForDb()
     const head = await w3clock.head({
       issuer: this.issuer(client),
@@ -51,7 +59,9 @@ export abstract class AbstractConnectIPFS extends Connection {
       proofs: clockProofs
     })
     if (head.out.ok) {
-      return this.fetchAndUpdateHead(head.out.ok.head)
+      return this.fetchAndUpdateHead(
+        head.out.ok.head as unknown as Link<DbMetaEventBlock, number, number, 1>[]
+      )
     } else {
       console.log('w3clock error', head.out.error)
       throw new Error(`Failed to download ${params.name}`)
@@ -62,7 +72,9 @@ export abstract class AbstractConnectIPFS extends Connection {
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     const client = await this.authorizedClient()
     // @ts-ignore
-    if (params.branch !== 'main') { throw new Error('todo, implement space per branch') }
+    if (params.branch !== 'main') {
+      throw new Error('todo, implement space per branch')
+    }
 
     const clockProofs = await this.clockProofsForDb()
 
@@ -75,12 +87,16 @@ export abstract class AbstractConnectIPFS extends Connection {
       blocks.push(await decodeEventBlock(eventBytes))
     }
 
-    const advanced = await w3clock.advance({
-      issuer: this.issuer(client),
-      with: this.clockSpaceDIDForDb(),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      proofs: clockProofs
-    }, event.cid, { blocks })
+    const advanced = await w3clock.advance(
+      {
+        issuer: this.issuer(client),
+        with: this.clockSpaceDIDForDb(),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        proofs: clockProofs
+      },
+      event.cid,
+      { blocks }
+    )
 
     // @ts-ignore
     const { ok, error } = advanced.root.data?.ocm.out
