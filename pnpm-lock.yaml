@@ -239,26 +239,26 @@ importers:
         specifier: workspace:^
         version: link:../encrypted-blockstore
       '@ucanto/core':
-        specifier: ^8.2.0
-        version: 8.2.0
+        specifier: ^10.0.1
+        version: 10.4.0
       '@ucanto/interface':
-        specifier: ^8.1.0
-        version: 8.1.0
+        specifier: ^10.0.1
+        version: 10.3.0
       '@web3-storage/clock':
-        specifier: ^0.3.0
-        version: 0.3.0
+        specifier: ^0.4.1
+        version: 0.4.1
       '@web3-storage/pail':
         specifier: ^0.5.0
         version: 0.5.0
       '@web3-storage/w3up-client':
-        specifier: ^8.0.1
-        version: 8.1.0(encoding@0.1.13)
+        specifier: ^12.5.2
+        version: 12.5.3(encoding@0.1.13)
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
       multiformats:
-        specifier: ^12.0.1
-        version: 12.1.3
+        specifier: ^13.1.0
+        version: 13.3.6
     devDependencies:
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.2
@@ -802,11 +802,6 @@ importers:
         version: 1.6.1(@types/node@22.15.30)(jsdom@23.2.0)(terser@5.41.0)
 
 packages:
-
-  '@alanshaw/pail@0.3.4':
-    resolution: {integrity: sha512-9hxffjZazBQ7AvfuLQZ4KnXEBdrtK0xEJFCX1XTViPwRe/abo/hIyCkrs/F4plXD6WiFZljvXEWM7bLGV9Ux7g==}
-    deprecated: Moved to @web3-storage/pail
-    hasBin: true
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -2276,6 +2271,12 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
+  '@scure/base@1.2.6':
+    resolution: {integrity: sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg==}
+
+  '@scure/bip39@1.6.0':
+    resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
+
   '@sinclair/typebox@0.27.8':
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
 
@@ -2367,6 +2368,9 @@ packages:
   '@types/retry@0.12.1':
     resolution: {integrity: sha512-xoDlM2S4ortawSWORYqsdU+2rxdh4LRW9ytc3zmT37RIKQh6IHyKwwtKhKis9ah8ol07DCkZxPt8BBvPjC6v4g==}
 
+  '@types/retry@0.12.2':
+    resolution: {integrity: sha512-XISRgDJ2Tc5q4TRqvgJtzsRkFYNJzZrhTdtMoGVBttwzzQJkPnS3WWTFc7kuDRoPtPakl+T+OfdEUjYJj7Jbow==}
+
   '@types/semver@7.7.0':
     resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
 
@@ -2434,12 +2438,6 @@ packages:
   '@ucanto/client@4.2.3':
     resolution: {integrity: sha512-vIa0drEAeolQpSePpHtsW1bx8lzDdxtXi2fEdQ4f34xbI2VSOQuAgUURJTtRVmRXa5MweQoEGI9CHPKL4CMyFQ==}
 
-  '@ucanto/client@7.0.1':
-    resolution: {integrity: sha512-Rn1rX77UNyMAnJmVhmnSvESgVgRkVvEo7+j6q/FAQijZS83GPF/jr3Ln7Xbc88548ilcAViFjNGK0TpKBl/rAQ==}
-
-  '@ucanto/client@8.0.1':
-    resolution: {integrity: sha512-2FQmoGFZa/I23sgeMinNZoPs7VwueNksbxT6+/wTm5VjWHcGCSR5QIJo++z3TfqgWxDpx7UOEucrS2y4DE0jOw==}
-
   '@ucanto/client@9.0.1':
     resolution: {integrity: sha512-cV8w3AnaZaYCdUmyFFICj8YhFckDoy2DvWgAzGDMkPz0WbUW4lw9Tjm4hEE8x5kiP47wYej/pHKWCcoELiU0qw==}
 
@@ -2452,15 +2450,6 @@ packages:
   '@ucanto/core@5.2.0':
     resolution: {integrity: sha512-Eblo2LfJyojRKmBk5/w25u1hhSCs6K3zUH/zNknwTrJg7CJYxw0hgsGcXrlkQf1TnSRzJVFEduK1ZzYCV55/Uw==}
 
-  '@ucanto/core@7.1.1':
-    resolution: {integrity: sha512-RXYOXVTqpTqeYBw7aVGna4JwLEi4xnfN4eX53n+9SLNbh7lNrD7bZuXGMB53W4PimRIZp92tQSWSO8ljw3hf1Q==}
-
-  '@ucanto/core@8.2.0':
-    resolution: {integrity: sha512-Yw1NZySQFS2+JPUuWGlRpq4HMB1npXYq1WBo6B1tINGRabKAujq3HrZ/iidYL2MuoHn0CGfSvCUzlXrcD4obNg==}
-
-  '@ucanto/core@9.0.1':
-    resolution: {integrity: sha512-SsYvKCO3FD27roTVcg8ASxnixjn+j96sPlijpVq1uBUxq7SmuNxNPYFZqpxXKj2R4gty/Oc8XTse12ebB9Kofg==}
-
   '@ucanto/interface@10.3.0':
     resolution: {integrity: sha512-97929CGr3AM4Y01CLZ3wwhzrlth5pq8eJCbd/hUMxD62nyG9eRsyvt3RSOtBNtu4jTdMH580x0oAF2D1XKcPvw==}
 
@@ -2470,41 +2459,23 @@ packages:
   '@ucanto/interface@6.2.0':
     resolution: {integrity: sha512-b37bjTxNWQE+O4f18fvb7/woe41Dvb4AfdbevPLmaJj1fZogssH9fVgWlZdVg8ZsJQhMxRyHDuH40QAvuKRR1w==}
 
-  '@ucanto/interface@7.1.0':
-    resolution: {integrity: sha512-DMD0ybPZ7UUtBx9g3TR6mrYW6N2IMhzgQ2IRfYsoTlhnXOTfmllwogWKhUJobf/lBHmmpi2CW8gWXTBby/cN5A==}
-
-  '@ucanto/interface@8.1.0':
-    resolution: {integrity: sha512-n6WL9miVcN1PUq+e41hKUgZR0+Xn5sHHMQfXnt4YuLnGbh93tIgQkeGWmfUBJI+Y6C0vAFfaSCZnM6Z+kedskA==}
-
-  '@ucanto/interface@9.0.0':
-    resolution: {integrity: sha512-Y9185yj+CRNpT43EAHTe9MpskCgU9DyWvmYyLMMmF40w+ujp6EYy5JVI/gVjJAsh+2Y9ruvWHOF0M+21TnLQyg==}
-
   '@ucanto/principal@4.2.3':
     resolution: {integrity: sha512-S02cKaMcIQhxk9uJfUCUb+f98zEEFsC+5BZC6aBoYVCEpXwVZD6+hc9xI0yIQl8zJyQVA3nnUUpLfLynsSox2A==}
 
   '@ucanto/principal@5.1.0':
     resolution: {integrity: sha512-niZzojYPYAgdszTmra82wGbl5YGHugUblMTPrEjuz3RFjXDCxW50IJFwzus3Z6k6Q6zIbXPU+yVxTbzJWg8/JA==}
 
-  '@ucanto/principal@7.0.0':
-    resolution: {integrity: sha512-VZuLDDQWpkkKR8+MHdnigOd5AlnToeb4vz1bjCircxSNMUvIi5O2UAUkSArgSPzqPUeriZW6vRbwGK2DMqQ4UQ==}
-
   '@ucanto/principal@9.0.2':
     resolution: {integrity: sha512-RE3Rj0oz4wh4C9p2JJZB9+QLd7Fi3lCixrbHgAvEoSyTNpvz6ky8DGNtttmD5j3O94z13qdVdIoSRY6DQZXfAg==}
 
-  '@ucanto/server@7.0.2':
-    resolution: {integrity: sha512-U1wM01abvrNUlnVbFWaE6Vr02L6iPi+sYboBcvrqTFNkefQ0FYuQ38OqSlH0bE1pKMvhvCjJM1f7MD0LkrsHwA==}
+  '@ucanto/server@10.2.0':
+    resolution: {integrity: sha512-RKoh7m86V97Kk8LZRaKmF1f2HdT3iQNyAGYShx9gasEV3qUuTaq2k6gXBTBRiEaYjX27C3C/KSaTrmVCEPwp1g==}
 
   '@ucanto/transport@4.2.3':
     resolution: {integrity: sha512-ZtHB5ybSB/1dBLhzJqjxGDEE+TTTNzc9HMrVA1AP5KHvaHPu2UtAmS2IMr+HrhSjcwWwdavK0qMQbXSfLWM+kg==}
 
   '@ucanto/transport@5.1.1':
     resolution: {integrity: sha512-5g2Xiofqalvmaw/UPRTdxV2be+KE3TMbFhG4ZNNPkDIBpdBduVENcLQPJ9ksD29Bc2ArIefXALxGzyGLgUPCBg==}
-
-  '@ucanto/transport@7.0.3':
-    resolution: {integrity: sha512-znDhFd6+gAOyqNTpzIqpLIfEWO6J0JYG5TQaPV1SP4B73Idad/WYMVTZpTNUGY2B2BmY42iyzbvnNUsCKzwxEg==}
-
-  '@ucanto/transport@8.0.0':
-    resolution: {integrity: sha512-1/3ELUtUAu7zNKq/jy/PjvvCoFt7cFS8198E8U04UM1EsZS0WvK2VnEa/aS8MA5bBy8TjRFmQtXjcndZ0RE5vw==}
 
   '@ucanto/transport@9.2.0':
     resolution: {integrity: sha512-w/CtD5LYEpGo/CxV78IiWalW99gNRPHKZ/DoOpart5QShozvnU//PwUqyqnGimZCDIrIq4LH6x92z2L/2k5OKQ==}
@@ -2514,9 +2485,6 @@ packages:
 
   '@ucanto/validator@6.1.0':
     resolution: {integrity: sha512-vZ40paByLgosllG+YfuI4eD7m3KyYG1ebEa9jZEkLDYjWh7WWBtYvBn40pziIiLfBCzum2zU1uP1SMOf63EqqQ==}
-
-  '@ucanto/validator@7.0.0':
-    resolution: {integrity: sha512-esbxBSe4HIlwbL/+G4pCZf7Z09OsQ9thoFUpIvKO96iZin2hFJJhW5AcXTp/9z/+k3SO3pD879PjPpGkrMZRVA==}
 
   '@ucanto/validator@9.1.0':
     resolution: {integrity: sha512-2JnEEZYc8kTZz+qbyL7LbI/TSpBRWLOchNhaRB5DTyj38FxMFQUXIB7gQ5lZHv49uYJGx/FXKPw0268WgJdEvg==}
@@ -2564,15 +2532,21 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
 
-  '@web3-storage/access@16.4.0':
-    resolution: {integrity: sha512-psFZiSrm8S50MJ8Zkljn6GNfd6xFkEo/Awhd/1b3gAZh3CViANTHoKVqez7MVT+YxogJa5uQ+ddneLadpg4aAA==}
+  '@web3-storage/access@18.4.0':
+    resolution: {integrity: sha512-EQQxSCip9FNgiNGwpKTnpff7/5A6MSn/Etf1Xpei3Au2oQkUe25DHwRJd/mbUzjnhcYh6UMGk2f0dIJ4Me00LA==}
 
   '@web3-storage/access@9.4.0':
     resolution: {integrity: sha512-GwrSHhOigNI009DRmRtJjqQ3JS/a+rlU7wXM7k5+FwMR9Kqr/Ayid+Ida1tN7NPEIKBqfe9wfXbVMowi86YNYw==}
     hasBin: true
 
-  '@web3-storage/capabilities@11.4.1':
-    resolution: {integrity: sha512-PjIewEg/T3wfNavxzsZZ5MpH2WBldNz94qOQOKg5iH/4UrS8SPWWGsJx/Tu760O+PFhpTFwvi5cHCtkb08OdAA==}
+  '@web3-storage/capabilities@14.0.2':
+    resolution: {integrity: sha512-0BTzzn60S7eC2xwZjla3v2SNiyxSuVYD2bAokHuO4ztfi0O7L76R2pVDpOI67ZnIL+Cl3FX022NKt+qLxFIoSg==}
+
+  '@web3-storage/capabilities@17.4.1':
+    resolution: {integrity: sha512-GogLfON8PZabi03CUyncBvMcCi36yQ/0iR5P8kr4pxdnZm7OuAn4sEwbEB8rTKbah5V10Vwgb3O5dh0FBgyjHg==}
+
+  '@web3-storage/capabilities@18.1.0':
+    resolution: {integrity: sha512-jgZtymt2jJtER3SPsE0yoRSf1BzNo1hQIir6hfY3QlooxTwdETzPbF1rBs5El7BCCMHhQfB9hiLRniTIhnX4wA==}
 
   '@web3-storage/capabilities@2.3.0':
     resolution: {integrity: sha512-+vg61eqK1eqQ+QD1hvChDDx6CXLGFnUsEA+W+g9yagCpq+H9yAqROncEEt+oluIGvAqNbFMrUb+bWRWxk0Tmuw==}
@@ -2580,31 +2554,35 @@ packages:
   '@web3-storage/capabilities@3.2.0':
     resolution: {integrity: sha512-WtQNLpqfsq1v62+OJFaXUNXJsk+x8WWJZnok4tEd2p57uv1d9TeNnnWhzOo5qzGmoh1pqjlLoPjYrq78Ib9o7A==}
 
-  '@web3-storage/capabilities@9.5.0':
-    resolution: {integrity: sha512-vCvP07BVX6OeT4bdMwqV9bOWSUk8BSnx7TuXZiWYAqzAsdO1MaFqwcj/IENsHJd8YgzuieAiepf8aWSkxHHJug==}
-
-  '@web3-storage/clock@0.3.0':
-    resolution: {integrity: sha512-O+1qbkLFj6Yfo4LYztN3HOJX5bsZRF43zIMIdTYPPTy2lEaCsLo596PGOc+y34g35tt4Aw5M2saK4pJSQNr3HA==}
+  '@web3-storage/clock@0.4.1':
+    resolution: {integrity: sha512-VHAyvbl7ZrNls6yltS5Djuwjz9Rw0rcA8tpv7qQp1WoheY00YBdqa8gjR1V4egVkqV1ZugGA06XH+ug0OhGXDg==}
 
   '@web3-storage/data-segment@3.2.0':
     resolution: {integrity: sha512-SM6eNumXzrXiQE2/J59+eEgCRZNYPxKhRoHX2QvV3/scD4qgcf4g+paWBc3UriLEY1rCboygGoPsnqYJNyZyfA==}
+
+  '@web3-storage/data-segment@5.3.0':
+    resolution: {integrity: sha512-zFJ4m+pEKqtKatJNsFrk/2lHeFSbkXZ6KKXjBe7/2ayA9wAar7T/unewnOcZrrZTnCWmaxKsXWqdMFy9bXK9dw==}
 
   '@web3-storage/did-mailto@2.1.0':
     resolution: {integrity: sha512-TRmfSXj1IhtX3ESurSNOylZSBKi0z/VJNoMLpof+AVRdovgZjjocpiePQTs2pfHKqHTHfJXc9AboWyK4IKTWMw==}
     engines: {node: '>=16.15'}
 
+  '@web3-storage/filecoin-client@3.3.5':
+    resolution: {integrity: sha512-3JFKnHFizlljRSJyyCdNN3Np4MN5riBvjAXweqNmu4s2sChMB8kopnCkAFoMeEom9r7ZAnBAkMO3Wacjs6Nlcw==}
+
   '@web3-storage/pail@0.5.0':
     resolution: {integrity: sha512-BUuunK6ZQQfNvECB2st0G7/rd0Vfsn6jFg01tfMLEsitFJWI9J503ixKJ8jWpoNW/3juJ32HQpo8ar3pmgG5uA==}
     hasBin: true
 
+  '@web3-storage/upload-client@13.2.2':
+    resolution: {integrity: sha512-dtedxw9azYUG5LTbZ37CnjggCRIuSsi0nD8phpWjWN20v3pqlrMCCh4cwl0z1bDk/GnYmOxDBViE19paEaYPBw==}
+
   '@web3-storage/upload-client@6.0.0':
     resolution: {integrity: sha512-oJ1/cLBSap25j2ZfC1RNOW9IisOnWMX2ay7sAWY9KPDiWe/coBXDOQB3vXxtPWSIBID6+SOSGaHh3+kXv8b4yg==}
 
-  '@web3-storage/upload-client@9.4.1':
-    resolution: {integrity: sha512-RXIY3emclORGMjixFFUA6ztx5UDKeh+EeBk5eRG7Vpaj6y8lflqRXD/8EDhh6Z0PKHt8foSgpZi/6EsrqRID/Q==}
-
-  '@web3-storage/w3up-client@8.1.0':
-    resolution: {integrity: sha512-E6EICzkvtZh0X2gXDRBjGCZQjyjF22OcUV9SMniAUg6CmNb+f7oML6n7lPxxpfLgnasQ8Ouun0UsX68HLfhqiA==}
+  '@web3-storage/w3up-client@12.5.3':
+    resolution: {integrity: sha512-tpkjSU6amVDojiBRK6l43bIPQYcwx63T3uO3jNMMyOo9khzru+wBV2P0mTsMd1VkaBMdxo8ylzLdDPp8m2X5rQ==}
+    engines: {node: '>=18'}
     deprecated: Version no longer supported. Please upgrade.
 
   '@webassemblyjs/ast@1.14.1':
@@ -3890,9 +3868,6 @@ packages:
     resolution: {integrity: sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==}
     engines: {node: '>= 6'}
 
-  fr32-sha2-256-trunc254-padded-binary-tree-multihash@1.1.4:
-    resolution: {integrity: sha512-+IpghzGszM7ebMuYzoILYvQMHXgtyZbIwlx2VYY4yLsT4SVU02ur6g7LCoLAxaD9GIv2oTAdiuHUxBH1liEQ7g==}
-
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
@@ -4290,6 +4265,10 @@ packages:
   is-negative-zero@2.0.3:
     resolution: {integrity: sha512-5KoIu2Ngpyek75jXodFvnafB6DJgr3u8uuK0LEZJjrU19DrMD3EVERaR8sjz8CCGgpZvxPl9SuE1GMVPFHx1mw==}
     engines: {node: '>= 0.4'}
+
+  is-network-error@1.1.0:
+    resolution: {integrity: sha512-tUdRRAnhT+OtCZR/LxZelH/C7QtjtFrTu5tXCA8pl55eTUElUHT+GPYV8MBMBvea/j+NxQqVt3LbWMRir7Gx9g==}
+    engines: {node: '>=16'}
 
   is-number-object@1.1.1:
     resolution: {integrity: sha512-lZhclumE1G6VYD8VHe35wFaIif+CTy5SJIi5+3y4psDgWu4wPDoBhF8NxUOinEc7pHgiTsT6MaBb92rKhhD+Xw==}
@@ -5003,6 +4982,10 @@ packages:
     resolution: {integrity: sha512-couX95waDu98NfNZV+i/iLt+fdVxmI7CbrrdC2uDWfPdUAApyxT4wmDlyOtR5KtTDmkDO0zDScDjDou9YHhd9g==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  p-retry@6.2.1:
+    resolution: {integrity: sha512-hEt02O4hUct5wtwg4H4KcWgDdm+l1bOaEy/hWzd8xtXB9BqxTWBBhb+2ImAtH4Cv4rPjV76xN3Zumqk3k3AhhQ==}
+    engines: {node: '>=16.17'}
+
   p-timeout@5.1.0:
     resolution: {integrity: sha512-auFDyzzzGZZZdHz3BtET9VEz0SE/uMEAx7uWfGPucfzEwwe/xH0iVeZibQmANYE/hp9T2+UUZT5m+BKyrDp3Ew==}
     engines: {node: '>=12'}
@@ -5032,9 +5015,6 @@ packages:
 
   pako@1.0.11:
     resolution: {integrity: sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==}
-
-  parallel-transform-web@1.0.1:
-    resolution: {integrity: sha512-RtPU/7IuwPZ4ePcqoPxNCpjtaXYOkCVtnhh5tW3O78wy9jqVoV2hQHms17kUeu8DTYoOP+mykFLg2agwVKlwBw==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -5986,6 +5966,10 @@ packages:
     resolution: {integrity: sha512-tLq3bSNx+xSpwvAJnzrK0Ep5CLNWjvFTOp71URMaAEWBfRb9nnJiBoUe0tF8bI4ZFO3omgBR6NvnbzVUT3Ly4g==}
     engines: {node: '>=14.16'}
 
+  type-fest@4.41.0:
+    resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
+    engines: {node: '>=16'}
+
   type@2.7.3:
     resolution: {integrity: sha512-8j+1QmAbPvLZow5Qpi6NCaN8FB60p/6x8/vfNqOk/hC+HuvFZhL4+WfekuhQLiqFZXOgQdrs3B+XxEmCc6b3FQ==}
 
@@ -6433,15 +6417,6 @@ packages:
     resolution: {integrity: sha512-rd6eEF3BTNvQnR2e2wwolfTmUTnp70aUTqr0oaGbHifzC3BKJsoV+Gat8vxUMR1hwOKBs6El+qWehrHbCpW6SQ==}
 
 snapshots:
-
-  '@alanshaw/pail@0.3.4':
-    dependencies:
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      archy: 1.0.0
-      cli-color: 2.0.4
-      multiformats: 12.1.3
-      sade: 1.8.1
 
   '@ampproject/remapping@2.3.0':
     dependencies:
@@ -7488,6 +7463,13 @@ snapshots:
 
   '@rtsao/scc@1.1.0': {}
 
+  '@scure/base@1.2.6': {}
+
+  '@scure/bip39@1.6.0':
+    dependencies:
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.6
+
   '@sinclair/typebox@0.27.8': {}
 
   '@solidjs/router@0.10.10(solid-js@1.9.7)':
@@ -7587,6 +7569,8 @@ snapshots:
 
   '@types/retry@0.12.1': {}
 
+  '@types/retry@0.12.2': {}
+
   '@types/semver@7.7.0': {}
 
   '@types/yauzl@2.10.3':
@@ -7685,16 +7669,6 @@ snapshots:
       '@ucanto/interface': 4.2.3
       multiformats: 11.0.2
 
-  '@ucanto/client@7.0.1':
-    dependencies:
-      '@ucanto/core': 7.1.1
-      '@ucanto/interface': 7.1.0
-
-  '@ucanto/client@8.0.1':
-    dependencies:
-      '@ucanto/core': 8.2.0
-      '@ucanto/interface': 8.1.0
-
   '@ucanto/client@9.0.1':
     dependencies:
       '@ucanto/core': 10.4.0
@@ -7724,30 +7698,6 @@ snapshots:
       '@ucanto/interface': 6.2.0
       multiformats: 11.0.2
 
-  '@ucanto/core@7.1.1':
-    dependencies:
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      '@ipld/dag-ucan': 3.4.5
-      '@ucanto/interface': 7.1.0
-      multiformats: 11.0.2
-
-  '@ucanto/core@8.2.0':
-    dependencies:
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      '@ipld/dag-ucan': 3.4.5
-      '@ucanto/interface': 8.1.0
-      multiformats: 11.0.2
-
-  '@ucanto/core@9.0.1':
-    dependencies:
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      '@ipld/dag-ucan': 3.4.5
-      '@ucanto/interface': 9.0.0
-      multiformats: 11.0.2
-
   '@ucanto/interface@10.3.0':
     dependencies:
       '@ipld/dag-ucan': 3.4.5
@@ -7759,21 +7709,6 @@ snapshots:
       multiformats: 11.0.2
 
   '@ucanto/interface@6.2.0':
-    dependencies:
-      '@ipld/dag-ucan': 3.4.5
-      multiformats: 11.0.2
-
-  '@ucanto/interface@7.1.0':
-    dependencies:
-      '@ipld/dag-ucan': 3.4.5
-      multiformats: 11.0.2
-
-  '@ucanto/interface@8.1.0':
-    dependencies:
-      '@ipld/dag-ucan': 3.4.5
-      multiformats: 11.0.2
-
-  '@ucanto/interface@9.0.0':
     dependencies:
       '@ipld/dag-ucan': 3.4.5
       multiformats: 11.0.2
@@ -7794,14 +7729,6 @@ snapshots:
       multiformats: 11.0.2
       one-webcrypto: 1.0.3
 
-  '@ucanto/principal@7.0.0':
-    dependencies:
-      '@ipld/dag-ucan': 3.4.5
-      '@noble/ed25519': 1.7.5
-      '@ucanto/interface': 7.1.0
-      multiformats: 11.0.2
-      one-webcrypto: 1.0.3
-
   '@ucanto/principal@9.0.2':
     dependencies:
       '@ipld/dag-ucan': 3.4.5
@@ -7812,11 +7739,12 @@ snapshots:
       multiformats: 13.3.6
       one-webcrypto: 1.0.3
 
-  '@ucanto/server@7.0.2':
+  '@ucanto/server@10.2.0':
     dependencies:
-      '@ucanto/core': 7.1.1
-      '@ucanto/interface': 7.1.0
-      '@ucanto/validator': 7.0.0
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
+      '@ucanto/principal': 9.0.2
+      '@ucanto/validator': 9.1.0
 
   '@ucanto/transport@4.2.3':
     dependencies:
@@ -7833,16 +7761,6 @@ snapshots:
       '@ucanto/core': 5.2.0
       '@ucanto/interface': 6.2.0
       multiformats: 11.0.2
-
-  '@ucanto/transport@7.0.3':
-    dependencies:
-      '@ucanto/core': 7.1.1
-      '@ucanto/interface': 7.1.0
-
-  '@ucanto/transport@8.0.0':
-    dependencies:
-      '@ucanto/core': 8.2.0
-      '@ucanto/interface': 8.1.0
 
   '@ucanto/transport@9.2.0':
     dependencies:
@@ -7863,14 +7781,6 @@ snapshots:
       '@ipld/dag-cbor': 9.2.4
       '@ucanto/core': 5.2.0
       '@ucanto/interface': 6.2.0
-      multiformats: 11.0.2
-
-  '@ucanto/validator@7.0.0':
-    dependencies:
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      '@ucanto/core': 7.1.1
-      '@ucanto/interface': 7.1.0
       multiformats: 11.0.2
 
   '@ucanto/validator@9.1.0':
@@ -7969,24 +7879,25 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@web3-storage/access@16.4.0':
+  '@web3-storage/access@18.4.0':
     dependencies:
       '@ipld/car': 5.4.2
       '@ipld/dag-ucan': 3.4.5
+      '@scure/bip39': 1.6.0
       '@ucanto/client': 9.0.1
-      '@ucanto/core': 9.0.1
-      '@ucanto/interface': 9.0.0
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
       '@ucanto/principal': 9.0.2
       '@ucanto/transport': 9.2.0
       '@ucanto/validator': 9.1.0
-      '@web3-storage/capabilities': 11.4.1
+      '@web3-storage/capabilities': 17.4.1
       '@web3-storage/did-mailto': 2.1.0
       bigint-mod-arith: 3.3.1
       conf: 11.0.2
       multiformats: 12.1.3
       one-webcrypto: '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
       p-defer: 4.0.1
-      type-fest: 3.13.1
+      type-fest: 4.41.0
       uint8arrays: 4.0.10
 
   '@web3-storage/access@9.4.0':
@@ -8020,14 +7931,35 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@web3-storage/capabilities@11.4.1':
+  '@web3-storage/capabilities@14.0.2':
     dependencies:
-      '@ucanto/core': 9.0.1
-      '@ucanto/interface': 9.0.0
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
       '@ucanto/principal': 9.0.2
       '@ucanto/transport': 9.2.0
       '@ucanto/validator': 9.1.0
       '@web3-storage/data-segment': 3.2.0
+      uint8arrays: 5.1.0
+
+  '@web3-storage/capabilities@17.4.1':
+    dependencies:
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
+      '@ucanto/principal': 9.0.2
+      '@ucanto/transport': 9.2.0
+      '@ucanto/validator': 9.1.0
+      '@web3-storage/data-segment': 5.3.0
+      uint8arrays: 5.1.0
+
+  '@web3-storage/capabilities@18.1.0':
+    dependencies:
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
+      '@ucanto/principal': 9.0.2
+      '@ucanto/transport': 9.2.0
+      '@ucanto/validator': 9.1.0
+      '@web3-storage/data-segment': 5.3.0
+      uint8arrays: 5.1.0
 
   '@web3-storage/capabilities@2.3.0':
     dependencies:
@@ -8045,29 +7977,20 @@ snapshots:
       '@ucanto/transport': 5.1.1
       '@ucanto/validator': 6.1.0
 
-  '@web3-storage/capabilities@9.5.0':
+  '@web3-storage/clock@0.4.1':
     dependencies:
-      '@ucanto/core': 9.0.1
-      '@ucanto/interface': 9.0.0
-      '@ucanto/principal': 9.0.2
-      '@ucanto/transport': 9.2.0
-      '@ucanto/validator': 9.1.0
-      '@web3-storage/data-segment': 3.2.0
-
-  '@web3-storage/clock@0.3.0':
-    dependencies:
-      '@alanshaw/pail': 0.3.4
       '@ipld/dag-cbor': 9.2.4
       '@ipld/dag-ucan': 3.4.5
-      '@ucanto/client': 7.0.1
-      '@ucanto/interface': 7.1.0
-      '@ucanto/principal': 7.0.0
-      '@ucanto/server': 7.0.2
-      '@ucanto/transport': 7.0.3
-      '@ucanto/validator': 7.0.0
+      '@ucanto/client': 9.0.1
+      '@ucanto/interface': 10.3.0
+      '@ucanto/principal': 9.0.2
+      '@ucanto/server': 10.2.0
+      '@ucanto/transport': 9.2.0
+      '@ucanto/validator': 9.1.0
+      '@web3-storage/pail': 0.5.0
       hashlru: 2.3.0
-      multiformats: 11.0.2
-      p-retry: 5.1.2
+      multiformats: 13.3.6
+      p-retry: 6.2.1
 
   '@web3-storage/data-segment@3.2.0':
     dependencies:
@@ -8075,7 +7998,22 @@ snapshots:
       multiformats: 11.0.2
       sync-multihash-sha2: 1.0.0
 
+  '@web3-storage/data-segment@5.3.0':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.4
+      multiformats: 13.3.6
+      sync-multihash-sha2: 1.0.0
+
   '@web3-storage/did-mailto@2.1.0': {}
+
+  '@web3-storage/filecoin-client@3.3.5':
+    dependencies:
+      '@ipld/dag-ucan': 3.4.5
+      '@ucanto/client': 9.0.1
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
+      '@ucanto/transport': 9.2.0
+      '@web3-storage/capabilities': 18.1.0
 
   '@web3-storage/pail@0.5.0':
     dependencies:
@@ -8086,6 +8024,25 @@ snapshots:
       cli-color: 2.0.4
       multiformats: 12.1.3
       sade: 1.8.1
+
+  '@web3-storage/upload-client@13.2.2(encoding@0.1.13)':
+    dependencies:
+      '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.4
+      '@ipld/dag-ucan': 3.4.5
+      '@ipld/unixfs': 2.2.0
+      '@ucanto/client': 9.0.1
+      '@ucanto/interface': 10.3.0
+      '@ucanto/transport': 9.2.0
+      '@web3-storage/capabilities': 14.0.2
+      '@web3-storage/data-segment': 5.3.0
+      '@web3-storage/filecoin-client': 3.3.5
+      ipfs-utils: 9.0.14(encoding@0.1.13)
+      multiformats: 12.1.3
+      p-retry: 5.1.2
+      varint: 6.0.0
+    transitivePeerDependencies:
+      - encoding
 
   '@web3-storage/upload-client@6.0.0':
     dependencies:
@@ -8100,36 +8057,19 @@ snapshots:
       p-queue: 7.4.1
       p-retry: 5.1.2
 
-  '@web3-storage/upload-client@9.4.1(encoding@0.1.13)':
-    dependencies:
-      '@ipld/car': 5.4.2
-      '@ipld/dag-cbor': 9.2.4
-      '@ipld/dag-ucan': 3.4.5
-      '@ipld/unixfs': 2.2.0
-      '@ucanto/client': 8.0.1
-      '@ucanto/interface': 8.1.0
-      '@ucanto/transport': 8.0.0
-      '@web3-storage/capabilities': 9.5.0
-      fr32-sha2-256-trunc254-padded-binary-tree-multihash: 1.1.4
-      ipfs-utils: 9.0.14(encoding@0.1.13)
-      multiformats: 11.0.2
-      p-retry: 5.1.2
-      parallel-transform-web: 1.0.1
-      varint: 6.0.0
-    transitivePeerDependencies:
-      - encoding
-
-  '@web3-storage/w3up-client@8.1.0(encoding@0.1.13)':
+  '@web3-storage/w3up-client@12.5.3(encoding@0.1.13)':
     dependencies:
       '@ipld/dag-ucan': 3.4.5
       '@ucanto/client': 9.0.1
-      '@ucanto/core': 9.0.1
-      '@ucanto/interface': 9.0.0
+      '@ucanto/core': 10.4.0
+      '@ucanto/interface': 10.3.0
       '@ucanto/principal': 9.0.2
       '@ucanto/transport': 9.2.0
-      '@web3-storage/access': 16.4.0
-      '@web3-storage/capabilities': 9.5.0
-      '@web3-storage/upload-client': 9.4.1(encoding@0.1.13)
+      '@web3-storage/access': 18.4.0
+      '@web3-storage/capabilities': 14.0.2
+      '@web3-storage/did-mailto': 2.1.0
+      '@web3-storage/filecoin-client': 3.3.5
+      '@web3-storage/upload-client': 13.2.2(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
 
@@ -9860,8 +9800,6 @@ snapshots:
       hasown: 2.0.2
       mime-types: 2.1.35
 
-  fr32-sha2-256-trunc254-padded-binary-tree-multihash@1.1.4: {}
-
   fs.realpath@1.0.0: {}
 
   fsevents@2.3.3:
@@ -10303,6 +10241,8 @@ snapshots:
       define-properties: 1.2.1
 
   is-negative-zero@2.0.3: {}
+
+  is-network-error@1.1.0: {}
 
   is-number-object@1.1.1:
     dependencies:
@@ -11107,6 +11047,12 @@ snapshots:
       '@types/retry': 0.12.1
       retry: 0.13.1
 
+  p-retry@6.2.1:
+    dependencies:
+      '@types/retry': 0.12.2
+      is-network-error: 1.1.0
+      retry: 0.13.1
+
   p-timeout@5.1.0: {}
 
   p-timeout@6.1.4: {}
@@ -11138,8 +11084,6 @@ snapshots:
   package-json-from-dist@1.0.1: {}
 
   pako@1.0.11: {}
-
-  parallel-transform-web@1.0.1: {}
 
   parent-module@1.0.1:
     dependencies:
@@ -12193,6 +12137,8 @@ snapshots:
   type-fest@2.19.0: {}
 
   type-fest@3.13.1: {}
+
+  type-fest@4.41.0: {}
 
   type@2.7.3: {}
 
