@@ -117,13 +117,13 @@ console.log('cjs/node build');
         ...commonSettings,
         outfile: `dist/browser/${filename}.iife.js`,
         format: 'iife',
-        globalName: 'FireproofConnect',
+        globalName: 'FireproofConnectIPFS',
         platform: 'browser',
-        target: 'es2020',
+        target: 'esnext',
         entryPoints: [entryPoint],
         minify: false,
         banner: bannerLog`
-console.log('browser/es2015 build');
+console.log('browser/esnext build');
 `,
         plugins: [
           // alias(
