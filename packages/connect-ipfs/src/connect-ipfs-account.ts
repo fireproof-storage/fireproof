@@ -11,38 +11,38 @@ import { Capabilities } from '@ucanto/interface'
 import { Loader } from '@fireproof/encrypted-blockstore'
 
 type ClockSpaceDoc = Doc<{
-  type: 'clock-space';
-  clockName: `_clock/${string}/${string}`;
-  with: `did:${string}:${string}`;
-  accountSpace: `did:${string}:${string}`;
-  issuer: `did:key:${string}`;
-  created: number;
-  name: string;
-  email: `${string}@${string}` | null;
-  ua: string;
-  schema: string;
+  type: 'clock-space'
+  clockName: `_clock/${string}/${string}`
+  with: `did:${string}:${string}`
+  accountSpace: `did:${string}:${string}`
+  issuer: `did:key:${string}`
+  created: number
+  name: string
+  email: `${string}@${string}` | null
+  ua: string
+  schema: string
 }>
 
 type SchemaMemberDoc = Doc<{
-  _id: `schema-member/${string}/${string}`;
-  type: 'schema-member';
-  member: `did:key:${string}`;
-  schema: string;
-  ua: string;
+  _id: `schema-member/${string}/${string}`
+  type: 'schema-member'
+  member: `did:key:${string}`
+  schema: string
+  ua: string
 }>
 
 type SpaceDelegationDoc = Doc<{
-  _id: `delegation/${string}/${string}`;
-  type: 'member-delegation';
-  audience: `did:key:${string}`;
-  with: `did:${string}:${string}`;
-  schema: string;
-  status: 'pending' | 'applied';
-  delegation?: Uint8Array;
+  _id: `delegation/${string}/${string}`
+  type: 'member-delegation'
+  audience: `did:key:${string}`
+  with: `did:${string}:${string}`
+  schema: string
+  status: 'pending' | 'applied'
+  delegation?: Uint8Array
 }>
 
 const didKeyIdxFn: MapFn = (doc, emit) => {
-  const myDoc = doc as SpaceDelegationDoc | ClockSpaceDoc
+  const myDoc = doc as unknown as SpaceDelegationDoc | ClockSpaceDoc
   if (myDoc.type === 'clock-space') {
     emit(myDoc.issuer, myDoc.schema)
   } else if (myDoc.type === 'member-delegation' && myDoc.status === 'applied') {
@@ -59,7 +59,11 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   constructor() {
     super()
     this.accountDb = fireproof('_connect-web3')
-    const { _crdt: { blockstore: { loader: accountDbLoader } } } = this.accountDb
+    const {
+      _crdt: {
+        blockstore: { loader: accountDbLoader }
+      }
+    } = this.accountDb
     this.connect({ loader: accountDbLoader! })
     void this.authorizing.then(() => {
       void this.serviceAccessRequests()
@@ -81,9 +85,13 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   async authorize(email: `${string}@${string}`) {
     const client = this.client!
     await client.authorize(email, {
-      capabilities: [{ can: 'clock/*' },
-        { can: 'space/*' }, { can: 'provider/add' },
-        { can: 'store/*' }, { can: 'upload/*' }]
+      capabilities: [
+        { can: 'clock/*' },
+        { can: 'space/*' },
+        { can: 'provider/add' },
+        { can: 'store/*' },
+        { can: 'upload/*' }
+      ]
     })
     let space = this.bestSpace(client)
     if (!space) {
@@ -217,22 +225,27 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async waitForAccess(clockDoc: ClockSpaceDoc, agentDID: `did:key:${string}`) {
-    let resolve: (value?: unknown) => void = () => { }
-    const accessPromise = new Promise((_resolve) => {
+    let resolve: (value?: unknown) => void = () => {}
+    const accessPromise = new Promise(_resolve => {
       resolve = _resolve
     })
 
-    const myPendingDelegations = await this.accountDb.query((doc, emit) => {
-      const accessDoc = doc as SpaceDelegationDoc
-      if (doc.type === 'member-delegation' &&
-        accessDoc.audience &&
-        accessDoc.status === 'pending') {
-        emit(accessDoc.audience)
+    const myPendingDelegations = await this.accountDb.query(
+      (doc, emit) => {
+        const accessDoc = doc as unknown as SpaceDelegationDoc
+        if (
+          accessDoc.type === 'member-delegation' &&
+          accessDoc.audience &&
+          accessDoc.status === 'pending'
+        ) {
+          emit(accessDoc.audience)
+        }
+      },
+      {
+        key: agentDID,
+        includeDocs: true
       }
-    }, {
-      key: agentDID,
-      includeDocs: true
-    })
+    )
     const docs = myPendingDelegations.rows.map(row => row.doc as SpaceDelegationDoc)
 
     let foundMine = false
@@ -248,16 +261,18 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     if (foundMine) {
       resolve()
     } else {
-      const unsub = this.accountDb.subscribe(async (docs) => {
+      const unsub = this.accountDb.subscribe(async docs => {
         for (const doc of docs) {
-          const updateDoc = doc as SpaceDelegationDoc
-          if (updateDoc.type === 'member-delegation' &&
+          const updateDoc = JSON.parse(JSON.stringify(doc)) as unknown as SpaceDelegationDoc
+          if (
+            updateDoc.type === 'member-delegation' &&
             updateDoc.audience === agentDID &&
-            updateDoc.status === 'pending') {
+            updateDoc.status === 'pending'
+          ) {
             await this.applyDelegation(updateDoc)
             updateDoc.status = 'applied'
             await this.accountDb.put(updateDoc)
-            if (updateDoc.with === doc.with) {
+            if (updateDoc.with === (doc as unknown as SpaceDelegationDoc).with) {
               foundMine = true
             }
           }
@@ -280,63 +295,91 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
     await client.addProof(loadedDelegation.ok)
     const theseClockProofs = client.proofs([{ can: 'clock/*', with: doc.with }])
-    if (!theseClockProofs.length) { throw new Error('failed granting clock/* capability') }
+    if (!theseClockProofs.length) {
+      throw new Error('failed granting clock/* capability')
+    }
     console.log('accepting delegation', doc)
   }
 
   async serviceAccessRequests() {
     // query for any access requests I can do
-    const { rows: owned } = await this.accountDb.query(didKeyIdxFn, { includeDocs: true, key: this.issuer(this.client!).did() })
+    const { rows: owned } = (await this.accountDb.query(didKeyIdxFn, {
+      includeDocs: true,
+      key: this.issuer(this.client!).did()
+    })) as { rows: { doc: ClockSpaceDoc }[] }
 
     const schemas = [...new Set(owned.map(({ doc }) => doc!.schema))]
 
     // get all members of those schemas
-    const { rows: members } = await this.accountDb.query((doc, emit) => {
-      const myDoc = doc as SchemaMemberDoc
-      if (myDoc.type === 'schema-member') {
-        emit(myDoc.schema, myDoc.member)
-      }
-    }, { keys: schemas })
+    const { rows: members } = await this.accountDb.query(
+      (doc, emit) => {
+        const myDoc = doc as unknown as SchemaMemberDoc
+        if (myDoc.type === 'schema-member') {
+          emit(myDoc.schema, myDoc.member)
+        }
+      },
+      { keys: schemas }
+    )
 
     const memberDidSet = new Set(members.map(({ value }) => value as `did:key:${string}`))
     memberDidSet.delete(this.issuer(this.client!).did())
 
     const memberDidList = [...memberDidSet]
 
-    const { rows: accessible } = await this.accountDb.query(didKeyIdxFn, { includeDocs: true, keys: memberDidList })
+    const { rows: accessible } = (await this.accountDb.query(didKeyIdxFn, {
+      includeDocs: true,
+      keys: memberDidList
+    })) as { rows: { doc: SpaceDelegationDoc; key: `did:key:${string}` }[] }
 
     // for my owned spaces, are there any that are not accessible to any members?
     for (const memberDid of memberDidList) {
       for (const ownedSpace of owned) {
-        const accessibleSpace = accessible.find(space => space.doc!.with === ownedSpace.doc!.with && space.key === memberDid)
+        const accessibleSpace = accessible.find(
+          space => space.doc!.with === ownedSpace.doc!.with && space.key === memberDid
+        )
         if (!accessibleSpace) {
           await this.delegateAccess(ownedSpace.doc as ClockSpaceDoc | SpaceDelegationDoc, memberDid)
         }
       }
     }
 
-    const unsub = this.accountDb.subscribe(async (docs) => {
+    const unsub = this.accountDb.subscribe(async docs => {
       for (const doc of docs) {
-        const updateDoc = doc as SchemaMemberDoc
-        if (updateDoc.type === 'schema-member') {
+        if (isSchemaMemberDoc(doc)) {
+          const updateDoc = doc as SchemaMemberDoc
           const memberDid = updateDoc.member
           if (memberDid !== this.issuer(this.client!).did()) {
-            const { rows: owned } = await this.accountDb.query(didKeyIdxFn, { includeDocs: true, key: this.issuer(this.client!).did() })
-            const { rows: accessible } = await this.accountDb.query(didKeyIdxFn, { includeDocs: true, key: memberDid })
+            const { rows: owned } = (await this.accountDb.query(didKeyIdxFn, {
+              includeDocs: true,
+              key: this.issuer(this.client!).did()
+            })) as unknown as { rows: { doc: ClockSpaceDoc }[] }
+            const { rows: accessible } = (await this.accountDb.query(didKeyIdxFn, {
+              includeDocs: true,
+              key: memberDid
+            })) as unknown as { rows: { doc: SpaceDelegationDoc; key: `did:key:${string}` }[] }
             for (const ownedSpace of owned) {
-              const accessibleSpace = accessible.find(space => space.doc!.with === ownedSpace.doc!.with && space.key === memberDid)
+              const accessibleSpace = accessible.find(
+                space => space.doc!.with === ownedSpace.doc!.with && space.key === memberDid
+              )
               if (!accessibleSpace) {
-                await this.delegateAccess(ownedSpace.doc as ClockSpaceDoc | SpaceDelegationDoc, memberDid)
+                await this.delegateAccess(
+                  ownedSpace.doc as ClockSpaceDoc | SpaceDelegationDoc,
+                  memberDid
+                )
               }
             }
           }
         }
       }
-    })
+    }, true)
+
     return unsub
   }
 
-  async delegateAccess(clockDoc: ClockSpaceDoc | SpaceDelegationDoc, memberDid: `did:key:${string}`) {
+  async delegateAccess(
+    clockDoc: ClockSpaceDoc | SpaceDelegationDoc,
+    memberDid: `did:key:${string}`
+  ) {
     // first ensure we have the capability
     const client = this.client!
     const proofs = client.proofs([{ can: 'clock/*', with: clockDoc.with }])
@@ -351,7 +394,8 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
       capabilities: [{ can: 'clock/*', with: clockDoc.with }] as Capabilities,
       proofs: client.proofs() // proofs?
     }
-    const delegationID = `delegation/${clockDoc.with}/${memberDid}` as `delegation/${string}/${string}`
+    const delegationID =
+      `delegation/${clockDoc.with}/${memberDid}` as `delegation/${string}/${string}`
     const existingDelegation = await this.accountDb.get(delegationID).catch(() => null)
     if (existingDelegation) {
       console.log('delegation already exists', delegationID)
@@ -372,4 +416,14 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     }
     await this.accountDb.put(accessDoc)
   }
+}
+
+function isSchemaMemberDoc(doc: Doc<any>): doc is SchemaMemberDoc {
+  return (
+    doc.type === 'schema-member' &&
+    '_id' in doc &&
+    'member' in doc &&
+    'schema' in doc &&
+    'ua' in doc
+  )
 }
