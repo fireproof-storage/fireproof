@@ -33,7 +33,11 @@ export class ConnectS3 extends Connection {
     super();
     this.uploadUrl = new URL(upload);
     this.downloadUrl = new URL(download);
-    this.ws = new WebSocket(websocket);
+    if (websocket.length != 0) {
+      this.ws = new WebSocket(websocket);
+    } else {
+      this.ws = undefined;
+    }
     this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
       this.messageResolve = resolve;
     });
@@ -87,11 +91,6 @@ export class ConnectS3 extends Connection {
       throw new Error(
         "failed to upload data " + JSON.parse(result.body).message
       );
-    })
-    const result = await done.json()
-    if (result.status != 201)
-    {
-      throw new Error("failed to upload data " + JSON.parse(result.body).message)
     }
     this.parents = [event.cid];
     return null;
@@ -118,14 +117,9 @@ export class ConnectS3 extends Connection {
     if (this.ws == undefined) {
       return;
     }
-
-    if (this.ws == undefined) {
-      return;
-    }
     this.ws.addEventListener("message", async (event: any) => {
       const data = JSON.parse(event.data);
       const bytes = Base64.toUint8Array(data.items[0].data);
-
       const afn = async () => {
         console.log("Inside the afn");
         const uint8ArrayBuffer = bytes as Uint8Array;
@@ -201,7 +195,6 @@ export class ConnectS3 extends Connection {
         return { cid: element.cid, bytes };
       })
     );
-    console.log("These are the events in metaDownload", events);
     const cids = events.map((e) => e.cid);
     const uniqueParentsMap = new Map(
       [...this.parents, ...cids].map((p) => [p.toString(), p])
