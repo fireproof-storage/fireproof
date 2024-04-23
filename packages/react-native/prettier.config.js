@@ -1,12 +1,12 @@
 /** @type {import("prettier").Config} */
 export default {
-  arrowParens: "always",
+  arrowParens: 'always',
   bracketSpacing: true,
-  endOfLine: "lf",
+  endOfLine: 'lf',
   printWidth: 120,
   semi: true,
-  singleQuote: false,
+  singleQuote: true,
   tabWidth: 2,
-  trailingComma: "es5",
+  trailingComma: 'es5',
   useTabs: false,
 };

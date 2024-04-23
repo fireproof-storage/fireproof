@@ -9,8 +9,8 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {fireproof, Database} from '@fireproof/react-native';
-// import {Database} from '@fireproof/core';
+import {fireproof} from '@fireproof/react-native';
+import {type Database} from '@fireproof/react-native';
 
 type Todo = {
   completed?: boolean;
@@ -18,7 +18,7 @@ type Todo = {
 };
 
 const Todos = () => {
-  let database: Database = fireproof('todo');
+  let database: Database; // = fireproof('todo');
 
   try {
     database = fireproof('todos');
@@ -57,7 +57,10 @@ const Todos = () => {
           }}
         />
       </View>
-      <FlatList<Todo> data={todos} renderItem={renderTodo} />
+      <View>
+        <Text>Todos:</Text>
+        <FlatList<Todo> data={todos} renderItem={renderTodo} />
+      </View>
     </View>
   );
 };
