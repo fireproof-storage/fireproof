@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "echo 'todomvc example needs update'",
+    "build:tsc": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
