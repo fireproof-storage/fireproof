@@ -1,5 +1,3 @@
-import { Fireproof } from "use-fireproof"
-
 export function makeQueryFunctions({ ready, database }): {
   fetchAllLists: () => Promise<any>
   fetchListWithTodos: (_id: any) => Promise<{ list: any; todos: any }>
@@ -12,11 +10,13 @@ export function makeQueryFunctions({ ready, database }): {
 } {
   const fetchAllLists = async () => {
     const lists =
-      ready && database.allLists ? await database.allLists.query({ range: ['list', 'listx'] }) : { rows: [] }
+      ready && database.allLists
+        ? await database.allLists.query({ range: ['list', 'listx'] })
+        : { rows: [] }
     return lists.rows.map(({ value }) => value)
   }
 
-  const fetchListWithTodos = async (_id) => {
+  const fetchListWithTodos = async _id => {
     if (!ready || !database.todosByList)
       return Promise.resolve({ list: { title: '', type: 'list', _id: '' }, todos: [] })
 
@@ -24,20 +24,26 @@ export function makeQueryFunctions({ ready, database }): {
     const todos = await database.todosByList.query({
       range: [
         [_id, '0'],
-        [_id, '9'],
-      ],
+        [_id, '9']
+      ]
     })
-    return { list, todos: todos.rows.map((row) => row.value) }
+    return { list, todos: todos.rows.map(row => row.value) }
   }
 
-  const addList = async (title) => {
+  const addList = async title => {
     return ready && (await database.put({ title, type: 'list' }))
   }
 
   const addTodo = async (listId, title) => {
     return (
       ready &&
-      (await database.put({ completed: false, title, listId, type: 'todo', createdAt: new Date().toISOString() }))
+      (await database.put({
+        completed: false,
+        title,
+        listId,
+        type: 'todo',
+        createdAt: new Date().toISOString()
+      }))
     )
   }
 
@@ -54,17 +60,18 @@ export function makeQueryFunctions({ ready, database }): {
     return ready && (await database.put(doc))
   }
 
-  const clearCompleted = async (listId) => {
-    const result =  ready &&
-      await database.todosByList.query({
+  const clearCompleted = async listId => {
+    const result =
+      ready &&
+      (await database.todosByList.query({
         range: [
           [listId, '1'],
-          [listId, 'x'],
-        ],
-      })
-    
-    const todos = result.rows.map((row) => row.value)
-    const todosToDelete = todos.filter((todo) => todo.completed)
+          [listId, 'x']
+        ]
+      }))
+
+    const todos = result.rows.map(row => row.value)
+    const todosToDelete = todos.filter(todo => todo.completed)
     for (const todoToDelete of todosToDelete) {
       await database.del(todoToDelete._id)
     }
@@ -77,6 +84,6 @@ export function makeQueryFunctions({ ready, database }): {
     toggle,
     destroy,
     updateTitle,
-    clearCompleted,
+    clearCompleted
   }
 }

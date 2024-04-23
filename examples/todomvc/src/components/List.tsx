@@ -5,23 +5,26 @@ import { useNavigate, useParams, useLoaderData, useRevalidator } from 'react-rou
 import Footer from './Footer'
 import InputArea from './InputArea'
 import TodoItem from './TodoItem'
-import { FireproofCtx, FireproofCtxValue } from 'use-fireproof'
+import { useFireproof } from 'use-fireproof'
 import { TimeTravel } from './TimeTravel'
 import { UploadManager } from '../hooks/useUploader'
 
 import { ListLoaderData, TodoDoc } from '../interfaces'
 import { makeQueryFunctions } from '../makeQueryFunctions'
 
-const sleep = async (t: number) => new Promise((resolve) => setTimeout(resolve, t))
+const sleep = async (t: number) => new Promise(resolve => setTimeout(resolve, t))
 
 export function List(): JSX.Element {
   // first data stuff
-  const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue
-  const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions({ ready, database })
+  const { database } = useFireproof()
+  const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions({
+    ready: true,
+    database
+  })
   let { list, todos } = useLoaderData() as ListLoaderData
   const [editing, setEditing] = useState('')
   const revalidator = useRevalidator()
-  addSubscriber('List', async () => {
+  database.subscribe(async () => {
     revalidator.revalidate()
   })
 
@@ -37,8 +40,8 @@ export function List(): JSX.Element {
   const routeFilter = filter || ''
   const filteredTodos = {
     all: todos,
-    active: todos.filter((todo) => !todo.completed),
-    completed: todos.filter((todo) => todo.completed),
+    active: todos.filter(todo => !todo.completed),
+    completed: todos.filter(todo => todo.completed)
   }
   const shownTodos = filteredTodos[nowShowing]
   // now action stuff
@@ -54,7 +57,8 @@ export function List(): JSX.Element {
 
       <ul className="todo-list">
         {shownTodos.map((todo: TodoDoc) => {
-          const handle = (fn: (arg0: TodoDoc, arg1: string) => any) => (val: string) => fn(todo, val)
+          const handle = (fn: (arg0: TodoDoc, arg1: string) => any) => (val: string) =>
+            fn(todo, val)
           return (
             <TodoItem
               key={todo._id}
