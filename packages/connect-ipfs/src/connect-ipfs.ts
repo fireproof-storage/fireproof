@@ -42,7 +42,9 @@ export class ConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async initializeClient() {
+    console.log('initializeClient ConnectIPFS')
     await this.accountConnection.ready
+    console.log('initializeClient ConnectIPFS ready')
     this.authorized = this.accountConnection.activated
     await this.accountConnection.authorizedClockSpace(this.params)
       .then((clockSpaceDID: `did:${string}:${string}`) => {

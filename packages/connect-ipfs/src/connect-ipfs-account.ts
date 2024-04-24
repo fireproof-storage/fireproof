@@ -8,8 +8,8 @@ import type { Doc, Database, MapFn } from '@fireproof/core'
 import { ConnectIPFSParams } from './connect-ipfs'
 import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
 import { Capabilities } from '@ucanto/interface'
-import { Loader } from '@fireproof/encrypted-blockstore'
-import { OwnedSpace, Space } from '@web3-storage/w3up-client/dist/src/space'
+// import { Loader } from '@fireproof/encrypted-blockstore'
+import { OwnedSpace, Space } from '@web3-storage/w3up-client/space'
 
 type ClockSpaceDoc = Doc<{
   type: 'clock-space'
@@ -115,6 +115,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async initializeClient() {
+    console.log('initializeClient accountDb', this.accountDb.name)
     this.client = await this.connectClient()
   }
 
@@ -129,7 +130,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
 
   async connectClient() {
     const client = await create()
-    // console.log('connectClient proofs', client.currentSpace()?.did())
+    console.log('connectClient proofs', client.currentSpace()?.did())
     const space = this.bestSpace(client)
     if (!!space && space.usage) {
       this.activated = true
@@ -137,7 +138,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     } else {
       this.activated = false
     }
-    // console.log('connectClient authorized', this.activated)
+    console.log('connectClient authorized', this.activated)
     return client
   }
 
@@ -177,22 +178,39 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async createNewSpace(params: ConnectIPFSParams) {
+    console.log('createNewSpace', params)
     const client = this.client!
     const spaceKey = this.encodeSpaceName(params)
     console.log('creating new clock space', this.email, this.encodeSpaceName(params))
     const clockSpace = await client.createSpace(spaceKey)
+    console.log('created new clock space', clockSpace)
+
+    const clockSpaceDID = clockSpace.did()
+    console.log('clockSpaceDID:', clockSpaceDID)
+    client.setCurrentSpace(clockSpaceDID)
+    const accountSpace = client.currentSpace()
+    console.log('accountSpace:', accountSpace)
+    const accountSpaceDID = accountSpace!.did()
+    console.log('accountSpaceDID:', accountSpaceDID)
+    const issuerDID = this.issuer(client).did()
+    console.log('issuerDID:', issuerDID)
+    const userAgent = navigator.userAgent
+    console.log('userAgent:', userAgent)
+    const creationTime = Date.now()
+    console.log('creationTime:', creationTime)
 
     const doc: ClockSpaceDoc = {
       type: 'clock-space',
       ...params,
       clockName: spaceKey,
       email: this.email,
-      with: clockSpace.did(),
-      accountSpace: client.currentSpace()!.did(),
-      issuer: this.issuer(client).did(),
-      ua: navigator.userAgent,
-      created: Date.now()
+      with: clockSpaceDID,
+      accountSpace: accountSpaceDID,
+      issuer: issuerDID,
+      ua: userAgent,
+      created: creationTime
     }
+    console.log('putting new clock space', doc)
     await this.accountDb.put(doc)
 
     // todo this should delegate access to the new space to all
