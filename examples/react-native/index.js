@@ -2,8 +2,8 @@
  * @format
  */
 
-import '@fireproof/react-native';
 import {AppRegistry} from 'react-native';
+import '@fireproof/react-native';
 import App from './src/App';
 import {name as appName} from './app.json';
 

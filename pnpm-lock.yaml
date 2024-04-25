@@ -840,6 +840,9 @@ importers:
       react-native-fast-encoder:
         specifier: ^0.1.12
         version: 0.1.12(react-native@0.73.6)(react@18.2.0)
+      react-native-quick-base64:
+        specifier: craftzdog/react-native-quick-base64
+        version: github.com/craftzdog/react-native-quick-base64/ec30e4a127e642dfdd2abfd559d37819980d6dc7(react-native@0.73.6)(react@18.2.0)
       react-native-quick-crypto:
         specifier: margelo/react-native-quick-crypto
         version: github.com/margelo/react-native-quick-crypto/90a33a366483230a2dde86179b5a25fb4460352f(react-native@0.73.6)(react@18.2.0)
@@ -851,7 +854,7 @@ importers:
         version: link:../react
     devDependencies:
       '@babel/runtime':
-        specifier: ^7.24.4
+        specifier: ^7.20.0
         version: 7.24.4
       '@testing-library/react':
         specifier: ^14.1.2
@@ -15578,12 +15581,26 @@ packages:
   /zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
 
+  github.com/craftzdog/react-native-quick-base64/ec30e4a127e642dfdd2abfd559d37819980d6dc7(react-native@0.73.6)(react@18.2.0):
+    resolution: {tarball: https://codeload.github.com/craftzdog/react-native-quick-base64/tar.gz/ec30e4a127e642dfdd2abfd559d37819980d6dc7}
+    id: github.com/craftzdog/react-native-quick-base64/ec30e4a127e642dfdd2abfd559d37819980d6dc7
+    name: react-native-quick-base64
+    version: 2.1.1
+    requiresBuild: true
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+    dependencies:
+      base64-js: 1.5.1
+      react: 18.2.0
+      react-native: 0.73.6(@babel/core@7.24.4)(@babel/preset-env@7.24.4)(react@18.2.0)
+    dev: false
+
   github.com/craftzdog/react-native-quick-base64/ec30e4a127e642dfdd2abfd559d37819980d6dc7(react-native@0.73.7)(react@18.2.0):
     resolution: {tarball: https://codeload.github.com/craftzdog/react-native-quick-base64/tar.gz/ec30e4a127e642dfdd2abfd559d37819980d6dc7}
     id: github.com/craftzdog/react-native-quick-base64/ec30e4a127e642dfdd2abfd559d37819980d6dc7
     name: react-native-quick-base64
     version: 2.1.1
-    prepare: true
     requiresBuild: true
     peerDependencies:
       react: '*'
