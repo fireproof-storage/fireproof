@@ -2,8 +2,9 @@
  * @format
  */
 
+import '@fireproof/react-native/polyfills';
+
 import {AppRegistry} from 'react-native';
-import '@fireproof/react-native';
 import App from './src/App';
 import {name as appName} from './app.json';
 
