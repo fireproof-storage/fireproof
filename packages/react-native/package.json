@@ -56,6 +56,7 @@
     "@craftzdog/react-native-buffer": "^6.0.5",
     "event-target-shim": "^6.0.2",
     "react-native-fast-encoder": "^0.1.12",
+    "react-native-quick-base64": "craftzdog/react-native-quick-base64",
     "react-native-quick-crypto": "margelo/react-native-quick-crypto",
     "readable-stream": "^4.5.2",
     "use-fireproof": "workspace:^"
@@ -65,7 +66,7 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.24.4",
+    "@babel/runtime": "^7.20.0",
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.48",
     "@types/readable-stream": "^4.0.11",
