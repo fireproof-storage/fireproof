@@ -1,4 +1,4 @@
-package com.reactnative
+package com.reactnativefireproof
 
 import android.app.Application
 import com.facebook.react.PackageList

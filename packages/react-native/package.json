@@ -3,9 +3,9 @@
   "version": "0.17.11",
   "description": "Fireproof live database, JavaScript API and React Native hooks",
   "type": "module",
-  "module": "src/index.tsx",
-  "main": "src/index.tsx",
-  "react-native": "src/index.tsx",
+  "module": "src/index.js",
+  "main": "src/index.js",
+  "react-native": "src/index.js",
   "types": "dist/index.d.ts",
   "homepage": "https://use-fireproof.com",
   "keywords": [
@@ -23,15 +23,14 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "files": [
-    "src",
-    "node_modules/react-native-quick-crypto/react-native-quick-crypto.podspec"
+    "src"
   ],
   "exports": {
     ".": {
-      "import": "./src/index.tsx",
+      "import": "./src/index.js",
       "types": "./src/index.d.ts",
-      "default": "./src/index.tsx",
-      "react-native": "./src/index.tsx"
+      "default": "./src/index.js",
+      "react-native": "./src/index.js"
     }
   },
   "scripts": {
@@ -55,8 +54,8 @@
   "gptdoc": "Fireproof/React Native/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",
-    "@zxing/text-encoding": "^0.9.0",
     "event-target-shim": "^6.0.2",
+    "react-native-fast-encoder": "^0.1.12",
     "react-native-quick-crypto": "margelo/react-native-quick-crypto",
     "readable-stream": "^4.5.2",
     "use-fireproof": "workspace:^"
