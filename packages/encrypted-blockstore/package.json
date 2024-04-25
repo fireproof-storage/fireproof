@@ -113,6 +113,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.24.4",
     "@hyrious/esbuild-plugin-commonjs": "^0.2.4",
     "@rollup/plugin-alias": "^5.1.0",
     "@rollup/plugin-commonjs": "^25.0.7",

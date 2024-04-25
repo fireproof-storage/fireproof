@@ -31,7 +31,8 @@
       "types": "./src/index.d.ts",
       "default": "./src/index.js",
       "react-native": "./src/index.js"
-    }
+    },
+    "./polyfills": "./src/polyfills.js"
   },
   "scripts": {
     "prepublishOnly": "cp ../../README.md . && npm run build",
