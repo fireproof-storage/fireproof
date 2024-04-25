@@ -74,9 +74,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.reactnative"
+    namespace "com.reactnativefireproof"
     defaultConfig {
-        applicationId "com.reactnative"
+        applicationId "com.reactnativefireproof"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

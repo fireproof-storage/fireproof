@@ -18,8 +18,8 @@ type Todo = {
 };
 
 const Todos = () => {
+  // TODO: pick one after dev
   let database: Database; // = fireproof('todo');
-
   try {
     database = fireproof('todos');
   } catch (e) {
