@@ -12,12 +12,12 @@
     "test": "jest"
   },
   "dependencies": {
-    "@fireproof/react-native": "workspace:*",
+    "@fireproof/react-native": "workspace:^",
     "react": "18.2.0",
     "react-native": "0.73.7",
     "react-native-fast-encoder": "^0.1.12",
-    "react-native-quick-base64": "craftzdog/react-native-quick-base64",
-    "react-native-quick-crypto": "margelo/react-native-quick-crypto"
+    "react-native-quick-base64": "^2.1.2",
+    "react-native-quick-crypto": "^0.7.0-rc.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -9,25 +9,20 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {fireproof} from '@fireproof/react-native';
-import {type Database} from '@fireproof/react-native';
+import {useFireproof} from '@fireproof/react-native';
+// import {type Database} from '@fireproof/react-native';
 
-type Todo = {
-  completed?: boolean;
-  text?: string;
-};
+type Todo = { text: string; date: number; completed: boolean; };
 
 const Todos = () => {
-  // TODO: pick one after dev
-  let database: Database; // = fireproof('todo');
-  try {
-    database = fireproof('todos');
-  } catch (e) {
-    console.error(e);
-  }
-
-  const todos: ArrayLike<Todo> | null | undefined = []; //useLiveQuery('date', {limit: 10, descending: true}).docs;
-  const [text, onChangeText] = useState<string>('test fireproof');
+  const { useDocument, useLiveQuery } = useFireproof('TodoDB');
+  const [selectedTodo, setSelectedTodo] = useState<string>("")
+  const todos = useLiveQuery<Todo>('date', {limit: 10, descending: true});
+  const [todo, setTodo, saveTodo] = useDocument<Todo>(() => ({
+    text: "",
+    date: Date.now(),
+    completed: false,
+  }));
 
   const renderTodo = ({item}: ListRenderItemInfo<Todo>) => {
     return (
@@ -36,7 +31,7 @@ const Todos = () => {
           // onValueChange={() => null}
           value={item.completed}
         />
-        <Text>{item.text as string}</Text>
+        <Text>{item.text}</Text>
       </View>
     );
   };
@@ -44,12 +39,12 @@ const Todos = () => {
   return (
     <View style={styles.container}>
       <View>
-        <TextInput onChangeText={onChangeText} value={text} />
+        <TextInput onChangeText={(text) => setTodo({text})} value={todo.text} />
         <Button
           title="Add Todo"
           onPress={async () => {
             try {
-              const res = await database.put({text});
+              const res = await saveTodo();
               console.log({res});
             } catch (e) {
               console.error(e);
@@ -59,7 +54,7 @@ const Todos = () => {
       </View>
       <View>
         <Text>Todos:</Text>
-        <FlatList<Todo> data={todos} renderItem={renderTodo} />
+        <FlatList<Todo> data={todos.docs} renderItem={renderTodo} />
       </View>
     </View>
   );
