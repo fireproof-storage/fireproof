@@ -57,8 +57,8 @@
     "@craftzdog/react-native-buffer": "^6.0.5",
     "event-target-shim": "^6.0.2",
     "react-native-fast-encoder": "^0.1.12",
-    "react-native-quick-base64": "craftzdog/react-native-quick-base64",
-    "react-native-quick-crypto": "margelo/react-native-quick-crypto",
+    "react-native-quick-base64": "^2.1.2",
+    "react-native-quick-crypto": "^0.7.0-rc.2",
     "readable-stream": "^4.5.2",
     "use-fireproof": "workspace:^"
   },
