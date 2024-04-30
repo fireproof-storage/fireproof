@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Live database for the web",
   "scripts": {
-    "build:recursive": "pnpm -r build",
-    "build": "pnpm build:blockstore && pnpm build:core",
+    "build": "pnpm -r build",
+    "build:basic": "pnpm build:blockstore && pnpm build:core",
     "build:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build",
     "build:clean": "pnpm -r build:clean",
     "build:clean:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build:clean",
