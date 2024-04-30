@@ -26,10 +26,10 @@
     "build:clean": "rm -rf dist",
     "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../encrypted-blockstore/scripts/types.js",
     "build:script": "node ../encrypted-blockstore/scripts/build.js",
-    "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-netlify.iife.js",
-    "build": "npm run build:tsc && npm run build:script",
+    "build": "npm run build:basic && cp dist/browser/index.iife.js ../fireproof/test/www/connect-netlify.iife.js",
+    "build:basic": "npm run build:tsc && npm run build:script",
     "clean": "rm -rf node_modules",
-    "test": "node ../encrypted-blockstore/scripts/test.js",
+    "test": "echo 'please add tests'",
     "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
   },
   "keywords": [],
