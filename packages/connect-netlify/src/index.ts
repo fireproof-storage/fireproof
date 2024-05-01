@@ -1,5 +1,5 @@
 import { ConnectNetlify } from './connect-netlify'
-import type { Connectable } from '@fireproof/connect'
+import type { Connectable } from '@fireproof/encrypted-blockstore'
 
 const netlifyCxs = new Map<string, ConnectNetlify>()
 

@@ -31,10 +31,13 @@
     "prepublishOnly": "npm run build",
     "build:clean": "rm -rf dist",
     "build:watch": "tsc -w",
-    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
-    "build:script": "node ./scripts/build.js",
+    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../encrypted-blockstore/scripts/types.js",
+    "build:script": "node ../encrypted-blockstore/scripts/build.js",
     "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/ipfs.iife.js",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules",
+    "test": "echo \"Error: no test specified\"",
+    "test:run": "node ../encrypted-blockstore/scripts/test.js",
+    "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
   },
   "keywords": [],
   "author": "",
@@ -44,6 +47,7 @@
     "esbuild": "^0.19.4",
     "esbuild-plugin-alias": "^0.2.1",
     "esbuild-plugin-tsc": "^0.4.0",
+    "mocha": "^10.4.0",
     "partykit": "0.0.24",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
@@ -51,7 +55,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@fireproof/connect": "workspace:^",
+    "@fireproof/aws": "workspace:^",
     "@fireproof/core": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@ucanto/core": "^10.0.1",

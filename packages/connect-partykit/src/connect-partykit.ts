@@ -5,7 +5,7 @@ import {
   UploadMetaFnParams,
   UploadDataFnParams
 } from './types'
-import { Connection } from '@fireproof/connect'
+import { Connection } from '@fireproof/encrypted-blockstore'
 import PartySocket from 'partysocket'
 import type { Loader } from '@fireproof/encrypted-blockstore'
 

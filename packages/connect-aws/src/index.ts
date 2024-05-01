@@ -1,9 +1,7 @@
 import { ConnectS3 } from './connect-s3'
-import { ConnectREST } from './connect-rest'
-import { Connection, CarClockHead, Connectable } from './connection'
+import { Connection,Connectable } from '@fireproof/encrypted-blockstore'
 import type { AnyLink } from '@fireproof/encrypted-blockstore'
 export type { AnyLink }
-export { makeStores } from './store-remote'
 import {
   UploadDataFnParams,
   UploadMetaFnParams,
@@ -11,23 +9,6 @@ import {
   DownloadMetaFnParams
 } from './types'
 
-type RawConnectionParams = {
-  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>
-  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>
-  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>
-  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | null>
-}
-
-// @ts-ignore
-class ConnectRaw extends Connection {
-  constructor({ metaUpload, metaDownload, dataUpload, dataDownload }: RawConnectionParams) {
-    super()
-    this.metaUpload = metaUpload
-    this.metaDownload = metaDownload
-    this.dataUpload = dataUpload
-    this.dataDownload = dataDownload
-  }
-}
 
 export const connect = {
   s3free: ({ blockstore }: Connectable) => {
@@ -55,11 +36,6 @@ export const connect = {
     connection.connect(blockstore)
     return connection
   },
-  raw: ({ blockstore }: Connectable, params: RawConnectionParams) => {
-    const connection = new ConnectRaw(params)
-    connection.connect(blockstore)
-    return connection
-  }
 }
 
 export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
@@ -81,4 +57,4 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   }
 }
 
-export { Connection, ConnectS3, ConnectREST, CarClockHead, Connectable }
+export { ConnectS3 }

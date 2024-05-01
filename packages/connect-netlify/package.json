@@ -24,27 +24,25 @@
   "scripts": {
     "prepublishOnly": "npm run build",
     "build:clean": "rm -rf dist",
-    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ./scripts/types.js",
-    "build:script": "node ./scripts/build.js",
-    "build:all": "npm run build && cp dist/browser/index.iife.js ../fireproof/test/www/connect-netlify.iife.js",
-    "build": "npm run build:tsc && npm run build:script",
-    "clean": "rm -rf node_modules"
+    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../encrypted-blockstore/scripts/types.js",
+    "build:script": "node ../encrypted-blockstore/scripts/build.js",
+    "build": "npm run build:basic && cp dist/browser/index.iife.js ../fireproof/test/www/connect-netlify.iife.js",
+    "build:basic": "npm run build:tsc && npm run build:script",
+    "clean": "rm -rf node_modules",
+    "test": "echo 'please add tests'",
+    "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@hyrious/esbuild-plugin-commonjs": "^0.2.2",
-    "esbuild": "^0.19.4",
-    "esbuild-plugin-alias": "^0.2.1",
-    "esbuild-plugin-tsc": "^0.4.0",
+    "mocha": "^10.4.0",
     "ts-loader": "^9.4.4",
     "typescript": "^5.2.2",
     "webpack": "^5.88.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@fireproof/connect": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
     "@netlify/blobs": "^6.3.1",
     "cross-fetch": "^4.0.0",

@@ -1,12 +1,15 @@
 /* eslint-disable import/first */
 import { DownloadFnParamTypes, UploadDataFnParams } from './types'
-import type { AnyBlock, AnyLink, DbMeta, Loadable, Loader } from '@fireproof/encrypted-blockstore'
+import type { AnyBlock, AnyLink, DbMeta } from './types'
+import { type Loadable, type Loader } from './loader'
 import {
   DataStore as DataStoreBase,
   MetaStore as MetaStoreBase,
+} from './store'
+import { 
   RemoteWAL as RemoteWALBase,
   WALState
-} from '@fireproof/encrypted-blockstore'
+} from './remote-wal'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
 import { format, parse, ToString } from '@ipld/dag-json'
