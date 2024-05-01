@@ -5,9 +5,11 @@ import { type Loadable, type Loader } from './loader'
 import {
   DataStore as DataStoreBase,
   MetaStore as MetaStoreBase,
+} from './store'
+import { 
   RemoteWAL as RemoteWALBase,
   WALState
-} from './index'
+} from './remote-wal'
 import { Connection } from './connection'
 import { validateDataParams, validateMetaParams } from '.'
 import { format, parse, ToString } from '@ipld/dag-json'
