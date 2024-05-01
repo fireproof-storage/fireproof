@@ -8,7 +8,7 @@
 import React from 'react';
 import {SafeAreaView, StatusBar, useColorScheme, View} from 'react-native';
 import {Colors, Header} from 'react-native/Libraries/NewAppScreen';
-import Todos from './Todos';
+import TodoList from './TodoList';
 
 const App = () => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -27,7 +27,7 @@ const App = () => {
         style={{
           backgroundColor: isDarkMode ? Colors.black : Colors.white,
         }}>
-        <Todos />
+        <TodoList />
       </View>
     </SafeAreaView>
   );

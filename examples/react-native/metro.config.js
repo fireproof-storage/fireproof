@@ -6,6 +6,7 @@ const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
 // TODO: maybe `unstable_enablePackageExports: true` needs to stay?
 const d = __dirname;
 const pnpmRoot = path.resolve(path.join(d, '..', '..'));
+const rnqc = path.resolve(path.join(d, '..', '..', '..', 'react-native-quick-crypto'));
 const nodeModulesPath = [path.resolve(path.join(d, './node_modules'))];
 
 /**
@@ -20,7 +21,7 @@ const config = {
     unstable_enablePackageExports: true,
     unstable_enableSymlinks: true,
   },
-  watchFolders: [pnpmRoot],
+  watchFolders: [pnpmRoot, rnqc],
 };
 
 module.exports = mergeConfig(getDefaultConfig(__dirname), config);

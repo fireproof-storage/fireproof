@@ -104,8 +104,8 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
       react-native-quick-crypto:
-        specifier: ^0.7.0-rc.2
-        version: 0.7.0-rc.2(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
+        specifier: link:../../../react-native-quick-crypto
+        version: link:../../../react-native-quick-crypto
     devDependencies:
       '@babel/core':
         specifier: ^7.20.0
@@ -850,8 +850,8 @@ importers:
         specifier: ^2.1.2
         version: 2.1.2(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
       react-native-quick-crypto:
-        specifier: ^0.7.0-rc.2
-        version: 0.7.0-rc.2(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
+        specifier: link:../../../react-native-quick-crypto
+        version: link:../../../react-native-quick-crypto
       readable-stream:
         specifier: ^4.5.2
         version: 4.5.2
@@ -6858,9 +6858,6 @@ packages:
     peerDependencies:
       react: '*'
       react-native: '*'
-
-  react-native-quick-crypto@0.7.0-rc.2:
-    resolution: {integrity: sha512-gKHYLTTFc5ZiS4wr0MsBM5CFpesoa6eJzLUn0i+obGdlACVTOEvZ4vZ/VpWewtICFa66AHGlwdY94RfQHWvdOQ==}
 
   react-native@0.73.7:
     resolution: {integrity: sha512-LfI/INAC9jTf80bBHJQo0SfTEPQADsU8HoLaW7xQKjYXUX40dhu3AoyNEkMOHY4cpQyjEliQZ4dQpQMy733KRQ==}
@@ -15417,18 +15414,6 @@ snapshots:
       base64-js: 1.5.1
       react: 18.2.0
       react-native: 0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0)
-
-  react-native-quick-crypto@0.7.0-rc.2(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0):
-    dependencies:
-      '@craftzdog/react-native-buffer': 6.0.5(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
-      events: 3.3.0
-      react-native-quick-base64: 2.1.2(react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0))(react@18.2.0)
-      readable-stream: 4.5.2
-      string_decoder: 1.3.0
-      util: 0.12.5
-    transitivePeerDependencies:
-      - react
-      - react-native
 
   react-native@0.73.7(@babel/core@7.24.4)(@babel/preset-env@7.24.4(@babel/core@7.24.4))(encoding@0.1.13)(react@18.2.0):
     dependencies:
