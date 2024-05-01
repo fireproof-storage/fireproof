@@ -135,13 +135,13 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
 // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const chunker = bf(30)
 
-function hexStringToUint8Array(hexString: string) {
+function hexStringToArrayBuffer(hexString: string): ArrayBuffer {
   const length = hexString.length
   const uint8Array = new Uint8Array(length / 2)
   for (let i = 0; i < length; i += 2) {
     uint8Array[i / 2] = parseInt(hexString.substring(i, i + 2), 16)
   }
-  return uint8Array
+  return uint8Array.buffer
 }
 
 export async function encryptedEncodeCarFile(
@@ -150,7 +150,7 @@ export async function encryptedEncodeCarFile(
   rootCid: AnyLink,
   t: CarMakeable
 ): Promise<AnyBlock> {
-  const encryptionKey = hexStringToUint8Array(key)
+  const encryptionKey = hexStringToArrayBuffer(key)
   const encryptedBlocks = new MemoryBlockstore()
   const cidsToEncrypt = [] as AnyLink[]
   for (const { cid, bytes } of t.entries()) {

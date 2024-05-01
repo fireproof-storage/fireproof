@@ -5,6 +5,7 @@
   "type": "module",
   "module": "dist/index.js",
   "main": "dist/index.js",
+  "react-native": "src/index.tsx",
   "types": "dist/index.d.ts",
   "homepage": "https://use-fireproof.com",
   "repository": {

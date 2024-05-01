@@ -6,6 +6,7 @@
   "module": "./dist/browser/fireproof.js",
   "main": "./dist/browser/fireproof.cjs",
   "browser": "./dist/browser/fireproof.global.js",
+  "react-native": "./src/fireproof.ts",
   "types": "./dist/browser/fireproof.d.ts",
   "files": [
     "dist/browser",
