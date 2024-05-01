@@ -37,7 +37,7 @@
     "build:basic": "npm run build:tsc && npm run build:script",
     "dev": "cd test/app && npm i && npm run dev",
     "clean": "rm -rf node_modules",
-    "test": "node ../encrypted-blockstore/scripts/test.js",
+    "test": "echo \"Error: no test specified\"",
     "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
   },
   "keywords": [],
