@@ -18,6 +18,7 @@ const TodoList = () => {
   const { useDocument, useLiveQuery } = useFireproof('TodoDB', {public: true});
   // const [selectedTodo, setSelectedTodo] = useState<string>("")
   const todos: Doc<Todo>[] = useLiveQuery<Todo>('date', {limit: 10, descending: true}).docs;
+  console.log({todos});
   const [todo, setTodo, saveTodo] = useDocument<Todo>(() => ({
     // TODO: reset to '' after dev work
     text: 'implement mmkv as backend',
@@ -26,7 +27,7 @@ const TodoList = () => {
   }));
 
   const TodoItem = ({item, index}) => {
-    // console.log({item});
+    // console.log({item, index});
     return (
       <View key={index}>
         <Switch

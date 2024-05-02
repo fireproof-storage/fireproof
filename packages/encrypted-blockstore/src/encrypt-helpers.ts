@@ -16,7 +16,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 import { create, load } from 'prolly-trees/cid-set'
 
 import { encodeCarFile } from './loader-helpers'
-import { makeCodec } from './encrypt-codec.js'
+import { makeCodec } from './encrypt-codec'
 import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from './types'
 
 function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
