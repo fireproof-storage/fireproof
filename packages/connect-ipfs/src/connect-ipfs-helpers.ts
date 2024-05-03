@@ -5,7 +5,9 @@ import { CarClockHead, Connection } from '@fireproof/encrypted-blockstore'
 import { decodeEventBlock } from '@web3-storage/pail/clock'
 import { Proof, Principal } from '@ucanto/interface'
 import { Link } from 'multiformats/link'
-import { DbMetaEventBlock } from '../../connect/dist/types/connection'
+import { DbMetaEventBlock } from '@fireproof/encrypted-blockstore'
+
+//from '../../encrypted-blockstore/dist/types/connection'
 export abstract class AbstractConnectIPFS extends Connection {
   abstract authorizedClient(): Promise<Client>
   abstract clockProofsForDb(): Promise<Proof[]>
