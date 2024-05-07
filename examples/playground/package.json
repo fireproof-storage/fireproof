@@ -1,6 +1,7 @@
 {
   "name": "esbuild-react-starter",
   "version": "1.0.0",
+  "private": true,
   "description": "starter for react using esbuild as a bundler",
   "main": "app.jsx",
   "scripts": {
