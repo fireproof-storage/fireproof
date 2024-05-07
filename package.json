@@ -1,6 +1,7 @@
 {
   "name": "@fireproof/monorepo",
   "version": "1.0.0",
+  "private": true,
   "description": "Live database for the web",
   "scripts": {
     "build": "pnpm -r build",
