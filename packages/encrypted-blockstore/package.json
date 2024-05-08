@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/encrypted-blockstore",
-  "version": "0.17.8",
+  "version": "0.18.0",
   "description": "Content-addressed blockstore with pluggable CRDT storage connectors.",
   "type": "module",
   "main": "./dist/lib/index.cjs",
@@ -156,7 +156,7 @@
     "@ipld/dag-json": "^10.2.0",
     "@ipld/unixfs": "^2.2.0",
     "@peculiar/webcrypto": "^1.4.6",
-    "@web3-storage/pail": "^0.5.0",
+    "@web3-storage/pail": "^0.6.0",
     "charwise": "^3.0.1",
     "cross-fetch": "^4.0.0",
     "eslint-plugin-n": "^16.6.2",

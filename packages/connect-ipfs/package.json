@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/ipfs",
-  "version": "0.17.1",
+  "version": "0.18.0",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -61,7 +61,7 @@
     "@ucanto/core": "^10.0.1",
     "@ucanto/interface": "^10.0.1",
     "@web3-storage/clock": "^0.4.1",
-    "@web3-storage/pail": "^0.5.0",
+    "@web3-storage/pail": "^0.6.0",
     "@web3-storage/w3up-client": "^12.5.2",
     "cross-fetch": "^4.0.0",
     "multiformats": "^13.1.0"
