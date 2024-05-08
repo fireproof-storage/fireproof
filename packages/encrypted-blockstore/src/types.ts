@@ -14,9 +14,11 @@ export interface CarMakeable {
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
 
+export type CarGroupLink = AnyLink[]
+
 export type CarHeader = {
-  cars: AnyLink[]
-  compact: AnyLink[]
+  cars: CarGroupLink[]
+  compact: CarGroupLink[]
   meta: TransactionMeta
 }
 
@@ -30,10 +32,10 @@ type NestedData =
   | NestedData[]
   | { [key: string]: NestedData }
 
-export type TransactionMeta = Record<string, NestedData>;
+export type TransactionMeta = Record<string, NestedData>
 
 export type CryptoOpts = {
-  crypto: any,
+  crypto: any
   randomBytes: (size: number) => Uint8Array
 }
 
@@ -44,7 +46,7 @@ export type StoreOpts = {
 }
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
-export type DbMeta = { car: AnyLink; key: string | null }
+export type DbMeta = { car: CarGroupLink; key: string | null }
 
 export type UploadMetaFnParams = {
   name: string

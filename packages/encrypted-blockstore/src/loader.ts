@@ -42,7 +42,7 @@ export abstract class Loadable {
   name: string = ''
   remoteCarStore?: DataStore
   carStore?: DataStore
-  carLog: AnyLink[] = []
+  carLog: AnyLink[][] = []
   remoteMetaStore?: AbstractRemoteMetaStore
   remoteFileStore?: AbstractDataStore
   fileStore?: DataStore
@@ -61,7 +61,7 @@ export class Loader implements Loadable {
   remoteWAL: RemoteWAL
   metaStore?: MetaStore
   carStore: DataStore
-  carLog: AnyLink[] = []
+  carLog: AnyLink[][] = []
   carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
   key?: string
