@@ -1,6 +1,12 @@
-import { ConfigOpts, Database, useFireproof as useFireproofReact } from 'use-fireproof';
+import {
+  type ConfigOpts,
+  type Database,
+  useFireproof as useFireproofReact,
+  useDocument,
+  useLiveQuery,
+  FireproofCtx
+} from 'use-fireproof';
 import { StoreOpts } from '@fireproof/encrypted-blockstore'
-import * as crypto from '@fireproof/encrypted-blockstore/crypto-web'
 
 import {
   makeDataStore,
@@ -14,19 +20,20 @@ const store = {
   makeRemoteWAL
 } as unknown as StoreOpts
 
-
-// Fireproof React exports
-export * from 'use-fireproof';
-
-// export (override with) a new 'useFireproof' for React Native
-export const useFireproof = (
+// override with a new 'useFireproof' for React Native
+const useFireproof = (
   name?: string | Database | undefined,
   config?: ConfigOpts | undefined
 ) => {
   return useFireproofReact(name, {
     ...config,
     store,
-    crypto,
   })
 };
 
+export {
+  useFireproof,
+  useDocument,
+  useLiveQuery,
+  FireproofCtx,
+};
