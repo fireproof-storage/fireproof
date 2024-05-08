@@ -1,6 +1,6 @@
 {
   "name": "@fireproof/partykit",
-  "version": "0.17.10",
+  "version": "0.18.0",
   "description": "",
   "main": "./dist/browser/index.cjs",
   "module": "./dist/browser/index.esm.js",
@@ -54,7 +54,7 @@
   "dependencies": {
     "@fireproof/aws": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
-    "@web3-storage/pail": "^0.5.0",
+    "@web3-storage/pail": "^0.6.0",
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
     "multiformats": "^12.0.1",
