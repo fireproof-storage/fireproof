@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Button,
   FlatList,
@@ -9,32 +9,40 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {Doc, useFireproof} from '@fireproof/react-native';
+import {useFireproof} from '@fireproof/react-native';
 
 export type Todo = { text: string; date: number; completed: boolean; };
 
 const TodoList = () => {
   // TODO: {public: true} is there until crypto.subtle.(encrypt|decrypt) are present in RNQC
-  const { useDocument, useLiveQuery } = useFireproof('TodoDB', {public: true});
-  // const [selectedTodo, setSelectedTodo] = useState<string>("")
-  const todos: Doc<Todo>[] = useLiveQuery<Todo>('date', {limit: 10, descending: true}).docs;
-  console.log({todos});
+  const { database, useDocument } = useFireproof('TodoDB', {public: true});
+
+  const [todos, setTodos] = useState<Todo[]>([])
+
+  useEffect(() => {
+    const getDocs = async () => {
+      const res = await database.allDocs<Todo>();
+      setTodos(res.rows);
+    }
+    getDocs()
+  }, []);
+
   const [todo, setTodo, saveTodo] = useDocument<Todo>(() => ({
-    // TODO: reset to '' after dev work
-    text: 'implement mmkv as backend',
+    text: '',
     date: Date.now(),
     completed: false,
   }));
 
-  const TodoItem = ({item, index}) => {
-    // console.log({item, index});
+  const TodoItem = ({item}) => {
+    // console.log({item});
+    if (!item?.value) return null;
     return (
-      <View key={index}>
+      <View style={styles.itemRow}>
         <Switch
           // onValueChange={(completed) => setTodo({completed})}
-          value={item.completed}
+          value={item.value.completed}
         />
-        <Text>{item.text}</Text>
+        <Text>{item.value.text}</Text>
       </View>
     );
 };
@@ -56,7 +64,7 @@ const TodoList = () => {
         <Text>Todo List:</Text>
         {
           todos.map((todo, i) => (
-            <TodoItem item={todo} index={i} />
+            <TodoItem key={i} item={todo} />
           ))
         }
         {/* <FlatList<Todo>
@@ -83,5 +91,9 @@ export default TodoList;
 const styles = StyleSheet.create({
   container: {
     margin: 10,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

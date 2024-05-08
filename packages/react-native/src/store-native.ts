@@ -12,21 +12,20 @@ export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader)
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-native-mmkv'
-  rndb: MMKV | null = null
+  store: MMKV | null = null
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
-    if (!this.rndb) {
+    if (!this.store) {
       const dbName = `fp.${this.STORAGE_VERSION}.${this.name}`
-      this.rndb = new MMKV({
+      this.store = new MMKV({
         id: dbName,
       })
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await dbWorkFun(this.rndb)
+    return await dbWorkFun(this.store)
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this._withDB(async (db: MMKV) => {
       const bytes = db.getBuffer(cid.toString())
       if (!bytes) throw new Error(`missing db block ${cid.toString()}`)
@@ -35,14 +34,12 @@ export class DataStore extends DataStoreBase {
   }
 
   async save(car: AnyBlock): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this._withDB(async (db: MMKV) => {
       db.set(car.cid.toString(), car.bytes)
     })
   }
 
   async remove(cid: AnyLink): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this._withDB(async (db: MMKV) => {
       db.delete(cid.toString())
     })
@@ -51,7 +48,7 @@ export class DataStore extends DataStoreBase {
 
 export class RemoteWAL extends RemoteWALBase {
   tag: string = 'wal-native-mmkv'
-  wal: MMKV | null = null
+  store: MMKV | null = null
 
   headerKey(branch: string) {
     // remove 'public' on next storage version bump
@@ -59,14 +56,14 @@ export class RemoteWAL extends RemoteWALBase {
   }
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
-    if (!this.wal) {
+    if (!this.store) {
       const dbName = `fp.${this.STORAGE_VERSION}.wal`
-      this.wal = new MMKV({
+      this.store = new MMKV({
         id: dbName,
       })
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await dbWorkFun(this.wal)
+    return await dbWorkFun(this.store)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -89,21 +86,21 @@ export class RemoteWAL extends RemoteWALBase {
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-native-mmkv'
-  meta: MMKV | null = null
+  store: MMKV | null = null
 
   headerKey(branch: string) {
     return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`
   }
 
   async _withDB(dbWorkFun: (arg0: any) => any) {
-    if (!this.meta) {
+    if (!this.store) {
       const dbName = `fp.${this.STORAGE_VERSION}.meta`
-      this.meta = new MMKV({
+      this.store = new MMKV({
         id: dbName,
       })
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    return await dbWorkFun(this.meta)
+    return await dbWorkFun(this.store)
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
