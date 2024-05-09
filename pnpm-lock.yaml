@@ -314,46 +314,22 @@ importers:
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
-      '@ipld/dag-json':
-        specifier: ^10.1.2
-        version: 10.2.0
-      '@web3-storage/pail':
-        specifier: ^0.5.0
-        version: 0.5.0
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
       js-base64:
         specifier: ^3.7.5
         version: 3.7.7
-      multiformats:
-        specifier: ^12.0.1
-        version: 12.1.3
     devDependencies:
-      '@hyrious/esbuild-plugin-commonjs':
-        specifier: ^0.2.2
-        version: 0.2.4(cjs-module-lexer@1.2.3)(esbuild@0.19.12)
-      esbuild:
-        specifier: ^0.19.4
-        version: 0.19.12
-      esbuild-plugin-alias:
-        specifier: ^0.2.1
-        version: 0.2.1
-      esbuild-plugin-tsc:
-        specifier: ^0.4.0
-        version: 0.4.0(typescript@5.4.5)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       ts-loader:
         specifier: ^9.4.4
-        version: 9.5.1(typescript@5.4.5)(webpack@5.91.0(esbuild@0.19.12)(webpack-cli@5.1.4))
+        version: 9.5.1(typescript@5.4.5)(webpack@5.91.0(esbuild@0.19.12))
       typescript:
-        specifier: ^5.2.2
+        specifier: ^5.4.4
         version: 5.4.5
-      webpack:
-        specifier: ^5.88.2
-        version: 5.91.0(esbuild@0.19.12)(webpack-cli@5.1.4)
-      webpack-cli:
-        specifier: ^5.1.4
-        version: 5.1.4(webpack@5.91.0)
 
   packages/connect-ipfs:
     dependencies:
@@ -400,6 +376,9 @@ importers:
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.4.5)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       partykit:
         specifier: 0.0.24
         version: 0.0.24
@@ -431,18 +410,9 @@ importers:
         specifier: ^3.7.5
         version: 3.7.7
     devDependencies:
-      '@hyrious/esbuild-plugin-commonjs':
-        specifier: ^0.2.2
-        version: 0.2.4(cjs-module-lexer@1.2.3)(esbuild@0.19.12)
-      esbuild:
-        specifier: ^0.19.4
-        version: 0.19.12
-      esbuild-plugin-alias:
-        specifier: ^0.2.1
-        version: 0.2.1
-      esbuild-plugin-tsc:
-        specifier: ^0.4.0
-        version: 0.4.0(typescript@5.4.5)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       ts-loader:
         specifier: ^9.4.4
         version: 9.5.1(typescript@5.4.5)(webpack@5.91.0(esbuild@0.19.12)(webpack-cli@5.1.4))
@@ -474,18 +444,9 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
     devDependencies:
-      '@hyrious/esbuild-plugin-commonjs':
-        specifier: ^0.2.2
-        version: 0.2.4(cjs-module-lexer@1.2.3)(esbuild@0.19.12)
-      esbuild:
-        specifier: ^0.19.4
-        version: 0.19.12
-      esbuild-plugin-alias:
-        specifier: ^0.2.1
-        version: 0.2.1
-      esbuild-plugin-tsc:
-        specifier: ^0.4.0
-        version: 0.4.0(typescript@5.4.5)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
       partykit:
         specifier: 0.0.85
         version: 0.0.85
@@ -569,19 +530,19 @@ importers:
   packages/encrypted-blockstore:
     dependencies:
       '@ipld/car':
-        specifier: ^5.2.0
+        specifier: ^5.3.0
         version: 5.3.0
       '@ipld/dag-cbor':
-        specifier: ^9.0.3
+        specifier: ^9.2.0
         version: 9.2.0
       '@ipld/dag-json':
-        specifier: ^10.1.2
+        specifier: ^10.2.0
         version: 10.2.0
       '@ipld/unixfs':
-        specifier: ^2.1.1
+        specifier: ^2.2.0
         version: 2.2.0
       '@peculiar/webcrypto':
-        specifier: ^1.4.3
+        specifier: ^1.4.6
         version: 1.4.6
       '@web3-storage/pail':
         specifier: ^0.6.0
@@ -591,16 +552,15 @@ importers:
         version: 3.0.1
       cross-fetch:
         specifier: ^4.0.0
-        version: 4.0.0
+        version: 4.0.0(encoding@0.1.13)
       eslint-plugin-n:
         specifier: ^16.6.2
-        version: 16.6.2(eslint@8.57.0)
         version: 16.6.2(eslint@8.57.0)
       idb:
         specifier: ^7.1.1
         version: 7.1.1
       ipfs-unixfs-exporter:
-        specifier: ^13.1.7
+        specifier: ^13.5.0
         version: 13.5.0
       multiformats:
         specifier: ^13.1.1
@@ -619,19 +579,19 @@ importers:
         specifier: ^7.24.4
         version: 7.24.4
       '@hyrious/esbuild-plugin-commonjs':
-        specifier: ^0.2.2
+        specifier: ^0.2.4
         version: 0.2.4(cjs-module-lexer@1.2.3)(esbuild@0.18.20)
       '@rollup/plugin-alias':
-        specifier: ^5.0.0
+        specifier: ^5.1.0
         version: 5.1.0(rollup@4.16.4)
       '@rollup/plugin-commonjs':
-        specifier: ^25.0.4
+        specifier: ^25.0.7
         version: 25.0.7(rollup@4.16.4)
       '@rollup/plugin-json':
-        specifier: ^6.0.0
+        specifier: ^6.1.0
         version: 6.1.0(rollup@4.16.4)
       '@rollup/plugin-node-resolve':
-        specifier: ^15.2.0
+        specifier: ^15.2.3
         version: 15.2.3(rollup@4.16.4)
       '@types/async':
         specifier: ^3.2.24
@@ -640,10 +600,10 @@ importers:
         specifier: ^10.0.6
         version: 10.0.6
       '@typescript-eslint/eslint-plugin':
-        specifier: ^6.1.0
+        specifier: ^6.21.0
         version: 6.21.0(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
       '@typescript-eslint/parser':
-        specifier: ^6.1.0
+        specifier: ^6.21.0
         version: 6.21.0(eslint@8.57.0)(typescript@5.4.5)
       browser-assert:
         specifier: ^1.2.1
@@ -666,35 +626,32 @@ importers:
       esbuild-plugin-tsc:
         specifier: ^0.4.0
         version: 0.4.0(typescript@5.4.5)
-        version: 0.4.0(typescript@5.4.5)
       eslint:
-        specifier: ^8.45.0
+        specifier: ^8.57.0
         version: 8.57.0
       eslint-config-standard:
         specifier: ^17.1.0
         version: 17.1.0(eslint-plugin-import@2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0))(eslint-plugin-n@16.6.2(eslint@8.57.0))(eslint-plugin-promise@6.1.1(eslint@8.57.0))(eslint@8.57.0)
       eslint-plugin-import:
-        specifier: ^2.27.5
+        specifier: ^2.29.1
         version: 2.29.1(@typescript-eslint/parser@6.21.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)
       eslint-plugin-mocha:
-        specifier: ^10.1.0
+        specifier: ^10.4.1
         version: 10.4.3(eslint@8.57.0)
       eslint-plugin-node:
         specifier: ^11.1.0
         version: 11.1.0(eslint@8.57.0)
-        version: 11.1.0(eslint@8.57.0)
       eslint-plugin-promise:
         specifier: ^6.1.1
         version: 6.1.1(eslint@8.57.0)
-        version: 6.1.1(eslint@8.57.0)
       memfs:
-        specifier: ^4.2.1
+        specifier: ^4.8.1
         version: 4.8.2
       mocha:
-        specifier: ^10.2.0
+        specifier: ^10.4.0
         version: 10.4.0
       nodemon:
-        specifier: ^3.0.1
+        specifier: ^3.1.0
         version: 3.1.0
       os-browserify:
         specifier: ^0.3.0
@@ -706,25 +663,25 @@ importers:
         specifier: ^0.11.10
         version: 0.11.10
       puppeteer:
-        specifier: ^21.0.3
+        specifier: ^21.11.0
         version: 21.11.0(encoding@0.1.13)(typescript@5.4.5)
       rollup-plugin-polyfill-node:
         specifier: ^0.12.0
         version: 0.12.0(rollup@4.16.4)
       rollup-plugin-visualizer:
-        specifier: ^5.9.2
+        specifier: ^5.12.0
         version: 5.12.0(rollup@4.16.4)
       stream-browserify:
         specifier: ^3.0.0
         version: 3.0.0
       ts-unused-exports:
-        specifier: ^10.0.0
+        specifier: ^10.0.1
         version: 10.0.1(typescript@5.4.5)
       tslib:
         specifier: ^2.6.2
         version: 2.6.2
       typescript:
-        specifier: ^5.1.6
+        specifier: ^5.4.4
         version: 5.4.5
       util:
         specifier: ^0.12.5
@@ -3509,6 +3466,10 @@ packages:
 
   '@web3-storage/pail@0.5.0':
     resolution: {integrity: sha512-BUuunK6ZQQfNvECB2st0G7/rd0Vfsn6jFg01tfMLEsitFJWI9J503ixKJ8jWpoNW/3juJ32HQpo8ar3pmgG5uA==}
+    hasBin: true
+
+  '@web3-storage/pail@0.6.0':
+    resolution: {integrity: sha512-/lIBu8pR92AEcCqYqjcxc3kUSLLRGQLomUes7PAyoK4lNe4ttm8Wr7WFcrbJmWTBJZmYE6npbYcVio8U+OexpA==}
     hasBin: true
 
   '@web3-storage/upload-client@13.2.2':
@@ -11116,6 +11077,11 @@ snapshots:
       multiformats: 12.1.3
       sade: 1.8.1
 
+  '@web3-storage/pail@0.6.0':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.0
+      multiformats: 13.1.0
+
   '@web3-storage/upload-client@13.2.2(encoding@0.1.13)':
     dependencies:
       '@ipld/car': 5.3.0
@@ -16275,6 +16241,17 @@ snapshots:
     optionalDependencies:
       esbuild: 0.19.12
 
+  terser-webpack-plugin@5.3.10(esbuild@0.19.12)(webpack@5.91.0(esbuild@0.19.12)):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.25
+      jest-worker: 27.5.1
+      schema-utils: 3.3.0
+      serialize-javascript: 6.0.2
+      terser: 5.30.4
+      webpack: 5.91.0(esbuild@0.19.12)
+    optionalDependencies:
+      esbuild: 0.19.12
+
   terser@5.30.4:
     dependencies:
       '@jridgewell/source-map': 0.3.6
@@ -16378,6 +16355,16 @@ snapshots:
       source-map: 0.7.4
       typescript: 5.4.5
       webpack: 5.91.0(esbuild@0.19.12)(webpack-cli@5.1.4)
+
+  ts-loader@9.5.1(typescript@5.4.5)(webpack@5.91.0(esbuild@0.19.12)):
+    dependencies:
+      chalk: 4.1.2
+      enhanced-resolve: 5.16.0
+      micromatch: 4.0.5
+      semver: 7.6.0
+      source-map: 0.7.4
+      typescript: 5.4.5
+      webpack: 5.91.0(esbuild@0.19.12)
 
   ts-unused-exports@10.0.1(typescript@5.4.5):
     dependencies:
@@ -16755,6 +16742,37 @@ snapshots:
 
   webpack-sources@3.2.3: {}
 
+  webpack@5.91.0(esbuild@0.19.12):
+    dependencies:
+      '@types/eslint-scope': 3.7.7
+      '@types/estree': 1.0.5
+      '@webassemblyjs/ast': 1.12.1
+      '@webassemblyjs/wasm-edit': 1.12.1
+      '@webassemblyjs/wasm-parser': 1.12.1
+      acorn: 8.11.3
+      acorn-import-assertions: 1.9.0(acorn@8.11.3)
+      browserslist: 4.23.0
+      chrome-trace-event: 1.0.3
+      enhanced-resolve: 5.16.0
+      es-module-lexer: 1.5.0
+      eslint-scope: 5.1.1
+      events: 3.3.0
+      glob-to-regexp: 0.4.1
+      graceful-fs: 4.2.11
+      json-parse-even-better-errors: 2.3.1
+      loader-runner: 4.3.0
+      mime-types: 2.1.35
+      neo-async: 2.6.2
+      schema-utils: 3.3.0
+      tapable: 2.2.1
+      terser-webpack-plugin: 5.3.10(esbuild@0.19.12)(webpack@5.91.0(esbuild@0.19.12))
+      watchpack: 2.4.1
+      webpack-sources: 3.2.3
+    transitivePeerDependencies:
+      - '@swc/core'
+      - esbuild
+      - uglify-js
+
   webpack@5.91.0(esbuild@0.19.12)(webpack-cli@5.1.4):
     dependencies:
       '@types/eslint-scope': 3.7.7
@@ -16978,7 +16996,7 @@ snapshots:
       require-directory: 2.1.1
       string-width: 4.2.3
       y18n: 5.0.8
-      yargs-parser: 20.2.4
+      yargs-parser: 20.2.9
 
   yargs@17.7.2:
     dependencies:
