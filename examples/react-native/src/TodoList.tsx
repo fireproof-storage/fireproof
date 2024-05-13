@@ -2,50 +2,40 @@ import React, {useEffect, useState} from 'react';
 import {
   Button,
   FlatList,
-  ListRenderItemInfo,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import {useFireproof} from '@fireproof/react-native';
+import { Doc } from '@fireproof/core';
+import TodoItem from './TodoItem';
 
 export type Todo = { text: string; date: number; completed: boolean; };
+export type TodoFromAllDocs = { key: string; value: Doc<Todo>; };
 
 const TodoList = () => {
   // TODO: {public: true} is there until crypto.subtle.(encrypt|decrypt) are present in RNQC
-  const { database, useDocument } = useFireproof('TodoDB', {public: true});
+  const { database: db, useDocument } = useFireproof('TodoDB', {public: true});
 
-  const [todos, setTodos] = useState<Todo[]>([])
-
-  useEffect(() => {
-    const getDocs = async () => {
-      const res = await database.allDocs<Todo>();
-      setTodos(res.rows);
-    }
-    getDocs()
-  }, []);
-
+  const [todos, setTodos] = useState<TodoFromAllDocs[]>([])
   const [todo, setTodo, saveTodo] = useDocument<Todo>(() => ({
     text: '',
     date: Date.now(),
     completed: false,
   }));
 
-  const TodoItem = ({item}) => {
-    // console.log({item});
-    if (!item?.value) return null;
-    return (
-      <View style={styles.itemRow}>
-        <Switch
-          // onValueChange={(completed) => setTodo({completed})}
-          value={item.value.completed}
-        />
-        <Text>{item.value.text}</Text>
-      </View>
-    );
-};
+  useEffect(() => {
+    const getDocs = async () => {
+      const res = await db.allDocs<Todo>();
+      setTodos(res.rows);
+    }
+    getDocs()
+  }, []);
+
+  db.subscribe((changes) => {
+    if (changes.length > 0) console.log({changes});
+  });
 
   return (
     <View style={styles.container}>
@@ -64,23 +54,16 @@ const TodoList = () => {
         <Text>Todo List:</Text>
         {
           todos.map((todo, i) => (
-            <TodoItem key={i} item={todo} />
+            // @ts-expect-error `Property '_deleted' does not exist on type 'Doc<Todo>'.`
+            !(todo.value._deleted) && <TodoItem key={i} item={todo} />
           ))
         }
-        {/* <FlatList<Todo>
+        {/* for some reason, this is throwing the React Hooks error.  Maybe useMemo() in useFireproof?
+        <FlatList<TodoFromAllDocs>
           data={todos}
-          renderItem={({item, index}) => {
-            return (
-              <View key={index}>
-                <Switch
-                  // onValueChange={(completed) => setTodo({completed})}
-                  value={item.completed}
-                />
-                <Text>{item.text}</Text>
-              </View>
-            );
-          }}
-        /> */}
+          renderItem={({item, index}) => (<TodoItem key={index} item={item} />)}
+        />
+        */}
       </View>
     </View>
   );
@@ -91,9 +74,5 @@ export default TodoList;
 const styles = StyleSheet.create({
   container: {
     margin: 10,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 });

@@ -58,8 +58,7 @@
     "event-target-shim": "^6.0.2",
     "react-native-fast-encoder": "^0.1.12",
     "react-native-mmkv": "<3",
-    "react-native-quick-base64": "^2.1.2",
-    "react-native-quick-crypto": "link:../../../react-native-quick-crypto",
+    "react-native-quick-crypto": "^0.7.0-rc.5",
     "readable-stream": "^4.5.2",
     "use-fireproof": "workspace:^"
   },
