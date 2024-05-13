@@ -71,14 +71,12 @@
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.48",
     "@types/readable-stream": "^4.0.11",
-    "@vitest/coverage-istanbul": "^1.2.1",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-simple-import-sort": "^12.1.0",
     "prettier": "^3.2.5",
     "randombytes": "^2.1.0",
-    "typescript": "^5.4.5",
-    "vitest": "^1.2.1"
+    "typescript": "^5.4.5"
   }
 }
