@@ -58,12 +58,12 @@ const TodoList = () => {
             !(todo.value._deleted) && <TodoItem key={i} item={todo} />
           ))
         }
-        {/* for some reason, this is throwing the React Hooks error.  Maybe useMemo() in useFireproof?
-        <FlatList<TodoFromAllDocs>
+
+        {/* for some reason, this is throwing the React Hooks error.  Maybe useMemo() in useFireproof? */}
+        {/* <FlatList<TodoFromAllDocs>
           data={todos}
           renderItem={({item, index}) => (<TodoItem key={index} item={item} />)}
-        />
-        */}
+        /> */}
       </View>
     </View>
   );

@@ -579,7 +579,7 @@ importers:
         version: 0.6.3
     devDependencies:
       '@babel/runtime':
-        specifier: ^7.24.4
+        specifier: ^7.20.0
         version: 7.24.4
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.4
@@ -736,7 +736,7 @@ importers:
         version: 0.6.3
     devDependencies:
       '@babel/runtime':
-        specifier: ^7.24.4
+        specifier: ^7.20.0
         version: 7.24.4
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.2
@@ -950,9 +950,6 @@ importers:
       '@types/readable-stream':
         specifier: ^4.0.11
         version: 4.0.11
-      '@vitest/coverage-istanbul':
-        specifier: ^1.2.1
-        version: 1.5.1(vitest@1.5.1(@types/node@20.12.7)(jsdom@23.2.0)(terser@5.30.4))
       eslint:
         specifier: ^8.56.0
         version: 8.57.0
@@ -974,9 +971,6 @@ importers:
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
-      vitest:
-        specifier: ^1.2.1
-        version: 1.5.1(@types/node@20.12.7)(jsdom@23.2.0)(terser@5.30.4)
 
   packages/solid-js:
     dependencies:
