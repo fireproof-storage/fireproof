@@ -184,8 +184,8 @@ async function decodeCarBlocks(
   get: (cid: any) => Promise<AnyBlock | undefined>,
   keyMaterial: string
 ): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
-  const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial)
-  const decryptionKey = decryptionKeyUint8.buffer.slice(0, decryptionKeyUint8.byteLength)
+  const decryptionKeyUint8 = hexStringToArrayBuffer(keyMaterial)
+  const decryptionKey = decryptionKeyUint8.slice(0, decryptionKeyUint8.byteLength)
 
   const decryptedBlocks = new MemoryBlockstore()
   let last: AnyBlock | null = null
