@@ -4,9 +4,9 @@ import type { AnyBlock, AnyLink, DbMeta } from './types'
 import { type Loadable, type Loader } from './loader'
 import {
   DataStore as DataStoreBase,
-  MetaStore as MetaStoreBase,
+  MetaStore as MetaStoreBase
 } from './store'
-import { 
+import {
   RemoteWAL as RemoteWALBase,
   WALState
 } from './remote-wal'
@@ -151,6 +151,7 @@ export class RemoteWAL extends RemoteWALBase {
     if (!bytesString) return null
     return parse<WALState>(bytesString)
   }
+
   async save(state: WALState, branch = 'main'): Promise<void> {
     const encoded: ToString<WALState> = format(state)
     this.store.set(this.headerKey(branch), encoded)

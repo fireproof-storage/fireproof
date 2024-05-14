@@ -28,7 +28,7 @@ function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
 function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   const codec = makeCodec(crypto, randomBytes)
 
-  const encrypt = async function* ({
+  const encrypt = async function * ({
     get,
     cids,
     hasher,
@@ -73,7 +73,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     yield block
   }
 
-  const decrypt = async function* ({
+  const decrypt = async function * ({
     root,
     get,
     key,
@@ -127,7 +127,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     for (const { cid } of nodes) {
       if (!rootBlock.cid.equals(cid)) promises.push(getWithDecrypt(cid).then(unwrap))
     }
-    yield* promises
+    yield * promises
     yield unwrap(rootBlock)
   }
   return { encrypt, decrypt }

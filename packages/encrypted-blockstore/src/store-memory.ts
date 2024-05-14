@@ -6,10 +6,9 @@ import { RemoteWAL as RemoteWALBase, WALState } from './remote-wal'
 
 import type { Loadable, Loader } from './loader'
 
-export const makeDataStore = (name: string) => new DataStore(name);
-export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
-export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
-
+export const makeDataStore = (name: string) => new DataStore(name)
+export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name)
+export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader)
 
 export class DataStore extends DataStoreBase {
   tag: string = 'car-mem'
@@ -29,7 +28,6 @@ export class DataStore extends DataStoreBase {
     this.store.delete(cid.toString())
   }
 }
-
 
 export class MetaStore extends MetaStoreBase {
   tag: string = 'header-mem'
@@ -66,7 +64,7 @@ export class MetaStore extends MetaStoreBase {
   }
 }
 
-// 
+//
 export class RemoteWAL extends RemoteWALBase {
   tag: string = 'wal-mem'
   store = new Map<string, string>()
@@ -85,6 +83,7 @@ export class RemoteWAL extends RemoteWALBase {
       return null
     }
   }
+
   // eslint-disable-next-line @typescript-eslint/require-await
   async save(state: WALState, branch = 'main'): Promise<void> {
     try {
