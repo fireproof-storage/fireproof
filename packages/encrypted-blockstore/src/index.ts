@@ -1,13 +1,13 @@
 import { ConnectREST } from './connect-rest'
 import { Connection, CarClockHead, Connectable, DbMetaEventBlock } from './connection'
-export { makeStores } from './store-remote'
-import { AnyLink } from './types'
 import {
+  AnyLink,
   UploadDataFnParams,
   UploadMetaFnParams,
   DownloadDataFnParams,
   DownloadMetaFnParams
 } from './types'
+export { makeStores } from './store-remote'
 
 type RawConnectionParams = {
   metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>

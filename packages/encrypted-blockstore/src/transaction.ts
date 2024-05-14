@@ -2,11 +2,10 @@ import { MemoryBlockstore } from '@web3-storage/pail/block'
 // todo get these from multiformats?
 import { BlockFetcher as BlockFetcherAPI } from '@web3-storage/pail/api'
 
-import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from './types'
+import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM, CryptoOpts, StoreOpts } from './types'
 
 import { Loader } from './loader'
 import type { CID } from 'multiformats'
-import { CryptoOpts, StoreOpts } from './types'
 
 export type BlockFetcher = BlockFetcherAPI
 // = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
@@ -108,7 +107,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     const blockLog = new CompactionFetcher(this)
     this.compacting = true
     const meta = await compactFn(blockLog)
-    await this.loader!.commit(blockLog.loggedBlocks, meta, {
+    await this.loader.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true
     })
@@ -131,10 +130,10 @@ export class EncryptedBlockstore implements BlockFetcher {
         blocks.loggedBlocks.putSync(blk.cid, blk.bytes)
       }
     }
-    return this.lastTxMeta as TransactionMeta
+    return this.lastTxMeta
   }
 
-  async *entries(): AsyncIterableIterator<AnyBlock> {
+  async * entries(): AsyncIterableIterator<AnyBlock> {
     const seen: Set<string> = new Set()
     if (this.loader) {
       for await (const blk of this.loader.entries()) {

@@ -3,17 +3,15 @@ import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats'
 
 import type { AnyBlock, AnyLink, CarHeader, CommitOpts, DbMeta, TransactionMeta } from './types'
-import type { BlockstoreOpts } from './transaction'
+import type { BlockstoreOpts, CarTransaction } from './transaction'
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 
 import { getCrypto, randomBytes } from './crypto-web'
-import { DataStore, MetaStore } from './store'
+import { DataStore, MetaStore, DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
 import { RemoteWAL } from './remote-wal'
 
-import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
 export function cidListIncludes(list: AnyLink[], cid: AnyLink) {
@@ -82,9 +80,8 @@ export class Loader implements Loadable {
     this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
     this.ready = Promise.resolve().then(async () => {
       this.metaStore = ebOpts.store.makeMetaStore(this)
-      if (!this.metaStore || !this.carStore || !this.remoteWAL)
-        throw new Error('stores not initialized')
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore!.load('main')
+      if (!this.metaStore || !this.carStore || !this.remoteWAL) { throw new Error('stores not initialized') }
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -127,7 +124,7 @@ export class Loader implements Loadable {
     if (cidListIncludes(this.carLog, meta.car)) {
       return
     }
-    const carHeader = (await this.loadCarHeaderFromMeta(meta)) as CarHeader
+    const carHeader = (await this.loadCarHeaderFromMeta(meta))
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
@@ -170,6 +167,7 @@ export class Loader implements Loadable {
   ): Promise<AnyLink> {
     return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
   }
+
   // can these skip the queue? or have a file queue?
   async _commitInternalFiles(
     t: CarTransaction,
@@ -181,8 +179,8 @@ export class Loader implements Loadable {
       files: AnyLink[]
     }
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    await this.fileStore!.save({ cid, bytes })
-    await this.remoteWAL!.enqueueFile(cid, !!opts.public)
+    await this.fileStore.save({ cid, bytes })
+    await this.remoteWAL.enqueueFile(cid, !!opts.public)
     return cid
   }
 
@@ -224,13 +222,13 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<AnyLink> {
     await this.ready
-    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader
-    let roots: AnyLink[] = await this.prepareRoots(fp, t)
+    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact)
+    const roots: AnyLink[] = await this.prepareRoots(fp, t)
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    await this.carStore!.save({ cid, bytes })
+    await this.carStore.save({ cid, bytes })
     await this.cacheTransaction(t)
     const newDbMeta = { car: cid, key: this.key || null } as DbMeta
-    await this.remoteWAL!.enqueue(newDbMeta, opts)
+    await this.remoteWAL.enqueue(newDbMeta, opts)
     await this.metaStore!.save(newDbMeta)
     await this.updateCarLog(cid, fp, !!opts.compact)
     return cid
@@ -281,7 +279,7 @@ export class Loader implements Loadable {
       car: cid
     } as unknown as DbMeta)
     for (const cid of carHeader.compact) {
-      await this.carStore!.remove(cid)
+      await this.carStore.remove(cid)
     }
   }
 
@@ -294,7 +292,7 @@ export class Loader implements Loadable {
   //   }
   // }
 
-  async *entries(cache = true): AsyncIterableIterator<AnyBlock> {
+  async * entries(cache = true): AsyncIterableIterator<AnyBlock> {
     await this.ready
     if (cache) {
       for (const [, block] of this.getBlockCache) {
