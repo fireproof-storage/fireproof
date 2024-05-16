@@ -65,6 +65,7 @@
     "Travis Vachon",
     "Mikeal Rogers"
   ],
+  "packageManager": "pnpm@8.15.8",
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
     "c8": "^7.12.0",

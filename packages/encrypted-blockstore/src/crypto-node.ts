@@ -2,18 +2,12 @@ import { Crypto } from '@peculiar/webcrypto'
 
 export function getCrypto() {
   try {
-    if (crypto && crypto.subtle) {
-      return crypto
-    } else {
-      return new Crypto()
-    }
+    return new Crypto()
   } catch (e) {
     return null
   }
 }
-const gotCrypto = getCrypto()
-
-export { gotCrypto as crypto }
+export const crypto = getCrypto()
 
 export function randomBytes(size: number) {
   const bytes = new Uint8Array(size)
