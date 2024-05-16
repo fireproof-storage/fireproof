@@ -16,8 +16,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "strict": true
+    "strict": true,
   },
   "include": ["src"],
-  "exclude": ["coverage", "dist", "node_modules"]
+  "exclude": ["coverage", "dist", "node_modules"],
 }
