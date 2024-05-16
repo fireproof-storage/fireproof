@@ -8,8 +8,7 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "pods": "bundle install && bundle exec pod install --project-directory=ios/",
-    "start": "react-native start",
-    "test": "jest"
+    "start": "react-native start"
   },
   "dependencies": {
     "@fireproof/core": "workspace:^",

@@ -53,6 +53,7 @@
     "react-dom": ">=18.0.0"
   },
   "devDependencies": {
+    "@babel/runtime": "^7.20.0",
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",

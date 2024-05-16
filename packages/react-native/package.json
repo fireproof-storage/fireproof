@@ -44,9 +44,7 @@
     "format:fix": "prettier . --write",
     "lint:check": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
-    "start": "tsup -w",
-    "test": "vitest run",
-    "test:cov": "vitest run --coverage"
+    "start": "tsup -w"
   },
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
