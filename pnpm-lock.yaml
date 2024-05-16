@@ -746,6 +746,9 @@ importers:
         specifier: workspace:^
         version: link:../fireproof
     devDependencies:
+      '@babel/runtime':
+        specifier: ^7.20.0
+        version: 7.23.8
       '@testing-library/react':
         specifier: ^14.1.2
         version: 14.1.2(react-dom@18.2.0)(react@18.2.0)
