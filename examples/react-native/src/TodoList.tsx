@@ -18,24 +18,32 @@ const TodoList = () => {
   // TODO: {public: true} is there until crypto.subtle.(encrypt|decrypt) are present in RNQC
   const { database: db, useDocument } = useFireproof('TodoDB', {public: true});
 
-  const [todos, setTodos] = useState<TodoFromAllDocs[]>([])
-  const [todo, setTodo, saveTodo] = useDocument<Todo>(() => ({
+  const defaultTodo = {
     text: '',
     date: Date.now(),
     completed: false,
-  }));
+  };
+  const [todos, setTodos] = useState<TodoFromAllDocs[]>([])
+  const [todo, setTodo, saveTodo] = useDocument<Todo>(() => (defaultTodo));
+
+  const getDocs = async () => {
+    const { rows } = await db.allDocs<Todo>();
+    setTodos(rows);
+  }
 
   useEffect(() => {
-    const getDocs = async () => {
-      const res = await db.allDocs<Todo>();
-      setTodos(res.rows);
-    }
     getDocs()
   }, []);
 
+  const returnChangeData = false;
   db.subscribe((changes) => {
-    if (changes.length > 0) console.log({changes});
-  });
+    if (changes.length > 0) {
+      console.log({changes});
+      // This is a bit brute-strength, to get all docs upon one change.
+      // It's one subscription though, vs. one subscription per doc.
+      getDocs();
+    }
+  }, returnChangeData);
 
   return (
     <View style={styles.container}>
@@ -47,7 +55,10 @@ const TodoList = () => {
         />
         <Button
           title="Add Todo"
-          onPress={() => saveTodo()}
+          onPress={() => {
+            saveTodo();
+            setTodo(defaultTodo);
+          }}
         />
       </View>
       <View>
