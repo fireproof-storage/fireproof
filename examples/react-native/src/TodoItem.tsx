@@ -9,6 +9,10 @@ type TodoItemProps = {
   item: TodoFromAllDocs;
 }
 const TodoItem = ({item}: TodoItemProps) => {
+  if (!item) {
+    console.error('Todo undefined');
+    return null;
+  }
   const { database: db, useDocument } = useFireproof('TodoDB', {public: true});
   const [todo, setTodo, saveTodo] = useDocument<Todo>(() => item.value);
   const [editMode, setEditMode] = useState<boolean>(false);

@@ -16,34 +16,45 @@ export type TodoFromAllDocs = { key: string; value: Doc<Todo>; };
 
 const TodoList = () => {
   // TODO: {public: true} is there until crypto.subtle.(encrypt|decrypt) are present in RNQC
-  const { database: db, useDocument } = useFireproof('TodoDB', {public: true});
+  const { database: db, useDocument, useLiveQuery } = useFireproof('TodoDB', {public: true});
 
   const defaultTodo = {
     text: '',
     date: Date.now(),
     completed: false,
   };
-  const [todos, setTodos] = useState<TodoFromAllDocs[]>([])
   const [todo, setTodo, saveTodo] = useDocument<Todo>(() => (defaultTodo));
+  // ============
+  // db.allDocs()
+  // ============
+  // const [todos, setTodos] = useState<TodoFromAllDocs[]>([])
+  // const getDocs = async () => {
+  //   const { rows } = await db.allDocs<Todo>();
+  //   setTodos(rows);
+  // }
 
-  const getDocs = async () => {
-    const { rows } = await db.allDocs<Todo>();
-    setTodos(rows);
-  }
+  // useEffect(() => {
+  //   getDocs()
+  // }, []);
 
-  useEffect(() => {
-    getDocs()
-  }, []);
+  // const returnChangeData = false;
+  // db.subscribe((changes) => {
+  //   if (changes.length > 0) {
+  //     console.log({changes});
+  //     // This is a bit brute-strength, to get all docs upon one change.
+  //     // It's one subscription though, vs. one subscription per doc.
+  //     getDocs();
+  //   }
+  // }, returnChangeData);
 
-  const returnChangeData = false;
-  db.subscribe((changes) => {
-    if (changes.length > 0) {
-      console.log({changes});
-      // This is a bit brute-strength, to get all docs upon one change.
-      // It's one subscription though, vs. one subscription per doc.
-      getDocs();
-    }
-  }, returnChangeData);
+
+  // ============
+  // useLiveQuery
+  // ============
+  const todos: Doc<Todo>[] = useLiveQuery<Todo>('date', {limit: 10, descending: true}).docs;
+  console.log({todos});
+
+
 
   return (
     <View style={styles.container}>
@@ -66,7 +77,7 @@ const TodoList = () => {
         {
           todos.map((todo, i) => (
             // @ts-expect-error `Property '_deleted' does not exist on type 'Doc<Todo>'.`
-            !(todo.value._deleted) && <TodoItem key={i} item={todo} />
+            !(todo?.value._deleted) && <TodoItem key={i} item={todo} />
           ))
         }
 
