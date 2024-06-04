@@ -90,7 +90,7 @@ describe('MetaStore', function () {
   it('should save a header', async function () {
     const cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     const h = {
-      car: cid,
+      cars: [cid],
       key: null
     }
     await store.save(h)
@@ -98,8 +98,8 @@ describe('MetaStore', function () {
     const file = await readFile(path)
     const header = JSON.parse(file.toString())
     assert(header)
-    assert(header.car)
-    equals(header.car['/'], cid.toString())
+    assert(header.cars)
+    equals(header.cars[0]['/'], cid.toString())
   })
 })
 
@@ -110,7 +110,7 @@ describe('MetaStore with a saved header', function () {
   beforeEach(async function () {
     store = new MetaStore('test-saved-header')
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
-    await store.save({ car: cid, key: null })
+    await store.save({ cars: [cid], key: null })
   })
 
   it('should have a header', async function () {
@@ -119,15 +119,15 @@ describe('MetaStore with a saved header', function () {
     matches(data, /car/)
     const header = JSON.parse(data.toString())
     assert(header)
-    assert(header.car)
-    equals(header.car['/'], cid.toString())
+    assert(header.cars)
+    equals(header.cars[0]['/'], cid.toString())
   })
 
   it('should load a header', async function () {
     const loadeds = await store.load()
     const loaded = loadeds[0]
     assert(loaded)
-    assert(loaded.car)
-    equals(loaded.car.toString(), cid.toString())
+    assert(loaded.cars)
+    equals(loaded.cars.toString(), cid.toString())
   })
 })

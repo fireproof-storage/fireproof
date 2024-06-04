@@ -79,26 +79,33 @@ export abstract class RemoteWAL {
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
-          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
-          if (!car) {
-            if (cidListIncludes(this.loader.carLog, dbMeta.car))
-              throw new Error(`missing local car ${dbMeta.car.toString()}`)
-          } else {
-            await this.loader.remoteCarStore!.save(car)
+          //Loop through the cars and call the load for each car
+          for(const cid of dbMeta.cars)
+          {
+            const car = await this.loader.carStore!.load(cid).catch(() => null)
+            if (!car) {
+              if (cidListIncludes(this.loader.carLog, dbMeta.cars))
+                throw new Error(`missing local car ${cid.toString()}`)
+            } else {
+              await this.loader.remoteCarStore!.save(car)
+            }
+            this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
           }
-          this.walState.noLoaderOps = this.walState.noLoaderOps.filter(op => op !== dbMeta)
         })
         uploads.push(uploadP)
       }
 
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
-          const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
-          if (!car) {
-            if (cidListIncludes(this.loader.carLog, dbMeta.car))
-              throw new Error(`missing local car ${dbMeta.car.toString()}`)
-          } else {
-            await this.loader.remoteCarStore!.save(car)
+          for(const cid of dbMeta.cars)
+          {
+            const car = await this.loader.carStore!.load(cid).catch(() => null)
+            if (!car) {
+            if (cidListIncludes(this.loader.carLog, dbMeta.cars))
+              throw new Error(`missing local car ${cid.toString()}`)
+            } else {
+              await this.loader.remoteCarStore!.save(car)
+            }
           }
           this.walState.operations = this.walState.operations.filter(op => op !== dbMeta)
         })

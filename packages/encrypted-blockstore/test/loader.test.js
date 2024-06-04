@@ -168,6 +168,7 @@ describe('basic Loader with two commits', function () {
 
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)
+    console.log(e);
     matches(e.message, 'missing car file')
   }, { timeout: 10000 })
 })

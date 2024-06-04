@@ -4,6 +4,8 @@ import { RemoteWAL } from './remote-wal';
 import type { Loader } from './loader';
 
 export type AnyLink = Link<any, number, number, 1 | 0>
+export type CarGroup=AnyLink[]
+export type CarLog=CarGroup[]
 export type AnyAnyLink = Link<any, any, any, any>
 export type AnyBlock = { cid: AnyLink; bytes: Uint8Array }
 export type AnyAnyBlock = { cid: AnyAnyLink; bytes: Uint8Array }
@@ -14,9 +16,10 @@ export interface CarMakeable {
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
 
+//Changing the format of cars and compact from AnyLink[] to AnyLink[][]
 export type CarHeader = {
-  cars: AnyLink[]
-  compact: AnyLink[]
+  cars: CarLog
+  compact: CarLog
   meta: TransactionMeta
 }
 
@@ -44,7 +47,8 @@ export type StoreOpts = {
 }
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
-export type DbMeta = { car: AnyLink; key: string | null }
+//Changed the parameter from car:AnyLink to cars:AnyLink[]
+export type DbMeta = { cars: CarGroup; key: string | null }
 
 export type UploadMetaFnParams = {
   name: string
