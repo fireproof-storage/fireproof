@@ -42,39 +42,25 @@ export async function applyBulkUpdateToCrdt(
   updates: DocUpdate[]
 ): Promise<CRDTMeta> {
   let result: Result | null = null
-  // const batch = await Batch.create(tblocks, init.cid)
-  // console.log('applyBulkUpdateToCrdt', updates.length)
   if (updates.length > 1) {
-    // throw new Error('batch not implemented')
     const batch = await Batch.create(tblocks, head)
     for (const update of updates) {
       const link = await writeDocContent(tblocks, update)
       await batch.put(update.key, link)
     }
     result = await batch.commit()
-    // console.log('batch result', result)
-  } else {
-    for (const update of updates) {
-      const link = await writeDocContent(tblocks, update)
-      result = await put(tblocks, head, update.key, link)
-      const resRoot = result.root.toString()
-      const isReturned = result.additions.some(a => a.cid.toString() === resRoot)
-      if (!isReturned) {
-        const hasRoot = await tblocks.get(result.root) // is a db-wide get
-        if (!hasRoot) {
-          throw new Error(
-            `missing root in additions: ${result.additions.length} ${resRoot} keys: ${updates
-              .map(u => u.key)
-              .toString()}`
-          )
-        }
-      }
-    }
+  } else if (updates.length === 1) {
+    const link = await writeDocContent(tblocks, updates[0])
+    result = await put(tblocks, head, updates[0].key, link)
   }
-  if (!result) throw new Error('Missing result')
+  if (!result) throw new Error('Missing result, updates: ' + updates.length)
 
   if (result.event) {
-    for (const { cid, bytes } of [...result.additions, ...result.removals, result.event]) {
+    for (const { cid, bytes } of [
+      ...result.additions,
+      ...result.removals, // todo mute
+      result.event
+    ]) {
       tblocks.putSync(cid, bytes)
     }
   }
