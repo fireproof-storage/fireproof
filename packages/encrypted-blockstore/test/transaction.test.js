@@ -7,26 +7,31 @@ import * as nodeCrypto from '../dist/lib/crypto-node.js'
 import * as nodeStore from '../dist/lib/store-node.js'
 
 const loaderOpts = {
-  store : nodeStore,
+  store: nodeStore,
   crypto: nodeCrypto
 }
 
 describe('Fresh TransactionBlockstore', function () {
   /** @type {Blockstore} */
   let blocks
+
   beforeEach(function () {
     blocks = new Blockstore(loaderOpts)
   })
+
   it('should not have a name', function () {
     assert(!blocks.name)
   })
+
   it('should not have a loader', function () {
     assert(!blocks._loader)
   })
+
   it('should not put', async function () {
     const e = await blocks.put('key', 'value').catch(e => e)
     matches(e.message, /transaction/)
   })
+
   it('should yield a transaction', async function () {
     const txR = await blocks.transaction((tblocks) => {
       assert(tblocks)
@@ -41,15 +46,19 @@ describe('Fresh TransactionBlockstore', function () {
 describe('TransactionBlockstore with name', function () {
   /** @type {Blockstore} */
   let blocks
+
   beforeEach(function () {
-    blocks = new Blockstore({name:'test', ...loaderOpts})
+    blocks = new Blockstore({ name: 'test', ...loaderOpts })
   })
+
   it('should have a name', function () {
     equals(blocks.name, 'test')
   })
+
   it('should have a loader', function () {
     assert(blocks.loader)
   })
+
   it('should get from loader', async function () {
     blocks.loader.getBlock = async (cid) => {
       return { cid, bytes: 'bytes' }
@@ -62,11 +71,13 @@ describe('TransactionBlockstore with name', function () {
 describe('A transaction', function () {
   /** @type {CarTransaction} */
   let tblocks, blocks
+
   beforeEach(async function () {
     blocks = new Blockstore(loaderOpts)
     tblocks = new CarTransaction(blocks)
     blocks.transactions.add(tblocks)
   })
+
   it('should put and get', async function () {
     const cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
 
@@ -96,10 +107,12 @@ describe('TransactionBlockstore with a completed transaction', function () {
       return await tblocks.put(cid2, 'value2')
     })
   })
+
   it('should have transactions', async function () {
     const ts = blocks.transactions
     equals(ts.size, 2)
   })
+
   it('should get', async function () {
     const value = await blocks.get(cid)
     equals(value.cid, cid)
@@ -108,6 +121,7 @@ describe('TransactionBlockstore with a completed transaction', function () {
     const value2 = await blocks.get(cid2)
     equals(value2.bytes, 'value2')
   })
+
   it('should yield entries', async function () {
     const blz = []
     for await (const blk of blocks.entries()) {
@@ -117,4 +131,4 @@ describe('TransactionBlockstore with a completed transaction', function () {
   })
 })
 
-// test compact 
+// test compact

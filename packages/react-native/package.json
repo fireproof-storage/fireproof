@@ -1,0 +1,80 @@
+{
+  "name": "@fireproof/react-native",
+  "version": "0.18.0",
+  "description": "Fireproof live database, JavaScript API and React Native hooks",
+  "type": "module",
+  "module": "src/index.js",
+  "main": "src/index.js",
+  "react-native": "src/index.js",
+  "types": "dist/index.d.ts",
+  "homepage": "https://use-fireproof.com",
+  "keywords": [
+    "react-native",
+    "database",
+    "json",
+    "live",
+    "sync"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "files": [
+    "src"
+  ],
+  "exports": {
+    ".": {
+      "import": "./src/index.tsx",
+      "types": "./src/index.tsx",
+      "default": "./src/index.tsx"
+    },
+    "./polyfills": "./src/polyfills.tsx"
+  },
+  "scripts": {
+    "prepublishOnly": "cp ../../README.md . && npm run build",
+    "postpublish": "rm README.md",
+    "build": "tsup",
+    "build:clean": "rm -rf dist",
+    "build:watch": "tsup --watch",
+    "clean": "rm -rf node_modules",
+    "format:check": "prettier . --check",
+    "format:fix": "prettier . --write",
+    "lint:check": "eslint . --ext .ts,.tsx",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix",
+    "start": "tsup -w"
+  },
+  "author": "J Chris Anderson",
+  "license": "Apache-2.0 OR MIT",
+  "gptdoc": "Fireproof/React Native/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
+  "dependencies": {
+    "@craftzdog/react-native-buffer": "^6.0.5",
+    "@fireproof/encrypted-blockstore": "workspace:^",
+    "@ipld/dag-json": "^10.1.2",
+    "event-target-shim": "^6.0.2",
+    "react-native-fast-encoder": "^0.1.12",
+    "react-native-mmkv": "<3",
+    "react-native-quick-crypto": "^0.7.0-rc.5",
+    "readable-stream": "^4.5.2",
+    "use-fireproof": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.20.0",
+    "@testing-library/react": "^14.1.2",
+    "@types/react": "^18.2.48",
+    "@types/readable-stream": "^4.0.11",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-simple-import-sort": "^12.1.0",
+    "prettier": "^3.2.5",
+    "randombytes": "^2.1.0",
+    "typescript": "^5.4.5"
+  }
+}

@@ -109,7 +109,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
     return { value: { bytes, iv } }
   }
 
-  const cryptoFn = (key: Uint8Array) => {
+  const cryptoFn = (key: ArrayBuffer) => {
     // @ts-ignore
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return { encrypt: opts => encrypt({ key, ...opts }), decrypt: opts => decrypt({ key, ...opts }) }

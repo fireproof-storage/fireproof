@@ -1,11 +1,11 @@
 import { RemoteDataStore, RemoteMetaStore } from './store-remote'
 import type {
-  UploadMetaFnParams,
-  UploadDataFnParams,
+  AnyLink,
+  DownloadDataFnParams,
   DownloadMetaFnParams,
-  DownloadDataFnParams
+  UploadDataFnParams,
+  UploadMetaFnParams
 } from './types'
-import type { AnyLink } from './types'
 import { type Loader } from './loader'
 import { EventBlock, decodeEventBlock } from '@web3-storage/pail/clock'
 import { EventView } from '@web3-storage/pail/clock/api'
@@ -35,6 +35,7 @@ export abstract class Connection {
     params: UploadDataFnParams,
     opts?: { public?: boolean }
   ): Promise<void | AnyLink>
+
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>
   abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>
 
@@ -59,15 +60,15 @@ export abstract class Connection {
     this.loader = loader
     this.taskManager = new TaskManager(loader)
     this.onConnect()
-    const remote = new RemoteMetaStore(this.loader!.name, this)
+    const remote = new RemoteMetaStore(this.loader.name, this)
     remote.onLoad('main', async metas => {
       if (metas) {
         await this.loader!.handleDbMetasFromStore(metas)
       }
     })
-    this.loader!.remoteMetaStore = remote
-    this.loaded = this.loader!.ready.then(async () => {
-      remote!.load('main').then(() => {
+    this.loader.remoteMetaStore = remote
+    this.loaded = this.loader.ready.then(async () => {
+      remote.load('main').then(() => {
         void this.loader!.remoteWAL?._process()
       })
     })
@@ -78,8 +79,8 @@ export abstract class Connection {
   connectStorage({ loader }: { loader?: Loader }) {
     if (!loader) throw new Error('loader is required')
     this.loader = loader
-    loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
-    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this)
+    loader.remoteCarStore = new RemoteDataStore(this.loader.name, this)
+    loader.remoteFileStore = new RemoteDataStore(this.loader.name, this)
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {

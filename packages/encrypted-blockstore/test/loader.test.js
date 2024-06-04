@@ -54,7 +54,7 @@ describe('basic Loader', function () {
     const mockM = new MemoryBlockstore()
     mockM.transactions = new Set()
     t = new CarTransaction(mockM)
-    loader = new Loader('test-loader-commit', { ...loaderOpts,  public: true })
+    loader = new Loader('test-loader-commit', { ...loaderOpts, public: true })
     block = await encode({
       value: { hello: 'world' },
       hasher,
@@ -62,9 +62,11 @@ describe('basic Loader', function () {
     })
     await t.put(block.cid, block.bytes)
   })
+
   it('should have an empty car log', function () {
     equals(loader.carLog.length, 0)
   })
+
   it('should commit', async function () {
     const carCid = await loader.commit(t, { head: [block.cid] })
     equals(loader.carLog.length, 1)
@@ -178,7 +180,7 @@ describe('basic Loader with index commits', function () {
   beforeEach(async function () {
     await resetDirectory(dataDir, 'test-loader-index')
     // t = new CarTransaction()
-    ib = new EncryptedBlockstore({...indexLoaderOpts, name: 'test-loader-index'})
+    ib = new EncryptedBlockstore({ ...indexLoaderOpts, name: 'test-loader-index' })
     block = await encode({
       value: { hello: 'world' },
       hasher,
@@ -199,7 +201,7 @@ describe('basic Loader with index commits', function () {
     }
     indexMap = new Map()
   })
-  
+
   it('should start with an empty car log', function () {
     equals(ib.loader.carLog.length, 0)
   })

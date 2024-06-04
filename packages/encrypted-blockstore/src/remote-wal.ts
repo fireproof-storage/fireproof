@@ -81,8 +81,7 @@ export abstract class RemoteWAL {
         const uploadP = limit(async () => {
           const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
           if (!car) {
-            if (cidListIncludes(this.loader.carLog, dbMeta.car))
-              throw new Error(`missing local car ${dbMeta.car.toString()}`)
+            if (cidListIncludes(this.loader.carLog, dbMeta.car)) { throw new Error(`missing local car ${dbMeta.car.toString()}`) }
           } else {
             await this.loader.remoteCarStore!.save(car)
           }
@@ -95,8 +94,7 @@ export abstract class RemoteWAL {
         const uploadP = limit(async () => {
           const car = await this.loader.carStore!.load(dbMeta.car).catch(() => null)
           if (!car) {
-            if (cidListIncludes(this.loader.carLog, dbMeta.car))
-              throw new Error(`missing local car ${dbMeta.car.toString()}`)
+            if (cidListIncludes(this.loader.carLog, dbMeta.car)) { throw new Error(`missing local car ${dbMeta.car.toString()}`) }
           } else {
             await this.loader.remoteCarStore!.save(car)
           }
