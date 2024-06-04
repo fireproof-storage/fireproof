@@ -88,7 +88,10 @@ export class CRDTClock {
       async (tblocks: CarTransaction) => {
         head = await advanceBlocks(newHead, tblocks, head)
         const result = await root(tblocks, head)
-        for (const { cid, bytes } of [...result.additions, ...result.removals]) {
+        for (const { cid, bytes } of [
+          ...result.additions
+          // ...result.removals
+        ]) {
           tblocks.putSync(cid, bytes)
         }
         return { head }
