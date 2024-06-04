@@ -58,7 +58,7 @@ export async function applyBulkUpdateToCrdt(
   if (result.event) {
     for (const { cid, bytes } of [
       ...result.additions,
-      ...result.removals, // todo mute
+      // ...result.removals,
       result.event
     ]) {
       tblocks.putSync(cid, bytes)
