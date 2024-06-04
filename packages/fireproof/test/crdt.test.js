@@ -249,11 +249,11 @@ describe('Loader with a committed transaction', function () {
   })
   it('should commit a transaction', function () {
     assert(done.head)
-    assert(done.car)
+    assert(done.cars)
     equals(loader.carLog.length, 1)
   })
   it('can load the car', async function () {
-    const reader = await loader.loadCar(done.car)
+    const reader = await loader.loadCar(done.cars[0])
     assert(reader)
     const parsed = await parseCarFile(reader)
     assert(parsed.cars)
@@ -276,19 +276,22 @@ describe('Loader with two committed transactions', function () {
     done2 = await crdt.bulk([{ key: 'orange', value: { foo: 'bar' } }])
   })
   it('should commit two transactions', function () {
+    console.log(done1);
     assert(done1.head)
-    assert(done1.car)
+    assert(done1.cars)
     assert(done2.head)
-    assert(done2.car)
+    assert(done2.cars)
     notEquals(done1.head, done2.head)
-    notEquals(done1.car, done2.car)
+    notEquals(done1.cars, done2.cars)
     // equals(blockstore.transactions.size, 2)
     equals(loader.carLog.length, 2)
-    equals(loader.carLog.indexOf(done1.car), 1)
-    equals(loader.carLog.indexOf(done2.car), 0)
+    //equals(loader.carLog.indexOf(done1.cars), 1)
+    equals(loader.carLog.map(cs => cs.toString()).indexOf(done1.cars.toString()), 1)
+    //equals(loader.carLog.indexOf(done2.cars), 0)
+    equals(loader.carLog.map(cs => cs.toString()).indexOf(done2.cars.toString()), 0)
   })
   it('can load the car', async function () {
-    const reader = await loader.loadCar(done2.car)
+    const reader = await loader.loadCar(done2.cars[0])
     assert(reader)
     const parsed = await parseCarFile(reader)
     assert(parsed.cars)
@@ -318,14 +321,14 @@ describe('Loader with many committed transactions', function () {
   it('should commit many transactions', function () {
     for (const done of dones) {
       assert(done.head)
-      assert(done.car)
+      assert(done.cars)
     }
     equals(blockstore.transactions.size, 0) // cleaned up on commit
     equals(loader.carLog.length, count)
   })
   it('can load the car', async function () {
-    assert(dones[5].car)
-    const reader = await loader.loadCar(dones[5].car)
+    assert(dones[5].cars)
+    const reader = await loader.loadCar(dones[5].cars[0])
     assert(reader)
     const parsed = await parseCarFile(reader)
     assert(parsed.cars)

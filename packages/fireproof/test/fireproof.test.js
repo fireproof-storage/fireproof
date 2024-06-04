@@ -517,7 +517,7 @@ describe('basic js verify', function () {
     equals(ok.id, 'test')
     const ok2 = await db.put({ _id: 'test2', foo: ['bar', 'bam'] })
     equals(ok2.id, 'test2')
-    const cid = db._crdt.blockstore.loader.carLog[0]
+    const cid = db._crdt.blockstore.loader.carLog[0][0]
     const cid2 = db._crdt.clock.head[0]
     notEquals(cid, cid2)
     assert(cid !== cid2)
