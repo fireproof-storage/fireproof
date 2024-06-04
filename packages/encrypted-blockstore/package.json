@@ -79,6 +79,7 @@
     "lint:exports": "ts-unused-exports tsconfig.json",
     "serve": "npx serve-http -p 8080 test/www",
     "test": "npm run build && npm run test:node",
+    "test:rest": "node scripts/server.js",
     "test:browser": "node ./scripts/browser-test.js",
     "test:coverage": "c8 --reporter=html --include='dist/lib/*' node ./scripts/test.js && open coverage/src/index.html",
     "test:node": "node ./scripts/test.js",
