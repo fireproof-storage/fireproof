@@ -59,13 +59,13 @@ export class EncryptedBlockstore implements BlockFetcher {
     const done: TransactionMeta = await fn(t)
     this.lastTxMeta = done
     if (this.loader) {
-      const car = await this.loader.commit(t, done, opts)
+      const cars = await this.loader.commit(t, done, opts)
       if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
         setTimeout(() => void this.compact(), 10)
       }
-      if (car) {
+      if (cars) {
         this.transactions.delete(t)
-        return { ...done, car }
+        return { ...done, cars }
       }
       throw new Error('failed to commit car')
     }

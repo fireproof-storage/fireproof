@@ -73,7 +73,7 @@ export abstract class Loadable {
 export class Loader implements Loadable {
   name: string
   ebOpts: BlockstoreOpts
-  commitQueue: CommitQueue<AnyLink> = new CommitQueue<AnyLink>()
+  commitQueue: CommitQueue<AnyLink[]> = new CommitQueue<AnyLink[]>()
   isCompacting = false
   isWriting = false
   remoteMetaStore?: AbstractRemoteMetaStore
@@ -194,7 +194,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink> {
+  ): Promise<AnyLink[]> {
     return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
   }
   // can these skip the queue? or have a file queue?
@@ -202,7 +202,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink> {
+  ): Promise<AnyLink[]> {
     await this.ready
     const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[]
@@ -210,7 +210,7 @@ export class Loader implements Loadable {
     const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
     await this.fileStore!.save({ cid, bytes })
     await this.remoteWAL!.enqueueFile(cid, !!opts.public)
-    return cid
+    return [cid]
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
@@ -221,7 +221,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink> {
+  ): Promise<AnyLink[]> {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts))
   }
 
@@ -249,7 +249,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink> {
+  ): Promise<AnyLink[]> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
@@ -263,7 +263,7 @@ export class Loader implements Loadable {
     await this.remoteWAL!.enqueue(newDbMeta, opts)
     await this.metaStore!.save(newDbMeta)
     await this.updateCarLog([cid], fp, !!opts.compact)
-    return cid
+    return [cid]
   }
 
   async prepareRoots(fp: CarHeader, t: CarTransaction): Promise<AnyLink[]> {
