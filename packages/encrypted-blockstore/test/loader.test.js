@@ -168,7 +168,6 @@ describe('basic Loader with two commits', function () {
 
     const e = await loader.loadCar(carCid).catch(e => e)
     assert(e)
-    console.log(e);
     matches(e.message, 'missing car file')
   }, { timeout: 10000 })
 })
@@ -206,7 +205,7 @@ describe('basic Loader with index commits', function () {
   })
 
   it('should commit the index metadata', async function () {
-    const { car: carCid } = await ib.transaction(async t => {
+    const { cars: carCid } = await ib.transaction(async t => {
       await t.put(block.cid, block.bytes)
       return indexerResult
     }, indexMap)
