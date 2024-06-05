@@ -32,8 +32,8 @@ export function cidListIncludes(list: CarLog, cids: CarGroup) {
 }
 
 // this works for car groups because toString looks like bafy,bafy
-function uniqueCids(list: CarLog, remove: Set<string> = new Set()): AnyLink[][] {
-  const byString = new Map<string, AnyLink[]>()
+function uniqueCids(list: CarLog, remove: Set<string> = new Set()): CarLog {
+  const byString = new Map<string, CarGroup>()
   for (const cid of list) {
     if (remove.has(cid.toString())) continue
     byString.set(cid.toString(), cid)
@@ -64,7 +64,7 @@ export abstract class Loadable {
 export class Loader implements Loadable {
   name: string
   ebOpts: BlockstoreOpts
-  commitQueue: CommitQueue<AnyLink[]> = new CommitQueue<AnyLink[]>()
+  commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>()
   isCompacting = false
   isWriting = false
   remoteMetaStore?: AbstractRemoteMetaStore
@@ -187,7 +187,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink[]> {
+  ): Promise<CarGroup> {
     return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
   }
   // can these skip the queue? or have a file queue?
@@ -195,7 +195,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink[]> {
+  ): Promise<CarGroup> {
     await this.ready
     const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[]
@@ -214,7 +214,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink[]> {
+  ): Promise<CarGroup> {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts))
   }
 
@@ -242,7 +242,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
-  ): Promise<AnyLink[]> {
+  ): Promise<CarGroup> {
     await this.ready
     const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
