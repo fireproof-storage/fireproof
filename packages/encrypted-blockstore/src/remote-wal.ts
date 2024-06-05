@@ -80,8 +80,7 @@ export abstract class RemoteWAL {
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
           //Loop through the cars and call the load for each car
-          for(const cid of dbMeta.cars)
-          {
+          for (const cid of dbMeta.cars) {
             const car = await this.loader.carStore!.load(cid).catch(() => null)
             if (!car) {
               if (cidListIncludes(this.loader.carLog, dbMeta.cars))
@@ -97,12 +96,11 @@ export abstract class RemoteWAL {
 
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
-          for(const cid of dbMeta.cars)
-          {
+          for (const cid of dbMeta.cars) {
             const car = await this.loader.carStore!.load(cid).catch(() => null)
             if (!car) {
-            if (cidListIncludes(this.loader.carLog, dbMeta.cars))
-              throw new Error(`missing local car ${cid.toString()}`)
+              if (cidListIncludes(this.loader.carLog, dbMeta.cars))
+                throw new Error(`missing local car ${cid.toString()}`)
             } else {
               await this.loader.remoteCarStore!.save(car)
             }

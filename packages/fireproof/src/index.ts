@@ -9,7 +9,7 @@ import type {
   IdxMetaMap,
   IndexRow,
   Doc,
-  DocRecord,
+  DocRecord
 } from './types'
 import { EncryptedBlockstore, TransactionMeta } from '@fireproof/encrypted-blockstore'
 import {
