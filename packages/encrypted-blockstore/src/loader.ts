@@ -25,33 +25,18 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from '
 import type { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
 
-//Fix this
 export function cidListIncludes(list: CarLog, cids: CarGroup) {
-  //Here we are checking if the carlog has the cars present inside the meta object
-  const checkequality = (arr: CarGroup) => {
+  return list.some((arr: CarGroup) => {
     return arr.toString() === cids.toString()
-  }
-
-  return list.some(checkequality)
+  })
 }
-export function uniqueCids(list: CarLog, remove: Set<string> = new Set()): AnyLink[][] {
+
+// this works for car groups because toString looks like bafy,bafy
+function uniqueCids(list: CarLog, remove: Set<string> = new Set()): AnyLink[][] {
   const byString = new Map<string, AnyLink[]>()
-  // ? Do we wanna remove one segment at a time or the whole list?
   for (const cid of list) {
     if (remove.has(cid.toString())) continue
     byString.set(cid.toString(), cid)
-  }
-  return [...byString.values()]
-}
-
-export function uniqueCarCids(list: CarLog, remove: Set<string> = new Set()): AnyLink[][] {
-  const byString = new Map<string, AnyLink[]>()
-  // ? Do we wanna remove one segment at a time or the whole list?
-  for (const carcids of list) {
-    for (const cid of carcids) {
-      if (remove.has(cid.toString())) continue
-      byString.set(cid.toString(), [cid])
-    }
   }
   return [...byString.values()]
 }
@@ -309,7 +294,7 @@ export class Loader implements Loadable {
       const previousCompactCid = fp.compact[fp.compact.length - 1]
       fp.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
       //Made the change here from uniqueCids to uniqueCarCids
-      this.carLog = [...uniqueCarCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)]
+      this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)]
       void this.removeCidsForCompact(previousCompactCid[0])
     } else {
       //Work on this and make sure the tests pass
