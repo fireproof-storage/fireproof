@@ -17,8 +17,8 @@ abstract class VersionedStore {
 export abstract class MetaStore extends VersionedStore {
   tag: string = 'header-base'
 
-  makeHeader({ car, key }: DbMeta): ToString<DbMeta> {
-    const encoded = format({ car, key } as DbMeta)
+  makeHeader({ cars, key }: DbMeta): ToString<DbMeta> {
+    const encoded = format({ cars, key } as DbMeta)
     return encoded
   }
 

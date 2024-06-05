@@ -205,7 +205,7 @@ describe('basic Loader with index commits', function () {
   })
 
   it('should commit the index metadata', async function () {
-    const { car: carCid } = await ib.transaction(async t => {
+    const { cars: carCid } = await ib.transaction(async t => {
       await t.put(block.cid, block.bytes)
       return indexerResult
     }, indexMap)

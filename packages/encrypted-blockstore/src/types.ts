@@ -1,9 +1,11 @@
 import type { Link } from 'multiformats'
-import { DataStore, MetaStore } from './store';
-import { RemoteWAL } from './remote-wal';
-import type { Loader } from './loader';
+import { DataStore, MetaStore } from './store'
+import { RemoteWAL } from './remote-wal'
+import type { Loader } from './loader'
 
 export type AnyLink = Link<any, number, number, 1 | 0>
+export type CarGroup = AnyLink[]
+export type CarLog = CarGroup[]
 export type AnyAnyLink = Link<any, any, any, any>
 export type AnyBlock = { cid: AnyLink; bytes: Uint8Array }
 export type AnyAnyBlock = { cid: AnyAnyLink; bytes: Uint8Array }
@@ -15,8 +17,8 @@ export interface CarMakeable {
 }
 
 export type CarHeader = {
-  cars: AnyLink[]
-  compact: AnyLink[]
+  cars: CarLog
+  compact: CarLog
   meta: TransactionMeta
 }
 
@@ -30,10 +32,10 @@ type NestedData =
   | NestedData[]
   | { [key: string]: NestedData }
 
-export type TransactionMeta = Record<string, NestedData>;
+export type TransactionMeta = Record<string, NestedData>
 
 export type CryptoOpts = {
-  crypto: any,
+  crypto: any
   randomBytes: (size: number) => Uint8Array
 }
 
@@ -44,7 +46,7 @@ export type StoreOpts = {
 }
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
-export type DbMeta = { car: AnyLink; key: string | null }
+export type DbMeta = { cars: CarGroup; key: string | null }
 
 export type UploadMetaFnParams = {
   name: string
@@ -70,4 +72,3 @@ export type DownloadMetaFnParams = {
   name: string
   branch: string
 }
-
