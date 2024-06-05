@@ -1,11 +1,11 @@
 import type { Link } from 'multiformats'
-import { DataStore, MetaStore } from './store';
-import { RemoteWAL } from './remote-wal';
-import type { Loader } from './loader';
+import { DataStore, MetaStore } from './store'
+import { RemoteWAL } from './remote-wal'
+import type { Loader } from './loader'
 
 export type AnyLink = Link<any, number, number, 1 | 0>
-export type CarGroup=AnyLink[]
-export type CarLog=CarGroup[]
+export type CarGroup = AnyLink[]
+export type CarLog = CarGroup[]
 export type AnyAnyLink = Link<any, any, any, any>
 export type AnyBlock = { cid: AnyLink; bytes: Uint8Array }
 export type AnyAnyBlock = { cid: AnyAnyLink; bytes: Uint8Array }
@@ -33,10 +33,10 @@ type NestedData =
   | NestedData[]
   | { [key: string]: NestedData }
 
-export type TransactionMeta = Record<string, NestedData>;
+export type TransactionMeta = Record<string, NestedData>
 
 export type CryptoOpts = {
-  crypto: any,
+  crypto: any
   randomBytes: (size: number) => Uint8Array
 }
 
@@ -74,4 +74,3 @@ export type DownloadMetaFnParams = {
   name: string
   branch: string
 }
-

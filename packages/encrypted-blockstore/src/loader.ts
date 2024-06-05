@@ -2,7 +2,16 @@ import pLimit from 'p-limit'
 import { CarReader } from '@ipld/car'
 import { CID } from 'multiformats'
 
-import type { AnyBlock, AnyLink, CarHeader, CommitOpts, DbMeta, TransactionMeta,CarGroup,CarLog } from './types'
+import type {
+  AnyBlock,
+  AnyLink,
+  CarHeader,
+  CommitOpts,
+  DbMeta,
+  TransactionMeta,
+  CarGroup,
+  CarLog
+} from './types'
 import type { BlockstoreOpts } from './transaction'
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
@@ -19,19 +28,18 @@ import { CommitQueue } from './commit-queue'
 //Fix this
 export function cidListIncludes(list: CarLog, cids: CarGroup) {
   //Here we are checking if the carlog has the cars present inside the meta object
-  const checkequality=(arr:CarGroup)=>
-  {
-    return arr.toString()===cids.toString();
+  const checkequality = (arr: CarGroup) => {
+    return arr.toString() === cids.toString()
   }
-  
+
   return list.some(checkequality)
 }
 export function uniqueCids(list: CarLog, remove: Set<string> = new Set()): AnyLink[][] {
   const byString = new Map<string, AnyLink[]>()
   // ? Do we wanna remove one segment at a time or the whole list?
   for (const cid of list) {
-      if (remove.has(cid.toString())) continue
-      byString.set(cid.toString(), cid)
+    if (remove.has(cid.toString())) continue
+    byString.set(cid.toString(), cid)
   }
   return [...byString.values()]
 }
@@ -40,12 +48,10 @@ export function uniqueCarCids(list: CarLog, remove: Set<string> = new Set()): An
   const byString = new Map<string, AnyLink[]>()
   // ? Do we wanna remove one segment at a time or the whole list?
   for (const carcids of list) {
-    for(const cid of carcids)
-    {
+    for (const cid of carcids) {
       if (remove.has(cid.toString())) continue
       byString.set(cid.toString(), [cid])
     }
-    
   }
   return [...byString.values()]
 }
@@ -64,7 +70,7 @@ export abstract class Loadable {
   name: string = ''
   remoteCarStore?: DataStore
   carStore?: DataStore
-  carLog: CarLog = new Array<CarGroup>();
+  carLog: CarLog = new Array<CarGroup>()
   remoteMetaStore?: AbstractRemoteMetaStore
   remoteFileStore?: AbstractDataStore
   fileStore?: DataStore
@@ -84,7 +90,7 @@ export class Loader implements Loadable {
   metaStore?: MetaStore
   carStore: DataStore
   //Make this a 2d array - done
-  carLog: CarLog = new Array<CarGroup>();
+  carLog: CarLog = new Array<CarGroup>()
   carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
   key?: string
@@ -142,7 +148,7 @@ export class Loader implements Loadable {
     if (this.isCompacting) {
       throw new Error('cannot merge while compacting')
     }
-   
+
     //We don't have to loop over meta.cars because we are converting it into a string representation
     if (this.seenMeta.has(meta.cars.toString())) return
     this.seenMeta.add(meta.cars.toString())
@@ -150,7 +156,7 @@ export class Loader implements Loadable {
     if (meta.key) {
       await this.setKey(meta.key)
     }
-    if (cidListIncludes(this.carLog, meta.cars)) { 
+    if (cidListIncludes(this.carLog, meta.cars)) {
       return
     }
     const carHeader = (await this.loadCarHeaderFromMeta(meta)) as CarHeader
@@ -159,7 +165,9 @@ export class Loader implements Loadable {
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars.flat())
-    this.carLog = [...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)]
+    this.carLog = [
+      ...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)
+    ]
     await this.ebOpts.applyMeta(carHeader.meta)
   }
 
@@ -296,7 +304,7 @@ export class Loader implements Loadable {
   }
 
   //This needs more testing?
-  async updateCarLog(cids:CarGroup, fp: CarHeader, compact: boolean): Promise<void> {
+  async updateCarLog(cids: CarGroup, fp: CarHeader, compact: boolean): Promise<void> {
     if (compact) {
       const previousCompactCid = fp.compact[fp.compact.length - 1]
       fp.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
@@ -314,11 +322,9 @@ export class Loader implements Loadable {
       cars: [cid]
     } as unknown as DbMeta)
     for (const cids of carHeader.compact) {
-      for(const cid of cids)
-      {
+      for (const cid of cids) {
         await this.carStore!.remove(cid)
       }
-      
     }
   }
 
@@ -342,8 +348,7 @@ export class Loader implements Loadable {
         yield block
       }
       for (const cids of this.carLog) {
-        for(const cid of cids)
-        {
+        for (const cid of cids) {
           const reader = await this.loadCar(cid)
           if (!reader) throw new Error(`missing car reader ${cid.toString()}`)
           for await (const block of reader.blocks()) {
@@ -351,8 +356,8 @@ export class Loader implements Loadable {
             if (!this.getBlockCache.has(sCid)) {
               yield block
             }
+          }
         }
-      }
       }
     }
   }
@@ -387,11 +392,9 @@ export class Loader implements Loadable {
       for (let i = 0; i < compacts.length; i += batchSize) {
         const promises: Promise<AnyBlock | undefined>[] = []
         for (let j = i; j < Math.min(i + batchSize, compacts.length); j++) {
-          for(const cid of compacts[j])
-          {
+          for (const cid of compacts[j]) {
             promises.push(getCarCid(cid))
           }
-          
         }
         try {
           got = await Promise.any(promises)
@@ -410,10 +413,9 @@ export class Loader implements Loadable {
     for (let i = 0; i < this.carLog.length; i += batchSize) {
       const promises: Promise<AnyBlock | undefined>[] = []
       for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-        for(const cid of this.carLog[j])
-          {
-            promises.push(getCarCid(cid))
-          }
+        for (const cid of this.carLog[j]) {
+          promises.push(getCarCid(cid))
+        }
       }
       try {
         got = await Promise.any(promises)
@@ -427,8 +429,7 @@ export class Loader implements Loadable {
       for (let i = 0; i < this.carLog.length; i += batchSize) {
         const promises: Promise<AnyBlock | undefined>[] = []
         for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-          for(const cid of this.carLog[j])
-          {
+          for (const cid of this.carLog[j]) {
             promises.push(getCarCid(cid))
           }
         }
@@ -452,7 +453,7 @@ export class Loader implements Loadable {
     return { ...coreHeader, meta: result }
   }
 
-  protected async loadCar(cid:AnyLink): Promise<CarReader> {
+  protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')
     const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
     return loaded
@@ -460,7 +461,7 @@ export class Loader implements Loadable {
 
   //What if instead it returns an Array of CarHeader
   protected async storesLoadCar(
-    cid:AnyLink,
+    cid: AnyLink,
     local: AbstractDataStore,
     remote?: AbstractDataStore,
     publicFiles?: boolean
