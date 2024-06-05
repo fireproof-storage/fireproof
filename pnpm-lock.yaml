@@ -239,8 +239,8 @@ importers:
         specifier: ^4.0.0
         version: 4.0.0
       multiformats:
-        specifier: ^13.1.0
-        version: 13.1.0
+        specifier: ^13.1.1
+        version: 13.1.1
     devDependencies:
       '@hyrious/esbuild-plugin-commonjs':
         specifier: ^0.2.2
@@ -312,18 +312,12 @@ importers:
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
-      '@web3-storage/pail':
-        specifier: ^0.6.0
-        version: 0.6.0
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
       js-base64:
         specifier: ^3.7.5
         version: 3.7.5
-      multiformats:
-        specifier: ^12.0.1
-        version: 12.1.3
       partysocket:
         specifier: ^1.0.1
         version: 1.0.1
@@ -383,8 +377,8 @@ importers:
         specifier: ^13.5.0
         version: 13.5.0
       multiformats:
-        specifier: ^12.1.3
-        version: 12.1.3
+        specifier: ^13.1.1
+        version: 13.1.1
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
@@ -537,8 +531,8 @@ importers:
         specifier: ^13.1.7
         version: 13.2.5
       multiformats:
-        specifier: ^12.0.1
-        version: 12.1.3
+        specifier: ^13.1.1
+        version: 13.1.1
       p-limit:
         specifier: ^4.0.0
         version: 4.0.0
@@ -2159,7 +2153,7 @@ packages:
     dependencies:
       '@ipld/dag-cbor': 9.2.0
       cborg: 4.0.7
-      multiformats: 13.1.0
+      multiformats: 13.1.1
       varint: 6.0.0
     dev: false
 
@@ -2169,7 +2163,7 @@ packages:
     dependencies:
       '@ipld/dag-cbor': 9.2.0
       cborg: 4.1.3
-      multiformats: 13.1.0
+      multiformats: 13.1.1
       varint: 6.0.0
     dev: false
 
@@ -2186,7 +2180,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 4.0.7
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /@ipld/dag-cbor@9.2.0:
@@ -2194,7 +2188,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 4.1.3
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /@ipld/dag-json@10.1.7:
@@ -2202,7 +2196,7 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 4.0.7
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /@ipld/dag-json@10.2.0:
@@ -2210,14 +2204,14 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
       cborg: 4.1.3
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /@ipld/dag-pb@4.0.8:
     resolution: {integrity: sha512-693AqMY2jvhe+w4jSwjnDrbhxIu39gm1H4f6/KD5gG+6VFMM6EXV7vq85BvEf8CRsnA0+auWfA29/S8gbWI0Ew==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /@ipld/dag-ucan@3.4.0:
@@ -2367,7 +2361,7 @@ packages:
     resolution: {integrity: sha512-6vId1C46ra3R1sbJUOFCZnsUIveR9oF20yhPmAFxPm0JfrX3/ZRCgP3YDrBzlGoEppOXnA9czHeYc0T9mB6hbA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dependencies:
-      multiformats: 13.1.0
+      multiformats: 13.1.1
       murmurhash3js-revisited: 3.0.0
     dev: false
 
@@ -3677,7 +3671,7 @@ packages:
       '@ucanto/validator': 9.0.2
       '@web3-storage/pail': 0.5.0
       hashlru: 2.3.0
-      multiformats: 13.1.0
+      multiformats: 13.1.1
       p-retry: 6.2.0
     dev: false
 
@@ -3731,7 +3725,7 @@ packages:
     hasBin: true
     dependencies:
       '@ipld/dag-cbor': 9.2.0
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /@web3-storage/upload-client@13.2.1:
@@ -6954,7 +6948,7 @@ packages:
     resolution: {integrity: sha512-2nyiiOcmGSE5Z0K/Dck5Ayp2a51g1CEG1JyasqNYU/y+n0ykrT9sxuq+Dtc2w3qGpPuBBUirC4HwfGgBT4Z5lA==}
     dependencies:
       interface-store: 5.1.7
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /interface-store@5.1.7:
@@ -6999,7 +6993,7 @@ packages:
       it-parallel: 3.0.6
       it-pipe: 3.0.1
       it-pushable: 3.2.3
-      multiformats: 13.1.0
+      multiformats: 13.1.1
       p-queue: 8.0.1
       progress-events: 1.0.0
       uint8arrays: 5.0.1
@@ -7022,7 +7016,7 @@ packages:
       it-parallel: 3.0.6
       it-pipe: 3.0.1
       it-pushable: 3.2.3
-      multiformats: 13.1.0
+      multiformats: 13.1.1
       p-queue: 8.0.1
       progress-events: 1.0.0
     dev: false
@@ -8155,8 +8149,8 @@ packages:
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
     dev: false
 
-  /multiformats@13.1.0:
-    resolution: {integrity: sha512-HzdtdBwxsIkzpeXzhQ5mAhhuxcHbjEHH+JQoxt7hG/2HGFjjwyolLo7hbaexcnhoEuV4e0TNJ8kkpMjiEYY4VQ==}
+  /multiformats@13.1.1:
+    resolution: {integrity: sha512-JiptvwMmlxlzIlLLwhCi/srf/nk409UL0eUBr0kioRJq15hqqKyg68iftrBvhCRjR6Rw4fkNnSc4ZJXJDuta/Q==}
     dev: false
 
   /murmurhash3js-revisited@3.0.0:
@@ -10380,13 +10374,13 @@ packages:
   /uint8arrays@5.0.1:
     resolution: {integrity: sha512-ND5RpJAnPgHmZT7hWD/2T4BwRp04j8NLKvMKC/7bhiEwEjUMkQ4kvBKiH6hOqbljd6qJ2xS8reL3vl1e33grOQ==}
     dependencies:
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /uint8arrays@5.0.3:
     resolution: {integrity: sha512-6LBuKji28kHjgPJMkQ6GDaBb1lRwIhyOYq6pDGwYMoDPfImE9SkuYENVmR0yu9yGgs2clHUSY9fKDukR+AXfqQ==}
     dependencies:
-      multiformats: 13.1.0
+      multiformats: 13.1.1
     dev: false
 
   /unbox-primitive@1.0.2:

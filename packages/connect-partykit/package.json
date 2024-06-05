@@ -54,10 +54,8 @@
   "dependencies": {
     "@fireproof/aws": "workspace:^",
     "@fireproof/encrypted-blockstore": "workspace:^",
-    "@web3-storage/pail": "^0.6.0",
     "cross-fetch": "^4.0.0",
     "js-base64": "^3.7.5",
-    "multiformats": "^12.0.1",
     "partysocket": "^1.0.1"
   }
 }

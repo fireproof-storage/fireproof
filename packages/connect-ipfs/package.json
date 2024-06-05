@@ -64,6 +64,6 @@
     "@web3-storage/pail": "^0.6.0",
     "@web3-storage/w3up-client": "^12.5.2",
     "cross-fetch": "^4.0.0",
-    "multiformats": "^13.1.0"
+    "multiformats": "^13.1.1"
   }
 }
