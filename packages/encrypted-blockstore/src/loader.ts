@@ -74,7 +74,6 @@ export class Loader implements Loadable {
   remoteWAL: RemoteWAL
   metaStore?: MetaStore
   carStore: DataStore
-  //Make this a 2d array - done
   carLog: CarLog = new Array<CarGroup>()
   carReaders: Map<string, Promise<CarReader>> = new Map()
   ready: Promise<void>
@@ -85,7 +84,6 @@ export class Loader implements Loadable {
   writing: Promise<TransactionMeta | void> = Promise.resolve()
 
   private getBlockCache: Map<string, AnyBlock> = new Map()
-  //Try to make it a set of array of strings
   private seenMeta: Set<string> = new Set()
 
   constructor(name: string, ebOpts: BlockstoreOpts) {
@@ -134,7 +132,6 @@ export class Loader implements Loadable {
       throw new Error('cannot merge while compacting')
     }
 
-    //We don't have to loop over meta.cars because we are converting it into a string representation
     if (this.seenMeta.has(meta.cars.toString())) return
     this.seenMeta.add(meta.cars.toString())
 
@@ -288,16 +285,13 @@ export class Loader implements Loadable {
     return { files }
   }
 
-  //This needs more testing?
   async updateCarLog(cids: CarGroup, fp: CarHeader, compact: boolean): Promise<void> {
     if (compact) {
       const previousCompactCid = fp.compact[fp.compact.length - 1]
       fp.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
-      //Made the change here from uniqueCids to uniqueCarCids
       this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)]
       void this.removeCidsForCompact(previousCompactCid[0])
     } else {
-      //Work on this and make sure the tests pass
       this.carLog.unshift(cids)
     }
   }

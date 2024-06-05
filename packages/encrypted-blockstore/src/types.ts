@@ -16,7 +16,6 @@ export interface CarMakeable {
   get(cid: AnyLink): Promise<AnyBlock | undefined>
 }
 
-//Changing the format of cars and compact from AnyLink[] to AnyLink[][]
 export type CarHeader = {
   cars: CarLog
   compact: CarLog
@@ -47,7 +46,6 @@ export type StoreOpts = {
 }
 export type CommitOpts = { noLoader?: boolean; compact?: boolean; public?: boolean }
 
-//Changed the parameter from car:AnyLink to cars:AnyLink[]
 export type DbMeta = { cars: CarGroup; key: string | null }
 
 export type UploadMetaFnParams = {

@@ -79,7 +79,6 @@ export abstract class RemoteWAL {
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
-          //Loop through the cars and call the load for each car
           for (const cid of dbMeta.cars) {
             const car = await this.loader.carStore!.load(cid).catch(() => null)
             if (!car) {
