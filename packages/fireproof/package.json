@@ -141,7 +141,7 @@
     "charwise": "^3.0.1",
     "idb": "^7.1.1",
     "ipfs-unixfs-exporter": "^13.1.7",
-    "multiformats": "^12.0.1",
+    "multiformats": "^13.1.1",
     "p-limit": "^4.0.0",
     "prolly-trees": "^1.0.4",
     "uuidv7": "^0.6.2"
