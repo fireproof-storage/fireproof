@@ -15,7 +15,7 @@ import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
 import { create, load } from 'prolly-trees/cid-set'
 
-import { encodeCarFile } from './loader-helpers'
+import { encodeCarFiles } from './loader-helpers'
 import { makeCodec } from './encrypt-codec.js'
 import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from './types'
 
@@ -149,7 +149,7 @@ export async function encryptedEncodeCarFile(
   key: string,
   rootCid: AnyLink,
   t: CarMakeable
-): Promise<AnyBlock> {
+): Promise<AnyBlock[]> {
   const encryptionKey = hexStringToUint8Array(key)
   const encryptedBlocks = new MemoryBlockstore()
   const cidsToEncrypt = [] as AnyLink[]
@@ -176,8 +176,8 @@ export async function encryptedEncodeCarFile(
     last = block
   }
   if (!last) throw new Error('no blocks encrypted')
-  const encryptedCar = await encodeCarFile([last.cid], encryptedBlocks)
-  return encryptedCar
+  const encryptedCars = await encodeCarFiles([last.cid], encryptedBlocks)
+  return encryptedCars
 }
 
 export async function decodeEncryptedCar(crypto: CryptoOpts, key: string, reader: CarReader) {
