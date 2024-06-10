@@ -14,7 +14,7 @@ import type {
 } from './types'
 import type { BlockstoreOpts } from './transaction'
 
-import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
+import { encodeCarFiles, encodeCarHeader, parseCarFile } from './loader-helpers'
 import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 
 import { getCrypto, randomBytes } from './crypto-web'
@@ -213,10 +213,17 @@ export class Loader implements Loadable {
     const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[]
     }
-    const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    await this.fileStore!.save({ cid, bytes })
-    await this.remoteWAL!.enqueueFile(cid, !!opts.public)
-    return [cid]
+    const cids:AnyLink[]=[]
+    const cars = await this.prepareCarFiles(roots[0], t, !!opts.public)
+    for(const car of cars)
+    {
+      const {cid,bytes}=car
+      await this.fileStore!.save({ cid, bytes })
+      await this.remoteWAL!.enqueueFile(cid, !!opts.public)
+      cids.push(cid)
+    }
+   
+    return cids
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
@@ -272,14 +279,21 @@ export class Loader implements Loadable {
     //We need to split the data inside the prepareCarFile?
     //While splitting every CAR file should have a copy of root[0] meaning it should have a copy of fp
     // Maximum size of each CAR file as 1mb?
-    const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    await this.carStore!.save({ cid, bytes })
-    await this.cacheTransaction(t)
-    const newDbMeta = { cars: [cid], key: this.key || null } as DbMeta
-    await this.remoteWAL!.enqueue(newDbMeta, opts)
-    await this.metaStore!.save(newDbMeta)
-    await this.updateCarLog([cid], fp, !!opts.compact)
-    return [cid]
+    const cars = await this.prepareCarFiles(roots[0], t, !!opts.public)
+    const cids:AnyLink[]=[]
+    for(const car of cars)
+    {
+      const {cid,bytes}=car
+      await this.carStore!.save({ cid, bytes })
+      await this.cacheTransaction(t)
+      const newDbMeta = { cars: [cid], key: this.key || null } as DbMeta
+      await this.remoteWAL!.enqueue(newDbMeta, opts)
+      await this.metaStore!.save(newDbMeta)
+      await this.updateCarLog([cid], fp, !!opts.compact)
+      cids.push(cid)
+    }
+    
+    return cids
   }
 
   async prepareRoots(fp: CarHeader, t: CarTransaction): Promise<AnyLink[]> {
@@ -290,15 +304,16 @@ export class Loader implements Loadable {
     return [header.cid]
   }
 
-  async prepareCarFile(
+  async prepareCarFiles(
     root: AnyLink,
     t: CarTransaction,
     isPublic: boolean
-  ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
+  ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
     const theKey = isPublic ? null : await this._getKey()
-    return theKey && this.ebOpts.crypto
+    const carFiles= theKey && this.ebOpts.crypto
       ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, root, t)
-      : await encodeCarFile([root], t)
+      : await encodeCarFiles([root], t)
+    return carFiles
   }
 
   protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
