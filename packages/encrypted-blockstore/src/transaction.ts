@@ -23,9 +23,11 @@ export type TransactionMeta = TM
 
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   parent: EncryptedBlockstore
-  constructor(parent: EncryptedBlockstore) {
+  constructor(parent: EncryptedBlockstore, opts = { add: true }) {
     super()
-    parent.transactions.add(this)
+    if (opts.add) {
+      parent.transactions.add(this)
+    }
     this.parent = parent
   }
 

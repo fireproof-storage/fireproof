@@ -330,7 +330,7 @@ export class Loader implements Loadable {
     let splitcount = Math.ceil(size / threshold)
     let splitpercount = Math.floor(count / splitcount)
     let newcount = 0
-    let clonedt = new CarTransaction(t.parent)
+    let clonedt = new CarTransaction(t.parent, { add: false })
     for (const { cid, bytes } of t.entries()) {
       newcount++
       clonedt.putSync(cid, bytes)
@@ -338,15 +338,15 @@ export class Loader implements Loadable {
         const carFile =
           theKey && this.ebOpts.crypto
             ? await encryptedEncodeCarFile(
-                this.ebOpts.crypto,
-                theKey,
-                roots[0],
-                clonedt
-              )
+              this.ebOpts.crypto,
+              theKey,
+              roots[0],
+              clonedt
+            )
             : await encodeCarFile([roots[0]], clonedt)
         carFiles.push(carFile)
-        clonedt = new CarTransaction(t.parent)
-        newcount=0
+        clonedt = new CarTransaction(t.parent, { add: false })
+        newcount = 0
       }
     }
     return carFiles
