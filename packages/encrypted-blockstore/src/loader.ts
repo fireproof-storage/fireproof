@@ -283,14 +283,14 @@ export class Loader implements Loadable {
     for (const car of cars) {
       const { cid, bytes } = car
       await this.carStore!.save({ cid, bytes })
-      await this.cacheTransaction(t)
-      const newDbMeta = { cars: [cid], key: this.key || null } as DbMeta
-      await this.remoteWAL!.enqueue(newDbMeta, opts)
-      await this.metaStore!.save(newDbMeta)
-      await this.updateCarLog([cid], fp, !!opts.compact)
       cids.push(cid)
     }
 
+    await this.cacheTransaction(t)
+    const newDbMeta = { cars: cids, key: this.key || null } as DbMeta
+    await this.remoteWAL!.enqueue(newDbMeta, opts)
+    await this.metaStore!.save(newDbMeta)
+    await this.updateCarLog(cids, fp, !!opts.compact)
     return cids
   }
 
@@ -335,7 +335,7 @@ export class Loader implements Loadable {
     for (const { cid, bytes } of t.entries()) {
       newcount++
       clonedt.putSync(cid, bytes)
-      if (newcount > splitpercount) {
+      if (newcount >= splitpercount) {
         const carFile =
           theKey && this.ebOpts.crypto
             ? await encryptedEncodeCarFile(
@@ -347,6 +347,7 @@ export class Loader implements Loadable {
             : await encodeCarFile([roots[0]], clonedt)
         carFiles.push(carFile)
         clonedt = new CarTransaction(t.parent)
+        newcount=0
       }
     }
     return carFiles
