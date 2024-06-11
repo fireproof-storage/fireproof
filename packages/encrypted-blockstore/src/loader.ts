@@ -346,7 +346,7 @@ export class Loader implements Loadable {
               )
             : await encodeCarFile([roots[0]], clonedt);
         carFiles.push(carFile);
-        clonedt=new CarTransaction(t.parent)
+        clonedt = new CarTransaction(t.parent);
       }
     }
     return carFiles;
