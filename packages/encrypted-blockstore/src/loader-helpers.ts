@@ -8,15 +8,10 @@ import { CarReader } from '@ipld/car'
 
 import { AnyBlock, AnyLink, CarHeader, CarMakeable } from './types'
 
-export async function encodeCarFile(
-  roots: AnyLink[],
-  t: CarMakeable
-): Promise<AnyBlock> {
+export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0
   // @ts-ignore -- TODO: TypeScript does not like this casting
-  const headerSize = CBW.headerLength({ roots } as {
-    roots: CID<unknown, number, number, 1>[]
-  })
+  const headerSize = CBW.headerLength({ roots } as { roots: CID<unknown, number, number, 1>[]})
   size += headerSize
   for (const { cid, bytes } of t.entries()) {
     // @ts-ignore -- TODO: TypeScript does not like this casting
