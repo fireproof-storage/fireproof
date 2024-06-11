@@ -1,29 +1,29 @@
-import { sha256 } from "multiformats/hashes/sha2"
-import { CID } from "multiformats"
-import { encode, decode, create as mfCreate } from "multiformats/block"
-import type { MultihashHasher, ToString } from "multiformats"
+import { sha256 } from 'multiformats/hashes/sha2'
+import { CID } from 'multiformats'
+import { encode, decode, create as mfCreate } from 'multiformats/block'
+import type { MultihashHasher, ToString } from 'multiformats'
 
-import type { CarReader } from "@ipld/car"
-import * as dagcbor from "@ipld/dag-cbor"
+import type { CarReader } from '@ipld/car'
+import * as dagcbor from '@ipld/dag-cbor'
 
-import { MemoryBlockstore } from "@web3-storage/pail/block"
+import { MemoryBlockstore } from '@web3-storage/pail/block'
 
 // @ts-ignorex
-import { bf } from "prolly-trees/utils"
+import { bf } from 'prolly-trees/utils'
 // @ts-ignore
-import { nocache as cache } from "prolly-trees/cache"
+import { nocache as cache } from 'prolly-trees/cache'
 // @ts-ignore
-import { create, load } from "prolly-trees/cid-set"
+import { create, load } from 'prolly-trees/cid-set'
 
-import { encodeCarFile } from "./loader-helpers"
-import { makeCodec } from "./encrypt-codec.js"
+import { encodeCarFile } from './loader-helpers'
+import { makeCodec } from './encrypt-codec.js'
 import type {
   AnyBlock,
   CarMakeable,
   AnyLink,
   AnyDecodedBlock,
-  CryptoOpts,
-} from "./types"
+  CryptoOpts
+} from './types'
 
 function cidListIncludes(list: AnyLink[], cidMatch: AnyLink) {
   return list.some((cid: AnyLink) => {
@@ -41,7 +41,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     key,
     cache,
     chunker,
-    root,
+    root
   }: {
     get: (cid: AnyLink) => Promise<AnyBlock | undefined>
     key: ArrayBuffer
@@ -56,14 +56,14 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     if (!cidListIncludes(cids, root)) cids.push(root)
     for (const cid of cids) {
       const unencrypted = await get(cid)
-      if (!unencrypted) throw new Error("missing cid: " + cid.toString())
+      if (!unencrypted) throw new Error('missing cid: ' + cid.toString())
       const encrypted = await codec.encrypt({ ...unencrypted, key })
       const block = await encode({ ...encrypted, codec, hasher })
       yield block
       set.add(block.cid.toString())
       if (unencrypted.cid.equals(root)) eroot = block.cid
     }
-    if (!eroot) throw new Error("cids does not include root")
+    if (!eroot) throw new Error('cids does not include root')
     const list = [...set].map((s) => CID.parse(s))
     let last
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
@@ -73,14 +73,14 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
       cache,
       chunker,
       hasher,
-      codec: dagcbor,
+      codec: dagcbor
     })) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const block = (await node.block) as AnyBlock
       yield block
       last = block
     }
-    if (!last) throw new Error("missing last block")
+    if (!last) throw new Error('missing last block')
     const head = [eroot, last.cid]
     const block = await encode({ value: head, codec: dagcbor, hasher })
     yield block
@@ -92,7 +92,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     key,
     cache,
     chunker,
-    hasher,
+    hasher
   }: {
     root: AnyLink
     get: (cid: AnyLink) => Promise<AnyBlock | undefined>
@@ -114,13 +114,13 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
         return decoded
       })
     const decodedRoot = await getWithDecode(root)
-    if (!decodedRoot) throw new Error("missing root")
-    if (!decodedRoot.bytes) throw new Error("missing bytes")
+    if (!decodedRoot) throw new Error('missing root')
+    if (!decodedRoot.bytes) throw new Error('missing bytes')
     const {
-      value: [eroot, tree],
+      value: [eroot, tree]
     } = decodedRoot as { value: [AnyLink, AnyLink] }
     const rootBlock = (await get(eroot)) as AnyDecodedBlock
-    if (!rootBlock) throw new Error("missing root block")
+    if (!rootBlock) throw new Error('missing root block')
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const cidset = await load({
       cid: tree,
@@ -128,19 +128,19 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
       cache,
       chunker,
       codec,
-      hasher,
+      hasher
     })
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const { result: nodes } = (await cidset.getAllEntries()) as {
       result: { cid: CID }[]
     }
     const unwrap = async (eblock: AnyDecodedBlock | undefined) => {
-      if (!eblock) throw new Error("missing block")
+      if (!eblock) throw new Error('missing block')
       if (!eblock.value) {
         eblock = (await decode({
           ...eblock,
           codec,
-          hasher,
+          hasher
         })) as AnyDecodedBlock
       }
       const { bytes, cid } = await codec
@@ -199,12 +199,12 @@ export async function encryptedEncodeCarFile(
     chunker,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     cache,
-    root: rootCid,
+    root: rootCid
   }) as AsyncGenerator<AnyBlock, void, unknown>) {
     await encryptedBlocks.put(block.cid, block.bytes)
     last = block
   }
-  if (!last) throw new Error("no blocks encrypted")
+  if (!last) throw new Error('no blocks encrypted')
   const encryptedCar = await encodeCarFile([last.cid], encryptedBlocks)
   return encryptedCar
 }
@@ -243,11 +243,11 @@ async function decodeCarBlocks(
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     chunker,
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    cache,
+    cache
   })) {
     await decryptedBlocks.put(block.cid, block.bytes)
     last = block
   }
-  if (!last) throw new Error("no blocks decrypted")
+  if (!last) throw new Error('no blocks decrypted')
   return { blocks: decryptedBlocks, root: last.cid }
 }
