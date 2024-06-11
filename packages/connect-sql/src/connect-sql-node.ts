@@ -5,21 +5,20 @@ import { DataRecord, DataSQLRecordBuilder, DataStoreFactory } from './data-type'
 import { MetaRecord, MetaRecordKey, MetaSQLRecordBuilder, MetaStoreFactory } from './meta-type';
 import { SQLFactory } from './sql';
 
+export interface ConnectSQLOptions {
+  readonly objectStore: Store<DataRecord, string>
+  readonly metaStore: Store<MetaRecord, MetaRecordKey>
+}
 
 
 export class ConnectSQL extends Connection {
-  // readonly ws?: WebSocket
-  readonly decoder = new TextDecoder()
+  readonly objectStore: Store<DataRecord, string>
+  readonly metaStore: Store<MetaRecord, MetaRecordKey>
 
-  readonly dbConn: DBConnection
-
-  objectStore?: Store<DataRecord, string>
-  metaStore?: Store<MetaRecord, MetaRecordKey>
-
-  constructor(databaseURL: string) {
-    console.log('sql constructor', databaseURL);
+  constructor(cso: ConnectSQLOptions) {
     super()
-    this.dbConn = SQLFactory(new URL(databaseURL))
+    this.objectStore = cso.objectStore
+    this.metaStore = cso.metaStore
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -43,6 +42,7 @@ export class ConnectSQL extends Connection {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null> {
     console.log('sql dataDownload', params);
+
     // const { type, name, car } = params
     // const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl)
     // const response = await fetch(fetchFromUrl)
@@ -56,13 +56,8 @@ export class ConnectSQL extends Connection {
     if (!this.loader || !this.taskManager) {
       throw new Error('loader and taskManager must be set')
     }
-    console.log('sql onConnect-1')
-    await this.dbConn.connect()
-    console.log('sql onConnect-2')
-    this.objectStore = await DataStoreFactory(this.dbConn)
-    console.log('sql onConnect-3')
-    this.metaStore = await MetaStoreFactory(this.dbConn)
-    console.log('sql onConnect-4')
+    this.objectStore.start()
+    this.metaStore.start()
     return Promise.resolve()
   }
 
@@ -105,9 +100,14 @@ export class ConnectSQL extends Connection {
    * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null> {
-    console.log('sql metaDownload', params);
-    return Promise.resolve(null)
+  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null> {
+    const result = await this.metaStore!.select({
+      name: params.name,
+      branch: params.branch
+    })
+    if (result.length !== 1) return null
+    return null
+    // return result[0].blob
     // const { name, branch } = params
     // const fetchUploadUrl = new URL(
     //   `?${new URLSearchParams({ type: 'meta', ...params }).toString()}`,

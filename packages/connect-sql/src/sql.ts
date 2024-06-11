@@ -1,4 +1,4 @@
-import { SQLiteConnection } from "./sqlite-adapter"
+import { SQLiteConnection } from "./sqlite-adapter-node"
 import { DBConnection } from "./types"
 
 

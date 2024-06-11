@@ -30,5 +30,5 @@ export interface DBConnection {
 export interface Store<IType, KType> {
   start(): Promise<Store<IType, KType>>
   insert(ose: IType): Promise<RunResult>
-  select(car: KType): Promise<RunResult>
+  select(car: KType): Promise<IType[]>
 }
