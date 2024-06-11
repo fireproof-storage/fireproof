@@ -1,12 +1,12 @@
-import { CID } from "multiformats"
-import { Block, encode, decode } from "multiformats/block"
-import { sha256 as hasher } from "multiformats/hashes/sha2"
-import * as raw from "multiformats/codecs/raw"
-import * as CBW from "@ipld/car/buffer-writer"
-import * as codec from "@ipld/dag-cbor"
-import { CarReader } from "@ipld/car"
+import { CID } from 'multiformats'
+import { Block, encode, decode } from 'multiformats/block'
+import { sha256 as hasher } from 'multiformats/hashes/sha2'
+import * as raw from 'multiformats/codecs/raw'
+import * as CBW from '@ipld/car/buffer-writer'
+import * as codec from '@ipld/dag-cbor'
+import { CarReader } from '@ipld/car'
 
-import { AnyBlock, AnyLink, CarHeader, CarMakeable } from "./types"
+import { AnyBlock, AnyLink, CarHeader, CarMakeable } from './types'
 
 export async function encodeCarFile(
   roots: AnyLink[],
@@ -42,17 +42,17 @@ export async function encodeCarHeader(fp: CarHeader) {
   return (await encode({
     value: { fp },
     hasher,
-    codec,
+    codec
   })) as AnyBlock
 }
 
 export async function parseCarFile(reader: CarReader): Promise<CarHeader> {
   const roots = await reader.getRoots()
   const header = await reader.get(roots[0])
-  if (!header) throw new Error("missing header block")
+  if (!header) throw new Error('missing header block')
   const { value } = await decode({ bytes: header.bytes, hasher, codec })
   // @ts-ignore
-  if (value && value.fp === undefined) throw new Error("missing fp")
+  if (value && value.fp === undefined) throw new Error('missing fp')
   const { fp } = value as { fp: CarHeader }
   return fp
 }

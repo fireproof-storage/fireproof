@@ -1,6 +1,6 @@
-import pLimit from "p-limit"
-import { CarReader } from "@ipld/car"
-import { CID } from "multiformats"
+import pLimit from 'p-limit'
+import { CarReader } from '@ipld/car'
+import { CID } from 'multiformats'
 
 import type {
   AnyBlock,
@@ -10,25 +10,25 @@ import type {
   DbMeta,
   TransactionMeta,
   CarGroup,
-  CarLog,
-} from "./types"
-import type { BlockstoreOpts } from "./transaction"
+  CarLog
+} from './types'
+import type { BlockstoreOpts } from './transaction'
 
-import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers"
-import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers"
+import { encodeCarFile, encodeCarHeader, parseCarFile } from './loader-helpers'
+import { decodeEncryptedCar, encryptedEncodeCarFile } from './encrypt-helpers'
 
-import { getCrypto, randomBytes } from "./crypto-web"
-import { DataStore, MetaStore } from "./store"
-import { RemoteWAL } from "./remote-wal"
+import { getCrypto, randomBytes } from './crypto-web'
+import { DataStore, MetaStore } from './store'
+import { RemoteWAL } from './remote-wal'
 
 import {
   DataStore as AbstractDataStore,
-  MetaStore as AbstractMetaStore,
-} from "./store"
-import { CarTransaction } from "./transaction"
-import { CommitQueue } from "./commit-queue"
-import * as CBW from "@ipld/car/buffer-writer"
-import { Block, encode, decode } from "multiformats/block"
+  MetaStore as AbstractMetaStore
+} from './store'
+import { CarTransaction } from './transaction'
+import { CommitQueue } from './commit-queue'
+import * as CBW from '@ipld/car/buffer-writer'
+import { Block, encode, decode } from 'multiformats/block'
 
 export function cidListIncludes(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -48,8 +48,8 @@ function uniqueCids(list: CarLog, remove: Set<string> = new Set()): CarLog {
 
 export function toHexString(byteArray: Uint8Array) {
   return Array.from(byteArray)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("")
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('')
 }
 
 abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
@@ -60,7 +60,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 }
 
 export abstract class Loadable {
-  name: string = ""
+  name: string = ''
   remoteCarStore?: DataStore
   carStore?: DataStore
   carLog: CarLog = new Array<CarGroup>()
@@ -104,10 +104,10 @@ export class Loader implements Loadable {
     this.ready = Promise.resolve().then(async () => {
       this.metaStore = ebOpts.store.makeMetaStore(this)
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
-        throw new Error("stores not initialized")
+        throw new Error('stores not initialized')
       const metas = this.ebOpts.meta
         ? [this.ebOpts.meta]
-        : await this.metaStore!.load("main")
+        : await this.metaStore!.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -139,7 +139,7 @@ export class Loader implements Loadable {
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     if (this.isCompacting) {
-      throw new Error("cannot merge while compacting")
+      throw new Error('cannot merge while compacting')
     }
 
     if (this.seenMeta.has(meta.cars.toString())) return
@@ -163,7 +163,7 @@ export class Loader implements Loadable {
       ...uniqueCids(
         [meta.cars, ...this.carLog, ...carHeader.cars],
         this.seenCompacted
-      ),
+      )
     ]
     await this.ebOpts.applyMeta(carHeader.meta)
   }
@@ -189,7 +189,7 @@ export class Loader implements Loadable {
       if (getCrypto()) {
         await this.setKey(toHexString(randomBytes(32)))
       } else {
-        console.warn("missing crypto module, using public mode")
+        console.warn('missing crypto module, using public mode')
       }
     }
     return this.key
@@ -355,7 +355,7 @@ export class Loader implements Loadable {
   protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
     const files: AnyLink[] = []
     for (const [, meta] of Object.entries(result.files!)) {
-      if (meta && typeof meta === "object" && "cid" in meta && meta !== null) {
+      if (meta && typeof meta === 'object' && 'cid' in meta && meta !== null) {
         files.push(meta.cid as AnyLink)
       }
     }
@@ -373,7 +373,7 @@ export class Loader implements Loadable {
         .map((c) => c.toString())
         .forEach(this.seenCompacted.add, this.seenCompacted)
       this.carLog = [
-        ...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted),
+        ...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)
       ]
       void this.removeCidsForCompact(previousCompactCid[0])
     } else {
@@ -383,7 +383,7 @@ export class Loader implements Loadable {
 
   async removeCidsForCompact(cid: AnyLink) {
     const carHeader = await this.loadCarHeaderFromMeta({
-      cars: [cid],
+      cars: [cid]
     } as unknown as DbMeta)
     for (const cids of carHeader.compact) {
       for (const cid of cids) {
@@ -500,7 +500,7 @@ export class Loader implements Loadable {
   }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
-    if (!this.carStore) throw new Error("car store not initialized")
+    if (!this.carStore) throw new Error('car store not initialized')
     const loaded = await this.storesLoadCar(
       cid,
       this.carStore,
@@ -569,21 +569,21 @@ export class Loader implements Loadable {
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),
-      blocks: blocks.entries.bind(blocks),
+      blocks: blocks.entries.bind(blocks)
     } as unknown as CarReader
   }
 
   protected async setKey(key: string) {
-    if (this.key && this.key !== key) throw new Error("key mismatch")
+    if (this.key && this.key !== key) throw new Error('key mismatch')
     this.key = key
     const crypto = getCrypto()
-    if (!crypto) throw new Error("missing crypto module")
+    if (!crypto) throw new Error('missing crypto module')
     const subtle = crypto.subtle
     const encoder = new TextEncoder()
     const data = encoder.encode(key)
-    const hashBuffer = await subtle.digest("SHA-256", data)
+    const hashBuffer = await subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
-    this.keyId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+    this.keyId = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
   }
 
   protected async getMoreReaders(cids: AnyLink[]) {
@@ -609,13 +609,13 @@ export type UploadMetaFnParams = {
 }
 
 export type UploadDataFnParams = {
-  type: "data" | "file"
+  type: 'data' | 'file'
   name: string
   car: string
   size: string
 }
 
-export type DownloadFnParamTypes = "data" | "file"
+export type DownloadFnParamTypes = 'data' | 'file'
 
 export type DownloadDataFnParams = {
   type: DownloadFnParamTypes
