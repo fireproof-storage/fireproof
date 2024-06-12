@@ -11,6 +11,7 @@ export type ConfigOpts = {
   autoCompact?: number
   crypto?: CryptoOpts
   store?: StoreOpts
+  threshold?:number
 }
 
 export type ClockLink = EventLink<Operation>
