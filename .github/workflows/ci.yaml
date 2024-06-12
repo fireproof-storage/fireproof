@@ -19,7 +19,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8.15.0
+          version: 9.0.5
           run_install: false
 
       - name: Install Dependencies
