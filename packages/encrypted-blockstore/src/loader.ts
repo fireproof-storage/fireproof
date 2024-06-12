@@ -97,7 +97,6 @@ export class Loader implements Loadable {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
     this.ebOpts = ebOpts
-
     this.carStore = ebOpts.store.makeDataStore(this.name)
     this.fileStore = ebOpts.store.makeDataStore(this.name)
     this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
@@ -310,7 +309,7 @@ export class Loader implements Loadable {
     const theKey = isPublic ? null : await this._getKey()
     const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = []
     let size = 0
-    let threshold = 1024 * 1024
+    let threshold = this.ebOpts.threshold || 1024*1024
     let count = 0
     // @ts-ignore -- TODO: TypeScript does not like this casting
     const headerSize = CBW.headerLength({ roots } as {

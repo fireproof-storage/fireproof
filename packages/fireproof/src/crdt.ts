@@ -58,7 +58,8 @@ export class CRDT {
       crypto: this.opts.crypto || crypto,
       store: this.opts.store || store,
       public: this.opts.public,
-      meta: this.opts.meta
+      meta: this.opts.meta,
+      threshold:this.opts.threshold
     })
     this.clock.blockstore = this.blockstore
     this.indexBlockstore = new EncryptedBlockstore({
