@@ -61,6 +61,7 @@ describe('basic Loader', function () {
       codec
     })
     await t.put(block.cid, block.bytes)
+    await mockM.put(block.cid, block.bytes)
   })
   it('should have an empty car log', function () {
     equals(loader.carLog.length, 0)
@@ -184,6 +185,7 @@ describe('basic Loader with index commits', function () {
       hasher,
       codec
     })
+    // console.log('block', block.cid)
 
     cid = CID.parse('bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4')
     indexerResult = {

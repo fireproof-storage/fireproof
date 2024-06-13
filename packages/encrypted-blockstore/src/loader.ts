@@ -214,7 +214,7 @@ export class Loader implements Loadable {
       files: AnyLink[]
     }
     const cids: AnyLink[] = []
-    const cars = await this.prepareCarFiles(roots, t, !!opts.public)
+    const cars = await this.prepareCarFilesFiles(roots, t, !!opts.public)
     for (const car of cars) {
       const { cid, bytes } = car
       await this.fileStore!.save({ cid, bytes })
@@ -273,11 +273,9 @@ export class Loader implements Loadable {
       this.carLog,
       !!opts.compact
     ) as CarHeader
-    let roots: AnyLink[] = await this.prepareRoots(fp, t)
-    //We need to split the data inside the prepareCarFile?
-    //While splitting every CAR file should have a copy of root[0] meaning it should have a copy of fp
-    // Maximum size of each CAR file as 1mb?
-    const cars = await this.prepareCarFiles(roots, t, !!opts.public)
+    let rootBlock = await encodeCarHeader(fp)
+
+    const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public)
     const cids: AnyLink[] = []
     for (const car of cars) {
       const { cid, bytes } = car
@@ -293,62 +291,65 @@ export class Loader implements Loadable {
     return cids
   }
 
-  async prepareRoots(fp: CarHeader, t: CarTransaction): Promise<AnyLink[]> {
-    const header = await encodeCarHeader(fp)
-    await t.put(header.cid, header.bytes)
-    // const got = await t.get(header.cid)
-    // if (!got) throw new Error('missing header block: ' + header.cid.toString())
-    return [header.cid]
-  }
-
-  async prepareCarFiles(
+  async prepareCarFilesFiles(
     roots: AnyLink[],
     t: CarTransaction,
     isPublic: boolean
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
     const theKey = isPublic ? null : await this._getKey()
-    const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = []
-    let size = 0
-    let threshold = this.ebOpts.threshold || 1024*1024
-    let count = 0
-    // @ts-ignore -- TODO: TypeScript does not like this casting
-    const headerSize = CBW.headerLength({ roots } as {
-      roots: CID<unknown, number, number, 1>[]
-    })
-    size += headerSize
-    for (const { cid, bytes } of t.entries()) {
-      // @ts-ignore -- TODO: TypeScript does not like this casting
-      size += CBW.blockLength({ cid, bytes } as Block<
-        unknown,
-        number,
-        number,
-        1
-      >)
-      count++
-    }
+    const car = theKey && this.ebOpts.crypto
+      ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, roots[0], t)
+      : await encodeCarFile(roots, t)
+    return [car]
+  }
 
-    let splitcount = Math.ceil(size / threshold)
-    let splitpercount = Math.floor(count / splitcount)
-    let newcount = 0
+  async prepareCarFiles(
+    rootBlock: AnyBlock,
+    t: CarTransaction,
+    isPublic: boolean
+  ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
+    const theKey = isPublic ? null : await this._getKey()
+    const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = []
+    const threshold = this.ebOpts.threshold || 1000*1000
     let clonedt = new CarTransaction(t.parent, { add: false })
+    clonedt.putSync(rootBlock.cid, rootBlock.bytes)
+    // @ts-ignore
+    let newsize = CBW.blockLength(rootBlock)
+    let cidRootBlock = rootBlock;
     for (const { cid, bytes } of t.entries()) {
-      newcount++
-      clonedt.putSync(cid, bytes)
-      if (newcount >= splitpercount) {
+      // @ts-ignore
+      newsize += CBW.blockLength({ cid, bytes })
+      if (newsize >= threshold) {
         const carFile =
           theKey && this.ebOpts.crypto
             ? await encryptedEncodeCarFile(
               this.ebOpts.crypto,
               theKey,
-              roots[0],
+              cidRootBlock.cid,
               clonedt
             )
-            : await encodeCarFile([roots[0]], clonedt)
+            : await encodeCarFile([cidRootBlock.cid], clonedt)
         carFiles.push(carFile)
         clonedt = new CarTransaction(t.parent, { add: false })
-        newcount = 0
+        clonedt.putSync(cid, bytes)
+        cidRootBlock = { cid, bytes }
+        // @ts-ignore
+        newsize = CBW.blockLength({ cid, bytes }) //+ CBW.blockLength(rootBlock)
+      } else {
+        clonedt.putSync(cid, bytes)
       }
     }
+    const carFile =
+      theKey && this.ebOpts.crypto
+        ? await encryptedEncodeCarFile(
+          this.ebOpts.crypto,
+          theKey,
+          cidRootBlock.cid,
+          clonedt
+        )
+        : await encodeCarFile([cidRootBlock.cid], clonedt)
+    carFiles.push(carFile)
+    // console.log("split to ", carFiles.length, "files")
     return carFiles
   }
 

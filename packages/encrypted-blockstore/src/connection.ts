@@ -12,11 +12,12 @@ import { EventView } from '@web3-storage/pail/clock/api'
 import { MemoryBlockstore } from '@web3-storage/pail/block'
 import type { Link } from 'multiformats'
 import { TaskManager } from './task-manager'
+import { BlockstoreOpts } from './transaction'
 
 export type CarClockHead = Link<DbMetaEventBlock>[]
 
 export type Connectable = {
-  blockstore: { loader: Loader }
+  blockstore: { loader: Loader, ebOpts: BlockstoreOpts}
   name: string
 }
 
