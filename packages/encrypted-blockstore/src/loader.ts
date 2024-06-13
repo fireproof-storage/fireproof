@@ -347,6 +347,7 @@ export class Loader implements Loadable {
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
 
     const getCarCid = async (carCid: AnyLink) => {
+      if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       const reader = await this.loadCar(carCid)
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
@@ -390,35 +391,14 @@ export class Loader implements Loadable {
     let got
     const batchSize = 5
     for (let i = 0; i < this.carLog.length; i += batchSize) {
-      const promises: Promise<AnyBlock | undefined>[] = []
-      for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-        for (const cid of this.carLog[j]) {
-          promises.push(getCarCid(cid))
-        }
-      }
+      const batch = this.carLog.slice(i, i + batchSize)
+      const promises: Promise<AnyBlock | undefined>[] = batch.flatMap(slice => slice.map(getCarCid))
       try {
         got = await Promise.any(promises)
       } catch {
         // Ignore the error and continue with the next iteration
       }
       if (got) break
-    }
-
-    if (!got) {
-      for (let i = 0; i < this.carLog.length; i += batchSize) {
-        const promises: Promise<AnyBlock | undefined>[] = []
-        for (let j = i; j < Math.min(i + batchSize, this.carLog.length); j++) {
-          for (const cid of this.carLog[j]) {
-            promises.push(getCarCid(cid))
-          }
-        }
-        try {
-          got = await Promise.any(promises)
-        } catch {
-          // Ignore the error and continue with the next iteration
-        }
-        if (got) break
-      }
     }
     return got
   }
@@ -471,7 +451,12 @@ export class Loader implements Loadable {
           const readerP = publicFiles
             ? Promise.resolve(rawReader)
             : this.ensureDecryptedReader(rawReader)
-          this.carReaders.set(cidsString, readerP)
+
+          const cachedReaderP = readerP.then(async (reader) => {
+            await this.cacheCarReader(cidsString, reader).catch((e) => {})
+            return reader
+          })
+          this.carReaders.set(cidsString, cachedReaderP)
           return readerP
         })().catch(e => {
           this.carReaders.delete(cidsString)
