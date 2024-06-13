@@ -1,0 +1,53 @@
+{
+  "name": "@fireproof/sql",
+  "version": "0.18.0",
+  "description": "",
+  "off-main": "./dist/browser/index.cjs",
+  "off-module": "./dist/browser/index.esm.js",
+  "exports": {
+    ".": {
+      "import": "./dist/browser/index.esm.js",
+      "require": "./dist/browser/index.cjs",
+      "types": "./dist/types/index.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node/index.esm.js",
+      "require": "./dist/node/index.cjs",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/node/index.esm.js"
+    }
+  },
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist/node",
+    "dist/browser",
+    "dist/types"
+  ],
+  "type": "module",
+  "scripts": {
+    "prepublishOnly": "pnpm run build",
+    "build:clean": "rm -rf dist",
+    "build:tsc": "pnpm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/",
+    "build:script": "node ../encrypted-blockstore/scripts/build.js",
+    "build": "pnpm run build:tsc && pnpm run build:script",
+    "clean": "rm -rf node_modules",
+    "test": "echo 'please add tests'",
+    "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@adviser/cement": "^0.1.13",
+    "@fireproof/encrypted-blockstore": "workspace:^",
+    "@ipld/dag-json": "^10.2.1",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
+    "@types/pg": "^8.11.6",
+    "mocha": "^10.4.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.4.4"
+  }
+}
