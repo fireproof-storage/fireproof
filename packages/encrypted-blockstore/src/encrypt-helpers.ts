@@ -19,6 +19,12 @@ import { encodeCarFile } from './loader-helpers'
 import { makeCodec } from './encrypt-codec.js'
 import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from './types'
 
+function cidListIncludes(list: AnyLink[], cidMatch: AnyLink) {
+  return list.some((cid: AnyLink) => {
+    return cid.toString() === cidMatch.toString()
+  })
+}
+
 function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   const codec = makeCodec(crypto, randomBytes)
 
@@ -41,6 +47,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   }): AsyncGenerator<any, void, unknown> {
     const set = new Set<ToString<AnyLink>>()
     let eroot
+    if (!cidListIncludes(cids, root)) cids.push(root)
     for (const cid of cids) {
       const unencrypted = await get(cid)
       if (!unencrypted) throw new Error('missing cid: ' + cid.toString())
@@ -146,10 +153,10 @@ export async function encryptedEncodeCarFile(
   const encryptionKey = hexStringToUint8Array(key)
   const encryptedBlocks = new MemoryBlockstore()
   const cidsToEncrypt = [] as AnyLink[]
-  for (const { cid } of t.entries()) {
+  for (const { cid, bytes } of t.entries()) {
     cidsToEncrypt.push(cid)
     const g = await t.get(cid)
-    if (!g) throw new Error('missing cid block')
+    if (!g) throw new Error(`missing cid block: ${bytes.length}:${cid.toString()}`)
   }
   let last: AnyBlock | null = null
   const { encrypt } = makeEncDec(crypto.crypto, crypto.randomBytes)
