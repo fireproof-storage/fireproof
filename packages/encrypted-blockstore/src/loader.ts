@@ -21,9 +21,14 @@ import { getCrypto, randomBytes } from './crypto-web'
 import { DataStore, MetaStore } from './store'
 import { RemoteWAL } from './remote-wal'
 
-import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from './store'
-import type { CarTransaction } from './transaction'
+import {
+  DataStore as AbstractDataStore,
+  MetaStore as AbstractMetaStore
+} from './store'
+import { CarTransaction } from './transaction'
 import { CommitQueue } from './commit-queue'
+import * as CBW from '@ipld/car/buffer-writer'
+import { Block, encode, decode } from 'multiformats/block'
 
 export function cidListIncludes(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -43,12 +48,15 @@ function uniqueCids(list: CarLog, remove: Set<string> = new Set()): CarLog {
 
 export function toHexString(byteArray: Uint8Array) {
   return Array.from(byteArray)
-    .map(byte => byte.toString(16).padStart(2, '0'))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
     .join('')
 }
 
 abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
-  abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>
+  abstract handleByteHeads(
+    byteHeads: Uint8Array[],
+    branch?: string
+  ): Promise<DbMeta[]>
 }
 
 export abstract class Loadable {
@@ -89,7 +97,6 @@ export class Loader implements Loadable {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name
     this.ebOpts = ebOpts
-
     this.carStore = ebOpts.store.makeDataStore(this.name)
     this.fileStore = ebOpts.store.makeDataStore(this.name)
     this.remoteWAL = ebOpts.store.makeRemoteWAL(this)
@@ -97,7 +104,9 @@ export class Loader implements Loadable {
       this.metaStore = ebOpts.store.makeMetaStore(this)
       if (!this.metaStore || !this.carStore || !this.remoteWAL)
         throw new Error('stores not initialized')
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore!.load('main')
+      const metas = this.ebOpts.meta
+        ? [this.ebOpts.meta]
+        : await this.metaStore!.load('main')
       if (metas) {
         await this.handleDbMetasFromStore(metas)
       }
@@ -145,10 +154,15 @@ export class Loader implements Loadable {
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
-    carHeader.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
+    carHeader.compact
+      .map((c) => c.toString())
+      .forEach(this.seenCompacted.add, this.seenCompacted)
     await this.getMoreReaders(carHeader.cars.flat())
     this.carLog = [
-      ...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)
+      ...uniqueCids(
+        [meta.cars, ...this.carLog, ...carHeader.cars],
+        this.seenCompacted
+      )
     ]
     await this.ebOpts.applyMeta(carHeader.meta)
   }
@@ -185,7 +199,9 @@ export class Loader implements Loadable {
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<CarGroup> {
-    return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts))
+    return this.commitQueue.enqueue(() =>
+      this._commitInternalFiles(t, done, opts)
+    )
   }
   // can these skip the queue? or have a file queue?
   async _commitInternalFiles(
@@ -204,7 +220,12 @@ export class Loader implements Loadable {
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
-    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic)
+    return await this.storesLoadCar(
+      cid,
+      this.fileStore,
+      this.remoteFileStore,
+      isPublic
+    )
   }
 
   async commit(
@@ -241,7 +262,12 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false }
   ): Promise<CarGroup> {
     await this.ready
-    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader
+    const fp = this.makeCarHeader(
+      done,
+      this.carLog,
+      !!opts.compact
+    ) as CarHeader
+    let rootBlock = await encodeCarHeader(fp)    
     let roots: AnyLink[] = await this.prepareRoots(fp, t)
     //We need to split the data inside the prepareCarFile?
     //While splitting every CAR file should have a copy of root[0] meaning it should have a copy of fp
@@ -285,11 +311,19 @@ export class Loader implements Loadable {
     return { files }
   }
 
-  async updateCarLog(cids: CarGroup, fp: CarHeader, compact: boolean): Promise<void> {
+  async updateCarLog(
+    cids: CarGroup,
+    fp: CarHeader,
+    compact: boolean
+  ): Promise<void> {
     if (compact) {
       const previousCompactCid = fp.compact[fp.compact.length - 1]
-      fp.compact.map(c => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted)
-      this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)]
+      fp.compact
+        .map((c) => c.toString())
+        .forEach(this.seenCompacted.add, this.seenCompacted)
+      this.carLog = [
+        ...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)
+      ]
       void this.removeCidsForCompact(previousCompactCid[0])
     } else {
       this.carLog.unshift(cids)
@@ -352,7 +386,7 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
       }
-      await this.cacheCarReader(carCid.toString(), reader).catch(e => {})
+      await this.cacheCarReader(carCid.toString(), reader).catch((e) => {})
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid)
       throw new Error(`block not in reader: ${cid.toString()}`)
     }
@@ -408,13 +442,19 @@ export class Loader implements Loadable {
     cars: CarLog,
     compact: boolean = false
   ): CarHeader {
-    const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] }
+    const coreHeader = compact
+      ? { cars: [], compact: cars }
+      : { cars, compact: [] }
     return { ...coreHeader, meta: result }
   }
 
   protected async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error('car store not initialized')
-    const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore)
+    const loaded = await this.storesLoadCar(
+      cid,
+      this.carStore,
+      this.remoteCarStore
+    )
     return loaded
   }
 
@@ -470,7 +510,11 @@ export class Loader implements Loadable {
   protected async ensureDecryptedReader(reader: CarReader): Promise<CarReader> {
     const theKey = await this._getKey()
     if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) return reader
-    const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader)
+    const { blocks, root } = await decodeEncryptedCar(
+      this.ebOpts.crypto,
+      theKey,
+      reader
+    )
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),
@@ -488,13 +532,13 @@ export class Loader implements Loadable {
     const data = encoder.encode(key)
     const hashBuffer = await subtle.digest('SHA-256', data)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
-    this.keyId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    this.keyId = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
   }
 
   protected async getMoreReaders(cids: AnyLink[]) {
     const limit = pLimit(5)
-    const missing = cids.filter(cid => !this.carReaders.has(cid.toString()))
-    await Promise.all(missing.map(cid => limit(() => this.loadCar(cid))))
+    const missing = cids.filter((cid) => !this.carReaders.has(cid.toString()))
+    await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid))))
   }
 
   async _setWaitForWrite(_writingFn: () => Promise<any>): Promise<void> {
@@ -539,7 +583,10 @@ export interface Connection {
   connectMeta({ loader }: { loader: Loader }): void
   connectStorage({ loader }: { loader: Loader }): void
 
-  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
+  metaUpload(
+    bytes: Uint8Array,
+    params: UploadMetaFnParams
+  ): Promise<Uint8Array[] | null>
   dataUpload(
     bytes: Uint8Array,
     params: UploadDataFnParams,
