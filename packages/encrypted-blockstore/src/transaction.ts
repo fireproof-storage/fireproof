@@ -30,7 +30,7 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   }
 
   async get(cid: AnyAnyLink): Promise<AnyAnyBlock | undefined> {
-    return this.parent.get(cid)
+    return (await this.superGet(cid)) || this.parent.get(cid)
   }
 
   async superGet(cid: AnyLink): Promise<AnyBlock | undefined> {
@@ -191,4 +191,5 @@ export type BlockstoreOpts = {
   public?: boolean
   meta?: DbMeta
   name?: string
+  threshold?:number
 }
