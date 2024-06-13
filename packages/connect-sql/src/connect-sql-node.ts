@@ -1,47 +1,40 @@
-import { Connection, MetaStore } from '@fireproof/encrypted-blockstore'
-import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams, DBConnection, Store } from './types'
+import { Connection } from '@fireproof/encrypted-blockstore'
+import { UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams } from './types'
 
-import { DataRecord, DataSQLRecordBuilder, DataStoreFactory } from './data-type';
-import { MetaRecord, MetaRecordKey, MetaSQLRecordBuilder, MetaStoreFactory } from './meta-type';
-import { SQLFactory } from './sql';
+import { DataSQLStore, DataSQLRecordBuilder } from './data-type';
+import { MetaSQLStore, MetaSQLRecordBuilder } from './meta-type';
+import { WalSQLStore } from './wal-type';
+import { SQLOpts, ensureLogger } from './sqlite-adapter-node';
+import { Logger } from '@adviser/cement';
 
-export interface ConnectSQLOptions {
-  readonly objectStore: Store<DataRecord, string>
-  readonly metaStore: Store<MetaRecord, MetaRecordKey>
+export interface StoreOptions {
+  readonly data: DataSQLStore,
+  readonly meta: MetaSQLStore,
+  readonly wal: WalSQLStore,
 }
 
-
 export class ConnectSQL extends Connection {
-  readonly objectStore: Store<DataRecord, string>
-  readonly metaStore: Store<MetaRecord, MetaRecordKey>
+  readonly store: StoreOptions
+  readonly logger: Logger
 
-  constructor(cso: ConnectSQLOptions) {
+  constructor(store: StoreOptions, opts?: Partial<SQLOpts>) {
     super()
-    this.objectStore = cso.objectStore
-    this.metaStore = cso.metaStore
+    this.store = store
+    this.logger = ensureLogger(opts, 'ConnectSQL')
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    console.log('sql dataUpload', params);
-    await this.objectStore!.insert(
+    this.logger.Debug().Msg('dataUpload')
+    await this.store.data.insert(
       DataSQLRecordBuilder.fromUploadParams(bytes, params).build()
     )
     return Promise.resolve()
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
-    console.log('sql metaUpload', params);
-    const ret = await this.metaStore!.insert(
-      MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params).build()
-    )
-    return Promise.resolve(null)
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null> {
-    console.log('sql dataDownload', params);
+    this.logger.Debug().Msg('dataDownload')
 
     // const { type, name, car } = params
     // const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl)
@@ -52,56 +45,19 @@ export class ConnectSQL extends Connection {
     return Promise.resolve(null)
   }
 
-  async onConnect(): Promise<void> {
-    if (!this.loader || !this.taskManager) {
-      throw new Error('loader and taskManager must be set')
-    }
-    this.objectStore.start()
-    this.metaStore.start()
-    return Promise.resolve()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
+    this.logger.Debug().Msg('metaUpload')
+    const ret = await this.store.meta.insert(
+      MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params).build()
+    )
+    return Promise.resolve(null)
   }
 
-  /**
-   * metaDownload Function
-   *
-   * This function downloads metadata for a specific name and branch.
-   *
-   * Proposed Algorithm for Efficient Reads:
-   *
-   * 1. Read the Directory:
-   *    - Fetch the list of keys in the directory, sorted by their timestamp in descending order—newest to oldest.
-   *
-   * 2. Initialize a Skip List:
-   *    - Create an empty set data structure to keep track of the parent nodes that can be skipped.
-   *
-   * 3. Iterate through Keys:
-   *    - Start from the newest key and move towards the oldest.
-   *    - If the key is in the skip list, skip the read and continue.
-   *    - Read the node and add its parents to the skip list.
-   *
-   * 4. Idempotent Application:
-   *    - Apply the nodes to your DAG. Given that your application is idempotent, there's no harm in reapplying nodes,
-   *      but the skip list should minimize this.
-   *
-   * 5. State Tracking:
-   *    - Keep track of the oldest key you've successfully processed. This becomes the starting point for your next read,
-   *      adjusted for the safety window.
-   *
-   * 6. Retry Logic:
-   *    - If a key is missing, you could either skip it (since the system is designed to be eventually consistent) or
-   *      implement some kind of retry logic.
-   *
-   * By implementing this algorithm, we aim to minimize the number of reads and work with the most current snapshot
-   * of the data. It also avoids the need to delete keys, thereby averting the read-modify-write race condition.
-   *
-   * Writes: https://chat.openai.com/share/5dd42b0e-cbb8-4006-823b-7269df05e9eb
-   *
-   * @param params - The parameters for the download, including the name and branch.
-   * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
-   */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null> {
-    const result = await this.metaStore!.select({
+    this.logger.Debug().Msg('metaDownload')
+    const result = await this.store.meta.select({
       name: params.name,
       branch: params.branch
     })
@@ -129,4 +85,16 @@ export class ConnectSQL extends Connection {
     // this.parents = Array.from(uniqueParentsMap.values())
     // return events.map(e => e.bytes)
   }
+
+  async onConnect(): Promise<void> {
+    if (!this.loader || !this.taskManager) {
+      throw this.logger.Error().Msg('loader and taskManager must be set').AsError()
+    }
+    await this.store.data.start()
+    await this.store.meta.start()
+    await this.store.wal.start()
+    return Promise.resolve()
+  }
+
+
 }

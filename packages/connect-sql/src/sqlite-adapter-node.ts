@@ -1,107 +1,257 @@
 import { Database } from 'better-sqlite3';
-import path from 'path';
+
+import { format, parse, ToString } from '@ipld/dag-json'
+
 import { DBConnection } from './types';
-import { ConnectSQLOptions } from './connect-sql-node';
-import { DataSQLRecordBuilder, DataStoreFactory } from './data-type';
-import { MetaSQLRecordBuilder, MetaStoreFactory } from './meta-type';
-import { SQLFactory } from './sql';
-import { AnyBlock, AnyLink, DataStore, DbMeta, Loader, MetaStore, RemoteWAL, StoreOpts, WALState } from '@fireproof/encrypted-blockstore';
+import { StoreOptions } from './connect-sql-node';
+import { DataStoreFactory, DataSQLStore } from './data-type';
+import { MetaStoreFactory, MetaSQLStore, MetaSQLRecordBuilder } from './meta-type';
+import { AnyBlock, AnyLink, DbMeta, Loader, RemoteWAL, StoreOpts, WALState, DataStore, MetaStore } from '@fireproof/encrypted-blockstore';
+import { WalSQLStore, WalStoreFactory } from './wal-type';
+import { Future, Logger, LoggerImpl } from '@adviser/cement';
 
-
-export function SimpleSQLite(filename: string): ConnectSQLOptions {
-    const db = SQLiteConnection.fromFilename(filename)
-    return {
-        objectStore: DataStoreFactory(db),
-        metaStore: MetaStoreFactory(db)
-    }
+export interface SQLTableNames {
+    readonly data: string,
+    readonly meta: string,
+    readonly wal: string
 }
 
-export class SQLiteMetaStore extends MetaStore {
+export const DefaultSQLTableNames: SQLTableNames = {
+    data: 'Datas',
+    meta: 'Metas',
+    wal: 'Wals'
+}
+
+export interface SQLOpts {
+    readonly tableNames: SQLTableNames
+    readonly logger: Logger
+}
+
+const globalLogger = new LoggerImpl()
+
+export const textEncoder = new TextEncoder()
+export const textDecoder = new TextDecoder()
+
+export function ensureLogger(opts?: Partial<SQLOpts>, componentName?: string): Logger {
+    if (!opts?.logger) {
+        throw new Error("logger is required")
+    }
+    const logger = opts?.logger || globalLogger
+    if (componentName) {
+        return logger.With().Module(componentName).Logger()
+    }
+    return logger
+}
+
+export function ensureTableNames(opts?: Partial<SQLOpts>): SQLTableNames {
+    return opts?.tableNames || DefaultSQLTableNames
+
+}
+
+export function SimpleSQLite(filename: string, opts?: Partial<SQLOpts>): StoreOpts {
+    ensureLogger(opts, "SimpleSQLite").Debug().Str("filename", filename).Msg("SimpleSQLite")
+    const db = SQLiteConnection.fromFilename(filename, opts)
+    return SQLiteStoreOptions({
+        data: DataStoreFactory(db, opts),
+        meta: MetaStoreFactory(db, opts),
+        wal: WalStoreFactory(db, opts)
+    }, opts)
+}
+
+export class SQLMetaStore extends MetaStore {
     readonly loader: Loader
+    readonly store: MetaSQLStore
+    readonly logger: Logger
 
-    constructor(loader: Loader) {
+    needInit: boolean = true
+
+    constructor(store: MetaSQLStore, loader: Loader, opts?: Partial<SQLOpts>) {
         super("sqlite-meta-store")
+        this.store = store
         this.loader = loader
+        this.logger = ensureLogger(opts, "SQLMetaStore").With().Str("name", loader.name).Logger()
+        this.logger.Debug().Msg("constructor")
     }
 
-    async load(branch?: string | undefined): Promise<DbMeta[] | null> {
-        console.log(`SQLiteMetaStore:load Method not implemented.: ${branch}, ${JSON.stringify(this.loader.name)}`);
-        return null
-
+    async init(): Promise<void> {
+        if (this.needInit) {
+            this.logger.Debug().Msg("init")
+            await this.store.start()
+            this.needInit = false
+        }
     }
-    async save(dbMeta: DbMeta, branch?: string | undefined): Promise<DbMeta[] | null> {
-        console.log(`SQLiteMetaStore:save Method not implemented.: ${JSON.stringify(dbMeta)} ${branch}, ${JSON.stringify(this.loader.name)}`);
+
+    /*
+       {
+       "cars":[{"/":"bafkreihfweuqwjnub6pz23suyg2ud7zhojbms3v7d6slyqu577t7rluupe"}],
+       "key":"5cc3d17d01b3d2e24278deffddc6757ab7ed3fcf5094ecf0a584699b6d918c71"
+       }
+    */
+
+    async load(branch: string = 'main'): Promise<DbMeta[] | null> {
+        await this.init()
+        const metas = await this.store.select({ name: this.loader.name, branch: branch })
+        if (metas.length === 0) {
+            return null
+        }
+        const ret = this.parseHeader(textDecoder.decode(metas[0]?.meta))
+        this.logger.Debug().Str("branch", branch || 'main').Any("meta", ret).Msg("load")
+        return [ret]
+    }
+    async save(dbMeta: DbMeta, branch: string = 'main'): Promise<DbMeta[] | null> {
+        await this.init()
+        this.logger.Debug().Any("dbMeta", dbMeta).Str("branch", branch!).Msg("save")
+        await this.store.insert(MetaSQLRecordBuilder.fromBytes(this.makeHeader(dbMeta), this.loader.name, branch).build())
         return null
     }
 
 }
 
-export class SQLiteDataStore extends DataStore {
+export class SQLDataStore extends DataStore {
     readonly name: string
-    constructor(name: string) {
+    readonly store: DataSQLStore
+    readonly logger: Logger
+    needInit: boolean = true
+    constructor(store: DataSQLStore, name: string, opts?: Partial<SQLOpts>) {
         super("sqlite-data-store")
+        this.store = store
         this.name = name
+        this.logger = ensureLogger(opts, "SQLDataStore").With().Str("name", name).Logger()
     }
-    async load(cid: AnyLink): Promise<AnyBlock> {
-        console.log(`SQLiteDataStore:load Method not implemented.${cid}, ${this.name}`);
-        return { cid: cid, bytes: new Uint8Array() }
+    async init(): Promise<void> {
+        if (this.needInit) {
+            this.logger.Debug().Msg("init")
+            await this.store.start()
+            this.needInit = false
+        }
+    }
 
+    async load(cid: AnyLink): Promise<AnyBlock> {
+        await this.init()
+        this.logger.Debug().Str("cid", cid.toString()).Msg("load")
+        const ret = await this.store.select(cid.toString())
+        if (ret.length > 0) {
+            return { cid: cid, bytes: new Uint8Array(ret[0].data) }
+        }
+        throw this.logger.Error().Str("cid", cid.toString()).Msg("load failed").AsError()
     }
-    async save(car: AnyBlock, opts?: { public?: boolean | undefined; } | undefined): Promise<void | AnyLink> {
-        console.log(`SQLiteDataStore:save Method not implemented.${JSON.stringify(car)} ${opts}, ${this.name}`);
+    async save(car: AnyBlock): Promise<void> {
+        await this.init()
+        this.logger.Debug().Str("car", car.cid.toString()).Uint64("blob", car.bytes.length).Msg("save")
+        await this.store.insert({
+            name: this.name,
+            car: car.cid.toString(),
+            data: car.bytes,
+            updated_at: new Date()
+        })
     }
     async remove(cid: AnyLink): Promise<void> {
-        console.log(`SQLiteDataStore:remove Method not implemented.${cid}, ${this.name}`);
+        await this.init()
+        this.logger.Debug().Str("cid", cid.toString()).Msg("remove")
+        await this.store.delete(cid.toString())
     }
 }
 
-export class SQLiteRemoteWAL extends RemoteWAL {
-    constructor(loader: Loader) {
+export class SQLRemoteWAL extends RemoteWAL {
+    readonly store: WalSQLStore
+    needInit: boolean = true
+    readonly logger: Logger
+    constructor(store: WalSQLStore, loader: Loader, opts?: Partial<SQLOpts>) {
         super(loader)
+        this.store = store
+        this.logger = ensureLogger(opts, "SQLRemoteWAL").With().Str("name", loader.name).Logger()
     }
-    async load(branch?: string | undefined): Promise<WALState | null> {
-        console.log(`SQLiteRemoteWAL:load Method not implemented.: ${branch}, ${JSON.stringify(this.loader.name)}`);
-        return null
+
+    async init(): Promise<void> {
+        if (this.needInit) {
+            this.logger.Debug().Msg("init")
+            await this.store.start()
+            this.needInit = false
+        }
+    }
+
+    async load(branch: string = 'main'): Promise<WALState | null> {
+        await this.init()
+        const res = await this.store.select({ name: this.loader.name, branch: branch })
+        if (res.length === 0) {
+            return null
+        }
+        const ret = parse<WALState>(textDecoder.decode(res[0]?.state))
+        this.logger.Debug().Str("branch", branch!).Any("state", ret).Msg("load")
+        return ret
+
     }
     async save(state: WALState, branch?: string | undefined): Promise<void> {
-        console.log(`SQLiteRemoteWAL:save Method not implemented.${JSON.stringify(state)} ${branch}, ${JSON.stringify(this.loader.name)}`);
+        await this.init()
+        const encoded: ToString<WALState> = format(state)
+        this.logger.Debug().Any("state", state).Str("branch", branch!).Msg("save")
+        await this.store.insert({
+            state: textEncoder.encode(encoded.toString()),
+            updated_at: new Date(),
+            name: this.loader.name,
+            branch: branch || 'main'
+        })
     }
 }
 
-export function SQLLiteStoreOptions(filename: string = path.join((process.env.HOME || "./") + ".fireproof", "db.sqlite")): StoreOpts {
+
+export function SQLiteStoreOptions(cso: StoreOptions, opts?: Partial<SQLOpts>): StoreOpts {
+    const logger = ensureLogger(opts, "SQLiteStoreOptions")
+    logger.Debug().Msg("SQLiteStoreOptions")
     return {
         makeMetaStore: (loader: Loader) => {
-            return new SQLiteMetaStore(loader);
+            logger.Debug().Msg("makeMetaStore")
+            return new SQLMetaStore(cso.meta, loader, opts);
         },
         makeDataStore: (name: string) => {
-            return new SQLiteDataStore(name);
+            logger.Debug().Msg("makeDataStore")
+            return new SQLDataStore(cso.data, name, opts);
         },
         makeRemoteWAL: (loader: Loader) => {
-            return new SQLiteRemoteWAL(loader);
+            logger.Debug().Msg("makeRemoteWAL")
+            return new SQLRemoteWAL(cso.wal, loader, opts);
         }
     }
 }
 
 
 export class SQLiteConnection implements DBConnection {
-    static fromFilename(filename: string): DBConnection {
-        return new SQLiteConnection(filename)
+    static fromFilename(filename: string, opts?: Partial<SQLOpts>): DBConnection {
+        return new SQLiteConnection(filename, opts)
     }
     readonly filename: string
+    readonly logger: Logger
     client?: Database
-    private constructor(filename: string) {
-        console.log('sqlite constructor', filename);
+    private constructor(filename: string, opts?: Partial<SQLOpts>) {
+        this.logger = ensureLogger(opts, "SQLiteConnection").With().Str("filename", filename).Logger()
         this.filename = filename
+        this.logger.Debug().Msg("constructor")
     }
+    readonly connects: Promise<void>[] = []
+    isConnected = false
     async connect(): Promise<void> {
-        console.log('sqlite connect');
+        if (this.connects.length > 0) {
+            const onConnected = new Promise<void>((resolve, reject) => { })
+            this.connects.push(onConnected);
+            return onConnected
+        }
+        this.logger.Debug().Msg("connect")
         const Sqlite3Database = (await import('better-sqlite3')).default;
         this.client = new Sqlite3Database(this.filename, {
             // verbose: console.log,
             nativeBinding: "./node_modules/better-sqlite3/build/Release/better_sqlite3.node"
         });
+        // this.logger.Debug().Any("client", this.client).Msg("connected")
+        if (!this.client) {
+            throw this.logger.Error().Msg("connect failed").AsError()
+        }
+        this.isConnected = true
+        const toResolve = [...this.connects]
+        this.connects.splice(0, -1)
+        await Promise.all(toResolve)
     }
     async close(): Promise<void> {
+        this.logger.Debug().Msg("close")
         this.client?.close()
     }
 }

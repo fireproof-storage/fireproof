@@ -27,8 +27,9 @@ export interface DBConnection {
   connect(): Promise<void>
 }
 
-export interface Store<IType, KType> {
-  start(): Promise<Store<IType, KType>>
+export interface SQLStore<IType, KType, OType = IType[]> {
+  start(): Promise<SQLStore<IType, KType>>
   insert(ose: IType): Promise<RunResult>
-  select(car: KType): Promise<IType[]>
+  select(car: KType): Promise<OType>
+  delete(car: KType): Promise<RunResult>
 }

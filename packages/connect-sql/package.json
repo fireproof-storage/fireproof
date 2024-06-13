@@ -8,18 +8,15 @@
     ".": {
       "import": "./dist/browser/index.esm.js",
       "require": "./dist/browser/index.cjs",
-      "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js"
+      "types": "./dist/types/index.d.ts"
     },
     "./node": {
       "import": "./dist/node/index.esm.js",
       "require": "./dist/node/index.cjs",
       "types": "./dist/types/index.d.ts",
-      "script": "./dist/browser/index.iife.js",
       "default": "./dist/node/index.esm.js"
     }
   },
-  "off-browser": "./dist/index.browser.iife.js",
   "types": "./dist/types/index.d.ts",
   "files": [
     "dist/node",
@@ -28,12 +25,11 @@
   ],
   "type": "module",
   "scripts": {
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "pnpm run build",
     "build:clean": "rm -rf dist",
-    "build:tsc": "npm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/ && node ../encrypted-blockstore/scripts/types.js",
+    "build:tsc": "pnpm run build:clean && tsc && mkdir dist/tsc && mv dist/*.js dist/tsc/",
     "build:script": "node ../encrypted-blockstore/scripts/build.js",
-    "build": "npm run build:tsc && npm run build:script && cp dist/browser/index.iife.js ../fireproof/test/www/connect.iife.js",
-    "sql": "drizzle-kit generate",
+    "build": "pnpm run build:tsc && pnpm run build:script",
     "clean": "rm -rf node_modules",
     "test": "echo 'please add tests'",
     "browser-test": "node ../encrypted-blockstore/scripts/browser-test.js"
@@ -42,17 +38,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@adviser/cement": "^0.1.8",
+    "@adviser/cement": "^0.1.13",
     "@fireproof/encrypted-blockstore": "workspace:^",
-    "@types/better-sqlite3": "^7.6.10",
-    "better-sqlite3": "^11.0.0",
-    "cross-fetch": "^4.0.0",
-    "drizzle-kit": "^0.22.6",
-    "drizzle-orm": "^0.31.2",
-    "js-base64": "^3.7.5",
-    "pg": "^8.12.0"
+    "@ipld/dag-json": "^10.2.1",
+    "better-sqlite3": "^11.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
     "@types/pg": "^8.11.6",
     "mocha": "^10.4.0",
     "ts-loader": "^9.4.4",
