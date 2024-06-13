@@ -23,7 +23,7 @@ import { index } from '../dist/test/index.js'
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-export function cidListIncludes(list, cid) {
+export function carLogIncludesGroup(list, cid) {
   return list.some(c => c.equals(cid))
 }
 
@@ -524,6 +524,6 @@ describe('basic js verify', function () {
     const cidList = [cid, cid2]
     const cid3 = CID.parse(cid.toString())
     assert(!cidList.includes(cid3)) // sad trombone
-    assert(cidListIncludes(cidList, cid3))
+    assert(carLogIncludesGroup(cidList, cid3))
   })
 })

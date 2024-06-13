@@ -1,6 +1,6 @@
 import pLimit from 'p-limit'
 import { AnyLink, CommitOpts, DbMeta } from './types'
-import { type Loadable, cidListIncludes } from './loader'
+import { type Loadable, carLogIncludesGroup } from './loader'
 import { STORAGE_VERSION } from './store'
 import { CommitQueue } from './commit-queue'
 
@@ -82,7 +82,7 @@ export abstract class RemoteWAL {
           for (const cid of dbMeta.cars) {
             const car = await this.loader.carStore!.load(cid).catch(() => null)
             if (!car) {
-              if (cidListIncludes(this.loader.carLog, dbMeta.cars))
+              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
                 throw new Error(`missing local car ${cid.toString()}`)
             } else {
               await this.loader.remoteCarStore!.save(car)
@@ -98,7 +98,7 @@ export abstract class RemoteWAL {
           for (const cid of dbMeta.cars) {
             const car = await this.loader.carStore!.load(cid).catch(() => null)
             if (!car) {
-              if (cidListIncludes(this.loader.carLog, dbMeta.cars))
+              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
                 throw new Error(`missing local car ${cid.toString()}`)
             } else {
               await this.loader.remoteCarStore!.save(car)

@@ -30,7 +30,7 @@ import { CommitQueue } from './commit-queue'
 import * as CBW from '@ipld/car/buffer-writer'
 import { Block, encode, decode } from 'multiformats/block'
 
-export function cidListIncludes(list: CarLog, cids: CarGroup) {
+export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
     return arr.toString() === cids.toString()
   })
@@ -131,7 +131,7 @@ export class Loader implements Loadable {
         await this.mergeDbMetaIntoClock(meta)
         this.isWriting = false
       }
-      this._setWaitForWrite(writingFn)
+      void this._setWaitForWrite(writingFn)
       await writingFn()
     }
   }
@@ -147,7 +147,7 @@ export class Loader implements Loadable {
     if (meta.key) {
       await this.setKey(meta.key)
     }
-    if (cidListIncludes(this.carLog, meta.cars)) {
+    if (carLogIncludesGroup(this.carLog, meta.cars)) {
       return
     }
     const carHeader = (await this.loadCarHeaderFromMeta(meta)) as CarHeader
@@ -331,7 +331,7 @@ export class Loader implements Loadable {
       }
     }
     carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt))
-    console.log("split to ", carFiles.length, "files")
+    // console.log("split to ", carFiles.length, "files")
     return carFiles
   }
 
@@ -437,6 +437,8 @@ export class Loader implements Loadable {
     }
 
     const getCompactCarCids = async (carCid: AnyLink) => {
+      // console.log("getCompactCarCids", carCid.toString())
+      
       const reader = await this.loadCar(carCid)
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`)
@@ -479,6 +481,16 @@ export class Loader implements Loadable {
       }
       if (got) break
     }
+
+    if (!got) {
+        try {
+          got = await getCompactCarCids(this.carLog[this.carLog.length - 1][0])
+        } catch {
+          // Ignore the error and continue with the next iteration
+        }
+    }
+
+
     return got
   }
 

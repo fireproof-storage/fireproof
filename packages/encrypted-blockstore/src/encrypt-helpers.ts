@@ -19,7 +19,7 @@ import { encodeCarFile } from './loader-helpers'
 import { makeCodec } from './encrypt-codec.js'
 import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from './types'
 
-function cidListIncludes(list: AnyLink[], cidMatch: AnyLink) {
+function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   return list.some((cid: AnyLink) => {
     return cid.toString() === cidMatch.toString()
   })
@@ -47,7 +47,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   }): AsyncGenerator<any, void, unknown> {
     const set = new Set<ToString<AnyLink>>()
     let eroot
-    if (!cidListIncludes(cids, root)) cids.push(root)
+    if (!carLogIncludesGroup(cids, root)) cids.push(root)
     for (const cid of cids) {
       const unencrypted = await get(cid)
       if (!unencrypted) throw new Error('missing cid: ' + cid.toString())
