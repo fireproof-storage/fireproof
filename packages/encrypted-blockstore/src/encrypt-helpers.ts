@@ -149,7 +149,7 @@ export async function encryptedEncodeCarFile(
   key: string,
   rootCid: AnyLink,
   t: CarMakeable
-): Promise<AnyBlock[]> {
+): Promise<AnyBlock> {
   const encryptionKey = hexStringToUint8Array(key)
   const encryptedBlocks = new MemoryBlockstore()
   const cidsToEncrypt = [] as AnyLink[]
