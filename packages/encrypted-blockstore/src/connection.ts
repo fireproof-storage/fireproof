@@ -17,8 +17,8 @@ import { BlockstoreOpts } from './transaction'
 export type CarClockHead = Link<DbMetaEventBlock>[]
 
 export type Connectable = {
-  blockstore: { loader: Loader, ebOpts: BlockstoreOpts}
-  name: string
+  blockstore: { loader: Loader | null, ebOpts: BlockstoreOpts}
+  name: string | null
 }
 
 export abstract class Connection {
@@ -27,7 +27,7 @@ export abstract class Connection {
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   eventBlocks = new MemoryBlockstore()
   parents: CarClockHead = []
-  loader?: Loader
+  loader: Loader | null = null
   taskManager?: TaskManager
 
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>
@@ -49,13 +49,13 @@ export abstract class Connection {
     await this.loader!.remoteWAL?._process()
   }
 
-  connect({ loader }: { loader: Loader | undefined }) {
+  connect({ loader }: { loader: Loader | null }) {
     if (!loader) throw new Error('loader is required')
     this.connectMeta({ loader })
     this.connectStorage({ loader })
   }
 
-  connectMeta({ loader }: { loader: Loader | undefined}) {
+  connectMeta({ loader }: { loader: Loader | null }) {
     if (!loader) throw new Error('loader is required')
     this.loader = loader
     this.taskManager = new TaskManager(loader)
@@ -76,7 +76,7 @@ export abstract class Connection {
 
   async onConnect() {}
 
-  connectStorage({ loader }: { loader?: Loader }) {
+  connectStorage({ loader }: { loader: Loader | null }) {
     if (!loader) throw new Error('loader is required')
     this.loader = loader
     loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this)
