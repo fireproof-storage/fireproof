@@ -181,7 +181,7 @@ export class Loader implements Loadable {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async _getKey(): Promise<string | undefined> {
+  async _getKey(): Promise<string | null> {
     if (this.key) return this.key
     // generate a random key
     if (!this.ebOpts.public) {
@@ -191,7 +191,7 @@ export class Loader implements Loadable {
         console.warn('missing crypto module, using public mode')
       }
     }
-    return this.key
+    return this.key || null
   }
 
   async commitFiles(
@@ -213,10 +213,16 @@ export class Loader implements Loadable {
     const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[]
     }
-    const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    await this.fileStore!.save({ cid, bytes })
-    await this.remoteWAL!.enqueueFile(cid, !!opts.public)
-    return [cid]
+    const cids: AnyLink[] = []
+    const cars = await this.prepareCarFilesFiles(roots, t, !!opts.public)
+    for (const car of cars) {
+      const { cid, bytes } = car
+      await this.fileStore!.save({ cid, bytes })
+      await this.remoteWAL!.enqueueFile(cid, !!opts.public)
+      cids.push(cid)
+    }
+
+    return cids
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
@@ -267,38 +273,77 @@ export class Loader implements Loadable {
       this.carLog,
       !!opts.compact
     ) as CarHeader
-    let rootBlock = await encodeCarHeader(fp)    
-    let roots: AnyLink[] = await this.prepareRoots(fp, t)
-    //We need to split the data inside the prepareCarFile?
-    //While splitting every CAR file should have a copy of root[0] meaning it should have a copy of fp
-    // Maximum size of each CAR file as 1mb?
-    const { cid, bytes } = await this.prepareCarFile(roots[0], t, !!opts.public)
-    await this.carStore!.save({ cid, bytes })
+    let rootBlock = await encodeCarHeader(fp)
+
+    const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public)
+    const cids: AnyLink[] = []
+    for (const car of cars) {
+      const { cid, bytes } = car
+      await this.carStore!.save({ cid, bytes })
+      cids.push(cid)
+    }
+
     await this.cacheTransaction(t)
-    const newDbMeta = { cars: [cid], key: this.key || null } as DbMeta
+    const newDbMeta = { cars: cids, key: this.key || null } as DbMeta
     await this.remoteWAL!.enqueue(newDbMeta, opts)
     await this.metaStore!.save(newDbMeta)
-    await this.updateCarLog([cid], fp, !!opts.compact)
-    return [cid]
+    await this.updateCarLog(cids, fp, !!opts.compact)
+    return cids
   }
 
-  async prepareRoots(fp: CarHeader, t: CarTransaction): Promise<AnyLink[]> {
-    const header = await encodeCarHeader(fp)
-    await t.put(header.cid, header.bytes)
-    // const got = await t.get(header.cid)
-    // if (!got) throw new Error('missing header block: ' + header.cid.toString())
-    return [header.cid]
-  }
-
-  async prepareCarFile(
-    root: AnyLink,
+  async prepareCarFilesFiles(
+    roots: AnyLink[],
     t: CarTransaction,
     isPublic: boolean
-  ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
+  ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
     const theKey = isPublic ? null : await this._getKey()
+    const car = theKey && this.ebOpts.crypto
+      ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, roots[0], t)
+      : await encodeCarFile(roots, t)
+    return [car]
+  }
+
+  async prepareCarFiles(
+    rootBlock: AnyBlock,
+    t: CarTransaction,
+    isPublic: boolean
+  ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
+    const theKey = isPublic ? null : await this._getKey()
+    const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = []
+    const threshold = this.ebOpts.threshold || 1000*1000
+    let clonedt = new CarTransaction(t.parent, { add: false })
+    clonedt.putSync(rootBlock.cid, rootBlock.bytes)
+    // @ts-ignore
+    let newsize = CBW.blockLength(rootBlock)
+    let cidRootBlock = rootBlock;
+    for (const { cid, bytes } of t.entries()) {
+      // @ts-ignore
+      newsize += CBW.blockLength({ cid, bytes })
+      if (newsize >= threshold) {
+        carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt))
+        clonedt = new CarTransaction(t.parent, { add: false })
+        clonedt.putSync(cid, bytes)
+        cidRootBlock = { cid, bytes }
+        // @ts-ignore
+        newsize = CBW.blockLength({ cid, bytes }) //+ CBW.blockLength(rootBlock)
+      } else {
+        clonedt.putSync(cid, bytes)
+      }
+    }
+    carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt))
+    console.log("split to ", carFiles.length, "files")
+    return carFiles
+  }
+
+  private async createCarFile(theKey: string | null, cid: AnyLink, t: CarTransaction): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     return theKey && this.ebOpts.crypto
-      ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, root, t)
-      : await encodeCarFile([root], t)
+      ? await encryptedEncodeCarFile(
+        this.ebOpts.crypto,
+        theKey,
+        cid,
+        t
+      )
+      : await encodeCarFile([cid], t)
   }
 
   protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
