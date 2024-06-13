@@ -13,7 +13,7 @@ type AuthFormValues = {
 export default function Home () {
   const [email, setEmail] = useLocalStorageState<string>('example-email')
   const [db] = useState<Database>(fireproof('example'))
-  const [connection] = useState(connect.ipfs2(db, 'example-sync'))
+  const [connection] = useState(connect.ucan(db, 'example-sync'))
   const { register, handleSubmit } = useForm<AuthFormValues>();
   const { data: docs, mutate: mutateTestThings } = useSWR(
     'test things',
