@@ -181,7 +181,7 @@ export class Loader implements Loadable {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  async _getKey(): Promise<string | undefined> {
+  async _getKey(): Promise<string | null> {
     if (this.key) return this.key
     // generate a random key
     if (!this.ebOpts.public) {
@@ -191,7 +191,7 @@ export class Loader implements Loadable {
         console.warn('missing crypto module, using public mode')
       }
     }
-    return this.key
+    return this.key || null
   }
 
   async commitFiles(
@@ -320,16 +320,7 @@ export class Loader implements Loadable {
       // @ts-ignore
       newsize += CBW.blockLength({ cid, bytes })
       if (newsize >= threshold) {
-        const carFile =
-          theKey && this.ebOpts.crypto
-            ? await encryptedEncodeCarFile(
-              this.ebOpts.crypto,
-              theKey,
-              cidRootBlock.cid,
-              clonedt
-            )
-            : await encodeCarFile([cidRootBlock.cid], clonedt)
-        carFiles.push(carFile)
+        carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt))
         clonedt = new CarTransaction(t.parent, { add: false })
         clonedt.putSync(cid, bytes)
         cidRootBlock = { cid, bytes }
@@ -339,18 +330,20 @@ export class Loader implements Loadable {
         clonedt.putSync(cid, bytes)
       }
     }
-    const carFile =
-      theKey && this.ebOpts.crypto
-        ? await encryptedEncodeCarFile(
-          this.ebOpts.crypto,
-          theKey,
-          cidRootBlock.cid,
-          clonedt
-        )
-        : await encodeCarFile([cidRootBlock.cid], clonedt)
-    carFiles.push(carFile)
+    carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt))
     console.log("split to ", carFiles.length, "files")
     return carFiles
+  }
+
+  private async createCarFile(theKey: string | null, cid: AnyLink, t: CarTransaction): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
+    return theKey && this.ebOpts.crypto
+      ? await encryptedEncodeCarFile(
+        this.ebOpts.crypto,
+        theKey,
+        cid,
+        t
+      )
+      : await encodeCarFile([cid], t)
   }
 
   protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
