@@ -7,7 +7,7 @@ import { DID, Link } from "@ucanto/interface"
 import { create as createClient } from '@web3-storage/w3up-client'
 import * as Account from '@web3-storage/w3up-client/account'
 import * as Result from '@web3-storage/w3up-client/result'
-import { ConnectIPFSParams } from "./connect-ipfs";
+import { ConnectIPFSParams } from "./connect-ucan";
 
 const DEFAULT_CLOCK_SPACE_NAME = '_fireproof_account'
 
