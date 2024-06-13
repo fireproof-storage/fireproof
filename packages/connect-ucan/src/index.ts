@@ -1,5 +1,5 @@
 import type { Connectable } from '@fireproof/encrypted-blockstore'
-import { ConnectUCAN, ConnectUCANParams  } from './connect-ucan'
+import { ConnectUCAN, ConnectUCANParams } from './connect-ucan'
 
 const ipfsCxs = new Map<string, ConnectUCAN>()
 
