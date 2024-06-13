@@ -623,10 +623,10 @@ export type DownloadMetaFnParams = {
 }
 
 export interface Connection {
-  loader: Loader
+  loader: Loader | null
   loaded: Promise<void>
-  connectMeta({ loader }: { loader: Loader }): void
-  connectStorage({ loader }: { loader: Loader }): void
+  connectMeta({ loader }: { loader: Loader | null }): void
+  connectStorage({ loader }: { loader: Loader | null }): void
 
   metaUpload(
     bytes: Uint8Array,

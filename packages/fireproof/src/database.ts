@@ -16,11 +16,11 @@ import type {
   IndexRow
 } from './types'
 import { DbResponse, ChangesResponse } from './types'
-import { EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
+import { Connectable, EncryptedBlockstore } from '@fireproof/encrypted-blockstore'
 
 type DbName = string | null
 
-export class Database {
+export class Database implements Connectable {
   static databases: Map<string, Database> = new Map()
 
   name: DbName
