@@ -8,7 +8,7 @@ import { Link } from 'multiformats/link'
 import { DbMetaEventBlock } from '@fireproof/encrypted-blockstore'
 
 //from '../../encrypted-blockstore/dist/types/connection'
-export abstract class AbstractConnectIPFS extends Connection {
+export abstract class AbstractConnectUCAN extends Connection {
   abstract authorizedClient(): Promise<Client>
   abstract clockProofsForDb(): Promise<Proof[]>
   abstract clockSpaceDIDForDb(): `did:${string}:${string}`
@@ -142,7 +142,7 @@ export abstract class AbstractConnectIPFS extends Connection {
   }
 }
 
-export abstract class DatabaseConnectIPFS extends AbstractConnectIPFS {
+export abstract class DatabaseConnectUCAN extends AbstractConnectUCAN {
   activated: boolean | null = null
   authorizing: Promise<void>
   authorizingComplete!: () => void

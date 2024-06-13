@@ -53,7 +53,7 @@
     "immutable",
     "IPLD",
     "CID",
-    "IPFS"
+    "UCAN"
   ],
   "contributors": [
     "J Chris Anderson",

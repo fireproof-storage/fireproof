@@ -7,7 +7,7 @@ import { DID, Link } from "@ucanto/interface"
 import { create as createClient } from '@web3-storage/w3up-client'
 import * as Account from '@web3-storage/w3up-client/account'
 import * as Result from '@web3-storage/w3up-client/result'
-import { ConnectIPFSParams } from "./connect-ucan";
+import { ConnectUCANParams } from "./connect-ucan";
 
 const DEFAULT_CLOCK_SPACE_NAME = '_fireproof_account'
 
@@ -44,13 +44,13 @@ function parseEmail (email: string): Account.EmailAddress {
   return email as Account.EmailAddress
 }
 
-export class ConnectIPFSV2 extends Connection {
+export class ConnectUCANV2 extends Connection {
   client?: Client
   clockSpaceDID?: DID
-  params: ConnectIPFSParams
+  params: ConnectUCANParams
   pubsub: Function
 
-  constructor(params: ConnectIPFSParams) {
+  constructor(params: ConnectUCANParams) {
     super()
     this.params = params
     this.pubsub = function () {}

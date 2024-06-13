@@ -91,7 +91,7 @@ The blockstore layer includes all the Fireproof connectors, so you can leverage 
 * [S3](https://github.com/fireproof-storage/valid-cid-s3-bucket) - Verified storage for CAR files, using Lambda and signed URLs
 * [Netlify](https://www.npmjs.com/package/@fireproof/netlify) - CAR file storage and shared CRDT access
 * [PartyKit](https://www.npmjs.com/package/@fireproof/partykit) - Cloudflare Workers for realtime sync and storage
-* [web3.storage](https://www.npmjs.com/package/@fireproof/ipfs) - I heard you like IPFS, so I put your IPFS blocks in encrypted CAR files on IPFS
+* [web3.storage](https://www.npmjs.com/package/@fireproof/ucan) - I heard you like IPFS, so I put your IPFS blocks in encrypted CAR files on IPFS
 
 ## Architecture
 

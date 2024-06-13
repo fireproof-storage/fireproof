@@ -1,24 +1,24 @@
 
-import { AccountConnectIPFS } from './connect-ucan-account'
-import { DatabaseConnectIPFS } from './connect-ucan-helpers'
+import { AccountConnectUCAN } from './connect-ucan-account'
+import { DatabaseConnectUCAN } from './connect-ucan-helpers'
 
-export type ConnectIPFSParams = { name: string, schema: string }
+export type ConnectUCANParams = { name: string, schema: string }
 
-export type ConnectIPFSCallbacks = {
+export type ConnectUCANCallbacks = {
   resolve: (clockSpaceDID: `did:${string}:${string}`) => void;
   reject: (reason: string) => void;
 }
 
-// ConnectIPFS is a DatabaseConnectIPFS that creates an account database
+// ConnectUCAN is a DatabaseConnectUCAN that creates an account database
 // and ask it for the authorizedClient
-export class ConnectIPFS extends DatabaseConnectIPFS {
-  accountConnection: AccountConnectIPFS
+export class ConnectUCAN extends DatabaseConnectUCAN {
+  accountConnection: AccountConnectUCAN
   authorized: boolean | null = null
-  params: ConnectIPFSParams
+  params: ConnectUCANParams
   clockSpaceDID!: `did:${string}:${string}`
-  constructor(params: ConnectIPFSParams) {
+  constructor(params: ConnectUCANParams) {
     super()
-    this.accountConnection = new AccountConnectIPFS()
+    this.accountConnection = new AccountConnectUCAN()
     this.params = params
   }
 
@@ -42,14 +42,14 @@ export class ConnectIPFS extends DatabaseConnectIPFS {
   }
 
   async initializeClient() {
-    console.log('initializeClient ConnectIPFS')
+    console.log('initializeClient ConnectUCAN')
     await this.accountConnection.ready
-    console.log('initializeClient ConnectIPFS ready')
+    console.log('initializeClient ConnectUCAN ready')
     this.authorized = this.accountConnection.activated
     await this.accountConnection.authorizedClockSpace(this.params)
       .then((clockSpaceDID: `did:${string}:${string}`) => {
         this.clockSpaceDID = clockSpaceDID
-        // this.authorizingComplete() // this is called in DatabaseConnectIPFS constructor
+        // this.authorizingComplete() // this is called in DatabaseConnectUCAN constructor
         this.activated = true
       }).catch(this.authorizingFailed)
   }

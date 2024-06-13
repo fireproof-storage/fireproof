@@ -1,6 +1,6 @@
 'use client'
 import { Database, fireproof } from "@fireproof/core";
-import { connect } from "@fireproof/ipfs"
+import { connect } from "@fireproof/ucan"
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import useSWR from 'swr'

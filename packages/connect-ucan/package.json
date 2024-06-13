@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof/ipfs",
+  "name": "@fireproof/ucan",
   "version": "0.18.0",
   "description": "",
   "main": "./dist/browser/index.cjs",

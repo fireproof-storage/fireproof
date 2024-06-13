@@ -20,9 +20,9 @@ importers:
       '@fireproof/core':
         specifier: workspace:^
         version: link:../../packages/fireproof
-      '@fireproof/ipfs':
+      '@fireproof/ucan':
         specifier: workspace:^
-        version: link:../../packages/connect-ipfs
+        version: link:../../packages/connect-ucan
       next:
         specifier: 14.2.3
         version: 14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -261,70 +261,6 @@ importers:
         specifier: ^5.4.4
         version: 5.8.3
 
-  packages/connect-ipfs:
-    dependencies:
-      '@fireproof/aws':
-        specifier: workspace:^
-        version: link:../connect-aws
-      '@fireproof/core':
-        specifier: workspace:^
-        version: link:../fireproof
-      '@fireproof/encrypted-blockstore':
-        specifier: workspace:^
-        version: link:../encrypted-blockstore
-      '@ucanto/core':
-        specifier: ^10.0.1
-        version: 10.4.0
-      '@ucanto/interface':
-        specifier: ^10.0.1
-        version: 10.3.0
-      '@web3-storage/clock':
-        specifier: ^0.4.1
-        version: 0.4.1
-      '@web3-storage/pail':
-        specifier: ^0.6.0
-        version: 0.6.2
-      '@web3-storage/w3up-client':
-        specifier: ^13.1.1
-        version: 13.1.1(encoding@0.1.13)
-      cross-fetch:
-        specifier: ^4.0.0
-        version: 4.0.0(encoding@0.1.13)
-      multiformats:
-        specifier: ^13.1.1
-        version: 13.3.6
-    devDependencies:
-      '@hyrious/esbuild-plugin-commonjs':
-        specifier: ^0.2.2
-        version: 0.2.6(esbuild@0.19.12)
-      esbuild:
-        specifier: ^0.19.4
-        version: 0.19.12
-      esbuild-plugin-alias:
-        specifier: ^0.2.1
-        version: 0.2.1
-      esbuild-plugin-tsc:
-        specifier: ^0.4.0
-        version: 0.4.0(typescript@5.8.3)
-      mocha:
-        specifier: ^10.4.0
-        version: 10.8.2
-      partykit:
-        specifier: 0.0.24
-        version: 0.0.24
-      ts-loader:
-        specifier: ^9.4.4
-        version: 9.5.2(typescript@5.8.3)(webpack@5.99.9)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.8.3
-      webpack:
-        specifier: ^5.88.2
-        version: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
-      webpack-cli:
-        specifier: ^5.1.4
-        version: 5.1.4(webpack@5.99.9)
-
   packages/connect-netlify:
     dependencies:
       '@fireproof/encrypted-blockstore':
@@ -389,6 +325,70 @@ importers:
       webpack:
         specifier: ^5.88.2
         version: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
+      webpack-cli:
+        specifier: ^5.1.4
+        version: 5.1.4(webpack@5.99.9)
+
+  packages/connect-ucan:
+    dependencies:
+      '@fireproof/aws':
+        specifier: workspace:^
+        version: link:../connect-aws
+      '@fireproof/core':
+        specifier: workspace:^
+        version: link:../fireproof
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
+      '@ucanto/core':
+        specifier: ^10.0.1
+        version: 10.4.0
+      '@ucanto/interface':
+        specifier: ^10.0.1
+        version: 10.3.0
+      '@web3-storage/clock':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@web3-storage/pail':
+        specifier: ^0.6.0
+        version: 0.6.2
+      '@web3-storage/w3up-client':
+        specifier: ^13.1.1
+        version: 13.1.1(encoding@0.1.13)
+      cross-fetch:
+        specifier: ^4.0.0
+        version: 4.0.0(encoding@0.1.13)
+      multiformats:
+        specifier: ^13.1.1
+        version: 13.3.6
+    devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.6(esbuild@0.19.12)
+      esbuild:
+        specifier: ^0.19.4
+        version: 0.19.12
+      esbuild-plugin-alias:
+        specifier: ^0.2.1
+        version: 0.2.1
+      esbuild-plugin-tsc:
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.8.3)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.8.2
+      partykit:
+        specifier: 0.0.24
+        version: 0.0.24
+      ts-loader:
+        specifier: ^9.4.4
+        version: 9.5.2(typescript@5.8.3)(webpack@5.99.9)
+      typescript:
+        specifier: ^5.2.2
+        version: 5.8.3
+      webpack:
+        specifier: ^5.88.2
+        version: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
       webpack-cli:
         specifier: ^5.1.4
         version: 5.1.4(webpack@5.99.9)
@@ -3406,9 +3406,6 @@ packages:
   camelcase@6.3.0:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
-
-  caniuse-lite@1.0.30001576:
-    resolution: {integrity: sha512-ff5BdakGe2P3SQsMsiqmt1Lc8221NR1VzHj5jXN5vBny9A6fpze94HiVV/n7XRosOlsShJcvMv5mdnpjOGCEgg==}
 
   caniuse-lite@1.0.30001721:
     resolution: {integrity: sha512-cOuvmUVtKrtEaoKiO0rSc29jcjwMwX5tOHDy4MgVFEWiUXj4uBMJkwI8MDySkgXidpMiHUcviogAvFi4pA2hDQ==}
@@ -9160,17 +9157,17 @@ snapshots:
 
   '@webpack-cli/configtest@2.1.1(webpack-cli@5.1.4)(webpack@5.99.9)':
     dependencies:
-      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.99.9)
 
   '@webpack-cli/info@2.0.2(webpack-cli@5.1.4)(webpack@5.99.9)':
     dependencies:
-      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.99.9)
 
   '@webpack-cli/serve@2.0.5(webpack-cli@5.1.4)(webpack@5.99.9)':
     dependencies:
-      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
       webpack-cli: 5.1.4(webpack@5.99.9)
 
   '@xtuc/ieee754@1.2.0': {}
@@ -9547,7 +9544,7 @@ snapshots:
 
   browserslist@4.22.2:
     dependencies:
-      caniuse-lite: 1.0.30001576
+      caniuse-lite: 1.0.30001721
       electron-to-chromium: 1.4.628
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.22.2)
@@ -9652,8 +9649,6 @@ snapshots:
   camelcase-css@2.0.1: {}
 
   camelcase@6.3.0: {}
-
-  caniuse-lite@1.0.30001576: {}
 
   caniuse-lite@1.0.30001721: {}
 
@@ -13544,7 +13539,7 @@ snapshots:
       semver: 7.7.2
       source-map: 0.7.4
       typescript: 5.8.3
-      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
 
   ts-unused-exports@10.1.0(typescript@5.8.3):
     dependencies:
@@ -13918,7 +13913,7 @@ snapshots:
       import-local: 3.2.0
       interpret: 3.1.1
       rechoir: 0.8.0
-      webpack: 5.99.9(esbuild@0.19.12)(webpack-cli@5.1.4)
+      webpack: 5.99.9(esbuild@0.25.5)(webpack-cli@5.1.4)
       webpack-merge: 5.10.0
 
   webpack-merge@5.10.0:
