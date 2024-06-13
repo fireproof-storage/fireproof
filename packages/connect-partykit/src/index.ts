@@ -16,6 +16,7 @@ export const connect = {
       partyHost = 'http://localhost:1999'
     }
     const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
+    blockstore.ebOpts.threshold = 50000
     connection.connect(blockstore)
     partyCxs.set(name, connection)
     return connection
