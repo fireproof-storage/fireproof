@@ -1,7 +1,7 @@
-import { ConnectIPFS, ConnectIPFSParams } from './connect-ipfs'
+import { ConnectIPFS, ConnectIPFSParams } from './connect-ucan'
 import { ConnectS3 } from '@fireproof/aws'
 import type { Connectable } from '@fireproof/encrypted-blockstore'
-import { ConnectIPFSV2 } from './connect-ipfs-v2'
+import { ConnectIPFSV2 } from './connect-ucan-v2'
 
 const ipfsCxs = new Map<string, ConnectIPFS | ConnectIPFSV2>()
 

@@ -1,6 +1,6 @@
 
-import { AccountConnectIPFS } from './connect-ipfs-account'
-import { DatabaseConnectIPFS } from './connect-ipfs-helpers'
+import { AccountConnectIPFS } from './connect-ucan-account'
+import { DatabaseConnectIPFS } from './connect-ucan-helpers'
 
 export type ConnectIPFSParams = { name: string, schema: string }
 
