@@ -349,7 +349,7 @@ export class Loader implements Loadable {
         )
         : await encodeCarFile([cidRootBlock.cid], clonedt)
     carFiles.push(carFile)
-    // console.log("split to ", carFiles.length, "files")
+    console.log("split to ", carFiles.length, "files")
     return carFiles
   }
 
