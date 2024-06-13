@@ -5,8 +5,8 @@ import { delegate, Delegation } from '@ucanto/core'
 import { fireproof } from '@fireproof/core'
 import type { Doc, Database, MapFn } from '@fireproof/core'
 
-import { ConnectIPFSParams } from './connect-ucan'
-import { DatabaseConnectIPFS } from './connect-ucan-helpers'
+import { ConnectUCANParams } from './connect-ucan'
+import { DatabaseConnectUCAN } from './connect-ucan-helpers'
 import { Capabilities } from '@ucanto/interface'
 // import { Loader } from '@fireproof/encrypted-blockstore'
 import { OwnedSpace, Space } from '@web3-storage/w3up-client/space'
@@ -51,8 +51,8 @@ const didKeyIdxFn: MapFn = (doc, emit) => {
   }
 }
 
-// AccountConnectIPFS is a DatabaseConnectIPFS that manages an account
-export class AccountConnectIPFS extends DatabaseConnectIPFS {
+// AccountConnectUCAN is a DatabaseConnectUCAN that manages an account
+export class AccountConnectUCAN extends DatabaseConnectUCAN {
   accountDb: Database
   client: Client | null = null
   email: `${string}@${string}` | null = null
@@ -148,13 +148,13 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     return space
   }
 
-  encodeSpaceName(params: ConnectIPFSParams): `_clock/${string}/${string}` {
+  encodeSpaceName(params: ConnectUCANParams): `_clock/${string}/${string}` {
     const schemaPart = encodeURIComponent(params.schema)
     const namePart = encodeURIComponent(params.name)
     return `_clock/${schemaPart}/${namePart}`
   }
 
-  async authorizedClockSpace(params: ConnectIPFSParams): Promise<`did:${string}:${string}`> {
+  async authorizedClockSpace(params: ConnectUCANParams): Promise<`did:${string}:${string}`> {
     // const callId = Math.random().toString(36).substring(7)
     // console.log('authorizedClockSpace', this.constructor.name, this.authorizing, this.loaded, callId, params)
     // we are waiting on authorising
@@ -177,7 +177,7 @@ export class AccountConnectIPFS extends DatabaseConnectIPFS {
     }
   }
 
-  async createNewSpace(params: ConnectIPFSParams) {
+  async createNewSpace(params: ConnectUCANParams) {
     console.log('createNewSpace', params)
     const client = this.client!
     const spaceKey = this.encodeSpaceName(params)

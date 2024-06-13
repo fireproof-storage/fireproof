@@ -20,9 +20,9 @@ importers:
       '@fireproof/core':
         specifier: workspace:^
         version: link:../../packages/fireproof
-      '@fireproof/ipfs':
+      '@fireproof/ucan':
         specifier: workspace:^
-        version: link:../../packages/connect-ipfs
+        version: link:../../packages/connect-ucan
       next:
         specifier: 14.2.3
         version: 14.2.3(react-dom@18.2.0)(react@18.2.0)
@@ -261,70 +261,6 @@ importers:
         specifier: ^5.4.4
         version: 5.4.5
 
-  packages/connect-ipfs:
-    dependencies:
-      '@fireproof/aws':
-        specifier: workspace:^
-        version: link:../connect-aws
-      '@fireproof/core':
-        specifier: workspace:^
-        version: link:../fireproof
-      '@fireproof/encrypted-blockstore':
-        specifier: workspace:^
-        version: link:../encrypted-blockstore
-      '@ucanto/core':
-        specifier: ^10.0.1
-        version: 10.0.1
-      '@ucanto/interface':
-        specifier: ^10.0.1
-        version: 10.0.1
-      '@web3-storage/clock':
-        specifier: ^0.4.1
-        version: 0.4.1
-      '@web3-storage/pail':
-        specifier: ^0.6.0
-        version: 0.6.0
-      '@web3-storage/w3up-client':
-        specifier: ^13.1.1
-        version: 13.1.1
-      cross-fetch:
-        specifier: ^4.0.0
-        version: 4.0.0
-      multiformats:
-        specifier: ^13.1.1
-        version: 13.1.1
-    devDependencies:
-      '@hyrious/esbuild-plugin-commonjs':
-        specifier: ^0.2.2
-        version: 0.2.4(esbuild@0.19.11)
-      esbuild:
-        specifier: ^0.19.4
-        version: 0.19.11
-      esbuild-plugin-alias:
-        specifier: ^0.2.1
-        version: 0.2.1
-      esbuild-plugin-tsc:
-        specifier: ^0.4.0
-        version: 0.4.0(typescript@5.3.3)
-      mocha:
-        specifier: ^10.4.0
-        version: 10.4.0
-      partykit:
-        specifier: 0.0.24
-        version: 0.0.24
-      ts-loader:
-        specifier: ^9.4.4
-        version: 9.5.1(typescript@5.3.3)(webpack@5.89.0)
-      typescript:
-        specifier: ^5.2.2
-        version: 5.3.3
-      webpack:
-        specifier: ^5.88.2
-        version: 5.89.0(esbuild@0.19.11)(webpack-cli@5.1.4)
-      webpack-cli:
-        specifier: ^5.1.4
-        version: 5.1.4(webpack@5.89.0)
-
   packages/connect-netlify:
     dependencies:
       '@fireproof/encrypted-blockstore':
@@ -386,6 +322,70 @@ importers:
       typescript:
         specifier: ^5.2.2
         version: 5.3.3
+      webpack:
+        specifier: ^5.88.2
+        version: 5.89.0(esbuild@0.19.11)(webpack-cli@5.1.4)
+      webpack-cli:
+        specifier: ^5.1.4
+        version: 5.1.4(webpack@5.89.0)
+
+  packages/connect-ucan:
+    dependencies:
+      '@fireproof/aws':
+        specifier: workspace:^
+        version: link:../connect-aws
+      '@fireproof/core':
+        specifier: workspace:^
+        version: link:../fireproof
+      '@fireproof/encrypted-blockstore':
+        specifier: workspace:^
+        version: link:../encrypted-blockstore
+      '@ucanto/core':
+        specifier: ^10.0.1
+        version: 10.0.1
+      '@ucanto/interface':
+        specifier: ^10.0.1
+        version: 10.0.1
+      '@web3-storage/clock':
+        specifier: ^0.4.1
+        version: 0.4.1
+      '@web3-storage/pail':
+        specifier: ^0.6.0
+        version: 0.6.0
+      '@web3-storage/w3up-client':
+        specifier: ^13.1.1
+        version: 13.1.1
+      cross-fetch:
+        specifier: ^4.0.0
+        version: 4.0.0
+      multiformats:
+        specifier: ^13.1.1
+        version: 13.1.1
+    devDependencies:
+      '@hyrious/esbuild-plugin-commonjs':
+        specifier: ^0.2.2
+        version: 0.2.4(esbuild@0.19.11)
+      esbuild:
+        specifier: ^0.19.4
+        version: 0.19.11
+      esbuild-plugin-alias:
+        specifier: ^0.2.1
+        version: 0.2.1
+      esbuild-plugin-tsc:
+        specifier: ^0.4.0
+        version: 0.4.0(typescript@5.4.5)
+      mocha:
+        specifier: ^10.4.0
+        version: 10.4.0
+      partykit:
+        specifier: 0.0.24
+        version: 0.0.24
+      ts-loader:
+        specifier: ^9.4.4
+        version: 9.5.1(typescript@5.4.5)(webpack@5.89.0)
+      typescript:
+        specifier: ^5.2.2
+        version: 5.4.5
       webpack:
         specifier: ^5.88.2
         version: 5.89.0(esbuild@0.19.11)(webpack-cli@5.1.4)
@@ -3365,7 +3365,7 @@ packages:
   /@ucanto/core@10.0.1:
     resolution: {integrity: sha512-1BfUaJu0/c9Rl/WdZSDbScJJLsPsPe1g4ynl5kubUj3xDD/lyp/Q12PQVQ2X7hDiWwkpwmxCkRMkOxwc70iNKQ==}
     dependencies:
-      '@ipld/car': 5.2.6
+      '@ipld/car': 5.3.0
       '@ipld/dag-cbor': 9.2.0
       '@ipld/dag-ucan': 3.4.0
       '@ucanto/interface': 10.0.1
@@ -3439,7 +3439,7 @@ packages:
       '@ipld/dag-ucan': 3.4.0
       '@noble/curves': 1.3.0
       '@noble/ed25519': 1.7.3
-      '@noble/hashes': 1.3.3
+      '@noble/hashes': 1.4.0
       '@ucanto/interface': 10.0.1
       multiformats: 11.0.2
       one-webcrypto: 1.0.3
@@ -3886,8 +3886,8 @@ packages:
     resolution: {integrity: sha512-BUuunK6ZQQfNvECB2st0G7/rd0Vfsn6jFg01tfMLEsitFJWI9J503ixKJ8jWpoNW/3juJ32HQpo8ar3pmgG5uA==}
     hasBin: true
     dependencies:
-      '@ipld/car': 5.2.6
-      '@ipld/dag-cbor': 9.0.8
+      '@ipld/car': 5.3.0
+      '@ipld/dag-cbor': 9.2.0
       archy: 1.0.0
       cborg: 4.1.3
       cli-color: 2.0.4
@@ -4128,11 +4128,6 @@ packages:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
     dependencies:
       acorn: 8.11.3
-
-  /acorn-walk@8.3.1:
-    resolution: {integrity: sha512-TgUZgYvqZprrl7YldZNoa9OciCAyZR+Ejm9eXzKCmjsF5IKp/wgQ7Z/ZpjpGTIUPwrHQIcYeI8qDh4PsEwxMbw==}
-    engines: {node: '>=0.4.0'}
-    dev: true
 
   /acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
@@ -4632,7 +4627,7 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
     dependencies:
-      caniuse-lite: 1.0.30001576
+      caniuse-lite: 1.0.30001633
       electron-to-chromium: 1.4.628
       node-releases: 2.0.14
       update-browserslist-db: 1.0.13(browserslist@4.22.2)
@@ -4755,13 +4750,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /caniuse-lite@1.0.30001576:
-    resolution: {integrity: sha512-ff5BdakGe2P3SQsMsiqmt1Lc8221NR1VzHj5jXN5vBny9A6fpze94HiVV/n7XRosOlsShJcvMv5mdnpjOGCEgg==}
-    dev: true
-
   /caniuse-lite@1.0.30001633:
     resolution: {integrity: sha512-6sT0yf/z5jqf8tISAgpJDrmwOpLsrpnyCdD/lOZKvKkkJK4Dn0X5i7KF7THEZhOq+30bmhwBlNEaqPUiHiKtZg==}
-    dev: false
 
   /capnp-ts@0.7.0:
     resolution: {integrity: sha512-XKxXAC3HVPv7r674zP0VC3RTXz+/JKhfyw94ljvF80yynK6VkTnqE3jMuN8b3dUVmmc43TjyxjW4KTsmB3c86g==}
@@ -5182,13 +5172,6 @@ packages:
 
   /csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
-
-  /d@1.0.1:
-    resolution: {integrity: sha512-m62ShEObQ39CfralilEQRjH6oAMtNCV1xJyEx5LpRYUVN+EviphDgUc/F3hnYbADmkiNs67Y+3ylmlG7Lnu+FA==}
-    dependencies:
-      es5-ext: 0.10.62
-      type: 1.2.0
-    dev: false
 
   /d@1.0.2:
     resolution: {integrity: sha512-MOqHvMWF9/9MX6nza0KgvFH4HpMU0EF5uUDXqX/BtxtU8NfB0QzRtJ8Oe/6SuS4kbhyzVJwjd97EA4PKrzJ8bw==}
@@ -5640,16 +5623,6 @@ packages:
       is-symbol: 1.0.4
     dev: true
 
-  /es5-ext@0.10.62:
-    resolution: {integrity: sha512-BHLqn0klhEpnOKSrzn/Xsz2UIW8j+cGmo9JLzr8BiUapV8hPL9+FliFqjwr9ngW7jWdnxv6eO+/LqyhJVqgrjA==}
-    engines: {node: '>=0.10'}
-    requiresBuild: true
-    dependencies:
-      es6-iterator: 2.0.3
-      es6-symbol: 3.1.3
-      next-tick: 1.1.0
-    dev: false
-
   /es5-ext@0.10.64:
     resolution: {integrity: sha512-p2snDhiLaXe6dahss1LddxqEm+SkuDvV8dnIQG0MWjyHpcMNfXKPE+/Cc0y+PhxJX3A4xGNeFCj5oc0BUh6deg==}
     engines: {node: '>=0.10'}
@@ -5664,16 +5637,9 @@ packages:
   /es6-iterator@2.0.3:
     resolution: {integrity: sha512-zw4SRzoUkd+cl+ZoE15A9o1oQd920Bb0iOJMQkQhl3jNc03YqVjAhG7scf9C5KWRU/R13Orf588uCC6525o02g==}
     dependencies:
-      d: 1.0.1
-      es5-ext: 0.10.62
-      es6-symbol: 3.1.3
-    dev: false
-
-  /es6-symbol@3.1.3:
-    resolution: {integrity: sha512-NJ6Yn3FuDinBaBRWl/q5X/s4koRHBrgKAu+yGI6JCBeiu3qrcbJhwT2GeR/EXVfylRk8dpQVJoLEFhK+Mu31NA==}
-    dependencies:
-      d: 1.0.1
-      ext: 1.7.0
+      d: 1.0.2
+      es5-ext: 0.10.64
+      es6-symbol: 3.1.4
     dev: false
 
   /es6-symbol@3.1.4:
@@ -5687,10 +5653,10 @@ packages:
   /es6-weak-map@2.0.3:
     resolution: {integrity: sha512-p5um32HOTO1kP+w7PRnB+5lQ43Z6muuMuIMffvDN8ZB4GcnjLBV6zGStpbASIMk4DCAvEaamhe2zhyCb/QXXsA==}
     dependencies:
-      d: 1.0.1
-      es5-ext: 0.10.62
+      d: 1.0.2
+      es5-ext: 0.10.64
       es6-iterator: 2.0.3
-      es6-symbol: 3.1.3
+      es6-symbol: 3.1.4
     dev: false
 
   /esbuild-plugin-alias@0.2.1:
@@ -6665,8 +6631,8 @@ packages:
   /event-emitter@0.3.5:
     resolution: {integrity: sha512-D9rRn9y7kLPnJ+hMq7S/nhvoKwwvVJahBi2BPmx3bvbsEdK3W9ii8cBSGjP+72/LnM4n6fo3+dkCX5FeTQruXA==}
     dependencies:
-      d: 1.0.1
-      es5-ext: 0.10.62
+      d: 1.0.2
+      es5-ext: 0.10.64
     dev: false
 
   /event-target-shim@6.0.2:
@@ -7043,6 +7009,7 @@ packages:
 
   /glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
@@ -7054,6 +7021,7 @@ packages:
   /glob@8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
     engines: {node: '>=12'}
+    deprecated: Glob versions prior to v9 are no longer supported
     dependencies:
       fs.realpath: 1.0.0
       inflight: 1.0.6
@@ -8225,7 +8193,7 @@ packages:
   /lru-queue@0.1.0:
     resolution: {integrity: sha512-BpdYkt9EvGl8OfWHDQPISVpcl5xZthb+XPsbELj5AQXxIC8IriDZIQYjBJPEm5rS420sjZ0TLEzRcq5KdBhYrQ==}
     dependencies:
-      es5-ext: 0.10.62
+      es5-ext: 0.10.64
     dev: false
 
   /lz-string@1.5.0:
@@ -8299,8 +8267,8 @@ packages:
   /memoizee@0.4.15:
     resolution: {integrity: sha512-UBWmJpLZd5STPm7PMUlOw/TSy972M+z8gcyQ5veOnSDRREz/0bmpyTfKt3/51DhEBqCZQn1udM/5flcSPYhkdQ==}
     dependencies:
-      d: 1.0.1
-      es5-ext: 0.10.62
+      d: 1.0.2
+      es5-ext: 0.10.64
       es6-weak-map: 2.0.3
       event-emitter: 0.3.5
       is-promise: 2.2.2
@@ -8377,7 +8345,7 @@ packages:
     engines: {node: '>=16.13'}
     dependencies:
       acorn: 8.11.3
-      acorn-walk: 8.3.1
+      acorn-walk: 8.3.2
       capnp-ts: 0.7.0
       exit-hook: 2.2.1
       glob-to-regexp: 0.4.1
@@ -10608,7 +10576,7 @@ packages:
   /timers-ext@0.1.7:
     resolution: {integrity: sha512-b85NUNzTSdodShTIbky6ZF02e8STtVVfD+fu4aXXShEELpozH+bCpJLYMPZbsABN2wDH7fJpqIoXxJpzbf0NqQ==}
     dependencies:
-      es5-ext: 0.10.62
+      es5-ext: 0.10.64
       next-tick: 1.1.0
     dev: false
 
@@ -10874,10 +10842,6 @@ packages:
   /type-fest@4.16.0:
     resolution: {integrity: sha512-z7Rf5PXxIhbI6eJBTwdqe5bO02nUUmctq4WqviFSstBAWV0YNtEQRhEnZw73WJ8sZOqgFG6Jdl8gYZu7NBJZnA==}
     engines: {node: '>=16'}
-    dev: false
-
-  /type@1.2.0:
-    resolution: {integrity: sha512-+5nt5AAniqsCnu2cEQQdpzCAh33kVx8n0VoFidKpB1dVVLAN/F+bgVOqOJqOnEnrhp222clB5p3vUlD+1QAnfg==}
     dev: false
 
   /type@2.7.2:
