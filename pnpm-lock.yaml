@@ -294,9 +294,6 @@ importers:
 
   packages/connect-partykit:
     dependencies:
-      '@fireproof/aws':
-        specifier: workspace:^
-        version: link:../connect-aws
       '@fireproof/encrypted-blockstore':
         specifier: workspace:^
         version: link:../encrypted-blockstore
