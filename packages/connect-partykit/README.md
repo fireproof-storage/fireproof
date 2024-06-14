@@ -64,3 +64,30 @@ The `connect.partykit` function is idempotent, and designed to be safe to call o
 
 Now you can use Fireproof as you normally would, and it will sync in realtime with other users. Any existing apps you have that use the [live query](https://use-fireproof.com/docs/react-hooks/use-live-query) or [subscription](https://use-fireproof.com/docs/database-api/database#subscribe) APIs will automatically render multi-user updates.
 
+## Remix connectors
+
+In this example we use both the S3 and PartyKit connectors. You can use any combination of connectors in your app.
+
+```ts
+function partykitS3({ name, blockstore }: Connectable, partyHost?: string, refresh?: boolean) {
+  if (!name) throw new Error('database name is required')
+  if (!refresh && partyCxs.has(name)) {
+    return partyCxs.get(name)!
+  }
+  const s3conf = { // example values, replace with your own by deploying https://github.com/fireproof-storage/valid-cid-s3-bucket
+    upload: 'https://04rvvth2b4.execute-api.us-east-2.amazonaws.com/uploads',
+    download: 'https://sam-app-s3uploadbucket-e6rv1dj2kydh.s3.us-east-2.amazonaws.com'
+  }
+  const s3conn = new ConnectS3(s3conf.upload, s3conf.download, '')
+  s3conn.connectStorage(blockstore)
+
+  if (!partyHost) {
+    console.warn('partyHost not provided, using localhost:1999')
+    partyHost = 'http://localhost:1999'
+  }
+  const connection = new ConnectPartyKit({ name, host: partyHost } as ConnectPartyKitParams)
+  connection.connectMeta(blockstore)
+  partyCxs.set(name, connection)
+  return connection
+}
+```
