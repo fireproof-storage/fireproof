@@ -1,47 +1,46 @@
-'use client'
+"use client";
 import { Database, fireproof } from "@fireproof/core";
-import { connect } from "@fireproof/ucan"
+import { connect } from "@fireproof/ucan";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import useSWR from 'swr'
-import useLocalStorageState from 'use-local-storage-state'
+import useSWR from "swr";
+import useLocalStorageState from "use-local-storage-state";
 
 type AuthFormValues = {
-  email: string
-}
+  email: string;
+};
 
-export default function Home () {
-  const [email, setEmail] = useLocalStorageState<string>('example-email')
-  const [db] = useState<Database>(fireproof('example'))
-  const [connection] = useState(connect.ucan(db, 'example-sync'))
+export default function Home() {
+  const [email, setEmail] = useLocalStorageState<string>("example-email");
+  const [db] = useState<Database>(fireproof("example"));
+  const [connection] = useState(connect.ucan(db, "example-sync"));
   const { register, handleSubmit } = useForm<AuthFormValues>();
-  const { data: docs, mutate: mutateTestThings } = useSWR(
-    'test things',
-    async () => db.query('test'),
-    {
-      refreshInterval: 1000
-    }
-  )
-  async function addThing () {
-    await db.put({ test: 'foo', time: Date.now() })
-    await mutateTestThings()
+  const { data: docs, mutate: mutateTestThings } = useSWR("test things", async () => db.query("test"), {
+    refreshInterval: 1000,
+  });
+  async function addThing() {
+    await db.put({ test: "foo", time: Date.now() });
+    await mutateTestThings();
   }
 
-  async function login (data: AuthFormValues) {
+  async function login(data: AuthFormValues) {
     // set email - the change will be detected and auth will happen below
-    setEmail(data.email)
+    setEmail(data.email);
   }
 
   // this will run any time email changes
-  useEffect(function () {
-    if (email) {
-      (async () => {
-        console.debug(`authorizing as ${email}`)
-        await connection.authorize(email as `${string}@${string}`)
-        console.debug(`authorized as ${email}`)
-      })()
-    }
-  }, [email])
+  useEffect(
+    function () {
+      if (email) {
+        (async () => {
+          console.debug(`authorizing as ${email}`);
+          await connection.authorize(email as `${string}@${string}`);
+          console.debug(`authorized as ${email}`);
+        })();
+      }
+    },
+    [email],
+  );
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
       {docs && docs.rows.map((r: any) => <pre key={r.id}>{JSON.stringify(r, null, 2)}</pre>)}
@@ -54,6 +53,6 @@ export default function Home () {
           <input type="submit" />
         </form>
       )}
-    </main >
+    </main>
   );
 }

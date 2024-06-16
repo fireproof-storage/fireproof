@@ -4,7 +4,7 @@ function Home() {
       <div>Welcome to the Fireproof demo using SolidJS!</div>
       <div>Feel free to explore the navbar tabs to see the different examples</div>
     </div>
-  )
+  );
 }
 
 export default Home;

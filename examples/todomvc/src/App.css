@@ -30,11 +30,11 @@
 }
 .app-header .app-title {
   margin-top: 12px;
-  margin-left: 16px
+  margin-left: 16px;
 }
 .app-header .app-logo {
-  height:77px;
-  margin-top:-8px
+  height: 77px;
+  margin-top: -8px;
 }
 .app-left-nav {
   margin: 30px;
@@ -45,25 +45,24 @@
   /* background: linear-gradient(217deg, rgba(255,160,0,.8), rgba(255,111,0,0) 70.71%),            linear-gradient(127deg, rgba(200,50,0,.8), rgba(0,0,0,0) 70.71%),            linear-gradient(336deg, rgba(255,0,0,.8), rgba(255,111,0,0) 70.71%); */
 }
 
-
 .listNav {
-	background: linear-gradient(-45deg, #000000, #ff6f00, #ffa000, #000, #ff8200);
-	background-size: 400% 400%;
-	animation: gradient 30s ease infinite;
+  background: linear-gradient(-45deg, #000000, #ff6f00, #ffa000, #000, #ff8200);
+  background-size: 400% 400%;
+  animation: gradient 30s ease infinite;
 }
 
 @keyframes gradient {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
     background-rotate: 180deg;
-	}
-	100% {
-		background-position: 0% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
     background-rotate: 270deg;
-	}
+  }
 }
 
 .dbInfo {
@@ -71,7 +70,7 @@
   top: 0;
   right: 0;
   width: 12rem;
-  padding:20px;
+  padding: 20px;
 
   background: radial-gradient(ellipse at top, #fdd, transparent), radial-gradient(ellipse at bottom, #efd, transparent);
   background-size: 400% 400%;

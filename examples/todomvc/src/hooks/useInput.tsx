@@ -1,20 +1,20 @@
 // from https://github.com/sw-yx/hooks/blob/master/src/index.tsx
 
-import * as React from 'react'
+import * as React from "react";
 
-let storageSupported = false
+let storageSupported = false;
 try {
-  storageSupported = window.localStorage && true
+  storageSupported = window.localStorage && true;
 } catch (e) {}
 
-export type Props = { text: string }
+export type Props = { text: string };
 
-const STRINGARRAYSERIALIZER = '#*#*#*#*#*STRINGARRAYSERIALIZER#*#*#*#*#*'
+const STRINGARRAYSERIALIZER = "#*#*#*#*#*STRINGARRAYSERIALIZER#*#*#*#*#*";
 const noOptions = {
   stateObserver: noop,
   localStorageName: undefined,
   controlled: false,
-}
+};
 /**
  * **useInput hook:**
  *
@@ -36,50 +36,50 @@ export function useInput(
   initialValue: number | string | string[],
   options?: {
     /** prop: pass a callback if you want to know about changes */
-    stateObserver?: (arg: typeof initialValue) => void
+    stateObserver?: (arg: typeof initialValue) => void;
     /** if you want to persist to localstorage, pass a name for it! */
-    localStorageName?: String
+    localStorageName?: String;
     /** pass true if you want a resetValue or setValue */
-    controlled?: boolean
-  }
+    controlled?: boolean;
+  },
 ) {
-  const { stateObserver, localStorageName, controlled } = options || noOptions
-  let _initialValue = initialValue
+  const { stateObserver, localStorageName, controlled } = options || noOptions;
+  let _initialValue = initialValue;
 
   // safely check localstorage and coerce the right types
-  if (storageSupported && typeof localStorageName === 'string') {
-    let v = localStorage.getItem(localStorageName)
+  if (storageSupported && typeof localStorageName === "string") {
+    let v = localStorage.getItem(localStorageName);
     if (v) {
-      if (typeof initialValue === 'number') _initialValue = Number(v)
-      else if (Array.isArray(v)) _initialValue = v.split(STRINGARRAYSERIALIZER)
-      else _initialValue = v // string
-      if (stateObserver) stateObserver(_initialValue)
+      if (typeof initialValue === "number") _initialValue = Number(v);
+      else if (Array.isArray(v)) _initialValue = v.split(STRINGARRAYSERIALIZER);
+      else _initialValue = v; // string
+      if (stateObserver) stateObserver(_initialValue);
     }
   }
 
-  let [value, setValue] = React.useState<typeof _initialValue>(_initialValue)
+  let [value, setValue] = React.useState<typeof _initialValue>(_initialValue);
   const onChange = (e: { target: { type: string; value: string } }) => {
-    if (e.target.type === 'checkbox') {
+    if (e.target.type === "checkbox") {
       throw new Error(
-        'useInput error - type=checkbox specified, this is likely a mistake by the developer. you may want useCheckInput instead'
-      )
+        "useInput error - type=checkbox specified, this is likely a mistake by the developer. you may want useCheckInput instead",
+      );
     }
-    let val = typeof initialValue === 'number' ? Number(e.target.value) : e.target.value
-    setValue(val)
-    if (storageSupported && typeof localStorageName === 'string') {
+    let val = typeof initialValue === "number" ? Number(e.target.value) : e.target.value;
+    setValue(val);
+    if (storageSupported && typeof localStorageName === "string") {
       if (val !== initialValue) {
-        localStorage.setItem(localStorageName, String(Array.isArray(val) ? val.join(STRINGARRAYSERIALIZER) : val))
+        localStorage.setItem(localStorageName, String(Array.isArray(val) ? val.join(STRINGARRAYSERIALIZER) : val));
       } else {
-        localStorage.removeItem(localStorageName)
+        localStorage.removeItem(localStorageName);
       }
     }
-    if (stateObserver) stateObserver(val)
-  }
-  const resetValue = () => setValue(initialValue)
+    if (stateObserver) stateObserver(val);
+  };
+  const resetValue = () => setValue(initialValue);
   if (controlled) {
-    return { onChange, value, setValue, resetValue }
+    return { onChange, value, setValue, resetValue };
   } else {
-    return { onChange, value }
+    return { onChange, value };
   }
 }
 

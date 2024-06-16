@@ -1,41 +1,41 @@
-import React, { Component, createRef } from 'react'
-import classNames from 'classnames'
+import React, { Component, createRef } from "react";
+import classNames from "classnames";
 
-const ESCAPE_KEY = 27
-const ENTER_KEY = 13
+const ESCAPE_KEY = 27;
+const ENTER_KEY = 13;
 
 class TodoItem extends Component {
-  state = { editText: this.props.todo.title }
-  EditFieldRef = createRef()
-  handleSubmit = event => {
-    const val = this.state.editText.trim()
+  state = { editText: this.props.todo.title };
+  EditFieldRef = createRef();
+  handleSubmit = (event) => {
+    const val = this.state.editText.trim();
     if (val) {
-      this.props.onSave(val)
-      this.setState({ editText: val })
+      this.props.onSave(val);
+      this.setState({ editText: val });
     } else {
-      this.props.onDestroy()
+      this.props.onDestroy();
     }
-  }
+  };
 
   handleEdit = () => {
-    this.props.onEdit()
-    this.setState({ editText: this.props.todo.title })
-  }
+    this.props.onEdit();
+    this.setState({ editText: this.props.todo.title });
+  };
 
-  handleKeyDown = event => {
+  handleKeyDown = (event) => {
     if (event.which === ESCAPE_KEY) {
-      this.setState({ editText: this.props.todo.title })
-      this.props.onCancel(event)
+      this.setState({ editText: this.props.todo.title });
+      this.props.onCancel(event);
     } else if (event.which === ENTER_KEY) {
-      this.handleSubmit(event)
+      this.handleSubmit(event);
     }
-  }
+  };
 
-  handleChange = event => {
+  handleChange = (event) => {
     if (this.props.editing) {
-      this.setState({ editText: event.target.value })
+      this.setState({ editText: event.target.value });
     }
-  }
+  };
 
   /**
    * This is a completely optional performance enhancement that you can
@@ -44,12 +44,10 @@ class TodoItem extends Component {
    * just use it as an example of how little code it takes to get an order
    * of magnitude performance improvement.
    */
-  shouldComponentUpdate (nextProps, nextState) {
+  shouldComponentUpdate(nextProps, nextState) {
     return (
-      nextProps.todo !== this.props.todo ||
-      nextProps.editing !== this.props.editing ||
-      nextState.editText !== this.state.editText
-    )
+      nextProps.todo !== this.props.todo || nextProps.editing !== this.props.editing || nextState.editText !== this.state.editText
+    );
   }
 
   /**
@@ -58,42 +56,37 @@ class TodoItem extends Component {
    * For more info refer to notes at https://facebook.github.io/react/docs/component-api.html#setstate
    * and https://facebook.github.io/react/docs/component-specs.html#updating-componentdidupdate
    */
-  componentDidUpdate (prevProps) {
+  componentDidUpdate(prevProps) {
     if (!prevProps.editing && this.props.editing) {
-      const node = this.EditFieldRef.current
-      node.focus()
-      node.setSelectionRange(node.value.length, node.value.length)
+      const node = this.EditFieldRef.current;
+      node.focus();
+      node.setSelectionRange(node.value.length, node.value.length);
     }
   }
 
-  render () {
+  render() {
     return (
       <li
         className={classNames({
           completed: this.props.todo.completed,
-          editing: this.props.editing
+          editing: this.props.editing,
         })}
       >
-        <div className='view'>
-          <input
-            className='toggle'
-            type='checkbox'
-            checked={this.props.todo.completed}
-            onChange={this.props.onToggle}
-          />
+        <div className="view">
+          <input className="toggle" type="checkbox" checked={this.props.todo.completed} onChange={this.props.onToggle} />
           <label onDoubleClick={this.handleEdit}>{this.props.todo.title}</label>
-          <button className='destroy' onClick={this.props.onDestroy} />
+          <button className="destroy" onClick={this.props.onDestroy} />
         </div>
         <input
           ref={this.EditFieldRef}
-          className='edit'
+          className="edit"
           value={this.state.editText}
           onBlur={this.handleSubmit}
           onChange={this.handleChange}
           onKeyDown={this.handleKeyDown}
         />
       </li>
-    )
+    );
   }
 }
-export default TodoItem
+export default TodoItem;
