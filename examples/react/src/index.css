@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
 
 * {
   box-sizing: border-box;
@@ -11,7 +11,9 @@ body {
   margin: 0;
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   text-wrap: balance;
 }
 
@@ -37,7 +39,7 @@ p {
 .nav-link {
   color: white;
   text-decoration: none;
-  font-family: 'IBM Plex Sans';
+  font-family: "IBM Plex Sans";
 }
 
 .nav-link-active {
@@ -45,7 +47,7 @@ p {
 }
 
 .app-title-container {
-  font-family: 'Futura';
+  font-family: "Futura";
   display: flex;
   align-items: center;
   font-size: 20px;

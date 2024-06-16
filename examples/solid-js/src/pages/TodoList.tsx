@@ -1,11 +1,11 @@
-import { For } from 'solid-js';
-import { TodoListDB } from '../databases';
-import { Todo } from '../types';
+import { For } from "solid-js";
+import { TodoListDB } from "../databases";
+import { Todo } from "../types";
 
 export default function TodoList() {
-  const todos = TodoListDB.createLiveQuery<Todo>('date', { limit: 10, descending: true })
+  const todos = TodoListDB.createLiveQuery<Todo>("date", { limit: 10, descending: true });
   const [todo, setTodo, saveTodo] = TodoListDB.createDocument<Todo>(() => ({
-    text: '',
+    text: "",
     date: Date.now(),
     completed: false,
   }));
@@ -13,24 +13,24 @@ export default function TodoList() {
   return (
     <>
       <div>
-        <input 
-          type="text" 
-          value={todo().text} 
+        <input
+          type="text"
+          value={todo().text}
           placeholder="new todo here"
-          onChange={e => {
-            setTodo({ text: e.target.value.trim() })
-          }} 
+          onChange={(e) => {
+            setTodo({ text: e.target.value.trim() });
+          }}
         />
         <button
           onClick={async () => {
-            await saveTodo()
-            setTodo()
+            await saveTodo();
+            setTodo();
           }}
         >
           Add Todo
         </button>
       </div>
-      <For each={(todos().docs)}>
+      <For each={todos().docs}>
         {(todo) => {
           return (
             <div>
@@ -41,7 +41,7 @@ export default function TodoList() {
               />
               <span
                 style={{
-                  'text-decoration': todo.completed ? 'line-through' : 'none',
+                  "text-decoration": todo.completed ? "line-through" : "none",
                 }}
               >
                 {todo.text}
@@ -52,4 +52,4 @@ export default function TodoList() {
       </For>
     </>
   );
-};
+}

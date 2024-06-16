@@ -1,14 +1,14 @@
 name: Test
-description: 'Setup and test'
+description: "Setup and test"
 
 runs:
   using: "composite"
   steps:
     - uses: actions/setup-node@v4
       with:
-        registry-url: 'https://registry.npmjs.org'
+        registry-url: "https://registry.npmjs.org"
         node-version: 20
-        cache: 'npm'
+        cache: "npm"
     - run: npm ci
       shell: bash
     - run: npm run lint

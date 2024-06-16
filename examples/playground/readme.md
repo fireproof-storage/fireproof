@@ -12,4 +12,3 @@ Including handy presets:
 
 "npm run start" for a live reloading dev server using esbuild's watch and servor with no minifying + sourcemap
 "npm run build" for the minified production build.
- 
