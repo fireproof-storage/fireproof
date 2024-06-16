@@ -8,11 +8,7 @@ const outdirectory = "dist";
 fs.readdir(outdirectory, (err, files) => {
   if (err) throw err;
   for (const file of files) {
-    if (
-      file.endsWith(".js") ||
-      file.endsWith(".css") ||
-      file.endsWith(".js.map")
-    ) {
+    if (file.endsWith(".js") || file.endsWith(".css") || file.endsWith(".js.map")) {
       fs.unlink(path.join(outdirectory, file), (err) => {
         if (err) throw err;
       });
@@ -58,7 +54,7 @@ async function serve() {
   console.log("running server from: http://localhost:8080/");
   const servor = require("servor");
   await servor({
-    browser:true,
+    browser: true,
     root: outdirectory,
     port: 8080,
   });

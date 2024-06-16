@@ -1,27 +1,27 @@
-import React from 'react'
-import { useContext } from 'react'
-import { Link, useLoaderData, useRevalidator } from 'react-router-dom'
-import InputArea from './InputArea'
-import { FireproofCtx, FireproofCtxValue } from 'use-fireproof'
-import { TimeTravel } from './TimeTravel'
-import { UploadManager } from '../hooks/useUploader'
-import { useKeyring } from '@w3ui/react-keyring'
-import { ListDoc } from '../interfaces'
-import { makeQueryFunctions } from '../makeQueryFunctions'
+import React from "react";
+import { useContext } from "react";
+import { Link, useLoaderData, useRevalidator } from "react-router-dom";
+import InputArea from "./InputArea";
+import { FireproofCtx, FireproofCtxValue } from "use-fireproof";
+import { TimeTravel } from "./TimeTravel";
+import { UploadManager } from "../hooks/useUploader";
+import { useKeyring } from "@w3ui/react-keyring";
+import { ListDoc } from "../interfaces";
+import { makeQueryFunctions } from "../makeQueryFunctions";
 
 const threeEmptyLists: ListDoc[] = [
-  { title: '', _id: '', type: 'list' },
-  { title: '', _id: '', type: 'list' },
-  { title: '', _id: '', type: 'list' },
-]
+  { title: "", _id: "", type: "list" },
+  { title: "", _id: "", type: "list" },
+  { title: "", _id: "", type: "list" },
+];
 
 const todoItems = ({ title, _id }: ListDoc, i: number) => {
-  if (_id === '') {
+  if (_id === "") {
     return (
       <li key={_id || i}>
         <label>&nbsp;</label>
       </li>
-    )
+    );
   } else {
     return (
       <li key={_id || i}>
@@ -29,9 +29,9 @@ const todoItems = ({ title, _id }: ListDoc, i: number) => {
           <Link to={`/list/${_id}`}>{title}</Link>
         </label>
       </li>
-    )
+    );
   }
-}
+};
 
 /**
  * A React functional component that renders a list of todo lists.
@@ -41,30 +41,30 @@ const todoItems = ({ title, _id }: ListDoc, i: number) => {
  */
 export function AllLists(): JSX.Element {
   // first data stuff
-  const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue
-  const { addList } = makeQueryFunctions({ ready, database })
+  const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue;
+  const { addList } = makeQueryFunctions({ ready, database });
 
-  const revalidator = useRevalidator()
-  addSubscriber('AllLists', () => {
+  const revalidator = useRevalidator();
+  addSubscriber("AllLists", () => {
     // console.log('revalidating', name)
-    revalidator.revalidate()
-  })
+    revalidator.revalidate();
+  });
 
-  let lists = useLoaderData() as ListDoc[]
+  let lists = useLoaderData() as ListDoc[];
   if (lists.length == 0) {
-    lists = threeEmptyLists
+    lists = threeEmptyLists;
   }
   // now upload stuff
   // const { registered } = useContext(UploaderCtx)
   // const { registered } = useContext(UploaderCtx)
-  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring()
-  const registered = Boolean(space?.registered())
+  const [{ agent, space }, { getProofs, loadAgent }] = useKeyring();
+  const registered = Boolean(space?.registered());
   return (
     <div>
       <div className="listNav">
         <button
           onClick={async () => {
-            console.log('await database.changesSince()', await database.changesSince())
+            console.log("await database.changesSince()", await database.changesSince());
           }}
         >
           Choose a list.
@@ -78,5 +78,5 @@ export function AllLists(): JSX.Element {
         {/* <UploadManager registered={registered} /> */}
       </div>
     </div>
-  )
+  );
 }

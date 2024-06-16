@@ -1,10 +1,9 @@
-const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`
-const clockLog = new Set<string>()
-
+const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`;
+const clockLog = new Set<string>();
 
 export const TimeTravel = ({ database }) => {
-  database.clock && database.clock.length && clockLog.add(database.clock.toString())
-  const diplayClocklog = Array.from(clockLog).reverse()
+  database.clock && database.clock.length && clockLog.add(database.clock.toString());
+  const diplayClocklog = Array.from(clockLog).reverse();
   return (
     <div className="timeTravel">
       <h2>Time Travel</h2>
@@ -23,12 +22,12 @@ export const TimeTravel = ({ database }) => {
       </p>
       <p>Clock log (newest first): </p>
       <ul>
-        {diplayClocklog.map(entry => (
+        {diplayClocklog.map((entry) => (
           <li key={entry}>
             <button
               onClick={async () => {
                 // await Fireproof.zoom(database, [entry])
-                console.log('todo zoom', entry)
+                console.log("todo zoom", entry);
               }}
             >
               {shortLink(entry)}
@@ -37,5 +36,5 @@ export const TimeTravel = ({ database }) => {
         ))}
       </ul>
     </div>
-  )
-}
+  );
+};

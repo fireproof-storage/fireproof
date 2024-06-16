@@ -4,7 +4,7 @@
   "private": true,
   "description": "Live database for the web",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "tsc",
     "build:basic": "pnpm build:blockstore && pnpm build:core",
     "build:blockstore": "pnpm --filter @fireproof/encrypted-blockstore build",
     "build:clean": "pnpm -r build:clean",
@@ -45,7 +45,8 @@
     "test:cov:react": "pnpm --filter use-fireproof test:cov",
     "test:cov:solid": "pnpm --filter @fireproof/solid-js test:cov",
     "test:react": "pnpm --filter use-fireproof test",
-    "test:solid": "pnpm --filter @fireproof/solid-js test"
+    "test:solid": "pnpm --filter @fireproof/solid-js test",
+    "format": "prettier ."
   },
   "keywords": [
     "database",
@@ -73,5 +74,28 @@
   "bugs": {
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "homepage": "https://github.com/fireproof-storage/fireproof#readme"
+  "homepage": "https://github.com/fireproof-storage/fireproof#readme",
+  "dependencies": {
+    "@ipld/car": "^5.3.1",
+    "@ipld/dag-cbor": "^9.2.0",
+    "@ipld/dag-json": "^10.2.1",
+    "@ipld/unixfs": "^3.0.0",
+    "@netlify/blobs": "^7.3.0",
+    "@peculiar/webcrypto": "^1.5.0",
+    "@ucanto/interface": "^10.0.1",
+    "@web3-storage/clock": "^0.4.1",
+    "@web3-storage/pail": "^0.6.0",
+    "@web3-storage/w3up-client": "^15.0.0",
+    "cross-fetch": "^4.0.0",
+    "idb": "^8.0.0",
+    "ipfs-unixfs-exporter": "^13.5.0",
+    "js-base64": "^3.7.7",
+    "multiformats": "^13.1.1",
+    "p-limit": "^5.0.0",
+    "prettier": "^3.3.2",
+    "prolly-trees": "^1.0.4",
+    "typescript": "^5.4.5",
+    "uuidv7": "^1.0.0",
+    "vite": "^5.3.1"
+  }
 }
