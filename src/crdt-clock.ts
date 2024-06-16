@@ -1,18 +1,18 @@
 import { clockChangesSince } from "./crdt-helpers";
 import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/";
-import type { DocUpdate, ClockHead } from "./types";
+import type { DocUpdate, ClockHead, IndexKeyType } from "./types";
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue";
 
-export class CRDTClock {
+export class CRDTClock<T, K extends IndexKeyType> {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
   // should go with making sure the local clock only references locally available blockstore on write
   head: ClockHead = [];
 
   readonly zoomers: Set<() => void> = new Set();
-  readonly watchers: Set<(updates: DocUpdate[]) => void> = new Set();
+  readonly watchers: Set<(updates: DocUpdate<T, K>[]) => void> = new Set();
   readonly emptyWatchers: Set<() => void> = new Set();
 
   blockstore?: EncryptedBlockstore;
@@ -27,7 +27,7 @@ export class CRDTClock {
     this.head = head;
   }
 
-  async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate[]) {
+  async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<T, K>[]) {
     for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({
       newHead,
       prevHead,
@@ -37,22 +37,22 @@ export class CRDTClock {
     }
   }
 
-  async processUpdates(updatesAcc: DocUpdate[], all: boolean, prevHead: ClockHead) {
+  async processUpdates(updatesAcc: DocUpdate<T, K>[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc;
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince(this.blockstore!, this.head, prevHead, {});
+      const changes = await clockChangesSince<T, K>(this.blockstore!, this.head, prevHead, {});
       internalUpdates = changes.result;
     }
     this.zoomers.forEach((fn) => fn());
     this.notifyWatchers(internalUpdates || []);
   }
 
-  notifyWatchers(updates: DocUpdate[]) {
+  notifyWatchers(updates: DocUpdate<T, K>[]) {
     this.emptyWatchers.forEach((fn) => fn());
     this.watchers.forEach((fn) => fn(updates || []));
   }
 
-  onTick(fn: (updates: DocUpdate[]) => void) {
+  onTick(fn: (updates: DocUpdate<T, K>[]) => void) {
     this.watchers.add(fn);
   }
 

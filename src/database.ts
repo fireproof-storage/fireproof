@@ -52,14 +52,19 @@ export class Database implements Connectable {
     });
     if (!got) throw new Error(`Not found: ${id}`);
     const { doc } = got;
-    return { _id: id, ...doc } as Doc<T>;
+    return { ...doc, _id: id } as Doc<T>;
   }
 
   async put<T extends DocRecord<T> = {}>(doc: Doc<T>): Promise<DbResponse> {
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
-    const result: CRDTMeta = await this._writeQueue.push({ key: docId, value } as DocUpdate);
-    return { id: docId, clock: result?.head } as DbResponse;
+    const result: CRDTMeta = await this._writeQueue.push({
+      key: docId, value: {
+        ...value,
+        _id: docId,
+      }
+    });
+    return { id: docId, clock: result?.head };
   }
 
   async del(id: string): Promise<DbResponse> {

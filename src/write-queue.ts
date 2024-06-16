@@ -1,19 +1,19 @@
-import { CRDTMeta, DocUpdate } from "./types";
+import { CRDTMeta, DocUpdate, IndexKeyType } from "./types";
 
-type WorkerFunction = (tasks: DocUpdate[]) => Promise<CRDTMeta>;
+type WorkerFunction<T, K extends IndexKeyType> = (tasks: DocUpdate<T, K>[]) => Promise<CRDTMeta>;
 
-export interface WriteQueue {
-  push(task: DocUpdate): Promise<CRDTMeta>;
+export interface WriteQueue<T, K extends IndexKeyType> {
+  push(task: DocUpdate<T, K>): Promise<CRDTMeta>;
 }
 
-interface WriteQueueItem {
-  readonly task: DocUpdate;
+interface WriteQueueItem<T, K extends IndexKeyType> {
+  readonly task: DocUpdate<T, K>;
   resolve(result: CRDTMeta): void;
   reject(error: Error): void;
 }
 
-export function writeQueue(worker: WorkerFunction, payload: number = Infinity, unbounded: boolean = false): WriteQueue {
-  const queue: WriteQueueItem[] = [];
+export function writeQueue<T, K extends IndexKeyType>(worker: WorkerFunction<T, K>, payload: number = Infinity, unbounded: boolean = false): WriteQueue<T, K> {
+  const queue: WriteQueueItem<T, K>[] = [];
   let isProcessing = false;
 
   async function process() {
@@ -50,7 +50,7 @@ export function writeQueue(worker: WorkerFunction, payload: number = Infinity, u
   }
 
   return {
-    push(task: DocUpdate): Promise<CRDTMeta> {
+    push(task: DocUpdate<T, K>): Promise<CRDTMeta> {
       return new Promise<CRDTMeta>((resolve, reject) => {
         queue.push({ task, resolve, reject });
         void process();

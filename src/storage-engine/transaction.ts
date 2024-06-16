@@ -35,7 +35,13 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
 export class EncryptedBlockstore implements BlockFetcher {
   readonly ready: Promise<void>;
   readonly name?: string;
-  readonly loader?: Loader;
+  readonly _loader?: Loader;
+
+  get loader(): Loader {
+    if (!this._loader) throw new Error("loader not ready")
+    return this._loader;
+  }
+
   readonly ebOpts: BlockstoreOpts;
   readonly transactions: Set<CarTransaction> = new Set();
   lastTxMeta?: TransactionMeta;
@@ -46,7 +52,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     const { name } = ebOpts;
     if (name) {
       this.name = name;
-      this.loader = new Loader(name, this.ebOpts);
+      this._loader = new Loader(name, this.ebOpts);
       this.ready = this.loader.ready;
     } else {
       this.ready = Promise.resolve();

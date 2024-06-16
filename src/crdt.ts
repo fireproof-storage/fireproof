@@ -12,21 +12,21 @@ import {
   getBlock,
   doCompact,
 } from "./crdt-helpers";
-import type { DocUpdate, CRDTMeta, ClockHead, ConfigOpts, ChangesOptions, IdxMetaMap, DocValue } from "./types";
+import type { DocUpdate, CRDTMeta, ClockHead, ConfigOpts, ChangesOptions, IdxMetaMap, DocValue, IndexKeyType } from "./types";
 import { index, type Index } from "./index";
 import { CRDTClock } from "./crdt-clock";
 import { Block } from "multiformats";
 
-export class CRDT {
+export class CRDT<T, K extends IndexKeyType> {
   readonly name?: string;
   readonly opts: ConfigOpts = {};
   readonly ready: Promise<void>;
   readonly blockstore: EncryptedBlockstore;
   readonly indexBlockstore: EncryptedBlockstore;
 
-  readonly indexers: Map<string, Index> = new Map();
+  readonly indexers: Map<string, Index<unknown, unknown>> = new Map();
 
-  readonly clock: CRDTClock = new CRDTClock();
+  readonly clock: CRDTClock<T, K> = new CRDTClock<T, K>();
 
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name;
@@ -61,7 +61,7 @@ export class CRDT {
       public: this.opts.public,
       store,
     });
-    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {});
+    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => { });
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
@@ -69,15 +69,16 @@ export class CRDT {
     });
   }
 
-  async bulk(updates: DocUpdate[]): Promise<CRDTMeta> {
+  async bulk(updates: DocUpdate<T, K>[]): Promise<CRDTMeta> {
     await this.ready;
     const prevHead = [...this.clock.head];
 
     const meta = (await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
-      const { head } = await applyBulkUpdateToCrdt(blocks, this.clock.head, updates);
-      updates = updates.map(({ key, value, del, clock }) => {
-        readFiles(this.blockstore, { doc: value });
-        return { key, value, del, clock };
+      const { head } = await applyBulkUpdateToCrdt<T, K>(blocks, this.clock.head, updates);
+      updates = updates.map((dupdate: DocUpdate<T, K>) => {
+        if (!dupdate.value) throw new Error("missing value");
+        readFiles(this.blockstore, { doc: dupdate.value });
+        return dupdate
       });
       return { head } as TransactionMeta;
     })) as CRDTMeta;
@@ -87,10 +88,10 @@ export class CRDT {
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
-  async allDocs(): Promise<{ result: DocUpdate[]; head: ClockHead }> {
+  async allDocs(): Promise<{ result: DocUpdate<T, K>[]; head: ClockHead }> {
     await this.ready;
-    const result: DocUpdate[] = [];
-    for await (const entry of getAllEntries(this.blockstore, this.clock.head)) {
+    const result: DocUpdate<T, K>[] = [];
+    for await (const entry of getAllEntries<T, K>(this.blockstore, this.clock.head)) {
       result.push(entry);
     }
     return { result, head: this.clock.head };
@@ -110,10 +111,10 @@ export class CRDT {
     return await getBlock(this.blockstore, cidString);
   }
 
-  async get(key: string): Promise<DocValue | null> {
+  async get(key: string): Promise<DocValue<T> | undefined> {
     await this.ready;
-    const result = await getValueFromCrdt(this.blockstore, this.clock.head, key);
-    if (result.del) return null;
+    const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
+    if (result.del) return undefined;
     return result;
   }
 
@@ -121,7 +122,7 @@ export class CRDT {
     since: ClockHead = [],
     opts: ChangesOptions = {},
   ): Promise<{
-    result: DocUpdate[];
+    result: DocUpdate<T, K>[];
     head: ClockHead;
   }> {
     await this.ready;

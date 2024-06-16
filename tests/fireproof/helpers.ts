@@ -4,7 +4,7 @@ import { join, dirname } from "path";
 import { promises as fs, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 
-import { MetaStore } from "../../encrypted-blockstore/dist/lib/store-node.js";
+import { MetaStore } from "../../src/node/store-node"
 
 const dataDir = MetaStore.dataDir;
 
@@ -14,29 +14,29 @@ const { mkdir, readdir, rm, copyFile } = fs;
 
 export { assert };
 
-export function equals(actual, expected) {
+export function equals<T>(actual: T, expected: T) {
   assert(actual === expected, `Expected '${actual}' to equal '${expected}'`);
 }
 
-export function equalsJSON(actual, expected) {
+export function equalsJSON<T>(actual: T, expected: T) {
   equals(JSON.stringify(actual), JSON.stringify(expected));
 }
 
-export function notEquals(actual, expected) {
+export function notEquals<T>(actual: T, expected: T) {
   assert(actual !== expected, `Expected '${actual} 'to not equal '${expected}'`);
 }
 
-export function matches(actual, expected) {
+export function matches<T extends { toString: () => string }>(actual: T, expected: T) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-  assert(actual.toString().match(expected), `Expected '${actual}' to match ${expected}`);
+  assert(actual.toString().match(expected.toString()), `Expected '${actual}' to match ${expected}`);
 }
 
-export async function resetDirectory(dir, name) {
+export async function resetDirectory(dir: string, name: string) {
   await doResetDirectory(dir, name);
   await doResetDirectory(dir, name + ".idx");
 }
 
-export async function doResetDirectory(dir, name) {
+export async function doResetDirectory(dir: string, name: string) {
   const path = join(dir, name);
   await mkdir(path, { recursive: true });
 
@@ -48,7 +48,7 @@ export async function doResetDirectory(dir, name) {
 }
 
 // Function to copy a directory
-export async function copyDirectory(source, destination) {
+export async function copyDirectory(source: string, destination: string) {
   // Ensure the destination directory exists
   await mkdir(destination, { recursive: true });
 
@@ -70,14 +70,14 @@ export async function copyDirectory(source, destination) {
   }
 }
 
-export function getDirectoryName(url) {
+export function getDirectoryName(url: string) {
   const path = fileURLToPath(url);
   const dir_name = dirname(path);
   return dir_name;
 }
 
 export function readImages(directory, imagedirectoryname, imagenames) {
-  let images = [];
+  let images: Buffer[] = [];
   const imagesdirectorypath = join(directory, imagedirectoryname);
   imagenames.forEach((image) => {
     const data = readFileSync(join(imagesdirectorypath, image));
