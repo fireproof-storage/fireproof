@@ -1,13 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable mocha/max-top-level-suites */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
-import { Database } from "../dist/test/database.js";
-// import { Doc } from '../dist/test/types.d.esm.js'
-// import { MetaStore } from '../../fireproof/dist/test/store-fs.esm.js'
+import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.ts";
+import { Database, DbResponse } from "../../src/index.ts";
 
 /**
  * @typedef {Object.<string, any>} DocBody
@@ -19,30 +11,30 @@ import { Database } from "../dist/test/database.js";
  * @property {DocBody} [property] - an additional property
  */
 
-describe("basic Database", function () {
+describe("basic Database", () => {
   /** @type {Database} */
   let db;
-  beforeEach(function () {
+  beforeEach(() => {
     db = new Database();
   });
-  it("should put", async function () {
+  it("should put", async () => {
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
     const ok = await db.put(doc);
     equals(ok.id, "hello");
   });
-  it("get missing should throw", async function () {
+  it("get missing should throw", async () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
     const e = await db.get("missing").catch((e) => e);
     matches(e.message, /Not found/);
   });
-  it("del missing should result in deleted state", async function () {
+  it("del missing should result in deleted state", async () => {
     await db.del("missing");
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
     const e = await db.get("missing").catch((e) => e);
     matches(e.message, /Not found/);
   });
-  it("has no changes", async function () {
+  it("has no changes", async () => {
     const { rows } = await db.changes([]);
     equals(rows.length, 0);
   });
@@ -217,7 +209,7 @@ describe("named Database with record", function () {
 describe("basic Database parallel writes / public", function () {
   /** @type {Database} */
   let db;
-  const writes = [];
+  const writes: DbResponse[] = [];
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-parallel-writes");
     db = new Database("test-parallel-writes", { public: true });
@@ -252,7 +244,7 @@ describe("basic Database parallel writes / public", function () {
     }
   });
   it("should delete all in parallel", async function () {
-    const deletes = [];
+    const deletes: DbResponse[] = [];
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
       deletes.push(db.del(id));
@@ -260,7 +252,6 @@ describe("basic Database parallel writes / public", function () {
     await Promise.all(deletes);
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       const e = await db.get(id).catch((e) => e);
       matches(e.message, /Not found/);
     }
@@ -357,10 +348,10 @@ describe("basic Database with no update subscription", function () {
 describe("database with files input", async function () {
   /** @type {Database} */
   let db;
-  let imagefiles = [];
+  let imagefiles: File[] = [];
   let result;
 
-  before(function () {
+  beforeAll(function () {
     let directoryname = getDirectoryName(import.meta.url);
     let [jpg, png] = readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
     imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: "image/jpeg" }));

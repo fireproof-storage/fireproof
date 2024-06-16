@@ -1,17 +1,8 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable mocha/max-top-level-suites */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir } from "./helpers.js";
 
 import { CID } from "multiformats/cid";
 
-import { fireproof, Database } from "../dist/test/database.js";
-import { index } from "../dist/test/index.js";
+import { fireproof, Database, index, DbResponse } from "../../src/index.js";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -99,7 +90,7 @@ describe("basic database", function () {
   it("can define an index", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     assert(ok);
-    const idx = index(db, "test-index", (doc) => doc.foo);
+    const idx = index<{ foo: string }, string>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     assert(result);
     assert(result.rows);
@@ -139,7 +130,7 @@ describe("benchmarking with compaction", function () {
 
     let doing = null;
     for (let i = 0; i < numDocs; i += batchSize) {
-      const ops = [];
+      const ops: Promise<DbResponse | void>[] = [];
       db.put({ foo: "fast" });
       // await doing
       // doing = db.compact()
@@ -168,12 +159,12 @@ describe("benchmarking with compaction", function () {
     }
     await doing;
     console.timeEnd(`insert and read ${numDocs} records`);
-  }).timeout(20000000);
+  }, 20000000);
 });
 
 describe("benchmarking a database", function () {
   /** @type {Database} */
-  let db;
+  let db: Database;
   beforeEach(async function () {
     // erase the existing test data
     await resetDirectory(dataDir, "test-benchmark");
@@ -187,7 +178,7 @@ describe("benchmarking a database", function () {
   //      npm test -- --grep 'insert and read many records'
   //
   // eslint-disable-next-line mocha/no-skipped-tests
-  it.skip("passing: insert and read many records", async function () {
+  it.skip("passing: insert and read many records", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -200,7 +191,7 @@ describe("benchmarking a database", function () {
     console.time(`insert and read ${numDocs} records`);
 
     for (let i = 0; i < numDocs; i += batchSize) {
-      const ops = [];
+      const ops: Promise<DbResponse | void>[] = [];
       for (let j = 0; j < batchSize && i + j < numDocs; j++) {
         ops.push(
           db
@@ -288,7 +279,7 @@ describe("benchmarking a database", function () {
     equals(result3.rows.length, numDocs + 2);
 
     console.time("compacted newDb2 insert and read 100 records");
-    const ops2 = [];
+    const ops2: Promise<void>[] = [];
     for (let i = 0; i < 100; i++) {
       const ok = newDb2
         .put({
@@ -298,7 +289,7 @@ describe("benchmarking a database", function () {
             .repeat(25 * 1024),
         })
         .then((ok) => {
-          newDb2.get(`test${i}`).then((doc) => {
+          newDb2.get<{ fire: number }>(`test${i}`).then((doc) => {
             assert(doc.fire);
           });
         });
@@ -313,7 +304,7 @@ describe("benchmarking a database", function () {
     // const allDocsResult3 = await newDb2.allDocs()
     // console.timeEnd('compacted allDocs new DB2')
     // equals(allDocsResult3.rows.length, numDocs+2)
-  }).timeout(20000000);
+  }, 20000000);
 });
 
 describe("Reopening a database", function () {
@@ -374,7 +365,7 @@ describe("Reopening a database", function () {
       const doc = await db.get(`test${i}`);
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
-  }).timeout(20000);
+  }, 20000);
 
   // eslint-disable-next-line mocha/no-skipped-tests
   it.skip("passing slow, should have the same data on reopen after reopen and update", async function () {
@@ -397,7 +388,7 @@ describe("Reopening a database", function () {
       console.timeEnd("db get");
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
-  }).timeout(20000);
+  }, 20000);
 });
 
 describe("Reopening a database with indexes", function () {

@@ -1,14 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Index, index } from "../dist/test/index.js";
-import { Database } from "../dist/test/database.js";
-import { CRDT } from "../dist/test/crdt.js";
+import { Index, index, Database, CRDT } from "../../src/index.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { assert, matches, equals, resetDirectory, equalsJSON, dataDir } from "./helpers.js";
+
+type TestType = {
+  readonly title: string;
+  readonly score: number;
+}
 
 describe("basic Index", function () {
   let db, indexer, didMap;
@@ -19,7 +17,7 @@ describe("basic Index", function () {
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index(db._crdt, "hello", (doc) => {
+    indexer = new Index<TestType, string>(db._crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
     });
@@ -88,7 +86,7 @@ describe("Index query with compound key", function () {
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
     await db.put({ title: "bazillas", score: 3 });
-    indexer = new Index(db._crdt, "hello", (doc) => {
+    indexer = new Index<TestType, string>(db._crdt, "hello", (doc) => {
       return [doc.title, doc.score];
     });
   });
@@ -109,7 +107,7 @@ describe("basic Index with map fun", function () {
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index(db._crdt, "hello", (doc, map) => {
+    indexer = new Index<TestType, string>(db._crdt, "hello", (doc, map) => {
       map(doc.title);
     });
   });
@@ -131,7 +129,7 @@ describe("basic Index with map fun with value", function () {
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index(db._crdt, "hello", (doc, map) => {
+    indexer = new Index<TestType, string>(db._crdt, "hello", (doc, map) => {
       map(doc.title, doc.title.length);
     });
   });
@@ -162,7 +160,7 @@ describe("Index query with map and compound key", function () {
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
     await db.put({ title: "bazillas", score: 3 });
-    indexer = new Index(db._crdt, "hello", (doc, emit) => {
+    indexer = new Index<TestType, string>(db._crdt, "hello", (doc, emit) => {
       emit([doc.title, doc.score]);
     });
   });
@@ -244,7 +242,7 @@ describe("basic Index upon cold start", function () {
   });
   it.skip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
-    const crdt2 = new CRDT("test-indexer-cold", { persistIndexes: true });
+    const crdt2 = new CRDT<TestType, string>("test-indexer-cold", { persistIndexes: true });
     const indexer2 = await index({ _crdt: crdt2 }, "hello", mapFn);
     const { result, head } = await crdt2.changes([]);
     equals(result.length, 3);
@@ -258,7 +256,7 @@ describe("basic Index upon cold start", function () {
     assert(result2);
     equals(result2.rows.length, 3);
     equals(didMap, 0);
-    await crdt2.bulk([{ key: "abc4", value: { title: "despicable" } }]);
+    await crdt2.bulk([{ key: "abc4", value: { title: "despicable", score: 0 } }]);
 
     const { result: ch3, head: h3 } = await crdt2.changes(head);
     equals(ch3.length, 1);
@@ -269,8 +267,8 @@ describe("basic Index upon cold start", function () {
     equals(didMap, 1);
   });
   it("should ignore meta when map function definiton changes", async function () {
-    const crdt2 = new CRDT("test-indexer-cold");
-    const result = await index({ _crdt: crdt2 }, "hello", (doc) => doc.title.split("").reverse().join("")).query();
+    const crdt2 = new CRDT<TestType, string>("test-indexer-cold");
+    const result = await index<TestType, string>({ _crdt: crdt2 }, "hello", (doc) => doc.title.split("").reverse().join("")).query();
     equals(result.rows.length, 3);
     equals(result.rows[0].key, "evitaerc"); // creative
   });
@@ -282,7 +280,7 @@ describe("basic Index with no data", function () {
     await resetDirectory(dataDir, "test-indexer");
 
     db = new Database("test-indexer");
-    indexer = new Index(db._crdt, "hello", (doc) => {
+    indexer = new Index<TestType, string>(db._crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
     });

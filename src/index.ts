@@ -8,8 +8,10 @@ import type {
   DocFragment,
   IdxMetaMap,
   IndexRow,
-  Doc,
-  DocRecord,
+  DbResponse,
+  DocBase,
+  IndexKey,
+  IndexKeyType
 } from "./types";
 import { EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 import {
@@ -22,27 +24,39 @@ import {
   encodeRange,
   encodeKey,
   loadIndex,
+  IndexDoc,
 } from "./indexer-helpers";
 import { CRDT } from "./crdt";
 
-export function index({ _crdt }: { _crdt: CRDT }, name: string, mapFn?: MapFn, meta?: IdxMeta): Index {
+export { CRDT, DocBase };
+
+export { Database, fireproof } from "./database";
+
+export type { DocUpdate, MapFn, IndexUpdate, QueryOpts, IdxMeta, DocFragment, IdxMetaMap, IndexRow, ClockHead, DbResponse };
+
+export function index<T, K extends IndexKeyType>({ _crdt }: { _crdt: CRDT<T, K> }, name: string, mapFn?: MapFn<T>, meta?: IdxMeta): Index<T> {
   if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
   if (mapFn && mapFn.constructor.name !== "Function") throw new Error("mapFn must be a function");
   if (_crdt.indexers.has(name)) {
     const idx = _crdt.indexers.get(name)!;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index(_crdt, name, mapFn, meta);
-    _crdt.indexers.set(name, idx);
+    const idx = new Index<T, K>(_crdt, name, mapFn, meta);
+    _crdt.indexers.set(name, idx as Index<unknown, unknown>);
   }
-  return _crdt.indexers.get(name)!;
+  return _crdt.indexers.get(name) as Index<T, K>;
 }
 
-export class Index {
+type ByIdIndexIten = {
+  readonly key: string
+  readonly value: [string, string]
+}
+
+export class Index<T, K extends IndexKeyType> {
   readonly blockstore: EncryptedBlockstore;
-  readonly crdt: CRDT;
+  readonly crdt: CRDT<T, K>;
   name?: string;
-  mapFn?: MapFn;
+  mapFn?: MapFn<T>;
   mapFnString: string = "";
   byKey: IndexTree = new IndexTree();
   byId: IndexTree = new IndexTree();
@@ -51,12 +65,12 @@ export class Index {
   initError?: Error;
   readonly ready: Promise<void>;
 
-  constructor(crdt: CRDT, name: string, mapFn?: MapFn, meta?: IdxMeta) {
+  constructor(crdt: CRDT<T, K>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt;
     this.applyMapFn(name, mapFn, meta);
     if (!(this.mapFnString || this.initError)) throw new Error("missing mapFnString");
-    this.ready = this.blockstore.ready.then(() => {});
+    this.ready = this.blockstore.ready.then(() => { });
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -67,7 +81,7 @@ export class Index {
     //   })
   }
 
-  applyMapFn<T extends DocRecord<T> = {}>(name: string, mapFn?: MapFn, meta?: IdxMeta) {
+  applyMapFn<T>(name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
     if (this.name && this.name !== name) throw new Error("cannot change name");
     this.name = name;
@@ -123,17 +137,17 @@ export class Index {
     }
   }
 
-  async query<T extends DocRecord<T> = {}>(opts: QueryOpts = {}): Promise<{ rows: IndexRow<T>[] }> {
+  async query<K>(opts: QueryOpts<K> = {}): Promise<{ rows: IndexRow<T, K>[] }> {
     // this._resetIndex()
     await this._updateIndex();
     await this._hydrateIndex();
     if (!this.byKey.root) {
-      return await applyQuery(this.crdt, { result: [] }, opts);
+      return await applyQuery<T, K>(this.crdt, { result: [] }, opts);
     }
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      const { result, ...all } = await this.byKey.root.range<T>(...encodeRange(opts.range));
+      const { result, ...all } = await this.byKey.root.range<T, K>(...encodeRange<K>(opts.range));
       return await applyQuery(this.crdt, { result, ...all }, opts);
     }
     if (opts.key) {
@@ -144,7 +158,7 @@ export class Index {
       const results = await Promise.all(
         opts.keys.map(async (key: DocFragment) => {
           const encodedKey = encodeKey(key);
-          return (await applyQuery(this.crdt, await this.byKey.root!.get<T>(encodedKey), opts)).rows;
+          return (await applyQuery(this.crdt, await this.byKey.root!.get<T, K>(encodedKey), opts)).rows;
         }),
       );
       return { rows: results.flat() };
@@ -153,8 +167,8 @@ export class Index {
       if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
       const start = [...opts.prefix, NaN];
       const end = [...opts.prefix, Infinity];
-      const encodedR = encodeRange([start, end]);
-      return await applyQuery(this.crdt, await this.byKey.root.range(...encodedR), opts);
+      const encodedR = encodeRange<K>([start, end]);
+      return await applyQuery<T, K>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const { result, ...all } = await this.byKey.root.getAllEntries<T>(); // funky return type
@@ -185,7 +199,7 @@ export class Index {
     await this.ready;
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw new Error("No map function defined");
-    let result: DocUpdate[], head: ClockHead;
+    let result: DocUpdate<T, K>[], head: ClockHead;
     if (!this.indexHead || this.indexHead.length === 0) {
       ({ result, head } = await this.crdt.allDocs());
     } else {
@@ -195,8 +209,8 @@ export class Index {
       this.indexHead = head;
       return { byId: this.byId, byKey: this.byKey } as unknown as TransactionMeta;
     }
-    let staleKeyIndexEntries: IndexUpdate[] = [];
-    let removeIdIndexEntries: IndexUpdate[] = [];
+    let staleKeyIndexEntries: IndexUpdate<T>[] = [];
+    let removeIdIndexEntries: IndexUpdate<T>[] = [];
     if (this.byId.root) {
       const removeIds = result.map(({ key }) => key);
       const { result: oldChangeEntries } = (await this.byId.root.getMany(removeIds)) as {
@@ -206,7 +220,7 @@ export class Index {
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }
     const indexEntries = indexEntriesForChanges(result, this.mapFn); // use a getter to translate from string
-    const byIdIndexEntries: DocUpdate[] = indexEntries.map(({ key }) => ({
+    const byIdIndexEntries: ByIdIndexIten[] = indexEntries.map(({ key }) => ({
       key: key[1],
       value: key,
     }));

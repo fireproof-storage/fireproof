@@ -1,14 +1,10 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/require-await */
 /* eslint-disable mocha/max-top-level-suites */
-import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "./helpers.js";
-import { CRDT } from "../dist/test/crdt.js";
-import { index } from "../dist/test/index.js";
-import { parseCarFile } from "../../encrypted-blockstore/dist/test/loader-helpers.js";
+import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "./helpers.ts";
+import { CRDT } from "../../src/crdt";
+// import { index } from "../dist/test/index.js";
+import { parseCarFile } from "../../src/storage-engine/loader-helpers.ts";
+import { AnyBlock, CRDTMeta, DocValue } from "../../src/types.ts";
+import { index } from "../../src/index.ts";
 
 describe("Fresh crdt", function () {
   /** @type {CRDT} */
@@ -131,10 +127,15 @@ describe("CRDT with a multi-write", function () {
   });
 });
 
+type CRDTTestType = {
+  readonly points: number;
+}
 describe("CRDT with two multi-writes", function () {
   /** @type {CRDT} */
-  let crdt, firstPut, secondPut;
-  beforeEach(async function () {
+  let crdt: CRDT<CRDTTestType, string>;
+  let firstPut: CRDTMeta;
+  let secondPut: CRDTMeta;
+  beforeEach(async () => {
     crdt = new CRDT();
     firstPut = await crdt.bulk([
       { key: "ace", value: { points: 11 } },
@@ -153,11 +154,13 @@ describe("CRDT with two multi-writes", function () {
     notEquals(firstPut.head[0], secondPut.head[0]);
   });
   it("return the records on get", async function () {
-    const { doc } = await crdt.get("ace");
+    const ret = await crdt.get("ace");
+    expect(ret).not.toBeNull();
+    const { doc } = ret as DocValue<CRDTTestType>;
     equals(doc.points, 11);
 
     for (const key of ["king", "queen", "jack"]) {
-      const { doc } = await crdt.get(key);
+      const { doc } = await crdt.get(key) as DocValue<CRDTTestType>;
       equals(doc.points, 10);
     }
   });
@@ -165,7 +168,7 @@ describe("CRDT with two multi-writes", function () {
     const { result } = await crdt.changes();
     equals(result.length, 4);
     equals(result[0].key, "ace");
-    equals(result[0].value.points, 11);
+    equals(result[0].value?.points, 11);
     equals(result[1].key, "king");
     equals(result[2].key, "queen");
     equals(result[3].key, "jack");
@@ -174,7 +177,7 @@ describe("CRDT with two multi-writes", function () {
 
 describe("Compact a named CRDT with writes", function () {
   /** @type {CRDT} */
-  let crdt;
+  let crdt: CRDT<CRDTTestType, string>;
   beforeEach(async function () {
     await resetDirectory(dataDir, "named-crdt-compaction");
     crdt = new CRDT("named-crdt-compaction");
@@ -187,12 +190,12 @@ describe("Compact a named CRDT with writes", function () {
     }
   });
   it("has data", async function () {
-    const got = await crdt.get("ace");
+    const got = await crdt.get("ace") as DocValue<CRDTTestType>;
     assert(got.doc);
     equals(got.doc.points, 11);
   });
   it("should start with blocks", async function () {
-    const blz = [];
+    const blz: AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
@@ -205,7 +208,7 @@ describe("Compact a named CRDT with writes", function () {
   });
   it.skip("should have fewer blocks after compact", async function () {
     await crdt.compact();
-    const blz = [];
+    const blz: AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
@@ -213,7 +216,7 @@ describe("Compact a named CRDT with writes", function () {
   });
   it("should have data after compact", async function () {
     await crdt.compact();
-    const got = await crdt.get("ace");
+    const got = await crdt.get("ace") as DocValue<CRDTTestType>;
     assert(got.doc);
     equals(got.doc.points, 11);
   });
@@ -224,14 +227,15 @@ describe("Compact a named CRDT with writes", function () {
 });
 
 describe("CRDT with an index", function () {
-  let crdt, idx;
+  let crdt: CRDT<CRDTTestType, string>;
+  let idx;
   beforeEach(async function () {
-    crdt = new CRDT();
+    crdt = new CRDT<CRDTTestType, string>();
     await crdt.bulk([
       { key: "ace", value: { points: 11 } },
       { key: "king", value: { points: 10 } },
     ]);
-    idx = await index({ _crdt: crdt }, "points");
+    idx = await index<CRDTTestType, string>({ _crdt: crdt }, "points");
   });
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });

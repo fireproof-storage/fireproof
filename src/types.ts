@@ -29,19 +29,21 @@ export type DocFragment =
   | DocFragment[]
   | { [key: string]: DocFragment };
 
-export type DocRecord<T> = {
-  readonly [K in keyof T]: DocFragment;
-};
+// export type DocRecord<T> = {
+// readonly [K in keyof T]: DocFragment;
+// };
 
 export type DocFiles = Record<string, DocFileMeta | File>;
 
 export type DocBase = {
-  readonly _id?: string;
+  readonly _id: string;
   readonly _files?: DocFiles;
   readonly _publicFiles?: DocFiles;
 };
 
-export type Doc<T extends DocRecord<T> = {}> = DocBase & T;
+export type DocWithId<T> = DocBase & T;
+
+export type DocSet<T> = Partial<DocBase> & T;
 
 export type DocFileMeta = {
   readonly type: string;
@@ -52,33 +54,34 @@ export type DocFileMeta = {
   file?: () => Promise<File>;
 };
 
-export type DocUpdate = {
-  readonly key: string;
-  readonly value?: Record<string, any>;
+export type DocUpdate<T, K extends IndexKeyType> = {
+  readonly key: K;
+  readonly value?: DocSet<T>;
   readonly del?: boolean;
   readonly clock?: AnyLink; // would be useful to give ClockLinks a type
 };
 
 // todo merge into above
-export type DocValue = {
-  readonly doc?: DocBase;
-  readonly del?: boolean;
-  cid?: AnyLink;
+export type DocValue<T> = {
+  readonly doc: DocWithId<T>;
+  readonly del: boolean;
+  readonly cid: AnyLink;
 };
 
-export type IndexKey = [string, string] | string;
+export type IndexKey<T extends IndexKeyType> = [T, T] | T;
+export type IndexKeyType = string | number | boolean | unknown;
 
-export type IndexUpdate = {
-  readonly key: IndexKey;
+export type IndexUpdate<T> = {
+  readonly key: IndexKey<T>;
   readonly value?: DocFragment;
   readonly del?: boolean;
 };
 
-export type IndexRow<T extends DocRecord<T> = {}> = {
+export type IndexRow<T, K> = {
   readonly id: string;
-  key: IndexKey;
+  key: IndexKey<K>;
   row?: DocFragment;
-  readonly doc?: Doc<T> | null;
+  readonly doc?: DocWithId<T>;
   value?: DocFragment;
   readonly del?: boolean;
 };
@@ -99,14 +102,14 @@ export type IdxMetaMap = {
   readonly indexes: Map<string, IdxMeta>;
 };
 
-export type QueryOpts = {
+export type QueryOpts<K> = {
   readonly descending?: boolean;
   readonly limit?: number;
   includeDocs?: boolean;
-  readonly range?: [IndexKey, IndexKey];
+  readonly range?: [IndexKey<K>, IndexKey<K>];
   readonly key?: DocFragment;
   readonly keys?: DocFragment[];
-  prefix?: DocFragment | [DocFragment];
+  prefix?: IndexKey<K> | [IndexKey<K>];
 };
 
 export type AnyLink = Link<unknown, number, number, 1 | 0>;
@@ -120,19 +123,19 @@ export type AnyDecodedBlock = {
   readonly value: any;
 };
 
-type EmitFn = (k: DocFragment, v?: DocFragment) => void;
-export type MapFn = <T extends DocRecord<T> = {}>(doc: Doc<T>, emit: EmitFn) => DocFragment | void;
+type EmitFn = (k: IndexKeyType, v?: IndexKeyType) => void;
+export type MapFn<T> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | void;
 
 export type ChangesOptions = {
   readonly dirty?: boolean;
   readonly limit?: number;
 };
 
-export type ChangesResponse<T extends DocRecord<T> = {}> = {
+export type ChangesResponse<T> = {
   readonly clock: ClockHead;
   readonly rows: {
     readonly key: string;
-    readonly value: Doc<T>;
+    readonly value: DocWithId<T>;
   }[];
 };
 
