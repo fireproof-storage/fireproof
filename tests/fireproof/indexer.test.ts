@@ -256,7 +256,7 @@ describe("basic Index upon cold start", function () {
     assert(result2);
     equals(result2.rows.length, 3);
     equals(didMap, 0);
-    await crdt2.bulk([{ key: "abc4", value: { title: "despicable", score: 0 } }]);
+    await crdt2.bulk([{ id: "abc4", value: { title: "despicable", score: 0 } }]);
 
     const { result: ch3, head: h3 } = await crdt2.changes(head);
     equals(ch3.length, 1);

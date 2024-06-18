@@ -7,7 +7,7 @@ import { Operation, PutOperation } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import { type EncryptedBlockstore, type CompactionFetcher, CarTransaction, TransactionMeta, BlockFetcher } from "./storage-engine";
-import type { IndexKeyType, DocUpdate, ClockHead, AnyLink, DocValue, CRDTMeta, ChangesOptions, DocFileMeta, DocFiles, DocSet } from "./types";
+import type { IndexKeyType, DocUpdate, ClockHead, AnyLink, DocValue, CRDTMeta, ChangesOptions, DocFileMeta, DocFiles, DocSet, DocWithId } from "./types";
 import { decodeFile, encodeFile } from "./files";
 import { Result } from "@web3-storage/pail/crdt/api";
 import { IndexKey } from "idb";
@@ -30,18 +30,18 @@ function toString<K extends IndexKeyType>(key: K): string {
   }
 }
 
-export async function applyBulkUpdateToCrdt<T, K extends IndexKeyType>(tblocks: CarTransaction, head: ClockHead, updates: DocUpdate<T, K>[]): Promise<CRDTMeta> {
+export async function applyBulkUpdateToCrdt<T>(tblocks: CarTransaction, head: ClockHead, updates: DocUpdate<T>[]): Promise<CRDTMeta> {
   let result: Result | null = null;
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
     for (const update of updates) {
       const link = await writeDocContent(tblocks, update);
-      await batch.put(toString(update.key), link);
+      await batch.put(toString(update.id), link);
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
     const link = await writeDocContent(tblocks, updates[0]);
-    result = await put(tblocks, head, toString(updates[0].key), link);
+    result = await put(tblocks, head, toString(updates[0].id), link);
   }
   if (!result) throw new Error("Missing result, updates: " + updates.length);
 
@@ -58,14 +58,14 @@ export async function applyBulkUpdateToCrdt<T, K extends IndexKeyType>(tblocks: 
 }
 
 // this whole thing can get pulled outside of the write queue
-async function writeDocContent<T, K extends IndexKeyType>(blocks: CarTransaction, update: DocUpdate<T, K>): Promise<AnyLink> {
+async function writeDocContent<T, K extends IndexKeyType>(blocks: CarTransaction, update: DocUpdate<T>): Promise<AnyLink> {
   let value: Partial<DocValue<T>>;
   if (update.del) {
     value = { del: true };
   } else {
     if (!update.value) throw new Error("Missing value");
     await processFiles(blocks, update.value);
-    value = { doc: update.value };
+    value = { doc: update.value as DocWithId<T> };
   }
   const block = await encode({ value, hasher, codec });
   blocks.putSync(block.cid, block.bytes);
@@ -185,30 +185,30 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
   }
 }
 
-export async function clockChangesSince<T, K extends IndexKeyType>(
+export async function clockChangesSince<T>(
   blocks: BlockFetcher,
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions,
-): Promise<{ result: DocUpdate<T, K>[]; head: ClockHead }> {
+): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
   const eventsFetcher = (
     opts.dirty ? new DirtyEventFetcher<Operation>(blocks) : new EventFetcher<Operation>(blocks)
   ) as EventFetcher<Operation>;
   const keys: Set<string> = new Set();
-  const updates = await gatherUpdates<T, K>(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity);
+  const updates = await gatherUpdates<T>(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity);
   return { result: updates.reverse(), head };
 }
 
-async function gatherUpdates<T, K extends IndexKeyType>(
+async function gatherUpdates<T>(
   blocks: BlockFetcher,
   eventsFetcher: EventFetcher<Operation>,
   head: ClockHead,
   since: ClockHead,
-  updates: DocUpdate<T, K>[] = [],
+  updates: DocUpdate<T>[] = [],
   keys: Set<string>,
   didLinks: Set<string>,
   limit: number,
-): Promise<DocUpdate<T, K>[]> {
+): Promise<DocUpdate<T>[]> {
   if (limit <= 0) return updates;
   // if (Math.random() < 0.001) console.log('gatherUpdates', head.length, since.length, updates.length)
   const sHead = head.map((l) => l.toString());
@@ -233,8 +233,8 @@ async function gatherUpdates<T, K extends IndexKeyType>(
       const { key, value } = ops[i];
       if (!keys.has(key)) {
         // todo option to see all updates
-        const docValue = await getValueFromLink(blocks, value);
-        updates.push({ key: key as K, value: docValue.doc, del: docValue.del, clock: link });
+        const docValue = await getValueFromLink<T>(blocks, value);
+        updates.push({ id: key, value: docValue.doc, del: docValue.del, clock: link });
         limit--;
         keys.add(key);
       }
@@ -246,11 +246,11 @@ async function gatherUpdates<T, K extends IndexKeyType>(
   return updates;
 }
 
-export async function* getAllEntries<T, K extends IndexKeyType>(blocks: BlockFetcher, head: ClockHead) {
+export async function* getAllEntries<T>(blocks: BlockFetcher, head: ClockHead) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
     const docValue = await getValueFromLink(blocks, link);
-    yield { key, value: docValue.doc, del: docValue.del } as DocUpdate<T, K>;
+    yield { id: key, value: docValue.doc, del: docValue.del } as DocUpdate<T>;
   }
 }
 

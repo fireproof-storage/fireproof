@@ -29,8 +29,8 @@ export type DocFragment =
   | DocFragment[]
   | { [key: string]: DocFragment };
 
-// export type DocRecord<T> = {
-// readonly [K in keyof T]: DocFragment;
+// type DocRecord<T> = {
+//   readonly [K in keyof T]: DocFragment;
 // };
 
 export type DocFiles = Record<string, DocFileMeta | File>;
@@ -54,8 +54,8 @@ export type DocFileMeta = {
   file?: () => Promise<File>;
 };
 
-export type DocUpdate<T, K extends IndexKeyType> = {
-  readonly key: K;
+export type DocUpdate<T> = {
+  readonly id: string;
   readonly value?: DocSet<T>;
   readonly del?: boolean;
   readonly clock?: AnyLink; // would be useful to give ClockLinks a type
@@ -68,21 +68,21 @@ export type DocValue<T> = {
   readonly cid: AnyLink;
 };
 
-export type IndexKey<T extends IndexKeyType> = [T, T] | T;
-export type IndexKeyType = string | number | boolean | unknown;
+export type IndexKey<K extends IndexKeyType> = [K, string]
+export type IndexKeyType = string | number | boolean | IndexKeyType[]
 
-export type IndexUpdate<T> = {
-  readonly key: IndexKey<T>;
+export type IndexUpdate<K extends IndexKeyType> = {
+  readonly key: IndexKey<K>;
   readonly value?: DocFragment;
   readonly del?: boolean;
 };
 
-export type IndexRow<T, K> = {
+export type IndexRow<K extends IndexKeyType, T> = {
   readonly id: string;
   key: IndexKey<K>;
   row?: DocFragment;
   readonly doc?: DocWithId<T>;
-  value?: DocFragment;
+  value?: T;
   readonly del?: boolean;
 };
 
@@ -102,14 +102,14 @@ export type IdxMetaMap = {
   readonly indexes: Map<string, IdxMeta>;
 };
 
-export type QueryOpts<K> = {
+export type QueryOpts<K extends IndexKeyType> = {
   readonly descending?: boolean;
   readonly limit?: number;
   includeDocs?: boolean;
-  readonly range?: [IndexKey<K>, IndexKey<K>];
+  readonly range?: [IndexKeyType, IndexKeyType];
   readonly key?: DocFragment;
   readonly keys?: DocFragment[];
-  prefix?: IndexKey<K> | [IndexKey<K>];
+  prefix?: IndexKey<K> | [IndexKey<K>]; // thing about later
 };
 
 export type AnyLink = Link<unknown, number, number, 1 | 0>;

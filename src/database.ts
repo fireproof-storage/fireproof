@@ -7,13 +7,14 @@ import type {
   CRDTMeta,
   DocUpdate,
   ClockHead,
-  Doc,
   ConfigOpts,
   MapFn,
   QueryOpts,
   ChangesOptions,
-  DocRecord,
   IndexRow,
+  DocSet,
+  DocWithId,
+  IndexKeyType,
 } from "./types";
 import { DbResponse, ChangesResponse } from "./types";
 import { Connectable, EncryptedBlockstore } from "./storage-engine";
@@ -25,10 +26,10 @@ export class Database implements Connectable {
   readonly opts: ConfigOpts = {};
 
   _listening = false;
-  readonly _listeners: Set<ListenerFn> = new Set();
-  readonly _noupdate_listeners: Set<ListenerFn> = new Set();
-  readonly _crdt: CRDT;
-  readonly _writeQueue: WriteQueue;
+  readonly _listeners: Set<ListenerFn<unknown>> = new Set();
+  readonly _noupdate_listeners: Set<ListenerFn<unknown>> = new Set();
+  readonly _crdt: CRDT<unknown>;
+  readonly _writeQueue: WriteQueue<unknown>;
   readonly blockstore: EncryptedBlockstore;
 
   constructor(name?: string, opts?: ConfigOpts) {
@@ -36,7 +37,7 @@ export class Database implements Connectable {
     this.opts = opts || this.opts;
     this._crdt = new CRDT(name, this.opts);
     this.blockstore = this._crdt.blockstore; // for connector compatibility
-    this._writeQueue = writeQueue(async (updates: DocUpdate[]) => {
+    this._writeQueue = writeQueue(async (updates: DocUpdate<unknown>[]) => {
       return await this._crdt.bulk(updates);
     }); //, Infinity)
     this._crdt.clock.onTock(() => {
@@ -44,7 +45,7 @@ export class Database implements Connectable {
     });
   }
 
-  async get<T extends DocRecord<T> = {}>(id: string): Promise<Doc<T>> {
+  async get<T>(id: string): Promise<DocWithId<T>> {
     const got = await this._crdt.get(id).catch((e) => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       e.message = `Not found: ${id} - ` + e.message;
@@ -52,14 +53,15 @@ export class Database implements Connectable {
     });
     if (!got) throw new Error(`Not found: ${id}`);
     const { doc } = got;
-    return { ...doc, _id: id } as Doc<T>;
+    return { ...doc, _id: id } as DocWithId<T>;
   }
 
-  async put<T extends DocRecord<T> = {}>(doc: Doc<T>): Promise<DbResponse> {
+  async put<T>(doc: DocSet<T>): Promise<DbResponse> {
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
     const result: CRDTMeta = await this._writeQueue.push({
-      key: docId, value: {
+      id: docId,
+      value: {
         ...value,
         _id: docId,
       }
@@ -72,46 +74,46 @@ export class Database implements Connectable {
     return { id, clock: result?.head } as DbResponse;
   }
 
-  async changes<T extends DocRecord<T> = {}>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
+  async changes<T>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     const { result, head } = await this._crdt.changes(since, opts);
-    const rows = result.map(({ key, value, del, clock }) => ({
+    const rows = result.map(({ id: key, value, del, clock }) => ({
       key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc<T>,
+      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
       clock,
     }));
     return { rows, clock: head };
   }
 
-  async allDocs<T extends DocRecord<T> = {}>(): Promise<{
+  async allDocs<T>(): Promise<{
     rows: {
       key: string;
-      value: Doc<T>;
+      value: DocWithId<T>;
     }[];
     clock: ClockHead;
   }> {
     const { result, head } = await this._crdt.allDocs();
-    const rows = result.map(({ key, value, del }) => ({
+    const rows = result.map(({ id: key, value, del }) => ({
       key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as Doc<T>,
+      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
     return { rows, clock: head };
   }
 
-  async allDocuments<T extends DocRecord<T> = {}>(): Promise<{
+  async allDocuments<T>(): Promise<{
     rows: {
       key: string;
-      value: Doc<T>;
+      value: DocWithId<T>;
     }[];
     clock: ClockHead;
   }> {
     return this.allDocs<T>();
   }
 
-  subscribe(listener: ListenerFn | NoUpdateListenerFn, updates?: boolean): () => void {
+  subscribe<T>(listener: ListenerFn<T>, updates?: boolean): () => void {
     if (updates) {
       if (!this._listening) {
         this._listening = true;
-        this._crdt.clock.onTick((updates: DocUpdate[]) => {
+        this._crdt.clock.onTick((updates: DocUpdate<unknown>[]) => {
           void this._notify(updates);
         });
       }
@@ -128,26 +130,26 @@ export class Database implements Connectable {
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<T extends DocRecord<T> = {}>(
-    field: string | MapFn,
-    opts: QueryOpts = {},
+  async query<K extends IndexKeyType, T>(
+    field: string | MapFn<T>,
+    opts: QueryOpts<K> = {},
   ): Promise<{
-    rows: IndexRow<T>[];
+    rows: IndexRow<K, T>[];
   }> {
     const idx =
       typeof field === "string"
         ? index({ _crdt: this._crdt }, field)
         : index({ _crdt: this._crdt }, makeName(field.toString()), field);
-    return await idx.query<T>(opts);
+    return await idx.query(opts) as { rows: IndexRow<K, T>[] };
   }
 
   async compact() {
     await this._crdt.compact();
   }
 
-  async _notify(updates: DocUpdate[]) {
+  async _notify(updates: DocUpdate<unknown>[]) {
     if (this._listeners.size) {
-      const docs: Doc[] = updates.map(({ key, value }) => ({ _id: key, ...value }));
+      const docs: DocWithId<unknown>[] = updates.map(({ id, value }) => ({ _id: id, ...value }));
       for (const listener of this._listeners) {
         await (async () => await listener(docs))().catch((e: Error) => {
           console.error("subscriber error", e);
@@ -167,9 +169,9 @@ export class Database implements Connectable {
   }
 }
 
-type UpdateListenerFn = <T extends DocRecord<T>>(docs: Doc<T>[]) => Promise<void> | void;
+type UpdateListenerFn<T> = (docs: DocWithId<T>[]) => Promise<void> | void;
 type NoUpdateListenerFn = () => Promise<void> | void;
-type ListenerFn = UpdateListenerFn | NoUpdateListenerFn;
+type ListenerFn<T> = UpdateListenerFn<T> | NoUpdateListenerFn;
 
 export function fireproof(name: string, opts?: ConfigOpts): Database {
   if (!Database.databases.has(name)) {
