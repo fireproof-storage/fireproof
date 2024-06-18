@@ -1,7 +1,9 @@
-## Connect Fireproof to IPFS
+## Fireproof UCAN connector
 
-This uses web3.storage to upload CAR files (the same ones in Fireproof local storage) and then uses the IPFS gateway to retrieve them.
+[UCAN](https://ucan.xyz) is a distributed auth protocol that Fireproof Cloud uses to implement access control.
 
-It also includes support for access control via UCAN delegation.
+Read more about [UCAN delegation](https://fission.codes/blog/verifying-ucans/) which gives devs and end-users control over capabilites.
 
-This connector is a work in progress so you should use it but also expect to contribute improvements. Thanks!
+For application users, Fireproof auth will work via familiar channels like email and passkey.
+
+This connector is "under construction" -- please [join our Discord](https://discord.gg/cCryrNHePH) to let us know how you'd like to use it.
