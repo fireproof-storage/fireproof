@@ -138,12 +138,12 @@ describe("CRDT with two multi-writes", function () {
   beforeEach(async () => {
     crdt = new CRDT();
     firstPut = await crdt.bulk([
-      { key: "ace", value: { points: 11 } },
-      { key: "king", value: { points: 10 } },
+      { id: "ace", value: { points: 11 } },
+      { id: "king", value: { points: 10 } },
     ]);
     secondPut = await crdt.bulk([
-      { key: "queen", value: { points: 10 } },
-      { key: "jack", value: { points: 10 } },
+      { id: "queen", value: { points: 10 } },
+      { id: "jack", value: { points: 10 } },
     ]);
   });
   it("should have a one-element head", async function () {
@@ -167,11 +167,11 @@ describe("CRDT with two multi-writes", function () {
   it("should offer changes", async function () {
     const { result } = await crdt.changes();
     equals(result.length, 4);
-    equals(result[0].key, "ace");
+    equals(result[0].id, "ace");
     equals(result[0].value?.points, 11);
-    equals(result[1].key, "king");
-    equals(result[2].key, "queen");
-    equals(result[3].key, "jack");
+    equals(result[1].id, "king");
+    equals(result[2].id, "queen");
+    equals(result[3].id, "jack");
   });
 });
 
@@ -204,7 +204,7 @@ describe("Compact a named CRDT with writes", function () {
   it("should start with changes", async function () {
     const { result } = await crdt.changes();
     equals(result.length, 2);
-    equals(result[0].key, "ace");
+    equals(result[0].id, "ace");
   });
   it.skip("should have fewer blocks after compact", async function () {
     await crdt.compact();
@@ -222,20 +222,20 @@ describe("Compact a named CRDT with writes", function () {
   });
   it("should have changes after compact", async function () {
     const chs = await crdt.changes();
-    equals(chs.result[0].key, "ace");
+    equals(chs.result[0].id, "ace");
   });
 });
 
 describe("CRDT with an index", function () {
-  let crdt: CRDT<CRDTTestType, string>;
+  let crdt: CRDT<CRDTTestType, number>;
   let idx;
   beforeEach(async function () {
-    crdt = new CRDT<CRDTTestType, string>();
+    crdt = new CRDT<CRDTTestType, number>();
     await crdt.bulk([
-      { key: "ace", value: { points: 11 } },
-      { key: "king", value: { points: 10 } },
+      { id: "ace", value: { points: 11 } },
+      { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<CRDTTestType, string>({ _crdt: crdt }, "points");
+    idx = await index<CRDTTestType, number>({ _crdt: crdt }, "points");
   });
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });

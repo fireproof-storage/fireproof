@@ -1,9 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable mocha/max-top-level-suites */
+
 import { assert, equals, resetDirectory, dataDir } from "./helpers.js";
 import { fireproof as database, Database, index, Index } from "../../src/index.js";
 

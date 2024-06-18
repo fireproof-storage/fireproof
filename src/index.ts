@@ -34,38 +34,38 @@ export { Database, fireproof } from "./database";
 
 export type { DocUpdate, MapFn, IndexUpdate, QueryOpts, IdxMeta, DocFragment, IdxMetaMap, IndexRow, ClockHead, DbResponse };
 
-export function index<T, K extends IndexKeyType>({ _crdt }: { _crdt: CRDT<T, K> }, name: string, mapFn?: MapFn<T>, meta?: IdxMeta): Index<T> {
+export function index<K extends IndexKeyType, T = unknown>({ _crdt }: { _crdt: CRDT<T> }, name: string, mapFn?: MapFn<T>, meta?: IdxMeta): Index<K, T> {
   if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
   if (mapFn && mapFn.constructor.name !== "Function") throw new Error("mapFn must be a function");
   if (_crdt.indexers.has(name)) {
-    const idx = _crdt.indexers.get(name)!;
+    const idx = _crdt.indexers.get(name) as Index<K, T>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<T, K>(_crdt, name, mapFn, meta);
-    _crdt.indexers.set(name, idx as Index<unknown, unknown>);
+    const idx = new Index<K, T>(_crdt, name, mapFn, meta);
+    _crdt.indexers.set(name, idx);
   }
-  return _crdt.indexers.get(name) as Index<T, K>;
+  return _crdt.indexers.get(name) as Index<K, T>;
 }
 
-type ByIdIndexIten = {
-  readonly key: string
-  readonly value: [string, string]
+type ByIdIndexIten<K extends IndexKeyType> = {
+  readonly key: K
+  readonly value: [K, K]
 }
 
-export class Index<T, K extends IndexKeyType> {
+export class Index<K extends IndexKeyType, T = unknown> {
   readonly blockstore: EncryptedBlockstore;
-  readonly crdt: CRDT<T, K>;
+  readonly crdt: CRDT<T>;
   name?: string;
   mapFn?: MapFn<T>;
   mapFnString: string = "";
-  byKey: IndexTree = new IndexTree();
-  byId: IndexTree = new IndexTree();
+  byKey: IndexTree<K, T> = new IndexTree();
+  byId: IndexTree<K, T> = new IndexTree();
   indexHead?: ClockHead;
   includeDocsDefault: boolean = false;
   initError?: Error;
   readonly ready: Promise<void>;
 
-  constructor(crdt: CRDT<T, K>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  constructor(crdt: CRDT<T>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt;
     this.applyMapFn(name, mapFn, meta);
@@ -81,7 +81,7 @@ export class Index<T, K extends IndexKeyType> {
     //   })
   }
 
-  applyMapFn<T>(name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  applyMapFn(name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
     if (this.name && this.name !== name) throw new Error("cannot change name");
     this.name = name;
@@ -118,11 +118,13 @@ export class Index<T, K extends IndexKeyType> {
         } else {
           // application code is creating an index
           if (!mapFn) {
-            mapFn = (doc) => doc[name as keyof Doc<T>] ?? undefined;
+            mapFn = ((doc) => (doc as Record<string, unknown>)[name] ?? undefined) as MapFn<T>;
           }
           if (this.mapFnString) {
             // we already loaded from a header
-            if (this.mapFnString !== mapFn.toString()) throw new Error("cannot apply different mapFn app");
+            if (this.mapFnString !== mapFn.toString()) {
+              throw new Error("cannot apply different mapFn app");
+            }
           } else {
             // we are first
             this.mapFnString = mapFn.toString();
@@ -137,7 +139,7 @@ export class Index<T, K extends IndexKeyType> {
     }
   }
 
-  async query<K>(opts: QueryOpts<K> = {}): Promise<{ rows: IndexRow<T, K>[] }> {
+  async query(opts: QueryOpts<K> = {}): Promise<{ rows: IndexRow<K, T>[] }> {
     // this._resetIndex()
     await this._updateIndex();
     await this._hydrateIndex();
@@ -147,32 +149,33 @@ export class Index<T, K extends IndexKeyType> {
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      const { result, ...all } = await this.byKey.root.range<T, K>(...encodeRange<K>(opts.range));
-      return await applyQuery(this.crdt, { result, ...all }, opts);
+      const { result, ...all } = await this.byKey.root.range(...encodeRange<K>(opts.range));
+      return await applyQuery<T, K>(this.crdt, { result, ...all }, opts);
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
-      return await applyQuery(this.crdt, await this.byKey.root.get(encodedKey), opts);
+      return await applyQuery<T, K>(this.crdt, await this.byKey.root.get(encodedKey), opts);
     }
     if (Array.isArray(opts.keys)) {
       const results = await Promise.all(
         opts.keys.map(async (key: DocFragment) => {
           const encodedKey = encodeKey(key);
-          return (await applyQuery(this.crdt, await this.byKey.root!.get<T, K>(encodedKey), opts)).rows;
+          return (await applyQuery<T, K>(this.crdt, await this.byKey.root!.get(encodedKey), opts)).rows;
         }),
       );
       return { rows: results.flat() };
     }
     if (opts.prefix) {
       if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
+      // prefix should be always an array
       const start = [...opts.prefix, NaN];
       const end = [...opts.prefix, Infinity];
       const encodedR = encodeRange<K>([start, end]);
       return await applyQuery<T, K>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-    const { result, ...all } = await this.byKey.root.getAllEntries<T>(); // funky return type
-    return await applyQuery(
+    const { result, ...all } = await this.byKey.root.getAllEntries(); // funky return type
+    return await applyQuery<T, K>(
       this.crdt,
       {
         result: result.map(({ key: [k, id], value }) => ({ key: k, id, value })),
@@ -209,18 +212,18 @@ export class Index<T, K extends IndexKeyType> {
       this.indexHead = head;
       return { byId: this.byId, byKey: this.byKey } as unknown as TransactionMeta;
     }
-    let staleKeyIndexEntries: IndexUpdate<T>[] = [];
-    let removeIdIndexEntries: IndexUpdate<T>[] = [];
+    let staleKeyIndexEntries: IndexUpdate<K>[] = [];
+    let removeIdIndexEntries: IndexUpdate<K>[] = [];
     if (this.byId.root) {
-      const removeIds = result.map(({ key }) => key);
+      const removeIds = result.map(({ id: key }) => key);
       const { result: oldChangeEntries } = (await this.byId.root.getMany(removeIds)) as {
-        result: Array<[string, string] | string>;
+        result: Array<K | [K, K]>;
       };
       staleKeyIndexEntries = oldChangeEntries.map((key) => ({ key, del: true }));
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }
-    const indexEntries = indexEntriesForChanges(result, this.mapFn); // use a getter to translate from string
-    const byIdIndexEntries: ByIdIndexIten[] = indexEntries.map(({ key }) => ({
+    const indexEntries = indexEntriesForChanges<T, K>(result, this.mapFn); // use a getter to translate from string
+    const byIdIndexEntries: IndexDoc<K>[] = indexEntries.map(({ key }) => ({
       key: key[1],
       value: key,
     }));
@@ -238,8 +241,8 @@ export class Index<T, K extends IndexKeyType> {
       }
     }
     return await this.blockstore.transaction(async (tblocks): Promise<TransactionMeta> => {
-      this.byId = await bulkIndex(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
-      this.byKey = await bulkIndex(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
+      this.byId = await bulkIndex<T, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
+      this.byKey = await bulkIndex<T, K>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
       this.indexHead = head;
       const idxMeta = {
         byId: this.byId.cid,
