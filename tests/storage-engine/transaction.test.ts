@@ -27,7 +27,7 @@ describe("Fresh TransactionBlockstore", function () {
   it("should not put", async function () {
     const value = new TextEncoder().encode("value");
     const e = await blocks.put("key" as unknown as AnyLink, value).catch((e) => e);
-    matches(e.message.toString(), /transaction/g);
+    matches(e.message, /transaction/g);
   });
   it("should yield a transaction", async function () {
     const txR = await blocks.transaction(async (tblocks) => {
