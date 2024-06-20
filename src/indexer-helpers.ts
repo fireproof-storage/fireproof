@@ -60,31 +60,29 @@ const compare = (a: CompareKey, b: CompareKey) => {
   return refCompare(aRef, bRef);
 };
 
-
 export const byKeyOpts: StaticProllyOptions = { cache, chunker: bf(30), codec, hasher, compare };
 
 export const byIdOpts: StaticProllyOptions = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
 
-
-
 export interface IndexDoc<K extends IndexKeyType> {
-  readonly key: IndexKey<K>
-  readonly value: DocFragment
+  readonly key: IndexKey<K>;
+  readonly value: DocFragment;
 }
 
 export interface IndexDocString {
-  readonly key: string
-  readonly value: DocFragment
+  readonly key: string;
+  readonly value: DocFragment;
 }
 
-
-
-export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyType>(changes: DocUpdate<T>[], mapFn: MapFn<T>): IndexDoc<K>[] {
+export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyType>(
+  changes: DocUpdate<T>[],
+  mapFn: MapFn<T>,
+): IndexDoc<K>[] {
   const indexEntries: IndexDoc<K>[] = [];
   changes.forEach(({ id: key, value, del }) => {
     if (del || !value) return;
     let mapCalled = false;
-    const mapReturn = mapFn({ ...value as DocWithId<T>, _id: key }, (k: IndexKeyType, v?: IndexKeyType) => {
+    const mapReturn = mapFn({ ...(value as DocWithId<T>), _id: key }, (k: IndexKeyType, v?: IndexKeyType) => {
       mapCalled = true;
       if (typeof k === "undefined") return;
       indexEntries.push({
@@ -120,7 +118,7 @@ export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
   if (!indexEntries.length) return inIndex;
   if (!inIndex.root) {
     if (!inIndex.cid) {
-      let returnRootBlock: Block | undefined = undefined
+      let returnRootBlock: Block | undefined = undefined;
       let returnNode: ProllyNode<K, T> | undefined = undefined;
 
       for await (const node of (await DbIndex.create({
@@ -136,7 +134,6 @@ export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
       if (!returnNode || !returnRootBlock) throw new Error("failed to create index");
       return { root: returnNode, cid: returnRootBlock.cid };
     } else {
-
       inIndex.root = (await DbIndex.load({ cid: inIndex.cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
     }
   }
@@ -151,8 +148,11 @@ export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
   }
 }
 
-export async function loadIndex<T extends DocFragment, K extends IndexKeyType>(tblocks: BlockFetcher, cid: AnyLink, opts: StaticProllyOptions): Promise<ProllyNode<K, T>> {
-
+export async function loadIndex<T extends DocFragment, K extends IndexKeyType>(
+  tblocks: BlockFetcher,
+  cid: AnyLink,
+  opts: StaticProllyOptions,
+): Promise<ProllyNode<K, T>> {
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }
 
@@ -183,12 +183,12 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
       id: row.id,
       key: charwise.decode(row.key),
       value: row.row,
-    }))
+    })),
   };
 }
 
 export function encodeRange<K extends IndexKeyType>(range: [IndexKeyType, IndexKeyType]): [string, string] {
-  return [charwise.encode(range[1]), charwise.encode(range[1])]
+  return [charwise.encode(range[1]), charwise.encode(range[1])];
 }
 
 export function encodeKey(key: DocFragment): string {
@@ -198,8 +198,8 @@ export function encodeKey(key: DocFragment): string {
 export type ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> = {
   readonly id: string;
   readonly key: IndexKey<K>;
-  readonly row: T
-}
+  readonly row: T;
+};
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
 interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode {
@@ -209,7 +209,7 @@ interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends Base
   get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
   bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
     readonly root?: ProllyNode<K, T>;
-    readonly blocks: Block[]
+    readonly blocks: Block[];
   }>;
   readonly address: Promise<Link>;
   readonly distance: number;

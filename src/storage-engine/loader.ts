@@ -166,7 +166,6 @@ export class Loader implements Loadable {
     return await parseCarFile(reader);
   }
 
-
   async _getKey(): Promise<string | null> {
     if (this.key) return this.key;
     // generate a random key
@@ -241,13 +240,9 @@ export class Loader implements Loadable {
     }
   }
 
-  async _commitInternal<T>(
-    t: CarTransaction,
-    done: T,
-    opts: CommitOpts = { noLoader: false, compact: false },
-  ): Promise<CarGroup> {
+  async _commitInternal<T>(t: CarTransaction, done: T, opts: CommitOpts = { noLoader: false, compact: false }): Promise<CarGroup> {
     await this.ready;
-    const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact)
+    const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact);
     const rootBlock = await encodeCarHeader(fp);
 
     const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public);
@@ -394,7 +389,7 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`);
       }
-      await this.cacheCarReader(carCid.toString(), reader).catch((e) => { });
+      await this.cacheCarReader(carCid.toString(), reader).catch((e) => {});
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
       throw new Error(`block not in reader: ${cid.toString()}`);
     };
@@ -502,7 +497,7 @@ export class Loader implements Loadable {
           const readerP = publicFiles ? Promise.resolve(rawReader) : this.ensureDecryptedReader(rawReader);
 
           const cachedReaderP = readerP.then(async (reader) => {
-            await this.cacheCarReader(cidsString, reader).catch((e) => { });
+            await this.cacheCarReader(cidsString, reader).catch((e) => {});
             return reader;
           });
           this.carReaders.set(cidsString, cachedReaderP);
@@ -552,7 +547,7 @@ export class Loader implements Loadable {
       await _writingFn();
       return wr;
     });
-    return this.writing.then(() => { });
+    return this.writing.then(() => {});
   }
 }
 

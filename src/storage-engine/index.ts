@@ -13,11 +13,14 @@ interface RawConnectionParams {
 }
 
 class ConnectRaw extends Connection {
-
   metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
     throw new Error("Method not implemented.");
   }
-  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean | undefined; } | undefined): Promise<void | AnyLink> {
+  dataUpload(
+    bytes: Uint8Array,
+    params: UploadDataFnParams,
+    opts?: { public?: boolean | undefined } | undefined,
+  ): Promise<void | AnyLink> {
     throw new Error("Method not implemented.");
   }
   metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
@@ -79,5 +82,5 @@ export {
   UploadMetaFnParams,
   DownloadDataFnParams,
   DownloadMetaFnParams,
-  TransactionMeta
+  TransactionMeta,
 } from "./types";

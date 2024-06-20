@@ -13,7 +13,11 @@ interface WriteQueueItem<T extends DocTypes, K extends IndexKeyType> {
   reject(error: Error): void;
 }
 
-export function writeQueue<T extends DocTypes, K extends IndexKeyType>(worker: WorkerFunction<T, K>, payload = Infinity, unbounded = false): WriteQueue<T> {
+export function writeQueue<T extends DocTypes, K extends IndexKeyType>(
+  worker: WorkerFunction<T, K>,
+  payload = Infinity,
+  unbounded = false,
+): WriteQueue<T> {
   const queue: WriteQueueItem<T, K>[] = [];
   let isProcessing = false;
 

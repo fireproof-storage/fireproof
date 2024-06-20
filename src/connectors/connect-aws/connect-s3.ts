@@ -59,7 +59,7 @@ export class ConnectS3 extends Connection {
       throw new Error("failed to upload data " + JSON.parse(result.body).message);
     }
     this.parents = [event.cid];
-    return undefined
+    return undefined;
   }
 
   async dataDownload(params: DownloadDataFnParams) {

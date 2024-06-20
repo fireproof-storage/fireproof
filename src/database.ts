@@ -16,12 +16,14 @@ import type {
   DocWithId,
   IndexKeyType,
   ListenerFn,
-  DbResponse, ChangesResponse, DocRecord,
+  DbResponse,
+  ChangesResponse,
+  DocRecord,
   DocTypes,
   DocObject,
   IndexRows,
   DocFragment,
-  ChangesResponseRow
+  ChangesResponseRow,
 } from "./types";
 import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 
@@ -53,30 +55,29 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
     const got = await this._crdt.get(id).catch((e) => {
-
       e.message = `Not found: ${id} - ` + e.message;
       throw e;
     });
     if (!got) throw new Error(`Not found: ${id}`);
     const { doc } = got;
-    return { ...(doc as unknown as DocWithId<T>), _id: id }
+    return { ...(doc as unknown as DocWithId<T>), _id: id };
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DbResponse> {
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
-    const result = await this._writeQueue.push({
+    const result = (await this._writeQueue.push({
       id: docId,
       value: {
-        ...value as unknown as DocSet<DT>,
+        ...(value as unknown as DocSet<DT>),
         _id: docId,
-      }
-    }) as TransactionMeta;
+      },
+    })) as TransactionMeta;
     return { id: docId, clock: result?.head };
   }
 
   async del(id: string): Promise<DbResponse> {
-    const result = await this._writeQueue.push({ id: id, del: true }) as TransactionMeta;
+    const result = (await this._writeQueue.push({ id: id, del: true })) as TransactionMeta;
     return { id, clock: result?.head } as DbResponse;
   }
 
@@ -142,10 +143,8 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
   ): Promise<IndexRows<K, T, R>> {
     const _crdt = this._crdt as unknown as CRDT<T>;
     const idx =
-      typeof field === "string"
-        ? index<K, T, R>({ _crdt }, field)
-        : index<K, T, R>({ _crdt }, makeName(field.toString()), field);
-    return await idx.query(opts)
+      typeof field === "string" ? index<K, T, R>({ _crdt }, field) : index<K, T, R>({ _crdt }, makeName(field.toString()), field);
+    return await idx.query(opts);
   }
 
   async compact() {
@@ -173,7 +172,6 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
     }
   }
 }
-
 
 export function fireproof(name: string, opts?: ConfigOpts): Database {
   if (!Database.databases.has(name)) {

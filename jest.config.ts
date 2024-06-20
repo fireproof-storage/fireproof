@@ -1,12 +1,12 @@
-import type {Config} from 'jest';
+import type { Config } from "jest";
 
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
   modulePathIgnorePatterns: ["dist/"],
   transform: {
-    '\\.[jt]sx?$': 'babel-jest',
+    "\\.[jt]sx?$": "babel-jest",
   },
 };
 
-export default config
+export default config;

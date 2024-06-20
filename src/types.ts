@@ -18,24 +18,15 @@ export type ClockLink = EventLink<Operation>;
 
 export type ClockHead = ClockLink[];
 
-export type DocFragment =
-  | Uint8Array
-  | string
-  | number
-  | boolean
-  | undefined
-  | null
-  | AnyLink
-  | DocFragment[]
-  | object
+export type DocFragment = Uint8Array | string | number | boolean | undefined | null | AnyLink | DocFragment[] | object;
 // | { [key: string]: DocFragment };
 
 export type DocLiteral = string | number | boolean | Uint8Array | unknown;
 
 export type DocObject = object;
-export type DocTypes = DocObject
+export type DocTypes = DocObject;
 
-export type DocRecord<T extends DocObject> = T
+export type DocRecord<T extends DocObject> = T;
 
 export type UnknownDoc = DocRecord<never>;
 
@@ -75,9 +66,9 @@ export interface DocValue<T extends DocTypes> {
   readonly cid: AnyLink;
 }
 
-export type KeyLiteral = string | number | boolean
-export type IndexKeyType = KeyLiteral | KeyLiteral[]
-export type IndexKey<K extends IndexKeyType> = [K, string]
+export type KeyLiteral = string | number | boolean;
+export type IndexKeyType = KeyLiteral | KeyLiteral[];
+export type IndexKey<K extends IndexKeyType> = [K, string];
 
 export interface IndexUpdate<K extends IndexKeyType> {
   readonly key: IndexKey<K>;
@@ -113,9 +104,9 @@ export interface IndexUpdateString {
 export type IndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> = {
   readonly id: string;
   readonly key: K; // IndexKey<K>;
-  readonly value: R
+  readonly value: R;
   readonly doc?: DocWithId<T>;
-}
+};
 
 export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];
@@ -143,7 +134,7 @@ export interface QueryOpts<K extends IndexKeyType> {
   readonly range?: [IndexKeyType, IndexKeyType];
   readonly key?: DocFragment;
   readonly keys?: DocFragment[];
-  prefix?: IndexKeyType
+  prefix?: IndexKeyType;
 }
 
 export type AnyLink = Link<unknown, number, number, 1 | 0>;

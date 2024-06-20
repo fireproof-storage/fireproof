@@ -7,7 +7,9 @@ try {
   storageSupported = window.localStorage && true;
 } catch (e) {}
 
-export interface Props { text: string }
+export interface Props {
+  text: string;
+}
 
 const STRINGARRAYSERIALIZER = "#*#*#*#*#*STRINGARRAYSERIALIZER#*#*#*#*#*";
 const noOptions = {

@@ -12,7 +12,19 @@ import {
   getBlock,
   doCompact,
 } from "./crdt-helpers";
-import type { DocUpdate, CRDTMeta, ClockHead, ConfigOpts, ChangesOptions, IdxMetaMap, DocValue, IndexKeyType, DocWithId, DocRecord, DocTypes } from "./types";
+import type {
+  DocUpdate,
+  CRDTMeta,
+  ClockHead,
+  ConfigOpts,
+  ChangesOptions,
+  IdxMetaMap,
+  DocValue,
+  IndexKeyType,
+  DocWithId,
+  DocRecord,
+  DocTypes,
+} from "./types";
 import { index, type Index } from "./indexer";
 import { CRDTClock } from "./crdt-clock";
 import { Block } from "multiformats";
@@ -62,7 +74,7 @@ export class CRDT<T extends DocTypes> {
       public: this.opts.public,
       store,
     });
-    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => { });
+    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {});
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
@@ -74,15 +86,15 @@ export class CRDT<T extends DocTypes> {
     await this.ready;
     const prevHead = [...this.clock.head];
 
-    const meta = (await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
+    const meta = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(blocks, this.clock.head, updates);
       updates = updates.map((dupdate: DocUpdate<T>) => {
         if (!dupdate.value) throw new Error("missing value");
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
-        return dupdate
+        return dupdate;
       });
-      return { head }
-    }));
+      return { head };
+    });
     await this.clock.applyHead(meta.head, prevHead, updates);
     return meta;
   }

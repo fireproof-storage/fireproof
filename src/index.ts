@@ -3,4 +3,4 @@ export * from "./types";
 
 export { CRDT } from "./crdt";
 
-export * from './indexer'
+export * from "./indexer";
