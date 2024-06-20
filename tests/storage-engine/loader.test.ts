@@ -89,8 +89,8 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   // transaction<M ext(fn: (t: CarTransaction) => Promise<MetaType>, opts?: { noLoader: boolean }): Promise<MetaType> {
   //   throw new Error("Method not implemented.");
   // }
-  
-  
+
+
   getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
   }
@@ -232,7 +232,7 @@ describe("basic Loader with index commits", function () {
         },
       },
     };
-    indexMap = new Map();
+    // indexMap = new Map();
   });
 
   it("should start with an empty car log", function () {

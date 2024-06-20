@@ -1,11 +1,12 @@
-import { format, parse, ToString } from "@ipld/dag-json";
-import { join, dirname } from "path";
-import { homedir } from "os";
-import { mkdir, readFile, writeFile, unlink } from "fs/promises";
+import { join, dirname } from "node:path";
+import { homedir } from "node:os";
+import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import type { AnyBlock, AnyLink, DbMeta } from "../storage-engine";
 import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase } from "../storage-engine";
 import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal";
 import type { Loadable, Loader } from "../storage-engine";
+
+import { format, parse, ToString } from "@ipld/dag-json";
 
 export const makeDataStore = (name: string) => new DataStore(name);
 export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
