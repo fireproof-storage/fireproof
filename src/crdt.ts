@@ -1,6 +1,6 @@
 import { EncryptedBlockstore, type CompactionFetcher, type TransactionMeta, type CarTransaction } from "./storage-engine";
 
-import { store, crypto } from "./web/eb-web";
+import { store, crypto } from "./node/eb-node";
 
 import {
   clockChangesSince,
