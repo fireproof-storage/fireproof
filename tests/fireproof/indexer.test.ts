@@ -205,7 +205,7 @@ describe("basic Index with string fun", function () {
 });
 
 describe("basic Index upon cold start", function () {
-  type TestType = { title: string, score?: number };
+  interface TestType { title: string, score?: number }
   let crdt: CRDT<TestType>;
   let indexer: Index<string, TestType>
   let didMap: number;
@@ -255,7 +255,7 @@ describe("basic Index upon cold start", function () {
     equals(result2.rows.length, 3);
     equalsJSON(indexer2.indexHead, head);
   });
-  it.skip("should not rerun the map function on seen changes", async function () {
+  xit("should not rerun the map function on seen changes", async function () {
     didMap = 0;
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     const indexer2 = await index({ _crdt: crdt2 }, "hello", mapFn);

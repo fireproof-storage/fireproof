@@ -2,13 +2,12 @@ import type { CID, Link } from "multiformats";
 import { DataStore, MetaStore } from "./store";
 import { RemoteWAL } from "./remote-wal";
 import type { Loader } from "./loader";
-import { F } from "vite/dist/node/types.d-aGj9QkWt";
-import { CRDTMeta, ClockHead } from "../types";
+import { CRDTMeta } from "../types";
 
-export type AnyLink = Link<any, number, number, 1 | 0>;
+export type AnyLink = Link<unknown, number, number, 1 | 0>;
 export type CarGroup = AnyLink[];
 export type CarLog = CarGroup[];
-export type AnyAnyLink = Link<any, any, any, any>;
+export type AnyAnyLink = Link<unknown, number, number, 1>;
 export interface AnyBlock {
   cid: AnyLink;
   bytes: Uint8Array;
@@ -20,7 +19,7 @@ export interface AnyAnyBlock {
 export interface AnyDecodedBlock {
   cid: AnyLink;
   bytes: Uint8Array;
-  value: any;
+  value: unknown;
 }
 
 export interface CarMakeable {
@@ -34,16 +33,16 @@ export interface CarHeader<T> {
   readonly meta: T;
 }
 
-type NestedData =
-  | Uint8Array
-  | string
-  | number
-  | boolean
-  | undefined
-  | null
-  | AnyLink
-  | NestedData[]
-  | { [key: string]: NestedData };
+// type NestedData =
+//   | Uint8Array
+//   | string
+//   | number
+//   | boolean
+//   | undefined
+//   | null
+//   | AnyLink
+//   | NestedData[]
+//   | { [key: string]: NestedData };
 
 export interface IdxMeta {
   readonly byId: CID;
@@ -68,7 +67,7 @@ export type TransactionMeta = CRDTMeta & {
 export type MetaType = TransactionMeta | IndexTransactionMeta;
 
 export interface CryptoOpts {
-  readonly crypto: any;
+  readonly crypto: unknown;
   randomBytes(size: number): Uint8Array;
 }
 

@@ -1,31 +1,35 @@
 import { ConnectREST } from "./connect-rest";
-import { Connection, CarClockHead, Connectable, DbMetaEventBlock } from "./connection";
+import { Connection, type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection";
 export { makeStores } from "./store-remote";
-import { AnyLink, UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, DownloadMetaFnParams } from "./types";
+import { type AnyBlock, type AnyLink, type UploadDataFnParams, type UploadMetaFnParams, type DownloadDataFnParams, type DownloadMetaFnParams, type DbMeta, type CommitOpts, type CryptoOpts, type StoreOpts, type TransactionMeta } from "./types";
 
 export { STORAGE_VERSION } from "./store";
 
 interface RawConnectionParams {
   metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | undefined>;
-  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>;
+  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<AnyLink>;
   metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | undefined>;
   dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | undefined>;
 }
 
+
 class ConnectRaw extends Connection {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
     throw new Error("Method not implemented.");
   }
-  dataUpload(
-    bytes: Uint8Array,
-    params: UploadDataFnParams,
-    opts?: { public?: boolean | undefined } | undefined,
-  ): Promise<void | AnyLink> {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean | undefined } | undefined): Promise<AnyLink> {
     throw new Error("Method not implemented.");
   }
+
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
     throw new Error("Method not implemented.");
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined> {
     throw new Error("Method not implemented.");
   }
@@ -67,10 +71,10 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
 
 export { Connection, ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };
 
-export { EncryptedBlockstore, CompactionFetcher, BlockFetcher, CarTransaction } from "./transaction";
+export { EncryptedBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction";
 export { Loader, Loadable } from "./loader";
 export { DataStore, MetaStore } from "./store";
-export { RemoteWAL, WALState } from "./remote-wal";
+export { RemoteWAL, type WALState } from "./remote-wal";
 export {
   DbMeta,
   AnyBlock,
@@ -83,4 +87,4 @@ export {
   DownloadDataFnParams,
   DownloadMetaFnParams,
   TransactionMeta,
-} from "./types";
+} // from "./types";

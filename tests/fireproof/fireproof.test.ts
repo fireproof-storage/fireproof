@@ -19,7 +19,7 @@ interface FireType {
 }
 
 describe("dreamcode", function () {
-  type Doc = { text: string, dream: boolean }
+  interface Doc { text: string, dream: boolean }
   let ok: DbResponse
   let doc: DocWithId<Doc>
   let result: IndexRows<boolean, Doc>;
@@ -54,7 +54,7 @@ describe("dreamcode", function () {
 });
 
 describe("public API", function () {
-  type Doc = { foo: string };
+  interface Doc { foo: string }
   let db: Database;
   let ok: DbResponse;
   let doc: DocWithId<Doc>;
@@ -88,7 +88,7 @@ describe("public API", function () {
 });
 
 describe("basic database", function () {
-  type Doc = { foo: string };
+  interface Doc { foo: string }
   let db: Database<Doc>;
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-basic");
@@ -134,7 +134,7 @@ describe("benchmarking with compaction", function () {
     await resetDirectory(dataDir, "test-benchmark-compaction");
     db = new Database("test-benchmark-compaction", { autoCompact: 3, public: true });
   });
-  it.skip("passing: insert during compaction", async function () {
+  xit("passing: insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -196,7 +196,7 @@ describe("benchmarking a database", function () {
   //
   // eslint-disable-next-line mocha/no-skipped-tests
 
-  it.skip("passing: insert and read many records", async () => {
+  xit("passing: insert and read many records", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -326,7 +326,7 @@ describe("benchmarking a database", function () {
 });
 
 describe("Reopening a database", function () {
-  type Doc = { foo: string };
+  interface Doc { foo: string }
   let db: Database
   beforeEach(async function () {
     // erase the existing test data
@@ -385,7 +385,7 @@ describe("Reopening a database", function () {
     }
   }, 20000);
 
-  it.skip("passing slow, should have the same data on reopen after reopen and update", async function () {
+  xit("passing slow, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 200; i++) {
       console.log("iteration", i);
       console.time("db open");
@@ -409,7 +409,7 @@ describe("Reopening a database", function () {
 });
 
 describe("Reopening a database with indexes", function () {
-  type Doc = { foo: string };
+  interface Doc { foo: string }
   let db: Database
   let idx: Index<string, Doc>
   let didMap: boolean
