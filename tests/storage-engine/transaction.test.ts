@@ -27,7 +27,7 @@ describe("Fresh TransactionBlockstore", function () {
   it("should not put", async function () {
     const value = new TextEncoder().encode("value");
     const e = await blocks.put("key" as unknown as AnyLink, value).catch((e) => e);
-    matches(e.message, /transaction/);
+    matches(e.message.toString(), /transaction/g);
   });
   it("should yield a transaction", async function () {
     const txR = await blocks.transaction(async (tblocks) => {
@@ -114,10 +114,10 @@ describe("TransactionBlockstore with a completed transaction", function () {
   it("should get", async function () {
     const value = await blocks.get(cid) as AnyBlock;
     equals(value.cid, cid);
-    equals(value.bytes, asUInt8Array("value"));
+    equals(value.bytes.toString(), asUInt8Array("value").toString());
 
     const value2 = await blocks.get(cid2) as AnyBlock;
-    equals(value2.bytes, asUInt8Array("value2"));
+    equals(value2.bytes.toString(), asUInt8Array("value2").toString());
   });
   it("should yield entries", async function () {
     const blz = [];
