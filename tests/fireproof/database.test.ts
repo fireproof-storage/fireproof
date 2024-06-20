@@ -31,7 +31,7 @@ describe("basic Database", () => {
 });
 
 describe("basic Database with record", function () {
-  type Doc = { readonly value: string };
+  interface Doc { readonly value: string }
   let db: Database;
   beforeEach(async function () {
     db = new Database();
@@ -75,7 +75,7 @@ describe("basic Database with record", function () {
 });
 
 describe("named Database with record", function () {
-  type Doc = { readonly value: string };
+  interface Doc { readonly value: string }
   let db: Database;
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-db-name");
@@ -330,7 +330,7 @@ describe("basic Database with no update subscription", function () {
   });
 });
 
-describe("database with files input", async function () {
+describe("database with files input", () => {
   let db: Database;
   const imagefiles: File[] = [];
   let result: DbResponse;
@@ -392,9 +392,9 @@ describe("database with files input", async function () {
   });
 
   it("should update the file document data without changing the files", async function () {
-    type Doc = {
+    interface Doc {
       type: string;
-    };
+    }
     const doc = await db.get<Doc>(result.id);
     let files = doc._files || {};
     let keys = Object.keys(files);

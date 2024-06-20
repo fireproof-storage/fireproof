@@ -31,7 +31,7 @@ describe("Fresh crdt", function () {
 });
 
 describe("CRDT with one record", function () {
-  type CRDTTestType = {
+  interface CRDTTestType {
     readonly hello: string;
     readonly nice: string;
   }
@@ -77,7 +77,7 @@ describe("CRDT with one record", function () {
 });
 
 describe("CRDT with a multi-write", function () {
-  type CRDTTestType = {
+  interface CRDTTestType {
     readonly points: number;
   }
   let crdt: CRDT<CRDTTestType>;
@@ -133,7 +133,7 @@ describe("CRDT with a multi-write", function () {
   });
 });
 
-type CRDTTestType = {
+interface CRDTTestType {
   readonly points: number;
 }
 describe("CRDT with two multi-writes", function () {
@@ -212,7 +212,7 @@ describe("Compact a named CRDT with writes", function () {
     equals(result.length, 2);
     equals(result[0].id, "ace");
   });
-  it.skip("should have fewer blocks after compact", async function () {
+  xit("should have fewer blocks after compact", async function () {
     await crdt.compact();
     const blz: AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
@@ -265,7 +265,7 @@ describe("CRDT with an index", function () {
 });
 
 describe("Loader with a committed transaction", function () {
-  type CRDTTestType = {
+  interface CRDTTestType {
     readonly foo: string;
   }
   let loader: Loader;
@@ -302,7 +302,7 @@ describe("Loader with a committed transaction", function () {
 });
 
 describe("Loader with two committed transactions", function () {
-  type CRDTTestType = {
+  interface CRDTTestType {
     readonly foo: string;
   }
   let loader: Loader
@@ -348,7 +348,7 @@ describe("Loader with two committed transactions", function () {
 });
 
 describe("Loader with many committed transactions", function () {
-  type Doc = { foo: string }
+  interface Doc { foo: string }
   let loader: Loader
   let blockstore: EncryptedBlockstore
   let crdt: CRDT<Doc>
