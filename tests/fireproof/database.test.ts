@@ -1,6 +1,5 @@
 import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js";
-import { Data } from "@ipld/unixfs/gen/unixfs.js";
 
 describe("basic Database", () => {
   let db: Database;
@@ -267,7 +266,7 @@ describe("basic Database with subscription", function () {
   let db: Database;
   let didRun: number
   let unsubscribe: () => void
-  let lastDoc: DocWithId<{}>;
+  let lastDoc: DocWithId<NonNullable<unknown>>;
   beforeEach(function () {
     db = new Database();
     didRun = 0;

@@ -3,15 +3,15 @@ import { create } from "multiformats/block";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 
-// @ts-ignore
+// @ts-expect-error "charwise" has no types
 import charwise from "charwise";
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import * as DbIndex from "prolly-trees/db-index";
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import { bf, simpleCompare } from "prolly-trees/utils";
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import { nocache as cache } from "prolly-trees/cache";
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import { ProllyNode as BaseNode } from "prolly-trees/db-index";
 
 import {
@@ -26,7 +26,6 @@ import {
   DocWithId,
   IndexKeyType,
   IndexKey,
-  DocRecord,
   DocTypes,
   DocObject,
   IndexUpdateString,
@@ -42,7 +41,7 @@ export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
 type CompareRef = string | number;
 type CompareKey = [string | number, CompareRef];
 
-const refCompare = (aRef: CompareRef, bRef: CompareRef) => {
+function refCompare(aRef: CompareRef, bRef: CompareRef) {
   if (Number.isNaN(aRef)) return -1;
   if (Number.isNaN(bRef)) throw new Error("ref may not be Infinity or NaN");
   if (aRef === Infinity) return 1;
@@ -51,7 +50,7 @@ const refCompare = (aRef: CompareRef, bRef: CompareRef) => {
   return simpleCompare(aRef, bRef) as number;
 };
 
-const compare = (a: CompareKey, b: CompareKey) => {
+function compare(a: CompareKey, b: CompareKey) {
   const [aKey, aRef] = a;
   const [bKey, bRef] = b;
 
@@ -82,7 +81,7 @@ export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyTyp
   changes.forEach(({ id: key, value, del }) => {
     if (del || !value) return;
     let mapCalled = false;
-    const mapReturn = mapFn({ ...(value as DocWithId<T>), _id: key }, (k: IndexKeyType, v?: IndexKeyType) => {
+    const mapReturn = mapFn({ ...(value as DocWithId<T>), _id: key }, (k: IndexKeyType, v?: DocFragment) => {
       mapCalled = true;
       if (typeof k === "undefined") return;
       indexEntries.push({
@@ -187,7 +186,7 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
   };
 }
 
-export function encodeRange<K extends IndexKeyType>(range: [IndexKeyType, IndexKeyType]): [string, string] {
+export function encodeRange(range: [IndexKeyType, IndexKeyType]): [string, string] {
   return [charwise.encode(range[1]), charwise.encode(range[1])];
 }
 
@@ -203,7 +202,7 @@ export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
 interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode {
-  getAllEntries(): PromiseLike<{ [x: string]: any; result: ProllyIndexRow<K, T>[] }>;
+  getAllEntries(): PromiseLike<{ [x: string]: unknown; result: ProllyIndexRow<K, T>[] }>;
   getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
   range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
   get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
@@ -213,15 +212,15 @@ interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends Base
   }>;
   readonly address: Promise<Link>;
   readonly distance: number;
-  compare: (a: any, b: any) => number;
-  readonly cache: any;
+  compare: (a: unknown, b: unknown) => number;
+  readonly cache: unknown;
   readonly block: Promise<Block>;
 }
 
 interface StaticProllyOptions {
-  readonly cache: any;
-  chunker: (entry: any, distance: number) => boolean;
-  readonly codec: any;
-  readonly hasher: any;
-  compare: (a: any, b: any) => number;
+  readonly cache: unknown;
+  chunker: (entry: unknown, distance: number) => boolean;
+  readonly codec: unknown;
+  readonly hasher: unknown;
+  compare: (a: unknown, b: unknown) => number;
 }

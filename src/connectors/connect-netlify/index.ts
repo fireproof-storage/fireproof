@@ -9,7 +9,7 @@ export const connect = {
   netlify: ({ name, blockstore }: Connectable, refresh = false) => {
     if (!name) throw new Error("database name is required");
     if (!refresh && netlifyCxs.has(name)) {
-      return netlifyCxs.get(name)!;
+      return netlifyCxs.get(name);
     }
     const connection = new ConnectNetlify(name);
     connection.connect(blockstore);

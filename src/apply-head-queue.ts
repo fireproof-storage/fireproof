@@ -1,4 +1,4 @@
-import { ClockHead, DocRecord, DocTypes, DocUpdate } from "./types";
+import { ClockHead, DocTypes, DocUpdate } from "./types";
 
 type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) => Promise<void>;
 

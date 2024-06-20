@@ -1,12 +1,12 @@
 import { CID } from "multiformats";
 
-import { assert, equals, matches, equalsJSON } from "../fireproof/helpers.js";
-import { EncryptedBlockstore as Blockstore, CarTransaction } from "../../src/storage-engine/index.js";
+import { assert, equals, matches, equalsJSON } from "../fireproof/helpers";
+import { EncryptedBlockstore as Blockstore, CarTransaction } from "../../src/storage-engine/index";
 
-import * as nodeCrypto from "../../src/node/crypto-node.js";
-import * as nodeStore from "../../src/node/store-node.js";
-import { AnyLink } from "@web3-storage/w3up-client/dist/src/types.js";
-import { AnyBlock } from "../../src/types.js";
+import * as nodeCrypto from "../../src/node/crypto-node";
+import * as nodeStore from "../../src/node/store-node";
+import { AnyBlock, AnyLink } from "../../src/types";
+import { AnyAnyLink } from "../../src/storage-engine/types";
 
 const loaderOpts = {
   store: nodeStore,
@@ -56,8 +56,8 @@ describe("TransactionBlockstore with name", function () {
     blocks.loader.getBlock = async (cid) => {
       return { cid, bytes };
     };
-    const value = await blocks.get("key" as unknown as AnyLink);
-    equalsJSON(value, { cid: "key" as unknown as AnyLink, bytes });
+    const value = await blocks.get("key" as unknown as AnyAnyLink);
+    equalsJSON(value, { cid: "key" as unknown as AnyAnyLink, bytes });
   });
 });
 
@@ -71,7 +71,6 @@ describe("A transaction", function () {
   });
   it("should put and get", async function () {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-
     const bytes = new TextEncoder().encode("bytes");
     await tblocks.put(cid, bytes);
     assert(blocks.transactions.has(tblocks));

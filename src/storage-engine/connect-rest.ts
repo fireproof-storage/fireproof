@@ -22,7 +22,7 @@ export class ConnectREST extends Connection {
   }
 
   async dataDownload(params: DownloadDataFnParams) {
-    const { type, name, car } = params;
+    const { car } = params;
     const fetchFromUrl = new URL(`/cars/${car.toString()}.car`, this.baseUrl);
     const response = await fetch(fetchFromUrl);
     if (!response.ok) {
@@ -32,6 +32,7 @@ export class ConnectREST extends Connection {
     return bytes;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams) {
     // const event = await this.createEventBlock(bytes)
     // const base64String = Base64.fromUint8Array(bytes)
@@ -56,6 +57,7 @@ export class ConnectREST extends Connection {
     return undefined;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async metaDownload(params: DownloadMetaFnParams) {
     // const { name, branch } = params
     // const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`,this.uploadUrl)

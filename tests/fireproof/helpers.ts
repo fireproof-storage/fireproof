@@ -14,6 +14,10 @@ const { mkdir, readdir, rm, copyFile } = fs;
 
 export { assert };
 
+export function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function equals<T>(actual: T, expected: T) {
   assert(actual === expected, `Expected '${actual}' to equal '${expected}'`);
 }
@@ -26,8 +30,12 @@ export function notEquals<T>(actual: T, expected: T) {
   assert(actual !== expected, `Expected '${actual} 'to not equal '${expected}'`);
 }
 interface ToStringFn { toString: () => string }
-export function matches<TA extends ToStringFn>(actual: TA, expected: RegExp) {
-  assert(actual.toString().match(expected), `Expected '${actual}' to match ${expected}`);
+export function matches<TA extends ToStringFn, TB extends ToStringFn>(actual: TA, expected: TB | RegExp) {
+  if (expected instanceof RegExp) {
+    assert(actual.toString().match(expected), `Expected '${actual}' to match ${expected}`);
+  } else {
+    assert(actual.toString().match(expected.toString()), `Expected '${actual}' to match ${expected}`);
+  }
 }
 
 export async function resetDirectory(dir: string, name: string) {

@@ -1,20 +1,12 @@
-
-
-
-
-/* eslint-disable mocha/max-top-level-suites */
-
-import { join } from "path";
-import { promises } from "fs";
-
+import { join } from "node:path";
+import { promises } from "node:fs";
 import { CID } from "multiformats";
 
+import { assert, matches, equals, dataDir } from "../fireproof/helpers.js";
 
-import { assert, matches, equals, dataDir } from "../fireproof/helpers";
-
-import { DataStore, MetaStore } from "../../src/node/store-node";
-import { AnyBlock, AnyLink } from "../../src/types";
-import { DbMeta } from "../../src/storage-engine/types";
+import { DataStore, MetaStore } from "../../src/node/store-node.js";
+import { AnyBlock, AnyLink } from "../../src/types.js";
+import { DbMeta } from "../../src/storage-engine/types.js";
 
 const { readFile } = promises;
 

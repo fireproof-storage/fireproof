@@ -2,6 +2,7 @@ import { Connection } from "../../storage-engine";
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
 import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types";
+import { throwFalsy } from "../../types";
 
 export class ConnectS3 extends Connection {
   readonly uploadUrl: URL;
@@ -14,12 +15,12 @@ export class ConnectS3 extends Connection {
     super();
     this.uploadUrl = new URL(upload);
     this.downloadUrl = new URL(download);
-    if (websocket?.length != 0) {
-      this.ws = new WebSocket(websocket!);
+    if (websocket && websocket.length != 0) {
+      this.ws = new WebSocket(websocket);
     } else {
       this.ws = undefined;
     }
-    this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
+    this.messagePromise = new Promise<Uint8Array[]>((resolve) => {
       this.messageResolve = resolve;
     });
   }
@@ -81,19 +82,20 @@ export class ConnectS3 extends Connection {
     if (this.ws == undefined) {
       return;
     }
-    this.ws.addEventListener("message", async (event: any) => {
+    this.ws.addEventListener("message", async (event: {
+      data: string;
+    }) => {
       const data = JSON.parse(event.data);
       const bytes = Base64.toUint8Array(data.items[0].data);
       const afn = async () => {
         const uint8ArrayBuffer = bytes as Uint8Array;
         const eventBlock = await this.createEventBlock(uint8ArrayBuffer);
-        await this.taskManager!.handleEvent(eventBlock);
-        // @ts-ignore
+        await throwFalsy(this.taskManager).handleEvent(eventBlock);
         this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array]);
         // add the cid to our parents so we delete it when we send the update
         this.parents.push(eventBlock.cid);
         setTimeout(() => {
-          this.messagePromise = new Promise<Uint8Array[]>((resolve, reject) => {
+          this.messagePromise = new Promise<Uint8Array[]>((resolve) => {
             this.messageResolve = resolve;
           });
         }, 0);
@@ -109,14 +111,17 @@ export class ConnectS3 extends Connection {
    * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
    */
   async metaDownload(params: DownloadMetaFnParams) {
-    const { name, branch } = params;
+    // const { name, branch } = params;
     const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl);
     const data = await fetch(fetchUploadUrl);
     let response = await data.json();
     if (response.status != 200) throw new Error("Failed to download data");
     response = JSON.parse(response.body).items;
     const events = await Promise.all(
-      response.map(async (element: any) => {
+      response.map(async (element: {
+        cid: string;
+        data: string;
+      }) => {
         const base64String = element.data;
         const bytes = Base64.toUint8Array(base64String);
         return { cid: element.cid, bytes };

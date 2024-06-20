@@ -1,3 +1,4 @@
+import { Falsy } from "../types";
 import { ConnectREST } from "./connect-rest";
 import { Connection, type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection";
 export { makeStores } from "./store-remote";
@@ -6,31 +7,31 @@ import { type AnyBlock, type AnyLink, type UploadDataFnParams, type UploadMetaFn
 export { STORAGE_VERSION } from "./store";
 
 interface RawConnectionParams {
-  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | undefined>;
-  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<AnyLink>;
-  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | undefined>;
-  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | undefined>;
+  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | Falsy>;
+  dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void>;
+  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | Falsy>;
+  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | Falsy>;
 }
 
 
 class ConnectRaw extends Connection {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     throw new Error("Method not implemented.");
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean | undefined } | undefined): Promise<AnyLink> {
+  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
     throw new Error("Method not implemented.");
   }
 
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined> {
+  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy> {
     throw new Error("Method not implemented.");
   }
   constructor({ metaUpload, metaDownload, dataUpload, dataDownload }: RawConnectionParams) {

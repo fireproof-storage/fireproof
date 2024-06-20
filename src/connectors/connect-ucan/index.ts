@@ -9,12 +9,12 @@ export const connect = {
   ucan: ({ name, blockstore }: Connectable, schemaName?: string) => {
     if (!name) throw new Error("database name is required");
     if (ipfsCxs.has(name)) {
-      return ipfsCxs.get(name)!;
+      return ipfsCxs.get(name);
     }
     if (!schemaName && location) {
       schemaName = location.origin;
     }
-    const connection = new ConnectUCAN({ name, schema: schemaName! } as ConnectUCANParams);
+    const connection = new ConnectUCAN({ name, schema: schemaName } as ConnectUCANParams);
     connection.connect(blockstore);
     ipfsCxs.set(name, connection);
     return connection;

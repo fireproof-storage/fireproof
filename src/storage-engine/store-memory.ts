@@ -1,4 +1,3 @@
-/* eslint-disable import/first */
 import { format, parse, ToString } from "@ipld/dag-json";
 import { AnyBlock, AnyLink, DbMeta } from "./types";
 import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from "./store";

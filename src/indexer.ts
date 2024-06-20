@@ -1,22 +1,17 @@
-import type {
-  ClockHead,
-  DocUpdate,
-  MapFn,
-  IndexUpdate,
-  QueryOpts,
-  IdxMeta,
-  DocFragment,
-  IdxMetaMap,
-  IndexRow,
-  DbResponse,
-  DocBase,
-  IndexKey,
-  IndexKeyType,
-  DocRecord,
-  IndexRows,
-  DocTypes,
-  DocLiteral,
-  IndexUpdateString,
+import {
+  type ClockHead,
+  type DocUpdate,
+  type MapFn,
+  type IndexUpdate,
+  type QueryOpts,
+  type IdxMeta,
+  type DocFragment,
+  type IdxMetaMap,
+  type IndexKeyType,
+  type IndexRows,
+  type DocTypes,
+  type IndexUpdateString,
+  throwFalsy,
 } from "./types";
 import { EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 import {
@@ -29,13 +24,12 @@ import {
   encodeRange,
   encodeKey,
   loadIndex,
-  IndexDoc,
   IndexDocString,
 } from "./indexer-helpers";
 import { CRDT } from "./crdt";
 
-export function index<K extends IndexKeyType = string, T extends DocTypes = {}, R extends DocFragment = T>(
-  { _crdt }: { _crdt: CRDT<T> | CRDT<{}> },
+export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
+  { _crdt }: { _crdt: CRDT<T> | CRDT<NonNullable<unknown>> },
   name: string,
   mapFn?: MapFn<T>,
   meta?: IdxMeta,
@@ -47,35 +41,36 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = {}, 
     idx.applyMapFn(name, mapFn, meta);
   } else {
     const idx = new Index<K, T>(_crdt, name, mapFn, meta);
-    _crdt.indexers.set(name, idx as unknown as Index<K, {}, {}>);
+    _crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
   }
   return _crdt.indexers.get(name) as unknown as Index<K, T, R>;
 }
 
-type ByIdIndexIten<K extends IndexKeyType> = {
-  readonly key: K;
-  readonly value: [K, K];
-};
+// interface ByIdIndexIten<K extends IndexKeyType> {
+//   readonly key: K;
+//   readonly value: [K, K];
+// }
 
 export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
   readonly blockstore: EncryptedBlockstore;
   readonly crdt: CRDT<T>;
-  name?: string;
+  name: string;
   mapFn?: MapFn<T>;
-  mapFnString: string = "";
-  byKey: IndexTree<K, R> = new IndexTree();
-  byId: IndexTree<K, R> = new IndexTree();
+  mapFnString = "";
+  byKey = new IndexTree<K, R>();
+  byId = new IndexTree<K, R>();
   indexHead?: ClockHead;
-  includeDocsDefault: boolean = false;
+  includeDocsDefault = false;
   initError?: Error;
   readonly ready: Promise<void>;
 
-  constructor(crdt: CRDT<T> | CRDT<{}>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  constructor(crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt as CRDT<T>;
     this.applyMapFn(name, mapFn, meta);
+    this.name = name;
     if (!(this.mapFnString || this.initError)) throw new Error("missing mapFnString");
-    this.ready = this.blockstore.ready.then(() => {});
+    this.ready = this.blockstore.ready.then(() => { return });
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -123,7 +118,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         } else {
           // application code is creating an index
           if (!mapFn) {
-            mapFn = ((doc) => (doc as Record<string, unknown>)[name] ?? undefined) as MapFn<T>;
+            mapFn = ((doc) => (doc as unknown as Record<string, unknown>)[name] ?? undefined) as MapFn<T>;
           }
           if (this.mapFnString) {
             // we already loaded from a header
@@ -153,19 +148,19 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+
       const { result, ...all } = await this.byKey.root.range(...encodeRange(opts.range));
       return await applyQuery<K, T, R>(this.crdt, { result, ...all }, opts);
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
-      return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.get(encodedKey), opts);
+      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
     }
     if (Array.isArray(opts.keys)) {
       const results = await Promise.all(
         opts.keys.map(async (key: DocFragment) => {
           const encodedKey = encodeKey(key);
-          return (await applyQuery<K, T, R>(this.crdt, await this.byKey.root!.get(encodedKey), opts)).rows;
+          return (await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
         }),
       );
       return { rows: results.flat() };
@@ -175,10 +170,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       // prefix should be always an array
       const start = [...opts.prefix, NaN];
       const end = [...opts.prefix, Infinity];
-      const encodedR = encodeRange<K>([start, end]);
+      const encodedR = encodeRange([start, end]);
       return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
     const { result, ...all } = await this.byKey.root.getAllEntries(); // funky return type
     return await applyQuery<K, T, R>(
       this.crdt,
@@ -261,7 +256,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         map: this.mapFnString,
         name: this.name,
       } as IdxMeta;
-      indexerMeta.indexes.set(this.name!, idxMeta); // should this move to after commit?
+      indexerMeta.indexes.set(this.name, idxMeta); // should this move to after commit?
       return indexerMeta as unknown as TransactionMeta;
     });
   }

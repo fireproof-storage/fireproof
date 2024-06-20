@@ -1,14 +1,15 @@
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 // todo get these from multiformats?
-import { BlockFetcher as BlockFetcherAPI } from "@web3-storage/pail/api";
+import { BlockFetcher as BlockFetcherApi } from "@web3-storage/pail/api";
 
 import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, TransactionMeta } from "./types";
 
 import { Loader } from "./loader";
 import type { CID } from "multiformats";
 import { CryptoOpts, StoreOpts } from "./types";
+import { Falsy, falsyToUndef } from "../types";
 
-export type BlockFetcher = BlockFetcherAPI;
+export type BlockFetcher = BlockFetcherApi;
 
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   readonly parent: EncryptedBlockstore;
@@ -20,8 +21,8 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
     this.parent = parent;
   }
 
-  async get(cid: AnyAnyLink): Promise<AnyAnyBlock | undefined> {
-    return (await this.superGet(cid)) || this.parent.get(cid);
+  async get(cid: AnyLink): Promise<AnyBlock | undefined> {
+    return (await this.superGet(cid)) || falsyToUndef(await this.parent.get(cid) as AnyBlock);
   }
 
   async superGet(cid: AnyLink): Promise<AnyBlock | undefined> {
@@ -34,8 +35,8 @@ export class EncryptedBlockstore implements BlockFetcher {
   readonly name?: string;
   readonly _loader?: Loader;
 
-  get loader(): Loader | undefined {
-    // if (!this._loader) throw new Error("loader not ready");
+  get loader(): Loader {
+    if (!this._loader) throw new Error("loader not ready");
     return this._loader;
   }
 
@@ -74,11 +75,12 @@ export class EncryptedBlockstore implements BlockFetcher {
     return done;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
     throw new Error("use a transaction to put");
   }
 
-  async get(cid: AnyAnyLink): Promise<AnyAnyBlock | undefined> {
+  async get(cid: AnyAnyLink): Promise<AnyAnyBlock | Falsy> {
     if (!cid) throw new Error("required cid");
     for (const f of this.transactions) {
       // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
@@ -107,7 +109,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
     const meta = await compactFn(blockLog);
-    await this.loader!.commit(blockLog.loggedBlocks, meta, {
+    await this.loader?.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true,
     });
@@ -167,7 +169,7 @@ export class CompactionFetcher implements BlockFetcher {
   async get(cid: AnyLink): Promise<AnyAnyBlock | undefined> {
     const block = await this.blockstore.get(cid);
     if (block) this.loggedBlocks.putSync(cid, block.bytes);
-    return block;
+    return falsyToUndef(block);
   }
 }
 

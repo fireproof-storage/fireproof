@@ -1,11 +1,17 @@
 import { DbMetaEventBlock } from "./connection";
 import { AnyLink, Loader } from "./index";
 
+interface TaskItem {
+  readonly cid: string;
+  readonly eventBlock: DbMetaEventBlock;
+  retries: number;
+}
+
 export class TaskManager {
   private readonly eventsWeHandled = new Set<string>();
   private readonly loader: Loader;
 
-  private queue: any[] = [];
+  private queue: TaskItem[] = [];
   private isProcessing = false;
 
   constructor(loader: Loader) {

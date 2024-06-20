@@ -79,7 +79,6 @@ describe("basic Index", () => {
   });
 });
 
-// eslint-disable-next-line mocha/max-top-level-suites
 describe("Index query with compound key", function () {
   let db: Database<TestType>;
   let indexer: Index<[string, number], TestType>
