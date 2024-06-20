@@ -16,6 +16,7 @@ import type { DocUpdate, CRDTMeta, ClockHead, ConfigOpts, ChangesOptions, IdxMet
 import { index, type Index } from "./indexer";
 import { CRDTClock } from "./crdt-clock";
 import { Block } from "multiformats";
+import { MetaType } from "./storage-engine/types";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
@@ -33,7 +34,7 @@ export class CRDT<T extends DocTypes> {
     this.opts = opts || this.opts;
     this.blockstore = new EncryptedBlockstore({
       name,
-      applyMeta: async (meta: TransactionMeta) => {
+      applyMeta: async (meta: MetaType) => {
         const crdtMeta = meta as unknown as CRDTMeta;
         await this.clock.applyHead(crdtMeta.head, []);
       },
@@ -51,7 +52,7 @@ export class CRDT<T extends DocTypes> {
     this.clock.blockstore = this.blockstore;
     this.indexBlockstore = new EncryptedBlockstore({
       name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
-      applyMeta: async (meta: TransactionMeta) => {
+      applyMeta: async (meta: MetaType) => {
         const idxCarMeta = meta as unknown as IdxMetaMap;
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
           index({ _crdt: this }, name, undefined, idx as any);

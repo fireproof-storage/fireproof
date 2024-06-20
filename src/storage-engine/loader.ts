@@ -143,14 +143,14 @@ export class Loader implements Loadable {
     if (carLogIncludesGroup(this.carLog, meta.cars)) {
       return;
     }
-    const carHeader = (await this.loadCarHeaderFromMeta(meta)) as CarHeader;
+    const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta);
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
     await this.getMoreReaders(carHeader.cars.flat());
     this.carLog = [...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)];
-    await this.ebOpts.applyMeta(carHeader.meta);
+    await this.ebOpts.applyMeta?.(carHeader.meta);
   }
 
   protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -160,7 +160,7 @@ export class Loader implements Loadable {
     }
   }
 
-  async loadCarHeaderFromMeta({ cars: cids }: DbMeta): Promise<CarHeader> {
+  async loadCarHeaderFromMeta<T>({ cars: cids }: DbMeta): Promise<CarHeader<T>> {
     //Call loadCar for every cid
     const reader = await this.loadCar(cids[0]);
     return await parseCarFile(reader);
@@ -213,9 +213,9 @@ export class Loader implements Loadable {
     return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic);
   }
 
-  async commit(
+  async commit<T = TransactionMeta>(
     t: CarTransaction,
-    done: TransactionMeta,
+    done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts));
@@ -241,13 +241,13 @@ export class Loader implements Loadable {
     }
   }
 
-  async _commitInternal(
+  async _commitInternal<T>(
     t: CarTransaction,
-    done: TransactionMeta,
+    done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.ready;
-    const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader;
+    const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact)
     const rootBlock = await encodeCarHeader(fp);
 
     const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public);
@@ -327,7 +327,7 @@ export class Loader implements Loadable {
     return { ...result, files };
   }
 
-  async updateCarLog(cids: CarGroup, fp: CarHeader, compact: boolean): Promise<void> {
+  async updateCarLog<T>(cids: CarGroup, fp: CarHeader<T>, compact: boolean): Promise<void> {
     if (compact) {
       const previousCompactCid = fp.compact[fp.compact.length - 1];
       fp.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
@@ -456,20 +456,22 @@ export class Loader implements Loadable {
     return got;
   }
 
-  protected makeCarHeader(result: TransactionMeta, cars: CarLog, compact = false): CarHeader {
+  protected makeCarHeader<T>(result: T, cars: CarLog, compact = false): CarHeader<T> {
     const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] };
     return { ...coreHeader, meta: result };
   }
 
-  async loadCar(cid: AnyLink): Promise<CarReader> {
-    if (!this.carStore) throw new Error("car store not initialized");
+  async loadCar(cid: AnyLink | AnyLink[]): Promise<CarReader> {
+    if (!this.carStore) {
+      throw new Error("car store not initialized");
+    }
     const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore);
     return loaded;
   }
 
   //What if instead it returns an Array of CarHeader
   protected async storesLoadCar(
-    cid: AnyLink,
+    cid: AnyLink | AnyLink[],
     local: AbstractDataStore,
     remote?: AbstractDataStore,
     publicFiles?: boolean,

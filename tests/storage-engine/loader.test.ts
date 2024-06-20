@@ -1,29 +1,25 @@
- 
- 
- 
- 
- 
- 
-/* eslint-disable mocha/max-top-level-suites */
-
 import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import { encode } from "multiformats/block";
+import { Block, encode } from "multiformats/block";
 import { CID } from "multiformats/cid";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals, resetDirectory, notEquals, dataDir } from "../../fireproof/test/helpers.js";
+import { assert, matches, equals, resetDirectory, notEquals, dataDir } from "../fireproof/helpers.js";
 
-import { parseCarFile } from "../dist/test/loader-helpers.js";
+import { parseCarFile } from "../../src/storage-engine/loader-helpers.js";
 
-import { Loader } from "../dist/test/loader.js";
+import { CompactionFetcher, Loader } from "../../src/storage-engine/index.js";
 // import { CRDT } from '../../fireproof/dist/test/crdt.esm.js'
-import { CarTransaction, EncryptedBlockstore } from "../dist/test/transaction.js";
+import { CarTransaction, EncryptedBlockstore } from "../../src/storage-engine/index.js";
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
-import * as nodeCrypto from "../dist/lib/crypto-node.js";
-import * as nodeStore from "../dist/lib/store-node.js";
+import * as nodeCrypto from "../../src/node/crypto-node.js";
+import * as nodeStore from "../../src/node/store-node.js";
+import { BlockStore } from "@ucanto/interface";
+import { BlockView } from "multiformats";
+import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarGroup, IndexTransactionMeta, MetaType, TransactionMeta } from "../../src/storage-engine/types.js";
+import { BlockstoreOpts } from "../../src/storage-engine/transaction.js";
 
 // const randomBytes = size => {
 //   throw new Error('randomBytes not implemented')
@@ -40,12 +36,13 @@ const indexLoaderOpts = {
 };
 
 describe("basic Loader", function () {
-  let loader, block, t;
+  let loader: Loader
+  let block: BlockView
+  let t: CarTransaction;
 
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-commit");
-    const mockM = new MemoryBlockstore();
-    mockM.transactions = new Set();
+    const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM);
     loader = new Loader("test-loader-commit", { ...loaderOpts, public: true });
     block = await encode({
@@ -64,7 +61,7 @@ describe("basic Loader", function () {
     equals(loader.carLog.length, 1);
     const reader = await loader.loadCar(carCid);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);
@@ -72,15 +69,59 @@ describe("basic Loader", function () {
   });
 });
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+class MyMemoryBlockStore extends EncryptedBlockstore {
+  readonly memblock = new MemoryBlockstore();
+  constructor() {
+    const ebOpts = {
+      name: "MyMemoryBlockStore",
+      crypto: nodeCrypto, store: nodeStore
+    }
+    super(ebOpts);
+    this.ready = Promise.resolve();
+  }
+  readonly ready: Promise<void>;
+  get loader(): Loader {
+    throw new Error("Method not implemented.");
+  }
+  readonly transactions: Set<CarTransaction> = new Set();
+  // readonly lastTxMeta?: TransactionMeta;
+  readonly compacting: boolean = false;
+
+  override async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
+    return this.memblock.put(cid, block);
+  }
+
+  // transaction<M ext(fn: (t: CarTransaction) => Promise<MetaType>, opts?: { noLoader: boolean }): Promise<MetaType> {
+  //   throw new Error("Method not implemented.");
+  // }
+  getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
+    throw new Error("Method not implemented.");
+  }
+  compact(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+  defaultCompact(blocks: CompactionFetcher): Promise<TransactionMeta> {
+    throw new Error("Method not implemented.");
+  }
+}
 
 describe("basic Loader with two commits", function () {
-  let loader, block, block2, block3, block4, t, carCid, carCid0;
+  let loader: Loader
+  let block: BlockView
+  let block2: BlockView
+  let block3: BlockView
+  let block4: BlockView
+  let t: CarTransaction
+  let carCid: CarGroup
+  let carCid0: CarGroup
 
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-two-commit");
-    const mockM = new MemoryBlockstore();
-    mockM.transactions = new Set();
+    const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM);
     loader = new Loader("test-loader-two-commit", { ...loaderOpts, public: true });
     block = await encode({
@@ -126,7 +167,7 @@ describe("basic Loader with two commits", function () {
   it("should commit", async function () {
     const reader = await loader.loadCar(carCid);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.compact.length, 0);
     equals(parsed.cars.length, 1);
@@ -140,7 +181,7 @@ describe("basic Loader with two commits", function () {
 
     const reader = await loader.loadCar(compactCid);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.compact.length, 2);
     equals(parsed.cars.length, 0);
@@ -165,13 +206,15 @@ describe("basic Loader with two commits", function () {
       const e = await loader.loadCar(carCid).catch((e) => e);
       assert(e);
       matches(e.message, "missing car file");
-    },
-    { timeout: 10000 },
-  );
+    }, 10000);
 });
 
 describe("basic Loader with index commits", function () {
-  let block, ib, indexerResult, cid, indexMap;
+  let block: BlockView
+  let ib: EncryptedBlockstore
+  let indexerResult: IndexTransactionMeta
+  let cid: CID
+  let indexMap: Map<string, CID>;
 
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-index");
@@ -204,17 +247,19 @@ describe("basic Loader with index commits", function () {
   });
 
   it("should commit the index metadata", async function () {
-    const { cars: carCid } = await ib.transaction(async (t) => {
+    const { cars: carCid } = await ib.transaction<IndexTransactionMeta>(async (t) => {
       await t.put(block.cid, block.bytes);
       return indexerResult;
-    }, indexMap);
+    }/* , indexMap */);
+
+    assert(carCid);
 
     const carLog = ib.loader.carLog;
 
     equals(carLog.length, 1);
     const reader = await ib.loader.loadCar(carCid);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<IndexTransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);

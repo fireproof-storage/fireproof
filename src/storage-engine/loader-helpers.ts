@@ -29,7 +29,7 @@ export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<A
   return await encode({ value: writer.bytes, hasher, codec: raw });
 }
 
-export async function encodeCarHeader(fp: CarHeader) {
+export async function encodeCarHeader<T>(fp: CarHeader<T>) {
   return (await encode({
     value: { fp },
     hasher,
@@ -37,12 +37,12 @@ export async function encodeCarHeader(fp: CarHeader) {
   })) as AnyBlock;
 }
 
-export async function parseCarFile(reader: CarReader): Promise<CarHeader> {
+export async function parseCarFile<T>(reader: CarReader): Promise<CarHeader<T>> {
   const roots = await reader.getRoots();
   const header = await reader.get(roots[0]);
   if (!header) throw new Error("missing header block");
   const { value } = await decode({ bytes: header.bytes, hasher, codec });
-  const fpvalue = value as { readonly fp: CarHeader };
+  const fpvalue = value as { readonly fp: CarHeader<T> };
   // @jchris where is the fp attribute coming from?
   if (fpvalue && !fpvalue.fp) {
     throw new Error("missing fp");

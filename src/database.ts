@@ -23,7 +23,7 @@ import type {
   DocFragment,
   ChangesResponseRow
 } from "./types";
-import { Connectable, EncryptedBlockstore } from "./storage-engine";
+import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 
 export class Database<DT extends DocTypes = {}> implements Connectable {
   static databases = new Map<string, Database>();
@@ -65,18 +65,18 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DbResponse> {
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
-    const result: CRDTMeta = await this._writeQueue.push({
+    const result = await this._writeQueue.push({
       id: docId,
       value: {
         ...value as unknown as DocSet<DT>,
         _id: docId,
       }
-    });
+    }) as TransactionMeta;
     return { id: docId, clock: result?.head };
   }
 
   async del(id: string): Promise<DbResponse> {
-    const result = await this._writeQueue.push({ id: id, del: true });
+    const result = await this._writeQueue.push({ id: id, del: true }) as TransactionMeta;
     return { id, clock: result?.head } as DbResponse;
   }
 

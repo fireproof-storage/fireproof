@@ -1,10 +1,12 @@
 import { CID } from "multiformats";
 
-import { assert, equals, matches, equalsJSON } from "../../fireproof/test/helpers.js";
-import { EncryptedBlockstore as Blockstore, CarTransaction } from "../dist/test/transaction.js";
+import { assert, equals, matches, equalsJSON } from "../fireproof/helpers.js";
+import { EncryptedBlockstore as Blockstore, CarTransaction } from "../../src/storage-engine/index.js";
 
-import * as nodeCrypto from "../dist/lib/crypto-node.js";
-import * as nodeStore from "../dist/lib/store-node.js";
+import * as nodeCrypto from "../../src/node/crypto-node.js";
+import * as nodeStore from "../../src/node/store-node.js";
+import { AnyLink } from "@web3-storage/w3up-client/dist/src/types.js";
+import { AnyBlock } from "../../src/types.js";
 
 const loaderOpts = {
   store: nodeStore,
@@ -12,8 +14,7 @@ const loaderOpts = {
 };
 
 describe("Fresh TransactionBlockstore", function () {
-  /** @type {Blockstore} */
-  let blocks;
+  let blocks: Blockstore;
   beforeEach(function () {
     blocks = new Blockstore(loaderOpts);
   });
@@ -24,11 +25,12 @@ describe("Fresh TransactionBlockstore", function () {
     assert(!blocks._loader);
   });
   it("should not put", async function () {
-    const e = await blocks.put("key", "value").catch((e) => e);
+    const value = new TextEncoder().encode("value");
+    const e = await blocks.put("key" as unknown as AnyLink, value).catch((e) => e);
     matches(e.message, /transaction/);
   });
   it("should yield a transaction", async function () {
-    const txR = await blocks.transaction((tblocks) => {
+    const txR = await blocks.transaction(async (tblocks) => {
       assert(tblocks);
       assert(tblocks instanceof CarTransaction);
       return { head: [] };
@@ -39,8 +41,7 @@ describe("Fresh TransactionBlockstore", function () {
 });
 
 describe("TransactionBlockstore with name", function () {
-  /** @type {Blockstore} */
-  let blocks;
+  let blocks: Blockstore
   beforeEach(function () {
     blocks = new Blockstore({ name: "test", ...loaderOpts });
   });
@@ -51,17 +52,18 @@ describe("TransactionBlockstore with name", function () {
     assert(blocks.loader);
   });
   it("should get from loader", async function () {
+    const bytes = new TextEncoder().encode("bytes");
     blocks.loader.getBlock = async (cid) => {
-      return { cid, bytes: "bytes" };
+      return { cid, bytes };
     };
-    const value = await blocks.get("key");
-    equalsJSON(value, { cid: "key", bytes: "bytes" });
+    const value = await blocks.get("key" as unknown as AnyLink);
+    equalsJSON(value, { cid: "key" as unknown as AnyLink, bytes });
   });
 });
 
 describe("A transaction", function () {
-  /** @type {CarTransaction} */
-  let tblocks, blocks;
+  let tblocks: CarTransaction
+  let blocks: Blockstore;
   beforeEach(async function () {
     blocks = new Blockstore(loaderOpts);
     tblocks = new CarTransaction(blocks);
@@ -70,17 +72,24 @@ describe("A transaction", function () {
   it("should put and get", async function () {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
 
-    await tblocks.put(cid, "bytes");
+    const bytes = new TextEncoder().encode("bytes");
+    await tblocks.put(cid, bytes);
     assert(blocks.transactions.has(tblocks));
     const got = await tblocks.get(cid);
     assert(got);
     equals(got.cid, cid);
-    equals(got.bytes, "bytes");
+    equals(got.bytes, bytes);
   });
 });
 
+function asUInt8Array(str: string) {
+  return new TextEncoder().encode(str);
+}
+
 describe("TransactionBlockstore with a completed transaction", function () {
-  let blocks, cid, cid2;
+  let blocks: Blockstore
+  let cid: CID
+  let cid2: CID
 
   beforeEach(async function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
@@ -88,12 +97,14 @@ describe("TransactionBlockstore with a completed transaction", function () {
 
     blocks = new Blockstore(loaderOpts);
     await blocks.transaction(async (tblocks) => {
-      await tblocks.put(cid, "value");
-      return await tblocks.put(cid2, "value2");
+      await tblocks.put(cid, asUInt8Array("value"));
+      await tblocks.put(cid2, asUInt8Array("value2"));
+      return { head: [] };
     });
     await blocks.transaction(async (tblocks) => {
-      await tblocks.put(cid, "value");
-      return await tblocks.put(cid2, "value2");
+      await tblocks.put(cid, asUInt8Array("value"));
+      await tblocks.put(cid2, asUInt8Array("value2"));
+      return { head: [] };
     });
   });
   it("should have transactions", async function () {
@@ -101,12 +112,12 @@ describe("TransactionBlockstore with a completed transaction", function () {
     equals(ts.size, 2);
   });
   it("should get", async function () {
-    const value = await blocks.get(cid);
+    const value = await blocks.get(cid) as AnyBlock;
     equals(value.cid, cid);
-    equals(value.bytes, "value");
+    equals(value.bytes, asUInt8Array("value"));
 
-    const value2 = await blocks.get(cid2);
-    equals(value2.bytes, "value2");
+    const value2 = await blocks.get(cid2) as AnyBlock;
+    equals(value2.bytes, asUInt8Array("value2"));
   });
   it("should yield entries", async function () {
     const blz = [];

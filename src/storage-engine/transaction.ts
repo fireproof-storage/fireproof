@@ -2,7 +2,7 @@ import { MemoryBlockstore } from "@web3-storage/pail/block";
 // todo get these from multiformats?
 import { BlockFetcher as BlockFetcherAPI } from "@web3-storage/pail/api";
 
-import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta } from "./types";
+import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, TransactionMeta } from "./types";
 
 import { Loader } from "./loader";
 import type { CID } from "multiformats";
@@ -41,7 +41,7 @@ export class EncryptedBlockstore implements BlockFetcher {
 
   readonly ebOpts: BlockstoreOpts;
   readonly transactions = new Set<CarTransaction>();
-  lastTxMeta?: TransactionMeta;
+  lastTxMeta?: unknown; // TransactionMeta
   compacting = false;
 
   constructor(ebOpts: BlockstoreOpts) {
@@ -56,9 +56,9 @@ export class EncryptedBlockstore implements BlockFetcher {
     }
   }
 
-  async transaction(fn: (t: CarTransaction) => Promise<TransactionMeta>, opts = { noLoader: false }): Promise<TransactionMeta> {
+  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
     const t = new CarTransaction(this);
-    const done: TransactionMeta = await fn(t);
+    const done: M = await fn(t);
     this.lastTxMeta = done;
     if (this.loader) {
       const cars = await this.loader.commit(t, done, opts);
@@ -74,7 +74,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     return done;
   }
 
-  async put() {
+  async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
     throw new Error("use a transaction to put");
   }
 
@@ -171,16 +171,16 @@ export class CompactionFetcher implements BlockFetcher {
   }
 }
 
-export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>;
+export type CompactFn = (blocks: CompactionFetcher) => Promise<MetaType>;
 
 export interface BlockstoreOpts {
-  applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  compact?: CompactFn;
-  autoCompact?: number;
-  crypto: CryptoOpts;
-  store: StoreOpts;
-  public?: boolean;
-  meta?: DbMeta;
-  name?: string;
-  threshold?: number;
+  readonly applyMeta?: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
+  readonly compact?: CompactFn;
+  readonly autoCompact?: number;
+  readonly crypto: CryptoOpts;
+  readonly store: StoreOpts;
+  readonly public?: boolean;
+  readonly meta?: DbMeta;
+  readonly name?: string;
+  readonly threshold?: number;
 }
