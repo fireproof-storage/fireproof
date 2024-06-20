@@ -4,7 +4,6 @@ import { parseCarFile } from "../../src/storage-engine/loader-helpers";
 import { AnyBlock, CRDTMeta, DocValue } from "../../src/types";
 import { Index, index } from "../../src/indexer";
 import { EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine";
-import { AnyLink } from "@web3-storage/w3up-client/dist/src/types";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
