@@ -76,7 +76,7 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   }
   readonly ready: Promise<void>;
   get loader(): Loader {
-    throw new Error("Method not implemented.");
+    return new Loader("MyMemoryBlockStore", { ...loaderOpts });
   }
   readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
