@@ -8,7 +8,6 @@ import { AnyBlock, AnyLink, DocFileMeta } from "../types";
 
 import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
 
-
 const queuingStrategy = UnixFS.withCapacity();
 
 const settings = UnixFS.configure({

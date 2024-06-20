@@ -7,7 +7,21 @@ import { Operation, PutOperation } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import { type EncryptedBlockstore, type CompactionFetcher, CarTransaction, BlockFetcher, TransactionMeta } from "./storage-engine";
-import type { IndexKeyType, DocUpdate, ClockHead, AnyLink, DocValue, CRDTMeta, ChangesOptions, DocFileMeta, DocFiles, DocSet, DocWithId, DocRecord, DocTypes } from "./types";
+import type {
+  IndexKeyType,
+  DocUpdate,
+  ClockHead,
+  AnyLink,
+  DocValue,
+  CRDTMeta,
+  ChangesOptions,
+  DocFileMeta,
+  DocFiles,
+  DocSet,
+  DocWithId,
+  DocRecord,
+  DocTypes,
+} from "./types";
 import { decodeFile, encodeFile } from "./node/files";
 import { Result } from "@web3-storage/pail/crdt/api";
 import { IndexKey } from "idb";
@@ -30,7 +44,11 @@ function toString<K extends IndexKeyType>(key: K): string {
   }
 }
 
-export async function applyBulkUpdateToCrdt<T extends DocTypes>(tblocks: CarTransaction, head: ClockHead, updates: DocUpdate<T>[]): Promise<CRDTMeta> {
+export async function applyBulkUpdateToCrdt<T extends DocTypes>(
+  tblocks: CarTransaction,
+  head: ClockHead,
+  updates: DocUpdate<T>[],
+): Promise<CRDTMeta> {
   let result: Result | null = null;
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
@@ -58,7 +76,10 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(tblocks: CarTran
 }
 
 // this whole thing can get pulled outside of the write queue
-async function writeDocContent<T extends DocTypes, K extends IndexKeyType>(blocks: CarTransaction, update: DocUpdate<T>): Promise<AnyLink> {
+async function writeDocContent<T extends DocTypes, K extends IndexKeyType>(
+  blocks: CarTransaction,
+  update: DocUpdate<T>,
+): Promise<AnyLink> {
   let value: Partial<DocValue<T>>;
   if (update.del) {
     value = { del: true };
@@ -117,7 +138,11 @@ async function processFileset(blocks: CarTransaction, files: DocFiles, publicFil
   }
 }
 
-export async function getValueFromCrdt<T extends DocTypes>(blocks: EncryptedBlockstore, head: ClockHead, key: string): Promise<DocValue<T>> {
+export async function getValueFromCrdt<T extends DocTypes>(
+  blocks: EncryptedBlockstore,
+  head: ClockHead,
+  key: string,
+): Promise<DocValue<T>> {
   if (!head.length) throw new Error("Getting from an empty database");
   const link = await get(blocks, head, key);
   if (!link) throw new Error(`Missing key ${key}`);
@@ -164,8 +189,8 @@ async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: 
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue<T> };
   const cvalue = {
     ...value,
-    cid: link
-  }
+    cid: link,
+  };
 
   readFiles(blocks as EncryptedBlockstore, cvalue);
   return cvalue;
@@ -175,10 +200,8 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
   // @ts-ignore
   async get(link) {
     try {
-
       return await super.get(link);
     } catch (e) {
-
       console.error("missing event", link.toString(), e);
       return { value: null };
     }

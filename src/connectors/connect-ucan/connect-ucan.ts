@@ -16,7 +16,10 @@ import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
 
-export interface ConnectUCANParams { name: string; schema: string }
+export interface ConnectUCANParams {
+  name: string;
+  schema: string;
+}
 
 const DEFAULT_CLOCK_SPACE_NAME = "_fireproof_account";
 
@@ -66,7 +69,7 @@ export class ConnectUCAN extends Connection {
   constructor(params: ConnectUCANParams) {
     super();
     this.params = params;
-    this.pubsub = function () { };
+    this.pubsub = function () {};
   }
 
   async authorize(rawEmail: string) {
@@ -205,7 +208,6 @@ export class ConnectUCAN extends Connection {
       throw new Error(JSON.stringify(error));
     }
     this.parents = [event.cid];
-
 
     const head = ok.head as CarClockHead;
     return this.fetchAndUpdateHead(head);

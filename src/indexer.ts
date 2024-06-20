@@ -16,7 +16,7 @@ import type {
   IndexRows,
   DocTypes,
   DocLiteral,
-  IndexUpdateString
+  IndexUpdateString,
 } from "./types";
 import { EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 import {
@@ -34,7 +34,12 @@ import {
 } from "./indexer-helpers";
 import { CRDT } from "./crdt";
 
-export function index<K extends IndexKeyType = string, T extends DocTypes = {}, R extends DocFragment = T>({ _crdt }: { _crdt: CRDT<T> | CRDT<{}> }, name: string, mapFn?: MapFn<T>, meta?: IdxMeta): Index<K, T, R> {
+export function index<K extends IndexKeyType = string, T extends DocTypes = {}, R extends DocFragment = T>(
+  { _crdt }: { _crdt: CRDT<T> | CRDT<{}> },
+  name: string,
+  mapFn?: MapFn<T>,
+  meta?: IdxMeta,
+): Index<K, T, R> {
   if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
   if (mapFn && mapFn.constructor.name !== "Function") throw new Error("mapFn must be a function");
   if (_crdt.indexers.has(name)) {
@@ -42,15 +47,15 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = {}, 
     idx.applyMapFn(name, mapFn, meta);
   } else {
     const idx = new Index<K, T>(_crdt, name, mapFn, meta);
-    _crdt.indexers.set(name, idx as unknown as Index<K, {}, {}>)
+    _crdt.indexers.set(name, idx as unknown as Index<K, {}, {}>);
   }
   return _crdt.indexers.get(name) as unknown as Index<K, T, R>;
 }
 
 type ByIdIndexIten<K extends IndexKeyType> = {
-  readonly key: K
-  readonly value: [K, K]
-}
+  readonly key: K;
+  readonly value: [K, K];
+};
 
 export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
   readonly blockstore: EncryptedBlockstore;
@@ -70,7 +75,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.crdt = crdt as CRDT<T>;
     this.applyMapFn(name, mapFn, meta);
     if (!(this.mapFnString || this.initError)) throw new Error("missing mapFnString");
-    this.ready = this.blockstore.ready.then(() => { });
+    this.ready = this.blockstore.ready.then(() => {});
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -179,7 +184,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       this.crdt,
       {
         ...all,
-        result: result
+        result: result,
         /*
         .map(({ key: [k, id], value }) => ({
           key: k,
@@ -223,7 +228,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     let removeIdIndexEntries: IndexUpdateString[] = [];
     if (this.byId.root) {
       const removeIds = result.map(({ id: key }) => key);
-      const { result: oldChangeEntries } = (await this.byId.root.getMany(removeIds))
+      const { result: oldChangeEntries } = await this.byId.root.getMany(removeIds);
       staleKeyIndexEntries = oldChangeEntries.map((key) => ({ key, del: true }));
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }

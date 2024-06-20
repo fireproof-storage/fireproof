@@ -11,7 +11,7 @@ interface DecryptOpts {
   readonly key: ArrayBuffer;
   readonly value: {
     readonly bytes: Uint8Array;
-    readonly iv: Uint8Array
+    readonly iv: Uint8Array;
   };
 }
 
@@ -64,10 +64,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
     );
   }
 
-  const decrypt = async ({
-    key,
-    value,
-  }: DecryptOpts): Promise<{ cid: AnyLink; bytes: Uint8Array }> => {
+  const decrypt = async ({ key, value }: DecryptOpts): Promise<{ cid: AnyLink; bytes: Uint8Array }> => {
     let { bytes, iv } = value;
     const cryKey = await subtleKey(key);
     const deBytes = await crypto!.subtle.decrypt(

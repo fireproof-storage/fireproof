@@ -9,9 +9,19 @@ export type AnyLink = Link<any, number, number, 1 | 0>;
 export type CarGroup = AnyLink[];
 export type CarLog = CarGroup[];
 export type AnyAnyLink = Link<any, any, any, any>;
-export interface AnyBlock { cid: AnyLink; bytes: Uint8Array }
-export interface AnyAnyBlock { cid: AnyAnyLink; bytes: Uint8Array }
-export interface AnyDecodedBlock { cid: AnyLink; bytes: Uint8Array; value: any }
+export interface AnyBlock {
+  cid: AnyLink;
+  bytes: Uint8Array;
+}
+export interface AnyAnyBlock {
+  cid: AnyAnyLink;
+  bytes: Uint8Array;
+}
+export interface AnyDecodedBlock {
+  cid: AnyLink;
+  bytes: Uint8Array;
+  value: any;
+}
 
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>;
@@ -36,11 +46,11 @@ type NestedData =
   | { [key: string]: NestedData };
 
 export interface IdxMeta {
-  readonly byId: CID
-  readonly byKey: CID
-  readonly head: CarGroup
-  readonly name: string
-  readonly map: string // is this really a string of javascript who is eval'd?
+  readonly byId: CID;
+  readonly byKey: CID;
+  readonly head: CarGroup;
+  readonly name: string;
+  readonly map: string; // is this really a string of javascript who is eval'd?
 }
 export interface IndexTransactionMeta {
   readonly indexes: Record<string, IdxMeta>;
@@ -49,8 +59,8 @@ export interface IndexTransactionMeta {
 // // Record<string, NestedData>;
 export type TransactionMeta = CRDTMeta & {
   readonly cars?: CarGroup;
-  readonly files?: AnyLink[]
-}
+  readonly files?: AnyLink[];
+};
 // export type TransactionMeta = {
 //   readonly head: ClockHead;
 // };

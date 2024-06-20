@@ -50,7 +50,6 @@ export class MetaStore extends MetaStoreBase {
     }
   }
 
-   
   async save(meta: DbMeta, branch = "main") {
     try {
       const headerKey = this.headerKey(branch);

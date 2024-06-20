@@ -67,7 +67,7 @@ export abstract class Connection {
     });
   }
 
-  async onConnect() { }
+  async onConnect() {}
 
   connectStorage({ loader }: { loader: Loader | null }) {
     if (!loader) throw new Error("loader is required");
