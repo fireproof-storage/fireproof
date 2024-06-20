@@ -10,11 +10,11 @@ import { promises } from "fs";
 import { CID } from "multiformats";
 
 
-import { assert, matches, equals, dataDir } from "../fireproof/helpers.js";
+import { assert, matches, equals, dataDir } from "../fireproof/helpers";
 
-import { DataStore, MetaStore } from "../../src/node/store-node.js";
-import { AnyBlock, AnyLink } from "../../src/types.js";
-import { DbMeta } from "../../src/storage-engine/types.js";
+import { DataStore, MetaStore } from "../../src/node/store-node";
+import { AnyBlock, AnyLink } from "../../src/types";
+import { DbMeta } from "../../src/storage-engine/types";
 
 const { readFile } = promises;
 
