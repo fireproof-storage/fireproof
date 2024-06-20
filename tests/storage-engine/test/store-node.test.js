@@ -1,15 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
+ 
+ 
 /* eslint-disable mocha/max-top-level-suites */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+ 
 import { join } from "path";
 import { promises } from "fs";
 
 import { CID } from "multiformats";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 import { assert, matches, equals, dataDir } from "../../fireproof/test/helpers.js";
 
 import { DataStore, MetaStore } from "../dist/lib/store-node.js";

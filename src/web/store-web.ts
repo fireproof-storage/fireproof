@@ -23,12 +23,10 @@ export class DataStore extends DataStoreBase {
         },
       });
     }
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await dbWorkFun(this.idb);
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this._withDB(async (db: IDBPDatabase<unknown>) => {
       const tx = db.transaction(["cars"], "readonly");
       const bytes = (await tx.objectStore("cars").get(cid.toString())) as Uint8Array;
@@ -38,7 +36,6 @@ export class DataStore extends DataStoreBase {
   }
 
   async save(car: AnyBlock): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this._withDB(async (db: IDBPDatabase<unknown>) => {
       const tx = db.transaction(["cars"], "readwrite");
       await tx.objectStore("cars").put(car.bytes, car.cid.toString());
@@ -47,7 +44,6 @@ export class DataStore extends DataStoreBase {
   }
 
   async remove(cid: AnyLink): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return await this._withDB(async (db: IDBPDatabase<unknown>) => {
       const tx = db.transaction(["cars"], "readwrite");
       await tx.objectStore("cars").delete(cid.toString());
@@ -60,11 +56,9 @@ export class RemoteWAL extends RemoteWALBase {
   readonly tag: string = "wal-web-ls";
 
   headerKey(branch: string) {
-    // remove 'public' on next storage version bump
     return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch = "main"): Promise<WALState | null> {
     try {
       const bytesString = localStorage.getItem(this.headerKey(branch));
@@ -75,7 +69,6 @@ export class RemoteWAL extends RemoteWALBase {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async save(state: WALState, branch = "main"): Promise<void> {
     try {
       const encoded: ToString<WALState> = format(state);
@@ -94,8 +87,7 @@ export class MetaStore extends MetaStoreBase {
     return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch: string = "main"): Promise<DbMeta[] | null> {
+  async load(branch = "main"): Promise<DbMeta[] | null> {
     try {
       const bytesString = localStorage.getItem(this.headerKey(branch));
       if (!bytesString) return null;
@@ -108,8 +100,7 @@ export class MetaStore extends MetaStoreBase {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async save(meta: DbMeta, branch: string = "main") {
+  async save(meta: DbMeta, branch = "main") {
     try {
       const headerKey = this.headerKey(branch);
       const bytes = this.makeHeader(meta);

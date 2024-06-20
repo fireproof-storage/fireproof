@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
 import { build } from "esbuild";
 import { createBuildSettings } from "./settings.js";
 

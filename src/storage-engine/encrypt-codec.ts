@@ -1,6 +1,19 @@
-// from https://github.com/mikeal/encrypted-block
 import { CID } from "multiformats";
 import type { AnyLink } from "./types";
+
+interface EncryptOpts {
+  readonly key: ArrayBuffer;
+  readonly cid: AnyLink;
+  readonly bytes: Uint8Array;
+}
+
+interface DecryptOpts {
+  readonly key: ArrayBuffer;
+  readonly value: {
+    readonly bytes: Uint8Array;
+    readonly iv: Uint8Array
+  };
+}
 
 export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   const enc32 = (value: number) => {
@@ -18,7 +31,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
     return (buffer[offset] | (buffer[offset + 1] << 8) | (buffer[offset + 2] << 16)) + buffer[offset + 3] * 0x1000000;
   };
 
-  const concat = (buffers: Array<ArrayBuffer | Uint8Array>) => {
+  const concat = (buffers: (ArrayBuffer | Uint8Array)[]) => {
     const uint8Arrays = buffers.map((b) => (b instanceof ArrayBuffer ? new Uint8Array(b) : b));
     const totalLength = uint8Arrays.reduce((sum, arr) => sum + arr.length, 0);
     const result = new Uint8Array(totalLength);
@@ -54,10 +67,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
   const decrypt = async ({
     key,
     value,
-  }: {
-    key: ArrayBuffer;
-    value: { bytes: Uint8Array; iv: Uint8Array };
-  }): Promise<{ cid: AnyLink; bytes: Uint8Array }> => {
+  }: DecryptOpts): Promise<{ cid: AnyLink; bytes: Uint8Array }> => {
     let { bytes, iv } = value;
     const cryKey = await subtleKey(key);
     const deBytes = await crypto!.subtle.decrypt(
@@ -75,7 +85,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
     bytes = bytes.subarray(4 + len);
     return { cid, bytes };
   };
-  const encrypt = async ({ key, cid, bytes }: { key: ArrayBuffer; cid: AnyLink; bytes: Uint8Array }) => {
+  const encrypt = async ({ key, cid, bytes }: EncryptOpts) => {
     const len = enc32(cid.bytes.byteLength);
     const iv = randomBytes(12);
     const msg = concat([len, cid.bytes, bytes]);
@@ -99,9 +109,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
   };
 
   const cryptoFn = (key: Uint8Array) => {
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-    return { encrypt: (opts) => encrypt({ key, ...opts }), decrypt: (opts) => decrypt({ key, ...opts }) };
+    return { encrypt: (opts: EncryptOpts) => encrypt({ ...opts, key }), decrypt: (opts: DecryptOpts) => decrypt({ ...opts, key }) };
   };
 
   const name = "jchris@encrypted-block:aes-gcm";

@@ -2,11 +2,11 @@ import { DbMetaEventBlock } from "./connection";
 import { AnyLink, Loader } from "./index";
 
 export class TaskManager {
-  private readonly eventsWeHandled: Set<string> = new Set();
+  private readonly eventsWeHandled = new Set<string>();
   private readonly loader: Loader;
 
   private queue: any[] = [];
-  private isProcessing: boolean = false;
+  private isProcessing = false;
 
   constructor(loader: Loader) {
     this.loader = loader;

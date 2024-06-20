@@ -16,14 +16,18 @@ export class ConnectREST extends Connection {
 
     const done = await fetch(uploadURL, { method: "PUT", body: bytes });
     // console.log('rest dataUpload done', params.car.toString(), done)
-    if (!done.ok) throw new Error("failed to upload data " + done.statusText);
+    if (!done.ok) {
+      throw new Error("failed to upload data " + done.statusText);
+    }
   }
 
   async dataDownload(params: DownloadDataFnParams) {
     const { type, name, car } = params;
     const fetchFromUrl = new URL(`/cars/${car.toString()}.car`, this.baseUrl);
     const response = await fetch(fetchFromUrl);
-    if (!response.ok) return null; // throw new Error('failed to download data ' + response.statusText)
+    if (!response.ok) {
+      return undefined; // throw new Error('failed to download data ' + response.statusText)
+    }
     const bytes = new Uint8Array(await response.arrayBuffer());
     return bytes;
   }
@@ -49,7 +53,7 @@ export class ConnectREST extends Connection {
     //   throw new Error('failed to upload data ' + JSON.parse(result.body).message)
     // }
     // this.parents = [event.cid]
-    return null;
+    return undefined;
   }
 
   async metaDownload(params: DownloadMetaFnParams) {

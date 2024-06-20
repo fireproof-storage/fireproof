@@ -1,17 +1,17 @@
-import { ClockHead, DocUpdate } from "./types";
+import { ClockHead, DocRecord, DocTypes, DocUpdate } from "./types";
 
 type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) => Promise<void>;
 
-type ApplyHeadTask = {
+interface ApplyHeadTask<T extends DocTypes> {
   readonly newHead: ClockHead;
   readonly prevHead: ClockHead;
-  readonly updates?: DocUpdate[];
-};
+  readonly updates?: DocUpdate<T>[];
+}
 
-export interface ApplyHeadQueue {
-  push(task: ApplyHeadTask): AsyncGenerator<
+export interface ApplyHeadQueue<T extends DocTypes> {
+  push(task: ApplyHeadTask<T>): AsyncGenerator<
     {
-      readonly updates: DocUpdate[];
+      readonly updates: DocUpdate<T>[];
       readonly all: boolean;
     },
     void,
@@ -20,14 +20,14 @@ export interface ApplyHeadQueue {
   size(): number;
 }
 
-export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue {
-  const queue: ApplyHeadTask[] = [];
+export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFunction): ApplyHeadQueue<T> {
+  const queue: ApplyHeadTask<T>[] = [];
   let isProcessing = false;
 
   async function* process() {
     if (isProcessing || queue.length === 0) return;
     isProcessing = true;
-    const allUpdates: DocUpdate[] = [];
+    const allUpdates: DocUpdate<T>[] = [];
     try {
       while (queue.length > 0) {
         queue.sort((a, b) => (b.updates ? 1 : -1));
@@ -62,7 +62,7 @@ export function applyHeadQueue(worker: ApplyHeadWorkerFunction): ApplyHeadQueue 
   }
 
   return {
-    push(task: ApplyHeadTask): AsyncGenerator<{ updates: DocUpdate[]; all: boolean }, void, unknown> {
+    push(task: ApplyHeadTask<T>): AsyncGenerator<{ updates: DocUpdate<T>[]; all: boolean }, void, unknown> {
       queue.push(task);
       return process();
     },

@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 
 const FlameIcon = () => <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25" />;
 
-type LinkProps = {
+interface LinkProps {
   readonly href: string;
   readonly children: React.ReactNode;
-};
+}
 
 const NavLink: React.FC<LinkProps> = (props) => (
   <Link

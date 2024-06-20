@@ -3,10 +3,10 @@ import { Database, DocRecord } from "@fireproof/core";
 
 import { LiveQueryResult, useFireproof, UseLiveQuery } from "./useFireproof";
 
-export type TLUseLiveQuery = {
-  <T extends DocRecord<T>>(...args: Parameters<UseLiveQuery>): LiveQueryResult<T>;
+export interface TLUseLiveQuery {
+  <T extends DocTypes>(...args: Parameters<UseLiveQuery>): LiveQueryResult<T>;
   database: Database;
-};
+}
 
 function topLevelUseLiveQuery(...args: Parameters<UseLiveQuery>) {
   const { useLiveQuery, database } = useFireproof();

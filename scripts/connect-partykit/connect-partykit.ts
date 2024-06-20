@@ -62,7 +62,7 @@ export class ConnectPartyKit extends Connection {
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
-    let uploadUrl = `${this.host}/parties/fireproof/${this.name}?car=${params.car}`;
+    const uploadUrl = `${this.host}/parties/fireproof/${this.name}?car=${params.car}`;
     const response = await fetch(uploadUrl, { method: "PUT", body: bytes });
     if (response.status === 404) {
       throw new Error("Failure in uploading data!");
@@ -70,7 +70,7 @@ export class ConnectPartyKit extends Connection {
   }
 
   async dataDownload(params: DownloadDataFnParams) {
-    let uploadUrl = `${this.host}/parties/fireproof/${this.name}?car=${params.car}`;
+    const uploadUrl = `${this.host}/parties/fireproof/${this.name}?car=${params.car}`;
     const response = await fetch(uploadUrl, { method: "GET" });
     if (response.status === 404) {
       throw new Error("Failure in downloading data!");

@@ -1,4 +1,3 @@
-/* eslint-disable import/first */
 import { format, parse, ToString } from "@ipld/dag-json";
 import { join, dirname } from "path";
 import { homedir } from "os";
@@ -41,7 +40,7 @@ export class MetaStore extends MetaStoreBase {
     return join(MetaStore.dataDir, this.name, "meta", branch + ".json");
   }
 
-  async load(branch: string = "main"): Promise<DbMeta[] | null> {
+  async load(branch = "main"): Promise<DbMeta[] | null> {
     const filepath = this.filePathForBranch(branch);
     const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
@@ -51,7 +50,7 @@ export class MetaStore extends MetaStoreBase {
     return bytes ? [this.parseHeader(bytes.toString())] : null;
   }
 
-  async save(meta: DbMeta, branch: string = "main") {
+  async save(meta: DbMeta, branch = "main") {
     const filepath = this.filePathForBranch(branch);
     const bytes = this.makeHeader(meta);
     await writePathFile(filepath, bytes);

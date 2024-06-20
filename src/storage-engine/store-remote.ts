@@ -59,7 +59,6 @@ export class RemoteDataStore extends DataStoreBase {
     return await this.connection.dataUpload(car.bytes, uploadParams, opts);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async remove(_cid: AnyLink): Promise<void> {
     throw new Error("not implemented");
   }
@@ -68,7 +67,7 @@ export class RemoteDataStore extends DataStoreBase {
 export class RemoteMetaStore extends MetaStoreBase {
   readonly tag: string = "remote-meta";
   readonly connection: Connection;
-  readonly subscribers: Map<string, LoadHandler[]> = new Map();
+  readonly subscribers = new Map<string, LoadHandler[]>();
 
   constructor(name: string, connection: Connection) {
     super(name);
@@ -90,7 +89,7 @@ export class RemoteMetaStore extends MetaStoreBase {
     return `fp.${this.name}.${this.STORAGE_VERSION}`;
   }
 
-  async handleByteHeads(byteHeads: Uint8Array[], branch: string = "main") {
+  async handleByteHeads(byteHeads: Uint8Array[], branch = "main") {
     const dbMetas = this.dbMetasForByteHeads(byteHeads);
     const subscribers = this.subscribers.get(branch) || [];
     for (const subscriber of subscribers) {
@@ -99,7 +98,7 @@ export class RemoteMetaStore extends MetaStoreBase {
     return dbMetas;
   }
 
-  async load(branch: string = "main"): Promise<DbMeta[] | null> {
+  async load(branch = "main"): Promise<DbMeta[] | null> {
     const params = {
       name: this.prefix(),
       branch,
@@ -110,7 +109,7 @@ export class RemoteMetaStore extends MetaStoreBase {
     return this.handleByteHeads(byteHeads, branch);
   }
 
-  async save(meta: DbMeta, branch: string = "main") {
+  async save(meta: DbMeta, branch = "main") {
     const bytes = new TextEncoder().encode(this.makeHeader(meta));
     const params = { name: this.prefix(), branch };
     validateMetaParams(params);

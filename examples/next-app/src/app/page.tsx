@@ -6,9 +6,9 @@ import { useForm } from "react-hook-form";
 import useSWR from "swr";
 import useLocalStorageState from "use-local-storage-state";
 
-type AuthFormValues = {
+interface AuthFormValues {
   email: string;
-};
+}
 
 export default function Home() {
   const [email, setEmail] = useLocalStorageState<string>("example-email");

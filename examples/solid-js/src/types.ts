@@ -1,1 +1,1 @@
-export type Todo = { text: string; date: number; completed: boolean };
+export interface Todo { text: string; date: number; completed: boolean }

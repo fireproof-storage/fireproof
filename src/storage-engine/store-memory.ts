@@ -37,8 +37,7 @@ export class MetaStore extends MetaStoreBase {
     return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async load(branch: string = "main"): Promise<DbMeta[] | null> {
+  async load(branch = "main"): Promise<DbMeta[] | null> {
     try {
       const bytesString = this.store.get(this.headerKey(branch));
       if (!bytesString) return null;
@@ -51,8 +50,8 @@ export class MetaStore extends MetaStoreBase {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async save(meta: DbMeta, branch: string = "main") {
+   
+  async save(meta: DbMeta, branch = "main") {
     try {
       const headerKey = this.headerKey(branch);
       const bytes = this.makeHeader(meta);
@@ -73,7 +72,6 @@ export class RemoteWAL extends RemoteWALBase {
     return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async load(branch = "main"): Promise<WALState | null> {
     try {
       const bytesString = this.store.get(this.headerKey(branch));
@@ -83,7 +81,6 @@ export class RemoteWAL extends RemoteWALBase {
       return null;
     }
   }
-  // eslint-disable-next-line @typescript-eslint/require-await
   async save(state: WALState, branch = "main"): Promise<void> {
     try {
       const encoded: ToString<WALState> = format(state);

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+ 
+ 
 import * as esbuild from "esbuild";
 import fs from "fs";
 import { createBuildSettings } from "./settings.js";

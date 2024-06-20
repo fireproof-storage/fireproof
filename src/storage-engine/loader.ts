@@ -36,7 +36,7 @@ export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
 }
 
 // this works for car groups because toString looks like bafy,bafy
-function uniqueCids(list: CarLog, remove: Set<string> = new Set()): CarLog {
+function uniqueCids(list: CarLog, remove = new Set<string>()): CarLog {
   const byString = new Map<string, CarGroup>();
   for (const cid of list) {
     if (remove.has(cid.toString())) continue;
@@ -56,7 +56,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 }
 
 export abstract class Loadable {
-  name: string = "";
+  name = "";
   remoteCarStore?: DataStore;
   carStore?: DataStore;
   carLog: CarLog = new Array<CarGroup>();
@@ -79,16 +79,16 @@ export class Loader implements Loadable {
   metaStore?: MetaStore;
   readonly carStore: DataStore;
   carLog: CarLog = [];
-  readonly carReaders: Map<string, Promise<CarReader>> = new Map();
+  readonly carReaders = new Map<string, Promise<CarReader>>();
   readonly ready: Promise<void>;
   key?: string;
   keyId?: string;
-  readonly seenCompacted: Set<string> = new Set();
-  readonly processedCars: Set<string> = new Set();
+  readonly seenCompacted = new Set<string>();
+  readonly processedCars = new Set<string>();
   writing: Promise<TransactionMeta | void> = Promise.resolve();
 
-  private getBlockCache: Map<string, AnyBlock> = new Map();
-  private seenMeta: Set<string> = new Set();
+  private getBlockCache = new Map<string, AnyBlock>();
+  private seenMeta = new Set<string>();
 
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
@@ -166,7 +166,7 @@ export class Loader implements Loadable {
     return await parseCarFile(reader);
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
+
   async _getKey(): Promise<string | null> {
     if (this.key) return this.key;
     // generate a random key
@@ -248,7 +248,7 @@ export class Loader implements Loadable {
   ): Promise<CarGroup> {
     await this.ready;
     const fp = this.makeCarHeader(done, this.carLog, !!opts.compact) as CarHeader;
-    let rootBlock = await encodeCarHeader(fp);
+    const rootBlock = await encodeCarHeader(fp);
 
     const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public);
     const cids: AnyLink[] = [];
@@ -324,7 +324,7 @@ export class Loader implements Loadable {
         files.push(meta.cid as AnyLink);
       }
     }
-    return { files };
+    return { ...result, files };
   }
 
   async updateCarLog(cids: CarGroup, fp: CarHeader, compact: boolean): Promise<void> {
@@ -394,7 +394,7 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`);
       }
-      await this.cacheCarReader(carCid.toString(), reader).catch((e) => {});
+      await this.cacheCarReader(carCid.toString(), reader).catch((e) => { });
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
       throw new Error(`block not in reader: ${cid.toString()}`);
     };
@@ -456,12 +456,12 @@ export class Loader implements Loadable {
     return got;
   }
 
-  protected makeCarHeader(result: TransactionMeta, cars: CarLog, compact: boolean = false): CarHeader {
+  protected makeCarHeader(result: TransactionMeta, cars: CarLog, compact = false): CarHeader {
     const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] };
     return { ...coreHeader, meta: result };
   }
 
-  protected async loadCar(cid: AnyLink): Promise<CarReader> {
+  async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) throw new Error("car store not initialized");
     const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore);
     return loaded;
@@ -500,7 +500,7 @@ export class Loader implements Loadable {
           const readerP = publicFiles ? Promise.resolve(rawReader) : this.ensureDecryptedReader(rawReader);
 
           const cachedReaderP = readerP.then(async (reader) => {
-            await this.cacheCarReader(cidsString, reader).catch((e) => {});
+            await this.cacheCarReader(cidsString, reader).catch((e) => { });
             return reader;
           });
           this.carReaders.set(cidsString, cachedReaderP);
@@ -550,7 +550,7 @@ export class Loader implements Loadable {
       await _writingFn();
       return wr;
     });
-    return this.writing.then(() => {});
+    return this.writing.then(() => { });
   }
 }
 

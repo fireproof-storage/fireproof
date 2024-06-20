@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
+ 
 import path from "path";
 import alias from "@rollup/plugin-alias";
 import nodePolyfills from "rollup-plugin-polyfill-node";

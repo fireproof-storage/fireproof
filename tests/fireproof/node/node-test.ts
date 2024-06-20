@@ -1,13 +1,17 @@
-import { fireproof } from "@fireproof/core/node";
+import { fireproof } from "../../../src"
 
-console.log(fireproof);
+async function main() {
+    console.log(fireproof);
 
-const db = fireproof("test-node-" + Date.now());
+    const db = fireproof("test-node-" + Date.now());
 
-const ok = await db.put({ _id: "test", hello: "world" });
+    const ok = await db.put({ _id: "test", hello: "world" });
 
-console.log(ok);
+    console.log(ok);
 
-const doc = await db.get("test");
+    const doc = await db.get("test");
 
-console.log(doc);
+    console.log(doc);
+}
+
+main().catch(console.error);

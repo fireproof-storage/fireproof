@@ -1,11 +1,11 @@
-import { fireproof } from "../fireproof/dist/node/fireproof.js";
+import { fireproof } from "../../../src/index.js";
 import { SimpleSQLite } from "./dist/node/sqlite-adapter-node.cjs";
 
 import { LoggerImpl, Level } from "@adviser/cement";
 
 async function main() {
   const logger = new LoggerImpl(); // .EnableLevel(Level.DEBUG);
-  logger.Debug("test");
+  logger.Debug().Msg("test");
 
   const db = fireproof("my-database", {
     store: SimpleSQLite("sqlite.db", {

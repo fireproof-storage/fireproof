@@ -7,7 +7,7 @@ try {
   storageSupported = window.localStorage && true;
 } catch (e) {}
 
-export type Props = { text: string };
+export interface Props { text: string }
 
 const STRINGARRAYSERIALIZER = "#*#*#*#*#*STRINGARRAYSERIALIZER#*#*#*#*#*";
 const noOptions = {
@@ -38,7 +38,7 @@ export function useInput(
     /** prop: pass a callback if you want to know about changes */
     stateObserver?: (arg: typeof initialValue) => void;
     /** if you want to persist to localstorage, pass a name for it! */
-    localStorageName?: String;
+    localStorageName?: string;
     /** pass true if you want a resetValue or setValue */
     controlled?: boolean;
   },
@@ -48,7 +48,7 @@ export function useInput(
 
   // safely check localstorage and coerce the right types
   if (storageSupported && typeof localStorageName === "string") {
-    let v = localStorage.getItem(localStorageName);
+    const v = localStorage.getItem(localStorageName);
     if (v) {
       if (typeof initialValue === "number") _initialValue = Number(v);
       else if (Array.isArray(v)) _initialValue = v.split(STRINGARRAYSERIALIZER);
@@ -57,14 +57,14 @@ export function useInput(
     }
   }
 
-  let [value, setValue] = React.useState<typeof _initialValue>(_initialValue);
+  const [value, setValue] = React.useState<typeof _initialValue>(_initialValue);
   const onChange = (e: { target: { type: string; value: string } }) => {
     if (e.target.type === "checkbox") {
       throw new Error(
         "useInput error - type=checkbox specified, this is likely a mistake by the developer. you may want useCheckInput instead",
       );
     }
-    let val = typeof initialValue === "number" ? Number(e.target.value) : e.target.value;
+    const val = typeof initialValue === "number" ? Number(e.target.value) : e.target.value;
     setValue(val);
     if (storageSupported && typeof localStorageName === "string") {
       if (val !== initialValue) {

@@ -3,9 +3,9 @@ import { ParentComponent } from "solid-js";
 
 const FlameIcon = () => <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25" />;
 
-type LinkProps = {
+interface LinkProps {
   readonly href: string;
-};
+}
 
 const Link: ParentComponent<LinkProps> = (props) => (
   <A class="nav-link" href={props.href} activeClass="nav-link-active" end>

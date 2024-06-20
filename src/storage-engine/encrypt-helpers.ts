@@ -60,9 +60,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     if (!eroot) throw new Error("cids does not include root");
     const list = [...set].map((s) => CID.parse(s));
     let last;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     for await (const node of create({ list, get, cache, chunker, hasher, codec: dagcbor })) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const block = (await node.block) as AnyBlock;
       yield block;
       last = block;
@@ -108,9 +106,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     } = decodedRoot as { value: [AnyLink, AnyLink] };
     const rootBlock = (await get(eroot)) as AnyDecodedBlock;
     if (!rootBlock) throw new Error("missing root block");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
     const cidset = await load({ cid: tree, get: getWithDecode, cache, chunker, codec, hasher });
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
     const { result: nodes } = (await cidset.getAllEntries()) as { result: { cid: CID }[] };
     const unwrap = async (eblock: AnyDecodedBlock | undefined) => {
       if (!eblock) throw new Error("missing block");
@@ -132,7 +128,6 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
   };
   return { encrypt, decrypt };
 }
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
 const chunker = bf(30);
 
 function hexStringToUint8Array(hexString: string) {
@@ -161,9 +156,7 @@ export async function encryptedEncodeCarFile(crypto: CryptoOpts, key: string, ro
     get: t.get.bind(t),
     key: encryptionKey,
     hasher: sha256,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     chunker,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     cache,
     root: rootCid,
   }) as AsyncGenerator<AnyBlock, void, unknown>) {
@@ -199,9 +192,7 @@ async function decodeCarBlocks(
     get,
     key: decryptionKey,
     hasher: sha256,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     chunker,
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     cache,
   })) {
     await decryptedBlocks.put(block.cid, block.bytes);

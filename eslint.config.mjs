@@ -7,6 +7,6 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   {
-    ignores: ["jest.config.js", "**/dist/", "**/pubdir/", "**/node_modules/", "**/tests/", "**/scripts/", "**/examples/"],
+    ignores: ["jest.config.js", "**/dist/", "**/pubdir/", "**/node_modules/"],
   },
 );

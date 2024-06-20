@@ -12,19 +12,19 @@ import {
   getBlock,
   doCompact,
 } from "./crdt-helpers";
-import type { DocUpdate, CRDTMeta, ClockHead, ConfigOpts, ChangesOptions, IdxMetaMap, DocValue, IndexKeyType, DocWithId } from "./types";
-import { index, type Index } from "./index";
+import type { DocUpdate, CRDTMeta, ClockHead, ConfigOpts, ChangesOptions, IdxMetaMap, DocValue, IndexKeyType, DocWithId, DocRecord, DocTypes } from "./types";
+import { index, type Index } from "./indexer";
 import { CRDTClock } from "./crdt-clock";
 import { Block } from "multiformats";
 
-export class CRDT<T> {
+export class CRDT<T extends DocTypes> {
   readonly name?: string;
   readonly opts: ConfigOpts = {};
   readonly ready: Promise<void>;
   readonly blockstore: EncryptedBlockstore;
   readonly indexBlockstore: EncryptedBlockstore;
 
-  readonly indexers: Map<string, Index<IndexKeyType, T>> = new Map();
+  readonly indexers = new Map<string, Index<IndexKeyType, {}>>();
 
   readonly clock: CRDTClock<T> = new CRDTClock<T>();
 
@@ -69,7 +69,7 @@ export class CRDT<T> {
     });
   }
 
-  async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
+  async bulk(updates: DocUpdate<T>[]): Promise<TransactionMeta> {
     await this.ready;
     const prevHead = [...this.clock.head];
 
@@ -80,8 +80,8 @@ export class CRDT<T> {
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
         return dupdate
       });
-      return { head } as TransactionMeta;
-    })) as CRDTMeta;
+      return { head }
+    }));
     await this.clock.applyHead(meta.head, prevHead, updates);
     return meta;
   }
@@ -126,7 +126,7 @@ export class CRDT<T> {
     head: ClockHead;
   }> {
     await this.ready;
-    return await clockChangesSince(this.blockstore, this.clock.head, since, opts);
+    return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts);
   }
 
   async compact(): Promise<void> {

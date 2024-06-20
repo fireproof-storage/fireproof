@@ -11,13 +11,13 @@ import { BlockstoreOpts } from "./transaction";
 
 export type CarClockHead = Link<DbMetaEventBlock>[];
 
-export type Connectable = {
+export interface Connectable {
   readonly blockstore: {
     readonly loader?: Loader;
     readonly ebOpts: BlockstoreOpts;
   };
   readonly name?: string;
-};
+}
 
 export abstract class Connection {
   readonly ready: Promise<any>;
@@ -28,10 +28,10 @@ export abstract class Connection {
   taskManager?: TaskManager;
   loaded: Promise<any> = Promise.resolve();
 
-  abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>;
+  abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined>;
   abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void | AnyLink>;
-  abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>;
-  abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>;
+  abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined>;
+  abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined>;
 
   constructor() {
     this.ready = Promise.resolve();
@@ -67,7 +67,7 @@ export abstract class Connection {
     });
   }
 
-  async onConnect() {}
+  async onConnect() { }
 
   connectStorage({ loader }: { loader: Loader | null }) {
     if (!loader) throw new Error("loader is required");

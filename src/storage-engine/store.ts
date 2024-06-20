@@ -31,9 +31,9 @@ export abstract class MetaStore extends VersionedStore {
   abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | null>;
 }
 
-type DataSaveOpts = {
+interface DataSaveOpts {
   readonly public: boolean;
-};
+}
 
 export abstract class DataStore {
   readonly tag: string = "car-base";

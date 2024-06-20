@@ -2,16 +2,13 @@ import { MemoryBlockstore } from "@web3-storage/pail/block";
 // todo get these from multiformats?
 import { BlockFetcher as BlockFetcherAPI } from "@web3-storage/pail/api";
 
-import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta as TM } from "./types";
+import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, TransactionMeta } from "./types";
 
 import { Loader } from "./loader";
 import type { CID } from "multiformats";
 import { CryptoOpts, StoreOpts } from "./types";
 
 export type BlockFetcher = BlockFetcherAPI;
-// = { get: (link: AnyLink) => Promise<AnyBlock | undefined> }
-
-export type TransactionMeta = TM;
 
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   readonly parent: EncryptedBlockstore;
@@ -43,7 +40,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 
   readonly ebOpts: BlockstoreOpts;
-  readonly transactions: Set<CarTransaction> = new Set();
+  readonly transactions = new Set<CarTransaction>();
   lastTxMeta?: TransactionMeta;
   compacting = false;
 
@@ -77,7 +74,6 @@ export class EncryptedBlockstore implements BlockFetcher {
     return done;
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   async put() {
     throw new Error("use a transaction to put");
   }
@@ -97,7 +93,6 @@ export class EncryptedBlockstore implements BlockFetcher {
     await this.ready;
     if (!this.loader) throw new Error("loader required to get file");
     const reader = await this.loader.loadFileCar(car, isPublic);
-    // @ts-ignore -- TODO: TypeScript does not like this casting
     const block = await reader.get(cid as CID);
     if (!block) throw new Error(`Missing block ${cid.toString()}`);
     return block.bytes;
@@ -139,7 +134,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
-    const seen: Set<string> = new Set();
+    const seen = new Set<string>();
     if (this.loader) {
       for await (const blk of this.loader.entries()) {
         // if (seen.has(blk.cid.toString())) continue
@@ -178,7 +173,7 @@ export class CompactionFetcher implements BlockFetcher {
 
 export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>;
 
-export type BlockstoreOpts = {
+export interface BlockstoreOpts {
   applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
   compact?: CompactFn;
   autoCompact?: number;
@@ -188,4 +183,4 @@ export type BlockstoreOpts = {
   meta?: DbMeta;
   name?: string;
   threshold?: number;
-};
+}

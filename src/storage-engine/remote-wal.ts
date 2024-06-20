@@ -4,14 +4,14 @@ import { type Loadable, carLogIncludesGroup } from "./loader";
 import { STORAGE_VERSION } from "./store";
 import { CommitQueue } from "./commit-queue";
 
-export type WALState = {
+export interface WALState {
   operations: DbMeta[];
   noLoaderOps: DbMeta[];
   fileOperations: {
     readonly cid: AnyLink;
     readonly public: boolean;
   }[];
-};
+}
 
 export abstract class RemoteWAL {
   readonly tag: string = "rwal-base";
