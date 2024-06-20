@@ -1,4 +1,4 @@
-import type { Link } from "multiformats";
+import type { CID, Link } from "multiformats";
 import { DataStore, MetaStore } from "./store";
 import { RemoteWAL } from "./remote-wal";
 import type { Loader } from "./loader";
@@ -18,10 +18,10 @@ export interface CarMakeable {
   get(cid: AnyLink): Promise<AnyBlock | undefined>;
 }
 
-export interface CarHeader {
+export interface CarHeader<T> {
   readonly cars: CarLog;
   readonly compact: CarLog;
-  readonly meta: CRDTMeta;
+  readonly meta: T;
 }
 
 type NestedData =
@@ -35,6 +35,17 @@ type NestedData =
   | NestedData[]
   | { [key: string]: NestedData };
 
+export interface IdxMeta {
+  readonly byId: CID
+  readonly byKey: CID
+  readonly head: CarGroup
+  readonly name: string
+  readonly map: string // is this really a string of javascript who is eval'd?
+}
+export interface IndexTransactionMeta {
+  readonly indexes: Record<string, IdxMeta>;
+  readonly cars?: CarGroup;
+}
 // // Record<string, NestedData>;
 export type TransactionMeta = CRDTMeta & {
   readonly cars?: CarGroup;
@@ -43,6 +54,8 @@ export type TransactionMeta = CRDTMeta & {
 // export type TransactionMeta = {
 //   readonly head: ClockHead;
 // };
+
+export type MetaType = TransactionMeta | IndexTransactionMeta;
 
 export interface CryptoOpts {
   readonly crypto: any;

@@ -25,9 +25,8 @@ export function equalsJSON<T>(actual: T, expected: T) {
 export function notEquals<T>(actual: T, expected: T) {
   assert(actual !== expected, `Expected '${actual} 'to not equal '${expected}'`);
 }
-
-export function matches<T extends { toString: () => string }>(actual: T, expected: T) {
-
+type ToStringFn = { toString: () => string };
+export function matches<TA extends ToStringFn, TB extends ToStringFn>(actual: TA, expected: TB) {
   assert(actual.toString().match(expected.toString()), `Expected '${actual}' to match ${expected}`);
 }
 

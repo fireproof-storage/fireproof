@@ -1,26 +1,27 @@
- 
- 
- 
- 
+
+
+
+
 /* eslint-disable mocha/max-top-level-suites */
- 
+
 import { join } from "path";
 import { promises } from "fs";
 
 import { CID } from "multiformats";
 
- 
-import { assert, matches, equals, dataDir } from "../../fireproof/test/helpers.js";
 
-import { DataStore, MetaStore } from "../dist/lib/store-node.js";
+import { assert, matches, equals, dataDir } from "../fireproof/helpers.js";
+
+import { DataStore, MetaStore } from "../../src/node/store-node.js";
+import { AnyBlock, AnyLink } from "../../src/types.js";
+import { DbMeta } from "../../src/storage-engine/types.js";
 
 const { readFile } = promises;
 
 const decoder = new TextDecoder("utf-8");
 
 describe("DataStore", function () {
-  /** @type {DataStore} */
-  let store;
+  let store: DataStore;
 
   beforeEach(function () {
     store = new DataStore("test");
@@ -31,8 +32,8 @@ describe("DataStore", function () {
   });
 
   it("should save a car", async function () {
-    const car = {
-      cid: "cid",
+    const car: AnyBlock = {
+      cid: "cid" as unknown as AnyLink,
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
@@ -43,13 +44,13 @@ describe("DataStore", function () {
 });
 
 describe("DataStore with a saved car", function () {
-  /** @type {DataStore} */
-  let store, car;
+  let store: DataStore
+  let car: AnyBlock;
 
   beforeEach(async function () {
     store = new DataStore("test2");
     car = {
-      cid: "cid",
+      cid: "cid" as unknown as AnyLink,
       bytes: new Uint8Array([55, 56, 57, 80]),
     };
     await store.save(car);
@@ -76,8 +77,7 @@ describe("DataStore with a saved car", function () {
 });
 
 describe("MetaStore", function () {
-  /** @type {MetaStore} */
-  let store;
+  let store: MetaStore
 
   beforeEach(function () {
     store = new MetaStore("test");
@@ -89,9 +89,9 @@ describe("MetaStore", function () {
 
   it("should save a header", async function () {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-    const h = {
+    const h: DbMeta = {
       cars: [cid],
-      key: null,
+      key: undefined,
     };
     await store.save(h);
     const path = join(dataDir, store.name, "meta", "main.json");
@@ -104,13 +104,13 @@ describe("MetaStore", function () {
 });
 
 describe("MetaStore with a saved header", function () {
-  /** @type {MetaStore} */
-  let store, cid;
+  let store: MetaStore
+  let cid: CID;
 
   beforeEach(async function () {
     store = new MetaStore("test-saved-header");
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-    await store.save({ cars: [cid], key: null });
+    await store.save({ cars: [cid], key: undefined });
   });
 
   it("should have a header", async function () {
@@ -124,7 +124,7 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should load a header", async function () {
-    const loadeds = await store.load();
+    const loadeds = await store.load() as DbMeta[];
     const loaded = loadeds[0];
     assert(loaded);
     assert(loaded.cars);

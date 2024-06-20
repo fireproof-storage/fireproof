@@ -294,7 +294,7 @@ describe("Loader with a committed transaction", function () {
     assert(blk);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);
@@ -340,7 +340,7 @@ describe("Loader with two committed transactions", function () {
     assert(blk);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 1);
     assert(parsed.meta);
@@ -380,7 +380,7 @@ describe("Loader with many committed transactions", function () {
     assert(dones[5].cars);
     const reader = await loader.loadCar(dones[5].cars[0]);
     assert(reader);
-    const parsed = await parseCarFile(reader);
+    const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 5);
     assert(parsed.meta);

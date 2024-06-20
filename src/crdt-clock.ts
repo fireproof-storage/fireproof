@@ -1,11 +1,11 @@
 import { clockChangesSince } from "./crdt-helpers";
-import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/";
+import type { EncryptedBlockstore, CarTransaction, TransactionMeta } from "./storage-engine/";
 import type { DocUpdate, ClockHead, IndexKeyType, DocRecord, DocTypes } from "./types";
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue";
 
-export class CRDTClock<T extends DocTypes> {
+export class CRDTClock<T extends DocTypes, TR = TransactionMeta> {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
   // should go with making sure the local clock only references locally available blockstore on write
