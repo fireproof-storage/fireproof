@@ -22,7 +22,6 @@ import type {
   DocValue,
   IndexKeyType,
   DocWithId,
-  DocRecord,
   DocTypes,
 } from "./types";
 import { index, type Index } from "./indexer";
@@ -37,7 +36,7 @@ export class CRDT<T extends DocTypes> {
   readonly blockstore: EncryptedBlockstore;
   readonly indexBlockstore: EncryptedBlockstore;
 
-  readonly indexers = new Map<string, Index<IndexKeyType, {}>>();
+  readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
 
   readonly clock: CRDTClock<T> = new CRDTClock<T>();
 
@@ -67,14 +66,14 @@ export class CRDT<T extends DocTypes> {
       applyMeta: async (meta: MetaType) => {
         const idxCarMeta = meta as unknown as IdxMetaMap;
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index({ _crdt: this }, name, undefined, idx as any);
+          index({ _crdt: this }, name, undefined, idx);
         }
       },
       crypto,
       public: this.opts.public,
       store,
     });
-    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {});
+    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => { return });
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();

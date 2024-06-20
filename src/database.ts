@@ -4,30 +4,26 @@ import { WriteQueue, writeQueue } from "./write-queue";
 import { CRDT } from "./crdt";
 import { index } from "./indexer";
 import type {
-  CRDTMeta,
   DocUpdate,
   ClockHead,
   ConfigOpts,
   MapFn,
   QueryOpts,
   ChangesOptions,
-  IndexRow,
   DocSet,
   DocWithId,
   IndexKeyType,
   ListenerFn,
   DbResponse,
   ChangesResponse,
-  DocRecord,
   DocTypes,
-  DocObject,
   IndexRows,
   DocFragment,
   ChangesResponseRow,
 } from "./types";
 import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 
-export class Database<DT extends DocTypes = {}> implements Connectable {
+export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
 
   readonly name?: string;
@@ -120,18 +116,18 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
     if (updates) {
       if (!this._listening) {
         this._listening = true;
-        this._crdt.clock.onTick((updates: DocUpdate<{}>[]) => {
+        this._crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
           void this._notify(updates);
         });
       }
-      this._listeners.add(listener as ListenerFn<{}>);
+      this._listeners.add(listener as ListenerFn<NonNullable<unknown>>);
       return () => {
-        this._listeners.delete(listener as ListenerFn<{}>);
+        this._listeners.delete(listener as ListenerFn<NonNullable<unknown>>);
       };
     } else {
-      this._noupdate_listeners.add(listener as ListenerFn<{}>);
+      this._noupdate_listeners.add(listener as ListenerFn<NonNullable<unknown>>);
       return () => {
-        this._noupdate_listeners.delete(listener as ListenerFn<{}>);
+        this._noupdate_listeners.delete(listener as ListenerFn<NonNullable<unknown>>);
       };
     }
   }
@@ -151,9 +147,9 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
     await this._crdt.compact();
   }
 
-  async _notify(updates: DocUpdate<{}>[]) {
+  async _notify(updates: DocUpdate<NonNullable<unknown>>[]) {
     if (this._listeners.size) {
-      const docs: DocWithId<{}>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
+      const docs: DocWithId<NonNullable<unknown>>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
         await (async () => await listener(docs as DocWithId<DT>[]))().catch((e: Error) => {
           console.error("subscriber error", e);
@@ -174,10 +170,12 @@ export class Database<DT extends DocTypes = {}> implements Connectable {
 }
 
 export function fireproof(name: string, opts?: ConfigOpts): Database {
-  if (!Database.databases.has(name)) {
-    Database.databases.set(name, new Database(name, opts));
+  let db = Database.databases.get(name);
+  if (!db) {
+    db = new Database(name, opts);
+    Database.databases.set(name, db);
   }
-  return Database.databases.get(name)!;
+  return db
 }
 
 function makeName(fnString: string) {

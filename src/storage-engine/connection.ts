@@ -1,6 +1,5 @@
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote";
 import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from "./types";
-import type { AnyLink } from "./types";
 import { type Loader } from "./loader";
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
@@ -8,6 +7,7 @@ import { MemoryBlockstore } from "@web3-storage/pail/block";
 import type { Link } from "multiformats";
 import { TaskManager } from "./task-manager";
 import { BlockstoreOpts } from "./transaction";
+import { Falsy, throwFalsy } from "../types";
 
 export type CarClockHead = Link<DbMetaEventBlock>[];
 
@@ -20,26 +20,26 @@ export interface Connectable {
 }
 
 export abstract class Connection {
-  readonly ready: Promise<any>;
+  readonly ready: Promise<unknown>;
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   readonly eventBlocks = new MemoryBlockstore();
   parents: CarClockHead = [];
   loader?: Loader;
   taskManager?: TaskManager;
-  loaded: Promise<any> = Promise.resolve();
+  loaded: Promise<unknown> = Promise.resolve();
 
-  abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined>;
-  abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void | AnyLink>;
-  abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined>;
-  abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined>;
+  abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
+  abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 
   constructor() {
     this.ready = Promise.resolve();
   }
 
   async refresh() {
-    await this.loader!.remoteMetaStore!.load("main");
-    await this.loader!.remoteWAL?._process();
+    await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
+    await throwFalsy(this.loader).remoteWAL._process();
   }
 
   connect({ loader }: { loader?: Loader }) {
@@ -53,27 +53,27 @@ export abstract class Connection {
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
     this.onConnect();
-    const remote = new RemoteMetaStore(this.loader!.name, this);
+    const remote = new RemoteMetaStore(this.loader.name, this);
     remote.onLoad("main", async (metas) => {
       if (metas) {
-        await this.loader!.handleDbMetasFromStore(metas);
+        await throwFalsy(this.loader).handleDbMetasFromStore(metas);
       }
     });
-    this.loader!.remoteMetaStore = remote;
-    this.loaded = this.loader!.ready.then(async () => {
-      remote!.load("main").then(() => {
-        void this.loader!.remoteWAL?._process();
+    this.loader.remoteMetaStore = remote;
+    this.loaded = this.loader.ready.then(async () => {
+      throwFalsy(remote).load("main").then(() => {
+        throwFalsy(this.loader).remoteWAL?._process();
       });
     });
   }
 
-  async onConnect() {}
+  async onConnect() { return }
 
   connectStorage({ loader }: { loader: Loader | null }) {
     if (!loader) throw new Error("loader is required");
     this.loader = loader;
-    loader!.remoteCarStore = new RemoteDataStore(this.loader!.name, this);
-    loader!.remoteFileStore = new RemoteDataStore(this.loader!.name, this);
+    loader.remoteCarStore = new RemoteDataStore(this.loader.name, this);
+    loader.remoteFileStore = new RemoteDataStore(this.loader.name, this);
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {

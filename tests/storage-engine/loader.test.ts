@@ -91,12 +91,14 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   // }
 
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
   }
   compact(): Promise<void> {
     throw new Error("Method not implemented.");
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultCompact(blocks: CompactionFetcher): Promise<TransactionMeta> {
     throw new Error("Method not implemented.");
   }

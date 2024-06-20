@@ -28,6 +28,7 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "
 import { CarTransaction } from "./transaction";
 import { CommitQueue } from "./commit-queue";
 import * as CBW from "@ipld/car/buffer-writer";
+import { Falsy, throwFalsy } from "../types";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -85,7 +86,7 @@ export class Loader implements Loadable {
   keyId?: string;
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
-  writing: Promise<TransactionMeta | void> = Promise.resolve();
+  writing = Promise.resolve();
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
@@ -99,7 +100,7 @@ export class Loader implements Loadable {
     this.ready = Promise.resolve().then(async () => {
       this.metaStore = ebOpts.store.makeMetaStore(this);
       if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore!.load("main");
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load("main");
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
@@ -200,8 +201,8 @@ export class Loader implements Loadable {
     const cars = await this.prepareCarFilesFiles(roots, t, !!opts.public);
     for (const car of cars) {
       const { cid, bytes } = car;
-      await this.fileStore!.save({ cid, bytes });
-      await this.remoteWAL!.enqueueFile(cid, !!opts.public);
+      await this.fileStore.save({ cid, bytes });
+      await this.remoteWAL.enqueueFile(cid, !!opts.public);
       cids.push(cid);
     }
 
@@ -249,14 +250,14 @@ export class Loader implements Loadable {
     const cids: AnyLink[] = [];
     for (const car of cars) {
       const { cid, bytes } = car;
-      await this.carStore!.save({ cid, bytes });
+      await this.carStore.save({ cid, bytes });
       cids.push(cid);
     }
 
     await this.cacheTransaction(t);
     const newDbMeta = { cars: cids, key: this.key || null } as DbMeta;
-    await this.remoteWAL!.enqueue(newDbMeta, opts);
-    await this.metaStore!.save(newDbMeta);
+    await this.remoteWAL.enqueue(newDbMeta, opts);
+    await throwFalsy(this.metaStore).save(newDbMeta);
     await this.updateCarLog(cids, fp, !!opts.compact);
     return cids;
   }
@@ -280,18 +281,15 @@ export class Loader implements Loadable {
     const threshold = this.ebOpts.threshold || 1000 * 1000;
     let clonedt = new CarTransaction(t.parent, { add: false });
     clonedt.putSync(rootBlock.cid, rootBlock.bytes);
-    // @ts-ignore
     let newsize = CBW.blockLength(rootBlock);
     let cidRootBlock = rootBlock;
     for (const { cid, bytes } of t.entries()) {
-      // @ts-ignore
       newsize += CBW.blockLength({ cid, bytes });
       if (newsize >= threshold) {
         carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt));
         clonedt = new CarTransaction(t.parent, { add: false });
         clonedt.putSync(cid, bytes);
         cidRootBlock = { cid, bytes };
-        // @ts-ignore
         newsize = CBW.blockLength({ cid, bytes }); //+ CBW.blockLength(rootBlock)
       } else {
         clonedt.putSync(cid, bytes);
@@ -314,7 +312,7 @@ export class Loader implements Loadable {
 
   protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
     const files: AnyLink[] = [];
-    for (const [, meta] of Object.entries(result.files!)) {
+    for (const [, meta] of Object.entries(result.files || {})) {
       if (meta && typeof meta === "object" && "cid" in meta && meta !== null) {
         files.push(meta.cid as AnyLink);
       }
@@ -339,7 +337,7 @@ export class Loader implements Loadable {
     } as unknown as DbMeta);
     for (const cids of carHeader.compact) {
       for (const cid of cids) {
-        await this.carStore!.remove(cid);
+        await this.carStore.remove(cid);
       }
     }
   }
@@ -378,7 +376,7 @@ export class Loader implements Loadable {
     }
   }
 
-  async getBlock(cid: AnyLink): Promise<AnyBlock | undefined> {
+  async getBlock(cid: AnyLink): Promise<AnyBlock | Falsy> {
     await this.ready;
     const sCid = cid.toString();
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
@@ -389,7 +387,7 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`);
       }
-      await this.cacheCarReader(carCid.toString(), reader).catch((e) => {});
+      await this.cacheCarReader(carCid.toString(), reader).catch(() => { return });
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
       throw new Error(`block not in reader: ${cid.toString()}`);
     };
@@ -497,7 +495,7 @@ export class Loader implements Loadable {
           const readerP = publicFiles ? Promise.resolve(rawReader) : this.ensureDecryptedReader(rawReader);
 
           const cachedReaderP = readerP.then(async (reader) => {
-            await this.cacheCarReader(cidsString, reader).catch((e) => {});
+            await this.cacheCarReader(cidsString, reader).catch(() => { return });
             return reader;
           });
           this.carReaders.set(cidsString, cachedReaderP);
@@ -541,13 +539,13 @@ export class Loader implements Loadable {
     await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid))));
   }
 
-  async _setWaitForWrite(_writingFn: () => Promise<any>): Promise<void> {
+  async _setWaitForWrite(_writingFn: () => Promise<unknown>): Promise<void> {
     const wr = this.writing;
     this.writing = wr.then(async () => {
       await _writingFn();
       return wr;
     });
-    return this.writing.then(() => {});
+    return this.writing.then(() => { return });
   }
 }
 
@@ -558,7 +556,7 @@ export interface Connection {
   connectStorage({ loader }: { loader: Loader | null }): void;
 
   metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>;
-  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void | AnyLink>;
+  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
   metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>;
   dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>;
 }

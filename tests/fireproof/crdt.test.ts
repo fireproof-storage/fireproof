@@ -52,7 +52,6 @@ describe("CRDT with one record", function () {
   it("return the record on get", async function () {
     const got = await crdt.get("hello");
     assert(got);
-    const value = got.doc;
     equals(got.doc.hello, "world");
   });
   it("should accept another put and return results", async function () {

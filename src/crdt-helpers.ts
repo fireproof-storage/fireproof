@@ -3,33 +3,34 @@ import { parse } from "multiformats/link";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 import { put, get, entries, root } from "@web3-storage/pail/crdt";
-import { Operation, PutOperation } from "@web3-storage/pail/crdt/api";
+import { EventBlockView, EventLink, Operation, PutOperation } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import { type EncryptedBlockstore, type CompactionFetcher, CarTransaction, BlockFetcher, TransactionMeta } from "./storage-engine";
-import type {
-  IndexKeyType,
-  DocUpdate,
-  ClockHead,
-  AnyLink,
-  DocValue,
-  CRDTMeta,
-  ChangesOptions,
-  DocFileMeta,
-  DocFiles,
-  DocSet,
-  DocWithId,
-  DocRecord,
-  DocTypes,
+import {
+  type IndexKeyType,
+  type DocUpdate,
+  type ClockHead,
+  type AnyLink,
+  type DocValue,
+  type CRDTMeta,
+  type ChangesOptions,
+  type DocFileMeta,
+  type DocFiles,
+  type DocSet,
+  type DocWithId,
+  type DocTypes,
+  throwFalsy,
 } from "./types";
 import { decodeFile, encodeFile } from "./node/files";
 import { Result } from "@web3-storage/pail/crdt/api";
-import { IndexKey } from "idb";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
   // console.time(tag)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function timeEnd(tag: string) {
   // console.timeEnd(tag)
 }
@@ -76,7 +77,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
 }
 
 // this whole thing can get pulled outside of the write queue
-async function writeDocContent<T extends DocTypes, K extends IndexKeyType>(
+async function writeDocContent<T extends DocTypes>(
   blocks: CarTransaction,
   update: DocUpdate<T>,
 ): Promise<AnyLink> {
@@ -171,7 +172,7 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
           await decodeFile(
             {
               get: async (cid: AnyLink) => {
-                return await blocks.getFile(fileMeta.car!, cid, isPublic);
+                return await blocks.getFile(throwFalsy(fileMeta.car), cid, isPublic);
               },
             },
             fileMeta.cid,
@@ -197,13 +198,12 @@ async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: 
 }
 
 class DirtyEventFetcher<T> extends EventFetcher<T> {
-  // @ts-ignore
-  async get(link) {
+  async get(link: EventLink<T>): Promise<EventBlockView<T>> {
     try {
-      return await super.get(link);
+      return super.get(link);
     } catch (e) {
       console.error("missing event", link.toString(), e);
-      return { value: null };
+      return { value: undefined } as unknown as EventBlockView<T>;
     }
   }
 }
@@ -310,9 +310,11 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   // }
 
   time("compact all entries");
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   for await (const _entry of getAllEntries(blockLog, head)) {
     // result.push(entry)
-    void 1;
+    // void 1;
+    continue;
   }
   timeEnd("compact all entries");
 

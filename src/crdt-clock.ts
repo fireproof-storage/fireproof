@@ -1,11 +1,11 @@
 import { clockChangesSince } from "./crdt-helpers";
-import type { EncryptedBlockstore, CarTransaction, TransactionMeta } from "./storage-engine/";
-import type { DocUpdate, ClockHead, IndexKeyType, DocRecord, DocTypes } from "./types";
+import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/";
+import type { DocUpdate, ClockHead, DocTypes } from "./types";
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue";
 
-export class CRDTClock<T extends DocTypes, TR = TransactionMeta> {
+export class CRDTClock<T extends DocTypes> {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
   // should go with making sure the local clock only references locally available blockstore on write
@@ -40,7 +40,7 @@ export class CRDTClock<T extends DocTypes, TR = TransactionMeta> {
   async processUpdates(updatesAcc: DocUpdate<T>[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc;
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince<T>(this.blockstore!, this.head, prevHead, {});
+      const changes = await clockChangesSince<T>(this.blockstore, this.head, prevHead, {});
       internalUpdates = changes.result;
     }
     this.zoomers.forEach((fn) => fn());
@@ -107,9 +107,10 @@ function sortClockHead(clockHead: ClockHead) {
   return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()));
 }
 
-async function validateBlocks(newHead: ClockHead, blockstore: EncryptedBlockstore | null) {
+async function validateBlocks(newHead: ClockHead, blockstore?: EncryptedBlockstore) {
+  if (!blockstore) throw new Error("missing blockstore");
   newHead.map(async (cid) => {
-    const got = await blockstore!.get(cid);
+    const got = await blockstore.get(cid);
     if (!got) {
       throw new Error("int_applyHead missing block: " + cid.toString());
     }

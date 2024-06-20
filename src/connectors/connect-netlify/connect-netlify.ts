@@ -1,9 +1,10 @@
 import { Base64 } from "js-base64";
 import { Connection } from "../../storage-engine";
 import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types";
+import { Falsy } from "../../types";
 
 export class ConnectNetlify extends Connection {
-  name: string;
+  readonly name: string;
 
   constructor(name: string) {
     super();
@@ -28,7 +29,7 @@ export class ConnectNetlify extends Connection {
     return data;
   }
 
-  async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     const event = await this.createEventBlock(bytes);
     const base64String = Base64.fromUint8Array(bytes);
     const crdtEntry = {
@@ -49,7 +50,10 @@ export class ConnectNetlify extends Connection {
     if (!response.ok) throw new Error("failed to download meta " + response.statusText);
     const crdtEntries = await response.json();
     const events = await Promise.all(
-      crdtEntries.map(async (entry: any) => {
+      crdtEntries.map(async (entry: {
+        cid: string;
+        data: string;
+      }) => {
         const base64String = entry.data;
         const bytes = Base64.toUint8Array(base64String);
         // const event = await this.createEventBlock(bytes)

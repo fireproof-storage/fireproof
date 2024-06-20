@@ -1,13 +1,13 @@
-import type { CID, Link } from "multiformats";
+import type { CID, Link, Version } from "multiformats";
 import { DataStore, MetaStore } from "./store";
 import { RemoteWAL } from "./remote-wal";
 import type { Loader } from "./loader";
 import { CRDTMeta } from "../types";
 
-export type AnyLink = Link<unknown, number, number, 1 | 0>;
+export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
 export type CarLog = CarGroup[];
-export type AnyAnyLink = Link<unknown, number, number, 1>;
+export type AnyAnyLink = Link<unknown, number, number, Version>;
 export interface AnyBlock {
   cid: AnyLink;
   bytes: Uint8Array;
@@ -21,6 +21,7 @@ export interface AnyDecodedBlock {
   bytes: Uint8Array;
   value: unknown;
 }
+
 
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>;
@@ -66,8 +67,16 @@ export type TransactionMeta = CRDTMeta & {
 
 export type MetaType = TransactionMeta | IndexTransactionMeta;
 
+export interface MakeCodecCrypto {
+  subtle: {
+    importKey: (format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
+    decrypt: (algo: { name: string; iv: Uint8Array; tagLength: number }, key: CryptoKey, data: Uint8Array) => Promise<ArrayBuffer>;
+    encrypt: (algo: { name: string; iv: Uint8Array; tagLength: number }, key: CryptoKey, data: Uint8Array) => Promise<ArrayBuffer>;
+  }
+}
+
 export interface CryptoOpts {
-  readonly crypto: unknown;
+  readonly crypto: MakeCodecCrypto;
   randomBytes(size: number): Uint8Array;
 }
 

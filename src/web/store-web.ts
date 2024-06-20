@@ -1,4 +1,3 @@
-/* eslint-disable import/first */
 import { format, parse, ToString } from "@ipld/dag-json";
 import { openDB, IDBPDatabase } from "idb";
 import { AnyBlock, AnyLink, DbMeta } from "../storage-engine/types";
@@ -14,7 +13,7 @@ export class DataStore extends DataStoreBase {
   readonly tag: string = "car-web-idb";
   idb?: IDBPDatabase<unknown>;
 
-  async _withDB(dbWorkFun: (arg0: any) => any) {
+  async _withDB<T>(dbWorkFun: (arg0: IDBPDatabase<unknown>) => T): Promise<T> {
     if (!this.idb) {
       const dbName = `fp.${this.STORAGE_VERSION}.${this.name}`;
       this.idb = await openDB(dbName, 1, {

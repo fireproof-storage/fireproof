@@ -4,6 +4,28 @@ import type { Operation } from "@web3-storage/pail/crdt/api";
 
 import type { DbMeta, CryptoOpts, StoreOpts } from "./storage-engine";
 
+export type Falsy = false | null | undefined;
+
+export function isFalsy(value: unknown): value is Falsy {
+  return value === false &&
+    value === null &&
+    value === undefined;
+}
+
+export function throwFalsy<T>(value: T | Falsy): T {
+  if (isFalsy(value)) {
+    throw new Error("value is Falsy");
+  }
+  return value
+}
+
+export function falsyToUndef<T>(value: T | Falsy): T | undefined {
+  if (isFalsy(value)) {
+    return undefined;
+  }
+  return value;
+}
+
 export interface ConfigOpts {
   readonly public?: boolean;
   readonly meta?: DbMeta;
@@ -23,7 +45,7 @@ export type DocFragment = Uint8Array | string | number | boolean | null | AnyLin
 
 export type DocLiteral = string | number | boolean | Uint8Array | unknown;
 
-export type DocObject = object;
+export type DocObject = NonNullable<unknown>;
 export type DocTypes = DocObject;
 
 export type DocRecord<T extends DocObject> = T;
@@ -127,6 +149,7 @@ export interface IdxMetaMap {
   readonly indexes: Map<string, IdxMeta>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface QueryOpts<K extends IndexKeyType> {
   readonly descending?: boolean;
   readonly limit?: number;
@@ -145,11 +168,11 @@ export interface AnyBlock {
 export interface AnyDecodedBlock {
   readonly cid: AnyLink;
   readonly bytes: Uint8Array;
-  readonly value: any;
+  readonly value: unknown;
 }
 
-type EmitFn = (k: IndexKeyType, v?: IndexKeyType) => void;
-export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | void;
+type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
+export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment
 
 export interface ChangesOptions {
   readonly dirty?: boolean;

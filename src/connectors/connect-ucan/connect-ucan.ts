@@ -7,14 +7,14 @@ import {
   UploadDataFnParams,
   UploadMetaFnParams,
 } from "../../storage-engine";
-import { AnyLink } from "../../types";
 import { Client } from "@web3-storage/w3up-client";
 import * as w3clock from "@web3-storage/clock/client";
 import { decodeEventBlock } from "@web3-storage/pail/clock";
-import { DID, Link } from "@ucanto/interface";
+import { DID, Link, Proof } from "@ucanto/interface";
 import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
+import { Falsy, throwFalsy } from "../../types";
 
 export interface ConnectUCANParams {
   name: string;
@@ -23,7 +23,7 @@ export interface ConnectUCANParams {
 
 const DEFAULT_CLOCK_SPACE_NAME = "_fireproof_account";
 
-function findClockSpace(client: Client, name: string = DEFAULT_CLOCK_SPACE_NAME): DID | undefined {
+function findClockSpace(client: Client, name: string = DEFAULT_CLOCK_SPACE_NAME): DID | Falsy {
   const spaces = client.spaces();
   const space = spaces
     // sort alphanumerically by space DID
@@ -64,12 +64,12 @@ export class ConnectUCAN extends Connection {
   client?: Client;
   clockSpaceDID?: DID;
   readonly params: ConnectUCANParams;
-  readonly pubsub: Function;
+  readonly pubsub: () => void;
 
   constructor(params: ConnectUCANParams) {
     super();
     this.params = params;
-    this.pubsub = function () {};
+    this.pubsub = function () { return };
   }
 
   async authorize(rawEmail: string) {
@@ -86,7 +86,7 @@ export class ConnectUCAN extends Connection {
       this.clockSpaceDID = await createSpace(client, account, this.params.name);
       console.log("Could not find existing space, creating new one.");
     }
-    await client.setCurrentSpace(this.clockSpaceDID);
+    await client.setCurrentSpace(throwFalsy(this.clockSpaceDID));
     console.log("starting background sync");
     void this.startBackgroundSync();
   }
@@ -101,14 +101,14 @@ export class ConnectUCAN extends Connection {
         console.log("refreshing");
         await this.refresh();
         console.log("refreshed");
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.log("refresh error", e);
         await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
   }
 
-  async dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined> {
+  async dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy> {
     const url = `https://${params.car}.ipfs.w3s.link/`;
     const response = await fetch(url);
     if (response.ok) {
@@ -121,8 +121,8 @@ export class ConnectUCAN extends Connection {
   async dataUpload(
     bytes: Uint8Array,
     params: UploadDataFnParams,
-    opts?: { public?: boolean | undefined } | undefined,
-  ): Promise<void | AnyLink> {
+    opts?: { public?: boolean },
+  ): Promise<void> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot dataUpload, please authorize first");
@@ -134,10 +134,12 @@ export class ConnectUCAN extends Connection {
     if (params.type === "file" && opts?.public) {
       await client.uploadCAR(new Blob([bytes]));
     }
-    return await client.uploadFile(new Blob([bytes]));
+    return await client.uploadFile(new Blob([bytes])).then(() => {
+      return;
+    });
   }
 
-  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
+  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot metaDownload, please authorize first");
@@ -153,7 +155,6 @@ export class ConnectUCAN extends Connection {
     const head = await w3clock.head({
       issuer: client.agent.issuer,
       with: clockSpaceDID,
-
       proofs: clockProofs,
     });
     if (head.out.ok) {
@@ -202,8 +203,7 @@ export class ConnectUCAN extends Connection {
       { blocks },
     );
 
-    // @ts-ignore
-    const { ok, error } = advanced.root.data?.ocm.out;
+    const { ok, error } = throwFalsy(advanced.root.data).ocm.out;
     if (error) {
       throw new Error(JSON.stringify(error));
     }
@@ -220,7 +220,6 @@ export class ConnectUCAN extends Connection {
       const local = await cache.get(cid);
       if (local) {
         const event = await decodeEventBlock(local.bytes);
-        // @ts-ignore
         outBytess.push(event.value.data.dbMeta as Uint8Array);
       } else {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`;
@@ -229,7 +228,6 @@ export class ConnectUCAN extends Connection {
           const metaBlock = new Uint8Array(await response.arrayBuffer());
           await cache.put(cid, metaBlock);
           const event = await decodeEventBlock(metaBlock);
-          // @ts-ignore
           outBytess.push(event.value.data.dbMeta as Uint8Array);
         } else {
           throw new Error(`Failed to download ${url}`);
@@ -240,7 +238,7 @@ export class ConnectUCAN extends Connection {
     return outBytess;
   }
 
-  async clockProofsForDb(): Promise<any[]> {
+  async clockProofsForDb(): Promise<Proof[]> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot get clock proofs, please authorize first");

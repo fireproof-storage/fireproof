@@ -1,4 +1,3 @@
-/* eslint-disable import/first */
 import { UploadDataFnParams } from "./types";
 import type { AnyBlock, AnyLink, DbMeta, FnParamTypes } from "./types";
 import { type Loadable, type Loader } from "./loader";
@@ -59,7 +58,8 @@ export class RemoteDataStore extends DataStoreBase {
     return await this.connection.dataUpload(car.bytes, uploadParams, opts);
   }
 
-  async remove(_cid: AnyLink): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async remove(cid: AnyLink): Promise<void> {
     throw new Error("not implemented");
   }
 }

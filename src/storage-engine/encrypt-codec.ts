@@ -15,7 +15,9 @@ interface DecryptOpts {
   };
 }
 
-export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array) {
+
+
+export function makeCodec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint8Array) {
   const enc32 = (value: number) => {
     value = +value;
     const buff = new Uint8Array(4);
@@ -55,7 +57,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
   const code = 0x300000 + 1337;
 
   async function subtleKey(key: ArrayBuffer) {
-    return await crypto!.subtle.importKey(
+    return await crypto.subtle.importKey(
       "raw", // raw or jwk
       key, // raw data
       "AES-GCM",
@@ -65,22 +67,21 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
   }
 
   const decrypt = async ({ key, value }: DecryptOpts): Promise<{ cid: AnyLink; bytes: Uint8Array }> => {
-    let { bytes, iv } = value;
+    const { bytes: inBytes, iv } = value;
     const cryKey = await subtleKey(key);
-    const deBytes = await crypto!.subtle.decrypt(
+    const deBytes = await crypto.subtle.decrypt(
       {
         name: "AES-GCM",
         iv,
         tagLength: 128,
       },
       cryKey,
-      bytes,
+      inBytes,
     );
-    bytes = new Uint8Array(deBytes);
+    const bytes = new Uint8Array(deBytes);
     const len = readUInt32LE(bytes.subarray(0, 4));
     const cid = CID.decode(bytes.subarray(4, 4 + len));
-    bytes = bytes.subarray(4 + len);
-    return { cid, bytes };
+    return { cid, bytes: bytes.subarray(4 + len) };
   };
   const encrypt = async ({ key, cid, bytes }: EncryptOpts) => {
     const len = enc32(cid.bytes.byteLength);
@@ -88,7 +89,7 @@ export function makeCodec(crypto: any, randomBytes: (size: number) => Uint8Array
     const msg = concat([len, cid.bytes, bytes]);
     try {
       const cryKey = await subtleKey(key);
-      const deBytes = await crypto!.subtle.encrypt(
+      const deBytes = await crypto.subtle.encrypt(
         {
           name: "AES-GCM",
           iv,

@@ -1,24 +1,24 @@
 import { MetaType } from "./storage-engine/types";
-import { CRDTMeta, DocRecord, DocTypes, DocUpdate, IndexKeyType } from "./types";
+import { DocTypes, DocUpdate } from "./types";
 
-type WorkerFunction<T extends DocTypes, K extends IndexKeyType> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;
+type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;
 
 export interface WriteQueue<T extends DocTypes> {
   push(task: DocUpdate<T>): Promise<MetaType>;
 }
 
-interface WriteQueueItem<T extends DocTypes, K extends IndexKeyType> {
+interface WriteQueueItem<T extends DocTypes> {
   readonly task: DocUpdate<T>;
   resolve(result: MetaType): void;
   reject(error: Error): void;
 }
 
-export function writeQueue<T extends DocTypes, K extends IndexKeyType>(
-  worker: WorkerFunction<T, K>,
+export function writeQueue<T extends DocTypes>(
+  worker: WorkerFunction<T>,
   payload = Infinity,
   unbounded = false,
 ): WriteQueue<T> {
-  const queue: WriteQueueItem<T, K>[] = [];
+  const queue: WriteQueueItem<T>[] = [];
   let isProcessing = false;
 
   async function process() {

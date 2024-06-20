@@ -10,7 +10,7 @@ describe("Hello World Test", function () {
 });
 
 describe("public API", function () {
-  type TestDoc = { foo: string };
+  interface TestDoc { foo: string }
   let db: Database
   let idx: Index<string, TestDoc>
   let ok: DbResponse

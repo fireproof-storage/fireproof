@@ -8,16 +8,17 @@ import * as dagcbor from "@ipld/dag-cbor";
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import { bf } from "prolly-trees/utils";
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import { nocache as cache } from "prolly-trees/cache";
-// @ts-ignore
+// @ts-expect-error "prolly-trees" has no types
 import { create, load } from "prolly-trees/cid-set";
 
 import { encodeCarFile } from "./loader-helpers";
-import { makeCodec } from "./encrypt-codec.js";
+import { MakeCodecCrypto, makeCodec } from "./encrypt-codec.js";
 import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from "./types";
+import { Falsy } from "../types";
 
 function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   return list.some((cid: AnyLink) => {
@@ -25,7 +26,7 @@ function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   });
 }
 
-function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
+function makeEncDec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint8Array) {
   const codec = makeCodec(crypto, randomBytes);
 
   const encrypt = async function* ({
@@ -37,14 +38,14 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     chunker,
     root,
   }: {
-    get: (cid: AnyLink) => Promise<AnyBlock | undefined>;
+    get: (cid: AnyLink) => Promise<AnyBlock | Falsy>;
     key: ArrayBuffer;
     cids: AnyLink[];
     hasher: MultihashHasher<number>;
     chunker: (bytes: Uint8Array) => AsyncGenerator<Uint8Array>;
     cache: (cid: AnyLink) => Promise<AnyBlock>;
     root: AnyLink;
-  }): AsyncGenerator<any, void, unknown> {
+  }): AsyncGenerator<unknown, void, unknown> {
     const set = new Set<ToString<AnyLink>>();
     let eroot;
     if (!carLogIncludesGroup(cids, root)) cids.push(root);
@@ -80,7 +81,7 @@ function makeEncDec(crypto: any, randomBytes: (size: number) => Uint8Array) {
     hasher,
   }: {
     root: AnyLink;
-    get: (cid: AnyLink) => Promise<AnyBlock | undefined>;
+    get: (cid: AnyLink) => Promise<AnyBlock | Falsy>;
     key: ArrayBuffer;
     cache: (cid: AnyLink) => Promise<AnyBlock>;
     chunker: (bytes: Uint8Array) => AsyncGenerator<Uint8Array>;
@@ -176,7 +177,7 @@ export async function decodeEncryptedCar(crypto: CryptoOpts, key: string, reader
 async function decodeCarBlocks(
   crypto: CryptoOpts,
   root: AnyLink,
-  get: (cid: any) => Promise<AnyBlock | undefined>,
+  get: (cid: CID) => Promise<AnyBlock | Falsy>,
   keyMaterial: string,
 ): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
   const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial);

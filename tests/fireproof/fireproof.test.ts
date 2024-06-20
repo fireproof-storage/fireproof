@@ -1,10 +1,8 @@
-import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir } from "./helpers.js";
-
+import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "./helpers.js";
 import { CID } from "multiformats/cid";
 
 import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn, AnyLink } from "../../src/index.js";
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -147,7 +145,7 @@ describe("benchmarking with compaction", function () {
 
     const doing = null;
     for (let i = 0; i < numDocs; i += batchSize) {
-      const ops: Promise<DbResponse | void>[] = [];
+      const ops: Promise<DbResponse>[] = [];
       db.put({ foo: "fast" });
       // await doing
       // doing = db.compact()
@@ -194,8 +192,6 @@ describe("benchmarking a database", function () {
   // run:
   //      npm test -- --grep 'insert and read many records'
   //
-  // eslint-disable-next-line mocha/no-skipped-tests
-
   xit("passing: insert and read many records", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
@@ -209,7 +205,7 @@ describe("benchmarking a database", function () {
     console.time(`insert and read ${numDocs} records`);
 
     for (let i = 0; i < numDocs; i += batchSize) {
-      const ops: Promise<DbResponse | void>[] = [];
+      const ops: Promise<DbResponse>[] = [];
       for (let j = 0; j < batchSize && i + j < numDocs; j++) {
         ops.push(
           db
@@ -223,6 +219,7 @@ describe("benchmarking a database", function () {
               db.get<{ fire: string }>(`test${i + j}`).then((doc) => {
                 assert(doc.fire);
               });
+              return ok
             }),
         );
       }
@@ -306,7 +303,7 @@ describe("benchmarking a database", function () {
             .toString()
             .repeat(25 * 1024),
         })
-        .then((ok) => {
+        .then(() => {
           newDb2.get<{ fire: number }>(`test${i}`).then((doc) => {
             assert(doc.fire);
           });
