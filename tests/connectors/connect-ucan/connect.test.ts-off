@@ -1,18 +1,14 @@
-/* eslint-disable @typescript-eslint/require-await */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable mocha/max-top-level-suites */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, equals, notEquals, matches, resetDirectory, equalsJSON } from "../../fireproof/test/helpers.js";
-import { Database } from "../../fireproof/dist/test/database.esm.js";
-import { connect } from "../../fireproof/dist/test/connect.esm.js";
+import { assert, equals, notEquals, matches, resetDirectory, equalsJSON } from "../../helpers.js";
+import { Database } from "../../../src/index.js";
+// import { connect } from "../../../src/index.js";
 // import { Doc } from '../dist/test/types.d.esm.js'
-import { MetaStore } from "../../fireproof/dist/test/store-fs.esm.js";
-import { join } from "path";
-import { promises as fs } from "fs";
+// import { MetaStore } from "../../../src/store-fs.js";
+import { join } from "node:path";
+import { promises as fs } from "node:fs";
+import { connect } from '../../../src/connectors/connect-aws/index.js'
+import { Connection } from "../../../src/storage-engine/connection.js";
+import { DownloadDataFnParams, DownloadMetaFnParams, MetaStore, UploadDataFnParams, UploadMetaFnParams } from "../../../src/storage-engine/index.js";
+
 const { readFile, writeFile } = fs;
 
 const serviceConfig = {
@@ -23,38 +19,48 @@ const serviceConfig = {
 };
 
 const mockStore = new Map();
-const mockConnect = {
-  metaUpload: async function (bytes, { name, branch }) {
+class MockConnect extends Connection {
+  // readonly blockstore: EncryptedBlockstore
+  // readonly name?: string;
+
+  // abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>;
+  // abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void | AnyLink>;
+  // abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>;
+  // abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>;
+
+  async metaUpload(bytes: Uint8Array, { name, branch }: UploadMetaFnParams) {
     const key = new URLSearchParams({ name, branch }).toString();
     mockStore.set(key, bytes);
-  },
-  // eslint-disable-next-line @typescript-eslint/require-await
-  dataUpload: async function (bytes, { type, name, car }) {
+    return undefined
+  }
+
+  async dataUpload(bytes: Uint8Array, { type, name, car }: UploadDataFnParams) {
     const key = new URLSearchParams({ type, name, car }).toString();
     mockStore.set(key, bytes);
-  },
-  // eslint-disable-next-line @typescript-eslint/require-await
-  metaDownload: async function ({ name, branch }) {
+  }
+
+  async metaDownload({ name, branch }: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
     const key = new URLSearchParams({ name, branch }).toString();
-    if (!mockStore.has(key)) return null;
+    if (!mockStore.has(key)) {
+      return undefined;
+    }
     return [mockStore.get(key)];
-  },
-  dataDownload: async function ({ type, name, car }) {
+  }
+  async dataDownload({ type, name, car }: DownloadDataFnParams) {
     const key = new URLSearchParams({ type, name, car }).toString();
     return mockStore.get(key);
-  },
+  }
 };
 
 // const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-// eslint-disable-next-line mocha/no-skipped-tests
 describe.skip("basic Connection with s3 remote", function () {
-  /** @type {Database} */
-  let db, dbName;
+  let db: Database
+  let dbName: string
   beforeEach(async function () {
     dbName = "test-s3-" + Math.ceil(Math.random() * 100000);
     db = new Database(dbName);
-    const remote = connect.s3(db, serviceConfig.s3);
+    const remote = connect.s3free(db, serviceConfig.s3);
     await remote.ready;
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
@@ -77,13 +83,13 @@ describe.skip("basic Connection with s3 remote", function () {
     const gotMain = await loader.remoteMetaStore.load("main");
     assert(gotMain);
     equals(gotMain[0].key, loader.key);
-  }).timeout(10000);
+  }, 10000);
   it("should get", async function () {
     const doc = await db.get("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
-  }).timeout(10000);
+  }, 10000);
   it("should get remote", async function () {
     await resetDirectory(MetaStore.dataDir, dbName);
     const db2 = new Database(dbName);
@@ -98,17 +104,17 @@ describe.skip("basic Connection with s3 remote", function () {
     const gotMain = await loader2.remoteMetaStore.load("main");
     equals(gotMain[0].key, loader2.key); // fails when remote not ingested
 
-    const doc = await db2.get("hello");
+    const doc = await db2.get<{ value: string }>("hello");
 
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
-  }).timeout(10000);
+  }, 10000);
 });
 
 describe("basic Connection with raw remote", function () {
-  /** @type {Database} */
-  let db, dbName;
+  let db: Database
+  let dbName: string;
   beforeEach(async function () {
     dbName = "test-raw-connect";
     await resetDirectory(MetaStore.dataDir, dbName);
@@ -131,7 +137,7 @@ describe("basic Connection with raw remote", function () {
     const gotMain = (await loader.remoteMetaStore.load("main"))[0];
     assert(gotMain);
     equals(gotMain.key, loader.key);
-  }).timeout(10000);
+  }, 10000);
   it("should have a carLog", async function () {
     const {
       _crdt: {
@@ -140,13 +146,13 @@ describe("basic Connection with raw remote", function () {
     } = db;
     assert(loader.carLog);
     equals(loader.carLog.length, 1);
-  }).timeout(10000);
+  }, 10000);
   it("should get", async function () {
-    const doc = await db.get("hello");
+    const doc = await db.get<{ value: string }>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
-  }).timeout(10000);
+  }, 10000);
   it("should get remote", async function () {
     await resetDirectory(MetaStore.dataDir, dbName);
     const db2 = new Database(dbName);
@@ -166,12 +172,12 @@ describe("basic Connection with raw remote", function () {
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
-  }).timeout(10000);
+  }, 10000);
   it("should be ok with a remote that has headers but not car files", async function () {
     // create a database that is up to date with meta1 but not meta2
     // add meta2 and poll it
 
-    const dataDownload = async function () {};
+    const dataDownload = async function () { };
     const badMockConnect = { ...mockConnect, dataDownload };
 
     const db2 = new Database(dbName);
@@ -216,8 +222,8 @@ describe("basic Connection with raw remote", function () {
 });
 
 describe("forked Connection with raw remote", function () {
-  /** @type {Database} */
-  let db, dbName;
+  let db: Database
+  let dbName: string
   beforeEach(async function () {
     dbName = "test-raw-forked";
     await resetDirectory(MetaStore.dataDir, dbName);
@@ -240,19 +246,19 @@ describe("forked Connection with raw remote", function () {
     const gotMain = (await loader.remoteMetaStore.load("main"))[0];
     assert(gotMain);
     equals(gotMain.key, loader.key);
-  }).timeout(10000);
+  }, 10000);
   it("should get", async function () {
-    const doc = await db.get("hello");
+    const doc = await db.get<{ value: string }>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
-  }).timeout(10000);
+  }, 10000);
   it("should get remote fork", async function () {
     // await resetDirectory(MetaStore.dataDir, dbName)
 
     const db2 = new Database(dbName);
 
-    const doc = await db2.get("hello");
+    const doc = await db2.get<{ value: string }>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
@@ -280,9 +286,9 @@ describe("forked Connection with raw remote", function () {
 
     // open a the db again from files
     const db3 = new Database(dbName);
-    const doc3 = await db3.get("hey");
+    const doc3 = await db3.get<{ value: string }>("hey");
     equals(doc3.value, "partyverse");
-    const doc4 = await db3.get("greetings");
+    const doc4 = await db3.get<{ value: string }>("greetings");
     equals(doc4.value, "universe");
 
     // reset files and open again
@@ -292,12 +298,12 @@ describe("forked Connection with raw remote", function () {
     await remote4.loaded;
     const changes = await db4.changes();
     equals(changes.rows.length, 3);
-  }).timeout(10000);
+  }, 10000);
 });
 
 describe("two Connection with raw remote", function () {
-  /** @type {Database} */
-  let db, dbName;
+  let db: Database
+  let dbName: string
 
   // this test won't test the forking anymore once we
   // move away from default behavior of:
@@ -352,7 +358,7 @@ describe("two Connection with raw remote", function () {
     const doc2 = { _id: "hi", value: "folks" };
     const ok2 = await db.put(doc2);
     equals(ok2.id, "hi");
-    const hi = await db.get(ok2.id);
+    const hi = await db.get<{ value: string }>(ok2.id);
     equals(hi.value, "folks");
 
     const changes1 = await db.changes();
@@ -364,7 +370,7 @@ describe("two Connection with raw remote", function () {
 
     await db2._crdt.blockstore.loader.ready;
 
-    const docHello = await db2.get("hello");
+    const docHello = await db2.get<{ value: string }>("hello");
     equals(docHello.value, "world");
 
     const docHi = await db2.get("hi").catch((e) => e);
@@ -382,7 +388,7 @@ describe("two Connection with raw remote", function () {
     equals(db2._crdt.clock.head.length, 1);
     equalsJSON(db2._crdt.clock.head, ok3.clock);
 
-    const hey = await db2.get("hey");
+    const hey = await db2.get<{ value: string }>("hey");
     equals(hey.value, "partyverse");
 
     const changes2 = await db2.changes();
@@ -415,10 +421,10 @@ describe("two Connection with raw remote", function () {
     // equalsJSON(db3._crdt.clock.head, ok3.clock)
     equals(db3._crdt.clock.head.length, 2);
 
-    const hey3 = await db3.get("hey");
+    const hey3 = await db3.get<{ value: string }>("hey");
     equals(hey3.value, "partyverse");
 
-    const docHello3 = await db3.get("hello");
+    const docHello3 = await db3.get<{ value: string }>("hello");
     equals(docHello3.value, "world");
 
     // const docHi3 = await db3.get('hi')
@@ -437,13 +443,13 @@ describe("two Connection with raw remote", function () {
     const gotMain = (await loader.remoteMetaStore.load("main"))[0];
     assert(gotMain);
     equals(gotMain.key, loader.key);
-  }).timeout(10000);
+  }, 10000);
   it("continues to execute queries", async function () {
     // await resetDirectory(MetaStore.dataDir, dbName)
 
     const db2 = new Database(dbName);
 
-    const doc = await db2.get("hello");
+    const doc = await db2.get<{ value: string }>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
@@ -461,7 +467,7 @@ describe("two Connection with raw remote", function () {
     const gotMain = (await loader2.remoteMetaStore.load("main"))[0];
     equals(gotMain.key, loader2.key); // fails when remote not ingested
 
-    const doc2 = await db2.get("greetings");
+    const doc2 = await db2.get<{ value: string }>("greetings");
     equals(doc2.value, "universe");
     // equals(db2._crdt.clock.head.length, 2)
 
@@ -471,9 +477,9 @@ describe("two Connection with raw remote", function () {
 
     // open a the db again from files
     const db3 = new Database(dbName);
-    const doc3 = await db3.get("hey");
+    const doc3 = await db3.get<{ value: string }>("hey");
     equals(doc3.value, "partyverse");
-    const doc4 = await db3.get("greetings");
+    const doc4 = await db3.get<{ value: string }>("greetings");
     equals(doc4.value, "universe");
 
     // reset files and open again
@@ -483,5 +489,5 @@ describe("two Connection with raw remote", function () {
     await remote4.loaded;
     const changes = await db4.changes();
     equals(changes.rows.length, 4);
-  }).timeout(10000);
+  }, 10000);
 });

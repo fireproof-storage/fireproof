@@ -70,7 +70,7 @@ export function useUploader(database: Fireproof) {
   return { uploaderReady };
 }
 
-export const UploadManager = ({}: { registered: Boolean }) => {
+export const UploadManager = ({}: { registered: boolean }) => {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring();
   const registered = Boolean(space?.registered());
   // console.log('loadAgent', loadAgent, typeof loadAgent)

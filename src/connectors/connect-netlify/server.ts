@@ -1,10 +1,10 @@
 import { getStore } from "@netlify/blobs";
 
-type CRDTEntry = {
+interface CRDTEntry {
   readonly data: string;
   readonly cid: string;
   readonly parents: string[];
-};
+}
 
 export default async (req: Request) => {
   const url = new URL(req.url);

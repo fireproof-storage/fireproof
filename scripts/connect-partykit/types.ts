@@ -1,24 +1,24 @@
-export type UploadMetaFnParams = {
+export interface UploadMetaFnParams {
   name: string;
   branch: string;
-};
+}
 
-export type UploadDataFnParams = {
+export interface UploadDataFnParams {
   type: "data" | "file";
   name: string;
   car: string;
   size: string;
-};
+}
 
 export type DownloadFnParamTypes = "data" | "file";
 
-export type DownloadDataFnParams = {
+export interface DownloadDataFnParams {
   type: DownloadFnParamTypes;
   name: string;
   car: string;
-};
+}
 
-export type DownloadMetaFnParams = {
+export interface DownloadMetaFnParams {
   name: string;
   branch: string;
-};
+}

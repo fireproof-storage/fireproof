@@ -1,23 +1,23 @@
 import { clockChangesSince } from "./crdt-helpers";
 import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/";
-import type { DocUpdate, ClockHead, IndexKeyType } from "./types";
+import type { DocUpdate, ClockHead, IndexKeyType, DocRecord, DocTypes } from "./types";
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue";
 
-export class CRDTClock<T> {
+export class CRDTClock<T extends DocTypes> {
   // todo: track local and remote clocks independently, merge on read
   // that way we can drop the whole remote if we need to
   // should go with making sure the local clock only references locally available blockstore on write
   head: ClockHead = [];
 
-  readonly zoomers: Set<() => void> = new Set();
-  readonly watchers: Set<(updates: DocUpdate<T>[]) => void> = new Set();
-  readonly emptyWatchers: Set<() => void> = new Set();
+  readonly zoomers = new Set<() => void>();
+  readonly watchers = new Set<(updates: DocUpdate<T>[]) => void>();
+  readonly emptyWatchers = new Set<() => void>();
 
   blockstore?: EncryptedBlockstore;
 
-  readonly applyHeadQueue: ApplyHeadQueue;
+  readonly applyHeadQueue: ApplyHeadQueue<T>;
 
   constructor() {
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this));

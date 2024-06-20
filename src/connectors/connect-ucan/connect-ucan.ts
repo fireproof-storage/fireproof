@@ -16,7 +16,7 @@ import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
 
-export type ConnectUCANParams = { name: string; schema: string };
+export interface ConnectUCANParams { name: string; schema: string }
 
 const DEFAULT_CLOCK_SPACE_NAME = "_fireproof_account";
 
@@ -66,7 +66,7 @@ export class ConnectUCAN extends Connection {
   constructor(params: ConnectUCANParams) {
     super();
     this.params = params;
-    this.pubsub = function () {};
+    this.pubsub = function () { };
   }
 
   async authorize(rawEmail: string) {
@@ -105,7 +105,7 @@ export class ConnectUCAN extends Connection {
     }
   }
 
-  async dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null> {
+  async dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined> {
     const url = `https://${params.car}.ipfs.w3s.link/`;
     const response = await fetch(url);
     if (response.ok) {
@@ -134,7 +134,7 @@ export class ConnectUCAN extends Connection {
     return await client.uploadFile(new Blob([bytes]));
   }
 
-  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null> {
+  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot metaDownload, please authorize first");
@@ -150,7 +150,7 @@ export class ConnectUCAN extends Connection {
     const head = await w3clock.head({
       issuer: client.agent.issuer,
       with: clockSpaceDID,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
       proofs: clockProofs,
     });
     if (head.out.ok) {
@@ -161,7 +161,7 @@ export class ConnectUCAN extends Connection {
     }
   }
 
-  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
+  async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot metaUpload, please authorize first");
@@ -192,7 +192,7 @@ export class ConnectUCAN extends Connection {
       {
         issuer: client.agent.issuer,
         with: clockSpaceDID,
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
         proofs: clockProofs,
       },
       event.cid,
@@ -206,7 +206,7 @@ export class ConnectUCAN extends Connection {
     }
     this.parents = [event.cid];
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     const head = ok.head as CarClockHead;
     return this.fetchAndUpdateHead(head);
   }

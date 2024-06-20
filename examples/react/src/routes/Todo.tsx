@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useFireproof } from "use-fireproof";
 
-type Todo = { text: string; date: number; completed: boolean };
+interface Todo { text: string; date: number; completed: boolean }
 
 export default function TodoList() {
   const { useDocument, useLiveQuery } = useFireproof("TodoDB");
@@ -50,9 +50,9 @@ export default function TodoList() {
   );
 }
 
-type TodoEditorProps = {
+interface TodoEditorProps {
   readonly id: string;
-};
+}
 
 function TodoEditor({ id }: TodoEditorProps) {
   const { useDocument } = useFireproof("TodoDB");

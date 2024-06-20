@@ -10,23 +10,19 @@ import { AnyBlock, AnyLink, CarHeader, CarMakeable } from "./types";
 
 export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0;
-  // @ts-ignore -- TODO: TypeScript does not like this casting
   const headerSize = CBW.headerLength({ roots } as { roots: CID<unknown, number, number, 1>[] });
   size += headerSize;
   for (const { cid, bytes } of t.entries()) {
-    // @ts-ignore -- TODO: TypeScript does not like this casting
     size += CBW.blockLength({ cid, bytes } as Block<unknown, number, number, 1>);
   }
   const buffer = new Uint8Array(size);
   const writer = CBW.createWriter(buffer, { headerSize });
 
   for (const r of roots) {
-    // @ts-ignore -- TODO: TypeScript does not like this casting
     writer.addRoot(r as CID<unknown, number, number, 1>);
   }
 
   for (const { cid, bytes } of t.entries()) {
-    // @ts-ignore -- TODO: TypeScript does not like this casting
     writer.write({ cid, bytes } as Block<unknown, number, number, 1>);
   }
   writer.close();
@@ -46,8 +42,10 @@ export async function parseCarFile(reader: CarReader): Promise<CarHeader> {
   const header = await reader.get(roots[0]);
   if (!header) throw new Error("missing header block");
   const { value } = await decode({ bytes: header.bytes, hasher, codec });
-  // @ts-ignore
-  if (value && value.fp === undefined) throw new Error("missing fp");
-  const { fp } = value as { fp: CarHeader };
-  return fp;
+  const fpvalue = value as { readonly fp: CarHeader };
+  // @jchris where is the fp attribute coming from?
+  if (fpvalue && !fpvalue.fp) {
+    throw new Error("missing fp");
+  }
+  return fpvalue.fp;
 }

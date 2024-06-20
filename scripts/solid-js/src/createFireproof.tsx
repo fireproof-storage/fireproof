@@ -3,30 +3,30 @@ import { Database, fireproof } from "@fireproof/core";
 import { deepmerge } from "deepmerge-ts";
 import { Accessor, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
-export type LiveQueryResult<T extends DocRecord<T>> = {
+export interface LiveQueryResult<T extends DocTypes> {
   readonly docs: Doc<T>[];
   readonly rows: IndexRow<T>[];
-};
+}
 
-export type CreateLiveQuery = <T extends DocRecord<T>>(
+export type CreateLiveQuery = <T extends DocTypes>(
   mapFn: string | MapFn,
   query?: QueryOpts,
   initialRows?: IndexRow<T>[]
 ) => Accessor<LiveQueryResult<T>>;
 
-type UpdateDocFnOptions = {
+interface UpdateDocFnOptions {
   readonly replace?: boolean;
-};
+}
 
-type UpdateDocFn<T extends DocRecord<T>> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
+type UpdateDocFn<T extends DocTypes> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
 
-type StoreDocFn<T extends DocRecord<T>> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
 
-export type CreateDocumentResult<T extends DocRecord<T>> = [Accessor<Doc<T>>, UpdateDocFn<T>, StoreDocFn<T>];
+export type CreateDocumentResult<T extends DocTypes> = [Accessor<Doc<T>>, UpdateDocFn<T>, StoreDocFn<T>];
 
-export type CreateDocument = <T extends DocRecord<T>>(initialDocFn: Accessor<Doc<T>>) => CreateDocumentResult<T>;
+export type CreateDocument = <T extends DocTypes>(initialDocFn: Accessor<Doc<T>>) => CreateDocumentResult<T>;
 
-export type CreateFireproof = {
+export interface CreateFireproof {
   /** The Fireproof database */
   readonly database: Accessor<Database>;
   /**
@@ -79,7 +79,7 @@ export type CreateFireproof = {
    * local storage.
    */
   readonly createLiveQuery: CreateLiveQuery;
-};
+}
 
 /**
  *
@@ -107,7 +107,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
   // allows use of this hook at the global scope without needing to wrap it with createRoot from SolidJS.
   const database = () => fireproof(dbName || "FireproofDB", config);
 
-  function createDocument<T extends DocRecord<T>>(initialDocFn: Accessor<Doc<T>>): CreateDocumentResult<T> {
+  function createDocument<T extends DocTypes>(initialDocFn: Accessor<Doc<T>>): CreateDocumentResult<T> {
     const [doc, setDoc] = createSignal(initialDocFn());
 
     // Memoize the docId to re-run dependent effects ONLY when the _id value actually changes
@@ -158,7 +158,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
     return [doc, updateDoc, saveDoc];
   }
 
-  function createLiveQuery<T extends DocRecord<T>>(
+  function createLiveQuery<T extends DocTypes>(
     strOrFn: string | MapFn,
     query = {},
     initialRows: IndexRow<T>[] = []

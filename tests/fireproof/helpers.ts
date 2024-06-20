@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import assert from "assert";
 import { join, dirname } from "path";
 import { promises as fs, readFileSync } from "fs";
@@ -27,7 +27,7 @@ export function notEquals<T>(actual: T, expected: T) {
 }
 
 export function matches<T extends { toString: () => string }>(actual: T, expected: T) {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+
   assert(actual.toString().match(expected.toString()), `Expected '${actual}' to match ${expected}`);
 }
 
@@ -76,8 +76,8 @@ export function getDirectoryName(url: string) {
   return dir_name;
 }
 
-export function readImages(directory, imagedirectoryname, imagenames) {
-  let images: Buffer[] = [];
+export function readImages(directory: string, imagedirectoryname: string, imagenames: string[]) {
+  const images: Buffer[] = [];
   const imagesdirectorypath = join(directory, imagedirectoryname);
   imagenames.forEach((image) => {
     const data = readFileSync(join(imagesdirectorypath, image));

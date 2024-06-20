@@ -59,14 +59,16 @@ export class ConnectS3 extends Connection {
       throw new Error("failed to upload data " + JSON.parse(result.body).message);
     }
     this.parents = [event.cid];
-    return null;
+    return undefined
   }
 
   async dataDownload(params: DownloadDataFnParams) {
     const { type, name, car } = params;
     const fetchFromUrl = new URL(`${type}/${name}/${car}.car`, this.downloadUrl);
     const response = await fetch(fetchFromUrl);
-    if (!response.ok) return null; // throw new Error('failed to download data ' + response.statusText)
+    if (!response.ok) {
+      return undefined; // throw new Error('failed to download data ' + response.statusText)
+    }
     const bytes = new Uint8Array(await response.arrayBuffer());
     return bytes;
   }

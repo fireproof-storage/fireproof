@@ -14,7 +14,9 @@ export class ConnectNetlify extends Connection {
     const fetchUploadUrl = new URL(`/fireproof?car=${car}`, document.location.origin);
     const base64String = Base64.fromUint8Array(bytes);
     const done = await fetch(fetchUploadUrl, { method: "PUT", body: base64String });
-    if (!done.ok) throw new Error("failed to upload data " + done.statusText);
+    if (!done.ok) {
+      throw new Error("failed to upload data " + done.statusText);
+    }
   }
 
   async dataDownload({ car }: DownloadDataFnParams) {
@@ -26,7 +28,7 @@ export class ConnectNetlify extends Connection {
     return data;
   }
 
-  async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | null> {
+  async metaUpload(bytes: Uint8Array, { name }: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
     const event = await this.createEventBlock(bytes);
     const base64String = Base64.fromUint8Array(bytes);
     const crdtEntry = {
@@ -38,7 +40,7 @@ export class ConnectNetlify extends Connection {
     const done = await fetch(fetchUploadUrl, { method: "PUT", body: JSON.stringify(crdtEntry) });
     if (!done.ok) throw new Error("failed to upload meta " + done.statusText);
     this.parents = [event.cid];
-    return null;
+    return undefined;
   }
 
   async metaDownload({ name }: DownloadMetaFnParams) {

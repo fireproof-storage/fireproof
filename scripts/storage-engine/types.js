@@ -3,7 +3,7 @@ import path from "path";
 // import { createBuildSettings } from './settings.js' // import your build settings
 
 // Get the entry points from your build settings
-// eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+ 
 // const entryPoints = ['database', 'index', 'types']// createBuildSettings({}).map(config => path.basename(config.entryPoints[0], '.ts'))
 
 function generateIndexFile() {

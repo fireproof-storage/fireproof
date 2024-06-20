@@ -5,15 +5,27 @@ import { AnyLink, UploadDataFnParams, UploadMetaFnParams, DownloadDataFnParams, 
 
 export { STORAGE_VERSION } from "./store";
 
-type RawConnectionParams = {
-  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | null>;
+interface RawConnectionParams {
+  metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | undefined>;
   dataUpload: (bytes: Uint8Array, params: UploadDataFnParams) => Promise<void | AnyLink>;
-  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | null>;
-  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | null>;
-};
+  metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | undefined>;
+  dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | undefined>;
+}
 
-// @ts-ignore
 class ConnectRaw extends Connection {
+
+  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | undefined> {
+    throw new Error("Method not implemented.");
+  }
+  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean | undefined; } | undefined): Promise<void | AnyLink> {
+    throw new Error("Method not implemented.");
+  }
+  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | undefined> {
+    throw new Error("Method not implemented.");
+  }
+  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | undefined> {
+    throw new Error("Method not implemented.");
+  }
   constructor({ metaUpload, metaDownload, dataUpload, dataDownload }: RawConnectionParams) {
     super();
     this.metaUpload = metaUpload;
@@ -52,7 +64,7 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
 
 export { Connection, ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };
 
-export { EncryptedBlockstore, CompactionFetcher, BlockFetcher, CarTransaction, TransactionMeta } from "./transaction";
+export { EncryptedBlockstore, CompactionFetcher, BlockFetcher, CarTransaction } from "./transaction";
 export { Loader, Loadable } from "./loader";
 export { DataStore, MetaStore } from "./store";
 export { RemoteWAL, WALState } from "./remote-wal";
@@ -67,4 +79,5 @@ export {
   UploadMetaFnParams,
   DownloadDataFnParams,
   DownloadMetaFnParams,
+  TransactionMeta
 } from "./types";

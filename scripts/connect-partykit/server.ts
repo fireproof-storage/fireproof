@@ -1,10 +1,10 @@
 import type * as Party from "partykit/server";
 
-type PartyMessage = {
+interface PartyMessage {
   data: string;
   cid: string;
   parents: string[];
-};
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +15,7 @@ const json = <T>(data: T, status = 200) => Response.json(data, { status, headers
 
 const ok = () => json({ ok: true });
 export default class Server implements Party.Server {
-  clockHead: Map<string, string> = new Map();
+  clockHead = new Map<string, string>();
   constructor(public party: Party.Party) {}
 
   async onStart() {

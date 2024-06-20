@@ -2,16 +2,28 @@ import { assert, equals, notEquals, matches, equalsJSON, resetDirectory, dataDir
 
 import { CID } from "multiformats/cid";
 
-import { fireproof, Database, index, DbResponse } from "../../src/index.js";
+import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn, AnyLink } from "../../src/index.js";
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export function carLogIncludesGroup(list, cid) {
+export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
 }
 
+interface FooType {
+  readonly foo: string;
+}
+
+interface FireType {
+  readonly fire: string;
+}
+
 describe("dreamcode", function () {
-  let ok, doc, result, db;
+  type Doc = { text: string, dream: boolean }
+  let ok: DbResponse
+  let doc: DocWithId<Doc>
+  let result: IndexRows<boolean, Doc>;
+  let db: Database
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-db");
     db = fireproof("test-db");
@@ -30,10 +42,10 @@ describe("dreamcode", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].key, "fireproof");
+    equals(result.rows[0].id, "fireproof");
   });
   it("should query with function", async function () {
-    const result = await db.query((doc) => doc.dream);
+    const result = await db.query<boolean, Doc>((doc) => doc.dream);
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
@@ -42,36 +54,42 @@ describe("dreamcode", function () {
 });
 
 describe("public API", function () {
+  type Doc = { foo: string };
+  let db: Database;
+  let ok: DbResponse;
+  let doc: DocWithId<Doc>;
+  let query: IndexRows<string, Doc>;
+
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-api");
-    this.db = fireproof("test-api");
-    // this.index = index(this.db, 'test-index', (doc) => doc.foo)
-    this.ok = await this.db.put({ _id: "test", foo: "bar" });
-    this.doc = await this.db.get("test");
-    this.query = await this.db.query((doc) => doc.foo);
+    db = fireproof("test-api");
+    // index = index(db, 'test-index', (doc) => doc.foo)
+    ok = await db.put({ _id: "test", foo: "bar" });
+    doc = await db.get("test");
+    query = await db.query<string, Doc>((doc) => doc.foo);
   });
   it("should be a database instance", function () {
-    assert(this.db);
-    assert(this.db instanceof Database);
+    assert(db);
+    assert(db instanceof Database);
   });
   it("should put", function () {
-    assert(this.ok);
-    equals(this.ok.id, "test");
+    assert(ok);
+    equals(ok.id, "test");
   });
   it("should get", function () {
-    equals(this.doc.foo, "bar");
+    equals(doc.foo, "bar");
   });
   it("should query", function () {
-    assert(this.query);
-    assert(this.query.rows);
-    equals(this.query.rows.length, 1);
-    equals(this.query.rows[0].key, "bar");
+    assert(query);
+    assert(query.rows);
+    equals(query.rows.length, 1);
+    equals(query.rows[0].key, "bar");
   });
 });
 
 describe("basic database", function () {
-  /** @type {Database} */
-  let db;
+  type Doc = { foo: string };
+  let db: Database<Doc>;
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-basic");
     db = new Database("test-basic");
@@ -84,18 +102,18 @@ describe("basic database", function () {
   it("can put without id", async function () {
     const ok = await db.put({ foo: "bam" });
     assert(ok);
-    const got = await db.get(ok.id);
+    const got = await db.get<Doc>(ok.id);
     equals(got.foo, "bam");
   });
   it("can define an index", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     assert(ok);
-    const idx = index<{ foo: string }, string>(db, "test-index", (doc) => doc.foo);
+    const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
+    equals(result.rows[0].id, "bar");
   });
   it("can define an index with a default function", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -105,13 +123,12 @@ describe("basic database", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
+    equals(result.rows[0].id, "bar");
   });
 });
 
 describe("benchmarking with compaction", function () {
-  /** @type {Database} */
-  let db;
+  let db: Database;
   beforeEach(async function () {
     // erase the existing test data
     await resetDirectory(dataDir, "test-benchmark-compaction");
@@ -128,7 +145,7 @@ describe("benchmarking with compaction", function () {
     const batchSize = 500;
     console.time(`insert and read ${numDocs} records`);
 
-    let doing = null;
+    const doing = null;
     for (let i = 0; i < numDocs; i += batchSize) {
       const ops: Promise<DbResponse | void>[] = [];
       db.put({ foo: "fast" });
@@ -178,6 +195,7 @@ describe("benchmarking a database", function () {
   //      npm test -- --grep 'insert and read many records'
   //
   // eslint-disable-next-line mocha/no-skipped-tests
+
   it.skip("passing: insert and read many records", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
@@ -202,7 +220,7 @@ describe("benchmarking a database", function () {
                 .repeat(25 * 1024),
             })
             .then((ok) => {
-              db.get(`test${i + j}`).then((doc) => {
+              db.get<{ fire: string }>(`test${i + j}`).then((doc) => {
                 assert(doc.fire);
               });
             }),
@@ -220,7 +238,7 @@ describe("benchmarking a database", function () {
 
     console.time("open new DB");
     const newDb = new Database("test-benchmark", { autoCompact: 100000, public: true });
-    const doc = await newDb.get("test");
+    const doc = await newDb.get<{ foo: string }>("test");
     equals(doc.foo, "fast");
     console.timeEnd("open new DB");
 
@@ -259,12 +277,12 @@ describe("benchmarking a database", function () {
 
     console.time("compacted reopen again");
     const newDb2 = new Database("test-benchmark", { autoCompact: 100000, public: true });
-    const doc21 = await newDb2.get("test");
+    const doc21 = await newDb2.get<FooType>("test");
     equals(doc21.foo, "fast");
 
     equals(newDb2._crdt.blockstore.loader.carLog.length, 2);
 
-    const doc2 = await newDb2.get("compacted-test");
+    const doc2 = await newDb2.get<FooType>("compacted-test");
 
     equals(doc2.foo, "bar");
 
@@ -308,8 +326,8 @@ describe("benchmarking a database", function () {
 });
 
 describe("Reopening a database", function () {
-  /** @type {Database} */
-  let db;
+  type Doc = { foo: string };
+  let db: Database
   beforeEach(async function () {
     // erase the existing test data
     await resetDirectory(dataDir, "test-reopen");
@@ -324,13 +342,13 @@ describe("Reopening a database", function () {
   });
 
   it("should persist data", async function () {
-    const doc = await db.get("test");
+    const doc = await db.get<Doc>("test");
     equals(doc.foo, "bar");
   });
 
   it("should have the same data on reopen", async function () {
     const db2 = new Database("test-reopen");
-    const doc = await db2.get("test");
+    const doc = await db2.get<FooType>("test");
     equals(doc.foo, "bar");
     assert(db2._crdt.clock.head);
     equals(db2._crdt.clock.head.length, 1);
@@ -362,12 +380,11 @@ describe("Reopening a database", function () {
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       assert(ok);
       equals(db._crdt.blockstore.loader.carLog.length, i + 2);
-      const doc = await db.get(`test${i}`);
+      const doc = await db.get<FireType>(`test${i}`);
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
   }, 20000);
 
-  // eslint-disable-next-line mocha/no-skipped-tests
   it.skip("passing slow, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 200; i++) {
       console.log("iteration", i);
@@ -384,7 +401,7 @@ describe("Reopening a database", function () {
       assert(ok);
       equals(db._crdt.blockstore.loader.carLog.length, i + 2);
       console.time("db get");
-      const doc = await db.get(`test${i}`);
+      const doc = await db.get<FireType>(`test${i}`);
       console.timeEnd("db get");
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
@@ -392,8 +409,11 @@ describe("Reopening a database", function () {
 });
 
 describe("Reopening a database with indexes", function () {
-  /** @type {Database} */
-  let db, idx, didMap, mapFn;
+  type Doc = { foo: string };
+  let db: Database
+  let idx: Index<string, Doc>
+  let didMap: boolean
+  let mapFn: MapFn<Doc>
   beforeEach(async function () {
     // erase the existing test data
     await resetDirectory(dataDir, "test-reopen-idx");
@@ -405,24 +425,23 @@ describe("Reopening a database with indexes", function () {
 
     didMap = false;
 
-    const mapFn = (doc) => {
+    const mapFn = (doc: Doc) => {
       didMap = true;
       return doc.foo;
     };
-
-    idx = index(db, "foo", mapFn);
+    idx = index<string, Doc>(db, "foo", mapFn);
   });
 
   it("should persist data", async function () {
-    const doc = await db.get("test");
+    const doc = await db.get<Doc>("test");
     equals(doc.foo, "bar");
-    const idx2 = index(db, "foo");
+    const idx2 = index<string, Doc>(db, "foo");
     assert(idx2 === idx, "same object");
     const result = await idx2.query();
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
+    equals(result.rows[0].id, "bar");
     assert(didMap);
   });
 
@@ -433,20 +452,20 @@ describe("Reopening a database with indexes", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
+    equals(result.rows[0].id, "bar");
     assert(didMap);
     didMap = false;
     const r2 = await idx2.query();
     assert(r2);
     assert(r2.rows);
     equals(r2.rows.length, 1);
-    equals(r2.rows[0].key, "bar");
+    equals(r2.rows[0].id, "bar");
     assert(!didMap);
   });
 
   it("should have the same data on reopen", async function () {
     const db2 = fireproof("test-reopen-idx");
-    const doc = await db2.get("test");
+    const doc = await db2.get<FooType>("test");
     equals(doc.foo, "bar");
     assert(db2._crdt.clock.head);
     equals(db2._crdt.clock.head.length, 1);
@@ -461,7 +480,7 @@ describe("Reopening a database with indexes", function () {
     equals(r0.rows[0].key, "bar");
 
     const db2 = fireproof("test-reopen-idx");
-    const doc = await db2.get("test");
+    const doc = await db2.get<FooType>("test");
     equals(doc.foo, "bar");
     assert(db2._crdt.clock.head);
     equals(db2._crdt.clock.head.length, 1);

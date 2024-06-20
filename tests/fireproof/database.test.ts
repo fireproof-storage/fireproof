@@ -1,19 +1,9 @@
-import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.ts";
-import { Database, DbResponse } from "../../src/index.ts";
-
-/**
- * @typedef {Object.<string, any>} DocBody
- */
-
-/**
- * @typedef {Object} Doc
- * @property {string} _id
- * @property {DocBody} [property] - an additional property
- */
+import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
+import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js";
+import { Data } from "@ipld/unixfs/gen/unixfs.js";
 
 describe("basic Database", () => {
-  /** @type {Database} */
-  let db;
+  let db: Database;
   beforeEach(() => {
     db = new Database();
   });
@@ -24,13 +14,13 @@ describe("basic Database", () => {
     equals(ok.id, "hello");
   });
   it("get missing should throw", async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+
     const e = await db.get("missing").catch((e) => e);
     matches(e.message, /Not found/);
   });
   it("del missing should result in deleted state", async () => {
     await db.del("missing");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return
+
     const e = await db.get("missing").catch((e) => e);
     matches(e.message, /Not found/);
   });
@@ -41,17 +31,15 @@ describe("basic Database", () => {
 });
 
 describe("basic Database with record", function () {
-  /** @type {Database} */
-  let db;
+  type Doc = { readonly value: string };
+  let db: Database;
   beforeEach(async function () {
     db = new Database();
-    /** @type {Doc} */
-    const doc = { _id: "hello", value: "world" };
-    const ok = await db.put(doc);
+    const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     equals(ok.id, "hello");
   });
   it("should get", async function () {
-    const doc = await db.get("hello");
+    const doc = await db.get<Doc>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
@@ -59,7 +47,7 @@ describe("basic Database with record", function () {
   it("should update", async function () {
     const ok = await db.put({ _id: "hello", value: "universe" });
     equals(ok.id, "hello");
-    const doc = await db.get("hello");
+    const doc = await db.get<Doc>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "universe");
@@ -67,7 +55,7 @@ describe("basic Database with record", function () {
   it("should del last record", async function () {
     const ok = await db.del("hello");
     equals(ok.id, "hello");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
     const e = await db.get("hello").catch((e) => e);
     matches(e.message, /Not found/);
   });
@@ -87,8 +75,8 @@ describe("basic Database with record", function () {
 });
 
 describe("named Database with record", function () {
-  /** @type {Database} */
-  let db;
+  type Doc = { readonly value: string };
+  let db: Database;
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-db-name");
 
@@ -99,7 +87,7 @@ describe("named Database with record", function () {
     equals(ok.id, "hello");
   });
   it("should get", async function () {
-    const doc = await db.get("hello");
+    const doc = await db.get<Doc>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "world");
@@ -107,7 +95,7 @@ describe("named Database with record", function () {
   it("should update", async function () {
     const ok = await db.put({ _id: "hello", value: "universe" });
     equals(ok.id, "hello");
-    const doc = await db.get("hello");
+    const doc = await db.get<Doc>("hello");
     assert(doc);
     equals(doc._id, "hello");
     equals(doc.value, "universe");
@@ -115,7 +103,7 @@ describe("named Database with record", function () {
   it("should del last record", async function () {
     const ok = await db.del("hello");
     equals(ok.id, "hello");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
     const e = await db.get("hello").catch((e) => e);
     matches(e.message, /Not found/);
   });
@@ -130,8 +118,8 @@ describe("named Database with record", function () {
     equals(rows.length, 1);
     const loader = db._crdt.blockstore.loader;
     await loader.ready;
-    equals(loader.key.length, 64);
-    equals(loader.keyId.length, 64);
+    equals(loader.key?.length, 64);
+    equals(loader.keyId?.length, 64);
     notEquals(loader.key, loader.keyId);
   });
   it("should work right with a sequence of changes", async function () {
@@ -149,7 +137,7 @@ describe("named Database with record", function () {
 
     for (let i = 0; i < numDocs; i++) {
       const id = `id-${i}`;
-      const doc = await db.get(id);
+      const doc = await db.get<{ hello: string }>(id);
       assert(doc);
       equals(doc._id, id);
       equals(doc.hello.length, 5);
@@ -207,13 +195,11 @@ describe("named Database with record", function () {
 //   })
 
 describe("basic Database parallel writes / public", function () {
-  /** @type {Database} */
-  let db;
-  const writes: DbResponse[] = [];
+  let db: Database;
+  const writes: Promise<DbResponse>[] = [];
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-parallel-writes");
     db = new Database("test-parallel-writes", { public: true });
-    /** @type {Doc} */
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -227,7 +213,7 @@ describe("basic Database parallel writes / public", function () {
   it("should write all", async function () {
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
-      const doc = await db.get(id);
+      const doc = await db.get<{ hello: string }>(id);
       assert(doc);
       equals(doc._id, id);
       equals(doc.hello, "world");
@@ -238,13 +224,13 @@ describe("basic Database parallel writes / public", function () {
       const id = `id-${i}`;
       const ok = await db.del(id);
       equals(ok.id, id);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
       const e = await db.get(id).catch((e) => e);
       matches(e.message, /Not found/);
     }
   });
   it("should delete all in parallel", async function () {
-    const deletes: DbResponse[] = [];
+    const deletes: Promise<DbResponse>[] = [];
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
       deletes.push(db.del(id));
@@ -278,12 +264,14 @@ describe("basic Database parallel writes / public", function () {
 });
 
 describe("basic Database with subscription", function () {
-  /** @type {Database} */
-  let db, didRun, unsubscribe, lastDoc;
+  let db: Database;
+  let didRun: number
+  let unsubscribe: () => void
+  let lastDoc: DocWithId<{}>;
   beforeEach(function () {
     db = new Database();
     didRun = 0;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
     unsubscribe = db.subscribe((docs) => {
       lastDoc = docs[0];
       didRun++;
@@ -292,7 +280,6 @@ describe("basic Database with subscription", function () {
   it("should run on put", async function () {
     const all = await db.allDocs();
     equals(all.rows.length, 0);
-    /** @type {Doc} */
     const doc = { _id: "hello", message: "world" };
     equals(didRun, 0);
     const ok = await db.put(doc);
@@ -303,9 +290,8 @@ describe("basic Database with subscription", function () {
     equals(didRun, 1);
   });
   it("should unsubscribe", async function () {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
     unsubscribe();
-    /** @type {Doc} */
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
     equals(ok.id, "hello");
@@ -314,12 +300,13 @@ describe("basic Database with subscription", function () {
 });
 
 describe("basic Database with no update subscription", function () {
-  /** @type {Database} */
-  let db, didRun, unsubscribe;
+  let db: Database
+  let didRun: number
+  let unsubscribe: () => void
   beforeEach(function () {
     db = new Database();
     didRun = 0;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
     unsubscribe = db.subscribe(() => {
       didRun++;
     });
@@ -335,9 +322,7 @@ describe("basic Database with no update subscription", function () {
     equals(didRun, 1);
   });
   it("should unsubscribe", async function () {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     unsubscribe();
-    /** @type {Doc} */
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
     equals(ok.id, "hello");
@@ -346,14 +331,13 @@ describe("basic Database with no update subscription", function () {
 });
 
 describe("database with files input", async function () {
-  /** @type {Database} */
-  let db;
-  let imagefiles: File[] = [];
-  let result;
+  let db: Database;
+  const imagefiles: File[] = [];
+  let result: DbResponse;
 
   beforeAll(function () {
-    let directoryname = getDirectoryName(import.meta.url);
-    let [jpg, png] = readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
+    const directoryname = getDirectoryName("./test-images");
+    const [jpg, png] = readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
     imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: "image/jpeg" }));
     imagefiles.push(new File([new Blob([png])], `fireproof.png`, { type: "image/png" }));
   });
@@ -381,26 +365,26 @@ describe("database with files input", async function () {
   });
 
   it("Should fetch the images", async function () {
-    let doc = await db.get(result.id);
-    let files = doc._files;
-    let keys = Object.keys(files);
-    let fileMeta = files[keys[0]];
+    const doc = await db.get(result.id);
+    const files = doc._files || {};
+    const keys = Object.keys(files);
+    let fileMeta = files[keys[0]] as DocFileMeta;
     equals(fileMeta.type, "image/jpeg");
     equals(fileMeta.size, 5315);
     equals(fileMeta.cid.toString(), "bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm");
     equals(typeof fileMeta.file, "function");
-    let file = await fileMeta.file();
+    let file = await fileMeta.file?.() as File;
 
     equals(file.type, "image/jpeg");
     equals(file.size, 5315);
     // equals(file.name, 'image.jpg') // see https://github.com/fireproof-storage/fireproof/issues/70
 
-    fileMeta = files[keys[1]];
+    fileMeta = files[keys[1]] as DocFileMeta;
     equals(fileMeta.type, "image/png");
     equals(fileMeta.size, 29917);
     equals(fileMeta.cid.toString(), "bafkreiculdb2bq7tg7jaxl6m5gf4vh5ta3kqck6knc7lotm3a7u6qvpoje");
     equals(typeof fileMeta.file, "function");
-    file = await fileMeta.file();
+    file = await fileMeta.file?.() as File;
 
     equals(file.type, "image/png");
     equals(file.size, 29917);
@@ -408,32 +392,35 @@ describe("database with files input", async function () {
   });
 
   it("should update the file document data without changing the files", async function () {
-    let doc = await db.get(result.id);
-    let files = doc._files;
+    type Doc = {
+      type: string;
+    };
+    const doc = await db.get<Doc>(result.id);
+    let files = doc._files || {};
     let keys = Object.keys(files);
-    let fileMeta = files[keys[0]];
+    let fileMeta = files[keys[0]] as DocFileMeta;
     equals(fileMeta.type, "image/jpeg");
     equals(fileMeta.size, 5315);
     equals(fileMeta.cid.toString(), "bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm");
     equals(typeof fileMeta.file, "function");
-    let file = await fileMeta.file();
+    let file = await fileMeta.file?.() as File;
 
     equals(file.type, "image/jpeg");
     equals(file.size, 5315);
 
     doc.type = "images";
-    let r2 = await db.put(doc);
+    const r2 = await db.put(doc);
     equals(r2.id, "images-main");
-    let readDoc = await db.get(r2.id);
+    const readDoc = await db.get<Doc>(r2.id);
     equals(readDoc.type, "images");
-    files = readDoc._files;
+    files = readDoc._files || {};
     keys = Object.keys(files);
-    fileMeta = files[keys[0]];
+    fileMeta = files[keys[0]] as DocFileMeta;
     equals(fileMeta.type, "image/jpeg");
     equals(fileMeta.size, 5315);
     equals(fileMeta.cid.toString(), "bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm");
     equals(typeof fileMeta.file, "function");
-    file = await fileMeta.file();
+    file = await fileMeta.file?.() as File;
 
     equals(file.type, "image/jpeg");
     equals(file.size, 5315);

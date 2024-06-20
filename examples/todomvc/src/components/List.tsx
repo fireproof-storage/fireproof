@@ -21,7 +21,7 @@ export function List(): JSX.Element {
     ready: true,
     database,
   });
-  let { list, todos } = useLoaderData() as ListLoaderData;
+  const { list, todos } = useLoaderData() as ListLoaderData;
   const [editing, setEditing] = useState("");
   const revalidator = useRevalidator();
   database.subscribe(async () => {

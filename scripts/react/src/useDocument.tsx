@@ -3,10 +3,10 @@ import { Database, Doc, DocRecord } from "@fireproof/core";
 
 import { UseDocument, UseDocumentResult, useFireproof } from "./useFireproof";
 
-export type TLUseDocument = {
-  <T extends DocRecord<T>>(initialDoc: Doc<T>): UseDocumentResult<T>;
+export interface TLUseDocument {
+  <T extends DocTypes>(initialDoc: Doc<T>): UseDocumentResult<T>;
   database: Database;
-};
+}
 
 function topLevelUseDocument(...args: Parameters<UseDocument>) {
   const { useDocument, database } = useFireproof();

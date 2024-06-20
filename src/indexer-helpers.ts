@@ -26,13 +26,17 @@ import {
   DocWithId,
   IndexKeyType,
   IndexKey,
+  DocRecord,
+  DocTypes,
+  DocObject,
+  IndexUpdateString,
 } from "./types";
 import { CarTransaction, BlockFetcher } from "./storage-engine";
 import { CRDT } from "./crdt";
 
-export class IndexTree<K extends IndexKeyType, T> {
+export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
-  root?: ProllyNode<K, T>;
+  root?: ProllyNode<K, R>;
 }
 
 type CompareRef = string | number;
@@ -43,32 +47,39 @@ const refCompare = (aRef: CompareRef, bRef: CompareRef) => {
   if (Number.isNaN(bRef)) throw new Error("ref may not be Infinity or NaN");
   if (aRef === Infinity) return 1;
   // if (!Number.isFinite(bRef)) throw new Error('ref may not be Infinity or NaN')
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+
   return simpleCompare(aRef, bRef) as number;
 };
 
 const compare = (a: CompareKey, b: CompareKey) => {
   const [aKey, aRef] = a;
   const [bKey, bRef] = b;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
   const comp: number = simpleCompare(aKey, bKey);
   if (comp !== 0) return comp;
   return refCompare(aRef, bRef);
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
 export const byKeyOpts: StaticProllyOptions = { cache, chunker: bf(30), codec, hasher, compare };
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
+
 export const byIdOpts: StaticProllyOptions = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
 
 
 
-export type IndexDoc<K extends IndexKeyType> = {
+export interface IndexDoc<K extends IndexKeyType> {
   readonly key: IndexKey<K>
   readonly value: DocFragment
 }
 
-export function indexEntriesForChanges<T, K extends IndexKeyType>(changes: DocUpdate<T>[], mapFn: MapFn<T>): IndexDoc<K>[] {
+export interface IndexDocString {
+  readonly key: string
+  readonly value: DocFragment
+}
+
+
+
+export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyType>(changes: DocUpdate<T>[], mapFn: MapFn<T>): IndexDoc<K>[] {
   const indexEntries: IndexDoc<K>[] = [];
   changes.forEach(({ id: key, value, del }) => {
     if (del || !value) return;
@@ -100,10 +111,10 @@ function makeProllyGetBlock(blocks: BlockFetcher): (address: AnyLink) => Promise
   };
 }
 
-export async function bulkIndex<T, K extends IndexKeyType>(
+export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
   tblocks: CarTransaction,
   inIndex: IndexTree<K, T>,
-  indexEntries: IndexUpdate<K>[],
+  indexEntries: (IndexUpdate<K> | IndexUpdateString)[],
   opts: StaticProllyOptions,
 ): Promise<IndexTree<K, T>> {
   if (!indexEntries.length) return inIndex;
@@ -111,7 +122,7 @@ export async function bulkIndex<T, K extends IndexKeyType>(
     if (!inIndex.cid) {
       let returnRootBlock: Block | undefined = undefined
       let returnNode: ProllyNode<K, T> | undefined = undefined;
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+
       for await (const node of (await DbIndex.create({
         get: makeProllyGetBlock(tblocks),
         list: indexEntries,
@@ -125,7 +136,7 @@ export async function bulkIndex<T, K extends IndexKeyType>(
       if (!returnNode || !returnRootBlock) throw new Error("failed to create index");
       return { root: returnNode, cid: returnRootBlock.cid };
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+
       inIndex.root = (await DbIndex.load({ cid: inIndex.cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
     }
   }
@@ -140,17 +151,17 @@ export async function bulkIndex<T, K extends IndexKeyType>(
   }
 }
 
-export async function loadIndex<T, K extends IndexKeyType>(tblocks: BlockFetcher, cid: AnyLink, opts: StaticProllyOptions): Promise<ProllyNode<K, T>> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+export async function loadIndex<T extends DocFragment, K extends IndexKeyType>(tblocks: BlockFetcher, cid: AnyLink, opts: StaticProllyOptions): Promise<ProllyNode<K, T>> {
+
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }
 
-export async function applyQuery<T, K extends IndexKeyType>(
+export async function applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
   crdt: CRDT<T>,
-  resp: { result: IndexRow<K, T>[] },
+  resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K>,
 ): Promise<{
-  rows: IndexRow<K, T>[];
+  rows: IndexRow<K, T, R>[];
 }> {
   if (query.descending) {
     resp.result = resp.result.reverse();
@@ -168,15 +179,11 @@ export async function applyQuery<T, K extends IndexKeyType>(
     );
   }
   return {
-    rows: resp.result.map((row) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
-      row.key = charwise.decode(row.key) as IndexKey<K>;
-      if (row.row && !row.value) {
-        row.value = row.row;
-        delete row.row;
-      }
-      return row;
-    }),
+    rows: resp.result.map((row) => ({
+      id: row.id,
+      key: charwise.decode(row.key),
+      value: row.row,
+    }))
   };
 }
 
@@ -188,13 +195,19 @@ export function encodeKey(key: DocFragment): string {
   return charwise.encode(key) as string;
 }
 
+export type ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> = {
+  readonly id: string;
+  readonly key: IndexKey<K>;
+  readonly row: T
+}
+
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
-interface ProllyNode<K extends IndexKeyType, T> extends BaseNode {
-  getAllEntries(): PromiseLike<{ [x: string]: any; result: IndexRow<K, T>[] }>;
-  getMany(removeIds: K[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
-  range(a: IndexKey<K>, b: IndexKey<K>): Promise<{ result: IndexRow<K, T>[] }>;
-  get(key: string): Promise<{ result: IndexRow<K, T>[] }>;
-  bulk(bulk: IndexUpdate<K>[]): PromiseLike<{
+interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode {
+  getAllEntries(): PromiseLike<{ [x: string]: any; result: ProllyIndexRow<K, T>[] }>;
+  getMany<KI extends IndexKeyType>(removeIds: KI[]): Promise<{ /* [x: K]: unknown; */ result: IndexKey<K>[] }>;
+  range(a: string, b: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
+  get(key: string): Promise<{ result: ProllyIndexRow<K, T>[] }>;
+  bulk(bulk: (IndexUpdate<K> | IndexUpdateString)[]): PromiseLike<{
     readonly root?: ProllyNode<K, T>;
     readonly blocks: Block[]
   }>;

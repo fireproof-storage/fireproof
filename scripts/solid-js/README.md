@@ -83,7 +83,7 @@ Create (or modify) a document in your Fireproof database.
 
 ```ts
 // API Signature
-function createDocument<T extends DocRecord<T>>(initialDocFn: Accessor<Doc<T>>): CreateDocumentResult<T>;
+function createDocument<T extends DocTypes>(initialDocFn: Accessor<Doc<T>>): CreateDocumentResult<T>;
 ```
 
 Whether you create or modify a document is driven by the supply of an `_id` field in your invocation.
@@ -110,7 +110,7 @@ The getter/setter operates much like what you would expect from a normal `create
 
 ```ts
 type UpdateDocFnOptions = { readonly replace?: boolean };
-type UpdateDocFn<T extends DocRecord<T>> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
+type UpdateDocFn<T extends DocTypes> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
 ```
 
 Here are the ways you use the setter:
@@ -141,7 +141,7 @@ setTodo({ text: "anotherTodo", count: 2, completed: false }, { replace: true });
 The last function from the tuple is the save/write to database function. It has the following signature:
 
 ```ts
-type StoreDocFn<T extends DocRecord<T>> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
 ```
 
 This function has two modes of use:
@@ -162,12 +162,12 @@ The second mode can only be exercised via complementing `createDocument` with th
 Access to live query results, enabling real-time updates in your app.
 
 ```ts
-type LiveQueryResult<T extends DocRecord<T>> = {
+type LiveQueryResult<T extends DocTypes> = {
   readonly docs: Doc<T>[];
   readonly rows: IndexRow<T>[];
 };
 
-export type CreateLiveQuery = <T extends DocRecord<T>>(
+export type CreateLiveQuery = <T extends DocTypes>(
   mapFn: string | MapFn,
   query?: QueryOpts,
   initialRows?: IndexRow<T>[]

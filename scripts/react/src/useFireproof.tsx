@@ -2,31 +2,31 @@ import type { ConfigOpts, Database, DbResponse, Doc, DocRecord, IndexRow, MapFn,
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export type LiveQueryResult<T extends DocRecord<T>> = {
+export interface LiveQueryResult<T extends DocTypes> {
   readonly docs: Doc<T>[];
   readonly rows: IndexRow<T>[];
-};
+}
 
-export type UseLiveQuery = <T extends DocRecord<T>>(
+export type UseLiveQuery = <T extends DocTypes>(
   mapFn: string | MapFn,
   query?: QueryOpts,
   initialRows?: IndexRow<T>[]
 ) => LiveQueryResult<T>;
 
-type UpdateDocFnOptions = {
+interface UpdateDocFnOptions {
   readonly replace?: boolean;
   readonly reset?: boolean;
-};
+}
 
-type UpdateDocFn<T extends DocRecord<T>> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
+type UpdateDocFn<T extends DocTypes> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
 
-type StoreDocFn<T extends DocRecord<T>> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
 
-export type UseDocumentResult<T extends DocRecord<T>> = [Doc<T>, UpdateDocFn<T>, StoreDocFn<T>];
+export type UseDocumentResult<T extends DocTypes> = [Doc<T>, UpdateDocFn<T>, StoreDocFn<T>];
 
-export type UseDocument = <T extends DocRecord<T>>(initialDocFn: () => Doc<T>) => UseDocumentResult<T>;
+export type UseDocument = <T extends DocTypes>(initialDocFn: () => Doc<T>) => UseDocumentResult<T>;
 
-export type UseFireproof = {
+export interface UseFireproof {
   readonly database: Database;
   /**
    * ## Summary
@@ -78,7 +78,7 @@ export type UseFireproof = {
    * local storage.
    */
   readonly useLiveQuery: UseLiveQuery;
-};
+}
 
 /**
  * @deprecated Use the `useFireproof` hook instead
@@ -112,7 +112,7 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument<T extends DocRecord<T>>(initialDocFn: () => Doc<T>): UseDocumentResult<T> {
+  function useDocument<T extends DocTypes>(initialDocFn: () => Doc<T>): UseDocumentResult<T> {
     // We purposely refetch the docId everytime to check if it has changed
     const docId = initialDocFn()._id ?? "";
 
@@ -168,7 +168,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     return [doc, updateDoc, saveDoc];
   }
 
-  function useLiveQuery<T extends DocRecord<T>>(
+  function useLiveQuery<T extends DocTypes>(
     mapFn: MapFn | string,
     query = {},
     initialRows: IndexRow<T>[] = []

@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+ 
+ 
 import esbuildPluginTsc from "esbuild-plugin-tsc";
 import alias from "esbuild-plugin-alias";
 import fs from "fs";
@@ -60,7 +60,7 @@ export function createBuildSettings(options) {
       format: "esm",
       platform: "node",
       entryPoints: [entryPoint],
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+       
       plugins: [...commonSettings.plugins],
       banner: bannerLog(
         `
@@ -75,7 +75,7 @@ const require = createRequire(import.meta.url);
     const testEsmConfig = {
       ...esmConfig,
       platform: "node",
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+       
       plugins: [
         ...esmConfig.plugins,
         alias({
@@ -104,7 +104,7 @@ const require = createRequire(import.meta.url);
     const memEsmConfig = {
       ...esmConfig,
       // platform: 'node',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+       
       plugins: [
         ...esmConfig.plugins,
         alias({
@@ -182,7 +182,7 @@ console.log('fp browser/es2015 build');
           // alias({
           //   crypto: 'crypto-browserify'
           // }),
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+           
           ...commonSettings.plugins,
         ],
       };
