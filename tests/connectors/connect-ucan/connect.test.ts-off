@@ -60,7 +60,7 @@ describe.skip("basic Connection with s3 remote", function () {
   beforeEach(async function () {
     dbName = "test-s3-" + Math.ceil(Math.random() * 100000);
     db = new Database(dbName);
-    const remote = connect.s3free(db, serviceConfig.s3);
+    const remote = connect.s3(db, serviceConfig.s3);
     await remote.ready;
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };

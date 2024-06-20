@@ -1,29 +1,20 @@
 import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import { Block, encode } from "multiformats/block";
+import { encode } from "multiformats/block";
 import { CID } from "multiformats/cid";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals, resetDirectory, notEquals, dataDir } from "../fireproof/helpers.js";
+import { assert, matches, equals, resetDirectory, dataDir } from "../fireproof/helpers.js";
 
-import { parseCarFile } from "../../src/storage-engine/loader-helpers.js";
+import { parseCarFile } from "../../src/storage-engine/loader-helpers";
 
 import { CompactionFetcher, Loader } from "../../src/storage-engine/index.js";
-// import { CRDT } from '../../fireproof/dist/test/crdt.esm.js'
-import { CarTransaction, EncryptedBlockstore } from "../../src/storage-engine/index.js";
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
 import * as nodeCrypto from "../../src/node/crypto-node.js";
 import * as nodeStore from "../../src/node/store-node.js";
-import { BlockStore } from "@ucanto/interface";
 import { BlockView } from "multiformats";
-import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarGroup, IndexTransactionMeta, MetaType, TransactionMeta } from "../../src/storage-engine/types.js";
-import { BlockstoreOpts } from "../../src/storage-engine/transaction.js";
-
-// const randomBytes = size => {
-//   throw new Error('randomBytes not implemented')
-// }
+import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types.js";
 
 const loaderOpts = {
   store: nodeStore,
