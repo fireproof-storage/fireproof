@@ -1,5 +1,5 @@
-import { format, parse, ToString } from "@ipld/dag-json";
 import type { AnyBlock, AnyLink, DbMeta } from "./types";
+import { format, parse, ToString } from "@ipld/dag-json";
 
 import { PACKAGE_VERSION } from "./version";
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);

@@ -50,6 +50,9 @@ importers:
       '@web3-storage/w3up-client':
         specifier: ^15.0.0
         version: 15.0.0(encoding@0.1.13)
+      babel-jest:
+        specifier: ^29.7.0
+        version: 29.7.0(@babel/core@7.24.7)
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Live database for the web",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "build:basic": "pnpm build:blockstore && pnpm build:core",
@@ -92,6 +93,7 @@
     "@web3-storage/clock": "^0.4.1",
     "@web3-storage/pail": "^0.6.0",
     "@web3-storage/w3up-client": "^15.0.0",
+    "babel-jest": "^29.7.0",
     "cross-fetch": "^4.0.0",
     "eslint": "^9.5.0",
     "idb": "^8.0.0",
