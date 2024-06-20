@@ -3,18 +3,18 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { encode } from "multiformats/block";
 import { CID } from "multiformats/cid";
 
-import { assert, matches, equals, resetDirectory, dataDir } from "../fireproof/helpers.js";
+import { assert, matches, equals, resetDirectory, dataDir } from "../fireproof/helpers";
 
 import { parseCarFile } from "../../src/storage-engine/loader-helpers";
 
-import { CompactionFetcher, Loader } from "../../src/storage-engine/index.js";
+import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "../../src/storage-engine/index";
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
-import * as nodeCrypto from "../../src/node/crypto-node.js";
-import * as nodeStore from "../../src/node/store-node.js";
+import * as nodeCrypto from "../../src/node/crypto-node";
+import * as nodeStore from "../../src/node/store-node";
 import { BlockView } from "multiformats";
-import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types.js";
+import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types";
 
 const loaderOpts = {
   store: nodeStore,
@@ -27,14 +27,14 @@ const indexLoaderOpts = {
 };
 
 describe("basic Loader", function () {
-  let loader: Loader
-  let block: BlockView
+  let loader: Loader;
+  let block: BlockView;
   let t: CarTransaction;
 
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-commit");
     const mockM = new MyMemoryBlockStore();
-    t = new CarTransaction(mockM);
+    t = new CarTransaction(mockM as EncryptedBlockstore);
     loader = new Loader("test-loader-commit", { ...loaderOpts, public: true });
     block = await encode({
       value: { hello: "world" },
@@ -60,9 +60,9 @@ describe("basic Loader", function () {
   });
 });
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// function sleep(ms: number) {
+//   return new Promise((resolve) => setTimeout(resolve, ms));
+// }
 
 class MyMemoryBlockStore extends EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
@@ -78,7 +78,7 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   get loader(): Loader {
     throw new Error("Method not implemented.");
   }
-  readonly transactions: Set<CarTransaction> = new Set();
+  readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
 
@@ -89,6 +89,8 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   // transaction<M ext(fn: (t: CarTransaction) => Promise<MetaType>, opts?: { noLoader: boolean }): Promise<MetaType> {
   //   throw new Error("Method not implemented.");
   // }
+  
+  
   getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
   }
@@ -205,7 +207,7 @@ describe("basic Loader with index commits", function () {
   let ib: EncryptedBlockstore
   let indexerResult: IndexTransactionMeta
   let cid: CID
-  let indexMap: Map<string, CID>;
+  // let indexMap: Map<string, CID>;
 
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-index");
