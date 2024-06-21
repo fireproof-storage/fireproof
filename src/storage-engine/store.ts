@@ -18,8 +18,9 @@ export abstract class MetaStore extends VersionedStore {
   readonly tag: string = "header-base";
 
   makeHeader({ cars, key }: DbMeta): ToString<DbMeta> {
-    const encoded = format({ cars, key } as DbMeta);
-    return encoded;
+    const toEncode: DbMeta = { cars };
+    if (key) toEncode.key = key;
+    return format(toEncode);
   }
 
   parseHeader(headerData: ToString<DbMeta>): DbMeta {
