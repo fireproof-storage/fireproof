@@ -18,7 +18,7 @@ export type ClockLink = EventLink<Operation>;
 
 export type ClockHead = ClockLink[];
 
-export type DocFragment = Uint8Array | string | number | boolean | undefined | null | AnyLink | DocFragment[] | object;
+export type DocFragment = Uint8Array | string | number | boolean | null | AnyLink | DocFragment[] | object;
 // | { [key: string]: DocFragment };
 
 export type DocLiteral = string | number | boolean | Uint8Array | unknown;
@@ -101,12 +101,12 @@ export interface IndexUpdateString {
 // export type IndexRow<K extends IndexKeyType, T extends DocTypes> =
 //   T extends DocLiteral ? IndexRowLiteral<K, T> : IndexRowObject<K, T>
 
-export type IndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> = {
+export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> {
   readonly id: string;
   readonly key: K; // IndexKey<K>;
   readonly value: R;
   readonly doc?: DocWithId<T>;
-};
+}
 
 export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];

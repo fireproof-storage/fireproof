@@ -65,6 +65,7 @@ describe("basic Index", () => {
   });
   it("should range query", async function () {
     const { rows } = await indexer.query({ range: ["b", "d"] });
+    equals(rows.length, 1);
     equals(rows[0].id, "bazillas");
   });
   it("should key query", async function () {
