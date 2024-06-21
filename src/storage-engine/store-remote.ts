@@ -1,7 +1,8 @@
 import { UploadDataFnParams } from "./types";
 import type { AnyBlock, AnyLink, DbMeta, FnParamTypes } from "./types";
 import { type Loadable } from "./loader";
-import { DataStore, MetaStore, RemoteWAL, WALState } from "./index";
+import { DataStore, MetaStore } from "./store";
+import { RemoteWAL, WALState } from "./remote-wal";
 import { Connection } from "./connection";
 import { validateDataParams, validateMetaParams } from ".";
 import { format, parse, ToString } from "@ipld/dag-json";
