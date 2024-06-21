@@ -13,11 +13,13 @@ function digestSHA256(data: Uint8Array): Promise<ArrayBuffer> {
 }
 
 export function toCryptoOpts(cryptoOpts: Partial<CryptoOpts> = {}): CryptoOpts {
-  return {
+  const opts = {
     importKey: cryptoOpts.importKey || crypto.subtle.importKey.bind(crypto.subtle),
     encrypt: cryptoOpts.encrypt || crypto.subtle.encrypt.bind(crypto.subtle),
     decrypt: cryptoOpts.decrypt || crypto.subtle.decrypt.bind(crypto.subtle),
     randomBytes: cryptoOpts.randomBytes || randomBytes,
     digestSHA256: cryptoOpts.digestSHA256 || digestSHA256,
   };
+  // console.log("cryptoOpts", cryptoOpts, opts)
+  return opts;
 }

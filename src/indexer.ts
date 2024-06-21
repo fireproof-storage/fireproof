@@ -238,7 +238,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
     for (const [name, indexer] of this.crdt.indexers) {
       if (indexer.indexHead) {
-        indexerMeta.indexes.set(name, {
+        indexerMeta.indexes?.set(name, {
           byId: indexer.byId.cid,
           byKey: indexer.byKey.cid,
           head: indexer.indexHead,
@@ -258,7 +258,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         map: this.mapFnString,
         name: this.name,
       } as IdxMeta;
-      indexerMeta.indexes.set(this.name, idxMeta); // should this move to after commit?
+      indexerMeta.indexes?.set(this.name, idxMeta); // should this move to after commit?
       return indexerMeta as unknown as TransactionMeta;
     });
   }

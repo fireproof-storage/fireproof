@@ -4,7 +4,7 @@ import { CID } from "multiformats";
 
 import { assert, matches, equals, dataDir } from "../fireproof/helpers";
 
-import { MetaStore, DataStore, Loader } from "../../src/storage-engine";
+import { MetaStore, DataStore, Loader, Loadable } from "../../src/storage-engine";
 
 import { toStoreRuntime } from "../../src/storage-engine/index";
 import { AnyBlock, DbMeta, StoreRuntime } from "../../src/storage-engine/types";
@@ -19,7 +19,7 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     runtime = toStoreRuntime({})
-    store = await runtime.makeDataStore("test");
+    store = await runtime.makeDataStore({ name: "test" } as Loadable);
   });
 
   it("should have a name", function () {
@@ -45,7 +45,7 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     runtime = toStoreRuntime({})
-    store = await runtime.makeDataStore("test2");
+    store = await runtime.makeDataStore({ name: "test2" } as Loadable);
     car = {
       cid: CID.parse("cid"),
       bytes: new Uint8Array([55, 56, 57, 80]),

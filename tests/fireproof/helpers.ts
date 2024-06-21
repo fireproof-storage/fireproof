@@ -78,7 +78,12 @@ export async function copyDirectory(source: string, destination: string) {
 }
 
 export function getDirectoryName(url: string) {
-  const path = fileURLToPath(url);
+  let path: string;
+  try {
+    path = fileURLToPath(url);
+  } catch (e) {
+    path = url;
+  }
   const dir_name = dirname(path);
   return dir_name;
 }
