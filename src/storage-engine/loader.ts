@@ -1,31 +1,31 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
 
-import type {
-  AnyBlock,
-  AnyLink,
-  CarHeader,
-  CommitOpts,
-  DbMeta,
-  TransactionMeta,
-  CarGroup,
-  CarLog,
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  UploadDataFnParams,
-  UploadMetaFnParams,
+import {
+  type AnyBlock,
+  type AnyLink,
+  type CarHeader,
+  type CommitOpts,
+  type DbMeta,
+  type TransactionMeta,
+  type CarGroup,
+  type CarLog,
+  type DownloadDataFnParams,
+  type DownloadMetaFnParams,
+  type UploadDataFnParams,
+  type UploadMetaFnParams,
+  toCIDBlock,
 } from "./types";
-import type { BlockstoreOpts } from "./transaction";
+import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction";
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers";
 import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers";
 
-import { getCrypto, randomBytes } from "../web/crypto-web";
 import { DataStore, MetaStore } from "./store";
 import { RemoteWAL } from "./remote-wal";
 
 import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "./store";
-import { CarTransaction } from "./transaction";
+import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction";
 import { CommitQueue } from "./commit-queue";
 import * as CBW from "@ipld/car/buffer-writer";
 import { Falsy, throwFalsy } from "../types";
@@ -68,7 +68,7 @@ export abstract class Loadable {
 
 export class Loader implements Loadable {
   readonly name: string;
-  readonly ebOpts: BlockstoreOpts;
+  readonly ebOpts: BlockstoreRuntime;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
   isWriting = false;
@@ -91,14 +91,17 @@ export class Loader implements Loadable {
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
 
-  constructor(name: string, ebOpts: BlockstoreOpts) {
+  constructor(name: string, ebOpts: Partial<BlockstoreOpts>) {
     this.name = name;
-    this.ebOpts = ebOpts;
-    this.carStore = ebOpts.store.makeDataStore(this.name);
-    this.fileStore = ebOpts.store.makeDataStore(this.name);
-    this.remoteWAL = ebOpts.store.makeRemoteWAL(this);
+    this.ebOpts = defaultedBlockstoreRuntime({
+      ...ebOpts,
+      name,
+    });
+    this.carStore = this.ebOpts.store.makeDataStore(this.name);
+    this.fileStore = this.ebOpts.store.makeDataStore(this.name);
+    this.remoteWAL = this.ebOpts.store.makeRemoteWAL(this);
     this.ready = Promise.resolve().then(async () => {
-      this.metaStore = ebOpts.store.makeMetaStore(this);
+      this.metaStore = this.ebOpts.store.makeMetaStore(this);
       if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
       const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load("main");
       if (metas) {
@@ -171,11 +174,7 @@ export class Loader implements Loadable {
     if (this.key) return this.key;
     // generate a random key
     if (!this.ebOpts.public) {
-      if (getCrypto()) {
-        await this.setKey(toHexString(randomBytes(32)));
-      } else {
-        console.warn("missing crypto module, using public mode");
-      }
+      await this.setKey(toHexString(this.ebOpts.crypto.randomBytes(32)));
     }
     return this.key || null;
   }
@@ -281,16 +280,16 @@ export class Loader implements Loadable {
     const threshold = this.ebOpts.threshold || 1000 * 1000;
     let clonedt = new CarTransaction(t.parent, { add: false });
     clonedt.putSync(rootBlock.cid, rootBlock.bytes);
-    let newsize = CBW.blockLength(rootBlock);
+    let newsize = CBW.blockLength(toCIDBlock(rootBlock));
     let cidRootBlock = rootBlock;
     for (const { cid, bytes } of t.entries()) {
-      newsize += CBW.blockLength({ cid, bytes });
+      newsize += CBW.blockLength(toCIDBlock({ cid: cid, bytes }));
       if (newsize >= threshold) {
         carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt));
         clonedt = new CarTransaction(t.parent, { add: false });
         clonedt.putSync(cid, bytes);
         cidRootBlock = { cid, bytes };
-        newsize = CBW.blockLength({ cid, bytes }); //+ CBW.blockLength(rootBlock)
+        newsize = CBW.blockLength(toCIDBlock({ cid, bytes })); //+ CBW.blockLength(rootBlock)
       } else {
         clonedt.putSync(cid, bytes);
       }
@@ -387,7 +386,9 @@ export class Loader implements Loadable {
       if (!reader) {
         throw new Error(`missing car reader ${carCid.toString()}`);
       }
-      await this.cacheCarReader(carCid.toString(), reader).catch(() => { return });
+      await this.cacheCarReader(carCid.toString(), reader).catch(() => {
+        return;
+      });
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
       throw new Error(`block not in reader: ${cid.toString()}`);
     };
@@ -495,7 +496,9 @@ export class Loader implements Loadable {
           const readerP = publicFiles ? Promise.resolve(rawReader) : this.ensureDecryptedReader(rawReader);
 
           const cachedReaderP = readerP.then(async (reader) => {
-            await this.cacheCarReader(cidsString, reader).catch(() => { return });
+            await this.cacheCarReader(cidsString, reader).catch(() => {
+              return;
+            });
             return reader;
           });
           this.carReaders.set(cidsString, cachedReaderP);
@@ -523,12 +526,9 @@ export class Loader implements Loadable {
   protected async setKey(key: string) {
     if (this.key && this.key !== key) throw new Error("key mismatch");
     this.key = key;
-    const crypto = getCrypto();
-    if (!crypto) throw new Error("missing crypto module");
-    const subtle = crypto.subtle;
     const encoder = new TextEncoder();
     const data = encoder.encode(key);
-    const hashBuffer = await subtle.digest("SHA-256", data);
+    const hashBuffer = await this.ebOpts.crypto.digestSHA256(data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     this.keyId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
   }
@@ -545,7 +545,9 @@ export class Loader implements Loadable {
       await _writingFn();
       return wr;
     });
-    return this.writing.then(() => { return });
+    return this.writing.then(() => {
+      return;
+    });
   }
 }
 

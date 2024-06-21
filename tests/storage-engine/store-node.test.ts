@@ -2,11 +2,12 @@ import { join } from "node:path";
 import { promises } from "node:fs";
 import { CID } from "multiformats";
 
-import { assert, matches, equals, dataDir } from "../fireproof/helpers.js";
+import { assert, matches, equals, dataDir } from "../fireproof/helpers";
 
-import { DataStore, MetaStore } from "../../src/node/store-node.js";
-import { AnyBlock, AnyLink } from "../../src/types.js";
-import { DbMeta } from "../../src/storage-engine/types.js";
+import { MetaStore, DataStore, Loader } from "../../src/storage-engine";
+
+import { toStoreRuntime } from "../../src/runtime/stores";
+import { AnyBlock, DbMeta, StoreRuntime } from "../../src/storage-engine/types";
 
 const { readFile } = promises;
 
@@ -14,9 +15,11 @@ const decoder = new TextDecoder("utf-8");
 
 describe("DataStore", function () {
   let store: DataStore;
+  let runtime: StoreRuntime;
 
   beforeEach(function () {
-    store = new DataStore("test");
+    runtime = toStoreRuntime({})
+    store = runtime.makeDataStore("test");
   });
 
   it("should have a name", function () {
@@ -25,11 +28,11 @@ describe("DataStore", function () {
 
   it("should save a car", async function () {
     const car: AnyBlock = {
-      cid: "cid" as unknown as AnyLink,
+      cid: CID.parse("cid"),
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const path = join(DataStore.dataDir, store.name, "data", car.cid + ".car");
+    const path = join(runtime.stores.data.pathname, store.name, "data", car.cid + ".car");
     const data = await readFile(path);
     equals(data.toString(), decoder.decode(car.bytes));
   });
@@ -37,19 +40,21 @@ describe("DataStore", function () {
 
 describe("DataStore with a saved car", function () {
   let store: DataStore
+  let runtime: StoreRuntime;
   let car: AnyBlock;
 
   beforeEach(async function () {
-    store = new DataStore("test2");
+    runtime = toStoreRuntime({})
+    store = runtime.makeDataStore("test2");
     car = {
-      cid: "cid" as unknown as AnyLink,
+      cid: CID.parse("cid"),
       bytes: new Uint8Array([55, 56, 57, 80]),
     };
     await store.save(car);
   });
 
   it("should have a car", async function () {
-    const path = join(DataStore.dataDir, store.name, "data", car.cid + ".car");
+    const path = join(runtime.stores.data.pathname, store.name, "data", car.cid + ".car");
     const data = await readFile(path);
     equals(data.toString(), decoder.decode(car.bytes));
   });
@@ -70,9 +75,11 @@ describe("DataStore with a saved car", function () {
 
 describe("MetaStore", function () {
   let store: MetaStore
+  let runtime: StoreRuntime;
 
   beforeEach(function () {
-    store = new MetaStore("test");
+    runtime = toStoreRuntime()
+    store = runtime.makeMetaStore({ name: "test" } as unknown as Loader);
   });
 
   it("should have a name", function () {
@@ -98,9 +105,11 @@ describe("MetaStore", function () {
 describe("MetaStore with a saved header", function () {
   let store: MetaStore
   let cid: CID;
+  let runtime: StoreRuntime;
 
   beforeEach(async function () {
-    store = new MetaStore("test-saved-header");
+    runtime = toStoreRuntime()
+    store = runtime.makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid], key: undefined });
   });

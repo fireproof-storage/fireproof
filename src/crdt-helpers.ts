@@ -6,12 +6,19 @@ import { put, get, entries, root } from "@web3-storage/pail/crdt";
 import { EventBlockView, EventLink, Operation, PutOperation } from "@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
-import { type EncryptedBlockstore, type CompactionFetcher, CarTransaction, BlockFetcher, TransactionMeta } from "./storage-engine";
+import {
+  type EncryptedBlockstore,
+  type CompactionFetcher,
+  CarTransaction,
+  BlockFetcher,
+  TransactionMeta,
+  AnyLink,
+  StoreRuntime,
+} from "./storage-engine";
 import {
   type IndexKeyType,
   type DocUpdate,
   type ClockHead,
-  type AnyLink,
   type DocValue,
   type CRDTMeta,
   type ChangesOptions,
@@ -22,7 +29,6 @@ import {
   type DocTypes,
   throwFalsy,
 } from "./types";
-import { decodeFile, encodeFile } from "./node/files";
 import { Result } from "@web3-storage/pail/crdt/api";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -46,6 +52,7 @@ function toString<K extends IndexKeyType>(key: K): string {
 }
 
 export async function applyBulkUpdateToCrdt<T extends DocTypes>(
+  store: StoreRuntime,
   tblocks: CarTransaction,
   head: ClockHead,
   updates: DocUpdate<T>[],
@@ -54,12 +61,12 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
     for (const update of updates) {
-      const link = await writeDocContent(tblocks, update);
+      const link = await writeDocContent(store, tblocks, update);
       await batch.put(toString(update.id), link);
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
-    const link = await writeDocContent(tblocks, updates[0]);
+    const link = await writeDocContent(store, tblocks, updates[0]);
     result = await put(tblocks, head, toString(updates[0].id), link);
   }
   if (!result) throw new Error("Missing result, updates: " + updates.length);
@@ -78,6 +85,7 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
 
 // this whole thing can get pulled outside of the write queue
 async function writeDocContent<T extends DocTypes>(
+  store: StoreRuntime,
   blocks: CarTransaction,
   update: DocUpdate<T>,
 ): Promise<AnyLink> {
@@ -86,7 +94,7 @@ async function writeDocContent<T extends DocTypes>(
     value = { del: true };
   } else {
     if (!update.value) throw new Error("Missing value");
-    await processFiles(blocks, update.value);
+    await processFiles(store, blocks, update.value);
     value = { doc: update.value as DocWithId<T> };
   }
   const block = await encode({ value, hasher, codec });
@@ -94,16 +102,16 @@ async function writeDocContent<T extends DocTypes>(
   return block.cid;
 }
 
-async function processFiles<T extends DocTypes>(blocks: CarTransaction, doc: DocSet<T>) {
+async function processFiles<T extends DocTypes>(store: StoreRuntime, blocks: CarTransaction, doc: DocSet<T>) {
   if (doc._files) {
-    await processFileset(blocks, doc._files);
+    await processFileset(store, blocks, doc._files);
   }
   if (doc._publicFiles) {
-    await processFileset(blocks, doc._publicFiles, true);
+    await processFileset(store, blocks, doc._publicFiles, true);
   }
 }
 
-async function processFileset(blocks: CarTransaction, files: DocFiles, publicFiles = false) {
+async function processFileset(store: StoreRuntime, blocks: CarTransaction, files: DocFiles, publicFiles = false) {
   const dbBlockstore = blocks.parent;
   const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
   const didPut = [];
@@ -113,7 +121,7 @@ async function processFileset(blocks: CarTransaction, files: DocFiles, publicFil
       const file = files[filename] as File;
 
       // totalSize += file.size
-      const { cid, blocks: fileBlocks } = await encodeFile(file);
+      const { cid, blocks: fileBlocks } = await store.encodeFile(file);
       didPut.push(filename);
       for (const block of fileBlocks) {
         t.putSync(block.cid, block.bytes);
@@ -169,7 +177,7 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
       }
       if (fileMeta.car) {
         fileMeta.file = async () =>
-          await decodeFile(
+          await blocks.ebOpts.store.decodeFile(
             {
               get: async (cid: AnyLink) => {
                 return await blocks.getFile(throwFalsy(fileMeta.car), cid, isPublic);

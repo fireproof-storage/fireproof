@@ -15,14 +15,12 @@ import { nocache as cache } from "prolly-trees/cache";
 import { ProllyNode as BaseNode } from "prolly-trees/db-index";
 
 import {
-  AnyLink,
   DocUpdate,
   MapFn,
   DocFragment,
   IndexUpdate,
   QueryOpts,
   IndexRow,
-  AnyBlock,
   DocWithId,
   IndexKeyType,
   IndexKey,
@@ -30,7 +28,7 @@ import {
   DocObject,
   IndexUpdateString,
 } from "./types";
-import { CarTransaction, BlockFetcher } from "./storage-engine";
+import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./storage-engine";
 import { CRDT } from "./crdt";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
@@ -39,7 +37,7 @@ export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
 }
 
 type CompareRef = string | number;
-type CompareKey = [string | number, CompareRef];
+export type CompareKey = [string | number, CompareRef];
 
 function refCompare(aRef: CompareRef, bRef: CompareRef) {
   if (Number.isNaN(aRef)) return -1;
@@ -48,7 +46,7 @@ function refCompare(aRef: CompareRef, bRef: CompareRef) {
   // if (!Number.isFinite(bRef)) throw new Error('ref may not be Infinity or NaN')
 
   return simpleCompare(aRef, bRef) as number;
-};
+}
 
 function compare(a: CompareKey, b: CompareKey) {
   const [aKey, aRef] = a;
@@ -57,11 +55,11 @@ function compare(a: CompareKey, b: CompareKey) {
   const comp: number = simpleCompare(aKey, bKey);
   if (comp !== 0) return comp;
   return refCompare(aRef, bRef);
-};
+}
 
-export const byKeyOpts: StaticProllyOptions = { cache, chunker: bf(30), codec, hasher, compare };
+export const byKeyOpts: StaticProllyOptions<CompareKey> = { cache, chunker: bf(30), codec, hasher, compare };
 
-export const byIdOpts: StaticProllyOptions = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
+export const byIdOpts: StaticProllyOptions<unknown> = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
 
 export interface IndexDoc<K extends IndexKeyType> {
   readonly key: IndexKey<K>;
@@ -112,7 +110,7 @@ export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
   tblocks: CarTransaction,
   inIndex: IndexTree<K, T>,
   indexEntries: (IndexUpdate<K> | IndexUpdateString)[],
-  opts: StaticProllyOptions,
+  opts: StaticProllyOptions<T>,
 ): Promise<IndexTree<K, T>> {
   if (!indexEntries.length) return inIndex;
   if (!inIndex.root) {
@@ -150,7 +148,7 @@ export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
 export async function loadIndex<T extends DocFragment, K extends IndexKeyType>(
   tblocks: BlockFetcher,
   cid: AnyLink,
-  opts: StaticProllyOptions,
+  opts: StaticProllyOptions<T>,
 ): Promise<ProllyNode<K, T>> {
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }
@@ -217,10 +215,10 @@ interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends Base
   readonly block: Promise<Block>;
 }
 
-interface StaticProllyOptions {
+interface StaticProllyOptions<T> {
   readonly cache: unknown;
-  chunker: (entry: unknown, distance: number) => boolean;
+  chunker: (entry: T, distance: number) => boolean;
   readonly codec: unknown;
   readonly hasher: unknown;
-  compare: (a: unknown, b: unknown) => number;
+  compare: (a: T, b: T) => number;
 }

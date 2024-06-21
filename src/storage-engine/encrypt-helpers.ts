@@ -16,9 +16,8 @@ import { nocache as cache } from "prolly-trees/cache";
 import { create, load } from "prolly-trees/cid-set";
 
 import { encodeCarFile } from "./loader-helpers";
-import { MakeCodecCrypto, makeCodec } from "./encrypt-codec.js";
-import type { AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from "./types";
-import { Falsy } from "../types";
+import { makeCodec } from "./encrypt-codec";
+import type { AnyLinkFn, AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from "./types";
 
 function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   return list.some((cid: AnyLink) => {
@@ -26,7 +25,7 @@ function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   });
 }
 
-function makeEncDec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint8Array) {
+function makeEncDec(crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
   const codec = makeCodec(crypto, randomBytes);
 
   const encrypt = async function* ({
@@ -38,7 +37,7 @@ function makeEncDec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint
     chunker,
     root,
   }: {
-    get: (cid: AnyLink) => Promise<AnyBlock | Falsy>;
+    get: (cid: AnyLink) => Promise<AnyBlock | undefined>;
     key: ArrayBuffer;
     cids: AnyLink[];
     hasher: MultihashHasher<number>;
@@ -81,7 +80,7 @@ function makeEncDec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint
     hasher,
   }: {
     root: AnyLink;
-    get: (cid: AnyLink) => Promise<AnyBlock | Falsy>;
+    get: (cid: AnyLink) => Promise<AnyBlock | undefined>;
     key: ArrayBuffer;
     cache: (cid: AnyLink) => Promise<AnyBlock>;
     chunker: (bytes: Uint8Array) => AsyncGenerator<Uint8Array>;
@@ -109,10 +108,11 @@ function makeEncDec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint
     if (!rootBlock) throw new Error("missing root block");
     const cidset = await load({ cid: tree, get: getWithDecode, cache, chunker, codec, hasher });
     const { result: nodes } = (await cidset.getAllEntries()) as { result: { cid: CID }[] };
-    const unwrap = async (eblock: AnyDecodedBlock | undefined) => {
+    const unwrap = async (eblock?: AnyDecodedBlock) => {
       if (!eblock) throw new Error("missing block");
       if (!eblock.value) {
-        eblock = (await decode({ ...eblock, codec, hasher })) as AnyDecodedBlock;
+        eblock = await decode({ ...eblock, codec, hasher });
+        if (!eblock.value) throw new Error("missing value");
       }
       const { bytes, cid } = await codec.decrypt({ ...eblock, key }).catch((e) => {
         throw e;
@@ -150,7 +150,7 @@ export async function encryptedEncodeCarFile(crypto: CryptoOpts, key: string, ro
     if (!g) throw new Error(`missing cid block: ${bytes.length}:${cid.toString()}`);
   }
   let last: AnyBlock | null = null;
-  const { encrypt } = makeEncDec(crypto.crypto, crypto.randomBytes);
+  const { encrypt } = makeEncDec(crypto, crypto.randomBytes);
 
   for await (const block of encrypt({
     cids: cidsToEncrypt,
@@ -172,12 +172,12 @@ export async function encryptedEncodeCarFile(crypto: CryptoOpts, key: string, ro
 export async function decodeEncryptedCar(crypto: CryptoOpts, key: string, reader: CarReader) {
   const roots = await reader.getRoots();
   const root = roots[0];
-  return await decodeCarBlocks(crypto, root, reader.get.bind(reader), key);
+  return await decodeCarBlocks(crypto, root, reader.get.bind(reader) as AnyLinkFn, key);
 }
 async function decodeCarBlocks(
   crypto: CryptoOpts,
   root: AnyLink,
-  get: (cid: CID) => Promise<AnyBlock | Falsy>,
+  get: (cid: AnyLink) => Promise<AnyBlock | undefined>,
   keyMaterial: string,
 ): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
   const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial);
@@ -186,7 +186,7 @@ async function decodeCarBlocks(
   const decryptedBlocks = new MemoryBlockstore();
   let last: AnyBlock | null = null;
 
-  const { decrypt } = makeEncDec(crypto.crypto, crypto.randomBytes);
+  const { decrypt } = makeEncDec(crypto, crypto.randomBytes);
 
   for await (const block of decrypt({
     root,

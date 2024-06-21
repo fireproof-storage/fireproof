@@ -1,15 +1,14 @@
 import { format, parse, ToString } from "@ipld/dag-json";
 import { AnyBlock, AnyLink, DbMeta } from "./types";
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from "./store";
-import { RemoteWAL as RemoteWALBase, WALState } from "./remote-wal";
+import { DataStore, MetaStore, RemoteWAL, WALState } from "./index";
 
-import type { Loadable, Loader } from "./loader";
+// import type { Loadable, Loader } from "./loader";
 
-export const makeDataStore = (name: string) => new DataStore(name);
-export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
-export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
+// export const makeDataStore = (name: string) => new DataStore(name);
+// export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
+// export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
 
-export class DataStore extends DataStoreBase {
+export class MemoryDataStore extends DataStore {
   readonly tag: string = "car-mem";
   readonly store = new Map<string, Uint8Array>();
 
@@ -28,7 +27,7 @@ export class DataStore extends DataStoreBase {
   }
 }
 
-export class MetaStore extends MetaStoreBase {
+export class MemoryMetaStore extends MetaStore {
   readonly tag: string = "header-mem";
   readonly store = new Map<string, string>();
 
@@ -62,7 +61,7 @@ export class MetaStore extends MetaStoreBase {
 }
 
 //
-export class RemoteWAL extends RemoteWALBase {
+export class MemoryRemoteWAL extends RemoteWAL {
   readonly tag: string = "wal-mem";
   readonly store = new Map<string, string>();
 

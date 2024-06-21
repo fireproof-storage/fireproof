@@ -1,20 +1,44 @@
 import { join, dirname } from "node:path";
-import { homedir } from "node:os";
 import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import type { AnyBlock, AnyLink, DbMeta } from "../storage-engine";
-import { STORAGE_VERSION, MetaStore as MetaStoreBase, DataStore as DataStoreBase } from "../storage-engine";
-import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal";
+import { MetaStore, DataStore, RemoteWAL, WALState } from "../storage-engine";
 import type { Loadable, Loader } from "../storage-engine";
-
 import { format, parse, ToString } from "@ipld/dag-json";
+import { dataDir, decodeFile, encodeFile } from "./files";
+import { StoreRuntime, StoreOpts } from "../storage-engine/types";
 
-export const makeDataStore = (name: string) => new DataStore(name);
-export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
-export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
+function toURL(path: string | URL): URL {
+  if (path instanceof URL) return path;
+  return new URL(path, "file:");
+}
 
-export class RemoteWAL extends RemoteWALBase {
+export function toStoreRuntime(opts: StoreOpts = {}): StoreRuntime {
+  const stores = {
+    meta: toURL(opts.stores?.meta || dataDir()),
+    data: toURL(opts.stores?.data || dataDir()),
+    indexes: toURL(opts.stores?.indexes || dataDir()),
+    remoteWAL: toURL(opts.stores?.remoteWAL || dataDir()),
+  };
+  return {
+    stores,
+    makeMetaStore: (loader: Loader) => new FileMetaStore(stores.meta, loader.name),
+
+    makeDataStore: (name: string) => new FileDataStore(stores.data, name),
+
+    makeRemoteWAL: (loader: Loadable) => new FileRemoteWAL(stores.remoteWAL, loader),
+
+    encodeFile,
+    decodeFile,
+  };
+}
+
+class FileRemoteWAL extends RemoteWAL {
+  constructor(dir: URL, loader: Loadable) {
+    super(loader, dir);
+  }
+
   filePathForBranch(branch: string): string {
-    return join(MetaStore.dataDir, this.loader.name, "wal", branch + ".json");
+    return join(this.url.pathname, this.loader.name, "wal", branch + ".json");
   }
 
   async load(branch = "main"): Promise<WALState | null> {
@@ -33,12 +57,15 @@ export class RemoteWAL extends RemoteWALBase {
   }
 }
 
-export class MetaStore extends MetaStoreBase {
+class FileMetaStore extends MetaStore {
   readonly tag: string = "header-node-fs";
-  static dataDir: string = join(homedir(), ".fireproof", "v" + STORAGE_VERSION);
+
+  constructor(dir: URL, name: string) {
+    super(name, dir);
+  }
 
   filePathForBranch(branch: string): string {
-    return join(MetaStore.dataDir, this.name, "meta", branch + ".json");
+    return join(this.url.pathname, this.name, "meta", branch + ".json");
   }
 
   async load(branch = "main"): Promise<DbMeta[] | null> {
@@ -59,13 +86,12 @@ export class MetaStore extends MetaStoreBase {
   }
 }
 
-export const testConfig = {
-  dataDir: MetaStore.dataDir,
-};
-
-export class DataStore extends DataStoreBase {
+class FileDataStore extends DataStore {
   readonly tag: string = "car-node-fs";
-  static dataDir: string = join(homedir(), ".fireproof", "v" + STORAGE_VERSION);
+
+  constructor(dir: URL, name: string) {
+    super(name, dir);
+  }
 
   async save(car: AnyBlock): Promise<void> {
     const filepath = this.cidPath(car.cid);
@@ -73,7 +99,7 @@ export class DataStore extends DataStoreBase {
   }
 
   private cidPath(cid: AnyLink) {
-    return join(DataStore.dataDir, this.name, "data", cid.toString() + ".car");
+    return join(this.url.pathname, this.name, "data", cid.toString() + ".car");
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {

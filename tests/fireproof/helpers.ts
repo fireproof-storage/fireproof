@@ -4,9 +4,9 @@ import { join, dirname } from "path";
 import { promises as fs, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 
-import { MetaStore } from "../../src/node/store-node"
+import { dataDir as dataDirFn } from "../../src/runtime/files";
 
-const dataDir = MetaStore.dataDir;
+const dataDir = dataDirFn();
 
 export { dataDir };
 

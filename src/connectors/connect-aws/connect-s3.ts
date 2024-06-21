@@ -3,7 +3,12 @@ import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
 import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types";
 import { throwFalsy } from "../../types";
+import { CID } from "multiformats";
 
+interface MetaResultItem {
+  readonly cid: string;
+  readonly data: string;
+}
 export class ConnectS3 extends Connection {
   readonly uploadUrl: URL;
   readonly downloadUrl: URL;
@@ -82,9 +87,7 @@ export class ConnectS3 extends Connection {
     if (this.ws == undefined) {
       return;
     }
-    this.ws.addEventListener("message", async (event: {
-      data: string;
-    }) => {
+    this.ws.addEventListener("message", async (event: { data: string }) => {
       const data = JSON.parse(event.data);
       const bytes = Base64.toUint8Array(data.items[0].data);
       const afn = async () => {
@@ -110,25 +113,22 @@ export class ConnectS3 extends Connection {
    * @param params - The parameters for the download, including the name and branch.
    * @returns - Returns the metadata bytes as a Uint8Array or null if the fetch is unsuccessful.
    */
+
   async metaDownload(params: DownloadMetaFnParams) {
-    // const { name, branch } = params;
     const fetchUploadUrl = new URL(`?${new URLSearchParams({ type: "meta", ...params }).toString()}`, this.uploadUrl);
     const data = await fetch(fetchUploadUrl);
-    let response = await data.json();
+    const response = await data.json();
     if (response.status != 200) throw new Error("Failed to download data");
-    response = JSON.parse(response.body).items;
+    const items: MetaResultItem[] = JSON.parse(response.body).items;
     const events = await Promise.all(
-      response.map(async (element: {
-        cid: string;
-        data: string;
-      }) => {
+      items.map(async (element: { cid: string; data: string }) => {
         const base64String = element.data;
         const bytes = Base64.toUint8Array(base64String);
         return { cid: element.cid, bytes };
       }),
     );
     const cids = events.map((e) => e.cid);
-    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
+    const uniqueParentsMap = new Map([...this.parents, ...cids.map((i) => CID.parse(i))].map((p) => [p.toString(), p]));
     this.parents = Array.from(uniqueParentsMap.values());
     return events.map((e) => e.bytes);
   }

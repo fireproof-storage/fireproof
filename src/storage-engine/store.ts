@@ -9,8 +9,10 @@ export const STORAGE_VERSION = match[0];
 abstract class VersionedStore {
   readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly name: string;
-  constructor(name: string) {
+  readonly url: URL;
+  constructor(name: string, url: URL) {
     this.name = name;
+    this.url = url;
   }
 }
 
@@ -41,11 +43,13 @@ export abstract class DataStore {
 
   readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly name: string;
-  constructor(name: string) {
+  readonly url: URL;
+  constructor(name: string, url: URL) {
     this.name = name;
+    this.url = url;
   }
 
   abstract load(cid: AnyLink | AnyLink[]): Promise<AnyBlock>;
-  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */void>;
+  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   abstract remove(cid: AnyLink): Promise<void>;
 }

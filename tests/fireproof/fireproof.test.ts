@@ -1,7 +1,8 @@
-import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "./helpers.js";
+import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "./helpers";
 import { CID } from "multiformats/cid";
 
-import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn, AnyLink } from "../../src/index.js";
+import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "../../src/index";
+import { AnyLink } from "../../src/storage-engine";
 
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {

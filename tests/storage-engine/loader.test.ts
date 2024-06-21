@@ -11,20 +11,8 @@ import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
-import * as nodeCrypto from "../../src/node/crypto-node";
-import * as nodeStore from "../../src/node/store-node";
 import { BlockView } from "multiformats";
 import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types";
-
-const loaderOpts = {
-  store: nodeStore,
-  crypto: nodeCrypto,
-};
-
-const indexLoaderOpts = {
-  store: nodeStore,
-  crypto: nodeCrypto,
-};
 
 describe("basic Loader", function () {
   let loader: Loader;
@@ -35,7 +23,7 @@ describe("basic Loader", function () {
     await resetDirectory(dataDir, "test-loader-commit");
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM as EncryptedBlockstore);
-    loader = new Loader("test-loader-commit", { ...loaderOpts, public: true });
+    loader = new Loader("test-loader-commit", { public: true });
     block = await encode({
       value: { hello: "world" },
       hasher,
@@ -69,14 +57,13 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   constructor() {
     const ebOpts = {
       name: "MyMemoryBlockStore",
-      crypto: nodeCrypto, store: nodeStore
     }
     super(ebOpts);
     this.ready = Promise.resolve();
   }
   readonly ready: Promise<void>;
   get loader(): Loader {
-    return new Loader("MyMemoryBlockStore", { ...loaderOpts });
+    return new Loader("MyMemoryBlockStore", {});
   }
   readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
@@ -118,7 +105,7 @@ describe("basic Loader with two commits", function () {
     await resetDirectory(dataDir, "test-loader-two-commit");
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM);
-    loader = new Loader("test-loader-two-commit", { ...loaderOpts, public: true });
+    loader = new Loader("test-loader-two-commit", { public: true });
     block = await encode({
       value: { hello: "world" },
       hasher,
@@ -214,7 +201,7 @@ describe("basic Loader with index commits", function () {
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-index");
     // t = new CarTransaction()
-    ib = new EncryptedBlockstore({ ...indexLoaderOpts, name: "test-loader-index" });
+    ib = new EncryptedBlockstore({ name: "test-loader-index" });
     block = await encode({
       value: { hello: "world" },
       hasher,

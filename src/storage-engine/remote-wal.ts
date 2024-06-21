@@ -20,13 +20,15 @@ export abstract class RemoteWAL {
   readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly loader: Loadable;
   readonly ready: Promise<void>;
+  readonly url: URL;
 
   walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  constructor(loader: Loadable) {
+  constructor(loader: Loadable, url: URL) {
     this.loader = loader;
+    this.url = url;
 
     this.ready = Promise.resolve().then(async () => {
       const walState = await this.load().catch((e) => {
@@ -80,7 +82,9 @@ export abstract class RemoteWAL {
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
           for (const cid of dbMeta.cars) {
-            const car = await throwFalsy(this.loader.carStore).load(cid).catch(() => null);
+            const car = await throwFalsy(this.loader.carStore)
+              .load(cid)
+              .catch(() => null);
             if (!car) {
               if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) throw new Error(`missing local car ${cid.toString()}`);
             } else {
@@ -95,7 +99,9 @@ export abstract class RemoteWAL {
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
           for (const cid of dbMeta.cars) {
-            const car = await throwFalsy(this.loader.carStore).load(cid).catch(() => null);
+            const car = await throwFalsy(this.loader.carStore)
+              .load(cid)
+              .catch(() => null);
             if (!car) {
               if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) throw new Error(`missing local car ${cid.toString()}`);
             } else {
