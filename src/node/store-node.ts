@@ -53,6 +53,7 @@ export class MetaStore extends MetaStoreBase {
 
   async save(meta: DbMeta, branch = "main") {
     const filepath = this.filePathForBranch(branch);
+    console.log("meta", meta, "filepath", filepath);
     const bytes = this.makeHeader(meta);
     await writePathFile(filepath, bytes);
     return null;

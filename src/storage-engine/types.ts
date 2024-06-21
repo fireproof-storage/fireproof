@@ -84,7 +84,7 @@ export interface CommitOpts {
 
 export interface DbMeta {
   readonly cars: CarGroup;
-  readonly key?: string;
+  readonly key: string | null;
 }
 
 export interface UploadMetaFnParams {
