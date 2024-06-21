@@ -82,9 +82,8 @@ export abstract class RemoteWAL {
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
           for (const cid of dbMeta.cars) {
-            const car = await throwFalsy(this.loader.carStore)
+            const car = await (await this.loader.carStore())
               .load(cid)
-              .catch(() => null);
             if (!car) {
               if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) throw new Error(`missing local car ${cid.toString()}`);
             } else {
@@ -99,7 +98,7 @@ export abstract class RemoteWAL {
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
           for (const cid of dbMeta.cars) {
-            const car = await throwFalsy(this.loader.carStore)
+            const car = await (await this.loader.carStore())
               .load(cid)
               .catch(() => null);
             if (!car) {
@@ -117,7 +116,7 @@ export abstract class RemoteWAL {
         const dbLoader = this.loader;
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
           const uploadP = limit(async () => {
-            const fileBlock = await throwFalsy(dbLoader.fileStore).load(fileCid); // .catch(() => false)
+            const fileBlock = await (await dbLoader.fileStore()).load(fileCid); // .catch(() => false)
             await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile });
             this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
           });

@@ -5,6 +5,7 @@ import { DataStore, MetaStore, RemoteWAL, WALState } from "./index";
 import { Connection } from "./connection";
 import { validateDataParams, validateMetaParams } from ".";
 import { format, parse, ToString } from "@ipld/dag-json";
+import { Falsy } from "../types";
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
@@ -97,7 +98,7 @@ export class RemoteMetaStore extends MetaStore {
     return dbMetas;
   }
 
-  async load(branch = "main"): Promise<DbMeta[] | null> {
+  async load(branch = "main"): Promise<DbMeta[] | Falsy> {
     const params = {
       name: this.prefix(),
       branch,

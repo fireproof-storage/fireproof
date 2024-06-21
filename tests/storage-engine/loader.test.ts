@@ -178,10 +178,10 @@ describe("basic Loader with two commits", function () {
       equals(loader.carLog.length, 1);
       await loader.commit(t, { head: [block3.cid] }, { compact: false });
       equals(loader.carLog.length, 2);
-      assert(await loader.carStore.load(carCid));
+      assert(await (await loader.carStore()).load(carCid));
       await loader.commit(t, { head: [block3.cid] }, { compact: true });
       equals(loader.carLog.length, 1);
-      assert(await loader.carStore.load(carCid));
+      assert(await (await loader.carStore()).load(carCid));
       await loader.commit(t, { head: [block4.cid] }, { compact: false });
       equals(loader.carLog.length, 2);
 

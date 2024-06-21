@@ -28,7 +28,7 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction";
 import { CommitQueue } from "./commit-queue";
 import * as CBW from "@ipld/car/buffer-writer";
-import { Falsy, throwFalsy } from "../types";
+import { Falsy } from "../types";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -59,12 +59,13 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 export abstract class Loadable {
   name = "";
   remoteCarStore?: DataStore;
-  carStore?: DataStore;
+  abstract carStore(): Promise<DataStore>;
   carLog: CarLog = new Array<CarGroup>();
   remoteMetaStore?: AbstractRemoteMetaStore;
   remoteFileStore?: AbstractDataStore;
-  fileStore?: DataStore;
+  abstract fileStore(): Promise<DataStore>;
 }
+
 
 export class Loader implements Loadable {
   readonly name: string;
@@ -74,11 +75,7 @@ export class Loader implements Loadable {
   isWriting = false;
   remoteMetaStore?: AbstractRemoteMetaStore;
   remoteCarStore?: AbstractDataStore;
-  readonly fileStore: DataStore;
   remoteFileStore?: AbstractDataStore;
-  readonly remoteWAL: RemoteWAL;
-  metaStore?: MetaStore;
-  readonly carStore: DataStore;
   carLog: CarLog = [];
   readonly carReaders = new Map<string, Promise<CarReader>>();
   readonly ready: Promise<void>;
@@ -91,19 +88,30 @@ export class Loader implements Loadable {
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
 
+  async carStore(): Promise<DataStore> {
+    return this.ebOpts.store.makeDataStore(this.name);
+  }
+
+  async fileStore(): Promise<DataStore> {
+    return this.ebOpts.store.makeDataStore(this.name);
+  }
+  async remoteWAL(): Promise<RemoteWAL> {
+    return this.ebOpts.store.makeRemoteWAL(this);
+  }
+
+  async metaStore(): Promise<MetaStore> {
+    return this.ebOpts.store.makeMetaStore(this);
+  }
+
   constructor(name: string, ebOpts: Partial<BlockstoreOpts>) {
     this.name = name;
     this.ebOpts = defaultedBlockstoreRuntime({
       ...ebOpts,
       name,
     });
-    this.carStore = this.ebOpts.store.makeDataStore(this.name);
-    this.fileStore = this.ebOpts.store.makeDataStore(this.name);
-    this.remoteWAL = this.ebOpts.store.makeRemoteWAL(this);
     this.ready = Promise.resolve().then(async () => {
-      this.metaStore = this.ebOpts.store.makeMetaStore(this);
       if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await this.metaStore.load("main");
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load("main");
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
@@ -200,8 +208,8 @@ export class Loader implements Loadable {
     const cars = await this.prepareCarFilesFiles(roots, t, !!opts.public);
     for (const car of cars) {
       const { cid, bytes } = car;
-      await this.fileStore.save({ cid, bytes });
-      await this.remoteWAL.enqueueFile(cid, !!opts.public);
+      await (await this.fileStore()).save({ cid, bytes });
+      await (await this.remoteWAL()).enqueueFile(cid, !!opts.public);
       cids.push(cid);
     }
 
@@ -209,7 +217,7 @@ export class Loader implements Loadable {
   }
 
   async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
-    return await this.storesLoadCar(cid, this.fileStore, this.remoteFileStore, isPublic);
+    return await this.storesLoadCar(cid, await this.fileStore(), this.remoteFileStore, isPublic);
   }
 
   async commit<T = TransactionMeta>(
@@ -249,14 +257,14 @@ export class Loader implements Loadable {
     const cids: AnyLink[] = [];
     for (const car of cars) {
       const { cid, bytes } = car;
-      await this.carStore.save({ cid, bytes });
+      await (await this.carStore()).save({ cid, bytes });
       cids.push(cid);
     }
 
     await this.cacheTransaction(t);
     const newDbMeta = { cars: cids, key: this.key || null } as DbMeta;
-    await this.remoteWAL.enqueue(newDbMeta, opts);
-    await throwFalsy(this.metaStore).save(newDbMeta);
+    await (await this.remoteWAL()).enqueue(newDbMeta, opts);
+    await (await this.metaStore()).save(newDbMeta);
     await this.updateCarLog(cids, fp, !!opts.compact);
     return cids;
   }
@@ -336,7 +344,7 @@ export class Loader implements Loadable {
     } as unknown as DbMeta);
     for (const cids of carHeader.compact) {
       for (const cid of cids) {
-        await this.carStore.remove(cid);
+        await (await this.carStore()).remove(cid);
       }
     }
   }
@@ -459,7 +467,7 @@ export class Loader implements Loadable {
     if (!this.carStore) {
       throw new Error("car store not initialized");
     }
-    const loaded = await this.storesLoadCar(cid, this.carStore, this.remoteCarStore);
+    const loaded = await this.storesLoadCar(cid, await this.carStore(), this.remoteCarStore);
     return loaded;
   }
 

@@ -8,7 +8,7 @@ import type { CID, Block, Version } from "multiformats";
 import { CryptoOpts } from "./types";
 import { falsyToUndef } from "../types";
 import { toCryptoOpts } from "../runtime/crypto";
-import { toStoreRuntime } from "../runtime/stores";
+import { toStoreRuntime } from "./store-factory";
 
 export type BlockFetcher = BlockFetcherApi;
 
