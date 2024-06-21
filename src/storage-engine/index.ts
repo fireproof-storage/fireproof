@@ -19,7 +19,7 @@ import {
 
 export { STORAGE_VERSION } from "./store";
 
-export * from './store-factory'
+export * from "./store-factory";
 
 interface RawConnectionParams {
   metaUpload: (bytes: Uint8Array, params: UploadMetaFnParams) => Promise<Uint8Array[] | Falsy>;

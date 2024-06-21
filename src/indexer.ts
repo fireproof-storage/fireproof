@@ -25,6 +25,7 @@ import {
   encodeKey,
   loadIndex,
   IndexDocString,
+  CompareKey,
 } from "./indexer-helpers";
 import { CRDT } from "./crdt";
 
@@ -202,8 +203,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   async _hydrateIndex() {
     if (this.byId.root && this.byKey.root) return;
     if (!this.byId.cid || !this.byKey.cid) return;
-    this.byId.root = await loadIndex<R, K>(this.blockstore, this.byId.cid, byIdOpts);
-    this.byKey.root = await loadIndex<R, K>(this.blockstore, this.byKey.cid, byKeyOpts);
+    this.byId.root = await loadIndex<K, R, K>(this.blockstore, this.byId.cid, byIdOpts);
+    this.byKey.root = await loadIndex<K, R, CompareKey>(this.blockstore, this.byKey.cid, byKeyOpts);
   }
 
   async _updateIndex(): Promise<TransactionMeta> {
@@ -247,8 +248,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       }
     }
     return await this.blockstore.transaction(async (tblocks): Promise<TransactionMeta> => {
-      this.byId = await bulkIndex<R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
-      this.byKey = await bulkIndex<R, K>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
+      this.byId = await bulkIndex<K, R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
+      this.byKey = await bulkIndex<K, R, CompareKey>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
       this.indexHead = head;
       const idxMeta = {
         byId: this.byId.cid,

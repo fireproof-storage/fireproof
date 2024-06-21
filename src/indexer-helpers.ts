@@ -106,11 +106,11 @@ function makeProllyGetBlock(blocks: BlockFetcher): (address: AnyLink) => Promise
   };
 }
 
-export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
+export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, CT>(
   tblocks: CarTransaction,
   inIndex: IndexTree<K, T>,
   indexEntries: (IndexUpdate<K> | IndexUpdateString)[],
-  opts: StaticProllyOptions<T>,
+  opts: StaticProllyOptions<CT>,
 ): Promise<IndexTree<K, T>> {
   if (!indexEntries.length) return inIndex;
   if (!inIndex.root) {
@@ -145,10 +145,10 @@ export async function bulkIndex<T extends DocFragment, K extends IndexKeyType>(
   }
 }
 
-export async function loadIndex<T extends DocFragment, K extends IndexKeyType>(
+export async function loadIndex<K extends IndexKeyType, T extends DocFragment, CT>(
   tblocks: BlockFetcher,
   cid: AnyLink,
-  opts: StaticProllyOptions<T>,
+  opts: StaticProllyOptions<CT>,
 ): Promise<ProllyNode<K, T>> {
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }

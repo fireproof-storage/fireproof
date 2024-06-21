@@ -7,14 +7,7 @@ import type { View } from "@ipld/unixfs";
 import { DocFileMeta } from "../types";
 
 import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
-import { AnyBlock, AnyLink, BlobLike, STORAGE_VERSION } from "../storage-engine";
-
-import { homedir } from "os";
-import { join } from "path";
-
-export function dataDir(): string {
-  return join(homedir(), ".fireproof", "v" + STORAGE_VERSION);
-}
+import { BlobLike, AnyLink, AnyBlock } from "../storage-engine";
 
 const queuingStrategy = UnixFS.withCapacity();
 
