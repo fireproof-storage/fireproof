@@ -87,13 +87,13 @@ export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyTyp
       if (typeof k === "undefined") return;
       indexEntries.push({
         key: [charwise.encode(k) as K, key],
-        value: v || undefined,
+        value: v || null,
       });
     });
     if (!mapCalled && mapReturn) {
       indexEntries.push({
         key: [charwise.encode(mapReturn) as K, key],
-        value: undefined,
+        value: null,
       });
     }
   });
@@ -195,11 +195,11 @@ export function encodeKey(key: DocFragment): string {
   return charwise.encode(key) as string;
 }
 
-export type ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> = {
+export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
   readonly id: string;
   readonly key: IndexKey<K>;
   readonly row: T;
-};
+}
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
 interface ProllyNode<K extends IndexKeyType, T extends DocFragment> extends BaseNode {
