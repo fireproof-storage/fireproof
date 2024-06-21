@@ -66,6 +66,7 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.10",
     "@types/jasmine": "^5.1.4",
     "@types/node": "^20.14.6",
     "c8": "^7.12.0",
@@ -98,6 +99,7 @@
     "@web3-storage/clock": "^0.4.1",
     "@web3-storage/pail": "^0.6.0",
     "@web3-storage/w3up-client": "^15.0.0",
+    "better-sqlite3": "^11.0.0",
     "charwise": "^3.0.1",
     "cross-fetch": "^4.0.0",
     "idb": "^8.0.0",

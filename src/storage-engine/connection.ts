@@ -39,7 +39,7 @@ export abstract class Connection {
 
   async refresh() {
     await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
-    await throwFalsy(this.loader).remoteWAL._process();
+    await (await throwFalsy(this.loader).remoteWAL())._process();
   }
 
   connect({ loader }: { loader?: Loader }) {
@@ -53,7 +53,7 @@ export abstract class Connection {
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
     this.onConnect();
-    const remote = new RemoteMetaStore(this.loader.name, this);
+    const remote = new RemoteMetaStore(new URL(`remote://connectMeta`), this.loader.name, this);
     remote.onLoad("main", async (metas) => {
       if (metas) {
         await throwFalsy(this.loader).handleDbMetasFromStore(metas);
@@ -61,8 +61,8 @@ export abstract class Connection {
     });
     this.loader.remoteMetaStore = remote;
     this.loaded = this.loader.ready.then(async () => {
-      remote.load("main").then(() => {
-        throwFalsy(this.loader).remoteWAL?._process();
+      remote.load("main").then(async () => {
+        (await throwFalsy(this.loader).remoteWAL())._process();
       });
     });
   }
@@ -74,8 +74,8 @@ export abstract class Connection {
   connectStorage({ loader }: { loader?: Loader }) {
     if (!loader) throw new Error("loader is required");
     this.loader = loader;
-    loader.remoteCarStore = new RemoteDataStore(this.loader.name, this);
-    loader.remoteFileStore = new RemoteDataStore(this.loader.name, this);
+    loader.remoteCarStore = new RemoteDataStore(new URL(`remote://remoteCarStore`), this.loader.name, this);
+    loader.remoteFileStore = new RemoteDataStore(new URL(`remote://remoteFileStore`), this.loader.name, this);
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {

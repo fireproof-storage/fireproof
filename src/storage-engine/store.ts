@@ -2,6 +2,7 @@ import type { AnyBlock, AnyLink, DbMeta } from "./types";
 import { format, parse, ToString } from "@ipld/dag-json";
 
 import { PACKAGE_VERSION } from "./version";
+import { Falsy } from "../types";
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
 if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
 export const STORAGE_VERSION = match[0];
@@ -30,8 +31,8 @@ export abstract class MetaStore extends VersionedStore {
     return got;
   }
 
-  abstract load(branch?: string): Promise<DbMeta[] | null>;
-  abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | null>;
+  abstract load(branch?: string): Promise<DbMeta[] | Falsy>;
+  abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | Falsy>;
 }
 
 interface DataSaveOpts {

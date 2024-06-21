@@ -6,7 +6,7 @@ import { assert, matches, equals, dataDir } from "../fireproof/helpers";
 
 import { MetaStore, DataStore, Loader } from "../../src/storage-engine";
 
-import { toStoreRuntime } from "../../src/runtime/stores";
+import { toStoreRuntime } from "../../src/storage-engine/index";
 import { AnyBlock, DbMeta, StoreRuntime } from "../../src/storage-engine/types";
 
 const { readFile } = promises;
@@ -17,9 +17,9 @@ describe("DataStore", function () {
   let store: DataStore;
   let runtime: StoreRuntime;
 
-  beforeEach(function () {
+  beforeEach(async () => {
     runtime = toStoreRuntime({})
-    store = runtime.makeDataStore("test");
+    store = await runtime.makeDataStore("test");
   });
 
   it("should have a name", function () {
@@ -45,7 +45,7 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     runtime = toStoreRuntime({})
-    store = runtime.makeDataStore("test2");
+    store = await runtime.makeDataStore("test2");
     car = {
       cid: CID.parse("cid"),
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -77,9 +77,9 @@ describe("MetaStore", function () {
   let store: MetaStore
   let runtime: StoreRuntime;
 
-  beforeEach(function () {
+  beforeEach(async function () {
     runtime = toStoreRuntime()
-    store = runtime.makeMetaStore({ name: "test" } as unknown as Loader);
+    store = await runtime.makeMetaStore({ name: "test" } as unknown as Loader);
   });
 
   it("should have a name", function () {
@@ -109,7 +109,7 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async function () {
     runtime = toStoreRuntime()
-    store = runtime.makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
+    store = await runtime.makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid], key: undefined });
   });
