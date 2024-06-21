@@ -4,11 +4,16 @@ import { parseCarFile } from "../../src/storage-engine/loader-helpers";
 import { CRDTMeta, DocValue } from "../../src/types";
 import { Index, index } from "../../src/indexer";
 import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine";
+import { uuidv4 } from "uuidv7";
+
+function testName(): string {
+  return `test@${uuidv4()}`;
+}
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
   beforeEach(function () {
-    crdt = new CRDT();
+    crdt = new CRDT(testName());
   });
   it("should have an empty head", async function () {
     const head = crdt.clock.head;
@@ -39,7 +44,7 @@ describe("CRDT with one record", function () {
   let crdt: CRDT<Partial<CRDTTestType>>;
   let firstPut: CRDTMeta;
   beforeEach(async function () {
-    crdt = new CRDT();
+    crdt = new CRDT(`test@${uuidv4()}`);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
   });
   it("should have a one-element head", async function () {
@@ -82,7 +87,7 @@ describe("CRDT with a multi-write", function () {
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
   beforeEach(async function () {
-    crdt = new CRDT();
+    crdt = new CRDT(testName());
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -141,7 +146,7 @@ describe("CRDT with two multi-writes", function () {
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
   beforeEach(async () => {
-    crdt = new CRDT();
+    crdt = new CRDT(testName());
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -181,7 +186,6 @@ describe("CRDT with two multi-writes", function () {
 });
 
 describe("Compact a named CRDT with writes", function () {
-  /** @type {CRDT} */
   let crdt: CRDT<CRDTTestType>;
   beforeEach(async function () {
     await resetDirectory(dataDir, "named-crdt-compaction");
@@ -235,7 +239,7 @@ describe("CRDT with an index", function () {
   let crdt: CRDT<CRDTTestType>;
   let idx: Index<number, CRDTTestType>;
   beforeEach(async function () {
-    crdt = new CRDT<CRDTTestType>();
+    crdt = new CRDT<CRDTTestType>(testName());
     await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },

@@ -144,7 +144,7 @@ export interface IdxMeta {
 }
 
 export interface IdxMetaMap {
-  readonly indexes: Map<string, IdxMeta>;
+  readonly indexes?: Map<string, IdxMeta>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

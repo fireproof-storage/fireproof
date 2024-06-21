@@ -71,28 +71,29 @@ export class Loader implements Loadable {
   readonly ebOpts: BlockstoreRuntime;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
+  readonly carReaders = new Map<string, Promise<CarReader>>();
+  readonly ready: Promise<void>;
+  readonly seenCompacted = new Set<string>();
+  readonly processedCars = new Set<string>();
+
+  carLog: CarLog = [];
+  key?: string;
+  keyId?: string;
   isWriting = false;
+  writing = Promise.resolve();
   remoteMetaStore?: AbstractRemoteMetaStore;
   remoteCarStore?: AbstractDataStore;
   remoteFileStore?: AbstractDataStore;
-  carLog: CarLog = [];
-  readonly carReaders = new Map<string, Promise<CarReader>>();
-  readonly ready: Promise<void>;
-  key?: string;
-  keyId?: string;
-  readonly seenCompacted = new Set<string>();
-  readonly processedCars = new Set<string>();
-  writing = Promise.resolve();
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
 
   async carStore(): Promise<DataStore> {
-    return this.ebOpts.store.makeDataStore(this.name);
+    return this.ebOpts.store.makeDataStore(this);
   }
 
   async fileStore(): Promise<DataStore> {
-    return this.ebOpts.store.makeDataStore(this.name);
+    return this.ebOpts.store.makeDataStore(this);
   }
   async remoteWAL(): Promise<RemoteWAL> {
     return this.ebOpts.store.makeRemoteWAL(this);
@@ -102,15 +103,17 @@ export class Loader implements Loadable {
     return this.ebOpts.store.makeMetaStore(this);
   }
 
-  constructor(name: string, ebOpts: Partial<BlockstoreOpts>) {
+  constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
     this.ebOpts = defaultedBlockstoreRuntime({
       ...ebOpts,
       name,
     });
     this.ready = Promise.resolve().then(async () => {
-      if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load("main");
+      // if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
+      const metas = this.ebOpts.meta ?
+        [this.ebOpts.meta] :
+        await (await this.metaStore()).load("main");
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
@@ -177,13 +180,13 @@ export class Loader implements Loadable {
     return await parseCarFile(reader);
   }
 
-  async _getKey(): Promise<string | null> {
+  async _getKey(): Promise<string | undefined> {
     if (this.key) return this.key;
     // generate a random key
     if (!this.ebOpts.public) {
       await this.setKey(toHexString(this.ebOpts.crypto.randomBytes(32)));
     }
-    return this.key || null;
+    return this.key || undefined;
   }
 
   async commitFiles(
@@ -282,7 +285,7 @@ export class Loader implements Loadable {
   }
 
   async prepareCarFiles(rootBlock: AnyBlock, t: CarTransaction, isPublic: boolean): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
-    const theKey = isPublic ? null : await this._getKey();
+    const theKey = isPublic ? undefined : await this._getKey();
     const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
     const threshold = this.ebOpts.threshold || 1000 * 1000;
     let clonedt = new CarTransaction(t.parent, { add: false });
@@ -307,7 +310,7 @@ export class Loader implements Loadable {
   }
 
   private async createCarFile(
-    theKey: string | null,
+    theKey: string | undefined,
     cid: AnyLink,
     t: CarTransaction,
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
@@ -482,7 +485,7 @@ export class Loader implements Loadable {
       this.carReaders.set(
         cidsString,
         (async () => {
-          let loadedCar: AnyBlock | null = null;
+          let loadedCar: AnyBlock | undefined = undefined;
           try {
             //loadedCar now is an array of AnyBlocks
             loadedCar = await local.load(cid);

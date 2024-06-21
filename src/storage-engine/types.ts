@@ -1,7 +1,7 @@
 import type { CID, Link, Version } from "multiformats";
 import { DataStore, MetaStore } from "./store";
 import { RemoteWAL } from "./remote-wal";
-import type { Loadable, Loader } from "./loader";
+import type { Loadable } from "./loader";
 import { CRDTMeta, DocFileMeta } from "../types";
 
 export type AnyLink = Link<unknown, number, number, Version>;
@@ -136,8 +136,8 @@ export interface StoreOpts {
     readonly indexes?: string | URL;
     readonly remoteWAL?: string | URL;
   };
-  makeMetaStore?: (loader: Loader) => Promise<MetaStore>;
-  makeDataStore?: (name: string) => Promise<DataStore>;
+  makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
+  makeDataStore?: (loader: Loadable) => Promise<DataStore>;
   makeRemoteWAL?: (loader: Loadable) => Promise<RemoteWAL>;
 
   encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
@@ -151,8 +151,8 @@ export interface StoreRuntime {
     readonly indexes: URL;
     readonly remoteWAL: URL;
   };
-  makeMetaStore(loader: Loader): Promise<MetaStore>;
-  makeDataStore(name: string): Promise<DataStore>;
+  makeMetaStore(loader: Loadable): Promise<MetaStore>;
+  makeDataStore(loader: Loadable): Promise<DataStore>;
   makeRemoteWAL(loader: Loadable): Promise<RemoteWAL>;
   encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File>;

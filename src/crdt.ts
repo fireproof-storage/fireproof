@@ -28,19 +28,17 @@ import { Block } from "multiformats";
 import { MetaType } from "./storage-engine/types";
 
 export class CRDT<T extends DocTypes> {
-  readonly name?: string;
-  readonly opts: ConfigOpts = {};
+  readonly name: string;
+  readonly opts: ConfigOpts;
   readonly ready: Promise<void>;
   readonly blockstore: EncryptedBlockstore;
   readonly indexBlockstore: EncryptedBlockstore;
-
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
+  readonly clock: CRDTClock<T>;
 
-  readonly clock: CRDTClock<T> = new CRDTClock<T>();
-
-  constructor(name?: string, opts?: ConfigOpts) {
+  constructor(name: string, opts: ConfigOpts = {}) {
     this.name = name;
-    this.opts = opts || this.opts;
+    this.opts = opts;
     this.blockstore = new EncryptedBlockstore({
       name: name,
       applyMeta: async (meta: MetaType) => {
@@ -58,11 +56,12 @@ export class CRDT<T extends DocTypes> {
       meta: this.opts.meta,
       threshold: this.opts.threshold,
     });
-    this.clock.blockstore = this.blockstore;
+    this.clock = new CRDTClock<T>(this.blockstore);
     this.indexBlockstore = new EncryptedBlockstore({
       name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
       applyMeta: async (meta: MetaType) => {
-        const idxCarMeta = meta as unknown as IdxMetaMap;
+        const idxCarMeta = meta as IdxMetaMap;
+        if (!idxCarMeta.indexes) return;
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
           index({ _crdt: this }, name, undefined, idx);
         }

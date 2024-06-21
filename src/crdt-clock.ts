@@ -15,11 +15,12 @@ export class CRDTClock<T extends DocTypes> {
   readonly watchers = new Set<(updates: DocUpdate<T>[]) => void>();
   readonly emptyWatchers = new Set<() => void>();
 
-  blockstore?: EncryptedBlockstore;
+  readonly blockstore: EncryptedBlockstore;
 
   readonly applyHeadQueue: ApplyHeadQueue<T>;
 
-  constructor() {
+  constructor(blockstore: EncryptedBlockstore) {
+    this.blockstore = blockstore;
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this));
   }
 

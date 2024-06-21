@@ -1,10 +1,15 @@
 import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js";
+import { uuidv4 } from "uuidv7";
+
+function testDatabase(): Database {
+  return new Database(`test@${uuidv4()}`);
+}
 
 describe("basic Database", () => {
   let db: Database;
   beforeEach(() => {
-    db = new Database();
+    db = testDatabase();
   });
   it("should put", async () => {
     /** @type {Doc} */
@@ -33,7 +38,7 @@ describe("basic Database with record", function () {
   interface Doc { readonly value: string }
   let db: Database;
   beforeEach(async function () {
-    db = new Database();
+    db = testDatabase();
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     equals(ok.id, "hello");
   });
@@ -65,7 +70,7 @@ describe("basic Database with record", function () {
     equals(rows[0].value._id, "hello");
   });
   it("is not persisted", async function () {
-    const db2 = new Database();
+    const db2 = testDatabase();
     const { rows } = await db2.changes([]);
     equals(rows.length, 0);
     const doc = await db2.get("hello").catch((e) => e);
@@ -268,7 +273,7 @@ describe("basic Database with subscription", function () {
   let unsubscribe: () => void
   let lastDoc: DocWithId<NonNullable<unknown>>;
   beforeEach(function () {
-    db = new Database();
+    db = testDatabase();
     didRun = 0;
 
     unsubscribe = db.subscribe((docs) => {
@@ -303,7 +308,7 @@ describe("basic Database with no update subscription", function () {
   let didRun: number
   let unsubscribe: () => void
   beforeEach(function () {
-    db = new Database();
+    db = testDatabase();
     didRun = 0;
 
     unsubscribe = db.subscribe(() => {
@@ -335,7 +340,7 @@ describe("database with files input", () => {
   let result: DbResponse;
 
   beforeAll(function () {
-    const directoryname = getDirectoryName("./test-images");
+    const directoryname = getDirectoryName("tests/fireproof/test-images");
     const [jpg, png] = readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
     imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: "image/jpeg" }));
     imagefiles.push(new File([new Blob([png])], `fireproof.png`, { type: "image/png" }));

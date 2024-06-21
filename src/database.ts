@@ -26,7 +26,7 @@ import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-eng
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
 
-  readonly name?: string;
+  readonly name: string;
   readonly opts: ConfigOpts = {};
 
   _listening = false;
@@ -36,7 +36,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly _writeQueue: WriteQueue<DT>;
   readonly blockstore: EncryptedBlockstore;
 
-  constructor(name?: string, opts?: ConfigOpts) {
+  constructor(name: string, opts?: ConfigOpts) {
     this.name = name;
     this.opts = opts || this.opts;
     this._crdt = new CRDT(name, this.opts);

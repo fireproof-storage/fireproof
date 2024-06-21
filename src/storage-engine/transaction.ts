@@ -43,11 +43,10 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
     },
     autoCompact: 0,
     public: true,
-    meta: {} as unknown as DbMeta,
     name: "default",
     threshold: 1000 * 1000,
-    crypto: toCryptoOpts(opts.crypto),
     ...opts,
+    crypto: toCryptoOpts(opts.crypto),
     store: toStoreRuntime(opts.store),
   };
 }
@@ -67,16 +66,16 @@ export class EncryptedBlockstore implements BlockFetcher {
   lastTxMeta?: unknown; // TransactionMeta
   compacting = false;
 
-  constructor(ebOpts: Partial<BlockstoreOpts>) {
+  constructor(ebOpts: BlockstoreOpts) {
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
-    const { name } = ebOpts;
-    if (name) {
-      this.name = name;
-      this._loader = new Loader(name, this.ebOpts);
-      this.ready = this.loader.ready;
-    } else {
-      this.ready = Promise.resolve();
-    }
+    // const { name } = ebOpts;
+    // if (name) {
+    // this.name = name;
+    this._loader = new Loader(this.ebOpts.name, this.ebOpts);
+    this.ready = this.loader.ready;
+    // } else {
+    // this.ready = Promise.resolve();
+    // }
   }
 
   async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
@@ -218,7 +217,7 @@ export interface BlockstoreRuntime {
   readonly crypto: CryptoOpts;
   readonly store: StoreRuntime;
   readonly public: boolean;
-  readonly meta: DbMeta;
+  readonly meta?: DbMeta;
   readonly name: string;
   readonly threshold: number;
 }
