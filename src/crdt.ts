@@ -89,7 +89,7 @@ export class CRDT<T extends DocTypes> {
     const meta = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(blocks, this.clock.head, updates);
       updates = updates.map((dupdate: DocUpdate<T>) => {
-        if (!dupdate.value) throw new Error("missing value");
+        // if (!dupdate.value) throw new Error("missing value");
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
         return dupdate;
       });
@@ -124,10 +124,10 @@ export class CRDT<T extends DocTypes> {
     return await getBlock(this.blockstore, cidString);
   }
 
-  async get(key: string): Promise<DocValue<T> | undefined> {
+  async get(key: string): Promise<DocValue<T> | null> {
     await this.ready;
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
-    if (result.del) return undefined;
+    if (result.del) return null;
     return result;
   }
 
