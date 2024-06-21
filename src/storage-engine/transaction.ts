@@ -33,7 +33,6 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
 
 export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRuntime {
   return {
-    ...opts,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     applyMeta: (meta: TransactionMeta, snap?: boolean): Promise<void> => {
       return Promise.resolve();
@@ -44,11 +43,12 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
     },
     autoCompact: 0,
     public: true,
-    store: toStoreRuntime(opts.store),
     meta: {} as unknown as DbMeta,
     name: "default",
     threshold: 1000 * 1000,
     crypto: toCryptoOpts(opts.crypto),
+    ...opts,
+    store: toStoreRuntime(opts.store),
   };
 }
 

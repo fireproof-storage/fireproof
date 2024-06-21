@@ -4,7 +4,7 @@ import { join, dirname } from "path";
 import { promises as fs, readFileSync } from "fs";
 import { fileURLToPath } from "url";
 
-import { dataDir as dataDirFn } from "../../src/runtime/files";
+import { dataDir as dataDirFn } from "../../src/runtime/data-dir";
 
 const dataDir = dataDirFn();
 

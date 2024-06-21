@@ -66,7 +66,6 @@ export abstract class Loadable {
   abstract fileStore(): Promise<DataStore>;
 }
 
-
 export class Loader implements Loadable {
   readonly name: string;
   readonly ebOpts: BlockstoreRuntime;
