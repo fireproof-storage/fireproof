@@ -1,9 +1,9 @@
 import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "./helpers";
 import { CRDT } from "../../src/crdt";
 import { parseCarFile } from "../../src/storage-engine/loader-helpers";
-import { AnyBlock, CRDTMeta, DocValue } from "../../src/types";
+import { CRDTMeta, DocValue } from "../../src/types";
 import { Index, index } from "../../src/indexer";
-import { EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine";
+import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;

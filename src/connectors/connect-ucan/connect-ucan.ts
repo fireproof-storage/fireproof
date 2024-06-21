@@ -69,7 +69,9 @@ export class ConnectUCAN extends Connection {
   constructor(params: ConnectUCANParams) {
     super();
     this.params = params;
-    this.pubsub = function () { return };
+    this.pubsub = function () {
+      return;
+    };
   }
 
   async authorize(rawEmail: string) {
@@ -118,11 +120,7 @@ export class ConnectUCAN extends Connection {
     }
   }
 
-  async dataUpload(
-    bytes: Uint8Array,
-    params: UploadDataFnParams,
-    opts?: { public?: boolean },
-  ): Promise<void> {
+  async dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
     const client = this.client;
     if (!client) {
       throw new Error("client not initialized, cannot dataUpload, please authorize first");
@@ -219,16 +217,16 @@ export class ConnectUCAN extends Connection {
     for (const cid of remoteHead) {
       const local = await cache.get(cid);
       if (local) {
-        const event = await decodeEventBlock(local.bytes);
-        outBytess.push(event.value.data.dbMeta as Uint8Array);
+        const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(local.bytes);
+        outBytess.push(event.value.data.dbMeta);
       } else {
         const url = `https://${cid.toString()}.ipfs.w3s.link/`;
         const response = await fetch(url, { redirect: "follow" });
         if (response.ok) {
           const metaBlock = new Uint8Array(await response.arrayBuffer());
           await cache.put(cid, metaBlock);
-          const event = await decodeEventBlock(metaBlock);
-          outBytess.push(event.value.data.dbMeta as Uint8Array);
+          const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(metaBlock);
+          outBytess.push(event.value.data.dbMeta);
         } else {
           throw new Error(`Failed to download ${url}`);
         }

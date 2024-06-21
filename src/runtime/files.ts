@@ -4,9 +4,17 @@ import { withMaxChunkSize } from "@ipld/unixfs/file/chunker/fixed";
 import { withWidth } from "@ipld/unixfs/file/layout/balanced";
 
 import type { View } from "@ipld/unixfs";
-import { AnyBlock, AnyLink, DocFileMeta } from "../types";
+import { DocFileMeta } from "../types";
 
 import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
+import { AnyBlock, AnyLink, BlobLike, STORAGE_VERSION } from "../storage-engine";
+
+import { homedir } from "os";
+import { join } from "path";
+
+export function dataDir(): string {
+  return join(homedir(), ".fireproof", "v" + STORAGE_VERSION);
+}
 
 const queuingStrategy = UnixFS.withCapacity();
 
@@ -16,6 +24,18 @@ const settings = UnixFS.configure({
   chunker: withMaxChunkSize(1024 * 1024),
   fileLayout: withWidth(1024),
 });
+
+async function collect<T>(collectable: ReadableStream<T>): Promise<T[]> {
+  const chunks: T[] = [];
+  await collectable.pipeTo(
+    new WritableStream({
+      write(chunk) {
+        chunks.push(chunk);
+      },
+    }),
+  );
+  return chunks;
+}
 
 export async function encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }> {
   const readable = createFileEncoderStream(blob);
@@ -43,21 +63,9 @@ function createFileEncoderStream(blob: BlobLike) {
   return readable;
 }
 
-async function collect<T>(collectable: ReadableStream<T>): Promise<T[]> {
-  const chunks: T[] = [];
-  await collectable.pipeTo(
-    new WritableStream({
-      write(chunk) {
-        chunks.push(chunk);
-      },
-    }),
-  );
-  return chunks;
-}
-
 class UnixFSFileBuilder {
   #file;
-  name: string;
+  readonly name: string;
   constructor(name: string, file: BlobLike) {
     this.name = name;
     this.#file = file;
@@ -74,11 +82,4 @@ class UnixFSFileBuilder {
     );
     return await unixfsFileWriter.close();
   }
-}
-
-export interface BlobLike {
-  /**
-   * Returns a ReadableStream which yields the Blob data.
-   */
-  stream: () => ReadableStream;
 }

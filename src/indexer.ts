@@ -70,7 +70,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.applyMapFn(name, mapFn, meta);
     this.name = name;
     if (!(this.mapFnString || this.initError)) throw new Error("missing mapFnString");
-    this.ready = this.blockstore.ready.then(() => { return });
+    this.ready = this.blockstore.ready.then(() => {
+      return;
+    });
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -148,7 +150,6 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
-
       const { result, ...all } = await this.byKey.root.range(...encodeRange(opts.range));
       return await applyQuery<K, T, R>(this.crdt, { result, ...all }, opts);
     }

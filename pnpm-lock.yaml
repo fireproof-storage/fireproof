@@ -29,6 +29,9 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.5.0
         version: 1.5.0
+      '@types/randombytes':
+        specifier: ^2.0.3
+        version: 2.0.3
       '@ucanto/interface':
         specifier: ^10.0.1
         version: 10.0.1
@@ -44,6 +47,9 @@ importers:
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
+      cross-fetch:
+        specifier: ^4.0.0
+        version: 4.0.0(encoding@0.1.13)
       idb:
         specifier: ^8.0.0
         version: 8.0.0
@@ -68,6 +74,9 @@ importers:
       prolly-trees:
         specifier: ^1.0.4
         version: 1.0.4
+      randombytes:
+        specifier: ^2.1.0
+        version: 2.1.0
       std-env:
         specifier: ^3.7.0
         version: 3.7.0
@@ -2549,6 +2558,9 @@ packages:
 
   '@types/prop-types@15.7.11':
     resolution: {integrity: sha512-ga8y9v9uyeiLdpKddhxYQkxNDrfvuPrlFb0N1qnZZByvcElJaXthF1UhvCh9TLWJBEHeNtdnbysW7Y6Uq8CVng==}
+
+  '@types/randombytes@2.0.3':
+    resolution: {integrity: sha512-+NRgihTfuURllWCiIAhm1wsJqzsocnqXM77V/CalsdJIYSRGEHMnritxh+6EsBklshC+clo1KgnN14qgSGeQdw==}
 
   '@types/react-dom@18.2.18':
     resolution: {integrity: sha512-TJxDm6OfAX2KJWJdMEVTwWke5Sc/E/RlnPGvGfS0W7+6ocy2xhDVQVh/KvC2Uf7kACs+gDytdusDSdWfWkaNzw==}
@@ -8466,6 +8478,10 @@ snapshots:
 
   '@types/prop-types@15.7.11': {}
 
+  '@types/randombytes@2.0.3':
+    dependencies:
+      '@types/node': 20.14.6
+
   '@types/react-dom@18.2.18':
     dependencies:
       '@types/react': 18.2.48
@@ -10053,6 +10069,12 @@ snapshots:
   cross-fetch@4.0.0:
     dependencies:
       node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
+
+  cross-fetch@4.0.0(encoding@0.1.13):
+    dependencies:
+      node-fetch: 2.7.0(encoding@0.1.13)
     transitivePeerDependencies:
       - encoding
 

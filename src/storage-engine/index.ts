@@ -1,8 +1,21 @@
 import { Falsy } from "../types";
 import { ConnectREST } from "./connect-rest";
 import { Connection, type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection";
-export { makeStores } from "./store-remote";
-import { type AnyBlock, type AnyLink, type UploadDataFnParams, type UploadMetaFnParams, type DownloadDataFnParams, type DownloadMetaFnParams, type DbMeta, type CommitOpts, type CryptoOpts, type StoreOpts, type TransactionMeta } from "./types";
+import {
+  type AnyBlock,
+  type AnyLink,
+  type UploadDataFnParams,
+  type UploadMetaFnParams,
+  type DownloadDataFnParams,
+  type DownloadMetaFnParams,
+  type DbMeta,
+  type CommitOpts,
+  type CryptoOpts,
+  type StoreOpts,
+  type StoreRuntime,
+  type TransactionMeta,
+  type BlobLike,
+} from "./types";
 
 export { STORAGE_VERSION } from "./store";
 
@@ -12,7 +25,6 @@ interface RawConnectionParams {
   metaDownload: (params: DownloadMetaFnParams) => Promise<Uint8Array[] | Falsy>;
   dataDownload: (params: DownloadDataFnParams) => Promise<Uint8Array | Falsy>;
 }
-
 
 class ConnectRaw extends Connection {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -24,7 +36,6 @@ class ConnectRaw extends Connection {
   dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void> {
     throw new Error("Method not implemented.");
   }
-
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
@@ -81,11 +92,13 @@ export {
   AnyBlock,
   AnyLink,
   CryptoOpts,
-  StoreOpts,
+  StoreOpts as StorexOpts,
+  StoreRuntime,
   CommitOpts,
   UploadDataFnParams,
   UploadMetaFnParams,
   DownloadDataFnParams,
   DownloadMetaFnParams,
   TransactionMeta,
-} // from "./types";
+  BlobLike,
+}; // from "./types";

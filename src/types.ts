@@ -1,22 +1,19 @@
-import type { Link } from "multiformats";
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
-import type { DbMeta, CryptoOpts, StoreOpts } from "./storage-engine";
+import type { DbMeta, CryptoOpts, StorexOpts, AnyLink } from "./storage-engine";
 
 export type Falsy = false | null | undefined;
 
 export function isFalsy(value: unknown): value is Falsy {
-  return value === false &&
-    value === null &&
-    value === undefined;
+  return value === false && value === null && value === undefined;
 }
 
 export function throwFalsy<T>(value: T | Falsy): T {
   if (isFalsy(value)) {
     throw new Error("value is Falsy");
   }
-  return value
+  return value;
 }
 
 export function falsyToUndef<T>(value: T | Falsy): T | undefined {
@@ -32,7 +29,8 @@ export interface ConfigOpts {
   readonly persistIndexes?: boolean;
   readonly autoCompact?: number;
   readonly crypto?: CryptoOpts;
-  readonly store?: StoreOpts;
+  readonly store?: StorexOpts;
+  readonly indexStore?: StorexOpts;
   readonly threshold?: number;
 }
 
@@ -160,19 +158,8 @@ export interface QueryOpts<K extends IndexKeyType> {
   prefix?: IndexKeyType;
 }
 
-export type AnyLink = Link<unknown, number, number, 1 | 0>;
-export interface AnyBlock {
-  readonly cid: AnyLink;
-  readonly bytes: Uint8Array;
-}
-export interface AnyDecodedBlock {
-  readonly cid: AnyLink;
-  readonly bytes: Uint8Array;
-  readonly value: unknown;
-}
-
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
-export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment
+export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | unknown;
 
 export interface ChangesOptions {
   readonly dirty?: boolean;

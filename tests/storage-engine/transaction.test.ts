@@ -3,20 +3,12 @@ import { CID } from "multiformats";
 import { assert, equals, matches, equalsJSON } from "../fireproof/helpers";
 import { EncryptedBlockstore as Blockstore, CarTransaction } from "../../src/storage-engine/index";
 
-import * as nodeCrypto from "../../src/node/crypto-node";
-import * as nodeStore from "../../src/node/store-node";
-import { AnyBlock, AnyLink } from "../../src/types";
-import { AnyAnyLink } from "../../src/storage-engine/types";
-
-const loaderOpts = {
-  store: nodeStore,
-  crypto: nodeCrypto,
-};
+import { AnyAnyLink, AnyBlock, AnyLink } from "../../src/storage-engine/types";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: Blockstore;
   beforeEach(function () {
-    blocks = new Blockstore(loaderOpts);
+    blocks = new Blockstore({});
   });
   it("should not have a name", function () {
     assert(!blocks.name);
@@ -43,7 +35,7 @@ describe("Fresh TransactionBlockstore", function () {
 describe("TransactionBlockstore with name", function () {
   let blocks: Blockstore
   beforeEach(function () {
-    blocks = new Blockstore({ name: "test", ...loaderOpts });
+    blocks = new Blockstore({ name: "test" });
   });
   it("should have a name", function () {
     equals(blocks.name, "test");
@@ -65,7 +57,7 @@ describe("A transaction", function () {
   let tblocks: CarTransaction
   let blocks: Blockstore;
   beforeEach(async function () {
-    blocks = new Blockstore(loaderOpts);
+    blocks = new Blockstore({});
     tblocks = new CarTransaction(blocks);
     blocks.transactions.add(tblocks);
   });
@@ -94,7 +86,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     cid2 = CID.parse("bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm");
 
-    blocks = new Blockstore(loaderOpts);
+    blocks = new Blockstore({});
     await blocks.transaction(async (tblocks) => {
       await tblocks.put(cid, asUInt8Array("value"));
       await tblocks.put(cid2, asUInt8Array("value2"));

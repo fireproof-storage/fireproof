@@ -2,26 +2,54 @@ import type { CID, Link, Version } from "multiformats";
 import { DataStore, MetaStore } from "./store";
 import { RemoteWAL } from "./remote-wal";
 import type { Loader } from "./loader";
-import { CRDTMeta } from "../types";
+import { CRDTMeta, DocFileMeta } from "../types";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
 export type CarLog = CarGroup[];
 export type AnyAnyLink = Link<unknown, number, number, Version>;
+
+export type AnyLinkFn = (cid: AnyLink) => Promise<AnyBlock | undefined>;
+
 export interface AnyBlock {
-  cid: AnyLink;
-  bytes: Uint8Array;
-}
-export interface AnyAnyBlock {
-  cid: AnyAnyLink;
-  bytes: Uint8Array;
-}
-export interface AnyDecodedBlock {
-  cid: AnyLink;
-  bytes: Uint8Array;
-  value: unknown;
+  readonly cid: Link<unknown, number, number, Version>;
+  readonly bytes: Uint8Array;
 }
 
+export interface CIDBlock {
+  readonly cid: CID<unknown, number, number, Version>;
+  readonly bytes: Uint8Array;
+}
+
+export function toCIDBlock(block: AnyBlock): CIDBlock {
+  return block as CIDBlock;
+}
+export interface AnyAnyBlock {
+  readonly cid: AnyAnyLink;
+  readonly bytes: Uint8Array;
+}
+
+export interface EncryptOpts {
+  readonly key: ArrayBuffer;
+  readonly cid: AnyLink;
+  readonly bytes: Uint8Array;
+}
+
+export interface DecryptOptsValue {
+  readonly bytes: Uint8Array;
+  readonly iv: Uint8Array;
+}
+
+export interface DecryptOpts {
+  readonly key: ArrayBuffer;
+  readonly value: DecryptOptsValue;
+}
+
+export interface AnyDecodedBlock {
+  readonly cid: AnyLink;
+  readonly bytes: Uint8Array;
+  readonly value: DecryptOptsValue;
+}
 
 export interface CarMakeable {
   entries(): Iterable<AnyBlock>;
@@ -67,24 +95,69 @@ export type TransactionMeta = CRDTMeta & {
 
 export type MetaType = TransactionMeta | IndexTransactionMeta;
 
-export interface MakeCodecCrypto {
-  subtle: {
-    importKey: (format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
-    decrypt: (algo: { name: string; iv: Uint8Array; tagLength: number }, key: CryptoKey, data: Uint8Array) => Promise<ArrayBuffer>;
-    encrypt: (algo: { name: string; iv: Uint8Array; tagLength: number }, key: CryptoKey, data: Uint8Array) => Promise<ArrayBuffer>;
-  }
-}
+// export interface MakeCodecCrypto {
+//   subtle: {
+//     decrypt: (algo: { name: string; iv: Uint8Array; tagLength: number }, key: CryptoKey, data: Uint8Array) => Promise<ArrayBuffer>;
+//     encrypt: (algo: { name: string; iv: Uint8Array; tagLength: number }, key: CryptoKey, data: Uint8Array) => Promise<ArrayBuffer>;
+//   };
+// }
 
 export interface CryptoOpts {
-  readonly crypto: MakeCodecCrypto;
-  randomBytes(size: number): Uint8Array;
+  // readonly crypto: MakeCodecCrypto; //| unknown;
+  readonly importKey: typeof crypto.subtle.importKey;
+  //(format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
+  readonly decrypt: (
+    algo: { name: string; iv: Uint8Array; tagLength: number },
+    key: CryptoKey,
+    data: Uint8Array,
+  ) => Promise<ArrayBuffer>;
+  readonly encrypt: (
+    algo: { name: string; iv: Uint8Array; tagLength: number },
+    key: CryptoKey,
+    data: Uint8Array,
+  ) => Promise<ArrayBuffer>;
+  readonly digestSHA256: (data: Uint8Array) => Promise<ArrayBuffer>;
+  readonly randomBytes: (size: number) => Uint8Array;
+}
+
+export interface BlobLike {
+  /**
+   * Returns a ReadableStream which yields the Blob data.
+   */
+  stream: () => ReadableStream;
 }
 
 export interface StoreOpts {
+  readonly stores?: {
+    // string means local storage
+    // URL means schema selects the storeType
+    readonly meta?: string | URL;
+    readonly data?: string | URL;
+    readonly indexes?: string | URL;
+    readonly remoteWAL?: string | URL;
+  };
+  makeMetaStore?: (loader: Loader) => MetaStore;
+  makeDataStore?: (name: string) => DataStore;
+  makeRemoteWAL?: (loader: Loader) => RemoteWAL;
+
+  encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
+}
+
+export interface StoreRuntime {
+  readonly stores: {
+    readonly meta: URL;
+    readonly data: URL;
+    readonly indexes: URL;
+    readonly remoteWAL: URL;
+  };
   makeMetaStore(loader: Loader): MetaStore;
   makeDataStore(name: string): DataStore;
   makeRemoteWAL(loader: Loader): RemoteWAL;
+  encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File>;
 }
+
 export interface CommitOpts {
   readonly noLoader?: boolean;
   readonly compact?: boolean;

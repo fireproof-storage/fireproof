@@ -1,13 +1,14 @@
 import { MemoryBlockstore } from "@web3-storage/pail/block";
-// todo get these from multiformats?
 import { BlockFetcher as BlockFetcherApi } from "@web3-storage/pail/api";
 
-import { AnyAnyBlock, AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, TransactionMeta } from "./types";
+import { AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, StoreRuntime, StoreOpts, TransactionMeta } from "./types";
 
 import { Loader } from "./loader";
-import type { CID } from "multiformats";
-import { CryptoOpts, StoreOpts } from "./types";
-import { Falsy, falsyToUndef } from "../types";
+import type { CID, Block, Version } from "multiformats";
+import { CryptoOpts } from "./types";
+import { falsyToUndef } from "../types";
+import { toCryptoOpts } from "../runtime/crypto";
+import { toStoreRuntime } from "../runtime/stores";
 
 export type BlockFetcher = BlockFetcherApi;
 
@@ -21,13 +22,34 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
     this.parent = parent;
   }
 
-  async get(cid: AnyLink): Promise<AnyBlock | undefined> {
-    return (await this.superGet(cid)) || falsyToUndef(await this.parent.get(cid) as AnyBlock);
+  async get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined> {
+    return ((await this.superGet(cid)) || falsyToUndef(await this.parent.get(cid))) as Block<T, C, A, V>;
   }
 
   async superGet(cid: AnyLink): Promise<AnyBlock | undefined> {
     return super.get(cid);
   }
+}
+
+export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRuntime {
+  return {
+    ...opts,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    applyMeta: (meta: TransactionMeta, snap?: boolean): Promise<void> => {
+      return Promise.resolve();
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    compact: async (blocks: CompactionFetcher) => {
+      return {} as unknown as MetaType;
+    },
+    autoCompact: 0,
+    public: true,
+    store: toStoreRuntime(opts.store),
+    meta: {} as unknown as DbMeta,
+    name: "default",
+    threshold: 1000 * 1000,
+    crypto: toCryptoOpts(opts.crypto),
+  };
 }
 
 export class EncryptedBlockstore implements BlockFetcher {
@@ -40,13 +62,13 @@ export class EncryptedBlockstore implements BlockFetcher {
     return this._loader;
   }
 
-  readonly ebOpts: BlockstoreOpts;
+  readonly ebOpts: BlockstoreRuntime;
   readonly transactions = new Set<CarTransaction>();
   lastTxMeta?: unknown; // TransactionMeta
   compacting = false;
 
-  constructor(ebOpts: BlockstoreOpts) {
-    this.ebOpts = ebOpts;
+  constructor(ebOpts: Partial<BlockstoreOpts>) {
+    this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
     const { name } = ebOpts;
     if (name) {
       this.name = name;
@@ -80,15 +102,17 @@ export class EncryptedBlockstore implements BlockFetcher {
     throw new Error("use a transaction to put");
   }
 
-  async get(cid: AnyAnyLink): Promise<AnyAnyBlock | Falsy> {
+  async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
     if (!cid) throw new Error("required cid");
     for (const f of this.transactions) {
       // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
       const v = await f.superGet(cid);
-      if (v) return v;
+      if (v) return v as Block<T, C, A, V>;
     }
-    if (!this.loader) return;
-    return await this.loader.getBlock(cid);
+    if (!this.loader) {
+      return;
+    }
+    return falsyToUndef(await this.loader.getBlock(cid)) as Block<T, C, A, V>;
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
@@ -166,10 +190,10 @@ export class CompactionFetcher implements BlockFetcher {
     this.loggedBlocks = new CarTransaction(blocks);
   }
 
-  async get(cid: AnyLink): Promise<AnyAnyBlock | undefined> {
+  async get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined> {
     const block = await this.blockstore.get(cid);
     if (block) this.loggedBlocks.putSync(cid, block.bytes);
-    return falsyToUndef(block);
+    return falsyToUndef(block) as Block<T, C, A, V>;
   }
 }
 
@@ -179,10 +203,22 @@ export interface BlockstoreOpts {
   readonly applyMeta?: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
   readonly compact?: CompactFn;
   readonly autoCompact?: number;
-  readonly crypto: CryptoOpts;
-  readonly store: StoreOpts;
+  readonly crypto?: CryptoOpts;
+  readonly store?: StoreOpts;
   readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly name?: string;
   readonly threshold?: number;
+}
+
+export interface BlockstoreRuntime {
+  readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
+  readonly compact: CompactFn;
+  readonly autoCompact: number;
+  readonly crypto: CryptoOpts;
+  readonly store: StoreRuntime;
+  readonly public: boolean;
+  readonly meta: DbMeta;
+  readonly name: string;
+  readonly threshold: number;
 }

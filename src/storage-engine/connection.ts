@@ -4,12 +4,12 @@ import { type Loader } from "./loader";
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
-import type { Link } from "multiformats";
+import type { Link, Version } from "multiformats";
 import { TaskManager } from "./task-manager";
 import { BlockstoreOpts } from "./transaction";
 import { Falsy, throwFalsy } from "../types";
 
-export type CarClockHead = Link<DbMetaEventBlock>[];
+export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
 
 export interface Connectable {
   readonly blockstore: {
@@ -48,7 +48,7 @@ export abstract class Connection {
     this.connectStorage({ loader });
   }
 
-  connectMeta({ loader }: { loader: Loader | null }) {
+  connectMeta({ loader }: { loader?: Loader }) {
     if (!loader) throw new Error("loader is required");
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
@@ -61,15 +61,17 @@ export abstract class Connection {
     });
     this.loader.remoteMetaStore = remote;
     this.loaded = this.loader.ready.then(async () => {
-      throwFalsy(remote).load("main").then(() => {
+      remote.load("main").then(() => {
         throwFalsy(this.loader).remoteWAL?._process();
       });
     });
   }
 
-  async onConnect() { return }
+  async onConnect() {
+    return;
+  }
 
-  connectStorage({ loader }: { loader: Loader | null }) {
+  connectStorage({ loader }: { loader?: Loader }) {
     if (!loader) throw new Error("loader is required");
     this.loader = loader;
     loader.remoteCarStore = new RemoteDataStore(this.loader.name, this);

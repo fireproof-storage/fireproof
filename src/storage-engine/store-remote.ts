@@ -1,32 +1,31 @@
 import { UploadDataFnParams } from "./types";
 import type { AnyBlock, AnyLink, DbMeta, FnParamTypes } from "./types";
-import { type Loadable, type Loader } from "./loader";
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from "./store";
-import { RemoteWAL as RemoteWALBase, WALState } from "./remote-wal";
+import { type Loadable } from "./loader";
+import { DataStore, MetaStore, RemoteWAL, WALState } from "./index";
 import { Connection } from "./connection";
 import { validateDataParams, validateMetaParams } from ".";
 import { format, parse, ToString } from "@ipld/dag-json";
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
-export function makeStores(storage: Connection, meta: Connection) {
-  return {
-    makeDataStore: (name: string) => new RemoteDataStore(name, storage),
-    makeMetaStore: (loader: Loader) => {
-      meta.connectMeta({ loader });
-      return loader.remoteMetaStore as RemoteMetaStore;
-    },
-    makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader),
-  };
-}
+// export function makeStores(storage: Connection, meta: Connection) {
+//   return {
+//     makeDataStore: (name: string) => new RemoteDataStore(name, storage),
+//     makeMetaStore: (loader: Loader) => {
+//       meta.connectMeta({ loader });
+//       return loader.remoteMetaStore as RemoteMetaStore;
+//     },
+//     makeRemoteWAL: (loader: Loadable) => new RemoteWAL(loader),
+//   };
+// }
 
-export class RemoteDataStore extends DataStoreBase {
+export class RemoteDataStore extends DataStore {
   readonly tag: string = "remote-data";
   readonly connection: Connection;
   readonly type: FnParamTypes;
 
-  constructor(name: string, connection: Connection, type: FnParamTypes = "data") {
-    super(name);
+  constructor(url: URL, name: string, connection: Connection, type: FnParamTypes = "data") {
+    super(name, url);
     this.connection = connection;
     this.type = type;
   }
@@ -64,13 +63,13 @@ export class RemoteDataStore extends DataStoreBase {
   }
 }
 
-export class RemoteMetaStore extends MetaStoreBase {
+export class RemoteMetaStore extends MetaStore {
   readonly tag: string = "remote-meta";
   readonly connection: Connection;
   readonly subscribers = new Map<string, LoadHandler[]>();
 
-  constructor(name: string, connection: Connection) {
-    super(name);
+  constructor(url: URL, name: string, connection: Connection) {
+    super(name, url);
     this.connection = connection;
   }
 
@@ -126,12 +125,12 @@ export class RemoteMetaStore extends MetaStoreBase {
   }
 }
 
-export class RemoteWAL extends RemoteWALBase {
+export class RemoteWALStore extends RemoteWAL {
   readonly tag: string = "wal-mem";
   readonly store: Map<string, string>;
 
-  constructor(loader: Loadable) {
-    super(loader);
+  constructor(url: URL, loader: Loadable) {
+    super(loader, url);
     this.store = new Map<string, string>();
   }
 

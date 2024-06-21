@@ -1,7 +1,5 @@
-import { Index, index, Database, CRDT, IndexRows } from "../../src/index.js";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { assert, matches, equals, resetDirectory, equalsJSON, dataDir } from "./helpers.js";
+import { Index, index, Database, CRDT, IndexRows } from "../../src/index";
+import { assert, equals, resetDirectory, equalsJSON, dataDir } from "./helpers";
 
 interface TestType {
   readonly title: string;

@@ -1,7 +1,5 @@
 import { EncryptedBlockstore, type CompactionFetcher, type TransactionMeta, type CarTransaction } from "./storage-engine";
 
-import { store, crypto } from "./node/eb-node";
-
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -44,7 +42,7 @@ export class CRDT<T extends DocTypes> {
     this.name = name;
     this.opts = opts || this.opts;
     this.blockstore = new EncryptedBlockstore({
-      name,
+      name: name,
       applyMeta: async (meta: MetaType) => {
         const crdtMeta = meta as unknown as CRDTMeta;
         await this.clock.applyHead(crdtMeta.head, []);
@@ -54,8 +52,8 @@ export class CRDT<T extends DocTypes> {
         return { head: this.clock.head } as TransactionMeta;
       },
       autoCompact: this.opts.autoCompact || 100,
-      crypto: this.opts.crypto || crypto,
-      store: this.opts.store || store,
+      crypto: this.opts.crypto,
+      store: this.opts.store,
       public: this.opts.public,
       meta: this.opts.meta,
       threshold: this.opts.threshold,
@@ -69,11 +67,13 @@ export class CRDT<T extends DocTypes> {
           index({ _crdt: this }, name, undefined, idx);
         }
       },
-      crypto,
+      crypto: this.opts.crypto,
+      store: this.opts.indexStore || this.opts.store,
       public: this.opts.public,
-      store,
     });
-    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => { return });
+    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {
+      return;
+    });
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
@@ -86,7 +86,7 @@ export class CRDT<T extends DocTypes> {
     const prevHead = [...this.clock.head];
 
     const meta = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
-      const { head } = await applyBulkUpdateToCrdt<T>(blocks, this.clock.head, updates);
+      const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates);
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });

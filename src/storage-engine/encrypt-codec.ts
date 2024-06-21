@@ -1,23 +1,7 @@
 import { CID } from "multiformats";
-import type { AnyLink } from "./types";
+import type { AnyLink, CryptoOpts, DecryptOpts, EncryptOpts } from "./types";
 
-interface EncryptOpts {
-  readonly key: ArrayBuffer;
-  readonly cid: AnyLink;
-  readonly bytes: Uint8Array;
-}
-
-interface DecryptOpts {
-  readonly key: ArrayBuffer;
-  readonly value: {
-    readonly bytes: Uint8Array;
-    readonly iv: Uint8Array;
-  };
-}
-
-
-
-export function makeCodec(crypto: MakeCodecCrypto, randomBytes: (size: number) => Uint8Array) {
+export function makeCodec(crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
   const enc32 = (value: number) => {
     value = +value;
     const buff = new Uint8Array(4);
@@ -57,7 +41,7 @@ export function makeCodec(crypto: MakeCodecCrypto, randomBytes: (size: number) =
   const code = 0x300000 + 1337;
 
   async function subtleKey(key: ArrayBuffer) {
-    return await crypto.subtle.importKey(
+    return await crypto.importKey(
       "raw", // raw or jwk
       key, // raw data
       "AES-GCM",
@@ -69,7 +53,7 @@ export function makeCodec(crypto: MakeCodecCrypto, randomBytes: (size: number) =
   const decrypt = async ({ key, value }: DecryptOpts): Promise<{ cid: AnyLink; bytes: Uint8Array }> => {
     const { bytes: inBytes, iv } = value;
     const cryKey = await subtleKey(key);
-    const deBytes = await crypto.subtle.decrypt(
+    const deBytes = await crypto.decrypt(
       {
         name: "AES-GCM",
         iv,
@@ -89,7 +73,7 @@ export function makeCodec(crypto: MakeCodecCrypto, randomBytes: (size: number) =
     const msg = concat([len, cid.bytes, bytes]);
     try {
       const cryKey = await subtleKey(key);
-      const deBytes = await crypto.subtle.encrypt(
+      const deBytes = await crypto.encrypt(
         {
           name: "AES-GCM",
           iv,

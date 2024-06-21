@@ -67,13 +67,13 @@
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
     "@types/jasmine": "^5.1.4",
+    "@types/node": "^20.14.6",
     "c8": "^7.12.0",
     "eslint": "^9.5.0",
     "jasmine": "^5.1.0",
     "prettier": "^3.3.2",
     "tsup": "^8.1.0",
     "tsx": "^4.15.6",
-    "@types/node": "^20.14.6",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.13.1"
   },
@@ -93,11 +93,13 @@
     "@ipld/unixfs": "^3.0.0",
     "@netlify/blobs": "^7.3.0",
     "@peculiar/webcrypto": "^1.5.0",
+    "@types/randombytes": "^2.0.3",
     "@ucanto/interface": "^10.0.1",
     "@web3-storage/clock": "^0.4.1",
     "@web3-storage/pail": "^0.6.0",
     "@web3-storage/w3up-client": "^15.0.0",
     "charwise": "^3.0.1",
+    "cross-fetch": "^4.0.0",
     "idb": "^8.0.0",
     "ipfs-unixfs-exporter": "^13.5.0",
     "js-base64": "^3.7.7",
@@ -106,6 +108,7 @@
     "partykit": "^0.0.107",
     "partysocket": "^1.0.1",
     "prolly-trees": "^1.0.4",
+    "randombytes": "^2.1.0",
     "std-env": "^3.7.0",
     "uuidv7": "^1.0.0"
   }

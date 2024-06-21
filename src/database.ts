@@ -175,7 +175,7 @@ export function fireproof(name: string, opts?: ConfigOpts): Database {
     db = new Database(name, opts);
     Database.databases.set(name, db);
   }
-  return db
+  return db;
 }
 
 function makeName(fnString: string) {

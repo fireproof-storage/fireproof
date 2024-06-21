@@ -1,6 +1,6 @@
 import { clockChangesSince } from "./crdt-helpers";
 import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/";
-import type { DocUpdate, ClockHead, DocTypes } from "./types";
+import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types";
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue";
@@ -40,7 +40,7 @@ export class CRDTClock<T extends DocTypes> {
   async processUpdates(updatesAcc: DocUpdate<T>[], all: boolean, prevHead: ClockHead) {
     let internalUpdates = updatesAcc;
     if (this.watchers.size && !all) {
-      const changes = await clockChangesSince<T>(this.blockstore, this.head, prevHead, {});
+      const changes = await clockChangesSince<T>(throwFalsy(this.blockstore), this.head, prevHead, {});
       internalUpdates = changes.result;
     }
     this.zoomers.forEach((fn) => fn());

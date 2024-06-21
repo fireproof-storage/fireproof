@@ -50,10 +50,7 @@ export class ConnectNetlify extends Connection {
     if (!response.ok) throw new Error("failed to download meta " + response.statusText);
     const crdtEntries = await response.json();
     const events = await Promise.all(
-      crdtEntries.map(async (entry: {
-        cid: string;
-        data: string;
-      }) => {
+      crdtEntries.map(async (entry: { cid: string; data: string }) => {
         const base64String = entry.data;
         const bytes = Base64.toUint8Array(base64String);
         // const event = await this.createEventBlock(bytes)

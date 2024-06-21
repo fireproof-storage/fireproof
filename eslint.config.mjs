@@ -7,14 +7,6 @@ export default tseslint.config(
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
   {
-    ignores: [
-        "babel.config.cjs",
-	"jest.config.js",
-	"**/dist/",
-	"**/pubdir/",
-	"**/node_modules/",
-	"**/scripts/",
-	"**/examples/"
-    ],
+    ignores: ["babel.config.cjs", "jest.config.js", "**/dist/", "**/pubdir/", "**/node_modules/", "**/scripts/", "**/examples/"],
   },
 );
