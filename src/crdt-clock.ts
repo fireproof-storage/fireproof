@@ -66,10 +66,10 @@ export class CRDTClock<T extends DocTypes> {
   }
 
   async int_applyHead(newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) {
-    // console.log(
-    //   'int_applyHead',
-    //   this.applyHeadQueue.size(),
-    // )
+    // if (!(this.head && prevHead && newHead)) {
+    //   throw new Error("missing head");
+    // }
+    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
     if (compareClockHeads(ogHead, newHead)) {

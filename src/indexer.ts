@@ -181,14 +181,12 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       this.crdt,
       {
         ...all,
-        result: result,
-        /*
-        .map(({ key: [k, id], value }) => ({
+        // @ts-expect-error getAllEntries returns a different type than range
+        result: result.map(({ key: [k, id], value }) => ({
           key: k,
           id,
-          value
+          value,
         })),
-        */
       },
       opts,
     );
@@ -230,6 +228,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }
     const indexEntries = indexEntriesForChanges<T, K>(result, this.mapFn); // use a getter to translate from string
+    // console.log("indexEntries", indexEntries);
     const byIdIndexEntries: IndexDocString[] = indexEntries.map(({ key }) => ({
       key: key[1],
       value: key,

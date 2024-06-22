@@ -42,7 +42,9 @@ export class CRDT<T extends DocTypes> {
     this.blockstore = new EncryptedBlockstore({
       name: name,
       applyMeta: async (meta: MetaType) => {
+        // console.log("applyMeta db", meta);
         const crdtMeta = meta as unknown as CRDTMeta;
+        if (!crdtMeta.head) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
         await this.clock.applyHead(crdtMeta.head, []);
       },
       compact: async (blocks: CompactionFetcher) => {
@@ -60,8 +62,9 @@ export class CRDT<T extends DocTypes> {
     this.indexBlockstore = new EncryptedBlockstore({
       name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
       applyMeta: async (meta: MetaType) => {
+        // console.log("applyMeta idx", meta);
         const idxCarMeta = meta as IdxMetaMap;
-        if (!idxCarMeta.indexes) return;
+        if (!idxCarMeta.indexes) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
           index({ _crdt: this }, name, undefined, idx);
         }
@@ -124,6 +127,7 @@ export class CRDT<T extends DocTypes> {
 
   async get(key: string): Promise<DocValue<T> | null> {
     await this.ready;
+    console.log("get", key);
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
     if (result.del) return null;
     return result;

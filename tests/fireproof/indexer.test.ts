@@ -6,6 +6,8 @@ interface TestType {
   readonly score: number;
 }
 
+const count = 0;
+
 describe("basic Index", () => {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
@@ -16,7 +18,9 @@ describe("basic Index", () => {
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
+    // const ok =
     await db.put({ title: "bazillas" });
+    // console.log("okcount", count++, ok.id);
     indexer = new Index<string, TestType>(db._crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
@@ -46,7 +50,7 @@ describe("basic Index", () => {
   });
   it("should be in order", async function () {
     const { rows } = await indexer.query();
-    equals(rows[0].id, "amazing");
+    equals(rows[0].key, "amazing");
   });
   it("should work with limit", async function () {
     const { rows } = await indexer.query({ limit: 1 });
@@ -54,17 +58,18 @@ describe("basic Index", () => {
   });
   it("should work with descending", async function () {
     const { rows } = await indexer.query({ descending: true });
-    equals(rows[0].id, "creative");
+    equals(rows[0].key, "creative");
   });
   it("should range query all", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
-    equals(rows[0].id, "amazing");
     equals(rows.length, 3);
+    equals(rows[0].key, "amazing");
+  
   });
   it("should range query", async function () {
     const { rows } = await indexer.query({ range: ["b", "d"] });
     equals(rows.length, 1);
-    equals(rows[0].id, "bazillas");
+    equals(rows[0].key, "bazillas");
   });
   it("should key query", async function () {
     const { rows } = await indexer.query({ key: "bazillas" });
@@ -79,7 +84,7 @@ describe("basic Index", () => {
 
 describe("Index query with compound key", function () {
   let db: Database<TestType>;
-  let indexer: Index<[string, number], TestType>
+  let indexer: Index<[string, number], TestType>;
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-indexer");
     db = new Database("test-indexer");
@@ -123,7 +128,7 @@ describe("basic Index with map fun", function () {
 });
 
 describe("basic Index with map fun with value", function () {
-  let db: Database<TestType>
+  let db: Database<TestType>;
   let indexer: Index<string, TestType, number>;
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-indexer");
@@ -141,7 +146,7 @@ describe("basic Index with map fun with value", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 3);
-    equals(result.rows[0].id, "amazing");
+    equals(result.rows[0].key, "amazing");
     // @jchris why is this not a object?
     equals(result.rows[0].value, 7);
   });
@@ -150,7 +155,7 @@ describe("basic Index with map fun with value", function () {
     assert(rows[0].doc);
     equals(rows[0].doc._id, rows[0].id);
     equals(rows.length, 3);
-    equals(rows[0].id, "amazing");
+    equals(rows[0].key, "amazing");
     // @jchris why is this not a object?
     equals(rows[0].value, 7);
   });
@@ -198,14 +203,18 @@ describe("basic Index with string fun", function () {
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query();
+    assert(rows.length)
     assert(rows[0].doc);
   });
 });
 
 describe("basic Index upon cold start", function () {
-  interface TestType { title: string, score?: number }
+  interface TestType {
+    title: string;
+    score?: number;
+  }
   let crdt: CRDT<TestType>;
-  let indexer: Index<string, TestType>
+  let indexer: Index<string, TestType>;
   let didMap: number;
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
@@ -281,14 +290,16 @@ describe("basic Index upon cold start", function () {
   });
   it("should ignore meta when map function definiton changes", async function () {
     const crdt2 = new CRDT<TestType>("test-indexer-cold");
-    const result = await index<string, TestType>({ _crdt: crdt2 }, "hello", (doc) => doc.title.split("").reverse().join("")).query();
+    const result = await index<string, TestType>({ _crdt: crdt2 }, "hello", (doc) =>
+      doc.title.split("").reverse().join(""),
+    ).query();
     equals(result.rows.length, 3);
     equals(result.rows[0].id, "evitaerc"); // creative
   });
 });
 
 describe("basic Index with no data", function () {
-  let db: Database<TestType>
+  let db: Database<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   beforeEach(async function () {
