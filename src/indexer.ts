@@ -151,7 +151,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
-      const { result, ...all } = await this.byKey.root.range(...encodeRange(opts.range));
+      const eRange = encodeRange(opts.range);
+      const { result, ...all } = await this.byKey.root.range(...eRange);
       return await applyQuery<K, T, R>(this.crdt, { result, ...all }, opts);
     }
     if (opts.key) {

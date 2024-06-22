@@ -185,7 +185,7 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
 }
 
 export function encodeRange(range: [IndexKeyType, IndexKeyType]): [string, string] {
-  return [charwise.encode(range[1]), charwise.encode(range[1])];
+  return [charwise.encode(range[0]), charwise.encode(range[1])];
 }
 
 export function encodeKey(key: DocFragment): string {

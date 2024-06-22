@@ -123,7 +123,7 @@ describe("basic Index with map fun", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 3);
-    equals(result.rows[0].id, "amazing");
+    equals(result.rows[0].key, "amazing");
   });
 });
 
