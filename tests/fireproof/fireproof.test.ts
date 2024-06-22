@@ -374,10 +374,10 @@ describe("Reopening a database", function () {
       const db = new Database("test-reopen");
       assert(db._crdt.ready);
       await db._crdt.ready;
-      equals(db._crdt.blockstore.loader.carLog.length, i + 1);
+      equals(db._crdt.blockstore.loader?.carLog.length, i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       assert(ok);
-      equals(db._crdt.blockstore.loader.carLog.length, i + 2);
+      equals(db._crdt.blockstore.loader?.carLog.length, i + 2);
       const doc = await db.get<FireType>(`test${i}`);
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
@@ -439,7 +439,7 @@ describe("Reopening a database with indexes", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].id, "bar");
+    equals(result.rows[0].key, "bar");
     assert(didMap);
   });
 
@@ -450,14 +450,14 @@ describe("Reopening a database with indexes", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].id, "bar");
+    equals(result.rows[0].key, "bar");
     assert(didMap);
     didMap = false;
     const r2 = await idx2.query();
     assert(r2);
     assert(r2.rows);
     equals(r2.rows.length, 1);
-    equals(r2.rows[0].id, "bar");
+    equals(r2.rows[0].key, "bar");
     assert(!didMap);
   });
 
