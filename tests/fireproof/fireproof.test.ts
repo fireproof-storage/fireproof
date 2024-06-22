@@ -112,7 +112,7 @@ describe("basic database", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].id, "bar");
+    equals(result.rows[0].key, "bar");
   });
   it("can define an index with a default function", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -122,7 +122,7 @@ describe("basic database", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].id, "bar");
+    equals(result.rows[0].key, "bar");
   });
 });
 

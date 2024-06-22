@@ -42,7 +42,7 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
       return {} as unknown as MetaType;
     },
     autoCompact: 0,
-    public: true,
+    public: false,
     name: "default",
     threshold: 1000 * 1000,
     ...opts,

@@ -294,7 +294,7 @@ describe("basic Index upon cold start", function () {
       doc.title.split("").reverse().join(""),
     ).query();
     equals(result.rows.length, 3);
-    equals(result.rows[0].id, "evitaerc"); // creative
+    equals(result.rows[0].key, "evitaerc"); // creative
   });
 });
 

@@ -249,7 +249,7 @@ describe("CRDT with an index", function () {
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });
     equals(got.rows.length, 2);
-    equals(got.rows[0].id, "king");
+    equals(got.rows[0].key, "king");
   });
   it("should register the index", async function () {
     const rIdx = await index({ _crdt: crdt }, "points");
@@ -257,7 +257,7 @@ describe("CRDT with an index", function () {
     equals(rIdx.name, "points");
     const got = await rIdx.query({ range: [9, 12] });
     equals(got.rows.length, 2);
-    equals(got.rows[0].id, "king");
+    equals(got.rows[0].key, "king");
   });
   it("creating a different index with same name should not work", async function () {
     const e = await index({ _crdt: crdt }, "points", (doc) => doc._id)
