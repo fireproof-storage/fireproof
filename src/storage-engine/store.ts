@@ -50,7 +50,7 @@ export abstract class DataStore {
     this.url = url;
   }
 
-  abstract load(cid: AnyLink | AnyLink[]): Promise<AnyBlock>;
-  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */void>;
+  abstract load(cid: AnyLink): Promise<AnyBlock>;
+  abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   abstract remove(cid: AnyLink): Promise<void>;
 }

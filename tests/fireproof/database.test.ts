@@ -1,6 +1,5 @@
 import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js";
-import { uuidv4 } from "uuidv7";
 
 function testDatabase(): Database {
   return new Database();
@@ -121,6 +120,7 @@ describe("named Database with record", function () {
     const { rows } = await db.changes([]);
     equals(rows.length, 1);
     const loader = db._crdt.blockstore.loader;
+    assert(loader)
     await loader.ready;
     equals(loader.key?.length, 64);
     equals(loader.keyId?.length, 64);
@@ -261,6 +261,7 @@ describe("basic Database parallel writes / public", function () {
     assert(db.opts.public);
     assert(db._crdt.opts.public);
     const loader = db._crdt.blockstore.loader;
+    assert(loader)
     await loader.ready;
     equals(loader.key, undefined);
     equals(loader.keyId, undefined);
