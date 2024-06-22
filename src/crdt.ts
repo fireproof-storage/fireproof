@@ -28,7 +28,7 @@ import { Block } from "multiformats";
 import { MetaType } from "./storage-engine/types";
 
 export class CRDT<T extends DocTypes> {
-  readonly name: string;
+  readonly name?: string;
   readonly opts: ConfigOpts;
   readonly ready: Promise<void>;
   readonly blockstore: EncryptedBlockstore;
@@ -36,7 +36,7 @@ export class CRDT<T extends DocTypes> {
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
   readonly clock: CRDTClock<T>;
 
-  constructor(name: string, opts: ConfigOpts = {}) {
+  constructor(name?: string, opts: ConfigOpts = {}) {
     this.name = name;
     this.opts = opts;
     this.blockstore = new EncryptedBlockstore({

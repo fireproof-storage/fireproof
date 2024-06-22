@@ -3,7 +3,7 @@ import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js
 import { uuidv4 } from "uuidv7";
 
 function testDatabase(): Database {
-  return new Database(`test@${uuidv4()}`);
+  return new Database();
 }
 
 describe("basic Database", () => {
