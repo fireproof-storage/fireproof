@@ -57,7 +57,6 @@ export class EncryptedBlockstore implements BlockFetcher {
   readonly _loader?: Loader;
 
   get loader(): Loader | null {
-    if (!this._loader) throw new Error("loader not ready");
     return this._loader || null;
   }
 
