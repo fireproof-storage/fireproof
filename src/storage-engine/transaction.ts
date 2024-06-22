@@ -68,14 +68,14 @@ export class EncryptedBlockstore implements BlockFetcher {
 
   constructor(ebOpts: BlockstoreOpts) {
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
-    // const { name } = ebOpts;
-    // if (name) {
-    // this.name = name;
-    this._loader = new Loader(this.ebOpts.name, this.ebOpts);
-    this.ready = this.loader.ready;
-    // } else {
-    // this.ready = Promise.resolve();
-    // }
+    const { name } = ebOpts;
+    if (name) {
+      this.name = name;
+      this._loader = new Loader(this.ebOpts.name, this.ebOpts);
+      this.ready = this._loader.ready;
+    } else {
+      this.ready = Promise.resolve();
+    }
   }
 
   async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
