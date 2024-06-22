@@ -143,7 +143,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   async query(opts: QueryOpts<K> = {}): Promise<IndexRows<K, T, R>> {
-    // this._resetIndex()
+    // this._resetIndex();
     await this._updateIndex();
     await this._hydrateIndex();
     if (!this.byKey.root) {

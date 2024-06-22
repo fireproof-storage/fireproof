@@ -69,6 +69,7 @@ export class FileDataStore extends DataStore {
 
     async save(car: AnyBlock): Promise<void> {
         const filepath = this.cidPath(car.cid);
+        console.log("save->", filepath);
         await writePathFile(filepath, car.bytes);
     }
 
