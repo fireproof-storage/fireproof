@@ -1,4 +1,3 @@
-import { d } from "@adviser/cement/sys_abstraction-CjljYIkv";
 import { Index, index, Database, CRDT, IndexRows } from "../../src/index";
 import { assert, equals, resetDirectory, equalsJSON, dataDir } from "./helpers";
 
@@ -7,16 +6,12 @@ interface TestType {
   readonly score: number;
 }
 
-// const count = 0;
-
-// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 describe("basic Index", () => {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   beforeEach(async function () {
-    console.log("resetting directory", dataDir, "test-indexer");
+    // console.log("resetting directory", dataDir, "test-indexer");
     await resetDirectory(dataDir, "test-indexer");
     // await sleep(1000);
     db = new Database("test-indexer");

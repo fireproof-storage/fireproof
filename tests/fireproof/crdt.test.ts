@@ -29,7 +29,6 @@ describe("Fresh crdt", function () {
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    console.log("didPut", didPut);
     const head = didPut.head;
     equals(head.length, 1);
   });
@@ -284,6 +283,7 @@ describe("Loader with a committed transaction", function () {
     await resetDirectory(dataDir, "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
+    if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     done = await crdt.bulk([{ id: "foo", value: { foo: "bar" } }]);
   });
@@ -322,12 +322,12 @@ describe("Loader with two committed transactions", function () {
     await resetDirectory(dataDir, "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
+    if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     done1 = await crdt.bulk([{ id: "apple", value: { foo: "bar" } }]);
     done2 = await crdt.bulk([{ id: "orange", value: { foo: "bar" } }]);
   });
   it("should commit two transactions", function () {
-    console.log(done1);
     assert(done1.head);
     assert(done1.cars);
     assert(done2.head);
@@ -367,6 +367,7 @@ describe("Loader with many committed transactions", function () {
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
+    if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     dones = [];
     for (let i = 0; i < count; i++) {

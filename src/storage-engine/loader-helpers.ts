@@ -45,7 +45,6 @@ export async function parseCarFile<T>(reader: CarReader): Promise<CarHeader<T>> 
   const fpvalue = value as { readonly fp: CarHeader<T> };
   // @jchris where is the fp attribute coming from?
   if (fpvalue && !fpvalue.fp) {
-    console.log("fp.header", value);
     throw new Error("missing fp");
   }
   return fpvalue.fp;

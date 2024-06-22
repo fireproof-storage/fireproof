@@ -45,6 +45,7 @@ describe("TransactionBlockstore with name", function () {
   });
   it("should get from loader", async function () {
     const bytes = new TextEncoder().encode("bytes");
+    assert(blocks.loader)
     blocks.loader.getBlock = async (cid) => {
       return { cid, bytes };
     };

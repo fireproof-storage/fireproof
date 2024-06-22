@@ -111,9 +111,7 @@ export class Loader implements Loadable {
     });
     this.ready = Promise.resolve().then(async () => {
       // if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
-      const metas = this.ebOpts.meta ?
-        [this.ebOpts.meta] :
-        await (await this.metaStore()).load("main");
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await(await this.metaStore()).load("main");
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
@@ -253,7 +251,6 @@ export class Loader implements Loadable {
   async _commitInternal<T>(t: CarTransaction, done: T, opts: CommitOpts = { noLoader: false, compact: false }): Promise<CarGroup> {
     await this.ready;
     const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact);
-    console.log("committing", fp.cars.length, fp.compact.length, fp.meta);
     const rootBlock = await encodeCarHeader(fp);
 
     const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public);
@@ -466,7 +463,7 @@ export class Loader implements Loadable {
     return { ...coreHeader, meta: result };
   }
 
-  async loadCar(cid: AnyLink | AnyLink[]): Promise<CarReader> {
+  async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) {
       throw new Error("car store not initialized");
     }
@@ -476,7 +473,7 @@ export class Loader implements Loadable {
 
   //What if instead it returns an Array of CarHeader
   protected async storesLoadCar(
-    cid: AnyLink | AnyLink[],
+    cid: AnyLink,
     local: AbstractDataStore,
     remote?: AbstractDataStore,
     publicFiles?: boolean,
@@ -526,7 +523,6 @@ export class Loader implements Loadable {
   protected async ensureDecryptedReader(reader: CarReader): Promise<CarReader> {
     const theKey = await this._getKey();
     if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
-      console.log("no key or crypto", this.ebOpts.public, theKey, this.ebOpts.crypto);
       return reader;
     }
     const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader);

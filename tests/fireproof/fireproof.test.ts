@@ -161,6 +161,7 @@ describe("benchmarking with compaction", function () {
           }),
         );
       }
+      assert(db._crdt.blockstore.loader)
       const label = `write ${i} log ${db._crdt.blockstore.loader.carLog.length}`;
       console.time(label);
       db.put({
@@ -265,6 +266,8 @@ describe("benchmarking a database", function () {
     await db.put({ _id: "compacted-test", foo: "bar" });
 
     // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+    assert(db._crdt.blockstore.loader)
+
     equals(db._crdt.blockstore.loader.carLog.length, 2);
 
     // console.time('allDocs new DB') // takes forever on 5k
@@ -277,6 +280,7 @@ describe("benchmarking a database", function () {
     const newDb2 = new Database("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     equals(doc21.foo, "fast");
+    assert(newDb2._crdt.blockstore.loader)
 
     equals(newDb2._crdt.blockstore.loader.carLog.length, 2);
 
@@ -391,6 +395,7 @@ describe("Reopening a database", function () {
       assert(db._crdt.ready);
       await db._crdt.ready;
       console.timeEnd("db open");
+      assert(db._crdt.blockstore.loader)
       equals(db._crdt.blockstore.loader.carLog.length, i + 1);
       // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
       console.time("db put");
@@ -514,6 +519,7 @@ describe("basic js verify", function () {
     equals(ok.id, "test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
     equals(ok2.id, "test2");
+    assert(db._crdt.blockstore.loader);
     const cid = db._crdt.blockstore.loader.carLog[0][0];
     const cid2 = db._crdt.clock.head[0];
     notEquals(cid, cid2);

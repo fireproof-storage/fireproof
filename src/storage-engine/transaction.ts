@@ -56,8 +56,8 @@ export class EncryptedBlockstore implements BlockFetcher {
   readonly name?: string;
   readonly _loader?: Loader;
 
-  get loader(): Loader | null {
-    return this._loader || null;
+  get loader(): Loader | undefined {
+    return this._loader || undefined;
   }
 
   readonly ebOpts: BlockstoreRuntime;
@@ -70,7 +70,7 @@ export class EncryptedBlockstore implements BlockFetcher {
     const { name } = ebOpts;
     if (name) {
       this.name = name;
-      this._loader = new Loader(this.ebOpts.name, this.ebOpts);
+      this._loader = new Loader(this.name, this.ebOpts);
       this.ready = this._loader.ready;
     } else {
       this.ready = Promise.resolve();

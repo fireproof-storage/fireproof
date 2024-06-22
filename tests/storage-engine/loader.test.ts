@@ -36,9 +36,9 @@ describe("basic Loader", function () {
     equals(loader.carLog.length, 0);
   });
   it("should commit", async function () {
-    const carCid = await loader.commit(t, { head: [block.cid] });
+    const carGroup = await loader.commit(t, { head: [block.cid] });
     equals(loader.carLog.length, 1);
-    const reader = await loader.loadCar(carCid);
+    const reader = await loader.loadCar(carGroup[0]);
     assert(reader);
     const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
@@ -57,7 +57,7 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   constructor() {
     const ebOpts = {
       name: "MyMemoryBlockStore",
-    }
+    };
     super(ebOpts);
     this.ready = Promise.resolve();
   }
@@ -77,7 +77,6 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   //   throw new Error("Method not implemented.");
   // }
 
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
@@ -92,14 +91,14 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
 }
 
 describe("basic Loader with two commits", function () {
-  let loader: Loader
-  let block: BlockView
-  let block2: BlockView
-  let block3: BlockView
-  let block4: BlockView
-  let t: CarTransaction
-  let carCid: CarGroup
-  let carCid0: CarGroup
+  let loader: Loader;
+  let block: BlockView;
+  let block2: BlockView;
+  let block3: BlockView;
+  let block4: BlockView;
+  let t: CarTransaction;
+  let carCid: CarGroup;
+  let carCid0: CarGroup;
 
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-loader-two-commit");
@@ -147,7 +146,7 @@ describe("basic Loader with two commits", function () {
   });
 
   it("should commit", async function () {
-    const reader = await loader.loadCar(carCid);
+    const reader = await loader.loadCar(carCid[0]);
     assert(reader);
     const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
@@ -161,7 +160,7 @@ describe("basic Loader with two commits", function () {
     const compactCid = await loader.commit(t, { head: [block2.cid] }, { compact: true });
     equals(loader.carLog.length, 1);
 
-    const reader = await loader.loadCar(compactCid);
+    const reader = await loader.loadCar(compactCid[0]);
     assert(reader);
     const parsed = await parseCarFile<TransactionMeta>(reader);
     assert(parsed.cars);
@@ -171,31 +170,29 @@ describe("basic Loader with two commits", function () {
     assert(parsed.meta.head);
   });
 
-  it(
-    "compact should erase old files",
-    async function () {
-      await loader.commit(t, { head: [block2.cid] }, { compact: true });
-      equals(loader.carLog.length, 1);
-      await loader.commit(t, { head: [block3.cid] }, { compact: false });
-      equals(loader.carLog.length, 2);
-      assert(await (await loader.carStore()).load(carCid));
-      await loader.commit(t, { head: [block3.cid] }, { compact: true });
-      equals(loader.carLog.length, 1);
-      assert(await (await loader.carStore()).load(carCid));
-      await loader.commit(t, { head: [block4.cid] }, { compact: false });
-      equals(loader.carLog.length, 2);
+  it("compact should erase old files", async function () {
+    await loader.commit(t, { head: [block2.cid] }, { compact: true });
+    equals(loader.carLog.length, 1);
+    await loader.commit(t, { head: [block3.cid] }, { compact: false });
+    equals(loader.carLog.length, 2);
+    assert(await (await loader.carStore()).load(carCid[0]));
+    await loader.commit(t, { head: [block3.cid] }, { compact: true });
+    equals(loader.carLog.length, 1);
+    assert(await (await loader.carStore()).load(carCid[0]));
+    await loader.commit(t, { head: [block4.cid] }, { compact: false });
+    equals(loader.carLog.length, 2);
 
-      const e = await loader.loadCar(carCid).catch((e) => e);
-      assert(e);
-      matches(e.message, "missing car file");
-    }, 10000);
+    const e = await loader.loadCar(carCid[0]).catch((e) => e);
+    assert(e);
+    matches(e.message, "missing car file");
+  }, 10000);
 });
 
 describe("basic Loader with index commits", function () {
-  let block: BlockView
-  let ib: EncryptedBlockstore
-  let indexerResult: IndexTransactionMeta
-  let cid: CID
+  let block: BlockView;
+  let ib: EncryptedBlockstore;
+  let indexerResult: IndexTransactionMeta;
+  let cid: CID;
   // let indexMap: Map<string, CID>;
 
   beforeEach(async function () {
@@ -225,21 +222,24 @@ describe("basic Loader with index commits", function () {
   });
 
   it("should start with an empty car log", function () {
+    assert(ib.loader);
     equals(ib.loader.carLog.length, 0);
   });
 
   it("should commit the index metadata", async function () {
-    const { cars: carCid } = await ib.transaction<IndexTransactionMeta>(async (t) => {
-      await t.put(block.cid, block.bytes);
-      return indexerResult;
-    }/* , indexMap */);
+    const { cars: carCid } = await ib.transaction<IndexTransactionMeta>(
+      async (t) => {
+        await t.put(block.cid, block.bytes);
+        return indexerResult;
+      } /* , indexMap */,
+    );
 
     assert(carCid);
-
+    assert(ib.loader);
     const carLog = ib.loader.carLog;
 
     equals(carLog.length, 1);
-    const reader = await ib.loader.loadCar(carCid);
+    const reader = await ib.loader.loadCar(carCid[0]);
     assert(reader);
     const parsed = await parseCarFile<IndexTransactionMeta>(reader);
     assert(parsed.cars);
