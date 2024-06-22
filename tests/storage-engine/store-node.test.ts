@@ -28,7 +28,7 @@ describe("DataStore", function () {
 
   it("should save a car", async function () {
     const car: AnyBlock = {
-      cid: CID.parse("cid"),
+      cid:  "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
@@ -47,7 +47,7 @@ describe("DataStore with a saved car", function () {
     runtime = toStoreRuntime({})
     store = await runtime.makeDataStore({ name: "test2" } as Loadable);
     car = {
-      cid: CID.parse("cid"),
+      cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
     };
     await store.save(car);
