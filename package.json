@@ -47,6 +47,7 @@
     "test:cov:solid": "pnpm --filter @fireproof/solid-js test:cov",
     "test:react": "pnpm --filter use-fireproof test",
     "test:solid": "pnpm --filter @fireproof/solid-js test",
+    "serve": "npx serve-http -p 8080 tests/www",
     "format": "prettier .",
     "lint": "eslint"
   },
