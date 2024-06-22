@@ -21,7 +21,7 @@ describe("dreamcode", function () {
   interface Doc { text: string, dream: boolean }
   let ok: DbResponse
   let doc: DocWithId<Doc>
-  let result: IndexRows<boolean, Doc>;
+  let result: IndexRows<string, Doc>;
   let db: Database
   beforeEach(async function () {
     await resetDirectory(dataDir, "test-db");
@@ -41,7 +41,7 @@ describe("dreamcode", function () {
     assert(result);
     assert(result.rows);
     equals(result.rows.length, 1);
-    equals(result.rows[0].id, "fireproof");
+    equals(result.rows[0].key, "fireproof");
   });
   it("should query with function", async function () {
     const result = await db.query<boolean, Doc>((doc) => doc.dream);

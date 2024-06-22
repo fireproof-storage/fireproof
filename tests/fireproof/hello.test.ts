@@ -43,6 +43,6 @@ describe("public API", function () {
     assert(query);
     assert(query.rows);
     equals(query.rows.length, 1);
-    equals(query.rows[0].id, "bar");
+    equals(query.rows[0].key, "bar");
   });
 });
