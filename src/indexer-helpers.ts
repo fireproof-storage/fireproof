@@ -169,8 +169,11 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
   if (query.includeDocs) {
     resp.result = await Promise.all(
       resp.result.map(async (row) => {
+        console.log("ID row", row);
         const val = await crdt.get(row.id);
         const doc = val ? ({ ...val.doc, _id: row.id } as DocWithId<T>) : undefined;
+        console.log("ID doc", doc);
+        // row.doc = doc;
         return { ...row, doc };
       }),
     );
@@ -179,7 +182,10 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
     rows: resp.result.map((row) => ({
       id: row.id,
       key: charwise.decode(row.key),
-      value: row.row,
+      // @ts-expect-error type is mungy
+      value: row.row ? row.row : row.value,
+      // @ts-expect-error type is mungy
+      doc: row.doc,
     })),
   };
 }
