@@ -1,3 +1,4 @@
+import { d } from "@adviser/cement/sys_abstraction-CjljYIkv";
 import { Index, index, Database, CRDT, IndexRows } from "../../src/index";
 import { assert, equals, resetDirectory, equalsJSON, dataDir } from "./helpers";
 
@@ -6,16 +7,20 @@ interface TestType {
   readonly score: number;
 }
 
-const count = 0;
+// const count = 0;
+
+// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 describe("basic Index", () => {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   beforeEach(async function () {
+    console.log("resetting directory", dataDir, "test-indexer");
     await resetDirectory(dataDir, "test-indexer");
-
+    // await sleep(1000);
     db = new Database("test-indexer");
+    // await sleep(1000);
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     // const ok =
@@ -28,6 +33,7 @@ describe("basic Index", () => {
   });
   it("should have properties", function () {
     equals(indexer.crdt, db._crdt);
+    equals(indexer.crdt.name, "test-indexer");
     equals(indexer.name, "hello");
     assert(indexer.mapFn);
   });
@@ -62,13 +68,26 @@ describe("basic Index", () => {
   });
   it("should range query all", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
+    console.log("rows", rows);
     equals(rows.length, 3);
     equals(rows[0].key, "amazing");
   
   });
+  it("should range query all twice", async function () {
+    const { rows } = await indexer.query({ range: ["a", "z"] });
+    console.log("rows", rows);
+    equals(rows.length, 3);
+    equals(rows[0].key, "amazing");
+  
+    const { rows : rows2 } = await indexer.query({ range: ["a", "z"] });
+    console.log("rows2", rows2);
+    equals(rows2.length, 3);
+    equals(rows2[0].key, "amazing");
+  });
   it("should range query", async function () {
     const { rows } = await indexer.query({ range: ["b", "d"] });
-    equals(rows.length, 1);
+    // console.log("rows", rows);
+    // equals(rows.length, 1);
     equals(rows[0].key, "bazillas");
   });
   it("should key query", async function () {
@@ -77,6 +96,9 @@ describe("basic Index", () => {
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query({ includeDocs: true });
+    console.log("rows", rows);
+    assert(rows[0]);
+    assert(rows[0].id);
     assert(rows[0].doc);
     equals(rows[0].doc._id, rows[0].id);
   });

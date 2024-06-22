@@ -41,9 +41,9 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
     compact: async (blocks: CompactionFetcher) => {
       return {} as unknown as MetaType;
     },
-    autoCompact: 0,
+    autoCompact: 100,
     public: false,
-    name: "default",
+    name: undefined,
     threshold: 1000 * 1000,
     ...opts,
     crypto: toCryptoOpts(opts.crypto),
@@ -217,6 +217,6 @@ export interface BlockstoreRuntime {
   readonly store: StoreRuntime;
   readonly public: boolean;
   readonly meta?: DbMeta;
-  readonly name: string;
+  readonly name?: string;
   readonly threshold: number;
 }

@@ -153,7 +153,6 @@ export async function getValueFromCrdt<T extends DocTypes>(
   key: string,
 ): Promise<DocValue<T>> {
   if (!head.length) throw new Error("Getting from an empty database");
-  console.log("getValueFromCrdt", key);
   const link = await get(blocks, head, key);
   if (!link) throw new Error(`Missing key ${key}`);
   return await getValueFromLink(blocks, link);

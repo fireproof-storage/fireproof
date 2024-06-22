@@ -52,40 +52,42 @@ async function waiter<T extends StoreTypes>(sw: StoreWaiter<T>, fn: () => Promis
 }
 
 async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: StoreFactories): Promise<T> {
-    const key = url.toString();
-    let storeCache = factoryCache.get(key);
-    if (!storeCache) {
-        storeCache = {
-            meta: { queued: [] },
-            data: { queued: [] },
-            remoteWAL: { queued: [] },
-        }
-        factoryCache.set(key, storeCache);
-    }
-    if (sf.meta) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return waiter(storeCache.meta, () => sf.meta!(url, loader)) as Promise<T>;
-    }
-    if (sf.data) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return waiter(storeCache.data, () => sf.data!(url, loader)) as Promise<T>;
-    }
-    if (sf.remoteWAL) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return waiter(storeCache.remoteWAL, () => sf.remoteWAL!(url, loader)) as Promise<T>;
-    }
-    throw new Error("unsupported store type");
+  const key = url.toString();
+  //   console.log("cacheStore", key);
+  let storeCache = undefined; // factoryCache.get(key);
+  //   console.log("storeCache found", !!storeCache);
+  if (!storeCache) {
+    storeCache = {
+      meta: { queued: [] },
+      data: { queued: [] },
+      remoteWAL: { queued: [] },
+    };
+    factoryCache.set(key, storeCache);
+  }
+  if (sf.meta) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return waiter(storeCache.meta, () => sf.meta!(url, loader)) as Promise<T>;
+  }
+  if (sf.data) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return waiter(storeCache.data, () => sf.data!(url, loader)) as Promise<T>;
+  }
+  if (sf.remoteWAL) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return waiter(storeCache.remoteWAL, () => sf.remoteWAL!(url, loader)) as Promise<T>;
+  }
+  throw new Error("unsupported store type");
 }
 
 async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> {
-    switch (url.protocol) {
-        case "file:": {
-            const { FileDataStore } = await import("../runtime/store-file");
-            return new FileDataStore(url, loader.name);
-        }
-        default:
-            throw new Error(`unsupported data store ${url.protocol}`);
+  switch (url.protocol) {
+    case "file:": {
+      const { FileDataStore } = await import("../runtime/store-file");
+      return new FileDataStore(url, loader.name);
     }
+    default:
+      throw new Error(`unsupported data store ${url.protocol}`);
+  }
 }
 
 async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> {

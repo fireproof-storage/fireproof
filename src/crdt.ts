@@ -70,7 +70,7 @@ export class CRDT<T extends DocTypes> {
         }
       },
       crypto: this.opts.crypto,
-      store: this.opts.indexStore || this.opts.store,
+      store: this.opts.indexStore,
       public: this.opts.public,
     });
     this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {
@@ -127,7 +127,6 @@ export class CRDT<T extends DocTypes> {
 
   async get(key: string): Promise<DocValue<T> | null> {
     await this.ready;
-    console.log("get", key);
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
     if (result.del) return null;
     return result;
