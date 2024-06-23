@@ -176,14 +176,12 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
     );
   }
   return {
-    rows: resp.result.map((row) => ({
-      id: row.id,
-      key: charwise.decode(row.key),
-      // @ts-expect-error type is mungy
-      value: row.row ? row.row : row.value,
-      // @ts-expect-error type is mungy
-      doc: row.doc,
-    })),
+    rows: resp.result.map(({ key, ...row }) => {
+      return {
+        key: charwise.decode(key),
+        ...row,
+      };
+    }),
   };
 }
 
@@ -198,7 +196,7 @@ export function encodeKey(key: DocFragment): string {
 export interface ProllyIndexRow<K extends IndexKeyType, T extends DocFragment> {
   readonly id: string;
   readonly key: IndexKey<K>;
-  readonly row: T;
+  readonly value: T;
 }
 
 // ProllyNode type based on the ProllyNode from 'prolly-trees/base'
