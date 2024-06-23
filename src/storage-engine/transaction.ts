@@ -51,7 +51,25 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
   };
 }
 
-export class EncryptedBlockstore implements BlockFetcher {
+export class BaseBlockstore implements BlockFetcher {
+  readonly transactions = new Set<CarTransaction>();
+  readonly ebOpts: BlockstoreRuntime;
+
+  constructor(ebOpts: BlockstoreOpts = {}) {
+    this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
+  }
+
+  async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
+    if (!cid) throw new Error("required cid");
+    for (const f of this.transactions) {
+      // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
+      const v = await f.superGet(cid);
+      if (v) return v as Block<T, C, A, V>;
+    }
+  }
+}
+
+export class EncryptedBlockstore extends BaseBlockstore {
   readonly ready: Promise<void>;
   readonly name?: string;
   readonly _loader?: Loader;
@@ -60,13 +78,11 @@ export class EncryptedBlockstore implements BlockFetcher {
     return this._loader || undefined;
   }
 
-  readonly ebOpts: BlockstoreRuntime;
-  readonly transactions = new Set<CarTransaction>();
   lastTxMeta?: unknown; // TransactionMeta
   compacting = false;
 
   constructor(ebOpts: BlockstoreOpts) {
-    this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
+    super(ebOpts);
     const { name } = ebOpts;
     if (name) {
       this.name = name;
@@ -101,12 +117,8 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
-    if (!cid) throw new Error("required cid");
-    for (const f of this.transactions) {
-      // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
-      const v = await f.superGet(cid);
-      if (v) return v as Block<T, C, A, V>;
-    }
+    const got = await super.get(cid);
+    if (got) return got as Block<T, C, A, V>;
     if (!this.loader) {
       return;
     }
