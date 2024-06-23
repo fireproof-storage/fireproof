@@ -14,6 +14,7 @@ import {
   TransactionMeta,
   AnyLink,
   StoreRuntime,
+  BaseBlockstore,
 } from "./storage-engine";
 import {
   type IndexKeyType,
@@ -112,7 +113,8 @@ async function processFiles<T extends DocTypes>(store: StoreRuntime, blocks: Car
 }
 
 async function processFileset(store: StoreRuntime, blocks: CarTransaction, files: DocFiles, publicFiles = false) {
-  const dbBlockstore = blocks.parent;
+  const dbBlockstore = blocks.parent as EncryptedBlockstore;
+  if (!dbBlockstore.loader) throw new Error("Missing loader, database name is required");
   const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
   const didPut = [];
   // let totalSize = 0
@@ -136,7 +138,7 @@ async function processFileset(store: StoreRuntime, blocks: CarTransaction, files
   }
 
   if (didPut.length) {
-    const car = await dbBlockstore.loader?.commitFiles(t, { files } as unknown as TransactionMeta, {
+    const car = await dbBlockstore.loader.commitFiles(t, { files } as unknown as TransactionMeta, {
       public: publicFiles,
     });
     if (car) {
@@ -147,24 +149,20 @@ async function processFileset(store: StoreRuntime, blocks: CarTransaction, files
   }
 }
 
-export async function getValueFromCrdt<T extends DocTypes>(
-  blocks: EncryptedBlockstore,
-  head: ClockHead,
-  key: string,
-): Promise<DocValue<T>> {
+export async function getValueFromCrdt<T extends DocTypes>(blocks: BaseBlockstore, head: ClockHead, key: string): Promise<DocValue<T>> {
   if (!head.length) throw new Error("Getting from an empty database");
   const link = await get(blocks, head, key);
   if (!link) throw new Error(`Missing key ${key}`);
   return await getValueFromLink(blocks, link);
 }
 
-export function readFiles<T extends DocTypes>(blocks: EncryptedBlockstore, { doc }: Partial<DocValue<T>>) {
+export function readFiles<T extends DocTypes>(blocks: BaseBlockstore, { doc }: Partial<DocValue<T>>) {
   if (!doc) return;
   if (doc._files) {
-    readFileset(blocks, doc._files);
+    readFileset(blocks as EncryptedBlockstore, doc._files);
   }
   if (doc._publicFiles) {
-    readFileset(blocks, doc._publicFiles, true);
+    readFileset(blocks as EncryptedBlockstore, doc._publicFiles, true);
   }
 }
 
@@ -285,7 +283,7 @@ export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, h
   }
 }
 
-export async function* clockVis(blocks: EncryptedBlockstore, head: ClockHead) {
+export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {
   for await (const line of vis(blocks, head)) {
     yield line;
   }

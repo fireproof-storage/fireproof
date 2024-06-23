@@ -1,4 +1,10 @@
-import { EncryptedBlockstore, type CompactionFetcher, type TransactionMeta, type CarTransaction } from "./storage-engine";
+import {
+  EncryptedBlockstore,
+  type CompactionFetcher,
+  type TransactionMeta,
+  type CarTransaction,
+  BaseBlockstore,
+} from "./storage-engine";
 
 import {
   clockChangesSince,
@@ -31,15 +37,16 @@ export class CRDT<T extends DocTypes> {
   readonly name?: string;
   readonly opts: ConfigOpts;
   readonly ready: Promise<void>;
-  readonly blockstore: EncryptedBlockstore;
-  readonly indexBlockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
+  readonly indexBlockstore: BaseBlockstore;
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
   readonly clock: CRDTClock<T>;
 
   constructor(name?: string, opts: ConfigOpts = {}) {
     this.name = name;
     this.opts = opts;
-    this.blockstore = new EncryptedBlockstore({
+    const blockstoreType = name ? EncryptedBlockstore : BaseBlockstore;
+    this.blockstore = new blockstoreType({
       name: name,
       applyMeta: async (meta: MetaType) => {
         // console.log("applyMeta db", meta);
@@ -59,7 +66,8 @@ export class CRDT<T extends DocTypes> {
       threshold: this.opts.threshold,
     });
     this.clock = new CRDTClock<T>(this.blockstore);
-    this.indexBlockstore = new EncryptedBlockstore({
+    const indexBlockstoreType = this.opts.indexStore && name ? EncryptedBlockstore : BaseBlockstore;
+    this.indexBlockstore = new indexBlockstoreType({
       name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
       applyMeta: async (meta: MetaType) => {
         // console.log("applyMeta idx", meta);

@@ -21,7 +21,7 @@ import type {
   DocFragment,
   ChangesResponseRow,
 } from "./types";
-import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine";
+import { BaseBlockstore, Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -34,7 +34,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly _noupdate_listeners = new Set<ListenerFn<DT>>();
   readonly _crdt: CRDT<DT>;
   readonly _writeQueue: WriteQueue<DT>;
-  readonly blockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
 
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name;

@@ -13,8 +13,8 @@ import { toStoreRuntime } from "./store-factory";
 export type BlockFetcher = BlockFetcherApi;
 
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
-  readonly parent: EncryptedBlockstore;
-  constructor(parent: EncryptedBlockstore, opts = { add: true }) {
+  readonly parent: BaseBlockstore;
+  constructor(parent: BaseBlockstore, opts = { add: true }) {
     super();
     if (opts.add) {
       parent.transactions.add(this);
@@ -54,9 +54,11 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
+  ready: Promise<void>;
 
   constructor(ebOpts: BlockstoreOpts = {}) {
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
+    this.ready = Promise.resolve();
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -67,30 +69,46 @@ export class BaseBlockstore implements BlockFetcher {
       if (v) return v as Block<T, C, A, V>;
     }
   }
+
+  lastTxMeta?: unknown; // TransactionMeta
+
+  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
+    const t = new CarTransaction(this);
+    const done: M = await fn(t);
+    this.lastTxMeta = done;
+    return done;
+  }
 }
 
 export class EncryptedBlockstore extends BaseBlockstore {
-  readonly ready: Promise<void>;
-  readonly name?: string;
-  readonly _loader?: Loader;
+  readonly name: string;
+  readonly loader: Loader;
 
-  get loader(): Loader | undefined {
-    return this._loader || undefined;
-  }
-
-  lastTxMeta?: unknown; // TransactionMeta
   compacting = false;
 
   constructor(ebOpts: BlockstoreOpts) {
     super(ebOpts);
     const { name } = ebOpts;
-    if (name) {
-      this.name = name;
-      this._loader = new Loader(this.name, this.ebOpts);
-      this.ready = this._loader.ready;
-    } else {
-      this.ready = Promise.resolve();
+    if (!name) {
+      throw new Error("name required");
     }
+    this.name = name;
+    this.loader = new Loader(this.name, this.ebOpts);
+    this.ready = this.loader.ready;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
+    throw new Error("use a transaction to put");
+  }
+
+  async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
+    const got = await super.get(cid);
+    if (got) return got as Block<T, C, A, V>;
+    if (!this.loader) {
+      return;
+    }
+    return falsyToUndef(await this.loader.getBlock(cid)) as Block<T, C, A, V>;
   }
 
   async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
@@ -109,20 +127,6 @@ export class EncryptedBlockstore extends BaseBlockstore {
       throw new Error("failed to commit car");
     }
     return done;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
-    throw new Error("use a transaction to put");
-  }
-
-  async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
-    const got = await super.get(cid);
-    if (got) return got as Block<T, C, A, V>;
-    if (!this.loader) {
-      return;
-    }
-    return falsyToUndef(await this.loader.getBlock(cid)) as Block<T, C, A, V>;
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {

@@ -85,7 +85,7 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
 
 export { Connection, ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };
 
-export { EncryptedBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction";
+export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction";
 export { Loader, Loadable } from "./loader";
 export { DataStore, MetaStore } from "./store";
 export { RemoteWAL, type WALState } from "./remote-wal";
