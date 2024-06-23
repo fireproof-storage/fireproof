@@ -112,21 +112,16 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
-    const t = new CarTransaction(this);
-    const done: M = await fn(t);
-    this.lastTxMeta = done;
-    if (this.loader) {
-      const cars = await this.loader.commit(t, done, opts);
-      if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
-        setTimeout(() => void this.compact(), 10);
-      }
-      if (cars) {
-        this.transactions.delete(t);
-        return { ...done, cars };
-      }
-      throw new Error("failed to commit car");
+    const done: M = await super.transaction<M>(fn, opts);
+    const cars = await this.loader.commit(t, done, opts);
+    if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
+      setTimeout(() => void this.compact(), 10);
     }
-    return done;
+    if (cars) {
+      this.transactions.delete(t);
+      return { ...done, cars };
+    }
+    throw new Error("failed to commit car files");
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
