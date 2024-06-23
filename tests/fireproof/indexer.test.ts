@@ -63,26 +63,20 @@ describe("basic Index", () => {
   });
   it("should range query all", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
-    console.log("rows", rows);
     equals(rows.length, 3);
     equals(rows[0].key, "amazing");
   
   });
   it("should range query all twice", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
-    console.log("rows", rows);
     equals(rows.length, 3);
     equals(rows[0].key, "amazing");
-  
     const { rows : rows2 } = await indexer.query({ range: ["a", "z"] });
-    console.log("rows2", rows2);
     equals(rows2.length, 3);
     equals(rows2[0].key, "amazing");
   });
   it("should range query", async function () {
     const { rows } = await indexer.query({ range: ["b", "d"] });
-    // console.log("rows", rows);
-    // equals(rows.length, 1);
     equals(rows[0].key, "bazillas");
   });
   it("should key query", async function () {
@@ -91,7 +85,6 @@ describe("basic Index", () => {
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query({ includeDocs: true });
-    console.log("rows", rows);
     assert(rows[0]);
     assert(rows[0].id);
     assert(rows[0].doc);
