@@ -1,6 +1,6 @@
-import { clockChangesSince } from "./crdt-helpers.js";
-import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/index.js";
-import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
+import { clockChangesSince } from "./crdt-helpers";
+import type { BaseBlockstore, CarTransaction } from "./storage-engine/";
+import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types";
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
@@ -15,11 +15,11 @@ export class CRDTClock<T extends DocTypes> {
   readonly watchers = new Set<(updates: DocUpdate<T>[]) => void>();
   readonly emptyWatchers = new Set<() => void>();
 
-  readonly blockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
 
   readonly applyHeadQueue: ApplyHeadQueue<T>;
 
-  constructor(blockstore: EncryptedBlockstore) {
+  constructor(blockstore: BaseBlockstore) {
     this.blockstore = blockstore;
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this));
   }
@@ -108,7 +108,7 @@ function sortClockHead(clockHead: ClockHead) {
   return clockHead.sort((a, b) => a.toString().localeCompare(b.toString()));
 }
 
-async function validateBlocks(newHead: ClockHead, blockstore?: EncryptedBlockstore) {
+async function validateBlocks(newHead: ClockHead, blockstore?: BaseBlockstore) {
   if (!blockstore) throw new Error("missing blockstore");
   newHead.map(async (cid) => {
     const got = await blockstore.get(cid);
