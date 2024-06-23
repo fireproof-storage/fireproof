@@ -152,8 +152,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       const eRange = encodeRange(opts.range);
-      const { result, ...all } = await this.byKey.root.range(...eRange);
-      return await applyQuery<K, T, R>(this.crdt, { result, ...all }, opts);
+      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
@@ -176,14 +175,12 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       const encodedR = encodeRange([start, end]);
       return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
-
-    const { result, ...all } = await this.byKey.root.getAllEntries(); // funky return type
+    const all = await this.byKey.root.getAllEntries(); // funky return type
     return await applyQuery<K, T, R>(
       this.crdt,
       {
-        ...all,
         // @ts-expect-error getAllEntries returns a different type than range
-        result: result.map(({ key: [k, id], value }) => ({
+        result: all.result.map(({ key: [k, id], value }) => ({
           key: k,
           id,
           value,
