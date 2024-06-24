@@ -1,13 +1,15 @@
-import { RemoteDataStore, RemoteMetaStore } from "./store-remote";
-import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams } from "./types";
-import { type Loader } from "./loader";
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import type { Link, Version } from "multiformats";
-import { TaskManager } from "./task-manager";
-import { BlockstoreOpts } from "./transaction";
-import { Falsy, throwFalsy } from "../types";
+
+import { Falsy, throwFalsy } from "../types.js";
+import { TaskManager } from "./task-manager.js";
+import type { BlockstoreOpts } from "./transaction.js";
+import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams, Connection } from "./types.js";
+import { Loadable, type Loader } from "./loader.js";
+
+import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
 
 export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
 
@@ -19,14 +21,14 @@ export interface Connectable {
   readonly name?: string;
 }
 
-export abstract class Connection {
+export abstract class ConnectionBase implements Connection {
   readonly ready: Promise<unknown>;
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   readonly eventBlocks = new MemoryBlockstore();
   parents: CarClockHead = [];
-  loader?: Loader;
+  loader?: Loadable;
   taskManager?: TaskManager;
-  loaded: Promise<unknown> = Promise.resolve();
+  loaded: Promise<void> = Promise.resolve();
 
   abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;

@@ -1,5 +1,5 @@
 import { CID } from "multiformats";
-import type { AnyLink, CryptoOpts, DecryptOpts, EncryptOpts } from "./types";
+import type { AnyLink, CryptoOpts, DecryptOpts, EncryptOpts } from "./types.js";
 
 export function makeCodec(crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
   const enc32 = (value: number) => {

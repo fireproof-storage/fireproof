@@ -9,7 +9,7 @@ import { Database } from "better-sqlite3";
 // import { AnyBlock, AnyLink, DbMeta, Loader, RemoteWAL, WALState, DataStore, MetaStore } from '../../storage-engine/index';
 // import { WalSQLStore, WalStoreFactory } from './wal-type';
 import { Logger, LoggerImpl } from "@adviser/cement";
-import { DBConnection } from "./types";
+import { DBConnection } from "./types.js";
 
 export interface SQLTableNames {
   readonly data: string;

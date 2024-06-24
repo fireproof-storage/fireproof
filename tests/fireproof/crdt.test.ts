@@ -1,9 +1,9 @@
-import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "./helpers";
-import { CRDT } from "../../src/crdt";
-import { parseCarFile } from "../../src/storage-engine/loader-helpers";
-import { CRDTMeta, DocValue } from "../../src/types";
-import { Index, index } from "../../src/indexer";
-import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine";
+import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "./helpers.js";
+import { CRDT } from "../../src/crdt.js";
+import { parseCarFile } from "../../src/storage-engine/loader-helpers.js";
+import { CRDTMeta, DocValue } from "../../src/types.js";
+import { Index, index } from "../../src/indexer.js";
+import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine/index.js";
 import { uuidv4 } from "uuidv7";
 
 function testName(): string {

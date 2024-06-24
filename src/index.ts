@@ -1,6 +1,6 @@
-export * from "./database";
-export * from "./types";
+export * from "./database.js";
+export * from "./types.js";
 
-export { CRDT } from "./crdt";
+export { CRDT } from "./crdt.js";
 
-export * from "./indexer";
+export * from "./indexer.js";

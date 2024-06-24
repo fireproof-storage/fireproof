@@ -1,5 +1,5 @@
-import { SQLOpts, SQLiteConnection, ensureLogger } from "./sqlite-adapter-node";
-import { DBConnection } from "./types";
+import { SQLOpts, SQLiteConnection, ensureLogger } from "./sqlite-adapter-node.js";
+import { DBConnection } from "./types.js";
 
 export function SQLFactory(databaseURL: URL, opts?: Partial<SQLOpts>): DBConnection {
   const logger = ensureLogger(opts, "SQLFactory");

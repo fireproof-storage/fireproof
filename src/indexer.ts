@@ -12,8 +12,8 @@ import {
   type DocTypes,
   type IndexUpdateString,
   throwFalsy,
-} from "./types";
-import { EncryptedBlockstore, TransactionMeta } from "./storage-engine";
+} from "./types.js";
+import { EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
 import {
   bulkIndex,
   indexEntriesForChanges,
@@ -26,8 +26,8 @@ import {
   loadIndex,
   IndexDocString,
   CompareKey,
-} from "./indexer-helpers";
-import { CRDT } from "./crdt";
+} from "./indexer-helpers.js";
+import { CRDT } from "./crdt.js";
 
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
   { _crdt }: { _crdt: CRDT<T> | CRDT<NonNullable<unknown>> },

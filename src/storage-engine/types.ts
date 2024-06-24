@@ -1,8 +1,8 @@
 import type { CID, Link, Version } from "multiformats";
-import { DataStore, MetaStore } from "./store";
-import { RemoteWAL } from "./remote-wal";
-import type { Loadable } from "./loader";
-import { CRDTMeta, DocFileMeta } from "../types";
+import { DataStore, MetaStore } from "./store.js";
+import { RemoteWAL } from "./remote-wal.js";
+import type { Loadable } from "./loader.js";
+import { CRDTMeta, DocFileMeta, Falsy } from "../types.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -192,4 +192,16 @@ export interface DownloadDataFnParams {
 export interface DownloadMetaFnParams {
   readonly name: string;
   readonly branch: string;
+}
+
+export interface Connection {
+  readonly loader?: Loadable;
+  readonly loaded: Promise<void>;
+  connectMeta({ loader }: { loader?: Loadable }): void;
+  connectStorage({ loader }: { loader?: Loadable }): void;
+
+  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
+  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 }

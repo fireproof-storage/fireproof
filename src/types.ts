@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
-import type { DbMeta, CryptoOpts, StorexOpts, AnyLink } from "./storage-engine";
+import type { DbMeta, CryptoOpts, StorexOpts, AnyLink } from "./storage-engine/index.js";
 
 export type Falsy = false | null | undefined;
 

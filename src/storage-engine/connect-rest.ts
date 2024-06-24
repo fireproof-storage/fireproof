@@ -1,7 +1,7 @@
-import { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from "./types";
-import { Connection } from "./connection";
+import type { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from "./types.js";
+import { ConnectionBase } from "./connection-base.js";
 
-export class ConnectREST extends Connection {
+export class ConnectREST extends ConnectionBase {
   readonly baseUrl: URL;
 
   constructor(base: string) {

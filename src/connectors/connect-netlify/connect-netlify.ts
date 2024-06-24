@@ -1,9 +1,9 @@
 import { Base64 } from "js-base64";
-import { Connection } from "../../storage-engine";
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types";
-import { Falsy } from "../../types";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types.js";
+import { Falsy } from "../../types.js";
+import { ConnectionBase } from "../../storage-engine/connection-base.js";
 
-export class ConnectNetlify extends Connection {
+export class ConnectNetlify extends ConnectionBase {
   readonly name: string;
 
   constructor(name: string) {

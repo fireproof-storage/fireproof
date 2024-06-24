@@ -1,6 +1,6 @@
 import "./styles.css";
 
-import PartySocket from "partysocket";
+import * as ps from "partysocket";
 
 declare const PARTYKIT_HOST: string;
 
@@ -17,7 +17,7 @@ function add(text: string) {
 
 // A PartySocket is like a WebSocket, except it's a bit more magical.
 // It handles reconnection logic, buffering messages while it's offline, and more.
-const conn = new PartySocket({
+const conn = new ps.PartySocket({
   host: PARTYKIT_HOST,
   room: "my-new-room",
 });

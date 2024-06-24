@@ -1,5 +1,5 @@
-import type { Connectable } from "../../storage-engine";
-import { ConnectUCAN, ConnectUCANParams } from "./connect-ucan";
+import type { Connectable } from "../../storage-engine/index.js";
+import { ConnectUCAN, ConnectUCANParams } from "./connect-ucan.js";
 
 export { ConnectUCAN, ConnectUCANParams };
 

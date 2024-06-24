@@ -1,12 +1,11 @@
 import {
   CarClockHead,
-  Connection,
   DbMetaEventBlock,
   DownloadDataFnParams,
   DownloadMetaFnParams,
   UploadDataFnParams,
   UploadMetaFnParams,
-} from "../../storage-engine";
+} from "../../storage-engine/index.js";
 import { Client } from "@web3-storage/w3up-client";
 import * as w3clock from "@web3-storage/clock/client";
 import { decodeEventBlock } from "@web3-storage/pail/clock";
@@ -14,7 +13,8 @@ import { DID, Link, Proof } from "@ucanto/interface";
 import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
-import { Falsy, throwFalsy } from "../../types";
+import { Falsy, throwFalsy } from "../../types.js";
+import { ConnectionBase } from "../../storage-engine/connection-base.js";
 
 export interface ConnectUCANParams {
   name: string;
@@ -60,7 +60,7 @@ function parseEmail(email: string): Account.EmailAddress {
   return email as Account.EmailAddress;
 }
 
-export class ConnectUCAN extends Connection {
+export class ConnectUCAN extends ConnectionBase {
   client?: Client;
   clockSpaceDID?: DID;
   readonly params: ConnectUCANParams;

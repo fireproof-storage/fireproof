@@ -10,25 +10,21 @@ import {
   type TransactionMeta,
   type CarGroup,
   type CarLog,
-  type DownloadDataFnParams,
-  type DownloadMetaFnParams,
-  type UploadDataFnParams,
-  type UploadMetaFnParams,
   toCIDBlock,
-} from "./types";
-import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction";
+} from "./types.js";
+import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction.js";
 
-import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers";
-import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers";
+import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers.js";
+import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers.js";
 
-import { DataStore, MetaStore } from "./store";
-import { RemoteWAL } from "./remote-wal";
+import { DataStore, MetaStore } from "./store.js";
+import { RemoteWAL } from "./remote-wal.js";
 
-import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "./store";
-import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction";
-import { CommitQueue } from "./commit-queue";
+import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "./store.js";
+import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
+import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
-import { Falsy } from "../types";
+import type { Falsy } from "../types.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -63,7 +59,10 @@ export abstract class Loadable {
   carLog: CarLog = new Array<CarGroup>();
   remoteMetaStore?: AbstractRemoteMetaStore;
   remoteFileStore?: AbstractDataStore;
+  abstract ready: Promise<void>;
   abstract fileStore(): Promise<DataStore>;
+  abstract remoteWAL(): Promise<RemoteWAL>;
+  abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
 
 export class Loader implements Loadable {
@@ -111,7 +110,7 @@ export class Loader implements Loadable {
     });
     this.ready = Promise.resolve().then(async () => {
       // if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await(await this.metaStore()).load("main");
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load("main");
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
@@ -561,14 +560,3 @@ export class Loader implements Loadable {
   }
 }
 
-export interface Connection {
-  loader: Loader | null;
-  loaded: Promise<void>;
-  connectMeta({ loader }: { loader: Loader | null }): void;
-  connectStorage({ loader }: { loader: Loader | null }): void;
-
-  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null>;
-  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
-  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null>;
-  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | null>;
-}
