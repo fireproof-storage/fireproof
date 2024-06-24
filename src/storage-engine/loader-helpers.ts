@@ -6,7 +6,7 @@ import * as CBW from "@ipld/car/buffer-writer";
 import * as codec from "@ipld/dag-cbor";
 import { CarReader } from "@ipld/car";
 
-import { AnyBlock, AnyLink, CarHeader, CarMakeable } from "./types";
+import { AnyBlock, AnyLink, CarHeader, CarMakeable } from "./types.js";
 
 export async function encodeCarFile(roots: AnyLink[], t: CarMakeable): Promise<AnyBlock> {
   let size = 0;

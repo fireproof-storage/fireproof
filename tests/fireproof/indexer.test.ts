@@ -1,5 +1,5 @@
-import { Index, index, Database, CRDT, IndexRows } from "../../src/index";
-import { assert, equals, resetDirectory, equalsJSON, dataDir } from "./helpers";
+import { Index, index, Database, CRDT, IndexRows } from "../../src/index.js";
+import { assert, equals, resetDirectory, equalsJSON, dataDir } from "./helpers.js";
 
 interface TestType {
   readonly title: string;

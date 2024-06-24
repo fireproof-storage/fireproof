@@ -1,5 +1,5 @@
-import { DbMetaEventBlock } from "./connection";
-import { AnyLink, Loader } from "./index";
+import { DbMetaEventBlock } from "./connection-base.js";
+import { AnyLink, Loader } from "./index.js";
 
 interface TaskItem {
   readonly cid: string;

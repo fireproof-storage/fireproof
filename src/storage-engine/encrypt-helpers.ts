@@ -15,9 +15,9 @@ import { nocache as cache } from "prolly-trees/cache";
 // @ts-expect-error "prolly-trees" has no types
 import { create, load } from "prolly-trees/cid-set";
 
-import { encodeCarFile } from "./loader-helpers";
-import { makeCodec } from "./encrypt-codec";
-import type { AnyLinkFn, AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from "./types";
+import { encodeCarFile } from "./loader-helpers.js";
+import { makeCodec } from "./encrypt-codec.js";
+import type { AnyLinkFn, AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from "./types.js";
 
 function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   return list.some((cid: AnyLink) => {

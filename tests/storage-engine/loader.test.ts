@@ -3,16 +3,16 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { encode } from "multiformats/block";
 import { CID } from "multiformats/cid";
 
-import { assert, matches, equals, resetDirectory, dataDir } from "../fireproof/helpers";
+import { assert, matches, equals, resetDirectory, dataDir } from "../fireproof/helpers.js";
 
-import { parseCarFile } from "../../src/storage-engine/loader-helpers";
+import { parseCarFile } from "../../src/storage-engine/loader-helpers.js";
 
-import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "../../src/storage-engine/index";
+import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "../../src/storage-engine/index.js";
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
 import { BlockView } from "multiformats";
-import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types";
+import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types.js";
 
 describe("basic Loader", function () {
   let loader: Loader;

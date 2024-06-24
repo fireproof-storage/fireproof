@@ -2,12 +2,12 @@ import { join } from "node:path";
 import { promises } from "node:fs";
 import { CID } from "multiformats";
 
-import { assert, matches, equals, dataDir } from "../fireproof/helpers";
+import { assert, matches, equals, dataDir } from "../fireproof/helpers.js";
 
-import { MetaStore, DataStore, Loader, Loadable } from "../../src/storage-engine";
+import { MetaStore, DataStore, Loader, Loadable } from "../../src/storage-engine/index.js";
 
-import { toStoreRuntime } from "../../src/storage-engine/index";
-import { AnyBlock, DbMeta, StoreRuntime } from "../../src/storage-engine/types";
+import { toStoreRuntime } from "../../src/storage-engine/index.js";
+import { AnyBlock, DbMeta, StoreRuntime } from "../../src/storage-engine/types.js";
 
 const { readFile } = promises;
 
@@ -28,7 +28,7 @@ describe("DataStore", function () {
 
   it("should save a car", async function () {
     const car: AnyBlock = {
-      cid:  "cid" as unknown as CID,
+      cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
@@ -68,7 +68,7 @@ describe("DataStore with a saved car", function () {
 
   it("should remove a car", async function () {
     await store.remove(car.cid);
-    const error = await store.load(car.cid).catch((e) => e);
+    const error = await store.load(car.cid).catch((e: Error) => e) as Error;
     matches(error.message, "ENOENT");
   });
 });

@@ -1,1 +1,1 @@
-export * from "./sqlite-adapter-node";
+export * from "./sqlite-adapter-node.js";

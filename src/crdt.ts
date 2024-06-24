@@ -4,8 +4,7 @@ import {
   type TransactionMeta,
   type CarTransaction,
   BaseBlockstore,
-} from "./storage-engine";
-
+} from "./storage-engine.js";
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -15,7 +14,7 @@ import {
   clockVis,
   getBlock,
   doCompact,
-} from "./crdt-helpers";
+} from "./crdt-helpers.js";
 import type {
   DocUpdate,
   CRDTMeta,
@@ -27,11 +26,11 @@ import type {
   IndexKeyType,
   DocWithId,
   DocTypes,
-} from "./types";
-import { index, type Index } from "./indexer";
-import { CRDTClock } from "./crdt-clock";
+} from "./types.js";
+import { index, type Index } from "./indexer.js";
+import { CRDTClock } from "./crdt-clock.js";
 import { Block } from "multiformats";
-import { MetaType } from "./storage-engine/types";
+import { MetaType } from "./storage-engine/types.js";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;

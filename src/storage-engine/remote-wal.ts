@@ -1,9 +1,9 @@
 import pLimit from "p-limit";
-import { AnyLink, CommitOpts, DbMeta } from "./types";
-import { type Loadable, carLogIncludesGroup } from "./loader";
-import { STORAGE_VERSION } from "./store";
-import { CommitQueue } from "./commit-queue";
-import { throwFalsy } from "../types";
+import type { AnyLink, CommitOpts, DbMeta } from "./types.js";
+import { type Loadable, carLogIncludesGroup } from "./loader.js";
+import { STORAGE_VERSION } from "./store.js";
+import { CommitQueue } from "./commit-queue.js";
+import { throwFalsy } from "../types.js";
 
 export interface WALState {
   operations: DbMeta[];

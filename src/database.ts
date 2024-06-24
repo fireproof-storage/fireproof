@@ -1,8 +1,8 @@
 import { uuidv7 } from "uuidv7";
 
-import { WriteQueue, writeQueue } from "./write-queue";
-import { CRDT } from "./crdt";
-import { index } from "./indexer";
+import { WriteQueue, writeQueue } from "./write-queue.js";
+import { CRDT } from "./crdt.js";
+import { index } from "./indexer.js";
 import type {
   DocUpdate,
   ClockHead,
@@ -20,8 +20,9 @@ import type {
   IndexRows,
   DocFragment,
   ChangesResponseRow,
-} from "./types";
-import { BaseBlockstore, Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine";
+} from "./types.js";
+import { BaseBlockstore, Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
+
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();

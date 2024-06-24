@@ -1,4 +1,4 @@
-import { fireproof } from "../../../src"
+import { fireproof } from "../../../src/index.js"
 
 async function main() {
     // console.log(fireproof);

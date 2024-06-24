@@ -1,5 +1,5 @@
-import { MetaType } from "./storage-engine/types";
-import { DocTypes, DocUpdate } from "./types";
+import { MetaType } from "./storage-engine/types.js";
+import { DocTypes, DocUpdate } from "./types.js";
 
 type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;
 

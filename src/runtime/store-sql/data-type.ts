@@ -1,8 +1,8 @@
 import { RunResult, Statement } from "better-sqlite3";
-import { DBConnection, SQLStore } from "./types";
-import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node";
+import { DBConnection, SQLStore } from "./types.js";
+import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
 import { Logger } from "@adviser/cement";
-import { UploadDataFnParams } from "../../storage-engine/types";
+import { UploadDataFnParams } from "../../storage-engine/types.js";
 
 export interface DataRecord {
   readonly name: string;

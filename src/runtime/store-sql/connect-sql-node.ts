@@ -1,16 +1,16 @@
 import {
-  Connection,
   DownloadDataFnParams,
   DownloadMetaFnParams,
   UploadDataFnParams,
   UploadMetaFnParams,
-} from "../../storage-engine/index";
+} from "../../storage-engine/index.js";
 
-import { DataSQLStore, DataSQLRecordBuilder } from "./data-type";
-import { MetaSQLStore, MetaSQLRecordBuilder } from "./meta-type";
-import { WalSQLStore } from "./wal-type";
-import { SQLOpts, ensureLogger } from "./sqlite-adapter-node";
+import { DataSQLStore, DataSQLRecordBuilder } from "./data-type.js";
+import { MetaSQLStore, MetaSQLRecordBuilder } from "./meta-type.js";
+import { WalSQLStore } from "./wal-type.js";
+import { SQLOpts, ensureLogger } from "./sqlite-adapter-node.js";
 import { Logger } from "@adviser/cement";
+import { ConnectionBase } from "../../storage-engine/connection-base.js";
 
 export interface StoreOptions {
   readonly data: DataSQLStore;
@@ -18,7 +18,7 @@ export interface StoreOptions {
   readonly wal: WalSQLStore;
 }
 
-export class ConnectSQL extends Connection {
+export class ConnectSQL extends ConnectionBase {
   readonly store: StoreOptions;
   readonly logger: Logger;
 
