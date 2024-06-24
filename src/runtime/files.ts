@@ -4,10 +4,10 @@ import { withMaxChunkSize } from "@ipld/unixfs/file/chunker/fixed";
 import { withWidth } from "@ipld/unixfs/file/layout/balanced";
 
 import type { View } from "@ipld/unixfs";
-import { DocFileMeta } from "../types";
+import { DocFileMeta } from "../types.js";
 
 import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
-import { BlobLike, AnyLink, AnyBlock } from "../storage-engine";
+import { BlobLike, AnyLink, AnyBlock } from "../storage-engine/index.js";
 
 const queuingStrategy = UnixFS.withCapacity();
 

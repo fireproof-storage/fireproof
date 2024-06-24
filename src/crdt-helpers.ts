@@ -14,7 +14,7 @@ import {
   TransactionMeta,
   AnyLink,
   StoreRuntime,
-} from "./storage-engine";
+} from "./storage-engine/index.js";
 import {
   type IndexKeyType,
   type DocUpdate,
@@ -28,7 +28,7 @@ import {
   type DocWithId,
   type DocTypes,
   throwFalsy,
-} from "./types";
+} from "./types.js";
 import { Result } from "@web3-storage/pail/crdt/api";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

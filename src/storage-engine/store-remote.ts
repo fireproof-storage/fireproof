@@ -1,14 +1,34 @@
-import { UploadDataFnParams } from "./types";
-import type { AnyBlock, AnyLink, DbMeta, FnParamTypes } from "./types";
-import { type Loadable } from "./loader";
-import { DataStore, MetaStore } from "./store";
-import { RemoteWAL, WALState } from "./remote-wal";
-import { Connection } from "./connection";
-import { validateDataParams, validateMetaParams } from ".";
+import { UploadDataFnParams } from "./types.js";
+import type { AnyBlock, AnyLink, Connection, DbMeta, DownloadDataFnParams, DownloadMetaFnParams, FnParamTypes, UploadMetaFnParams } from "./types.js";
+import { type Loadable } from "./loader.js";
+import { DataStore, MetaStore } from "./store.js";
+import { RemoteWAL, WALState } from "./remote-wal.js";
+// import { Connectable, Connection } from "./connection.js";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { Falsy } from "../types";
+import { Falsy } from "../types.js";
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
+
+
+export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
+  const { type, name, car } = params;
+  if (!name) throw new Error("name is required");
+  if (!car) {
+    throw new Error("car is required");
+  }
+  if (type !== "file" && type !== "data") {
+    throw new Error("type must be file or data");
+  }
+}
+
+export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams) {
+  const { name, branch } = params;
+  if (!name) throw new Error("name is required");
+  if (!branch) {
+    throw new Error("branch is required");
+  }
+}
+
 
 // export function makeStores(storage: Connection, meta: Connection) {
 //   return {

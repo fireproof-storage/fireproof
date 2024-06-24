@@ -1,12 +1,6 @@
 import { format, parse, ToString } from "@ipld/dag-json";
-import { AnyBlock, AnyLink, DbMeta } from "./types";
-import { DataStore, MetaStore, RemoteWAL, WALState } from "./index";
-
-// import type { Loadable, Loader } from "./loader";
-
-// export const makeDataStore = (name: string) => new DataStore(name);
-// export const makeMetaStore = (loader: Loader) => new MetaStore(loader.name);
-// export const makeRemoteWAL = (loader: Loadable) => new RemoteWAL(loader);
+import { AnyBlock, AnyLink, DbMeta } from "./types.js";
+import { DataStore, MetaStore, RemoteWAL, WALState } from "./index.js";
 
 export class MemoryDataStore extends DataStore {
   readonly tag: string = "car-mem";

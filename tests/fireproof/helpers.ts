@@ -1,10 +1,10 @@
 
 import assert from "assert";
-import { join, dirname } from "path";
-import { promises as fs, readFileSync } from "fs";
-import { fileURLToPath } from "url";
+import { join, dirname } from "node:path";
+import { promises as fs, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
-import { dataDir as dataDirFn } from "../../src/runtime/data-dir";
+import { dataDir as dataDirFn } from "../../src/runtime/data-dir.js";
 
 const dataDir = dataDirFn();
 
@@ -83,6 +83,12 @@ export function getDirectoryName(url: string) {
     path = fileURLToPath(url);
   } catch (e) {
     path = url;
+  }
+  if (process && typeof process.cwd === "function") {
+    const cwd = process.cwd();
+    if (cwd.endsWith('dist/esm')) {
+      path = '../../' + path;
+    }
   }
   const dir_name = dirname(path);
   return dir_name;

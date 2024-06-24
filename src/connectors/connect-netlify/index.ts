@@ -1,5 +1,5 @@
-import { ConnectNetlify } from "./connect-netlify";
-import type { Connectable } from "../../storage-engine";
+import { ConnectNetlify } from "./connect-netlify.js";
+import type { Connectable } from "../../storage-engine/index.js";
 
 const netlifyCxs = new Map<string, ConnectNetlify>();
 

@@ -1,14 +1,14 @@
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import { BlockFetcher as BlockFetcherApi } from "@web3-storage/pail/api";
 
-import { AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, StoreRuntime, StoreOpts, TransactionMeta } from "./types";
+import { AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, StoreRuntime, StoreOpts, TransactionMeta } from "./types.js";
 
-import { Loader } from "./loader";
+import { Loader } from "./loader.js";
 import type { CID, Block, Version } from "multiformats";
-import { CryptoOpts } from "./types";
-import { falsyToUndef } from "../types";
-import { toCryptoOpts } from "../runtime/crypto";
-import { toStoreRuntime } from "./store-factory";
+import { CryptoOpts } from "./types.js";
+import { falsyToUndef } from "../types.js";
+import { toCryptoOpts } from "../runtime/crypto.js";
+import { toStoreRuntime } from "./store-factory.js";
 
 export type BlockFetcher = BlockFetcherApi;
 

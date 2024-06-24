@@ -1,4 +1,4 @@
-import { STORAGE_VERSION } from "../storage-engine";
+import { STORAGE_VERSION } from "../storage-engine/index.js";
 
 import { homedir } from "node:os";
 import { join } from "node:path";

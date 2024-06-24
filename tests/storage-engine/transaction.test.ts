@@ -1,9 +1,9 @@
 import { CID } from "multiformats";
 
-import { assert, equals, matches, equalsJSON } from "../fireproof/helpers";
-import { EncryptedBlockstore as Blockstore, CarTransaction } from "../../src/storage-engine/index";
+import { assert, equals, matches, equalsJSON } from "../fireproof/helpers.js";
+import { EncryptedBlockstore as Blockstore, CarTransaction } from "../../src/storage-engine/index.js";
 
-import { AnyAnyLink, AnyBlock, AnyLink } from "../../src/storage-engine/types";
+import { AnyAnyLink, AnyBlock, AnyLink } from "../../src/storage-engine/types.js";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: Blockstore;

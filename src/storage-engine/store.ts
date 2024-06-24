@@ -1,8 +1,9 @@
-import type { AnyBlock, AnyLink, DbMeta } from "./types";
+import type { AnyBlock, AnyLink, DbMeta } from "./types.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 
-import { PACKAGE_VERSION } from "./version";
-import { Falsy } from "../types";
+import { PACKAGE_VERSION } from "./version.js";
+import { Falsy } from "../types.js";
+
 const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
 if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
 export const STORAGE_VERSION = match[0];

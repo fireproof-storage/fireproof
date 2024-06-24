@@ -1,15 +1,15 @@
-import { Connection } from "../../storage-engine";
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types";
-import { throwFalsy } from "../../types";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types.js";
+import { throwFalsy } from "../../types.js";
 import { CID } from "multiformats";
+import { ConnectionBase } from "../../storage-engine/connection-base.js";
 
 interface MetaResultItem {
   readonly cid: string;
   readonly data: string;
 }
-export class ConnectS3 extends Connection {
+export class ConnectS3 extends ConnectionBase {
   readonly uploadUrl: URL;
   readonly downloadUrl: URL;
   readonly ws?: WebSocket;
