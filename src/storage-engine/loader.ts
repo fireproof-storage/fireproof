@@ -25,6 +25,7 @@ import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
 import type { Falsy } from "../types.js";
+import { ResolveOnce } from "./resolve-once.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -59,7 +60,7 @@ export abstract class Loadable {
   carLog: CarLog = new Array<CarGroup>();
   remoteMetaStore?: AbstractRemoteMetaStore;
   remoteFileStore?: AbstractDataStore;
-  abstract ready: Promise<void>;
+  abstract xready(): Promise<void>;
   abstract fileStore(): Promise<DataStore>;
   abstract remoteWAL(): Promise<RemoteWAL>;
   abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
@@ -71,7 +72,6 @@ export class Loader implements Loadable {
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
   readonly carReaders = new Map<string, Promise<CarReader>>();
-  readonly ready: Promise<void>;
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
 
@@ -102,18 +102,21 @@ export class Loader implements Loadable {
     return this.ebOpts.store.makeMetaStore(this);
   }
 
+  readonly onceReady = new ResolveOnce<void>();
+  async xready(): Promise<void> {
+    return this.onceReady.once(async () => {
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load("main");
+      if (metas) {
+        await this.handleDbMetasFromStore(metas);
+      }
+    })
+  }
+
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
     this.ebOpts = defaultedBlockstoreRuntime({
       ...ebOpts,
       name,
-    });
-    this.ready = Promise.resolve().then(async () => {
-      // if (!this.metaStore || !this.carStore || !this.remoteWAL) throw new Error("stores not initialized");
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load("main");
-      if (metas) {
-        await this.handleDbMetasFromStore(metas);
-      }
     });
   }
 
@@ -199,7 +202,7 @@ export class Loader implements Loadable {
     done: TransactionMeta,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
-    await this.ready;
+    await this.xready();
     const { files: roots } = this.makeFileCarHeader(done) as {
       files: AnyLink[];
     };
@@ -248,7 +251,7 @@ export class Loader implements Loadable {
   }
 
   async _commitInternal<T>(t: CarTransaction, done: T, opts: CommitOpts = { noLoader: false, compact: false }): Promise<CarGroup> {
-    await this.ready;
+    await this.xready();
     const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact);
     const rootBlock = await encodeCarHeader(fp);
 
@@ -358,7 +361,7 @@ export class Loader implements Loadable {
   // }
 
   async *entries(cache = true): AsyncIterableIterator<AnyBlock> {
-    await this.ready;
+    await this.xready();
     if (cache) {
       for (const [, block] of this.getBlockCache) {
         yield block;
@@ -383,7 +386,7 @@ export class Loader implements Loadable {
   }
 
   async getBlock(cid: AnyLink): Promise<AnyBlock | Falsy> {
-    await this.ready;
+    await this.xready();
     const sCid = cid.toString();
     if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
 
@@ -559,4 +562,3 @@ export class Loader implements Loadable {
     });
   }
 }
-

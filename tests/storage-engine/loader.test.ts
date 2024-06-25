@@ -13,6 +13,7 @@ import { MemoryBlockstore } from "@web3-storage/pail/block";
 
 import { BlockView } from "multiformats";
 import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types.js";
+import { SysContainer } from "../../src/runtime/sys-container.js";
 
 describe("basic Loader", function () {
   let loader: Loader;
@@ -20,7 +21,8 @@ describe("basic Loader", function () {
   let t: CarTransaction;
 
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-loader-commit");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-loader-commit");
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM as EncryptedBlockstore);
     loader = new Loader("test-loader-commit", { public: true });
@@ -101,7 +103,8 @@ describe("basic Loader with two commits", function () {
   let carCid0: CarGroup;
 
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-loader-two-commit");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-loader-two-commit");
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM);
     loader = new Loader("test-loader-two-commit", { public: true });
@@ -196,7 +199,8 @@ describe("basic Loader with index commits", function () {
   // let indexMap: Map<string, CID>;
 
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-loader-index");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-loader-index");
     // t = new CarTransaction()
     ib = new EncryptedBlockstore({ name: "test-loader-index" });
     block = await encode({

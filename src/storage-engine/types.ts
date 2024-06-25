@@ -145,12 +145,12 @@ export interface StoreOpts {
 }
 
 export interface StoreRuntime {
-  readonly stores: {
-    readonly meta: URL;
-    readonly data: URL;
-    readonly indexes: URL;
-    readonly remoteWAL: URL;
-  };
+  // readonly stores: {
+  //   readonly meta: URL;
+  //   readonly data: URL;
+  //   readonly indexes: URL;
+  //   readonly remoteWAL: URL;
+  // };
   makeMetaStore(loader: Loadable): Promise<MetaStore>;
   makeDataStore(loader: Loadable): Promise<DataStore>;
   makeRemoteWAL(loader: Loadable): Promise<RemoteWAL>;

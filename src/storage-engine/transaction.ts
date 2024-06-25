@@ -52,7 +52,9 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
 }
 
 export class EncryptedBlockstore implements BlockFetcher {
-  readonly ready: Promise<void>;
+  xready(): Promise<void> {
+    return this._loader?.xready() || Promise.resolve();
+  }
   readonly name?: string;
   readonly _loader?: Loader;
 
@@ -71,9 +73,6 @@ export class EncryptedBlockstore implements BlockFetcher {
     if (name) {
       this.name = name;
       this._loader = new Loader(this.name, this.ebOpts);
-      this.ready = this._loader.ready;
-    } else {
-      this.ready = Promise.resolve();
     }
   }
 
@@ -114,7 +113,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
-    await this.ready;
+    await this.xready();
     if (!this.loader) throw new Error("loader required to get file");
     const reader = await this.loader.loadFileCar(car, isPublic);
     const block = await reader.get(cid as CID);
@@ -123,7 +122,7 @@ export class EncryptedBlockstore implements BlockFetcher {
   }
 
   async compact() {
-    await this.ready;
+    await this.xready();
     if (!this.loader) throw new Error("loader required to compact");
     if (this.loader.carLog.length < 2) return;
     const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks));

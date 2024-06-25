@@ -22,6 +22,7 @@ import type {
   ChangesResponseRow,
 } from "./types.js";
 import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
+import { SysContainer } from "./runtime/sys-container.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -50,6 +51,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
+    await SysContainer.start();
     const got = await this._crdt.get(id).catch((e) => {
       e.message = `Not found: ${id} - ` + e.message;
       throw e;
@@ -60,6 +62,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DbResponse> {
+    await SysContainer.start();
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
     const result = (await this._writeQueue.push({
@@ -73,11 +76,13 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async del(id: string): Promise<DbResponse> {
+    await SysContainer.start();
     const result = (await this._writeQueue.push({ id: id, del: true })) as TransactionMeta;
     return { id, clock: result?.head } as DbResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
+    await SysContainer.start();
     const { result, head } = await this._crdt.changes(since, opts);
     const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
       key,
@@ -94,6 +99,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     }[];
     clock: ClockHead;
   }> {
+    await SysContainer.start();
     const { result, head } = await this._crdt.allDocs();
     const rows = result.map(({ id: key, value, del }) => ({
       key,
@@ -137,6 +143,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     field: string | MapFn<T>,
     opts: QueryOpts<K> = {},
   ): Promise<IndexRows<K, T, R>> {
+    await SysContainer.start();
     const _crdt = this._crdt as unknown as CRDT<T>;
     const idx =
       typeof field === "string" ? index<K, T, R>({ _crdt }, field) : index<K, T, R>({ _crdt }, makeName(field.toString()), field);
@@ -144,10 +151,12 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async compact() {
+    await SysContainer.start();
     await this._crdt.compact();
   }
 
   async _notify(updates: DocUpdate<NonNullable<unknown>>[]) {
+    await SysContainer.start();
     if (this._listeners.size) {
       const docs: DocWithId<NonNullable<unknown>>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
@@ -159,6 +168,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async _no_update_notify() {
+    await SysContainer.start();
     if (this._noupdate_listeners.size) {
       for (const listener of this._noupdate_listeners) {
         await (async () => await listener([]))().catch((e: Error) => {

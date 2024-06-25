@@ -1,9 +1,4 @@
-import {
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  UploadDataFnParams,
-  UploadMetaFnParams,
-} from "../../storage-engine/index.js";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/index.js";
 
 import { DataSQLStore, DataSQLRecordBuilder } from "./data-type.js";
 import { MetaSQLStore, MetaSQLRecordBuilder } from "./meta-type.js";
