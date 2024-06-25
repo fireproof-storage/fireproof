@@ -271,7 +271,7 @@ describe("basic Index upon cold start", function () {
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     const { result, head } = await crdt2.changes();
     assert(result);
-    await crdt2.ready;
+    await crdt2.xready();
     const indexer2 = await index<string, TestType>({ _crdt: crdt2 }, "hello", mapFn);
     await indexer2.xready();
     const result2 = await indexer2.query();

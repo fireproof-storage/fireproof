@@ -365,7 +365,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have a car in the car log", async function () {
-    await db._crdt.ready;
+    await db._crdt.xready();
     assert(db._crdt.blockstore.loader);
     assert(db._crdt.blockstore.loader.carLog);
     equals(db._crdt.blockstore.loader.carLog.length, 1);
@@ -373,7 +373,7 @@ describe("Reopening a database", function () {
 
   it("should have carlog after reopen", async function () {
     const db2 = new Database("test-reopen");
-    await db2._crdt.ready;
+    await db2._crdt.xready();
     assert(db2._crdt.blockstore.loader);
     assert(db2._crdt.blockstore.loader.carLog);
     equals(db2._crdt.blockstore.loader.carLog.length, 1);
@@ -383,8 +383,8 @@ describe("Reopening a database", function () {
     for (let i = 0; i < 4; i++) {
       // console.log('iteration', i)
       const db = new Database("test-reopen");
-      assert(db._crdt.ready);
-      await db._crdt.ready;
+      // assert(db._crdt.xready());
+      await db._crdt.xready();
       equals(db._crdt.blockstore.loader?.carLog.length, i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       assert(ok);
@@ -399,8 +399,8 @@ describe("Reopening a database", function () {
       console.log("iteration", i);
       console.time("db open");
       const db = new Database("test-reopen", { autoCompact: 1000 }); // try with 10
-      assert(db._crdt.ready);
-      await db._crdt.ready;
+      // assert(db._crdt.ready);
+      await db._crdt.xready();
       console.timeEnd("db open");
       assert(db._crdt.blockstore.loader)
       equals(db._crdt.blockstore.loader.carLog.length, i + 1);
