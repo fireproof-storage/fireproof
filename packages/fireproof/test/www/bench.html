@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Benchmark.js test</title>
+    <meta charset="utf-8" />
+    <style media="screen">
+        table{
+            border-collapse:collapse;
+            border:1px solid black;
+            margin: 20px;
+        }
+
+        table td,th{
+            border:1px solid black;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+<script src="./encrypted-blockstore.iife.js"></script>
+<script src="./fireproof.iife.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/benchmark@2.1.4/benchmark.min.js"></script>
+<script type="module" src="./bench.js"></script>
+<script type="module">
+    import {setupBenchmarkSuite} from "./bench.js";
+    var suite = new Benchmark.Suite;
+    await setupBenchmarkSuite(suite, Fireproof.fireproof, FireproofEB.ConnectBench);
+
+    function rowForBenchmark(bench) {
+        const tr = document.createElement('tr')
+        const td1 = document.createElement('td')
+        td1.innerText = `${bench.name}`
+        const td2 = document.createElement('td')
+        td2.setAttribute("id", `ops-${bench.id}`)
+        const td3 = document.createElement('td')
+        td3.setAttribute("id", `plusminus-${bench.id}`)
+        const td4 = document.createElement('td')
+        td4.setAttribute("id", `runs-${bench.id}`)
+
+        tr.appendChild(td1)
+        tr.appendChild(td2)
+        tr.appendChild(td3)
+        tr.appendChild(td4)
+
+        return tr
+    }
+
+    function formatNumber(number) {
+        number = String(number).split('.');
+        return number[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ',') +
+            (number[1] ? '.' + number[1] : '');
+    }
+
+    function runById(id) {
+        console.log("got run by id", id)
+        // run async
+        suite.run({ 'async': true, 'id': id });
+
+    }
+
+    function updateRow(event) {
+        let hz = event.target.hz
+        let opsCell = document.querySelector(`#ops-${event.target.id}`)
+        let ops = formatNumber(hz.toFixed(hz < 100 ? 2 : 0))
+        opsCell.innerText = ops
+
+        let plusMinusCell = document.querySelector(`#plusminus-${event.target.id}`)
+        let plusMinus = event.target.stats.rme.toFixed(2)
+        plusMinusCell.innerText = plusMinus
+
+        let runsCell = document.querySelector(`#runs-${event.target.id}`)
+        let runs = event.target.stats.sample.length
+        runsCell.innerText = runs
+    }
+
+    function clearRow(id) {
+        let opsCell = document.querySelector(`#ops-${id}`)
+        opsCell.innerText = ""
+
+        let plusMinusCell = document.querySelector(`#plusminus-${id}`)
+        plusMinusCell.innerText = ""
+
+        let runsCell = document.querySelector(`#runs-${id}`)
+        runsCell.innerText = ""
+    }
+
+   // add listener
+   suite
+       .on('cycle', function(event) {
+            updateRow(event)
+            console.log(String(event.target), event);
+        })
+
+    suite.forEach(function(value) {
+        let benchmarksTable = document.querySelector('#benchmarks')
+        let rfb = rowForBenchmark(value)
+        benchmarksTable.appendChild(rfb)
+    });
+
+    let runAllButton = document.querySelector(`#runAll`)
+    runAllButton.addEventListener("click", (event) => {
+        // clear all the rows
+        suite.forEach(function(value) {
+            clearRow(value.id)
+        });
+
+        suite.run({ 'async': true });
+    });
+
+
+
+</script>
+
+<h1>Fireproof Benchmarks</h1>
+<table id="benchmarks">
+    <tr>
+        <th>Name</th>
+        <th>ops/sec</th>
+        <th>±</th>
+        <th>runs sampled</th>
+    </tr>
+</table>
+<button id="runAll">Run All</button>
+</body>
+</html>
