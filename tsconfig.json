@@ -32,7 +32,8 @@
     "paths": {
       "@fireproof/core": ["./src/index.js"],
       "@fireproof/core/runtime": ["./src/runtime/index.js"],
-      "@fireproof/core/storage-engine": ["./src/storage-engine/index.js"]
+      "@fireproof/core/storage-engine": ["./src/storage-engine/index.js"],
+      "use-fireproof": ["./src/react/index.ts"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,
     // "rootDirs": ["./src", "./src-generated"],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

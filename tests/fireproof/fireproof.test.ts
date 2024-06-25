@@ -1,4 +1,4 @@
-import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "../helpers.js";
+import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep, itSkip } from "../helpers.js";
 
 import { CID } from "multiformats/cid";
 
@@ -139,7 +139,7 @@ describe("benchmarking with compaction", function () {
     await resetDirectory(dataDir(), "test-benchmark-compaction");
     db = new Database("test-benchmark-compaction", { autoCompact: 3, public: true });
   });
-  xit("passing: insert during compaction", async function () {
+  itSkip("passing: insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -201,7 +201,7 @@ describe("benchmarking a database", function () {
   // run:
   //      npm test -- --grep 'insert and read many records'
   //
-  xit("passing: insert and read many records", async () => {
+  itSkip("passing: insert and read many records", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -395,7 +395,7 @@ describe("Reopening a database", function () {
     }
   }, 20000);
 
-  xit("passing slow, should have the same data on reopen after reopen and update", async function () {
+  itSkip("passing slow, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 200; i++) {
       console.log("iteration", i);
       console.time("db open");
