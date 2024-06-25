@@ -109,7 +109,7 @@ export class Loader implements Loadable {
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
-    })
+    });
   }
 
   constructor(name: string, ebOpts: BlockstoreOpts) {
