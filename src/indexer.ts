@@ -65,7 +65,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   initError?: Error;
 
   xready(): Promise<void> {
-    return this.blockstore.xready()
+    return this.blockstore.xready();
   }
 
   constructor(crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {

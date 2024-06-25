@@ -35,7 +35,7 @@ class sysContainer {
     dirname: (path: string) => path.split("/").slice(0, -1).join("/"),
     homedir: () => "/browser",
     fileURLToPath: (strurl: string | URL) => {
-      let url: URL
+      let url: URL;
       if (typeof strurl === "string") {
         url = new URL(strurl);
       } else {
@@ -78,10 +78,10 @@ class sysContainer {
             writefile: (await import("node:fs")).promises.writeFile as nodeMap["writefile"],
             assert: (await import("assert")).default,
           };
-          console.log("SysContainer is node", this.freight.homedir())
+          console.log("SysContainer is node", this.freight.homedir());
         } else {
           this.freight.state = "browser";
-          console.log("SysContainer is browser")
+          console.log("SysContainer is browser");
         }
         return;
       case "browser":
@@ -98,66 +98,66 @@ class sysContainer {
       | null
       | undefined,
   ) {
-    this.logSeeded("readdir")
+    this.logSeeded("readdir");
     return (throwFalsy(this.freight).readdir(path, options) as Promise<string[]>) || [];
   }
   async readdirent(
     path: PathLike,
     options: (ObjectEncodingOptions & { withFileTypes: true; recursive?: boolean }) | BufferEncoding | null | undefined,
   ): Promise<Dirent[]> {
-    this.logSeeded("readdirent")
+    this.logSeeded("readdirent");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (throwFalsy(this.freight).readdir(path, { ...(options as any), withFileTypes: true }) as Promise<Dirent[]>) || [];
   }
 
   async readfile(path: PathLike, options?: { encoding: BufferEncoding; flag?: string }) {
-    this.logSeeded("readfile")
+    this.logSeeded("readfile");
     return throwFalsy(this.freight).readfile(path, options) as unknown as Promise<Buffer>;
   }
 
   async mkdir(path: PathLike, options: { recursive: boolean }) {
-    this.logSeeded("mkdir")
+    this.logSeeded("mkdir");
     return throwFalsy(this.freight).mkdir(path, options);
   }
 
   async rm(path: PathLike, options: MakeDirectoryOptions & { recursive: boolean }) {
-    this.logSeeded("rm")
+    this.logSeeded("rm");
     return throwFalsy(this.freight).rm(path, options);
   }
 
   async unlink(path: PathLike) {
-    this.logSeeded("unlink")
+    this.logSeeded("unlink");
     return throwFalsy(this.freight).unlink(path);
   }
 
   async writefile(path: PathLike, data: Uint8Array | string) {
-    this.logSeeded("writefile")
+    this.logSeeded("writefile");
     return throwFalsy(this.freight).writefile(path, data);
   }
 
   async copyFile(source: PathLike, destination: PathLike) {
-    this.logSeeded("copyFile")
+    this.logSeeded("copyFile");
     return throwFalsy(this.freight).copyFile(source, destination);
   }
 
   fileURLToPath(url: string | URL) {
-    this.logSeeded("fileURLToPath")
-    return throwFalsy(this.freight).fileURLToPath(url)
+    this.logSeeded("fileURLToPath");
+    return throwFalsy(this.freight).fileURLToPath(url);
   }
 
   dirname(path: string) {
-    this.logSeeded("dirname")
-    return throwFalsy(this.freight).dirname(path)
+    this.logSeeded("dirname");
+    return throwFalsy(this.freight).dirname(path);
   }
 
   join(...args: string[]): string {
-    this.logSeeded("join")
-    return throwFalsy(this.freight).join(...args)
+    this.logSeeded("join");
+    return throwFalsy(this.freight).join(...args);
   }
 
   homedir = () => {
-    this.logSeeded("homedir")
-    return throwFalsy(this.freight).homedir()
+    this.logSeeded("homedir");
+    return throwFalsy(this.freight).homedir();
   };
 
   logSeeded(method: string) {

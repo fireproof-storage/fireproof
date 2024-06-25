@@ -31,10 +31,10 @@ export class CRDT<T extends DocTypes> {
   readonly name?: string;
   readonly opts: ConfigOpts;
 
-  readonly onceReady = new ResolveOnce<void>()
+  readonly onceReady = new ResolveOnce<void>();
   async xready(): Promise<void> {
     return this.onceReady.once(async () => {
-      await Promise.all([this.blockstore.xready(), this.indexBlockstore.xready()])
+      await Promise.all([this.blockstore.xready(), this.indexBlockstore.xready()]);
     });
   }
 

@@ -6,14 +6,35 @@ runs:
   steps:
     - uses: actions/setup-node@v4
       with:
-        registry-url: "https://registry.npmjs.org"
         node-version: 20
-        cache: "npm"
-    - run: npm ci
-      shell: bash
-    - run: npm run lint
-      shell: bash
-    - run: npm run build
-      shell: bash
-    - run: npm test
-      shell: bash
+
+    - uses: pnpm/action-setup@v2
+      name: Install pnpm
+      with:
+        run_install: false
+        version: 9
+
+    - run install
+      shell: pnpm install
+ 
+    - run format-check
+      shell: pnpm run format --check
+
+    - run lint
+      shell: pnpm run lint
+
+    - run build
+      shell: pnpm run build
+
+    - run: test
+      shell: pnpm run test
+
+
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
