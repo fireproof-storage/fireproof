@@ -2,35 +2,26 @@ name: CI
 on:
   - push
   - pull_request
-
 jobs:
   quality-checks:
     name: Quality Checks
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-
-    - uses: pnpm/action-setup@v2
-      name: Install pnpm
-      with:
-        run_install: false
-        version: 9
-
-    - run install
-      shell: pnpm install
- 
-    - run format-check
-      shell: pnpm run format --check
-
-    - run lint
-      shell: pnpm run lint
-
-    - run build
-      shell: pnpm run build
-
-    - run: test
-      shell: pnpm run test
-
-
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 9
+      - name: install
+        run: pnpm install
+      - name: format-check
+        run: pnpm run format --check
+      - name: lint
+        run: pnpm run lint
+      - name: build
+        run: pnpm run build
+      - name: test
+        run: pnpm run test
