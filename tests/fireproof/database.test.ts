@@ -278,14 +278,19 @@ describe("basic Database with subscription", function () {
   let didRun: number
   let unsubscribe: () => void
   let lastDoc: DocWithId<NonNullable<unknown>>;
+  let waitForSub: Promise<void>;
   beforeEach(async function () {
     await SysContainer.start();
     db = testDatabase();
     didRun = 0;
-    unsubscribe = db.subscribe((docs) => {
-      lastDoc = docs[0];
-      didRun++;
-    }, true);
+    waitForSub = new Promise((resolve) => {
+      unsubscribe = db.subscribe((docs) => {
+        lastDoc = docs[0];
+        // lastDoc = {_id: "ok"};
+        didRun++;
+        resolve();
+      }, true);
+    });
   });
   it("should run on put", async function () {
     const all = await db.allDocs();
@@ -293,6 +298,7 @@ describe("basic Database with subscription", function () {
     const doc = { _id: "hello", message: "world" };
     equals(didRun, 0);
     const ok = await db.put(doc);
+    await waitForSub;
     assert(didRun);
     assert(lastDoc);
     assert(lastDoc._id);
