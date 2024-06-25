@@ -79,6 +79,7 @@ export class BaseBlockstore implements BlockFetcher {
     const t = new CarTransaction(this);
     const done: M = await fn(t);
     this.lastTxMeta = done;
+    // done.t = t;
     return done;
   }
 }

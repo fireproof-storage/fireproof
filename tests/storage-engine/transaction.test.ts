@@ -14,7 +14,7 @@ describe("Fresh TransactionBlockstore", function () {
     assert(!blocks.name);
   });
   it("should not have a loader", function () {
-    assert(!blocks._loader);
+    assert(!blocks.loader);
   });
   it("should not put", async function () {
     const value = new TextEncoder().encode("value");

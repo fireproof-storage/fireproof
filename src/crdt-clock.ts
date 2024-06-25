@@ -1,6 +1,7 @@
-import { clockChangesSince } from "./crdt-helpers";
-import type { BaseBlockstore, CarTransaction } from "./storage-engine/";
-import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types";
+import { clockChangesSince } from "./crdt-helpers.js";
+import type { BaseBlockstore, CarTransaction } from "./storage-engine/index.js";
+import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
+
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
