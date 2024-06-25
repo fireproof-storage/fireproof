@@ -8,28 +8,29 @@ jobs:
     name: Quality Checks
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20.10.0
+    - uses: pnpm/action-setup@v2
+      name: Install pnpm
+      with:
+        run_install: false
+        version: 9
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9.0.5
-          run_install: false
+    - run install
+      shell: pnpm install
+ 
+    - run format-check
+      shell: pnpm run format --check
 
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+    - run lint
+      shell: pnpm run lint
 
-      - name: Lint Check
-        run: pnpm lint:check
+    - run build
+      shell: pnpm run build
 
-      - name: Format Check
-        run: pnpm format:check
+    - run: test
+      shell: pnpm run test
 
-      - name: Run Tests
-        run: pnpm test
+
