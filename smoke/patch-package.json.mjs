@@ -1,4 +1,6 @@
-const fs = require("fs");
+/*global console*/
+import * as fs from "fs";
+import * as process from "process";
 let version = process.argv[process.argv.length - 1];
 version = version.split("/").slice(-1)[0].replace(/^v/, "");
 console.error(`Patch package.json version to ${version}`);

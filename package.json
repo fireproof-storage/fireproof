@@ -17,7 +17,7 @@
     "build:pubdir": "tsup",
     "pubdir": "rm -rf dist/pubdir; pnpm run build:pubdir; cp -pr ./.gitignore ./README.md ./LICENSE.md dist/pubdir/; cp package-fireproof-core.json dist/pubdir/package.json",
     "presmoke": "pnpm run pubdir ; cd dist/pubdir ; pnpm pack",
-    "smoke": "cd smoke && rm -f package.json node_modules; pnpm init ; node patch-package.json.js ; pnpm install -f ../dist/pubdir/fireproof-core-*.tgz; npx tsx ./node-test.ts",
+    "smoke": "cd smoke && rm -f package.json node_modules; pnpm init ; node patch-package.json.mjs ; pnpm install -f ../dist/pubdir/fireproof-core-*.tgz; npx tsx ./node-test.ts",
     "build:cjs": "tsc",
     "build:esm": "tsc -p ./tsconfig.esm.json",
     "build:esm-bundle": "esbuild --external:node:url --external:node:fs --external:assert --external:node:path --external:node:os --bundle dist/esm/tests/fireproof/hello.test.js --outdir=dist/esm-bundle",
