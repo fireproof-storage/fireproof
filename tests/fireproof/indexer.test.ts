@@ -1,4 +1,4 @@
-import { assert, equals, resetDirectory, equalsJSON, dataDir } from "../helpers.js";
+import { assert, equals, resetDirectory, equalsJSON, dataDir, itSkip } from "../helpers.js";
 
 import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
@@ -281,7 +281,7 @@ describe("basic Index upon cold start", function () {
     equals(result2.rows.length, 3);
     equalsJSON(indexer2.indexHead, head);
   });
-  xit("should not rerun the map function on seen changes", async function () {
+  itSkip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     const indexer2 = await index({ _crdt: crdt2 }, "hello", mapFn);

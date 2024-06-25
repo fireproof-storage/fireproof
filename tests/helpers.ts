@@ -5,8 +5,21 @@ export { dataDir } from "@fireproof/core/runtime";
 
 export { assert };
 
+
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+
+export function itSkip(value: string, fn: () => unknown) {
+  if (typeof xit === "function") {
+    xit(value, fn);
+  }
+  const mit = (it as unknown as { skip: (value: string, fn: () => unknown) => unknown });
+  if (mit && typeof mit.skip === "function") {
+    mit.skip(value, fn);
+  }
+  console.warn("itSkip of " + value);
 }
 
 export function equals<T>(actual: T, expected: T) {

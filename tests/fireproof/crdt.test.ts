@@ -1,4 +1,4 @@
-import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "../helpers.js";
+import { assert, equals, matches, notEquals, resetDirectory, dataDir, itSkip } from "../helpers.js";
 
 import { uuidv4 } from "uuidv7";
 
@@ -224,7 +224,7 @@ describe("Compact a named CRDT with writes", function () {
     equals(result.length, 2);
     equals(result[0].id, "ace");
   });
-  xit("should have fewer blocks after compact", async function () {
+  itSkip("should have fewer blocks after compact", async function () {
     await crdt.compact();
     const blz: AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {

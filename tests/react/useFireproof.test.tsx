@@ -1,9 +1,8 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { useFireproof } from "../useFireproof";
+import { useFireproof } from "use-fireproof";
 
-// TODO: Write more tests!
 describe("HOOK: useFireproof", () => {
   it("should be defined", () => {
     expect(useFireproof).toBeDefined();
