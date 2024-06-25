@@ -116,25 +116,25 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
 }
 
 export function toStoreRuntime(opts: StoreOpts = {}): StoreRuntime {
-  const stores = {
-    meta: toURL(opts.stores?.meta || dataDir()),
-    data: toURL(opts.stores?.data || dataDir()),
-    indexes: toURL(opts.stores?.indexes || dataDir()),
-    remoteWAL: toURL(opts.stores?.remoteWAL || dataDir()),
-  };
+  // const stores = {
+  //   meta: ,
+  //   data:
+  //   indexes: toURL(opts.stores?.indexes || dataDir()),
+  //   remoteWAL: ,
+  // };
   return {
-    stores,
+    // stores,
 
     makeMetaStore: (loader: Loadable) =>
-      cacheStore(stores.meta, loader, {
+      cacheStore(toURL(opts.stores?.meta || dataDir()), loader, {
         meta: metaStoreFactory,
       }),
     makeDataStore: (loader: Loadable) =>
-      cacheStore(stores.data, loader, {
+      cacheStore(toURL(opts.stores?.data || dataDir()), loader, {
         data: dataStoreFactory,
       }),
     makeRemoteWAL: (loader: Loadable) =>
-      cacheStore(stores.remoteWAL, loader, {
+      cacheStore(toURL(opts.stores?.remoteWAL || dataDir()), loader, {
         remoteWAL: remoteWalFactory,
       }),
 

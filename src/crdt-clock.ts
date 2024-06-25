@@ -35,7 +35,7 @@ export class CRDTClock<T extends DocTypes> {
       prevHead,
       updates,
     })) {
-      this.processUpdates(updatesAcc, all, prevHead);
+      return this.processUpdates(updatesAcc, all, prevHead);
     }
   }
 

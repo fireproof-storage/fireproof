@@ -1,15 +1,12 @@
-import { join } from "node:path";
-import { promises } from "node:fs";
 import { CID } from "multiformats";
 
-import { assert, matches, equals, dataDir } from "../fireproof/helpers.js";
+import { matches, equals, dataDir } from "../helpers.js";
 
-import { MetaStore, DataStore, Loader, Loadable } from "../../src/storage-engine/index.js";
+import { MetaStore, DataStore, Loader, Loadable } from "@fireproof/core/storage-engine";
 
-import { toStoreRuntime } from "../../src/storage-engine/index.js";
-import { AnyBlock, DbMeta, StoreRuntime } from "../../src/storage-engine/types.js";
-
-const { readFile } = promises;
+import { toStoreRuntime } from "@fireproof/core/storage-engine"
+import { AnyBlock, DbMeta, StoreRuntime } from "@fireproof/core/storage-engine";
+import { SysContainer, assert } from "@fireproof/core/runtime";
 
 const decoder = new TextDecoder("utf-8");
 
@@ -18,6 +15,7 @@ describe("DataStore", function () {
   let runtime: StoreRuntime;
 
   beforeEach(async () => {
+    await SysContainer.start();
     runtime = toStoreRuntime({})
     store = await runtime.makeDataStore({ name: "test" } as Loadable);
   });
@@ -32,8 +30,8 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const path = join(runtime.stores.data.pathname, store.name, "data", car.cid + ".car");
-    const data = await readFile(path);
+    const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
+    const data = await SysContainer.readfile(path);
     equals(data.toString(), decoder.decode(car.bytes));
   });
 });
@@ -44,6 +42,7 @@ describe("DataStore with a saved car", function () {
   let car: AnyBlock;
 
   beforeEach(async function () {
+    await SysContainer.start();
     runtime = toStoreRuntime({})
     store = await runtime.makeDataStore({ name: "test2" } as Loadable);
     car = {
@@ -54,8 +53,8 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const path = join(runtime.stores.data.pathname, store.name, "data", car.cid + ".car");
-    const data = await readFile(path);
+    const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
+    const data = await SysContainer.readfile(path);
     equals(data.toString(), decoder.decode(car.bytes));
   });
 
@@ -78,6 +77,7 @@ describe("MetaStore", function () {
   let runtime: StoreRuntime;
 
   beforeEach(async function () {
+    await SysContainer.start();
     runtime = toStoreRuntime()
     store = await runtime.makeMetaStore({ name: "test" } as unknown as Loader);
   });
@@ -93,11 +93,11 @@ describe("MetaStore", function () {
       key: undefined,
     };
     await store.save(h);
-    const path = join(dataDir, store.name, "meta", "main.json");
-    const file = await readFile(path);
+    const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
+    const file = await SysContainer.readfile(path);
     const header = JSON.parse(file.toString());
     assert(header);
-    assert(header.cars);
+    assert(header.cars)
     equals(header.cars[0]["/"], cid.toString());
   });
 });
@@ -108,6 +108,7 @@ describe("MetaStore with a saved header", function () {
   let runtime: StoreRuntime;
 
   beforeEach(async function () {
+    await SysContainer.start();
     runtime = toStoreRuntime()
     store = await runtime.makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
@@ -115,8 +116,8 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should have a header", async function () {
-    const path = join(dataDir, store.name, "meta", "main.json");
-    const data = await readFile(path);
+    const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
+    const data = await SysContainer.readfile(path);
     matches(data, /car/);
     const header = JSON.parse(data.toString());
     assert(header);

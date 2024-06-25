@@ -1,0 +1,5 @@
+{
+  "imports": {
+    "@fireproof/core": "./node_modules/@fireproof/core/node/index.global.js"
+  }
+}

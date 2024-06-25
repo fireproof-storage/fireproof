@@ -1,6 +1,7 @@
 
-import { assert, equals, resetDirectory, dataDir } from "./helpers.js";
-import { fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "../../src/index.js";
+import { assert, equals, resetDirectory, dataDir } from "../helpers.js";
+import { fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
+import { SysContainer } from "@fireproof/core/runtime";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
@@ -17,7 +18,8 @@ describe("public API", function () {
   let doc: DocWithId<TestDoc>
   let query: IndexRows<string, TestDoc>;
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-public-api");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-public-api");
     db = database("test-public-api");
     idx = index<string, TestDoc>(db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });

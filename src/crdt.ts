@@ -31,11 +31,19 @@ import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { Block } from "multiformats";
 import { MetaType } from "./storage-engine/types.js";
+import { ResolveOnce } from "./storage-engine/resolve-once.js";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
   readonly opts: ConfigOpts;
-  readonly ready: Promise<void>;
+
+  readonly onceReady = new ResolveOnce<void>();
+  async xready(): Promise<void> {
+    return this.onceReady.once(async () => {
+      await Promise.all([this.blockstore.xready(), this.indexBlockstore.xready()]);
+    });
+  }
+
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
@@ -80,9 +88,7 @@ export class CRDT<T extends DocTypes> {
       store: this.opts.indexStore,
       public: this.opts.public,
     });
-    this.ready = Promise.all([this.blockstore.ready, this.indexBlockstore.ready]).then(() => {
-      return;
-    });
+
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
@@ -91,7 +97,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   async bulk(updates: DocUpdate<T>[]): Promise<TransactionMeta> {
-    await this.ready;
+    await this.xready();
     const prevHead = [...this.clock.head];
 
     const meta = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
@@ -110,7 +116,7 @@ export class CRDT<T extends DocTypes> {
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
   async allDocs(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
-    await this.ready;
+    await this.xready();
     const result: DocUpdate<T>[] = [];
     for await (const entry of getAllEntries<T>(this.blockstore, this.clock.head)) {
       result.push(entry);
@@ -119,7 +125,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   async vis(): Promise<string> {
-    await this.ready;
+    await this.xready();
     const txt: string[] = [];
     for await (const line of clockVis(this.blockstore, this.clock.head)) {
       txt.push(line);
@@ -128,12 +134,12 @@ export class CRDT<T extends DocTypes> {
   }
 
   async getBlock(cidString: string): Promise<Block> {
-    await this.ready;
+    await this.xready();
     return await getBlock(this.blockstore, cidString);
   }
 
   async get(key: string): Promise<DocValue<T> | null> {
-    await this.ready;
+    await this.xready();
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
     if (result.del) return null;
     return result;
@@ -146,7 +152,7 @@ export class CRDT<T extends DocTypes> {
     result: DocUpdate<T>[];
     head: ClockHead;
   }> {
-    await this.ready;
+    await this.xready();
     return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts);
   }
 

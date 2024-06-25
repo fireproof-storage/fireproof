@@ -1,8 +1,10 @@
-import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "./helpers.js";
+import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep, itSkip } from "../helpers.js";
+
 import { CID } from "multiformats/cid";
 
-import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "../../src/index.js";
-import { AnyLink } from "../../src/storage-engine/index.js";
+import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
+import { AnyLink } from "@fireproof/core/storage-engine";
+import { SysContainer } from "@fireproof/core/runtime";
 
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
@@ -24,7 +26,8 @@ describe("dreamcode", function () {
   let result: IndexRows<string, Doc>;
   let db: Database
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-db");
+    await SysContainer.start()
+    await resetDirectory(dataDir(), "test-db");
     db = fireproof("test-db");
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
     doc = await db.get(ok.id);
@@ -60,7 +63,8 @@ describe("public API", function () {
   let query: IndexRows<string, Doc>;
 
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-api");
+    await SysContainer.start()
+    await resetDirectory(dataDir(), "test-api");
     db = fireproof("test-api");
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
@@ -90,7 +94,8 @@ describe("basic database", function () {
   interface Doc { foo: string }
   let db: Database<Doc>;
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-basic");
+    await SysContainer.start()
+    await resetDirectory(dataDir(), "test-basic");
     db = new Database("test-basic");
   });
   it("can put with id", async function () {
@@ -130,10 +135,11 @@ describe("benchmarking with compaction", function () {
   let db: Database;
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(dataDir, "test-benchmark-compaction");
+    await SysContainer.start()
+    await resetDirectory(dataDir(), "test-benchmark-compaction");
     db = new Database("test-benchmark-compaction", { autoCompact: 3, public: true });
   });
-  xit("passing: insert during compaction", async function () {
+  itSkip("passing: insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -183,8 +189,9 @@ describe("benchmarking a database", function () {
   /** @type {Database} */
   let db: Database;
   beforeEach(async function () {
+    await SysContainer.start()
     // erase the existing test data
-    await resetDirectory(dataDir, "test-benchmark");
+    await resetDirectory(dataDir(), "test-benchmark");
     db = new Database("test-benchmark", { autoCompact: 100000, public: true });
     // db = new Database(null, {autoCompact: 100000})
   });
@@ -194,7 +201,7 @@ describe("benchmarking a database", function () {
   // run:
   //      npm test -- --grep 'insert and read many records'
   //
-  xit("passing: insert and read many records", async () => {
+  itSkip("passing: insert and read many records", async () => {
     const ok = await db.put({ _id: "test", foo: "fast" });
     assert(ok);
     equals(ok.id, "test");
@@ -332,7 +339,8 @@ describe("Reopening a database", function () {
   let db: Database
   beforeEach(async function () {
     // erase the existing test data
-    await resetDirectory(dataDir, "test-reopen");
+    await SysContainer.start()
+    await resetDirectory(dataDir(), "test-reopen");
 
     db = new Database("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -358,7 +366,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have a car in the car log", async function () {
-    await db._crdt.ready;
+    await db._crdt.xready();
     assert(db._crdt.blockstore.loader);
     assert(db._crdt.blockstore.loader.carLog);
     equals(db._crdt.blockstore.loader.carLog.length, 1);
@@ -366,7 +374,7 @@ describe("Reopening a database", function () {
 
   it("should have carlog after reopen", async function () {
     const db2 = new Database("test-reopen");
-    await db2._crdt.ready;
+    await db2._crdt.xready();
     assert(db2._crdt.blockstore.loader);
     assert(db2._crdt.blockstore.loader.carLog);
     equals(db2._crdt.blockstore.loader.carLog.length, 1);
@@ -376,8 +384,8 @@ describe("Reopening a database", function () {
     for (let i = 0; i < 4; i++) {
       // console.log('iteration', i)
       const db = new Database("test-reopen");
-      assert(db._crdt.ready);
-      await db._crdt.ready;
+      // assert(db._crdt.xready());
+      await db._crdt.xready();
       equals(db._crdt.blockstore.loader?.carLog.length, i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       assert(ok);
@@ -387,28 +395,28 @@ describe("Reopening a database", function () {
     }
   }, 20000);
 
-  xit("passing slow, should have the same data on reopen after reopen and update", async function () {
+  itSkip("passing slow, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 200; i++) {
-      console.log("iteration", i);
-      console.time("db open");
+      // console.log("iteration", i);
+      // console.time("db open");
       const db = new Database("test-reopen", { autoCompact: 1000 }); // try with 10
-      assert(db._crdt.ready);
-      await db._crdt.ready;
-      console.timeEnd("db open");
+      // assert(db._crdt.ready);
+      await db._crdt.xready();
+      // console.timeEnd("db open");
       assert(db._crdt.blockstore.loader)
       equals(db._crdt.blockstore.loader.carLog.length, i + 1);
       // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-      console.time("db put");
+      // console.time("db put");
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
-      console.timeEnd("db put");
+      // console.timeEnd("db put");
       assert(ok);
       equals(db._crdt.blockstore.loader.carLog.length, i + 2);
-      console.time("db get");
+      // console.time("db get");
       const doc = await db.get<FireType>(`test${i}`);
-      console.timeEnd("db get");
+      // console.timeEnd("db get");
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
-  }, 20000);
+  }, 200000);
 });
 
 describe("Reopening a database with indexes", function () {
@@ -418,9 +426,10 @@ describe("Reopening a database with indexes", function () {
   let didMap: boolean
   let mapFn: MapFn<Doc>
   beforeEach(async function () {
+    await SysContainer.start()
     // erase the existing test data
-    await resetDirectory(dataDir, "test-reopen-idx");
-    await resetDirectory(dataDir, "test-reopen-idx.idx");
+    await resetDirectory(dataDir(), "test-reopen-idx");
+    await resetDirectory(dataDir(), "test-reopen-idx.idx");
 
     db = fireproof("test-reopen-idx");
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -512,8 +521,11 @@ describe("Reopening a database with indexes", function () {
 });
 
 describe("basic js verify", function () {
+  beforeAll(async function () {
+    await SysContainer.start()
+  });
   it("should include cids in arrays", async function () {
-    await resetDirectory(dataDir, "test-verify");
+    await resetDirectory(dataDir(), "test-verify");
     const db = fireproof("test-verify");
     const ok = await db.put({ _id: "test", foo: ["bar", "bam"] });
     equals(ok.id, "test");

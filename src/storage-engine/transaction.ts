@@ -126,7 +126,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
-    await this.ready;
+    await this.xready();
     if (!this.loader) throw new Error("loader required to get file");
     const reader = await this.loader.loadFileCar(car, isPublic);
     const block = await reader.get(cid as CID);
@@ -135,7 +135,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async compact() {
-    await this.ready;
+    await this.xready();
     if (!this.loader) throw new Error("loader required to compact");
     if (this.loader.carLog.length < 2) return;
     const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks));

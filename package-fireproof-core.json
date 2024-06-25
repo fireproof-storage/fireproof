@@ -1,0 +1,34 @@
+{
+  "name": "@fireproof/core",
+  "version": "0.18.0",
+  "description": "Live database for the web.",
+  "type": "module",
+  "module": "./index.js",
+  "main": "./index.cjs",
+  "browser": "./index.global.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs",
+      "script": "./index.global.js",
+      "types": "./index.d.ts"
+    }
+  },
+  "scripts": {},
+  "keywords": ["database", "JSON", "document", "IPLD", "CID", "IPFS"],
+  "contributors": ["J Chris Anderson", "Alan Shaw", "Travis Vachon", "Mikeal Rogers"],
+  "author": "J Chris Anderson",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://use-fireproof.com",
+  "gptdoc": "import { fireproof } from 'use-fireproof; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); useEffect(()=> db.subscribe(updateReactStateAsyncFn), []); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}

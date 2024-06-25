@@ -1,5 +1,14 @@
 import { UploadDataFnParams } from "./types.js";
-import type { AnyBlock, AnyLink, Connection, DbMeta, DownloadDataFnParams, DownloadMetaFnParams, FnParamTypes, UploadMetaFnParams } from "./types.js";
+import type {
+  AnyBlock,
+  AnyLink,
+  Connection,
+  DbMeta,
+  DownloadDataFnParams,
+  DownloadMetaFnParams,
+  FnParamTypes,
+  UploadMetaFnParams,
+} from "./types.js";
 import { type Loadable } from "./loader.js";
 import { DataStore, MetaStore } from "./store.js";
 import { RemoteWAL, WALState } from "./remote-wal.js";
@@ -8,7 +17,6 @@ import { format, parse, ToString } from "@ipld/dag-json";
 import { Falsy } from "../types.js";
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
-
 
 export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
   const { type, name, car } = params;
@@ -28,7 +36,6 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
     throw new Error("branch is required");
   }
 }
-
 
 // export function makeStores(storage: Connection, meta: Connection) {
 //   return {

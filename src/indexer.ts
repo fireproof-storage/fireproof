@@ -63,7 +63,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   indexHead?: ClockHead;
   includeDocsDefault = false;
   initError?: Error;
-  readonly ready: Promise<void>;
+
+  xready(): Promise<void> {
+    return this.blockstore.xready();
+  }
 
   constructor(crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.blockstore = crdt.indexBlockstore;
@@ -71,9 +74,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.applyMapFn(name, mapFn, meta);
     this.name = name;
     if (!(this.mapFnString || this.initError)) throw new Error("missing mapFnString");
-    this.ready = this.blockstore.ready.then(() => {
-      return;
-    });
+    // this.ready = this.blockstore.ready.then(() => {
+    //   return;
+    // });
     // .then((header: IdxCarHeader) => {
     //     // @ts-ignore
     //     if (header.head) throw new Error('cannot have head in idx header')
@@ -204,7 +207,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   async _updateIndex(): Promise<TransactionMeta> {
-    await this.ready;
+    await this.xready();
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw new Error("No map function defined");
     let result: DocUpdate<T>[], head: ClockHead;

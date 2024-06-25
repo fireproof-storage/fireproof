@@ -1,9 +1,8 @@
-import { join, dirname } from "node:path";
-import { mkdir, readFile, writeFile, unlink } from "node:fs/promises";
 import type { AnyBlock, AnyLink, DbMeta } from "../storage-engine/index.js";
 import { MetaStore, DataStore, RemoteWAL, WALState } from "../storage-engine/index.js";
 import type { Loadable } from "../storage-engine/index.js";
 import { format, parse, ToString } from "@ipld/dag-json";
+import { SysContainer } from "./sys-container.js";
 
 export class FileRemoteWAL extends RemoteWAL {
   constructor(dir: URL, loader: Loadable) {
@@ -11,12 +10,13 @@ export class FileRemoteWAL extends RemoteWAL {
   }
 
   filePathForBranch(branch: string): string {
-    return join(this.url.pathname, this.loader.name, "wal", branch + ".json");
+    return SysContainer.join(this.url.pathname, this.loader.name, "wal", branch + ".json");
   }
 
   async load(branch = "main"): Promise<WALState | null> {
+    await SysContainer.start();
     const filepath = this.filePathForBranch(branch);
-    const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
+    const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
       throw e;
     });
@@ -39,12 +39,13 @@ export class FileMetaStore extends MetaStore {
 
   filePathForBranch(branch: string): string {
     // console.log("filePathForBranch->", this.url.pathname, this.name, "meta", branch + ".json");
-    return join(this.url.pathname, this.name, "meta", branch + ".json");
+    return SysContainer.join(this.url.pathname, this.name, "meta", branch + ".json");
   }
 
   async load(branch = "main"): Promise<DbMeta[] | null> {
+    await SysContainer.start();
     const filepath = this.filePathForBranch(branch);
-    const bytes = await readFile(filepath).catch((e: Error & { code: string }) => {
+    const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
       throw e;
     });
@@ -74,22 +75,23 @@ export class FileDataStore extends DataStore {
   }
 
   private cidPath(cid: AnyLink) {
-    return join(this.url.pathname, this.name, "data", cid.toString() + ".car");
+    return SysContainer.join(this.url.pathname, this.name, "data", cid.toString() + ".car");
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
+    await SysContainer.start();
     const filepath = this.cidPath(cid);
-    const bytes = await readFile(filepath);
+    const bytes = await SysContainer.readfile(filepath);
     return { cid, bytes: new Uint8Array(bytes) };
   }
 
   async remove(cid: AnyLink): Promise<void> {
     const filepath = this.cidPath(cid);
-    await unlink(filepath);
+    await SysContainer.unlink(filepath);
   }
 }
 
 async function writePathFile(path: string, data: Uint8Array | string) {
-  await mkdir(dirname(path), { recursive: true });
-  return await writeFile(path, data);
+  await SysContainer.mkdir(SysContainer.dirname(path), { recursive: true });
+  return await SysContainer.writefile(path, data);
 }

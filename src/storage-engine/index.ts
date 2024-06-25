@@ -2,6 +2,8 @@ import { ConnectREST } from "./connect-rest.js";
 import {
   type AnyBlock,
   type AnyLink,
+  type AnyAnyLink,
+  type CarGroup,
   type UploadDataFnParams,
   type UploadMetaFnParams,
   type DownloadDataFnParams,
@@ -13,7 +15,8 @@ import {
   type StoreRuntime,
   type TransactionMeta,
   type BlobLike,
-  type Connection
+  type Connection,
+  type IndexTransactionMeta,
 } from "./types.js";
 
 export { STORAGE_VERSION } from "./store.js";
@@ -27,11 +30,14 @@ export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetch
 export { Loader, Loadable } from "./loader.js";
 export { DataStore, MetaStore } from "./store.js";
 export { RemoteWAL, type WALState } from "./remote-wal.js";
+export { parseCarFile } from "./loader-helpers.js";
 
 export {
   DbMeta,
   AnyBlock,
   AnyLink,
+  AnyAnyLink,
+  CarGroup,
   CryptoOpts,
   StoreOpts as StorexOpts,
   StoreRuntime,
@@ -42,5 +48,6 @@ export {
   DownloadMetaFnParams,
   TransactionMeta,
   BlobLike,
-  Connection
+  Connection,
+  IndexTransactionMeta,
 }; // from "./types";
