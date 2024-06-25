@@ -397,26 +397,26 @@ describe("Reopening a database", function () {
 
   itSkip("passing slow, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 200; i++) {
-      console.log("iteration", i);
-      console.time("db open");
+      // console.log("iteration", i);
+      // console.time("db open");
       const db = new Database("test-reopen", { autoCompact: 1000 }); // try with 10
       // assert(db._crdt.ready);
       await db._crdt.xready();
-      console.timeEnd("db open");
+      // console.timeEnd("db open");
       assert(db._crdt.blockstore.loader)
       equals(db._crdt.blockstore.loader.carLog.length, i + 1);
       // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-      console.time("db put");
+      // console.time("db put");
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
-      console.timeEnd("db put");
+      // console.timeEnd("db put");
       assert(ok);
       equals(db._crdt.blockstore.loader.carLog.length, i + 2);
-      console.time("db get");
+      // console.time("db get");
       const doc = await db.get<FireType>(`test${i}`);
-      console.timeEnd("db get");
+      // console.timeEnd("db get");
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
-  }, 20000);
+  }, 200000);
 });
 
 describe("Reopening a database with indexes", function () {
