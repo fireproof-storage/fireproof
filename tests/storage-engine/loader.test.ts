@@ -62,9 +62,7 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
     this.ready = Promise.resolve();
   }
   readonly ready: Promise<void>;
-  get loader(): Loader {
-    return new Loader("MyMemoryBlockStore", {});
-  }
+  loader: Loader = new Loader("MyMemoryBlockStore", {})
   readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;

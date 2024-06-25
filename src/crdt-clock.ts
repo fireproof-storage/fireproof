@@ -1,5 +1,5 @@
 import { clockChangesSince } from "./crdt-helpers.js";
-import type { EncryptedBlockstore, CarTransaction } from "./storage-engine/index.js";
+import type { BaseBlockstore, CarTransaction } from "./storage-engine/index.js";
 import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
 
 import { advance } from "@web3-storage/pail/clock";
