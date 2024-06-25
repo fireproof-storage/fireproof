@@ -7,7 +7,6 @@ import { MetaStore, DataStore, Loader, Loadable } from "@fireproof/core/storage-
 import { toStoreRuntime } from "@fireproof/core/storage-engine"
 import { AnyBlock, DbMeta, StoreRuntime } from "@fireproof/core/storage-engine";
 import { SysContainer, assert } from "@fireproof/core/runtime";
-import { a } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 const decoder = new TextDecoder("utf-8");
 
