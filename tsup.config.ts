@@ -1,6 +1,6 @@
-import { defineConfig, Options } from 'tsup';
-import resolve from "esbuild-plugin-resolve"
-import path from "path"
+import { defineConfig, Options } from "tsup";
+import resolve from "esbuild-plugin-resolve";
+import path from "path";
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
@@ -11,7 +11,7 @@ const LIBRARY_BUNDLE_OPTIONS: Options = {
   sourcemap: true,
   metafile: true,
   minify: false,
-}
+};
 
 const LIBRARY_BUNDLES: readonly Options[] = [
   {
@@ -28,13 +28,13 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:url": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "assert": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-      })
+      }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core'"
+      footer: "declare module '@fireproof/core'",
     },
   },
-/*
+  /*
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     name: "core/node",
@@ -66,9 +66,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     },
   },
 */
-]
+];
 
-export default defineConfig((options) => [
-  ...LIBRARY_BUNDLES,
-  ...(options.watch || [])
-]);
+export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);
