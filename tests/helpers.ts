@@ -11,13 +11,13 @@ export function sleep(ms: number) {
 }
 
 
-export function itSkip(value: string, fn: () => unknown) {
+export function itSkip(value: string, fn: () => unknown, options?: number) {
   if (typeof xit === "function") {
-    xit(value, fn);
+    xit(value, fn, options);
   }
-  const mit = (it as unknown as { skip: (value: string, fn: () => unknown) => unknown });
+  const mit = (it as unknown as { skip: (value: string, fn: () => unknown, options?: unknown) => unknown });
   if (mit && typeof mit.skip === "function") {
-    mit.skip(value, fn);
+    mit.skip(value, fn, options);
   }
   console.warn("itSkip of " + value);
 }
