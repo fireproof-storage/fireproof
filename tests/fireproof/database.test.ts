@@ -1,5 +1,6 @@
 import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js";
+import { SysContainer } from "../../src/runtime/sys-container.js";
 
 function testDatabase(): Database {
   return new Database();
@@ -7,7 +8,8 @@ function testDatabase(): Database {
 
 describe("basic Database", () => {
   let db: Database;
-  beforeEach(() => {
+  beforeEach(async () => {
+    await SysContainer.start();
     db = testDatabase();
   });
   it("should put", async () => {
@@ -37,6 +39,7 @@ describe("basic Database with record", function () {
   interface Doc { readonly value: string }
   let db: Database;
   beforeEach(async function () {
+    await SysContainer.start();
     db = testDatabase();
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     equals(ok.id, "hello");
@@ -81,7 +84,8 @@ describe("named Database with record", function () {
   interface Doc { readonly value: string }
   let db: Database;
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-db-name");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-db-name");
 
     db = new Database("test-db-name");
     /** @type {Doc} */
@@ -121,7 +125,7 @@ describe("named Database with record", function () {
     equals(rows.length, 1);
     const loader = db._crdt.blockstore.loader;
     assert(loader)
-    await loader.ready;
+    await loader.xready();
     equals(loader.key?.length, 64);
     equals(loader.keyId?.length, 64);
     notEquals(loader.key, loader.keyId);
@@ -202,7 +206,8 @@ describe("basic Database parallel writes / public", function () {
   let db: Database;
   const writes: Promise<DbResponse>[] = [];
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-parallel-writes");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-parallel-writes");
     db = new Database("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -262,7 +267,7 @@ describe("basic Database parallel writes / public", function () {
     assert(db._crdt.opts.public);
     const loader = db._crdt.blockstore.loader;
     assert(loader)
-    await loader.ready;
+    await loader.xready();
     equals(loader.key, undefined);
     equals(loader.keyId, undefined);
   });
@@ -273,10 +278,10 @@ describe("basic Database with subscription", function () {
   let didRun: number
   let unsubscribe: () => void
   let lastDoc: DocWithId<NonNullable<unknown>>;
-  beforeEach(function () {
+  beforeEach(async function () {
+    await SysContainer.start();
     db = testDatabase();
     didRun = 0;
-
     unsubscribe = db.subscribe((docs) => {
       lastDoc = docs[0];
       didRun++;
@@ -308,7 +313,8 @@ describe("basic Database with no update subscription", function () {
   let db: Database
   let didRun: number
   let unsubscribe: () => void
-  beforeEach(function () {
+  beforeEach(async function () {
+    await SysContainer.start();
     db = testDatabase();
     didRun = 0;
 
@@ -340,15 +346,17 @@ describe("database with files input", () => {
   const imagefiles: File[] = [];
   let result: DbResponse;
 
-  beforeAll(function () {
+  beforeAll(async function () {
+    await SysContainer.start();
     const directoryname = getDirectoryName("tests/fireproof/test-images");
-    const [jpg, png] = readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
+    const [jpg, png] = await readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
     imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: "image/jpeg" }));
     imagefiles.push(new File([new Blob([png])], `fireproof.png`, { type: "image/png" }));
   });
 
   beforeEach(async function () {
-    await resetDirectory(dataDir, "fireproof-with-images");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "fireproof-with-images");
     db = new Database("fireproof-with-images");
     const doc = {
       _id: "images-main",
@@ -358,7 +366,6 @@ describe("database with files input", () => {
         two: imagefiles[1],
       },
     };
-
     result = await db.put(doc);
   });
 

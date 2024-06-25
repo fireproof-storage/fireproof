@@ -1,16 +1,7 @@
 
-import assert from "assert";
-import { join, dirname } from "node:path";
-import { promises as fs, readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { SysContainer, assert } from "../../src/runtime/sys-container.js";
 
-import { dataDir as dataDirFn } from "../../src/runtime/data-dir.js";
-
-const dataDir = dataDirFn();
-
-export { dataDir };
-
-const { mkdir, readdir, rm, copyFile } = fs;
+export { dataDir } from "../../src/runtime/data-dir.js";
 
 export { assert };
 
@@ -44,43 +35,44 @@ export async function resetDirectory(dir: string, name: string) {
 }
 
 export async function doResetDirectory(dir: string, name: string) {
-  const path = join(dir, name);
-  await mkdir(path, { recursive: true });
+  const path = SysContainer.join(dir, name);
+  await SysContainer.mkdir(path, { recursive: true });
 
-  const files = await readdir(path);
+  const files = await SysContainer.readdir(path);
 
   for (const file of files) {
-    await rm(join(path, file), { recursive: true, force: true });
+    await SysContainer.rm(SysContainer.join(path, file), { recursive: true });
   }
 }
 
 // Function to copy a directory
 export async function copyDirectory(source: string, destination: string) {
   // Ensure the destination directory exists
-  await mkdir(destination, { recursive: true });
+  await SysContainer.mkdir(destination, { recursive: true });
 
   // Read the source directory
-  const entries = await readdir(source, { withFileTypes: true });
+  const entries = await SysContainer.readdirent(source, { withFileTypes: true });
 
   // Iterate through each entry in the directory
   for (const entry of entries) {
-    const sourcePath = join(source, entry.name);
-    const destinationPath = join(destination, entry.name);
+    const sourcePath = SysContainer.join(source, entry.name);
+    const destinationPath = SysContainer.join(destination, entry.name);
 
     if (entry.isDirectory()) {
       // If the entry is a directory, copy it recursively
       await copyDirectory(sourcePath, destinationPath);
     } else if (entry.isFile()) {
       // If the entry is a file, copy it
-      await copyFile(sourcePath, destinationPath);
+      await SysContainer.copyFile(sourcePath, destinationPath);
     }
   }
 }
 
+
 export function getDirectoryName(url: string) {
   let path: string;
   try {
-    path = fileURLToPath(url);
+    path = SysContainer.fileURLToPath(url);
   } catch (e) {
     path = url;
   }
@@ -90,17 +82,17 @@ export function getDirectoryName(url: string) {
       path = '../../' + path;
     }
   }
-  const dir_name = dirname(path);
+  const dir_name = SysContainer.dirname(path);
   return dir_name;
 }
 
-export function readImages(directory: string, imagedirectoryname: string, imagenames: string[]) {
+export async function readImages(directory: string, imagedirectoryname: string, imagenames: string[]) {
   const images: Buffer[] = [];
-  const imagesdirectorypath = join(directory, imagedirectoryname);
-  imagenames.forEach((image) => {
-    const data = readFileSync(join(imagesdirectorypath, image));
-    images.push(data);
-  });
-
+  const imagesdirectorypath = SysContainer.join(directory, imagedirectoryname);
+  for (const image of imagenames) {
+    const imagepath = SysContainer.join(imagesdirectorypath, image);
+    const imagebuffer = await SysContainer.readfile(imagepath);
+    images.push(imagebuffer);
+  }
   return images;
 }

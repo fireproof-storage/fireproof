@@ -22,7 +22,7 @@ export interface Connectable {
 }
 
 export abstract class ConnectionBase implements Connection {
-  readonly ready: Promise<unknown>;
+  // readonly ready: Promise<unknown>;
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   readonly eventBlocks = new MemoryBlockstore();
   parents: CarClockHead = [];
@@ -35,9 +35,9 @@ export abstract class ConnectionBase implements Connection {
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 
-  constructor() {
-    this.ready = Promise.resolve();
-  }
+  // constructor() {
+  //   this.ready = Promise.resolve();
+  // }
 
   async refresh() {
     await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
@@ -62,7 +62,7 @@ export abstract class ConnectionBase implements Connection {
       }
     });
     this.loader.remoteMetaStore = remote;
-    this.loaded = this.loader.ready.then(async () => {
+    this.loaded = this.loader.xready().then(async () => {
       remote.load("main").then(async () => {
         (await throwFalsy(this.loader).remoteWAL())._process();
       });

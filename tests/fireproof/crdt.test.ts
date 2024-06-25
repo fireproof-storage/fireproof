@@ -5,6 +5,8 @@ import { CRDTMeta, DocValue } from "../../src/types.js";
 import { Index, index } from "../../src/indexer.js";
 import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine/index.js";
 import { uuidv4 } from "uuidv7";
+import { SysContainer } from "../../src/runtime/sys-container.js";
+
 
 function testName(): string {
   return `test@${uuidv4()}`;
@@ -12,7 +14,8 @@ function testName(): string {
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
-  beforeEach(function () {
+  beforeEach(async function () {
+    await SysContainer.start();
     crdt = new CRDT(testName());
   });
   it("should have an empty head", async function () {
@@ -43,6 +46,7 @@ describe("CRDT with one record", function () {
   let crdt: CRDT<Partial<CRDTTestType>>;
   let firstPut: CRDTMeta;
   beforeEach(async function () {
+    await SysContainer.start();
     crdt = new CRDT(`test@${uuidv4()}`);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
   });
@@ -86,6 +90,7 @@ describe("CRDT with a multi-write", function () {
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
   beforeEach(async function () {
+    await SysContainer.start();
     crdt = new CRDT(testName());
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
@@ -145,6 +150,7 @@ describe("CRDT with two multi-writes", function () {
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
   beforeEach(async () => {
+    await SysContainer.start();
     crdt = new CRDT(testName());
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
@@ -187,7 +193,8 @@ describe("CRDT with two multi-writes", function () {
 describe("Compact a named CRDT with writes", function () {
   let crdt: CRDT<CRDTTestType>;
   beforeEach(async function () {
-    await resetDirectory(dataDir, "named-crdt-compaction");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "named-crdt-compaction");
     crdt = new CRDT("named-crdt-compaction");
     for (let i = 0; i < 10; i++) {
       const bulk = [
@@ -238,6 +245,7 @@ describe("CRDT with an index", function () {
   let crdt: CRDT<CRDTTestType>;
   let idx: Index<number, CRDTTestType>;
   beforeEach(async function () {
+    await SysContainer.start();
     crdt = new CRDT<CRDTTestType>(testName());
     await crdt.bulk([
       { id: "ace", value: { points: 11 } },
@@ -280,7 +288,8 @@ describe("Loader with a committed transaction", function () {
   let done: TransactionMeta;
   const dbname = "test-loader";
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-loader");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
@@ -319,7 +328,8 @@ describe("Loader with two committed transactions", function () {
   let done2: TransactionMeta
   const dbname = "test-loader";
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-loader");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
@@ -363,7 +373,8 @@ describe("Loader with many committed transactions", function () {
   const dbname = "test-loader";
   const count = 10;
   beforeEach(async function () {
-    await resetDirectory(dataDir, "test-loader");
+    await SysContainer.start();
+    await resetDirectory(dataDir(), "test-loader");
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;

@@ -13,7 +13,7 @@ import {
   type StoreRuntime,
   type TransactionMeta,
   type BlobLike,
-  type Connection
+  type Connection,
 } from "./types.js";
 
 export { STORAGE_VERSION } from "./store.js";
@@ -41,5 +41,5 @@ export {
   DownloadMetaFnParams,
   TransactionMeta,
   BlobLike,
-  Connection
+  Connection,
 }; // from "./types";
