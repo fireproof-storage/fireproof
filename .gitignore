@@ -16,3 +16,6 @@ logs
 *.log
 *.tgz
 *.zip
+
+smoke/package.json
+smoke/pnpm-lock.yaml

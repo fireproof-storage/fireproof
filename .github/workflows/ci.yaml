@@ -24,5 +24,7 @@ jobs:
         run: pnpm run lint
       - name: build
         run: pnpm run build
+      - name: smoke
+        run: pnpm run smoke
       - name: test
         run: pnpm run test

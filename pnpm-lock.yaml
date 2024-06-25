@@ -29,9 +29,6 @@ importers:
       '@peculiar/webcrypto':
         specifier: ^1.5.0
         version: 1.5.0
-      '@types/randombytes':
-        specifier: ^2.0.3
-        version: 2.0.3
       '@ucanto/interface':
         specifier: ^10.0.1
         version: 10.0.1
@@ -53,24 +50,12 @@ importers:
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
-      esbuild:
-        specifier: ^0.21.5
-        version: 0.21.5
-      glob:
-        specifier: ^10.4.2
-        version: 10.4.2
       idb:
         specifier: ^8.0.0
         version: 8.0.0
       ipfs-unixfs-exporter:
         specifier: ^13.5.0
         version: 13.5.0
-      jasmine-browser-runner:
-        specifier: ^2.5.0
-        version: 2.5.0(jasmine-core@5.1.2)
-      jasmine-core:
-        specifier: ^5.1.2
-        version: 5.1.2
       js-base64:
         specifier: ^3.7.7
         version: 3.7.7
@@ -108,15 +93,33 @@ importers:
       '@types/node':
         specifier: ^20.14.6
         version: 20.14.8
+      '@types/randombytes':
+        specifier: ^2.0.3
+        version: 2.0.3
       c8:
         specifier: ^7.12.0
         version: 7.14.0
+      esbuild:
+        specifier: ^0.21.5
+        version: 0.21.5
+      esbuild-plugin-resolve:
+        specifier: ^2.0.0
+        version: 2.0.0
       eslint:
         specifier: ^9.5.0
         version: 9.5.0
+      glob:
+        specifier: ^10.4.2
+        version: 10.4.2
       jasmine:
         specifier: ^5.1.0
         version: 5.1.0
+      jasmine-browser-runner:
+        specifier: ^2.5.0
+        version: 2.5.0(jasmine-core@5.1.2)
+      jasmine-core:
+        specifier: ^5.1.2
+        version: 5.1.2
       prettier:
         specifier: ^3.3.2
         version: 3.3.2
