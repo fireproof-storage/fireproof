@@ -12,8 +12,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm run build:cjs; pnpm run build:esm; pnpm run build:esm-bundle",
-    "build:xpubdir": "tsup --out-dir dist/pubdir src/index.ts --sourcemap --format esm --dts --clean --external node:fs --external assert --external node:path --external node:os",
+    "build": "pnpm run build:cjs && pnpm run build:pubdir",
     "build:pubdir": "tsup",
     "pubdir": "rm -rf dist/pubdir; pnpm run build:pubdir; cp -pr ./.gitignore ./README.md ./LICENSE.md dist/pubdir/; cp package-fireproof-core.json dist/pubdir/package.json",
     "presmoke": "pnpm run pubdir ; cd dist/pubdir ; pnpm pack",
@@ -52,6 +51,7 @@
     "@types/jasmine": "^5.1.4",
     "@types/node": "^20.14.6",
     "@types/randombytes": "^2.0.3",
+    "@types/react": "^18.3.3",
     "c8": "^7.12.0",
     "esbuild": "^0.21.5",
     "esbuild-plugin-resolve": "^2.0.0",
@@ -82,6 +82,7 @@
     "@ipld/unixfs": "^3.0.0",
     "@netlify/blobs": "^7.3.0",
     "@peculiar/webcrypto": "^1.5.0",
+    "@testing-library/react": "^16.0.0",
     "@ucanto/interface": "^10.0.1",
     "@web3-storage/clock": "^0.4.1",
     "@web3-storage/pail": "^0.6.0",
@@ -98,7 +99,9 @@
     "partysocket": "^1.0.1",
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
+    "react": "^18.3.1",
     "std-env": "^3.7.0",
-    "uuidv7": "^1.0.0"
+    "uuidv7": "^1.0.0",
+    "vitest": "^1.6.0"
   }
 }

@@ -1,7 +1,7 @@
 
-import { SysContainer, assert } from "../../src/runtime/sys-container.js";
+import { SysContainer, assert } from "@fireproof/core/runtime";
 
-export { dataDir } from "../../src/runtime/data-dir.js";
+export { dataDir } from "@fireproof/core/runtime";
 
 export { assert };
 

@@ -1,6 +1,6 @@
-import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "./helpers.js";
-import { Database, DbResponse, DocFileMeta, DocWithId } from "../../src/index.js";
-import { SysContainer } from "../../src/runtime/sys-container.js";
+import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "../helpers.js";
+import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
+import { SysContainer } from "@fireproof/core/runtime";
 
 function testDatabase(): Database {
   return new Database();

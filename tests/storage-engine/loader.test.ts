@@ -1,19 +1,19 @@
 import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
+import { BlockView } from "multiformats";
 import { encode } from "multiformats/block";
 import { CID } from "multiformats/cid";
 
-import { assert, matches, equals, resetDirectory, dataDir } from "../fireproof/helpers.js";
-
-import { parseCarFile } from "../../src/storage-engine/loader-helpers.js";
-
-import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "../../src/storage-engine/index.js";
-
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
-import { BlockView } from "multiformats";
-import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "../../src/storage-engine/types.js";
-import { SysContainer } from "../../src/runtime/sys-container.js";
+import { assert, matches, equals, resetDirectory, dataDir } from "../helpers.js";
+
+import { parseCarFile } from "@fireproof/core/storage-engine";
+
+import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "@fireproof/core/storage-engine";
+
+import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "@fireproof/core/storage-engine";
+import { SysContainer } from "@fireproof/core/runtime"
 
 describe("basic Loader", function () {
   let loader: Loader;

@@ -1,7 +1,7 @@
 
-import { assert, equals, resetDirectory, dataDir } from "./helpers.js";
-import { fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "../../src/index.js";
-import { SysContainer } from "../../src/runtime/sys-container.js";
+import { assert, equals, resetDirectory, dataDir } from "../helpers.js";
+import { fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
+import { SysContainer } from "@fireproof/core/runtime";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {

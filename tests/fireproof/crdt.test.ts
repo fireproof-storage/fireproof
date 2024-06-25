@@ -1,15 +1,18 @@
-import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "./helpers.js";
-import { CRDT } from "../../src/crdt.js";
-import { parseCarFile } from "../../src/storage-engine/loader-helpers.js";
-import { CRDTMeta, DocValue } from "../../src/types.js";
-import { Index, index } from "../../src/indexer.js";
-import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "../../src/storage-engine/index.js";
+import { assert, equals, matches, notEquals, resetDirectory, dataDir } from "../helpers.js";
+
 import { uuidv4 } from "uuidv7";
-import { SysContainer } from "../../src/runtime/sys-container.js";
+
+import { CRDT } from "@fireproof/core";
+import { parseCarFile } from "@fireproof/core/storage-engine";
+import { CRDTMeta, DocValue } from "@fireproof/core";
+import { Index, index } from "@fireproof/core";
+import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "@fireproof/core/storage-engine";
+import { SysContainer } from "@fireproof/core/runtime";
 
 
-function testName(): string {
-  return `test@${uuidv4()}`;
+function testName(): string | undefined {
+  return undefined
+  // return `test@${uuidv4()}`;
 }
 
 describe("Fresh crdt", function () {
