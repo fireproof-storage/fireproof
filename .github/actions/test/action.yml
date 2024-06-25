@@ -30,11 +30,3 @@ runs:
       shell: pnpm run test
 
 
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - uses: denoland/setup-deno@v1
-        with:
-          deno-version: v1.x
-
