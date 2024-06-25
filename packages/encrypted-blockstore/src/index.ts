@@ -1,4 +1,5 @@
 import { ConnectREST } from './connect-rest'
+import { ConnectBench } from './connect-bench'
 import { Connection, CarClockHead, Connectable, DbMetaEventBlock } from './connection'
 export { makeStores } from './store-remote'
 import { AnyLink } from './types'
@@ -54,7 +55,7 @@ export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnPa
   }
 }
 
-export { Connection, ConnectREST, CarClockHead, Connectable, DbMetaEventBlock }
+export { Connection, ConnectREST, ConnectBench, CarClockHead, Connectable, DbMetaEventBlock }
 
 export { EncryptedBlockstore, CompactionFetcher, BlockFetcher, CarTransaction, TransactionMeta } from './transaction'
 export { Loader, Loadable } from './loader'

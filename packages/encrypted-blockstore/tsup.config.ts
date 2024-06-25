@@ -5,7 +5,7 @@ const CORE_OPTIONS: Options = {
   outDir: "dist/lib",
   format: ["esm", "cjs", "iife"],
   target: ["esnext", "node18"],
-  globalName: "Fireproof",
+  globalName: "FireproofEB",
   sourcemap: true,
   metafile: true,
   minify: false,
