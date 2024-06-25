@@ -3,6 +3,7 @@ import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike } fr
 import * as stdEnv from "std-env";
 import { throwFalsy } from "../types.js";
 import { uuidv4 } from "uuidv7";
+import { ResolveOnce } from "../storage-engine/resolve-once.js";
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
@@ -27,6 +28,8 @@ export interface NodeMap {
 export function assert(condition: unknown, message?: string | Error): asserts condition {
   SysContainer.freight?.assert(condition, message);
 }
+
+const onceStart = new ResolveOnce<void>();
 
 class sysContainer {
   freight: NodeMap = {
@@ -64,19 +67,23 @@ class sysContainer {
   readonly id = uuidv4();
 
   async start(): Promise<void> {
-    switch (this.freight.state) {
-      case "seeded":
-        if (stdEnv.isNode) {
-          const { createNodeSysContainer } = await import("./node-sys-container.js");
-          this.freight = await createNodeSysContainer();
-        } else {
-          this.freight.state = "browser";
-        }
-        return;
-      case "browser":
-      case "node":
-        return;
-    }
+    await onceStart.once(async () => {
+      switch (this.freight.state) {
+        case "seeded":
+          if (stdEnv.isNode) {
+            const { createNodeSysContainer } = await import("./node-sys-container.js");
+            console.log("use NodeSysContainer");
+            this.freight = await createNodeSysContainer();
+          } else {
+            console.log("use BrowserSysContainer");
+            this.freight.state = "browser";
+          }
+          return;
+        case "browser":
+        case "node":
+          return;
+      }
+    });
   }
 
   async readdir(

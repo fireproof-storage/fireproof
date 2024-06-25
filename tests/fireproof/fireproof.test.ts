@@ -1,9 +1,10 @@
-import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "./helpers.js";
+import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep } from "../helpers.js";
+
 import { CID } from "multiformats/cid";
 
-import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "../../src/index.js";
-import { AnyLink } from "../../src/storage-engine/index.js";
-import { SysContainer } from "../../src/runtime/sys-container.js";
+import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
+import { AnyLink } from "@fireproof/core/storage-engine";
+import { SysContainer } from "@fireproof/core/runtime";
 
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {

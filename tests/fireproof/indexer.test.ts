@@ -1,6 +1,7 @@
-import { Index, index, Database, CRDT, IndexRows } from "../../src/index.js";
-import { SysContainer } from "../../src/runtime/sys-container.js";
-import { assert, equals, resetDirectory, equalsJSON, dataDir } from "./helpers.js";
+import { assert, equals, resetDirectory, equalsJSON, dataDir } from "../helpers.js";
+
+import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
+import { SysContainer } from "@fireproof/core/runtime";
 
 interface TestType {
   readonly title: string;
