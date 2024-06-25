@@ -4,7 +4,7 @@ import * as stdEnv from "std-env";
 import { throwFalsy } from "../types.js";
 import { uuidv4 } from "uuidv7";
 
-interface nodeMap {
+export interface NodeMap {
   state: "seeded" | "browser" | "node";
   join: (...args: string[]) => string;
   dirname: (path: string) => string;
@@ -29,7 +29,7 @@ export function assert(condition: unknown, message?: string | Error): asserts co
 }
 
 class sysContainer {
-  freight: nodeMap = {
+  freight: NodeMap = {
     state: "seeded",
     join: (...paths: string[]) => paths.join("/").replace(/\/\/+/g, "/"),
     dirname: (path: string) => path.split("/").slice(0, -1).join("/"),
@@ -67,21 +67,10 @@ class sysContainer {
     switch (this.freight.state) {
       case "seeded":
         if (stdEnv.isNode) {
-          this.freight = {
-            state: "node",
-            ...(await import("node:path")),
-            ...(await import("node:os")),
-            ...(await import("node:url")),
-            ...(await import("node:fs")).promises,
-            readdir: (await import("node:fs")).promises.readdir as nodeMap["readdir"],
-            readfile: (await import("node:fs")).promises.readFile as nodeMap["readfile"],
-            writefile: (await import("node:fs")).promises.writeFile as nodeMap["writefile"],
-            assert: (await import("assert")).default,
-          };
-          console.log("SysContainer is node", this.freight.homedir());
+          const { createNodeSysContainer } = await import("./node-sys-container.js");
+          this.freight = await createNodeSysContainer();
         } else {
           this.freight.state = "browser";
-          console.log("SysContainer is browser");
         }
         return;
       case "browser":
