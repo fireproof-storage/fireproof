@@ -1,6 +1,5 @@
 import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
-import path from "path";
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
