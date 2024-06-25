@@ -15,10 +15,10 @@ const LIBRARY_BUNDLE_OPTIONS: Options = {
 const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    name: "core/browser",
+    name: "core",
     entry: ["src/index.ts"],
     platform: "browser",
-    outDir: "dist/pubdir",
+    outDir: "dist/fireproof-core",
     esbuildPlugins: [
       resolve({
         // "./node-sys-container.js": path.join(__dirname, './src/runtime/memory-sys-container.js'),
@@ -31,6 +31,27 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ],
     dts: {
       footer: "declare module '@fireproof/core'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    name: "use-fireproof",
+    entry: ["src/react/index.ts"],
+    platform: "browser",
+    outDir: "dist/use-fireproof",
+    external: ["@fireproof/core", "react"],
+    esbuildPlugins: [
+      resolve({
+        // "./node-sys-container.js": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        // "node:url": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        // "assert": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+      }),
+    ],
+    dts: {
+      footer: "declare module 'use-fireproof'",
     },
   },
   /*
