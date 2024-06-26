@@ -3,7 +3,7 @@ import { assert, equals, notEquals, equalsJSON, resetDirectory, dataDir, sleep, 
 import { CID } from "multiformats/cid";
 
 import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
-import { AnyLink } from "@fireproof/core/storage-engine";
+import { AnyLink, EncryptedBlockstore } from "@fireproof/core/storage-engine";
 import { SysContainer } from "@fireproof/core/runtime";
 
 
@@ -167,8 +167,10 @@ describe("benchmarking with compaction", function () {
           }),
         );
       }
-      assert(db._crdt.blockstore.loader)
-      const label = `write ${i} log ${db._crdt.blockstore.loader.carLog.length}`;
+      const blocks = db._crdt.blockstore as EncryptedBlockstore
+      const loader = blocks.loader;
+      assert(loader)
+      const label = `write ${i} log ${loader.carLog.length}`;
       console.time(label);
       db.put({
         data: Math.random(),
@@ -273,9 +275,11 @@ describe("benchmarking a database", function () {
     await db.put({ _id: "compacted-test", foo: "bar" });
 
     // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-    assert(db._crdt.blockstore.loader)
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader)
 
-    equals(db._crdt.blockstore.loader.carLog.length, 2);
+    equals(loader.carLog.length, 2);
 
     // console.time('allDocs new DB') // takes forever on 5k
     // const allDocsResult = await newDb.allDocs()
@@ -375,9 +379,11 @@ describe("Reopening a database", function () {
   it("should have carlog after reopen", async function () {
     const db2 = new Database("test-reopen");
     await db2._crdt.xready();
-    assert(db2._crdt.blockstore.loader);
-    assert(db2._crdt.blockstore.loader.carLog);
-    equals(db2._crdt.blockstore.loader.carLog.length, 1);
+    const blocks = db2._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader);
+    assert(loader.carLog);
+    equals(loader.carLog.length, 1);
   });
 
   it("faster, should have the same data on reopen after reopen and update", async function () {
@@ -531,8 +537,10 @@ describe("basic js verify", function () {
     equals(ok.id, "test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
     equals(ok2.id, "test2");
-    assert(db._crdt.blockstore.loader);
-    const cid = db._crdt.blockstore.loader.carLog[0][0];
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader);
+    const cid = loader.carLog[0][0];
     const cid2 = db._crdt.clock.head[0];
     notEquals(cid, cid2);
     assert(cid !== cid2);

@@ -13,7 +13,7 @@ import {
   type IndexUpdateString,
   throwFalsy,
 } from "./types.js";
-import { EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
+import { BaseBlockstore, EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
 import {
   bulkIndex,
   indexEntriesForChanges,
@@ -53,7 +53,7 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
 // }
 
 export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
-  readonly blockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
   readonly crdt: CRDT<T>;
   name: string;
   mapFn?: MapFn<T>;

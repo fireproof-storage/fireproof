@@ -98,6 +98,7 @@ export class CRDTClock<T extends DocTypes> {
         }
         return { head };
       },
+      // @ts-expect-error - need to make a type for transaction return vs its inner function return
       { noLoader },
     );
     this.setHead(head);

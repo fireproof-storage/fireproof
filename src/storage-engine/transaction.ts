@@ -54,11 +54,13 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
-  ready: Promise<void>;
+  // ready: Promise<void>;
+  xready(): Promise<void> {
+    return Promise.resolve();
+  }
 
   constructor(ebOpts: BlockstoreOpts = {}) {
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
-    this.ready = Promise.resolve();
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -72,19 +74,31 @@ export class BaseBlockstore implements BlockFetcher {
 
   lastTxMeta?: unknown; // TransactionMeta
 
-  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
+  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>): Promise<M> {
     const t = new CarTransaction(this);
     const done: M = await fn(t);
     this.lastTxMeta = done;
-    // done.t = t;
-    return done;
+    return { t, ...done };
+  }
+
+  async *entries(): AsyncIterableIterator<AnyBlock> {
+    const seen = new Set<string>();
+    for (const t of this.transactions) {
+      for await (const blk of t.entries()) {
+        if (seen.has(blk.cid.toString())) continue;
+        seen.add(blk.cid.toString());
+        yield blk;
+      }
+    }
   }
 }
 
 export class EncryptedBlockstore extends BaseBlockstore {
   readonly name: string;
   readonly loader: Loader;
-
+  xready(): Promise<void> {
+    return this.loader.xready();
+  }
   compacting = false;
 
   constructor(ebOpts: BlockstoreOpts) {
@@ -95,7 +109,6 @@ export class EncryptedBlockstore extends BaseBlockstore {
     }
     this.name = name;
     this.loader = new Loader(this.name, this.ebOpts);
-    this.ready = this.loader.ready;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -113,13 +126,15 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
-    const done: M = await super.transaction<M>(fn, opts);
+    // @ts-expect-error - need to make a type for transaction return vs its inner function return
+    const { t, ...done }: M = await super.transaction<M>(fn, opts);
     const cars = await this.loader.commit(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
     if (cars) {
       this.transactions.delete(t);
+      // @ts-expect-error - need to make a type for transaction return vs its inner function return
       return { ...done, cars };
     }
     throw new Error("failed to commit car files");
@@ -170,21 +185,11 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
-    const seen = new Set<string>();
-    if (this.loader) {
-      for await (const blk of this.loader.entries()) {
-        // if (seen.has(blk.cid.toString())) continue
-        // seen.add(blk.cid.toString())
-        yield blk;
-      }
-    } else {
-      for (const t of this.transactions) {
-        for await (const blk of t.entries()) {
-          if (seen.has(blk.cid.toString())) continue;
-          seen.add(blk.cid.toString());
-          yield blk;
-        }
-      }
+    // const seen = new Set<string>();
+    for await (const blk of this.loader.entries()) {
+      // if (seen.has(blk.cid.toString())) continue
+      // seen.add(blk.cid.toString())
+      yield blk;
     }
   }
 }

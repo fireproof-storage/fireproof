@@ -294,7 +294,7 @@ describe("Loader with a committed transaction", function () {
     await SysContainer.start();
     await resetDirectory(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
-    blockstore = crdt.blockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     done = await crdt.bulk([{ id: "foo", value: { foo: "bar" } }]);
@@ -334,7 +334,7 @@ describe("Loader with two committed transactions", function () {
     await SysContainer.start();
     await resetDirectory(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
-    blockstore = crdt.blockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     done1 = await crdt.bulk([{ id: "apple", value: { foo: "bar" } }]);
@@ -380,7 +380,7 @@ describe("Loader with many committed transactions", function () {
     await resetDirectory(dataDir(), "test-loader");
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname);
-    blockstore = crdt.blockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     dones = [];
