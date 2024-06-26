@@ -55,9 +55,8 @@ export class CRDT<T extends DocTypes> {
     this.blockstore = new blockstoreType({
       name: name,
       applyMeta: async (meta: TransactionMeta) => {
-        // console.log("applyMeta db", meta);
-        const crdtMeta = meta as unknown as CRDTMeta;
-        if (!crdtMeta.head) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
+        const crdtMeta = meta as CRDTMeta;
+        if (!crdtMeta.head) throw new Error("missing head");
         await this.clock.applyHead(crdtMeta.head, []);
       },
       compact: async (blocks: CompactionFetcher) => {
@@ -76,9 +75,8 @@ export class CRDT<T extends DocTypes> {
     this.indexBlockstore = new indexBlockstoreType({
       name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
       applyMeta: async (meta: TransactionMeta) => {
-        // console.log("applyMeta idx", meta);
         const idxCarMeta = meta as IdxMetaMap;
-        if (!idxCarMeta.indexes) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
+        if (!idxCarMeta.indexes) throw new Error("missing indexes");
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
           index({ _crdt: this }, name, undefined, idx);
         }
