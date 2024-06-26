@@ -88,7 +88,11 @@ export class BaseBlockstore implements BlockFetcher {
 
   lastTxMeta?: unknown; // TransactionMeta
 
-  async transaction<M extends TransactionMeta>(fn: (t: CarTransaction) => Promise<M>): Promise<TransactionWrapper<M>> {
+  async transaction<M extends TransactionMeta>(
+    fn: (t: CarTransaction) => Promise<M>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _opts = {},
+  ): Promise<TransactionWrapper<M>> {
     const t = new CarTransaction(this);
     const done: M = await fn(t);
     this.lastTxMeta = done;

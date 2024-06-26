@@ -1,6 +1,6 @@
 import { clockChangesSince } from "./crdt-helpers.js";
 import type { BaseBlockstore, CarTransaction } from "./storage-engine/index.js";
-import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
+import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } from "./types.js";
 
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
@@ -81,27 +81,26 @@ export class CRDTClock<T extends DocTypes> {
       this.setHead(newHead);
       return;
     }
-    let head = this.head;
+
     const noLoader = !localUpdates;
     // const noLoader = this.head.length === 1 && !updates?.length
     if (!this.blockstore) throw new Error("missing blockstore");
     await validateBlocks(newHead, this.blockstore);
-    await this.blockstore.transaction(
+    const { meta } = await this.blockstore.transaction<CRDTMeta>(
       async (tblocks: CarTransaction) => {
-        head = await advanceBlocks(newHead, tblocks, head);
-        const result = await root(tblocks, head);
+        const advancedHead = await advanceBlocks(newHead, tblocks, this.head);
+        const result = await root(tblocks, advancedHead);
         for (const { cid, bytes } of [
           ...result.additions,
           // ...result.removals
         ]) {
           tblocks.putSync(cid, bytes);
         }
-        return { head };
+        return { head: advancedHead };
       },
-      // @ts-expect-error - need to make a type for transaction return vs its inner function return
       { noLoader },
     );
-    this.setHead(head);
+    this.setHead(meta.head);
   }
 }
 
