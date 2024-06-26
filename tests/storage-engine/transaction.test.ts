@@ -87,7 +87,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     cid2 = CID.parse("bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm");
 
-    blocks = new Blockstore({});
+    blocks = new Blockstore({name : "test"});
     await blocks.transaction(async (tblocks) => {
       await tblocks.put(cid, asUInt8Array("value"));
       await tblocks.put(cid2, asUInt8Array("value2"));
