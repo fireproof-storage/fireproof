@@ -3,6 +3,7 @@ import { DataStore, MetaStore } from "./store.js";
 import { RemoteWAL } from "./remote-wal.js";
 import type { Loadable } from "./loader.js";
 import { CRDTMeta, DocFileMeta, Falsy } from "../types.js";
+import { CarTransaction } from "./transaction.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -92,6 +93,13 @@ export type TransactionMeta = CRDTMeta & {
 // export type TransactionMeta = {
 //   readonly head: ClockHead;
 // };
+
+export interface TransactionMetaWrapper {
+  done: TransactionMeta;
+  cars: CarGroup;
+  t: CarTransaction;
+}
+
 
 export type MetaType = TransactionMeta | IndexTransactionMeta;
 

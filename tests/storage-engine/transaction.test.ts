@@ -1,19 +1,21 @@
 import { CID } from "multiformats";
 
 import { assert, equals, matches, equalsJSON } from "../helpers.js";
-import { EncryptedBlockstore as Blockstore, CarTransaction } from "@fireproof/core/storage-engine";
+import { EncryptedBlockstore, BaseBlockstore, CarTransaction } from "@fireproof/core/storage-engine";
 
 import { AnyAnyLink, AnyBlock, AnyLink } from "@fireproof/core/storage-engine";
 
 describe("Fresh TransactionBlockstore", function () {
-  let blocks: Blockstore;
+  let blocks: BaseBlockstore;
   beforeEach(function () {
-    blocks = new Blockstore({});
+    blocks = new BaseBlockstore();
   });
   it("should not have a name", function () {
+    // @ts-expect-error - name is not set on BaseBlockstore
     assert(!blocks.name);
   });
   it("should not have a loader", function () {
+    // @ts-expect-error - loader is not set on BaseBlockstore
     assert(!blocks.loader);
   });
   it("should not put", async function () {
@@ -28,14 +30,16 @@ describe("Fresh TransactionBlockstore", function () {
       return { head: [] };
     });
     assert(txR);
+    // @ts-expect-error - delete txR
+    delete txR.t;
     equalsJSON(txR, { head: [] });
   });
 });
 
 describe("TransactionBlockstore with name", function () {
-  let blocks: Blockstore
+  let blocks: EncryptedBlockstore
   beforeEach(function () {
-    blocks = new Blockstore({ name: "test" });
+    blocks = new EncryptedBlockstore({ name: "test" });
   });
   it("should have a name", function () {
     equals(blocks.name, "test");
@@ -56,9 +60,9 @@ describe("TransactionBlockstore with name", function () {
 
 describe("A transaction", function () {
   let tblocks: CarTransaction
-  let blocks: Blockstore;
+  let blocks: EncryptedBlockstore;
   beforeEach(async function () {
-    blocks = new Blockstore({});
+    blocks = new EncryptedBlockstore({name: "test"});
     tblocks = new CarTransaction(blocks);
     blocks.transactions.add(tblocks);
   });
@@ -79,7 +83,7 @@ function asUInt8Array(str: string) {
 }
 
 describe("TransactionBlockstore with a completed transaction", function () {
-  let blocks: Blockstore
+  let blocks: BaseBlockstore
   let cid: CID
   let cid2: CID
 
@@ -87,7 +91,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     cid2 = CID.parse("bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm");
 
-    blocks = new Blockstore({name : "test"});
+    blocks = new BaseBlockstore();
     await blocks.transaction(async (tblocks) => {
       await tblocks.put(cid, asUInt8Array("value"));
       await tblocks.put(cid2, asUInt8Array("value2"));
