@@ -61,6 +61,16 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
   };
 }
 
+const blockstoreFactory = function (opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
+  if (opts.name) {
+    return new EncryptedBlockstore(opts);
+  } else {
+    return new BaseBlockstore(opts);
+  }
+};
+
+export { blockstoreFactory };
+
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;

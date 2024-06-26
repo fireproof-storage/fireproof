@@ -31,6 +31,7 @@ import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { Block } from "multiformats";
 import { ResolveOnce } from "./storage-engine/resolve-once.js";
+import { blockstoreFactory } from "./storage-engine/transaction.js";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
@@ -51,8 +52,7 @@ export class CRDT<T extends DocTypes> {
   constructor(name?: string, opts: ConfigOpts = {}) {
     this.name = name;
     this.opts = opts;
-    const blockstoreType = name ? EncryptedBlockstore : BaseBlockstore;
-    this.blockstore = new blockstoreType({
+    this.blockstore = blockstoreFactory({
       name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
@@ -70,10 +70,8 @@ export class CRDT<T extends DocTypes> {
       meta: this.opts.meta,
       threshold: this.opts.threshold,
     });
-    this.clock = new CRDTClock<T>(this.blockstore);
-    const indexBlockstoreType = this.opts.indexStore && name ? EncryptedBlockstore : BaseBlockstore;
-    this.indexBlockstore = new indexBlockstoreType({
-      name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
+    this.indexBlockstore = blockstoreFactory({
+      name: this.opts.indexStore && name ? name + ".idx" : undefined,
       applyMeta: async (meta: TransactionMeta) => {
         const idxCarMeta = meta as IdxMetaMap;
         if (!idxCarMeta.indexes) throw new Error("missing indexes");
@@ -85,7 +83,7 @@ export class CRDT<T extends DocTypes> {
       store: this.opts.indexStore,
       public: this.opts.public,
     });
-
+    this.clock = new CRDTClock<T>(this.blockstore);
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
