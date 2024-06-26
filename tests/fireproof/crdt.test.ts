@@ -288,7 +288,7 @@ describe("Loader with a committed transaction", function () {
   let loader: Loader;
   let blockstore: EncryptedBlockstore;
   let crdt: CRDT<CRDTTestType>;
-  let done: TransactionMeta;
+  let done: CRDTMeta;
   const dbname = "test-loader";
   beforeEach(async function () {
     await SysContainer.start();
@@ -312,7 +312,7 @@ describe("Loader with a committed transaction", function () {
     assert(blk);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);
@@ -327,8 +327,8 @@ describe("Loader with two committed transactions", function () {
   let loader: Loader
   let crdt: CRDT<CRDTTestType>;
   let blockstore: EncryptedBlockstore;
-  let done1: TransactionMeta
-  let done2: TransactionMeta
+  let done1: CRDTMeta
+  let done2: CRDTMeta
   const dbname = "test-loader";
   beforeEach(async function () {
     await SysContainer.start();
@@ -359,7 +359,7 @@ describe("Loader with two committed transactions", function () {
     assert(blk);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 1);
     assert(parsed.meta);
@@ -372,7 +372,7 @@ describe("Loader with many committed transactions", function () {
   let loader: Loader
   let blockstore: EncryptedBlockstore
   let crdt: CRDT<Doc>
-  let dones: TransactionMeta[]
+  let dones: CRDTMeta[]
   const dbname = "test-loader";
   const count = 10;
   beforeEach(async function () {
@@ -402,7 +402,7 @@ describe("Loader with many committed transactions", function () {
     // assert(dones[5].cars);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 7);
     assert(parsed.meta);

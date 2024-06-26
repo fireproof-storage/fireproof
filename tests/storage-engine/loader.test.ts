@@ -12,8 +12,9 @@ import { parseCarFile } from "@fireproof/core/storage-engine";
 
 import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "@fireproof/core/storage-engine";
 
-import { AnyAnyLink, AnyLink, CarGroup, IndexTransactionMeta, TransactionMeta } from "@fireproof/core/storage-engine";
+import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "@fireproof/core/storage-engine";
 import { SysContainer } from "@fireproof/core/runtime"
+import { CRDTMeta, IndexTransactionMeta } from "use-fireproof";
 
 describe("basic Loader", function () {
   let loader: Loader;
@@ -42,7 +43,7 @@ describe("basic Loader", function () {
     equals(loader.carLog.length, 1);
     const reader = await loader.loadCar(carGroup[0]);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);
@@ -149,7 +150,7 @@ describe("basic Loader with two commits", function () {
   it("should commit", async function () {
     const reader = await loader.loadCar(carCid[0]);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.compact.length, 0);
     equals(parsed.cars.length, 1);
@@ -163,7 +164,7 @@ describe("basic Loader with two commits", function () {
 
     const reader = await loader.loadCar(compactCid[0]);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.compact.length, 2);
     equals(parsed.cars.length, 0);
@@ -214,7 +215,7 @@ describe("basic Loader with index commits", function () {
         hello: {
           byId: cid,
           byKey: cid,
-          head: [cid],
+          head: [cid as CID<unknown, number, number, 1>],
           name: "hello",
           map: "(doc) => doc.hello",
         },

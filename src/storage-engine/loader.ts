@@ -24,7 +24,7 @@ import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
-import type { Falsy } from "../types.js";
+import type { Falsy, FileTransactionMeta } from "../types.js";
 import { ResolveOnce } from "./resolve-once.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
@@ -203,7 +203,7 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.xready();
-    const { files: roots } = this.makeFileCarHeader(done) as {
+    const { files: roots } = this.makeFileCarHeader(done as FileTransactionMeta) as {
       files: AnyLink[];
     };
     const cids: AnyLink[] = [];
@@ -319,7 +319,7 @@ export class Loader implements Loadable {
       : await encodeCarFile([cid], t);
   }
 
-  protected makeFileCarHeader(result: TransactionMeta): TransactionMeta {
+  protected makeFileCarHeader(result: FileTransactionMeta): TransactionMeta {
     const files: AnyLink[] = [];
     for (const [, meta] of Object.entries(result.files || {})) {
       if (meta && typeof meta === "object" && "cid" in meta && meta !== null) {
@@ -460,9 +460,9 @@ export class Loader implements Loadable {
     return got;
   }
 
-  protected makeCarHeader<T>(result: T, cars: CarLog, compact = false): CarHeader<T> {
+  protected makeCarHeader<T>(meta: T, cars: CarLog, compact = false): CarHeader<T> {
     const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] };
-    return { ...coreHeader, meta: result };
+    return { ...coreHeader, meta };
   }
 
   async loadCar(cid: AnyLink): Promise<CarReader> {
