@@ -4,8 +4,7 @@ import {
   type TransactionMeta,
   type CarTransaction,
   BaseBlockstore,
-} from "./storage-engine";
-
+} from "./storage-engine/index.js";
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
