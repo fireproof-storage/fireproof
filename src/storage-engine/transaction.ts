@@ -71,6 +71,10 @@ export class BaseBlockstore implements BlockFetcher {
       if (v) return v as Block<T, C, A, V>;
     }
   }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
+    throw new Error("use a transaction to put");
+  }
 
   lastTxMeta?: unknown; // TransactionMeta
 
@@ -109,11 +113,6 @@ export class EncryptedBlockstore extends BaseBlockstore {
     }
     this.name = name;
     this.loader = new Loader(this.name, this.ebOpts);
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
-    throw new Error("use a transaction to put");
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
