@@ -135,6 +135,16 @@ export interface CRDTMeta {
   readonly head: ClockHead;
 }
 
+export interface IndexTransactionMeta {
+  readonly indexes: Record<string, IdxMeta>;
+}
+
+export interface FileTransactionMeta {
+  readonly files?: AnyLink[];
+}
+
+export type MetaType = CRDTMeta | IndexTransactionMeta | FileTransactionMeta;
+
 export interface IdxMeta {
   readonly byId: AnyLink;
   readonly byKey: AnyLink;

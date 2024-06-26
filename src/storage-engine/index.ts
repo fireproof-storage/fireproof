@@ -16,7 +16,6 @@ import {
   type TransactionMeta,
   type BlobLike,
   type Connection,
-  type IndexTransactionMeta,
 } from "./types.js";
 
 export { STORAGE_VERSION } from "./store.js";
@@ -49,5 +48,4 @@ export {
   TransactionMeta,
   BlobLike,
   Connection,
-  IndexTransactionMeta,
 }; // from "./types";

@@ -30,7 +30,6 @@ import type {
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { Block } from "multiformats";
-import { MetaType } from "./storage-engine/types.js";
 import { ResolveOnce } from "./storage-engine/resolve-once.js";
 
 export class CRDT<T extends DocTypes> {
@@ -55,7 +54,7 @@ export class CRDT<T extends DocTypes> {
     const blockstoreType = name ? EncryptedBlockstore : BaseBlockstore;
     this.blockstore = new blockstoreType({
       name: name,
-      applyMeta: async (meta: MetaType) => {
+      applyMeta: async (meta: TransactionMeta) => {
         // console.log("applyMeta db", meta);
         const crdtMeta = meta as unknown as CRDTMeta;
         if (!crdtMeta.head) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
@@ -76,7 +75,7 @@ export class CRDT<T extends DocTypes> {
     const indexBlockstoreType = this.opts.indexStore && name ? EncryptedBlockstore : BaseBlockstore;
     this.indexBlockstore = new indexBlockstoreType({
       name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
-      applyMeta: async (meta: MetaType) => {
+      applyMeta: async (meta: TransactionMeta) => {
         // console.log("applyMeta idx", meta);
         const idxCarMeta = meta as IdxMetaMap;
         if (!idxCarMeta.indexes) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
@@ -96,11 +95,11 @@ export class CRDT<T extends DocTypes> {
     });
   }
 
-  async bulk(updates: DocUpdate<T>[]): Promise<TransactionMeta> {
+  async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
     await this.xready();
     const prevHead = [...this.clock.head];
 
-    const done = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
+    const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates);
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");

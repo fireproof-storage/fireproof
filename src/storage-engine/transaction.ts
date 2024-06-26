@@ -7,7 +7,6 @@ import {
   AnyLink,
   CarMakeable,
   DbMeta,
-  MetaType,
   StoreRuntime,
   StoreOpts,
   TransactionMeta,
@@ -20,7 +19,6 @@ import { CryptoOpts } from "./types.js";
 import { falsyToUndef } from "../types.js";
 import { toCryptoOpts } from "../runtime/crypto.js";
 import { toStoreRuntime } from "./store-factory.js";
-import { T } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 export type BlockFetcher = BlockFetcherApi;
 
@@ -51,7 +49,7 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     compact: async (blocks: CompactionFetcher) => {
-      return {} as unknown as MetaType;
+      return {} as unknown as TransactionMeta;
     },
     autoCompact: 100,
     public: false,
@@ -90,7 +88,7 @@ export class BaseBlockstore implements BlockFetcher {
 
   lastTxMeta?: unknown; // TransactionMeta
 
-  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>): Promise<TransactionWrapper<M>> {
+  async transaction<M extends TransactionMeta>(fn: (t: CarTransaction) => Promise<M>): Promise<TransactionWrapper<M>> {
     const t = new CarTransaction(this);
     const done: M = await fn(t);
     this.lastTxMeta = done;
@@ -136,12 +134,12 @@ export class EncryptedBlockstore extends BaseBlockstore {
     return falsyToUndef(await this.loader.getBlock(cid)) as Block<T, C, A, V>;
   }
 
-  async transaction<M extends MetaType>(
+  async transaction<M extends TransactionMeta>(
     fn: (t: CarTransaction) => Promise<M>,
     opts = { noLoader: false },
   ): Promise<TransactionWrapper<M>> {
     const { t, meta: done } = await super.transaction<M>(fn);
-    const cars = await this.loader.commit(t, done, opts);
+    const cars = await this.loader.commit<M>(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
@@ -224,7 +222,7 @@ export class CompactionFetcher implements BlockFetcher {
   }
 }
 
-export type CompactFn = (blocks: CompactionFetcher) => Promise<MetaType>;
+export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>;
 
 export interface BlockstoreOpts {
   readonly applyMeta?: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
