@@ -12,12 +12,11 @@ const decoder = new TextDecoder("utf-8");
 
 describe("DataStore", function () {
   let store: DataStore;
-  let runtime: StoreRuntime;
+  // let runtime: StoreRuntime;
 
   beforeEach(async () => {
     await SysContainer.start();
-    runtime = toStoreRuntime({})
-    store = await runtime.makeDataStore({ name: "test" } as Loadable);
+    store = await toStoreRuntime().makeDataStore({ name: "test" } as Loadable);
   });
 
   it("should have a name", function () {
@@ -38,13 +37,11 @@ describe("DataStore", function () {
 
 describe("DataStore with a saved car", function () {
   let store: DataStore
-  let runtime: StoreRuntime;
   let car: AnyBlock;
 
   beforeEach(async function () {
     await SysContainer.start();
-    runtime = toStoreRuntime({})
-    store = await runtime.makeDataStore({ name: "test2" } as Loadable);
+    store = await toStoreRuntime().makeDataStore({ name: "test2" } as Loadable);
     car = {
       cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -74,12 +71,10 @@ describe("DataStore with a saved car", function () {
 
 describe("MetaStore", function () {
   let store: MetaStore
-  let runtime: StoreRuntime;
 
   beforeEach(async function () {
     await SysContainer.start();
-    runtime = toStoreRuntime()
-    store = await runtime.makeMetaStore({ name: "test" } as unknown as Loader);
+    store = await toStoreRuntime().makeMetaStore({ name: "test" } as unknown as Loader);
   });
 
   it("should have a name", function () {

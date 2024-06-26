@@ -7,8 +7,13 @@ import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime } from "./types.js";
 
 function toURL(path: string | URL): URL {
+  // console.log("toPath", path);
   if (path instanceof URL) return path;
-  return new URL(path, "file:");
+  try {
+    return new URL(path);
+  } catch (e) {
+    return new URL(path, "file:");
+  }
 }
 
 interface StoreWaiter<T> {
@@ -51,9 +56,7 @@ async function waiter<T extends StoreTypes>(sw: StoreWaiter<T>, fn: () => Promis
 
 async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: StoreFactories): Promise<T> {
   const key = url.toString();
-  //   console.log("cacheStore", key);
-  let storeCache = undefined; // factoryCache.get(key);
-  //   console.log("storeCache found", !!storeCache);
+  let storeCache = factoryCache.get(key);
   if (!storeCache) {
     storeCache = {
       meta: { queued: [] },
@@ -115,26 +118,18 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
   }
 }
 
-export function toStoreRuntime(opts: StoreOpts = {}): StoreRuntime {
-  // const stores = {
-  //   meta: ,
-  //   data:
-  //   indexes: toURL(opts.stores?.indexes || dataDir()),
-  //   remoteWAL: ,
-  // };
+export function toStoreRuntime(name: string | undefined = undefined, opts: StoreOpts = {}): StoreRuntime {
   return {
-    // stores,
-
     makeMetaStore: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.meta || dataDir()), loader, {
+      cacheStore(toURL(opts.stores?.meta || dataDir(name)), loader, {
         meta: metaStoreFactory,
       }),
     makeDataStore: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.data || dataDir()), loader, {
+      cacheStore(toURL(opts.stores?.data || dataDir(name)), loader, {
         data: dataStoreFactory,
       }),
     makeRemoteWAL: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.remoteWAL || dataDir()), loader, {
+      cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name)), loader, {
         remoteWAL: remoteWalFactory,
       }),
 

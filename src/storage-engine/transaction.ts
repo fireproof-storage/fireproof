@@ -47,7 +47,7 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
     threshold: 1000 * 1000,
     ...opts,
     crypto: toCryptoOpts(opts.crypto),
-    store: toStoreRuntime(opts.store),
+    store: toStoreRuntime(opts.name, opts.store),
   };
 }
 
