@@ -94,9 +94,9 @@ export type TransactionMeta = CRDTMeta & {
 //   readonly head: ClockHead;
 // };
 
-export interface TransactionMetaWrapper {
-  done: TransactionMeta;
-  cars: CarGroup;
+export interface TransactionWrapper<M extends MetaType> {
+  meta: M;
+  cars?: CarGroup;
   t: CarTransaction;
 }
 

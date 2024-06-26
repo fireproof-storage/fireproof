@@ -1,7 +1,18 @@
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import { BlockFetcher as BlockFetcherApi } from "@web3-storage/pail/api";
 
-import { AnyAnyLink, AnyBlock, AnyLink, CarMakeable, DbMeta, MetaType, StoreRuntime, StoreOpts, TransactionMeta } from "./types.js";
+import {
+  AnyAnyLink,
+  AnyBlock,
+  AnyLink,
+  CarMakeable,
+  DbMeta,
+  MetaType,
+  StoreRuntime,
+  StoreOpts,
+  TransactionMeta,
+  TransactionWrapper,
+} from "./types.js";
 
 import { Loader } from "./loader.js";
 import type { CID, Block, Version } from "multiformats";
@@ -9,6 +20,7 @@ import { CryptoOpts } from "./types.js";
 import { falsyToUndef } from "../types.js";
 import { toCryptoOpts } from "../runtime/crypto.js";
 import { toStoreRuntime } from "./store-factory.js";
+import { T } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 export type BlockFetcher = BlockFetcherApi;
 
@@ -78,11 +90,11 @@ export class BaseBlockstore implements BlockFetcher {
 
   lastTxMeta?: unknown; // TransactionMeta
 
-  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>): Promise<M> {
+  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>): Promise<TransactionWrapper<M>> {
     const t = new CarTransaction(this);
     const done: M = await fn(t);
     this.lastTxMeta = done;
-    return { t, ...done };
+    return { t, meta: done };
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
@@ -124,17 +136,18 @@ export class EncryptedBlockstore extends BaseBlockstore {
     return falsyToUndef(await this.loader.getBlock(cid)) as Block<T, C, A, V>;
   }
 
-  async transaction<M extends MetaType>(fn: (t: CarTransaction) => Promise<M>, opts = { noLoader: false }): Promise<M> {
-    // @ts-expect-error - need to make a type for transaction return vs its inner function return
-    const { t, ...done }: M = await super.transaction<M>(fn, opts);
+  async transaction<M extends MetaType>(
+    fn: (t: CarTransaction) => Promise<M>,
+    opts = { noLoader: false },
+  ): Promise<TransactionWrapper<M>> {
+    const { t, meta: done } = await super.transaction<M>(fn);
     const cars = await this.loader.commit(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
     if (cars) {
       this.transactions.delete(t);
-      // @ts-expect-error - need to make a type for transaction return vs its inner function return
-      return { ...done, cars };
+      return { meta: done, cars, t };
     }
     throw new Error("failed to commit car files");
   }

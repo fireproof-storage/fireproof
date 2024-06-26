@@ -100,7 +100,7 @@ export class CRDT<T extends DocTypes> {
     await this.xready();
     const prevHead = [...this.clock.head];
 
-    const meta = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
+    const done = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates);
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
@@ -109,8 +109,8 @@ export class CRDT<T extends DocTypes> {
       });
       return { head };
     });
-    await this.clock.applyHead(meta.head, prevHead, updates);
-    return meta;
+    await this.clock.applyHead(done.meta.head, prevHead, updates);
+    return done.meta;
   }
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)

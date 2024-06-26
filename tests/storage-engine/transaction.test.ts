@@ -30,14 +30,14 @@ describe("Fresh TransactionBlockstore", function () {
       return { head: [] };
     });
     assert(txR);
-    // @ts-expect-error - delete txR
-    delete txR.t;
-    equalsJSON(txR, { head: [] });
+    console.log(txR);
+    assert(txR.t);
+    equalsJSON(txR.meta, { head: [] });
   });
 });
 
 describe("TransactionBlockstore with name", function () {
-  let blocks: EncryptedBlockstore
+  let blocks: EncryptedBlockstore;
   beforeEach(function () {
     blocks = new EncryptedBlockstore({ name: "test" });
   });
@@ -49,7 +49,7 @@ describe("TransactionBlockstore with name", function () {
   });
   it("should get from loader", async function () {
     const bytes = new TextEncoder().encode("bytes");
-    assert(blocks.loader)
+    assert(blocks.loader);
     blocks.loader.getBlock = async (cid) => {
       return { cid, bytes };
     };
@@ -59,10 +59,10 @@ describe("TransactionBlockstore with name", function () {
 });
 
 describe("A transaction", function () {
-  let tblocks: CarTransaction
+  let tblocks: CarTransaction;
   let blocks: EncryptedBlockstore;
   beforeEach(async function () {
-    blocks = new EncryptedBlockstore({name: "test"});
+    blocks = new EncryptedBlockstore({ name: "test" });
     tblocks = new CarTransaction(blocks);
     blocks.transactions.add(tblocks);
   });
@@ -83,9 +83,9 @@ function asUInt8Array(str: string) {
 }
 
 describe("TransactionBlockstore with a completed transaction", function () {
-  let blocks: BaseBlockstore
-  let cid: CID
-  let cid2: CID
+  let blocks: BaseBlockstore;
+  let cid: CID;
+  let cid2: CID;
 
   beforeEach(async function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
@@ -108,11 +108,11 @@ describe("TransactionBlockstore with a completed transaction", function () {
     equals(ts.size, 2);
   });
   it("should get", async function () {
-    const value = await blocks.get(cid) as AnyBlock;
+    const value = (await blocks.get(cid)) as AnyBlock;
     equals(value.cid, cid);
     equals(value.bytes.toString(), asUInt8Array("value").toString());
 
-    const value2 = await blocks.get(cid2) as AnyBlock;
+    const value2 = (await blocks.get(cid2)) as AnyBlock;
     equals(value2.bytes.toString(), asUInt8Array("value2").toString());
   });
   it("should yield entries", async function () {
