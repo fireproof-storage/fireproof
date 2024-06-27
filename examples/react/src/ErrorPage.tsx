@@ -1,6 +1,6 @@
 import { useRouteError } from "react-router-dom";
 
-type RouterError = {
+interface RouterError {
   statusText?: string;
   message?: string;
 }

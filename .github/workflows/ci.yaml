@@ -2,7 +2,6 @@ name: CI
 on:
   - push
   - pull_request
-
 jobs:
   quality-checks:
     name: Quality Checks
@@ -20,15 +19,16 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           run_install: false
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Lint Check
-        run: pnpm lint:check
-
-      - name: Format Check
-        run: pnpm format:check
-
-      - name: Run Tests
-        run: pnpm test
+          version: 9
+      - name: install
+        run: pnpm install
+      - name: format-check
+        run: pnpm run format --check
+      - name: lint
+        run: pnpm run lint
+      - name: build
+        run: pnpm run build
+      - name: smoke
+        run: pnpm run smoke
+      - name: test
+        run: pnpm run test

@@ -1,5 +1,3 @@
-
-
 # <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) realtime database
 
 <p align="right">
@@ -13,26 +11,25 @@
 
 Add collaboration to any app with Fireproof. Access data from JavaScript servers and edge functions. Use live queries to update your UI automatically when the database changes. [Connect realtime sync](https://www.npmjs.com/package/@fireproof/connect) and those changes will sync between browsers and backend functions. Apps built this way are multi-player by default.
 
- 
- ### JavaScript quick start
+### JavaScript quick start
 
 The document database API will feel familiar. Queries use dynamic indexes, and the database can refresh your UI, as seen in the `db.subscribe` call below, as well as the React liveQuery hook.
 
 ```js
-import { fireproof } from '@fireproof/core'
+import { fireproof } from "@fireproof/core";
 
-const db = fireproof('music-app')
+const db = fireproof("music-app");
 
-await db.put({ _id: 'beyonce', name: 'Beyoncé', hitSingles: 29 })
+await db.put({ _id: "beyonce", name: "Beyoncé", hitSingles: 29 });
 
 db.subscribe(async () => {
-  const topArtists = await db.query("hitSingles", { range: [30, Infinity] })
+  const topArtists = await db.query("hitSingles", { range: [30, Infinity] });
   // redraw the UI with the new topArtists
-})
+});
 
-const beyonceDoc = await db.get('beyonce')
-beyonceDoc.hitSingles += 1
-await db.put(beyonceDoc)
+const beyonceDoc = await db.get("beyonce");
+beyonceDoc.hitSingles += 1;
+await db.put(beyonceDoc);
 ```
 
 Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics)
@@ -51,9 +48,10 @@ function App() {
 
 Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
 
-## Why choose Fireproof 
+## Why choose Fireproof
 
 Compared to other embedded databases, Fireproof:
+
 - is network aware, encrypted, and multi-writer safe
 - is designed for real-time collaboration with CRDTs
 - offers cryptographic causal integrity for all operations
@@ -77,7 +75,6 @@ With Fireproof, you **build first** and sync via your cloud of choice when you a
 
 Fireproof is a great fit for code sandboxes and online IDEs, as you can get started without any configuration. This also makes it [easy for AI to write Fireproof apps](https://use-fireproof.com/docs/chatgpt-quick-start).
 
-
 ### Install
 
 Get started with the React hooks:
@@ -95,7 +92,7 @@ npm install @fireproof/core
 The default build is optimized for browsers, to load the node build add `/node`:
 
 ```js
-import { fireproof } from '@fireproof/core/node'
+import { fireproof } from "@fireproof/core/node";
 ```
 
 Add the database to any web page via HTML script tag (global is `Fireproof`):
@@ -105,7 +102,6 @@ Add the database to any web page via HTML script tag (global is `Fireproof`):
 ```
 
 Go ahead and write features, then [connect to any cloud backend](https://www.npmjs.com/package/@fireproof/connect) later.
-
 
 ## Thanks 🙏
 

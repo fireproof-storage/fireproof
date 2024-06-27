@@ -1,8 +1,8 @@
-import { Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom';
-import Todo from './routes/Todo';
-import Home from './routes/Home';
-import ErrorPage from './ErrorPage';
-import Navbar from './Navbar';
+import { Outlet, RouterProvider, createBrowserRouter } from "react-router-dom";
+import Todo from "./routes/Todo";
+import Home from "./routes/Home";
+import ErrorPage from "./ErrorPage";
+import Navbar from "./Navbar";
 
 function RootLayout() {
   return (
@@ -12,7 +12,7 @@ function RootLayout() {
         <Outlet />
       </main>
     </div>
-  )
+  );
 }
 
 const router = createBrowserRouter([

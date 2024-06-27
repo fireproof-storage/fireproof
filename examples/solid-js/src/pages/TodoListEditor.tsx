@@ -1,53 +1,49 @@
-import { For, Show, createSignal, onCleanup } from 'solid-js';
-import { TodoListDB } from '../databases';
-import { Todo } from '../types';
+import { For, Show, createSignal, onCleanup } from "solid-js";
+import { TodoListDB } from "../databases";
+import { Todo } from "../types";
 
-const [selectedTodo, setSelectedTodo] = createSignal("")
+const [selectedTodo, setSelectedTodo] = createSignal("");
 
 export default function TodoListEditor() {
-  const todos = TodoListDB.createLiveQuery<Todo>('date', { limit: 10, descending: true })
+  const todos = TodoListDB.createLiveQuery<Todo>("date", { limit: 10, descending: true });
   const [todo, setTodo, saveTodo] = TodoListDB.createDocument<Todo>(() => ({
-    text: '',
+    text: "",
     date: Date.now(),
     completed: false,
   }));
 
   onCleanup(() => {
-    setSelectedTodo('')
-  })
+    setSelectedTodo("");
+  });
 
   return (
     <>
       <div>
-        <input 
-          type="text" 
-          value={todo().text} 
+        <input
+          type="text"
+          value={todo().text}
           placeholder="new todo here"
-          onChange={e => {
-            setTodo({ text: e.target.value.trim() })
-          }} 
+          onChange={(e) => {
+            setTodo({ text: e.target.value.trim() });
+          }}
         />
         <button
           onClick={async () => {
-            await saveTodo()
-            setTodo()
+            await saveTodo();
+            setTodo();
           }}
         >
           Add Todo
         </button>
       </div>
-      <For each={(todos().docs)}>
+      <For each={todos().docs}>
         {(todo) => {
           return (
             <div>
-              <input
-                type="radio"
-                checked={selectedTodo() === todo._id}
-                onChange={() => setSelectedTodo(todo._id as string)}
-              />
+              <input type="radio" checked={selectedTodo() === todo._id} onChange={() => setSelectedTodo(todo._id as string)} />
               <span
                 style={{
-                  'text-decoration': todo.completed ? 'line-through' : 'none',
+                  "text-decoration": todo.completed ? "line-through" : "none",
                 }}
               >
                 {todo.text}
@@ -61,36 +57,36 @@ export default function TodoListEditor() {
       </Show>
     </>
   );
-};
+}
 
 function TodoEditor() {
   const [todo, setTodo, saveTodo] = TodoListDB.createDocument<Todo>(() => ({
     // Showcase modifying an existing document
     // SolidJS reactivity will automatically update the target document when the id changes
     _id: selectedTodo(),
-    text: '',
+    text: "",
     date: Date.now(),
     completed: false,
   }));
 
   return (
-    <div id='todo-editor'>
+    <div id="todo-editor">
       <input
         type="checkbox"
         checked={todo().completed}
         onChange={async () => setTodo({ ...todo(), completed: !todo().completed })}
       />
       <input
-        type="text" 
-        value={todo().text} 
+        type="text"
+        value={todo().text}
         placeholder="new todo here"
-        onChange={e => {
-          setTodo({ text: e.target.value.trim() })
+        onChange={(e) => {
+          setTodo({ text: e.target.value.trim() });
         }}
       />
       <button
         onClick={async () => {
-          await saveTodo()
+          await saveTodo();
         }}
       >
         Save Changes
