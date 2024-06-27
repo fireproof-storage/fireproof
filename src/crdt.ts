@@ -1,4 +1,10 @@
-import { EncryptedBlockstore, type CompactionFetcher, type TransactionMeta, type CarTransaction } from "./storage-engine/index.js";
+import {
+  EncryptedBlockstore,
+  type CompactionFetcher,
+  type TransactionMeta,
+  type CarTransaction,
+  BaseBlockstore,
+} from "./storage-engine/index.js";
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -24,8 +30,8 @@ import type {
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { Block } from "multiformats";
-import { MetaType } from "./storage-engine/types.js";
 import { ResolveOnce } from "./storage-engine/resolve-once.js";
+import { blockstoreFactory } from "./storage-engine/transaction.js";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
@@ -38,20 +44,19 @@ export class CRDT<T extends DocTypes> {
     });
   }
 
-  readonly blockstore: EncryptedBlockstore;
-  readonly indexBlockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
+  readonly indexBlockstore: BaseBlockstore;
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
   readonly clock: CRDTClock<T>;
 
   constructor(name?: string, opts: ConfigOpts = {}) {
     this.name = name;
     this.opts = opts;
-    this.blockstore = new EncryptedBlockstore({
+    this.blockstore = blockstoreFactory({
       name: name,
-      applyMeta: async (meta: MetaType) => {
-        // console.log("applyMeta db", meta);
-        const crdtMeta = meta as unknown as CRDTMeta;
-        if (!crdtMeta.head) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
+      applyMeta: async (meta: TransactionMeta) => {
+        const crdtMeta = meta as CRDTMeta;
+        if (!crdtMeta.head) throw new Error("missing head");
         await this.clock.applyHead(crdtMeta.head, []);
       },
       compact: async (blocks: CompactionFetcher) => {
@@ -65,13 +70,11 @@ export class CRDT<T extends DocTypes> {
       meta: this.opts.meta,
       threshold: this.opts.threshold,
     });
-    this.clock = new CRDTClock<T>(this.blockstore);
-    this.indexBlockstore = new EncryptedBlockstore({
-      name: this.opts.persistIndexes && this.name ? this.name + ".idx" : undefined,
-      applyMeta: async (meta: MetaType) => {
-        // console.log("applyMeta idx", meta);
+    this.indexBlockstore = blockstoreFactory({
+      name: this.opts.indexStore && name ? name + ".idx" : undefined,
+      applyMeta: async (meta: TransactionMeta) => {
         const idxCarMeta = meta as IdxMetaMap;
-        if (!idxCarMeta.indexes) return; // applyMeta is getting called for all blockstores (maybe storage event dispatch bug?)
+        if (!idxCarMeta.indexes) throw new Error("missing indexes");
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
           index({ _crdt: this }, name, undefined, idx);
         }
@@ -80,7 +83,7 @@ export class CRDT<T extends DocTypes> {
       store: this.opts.indexStore,
       public: this.opts.public,
     });
-
+    this.clock = new CRDTClock<T>(this.blockstore);
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
@@ -88,11 +91,11 @@ export class CRDT<T extends DocTypes> {
     });
   }
 
-  async bulk(updates: DocUpdate<T>[]): Promise<TransactionMeta> {
+  async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
     await this.xready();
     const prevHead = [...this.clock.head];
 
-    const meta = await this.blockstore.transaction(async (blocks: CarTransaction): Promise<TransactionMeta> => {
+    const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
       const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates);
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
@@ -101,8 +104,8 @@ export class CRDT<T extends DocTypes> {
       });
       return { head };
     });
-    await this.clock.applyHead(meta.head, prevHead, updates);
-    return meta;
+    await this.clock.applyHead(done.meta.head, prevHead, updates);
+    return done.meta;
   }
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
@@ -149,6 +152,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   async compact(): Promise<void> {
-    return await this.blockstore.compact();
+    const blocks = this.blockstore as EncryptedBlockstore;
+    return await blocks.compact();
   }
 }

@@ -16,7 +16,6 @@ import {
   type TransactionMeta,
   type BlobLike,
   type Connection,
-  type IndexTransactionMeta,
 } from "./types.js";
 
 export { STORAGE_VERSION } from "./store.js";
@@ -26,11 +25,12 @@ export * from "./store-factory.js";
 import { type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection-base.js";
 export { ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };
 
-export { EncryptedBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction.js";
+export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction.js";
 export { Loader, Loadable } from "./loader.js";
 export { DataStore, MetaStore } from "./store.js";
 export { RemoteWAL, type WALState } from "./remote-wal.js";
 export { parseCarFile } from "./loader-helpers.js";
+
 export {
   DbMeta,
   AnyBlock,
@@ -48,5 +48,4 @@ export {
   TransactionMeta,
   BlobLike,
   Connection,
-  IndexTransactionMeta,
 }; // from "./types";

@@ -1,6 +1,7 @@
 import { assert, equals, notEquals, matches, resetDatabase, dataDir, buildBlobFiles, FileWithCid } from "../helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
+import { EncryptedBlockstore } from "@fireproof/core/storage-engine";
 
 function testDatabase(): Database {
   return new Database();
@@ -123,7 +124,8 @@ describe("named Database with record", function () {
   it("should have a key", async function () {
     const { rows } = await db.changes([]);
     equals(rows.length, 1);
-    const loader = db._crdt.blockstore.loader;
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
     assert(loader)
     await loader.xready();
     equals(loader.key?.length, 64);
@@ -265,7 +267,8 @@ describe("basic Database parallel writes / public", function () {
     equals(rows.length, 10);
     assert(db.opts.public);
     assert(db._crdt.opts.public);
-    const loader = db._crdt.blockstore.loader;
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
     assert(loader)
     await loader.xready();
     equals(loader.key, undefined);

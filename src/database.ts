@@ -20,8 +20,10 @@ import type {
   IndexRows,
   DocFragment,
   ChangesResponseRow,
+  CRDTMeta,
 } from "./types.js";
-import { Connectable, EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
+import { BaseBlockstore, Connectable } from "./storage-engine/index.js";
+
 import { SysContainer } from "./runtime/sys-container.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
@@ -35,7 +37,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly _noupdate_listeners = new Set<ListenerFn<DT>>();
   readonly _crdt: CRDT<DT>;
   readonly _writeQueue: WriteQueue<DT>;
-  readonly blockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
 
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name;
@@ -71,13 +73,13 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
         ...(value as unknown as DocSet<DT>),
         _id: docId,
       },
-    })) as TransactionMeta;
+    })) as CRDTMeta;
     return { id: docId, clock: result?.head };
   }
 
   async del(id: string): Promise<DbResponse> {
     await SysContainer.start();
-    const result = (await this._writeQueue.push({ id: id, del: true })) as TransactionMeta;
+    const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
     return { id, clock: result?.head } as DbResponse;
   }
 

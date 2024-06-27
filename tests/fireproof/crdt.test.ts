@@ -288,13 +288,13 @@ describe("Loader with a committed transaction", function () {
   let loader: Loader;
   let blockstore: EncryptedBlockstore;
   let crdt: CRDT<CRDTTestType>;
-  let done: TransactionMeta;
+  let done: CRDTMeta;
   const dbname = "test-loader";
   beforeEach(async function () {
     await SysContainer.start();
     await resetDatabase(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
-    blockstore = crdt.blockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     done = await crdt.bulk([{ id: "foo", value: { foo: "bar" } }]);
@@ -304,15 +304,15 @@ describe("Loader with a committed transaction", function () {
   });
   it("should commit a transaction", function () {
     assert(done.head);
-    assert(done.cars);
+    // assert(done.cars);
     equals(loader.carLog.length, 1);
   });
   it("can load the car", async function () {
-    const blk = done.cars?.[0];
+    const blk = loader.carLog[0][0];
     assert(blk);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);
@@ -327,14 +327,14 @@ describe("Loader with two committed transactions", function () {
   let loader: Loader
   let crdt: CRDT<CRDTTestType>;
   let blockstore: EncryptedBlockstore;
-  let done1: TransactionMeta
-  let done2: TransactionMeta
+  let done1: CRDTMeta
+  let done2: CRDTMeta
   const dbname = "test-loader";
   beforeEach(async function () {
     await SysContainer.start();
     await resetDatabase(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
-    blockstore = crdt.blockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     done1 = await crdt.bulk([{ id: "apple", value: { foo: "bar" } }]);
@@ -342,24 +342,24 @@ describe("Loader with two committed transactions", function () {
   });
   it("should commit two transactions", function () {
     assert(done1.head);
-    assert(done1.cars);
+    // assert(done1.cars);
     assert(done2.head);
-    assert(done2.cars);
+    // assert(done2.cars);
     notEquals(done1.head, done2.head);
-    notEquals(done1.cars, done2.cars);
+    // notEquals(done1.cars, done2.cars);
     // equals(blockstore.transactions.size, 2)
     equals(loader.carLog.length, 2);
     //equals(loader.carLog.indexOf(done1.cars), 1)
-    equals(loader.carLog.map((cs) => cs.toString()).indexOf(done1.cars.toString()), 1);
+    // equals(loader.carLog.map((cs) => cs.toString()).indexOf(done1.cars.toString()), 1);
     //equals(loader.carLog.indexOf(done2.cars), 0)
-    equals(loader.carLog.map((cs) => cs.toString()).indexOf(done2.cars.toString()), 0);
+    // equals(loader.carLog.map((cs) => cs.toString()).indexOf(done2.cars.toString()), 0);
   });
   it("can load the car", async function () {
-    const blk = done2.cars?.[0];
+    const blk = loader.carLog[0][0];
     assert(blk);
     const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
     equals(parsed.cars.length, 1);
     assert(parsed.meta);
@@ -372,7 +372,7 @@ describe("Loader with many committed transactions", function () {
   let loader: Loader
   let blockstore: EncryptedBlockstore
   let crdt: CRDT<Doc>
-  let dones: TransactionMeta[]
+  let dones: CRDTMeta[]
   const dbname = "test-loader";
   const count = 10;
   beforeEach(async function () {
@@ -380,7 +380,7 @@ describe("Loader with many committed transactions", function () {
     await resetDatabase(dataDir(), "test-loader");
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname);
-    blockstore = crdt.blockstore;
+    blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
     dones = [];
@@ -392,18 +392,19 @@ describe("Loader with many committed transactions", function () {
   it("should commit many transactions", function () {
     for (const done of dones) {
       assert(done.head);
-      assert(done.cars);
+      // assert(done.cars);
     }
     equals(blockstore.transactions.size, 0); // cleaned up on commit
     equals(loader.carLog.length, count);
   });
   it("can load the car", async function () {
-    assert(dones[5].cars);
-    const reader = await loader.loadCar(dones[5].cars[0]);
+    const blk = loader.carLog[2][0];
+    // assert(dones[5].cars);
+    const reader = await loader.loadCar(blk);
     assert(reader);
-    const parsed = await parseCarFile<TransactionMeta>(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
     assert(parsed.cars);
-    equals(parsed.cars.length, 5);
+    equals(parsed.cars.length, 7);
     assert(parsed.meta);
     assert(parsed.meta.head);
   });

@@ -2,7 +2,8 @@ import type { CID, Link, Version } from "multiformats";
 import { DataStore, MetaStore } from "./store.js";
 import { RemoteWAL } from "./remote-wal.js";
 import type { Loadable } from "./loader.js";
-import { CRDTMeta, DocFileMeta, Falsy } from "../types.js";
+import { DocFileMeta, Falsy } from "../types.js";
+import { CarTransaction } from "./transaction.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -73,27 +74,14 @@ export interface CarHeader<T> {
 //   | NestedData[]
 //   | { [key: string]: NestedData };
 
-export interface IdxMeta {
-  readonly byId: CID;
-  readonly byKey: CID;
-  readonly head: CarGroup;
-  readonly name: string;
-  readonly map: string; // is this really a string of javascript who is eval'd?
+export interface TransactionWrapper<M extends TransactionMeta> {
+  meta: M;
+  cars?: CarGroup;
+  t: CarTransaction;
 }
-export interface IndexTransactionMeta {
-  readonly indexes: Record<string, IdxMeta>;
-  readonly cars?: CarGroup;
-}
-// // Record<string, NestedData>;
-export type TransactionMeta = CRDTMeta & {
-  readonly cars?: CarGroup;
-  readonly files?: AnyLink[];
-};
-// export type TransactionMeta = {
-//   readonly head: ClockHead;
-// };
 
-export type MetaType = TransactionMeta | IndexTransactionMeta;
+export type TransactionMeta = unknown
+//CRDTMeta | IndexTransactionMeta | FileTransactionMeta;
 
 // export interface MakeCodecCrypto {
 //   subtle: {

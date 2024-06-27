@@ -12,8 +12,9 @@ import {
   type DocTypes,
   type IndexUpdateString,
   throwFalsy,
+  IndexTransactionMeta,
 } from "./types.js";
-import { EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
+import { BaseBlockstore, EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
 import {
   bulkIndex,
   indexEntriesForChanges,
@@ -53,7 +54,7 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
 // }
 
 export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
-  readonly blockstore: EncryptedBlockstore;
+  readonly blockstore: BaseBlockstore;
   readonly crdt: CRDT<T>;
   name: string;
   mapFn?: MapFn<T>;
@@ -206,7 +207,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.byKey.root = await loadIndex<K, R, CompareKey>(this.blockstore, this.byKey.cid, byKeyOpts);
   }
 
-  async _updateIndex(): Promise<TransactionMeta> {
+  async _updateIndex(): Promise<IndexTransactionMeta> {
     await this.xready();
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw new Error("No map function defined");
@@ -218,7 +219,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
     if (result.length === 0) {
       this.indexHead = head;
-      return { byId: this.byId, byKey: this.byKey } as unknown as TransactionMeta;
+      // return { byId: this.byId, byKey: this.byKey } as IndexTransactionMeta;
     }
     let staleKeyIndexEntries: IndexUpdate<K>[] = [];
     let removeIdIndexEntries: IndexUpdateString[] = [];
@@ -247,7 +248,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         } as IdxMeta);
       }
     }
-    return await this.blockstore.transaction(async (tblocks): Promise<TransactionMeta> => {
+    const { meta } = await this.blockstore.transaction<IndexTransactionMeta>(async (tblocks): Promise<IndexTransactionMeta> => {
       this.byId = await bulkIndex<K, R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
       this.byKey = await bulkIndex<K, R, CompareKey>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
       this.indexHead = head;
@@ -259,7 +260,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         name: this.name,
       } as IdxMeta;
       indexerMeta.indexes?.set(this.name, idxMeta); // should this move to after commit?
-      return indexerMeta as unknown as TransactionMeta;
+      return indexerMeta as unknown as IndexTransactionMeta;
     });
+    return meta;
   }
 }

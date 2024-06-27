@@ -3,8 +3,9 @@ import { assert, equals, notEquals, equalsJSON, resetDatabase, dataDir, sleep, i
 import { CID } from "multiformats/cid";
 
 import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
-import { AnyLink } from "@fireproof/core/storage-engine";
+import { AnyLink, EncryptedBlockstore } from "@fireproof/core/storage-engine";
 import { SysContainer } from "@fireproof/core/runtime";
+import { c } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
@@ -167,8 +168,10 @@ describe("benchmarking with compaction", function () {
           }),
         );
       }
-      assert(db._crdt.blockstore.loader)
-      const label = `write ${i} log ${db._crdt.blockstore.loader.carLog.length}`;
+      const blocks = db._crdt.blockstore as EncryptedBlockstore
+      const loader = blocks.loader;
+      assert(loader)
+      const label = `write ${i} log ${loader.carLog.length}`;
       console.time(label);
       db.put({
         data: Math.random(),
@@ -273,9 +276,11 @@ describe("benchmarking a database", function () {
     await db.put({ _id: "compacted-test", foo: "bar" });
 
     // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-    assert(db._crdt.blockstore.loader)
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader)
 
-    equals(db._crdt.blockstore.loader.carLog.length, 2);
+    equals(loader.carLog.length, 2);
 
     // console.time('allDocs new DB') // takes forever on 5k
     // const allDocsResult = await newDb.allDocs()
@@ -287,9 +292,11 @@ describe("benchmarking a database", function () {
     const newDb2 = new Database("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     equals(doc21.foo, "fast");
-    assert(newDb2._crdt.blockstore.loader)
+    const blocks2 = newDb2._crdt.blockstore as EncryptedBlockstore
+    const loader2 = blocks2.loader;
+    assert(loader2)
 
-    equals(newDb2._crdt.blockstore.loader.carLog.length, 2);
+    equals(loader2.carLog.length, 2);
 
     const doc2 = await newDb2.get<FooType>("compacted-test");
 
@@ -367,17 +374,21 @@ describe("Reopening a database", function () {
 
   it("should have a car in the car log", async function () {
     await db._crdt.xready();
-    assert(db._crdt.blockstore.loader);
-    assert(db._crdt.blockstore.loader.carLog);
-    equals(db._crdt.blockstore.loader.carLog.length, 1);
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader);
+    assert(loader.carLog);
+    equals(loader.carLog.length, 1);
   });
 
   it("should have carlog after reopen", async function () {
     const db2 = new Database("test-reopen");
     await db2._crdt.xready();
-    assert(db2._crdt.blockstore.loader);
-    assert(db2._crdt.blockstore.loader.carLog);
-    equals(db2._crdt.blockstore.loader.carLog.length, 1);
+    const blocks = db2._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader);
+    assert(loader.carLog);
+    equals(loader.carLog.length, 1);
   });
 
   it("faster, should have the same data on reopen after reopen and update", async function () {
@@ -386,10 +397,12 @@ describe("Reopening a database", function () {
       const db = new Database("test-reopen");
       // assert(db._crdt.xready());
       await db._crdt.xready();
-      equals(db._crdt.blockstore.loader?.carLog.length, i + 1);
+      const blocks = db._crdt.blockstore as EncryptedBlockstore
+      const loader = blocks.loader;
+      equals(loader.carLog.length, i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       assert(ok);
-      equals(db._crdt.blockstore.loader?.carLog.length, i + 2);
+      equals(loader.carLog.length, i + 2);
       const doc = await db.get<FireType>(`test${i}`);
       equals(doc.fire, "proof".repeat(50 * 1024));
     }
@@ -403,14 +416,16 @@ describe("Reopening a database", function () {
       // assert(db._crdt.ready);
       await db._crdt.xready();
       // console.timeEnd("db open");
-      assert(db._crdt.blockstore.loader)
-      equals(db._crdt.blockstore.loader.carLog.length, i + 1);
-      // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
+      const blocks = db._crdt.blockstore as EncryptedBlockstore
+      const loader = blocks.loader;
+      assert(loader)
+      equals(loader.carLog.length, i + 1);
+      // console.log('car log length', loader.carLog.length)
       // console.time("db put");
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
       // console.timeEnd("db put");
       assert(ok);
-      equals(db._crdt.blockstore.loader.carLog.length, i + 2);
+      equals(loader.carLog.length, i + 2);
       // console.time("db get");
       const doc = await db.get<FireType>(`test${i}`);
       // console.timeEnd("db get");
@@ -531,8 +546,10 @@ describe("basic js verify", function () {
     equals(ok.id, "test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
     equals(ok2.id, "test2");
-    assert(db._crdt.blockstore.loader);
-    const cid = db._crdt.blockstore.loader.carLog[0][0];
+    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const loader = blocks.loader;
+    assert(loader);
+    const cid = loader.carLog[0][0];
     const cid2 = db._crdt.clock.head[0];
     notEquals(cid, cid2);
     assert(cid !== cid2);
