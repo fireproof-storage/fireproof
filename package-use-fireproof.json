@@ -15,13 +15,12 @@
   "bugs": {
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "files": ["dist"],
   "exports": {
     ".": {
       "import": "./index.js",
+      "require": "./index.cjs",
       "script": "./index.global.js",
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "types": "./index.d.ts"
     }
   },
   "scripts": {},
@@ -29,7 +28,6 @@
   "license": "Apache-2.0 OR MIT",
   "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
-    "@fireproof/core": "*",
     "react": ">=18.0.0"
   },
   "peerDependencies": {

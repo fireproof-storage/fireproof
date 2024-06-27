@@ -1,4 +1,4 @@
-import { assert, equals, matches, notEquals, resetDirectory, dataDir, itSkip } from "../helpers.js";
+import { assert, equals, matches, notEquals, resetDatabase, dataDir, itSkip } from "../helpers.js";
 
 import { uuidv4 } from "uuidv7";
 
@@ -197,7 +197,7 @@ describe("Compact a named CRDT with writes", function () {
   let crdt: CRDT<CRDTTestType>;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "named-crdt-compaction");
+    await resetDatabase(dataDir(), "named-crdt-compaction");
     crdt = new CRDT("named-crdt-compaction");
     for (let i = 0; i < 10; i++) {
       const bulk = [
@@ -292,7 +292,7 @@ describe("Loader with a committed transaction", function () {
   const dbname = "test-loader";
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-loader");
+    await resetDatabase(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
@@ -332,7 +332,7 @@ describe("Loader with two committed transactions", function () {
   const dbname = "test-loader";
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-loader");
+    await resetDatabase(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
@@ -377,7 +377,7 @@ describe("Loader with many committed transactions", function () {
   const count = 10;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-loader");
+    await resetDatabase(dataDir(), "test-loader");
     // loader = new DbLoader(dbname)
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore;

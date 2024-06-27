@@ -1,4 +1,4 @@
-import { assert, equals, notEquals, matches, resetDirectory, dataDir, getDirectoryName, readImages } from "../helpers.js";
+import { assert, equals, notEquals, matches, resetDatabase, dataDir, buildBlobFiles, FileWithCid } from "../helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
 
@@ -85,7 +85,7 @@ describe("named Database with record", function () {
   let db: Database;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-db-name");
+    await resetDatabase(dataDir(), "test-db-name");
 
     db = new Database("test-db-name");
     /** @type {Doc} */
@@ -207,7 +207,7 @@ describe("basic Database parallel writes / public", function () {
   const writes: Promise<DbResponse>[] = [];
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-parallel-writes");
+    await resetDatabase(dataDir(), "test-parallel-writes");
     db = new Database("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -349,63 +349,57 @@ describe("basic Database with no update subscription", function () {
 
 describe("database with files input", () => {
   let db: Database;
-  const imagefiles: File[] = [];
+  let imagefiles: FileWithCid[] = [];
   let result: DbResponse;
-
-  beforeAll(async function () {
-    await SysContainer.start();
-    const directoryname = getDirectoryName("tests/fireproof/test-images");
-    const [jpg, png] = await readImages(directoryname, "test-images", ["image1.jpg", "fireproof.png"]);
-    imagefiles.push(new File([new Blob([jpg])], `image.jpg`, { type: "image/jpeg" }));
-    imagefiles.push(new File([new Blob([png])], `fireproof.png`, { type: "image/png" }));
-  });
 
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "fireproof-with-images");
+    await resetDatabase(dataDir(), "fireproof-with-images");
+    imagefiles = await buildBlobFiles();
     db = new Database("fireproof-with-images");
     const doc = {
       _id: "images-main",
       type: "files",
       _files: {
-        one: imagefiles[0],
-        two: imagefiles[1],
+        one: imagefiles[0].file,
+        two: imagefiles[1].file,
       },
     };
     result = await db.put(doc);
   });
 
   it("Should upload images", async function () {
-    // console.log('These are the image files', imagefiles)
-
-    // console.log(result, "This is the result when the images are stored")
     equals(result.id, "images-main");
   });
 
   it("Should fetch the images", async function () {
     const doc = await db.get(result.id);
-    const files = doc._files || {};
+    const files = doc._files
+    assert(files);
     const keys = Object.keys(files);
     let fileMeta = files[keys[0]] as DocFileMeta;
-    equals(fileMeta.type, "image/jpeg");
-    equals(fileMeta.size, 5315);
-    equals(fileMeta.cid.toString(), "bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm");
+    assert(fileMeta);
+    assert(imagefiles[0].file.type);
+    assert(fileMeta.type);
+    equals(fileMeta.type, imagefiles[0].file.type);
+    equals(fileMeta.size, imagefiles[0].file.size);
+    equals(fileMeta.cid.toString(), imagefiles[0].cid);
     equals(typeof fileMeta.file, "function");
     let file = await fileMeta.file?.() as File;
 
-    equals(file.type, "image/jpeg");
-    equals(file.size, 5315);
+    equals(file.type, imagefiles[0].file.type);
+    equals(file.size, imagefiles[0].file.size);
     // equals(file.name, 'image.jpg') // see https://github.com/fireproof-storage/fireproof/issues/70
 
     fileMeta = files[keys[1]] as DocFileMeta;
-    equals(fileMeta.type, "image/png");
-    equals(fileMeta.size, 29917);
-    equals(fileMeta.cid.toString(), "bafkreiculdb2bq7tg7jaxl6m5gf4vh5ta3kqck6knc7lotm3a7u6qvpoje");
+    equals(fileMeta.type, imagefiles[1].file.type);
+    equals(fileMeta.size, imagefiles[1].file.size);
+    equals(fileMeta.cid.toString(), imagefiles[1].cid);
     equals(typeof fileMeta.file, "function");
     file = await fileMeta.file?.() as File;
 
-    equals(file.type, "image/png");
-    equals(file.size, 29917);
+    equals(file.type, imagefiles[1].file.type);
+    equals(file.size, imagefiles[1].file.size);
     // equals(file.name, 'fireproof.png') // see https://github.com/fireproof-storage/fireproof/issues/70
   });
 
@@ -417,14 +411,14 @@ describe("database with files input", () => {
     let files = doc._files || {};
     let keys = Object.keys(files);
     let fileMeta = files[keys[0]] as DocFileMeta;
-    equals(fileMeta.type, "image/jpeg");
-    equals(fileMeta.size, 5315);
-    equals(fileMeta.cid.toString(), "bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm");
+    equals(fileMeta.type, imagefiles[0].file.type);
+    equals(fileMeta.size, imagefiles[0].file.size);
+    equals(fileMeta.cid.toString(), imagefiles[0].cid);
     equals(typeof fileMeta.file, "function");
     let file = await fileMeta.file?.() as File;
 
-    equals(file.type, "image/jpeg");
-    equals(file.size, 5315);
+    equals(file.type, imagefiles[0].file.type);
+    equals(file.size, imagefiles[0].file.size);
 
     doc.type = "images";
     const r2 = await db.put(doc);
@@ -434,13 +428,13 @@ describe("database with files input", () => {
     files = readDoc._files || {};
     keys = Object.keys(files);
     fileMeta = files[keys[0]] as DocFileMeta;
-    equals(fileMeta.type, "image/jpeg");
-    equals(fileMeta.size, 5315);
-    equals(fileMeta.cid.toString(), "bafkreig5oxyx6k5st3j2yeunaovbzuneathglic5pmcfrmeuh5kme4nogm");
+    equals(fileMeta.type, imagefiles[0].file.type);
+    equals(fileMeta.size, imagefiles[0].file.size);
+    equals(fileMeta.cid.toString(), imagefiles[0].cid);
     equals(typeof fileMeta.file, "function");
     file = await fileMeta.file?.() as File;
 
-    equals(file.type, "image/jpeg");
-    equals(file.size, 5315);
+    equals(file.type, imagefiles[0].file.type);
+    equals(file.size, imagefiles[0].file.size);
   });
 });

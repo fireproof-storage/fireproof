@@ -19,7 +19,7 @@ export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R e
   readonly rows: IndexRow<K, T, R>[];
 }
 
-export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T>(
+export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
   mapFn: string | MapFn<T>,
   query?: QueryOpts<K>,
   initialRows?: IndexRow<K, T, R>[],
@@ -36,7 +36,7 @@ type StoreDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<Db
 
 export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>];
 
-export type UseDocument = <T extends DocTypes>(initialDocFn: () => DocWithId<T>) => UseDocumentResult<T>;
+export type UseDocument = <T extends DocTypes>(initialDocFn: () => DocSet<T>) => UseDocumentResult<T>;
 
 export interface UseFireproof {
   readonly database: Database;
@@ -124,7 +124,7 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument<T extends DocTypes>(initialDocFn: () => DocWithId<T>): UseDocumentResult<T> {
+  function useDocument<T extends DocTypes>(initialDocFn: () => DocSet<T>): UseDocumentResult<T> {
     // We purposely refetch the docId everytime to check if it has changed
     const docId = initialDocFn()._id ?? "";
 
@@ -175,10 +175,10 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       void refreshDoc();
     }, [refreshDoc]);
 
-    return [doc, updateDoc, saveDoc];
+    return [{ _id: docId, ...doc }, updateDoc, saveDoc];
   }
 
-  function useLiveQuery<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T>(
+  function useLiveQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
     mapFn: MapFn<T> | string,
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],

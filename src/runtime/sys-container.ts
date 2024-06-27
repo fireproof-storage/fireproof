@@ -4,6 +4,7 @@ import * as stdEnv from "std-env";
 import { throwFalsy } from "../types.js";
 import { uuidv4 } from "uuidv7";
 import { ResolveOnce } from "../storage-engine/resolve-once.js";
+import { deleteDB as dbDelete, openDB } from "idb";
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
@@ -23,6 +24,8 @@ export interface NodeMap {
 
   unlink: (path: PathLike) => Promise<void>;
   writefile: (path: PathLike, data: Uint8Array | string) => Promise<void>;
+  deleteDB(dir: string, name: string): Promise<void>;
+  getDB(storeUrl: URL, dbname: string, key: string): Promise<ArrayBuffer>;
 }
 
 export function assert(condition: unknown, message?: string | Error): asserts condition {
@@ -34,9 +37,11 @@ const onceStart = new ResolveOnce<void>();
 class sysContainer {
   freight: NodeMap = {
     state: "seeded",
-    join: (...paths: string[]) => paths.join("/").replace(/\/\/+/g, "/"),
+    join: (...paths: string[]) => paths.map((i) => i.replace(/\/+$/, "")).join("/"),
     dirname: (path: string) => path.split("/").slice(0, -1).join("/"),
-    homedir: () => "/browser",
+    homedir: () => {
+      throw new Error("SysContainer:homedir is not available in seeded state");
+    },
     fileURLToPath: (strurl: string | URL) => {
       let url: URL;
       if (typeof strurl === "string") {
@@ -55,13 +60,24 @@ class sysContainer {
         }
       }
     },
-    mkdir: () => Promise.resolve(""),
-    readdir: () => Promise.resolve([]),
-    rm: () => Promise.resolve(),
-    copyFile: () => Promise.resolve(),
-    readfile: () => Promise.resolve(""),
-    unlink: () => Promise.resolve(),
-    writefile: () => Promise.resolve(),
+    mkdir: () => Promise.reject(new Error("SysContainer:mkdir is not available in seeded state")),
+    readdir: () => Promise.reject(new Error("SysContainer:readdir is not available in seeded state")),
+    rm: () => Promise.reject(new Error("SysContainer:rm is not available in seeded state")),
+    copyFile: () => Promise.reject(new Error("SysContainer:copyFile is not available in seeded state")),
+    readfile: () => Promise.reject(new Error("SysContainer:readfile is not available in seeded state")),
+    unlink: () => Promise.reject(new Error("SysContainer:unlink is not available in seeded state")),
+    writefile: () => Promise.reject(new Error("SysContainer:writefile is not available in seeded state")),
+    deleteDB(dir: string, name: string) {
+      return dbDelete(name);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    async getDB(url: URL, dbName: string, key: string) {
+      console.log("getDB", url.toString(), dbName, key);
+      const db = await openDB(url.pathname, 1);
+      const bytes = await db.get(dbName, key);
+      db.close();
+      return bytes;
+    },
   };
 
   readonly id = uuidv4();
@@ -72,10 +88,10 @@ class sysContainer {
         case "seeded":
           if (stdEnv.isNode) {
             const { createNodeSysContainer } = await import("./node-sys-container.js");
-            console.log("use NodeSysContainer");
+            // console.log("use NodeSysContainer");
             this.freight = await createNodeSysContainer();
           } else {
-            console.log("use BrowserSysContainer");
+            // console.log("use BrowserSysContainer");
             this.freight.state = "browser";
           }
           return;
@@ -155,6 +171,16 @@ class sysContainer {
     this.logSeeded("homedir");
     return throwFalsy(this.freight).homedir();
   };
+
+  deleteDB(dir: string, name: string) {
+    this.logSeeded("deleteDB");
+    return throwFalsy(this.freight).deleteDB(dir, name);
+  }
+
+  getDB(storeURL: URL, dbname: string, key: string) {
+    this.logSeeded("getDb");
+    return throwFalsy(this.freight).getDB(storeURL, dbname, key);
+  }
 
   logSeeded(method: string) {
     if (this.freight.state === "seeded") {

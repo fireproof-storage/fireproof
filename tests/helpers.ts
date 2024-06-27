@@ -1,6 +1,7 @@
 
 import { SysContainer, assert } from "@fireproof/core/runtime";
-
+import { toCryptoOpts } from '../src/runtime/crypto.js'
+import { encodeFile } from "../src/runtime/files";
 export { dataDir } from "@fireproof/core/runtime";
 
 export { assert };
@@ -42,20 +43,9 @@ export function matches<TA extends ToStringFn, TB extends ToStringFn>(actual: TA
   }
 }
 
-export async function resetDirectory(dir: string, name: string) {
-  await doResetDirectory(dir, name);
-  await doResetDirectory(dir, name + ".idx");
-}
-
-export async function doResetDirectory(dir: string, name: string) {
-  const path = SysContainer.join(dir, name);
-  await SysContainer.mkdir(path, { recursive: true });
-
-  const files = await SysContainer.readdir(path);
-
-  for (const file of files) {
-    await SysContainer.rm(SysContainer.join(path, file), { recursive: true });
-  }
+export async function resetDatabase(dir: string, name: string) {
+  await SysContainer.deleteDB(dir, name);
+  await SysContainer.deleteDB(dir, name + ".idx");
 }
 
 // Function to copy a directory
@@ -99,13 +89,21 @@ export function getDirectoryName(url: string) {
   return dir_name;
 }
 
-export async function readImages(directory: string, imagedirectoryname: string, imagenames: string[]) {
-  const images: Buffer[] = [];
-  const imagesdirectorypath = SysContainer.join(directory, imagedirectoryname);
-  for (const image of imagenames) {
-    const imagepath = SysContainer.join(imagesdirectorypath, image);
-    const imagebuffer = await SysContainer.readfile(imagepath);
-    images.push(imagebuffer);
+async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
+  return {
+    file: new File([new Blob([buffer])], name, opts),
+    cid: (await encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString()
   }
-  return images;
+}
+
+export interface FileWithCid {
+  file: File
+  cid: string
+}
+export async function buildBlobFiles(): Promise<FileWithCid[]> {
+  const cp = toCryptoOpts();
+  return [
+    await toFileWithCid(cp.randomBytes(Math.random() * 51283), `image.jpg`, { type: "image/jpeg" }),
+    await toFileWithCid(cp.randomBytes(Math.random() * 51283), `fireproof.png`, { type: "image/png" })
+  ]
 }
