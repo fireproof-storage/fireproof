@@ -6,7 +6,7 @@ import { CID } from "multiformats/cid";
 
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 
-import { assert, matches, equals, resetDirectory, dataDir } from "../helpers.js";
+import { assert, matches, equals, resetDatabase, dataDir } from "../helpers.js";
 
 import { parseCarFile } from "@fireproof/core/storage-engine";
 
@@ -22,7 +22,7 @@ describe("basic Loader", function () {
 
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-loader-commit");
+    await resetDatabase(dataDir(), "test-loader-commit");
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM as EncryptedBlockstore);
     loader = new Loader("test-loader-commit", { public: true });
@@ -104,7 +104,7 @@ describe("basic Loader with two commits", function () {
 
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-loader-two-commit");
+    await resetDatabase(dataDir(), "test-loader-two-commit");
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM);
     loader = new Loader("test-loader-two-commit", { public: true });
@@ -200,7 +200,7 @@ describe("basic Loader with index commits", function () {
 
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-loader-index");
+    await resetDatabase(dataDir(), "test-loader-index");
     // t = new CarTransaction()
     ib = new EncryptedBlockstore({ name: "test-loader-index" });
     block = await encode({

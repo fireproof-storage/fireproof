@@ -7,7 +7,6 @@ import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime } from "./types.js";
 
 function toURL(path: string | URL): URL {
-  // console.log("toPath", path);
   if (path instanceof URL) return path;
   try {
     return new URL(path);
@@ -86,6 +85,10 @@ async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> 
       const { FileDataStore } = await import("../runtime/store-file.js");
       return new FileDataStore(url, loader.name);
     }
+    case "indexdb:": {
+      const { WebDataStore, getIndexDBName } = await import("../runtime/store-web.js");
+      return new WebDataStore(getIndexDBName(url, "data").dbName, url);
+    }
     default:
       throw new Error(`unsupported data store ${url.protocol}`);
   }
@@ -97,6 +100,10 @@ async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> 
       const { FileMetaStore } = await import("../runtime/store-file.js");
       return new FileMetaStore(url, loader.name);
     }
+    case "indexdb:": {
+      const { WebMetaStore, getIndexDBName } = await import("../runtime/store-web.js");
+      return new WebMetaStore(getIndexDBName(url, "meta").dbName, url);
+    }
     default:
       throw new Error(`unsupported meta store ${url.protocol}`);
   }
@@ -107,6 +114,10 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
     case "file:": {
       const { FileRemoteWAL } = await import("../runtime/store-file.js");
       return new FileRemoteWAL(url, loader);
+    }
+    case "indexdb:": {
+      const { WebRemoteWAL } = await import("../runtime/store-web.js");
+      return new WebRemoteWAL(loader, url);
     }
     case "sqlite:": {
       // const { WalStoreFactory } = await import("../runtime/store-sql/wal-type")
@@ -121,15 +132,15 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
 export function toStoreRuntime(name: string | undefined = undefined, opts: StoreOpts = {}): StoreRuntime {
   return {
     makeMetaStore: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.meta || dataDir(name)), loader, {
+      cacheStore(toURL(opts.stores?.meta || dataDir(name || loader.name)), loader, {
         meta: metaStoreFactory,
       }),
     makeDataStore: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.data || dataDir(name)), loader, {
+      cacheStore(toURL(opts.stores?.data || dataDir(name || loader.name)), loader, {
         data: dataStoreFactory,
       }),
     makeRemoteWAL: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name)), loader, {
+      cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name || loader.name)), loader, {
         remoteWAL: remoteWalFactory,
       }),
 

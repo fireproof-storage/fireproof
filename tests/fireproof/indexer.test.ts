@@ -1,4 +1,4 @@
-import { assert, equals, resetDirectory, equalsJSON, dataDir, itSkip } from "../helpers.js";
+import { assert, equals, resetDatabase, equalsJSON, dataDir, itSkip } from "../helpers.js";
 
 import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
@@ -15,7 +15,7 @@ describe("basic Index", () => {
   beforeEach(async function () {
     await SysContainer.start();
     // console.log("resetting directory", dataDir(), "test-indexer");
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
     // await sleep(1000);
     db = new Database("test-indexer");
     // await sleep(1000);
@@ -100,7 +100,7 @@ describe("Index query with compound key", function () {
   let indexer: Index<[string, number], TestType>;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
     db = new Database("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
@@ -123,7 +123,7 @@ describe("basic Index with map fun", function () {
   let indexer: Index<string, TestType>;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
 
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
@@ -147,7 +147,7 @@ describe("basic Index with map fun with value", function () {
   let indexer: Index<string, TestType, number>;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
 
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
@@ -182,7 +182,7 @@ describe("Index query with map and compound key", function () {
   let indexer: Index<[string, number], TestType>;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
     db = new Database("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
@@ -205,7 +205,7 @@ describe("basic Index with string fun", function () {
   let indexer: Index<string, TestType>;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
 
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
@@ -239,8 +239,8 @@ describe("basic Index upon cold start", function () {
   // result, mapFn;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer-cold");
-    await resetDirectory(dataDir(), "test-indexer-cold.idx");
+    await resetDatabase(dataDir(), "test-indexer-cold");
+    await resetDatabase(dataDir(), "test-indexer-cold.idx");
 
     // db = database()
     crdt = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
@@ -323,7 +323,7 @@ describe("basic Index with no data", function () {
   let didMap: boolean;
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDirectory(dataDir(), "test-indexer");
+    await resetDatabase(dataDir(), "test-indexer");
 
     db = new Database("test-indexer");
     indexer = new Index<string, TestType>(db._crdt, "hello", (doc) => {

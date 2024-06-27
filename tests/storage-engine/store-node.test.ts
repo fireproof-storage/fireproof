@@ -1,6 +1,6 @@
 import { CID } from "multiformats";
 
-import { matches, equals, dataDir } from "../helpers.js";
+import { matches, equals } from "../helpers.js";
 
 import { MetaStore, DataStore, Loader, Loadable } from "@fireproof/core/storage-engine";
 
@@ -12,7 +12,6 @@ const decoder = new TextDecoder("utf-8");
 
 describe("DataStore", function () {
   let store: DataStore;
-  // let runtime: StoreRuntime;
 
   beforeEach(async () => {
     await SysContainer.start();
@@ -29,9 +28,10 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
-    const data = await SysContainer.readfile(path);
-    equals(data.toString(), decoder.decode(car.bytes));
+    // const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
+    // const data = await SysContainer.readfile(path);
+    const data = await SysContainer.getDB(store.url, "data", car.cid + ".car");
+    equals(decoder.decode(data), decoder.decode(car.bytes));
   });
 });
 
@@ -50,9 +50,10 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
-    const data = await SysContainer.readfile(path);
-    equals(data.toString(), decoder.decode(car.bytes));
+    // const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
+    // const data = await SysContainer.readfile(path);
+    const data = await SysContainer.getDB(store.url, "data", car.cid + ".car");
+    equals(decoder.decode(data), decoder.decode(car.bytes));
   });
 
   it("should load a car", async function () {
@@ -88,9 +89,10 @@ describe("MetaStore", function () {
       key: undefined,
     };
     await store.save(h);
-    const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
-    const file = await SysContainer.readfile(path);
-    const header = JSON.parse(file.toString());
+    // const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
+    // const file = await SysContainer.readfile(path);
+    const file = await SysContainer.getDB(store.url, "meta", "main.json");
+    const header = JSON.parse(decoder.decode(file));
     assert(header);
     assert(header.cars)
     equals(header.cars[0]["/"], cid.toString());
@@ -111,10 +113,11 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should have a header", async function () {
-    const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
-    const data = await SysContainer.readfile(path);
+    // const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
+    // const data = await SysContainer.readfile(path);
+    const data = decoder.decode(await SysContainer.getDB(store.url, "meta", "main.json"));
     matches(data, /car/);
-    const header = JSON.parse(data.toString());
+    const header = JSON.parse(data);
     assert(header);
     assert(header.cars);
     equals(header.cars[0]["/"], cid.toString());

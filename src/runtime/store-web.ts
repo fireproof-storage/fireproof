@@ -1,16 +1,57 @@
 import { format, parse, ToString } from "@ipld/dag-json";
 import { openDB, IDBPDatabase } from "idb";
 import { AnyBlock, AnyLink, DbMeta } from "../storage-engine/types.js";
-import { DataStore as DataStoreBase, MetaStore as MetaStoreBase } from "../storage-engine/index.js";
+import { DataStore as DataStoreBase, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../storage-engine/index.js";
 import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal.js";
+
+export function getIndexDBName(
+  url: URL,
+  type: "data" | "meta" | "wal",
+  branch?: string,
+): {
+  fullDb: string;
+  dbName: string;
+} {
+  const fullDb = url.pathname.replace(/^\/+/, ""); // cut leading slashes
+  const dbName = fullDb.replace(new RegExp(`^fp.${STORAGE_VERSION}.`), ""); // cut fp prefix
+  let result: string;
+  switch (type) {
+    case "data":
+      result = `fp.${STORAGE_VERSION}.${dbName}`;
+      break;
+    case "meta":
+      result = `fp.${STORAGE_VERSION}.meta.${dbName}`;
+      break;
+    case "wal":
+      result = `fp.${STORAGE_VERSION}.wal.${dbName}`;
+      break;
+    default:
+      throw new Error(`invalid type ${type}`);
+  }
+  if (branch) {
+    result += `.${branch}`;
+  }
+  console.log("x", {
+    fullDb: result,
+    dbName,
+  });
+  return {
+    fullDb: result,
+    dbName,
+  };
+}
 
 export class WebDataStore extends DataStoreBase {
   readonly tag: string = "car-web-idb";
   idb?: IDBPDatabase<unknown>;
 
+  // constructor(name: string, url: URL) {
+  //   super(name, url);
+  // }
+
   async _withDB<T>(dbWorkFun: (arg0: IDBPDatabase<unknown>) => T): Promise<T> {
     if (!this.idb) {
-      const dbName = `fp.${this.STORAGE_VERSION}.${this.name}`;
+      const dbName = getIndexDBName(this.url, "data").fullDb; // `fp.${this.STORAGE_VERSION}.${this.name}`;
       this.idb = await openDB(dbName, 1, {
         upgrade(db): void {
           db.createObjectStore("cars");
@@ -50,7 +91,8 @@ export class WebRemoteWAL extends RemoteWALBase {
   readonly tag: string = "wal-web-ls";
 
   headerKey(branch: string) {
-    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
+    // return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
+    return getIndexDBName(this.url, "wal", branch).fullDb;
   }
 
   async load(branch = "main"): Promise<WALState | null> {
@@ -78,7 +120,8 @@ export class WebMetaStore extends MetaStoreBase {
   readonly tag: string = "header-web-ls";
 
   headerKey(branch: string) {
-    return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`;
+    // return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`;
+    return getIndexDBName(this.url, "meta", branch).fullDb;
   }
 
   async load(branch = "main"): Promise<DbMeta[] | null> {
