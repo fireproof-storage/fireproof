@@ -166,7 +166,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
     await this.xready();
-    if (!this.loader) throw new Error("loader required to get file");
+    if (!this.loader) throw new Error("loader required to get file, database must be named");
     const reader = await this.loader.loadFileCar(car, isPublic);
     const block = await reader.get(cid as CID);
     if (!block) throw new Error(`Missing block ${cid.toString()}`);
