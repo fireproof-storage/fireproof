@@ -22,11 +22,12 @@ describe("basic Loader", function () {
   let t: CarTransaction;
 
   beforeEach(async function () {
+    const testDbName = "test-loader-commit" + Math.random();
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-loader-commit");
+    await resetDatabase(dataDir(), testDbName);
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM as EncryptedBlockstore);
-    loader = new Loader("test-loader-commit", { public: true });
+    loader = new Loader(testDbName, { public: true });
     block = await encode({
       value: { hello: "world" },
       hasher,
@@ -100,13 +101,13 @@ describe("basic Loader with two commits", function () {
   let t: CarTransaction;
   let carCid: CarGroup;
   let carCid0: CarGroup;
-
   beforeEach(async function () {
+    const testDbName = "test-loader-two-commit" + Math.random();
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-loader-two-commit");
+    await resetDatabase(dataDir(), testDbName);
     const mockM = new MyMemoryBlockStore();
     t = new CarTransaction(mockM);
-    loader = new Loader("test-loader-two-commit", { public: true });
+    loader = new Loader(testDbName, { public: true });
     block = await encode({
       value: { hello: "world" },
       hasher,
@@ -186,6 +187,7 @@ describe("basic Loader with two commits", function () {
 
     const e = await loader.loadCar(carCid[0]).catch((e) => e);
     assert(e);
+    assert(e instanceof Error, 'e should be Error');
     matches(e.message, "missing car file");
   }, 10000);
 });
@@ -198,10 +200,11 @@ describe("basic Loader with index commits", function () {
   // let indexMap: Map<string, CID>;
 
   beforeEach(async function () {
+    const name = "test-loader-index" + Math.random();
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-loader-index");
+    await resetDatabase(dataDir(), name);
     // t = new CarTransaction()
-    ib = new EncryptedBlockstore({ name: "test-loader-index" });
+    ib = new EncryptedBlockstore({ name });
     block = await encode({
       value: { hello: "world" },
       hasher,
