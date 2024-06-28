@@ -75,8 +75,12 @@ export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
   // ready: Promise<void>;
-  xready(): Promise<void> {
+  ready(): Promise<void> {
     return Promise.resolve();
+  }
+
+  async close(): Promise<void> {
+    // no-op
   }
 
   constructor(ebOpts: BlockstoreOpts = {}) {
@@ -124,9 +128,15 @@ export class BaseBlockstore implements BlockFetcher {
 export class EncryptedBlockstore extends BaseBlockstore {
   readonly name: string;
   readonly loader: Loader;
-  xready(): Promise<void> {
-    return this.loader.xready();
+
+  ready(): Promise<void> {
+    return this.loader.ready();
   }
+
+  close(): Promise<void> {
+    return this.loader.close();
+  }
+
   compacting = false;
 
   constructor(ebOpts: BlockstoreOpts) {
@@ -165,7 +175,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
-    await this.xready();
+    await this.ready();
     if (!this.loader) throw new Error("loader required to get file, database must be named");
     const reader = await this.loader.loadFileCar(car, isPublic);
     const block = await reader.get(cid as CID);
@@ -174,7 +184,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   async compact() {
-    await this.xready();
+    await this.ready();
     if (!this.loader) throw new Error("loader required to compact");
     if (this.loader.carLog.length < 2) return;
     const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks));

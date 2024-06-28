@@ -344,6 +344,9 @@ describe("benchmarking a database", function () {
 describe("Reopening a database", function () {
   interface Doc { foo: string }
   let db: Database
+  afterEach(async function () {
+    await db.close();
+  })
   beforeEach(async function () {
     // erase the existing test data
     await SysContainer.start()
@@ -373,7 +376,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have a car in the car log", async function () {
-    await db._crdt.xready();
+    await db._crdt.ready();
     const blocks = db._crdt.blockstore as EncryptedBlockstore
     const loader = blocks.loader;
     assert(loader);
@@ -383,7 +386,7 @@ describe("Reopening a database", function () {
 
   it("should have carlog after reopen", async function () {
     const db2 = new Database("test-reopen");
-    await db2._crdt.xready();
+    await db2._crdt.ready();
     const blocks = db2._crdt.blockstore as EncryptedBlockstore
     const loader = blocks.loader;
     assert(loader);
@@ -396,7 +399,7 @@ describe("Reopening a database", function () {
       // console.log('iteration', i)
       const db = new Database("test-reopen");
       // assert(db._crdt.xready());
-      await db._crdt.xready();
+      await db._crdt.ready();
       const blocks = db._crdt.blockstore as EncryptedBlockstore
       const loader = blocks.loader;
       equals(loader.carLog.length, i + 1);
@@ -414,7 +417,7 @@ describe("Reopening a database", function () {
       // console.time("db open");
       const db = new Database("test-reopen", { autoCompact: 1000 }); // try with 10
       // assert(db._crdt.ready);
-      await db._crdt.xready();
+      await db._crdt.ready();
       // console.timeEnd("db open");
       const blocks = db._crdt.blockstore as EncryptedBlockstore
       const loader = blocks.loader;

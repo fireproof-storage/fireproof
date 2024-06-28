@@ -39,7 +39,7 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getDB: async (url: URL, storeName: string, key: string, fileType: "json" | "car", branch?: string) => {
-      const dbFile = path.join(getPath(url), storeName, key + '.' + fileType);
+      const dbFile = path.join(getPath(url), storeName, key + "." + fileType);
       const buffer = await fs.readFile(dbFile);
       return toArrayBuffer(buffer);
     },

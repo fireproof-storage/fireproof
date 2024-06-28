@@ -38,10 +38,14 @@ export class CRDT<T extends DocTypes> {
   readonly opts: ConfigOpts;
 
   readonly onceReady = new ResolveOnce<void>();
-  async xready(): Promise<void> {
+  async ready(): Promise<void> {
     return this.onceReady.once(async () => {
-      await Promise.all([this.blockstore.xready(), this.indexBlockstore.xready()]);
+      await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
     });
+  }
+
+  async close(): Promise<void> {
+    await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
   }
 
   readonly blockstore: BaseBlockstore;
@@ -92,7 +96,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
-    await this.xready();
+    await this.ready();
     const prevHead = [...this.clock.head];
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
@@ -111,7 +115,7 @@ export class CRDT<T extends DocTypes> {
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
   async allDocs(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
-    await this.xready();
+    await this.ready();
     const result: DocUpdate<T>[] = [];
     for await (const entry of getAllEntries<T>(this.blockstore, this.clock.head)) {
       result.push(entry);
@@ -120,7 +124,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   async vis(): Promise<string> {
-    await this.xready();
+    await this.ready();
     const txt: string[] = [];
     for await (const line of clockVis(this.blockstore, this.clock.head)) {
       txt.push(line);
@@ -129,12 +133,12 @@ export class CRDT<T extends DocTypes> {
   }
 
   async getBlock(cidString: string): Promise<Block> {
-    await this.xready();
+    await this.ready();
     return await getBlock(this.blockstore, cidString);
   }
 
   async get(key: string): Promise<DocValue<T> | null> {
-    await this.xready();
+    await this.ready();
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
     if (result.del) return null;
     return result;
@@ -147,7 +151,7 @@ export class CRDT<T extends DocTypes> {
     result: DocUpdate<T>[];
     head: ClockHead;
   }> {
-    await this.xready();
+    await this.ready();
     return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts);
   }
 

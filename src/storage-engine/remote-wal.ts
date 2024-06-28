@@ -4,6 +4,7 @@ import { type Loadable, carLogIncludesGroup } from "./loader.js";
 import { STORAGE_VERSION } from "./store.js";
 import { CommitQueue } from "./commit-queue.js";
 import { Falsy, throwFalsy } from "../types.js";
+import { ResolveOnce } from "./resolve-once.js";
 
 export interface WALState {
   operations: DbMeta[];
@@ -19,19 +20,12 @@ export abstract class RemoteWAL {
 
   readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly loader: Loadable;
-  readonly ready: Promise<void>;
-  readonly url: URL;
 
-  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
-  readonly processing: Promise<void> | undefined = undefined;
-  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
+  readonly _ready = new ResolveOnce<void>();
 
-  constructor(loader: Loadable, url: URL) {
-    this.loader = loader;
-    this.url = url;
-
-    this.ready = Promise.resolve().then(async () => {
-      const walState = await this.load().catch((e) => {
+  async xready() {
+    return this._ready.once(async () => {
+      const walState = await this._load().catch((e) => {
         console.error("error loading wal", e);
         return undefined;
       });
@@ -45,8 +39,19 @@ export abstract class RemoteWAL {
     });
   }
 
+  readonly url: URL;
+
+  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
+  readonly processing: Promise<void> | undefined = undefined;
+  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
+
+  constructor(loader: Loadable, url: URL) {
+    this.loader = loader;
+    this.url = url;
+  }
+
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
-    await this.ready;
+    await this.xready();
     if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
@@ -57,13 +62,13 @@ export abstract class RemoteWAL {
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
-    await this.ready;
+    await this.xready();
     this.walState.fileOperations.push({ cid: fileCid, public: publicFile });
     // await this.save(this.walState)
   }
 
   async _process() {
-    await this.ready;
+    await this.xready();
     if (!this.loader.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
       await this._doProcess();
@@ -150,6 +155,22 @@ export abstract class RemoteWAL {
     await rmlp;
   }
 
-  abstract load(branch?: string): Promise<WALState | Falsy>;
-  abstract save(state: WALState, branch?: string): Promise<void>;
+  async load(): Promise<WALState | Falsy> {
+    await this.xready();
+    return await this._load();
+  }
+
+  async save(state: WALState) {
+    await this.xready();
+    await this._save(state);
+  }
+
+  async close() {
+    await this.xready();
+    await this._close();
+  }
+
+  abstract _load(branch?: string): Promise<WALState | Falsy>;
+  abstract _save(state: WALState, branch?: string): Promise<void>;
+  abstract _close(): Promise<void>;
 }

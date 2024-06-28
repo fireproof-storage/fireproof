@@ -11,7 +11,7 @@ function toURL(path: string | URL): URL {
   try {
     const url = new URL(path);
     // console.log("toURL->", path, url.toString());
-    return url
+    return url;
   } catch (e) {
     const url = new URL(`file://${path}`); // `file://${path}
     // console.log("add file toURL->", path, url.toString());
@@ -46,15 +46,20 @@ async function waiter<T extends StoreTypes>(sw: StoreWaiter<T>, fn: () => Promis
   }
   const future = new Future<T>();
   if (sw.queued.length === 0) {
-    fn().then((store) => {
-      sw.cached = store;
-      const queued = [...sw.queued];
-      sw.queued.length = 0;
-      queued.forEach((f) => f.resolve(store));
-    });
+    fn()
+      .then((store) => {
+        sw.cached = store;
+        const queued = [...sw.queued];
+        sw.queued.length = 0;
+        queued.forEach((f) => f.resolve(store));
+      })
+      .catch((err) => {
+        console.error("waiter->ERR", err);
+      });
   }
   sw.queued.push(future);
-  return future.asPromise();
+  const ret = future.asPromise();
+  return ret;
 }
 
 async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: StoreFactories): Promise<T> {
@@ -77,6 +82,7 @@ async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: 
     return waiter(storeCache.data, () => sf.data!(url, loader)) as Promise<T>;
   }
   if (sf.remoteWAL) {
+    console.log("cacheStore->wal->", url.toString());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return waiter(storeCache.remoteWAL, () => sf.remoteWAL!(url, loader)) as Promise<T>;
   }
@@ -95,7 +101,7 @@ async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> 
       return new IndexDBDataStore(getIndexDBName(url, "data").dbName, url);
     }
     case "sqlite:": {
-      const { SQLDataStore } = await import("../runtime/store-sql/store-sql.js")
+      const { SQLDataStore } = await import("../runtime/store-sql/store-sql.js");
       return new SQLDataStore(url, loader.name);
     }
     default:
@@ -114,7 +120,7 @@ async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> 
       return new IndexDBMetaStore(getIndexDBName(url, "meta").dbName, url);
     }
     case "sqlite:": {
-      const { SQLMetaStore } = await import("../runtime/store-sql/store-sql.js")
+      const { SQLMetaStore } = await import("../runtime/store-sql/store-sql.js");
       return new SQLMetaStore(url, loader.name);
     }
     default:
@@ -129,11 +135,14 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
       return new FileRemoteWAL(url, loader);
     }
     case "indexdb:": {
+      console.log("remoteWalFactory->indexdb->enter->", url.toString());
       const { IndexDBRemoteWAL } = await import("../runtime/store-indexdb.js");
-      return new IndexDBRemoteWAL(loader, url);
+      const wal = new IndexDBRemoteWAL(loader, url);
+      console.log("remoteWalFactory->indexdb->leave->", url.toString());
+      return wal;
     }
     case "sqlite:": {
-      const { SQLRemoteWAL } = await import("../runtime/store-sql/store-sql.js")
+      const { SQLRemoteWAL } = await import("../runtime/store-sql/store-sql.js");
       return new SQLRemoteWAL(url, loader);
     }
     default:

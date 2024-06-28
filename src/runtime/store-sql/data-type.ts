@@ -115,6 +115,11 @@ export class SQLiteDataStore implements DataSQLStore {
     this.logger.Debug().Str("car", car).Msg("delete");
     return this.deleteStmt.run(car);
   }
+
+  async close(): Promise<void> {
+    this.logger.Debug().Msg("close");
+    await this.dbConn.close();
+  }
 }
 
 export function DataStoreFactory(db: DBConnection, opts?: Partial<SQLOpts>): SQLStore<DataRecord, string> {

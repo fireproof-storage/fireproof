@@ -18,8 +18,7 @@ export class FileRemoteWAL extends RemoteWAL {
     return SysContainer.join(getPath(this.url), "wal", branch + ".json");
   }
 
-  async load(branch = "main"): Promise<WALState | Falsy> {
-    await SysContainer.start();
+  async _load(branch = "main"): Promise<WALState | Falsy> {
     const filepath = this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
@@ -28,10 +27,13 @@ export class FileRemoteWAL extends RemoteWAL {
     return bytes && parse<WALState>(bytes.toString());
   }
 
-  async save(state: WALState, branch = "main"): Promise<void> {
+  async _save(state: WALState, branch = "main"): Promise<void> {
     const encoded: ToString<WALState> = format(state);
     const filepath = this.filePathForBranch(branch);
     await writePathFile(filepath, encoded);
+  }
+  async _close() {
+    // no-op
   }
 }
 
@@ -63,6 +65,9 @@ export class FileMetaStore extends MetaStore {
     await writePathFile(filepath, bytes);
     return undefined;
   }
+  async close() {
+    // no-op
+  }
 }
 
 export class FileDataStore extends DataStore {
@@ -92,6 +97,9 @@ export class FileDataStore extends DataStore {
   async remove(cid: AnyLink): Promise<void> {
     const filepath = this.cidPath(cid);
     await SysContainer.unlink(filepath);
+  }
+  async close() {
+    // no-op
   }
 }
 

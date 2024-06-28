@@ -5,6 +5,10 @@ export class ResolveOnce<T> {
   readonly _onceFutures: Future<T>[] = [];
   _once?: T;
 
+  get ready() {
+    return this._onceDone;
+  }
+
   async once(fn: () => Promise<T>): Promise<T> {
     if (this._onceDone) return this._once as T;
     const future = new Future<T>();

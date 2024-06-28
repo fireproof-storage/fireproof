@@ -4,6 +4,8 @@ import { AnyBlock, AnyLink, DbMeta } from "../storage-engine/types.js";
 import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../storage-engine/index.js";
 import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal.js";
 import { Falsy } from "../types.js";
+import { uuidv4 } from "uuidv7";
+import { ResolveOnce } from "../storage-engine/resolve-once.js";
 
 export interface DbName {
   readonly fullDb: string;
@@ -11,11 +13,7 @@ export interface DbName {
   readonly dbName: string;
 }
 
-export function getIndexDBName(
-  url: URL,
-  type: "data" | "meta" | "wal",
-  branch?: string,
-): DbName {
+export function getIndexDBName(url: URL, type: "data" | "meta" | "wal", branch?: string): DbName {
   const fullDb = url.pathname.replace(/^\/+/, ""); // cut leading slashes
   const dbName = fullDb.replace(new RegExp(`^fp.${STORAGE_VERSION}.`), ""); // cut fp prefix
   let result: string;
@@ -50,55 +48,59 @@ export interface SimpleDb {
 }
 
 export class EnsureDB {
-  idb?: IDBPDatabase<unknown>;
-  dbName?: DbName;
-
   readonly url: URL;
   readonly type: "data" | "meta" | "wal";
+
+  readonly id = uuidv4();
 
   constructor(url: URL, type: "data" | "meta" | "wal") {
     this.url = url;
     this.type = type;
   }
-  async get<T>(dbWorkFun: (arg0: SimpleDb) => T): Promise<T> {
-    if (!this.idb && !this.dbName) {
+  readonly getOnce = new ResolveOnce<{ db: IDBPDatabase<unknown>; dbName: DbName }>();
+  async get<T>(dbWorkFun: (arg0: SimpleDb) => Promise<T>): Promise<T> {
+    console.log(`get:${this.id}`);
+    const once = await this.getOnce.once(async () => {
+      console.log(`get:${this.id}:once`);
       const dbName = getIndexDBName(this.url, this.type); // `fp.${this.STORAGE_VERSION}.${this.name}`;
-      console.log("ensureDB:get", dbName);
-      this.idb = await openDB(dbName.fullDb, 1, {
+      // console.log(`openDB:pre:${this.id}`, dbName);
+      const db = await openDB(dbName.fullDb, 1, {
         upgrade(db) {
-          console.log("upgrade", dbName.type);
-          db.createObjectStore(dbName.type, {
-            autoIncrement: false,
-          });
-        }
+          for (const name of ["data", "meta", "wal"]) {
+            db.createObjectStore(name, {
+              autoIncrement: false,
+            });
+          }
+        },
       });
-      // this.idb.createObjectStore(dbName.type, {
-      //   autoIncrement: false,
-      // });
-      this.dbName = dbName;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const db = this.idb!;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const dbName = this.dbName!;
+      // console.log(`openDB:post:${this.id}`, dbName);
+      return { db, dbName };
+    });
+    // console.log(`get:${this.id}:once-done`);
     return await dbWorkFun({
       get: async (key: string) => {
-        const tx = db.transaction([dbName.type], 'readonly');
-        const bytes = await tx.objectStore(dbName.type).get(key)
-        await tx.done
-        return bytes
+        const tx = once.db.transaction([once.dbName.type], "readonly");
+        const bytes = await tx.objectStore(once.dbName.type).get(key);
+        await tx.done;
+        return bytes;
       },
       put: async (key: string, value: unknown) => {
-        const tx = db.transaction([dbName.type], 'readwrite');
-        await tx.objectStore(dbName.type).put(value, key)
-        await tx.done
+        // console.log("put", dbName, key, value);
+        const tx = once.db.transaction([once.dbName.type], "readwrite");
+        await tx.objectStore(once.dbName.type).put(value, key);
+        await tx.done;
       },
       delete: async (key: string) => {
-        const tx = db.transaction([dbName.type], 'readwrite');
-        await tx.objectStore(dbName.type).delete(key)
-        await tx.done
+        const tx = once.db.transaction([once.dbName.type], "readwrite");
+        await tx.objectStore(once.dbName.type).delete(key);
+        await tx.done;
       },
     });
+  }
+  async close() {
+    if (this.getOnce._once) {
+      this.getOnce._once.db.close();
+    }
   }
 }
 
@@ -114,7 +116,7 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     return await this.ensureDB.get(async (db) => {
-      const bytes = await db.get(cid.toString()) as Uint8Array;
+      const bytes = (await db.get(cid.toString())) as Uint8Array;
       // const tx = db.transaction([dbName.type], "readonly");
       // const bytes = (await tx.objectStore(dbName.type).get(cid.toString())) as Uint8Array;
       // await tx.done
@@ -125,12 +127,12 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async save(car: AnyBlock): Promise<void> {
     return await this.ensureDB.get(async (db: SimpleDb) => {
-      console.log("save", car.cid.toString())
+      // console.log("save", car.cid.toString())
       db.put(car.cid.toString(), car.bytes);
       // const tx = db.transaction([dbName.type], "readwrite");
       // await tx.objectStore(dbName.type).put(car.bytes, car.cid.toString());
       // await tx.done
-      return
+      return;
     });
   }
 
@@ -140,8 +142,11 @@ export class IndexDBDataStore extends DataStoreBase {
       // await tx.objectStore(dbName.type).delete(cid.toString());
       // await tx.done
       db.delete(cid.toString());
-      return
+      return;
     });
+  }
+  async close() {
+    this.ensureDB.close();
   }
 }
 
@@ -157,13 +162,16 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
 
   headerKey(branch: string) {
     // return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
-    return getIndexDBName(this.url, "wal", branch).fullDb;
+    // return getIndexDBName(this.url, "wal", branch).fullDb;
+    return branch;
   }
 
-  async load(branch = "main"): Promise<WALState | Falsy> {
+  async _load(branch = "main"): Promise<WALState | Falsy> {
+    // console.trace("IndexDBRemoteWAL:load", branch);
+    console.log("IndexDBRemoteWAL:load", branch);
     return await this.ensureDB.get(async (db: SimpleDb) => {
       try {
-        const bytesString = await db.get(this.headerKey(branch)) as string;
+        const bytesString = (await db.get(this.headerKey(branch))) as string;
         if (!bytesString) return undefined;
         return parse<WALState>(bytesString);
       } catch (e) {
@@ -173,7 +181,8 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
     });
   }
 
-  async save(state: WALState, branch = "main"): Promise<void> {
+  async _save(state: WALState, branch = "main"): Promise<void> {
+    console.log("IndexDBRemoteWAL:save", branch);
     return await this.ensureDB.get(async (db: SimpleDb) => {
       try {
         const encoded: ToString<WALState> = format(state);
@@ -187,6 +196,9 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
         throw e;
       }
     });
+  }
+  async _close() {
+    this.ensureDB.close();
   }
 }
 
@@ -202,13 +214,13 @@ export class IndexDBMetaStore extends MetaStoreBase {
 
   headerKey(branch: string) {
     // return `fp.${this.STORAGE_VERSION}.meta.${this.name}.${branch}`;
-    return branch // getIndexDBName(this.url, "meta").fullDb;
+    return branch; // getIndexDBName(this.url, "meta").fullDb;
   }
 
   async load(branch = "main"): Promise<DbMeta[] | Falsy> {
     return await this.ensureDB.get(async (db: SimpleDb) => {
       try {
-        const bytesString = await db.get(this.headerKey(branch)) as string;
+        const bytesString = (await db.get(this.headerKey(branch))) as string;
         // localStorage.getItem(this.headerKey(branch));
         if (!bytesString) return undefined;
         // browser assumes a single writer process
@@ -227,8 +239,7 @@ export class IndexDBMetaStore extends MetaStoreBase {
       try {
         const headerKey = this.headerKey(branch);
         const bytes = this.makeHeader(meta);
-        console.log("save", headerKey, bytes);
-        await db.put(bytes, headerKey);
+        await db.put(headerKey, bytes);
         // const tx = db.transaction([dbName.type], "readwrite");
         // await tx.objectStore(dbName.type).put(bytes, headerKey);
         // await tx.done
@@ -240,5 +251,8 @@ export class IndexDBMetaStore extends MetaStoreBase {
       }
       return undefined;
     });
+  }
+  async close() {
+    this.ensureDB.close();
   }
 }

@@ -19,6 +19,9 @@ export class MemoryDataStore extends DataStore {
   async remove(cid: AnyLink): Promise<void> {
     this.store.delete(cid.toString());
   }
+  async close() {
+    // no-op
+  }
 }
 
 export class MemoryMetaStore extends MetaStore {
@@ -52,6 +55,9 @@ export class MemoryMetaStore extends MetaStore {
       return null;
     }
   }
+  async close() {
+    // no-op
+  }
 }
 
 //
@@ -63,7 +69,7 @@ export class MemoryRemoteWAL extends RemoteWAL {
     return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
   }
 
-  async load(branch = "main"): Promise<WALState | null> {
+  async _load(branch = "main"): Promise<WALState | null> {
     try {
       const bytesString = this.store.get(this.headerKey(branch));
       if (!bytesString) return null;
@@ -72,7 +78,7 @@ export class MemoryRemoteWAL extends RemoteWAL {
       return null;
     }
   }
-  async save(state: WALState, branch = "main"): Promise<void> {
+  async _save(state: WALState, branch = "main"): Promise<void> {
     try {
       const encoded: ToString<WALState> = format(state);
       this.store.set(this.headerKey(branch), encoded);
@@ -80,5 +86,8 @@ export class MemoryRemoteWAL extends RemoteWAL {
       console.error("error saving wal", e);
       throw e;
     }
+  }
+  async _close() {
+    // no-op
   }
 }
