@@ -3,7 +3,7 @@ import type { AnyLink, CommitOpts, DbMeta } from "./types.js";
 import { type Loadable, carLogIncludesGroup } from "./loader.js";
 import { STORAGE_VERSION } from "./store.js";
 import { CommitQueue } from "./commit-queue.js";
-import { throwFalsy } from "../types.js";
+import { Falsy, throwFalsy } from "../types.js";
 
 export interface WALState {
   operations: DbMeta[];
@@ -33,10 +33,15 @@ export abstract class RemoteWAL {
     this.ready = Promise.resolve().then(async () => {
       const walState = await this.load().catch((e) => {
         console.error("error loading wal", e);
-        return null;
+        return undefined;
       });
-      this.walState.operations = walState?.operations || [];
-      this.walState.fileOperations = walState?.fileOperations || [];
+      if (!walState) {
+        this.walState.operations = [];
+        this.walState.fileOperations = [];
+      } else {
+        this.walState.operations = walState.operations || [];
+        this.walState.fileOperations = walState.fileOperations || [];
+      }
     });
   }
 
@@ -145,6 +150,6 @@ export abstract class RemoteWAL {
     await rmlp;
   }
 
-  abstract load(branch?: string): Promise<WALState | null>;
+  abstract load(branch?: string): Promise<WALState | Falsy>;
   abstract save(state: WALState, branch?: string): Promise<void>;
 }

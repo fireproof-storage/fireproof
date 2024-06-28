@@ -9,9 +9,13 @@ import { StoreOpts, StoreRuntime } from "./types.js";
 function toURL(path: string | URL): URL {
   if (path instanceof URL) return path;
   try {
-    return new URL(path);
+    const url = new URL(path);
+    // console.log("toURL->", path, url.toString());
+    return url
   } catch (e) {
-    return new URL(path, "file:");
+    const url = new URL(`file://${path}`); // `file://${path}
+    // console.log("add file toURL->", path, url.toString());
+    return url;
   }
 }
 
@@ -80,14 +84,19 @@ async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: 
 }
 
 async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> {
+  // console.log("dataStoreFactory->", url.toString());
   switch (url.protocol) {
     case "file:": {
       const { FileDataStore } = await import("../runtime/store-file.js");
       return new FileDataStore(url, loader.name);
     }
     case "indexdb:": {
-      const { WebDataStore, getIndexDBName } = await import("../runtime/store-web.js");
-      return new WebDataStore(getIndexDBName(url, "data").dbName, url);
+      const { IndexDBDataStore, getIndexDBName } = await import("../runtime/store-indexdb.js");
+      return new IndexDBDataStore(getIndexDBName(url, "data").dbName, url);
+    }
+    case "sqlite:": {
+      const { SQLDataStore } = await import("../runtime/store-sql/store-sql.js")
+      return new SQLDataStore(url, loader.name);
     }
     default:
       throw new Error(`unsupported data store ${url.protocol}`);
@@ -101,8 +110,12 @@ async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> 
       return new FileMetaStore(url, loader.name);
     }
     case "indexdb:": {
-      const { WebMetaStore, getIndexDBName } = await import("../runtime/store-web.js");
-      return new WebMetaStore(getIndexDBName(url, "meta").dbName, url);
+      const { IndexDBMetaStore, getIndexDBName } = await import("../runtime/store-indexdb.js");
+      return new IndexDBMetaStore(getIndexDBName(url, "meta").dbName, url);
+    }
+    case "sqlite:": {
+      const { SQLMetaStore } = await import("../runtime/store-sql/store-sql.js")
+      return new SQLMetaStore(url, loader.name);
     }
     default:
       throw new Error(`unsupported meta store ${url.protocol}`);
@@ -116,13 +129,12 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
       return new FileRemoteWAL(url, loader);
     }
     case "indexdb:": {
-      const { WebRemoteWAL } = await import("../runtime/store-web.js");
-      return new WebRemoteWAL(loader, url);
+      const { IndexDBRemoteWAL } = await import("../runtime/store-indexdb.js");
+      return new IndexDBRemoteWAL(loader, url);
     }
     case "sqlite:": {
-      // const { WalStoreFactory } = await import("../runtime/store-sql/wal-type")
-      // return new WalStoreFactory(url);
-      throw new Error(`unsupported remote WAL store ${url.protocol}`);
+      const { SQLRemoteWAL } = await import("../runtime/store-sql/store-sql.js")
+      return new SQLRemoteWAL(url, loader);
     }
     default:
       throw new Error(`unsupported remote WAL store ${url.protocol}`);

@@ -3,6 +3,11 @@ import { MetaStore, DataStore, RemoteWAL, WALState } from "../storage-engine/ind
 import type { Loadable } from "../storage-engine/index.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { SysContainer } from "./sys-container.js";
+import { Falsy } from "../types.js";
+
+export function getPath(url: URL): string {
+  return url.toString().replace(/^file:\/\//, "");
+}
 
 export class FileRemoteWAL extends RemoteWAL {
   constructor(dir: URL, loader: Loadable) {
@@ -10,17 +15,17 @@ export class FileRemoteWAL extends RemoteWAL {
   }
 
   filePathForBranch(branch: string): string {
-    return SysContainer.join(this.url.pathname, this.loader.name, "wal", branch + ".json");
+    return SysContainer.join(getPath(this.url), "wal", branch + ".json");
   }
 
-  async load(branch = "main"): Promise<WALState | null> {
+  async load(branch = "main"): Promise<WALState | Falsy> {
     await SysContainer.start();
     const filepath = this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
       throw e;
     });
-    return bytes ? parse<WALState>(bytes.toString()) : null;
+    return bytes && parse<WALState>(bytes.toString());
   }
 
   async save(state: WALState, branch = "main"): Promise<void> {
@@ -38,15 +43,14 @@ export class FileMetaStore extends MetaStore {
   }
 
   filePathForBranch(branch: string): string {
-    // console.log("filePathForBranch->", this.url.pathname, this.name, "meta", branch + ".json");
-    return SysContainer.join(this.url.pathname, this.name, "meta", branch + ".json");
+    return SysContainer.join(getPath(this.url), "meta", branch + ".json");
   }
 
-  async load(branch = "main"): Promise<DbMeta[] | null> {
+  async load(branch = "main"): Promise<DbMeta[] | Falsy> {
     await SysContainer.start();
     const filepath = this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
-      if (e.code === "ENOENT") return null;
+      if (e.code === "ENOENT") return undefined;
       throw e;
     });
     // currently FS is last-write-wins, assumes single writer process
@@ -57,7 +61,7 @@ export class FileMetaStore extends MetaStore {
     const filepath = this.filePathForBranch(branch);
     const bytes = this.makeHeader(meta);
     await writePathFile(filepath, bytes);
-    return null;
+    return undefined;
   }
 }
 
@@ -75,7 +79,7 @@ export class FileDataStore extends DataStore {
   }
 
   private cidPath(cid: AnyLink) {
-    return SysContainer.join(this.url.pathname, this.name, "data", cid.toString() + ".car");
+    return SysContainer.join(getPath(this.url), "data", cid.toString() + ".car");
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {

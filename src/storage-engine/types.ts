@@ -80,7 +80,7 @@ export interface TransactionWrapper<M extends TransactionMeta> {
   t: CarTransaction;
 }
 
-export type TransactionMeta = unknown
+export type TransactionMeta = unknown;
 //CRDTMeta | IndexTransactionMeta | FileTransactionMeta;
 
 // export interface MakeCodecCrypto {

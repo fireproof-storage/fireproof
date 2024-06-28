@@ -34,9 +34,9 @@ const globalLogger = new LoggerImpl();
 // export const textDecoder = new TextDecoder()
 
 export function ensureLogger(opts?: Partial<SQLOpts>, componentName?: string): Logger {
-  if (!opts?.logger) {
-    throw new Error("logger is required");
-  }
+  // if (!opts?.logger) {
+  //   throw new Error("logger is required");
+  // }
   const logger = opts?.logger || globalLogger;
   if (componentName) {
     return logger.With().Module(componentName).Logger();
@@ -214,7 +214,11 @@ export function ensureTableNames(opts?: Partial<SQLOpts>): SQLTableNames {
 // // }
 
 export class SQLiteConnection implements DBConnection {
-  static fromFilename(filename: string, opts?: Partial<SQLOpts>): DBConnection {
+  static fromURL(url: URL, opts?: Partial<SQLOpts>): DBConnection {
+    let filename = url.toString().replace("sqlite://", "");
+    if (!filename.endsWith(".sqlite")) {
+      filename += ".sqlite";
+    }
     return new SQLiteConnection(filename, opts);
   }
   readonly filename: string;
@@ -229,9 +233,13 @@ export class SQLiteConnection implements DBConnection {
   }
 
   private constructor(filename: string, opts?: Partial<SQLOpts>) {
+    console.log("SQLiteConnection:1:", filename);
     this.logger = ensureLogger(opts, "SQLiteConnection").With().Str("filename", filename).Logger();
+    console.log("SQLiteConnection:2:", filename);
     this.filename = filename;
+    console.log("SQLiteConnection:3:", filename);
     this.logger.Debug().Msg("constructor");
+    console.log("SQLiteConnection:4:", filename);
   }
   readonly connects: Promise<void>[] = [];
   isConnected = false;
@@ -244,11 +252,14 @@ export class SQLiteConnection implements DBConnection {
       return onConnected;
     }
     this.logger.Debug().Msg("connect");
+    console.log("SQLiteConnection:connect:0:", this.filename);
     const Sqlite3Database = (await import("better-sqlite3")).default;
+    console.log("SQLiteConnection:connect:1:", this.filename, process.cwd());
     this._client = new Sqlite3Database(this.filename, {
       // verbose: console.log,
       nativeBinding: "./node_modules/better-sqlite3/build/Release/better_sqlite3.node",
     });
+    console.log("SQLiteConnection:connect:2:", this.filename);
     // this.logger.Debug().Any("client", this.client).Msg("connected")
     if (!this._client) {
       throw this.logger.Error().Msg("connect failed").AsError();
