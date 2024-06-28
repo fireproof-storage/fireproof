@@ -1,4 +1,5 @@
-import type { NodeMap } from "./sys-container.js";
+import { getPath } from "./store-file.js";
+import { type NodeMap, join } from "./sys-container.js";
 
 function toArrayBuffer(buffer: Buffer) {
   const ab = new ArrayBuffer(buffer.length);
@@ -23,6 +24,7 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
     ...(await import(nodeOS)),
     ...(await import(nodeURL)),
     ...fs,
+    join,
     readdir: fs.readdir as NodeMap["readdir"],
     readfile: fs.readFile as NodeMap["readfile"],
     writefile: fs.writeFile as NodeMap["writefile"],
@@ -35,9 +37,9 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
         await fs.rm(path.join(fsdir, file), { recursive: true });
       }
     },
-    getDB: async (url: URL, storeName: string, key: string) => {
-      // awkward that the directory structure is doubled up
-      const dbFile = path.join(url.pathname, path.basename(url.pathname), storeName, key);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    getDB: async (url: URL, storeName: string, key: string, fileType: "json" | "car", branch?: string) => {
+      const dbFile = path.join(getPath(url), storeName, key + '.' + fileType);
       const buffer = await fs.readFile(dbFile);
       return toArrayBuffer(buffer);
     },

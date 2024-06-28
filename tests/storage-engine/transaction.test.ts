@@ -30,7 +30,6 @@ describe("Fresh TransactionBlockstore", function () {
       return { head: [] };
     });
     assert(txR);
-    console.log(txR);
     assert(txR.t);
     equalsJSON(txR.meta, { head: [] });
   });

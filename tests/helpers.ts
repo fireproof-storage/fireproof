@@ -44,8 +44,8 @@ export function matches<TA extends ToStringFn, TB extends ToStringFn>(actual: TA
 }
 
 export async function resetDatabase(dir: string, name: string) {
-  await SysContainer.deleteDB(dir, name);
-  await SysContainer.deleteDB(dir, name + ".idx");
+  await SysContainer.rawDB.delete(dir, name);
+  await SysContainer.rawDB.delete(dir, name + ".idx");
 }
 
 // Function to copy a directory

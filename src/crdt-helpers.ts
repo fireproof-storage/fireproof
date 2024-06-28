@@ -149,7 +149,11 @@ async function processFileset(store: StoreRuntime, blocks: CarTransaction, files
   }
 }
 
-export async function getValueFromCrdt<T extends DocTypes>(blocks: BaseBlockstore, head: ClockHead, key: string): Promise<DocValue<T>> {
+export async function getValueFromCrdt<T extends DocTypes>(
+  blocks: BaseBlockstore,
+  head: ClockHead,
+  key: string,
+): Promise<DocValue<T>> {
   if (!head.length) throw new Error("Getting from an empty database");
   const link = await get(blocks, head, key);
   if (!link) throw new Error(`Missing key ${key}`);

@@ -1,10 +1,13 @@
 import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike } from "node:fs";
 
 import * as stdEnv from "std-env";
-import { throwFalsy } from "../types.js";
 import { uuidv4 } from "uuidv7";
+import { deleteDB as dbDelete } from "idb";
+
+import { throwFalsy } from "../types.js";
 import { ResolveOnce } from "../storage-engine/resolve-once.js";
-import { deleteDB as dbDelete, openDB } from "idb";
+import { EnsureDB } from './store-indexdb.js'
+
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
@@ -25,7 +28,7 @@ export interface NodeMap {
   unlink: (path: PathLike) => Promise<void>;
   writefile: (path: PathLike, data: Uint8Array | string) => Promise<void>;
   deleteDB(dir: string, name: string): Promise<void>;
-  getDB(storeUrl: URL, dbname: string, key: string): Promise<ArrayBuffer>;
+  getDB(storeUrl: URL, dbname: string, key: string, fileType: "json" | "car", branch?: string): Promise<ArrayBuffer>;
 }
 
 export function assert(condition: unknown, message?: string | Error): asserts condition {
@@ -34,10 +37,15 @@ export function assert(condition: unknown, message?: string | Error): asserts co
 
 const onceStart = new ResolveOnce<void>();
 
+export function join(...paths: string[]): string {
+  return paths.map((i) => i.replace(/\/+$/, "")).join("/")
+}
+
+
 class sysContainer {
   freight: NodeMap = {
     state: "seeded",
-    join: (...paths: string[]) => paths.map((i) => i.replace(/\/+$/, "")).join("/"),
+    join,
     dirname: (path: string) => path.split("/").slice(0, -1).join("/"),
     homedir: () => {
       throw new Error("SysContainer:homedir is not available in seeded state");
@@ -71,12 +79,15 @@ class sysContainer {
       return dbDelete(name);
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async getDB(url: URL, dbName: string, key: string) {
-      console.log("getDB", url.toString(), dbName, key);
-      const db = await openDB(url.pathname, 1);
-      const bytes = await db.get(dbName, key);
-      db.close();
-      return bytes;
+    async getDB(url: URL, dbName: string, key: string, fileType: "json" | "car", branch?: string) {
+      const ensureDB = new EnsureDB(url, dbName as "data" | "meta" | "wal");
+      return ensureDB.get(async (db) => {
+        let bytes = await db.get(key);
+        if (typeof bytes === "string") {
+          bytes = new TextEncoder().encode(bytes);
+        }
+        return bytes as Uint8Array;
+      })
     },
   };
 
@@ -172,14 +183,16 @@ class sysContainer {
     return throwFalsy(this.freight).homedir();
   };
 
-  deleteDB(dir: string, name: string) {
-    this.logSeeded("deleteDB");
-    return throwFalsy(this.freight).deleteDB(dir, name);
-  }
+  readonly rawDB = {
+    delete: (dir: string, name: string) => {
+      this.logSeeded("deleteDB");
+      return throwFalsy(this.freight).deleteDB(dir, name);
+    },
 
-  getDB(storeURL: URL, dbname: string, key: string) {
-    this.logSeeded("getDb");
-    return throwFalsy(this.freight).getDB(storeURL, dbname, key);
+    get: (storeURL: URL, dbname: string, key: string, fileType: "json" | "car", branch?: string) => {
+      this.logSeeded("getDb");
+      return throwFalsy(this.freight).getDB(storeURL, dbname, key, fileType, branch);
+    }
   }
 
   logSeeded(method: string) {
