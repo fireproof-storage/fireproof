@@ -127,6 +127,10 @@ class SQLiteWalStore implements WalSQLStore {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
     return this.deleteStmt.run(key.name, key.branch);
   }
+  async close(): Promise<void> {
+    this.logger.Debug().Msg("close");
+    await this.dbConn.close();
+  }
 }
 
 export function WalStoreFactory(db: DBConnection, opts?: Partial<SQLOpts>): WalSQLStore {

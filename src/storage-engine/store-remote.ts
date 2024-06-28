@@ -90,6 +90,9 @@ export class RemoteDataStore extends DataStore {
   async remove(cid: AnyLink): Promise<void> {
     throw new Error("not implemented");
   }
+  async close() {
+    // no-op
+  }
 }
 
 export class RemoteMetaStore extends MetaStore {
@@ -152,6 +155,9 @@ export class RemoteMetaStore extends MetaStore {
       return this.parseHeader(txt);
     });
   }
+  async close() {
+    // no-op
+  }
 }
 
 export class RemoteWALStore extends RemoteWAL {
@@ -167,13 +173,16 @@ export class RemoteWALStore extends RemoteWAL {
     return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
   }
 
-  async load(branch = "main"): Promise<WALState | null> {
+  async _load(branch = "main"): Promise<WALState | null> {
     const bytesString = this.store.get(this.headerKey(branch));
     if (!bytesString) return null;
     return parse<WALState>(bytesString);
   }
-  async save(state: WALState, branch = "main"): Promise<void> {
+  async _save(state: WALState, branch = "main"): Promise<void> {
     const encoded: ToString<WALState> = format(state);
     this.store.set(this.headerKey(branch), encoded);
+  }
+  async _close() {
+    // no-op
   }
 }

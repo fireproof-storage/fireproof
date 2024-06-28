@@ -5,7 +5,7 @@ import { matches, equals } from "../helpers.js";
 import { MetaStore, DataStore, Loader, Loadable } from "@fireproof/core/storage-engine";
 
 import { toStoreRuntime } from "@fireproof/core/storage-engine"
-import { AnyBlock, DbMeta, StoreRuntime } from "@fireproof/core/storage-engine";
+import { AnyBlock, DbMeta } from "@fireproof/core/storage-engine";
 import { SysContainer, assert } from "@fireproof/core/runtime";
 
 const decoder = new TextDecoder("utf-8");
@@ -15,7 +15,7 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     await SysContainer.start();
-    store = await toStoreRuntime().makeDataStore({ name: "test" } as Loadable);
+    store = await (await toStoreRuntime()).makeDataStore({ name: "test" } as Loadable);
   });
 
   it("should have a name", function () {
@@ -41,7 +41,7 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     await SysContainer.start();
-    store = await toStoreRuntime().makeDataStore({ name: "test2" } as Loadable);
+    store = await (await toStoreRuntime()).makeDataStore({ name: "test2" } as Loadable);
     car = {
       cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -75,7 +75,7 @@ describe("MetaStore", function () {
 
   beforeEach(async function () {
     await SysContainer.start();
-    store = await toStoreRuntime().makeMetaStore({ name: "test" } as unknown as Loader);
+    store = await (await toStoreRuntime()).makeMetaStore({ name: "test" } as unknown as Loader);
   });
 
   it("should have a name", function () {
@@ -103,7 +103,7 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async function () {
     await SysContainer.start();
-    store = await toStoreRuntime().makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
+    store = await (await toStoreRuntime()).makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid], key: undefined });
   });

@@ -9,4 +9,5 @@ export interface SQLStore<IType, KType, OType = IType[]> {
   insert(ose: IType): Promise<RunResult>;
   select(car: KType): Promise<OType>;
   delete(car: KType): Promise<RunResult>;
+  close(): Promise<void>;
 }

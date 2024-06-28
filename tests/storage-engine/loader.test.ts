@@ -16,16 +16,23 @@ import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "@fireproof/core/
 import { SysContainer } from "@fireproof/core/runtime"
 import { CRDTMeta, IndexTransactionMeta } from "use-fireproof";
 
-describe("basic Loader", function () {
+describe("basic Loader simple", function () {
   let loader: Loader;
   let block: BlockView;
   let t: CarTransaction;
 
+  afterEach(async function () {
+    console.log(`af-0`)
+    await loader.close();
+  })
+
   beforeEach(async function () {
-    const testDbName = "test-loader-commit" + Math.random();
+    const testDbName = "test-loader-commit";
+    console.log(`bf-0`)
     await SysContainer.start();
     await resetDatabase(dataDir(), testDbName);
     const mockM = new MyMemoryBlockStore();
+    console.log(`bf-2`)
     t = new CarTransaction(mockM as EncryptedBlockstore);
     loader = new Loader(testDbName, { public: true });
     block = await encode({
@@ -33,18 +40,26 @@ describe("basic Loader", function () {
       hasher,
       codec,
     });
+    console.log(`bf-3`)
     await t.put(block.cid, block.bytes);
+    console.log(`bf-4`)
     await mockM.put(block.cid, block.bytes);
+    console.log(`bf-5`)
   });
   it("should have an empty car log", function () {
     equals(loader.carLog.length, 0);
   });
   it("should commit", async function () {
+    console.log(`-1`);
     const carGroup = await loader.commit(t, { head: [block.cid] });
+    console.log(`-2`);
     equals(loader.carLog.length, 1);
+    console.log(`-3`);
     const reader = await loader.loadCar(carGroup[0]);
+    console.log(`-4`);
     assert(reader);
     const parsed = await parseCarFile<CRDTMeta>(reader);
+    console.log(`-5`);
     assert(parsed.cars);
     equals(parsed.cars.length, 0);
     assert(parsed.meta);
@@ -63,9 +78,13 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
       name: "MyMemoryBlockStore",
     };
     super(ebOpts);
-    this.ready = Promise.resolve();
   }
-  readonly ready: Promise<void>;
+  ready(): Promise<void> {
+    return Promise.resolve();
+  }
+  close(): Promise<void> {
+    return this.loader.close();
+  }
   loader: Loader = new Loader("MyMemoryBlockStore", {})
   readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
@@ -101,45 +120,63 @@ describe("basic Loader with two commits", function () {
   let t: CarTransaction;
   let carCid: CarGroup;
   let carCid0: CarGroup;
+
+  afterEach(async function () {
+    await loader.close();
+  })
+
   beforeEach(async function () {
-    const testDbName = "test-loader-two-commit" + Math.random();
+    const testDbName = "test-loader-two-commit" 
+    console.log(`bfx-0`)
     await SysContainer.start();
     await resetDatabase(dataDir(), testDbName);
+    console.log(`bfx-2`)
     const mockM = new MyMemoryBlockStore();
+    console.log(`bfx-3`)
     t = new CarTransaction(mockM);
     loader = new Loader(testDbName, { public: true });
+    console.log(`bfx-5`)
     block = await encode({
       value: { hello: "world" },
       hasher,
       codec,
     });
+    console.log(`bfx-6`)
     await t.put(block.cid, block.bytes);
+    console.log(`bfx-7`)
     carCid0 = await loader.commit(t, { head: [block.cid] });
+    console.log(`bfx-8`)
 
     block2 = await encode({
       value: { hello: "universe" },
       hasher,
       codec,
     });
+    console.log(`bfx-9`)
 
     await t.put(block2.cid, block2.bytes);
+    console.log(`bfx-10`)
     carCid = await loader.commit(t, { head: [block2.cid] });
+    console.log(`bfx-11`)
 
     block3 = await encode({
       value: { hello: "multiverse" },
       hasher,
       codec,
     });
-
+    console.log(`bfx-12`)
     await t.put(block3.cid, block3.bytes);
+    console.log(`bfx-13`)
 
     block4 = await encode({
       value: { hello: "megaverse" },
       hasher,
       codec,
     });
+    console.log(`bfx-14`)
 
     await t.put(block4.cid, block4.bytes);
+    console.log(`bfx-15`)
   });
 
   it("should have a car log", function () {
@@ -198,6 +235,10 @@ describe("basic Loader with index commits", function () {
   let indexerResult: IndexTransactionMeta;
   let cid: CID;
   // let indexMap: Map<string, CID>;
+
+  afterEach(async function () {
+    await ib.close();
+  })
 
   beforeEach(async function () {
     const name = "test-loader-index" + Math.random();

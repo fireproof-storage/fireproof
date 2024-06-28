@@ -5,6 +5,7 @@ import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } f
 import { advance } from "@web3-storage/pail/clock";
 import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
+import { ResolveOnce } from "./storage-engine/resolve-once.js";
 
 export class CRDTClock<T extends DocTypes> {
   // todo: track local and remote clocks independently, merge on read
@@ -19,6 +20,17 @@ export class CRDTClock<T extends DocTypes> {
   readonly blockstore: BaseBlockstore;
 
   readonly applyHeadQueue: ApplyHeadQueue<T>;
+
+  readonly _ready = new ResolveOnce<void>();
+  async ready() {
+    return this._ready.once(async () => {
+      await this.blockstore.ready();
+    });
+  }
+
+  async close() {
+    await this.blockstore.close();
+  }
 
   constructor(blockstore: BaseBlockstore) {
     this.blockstore = blockstore;

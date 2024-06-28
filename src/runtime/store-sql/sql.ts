@@ -8,7 +8,7 @@ export function SQLFactory(databaseURL: URL, opts?: Partial<SQLOpts>): DBConnect
     case "sqlite:":
       logger.Info().Str("databaseURL", databaseURL.toString()).Msg("connecting to sqlite");
       return SQLiteConnection.fromURL(databaseURL, {
-        logger: new LoggerImpl().EnableLevel(Level.DEBUG)
+        logger: new LoggerImpl().EnableLevel(Level.DEBUG),
       });
     default:
       throw logger

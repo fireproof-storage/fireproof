@@ -127,7 +127,7 @@ describe("named Database with record", function () {
     const blocks = db._crdt.blockstore as EncryptedBlockstore
     const loader = blocks.loader;
     assert(loader)
-    await loader.xready();
+    await loader.ready();
     equals(loader.key?.length, 64);
     equals(loader.keyId?.length, 64);
     notEquals(loader.key, loader.keyId);
@@ -270,7 +270,7 @@ describe("basic Database parallel writes / public", function () {
     const blocks = db._crdt.blockstore as EncryptedBlockstore
     const loader = blocks.loader;
     assert(loader)
-    await loader.xready();
+    await loader.ready();
     equals(loader.key, undefined);
     equals(loader.keyId, undefined);
   });

@@ -44,8 +44,15 @@ export function matches<TA extends ToStringFn, TB extends ToStringFn>(actual: TA
 }
 
 export async function resetDatabase(dir: string, name: string) {
-  await SysContainer.rawDB.delete(dir, name);
-  await SysContainer.rawDB.delete(dir, name + ".idx");
+  try {
+    console.log(`resetDatabase:1`);
+    await SysContainer.rawDB.delete(dir, name);
+    console.log(`resetDatabase:2`);
+    await SysContainer.rawDB.delete(dir, name + ".idx");
+    console.log(`resetDatabase:3`);
+  } catch (e) {
+    //
+  }
 }
 
 // Function to copy a directory
