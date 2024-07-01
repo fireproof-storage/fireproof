@@ -49,10 +49,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   async destroy(): Promise<void> {
-    await Promise.all([
-      this.blockstore.destroy(),
-      this.indexBlockstore.destroy()
-    ])
+    await Promise.all([this.blockstore.destroy(), this.indexBlockstore.destroy()]);
   }
 
   readonly blockstore: BaseBlockstore;

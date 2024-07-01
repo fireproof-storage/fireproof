@@ -15,6 +15,11 @@ describe("DataStore", function () {
   let store: DataStore;
   let raw: TestStore;
 
+  afterEach(async () => {
+    await store.close();
+    await store.destroy();
+  })
+
   beforeEach(async () => {
     await SysContainer.start();
     store = await toStoreRuntime().makeDataStore({ name: "test" } as Loadable);
@@ -27,7 +32,7 @@ describe("DataStore", function () {
 
   it("should save a car", async function () {
     const car: AnyBlock = {
-      cid: "cid" as unknown as CID,
+      cid: "cidKey" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
@@ -43,6 +48,10 @@ describe("DataStore with a saved car", function () {
   let raw: TestStore;
   let car: AnyBlock;
 
+  afterEach(async () => {
+    await store.close();
+    await store.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
     store = await toStoreRuntime().makeDataStore({ name: "test2" } as Loadable);
@@ -79,6 +88,10 @@ describe("MetaStore", function () {
   let store: MetaStore
   let raw: TestStore;
 
+  afterEach(async () => {
+    await store.close();
+    await store.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
     store = await toStoreRuntime().makeMetaStore({ name: "test" } as unknown as Loader);
@@ -109,6 +122,11 @@ describe("MetaStore with a saved header", function () {
   let store: MetaStore
   let raw: TestStore;
   let cid: CID;
+
+  afterEach(async () => {
+    await store.close();
+    await store.destroy();
+  })
 
   beforeEach(async function () {
     await SysContainer.start();

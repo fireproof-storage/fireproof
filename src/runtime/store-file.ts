@@ -180,16 +180,17 @@ function toArrayBuffer(buffer: Buffer) {
 }
 
 export class FileTestStore implements TestStore {
-  constructor(readonly url: URL) { }
+  constructor(readonly url: URL) {}
 
-  async delete() {
-    const fsdir = getPath(this.url);
-    await SysContainer.mkdir(fsdir, { recursive: true });
-    const files = await SysContainer.readdir(fsdir);
-    for (const file of files) {
-      await SysContainer.rm(SysContainer.join(fsdir, file), { recursive: true });
-    }
-  }
+  // async delete() {
+  //   const fsdir = getPath(this.url);
+  //   await SysContainer.mkdir(fsdir, { recursive: true });
+  //   const files = await SysContainer.readdir(fsdir);
+  //   for (const file of files) {
+  //     await SysContainer.rm(SysContainer.join(fsdir, file), { recursive: true });
+  //   }
+  //   throw new Error("Method not implemented.");
+  // }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(key: string) {
     const dbFile = SysContainer.join(getPath(this.url), getStore(this.url), getFileName(this.url, key));
