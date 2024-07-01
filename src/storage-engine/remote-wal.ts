@@ -23,7 +23,7 @@ export abstract class RemoteWAL {
 
   readonly _ready = new ResolveOnce<void>();
 
-  async xready() {
+  async ready() {
     return this._ready.once(async () => {
       const walState = await this._load().catch((e) => {
         console.error("error loading wal", e);
@@ -51,7 +51,7 @@ export abstract class RemoteWAL {
   }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
-    await this.xready();
+    await this.ready();
     if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
@@ -62,13 +62,13 @@ export abstract class RemoteWAL {
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
-    await this.xready();
+    await this.ready();
     this.walState.fileOperations.push({ cid: fileCid, public: publicFile });
     // await this.save(this.walState)
   }
 
   async _process() {
-    await this.xready();
+    await this.ready();
     if (!this.loader.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
       await this._doProcess();
@@ -156,21 +156,27 @@ export abstract class RemoteWAL {
   }
 
   async load(): Promise<WALState | Falsy> {
-    await this.xready();
+    await this.ready();
     return await this._load();
   }
 
   async save(state: WALState) {
-    await this.xready();
+    await this.ready();
     await this._save(state);
   }
 
   async close() {
-    await this.xready();
+    await this.ready();
     await this._close();
+  }
+
+  async destroy() {
+    await this.ready();
+    await this._destroy();
   }
 
   abstract _load(branch?: string): Promise<WALState | Falsy>;
   abstract _save(state: WALState, branch?: string): Promise<void>;
   abstract _close(): Promise<void>;
+  abstract _destroy(): Promise<void>;
 }

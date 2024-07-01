@@ -4,17 +4,15 @@ import { decodeFile, encodeFile } from "../runtime/files.js";
 import { Loadable } from "./loader.js";
 import { RemoteWAL } from "./remote-wal.js";
 import { DataStore, MetaStore } from "./store.js";
-import { StoreOpts, StoreRuntime } from "./types.js";
+import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
 
-function toURL(path: string | URL): URL {
+export function toURL(path: string | URL): URL {
   if (path instanceof URL) return path;
   try {
     const url = new URL(path);
-    // console.log("toURL->", path, url.toString());
     return url;
   } catch (e) {
-    const url = new URL(`file://${path}`); // `file://${path}
-    // console.log("add file toURL->", path, url.toString());
+    const url = new URL(`file://${path}`);
     return url;
   }
 }
@@ -82,7 +80,7 @@ async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: 
     return waiter(storeCache.data, () => sf.data!(url, loader)) as Promise<T>;
   }
   if (sf.remoteWAL) {
-    console.log("cacheStore->wal->", url.toString());
+    // console.log("cacheStore->wal->", url.toString());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return waiter(storeCache.remoteWAL, () => sf.remoteWAL!(url, loader)) as Promise<T>;
   }
@@ -90,6 +88,7 @@ async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: 
 }
 
 async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> {
+  url.searchParams.set("store", "data");
   // console.log("dataStoreFactory->", url.toString());
   switch (url.protocol) {
     case "file:": {
@@ -110,6 +109,7 @@ async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> 
 }
 
 async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> {
+  url.searchParams.set("store", "meta");
   switch (url.protocol) {
     case "file:": {
       const { FileMetaStore } = await import("../runtime/store-file.js");
@@ -129,16 +129,15 @@ async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> 
 }
 
 async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> {
+  url.searchParams.set("store", "remoteWAL");
   switch (url.protocol) {
     case "file:": {
       const { FileRemoteWAL } = await import("../runtime/store-file.js");
       return new FileRemoteWAL(url, loader);
     }
     case "indexdb:": {
-      console.log("remoteWalFactory->indexdb->enter->", url.toString());
       const { IndexDBRemoteWAL } = await import("../runtime/store-indexdb.js");
       const wal = new IndexDBRemoteWAL(loader, url);
-      console.log("remoteWalFactory->indexdb->leave->", url.toString());
       return wal;
     }
     case "sqlite:": {
@@ -147,6 +146,25 @@ async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> 
     }
     default:
       throw new Error(`unsupported remote WAL store ${url.protocol}`);
+  }
+}
+
+export async function testStoreFactory(url: URL): Promise<TestStore> {
+  switch (url.protocol) {
+    case "file:": {
+      const { FileTestStore } = await import("../runtime/store-file.js");
+      return new FileTestStore(url);
+    }
+    case "indexdb:": {
+      const { IndexDBTestStore } = await import("../runtime/store-indexdb.js");
+      return new IndexDBTestStore(url);
+    }
+    case "sqlite:": {
+      const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
+      return new SQLTestStore(url);
+    }
+    default:
+      throw new Error(`unsupported test store ${url.protocol}`);
   }
 }
 

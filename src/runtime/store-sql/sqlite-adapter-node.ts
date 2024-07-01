@@ -1,4 +1,4 @@
-import { Database } from "better-sqlite3";
+import type { Database } from "better-sqlite3";
 
 // import { format, parse, ToString } from '@ipld/dag-json'
 
@@ -10,6 +10,7 @@ import { Database } from "better-sqlite3";
 // import { WalSQLStore, WalStoreFactory } from './wal-type';
 import { Logger, LoggerImpl } from "@adviser/cement";
 import { DBConnection } from "./types.js";
+import { SysContainer } from "../sys-container.js";
 
 export interface SQLTableNames {
   readonly data: string;
@@ -233,13 +234,9 @@ export class SQLiteConnection implements DBConnection {
   }
 
   private constructor(filename: string, opts?: Partial<SQLOpts>) {
-    console.log("SQLiteConnection:1:", filename);
     this.logger = ensureLogger(opts, "SQLiteConnection").With().Str("filename", filename).Logger();
-    console.log("SQLiteConnection:2:", filename);
     this.filename = filename;
-    console.log("SQLiteConnection:3:", filename);
     this.logger.Debug().Msg("constructor");
-    console.log("SQLiteConnection:4:", filename);
   }
   readonly connects: Promise<void>[] = [];
   isConnected = false;
@@ -252,14 +249,12 @@ export class SQLiteConnection implements DBConnection {
       return onConnected;
     }
     this.logger.Debug().Msg("connect");
-    console.log("SQLiteConnection:connect:0:", this.filename);
     const Sqlite3Database = (await import("better-sqlite3")).default;
-    console.log("SQLiteConnection:connect:1:", this.filename, process.cwd());
+    await SysContainer.mkdir(SysContainer.dirname(this.filename), { recursive: true });
     this._client = new Sqlite3Database(this.filename, {
       // verbose: console.log,
       nativeBinding: "./node_modules/better-sqlite3/build/Release/better_sqlite3.node",
     });
-    console.log("SQLiteConnection:connect:2:", this.filename);
     // this.logger.Debug().Any("client", this.client).Msg("connected")
     if (!this._client) {
       throw this.logger.Error().Msg("connect failed").AsError();

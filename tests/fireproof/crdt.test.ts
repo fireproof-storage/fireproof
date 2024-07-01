@@ -1,4 +1,4 @@
-import { assert, equals, matches, notEquals, resetDatabase, dataDir, itSkip } from "../helpers.js";
+import { assert, equals, matches, notEquals, dataDir, itSkip } from "../helpers.js";
 
 import { uuidv4 } from "uuidv7";
 
@@ -6,20 +6,20 @@ import { CRDT } from "@fireproof/core";
 import { parseCarFile } from "@fireproof/core/storage-engine";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
-import { AnyBlock, EncryptedBlockstore, Loader, TransactionMeta } from "@fireproof/core/storage-engine";
+import { AnyBlock, EncryptedBlockstore, Loader } from "@fireproof/core/storage-engine";
 import { SysContainer } from "@fireproof/core/runtime";
+import { after } from "node:test";
 
-
-function testName(): string | undefined {
-  return undefined
-  // return `test@${uuidv4()}`;
-}
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    crdt = new CRDT(testName());
+    crdt = new CRDT()
   });
   it("should have an empty head", async function () {
     const head = crdt.clock.head;
@@ -45,9 +45,14 @@ describe("CRDT with one record", function () {
     readonly hello: string;
     readonly nice: string;
   }
-
   let crdt: CRDT<Partial<CRDTTestType>>;
   let firstPut: CRDTMeta;
+
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
+
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT(`test@${uuidv4()}`);
@@ -92,9 +97,14 @@ describe("CRDT with a multi-write", function () {
   }
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
+
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    crdt = new CRDT(testName());
+    crdt = new CRDT();
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -152,9 +162,13 @@ describe("CRDT with two multi-writes", function () {
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async () => {
     await SysContainer.start();
-    crdt = new CRDT(testName());
+    crdt = new CRDT();
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -195,9 +209,12 @@ describe("CRDT with two multi-writes", function () {
 
 describe("Compact a named CRDT with writes", function () {
   let crdt: CRDT<CRDTTestType>;
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "named-crdt-compaction");
     crdt = new CRDT("named-crdt-compaction");
     for (let i = 0; i < 10; i++) {
       const bulk = [
@@ -247,9 +264,13 @@ describe("Compact a named CRDT with writes", function () {
 describe("CRDT with an index", function () {
   let crdt: CRDT<CRDTTestType>;
   let idx: Index<number, CRDTTestType>;
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    crdt = new CRDT<CRDTTestType>(testName());
+    crdt = new CRDT<CRDTTestType>();
     await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -290,9 +311,12 @@ describe("Loader with a committed transaction", function () {
   let crdt: CRDT<CRDTTestType>;
   let done: CRDTMeta;
   const dbname = "test-loader";
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-loader");
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
@@ -329,11 +353,13 @@ describe("Loader with two committed transactions", function () {
   let blockstore: EncryptedBlockstore;
   let done1: CRDTMeta
   let done2: CRDTMeta
-  const dbname = "test-loader";
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-loader");
-    crdt = new CRDT(dbname);
+    crdt = new CRDT("test-loader");
     blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;
@@ -373,13 +399,14 @@ describe("Loader with many committed transactions", function () {
   let blockstore: EncryptedBlockstore
   let crdt: CRDT<Doc>
   let dones: CRDTMeta[]
-  const dbname = "test-loader";
   const count = 10;
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-loader");
-    // loader = new DbLoader(dbname)
-    crdt = new CRDT(dbname);
+    crdt = new CRDT("test-loader-many");
     blockstore = crdt.blockstore as EncryptedBlockstore;
     if (!blockstore.loader) { throw new Error("no loader"); }
     loader = blockstore.loader;

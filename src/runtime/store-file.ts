@@ -4,9 +4,30 @@ import type { Loadable } from "../storage-engine/index.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { SysContainer } from "./sys-container.js";
 import { Falsy } from "../types.js";
+import { TestStore } from "../storage-engine/types.js";
 
-export function getPath(url: URL): string {
-  return url.toString().replace(/^file:\/\//, "");
+function getPath(url: URL): string {
+  return url
+    .toString()
+    .replace(/^file:\/\//, "")
+    .replace(/\?.*$/, "");
+}
+
+function getStore(url: URL): string {
+  const result = url.searchParams.get("store");
+  if (!result) throw new Error(`store not found:${url.toString()}`);
+  return result;
+}
+
+function getFileName(url: URL, key: string): string {
+  switch (getStore(url)) {
+    case "data":
+      return key + ".car";
+    case "meta":
+      return key + ".json";
+    default:
+      throw new Error(`unsupported store type:${url.toString()}`);
+  }
 }
 
 export class FileRemoteWAL extends RemoteWAL {
@@ -14,11 +35,14 @@ export class FileRemoteWAL extends RemoteWAL {
     super(loader, dir);
   }
 
+  readonly branches = new Set<string>();
+
   filePathForBranch(branch: string): string {
     return SysContainer.join(getPath(this.url), "wal", branch + ".json");
   }
 
   async _load(branch = "main"): Promise<WALState | Falsy> {
+    this.branches.add(branch);
     const filepath = this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
@@ -28,6 +52,7 @@ export class FileRemoteWAL extends RemoteWAL {
   }
 
   async _save(state: WALState, branch = "main"): Promise<void> {
+    this.branches.add(branch);
     const encoded: ToString<WALState> = format(state);
     const filepath = this.filePathForBranch(branch);
     await writePathFile(filepath, encoded);
@@ -35,10 +60,21 @@ export class FileRemoteWAL extends RemoteWAL {
   async _close() {
     // no-op
   }
+
+  async _destroy() {
+    for (const branch of this.branches) {
+      const filepath = this.filePathForBranch(branch);
+      await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
+        if (e.code === "ENOENT") return;
+        throw e;
+      });
+    }
+  }
 }
 
 export class FileMetaStore extends MetaStore {
   readonly tag: string = "header-node-fs";
+  readonly branches = new Set<string>();
 
   constructor(dir: URL, name: string) {
     super(name, dir);
@@ -49,6 +85,7 @@ export class FileMetaStore extends MetaStore {
   }
 
   async load(branch = "main"): Promise<DbMeta[] | Falsy> {
+    this.branches.add(branch);
     await SysContainer.start();
     const filepath = this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
@@ -60,6 +97,7 @@ export class FileMetaStore extends MetaStore {
   }
 
   async save(meta: DbMeta, branch = "main") {
+    this.branches.add(branch);
     const filepath = this.filePathForBranch(branch);
     const bytes = this.makeHeader(meta);
     await writePathFile(filepath, bytes);
@@ -67,6 +105,15 @@ export class FileMetaStore extends MetaStore {
   }
   async close() {
     // no-op
+  }
+  async destroy() {
+    for (const branch of this.branches) {
+      const filepath = this.filePathForBranch(branch);
+      await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
+        if (e.code === "ENOENT") return;
+        throw e;
+      });
+    }
   }
 }
 
@@ -101,9 +148,52 @@ export class FileDataStore extends DataStore {
   async close() {
     // no-op
   }
+  async destroy() {
+    const filepath = SysContainer.dirname(this.cidPath("x" as unknown as AnyLink));
+    try {
+      const dir = await SysContainer.readdir(filepath);
+      for (const file of dir) {
+        try {
+          await SysContainer.unlink(file);
+        } catch (e: unknown) {
+          if ((e as { code: string }).code !== "ENOENT") throw e;
+        }
+      }
+    } catch (e: unknown) {
+      if ((e as { code: string }).code !== "ENOENT") throw e;
+    }
+  }
 }
 
 async function writePathFile(path: string, data: Uint8Array | string) {
   await SysContainer.mkdir(SysContainer.dirname(path), { recursive: true });
   return await SysContainer.writefile(path, data);
+}
+
+function toArrayBuffer(buffer: Buffer) {
+  const ab = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(ab);
+  for (let i = 0; i < buffer.length; ++i) {
+    view[i] = buffer[i];
+  }
+  return view;
+}
+
+export class FileTestStore implements TestStore {
+  constructor(readonly url: URL) { }
+
+  async delete() {
+    const fsdir = getPath(this.url);
+    await SysContainer.mkdir(fsdir, { recursive: true });
+    const files = await SysContainer.readdir(fsdir);
+    for (const file of files) {
+      await SysContainer.rm(SysContainer.join(fsdir, file), { recursive: true });
+    }
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async get(key: string) {
+    const dbFile = SysContainer.join(getPath(this.url), getStore(this.url), getFileName(this.url, key));
+    const buffer = await SysContainer.readfile(dbFile);
+    return toArrayBuffer(buffer);
+  }
 }

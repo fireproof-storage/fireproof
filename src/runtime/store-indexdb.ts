@@ -1,6 +1,6 @@
 import { format, parse, ToString } from "@ipld/dag-json";
-import { openDB, IDBPDatabase } from "idb";
-import { AnyBlock, AnyLink, DbMeta } from "../storage-engine/types.js";
+import { openDB, IDBPDatabase, deleteDB } from "idb";
+import { AnyBlock, AnyLink, DbMeta, TestStore } from "../storage-engine/types.js";
 import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../storage-engine/index.js";
 import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal.js";
 import { Falsy } from "../types.js";
@@ -148,6 +148,10 @@ export class IndexDBDataStore extends DataStoreBase {
   async close() {
     this.ensureDB.close();
   }
+
+  async destroy() {
+    throw new Error("Method not implemented.");
+  }
 }
 
 export class IndexDBRemoteWAL extends RemoteWALBase {
@@ -199,6 +203,9 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   }
   async _close() {
     this.ensureDB.close();
+  }
+  async _destroy() {
+    throw new Error("Method not implemented.");
   }
 }
 
@@ -254,5 +261,31 @@ export class IndexDBMetaStore extends MetaStoreBase {
   }
   async close() {
     this.ensureDB.close();
+  }
+  async destroy() {
+    throw new Error("Method not implemented.");
+  }
+}
+
+export class IndexDBTestStore implements TestStore {
+  constructor(readonly url: URL) {}
+  async delete() {
+    const db = `${this.url.toString().replace(/^indexdb:\/\//, "")}`;
+    console.log("SysContainer:deleteDB:2", this.url.toString(), db);
+    await deleteDB(db);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async get(key: string, dbName = "x", fileType: "json" | "car" = "car", branch?: string) {
+    const ensureDB = new EnsureDB(this.url, dbName as "data" | "meta" | "wal");
+    const ret = await ensureDB.get(async (db) => {
+      let bytes = await db.get(key);
+      console.log("get", { url: this.url.toString(), dbName, key, fileType, branch }, bytes);
+      if (typeof bytes === "string") {
+        bytes = new TextEncoder().encode(bytes);
+      }
+      return bytes as Uint8Array;
+    });
+    ensureDB.close();
+    return ret;
   }
 }

@@ -2,20 +2,23 @@ import { CID } from "multiformats";
 
 import { matches, equals } from "../helpers.js";
 
-import { MetaStore, DataStore, Loader, Loadable } from "@fireproof/core/storage-engine";
+import { MetaStore, DataStore, Loader, Loadable, testStoreFactory } from "@fireproof/core/storage-engine";
 
 import { toStoreRuntime } from "@fireproof/core/storage-engine"
 import { AnyBlock, DbMeta } from "@fireproof/core/storage-engine";
 import { SysContainer, assert } from "@fireproof/core/runtime";
+import { TestStore } from "../../src/storage-engine/types.js";
 
 const decoder = new TextDecoder("utf-8");
 
 describe("DataStore", function () {
   let store: DataStore;
+  let raw: TestStore;
 
   beforeEach(async () => {
     await SysContainer.start();
-    store = await (await toStoreRuntime()).makeDataStore({ name: "test" } as Loadable);
+    store = await toStoreRuntime().makeDataStore({ name: "test" } as Loadable);
+    raw = await testStoreFactory(store.url);
   });
 
   it("should have a name", function () {
@@ -30,18 +33,20 @@ describe("DataStore", function () {
     await store.save(car);
     // const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
     // const data = await SysContainer.readfile(path);
-    const data = await SysContainer.rawDB.get(store.url, "data", car.cid.toString(), 'car');
+    const data = await raw.get(car.cid.toString());
     equals(decoder.decode(data), decoder.decode(car.bytes));
   });
 });
 
 describe("DataStore with a saved car", function () {
   let store: DataStore
+  let raw: TestStore;
   let car: AnyBlock;
 
   beforeEach(async function () {
     await SysContainer.start();
-    store = await (await toStoreRuntime()).makeDataStore({ name: "test2" } as Loadable);
+    store = await toStoreRuntime().makeDataStore({ name: "test2" } as Loadable);
+    raw = await testStoreFactory(store.url);
     car = {
       cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -52,7 +57,7 @@ describe("DataStore with a saved car", function () {
   it("should have a car", async function () {
     // const path = SysContainer.join(store.url.pathname, store.name, "data", car.cid + ".car");
     // const data = await SysContainer.readfile(path);
-    const data = await SysContainer.rawDB.get(store.url, "data", car.cid.toString(), 'car');
+    const data = await raw.get(car.cid.toString());
     equals(decoder.decode(data), decoder.decode(car.bytes));
   });
 
@@ -72,10 +77,12 @@ describe("DataStore with a saved car", function () {
 
 describe("MetaStore", function () {
   let store: MetaStore
+  let raw: TestStore;
 
   beforeEach(async function () {
     await SysContainer.start();
-    store = await (await toStoreRuntime()).makeMetaStore({ name: "test" } as unknown as Loader);
+    store = await toStoreRuntime().makeMetaStore({ name: "test" } as unknown as Loader);
+    raw = await testStoreFactory(store.url);
   });
 
   it("should have a name", function () {
@@ -89,7 +96,8 @@ describe("MetaStore", function () {
       key: undefined,
     };
     await store.save(h);
-    const file = await SysContainer.rawDB.get(store.url, "meta", "main", 'json');
+    const file = await raw.get("main")
+    // SysContainer.rawDB.get(store.url, "meta", "main", 'json');
     const header = JSON.parse(decoder.decode(file));
     assert(header);
     assert(header.cars)
@@ -99,11 +107,13 @@ describe("MetaStore", function () {
 
 describe("MetaStore with a saved header", function () {
   let store: MetaStore
+  let raw: TestStore;
   let cid: CID;
 
   beforeEach(async function () {
     await SysContainer.start();
-    store = await (await toStoreRuntime()).makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
+    store = await toStoreRuntime().makeMetaStore({ name: "test-saved-header" } as unknown as Loader);
+    raw = await testStoreFactory(store.url);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid], key: undefined });
   });
@@ -111,7 +121,7 @@ describe("MetaStore with a saved header", function () {
   it("should have a header", async function () {
     // const path = SysContainer.join(dataDir(), store.name, "meta", "main.json");
     // const data = await SysContainer.readfile(path);
-    const data = decoder.decode(await SysContainer.rawDB.get(store.url, "meta", "main", 'json'));
+    const data = decoder.decode(await raw.get("main"));
     matches(data, /car/);
     const header = JSON.parse(data);
     assert(header);

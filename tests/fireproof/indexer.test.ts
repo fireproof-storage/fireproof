@@ -1,4 +1,4 @@
-import { assert, equals, resetDatabase, equalsJSON, dataDir, itSkip } from "../helpers.js";
+import { assert, equals, equalsJSON, dataDir, itSkip } from "../helpers.js";
 
 import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
@@ -12,18 +12,16 @@ describe("basic Index", () => {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    // console.log("resetting directory", dataDir(), "test-indexer");
-    await resetDatabase(dataDir(), "test-indexer");
-    // await sleep(1000);
     db = new Database("test-indexer");
-    // await sleep(1000);
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
-    // const ok =
     await db.put({ title: "bazillas" });
-    // console.log("okcount", count++, ok.id);
     indexer = new Index<string, TestType>(db._crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
@@ -98,9 +96,12 @@ describe("basic Index", () => {
 describe("Index query with compound key", function () {
   let db: Database<TestType>;
   let indexer: Index<[string, number], TestType>;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer");
     db = new Database("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
@@ -121,10 +122,12 @@ describe("Index query with compound key", function () {
 describe("basic Index with map fun", function () {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer");
-
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -145,10 +148,12 @@ describe("basic Index with map fun", function () {
 describe("basic Index with map fun with value", function () {
   let db: Database<TestType>;
   let indexer: Index<string, TestType, number>;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer");
-
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -180,9 +185,12 @@ describe("basic Index with map fun with value", function () {
 describe("Index query with map and compound key", function () {
   let db: Database<TestType>;
   let indexer: Index<[string, number], TestType>;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer");
     db = new Database("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
@@ -203,10 +211,12 @@ describe("Index query with map and compound key", function () {
 describe("basic Index with string fun", function () {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer");
-
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -237,11 +247,12 @@ describe("basic Index upon cold start", function () {
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
   // result, mapFn;
+  afterEach(async function () {
+    await crdt.close();
+    await crdt.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer-cold");
-    await resetDatabase(dataDir(), "test-indexer-cold.idx");
-
     // db = database()
     crdt = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     await crdt.bulk([
@@ -321,10 +332,12 @@ describe("basic Index with no data", function () {
   let db: Database<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-indexer");
-
     db = new Database("test-indexer");
     indexer = new Index<string, TestType>(db._crdt, "hello", (doc) => {
       didMap = true;

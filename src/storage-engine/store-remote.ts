@@ -93,6 +93,9 @@ export class RemoteDataStore extends DataStore {
   async close() {
     // no-op
   }
+  async destroy() {
+    // no-op
+  }
 }
 
 export class RemoteMetaStore extends MetaStore {
@@ -158,6 +161,9 @@ export class RemoteMetaStore extends MetaStore {
   async close() {
     // no-op
   }
+  async destroy() {
+    // no-op
+  }
 }
 
 export class RemoteWALStore extends RemoteWAL {
@@ -183,6 +189,9 @@ export class RemoteWALStore extends RemoteWAL {
     this.store.set(this.headerKey(branch), encoded);
   }
   async _close() {
+    // no-op
+  }
+  async _destroy(): Promise<void> {
     // no-op
   }
 }

@@ -10,24 +10,20 @@ import { DBConnection } from "./types.js";
 import { WalSQLStore, WalStoreFactory } from "./wal-type.js";
 import { MetaSQLStore, MetaStoreFactory } from "./meta-type.js";
 import { DataSQLStore, DataStoreFactory } from "./data-type.js";
+import { TestStore } from "../../storage-engine/types.js";
 
 const onceSQLConnections = new Map<string, ResolveOnce<DBConnection>>();
 
 function connectSQL(url: URL) {
-  console.log("connectSQL:1:", url.toString());
   const urlStr = url.toString();
   let ro = onceSQLConnections.get(urlStr);
   if (!ro) {
     ro = new ResolveOnce();
     onceSQLConnections.set(urlStr, ro);
   }
-  console.log("connectSQL:2:", url.toString());
   return ro.once(async () => {
-    console.log("connectSQL:3:", url.toString());
     const conn = SQLiteConnection.fromURL(url);
-    console.log("connectSQL:4:", url.toString());
     await conn.connect();
-    console.log("connectSQL:5:", url.toString());
     return conn;
   });
 }
@@ -75,6 +71,10 @@ export class SQLRemoteWAL extends RemoteWAL {
     const ws = await this.ensureStore();
     ws.close();
   }
+
+  async _destroy() {
+    throw new Error("Method not implemented.");
+  }
 }
 
 export class SQLMetaStore extends MetaStore {
@@ -120,6 +120,10 @@ export class SQLMetaStore extends MetaStore {
     const ws = await this.ensureStore();
     ws.close();
   }
+
+  async destroy() {
+    throw new Error("Method not implemented.");
+  }
 }
 
 export class SQLDataStore extends DataStore {
@@ -131,17 +135,11 @@ export class SQLDataStore extends DataStore {
 
   readonly onceDataStore = new ResolveOnce<DataSQLStore>();
   async ensureStore() {
-    console.log("SQLDataStore:ensureStore:0:", this.url.toString());
     await SysContainer.start();
-    console.log("SQLDataStore:ensureStore:1:", this.url.toString());
     const conn = await connectSQL(this.url);
-    console.log("SQLDataStore:ensureStore:2:", this.url.toString());
     return this.onceDataStore.once(async () => {
-      console.log("SQLDataStore:ensureStore:3:", this.url.toString());
       const ws = DataStoreFactory(conn);
-      console.log("SQLDataStore:ensureStore:4:", this.url.toString());
       await ws.start();
-      console.log("SQLDataStore:ensureStore:5:", this.url.toString());
       return ws;
     });
   }
@@ -171,5 +169,21 @@ export class SQLDataStore extends DataStore {
   async close() {
     const ws = await this.ensureStore();
     ws.close();
+  }
+  async destroy() {
+    throw new Error("Method not implemented.");
+  }
+}
+
+export class SQLTestStore implements TestStore {
+  constructor(readonly url: URL) {}
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  get(key: string): Promise<Uint8Array> {
+    throw new Error("Method not implemented.");
+  }
+
+  async delete() {
+    // const conn = await connectSQL(this.url);
+    // await conn.close();
   }
 }

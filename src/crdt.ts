@@ -48,6 +48,13 @@ export class CRDT<T extends DocTypes> {
     await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
   }
 
+  async destroy(): Promise<void> {
+    await Promise.all([
+      this.blockstore.destroy(),
+      this.indexBlockstore.destroy()
+    ])
+  }
+
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();

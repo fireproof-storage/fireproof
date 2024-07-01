@@ -1,17 +1,17 @@
-import { assert, equals, notEquals, matches, resetDatabase, dataDir, buildBlobFiles, FileWithCid } from "../helpers.js";
+import { assert, equals, notEquals, matches, dataDir, buildBlobFiles, FileWithCid } from "../helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
 import { EncryptedBlockstore } from "@fireproof/core/storage-engine";
 
-function testDatabase(): Database {
-  return new Database();
-}
-
 describe("basic Database", () => {
   let db: Database;
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async () => {
     await SysContainer.start();
-    db = testDatabase();
+    db = new Database()
   });
   it("should put", async () => {
     /** @type {Doc} */
@@ -39,9 +39,13 @@ describe("basic Database", () => {
 describe("basic Database with record", function () {
   interface Doc { readonly value: string }
   let db: Database;
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    db = testDatabase();
+    db = new Database();
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     equals(ok.id, "hello");
   });
@@ -73,21 +77,25 @@ describe("basic Database with record", function () {
     equals(rows[0].value._id, "hello");
   });
   it("is not persisted", async function () {
-    const db2 = testDatabase();
+    const db2 = new Database();
     const { rows } = await db2.changes([]);
     equals(rows.length, 0);
     const doc = await db2.get("hello").catch((e) => e);
     assert(doc.message);
+    await db2.close();
+    await db2.destroy();
   });
 });
 
 describe("named Database with record", function () {
   interface Doc { readonly value: string }
   let db: Database;
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-db-name");
-
     db = new Database("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
@@ -207,9 +215,12 @@ describe("named Database with record", function () {
 describe("basic Database parallel writes / public", function () {
   let db: Database;
   const writes: Promise<DbResponse>[] = [];
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "test-parallel-writes");
     db = new Database("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -282,9 +293,13 @@ describe("basic Database with subscription", function () {
   let unsubscribe: () => void
   let lastDoc: DocWithId<NonNullable<unknown>>;
   let waitForSub: Promise<void>;
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    db = testDatabase();
+    db = new Database()
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -322,9 +337,13 @@ describe("basic Database with no update subscription", function () {
   let db: Database
   let didRun: number
   let unsubscribe: () => void
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    db = testDatabase();
+    db = new Database();
     didRun = 0;
 
     unsubscribe = db.subscribe(() => {
@@ -355,9 +374,12 @@ describe("database with files input", () => {
   let imagefiles: FileWithCid[] = [];
   let result: DbResponse;
 
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  })
   beforeEach(async function () {
     await SysContainer.start();
-    await resetDatabase(dataDir(), "fireproof-with-images");
     imagefiles = await buildBlobFiles();
     db = new Database("fireproof-with-images");
     const doc = {
