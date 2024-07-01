@@ -136,7 +136,7 @@ export interface TestStore {
   readonly url: URL;
   get(key: string): Promise<Uint8Array>;
   // delete the underlying store and all its data
-  delete(): Promise<void>;
+  // delete(): Promise<void>;
 }
 
 export interface StoreRuntime {

@@ -16,49 +16,6 @@ import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "@fireproof/core/
 import { SysContainer } from "@fireproof/core/runtime"
 import { CRDTMeta, IndexTransactionMeta } from "use-fireproof";
 
-describe("basic Loader simple", function () {
-  let loader: Loader;
-  let block: BlockView;
-  let t: CarTransaction;
-
-  afterEach(async function () {
-    await loader.close();
-    await loader.destroy();
-  })
-
-  beforeEach(async function () {
-    const testDbName = "test-loader-commit";
-    await SysContainer.start();
-    const mockM = new MyMemoryBlockStore();
-    t = new CarTransaction(mockM as EncryptedBlockstore);
-    loader = new Loader(testDbName, { public: true });
-    block = await encode({
-      value: { hello: "world" },
-      hasher,
-      codec,
-    });
-    await t.put(block.cid, block.bytes);
-    await mockM.put(block.cid, block.bytes);
-  });
-  it("should have an empty car log", function () {
-    equals(loader.carLog.length, 0);
-  });
-  it("should commit", async function () {
-    const carGroup = await loader.commit(t, { head: [block.cid] });
-    equals(loader.carLog.length, 1);
-    const reader = await loader.loadCar(carGroup[0]);
-    assert(reader);
-    const parsed = await parseCarFile<CRDTMeta>(reader);
-    assert(parsed.cars);
-    equals(parsed.cars.length, 0);
-    assert(parsed.meta);
-    assert(parsed.meta.head);
-  });
-});
-
-// function sleep(ms: number) {
-//   return new Promise((resolve) => setTimeout(resolve, ms));
-// }
 
 class MyMemoryBlockStore extends EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
@@ -99,6 +56,48 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
     throw new Error("Method not implemented.");
   }
 }
+
+
+describe("basic Loader simple", function () {
+  let loader: Loader;
+  let block: BlockView;
+  let t: CarTransaction;
+
+  afterEach(async function () {
+    await loader.close();
+    await loader.destroy();
+  })
+
+  beforeEach(async function () {
+    const testDbName = "test-loader-commit";
+    await SysContainer.start();
+    const mockM = new MyMemoryBlockStore();
+    t = new CarTransaction(mockM as EncryptedBlockstore);
+    loader = new Loader(testDbName, { public: true });
+    await loader.ready();
+    block = await encode({
+      value: { hello: "world" },
+      hasher,
+      codec,
+    });
+    await t.put(block.cid, block.bytes);
+    await mockM.put(block.cid, block.bytes);
+  });
+  it("should have an empty car log", function () {
+    equals(loader.carLog.length, 0);
+  });
+  it("should commit", async function () {
+    const carGroup = await loader.commit(t, { head: [block.cid] });
+    equals(loader.carLog.length, 1);
+    const reader = await loader.loadCar(carGroup[0]);
+    assert(reader);
+    const parsed = await parseCarFile<CRDTMeta>(reader);
+    assert(parsed.cars);
+    equals(parsed.cars.length, 0);
+    assert(parsed.meta);
+    assert(parsed.meta.head);
+  });
+});
 
 describe("basic Loader with two commits", function () {
   let loader: Loader;

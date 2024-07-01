@@ -2,6 +2,7 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, SQLStore } from "./types.js";
 import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
 import { Logger } from "@adviser/cement";
+import { S } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 export interface WalKey {
   readonly name: string;
@@ -39,15 +40,15 @@ interface SQLiteWalRecord {
 
 export type WalSQLStore = SQLStore<WalRecord, WalKey>;
 
-class SQLiteWalStore implements WalSQLStore {
+export class SQLiteWalStore implements WalSQLStore {
   _insertStmt?: Statement;
   _selectStmt?: Statement;
   _deleteStmt?: Statement;
   readonly dbConn: SQLiteConnection;
   readonly table: string;
   readonly logger: Logger;
-  constructor(dbConn: SQLiteConnection, opts?: Partial<SQLOpts>) {
-    this.dbConn = dbConn;
+  constructor(dbConn: DBConnection, opts?: Partial<SQLOpts>) {
+    this.dbConn = dbConn as SQLiteConnection;
     this.table = ensureTableNames(opts).wal;
     this.logger = ensureLogger(opts, "SQLiteWalStore").With().Str("table", this.table).Logger();
     this.logger.Debug().Msg("constructor");

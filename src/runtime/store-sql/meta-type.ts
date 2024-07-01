@@ -61,15 +61,15 @@ interface SQLiteMetaRecord {
 
 export type MetaSQLStore = SQLStore<MetaRecord, MetaRecordKey>;
 
-class SQLiteMetaStore implements MetaSQLStore {
+export class SQLiteMetaStore implements MetaSQLStore {
   _insertStmt?: Statement;
   _selectStmt?: Statement;
   _deleteStmt?: Statement;
   readonly dbConn: SQLiteConnection;
   readonly table: string;
   readonly logger: Logger;
-  constructor(dbConn: SQLiteConnection, opts?: Partial<SQLOpts>) {
-    this.dbConn = dbConn;
+  constructor(dbConn: DBConnection, opts?: Partial<SQLOpts>) {
+    this.dbConn = dbConn as SQLiteConnection;
     this.table = ensureTableNames(opts).meta;
     this.logger = ensureLogger(opts, "SQLiteMetaStore").With().Str("table", this.table).Logger();
     this.logger.Debug().Msg("constructor");

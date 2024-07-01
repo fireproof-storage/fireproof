@@ -7,15 +7,15 @@ import { Falsy } from "../../types.js";
 import { SQLiteConnection } from "./sqlite-adapter-node.js";
 import { ResolveOnce } from "../../storage-engine/resolve-once.js";
 import { DBConnection } from "./types.js";
-import { WalSQLStore, WalStoreFactory } from "./wal-type.js";
-import { MetaSQLStore, MetaStoreFactory } from "./meta-type.js";
-import { DataSQLStore, DataStoreFactory } from "./data-type.js";
+import { SQLiteWalStore, WalSQLStore, WalStoreFactory } from "./wal-type.js";
+import { MetaSQLStore, MetaStoreFactory, SQLiteMetaStore } from "./meta-type.js";
+import { DataSQLStore, DataStoreFactory, SQLiteDataStore } from "./data-type.js";
 import { TestStore } from "../../storage-engine/types.js";
 
 const onceSQLConnections = new Map<string, ResolveOnce<DBConnection>>();
 
 function connectSQL(url: URL) {
-  const urlStr = url.toString();
+  const urlStr = url.toString().replace(/\?.*$/, "");
   let ro = onceSQLConnections.get(urlStr);
   if (!ro) {
     ro = new ResolveOnce();
@@ -73,7 +73,7 @@ export class SQLRemoteWAL extends RemoteWAL {
   }
 
   async _destroy() {
-    throw new Error("Method not implemented.");
+    // throw new Error("Method not implemented.");
   }
 }
 
@@ -122,7 +122,7 @@ export class SQLMetaStore extends MetaStore {
   }
 
   async destroy() {
-    throw new Error("Method not implemented.");
+    // throw new Error("Method not implemented.");
   }
 }
 
@@ -159,6 +159,7 @@ export class SQLDataStore extends DataStore {
     console.log("SQLDataStore:load:", this.url.toString());
     const ws = await this.ensureStore();
     const records = await ws.select(cid.toString());
+    if (records.length === 0) throw new Error(`ENOENT: missing sql block ${cid.toString()}`);
     return records[0] && { cid, bytes: records[0].data };
   }
 
@@ -171,19 +172,42 @@ export class SQLDataStore extends DataStore {
     ws.close();
   }
   async destroy() {
-    throw new Error("Method not implemented.");
+    // throw new Error("Method not implemented.");
   }
 }
 
 export class SQLTestStore implements TestStore {
   constructor(readonly url: URL) {}
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  get(key: string): Promise<Uint8Array> {
-    throw new Error("Method not implemented.");
-  }
-
-  async delete() {
-    // const conn = await connectSQL(this.url);
-    // await conn.close();
+  async get(key: string): Promise<Uint8Array> {
+    const conn = await connectSQL(this.url);
+    switch (this.url.searchParams.get("store")) {
+      case "wal": {
+        const sqlStore = new SQLiteWalStore(conn);
+        await sqlStore.start();
+        const records = await sqlStore.select({
+          name: key,
+          branch: key,
+        });
+        return records[0].state;
+      }
+      case "meta": {
+        const sqlStore = new SQLiteMetaStore(conn);
+        await sqlStore.start();
+        const records = await sqlStore.select({
+          name: key,
+          branch: key,
+        });
+        return records[0].meta;
+      }
+      case "data": {
+        const sqlStore = new SQLiteDataStore(conn);
+        await sqlStore.start();
+        const records = await sqlStore.select(key);
+        return records[0].data;
+      }
+      default:
+        throw new Error(`Method not implemented.${this.url}:${key}`);
+    }
   }
 }

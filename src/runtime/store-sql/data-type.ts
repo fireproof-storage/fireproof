@@ -47,8 +47,8 @@ export class SQLiteDataStore implements DataSQLStore {
   _insertStmt?: Statement;
   _selectStmt?: Statement;
   _deleteStmt?: Statement;
-  constructor(dbConn: SQLiteConnection, opts?: Partial<SQLOpts>) {
-    this.dbConn = dbConn;
+  constructor(dbConn: DBConnection, opts?: Partial<SQLOpts>) {
+    this.dbConn = dbConn as SQLiteConnection;
     this.table = ensureTableNames(opts).data;
     this.logger = ensureLogger(opts, "SQLiteDataStore");
     this.logger.Debug().Msg("constructor");

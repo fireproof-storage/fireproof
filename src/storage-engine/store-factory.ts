@@ -129,7 +129,7 @@ async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> 
 }
 
 async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> {
-  url.searchParams.set("store", "remoteWAL");
+  url.searchParams.set("store", "wal");
   switch (url.protocol) {
     case "file:": {
       const { FileRemoteWAL } = await import("../runtime/store-file.js");
