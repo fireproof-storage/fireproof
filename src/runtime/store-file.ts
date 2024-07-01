@@ -124,25 +124,32 @@ export class FileDataStore extends DataStore {
     super(name, dir);
   }
 
+  private cidPath(cid: AnyLink) {
+    return SysContainer.join(getPath(this.url), "data", cid.toString() + ".car");
+  }
+
   async save(car: AnyBlock): Promise<void> {
+    await SysContainer.start();
     const filepath = this.cidPath(car.cid);
     // console.log("save->", filepath);
     await writePathFile(filepath, car.bytes);
   }
 
-  private cidPath(cid: AnyLink) {
-    return SysContainer.join(getPath(this.url), "data", cid.toString() + ".car");
-  }
-
   async load(cid: AnyLink): Promise<AnyBlock> {
+    console.log("load->0->", cid);
     await SysContainer.start();
+    console.log("load->1->", cid);
     const filepath = this.cidPath(cid);
+    console.log("load->2->", cid);
+    // console.log("load->", filepath);
     const bytes = await SysContainer.readfile(filepath);
+    console.log("load->3->", cid);
     return { cid, bytes: new Uint8Array(bytes) };
   }
 
   async remove(cid: AnyLink): Promise<void> {
     const filepath = this.cidPath(cid);
+    // console.log("remove->", filepath);
     await SysContainer.unlink(filepath);
   }
   async close() {
