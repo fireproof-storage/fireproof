@@ -202,7 +202,8 @@ describe("basic Loader with two commits", function () {
     await loader.commit(t, { head: [block3.cid] }, { compact: true });
     equals(loader.carLog.length, 1);
     console.log(`rm-5`, carCid[0].toString(), cs)
-    assert(await cs.load(carCid[0]));
+    const e0 = await cs.load(carCid[0]).catch(e => e);
+    assert(e0 instanceof Error, 'e should be an instance of Error');
     console.log(`rm-6`)
     await loader.commit(t, { head: [block4.cid] }, { compact: false });
     console.log(`rm-7`)
