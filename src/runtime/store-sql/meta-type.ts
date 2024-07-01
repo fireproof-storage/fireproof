@@ -145,7 +145,11 @@ export class SQLiteMetaStore implements MetaSQLStore {
   }
   async close(): Promise<void> {
     this.logger.Debug().Msg("close");
-    await this.dbConn.close();
+    // await this.dbConn.close();
+  }
+  async destroy(): Promise<void> {
+    this.logger.Debug().Msg("destroy");
+    await this.dbConn.client.prepare(`delete from ${this.table}`).run();
   }
 }
 

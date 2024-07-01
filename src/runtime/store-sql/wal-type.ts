@@ -2,7 +2,6 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, SQLStore } from "./types.js";
 import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
 import { Logger } from "@adviser/cement";
-import { S } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 export interface WalKey {
   readonly name: string;
@@ -130,7 +129,11 @@ export class SQLiteWalStore implements WalSQLStore {
   }
   async close(): Promise<void> {
     this.logger.Debug().Msg("close");
-    await this.dbConn.close();
+    // await this.dbConn.close();
+  }
+  async destroy(): Promise<void> {
+    this.logger.Debug().Msg("destroy");
+    await this.dbConn.client.prepare(`delete from ${this.table}`).run();
   }
 }
 

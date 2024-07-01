@@ -10,4 +10,5 @@ export interface SQLStore<IType, KType, OType = IType[]> {
   select(car: KType): Promise<OType>;
   delete(car: KType): Promise<RunResult>;
   close(): Promise<void>;
+  destroy(): Promise<void>;
 }
