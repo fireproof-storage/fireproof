@@ -1,4 +1,4 @@
-import { RunResult, Statement } from "better-sqlite3";
+import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, SQLStore } from "./types.js";
 import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
 import { Logger } from "@adviser/cement";
@@ -87,7 +87,10 @@ export class SQLiteDataStore implements DataSQLStore {
             updated_at TEXT NOT NULL)`,
       )
       .run();
-    this._insertStmt = this.dbConn.client.prepare(`insert into ${this.table} (name, car, data, updated_at) values (?, ?, ?, ?)`);
+    this._insertStmt = this.dbConn.client.prepare(`insert into ${this.table}
+      (name, car, data, updated_at) values (?, ?, ?, ?)
+      ON CONFLICT(car) DO UPDATE SET updated_at=?
+      `);
     this._selectStmt = this.dbConn.client.prepare(`select name, car, data, updated_at from ${this.table} where car = ?`);
     this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where car = ?`);
     return this;
@@ -95,7 +98,8 @@ export class SQLiteDataStore implements DataSQLStore {
 
   async insert(ose: DataRecord): Promise<RunResult> {
     this.logger.Debug().Str("name", ose.name).Str("car", ose.car).Uint64("data-len", ose.data.length).Msg("insert");
-    return this.insertStmt.run(ose.name, ose.car, Buffer.from(ose.data), ose.updated_at.toISOString());
+    const updated_at = ose.updated_at.toISOString();
+    return this.insertStmt.run(ose.name, ose.car, Buffer.from(ose.data), updated_at, updated_at);
   }
 
   async select(car: string): Promise<DataRecord[]> {

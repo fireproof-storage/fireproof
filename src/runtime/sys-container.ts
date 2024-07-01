@@ -2,11 +2,9 @@ import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike } fr
 
 import * as stdEnv from "std-env";
 import { uuidv4 } from "uuidv7";
-import { deleteDB as dbDelete } from "idb";
 
 import { throwFalsy } from "../types.js";
 import { ResolveOnce } from "../storage-engine/resolve-once.js";
-import { EnsureDB } from "./store-indexdb.js";
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
@@ -26,8 +24,6 @@ export interface NodeMap {
 
   unlink: (path: PathLike) => Promise<void>;
   writefile: (path: PathLike, data: Uint8Array | string) => Promise<void>;
-  deleteDB(dir: string, name: string): Promise<void>;
-  getDB(storeUrl: URL, dbname: string, key: string, fileType: "json" | "car", branch?: string): Promise<ArrayBuffer>;
 }
 
 export function assert(condition: unknown, message?: string | Error): asserts condition {
@@ -73,30 +69,6 @@ class sysContainer {
     readfile: () => Promise.reject(new Error("SysContainer:readfile is not available in seeded state")),
     unlink: () => Promise.reject(new Error("SysContainer:unlink is not available in seeded state")),
     writefile: () => Promise.reject(new Error("SysContainer:writefile is not available in seeded state")),
-    async deleteDB(dir: string, name: string) {
-      const db = `${dir.replace(/^indexdb:\/\//, "")}${name}`;
-      console.log("SysContainer:deleteDB:2", { dir, name }, db);
-      await dbDelete(db, {
-        blocked: () => {
-          console.warn("SysContainer:deleteDB:blocked", { dir, name });
-        },
-      });
-      console.log("SysContainer:deleteDB:3", { dir, name });
-    },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async getDB(url: URL, dbName: string, key: string, fileType: "json" | "car", branch?: string) {
-      const ensureDB = new EnsureDB(url, dbName as "data" | "meta" | "wal");
-      const ret = await ensureDB.get(async (db) => {
-        let bytes = await db.get(key);
-        console.log("getDB", { url: url.toString(), dbName, key, fileType, branch }, bytes);
-        if (typeof bytes === "string") {
-          bytes = new TextEncoder().encode(bytes);
-        }
-        return bytes as Uint8Array;
-      });
-      ensureDB.close();
-      return ret;
-    },
   };
 
   readonly id = uuidv4();
@@ -189,18 +161,6 @@ class sysContainer {
   homedir = () => {
     this.logSeeded("homedir");
     return throwFalsy(this.freight).homedir();
-  };
-
-  readonly rawDB = {
-    delete: (dir: string, name: string) => {
-      this.logSeeded("deleteDB");
-      return throwFalsy(this.freight).deleteDB(dir, name);
-    },
-
-    get: (storeURL: URL, dbname: string, key: string, fileType: "json" | "car", branch?: string) => {
-      this.logSeeded("getDb");
-      return throwFalsy(this.freight).getDB(storeURL, dbname, key, fileType, branch);
-    },
   };
 
   logSeeded(method: string) {

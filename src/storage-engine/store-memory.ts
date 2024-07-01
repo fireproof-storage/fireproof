@@ -22,6 +22,9 @@ export class MemoryDataStore extends DataStore {
   async close() {
     // no-op
   }
+  async destroy() {
+    // no-op
+  }
 }
 
 export class MemoryMetaStore extends MetaStore {
@@ -58,6 +61,9 @@ export class MemoryMetaStore extends MetaStore {
   async close() {
     // no-op
   }
+  async destroy() {
+    // no-op
+  }
 }
 
 //
@@ -88,6 +94,9 @@ export class MemoryRemoteWAL extends RemoteWAL {
     }
   }
   async _close() {
+    // no-op
+  }
+  async _destroy() {
     // no-op
   }
 }

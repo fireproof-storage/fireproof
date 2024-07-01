@@ -25,7 +25,6 @@ import type {
 import { BaseBlockstore, Connectable } from "./storage-engine/index.js";
 
 import { SysContainer } from "./runtime/sys-container.js";
-import { a } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 import { ResolveOnce } from "./storage-engine/resolve-once.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
@@ -44,6 +43,11 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   async close() {
     await this._crdt.close();
     await this.blockstore.close();
+  }
+
+  async destroy() {
+    await this._crdt.destroy();
+    await this.blockstore.destroy();
   }
 
   readonly _ready = new ResolveOnce<void>();

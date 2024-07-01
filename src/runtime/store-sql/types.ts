@@ -1,4 +1,4 @@
-import { RunResult } from "better-sqlite3";
+import type { RunResult } from "better-sqlite3";
 
 export interface DBConnection {
   connect(): Promise<void>;

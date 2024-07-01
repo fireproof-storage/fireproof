@@ -86,6 +86,10 @@ export class BaseBlockstore implements BlockFetcher {
     // no-op
   }
 
+  async destroy(): Promise<void> {
+    // no-op
+  }
+
   constructor(ebOpts: BlockstoreOpts = {}) {
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
   }
@@ -138,6 +142,10 @@ export class EncryptedBlockstore extends BaseBlockstore {
 
   close(): Promise<void> {
     return this.loader.close();
+  }
+
+  destroy(): Promise<void> {
+    return this.loader.destroy();
   }
 
   compacting = false;

@@ -132,6 +132,13 @@ export interface StoreOpts {
   decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
 }
 
+export interface TestStore {
+  readonly url: URL;
+  get(key: string): Promise<Uint8Array>;
+  // delete the underlying store and all its data
+  delete(): Promise<void>;
+}
+
 export interface StoreRuntime {
   // readonly stores: {
   //   readonly meta: URL;

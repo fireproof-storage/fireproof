@@ -35,6 +35,7 @@ export abstract class MetaStore extends VersionedStore {
   abstract load(branch?: string): Promise<DbMeta[] | Falsy>;
   abstract save(dbMeta: DbMeta, branch?: string): Promise<DbMeta[] | Falsy>;
   abstract close(): Promise<void>;
+  abstract destroy(): Promise<void>;
 }
 
 interface DataSaveOpts {
@@ -56,4 +57,5 @@ export abstract class DataStore {
   abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   abstract remove(cid: AnyLink): Promise<void>;
   abstract close(): Promise<void>;
+  abstract destroy(): Promise<void>;
 }

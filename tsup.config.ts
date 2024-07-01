@@ -1,11 +1,13 @@
 import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
 
+const external = ["path", "fs", "util", "node:fs", "node:path", "node:os", "node:url", "assert"];
+
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
   target: ["esnext", "node18"],
   globalName: "Fireproof",
-  external: ["node:fs", "node:path", "node:os", "node:url", "assert"],
+  external,
   clean: true,
   sourcemap: true,
   metafile: true,
@@ -21,6 +23,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     outDir: "dist/fireproof-core",
     esbuildPlugins: [
       resolve({
+        "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
+        "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
         // "./node-sys-container.js": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
@@ -39,9 +43,11 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     entry: ["src/react/index.ts"],
     platform: "browser",
     outDir: "dist/use-fireproof",
-    external: ["@fireproof/core", "react"],
+    external: [...external, "react"],
     esbuildPlugins: [
       resolve({
+        "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
+        "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
         // "./node-sys-container.js": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),

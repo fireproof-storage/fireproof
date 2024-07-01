@@ -117,11 +117,19 @@ export class Loader implements Loadable {
   }
 
   async close() {
-    console.log("closing:1", this.id);
+    // console.log("closing:1", this.id);
     const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
-    console.log("closing:2", this.id, toClose);
+    // console.log("closing:2", this.id, toClose);
     await Promise.all(toClose.map((store) => store.close()));
-    console.log("closing:3", this.id);
+    // console.log("closing:3", this.id);
+  }
+
+  async destroy() {
+    // console.log("destroy:1", this.id);
+    const toDestroy = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
+    // console.log("destroy:2", this.id, toDestroy);
+    await Promise.all(toDestroy.map((store) => store.destroy()));
+    // console.log("destroy:3", this.id);
   }
 
   constructor(name: string, ebOpts: BlockstoreOpts) {

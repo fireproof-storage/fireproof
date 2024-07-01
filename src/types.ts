@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
-import type { DbMeta, CryptoOpts, StorexOpts, AnyLink } from "./storage-engine/index.js";
+import type { DbMeta, CryptoOpts, StorexOpts as StoreOpts, AnyLink } from "./storage-engine/index.js";
 
 export type Falsy = false | null | undefined;
 
@@ -29,8 +29,8 @@ export interface ConfigOpts {
   readonly persistIndexes?: boolean;
   readonly autoCompact?: number;
   readonly crypto?: CryptoOpts;
-  readonly store?: StorexOpts;
-  readonly indexStore?: StorexOpts;
+  readonly store?: StoreOpts;
+  readonly indexStore?: StoreOpts;
   readonly threshold?: number;
 }
 
