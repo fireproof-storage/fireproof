@@ -1,50 +1,41 @@
 import type { RunResult, Statement } from "better-sqlite3";
-import { DBConnection, SQLStore } from "./types.js";
-import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
+import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../types.js";
+import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
-import { UploadMetaFnParams } from "../../storage-engine/types.js";
-
-export interface MetaType {
-  readonly name: string;
-  readonly branch: string;
-  readonly meta: Uint8Array;
-}
-
-export interface MetaRecordKey {
-  readonly name: string;
-  readonly branch: string;
-}
-
-export interface MetaRecord extends MetaRecordKey {
-  readonly meta: Uint8Array;
-  readonly updated_at: Date;
-}
-
-const textEncoder = new TextEncoder();
+import { ensureLogger } from "../ensurer.js";
+import { UploadMetaFnParams } from "../../../storage-engine/types.js";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;
+  readonly textEncoder: TextEncoder;
 
-  constructor(record: MetaRecord) {
+  constructor(record: MetaRecord, textEncoder: TextEncoder) {
     this.record = record;
+    this.textEncoder = textEncoder;
   }
 
-  static fromUploadMetaFnParams(data: Uint8Array, params: UploadMetaFnParams): MetaSQLRecordBuilder {
-    return new MetaSQLRecordBuilder({
-      name: params.name,
-      branch: params.branch,
-      meta: data,
-      updated_at: new Date(),
-    });
+  static fromUploadMetaFnParams(data: Uint8Array, params: UploadMetaFnParams, textEncoder: TextEncoder): MetaSQLRecordBuilder {
+    return new MetaSQLRecordBuilder(
+      {
+        name: params.name,
+        branch: params.branch,
+        meta: data,
+        updated_at: new Date(),
+      },
+      textEncoder,
+    );
   }
 
-  static fromBytes(str: string, name: string, branch: string): MetaSQLRecordBuilder {
-    return new MetaSQLRecordBuilder({
-      name: name,
-      branch: branch,
-      meta: textEncoder.encode(str),
-      updated_at: new Date(),
-    });
+  static fromBytes(str: string, name: string, branch: string, textEncoder: TextEncoder): MetaSQLRecordBuilder {
+    return new MetaSQLRecordBuilder(
+      {
+        name: name,
+        branch: branch,
+        meta: textEncoder.encode(str),
+        updated_at: new Date(),
+      },
+      textEncoder,
+    );
   }
 
   build(): MetaRecord {
@@ -59,22 +50,20 @@ interface SQLiteMetaRecord {
   updated_at: string;
 }
 
-export type MetaSQLStore = SQLStore<MetaRecord, MetaRecordKey>;
-
-export class SQLiteMetaStore implements MetaSQLStore {
+export class V0_18_0SQLiteMetaStore implements MetaSQLStore {
   _insertStmt?: Statement;
   _selectStmt?: Statement;
   _deleteStmt?: Statement;
   readonly dbConn: SQLiteConnection;
   readonly table: string;
   readonly logger: Logger;
-  constructor(dbConn: DBConnection, opts?: Partial<SQLOpts>) {
+  constructor(dbConn: DBConnection) {
     this.dbConn = dbConn as SQLiteConnection;
-    this.table = ensureTableNames(opts).meta;
-    this.logger = ensureLogger(opts, "SQLiteMetaStore").With().Str("table", this.table).Logger();
+    this.table = dbConn.opts.tableNames.meta;
+    this.logger = ensureLogger(dbConn.opts, "SQLiteMetaStore").With().Str("table", this.table).Logger();
     this.logger.Debug().Msg("constructor");
   }
-  async start(): Promise<SQLiteMetaStore> {
+  async start(): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
     await this.dbConn.client
@@ -97,7 +86,6 @@ export class SQLiteMetaStore implements MetaSQLStore {
       `select name, branch, meta, updated_at from ${this.table} where name = ? and branch = ?`,
     );
     this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where name = ? and branch = ?`);
-    return this;
   }
 
   get insertStmt(): Statement {
@@ -151,12 +139,4 @@ export class SQLiteMetaStore implements MetaSQLStore {
     this.logger.Debug().Msg("destroy");
     await this.dbConn.client.prepare(`delete from ${this.table}`).run();
   }
-}
-
-export function MetaStoreFactory(db: DBConnection, opts?: Partial<SQLOpts>): SQLStore<MetaRecord, MetaRecordKey> {
-  if (db instanceof SQLiteConnection) {
-    const store = new SQLiteMetaStore(db, opts);
-    return store;
-  }
-  throw ensureLogger(opts, "MetaStoreFactory").Error().Msg("unsupported db connection").AsError();
 }

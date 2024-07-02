@@ -1,10 +1,11 @@
 import { format, parse, ToString } from "@ipld/dag-json";
 import { openDB, IDBPDatabase } from "idb";
+import { uuidv4 } from "uuidv7";
+
 import { AnyBlock, AnyLink, DbMeta, TestStore } from "../storage-engine/types.js";
 import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../storage-engine/index.js";
 import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal.js";
 import { Falsy } from "../types.js";
-import { uuidv4 } from "uuidv7";
 import { ResolveOnce } from "../storage-engine/resolve-once.js";
 
 const onceIndexDB = new Map<string, ResolveOnce<{ db: IDBPDatabase<unknown>; dbName: DbName }>>();

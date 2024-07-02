@@ -1,11 +1,11 @@
 import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/index.js";
 
-import { DataSQLStore, DataSQLRecordBuilder } from "./data-type.js";
-import { MetaSQLStore, MetaSQLRecordBuilder } from "./meta-type.js";
-import { WalSQLStore } from "./wal-type.js";
-import { SQLOpts, ensureLogger } from "./sqlite-adapter-node.js";
+import { DataSQLRecordBuilder } from "./v0.18.0/sqlite-data-store.js";
+import { MetaSQLRecordBuilder } from "./v0.18.0/sqlite-meta-store.js";
 import { Logger } from "@adviser/cement";
 import { ConnectionBase } from "../../storage-engine/connection-base.js";
+import { ensureLogger, ensureSQLOpts } from "./ensurer.js";
+import { DataSQLStore, MetaSQLStore, SQLOpts, WalSQLStore } from "./types.js";
 
 export interface StoreOptions {
   readonly data: DataSQLStore;
@@ -16,11 +16,14 @@ export interface StoreOptions {
 export class ConnectSQL extends ConnectionBase {
   readonly store: StoreOptions;
   readonly logger: Logger;
+  readonly textEncoder = new TextEncoder();
 
-  constructor(store: StoreOptions, opts?: Partial<SQLOpts>) {
+  constructor(store: StoreOptions, iopts?: Partial<SQLOpts>) {
     super();
     this.store = store;
+    const opts = ensureSQLOpts(new URL("noready://"), iopts, "ConnectSQL");
     this.logger = ensureLogger(opts, "ConnectSQL");
+    this.textEncoder = opts.textEncoder;
   }
 
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
@@ -44,7 +47,7 @@ export class ConnectSQL extends ConnectionBase {
 
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
     this.logger.Debug().Msg("metaUpload");
-    await this.store.meta.insert(MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params).build());
+    await this.store.meta.insert(MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params, this.textEncoder).build());
     return Promise.resolve(null);
   }
 

@@ -2,17 +2,13 @@ import type { AnyBlock, AnyLink, DbMeta } from "../../storage-engine/index.js";
 import { MetaStore, DataStore, RemoteWAL, WALState } from "../../storage-engine/index.js";
 import type { Loadable } from "../../storage-engine/index.js";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { SysContainer } from "./../sys-container.js";
+import { SysContainer } from "../sys-container.js";
 import { Falsy } from "../../types.js";
 import { ResolveOnce } from "../../storage-engine/resolve-once.js";
-import { SQLiteWalStore, WalSQLStore, WalStoreFactory } from "./wal-type.js";
-import { MetaSQLStore, MetaStoreFactory, SQLiteMetaStore } from "./meta-type.js";
-import { DataSQLStore, DataStoreFactory, SQLiteDataStore } from "./data-type.js";
 import { TestStore } from "../../storage-engine/types.js";
-import { SQLFactory } from "./sql.js";
-
-const textDecoder = new TextDecoder();
-const textEncoder = new TextEncoder();
+import { SQLConnectionFactory } from "./sql-connection-factory.js";
+import { DataSQLStore, MetaSQLStore, WalSQLStore } from "./types.js";
+import { DataStoreFactory, MetaStoreFactory, WalStoreFactory } from "./store-version-factory.js";
 
 export class SQLRemoteWAL extends RemoteWAL {
   constructor(dir: URL, loader: Loadable) {
@@ -22,9 +18,9 @@ export class SQLRemoteWAL extends RemoteWAL {
   readonly onceWalStore = new ResolveOnce<WalSQLStore>();
   async ensureStore() {
     await SysContainer.start();
-    const conn = SQLFactory(this.url);
     return this.onceWalStore.once(async () => {
-      const ws = WalStoreFactory(conn);
+      const conn = SQLConnectionFactory(this.url);
+      const ws = await WalStoreFactory(conn);
       await ws.start();
       return ws;
     });
@@ -37,14 +33,14 @@ export class SQLRemoteWAL extends RemoteWAL {
       branch: branch,
     });
     if (record.length === 0) return undefined;
-    return record[0] && parse<WALState>(textDecoder.decode(record[0].state).toString());
+    return record[0] && parse<WALState>(ws.dbConn.opts.textDecoder.decode(record[0].state).toString());
   }
 
   async _save(state: WALState, branch = "main"): Promise<void> {
     const encoded: ToString<WALState> = format(state);
     const ws = await this.ensureStore();
     await ws.insert({
-      state: textEncoder.encode(encoded),
+      state: ws.dbConn.opts.textEncoder.encode(encoded),
       updated_at: new Date(),
       name: branch,
       branch: branch,
@@ -72,9 +68,9 @@ export class SQLMetaStore extends MetaStore {
   readonly onceMetaStore = new ResolveOnce<MetaSQLStore>();
   async ensureStore() {
     await SysContainer.start();
-    const conn = SQLFactory(this.url);
+    const conn = SQLConnectionFactory(this.url);
     return this.onceMetaStore.once(async () => {
-      const ws = MetaStoreFactory(conn);
+      const ws = await MetaStoreFactory(conn);
       await ws.start();
       return ws;
     });
@@ -89,14 +85,14 @@ export class SQLMetaStore extends MetaStore {
     if (record.length === 0) {
       return undefined;
     }
-    return record[0] && [this.parseHeader(textDecoder.decode(record[0].meta))];
+    return record[0] && [this.parseHeader(ws.dbConn.opts.textDecoder.decode(record[0].meta))];
   }
 
   async save(meta: DbMeta, branch = "main") {
     const ws = await this.ensureStore();
     const bytes = this.makeHeader(meta);
     await ws.insert({
-      meta: textEncoder.encode(bytes),
+      meta: ws.dbConn.opts.textEncoder.encode(bytes),
       updated_at: new Date(),
       name: branch,
       branch: branch,
@@ -123,10 +119,10 @@ export class SQLDataStore extends DataStore {
 
   readonly onceDataStore = new ResolveOnce<DataSQLStore>();
   async ensureStore() {
-    const conn = await SQLFactory(this.url);
+    const conn = await SQLConnectionFactory(this.url);
     return this.onceDataStore.once(async () => {
       await SysContainer.start();
-      const ws = DataStoreFactory(conn);
+      const ws = await DataStoreFactory(conn);
       await ws.start();
       return ws;
     });
@@ -169,10 +165,10 @@ export class SQLDataStore extends DataStore {
 export class SQLTestStore implements TestStore {
   constructor(readonly url: URL) {}
   async get(key: string): Promise<Uint8Array> {
-    const conn = SQLFactory(this.url);
+    const conn = SQLConnectionFactory(this.url);
     switch (this.url.searchParams.get("store")) {
       case "wal": {
-        const sqlStore = new SQLiteWalStore(conn);
+        const sqlStore = await WalStoreFactory(conn);
         await sqlStore.start();
         const records = await sqlStore.select({
           name: key,
@@ -181,7 +177,7 @@ export class SQLTestStore implements TestStore {
         return records[0].state;
       }
       case "meta": {
-        const sqlStore = new SQLiteMetaStore(conn);
+        const sqlStore = await MetaStoreFactory(conn);
         await sqlStore.start();
         const records = await sqlStore.select({
           name: key,
@@ -190,7 +186,7 @@ export class SQLTestStore implements TestStore {
         return records[0].meta;
       }
       case "data": {
-        const sqlStore = new SQLiteDataStore(conn);
+        const sqlStore = await DataStoreFactory(conn);
         await sqlStore.start();
         const records = await sqlStore.select(key);
         return records[0].data;
