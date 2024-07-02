@@ -38,7 +38,8 @@
     "J Chris Anderson",
     "Alan Shaw",
     "Travis Vachon",
-    "Mikeal Rogers"
+    "Mikeal Rogers",
+    "Meno Abels"
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
@@ -61,6 +62,7 @@
     "typescript": "^5.5.2",
     "typescript-eslint": "^7.13.1",
     "vite": "^5.3.1",
+    "vitest": "^1.6.0",
     "vite-tsconfig-paths": "^4.3.2"
   },
   "repository": {
@@ -72,7 +74,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "^0.1.15",
+    "@adviser/cement": "^0.1.17",
     "@ipld/car": "^5.3.1",
     "@ipld/dag-cbor": "^9.2.0",
     "@ipld/dag-json": "^10.2.1",
@@ -96,7 +98,6 @@
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
     "std-env": "^3.7.0",
-    "uuidv7": "^1.0.0",
-    "vitest": "^1.6.0"
+    "uuidv7": "^1.0.0"
   }
 }

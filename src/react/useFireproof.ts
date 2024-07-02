@@ -141,10 +141,8 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const saveDoc: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
         const res = await database.put(existingDoc ?? doc);
-
         // If the document was created, then we need to update the local state with the new `_id`
         if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
-
         return res;
       },
       [doc],

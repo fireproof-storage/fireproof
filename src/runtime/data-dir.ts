@@ -3,6 +3,12 @@ import { SysContainer } from "./sys-container.js";
 import { isNode } from "std-env";
 
 export function dataDir(name?: string): string {
+  const dataDir = _dataDir(name);
+  // console.log("dataDir->", dataDir);
+  return dataDir;
+}
+
+function _dataDir(name?: string): string {
   if (isNode) {
     // console.log("dataDir->", process.env, name);
     if (process.env.FP_STORAGE_URL) {
