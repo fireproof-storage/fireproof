@@ -1,36 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useState, useCallback, useEffect } from "react";
-import { Highlight } from "prism-react-renderer";
-import { useEditable } from "use-editable";
+import { useState, useCallback, useEffect } from "react";
+import Editor from "react-simple-code-editor";
+import hljs from 'highlight.js';
+import json from 'highlight.js/lib/languages/json';
+hljs.registerLanguage('json', json);
 
-export function CodeHighlight({ code, theme, language = "json" }: any) {
-  // const editorRef = useRef(null)
+function HighlightedCode({ code, language }: { code: string, language: string }) {
+  const highlightedCode = hljs.highlight(code, { language }).value;
+  return (
+    <pre className={`language-${language}`}>
+      <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+    </pre>
+  );
+}
 
+export function CodeHighlight({ code, language = "json" }: any) {
   return (
     <div className="p-2">
-      <Highlight theme={theme} code={code} language={language}>
-        {({ className, style, tokens, getLineProps, getTokenProps }) => (
-          <code>
-            <pre className={className + " p-2"} style={style}>
-              {tokens.map((line, i) => (
-                <div key={i} {...getLineProps({ line, key: i })}>
-                  {line.map((token, key) => (
-                    <span key={key} {...getTokenProps({ token, key })} />
-                  ))}
-                </div>
-              ))}
-            </pre>
-          </code>
-        )}
-      </Highlight>
+      <HighlightedCode code={code} language={language} />
     </div>
   );
 }
 
-export function EditableCodeHighlight({ code, onChange, theme, language = "json" }: any) {
-  const editorRef = useRef(null);
+export function EditableCodeHighlight({ code, onChange, language = "json" }: any) {
   const [liveCode, setCode] = useState(code);
-  // console.log('liveCode', liveCode, code)
+
   const onEditableChange = useCallback(
     (liveCode: string) => {
       let setThisCode = liveCode.slice(0, -1);
@@ -43,7 +37,6 @@ export function EditableCodeHighlight({ code, onChange, theme, language = "json"
         }
       } else {
         onChange({ code: setThisCode, valid: true });
-        // onChange(setThisCode)
       }
       setCode(setThisCode);
     },
@@ -54,28 +47,20 @@ export function EditableCodeHighlight({ code, onChange, theme, language = "json"
     setCode(code);
   }, [code]);
 
-  useEditable(editorRef, onEditableChange, {
-    disabled: false,
-    indentation: 2,
-  });
-
   return (
     <div className="p-2">
-      <Highlight theme={theme} code={liveCode} language={language}>
-        {({ className, style, tokens, getLineProps, getTokenProps }) => (
-          <pre className={className + " p-2"} style={style} ref={editorRef}>
-            {tokens.map((line, i) => (
-              <div key={i} {...getLineProps({ line, key: i })}>
-                {line.map((token, key) => (
-                  <>
-                    <span key={key} {...getTokenProps({ token, key })} />
-                  </>
-                ))}
-              </div>
-            ))}
-          </pre>
+      <Editor
+        value={liveCode}
+        onValueChange={onEditableChange}
+        highlight={code => (
+          <HighlightedCode code={code} language={language} />
         )}
-      </Highlight>
+        padding={10}
+        style={{
+          fontFamily: '"Fira code", "Fira Mono", monospace',
+          fontSize: 12,
+        }}
+      />
     </div>
   );
 }

@@ -1,70 +1,70 @@
-import { Link } from "@remix-run/react";
-import { useParams } from "react-router-dom";
-import { DocBase, useFireproof } from "use-fireproof";
 import { useState } from "react";
+import { useParams, Link } from "@remix-run/react";
+import { DocBase, useFireproof } from "use-fireproof";
+import { themes } from "prism-react-renderer";
+import { CodeHighlight, EditableCodeHighlight } from "../components/CodeHighlight";
 
 export default function Document() {
-  const { name, id } = useParams();
+  const { name, id : _id } = useParams();
   const { useDocument, database } = useFireproof(name);
-  const [isEditing, setIsEditing] = useState(false);
 
-  const [doc] = useDocument(() => ({ _id: id! }));
+  const [doc] = useDocument(() => ({ _id: _id! }));
+  const [docToSave, setDocToSave] = useState<any>(JSON.stringify(doc, null, 2));
+  const [needsSave, setNeedsSave] = useState(false);
 
-  const handleSave = (updatedDoc: DocBase) => {
-    setIsEditing(false);
-    database.put(updatedDoc);
-  };
-  
+  async function saveDocument(_id: string) {
+    const data = JSON.parse(docToSave);
+    const resp = await database.put({ _id, ...data });
+    if (!_id) {
+      window.location.href = `doc?id=${resp.id}`;
+    }
+    setNeedsSave(false);
+  }
+
+  async function deleteDocument(_id: string) {
+    await database.del(_id);
+    window.location.href = `docs`;
+  }
+
+  function editorChanged({ code, valid }: { code: string, valid: boolean }) {
+    setNeedsSave(valid);
+    setDocToSave(code);
+  }
+
+
+  const { _id: id, ...data } = doc;
+
+  const idFirstMeta = { _id };
+  const title = _id ? `Edit document: ${_id}` : 'Create new document';
+
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-2">
-        Document: <code className="bg-gray-200 p-1 rounded">{id}</code>
-      </h2>
+    <div className="bg-slate-800 p-6">
+      <h2 className="text-2xl pb-2">{title}</h2>
       <p className="mb-4">
         Database: <Link to={`/db/${name}`} className="text-blue-500 underline">{name}</Link>
       </p>
-      {isEditing ? (
-        <EditableArea doc={doc} onSave={handleSave} />
-      ) : (
-        <div>
-          <pre className="bg-gray-100 p-2 rounded mb-2">
-            <code>{JSON.stringify(doc, null, 2)}</code>
-          </pre>
-          <button onClick={() => setIsEditing(true)} className="bg-blue-500 text-white p-2">
-            Edit Document
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function EditableArea({ doc, onSave }: { doc: DocBase, onSave: (updatedDoc: DocBase) => void }) {
-  const [jsonInput, setJsonInput] = useState(JSON.stringify(doc, null, 2));
-  const [error, setError] = useState("");
-
-  const handleSaveClick = () => {
-    try {
-      const parsedJson = JSON.parse(jsonInput);
-      onSave(parsedJson);
-      setError("");
-    } catch (e) {
-      setError("Invalid JSON");
-    }
-  };
-
-  return (
-    <div>
-      <textarea
-        value={jsonInput}
-        onChange={(e) => setJsonInput(e.target.value)}
-        placeholder="Enter JSON here"
-        className="border p-2 w-full h-40 mb-2"
-      />
-      {error && <p className="text-red-500 mb-2">{error}</p>}
-      <button onClick={handleSaveClick} className="bg-blue-500 text-white p-2">
-        Save Document
+      <h3>Editable data fields</h3>
+      <EditableCodeHighlight onChange={editorChanged} code={JSON.stringify(data, null, 2)} theme={themes.nightOwl} />
+      <button
+        onClick={() => {
+          saveDocument(_id);
+        }}
+        className={`${
+          needsSave ? 'bg-blue-500 hover:bg-blue-700 text-white' : 'bg-gray-700 text-gray-400'
+        } font-bold py-2 px-4 m-5 rounded`}
+      >
+        Save
       </button>
+      <button
+        onClick={() => deleteDocument(_id)}
+        className={`${
+          !!_id ? 'bg-gray-700 hover:bg-orange-700 hover:text-white' : 'bg-gray-700'
+        } text-gray-400 font-bold py-2 px-4 my-5 rounded`}
+      >
+        Delete
+      </button>
+      <h3>Fireproof metadata</h3>
+      <CodeHighlight code={JSON.stringify(idFirstMeta, null, 2)} theme={themes.oneLight} />
     </div>
-  );
+  );  
 }
