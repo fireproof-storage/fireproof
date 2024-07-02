@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState, useCallback, useEffect } from "react";
-import Highlight, { defaultProps } from "prism-react-renderer";
+import { Highlight } from "prism-react-renderer";
 import { useEditable } from "use-editable";
 
-export function CodeHighlight({ code, theme = defaultProps.theme, language = "json" }: any) {
+export function CodeHighlight({ code, theme, language = "json" }: any) {
   // const editorRef = useRef(null)
 
   return (
     <div className="p-2">
-      <Highlight {...defaultProps} theme={theme} code={code} language={language}>
+      <Highlight theme={theme} code={code} language={language}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <code>
             <pre className={className + " p-2"} style={style}>
@@ -27,7 +27,7 @@ export function CodeHighlight({ code, theme = defaultProps.theme, language = "js
   );
 }
 
-export function EditableCodeHighlight({ code, onChange, theme = defaultProps.theme, language = "json" }: any) {
+export function EditableCodeHighlight({ code, onChange, theme, language = "json" }: any) {
   const editorRef = useRef(null);
   const [liveCode, setCode] = useState(code);
   // console.log('liveCode', liveCode, code)
@@ -61,7 +61,7 @@ export function EditableCodeHighlight({ code, onChange, theme = defaultProps.the
 
   return (
     <div className="p-2">
-      <Highlight {...defaultProps} theme={theme} code={liveCode} language={language}>
+      <Highlight theme={theme} code={liveCode} language={language}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <pre className={className + " p-2"} style={style} ref={editorRef}>
             {tokens.map((line, i) => (
