@@ -1,1 +1,1 @@
-export * from "./sqlite-adapter-node.js";
+export * from "./sqlite-adapter-better-sqlite3.js";

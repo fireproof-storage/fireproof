@@ -1,19 +1,9 @@
 import type { RunResult, Statement } from "better-sqlite3";
-import { DBConnection, SQLStore } from "./types.js";
-import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
+import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../types.js";
+import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
+import { ensureLogger } from "../ensurer.js";
 
-export interface WalKey {
-  readonly name: string;
-  readonly branch: string;
-}
-
-export interface WalRecord extends WalKey {
-  readonly state: Uint8Array;
-  readonly updated_at: Date;
-}
-
-const tee = new TextEncoder();
 export class WalSQLRecordBuilder {
   readonly #record: WalRecord;
 
@@ -37,22 +27,22 @@ interface SQLiteWalRecord {
   readonly updated_at: string;
 }
 
-export type WalSQLStore = SQLStore<WalRecord, WalKey>;
-
-export class SQLiteWalStore implements WalSQLStore {
+export class V0_18_0SQLiteWalStore implements WalSQLStore {
   _insertStmt?: Statement;
   _selectStmt?: Statement;
   _deleteStmt?: Statement;
   readonly dbConn: SQLiteConnection;
   readonly table: string;
   readonly logger: Logger;
-  constructor(dbConn: DBConnection, opts?: Partial<SQLOpts>) {
+  readonly textEncoder: TextEncoder;
+  constructor(dbConn: DBConnection) {
     this.dbConn = dbConn as SQLiteConnection;
-    this.table = ensureTableNames(opts).wal;
-    this.logger = ensureLogger(opts, "SQLiteWalStore").With().Str("table", this.table).Logger();
+    this.table = dbConn.opts.tableNames.wal;
+    this.textEncoder = dbConn.opts.textEncoder;
+    this.logger = ensureLogger(dbConn.opts, "SQLiteWalStore").With().Str("table", this.table).Logger();
     this.logger.Debug().Msg("constructor");
   }
-  async start(): Promise<SQLiteWalStore> {
+  async start(): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
     await this.dbConn.client
@@ -75,7 +65,6 @@ export class SQLiteWalStore implements WalSQLStore {
       `select name, branch, state, updated_at from ${this.table} where name = ? and branch = ?`,
     );
     this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where name = ? and branch = ?`);
-    return this;
   }
 
   get insertStmt(): Statement {
@@ -100,7 +89,7 @@ export class SQLiteWalStore implements WalSQLStore {
   }
   async insert(ose: WalRecord): Promise<RunResult> {
     const wal = WalSQLRecordBuilder.fromRecord(ose).build();
-    const bufState = Buffer.from(tee.encode(JSON.stringify(wal.state)));
+    const bufState = Buffer.from(this.textEncoder.encode(JSON.stringify(wal.state)));
     return this.insertStmt.run(
       ose.name,
       ose.branch,
@@ -135,12 +124,4 @@ export class SQLiteWalStore implements WalSQLStore {
     this.logger.Debug().Msg("destroy");
     await this.dbConn.client.prepare(`delete from ${this.table}`).run();
   }
-}
-
-export function WalStoreFactory(db: DBConnection, opts?: Partial<SQLOpts>): WalSQLStore {
-  if (db instanceof SQLiteConnection) {
-    const store = new SQLiteWalStore(db, opts);
-    return store;
-  }
-  throw ensureLogger(opts, "WalStoreFactory").Error().Msg("unsupported db connection").AsError();
 }

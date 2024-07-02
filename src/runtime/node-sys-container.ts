@@ -1,23 +1,23 @@
-import { type NodeMap, join } from "./sys-container.js";
+import { type NodeMap, join, saveImport } from "./sys-container.js";
 
 export async function createNodeSysContainer(): Promise<NodeMap> {
   const nodePath = "node:path";
   const nodeOS = "node:os";
   const nodeURL = "node:url";
   const nodeFS = "node:fs";
-  const fs = (await import(nodeFS)).promises;
+  const fs = (await saveImport(nodeFS)).promises;
   const assert = "assert";
-  const path = await import(nodePath);
+  const path = await saveImport(nodePath);
   return {
     state: "node",
     ...path,
-    ...(await import(nodeOS)),
-    ...(await import(nodeURL)),
+    ...(await saveImport(nodeOS)),
+    ...(await saveImport(nodeURL)),
     ...fs,
     join,
     readdir: fs.readdir as NodeMap["readdir"],
     readfile: fs.readFile as NodeMap["readfile"],
     writefile: fs.writeFile as NodeMap["writefile"],
-    assert: (await import(assert)).default,
+    assert: (await saveImport(assert)).default,
   };
 }

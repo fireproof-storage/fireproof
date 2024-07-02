@@ -1,4 +1,5 @@
 # Files
+.vscode
 .DS_Store
 .eslintcache
 pail.car

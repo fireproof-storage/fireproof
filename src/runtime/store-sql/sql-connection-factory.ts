@@ -1,14 +1,15 @@
-// import { Level, LoggerImpl } from "@adviser/cement";
-import { SQLOpts, SQLiteConnection, ensureLogger } from "./sqlite-adapter-node.js";
-import { DBConnection } from "./types.js";
+import { ensureLogger } from "./ensurer.js";
+import { SQLiteConnection } from "./sqlite-adapter-better-sqlite3.js";
+import { DBConnection, SQLOpts } from "./types.js";
 
-export function SQLFactory(databaseURL: URL, opts?: Partial<SQLOpts>): DBConnection {
+export function SQLConnectionFactory(databaseURL: URL, opts?: Partial<SQLOpts>): DBConnection {
   const logger = ensureLogger(opts, "SQLFactory");
   switch (databaseURL.protocol) {
     case "sqlite:":
       logger.Debug().Str("databaseURL", databaseURL.toString()).Msg("connecting to sqlite");
       return SQLiteConnection.fromURL(databaseURL, {
-        // logger: new LoggerImpl().EnableLevel(Level.DEBUG),
+        ...opts,
+        logger,
       });
     default:
       throw logger

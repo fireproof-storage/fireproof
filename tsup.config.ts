@@ -25,7 +25,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       resolve({
         "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
         "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
-        // "./node-sys-container.js": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        // "./node-sys-container.js":  "../runtime/store-file-not-impl.js",
         // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),

@@ -1,15 +1,9 @@
 import type { RunResult, Statement } from "better-sqlite3";
-import { DBConnection, SQLStore } from "./types.js";
-import { SQLOpts, SQLiteConnection, ensureLogger, ensureTableNames } from "./sqlite-adapter-node.js";
+import { DBConnection, DataRecord, DataSQLStore } from "../types.js";
+import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
-import { UploadDataFnParams } from "../../storage-engine/types.js";
-
-export interface DataRecord {
-  readonly name: string;
-  readonly car: string;
-  readonly data: Uint8Array;
-  readonly updated_at: Date;
-}
+import { UploadDataFnParams } from "../../../storage-engine/types.js";
+import { ensureLogger } from "../ensurer.js";
 
 export class DataSQLRecordBuilder {
   readonly dataRecord: DataRecord;
@@ -38,19 +32,17 @@ interface SQLiteDataRecord {
   updated_at: string;
 }
 
-export type DataSQLStore = SQLStore<DataRecord, string>;
-
-export class SQLiteDataStore implements DataSQLStore {
+export class V0_18_0SQLiteDataStore implements DataSQLStore {
   readonly dbConn: SQLiteConnection;
   readonly table: string;
   readonly logger: Logger;
   _insertStmt?: Statement;
   _selectStmt?: Statement;
   _deleteStmt?: Statement;
-  constructor(dbConn: DBConnection, opts?: Partial<SQLOpts>) {
+  constructor(dbConn: DBConnection) {
     this.dbConn = dbConn as SQLiteConnection;
-    this.table = ensureTableNames(opts).data;
-    this.logger = ensureLogger(opts, "SQLiteDataStore");
+    this.table = dbConn.opts.tableNames.data;
+    this.logger = ensureLogger(dbConn.opts, "SQLiteDataStore");
     this.logger.Debug().Msg("constructor");
   }
 
@@ -75,7 +67,7 @@ export class SQLiteDataStore implements DataSQLStore {
     return this._deleteStmt;
   }
 
-  async start(): Promise<SQLiteDataStore> {
+  async start(): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
     await this.dbConn.client
@@ -93,7 +85,6 @@ export class SQLiteDataStore implements DataSQLStore {
       `);
     this._selectStmt = this.dbConn.client.prepare(`select name, car, data, updated_at from ${this.table} where car = ?`);
     this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where car = ?`);
-    return this;
   }
 
   async insert(ose: DataRecord): Promise<RunResult> {
@@ -131,12 +122,4 @@ export class SQLiteDataStore implements DataSQLStore {
     this.logger.Debug().Msg("destroy");
     await this.dbConn.client.prepare(`delete from ${this.table}`).run();
   }
-}
-
-export function DataStoreFactory(db: DBConnection, opts?: Partial<SQLOpts>): SQLStore<DataRecord, string> {
-  if (db instanceof SQLiteConnection) {
-    const store = new SQLiteDataStore(db, opts);
-    return store;
-  }
-  throw ensureLogger(opts).Module("DataStoreFactory").Error().Msg("unsupported db connection").AsError();
 }

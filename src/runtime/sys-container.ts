@@ -78,7 +78,7 @@ class sysContainer {
       switch (this.freight.state) {
         case "seeded":
           if (stdEnv.isNode) {
-            const { createNodeSysContainer } = await import("./node-sys-container.js");
+            const { createNodeSysContainer } = await saveImport("./node-sys-container.js");
             // console.log("use NodeSysContainer");
             this.freight = await createNodeSysContainer();
           } else {
@@ -168,6 +168,17 @@ class sysContainer {
       const err = new Error();
       console.warn(`SysContainer.${method} is not available in seeded state:`, err.stack);
     }
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function saveImport(fName: string): Promise<any> {
+  try {
+    const i = await import(fName);
+    return i;
+  } catch (e: unknown) {
+    console.error(`saveImport failed for ${fName} with`, e);
+    throw e;
   }
 }
 
