@@ -332,12 +332,6 @@ export class IndexDBMetaStore extends MetaStoreBase {
 
 export class IndexDBTestStore implements TestStore {
   constructor(readonly url: URL) {}
-  // async delete() {
-  //   const db = `${this.url.toString().replace(/^indexdb:\/\//, "")}`;
-  //   console.log("SysContainer:deleteDB:2", this.url.toString(), db);
-  //   await deleteDB(db);
-  // }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(key: string) {
     const ensureDB = new EnsureDB(this.url);
     const ret = await ensureDB.get(async (db) => {

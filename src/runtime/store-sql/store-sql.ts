@@ -167,8 +167,7 @@ export class SQLDataStore extends DataStore {
 }
 
 export class SQLTestStore implements TestStore {
-  constructor(readonly url: URL) { }
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  constructor(readonly url: URL) {}
   async get(key: string): Promise<Uint8Array> {
     const conn = SQLFactory(this.url);
     switch (this.url.searchParams.get("store")) {

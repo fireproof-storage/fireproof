@@ -15,10 +15,12 @@ export function sleep(ms: number) {
 export function itSkip(value: string, fn: () => unknown, options?: number) {
   if (typeof xit === "function") {
     xit(value, fn, options);
+    return
   }
   const mit = (it as unknown as { skip: (value: string, fn: () => unknown, options?: unknown) => unknown });
   if (mit && typeof mit.skip === "function") {
     mit.skip(value, fn, options);
+    return
   }
   console.warn("itSkip of " + value);
 }

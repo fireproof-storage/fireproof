@@ -1,4 +1,4 @@
-import { assert, equals, notEquals, matches, dataDir, buildBlobFiles, FileWithCid } from "../helpers.js";
+import { assert, equals, notEquals, matches, buildBlobFiles, FileWithCid } from "../helpers.js";
 import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
 import { EncryptedBlockstore } from "@fireproof/core/storage-engine";
