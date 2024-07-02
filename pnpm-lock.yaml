@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.1.15
-        version: 0.1.15
+        specifier: ^0.1.17
+        version: 0.1.17
       '@ipld/car':
         specifier: ^5.3.1
         version: 5.3.1
@@ -83,9 +83,6 @@ importers:
       uuidv7:
         specifier: ^1.0.0
         version: 1.0.1
-      vitest:
-        specifier: ^1.6.0
-        version: 1.6.0(@types/node@20.14.8)(@vitest/browser@1.6.0)(happy-dom@14.12.3)
     devDependencies:
       '@eslint/js':
         specifier: ^9.6.0
@@ -147,6 +144,9 @@ importers:
       vite-tsconfig-paths:
         specifier: ^4.3.2
         version: 4.3.2(typescript@5.5.2)(vite@5.3.1(@types/node@20.14.8))
+      vitest:
+        specifier: ^1.6.0
+        version: 1.6.0(@types/node@20.14.8)(@vitest/browser@1.6.0)(happy-dom@14.12.3)
 
 packages:
 
@@ -154,8 +154,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.1.15':
-    resolution: {integrity: sha512-t3HbeTRBnXiWXZozyoag0Bkba1RSE4Z/KTWNhNOWA0WWdeF3dz2t7nxPHue0c9cw12n0HBqsD+PQ/Gu9gl+69A==}
+  '@adviser/cement@0.1.17':
+    resolution: {integrity: sha512-8JPyzty2Em+pbrptR4b9VIqOBs7aD6c1WBJo9K6PWz2Tma/U30W5scwo+yVKSOOqjK/EhhPzMDnAQNHV/EcUKQ==}
     engines: {node: '>=16'}
 
   '@babel/code-frame@7.24.7':
@@ -3338,7 +3338,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.1.15': {}
+  '@adviser/cement@0.1.17': {}
 
   '@babel/code-frame@7.24.7':
     dependencies:

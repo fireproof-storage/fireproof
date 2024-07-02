@@ -2,6 +2,7 @@ import { assert, equals, notEquals, matches, buildBlobFiles, FileWithCid } from 
 import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
 import { EncryptedBlockstore } from "@fireproof/core/storage-engine";
+import exp from "node:constants";
 
 describe("basic Database", () => {
   let db: Database;
@@ -268,6 +269,7 @@ describe("basic Database parallel writes / public", function () {
     const { rows, clock } = await db.changes([]);
     equals(clock[0], db._crdt.clock.head[0]);
     equals(rows.length, 10);
+    // rows.sort((a, b) => a.key.localeCompare(b.key));
     for (let i = 0; i < 10; i++) {
       equals(rows[i].key, "id-" + i);
       assert(rows[i].clock, "The clock head is missing");
