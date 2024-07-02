@@ -26,9 +26,6 @@ importers:
       '@netlify/blobs':
         specifier: ^7.3.0
         version: 7.3.0
-      '@typescript-eslint/typescript-estree':
-        specifier: ^7.15.0
-        version: 7.15.0(typescript@5.5.2)
       '@ucanto/interface':
         specifier: ^10.0.1
         version: 10.0.1
@@ -114,6 +111,9 @@ importers:
       '@types/react':
         specifier: ^18.3.3
         version: 18.3.3
+      '@typescript-eslint/typescript-estree':
+        specifier: ^7.15.0
+        version: 7.15.0(typescript@5.5.2)
       '@vitest/browser':
         specifier: ^1.6.0
         version: 1.6.0(vitest@1.6.0)(webdriverio@8.39.0(encoding@0.1.13)(typescript@5.5.2))
