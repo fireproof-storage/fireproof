@@ -8,11 +8,8 @@ export interface TLUseDocument {
 }
 
 function topLevelUseDocument(...args: Parameters<UseDocument>) {
-  console.log("topLevelUseDocument-1", args);
   const { useDocument, database } = useFireproof();
-  console.log("topLevelUseDocument-2", args);
   (topLevelUseDocument as TLUseDocument).database = database;
-  console.log("topLevelUseDocument-3", args);
   return useDocument(...args);
 }
 
