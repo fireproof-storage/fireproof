@@ -1,11 +1,10 @@
-import { assert, equals, notEquals, equalsJSON, dataDir, sleep, itSkip } from "../helpers.js";
+import { assert, equals, notEquals, equalsJSON, sleep, itSkip } from "../helpers.js";
 
 import { CID } from "multiformats/cid";
 
 import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
 import { AnyLink, EncryptedBlockstore } from "@fireproof/core/storage-engine";
 import { SysContainer } from "@fireproof/core/runtime";
-import { a } from "@adviser/cement/sys_abstraction-CjljYIkv.js";
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));

@@ -14,7 +14,7 @@ import {
   throwFalsy,
   IndexTransactionMeta,
 } from "./types.js";
-import { BaseBlockstore, EncryptedBlockstore, TransactionMeta } from "./storage-engine/index.js";
+import { BaseBlockstore } from "./storage-engine/index.js";
 import {
   bulkIndex,
   indexEntriesForChanges,

@@ -1,4 +1,4 @@
-import { assert, equals, equalsJSON, dataDir, itSkip } from "../helpers.js";
+import { assert, equals, equalsJSON, itSkip } from "../helpers.js";
 
 import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";

@@ -1,9 +1,0 @@
-{
-  "spec_dir": "tests",
-  "spec_files": ["**/*test.ts"],
-  "helpers": ["helpers/**/*.?(m)js"],
-  "env": {
-    "stopSpecOnExpectationFailure": false,
-    "random": false
-  }
-}
