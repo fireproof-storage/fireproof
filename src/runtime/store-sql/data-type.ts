@@ -117,11 +117,8 @@ export class SQLiteDataStore implements DataSQLStore {
 
   async delete(car: string): Promise<RunResult> {
     this.logger.Debug().Str("car", car).Msg("delete");
-    console.log("data:sqlite:delete:pre", car, this.deleteStmt);
     const ret = await this.deleteStmt.run(car);
-
-    const o = await this.select(car);
-    console.log("data:sqlite:delete:post", car, ret, o);
+    await this.select(car);
     return ret;
   }
 

@@ -95,7 +95,6 @@ export class SQLiteConnection implements DBConnection {
       this.logger.Debug().Str("filename", fName).Msg("connect");
       const Sqlite3Database = (await import("better-sqlite3")).default;
       await SysContainer.mkdir(SysContainer.dirname(fName), { recursive: true });
-      console.log(`SQLITE:Connect:filename: ${fName}`);
       const db = new Sqlite3Database(fName, {
         // verbose: console.log,
         nativeBinding: "./node_modules/better-sqlite3/build/Release/better_sqlite3.node",
