@@ -2,9 +2,9 @@ import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike } fr
 
 import * as stdEnv from "std-env";
 import { uuidv4 } from "uuidv7";
+import { ResolveOnce } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
-import { ResolveOnce } from "../storage-engine/resolve-once.js";
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";

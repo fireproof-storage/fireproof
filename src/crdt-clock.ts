@@ -1,11 +1,11 @@
+import { advance } from "@web3-storage/pail/clock";
+import { root } from "@web3-storage/pail/crdt";
+import { ResolveOnce } from "@adviser/cement";
+
 import { clockChangesSince } from "./crdt-helpers.js";
 import type { BaseBlockstore, CarTransaction } from "./storage-engine/index.js";
 import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } from "./types.js";
-
-import { advance } from "@web3-storage/pail/clock";
-import { root } from "@web3-storage/pail/crdt";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
-import { ResolveOnce } from "./storage-engine/resolve-once.js";
 
 export class CRDTClock<T extends DocTypes> {
   // todo: track local and remote clocks independently, merge on read

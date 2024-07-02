@@ -1,10 +1,11 @@
+import { ResolveOnce } from "@adviser/cement";
+
 import { dataDir } from "../runtime/data-dir.js";
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { Loadable } from "./loader.js";
 import { RemoteWAL } from "./remote-wal.js";
 import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
-import { ResolveOnce } from "./resolve-once.js";
 
 export function toURL(path: string | URL): URL {
   if (path instanceof URL) return path;

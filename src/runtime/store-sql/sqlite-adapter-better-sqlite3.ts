@@ -1,8 +1,8 @@
 import type { Database } from "better-sqlite3";
-import { Logger } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
+
 import { DBConnection, SQLOpts } from "./types.js";
 import { SysContainer, saveImport } from "../sys-container.js";
-import { ResolveOnce } from "../../storage-engine/resolve-once.js";
 import { ensureSQLOpts } from "./ensurer.js";
 
 // export function SimpleSQLite(filename: string, opts?: Partial<SQLOpts>): StoreOpts {

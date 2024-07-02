@@ -1,10 +1,11 @@
 import pLimit from "p-limit";
+import { ResolveOnce } from "@adviser/cement";
+
 import type { AnyLink, CommitOpts, DbMeta } from "./types.js";
 import { type Loadable, carLogIncludesGroup } from "./loader.js";
 import { STORAGE_VERSION } from "./store.js";
 import { CommitQueue } from "./commit-queue.js";
 import { Falsy, throwFalsy } from "../types.js";
-import { ResolveOnce } from "./resolve-once.js";
 
 export interface WALState {
   operations: DbMeta[];
