@@ -1,4 +1,5 @@
 import { uuidv7 } from "uuidv7";
+import { ResolveOnce } from "@adviser/cement";
 
 import { WriteQueue, writeQueue } from "./write-queue.js";
 import { CRDT } from "./crdt.js";
@@ -23,9 +24,7 @@ import type {
   CRDTMeta,
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./storage-engine/index.js";
-
 import { SysContainer } from "./runtime/sys-container.js";
-import { ResolveOnce } from "./storage-engine/resolve-once.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();

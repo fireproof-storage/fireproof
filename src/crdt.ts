@@ -1,3 +1,6 @@
+import { Block } from "multiformats";
+import { ResolveOnce } from "@adviser/cement";
+
 import {
   EncryptedBlockstore,
   type CompactionFetcher,
@@ -29,8 +32,6 @@ import type {
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
-import { Block } from "multiformats";
-import { ResolveOnce } from "./storage-engine/resolve-once.js";
 import { blockstoreFactory } from "./storage-engine/transaction.js";
 
 export class CRDT<T extends DocTypes> {

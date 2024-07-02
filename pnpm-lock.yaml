@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.1.13
-        version: 0.1.13(postcss@8.4.38)(typescript@5.5.2)
+        specifier: ^0.1.15
+        version: 0.1.15
       '@ipld/car':
         specifier: ^5.3.1
         version: 5.3.1
@@ -154,8 +154,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.1.13':
-    resolution: {integrity: sha512-ROzYxxC4vbnJ3HBnkxKYw1ZkEz6fpCf9sITWaduXpXfriEhcqVF5ooDNC6uVXyeutfZmYMvJnKkOUmJcWfE8PQ==}
+  '@adviser/cement@0.1.15':
+    resolution: {integrity: sha512-t3HbeTRBnXiWXZozyoag0Bkba1RSE4Z/KTWNhNOWA0WWdeF3dz2t7nxPHue0c9cw12n0HBqsD+PQ/Gu9gl+69A==}
     engines: {node: '>=16'}
 
   '@babel/code-frame@7.24.7':
@@ -3338,16 +3338,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.1.13(postcss@8.4.38)(typescript@5.5.2)':
-    dependencies:
-      tsup: 8.1.0(postcss@8.4.38)(typescript@5.5.2)
-    transitivePeerDependencies:
-      - '@microsoft/api-extractor'
-      - '@swc/core'
-      - postcss
-      - supports-color
-      - ts-node
-      - typescript
+  '@adviser/cement@0.1.15': {}
 
   '@babel/code-frame@7.24.7':
     dependencies:
