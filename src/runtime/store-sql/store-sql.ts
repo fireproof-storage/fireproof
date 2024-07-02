@@ -134,7 +134,6 @@ export class SQLDataStore extends DataStore {
 
   async save(car: AnyBlock): Promise<void> {
     const ws = await this.ensureStore();
-    console.log("DATA:save:pre:", car.cid.toString(), this.url.toString());
     await ws.insert({
       name: this.name,
       car: car.cid.toString(),
@@ -145,11 +144,8 @@ export class SQLDataStore extends DataStore {
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     const ws = await this.ensureStore();
-    console.log("DATA:load:pre:", cid.toString());
     const records = await ws.select(cid.toString());
-    console.log("DATA:load:post:", cid.toString(), records);
     if (records.length === 0) {
-      console.log("DATA:load:post:exception:", cid.toString(), records);
       throw new Error(`ENOENT: data missing idb block ${cid.toString()}`);
     }
     return records[0] && { cid, bytes: records[0].data };
@@ -157,9 +153,7 @@ export class SQLDataStore extends DataStore {
 
   async remove(cid: AnyLink): Promise<void> {
     const ws = await this.ensureStore();
-    console.log("DATA:remove:pre:", cid.toString());
     await ws.delete(cid.toString());
-    console.log("DATA:remove:post:", cid.toString());
   }
   async close() {
     const ws = await this.ensureStore();
@@ -173,7 +167,7 @@ export class SQLDataStore extends DataStore {
 }
 
 export class SQLTestStore implements TestStore {
-  constructor(readonly url: URL) {}
+  constructor(readonly url: URL) { }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async get(key: string): Promise<Uint8Array> {
     const conn = SQLFactory(this.url);

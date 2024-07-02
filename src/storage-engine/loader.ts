@@ -501,7 +501,6 @@ export class Loader implements Loadable {
     publicFiles?: boolean,
   ): Promise<CarReader> {
     const cidsString = cid.toString();
-    console.log(`>>>>>>>>HASH-State:${cidsString}->${this.carReaders.has(cidsString)}->${Array.from(this.carReaders.keys())}`);
     if (!this.carReaders.has(cidsString)) {
       this.carReaders.set(
         cidsString,
@@ -509,25 +508,18 @@ export class Loader implements Loadable {
           let loadedCar: AnyBlock | undefined = undefined;
           try {
             //loadedCar now is an array of AnyBlocks
-            console.log("loadedCar:local:pre:", local, cid.toString());
             loadedCar = await local.load(cid);
-            console.log("loadedCar:local:post:", loadedCar?.cid.toString(), cid.toString());
           } catch (e) {
             if (remote) {
               const remoteCar = await remote.load(cid);
-              console.log("loadedCar:remote", remoteCar);
               if (remoteCar) {
                 // todo test for this
                 await local.save(remoteCar);
                 loadedCar = remoteCar;
               }
-            } else {
-              console.log("loadedCar:local:err", cid.toString());
             }
           }
-          console.log("loadedCar:post", loadedCar?.cid.toString());
           if (!loadedCar) {
-            console.log("loadedCar:!:", cid.toString(), loadedCar);
             throw new Error(`missing car files ${cidsString}`);
           }
           //This needs a fix as well as the fromBytes function expects a Uint8Array

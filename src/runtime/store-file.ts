@@ -136,14 +136,9 @@ export class FileDataStore extends DataStore {
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
-    console.log("load->0->", cid);
     await SysContainer.start();
-    console.log("load->1->", cid);
     const filepath = this.cidPath(cid);
-    console.log("load->2->", cid);
-    // console.log("load->", filepath);
     const bytes = await SysContainer.readfile(filepath);
-    console.log("load->3->", cid);
     return { cid, bytes: new Uint8Array(bytes) };
   }
 
@@ -187,7 +182,7 @@ function toArrayBuffer(buffer: Buffer) {
 }
 
 export class FileTestStore implements TestStore {
-  constructor(readonly url: URL) {}
+  constructor(readonly url: URL) { }
 
   // async delete() {
   //   const fsdir = getPath(this.url);
