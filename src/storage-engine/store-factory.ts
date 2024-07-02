@@ -1,10 +1,10 @@
-import { Future } from "@adviser/cement";
 import { dataDir } from "../runtime/data-dir.js";
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { Loadable } from "./loader.js";
 import { RemoteWAL } from "./remote-wal.js";
 import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
+import { ResolveOnce } from "./resolve-once.js";
 
 export function toURL(path: string | URL): URL {
   if (path instanceof URL) return path;
@@ -16,16 +16,10 @@ export function toURL(path: string | URL): URL {
     return url;
   }
 }
-
-interface StoreWaiter<T> {
-  cached?: T;
-  readonly queued: Future<T>[];
-}
-
 interface StoreCache {
-  readonly meta: StoreWaiter<MetaStore>;
-  readonly data: StoreWaiter<DataStore>;
-  readonly remoteWAL: StoreWaiter<RemoteWAL>;
+  readonly meta: ResolveOnce<MetaStore>;
+  readonly data: ResolveOnce<DataStore>;
+  readonly remoteWAL: ResolveOnce<RemoteWAL>;
 }
 
 const factoryCache = new Map<string, StoreCache>();
@@ -38,51 +32,28 @@ interface StoreFactories {
   readonly remoteWAL?: (url: URL, loader: Loadable) => Promise<RemoteWAL>;
 }
 
-async function waiter<T extends StoreTypes>(sw: StoreWaiter<T>, fn: () => Promise<T>): Promise<T> {
-  if (sw.cached) {
-    return Promise.resolve(sw.cached as T);
-  }
-  const future = new Future<T>();
-  if (sw.queued.length === 0) {
-    fn()
-      .then((store) => {
-        sw.cached = store;
-        const queued = [...sw.queued];
-        sw.queued.length = 0;
-        queued.forEach((f) => f.resolve(store));
-      })
-      .catch((err) => {
-        console.error("waiter->ERR", err);
-      });
-  }
-  sw.queued.push(future);
-  const ret = future.asPromise();
-  return ret;
-}
-
 async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: StoreFactories): Promise<T> {
   const key = url.toString();
   let storeCache = factoryCache.get(key);
   if (!storeCache) {
     storeCache = {
-      meta: { queued: [] },
-      data: { queued: [] },
-      remoteWAL: { queued: [] },
+      meta: new ResolveOnce<MetaStore>(),
+      data: new ResolveOnce<DataStore>(),
+      remoteWAL: new ResolveOnce<RemoteWAL>(),
     };
     factoryCache.set(key, storeCache);
   }
   if (sf.meta) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return waiter(storeCache.meta, () => sf.meta!(url, loader)) as Promise<T>;
+    return storeCache.meta.once(() => sf.meta!(url, loader)) as Promise<T>;
   }
   if (sf.data) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return waiter(storeCache.data, () => sf.data!(url, loader)) as Promise<T>;
+    return storeCache.data.once(() => sf.data!(url, loader)) as Promise<T>;
   }
   if (sf.remoteWAL) {
-    // console.log("cacheStore->wal->", url.toString());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return waiter(storeCache.remoteWAL, () => sf.remoteWAL!(url, loader)) as Promise<T>;
+    return storeCache.remoteWAL.once(() => sf.remoteWAL!(url, loader)) as Promise<T>;
   }
   throw new Error("unsupported store type");
 }
