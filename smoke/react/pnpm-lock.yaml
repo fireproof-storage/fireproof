@@ -1322,7 +1322,7 @@ packages:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
   use-fireproof@file:../../dist/use-fireproof/use-fireproof-0.18.0.tgz:
-    resolution: {integrity: sha512-6RPbcr/EwU8nRKKghW2SYvtL9cO7kJyhWzVnvV51iBuTo1fvI2IcA3QkrFVG92OZ8jCZgmTIVaeVbIFvILTCyg==, tarball: file:../../dist/use-fireproof/use-fireproof-0.18.0.tgz}
+    resolution: {integrity: sha512-qt8WehCbTV+3yyDcczj6tlWxYKTPYAevOTJ9JsnsKzBzrnrTVgT8kCr4aMYt5fZJasz79mYSeDov20rNGLCI0g==, tarball: file:../../dist/use-fireproof/use-fireproof-0.18.0.tgz}
     version: 0.18.0
     peerDependencies:
       react: '>=18.0.0'

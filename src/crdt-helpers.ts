@@ -15,7 +15,7 @@ import {
   AnyLink,
   StoreRuntime,
   BaseBlockstore,
-} from "./block-store/index.js";
+} from "./blockstore/index.js";
 import {
   type IndexKeyType,
   type DocUpdate,

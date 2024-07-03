@@ -7,7 +7,7 @@ import {
   type TransactionMeta,
   type CarTransaction,
   BaseBlockstore,
-} from "./block-store/index.js";
+} from "./blockstore/index.js";
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -32,7 +32,7 @@ import type {
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
-import { blockstoreFactory } from "./block-store/transaction.js";
+import { blockstoreFactory } from "./blockstore/transaction.js";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
