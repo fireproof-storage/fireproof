@@ -2,12 +2,12 @@ import { CID } from "multiformats";
 
 import { matches, equals } from "../helpers.js";
 
-import { MetaStore, DataStore, Loader, Loadable, testStoreFactory } from "../../src/blockstore/index.js";
+import { MetaStore, DataStore, Loader, Loadable, testStoreFactory } from "@fireproof/core/blockstore";
 
-import { toStoreRuntime } from "../../src/blockstore/index.js"
-import { AnyBlock, DbMeta } from "../../src/blockstore/index.js";
+import { toStoreRuntime } from "@fireproof/core/blockstore"
+import { AnyBlock, DbMeta } from "@fireproof/core/blockstore";
 import { SysContainer, assert } from "@fireproof/core/runtime";
-import { TestStore } from "../../src/blockstore/types.js";
+import { TestStore } from "@fireproof/core/blockstore";
 
 const decoder = new TextDecoder("utf-8");
 

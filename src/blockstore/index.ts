@@ -1,21 +1,22 @@
 import { ConnectREST } from "./connect-rest.js";
-import {
-  type AnyBlock,
-  type AnyLink,
-  type AnyAnyLink,
-  type CarGroup,
-  type UploadDataFnParams,
-  type UploadMetaFnParams,
-  type DownloadDataFnParams,
-  type DownloadMetaFnParams,
-  type DbMeta,
-  type CommitOpts,
-  type CryptoOpts,
-  type StoreOpts,
-  type StoreRuntime,
-  type TransactionMeta,
-  type BlobLike,
-  type Connection,
+export type {
+  AnyBlock,
+  AnyLink,
+  AnyAnyLink,
+  CarGroup,
+  UploadDataFnParams,
+  UploadMetaFnParams,
+  DownloadDataFnParams,
+  DownloadMetaFnParams,
+  DbMeta,
+  CommitOpts,
+  CryptoOpts,
+  StoreOpts,
+  StoreRuntime,
+  TransactionMeta,
+  BlobLike,
+  Connection,
+  TestStore,
 } from "./types.js";
 
 export { STORAGE_VERSION } from "./store.js";
@@ -31,22 +32,3 @@ export { DataStore, MetaStore } from "./store.js";
 export { RemoteWAL, type WALState } from "./remote-wal.js";
 export { parseCarFile } from "./loader-helpers.js";
 export { ConnectionBase } from "./connection-base.js";
-
-export {
-  DbMeta,
-  AnyBlock,
-  AnyLink,
-  AnyAnyLink,
-  CarGroup,
-  CryptoOpts,
-  StoreOpts as StorexOpts,
-  StoreRuntime,
-  CommitOpts,
-  UploadDataFnParams,
-  UploadMetaFnParams,
-  DownloadDataFnParams,
-  DownloadMetaFnParams,
-  TransactionMeta,
-  BlobLike,
-  Connection,
-}; // from "./types";
