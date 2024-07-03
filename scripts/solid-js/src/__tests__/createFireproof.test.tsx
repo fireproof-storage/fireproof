@@ -3,7 +3,10 @@ import { describe, expect, test } from "vitest";
 
 import { createFireproof } from "../createFireproof";
 
-interface TestDoc { text: string; completed: boolean }
+interface TestDoc {
+  text: string;
+  completed: boolean;
+}
 
 const sleepHalfSecond = (ms = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 

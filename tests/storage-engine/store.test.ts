@@ -4,7 +4,7 @@ import { matches, equals } from "../helpers.js";
 
 import { MetaStore, DataStore, Loader, Loadable, testStoreFactory } from "@fireproof/core/blockstore";
 
-import { toStoreRuntime } from "@fireproof/core/blockstore"
+import { toStoreRuntime } from "@fireproof/core/blockstore";
 import { AnyBlock, DbMeta } from "@fireproof/core/blockstore";
 import { SysContainer, assert } from "@fireproof/core/runtime";
 import { TestStore } from "@fireproof/core/blockstore";
@@ -18,7 +18,7 @@ describe("DataStore", function () {
   afterEach(async () => {
     await store.close();
     await store.destroy();
-  })
+  });
 
   beforeEach(async () => {
     await SysContainer.start();
@@ -44,14 +44,14 @@ describe("DataStore", function () {
 });
 
 describe("DataStore with a saved car", function () {
-  let store: DataStore
+  let store: DataStore;
   let raw: TestStore;
   let car: AnyBlock;
 
   afterEach(async () => {
     await store.close();
     await store.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     store = await toStoreRuntime().makeDataStore({ name: "test2" } as Loadable);
@@ -79,19 +79,19 @@ describe("DataStore with a saved car", function () {
 
   it("should remove a car", async function () {
     await store.remove(car.cid);
-    const error = await store.load(car.cid).catch((e: Error) => e) as Error;
+    const error = (await store.load(car.cid).catch((e: Error) => e)) as Error;
     matches(error.message, "ENOENT");
   });
 });
 
 describe("MetaStore", function () {
-  let store: MetaStore
+  let store: MetaStore;
   let raw: TestStore;
 
   afterEach(async () => {
     await store.close();
     await store.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     store = await toStoreRuntime().makeMetaStore({ name: "test" } as unknown as Loader);
@@ -109,24 +109,24 @@ describe("MetaStore", function () {
       key: undefined,
     };
     await store.save(h);
-    const file = await raw.get("main")
+    const file = await raw.get("main");
     // SysContainer.rawDB.get(store.url, "meta", "main", 'json');
     const header = JSON.parse(decoder.decode(file));
     assert(header);
-    assert(header.cars)
+    assert(header.cars);
     equals(header.cars[0]["/"], cid.toString());
   });
 });
 
 describe("MetaStore with a saved header", function () {
-  let store: MetaStore
+  let store: MetaStore;
   let raw: TestStore;
   let cid: CID;
 
   afterEach(async () => {
     await store.close();
     await store.destroy();
-  })
+  });
 
   beforeEach(async function () {
     await SysContainer.start();
@@ -148,7 +148,7 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should load a header", async function () {
-    const loadeds = await store.load() as DbMeta[];
+    const loadeds = (await store.load()) as DbMeta[];
     const loaded = loadeds[0];
     assert(loaded);
     assert(loaded.cars);

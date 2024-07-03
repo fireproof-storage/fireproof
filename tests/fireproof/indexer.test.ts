@@ -15,7 +15,7 @@ describe("basic Index", () => {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");
@@ -66,7 +66,6 @@ describe("basic Index", () => {
     const { rows } = await indexer.query({ range: ["a", "z"] });
     equals(rows.length, 3);
     equals(rows[0].key, "amazing");
-
   });
   it("should range query all twice", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
@@ -99,7 +98,7 @@ describe("Index query with compound key", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");
@@ -125,7 +124,7 @@ describe("basic Index with map fun", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");
@@ -151,7 +150,7 @@ describe("basic Index with map fun with value", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");
@@ -188,7 +187,7 @@ describe("Index query with map and compound key", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");
@@ -214,7 +213,7 @@ describe("basic Index with string fun", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");
@@ -231,7 +230,7 @@ describe("basic Index with string fun", function () {
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query();
-    assert(rows.length)
+    assert(rows.length);
     assert(rows[0].doc);
   });
 });
@@ -250,7 +249,7 @@ describe("basic Index upon cold start", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     // db = database()
@@ -335,7 +334,7 @@ describe("basic Index with no data", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-indexer");

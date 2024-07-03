@@ -1,4 +1,3 @@
-
 import { assert, equals } from "../helpers.js";
 import { fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
@@ -11,16 +10,18 @@ describe("Hello World Test", function () {
 });
 
 describe("public API", function () {
-  interface TestDoc { foo: string }
-  let db: Database
-  let idx: Index<string, TestDoc>
-  let ok: DbResponse
-  let doc: DocWithId<TestDoc>
+  interface TestDoc {
+    foo: string;
+  }
+  let db: Database;
+  let idx: Index<string, TestDoc>;
+  let ok: DbResponse;
+  let doc: DocWithId<TestDoc>;
   let query: IndexRows<string, TestDoc>;
   afterEach(async function () {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = database("test-public-api");

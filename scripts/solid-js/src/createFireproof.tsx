@@ -158,11 +158,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
     return [doc, updateDoc, saveDoc];
   }
 
-  function createLiveQuery<T extends DocTypes>(
-    strOrFn: string | MapFn,
-    query = {},
-    initialRows: IndexRow<T>[] = []
-  ) {
+  function createLiveQuery<T extends DocTypes>(strOrFn: string | MapFn, query = {}, initialRows: IndexRow<T>[] = []) {
     // TODO: Explore using a store instead of a signal for more efficient updates
     const [result, setResult] = createSignal({
       docs: initialRows.map((r) => r.doc as Doc<T>),

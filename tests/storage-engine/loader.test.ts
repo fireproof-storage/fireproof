@@ -13,9 +13,8 @@ import { parseCarFile } from "@fireproof/core/blockstore";
 import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "@fireproof/core/blockstore";
 
 import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "@fireproof/core/blockstore";
-import { SysContainer } from "@fireproof/core/runtime"
+import { SysContainer } from "@fireproof/core/runtime";
 import { CRDTMeta, IndexTransactionMeta } from "use-fireproof";
-
 
 class MyMemoryBlockStore extends EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
@@ -31,7 +30,7 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   close(): Promise<void> {
     return this.loader.close();
   }
-  loader: Loader = new Loader("MyMemoryBlockStore", {})
+  loader: Loader = new Loader("MyMemoryBlockStore", {});
   readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
@@ -57,7 +56,6 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   }
 }
 
-
 describe("basic Loader simple", function () {
   let loader: Loader;
   let block: BlockView;
@@ -66,7 +64,7 @@ describe("basic Loader simple", function () {
   afterEach(async function () {
     await loader.close();
     await loader.destroy();
-  })
+  });
 
   beforeEach(async function () {
     const testDbName = "test-loader-commit";
@@ -112,7 +110,7 @@ describe("basic Loader with two commits", function () {
   afterEach(async function () {
     await loader.close();
     await loader.destroy();
-  })
+  });
 
   beforeEach(async function () {
     await SysContainer.start();
@@ -191,14 +189,14 @@ describe("basic Loader with two commits", function () {
     assert(await cs.load(carCid[0]));
     await loader.commit(t, { head: [block3.cid] }, { compact: true });
     equals(loader.carLog.length, 1);
-    const e0 = await cs.load(carCid[0]).catch(e => e);
-    assert(e0 instanceof Error, 'e should be an instance of Error');
+    const e0 = await cs.load(carCid[0]).catch((e) => e);
+    assert(e0 instanceof Error, "e should be an instance of Error");
     await loader.commit(t, { head: [block4.cid] }, { compact: false });
     equals(loader.carLog.length, 2);
 
     const e = await loader.loadCar(carCid[0]).catch((e) => e);
     assert(e);
-    assert(e instanceof Error, 'e should be Error');
+    assert(e instanceof Error, "e should be Error");
     matches(e.message, "missing car file");
   }, 10000);
 });
@@ -213,7 +211,7 @@ describe("basic Loader with index commits", function () {
   afterEach(async function () {
     await ib.close();
     await ib.destroy();
-  })
+  });
 
   beforeEach(async function () {
     const name = "test-loader-index" + Math.random();
