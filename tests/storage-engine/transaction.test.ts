@@ -1,9 +1,9 @@
 import { CID } from "multiformats";
 
 import { assert, equals, matches, equalsJSON } from "../helpers.js";
-import { EncryptedBlockstore, BaseBlockstore, CarTransaction } from "../../src/block-store/index.js";
+import { EncryptedBlockstore, BaseBlockstore, CarTransaction } from "../../src/blockstore/index.js";
 
-import { AnyAnyLink, AnyBlock, AnyLink } from "../../src/block-store/index.js";
+import { AnyAnyLink, AnyBlock, AnyLink } from "../../src/blockstore/index.js";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: BaseBlockstore;

@@ -39,10 +39,10 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    name: "core/block-store",
-    entry: ["src/block-store/index.ts"],
+    name: "core/blockstore",
+    entry: ["src/blockstore/index.ts"],
     platform: "browser",
-    outDir: "dist/fireproof-core/block-store",
+    outDir: "dist/fireproof-core/blockstore",
     esbuildPlugins: [
       resolve({
         "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
@@ -56,7 +56,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/block-store'",
+      footer: "declare module '@fireproof/core/blockstore'",
     },
   },
   {

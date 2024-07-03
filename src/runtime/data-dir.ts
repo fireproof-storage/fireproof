@@ -1,4 +1,4 @@
-import { STORAGE_VERSION } from "../block-store/index.js";
+import { STORAGE_VERSION } from "../blockstore/index.js";
 import { SysContainer } from "./sys-container.js";
 import { isNode } from "std-env";
 

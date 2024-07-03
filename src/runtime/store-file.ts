@@ -1,10 +1,10 @@
-import type { AnyBlock, AnyLink, DbMeta } from "../block-store/index.js";
-import { MetaStore, DataStore, RemoteWAL, WALState } from "../block-store/index.js";
-import type { Loadable } from "../block-store/index.js";
+import type { AnyBlock, AnyLink, DbMeta } from "../blockstore/index.js";
+import { MetaStore, DataStore, RemoteWAL, WALState } from "../blockstore/index.js";
+import type { Loadable } from "../blockstore/index.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { SysContainer } from "./sys-container.js";
 import { Falsy } from "../types.js";
-import { TestStore } from "../block-store/types.js";
+import { TestStore } from "../blockstore/types.js";
 
 function getPath(url: URL): string {
   return url

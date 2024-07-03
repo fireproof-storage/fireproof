@@ -3,7 +3,7 @@ import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../types.
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../ensurer.js";
-import { UploadMetaFnParams } from "../../../block-store/types.js";
+import { UploadMetaFnParams } from "../../../blockstore/types.js";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;

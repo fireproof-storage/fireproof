@@ -2,7 +2,7 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, DataRecord, DataSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
-import { UploadDataFnParams } from "../../../block-store/types.js";
+import { UploadDataFnParams } from "../../../blockstore/types.js";
 import { ensureLogger } from "../ensurer.js";
 
 export class DataSQLRecordBuilder {
