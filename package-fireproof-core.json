@@ -13,6 +13,12 @@
       "require": "./index.cjs",
       "script": "./index.global.js",
       "types": "./index.d.ts"
+    },
+    "./block-store": {
+      "import": "./block-store/index.js",
+      "require": "./block-store/index.cjs",
+      "script": "./block-store/index.global.js",
+      "types": "./block-store/index.d.ts"
     }
   },
   "scripts": {},
