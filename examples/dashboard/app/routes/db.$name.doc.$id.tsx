@@ -5,7 +5,7 @@ import { themes } from "prism-react-renderer";
 import { CodeHighlight, EditableCodeHighlight } from "../components/CodeHighlight";
 
 export default function Document() {
-  const { name, id : _id } = useParams();
+  const { name, id: _id } = useParams();
   const { useDocument, database } = useFireproof(name);
 
   const [doc] = useDocument(() => ({ _id: _id! }));
@@ -16,7 +16,7 @@ export default function Document() {
     const data = JSON.parse(docToSave);
     const resp = await database.put({ _id, ...data });
     if (!_id) {
-      window.location.href = `doc?id=${resp.id}`;
+      window.location.href = `/db/${name}/doc/${resp.id}`;
     }
     setNeedsSave(false);
   }
@@ -28,9 +28,8 @@ export default function Document() {
 
   function editorChanged({ code, valid }: { code: string, valid: boolean }) {
     setNeedsSave(valid);
-    setDocToSave(code);
+    setDocToSave(() => code);
   }
-
 
   const { _id: id, ...data } = doc;
 
@@ -49,22 +48,20 @@ export default function Document() {
         onClick={() => {
           saveDocument(_id);
         }}
-        className={`${
-          needsSave ? 'bg-blue-500 hover:bg-blue-700 text-white' : 'bg-gray-700 text-gray-400'
-        } font-bold py-2 px-4 m-5 rounded`}
+        className={`${needsSave ? 'bg-blue-500 hover:bg-blue-700 text-white' : 'bg-gray-700 text-gray-400'
+          } font-bold py-2 px-4 m-5 rounded`}
       >
         Save
       </button>
-      <button
+      {_id && <button
         onClick={() => deleteDocument(_id)}
-        className={`${
-          !!_id ? 'bg-gray-700 hover:bg-orange-700 hover:text-white' : 'bg-gray-700'
-        } text-gray-400 font-bold py-2 px-4 my-5 rounded`}
+        className={`${!!_id ? 'bg-gray-700 hover:bg-orange-700 hover:text-white' : 'bg-gray-700'
+          } text-gray-400 font-bold py-2 px-4 my-5 rounded`}
       >
         Delete
-      </button>
+      </button>}
       <h3>Fireproof metadata</h3>
       <CodeHighlight code={JSON.stringify(idFirstMeta, null, 2)} theme={themes.oneLight} />
     </div>
-  );  
+  );
 }
