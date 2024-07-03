@@ -1,4 +1,4 @@
-import type { Connectable } from "../../storage-engine/index.js";
+import type { Connectable } from "../../block-store/index.js";
 import { ConnectUCAN, ConnectUCANParams } from "../connect-ucan/index.js";
 
 const ipfsCxs = new Map<string, ConnectUCAN>();

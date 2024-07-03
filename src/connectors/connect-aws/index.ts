@@ -1,7 +1,7 @@
 import { ConnectS3 } from "./connect-s3.js";
-import { Connectable } from "../../storage-engine/index.js";
-import type { AnyLink, UploadDataFnParams } from "../../storage-engine/index.js";
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadMetaFnParams } from "../../storage-engine/types.js";
+import { Connectable } from "../../block-store/index.js";
+import type { AnyLink, UploadDataFnParams } from "../../block-store/index.js";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadMetaFnParams } from "../../block-store/types.js";
 export type { AnyLink };
 
 export const connect = {

@@ -1,4 +1,4 @@
-import { CryptoOpts } from "../storage-engine/index.js";
+import { CryptoOpts } from "../block-store/index.js";
 
 function randomBytes(size: number) {
   const bytes = new Uint8Array(size);

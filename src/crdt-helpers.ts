@@ -15,7 +15,7 @@ import {
   AnyLink,
   StoreRuntime,
   BaseBlockstore,
-} from "./storage-engine";
+} from "./block-store/index.js";
 import {
   type IndexKeyType,
   type DocUpdate,

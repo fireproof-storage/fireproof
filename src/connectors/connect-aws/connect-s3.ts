@@ -1,9 +1,9 @@
 import fetch from "cross-fetch";
 import { Base64 } from "js-base64";
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/types.js";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../block-store/types.js";
 import { throwFalsy } from "../../types.js";
 import { CID } from "multiformats";
-import { ConnectionBase } from "../../storage-engine/connection-base.js";
+import { ConnectionBase } from "../../block-store/connection-base.js";
 
 interface MetaResultItem {
   readonly cid: string;

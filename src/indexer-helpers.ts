@@ -28,7 +28,7 @@ import {
   DocObject,
   IndexUpdateString,
 } from "./types.js";
-import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./storage-engine/index.js";
+import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./block-store/index.js";
 import { CRDT } from "./crdt.js";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {

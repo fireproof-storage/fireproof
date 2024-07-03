@@ -5,7 +5,7 @@ import {
   DownloadMetaFnParams,
   UploadDataFnParams,
   UploadMetaFnParams,
-} from "../../storage-engine/index.js";
+} from "../../block-store/index.js";
 import { Client } from "@web3-storage/w3up-client";
 import * as w3clock from "@web3-storage/clock/client";
 import { decodeEventBlock } from "@web3-storage/pail/clock";
@@ -14,7 +14,7 @@ import { create as createClient } from "@web3-storage/w3up-client";
 import * as Account from "@web3-storage/w3up-client/account";
 import * as Result from "@web3-storage/w3up-client/result";
 import { Falsy, throwFalsy } from "../../types.js";
-import { ConnectionBase } from "../../storage-engine/connection-base.js";
+import { ConnectionBase } from "../../block-store/connection-base.js";
 
 export interface ConnectUCANParams {
   name: string;
