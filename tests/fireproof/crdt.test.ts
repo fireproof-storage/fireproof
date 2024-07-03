@@ -9,16 +9,15 @@ import { Index, index } from "@fireproof/core";
 import { AnyBlock, EncryptedBlockstore, Loader } from "@fireproof/core/blockstore";
 import { SysContainer } from "@fireproof/core/runtime";
 
-
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
-    crdt = new CRDT()
+    crdt = new CRDT();
   });
   it("should have an empty head", async function () {
     const head = crdt.clock.head;
@@ -50,7 +49,7 @@ describe("CRDT with one record", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
 
   beforeEach(async function () {
     await SysContainer.start();
@@ -73,7 +72,7 @@ describe("CRDT with one record", function () {
     const didPut = await crdt.bulk([{ id: "nice", value: { nice: "data" } }]);
     const head = didPut.head;
     equals(head.length, 1);
-    const { doc } = await crdt.get("nice") as DocValue<CRDTTestType>;
+    const { doc } = (await crdt.get("nice")) as DocValue<CRDTTestType>;
     equals(doc.nice, "data");
   });
   it("should allow for a delete", async function () {
@@ -100,7 +99,7 @@ describe("CRDT with a multi-write", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT();
@@ -115,7 +114,7 @@ describe("CRDT with a multi-write", function () {
     equals(firstPut.head.length, 1);
   });
   it("return the records on get", async function () {
-    const { doc } = await crdt.get("ace") as DocValue<CRDTTestType>;
+    const { doc } = (await crdt.get("ace")) as DocValue<CRDTTestType>;
     equals(doc.points, 11);
 
     const got2 = await crdt.get("king");
@@ -164,7 +163,7 @@ describe("CRDT with two multi-writes", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async () => {
     await SysContainer.start();
     crdt = new CRDT();
@@ -191,7 +190,7 @@ describe("CRDT with two multi-writes", function () {
     equals(doc.points, 11);
 
     for (const key of ["king", "queen", "jack"]) {
-      const { doc } = await crdt.get(key) as DocValue<CRDTTestType>;
+      const { doc } = (await crdt.get(key)) as DocValue<CRDTTestType>;
       equals(doc.points, 10);
     }
   });
@@ -211,7 +210,7 @@ describe("Compact a named CRDT with writes", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT("named-crdt-compaction");
@@ -224,7 +223,7 @@ describe("Compact a named CRDT with writes", function () {
     }
   });
   it("has data", async function () {
-    const got = await crdt.get("ace") as DocValue<CRDTTestType>;
+    const got = (await crdt.get("ace")) as DocValue<CRDTTestType>;
     assert(got.doc);
     equals(got.doc.points, 11);
   });
@@ -250,7 +249,7 @@ describe("Compact a named CRDT with writes", function () {
   });
   it("should have data after compact", async function () {
     await crdt.compact();
-    const got = await crdt.get("ace") as DocValue<CRDTTestType>;
+    const got = (await crdt.get("ace")) as DocValue<CRDTTestType>;
     assert(got.doc);
     equals(got.doc.points, 11);
   });
@@ -266,7 +265,7 @@ describe("CRDT with an index", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT<CRDTTestType>();
@@ -281,7 +280,6 @@ describe("CRDT with an index", function () {
     equals(got.rows.length, 2);
     equals(got.rows[0].id, "king");
     equals(got.rows[0].key, 10);
-
   });
   it("should register the index", async function () {
     const rIdx = await index<number, CRDTTestType>({ _crdt: crdt }, "points");
@@ -291,7 +289,6 @@ describe("CRDT with an index", function () {
     equals(got.rows.length, 2);
     equals(got.rows[0].id, "king");
     equals(got.rows[0].key, 10);
-
   });
   it("creating a different index with same name should not work", async function () {
     const e = await index({ _crdt: crdt }, "points", (doc) => doc._id)
@@ -313,12 +310,14 @@ describe("Loader with a committed transaction", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT(dbname);
     blockstore = crdt.blockstore as EncryptedBlockstore;
-    if (!blockstore.loader) { throw new Error("no loader"); }
+    if (!blockstore.loader) {
+      throw new Error("no loader");
+    }
     loader = blockstore.loader;
     done = await crdt.bulk([{ id: "foo", value: { foo: "bar" } }]);
   });
@@ -347,20 +346,22 @@ describe("Loader with two committed transactions", function () {
   interface CRDTTestType {
     readonly foo: string;
   }
-  let loader: Loader
+  let loader: Loader;
   let crdt: CRDT<CRDTTestType>;
   let blockstore: EncryptedBlockstore;
-  let done1: CRDTMeta
-  let done2: CRDTMeta
+  let done1: CRDTMeta;
+  let done2: CRDTMeta;
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT("test-loader");
     blockstore = crdt.blockstore as EncryptedBlockstore;
-    if (!blockstore.loader) { throw new Error("no loader"); }
+    if (!blockstore.loader) {
+      throw new Error("no loader");
+    }
     loader = blockstore.loader;
     done1 = await crdt.bulk([{ id: "apple", value: { foo: "bar" } }]);
     done2 = await crdt.bulk([{ id: "orange", value: { foo: "bar" } }]);
@@ -393,21 +394,25 @@ describe("Loader with two committed transactions", function () {
 });
 
 describe("Loader with many committed transactions", function () {
-  interface Doc { foo: string }
-  let loader: Loader
-  let blockstore: EncryptedBlockstore
-  let crdt: CRDT<Doc>
-  let dones: CRDTMeta[]
+  interface Doc {
+    foo: string;
+  }
+  let loader: Loader;
+  let blockstore: EncryptedBlockstore;
+  let crdt: CRDT<Doc>;
+  let dones: CRDTMeta[];
   const count = 10;
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     crdt = new CRDT("test-loader-many");
     blockstore = crdt.blockstore as EncryptedBlockstore;
-    if (!blockstore.loader) { throw new Error("no loader"); }
+    if (!blockstore.loader) {
+      throw new Error("no loader");
+    }
     loader = blockstore.loader;
     dones = [];
     for (let i = 0; i < count; i++) {

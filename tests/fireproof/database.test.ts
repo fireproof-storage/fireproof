@@ -8,10 +8,10 @@ describe("basic Database", () => {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async () => {
     await SysContainer.start();
-    db = new Database()
+    db = new Database();
   });
   it("should put", async () => {
     /** @type {Doc} */
@@ -20,7 +20,6 @@ describe("basic Database", () => {
     equals(ok.id, "hello");
   });
   it("get missing should throw", async () => {
-
     const e = await db.get("missing").catch((e) => e);
     matches(e.message, /Not found/);
   });
@@ -37,12 +36,14 @@ describe("basic Database", () => {
 });
 
 describe("basic Database with record", function () {
-  interface Doc { readonly value: string }
+  interface Doc {
+    readonly value: string;
+  }
   let db: Database;
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database();
@@ -88,12 +89,14 @@ describe("basic Database with record", function () {
 });
 
 describe("named Database with record", function () {
-  interface Doc { readonly value: string }
+  interface Doc {
+    readonly value: string;
+  }
   let db: Database;
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-db-name");
@@ -132,9 +135,9 @@ describe("named Database with record", function () {
   it("should have a key", async function () {
     const { rows } = await db.changes([]);
     equals(rows.length, 1);
-    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const blocks = db._crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
-    assert(loader)
+    assert(loader);
     await loader.ready();
     equals(loader.key?.length, 64);
     equals(loader.keyId?.length, 64);
@@ -218,7 +221,7 @@ describe("basic Database parallel writes / public", function () {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database("test-parallel-writes", { public: true });
@@ -279,9 +282,9 @@ describe("basic Database parallel writes / public", function () {
     equals(rows.length, 10);
     assert(db.opts.public);
     assert(db._crdt.opts.public);
-    const blocks = db._crdt.blockstore as EncryptedBlockstore
+    const blocks = db._crdt.blockstore as EncryptedBlockstore;
     const loader = blocks.loader;
-    assert(loader)
+    assert(loader);
     await loader.ready();
     equals(loader.key, undefined);
     equals(loader.keyId, undefined);
@@ -290,17 +293,17 @@ describe("basic Database parallel writes / public", function () {
 
 describe("basic Database with subscription", function () {
   let db: Database;
-  let didRun: number
-  let unsubscribe: () => void
+  let didRun: number;
+  let unsubscribe: () => void;
   let lastDoc: DocWithId<NonNullable<unknown>>;
   let waitForSub: Promise<void>;
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
-    db = new Database()
+    db = new Database();
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -325,7 +328,6 @@ describe("basic Database with subscription", function () {
     equals(didRun, 1);
   });
   it("should unsubscribe", async function () {
-
     unsubscribe();
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
@@ -335,13 +337,13 @@ describe("basic Database with subscription", function () {
 });
 
 describe("basic Database with no update subscription", function () {
-  let db: Database
-  let didRun: number
-  let unsubscribe: () => void
+  let db: Database;
+  let didRun: number;
+  let unsubscribe: () => void;
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     db = new Database();
@@ -378,7 +380,7 @@ describe("database with files input", () => {
   afterEach(async () => {
     await db.close();
     await db.destroy();
-  })
+  });
   beforeEach(async function () {
     await SysContainer.start();
     imagefiles = await buildBlobFiles();
@@ -400,7 +402,7 @@ describe("database with files input", () => {
 
   it("Should fetch the images", async function () {
     const doc = await db.get(result.id);
-    const files = doc._files
+    const files = doc._files;
     assert(files);
     const keys = Object.keys(files);
     let fileMeta = files[keys[0]] as DocFileMeta;
@@ -411,7 +413,7 @@ describe("database with files input", () => {
     equals(fileMeta.size, imagefiles[0].file.size);
     equals(fileMeta.cid.toString(), imagefiles[0].cid);
     equals(typeof fileMeta.file, "function");
-    let file = await fileMeta.file?.() as File;
+    let file = (await fileMeta.file?.()) as File;
 
     equals(file.type, imagefiles[0].file.type);
     equals(file.size, imagefiles[0].file.size);
@@ -422,7 +424,7 @@ describe("database with files input", () => {
     equals(fileMeta.size, imagefiles[1].file.size);
     equals(fileMeta.cid.toString(), imagefiles[1].cid);
     equals(typeof fileMeta.file, "function");
-    file = await fileMeta.file?.() as File;
+    file = (await fileMeta.file?.()) as File;
 
     equals(file.type, imagefiles[1].file.type);
     equals(file.size, imagefiles[1].file.size);
@@ -441,7 +443,7 @@ describe("database with files input", () => {
     equals(fileMeta.size, imagefiles[0].file.size);
     equals(fileMeta.cid.toString(), imagefiles[0].cid);
     equals(typeof fileMeta.file, "function");
-    let file = await fileMeta.file?.() as File;
+    let file = (await fileMeta.file?.()) as File;
 
     equals(file.type, imagefiles[0].file.type);
     equals(file.size, imagefiles[0].file.size);
@@ -458,7 +460,7 @@ describe("database with files input", () => {
     equals(fileMeta.size, imagefiles[0].file.size);
     equals(fileMeta.cid.toString(), imagefiles[0].cid);
     equals(typeof fileMeta.file, "function");
-    file = await fileMeta.file?.() as File;
+    file = (await fileMeta.file?.()) as File;
 
     equals(file.type, imagefiles[0].file.type);
     equals(file.size, imagefiles[0].file.size);

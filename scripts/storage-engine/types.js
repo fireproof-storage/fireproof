@@ -3,7 +3,7 @@ import path from "path";
 // import { createBuildSettings } from './settings.js' // import your build settings
 
 // Get the entry points from your build settings
- 
+
 // const entryPoints = ['database', 'index', 'types']// createBuildSettings({}).map(config => path.basename(config.entryPoints[0], '.ts'))
 
 function generateIndexFile() {

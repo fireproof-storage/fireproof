@@ -1,5 +1,3 @@
- 
- 
 import esbuildPluginTsc from "esbuild-plugin-tsc";
 import alias from "esbuild-plugin-alias";
 import fs from "fs";
@@ -68,7 +66,7 @@ export function createBuildSettings(options) {
       format: "esm",
       platform: "node",
       entryPoints: [entryPoint],
-       
+
       plugins: [...commonSettings.plugins],
       banner: bannerLog(
         `
@@ -80,7 +78,7 @@ console.log('eb esm/node build');`,
       const testEsmConfig = {
         ...esmConfig,
         platform: "node",
-         
+
         plugins: [
           ...esmConfig.plugins,
           alias({
@@ -136,7 +134,7 @@ console.log('eb web/es2015 build');
           // alias({
           //   crypto: 'crypto-browserify'
           // }),
-           
+
           ...commonSettings.plugins,
         ],
       };

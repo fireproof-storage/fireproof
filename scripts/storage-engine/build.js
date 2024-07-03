@@ -1,5 +1,3 @@
- 
- 
 import { build } from "esbuild";
 import { createBuildSettings } from "./settings.js";
 
