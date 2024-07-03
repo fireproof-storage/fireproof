@@ -62,8 +62,8 @@
     "typescript": "^5.5.2",
     "typescript-eslint": "^7.13.1",
     "vite": "^5.3.1",
-    "vitest": "^1.6.0",
-    "vite-tsconfig-paths": "^4.3.2"
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^1.6.0"
   },
   "repository": {
     "type": "git",
@@ -79,11 +79,7 @@
     "@ipld/dag-cbor": "^9.2.0",
     "@ipld/dag-json": "^10.2.1",
     "@ipld/unixfs": "^3.0.0",
-    "@netlify/blobs": "^7.3.0",
-    "@ucanto/interface": "^10.0.1",
-    "@web3-storage/clock": "^0.4.1",
     "@web3-storage/pail": "^0.6.0",
-    "@web3-storage/w3up-client": "^15.0.0",
     "better-sqlite3": "^11.0.0",
     "charwise": "^3.0.1",
     "cross-fetch": "^4.0.0",
@@ -92,8 +88,6 @@
     "js-base64": "^3.7.7",
     "multiformats": "^13.1.1",
     "p-limit": "^5.0.0",
-    "partykit": "^0.0.107",
-    "partysocket": "^1.0.1",
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
