@@ -3,10 +3,10 @@ import { assert, equals, matches, notEquals, itSkip } from "../helpers.js";
 import { uuidv4 } from "uuidv7";
 
 import { CRDT } from "@fireproof/core";
-import { parseCarFile } from "../../src/blockstore/index.js";
+import { parseCarFile } from "@fireproof/core/blockstore";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
-import { AnyBlock, EncryptedBlockstore, Loader } from "../../src/blockstore/index.js";
+import { AnyBlock, EncryptedBlockstore, Loader } from "@fireproof/core/blockstore";
 import { SysContainer } from "@fireproof/core/runtime";
 
 

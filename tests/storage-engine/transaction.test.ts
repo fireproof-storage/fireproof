@@ -1,9 +1,9 @@
 import { CID } from "multiformats";
 
 import { assert, equals, matches, equalsJSON } from "../helpers.js";
-import { EncryptedBlockstore, BaseBlockstore, CarTransaction } from "../../src/blockstore/index.js";
+import { EncryptedBlockstore, BaseBlockstore, CarTransaction } from "@fireproof/core/blockstore";
 
-import { AnyAnyLink, AnyBlock, AnyLink } from "../../src/blockstore/index.js";
+import { AnyAnyLink, AnyBlock, AnyLink } from "@fireproof/core/blockstore";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: BaseBlockstore;
