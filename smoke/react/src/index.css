@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+
+* {
+  box-sizing: border-box;
+  position: relative;
+  min-width: 0;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.navbar {
+  background-color: black;
+  color: white;
+  padding: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.nav-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-link {
+  color: white;
+  text-decoration: none;
+  font-family: "IBM Plex Sans";
+}
+
+.nav-link-active {
+  color: orange;
+}
+
+.app-title-container {
+  font-family: "Futura";
+  display: flex;
+  align-items: center;
+  font-size: 20px;
+  gap: 6px;
+}
+
+.app-main-content {
+  padding: 8px;
+}

@@ -2,7 +2,6 @@ import { assert, equals, notEquals, matches, buildBlobFiles, FileWithCid } from 
 import { Database, DbResponse, DocFileMeta, DocWithId } from "@fireproof/core";
 import { SysContainer } from "@fireproof/core/runtime";
 import { EncryptedBlockstore } from "@fireproof/core/storage-engine";
-import exp from "node:constants";
 
 describe("basic Database", () => {
   let db: Database;

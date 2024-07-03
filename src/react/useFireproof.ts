@@ -135,7 +135,8 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const refreshDoc = useCallback(async () => {
       // todo add option for mvcc checks
-      setDoc(await database.get<T>(docId).catch(() => initialDocFn()));
+      const doc = await database.get<T>(docId).catch(() => initialDocFn());
+      setDoc(doc);
     }, [docId]);
 
     const saveDoc: StoreDocFn<T> = useCallback(
