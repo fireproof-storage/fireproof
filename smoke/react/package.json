@@ -1,0 +1,37 @@
+{
+  "name": "@fireproof-example/react",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "pnpm run '/build:/'",
+    "build:tsc": "tsc",
+    "build:vite": "vite build",
+    "lint": "eslint",
+    "test": "vitest --run",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.24.0",
+    "use-fireproof": "file:../../dist/use-fireproof/use-fireproof-0.18.0.tgz"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@testing-library/react": "^16.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^1.6.0",
+    "eslint": "^9.6.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "typescript": "^5.5.0",
+    "vite": "^5.3.1",
+    "vitest": "^1.6.0"
+  }
+}
