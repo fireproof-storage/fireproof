@@ -8,11 +8,11 @@ import { MemoryBlockstore } from "@web3-storage/pail/block";
 
 import { assert, matches, equals } from "../helpers.js";
 
-import { parseCarFile } from "@fireproof/core/storage-engine";
+import { parseCarFile } from "../../src/block-store/index.js";
 
-import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "@fireproof/core/storage-engine";
+import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "../../src/block-store/index.js";
 
-import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "@fireproof/core/storage-engine";
+import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "../../src/block-store/index.js";
 import { SysContainer } from "@fireproof/core/runtime"
 import { CRDTMeta, IndexTransactionMeta } from "use-fireproof";
 

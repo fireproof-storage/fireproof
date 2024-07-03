@@ -1,9 +1,9 @@
-import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../storage-engine/index.js";
+import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../block-store/index.js";
 
 import { DataSQLRecordBuilder } from "./v0.18.0/sqlite-data-store.js";
 import { MetaSQLRecordBuilder } from "./v0.18.0/sqlite-meta-store.js";
 import { Logger } from "@adviser/cement";
-import { ConnectionBase } from "../../storage-engine/connection-base.js";
+import { ConnectionBase } from "../../block-store/connection-base.js";
 import { ensureLogger, ensureSQLOpts } from "./ensurer.js";
 import { DataSQLStore, MetaSQLStore, SQLOpts, WalSQLStore } from "./types.js";
 

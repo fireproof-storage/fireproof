@@ -23,7 +23,7 @@ import type {
   ChangesResponseRow,
   CRDTMeta,
 } from "./types.js";
-import { BaseBlockstore, Connectable } from "./storage-engine/index.js";
+import { BaseBlockstore, Connectable } from "./block-store/index.js";
 import { SysContainer } from "./runtime/sys-container.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {

@@ -3,7 +3,7 @@ import { assert, equals, notEquals, equalsJSON, sleep, itSkip } from "../helpers
 import { CID } from "multiformats/cid";
 
 import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
-import { AnyLink, EncryptedBlockstore } from "@fireproof/core/storage-engine";
+import { AnyLink, EncryptedBlockstore } from "../../src/block-store/index.js";
 import { SysContainer } from "@fireproof/core/runtime";
 
 export function carLogIncludesGroup(list: AnyLink[], cid: CID) {

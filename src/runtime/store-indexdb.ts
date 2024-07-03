@@ -3,9 +3,9 @@ import { openDB, IDBPDatabase } from "idb";
 import { uuidv4 } from "uuidv7";
 import { ResolveOnce } from "@adviser/cement";
 
-import { AnyBlock, AnyLink, DbMeta, TestStore } from "../storage-engine/types.js";
-import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../storage-engine/index.js";
-import { RemoteWAL as RemoteWALBase, WALState } from "../storage-engine/remote-wal.js";
+import { AnyBlock, AnyLink, DbMeta, TestStore } from "../block-store/types.js";
+import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../block-store/index.js";
+import { RemoteWAL as RemoteWALBase, WALState } from "../block-store/remote-wal.js";
 import { Falsy } from "../types.js";
 
 const onceIndexDB = new Map<string, ResolveOnce<{ db: IDBPDatabase<unknown>; dbName: DbName }>>();

@@ -7,7 +7,7 @@ import type { View } from "@ipld/unixfs";
 import { DocFileMeta } from "../types.js";
 
 import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
-import { BlobLike, AnyLink, AnyBlock } from "../storage-engine/index.js";
+import { BlobLike, AnyLink, AnyBlock } from "../block-store/index.js";
 
 const queuingStrategy = UnixFS.withCapacity();
 

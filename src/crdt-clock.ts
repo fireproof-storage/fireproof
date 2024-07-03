@@ -3,7 +3,7 @@ import { root } from "@web3-storage/pail/crdt";
 import { ResolveOnce } from "@adviser/cement";
 
 import { clockChangesSince } from "./crdt-helpers.js";
-import type { BaseBlockstore, CarTransaction } from "./storage-engine/index.js";
+import type { BaseBlockstore, CarTransaction } from "./block-store/index.js";
 import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 
