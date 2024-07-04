@@ -39,28 +39,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    name: "core/blockstore",
-    entry: ["src/blockstore/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core/blockstore",
-    esbuildPlugins: [
-      resolve({
-        "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
-        "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
-        // "./node-sys-container.js":  "../runtime/store-file-not-impl.js",
-        // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:url": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "assert": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core/blockstore'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
     name: "use-fireproof",
     entry: ["src/react/index.ts"],
     platform: "browser",

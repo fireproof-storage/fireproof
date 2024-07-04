@@ -1,9 +1,9 @@
-import { SysContainer, assert } from "@fireproof/core/runtime";
+import { rt } from "@fireproof/core";
 import { toCryptoOpts } from "../src/runtime/crypto.js";
 import { encodeFile } from "../src/runtime/files";
-export { dataDir } from "@fireproof/core/runtime";
 
-export { assert };
+const dataDir = rt.dataDir;
+export { dataDir };
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -22,67 +22,47 @@ export function itSkip(value: string, fn: () => unknown, options?: number) {
   console.warn("itSkip of " + value);
 }
 
-export function equals<T>(actual: T, expected: T) {
-  assert(actual === expected, `Expected '${actual}' to equal '${expected}'`);
-}
+//
 
-export function equalsJSON<T>(actual: T, expected: T) {
-  equals(JSON.stringify(actual), JSON.stringify(expected));
-}
+// // Function to copy a directory
+// export async function copyDirectory(source: string, destination: string) {
+//   // Ensure the destination directory exists
+//   await rt.SysContainer.mkdir(destination, { recursive: true });
 
-export function notEquals<T>(actual: T, expected: T) {
-  assert(actual !== expected, `Expected '${actual} 'to not equal '${expected}'`);
-}
-interface ToStringFn {
-  toString: () => string;
-}
-export function matches<TA extends ToStringFn, TB extends ToStringFn>(actual: TA, expected: TB | RegExp) {
-  if (expected instanceof RegExp) {
-    assert(actual.toString().match(expected), `Expected '${actual}' to match ${expected}`);
-  } else {
-    assert(actual.toString().match(expected.toString()), `Expected '${actual}' to match ${expected}`);
-  }
-}
+//   // Read the source directory
+//   const entries = await SysContainer.readdirent(source, { withFileTypes: true });
 
-// Function to copy a directory
-export async function copyDirectory(source: string, destination: string) {
-  // Ensure the destination directory exists
-  await SysContainer.mkdir(destination, { recursive: true });
+//   // Iterate through each entry in the directory
+//   for (const entry of entries) {
+//     const sourcePath = SysContainer.join(source, entry.name);
+//     const destinationPath = SysContainer.join(destination, entry.name);
 
-  // Read the source directory
-  const entries = await SysContainer.readdirent(source, { withFileTypes: true });
+//     if (entry.isDirectory()) {
+//       // If the entry is a directory, copy it recursively
+//       await copyDirectory(sourcePath, destinationPath);
+//     } else if (entry.isFile()) {
+//       // If the entry is a file, copy it
+//       await SysContainer.copyFile(sourcePath, destinationPath);
+//     }
+//   }
+// }
 
-  // Iterate through each entry in the directory
-  for (const entry of entries) {
-    const sourcePath = SysContainer.join(source, entry.name);
-    const destinationPath = SysContainer.join(destination, entry.name);
-
-    if (entry.isDirectory()) {
-      // If the entry is a directory, copy it recursively
-      await copyDirectory(sourcePath, destinationPath);
-    } else if (entry.isFile()) {
-      // If the entry is a file, copy it
-      await SysContainer.copyFile(sourcePath, destinationPath);
-    }
-  }
-}
-
-export function getDirectoryName(url: string) {
-  let path: string;
-  try {
-    path = SysContainer.fileURLToPath(url);
-  } catch (e) {
-    path = url;
-  }
-  if (process && typeof process.cwd === "function") {
-    const cwd = process.cwd();
-    if (cwd.endsWith("dist/esm")) {
-      path = "../../" + path;
-    }
-  }
-  const dir_name = SysContainer.dirname(path);
-  return dir_name;
-}
+// export function getDirectoryName(url: string) {
+//   let path: string;
+//   try {
+//     path = SysContainer.fileURLToPath(url);
+//   } catch (e) {
+//     path = url;
+//   }
+//   if (process && typeof process.cwd === "function") {
+//     const cwd = process.cwd();
+//     if (cwd.endsWith("dist/esm")) {
+//       path = "../../" + path;
+//     }
+//   }
+//   const dir_name = SysContainer.dirname(path);
+//   return dir_name;
+// }
 
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {

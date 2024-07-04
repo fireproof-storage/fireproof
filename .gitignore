@@ -21,3 +21,4 @@ logs
 smoke/package.json
 smoke/pnpm-lock.yaml
 smoke/react/package.json
+smoke/react/pnpm-lock.yaml

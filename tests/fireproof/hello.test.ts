@@ -1,11 +1,9 @@
-import { assert, equals } from "../helpers.js";
-import { fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
-import { SysContainer } from "@fireproof/core/runtime";
+import { rt, fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
     const result = database("hello"); // call to your library function
-    assert(result.name === "hello");
+    expect(result.name).toBe("hello");
   });
 });
 
@@ -23,7 +21,7 @@ describe("public API", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = database("test-public-api");
     idx = index<string, TestDoc>(db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
@@ -31,24 +29,24 @@ describe("public API", function () {
     query = await idx.query();
   });
   it("should have a database", function () {
-    assert(db);
-    assert(db instanceof Database);
+    expect(db).toBeTruthy();
+    expect(db instanceof Database).toBeTruthy();
   });
   it("should have an index", function () {
-    assert(idx);
-    assert(idx instanceof Index);
+    expect(idx).toBeTruthy();
+    expect(idx instanceof Index).toBeTruthy();
   });
   it("should put", function () {
-    assert(ok);
-    equals(ok.id, "test");
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test");
   });
   it("should get", function () {
-    equals(doc.foo, "bar");
+    expect(doc.foo).toBe("bar");
   });
   it("should query", function () {
-    assert(query);
-    assert(query.rows);
-    equals(query.rows.length, 1);
-    equals(query.rows[0].key, "bar");
+    expect(query).toBeTruthy();
+    expect(query.rows).toBeTruthy();
+    expect(query.rows.length).toBe(1);
+    expect(query.rows[0].key).toBe("bar");
   });
 });

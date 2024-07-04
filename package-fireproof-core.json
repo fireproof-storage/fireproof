@@ -13,17 +13,11 @@
       "require": "./index.cjs",
       "script": "./index.global.js",
       "types": "./index.d.ts"
-    },
-    "./blockstore": {
-      "import": "./blockstore/index.js",
-      "require": "./blockstore/index.cjs",
-      "script": "./blockstore/index.global.js",
-      "types": "./blockstore/index.d.ts"
     }
   },
   "scripts": {},
   "keywords": ["database", "JSON", "document", "IPLD", "CID", "IPFS"],
-  "contributors": ["J Chris Anderson", "Alan Shaw", "Travis Vachon", "Mikeal Rogers"],
+  "contributors": ["J Chris Anderson", "Alan Shaw", "Travis Vachon", "Mikeal Rogers", "Meno Abels"],
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
   "homepage": "https://use-fireproof.com",

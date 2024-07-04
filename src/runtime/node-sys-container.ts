@@ -6,7 +6,7 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
   const nodeURL = "node:url";
   const nodeFS = "node:fs";
   const fs = (await saveImport(nodeFS)).promises;
-  const assert = "assert";
+  // const assert = "assert";
   const path = await saveImport(nodePath);
   return {
     state: "node",
@@ -18,6 +18,6 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
     readdir: fs.readdir as NodeMap["readdir"],
     readfile: fs.readFile as NodeMap["readfile"],
     writefile: fs.writeFile as NodeMap["writefile"],
-    assert: (await saveImport(assert)).default,
+    // assert: (await saveImport(assert)).default,
   };
 }

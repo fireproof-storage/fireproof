@@ -29,6 +29,7 @@ import type {
   IndexKeyType,
   DocWithId,
   DocTypes,
+  Falsy,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
@@ -142,10 +143,10 @@ export class CRDT<T extends DocTypes> {
     return await getBlock(this.blockstore, cidString);
   }
 
-  async get(key: string): Promise<DocValue<T> | null> {
+  async get(key: string): Promise<DocValue<T> | Falsy> {
     await this.ready();
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
-    if (result.del) return null;
+    if (result.del) return undefined;
     return result;
   }
 

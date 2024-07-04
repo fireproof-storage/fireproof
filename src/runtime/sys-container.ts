@@ -12,7 +12,7 @@ export interface NodeMap {
   dirname: (path: string) => string;
   homedir: () => string;
   fileURLToPath: (url: string | URL) => string;
-  assert: (condition: unknown, message?: string | Error) => void;
+  // assert: (condition: unknown, message?: string | Error) => void;
 
   mkdir: (path: PathLike, options?: { recursive: boolean }) => Promise<string | undefined>;
   readdir: (path: PathLike, options?: unknown) => Promise<unknown[]>;
@@ -26,9 +26,9 @@ export interface NodeMap {
   writefile: (path: PathLike, data: Uint8Array | string) => Promise<void>;
 }
 
-export function assert(condition: unknown, message?: string | Error): asserts condition {
-  SysContainer.freight?.assert(condition, message);
-}
+// export function assert(condition: unknown, message?: string | Error): asserts condition {
+//   SysContainer.freight?.assert(condition, message);
+// }
 
 const onceStart = new ResolveOnce<void>();
 
@@ -53,15 +53,15 @@ class sysContainer {
       }
       return url.pathname;
     },
-    assert: (condition: unknown, message?: string | Error) => {
-      if (!condition) {
-        if (message instanceof Error) {
-          throw message;
-        } else {
-          throw new Error(message);
-        }
-      }
-    },
+    // assert: (condition: unknown, message?: string | Error) => {
+    //   if (!condition) {
+    //     if (message instanceof Error) {
+    //       throw message;
+    //     } else {
+    //       throw new Error(message);
+    //     }
+    //   }
+    // },
     mkdir: () => Promise.reject(new Error("SysContainer:mkdir is not available in seeded state")),
     readdir: () => Promise.reject(new Error("SysContainer:readdir is not available in seeded state")),
     rm: () => Promise.reject(new Error("SysContainer:rm is not available in seeded state")),

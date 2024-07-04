@@ -1,12 +1,10 @@
-import { assert, equals, notEquals, equalsJSON, sleep, itSkip } from "../helpers.js";
+import { sleep, itSkip } from "../helpers.js";
 
 import { CID } from "multiformats/cid";
 
-import { fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
-import { AnyLink, EncryptedBlockstore } from "@fireproof/core/blockstore";
-import { SysContainer } from "@fireproof/core/runtime";
+import { bs, rt, fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
 
-export function carLogIncludesGroup(list: AnyLink[], cid: CID) {
+export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
 }
 
@@ -32,31 +30,31 @@ describe("dreamcode", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = fireproof("test-db");
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
     doc = await db.get(ok.id);
     result = await db.query("text", { range: ["a", "z"] });
   });
   it("should put", function () {
-    assert(ok);
-    equals(ok.id, "test-1");
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test-1");
   });
   it("should get", function () {
-    equals(doc.text, "fireproof");
+    expect(doc.text).toBe("fireproof");
   });
   it("should query", function () {
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 1);
-    equals(result.rows[0].key, "fireproof");
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].key).toBe("fireproof");
   });
   it("should query with function", async function () {
     const result = await db.query<boolean, Doc>((doc) => doc.dream);
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 1);
-    equals(result.rows[0].key, true);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].key).toBe(true);
   });
 });
 
@@ -75,7 +73,7 @@ describe("public API", function () {
   });
 
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = fireproof("test-api");
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
@@ -83,21 +81,21 @@ describe("public API", function () {
     query = await db.query<string, Doc>((doc) => doc.foo);
   });
   it("should be a database instance", function () {
-    assert(db);
-    assert(db instanceof Database);
+    expect(db).toBeTruthy();
+    expect(db instanceof Database).toBeTruthy();
   });
   it("should put", function () {
-    assert(ok);
-    equals(ok.id, "test");
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test");
   });
   it("should get", function () {
-    equals(doc.foo, "bar");
+    expect(doc.foo).toBe("bar");
   });
   it("should query", function () {
-    assert(query);
-    assert(query.rows);
-    equals(query.rows.length, 1);
-    equals(query.rows[0].key, "bar");
+    expect(query).toBeTruthy();
+    expect(query.rows).toBeTruthy();
+    expect(query.rows.length).toBe(1);
+    expect(query.rows[0].key).toBe("bar");
   });
 });
 
@@ -111,39 +109,39 @@ describe("basic database", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-basic");
   });
   it("can put with id", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
-    assert(ok);
-    equals(ok.id, "test");
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test");
   });
   it("can put without id", async function () {
     const ok = await db.put({ foo: "bam" });
-    assert(ok);
+    expect(ok).toBeTruthy();
     const got = await db.get<Doc>(ok.id);
-    equals(got.foo, "bam");
+    expect(got.foo).toBe("bam");
   });
   it("can define an index", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
-    assert(ok);
+    expect(ok).toBeTruthy();
     const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].key).toBe("bar");
   });
   it("can define an index with a default function", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
-    assert(ok);
+    expect(ok).toBeTruthy();
     const idx = index(db, "foo");
     const result = await idx.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].key).toBe("bar");
   });
 });
 
@@ -155,17 +153,17 @@ describe("benchmarking with compaction", function () {
   });
   beforeEach(async function () {
     // erase the existing test data
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-benchmark-compaction", { autoCompact: 3, public: true });
   });
   itSkip(
     "passing: insert during compaction",
     async function () {
       const ok = await db.put({ _id: "test", foo: "fast" });
-      assert(ok);
-      equals(ok.id, "test");
-      assert(db._crdt.clock.head);
-      equals(db._crdt.clock.head.length, 1);
+      expect(ok).toBeTruthy();
+      expect(ok.id).toBe("test");
+      expect(db._crdt.clock.head).toBeTruthy();
+      expect(db._crdt.clock.head.length).toBe(1);
 
       const numDocs = 20000;
       const batchSize = 500;
@@ -188,9 +186,9 @@ describe("benchmarking with compaction", function () {
             }),
           );
         }
-        const blocks = db._crdt.blockstore as EncryptedBlockstore;
+        const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
         const loader = blocks.loader;
-        assert(loader);
+        expect(loader).toBeTruthy();
         const label = `write ${i} log ${loader.carLog.length}`;
         console.time(label);
         db.put({
@@ -218,7 +216,7 @@ describe("benchmarking a database", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     // erase the existing test data
     db = new Database("test-benchmark", { autoCompact: 100000, public: true });
     // db = new Database(null, {autoCompact: 100000})
@@ -233,11 +231,11 @@ describe("benchmarking a database", function () {
     "passing: insert and read many records",
     async () => {
       const ok = await db.put({ _id: "test", foo: "fast" });
-      assert(ok);
-      equals(ok.id, "test");
+      expect(ok).toBeTruthy();
+      expect(ok.id).toBe("test");
 
-      assert(db._crdt.clock.head);
-      equals(db._crdt.clock.head.length, 1);
+      expect(db._crdt.clock.head).toBeTruthy();
+      expect(db._crdt.clock.head.length).toBe(1);
 
       const numDocs = 2500;
       const batchSize = 500;
@@ -256,7 +254,7 @@ describe("benchmarking a database", function () {
               })
               .then((ok) => {
                 db.get<{ fire: string }>(`test${i + j}`).then((doc) => {
-                  assert(doc.fire);
+                  expect(doc.fire).toBeTruthy();
                 });
                 return ok;
               }),
@@ -275,19 +273,19 @@ describe("benchmarking a database", function () {
       console.time("open new DB");
       const newDb = new Database("test-benchmark", { autoCompact: 100000, public: true });
       const doc = await newDb.get<{ foo: string }>("test");
-      equals(doc.foo, "fast");
+      expect(doc.foo).toBe("fast");
       console.timeEnd("open new DB");
 
       console.time("changes");
       const result = await db.changes(); // takes 1.5 seconds (doesn't have to load blocks from cars)
       console.timeEnd("changes");
-      equals(result.rows.length, numDocs + 1);
+      expect(result.rows.length).toBe(numDocs + 1);
 
       // this takes 1 minute w 1000 docs
       console.time("changes new DB");
       const result2 = await newDb.changes();
       console.timeEnd("changes new DB");
-      equals(result2.rows.length, numDocs + 1);
+      expect(result2.rows.length).toBe(numDocs + 1);
 
       await sleep(1000);
 
@@ -303,11 +301,10 @@ describe("benchmarking a database", function () {
       await db.put({ _id: "compacted-test", foo: "bar" });
 
       // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-      const blocks = db._crdt.blockstore as EncryptedBlockstore;
+      const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
-      assert(loader);
-
-      equals(loader.carLog.length, 2);
+      expect(loader).toBeTruthy();
+      expect(loader.carLog.length).toBe(2);
 
       // console.time('allDocs new DB') // takes forever on 5k
       // const allDocsResult = await newDb.allDocs()
@@ -318,18 +315,18 @@ describe("benchmarking a database", function () {
       console.time("compacted reopen again");
       const newDb2 = new Database("test-benchmark", { autoCompact: 100000, public: true });
       const doc21 = await newDb2.get<FooType>("test");
-      equals(doc21.foo, "fast");
-      const blocks2 = newDb2._crdt.blockstore as EncryptedBlockstore;
+      expect(doc21.foo).toBe("fast");
+      const blocks2 = newDb2._crdt.blockstore as bs.EncryptedBlockstore;
       const loader2 = blocks2.loader;
-      assert(loader2);
+      expect(loader2).toBeTruthy();
 
-      equals(loader2.carLog.length, 2);
+      expect(loader2.carLog.length).toBe(2);
 
       const doc2 = await newDb2.get<FooType>("compacted-test");
 
-      equals(doc2.foo, "bar");
+      expect(doc2.foo).toBe("bar");
 
-      equals(doc2.foo, "bar");
+      expect(doc2.foo).toBe("bar");
       console.timeEnd("compacted reopen again");
 
       await sleep(100);
@@ -337,7 +334,7 @@ describe("benchmarking a database", function () {
       console.time("compacted changes new DB2");
       const result3 = await newDb2.changes();
       console.timeEnd("compacted changes new DB2");
-      equals(result3.rows.length, numDocs + 2);
+      expect(result3.rows.length).toBe(numDocs + 2);
 
       console.time("compacted newDb2 insert and read 100 records");
       const ops2: Promise<void>[] = [];
@@ -351,7 +348,7 @@ describe("benchmarking a database", function () {
           })
           .then(() => {
             newDb2.get<{ fire: number }>(`test${i}`).then((doc) => {
-              assert(doc.fire);
+              expect(doc.fire).toBeTruthy();
             });
           });
         ops2.push(ok);
@@ -381,49 +378,49 @@ describe("Reopening a database", function () {
   });
   beforeEach(async function () {
     // erase the existing test data
-    await SysContainer.start();
+    await rt.SysContainer.start();
 
     db = new Database("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
-    assert(ok);
-    equals(ok.id, "test");
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test");
 
-    assert(db._crdt.clock.head);
-    equals(db._crdt.clock.head.length, 1);
+    expect(db._crdt.clock.head).toBeDefined();
+    expect(db._crdt.clock.head.length).toBe(1);
   });
 
   it("should persist data", async function () {
     const doc = await db.get<Doc>("test");
-    equals(doc.foo, "bar");
+    expect(doc.foo).toBe("bar");
   });
 
   it("should have the same data on reopen", async function () {
     const db2 = new Database("test-reopen");
     const doc = await db2.get<FooType>("test");
-    equals(doc.foo, "bar");
-    assert(db2._crdt.clock.head);
-    equals(db2._crdt.clock.head.length, 1);
-    equalsJSON(db2._crdt.clock.head, db._crdt.clock.head);
+    expect(doc.foo).toBe("bar");
+    expect(db2._crdt.clock.head).toBeDefined();
+    expect(db2._crdt.clock.head.length).toBe(1);
+    expect(db2._crdt.clock.head).toEqual(db._crdt.clock.head);
     await db2.close();
   });
 
   it("should have a car in the car log", async function () {
     await db._crdt.ready();
-    const blocks = db._crdt.blockstore as EncryptedBlockstore;
+    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
-    assert(loader);
-    assert(loader.carLog);
-    equals(loader.carLog.length, 1);
+    expect(loader).toBeDefined();
+    expect(loader.carLog).toBeDefined();
+    expect(loader.carLog.length).toBe(1);
   });
 
   it("should have carlog after reopen", async function () {
     const db2 = new Database("test-reopen");
     await db2._crdt.ready();
-    const blocks = db2._crdt.blockstore as EncryptedBlockstore;
+    const blocks = db2._crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
-    assert(loader);
-    assert(loader.carLog);
-    equals(loader.carLog.length, 1);
+    expect(loader).toBeDefined();
+    expect(loader.carLog).toBeDefined();
+    expect(loader.carLog.length).toBe(1);
     await db2.close();
   });
 
@@ -433,14 +430,14 @@ describe("Reopening a database", function () {
       const db = new Database("test-reopen");
       // assert(db._crdt.xready());
       await db._crdt.ready();
-      const blocks = db._crdt.blockstore as EncryptedBlockstore;
+      const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
-      equals(loader.carLog.length, i + 1);
+      expect(loader.carLog.length).toBe(i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
-      assert(ok);
-      equals(loader.carLog.length, i + 2);
+      expect(ok).toBeTruthy();
+      expect(loader.carLog.length).toBe(i + 2);
       const doc = await db.get<FireType>(`test${i}`);
-      equals(doc.fire, "proof".repeat(50 * 1024));
+      expect(doc.fire).toBe("proof".repeat(50 * 1024));
       await db.close();
     }
   }, 20000);
@@ -455,20 +452,20 @@ describe("Reopening a database", function () {
         // assert(db._crdt.ready);
         await db._crdt.ready();
         // console.timeEnd("db open");
-        const blocks = db._crdt.blockstore as EncryptedBlockstore;
+        const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
         const loader = blocks.loader;
-        assert(loader);
-        equals(loader.carLog.length, i + 1);
+        expect(loader).toBeDefined();
+        expect(loader.carLog.length).toBe(i + 1);
         // console.log('car log length', loader.carLog.length)
         // console.time("db put");
         const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
         // console.timeEnd("db put");
-        assert(ok);
-        equals(loader.carLog.length, i + 2);
+        expect(ok).toBeTruthy();
+        expect(loader.carLog.length).toBe(i + 2);
         // console.time("db get");
         const doc = await db.get<FireType>(`test${i}`);
         // console.timeEnd("db get");
-        equals(doc.fire, "proof".repeat(50 * 1024));
+        expect(doc.fire).toBe("proof".repeat(50 * 1024));
       }
     },
     200000,
@@ -488,10 +485,10 @@ describe("Reopening a database with indexes", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = fireproof("test-reopen-idx");
     const ok = await db.put({ _id: "test", foo: "bar" });
-    equals(ok.id, "test");
+    expect(ok.id).toBe("test");
 
     didMap = false;
 
@@ -504,57 +501,57 @@ describe("Reopening a database with indexes", function () {
 
   it("should persist data", async function () {
     const doc = await db.get<Doc>("test");
-    equals(doc.foo, "bar");
+    expect(doc.foo).toBe("bar");
     const idx2 = index<string, Doc>(db, "foo");
-    assert(idx2 === idx, "same object");
+    expect(idx2).toBe(idx);
     const result = await idx2.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
-    assert(didMap);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].key).toBe("bar");
+    expect(didMap).toBeTruthy();
   });
 
   it("should reuse the index", async function () {
     const idx2 = index(db, "foo", mapFn);
-    assert(idx2 === idx, "same object");
+    expect(idx2).toBe(idx);
     const result = await idx2.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 1);
-    equals(result.rows[0].key, "bar");
-    assert(didMap);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(1);
+    expect(result.rows[0].key).toBe("bar");
+    expect(didMap).toBeTruthy();
     didMap = false;
     const r2 = await idx2.query();
-    assert(r2);
-    assert(r2.rows);
-    equals(r2.rows.length, 1);
-    equals(r2.rows[0].key, "bar");
-    assert(!didMap);
+    expect(r2).toBeTruthy();
+    expect(r2.rows).toBeTruthy();
+    expect(r2.rows.length).toBe(1);
+    expect(r2.rows[0].key).toBe("bar");
+    expect(didMap).toBeFalsy();
   });
 
   it("should have the same data on reopen", async function () {
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
-    equals(doc.foo, "bar");
-    assert(db2._crdt.clock.head);
-    equals(db2._crdt.clock.head.length, 1);
-    equalsJSON(db2._crdt.clock.head, db._crdt.clock.head);
+    expect(doc.foo).toBe("bar");
+    expect(db2._crdt.clock.head).toBeTruthy();
+    expect(db2._crdt.clock.head.length).toBe(1);
+    expect(db2._crdt.clock.head).toEqual(db._crdt.clock.head);
   });
 
   it("should have the same data on reopen after a query", async function () {
     const r0 = await idx.query();
-    assert(r0);
-    assert(r0.rows);
-    equals(r0.rows.length, 1);
-    equals(r0.rows[0].key, "bar");
+    expect(r0).toBeTruthy();
+    expect(r0.rows).toBeTruthy();
+    expect(r0.rows.length).toBe(1);
+    expect(r0.rows[0].key).toBe("bar");
 
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
-    equals(doc.foo, "bar");
-    assert(db2._crdt.clock.head);
-    equals(db2._crdt.clock.head.length, 1);
-    equalsJSON(db2._crdt.clock.head, db._crdt.clock.head);
+    expect(doc.foo).toBe("bar");
+    expect(db2._crdt.clock.head).toBeTruthy();
+    expect(db2._crdt.clock.head.length).toBe(1);
+    expect(db2._crdt.clock.head).toEqual(db._crdt.clock.head);
   });
 
   // it('should query the same data on reopen', async function () {
@@ -580,25 +577,25 @@ describe("Reopening a database with indexes", function () {
 
 describe("basic js verify", function () {
   beforeAll(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
   });
   it("should include cids in arrays", async function () {
     const db = fireproof("test-verify");
     const ok = await db.put({ _id: "test", foo: ["bar", "bam"] });
-    equals(ok.id, "test");
+    expect(ok.id).toBe("test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
-    equals(ok2.id, "test2");
-    const blocks = db._crdt.blockstore as EncryptedBlockstore;
+    expect(ok2.id).toBe("test2");
+    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
-    assert(loader);
+    expect(loader).toBeTruthy();
     const cid = loader.carLog[0][0];
     const cid2 = db._crdt.clock.head[0];
-    notEquals(cid, cid2);
-    assert(cid !== cid2);
+    expect(cid).not.toBe(cid2);
+    expect(cid).not.toBe(cid2);
     const cidList = [cid, cid2];
     const cid3 = CID.parse(cid.toString());
-    assert(!cidList.includes(cid3)); // sad trombone
-    assert(carLogIncludesGroup(cidList, cid3));
+    expect(cidList.includes(cid3)).toBeFalsy(); // sad trombone
+    expect(carLogIncludesGroup(cidList, cid3)).toBeTruthy();
     await db.close();
     await db.destroy();
   });

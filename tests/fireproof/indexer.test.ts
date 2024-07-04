@@ -1,7 +1,6 @@
-import { assert, equals, equalsJSON, itSkip } from "../helpers.js";
+import { itSkip } from "../helpers.js";
 
-import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
-import { SysContainer } from "@fireproof/core/runtime";
+import { rt, Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
 
 interface TestType {
   readonly title: string;
@@ -17,7 +16,7 @@ describe("basic Index", () => {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -28,67 +27,67 @@ describe("basic Index", () => {
     });
   });
   it("should have properties", function () {
-    equals(indexer.crdt, db._crdt);
-    equals(indexer.crdt.name, "test-indexer");
-    equals(indexer.name, "hello");
-    assert(indexer.mapFn);
+    expect(indexer.crdt).toBe(db._crdt);
+    expect(indexer.crdt.name).toBe("test-indexer");
+    expect(indexer.name).toBe("hello");
+    expect(indexer.mapFn).toBeTruthy();
   });
   it("should call the map function on first query", async function () {
     didMap = false;
     await indexer.query();
-    assert(didMap);
+    expect(didMap).toBe(true);
   });
   it("should not call the map function on second query", async function () {
     await indexer.query();
     didMap = false;
     await indexer.query();
-    assert(!didMap);
+    expect(didMap).toBe(false);
   });
   it("should get results", async function () {
     const result = await indexer.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 3);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(3);
   });
   it("should be in order", async function () {
     const { rows } = await indexer.query();
-    equals(rows[0].key, "amazing");
+    expect(rows[0].key).toBe("amazing");
   });
   it("should work with limit", async function () {
     const { rows } = await indexer.query({ limit: 1 });
-    equals(rows.length, 1);
+    expect(rows.length).toBe(1);
   });
   it("should work with descending", async function () {
     const { rows } = await indexer.query({ descending: true });
-    equals(rows[0].key, "creative");
+    expect(rows[0].key).toBe("creative");
   });
   it("should range query all", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
-    equals(rows.length, 3);
-    equals(rows[0].key, "amazing");
+    expect(rows.length).toBe(3);
+    expect(rows[0].key).toBe("amazing");
   });
   it("should range query all twice", async function () {
     const { rows } = await indexer.query({ range: ["a", "z"] });
-    equals(rows.length, 3);
-    equals(rows[0].key, "amazing");
+    expect(rows.length).toBe(3);
+    expect(rows[0].key).toBe("amazing");
     const { rows: rows2 } = await indexer.query({ range: ["a", "z"] });
-    equals(rows2.length, 3);
-    equals(rows2[0].key, "amazing");
+    expect(rows2.length).toBe(3);
+    expect(rows2[0].key).toBe("amazing");
   });
   it("should range query", async function () {
     const { rows } = await indexer.query({ range: ["b", "d"] });
-    equals(rows[0].key, "bazillas");
+    expect(rows[0].key).toBe("bazillas");
   });
   it("should key query", async function () {
     const { rows } = await indexer.query({ key: "bazillas" });
-    equals(rows.length, 1);
+    expect(rows.length).toBe(1);
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query({ includeDocs: true });
-    assert(rows[0]);
-    assert(rows[0].id);
-    assert(rows[0].doc);
-    equals(rows[0].doc._id, rows[0].id);
+    expect(rows[0]).toBeTruthy();
+    expect(rows[0].id).toBeTruthy();
+    expect(rows[0].doc).toBeTruthy();
+    expect(rows[0].doc?._id).toBe(rows[0].id);
   });
 });
 
@@ -100,7 +99,7 @@ describe("Index query with compound key", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
@@ -112,9 +111,9 @@ describe("Index query with compound key", function () {
   });
   it("should prefix query", async function () {
     const { rows } = await indexer.query({ prefix: "creative" });
-    equals(rows.length, 2);
-    equalsJSON(rows[0].key, ["creative", 2]);
-    equalsJSON(rows[1].key, ["creative", 20]);
+    expect(rows.length).toBe(2);
+    expect(rows[0].key).toEqual(["creative", 2]);
+    expect(rows[1].key).toEqual(["creative", 20]);
   });
 });
 
@@ -126,7 +125,7 @@ describe("basic Index with map fun", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -137,10 +136,10 @@ describe("basic Index with map fun", function () {
   });
   it("should get results", async function () {
     const result = await indexer.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 3);
-    equals(result.rows[0].key, "amazing");
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(3);
+    expect(result.rows[0].key).toBe("amazing");
   });
 });
 
@@ -152,7 +151,7 @@ describe("basic Index with map fun with value", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -163,21 +162,21 @@ describe("basic Index with map fun with value", function () {
   });
   it("should get results", async function () {
     const result = await indexer.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 3);
-    equals(result.rows[0].key, "amazing");
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(3);
+    expect(result.rows[0].key).toBe("amazing");
     // @jchris why is this not a object?
-    equals(result.rows[0].value, 7);
+    expect(result.rows[0].value).toBe(7);
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query({ includeDocs: true });
-    assert(rows[0].doc);
-    equals(rows[0].doc._id, rows[0].id);
-    equals(rows.length, 3);
-    equals(rows[0].key, "amazing");
+    expect(rows[0].doc).toBeTruthy();
+    expect(rows[0].doc?._id).toBe(rows[0].id);
+    expect(rows.length).toBe(3);
+    expect(rows[0].key).toBe("amazing");
     // @jchris why is this not a object?
-    equals(rows[0].value, 7);
+    expect(rows[0].value).toBe(7);
   });
 });
 
@@ -189,7 +188,7 @@ describe("Index query with map and compound key", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
@@ -201,9 +200,9 @@ describe("Index query with map and compound key", function () {
   });
   it("should prefix query", async function () {
     const { rows } = await indexer.query({ prefix: "creative" });
-    equals(rows.length, 2);
-    equalsJSON(rows[0].key, ["creative", 2]);
-    equalsJSON(rows[1].key, ["creative", 20]);
+    expect(rows.length).toBe(2);
+    expect(rows[0].key).toEqual(["creative", 2]);
+    expect(rows[1].key).toEqual(["creative", 20]);
   });
 });
 
@@ -215,7 +214,7 @@ describe("basic Index with string fun", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
@@ -224,14 +223,14 @@ describe("basic Index with string fun", function () {
   });
   it("should get results", async function () {
     const result = await indexer.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 3);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(3);
   });
   it("should include docs", async function () {
     const { rows } = await indexer.query();
-    assert(rows.length);
-    assert(rows[0].doc);
+    expect(rows.length).toBeTruthy();
+    expect(rows[0].doc).toBeTruthy();
   });
 });
 
@@ -251,7 +250,7 @@ describe("basic Index upon cold start", function () {
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     // db = database()
     crdt = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     await crdt.bulk([
@@ -267,63 +266,63 @@ describe("basic Index upon cold start", function () {
     indexer = await index<string, TestType>({ _crdt: crdt }, "hello", mapFn);
     // new Index(db._crdt.indexBlockstore, db._crdt, 'hello', mapFn)
     result = await indexer.query();
-    equalsJSON(indexer.indexHead, crdt.clock.head);
+    expect(indexer.indexHead).toEqual(crdt.clock.head);
   });
   it("should call map on first query", function () {
-    assert(didMap);
-    equals(didMap, 3);
+    expect(didMap).toBeTruthy();
+    expect(didMap).toEqual(3);
   });
   it("should get results on first query", function () {
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 3);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toEqual(3);
   });
   it("should work on cold load", async function () {
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     const { result, head } = await crdt2.changes();
-    assert(result);
+    expect(result).toBeTruthy();
     await crdt2.ready();
     const indexer2 = await index<string, TestType>({ _crdt: crdt2 }, "hello", mapFn);
     await indexer2.xready();
     const result2 = await indexer2.query();
-    equalsJSON(indexer2.indexHead, head);
-    assert(result2);
-    equals(result2.rows.length, 3);
-    equalsJSON(indexer2.indexHead, head);
+    expect(indexer2.indexHead).toEqual(head);
+    expect(result2).toBeTruthy();
+    expect(result2.rows.length).toEqual(3);
+    expect(indexer2.indexHead).toEqual(head);
   });
   itSkip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     const indexer2 = await index({ _crdt: crdt2 }, "hello", mapFn);
     const { result, head } = await crdt2.changes([]);
-    equals(result.length, 3);
-    equals(head.length, 1);
+    expect(result.length).toEqual(3);
+    expect(head.length).toEqual(1);
     const { result: ch2, head: h2 } = await crdt2.changes(head);
-    equals(ch2.length, 0);
-    equals(h2.length, 1);
-    equalsJSON(h2, head);
+    expect(ch2.length).toEqual(0);
+    expect(h2.length).toEqual(1);
+    expect(h2).toEqual(head);
     const result2 = await indexer2.query();
-    equalsJSON(indexer2.indexHead, head);
-    assert(result2);
-    equals(result2.rows.length, 3);
-    equals(didMap, 0);
+    expect(indexer2.indexHead).toEqual(head);
+    expect(result2).toBeTruthy();
+    expect(result2.rows.length).toEqual(3);
+    expect(didMap).toEqual(0);
     await crdt2.bulk([{ id: "abc4", value: { title: "despicable", score: 0 } }]);
 
     const { result: ch3, head: h3 } = await crdt2.changes(head);
-    equals(ch3.length, 1);
-    equals(h3.length, 1);
+    expect(ch3.length).toEqual(1);
+    expect(h3.length).toEqual(1);
     const result3 = await indexer2.query();
-    assert(result3);
-    equals(result3.rows.length, 4);
-    equals(didMap, 1);
+    expect(result3).toBeTruthy();
+    expect(result3.rows.length).toEqual(4);
+    expect(didMap).toEqual(1);
   });
   it("should ignore meta when map function definiton changes", async function () {
     const crdt2 = new CRDT<TestType>("test-indexer-cold");
     const result = await index<string, TestType>({ _crdt: crdt2 }, "hello", (doc) =>
       doc.title.split("").reverse().join(""),
     ).query();
-    equals(result.rows.length, 3);
-    equals(result.rows[0].key, "evitaerc"); // creative
+    expect(result.rows.length).toEqual(3);
+    expect(result.rows[0].key).toEqual("evitaerc"); // creative
   });
 });
 
@@ -336,7 +335,7 @@ describe("basic Index with no data", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     db = new Database("test-indexer");
     indexer = new Index<string, TestType>(db._crdt, "hello", (doc) => {
       didMap = true;
@@ -344,25 +343,25 @@ describe("basic Index with no data", function () {
     });
   });
   it("should have properties", function () {
-    equals(indexer.crdt, db._crdt);
-    equals(indexer.name, "hello");
-    assert(indexer.mapFn);
+    expect(indexer.crdt).toEqual(db._crdt);
+    expect(indexer.name).toEqual("hello");
+    expect(indexer.mapFn).toBeTruthy();
   });
   it("should not call the map function on first query", async function () {
     didMap = false;
     await indexer.query();
-    assert(!didMap);
+    expect(didMap).toBeFalsy();
   });
   it("should not call the map function on second query", async function () {
     await indexer.query();
     didMap = false;
     await indexer.query();
-    assert(!didMap);
+    expect(didMap).toBeFalsy();
   });
   it("should get results", async function () {
     const result = await indexer.query();
-    assert(result);
-    assert(result.rows);
-    equals(result.rows.length, 0);
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toEqual(0);
   });
 });
