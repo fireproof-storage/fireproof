@@ -3,20 +3,10 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { encode } from "multiformats/block";
 import { CID } from "multiformats/cid";
-
 import { MemoryBlockstore } from "@web3-storage/pail/block";
+import { CRDTMeta, IndexTransactionMeta, bs, rt } from "@fireproof/core";
 
-import { assert, matches, equals } from "../helpers.js";
-
-import { parseCarFile } from "@fireproof/core/blockstore";
-
-import { CarTransaction, CompactionFetcher, EncryptedBlockstore, Loader } from "@fireproof/core/blockstore";
-
-import { AnyAnyLink, AnyLink, CarGroup, TransactionMeta } from "@fireproof/core/blockstore";
-import { SysContainer } from "@fireproof/core/runtime";
-import { CRDTMeta, IndexTransactionMeta } from "use-fireproof";
-
-class MyMemoryBlockStore extends EncryptedBlockstore {
+class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
   constructor() {
     const ebOpts = {
@@ -30,12 +20,12 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   close(): Promise<void> {
     return this.loader.close();
   }
-  loader: Loader = new Loader("MyMemoryBlockStore", {});
-  readonly transactions = new Set<CarTransaction>();
+  loader = new bs.Loader("MyMemoryBlockStore", {});
+  readonly transactions = new Set<bs.CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
 
-  override async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
+  override async put(cid: bs.AnyAnyLink, block: Uint8Array): Promise<void> {
     return this.memblock.put(cid, block);
   }
 
@@ -44,22 +34,22 @@ class MyMemoryBlockStore extends EncryptedBlockstore {
   // }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  getFile(car: AnyLink, cid: AnyLink, isPublic?: boolean): Promise<Uint8Array> {
+  getFile(car: bs.AnyLink, cid: bs.AnyLink, isPublic?: boolean): Promise<Uint8Array> {
     throw new Error("Method not implemented.");
   }
   compact(): Promise<void> {
     throw new Error("Method not implemented.");
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  defaultCompact(blocks: CompactionFetcher): Promise<TransactionMeta> {
+  defaultCompact(blocks: bs.CompactionFetcher): Promise<bs.TransactionMeta> {
     throw new Error("Method not implemented.");
   }
 }
 
 describe("basic Loader simple", function () {
-  let loader: Loader;
+  let loader: bs.Loader;
   let block: BlockView;
-  let t: CarTransaction;
+  let t: bs.CarTransaction;
 
   afterEach(async function () {
     await loader.close();
@@ -68,10 +58,10 @@ describe("basic Loader simple", function () {
 
   beforeEach(async function () {
     const testDbName = "test-loader-commit";
-    await SysContainer.start();
+    await rt.SysContainer.start();
     const mockM = new MyMemoryBlockStore();
-    t = new CarTransaction(mockM as EncryptedBlockstore);
-    loader = new Loader(testDbName, { public: true });
+    t = new bs.CarTransaction(mockM as bs.EncryptedBlockstore);
+    loader = new bs.Loader(testDbName, { public: true });
     await loader.ready();
     block = await encode({
       value: { hello: "world" },
@@ -82,30 +72,30 @@ describe("basic Loader simple", function () {
     await mockM.put(block.cid, block.bytes);
   });
   it("should have an empty car log", function () {
-    equals(loader.carLog.length, 0);
+    expect(loader.carLog.length).toBe(0);
   });
   it("should commit", async function () {
     const carGroup = await loader.commit(t, { head: [block.cid] });
-    equals(loader.carLog.length, 1);
+    expect(loader.carLog.length).toBe(1);
     const reader = await loader.loadCar(carGroup[0]);
-    assert(reader);
-    const parsed = await parseCarFile<CRDTMeta>(reader);
-    assert(parsed.cars);
-    equals(parsed.cars.length, 0);
-    assert(parsed.meta);
-    assert(parsed.meta.head);
+    expect(reader).toBeTruthy();
+    const parsed = await bs.parseCarFile<CRDTMeta>(reader);
+    expect(parsed.cars).toBeTruthy();
+    expect(parsed.cars.length).toBe(0);
+    expect(parsed.meta).toBeTruthy();
+    expect(parsed.meta.head).toBeTruthy();
   });
 });
 
 describe("basic Loader with two commits", function () {
-  let loader: Loader;
+  let loader: bs.Loader;
   let block: BlockView;
   let block2: BlockView;
   let block3: BlockView;
   let block4: BlockView;
-  let t: CarTransaction;
-  let carCid: CarGroup;
-  let carCid0: CarGroup;
+  let t: bs.CarTransaction;
+  let carCid: bs.CarGroup;
+  let carCid0: bs.CarGroup;
 
   afterEach(async function () {
     await loader.close();
@@ -113,10 +103,10 @@ describe("basic Loader with two commits", function () {
   });
 
   beforeEach(async function () {
-    await SysContainer.start();
+    await rt.SysContainer.start();
     const mockM = new MyMemoryBlockStore();
-    t = new CarTransaction(mockM);
-    loader = new Loader("test-loader-two-commit", { public: true });
+    t = new bs.CarTransaction(mockM);
+    loader = new bs.Loader("test-loader-two-commit", { public: true });
     block = await encode({
       value: { hello: "world" },
       hasher,
@@ -150,60 +140,60 @@ describe("basic Loader with two commits", function () {
   });
 
   it("should have a car log", function () {
-    equals(loader.carLog.length, 2);
-    equals(loader.carLog[0].toString(), carCid.toString());
-    equals(loader.carLog[1].toString(), carCid0.toString());
+    expect(loader.carLog.length).toBe(2);
+    expect(loader.carLog[0].toString()).toBe(carCid.toString());
+    expect(loader.carLog[1].toString()).toBe(carCid0.toString());
   });
 
   it("should commit", async function () {
     const reader = await loader.loadCar(carCid[0]);
-    assert(reader);
-    const parsed = await parseCarFile<CRDTMeta>(reader);
-    assert(parsed.cars);
-    equals(parsed.compact.length, 0);
-    equals(parsed.cars.length, 1);
-    assert(parsed.meta);
-    assert(parsed.meta.head);
+    expect(reader).toBeTruthy();
+    const parsed = await bs.parseCarFile<CRDTMeta>(reader);
+    expect(parsed.cars).toBeTruthy();
+    expect(parsed.compact.length).toBe(0);
+    expect(parsed.cars.length).toBe(1);
+    expect(parsed.meta).toBeTruthy();
+    expect(parsed.meta.head).toBeTruthy();
   });
 
   it("should compact", async function () {
     const compactCid = await loader.commit(t, { head: [block2.cid] }, { compact: true });
-    equals(loader.carLog.length, 1);
+    expect(loader.carLog.length).toBe(1);
 
     const reader = await loader.loadCar(compactCid[0]);
-    assert(reader);
-    const parsed = await parseCarFile<CRDTMeta>(reader);
-    assert(parsed.cars);
-    equals(parsed.compact.length, 2);
-    equals(parsed.cars.length, 0);
-    assert(parsed.meta);
-    assert(parsed.meta.head);
+    expect(reader).toBeTruthy();
+    const parsed = await bs.parseCarFile<CRDTMeta>(reader);
+    expect(parsed.cars).toBeTruthy();
+    expect(parsed.compact.length).toBe(2);
+    expect(parsed.cars.length).toBe(0);
+    expect(parsed.meta).toBeTruthy();
+    expect(parsed.meta.head).toBeTruthy();
   });
 
   it("compact should erase old files", async function () {
     const cs = await loader.carStore();
     await loader.commit(t, { head: [block2.cid] }, { compact: true });
-    equals(loader.carLog.length, 1);
+    expect(loader.carLog.length).toBe(1);
     await loader.commit(t, { head: [block3.cid] }, { compact: false });
-    equals(loader.carLog.length, 2);
-    assert(await cs.load(carCid[0]));
+    expect(loader.carLog.length).toBe(2);
+    expect(await cs.load(carCid[0])).toBeTruthy();
     await loader.commit(t, { head: [block3.cid] }, { compact: true });
-    equals(loader.carLog.length, 1);
+    expect(loader.carLog.length).toBe(1);
     const e0 = await cs.load(carCid[0]).catch((e) => e);
-    assert(e0 instanceof Error, "e should be an instance of Error");
+    expect(e0 instanceof Error).toBeTruthy();
     await loader.commit(t, { head: [block4.cid] }, { compact: false });
-    equals(loader.carLog.length, 2);
+    expect(loader.carLog.length).toBe(2);
 
     const e = await loader.loadCar(carCid[0]).catch((e) => e);
-    assert(e);
-    assert(e instanceof Error, "e should be Error");
-    matches(e.message, "missing car file");
+    expect(e).toBeTruthy();
+    expect(e instanceof Error).toBeTruthy();
+    expect(e.message).toMatch("missing car file");
   }, 10000);
 });
 
 describe("basic Loader with index commits", function () {
   let block: BlockView;
-  let ib: EncryptedBlockstore;
+  let ib: bs.EncryptedBlockstore;
   let indexerResult: IndexTransactionMeta;
   let cid: CID;
   // let indexMap: Map<string, CID>;
@@ -215,9 +205,9 @@ describe("basic Loader with index commits", function () {
 
   beforeEach(async function () {
     const name = "test-loader-index" + Math.random();
-    await SysContainer.start();
+    await rt.SysContainer.start();
     // t = new CarTransaction()
-    ib = new EncryptedBlockstore({ name });
+    ib = new bs.EncryptedBlockstore({ name });
     block = await encode({
       value: { hello: "world" },
       hasher,
@@ -241,8 +231,8 @@ describe("basic Loader with index commits", function () {
   });
 
   it("should start with an empty car log", function () {
-    assert(ib.loader);
-    equals(ib.loader.carLog.length, 0);
+    expect(ib.loader).toBeTruthy();
+    expect(ib.loader.carLog.length).toBe(0);
   });
 
   it("should commit the index metadata", async function () {
@@ -253,22 +243,23 @@ describe("basic Loader with index commits", function () {
       } /* , indexMap */,
     );
 
-    assert(carCid);
-    assert(ib.loader);
+    expect(carCid).toBeTruthy();
+    expect(ib.loader).toBeTruthy();
     const carLog = ib.loader.carLog;
 
-    equals(carLog.length, 1);
-    const reader = await ib.loader.loadCar(carCid[0]);
-    assert(reader);
-    const parsed = await parseCarFile<IndexTransactionMeta>(reader);
-    assert(parsed.cars);
-    equals(parsed.cars.length, 0);
-    assert(parsed.meta);
-    assert(parsed.meta.indexes);
+    expect(carLog.length).toBe(1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const reader = await ib.loader.loadCar(carCid![0]);
+    expect(reader).toBeTruthy();
+    const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader);
+    expect(parsed.cars).toBeTruthy();
+    expect(parsed.cars.length).toBe(0);
+    expect(parsed.meta).toBeTruthy();
+    expect(parsed.meta.indexes).toBeTruthy();
     const indexes = parsed.meta.indexes;
-    assert(indexes);
-    assert(indexes.hello);
-    equals(indexes.hello.map, "(doc) => doc.hello");
-    equals(indexes.hello.name, "hello");
+    expect(indexes).toBeTruthy();
+    expect(indexes.hello).toBeTruthy();
+    expect(indexes.hello.map).toBe("(doc) => doc.hello");
+    expect(indexes.hello.name).toBe("hello");
   });
 });

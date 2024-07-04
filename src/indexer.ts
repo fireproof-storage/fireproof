@@ -15,6 +15,7 @@ import {
   IndexTransactionMeta,
 } from "./types.js";
 import { BaseBlockstore } from "./blockstore/index.js";
+
 import {
   bulkIndex,
   indexEntriesForChanges,
