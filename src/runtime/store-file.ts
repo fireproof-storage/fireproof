@@ -6,6 +6,7 @@ import { SysContainer } from "./sys-container.js";
 import { Falsy } from "../types.js";
 import { TestStore } from "../blockstore/types.js";
 import { FILESTORE_VERSION } from "./store-file-version.js";
+import { ResolveOnce } from "@adviser/cement";
 
 function ensureVersion(url: URL): URL {
   const ret = new URL(url.toString());
@@ -13,7 +14,32 @@ function ensureVersion(url: URL): URL {
   return ret;
 }
 
-function getPath(url: URL): string {
+const versionFiles = new Map<string, ResolveOnce<void>>();
+async function ensureVersionFile(path: string): Promise<string> {
+  let once = versionFiles.get(path)
+  if (!once) {
+    once = new ResolveOnce<void>();
+    versionFiles.set(path, once);
+  }
+  once.once(async () => {
+    await SysContainer.mkdir(path, { recursive: true });
+    const vFile = SysContainer.join(path, 'version');
+    const vFileStat = await SysContainer.stat(vFile).catch(() => undefined)
+    if (!vFileStat) {
+      await SysContainer.writefile(SysContainer.join(path, 'version'), FILESTORE_VERSION);
+      return
+    } else if (!vFileStat.isFile()) {
+      throw new Error(`version file is a directory:${vFile}`);
+    }
+    const v = await SysContainer.readfile(vFile);
+    if (v.toString() !== FILESTORE_VERSION) {
+      console.warn(`version mismatch:${vFile}: ${v.toString()}!=${FILESTORE_VERSION}`);
+    }
+  })
+  return path
+}
+
+async function getPath(url: URL): Promise<string> {
   const basePath = url.toString().replace(/^file:\/\//, "").replace(/\?.*$/, "");
   const name = url.searchParams.get("name");
   if (!name) throw new Error(`name not found:${url.toString()}`);
@@ -21,7 +47,7 @@ function getPath(url: URL): string {
   if (!version) throw new Error(`version not found:${url.toString()}`);
   // const index = url.searchParams.has("index");
   // if (index) name += index;
-  return SysContainer.join(basePath, version, name);
+  return ensureVersionFile(SysContainer.join(basePath, version, name));
 }
 
 function getStore(url: URL): string {
@@ -55,13 +81,13 @@ export class FileRemoteWAL extends RemoteWAL {
 
   readonly branches = new Set<string>();
 
-  filePathForBranch(branch: string): string {
-    return SysContainer.join(getPath(this.url), ensureIndexName(this.url, "wal"), branch + ".json");
+  async filePathForBranch(branch: string): Promise<string> {
+    return SysContainer.join(await getPath(this.url), ensureIndexName(this.url, "wal"), branch + ".json");
   }
 
   async _load(branch = "main"): Promise<WALState | Falsy> {
     this.branches.add(branch);
-    const filepath = this.filePathForBranch(branch);
+    const filepath = await this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
       throw e;
@@ -72,7 +98,7 @@ export class FileRemoteWAL extends RemoteWAL {
   async _save(state: WALState, branch = "main"): Promise<void> {
     this.branches.add(branch);
     const encoded: ToString<WALState> = format(state);
-    const filepath = this.filePathForBranch(branch);
+    const filepath = await this.filePathForBranch(branch);
     await writePathFile(filepath, encoded);
   }
   async _close() {
@@ -81,7 +107,7 @@ export class FileRemoteWAL extends RemoteWAL {
 
   async _destroy() {
     for (const branch of this.branches) {
-      const filepath = this.filePathForBranch(branch);
+      const filepath = await this.filePathForBranch(branch);
       await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
         if (e.code === "ENOENT") return;
         throw e;
@@ -98,14 +124,14 @@ export class FileMetaStore extends MetaStore {
     super(name, ensureVersion(url));
   }
 
-  filePathForBranch(branch: string): string {
-    return SysContainer.join(getPath(this.url), ensureIndexName(this.url, "meta"), branch + ".json");
+  async filePathForBranch(branch: string): Promise<string> {
+    return SysContainer.join(await getPath(this.url), ensureIndexName(this.url, "meta"), branch + ".json");
   }
 
   async load(branch = "main"): Promise<DbMeta[] | Falsy> {
     this.branches.add(branch);
     await SysContainer.start();
-    const filepath = this.filePathForBranch(branch);
+    const filepath = await this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return undefined;
       throw e;
@@ -116,7 +142,7 @@ export class FileMetaStore extends MetaStore {
 
   async save(meta: DbMeta, branch = "main") {
     this.branches.add(branch);
-    const filepath = this.filePathForBranch(branch);
+    const filepath = await this.filePathForBranch(branch);
     const bytes = this.makeHeader(meta);
     await writePathFile(filepath, bytes);
     return undefined;
@@ -126,7 +152,7 @@ export class FileMetaStore extends MetaStore {
   }
   async destroy() {
     for (const branch of this.branches) {
-      const filepath = this.filePathForBranch(branch);
+      const filepath = await this.filePathForBranch(branch);
       await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
         if (e.code === "ENOENT") return;
         throw e;
@@ -142,26 +168,26 @@ export class FileDataStore extends DataStore {
     super(name, ensureVersion(url));
   }
 
-  private cidPath(cid: AnyLink) {
-    return SysContainer.join(getPath(this.url), ensureIndexName(this.url, "data"), cid.toString() + ".car");
+  private async cidPath(cid: AnyLink): Promise<string> {
+    return SysContainer.join(await getPath(this.url), ensureIndexName(this.url, "data"), cid.toString() + ".car");
   }
 
   async save(car: AnyBlock): Promise<void> {
     await SysContainer.start();
-    const filepath = this.cidPath(car.cid);
+    const filepath = await this.cidPath(car.cid);
     // console.log("save->", filepath);
     await writePathFile(filepath, car.bytes);
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     await SysContainer.start();
-    const filepath = this.cidPath(cid);
+    const filepath = await this.cidPath(cid);
     const bytes = await SysContainer.readfile(filepath);
     return { cid, bytes: new Uint8Array(bytes) };
   }
 
   async remove(cid: AnyLink): Promise<void> {
-    const filepath = this.cidPath(cid);
+    const filepath = await this.cidPath(cid);
     // console.log("remove->", filepath);
     await SysContainer.unlink(filepath);
   }
@@ -169,7 +195,7 @@ export class FileDataStore extends DataStore {
     // no-op
   }
   async destroy() {
-    const filepath = SysContainer.dirname(this.cidPath("x" as unknown as AnyLink));
+    const filepath = SysContainer.dirname(await this.cidPath("x" as unknown as AnyLink));
     try {
       const dir = await SysContainer.readdir(filepath);
       for (const file of dir) {
@@ -203,7 +229,7 @@ export class FileTestStore implements TestStore {
   constructor(readonly url: URL) {}
 
   async get(key: string) {
-    const dbFile = SysContainer.join(getPath(this.url), getStore(this.url), getFileName(this.url, key));
+    const dbFile = SysContainer.join(await getPath(this.url), getStore(this.url), getFileName(this.url, key));
     const buffer = await SysContainer.readfile(dbFile);
     return toArrayBuffer(buffer);
   }

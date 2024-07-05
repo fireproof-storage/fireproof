@@ -118,7 +118,7 @@ describe("fireproof/config", () => {
   it("sqlite path", async () => {
     let dbFile = "sqlite://./dist/sqlite".replace(/\?.*$/, "").replace(/^sqlite:\/\//, "");
     dbFile = SysContainer.join(dbFile, "my-app.sqlite");
-    // await SysContainer.rm(dbFile, { recursive: true }).catch(() => { /* */ });;
+    await SysContainer.rm(dbFile, { recursive: true }).catch(() => { /* */ });;
 
     const db = fireproof("my-app", {
       store: {
