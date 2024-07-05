@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
 import { ResolveOnce } from "@adviser/cement";
-import { uuidv4, uuidv7 } from "uuidv7";
+// import { uuidv4 } from "uuidv7";
 
 import {
   type AnyBlock,
@@ -80,16 +80,15 @@ export class Loader implements Loadable {
   carLog: CarLog = [];
   key?: string;
   keyId?: string;
-  isWriting = false;
-  writing = Promise.resolve();
   remoteMetaStore?: AbstractRemoteMetaStore;
   remoteCarStore?: AbstractDataStore;
   remoteFileStore?: AbstractDataStore;
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
+  private writeLimit = pLimit(1); 
 
-  readonly id = uuidv4();
+  // readonly id = uuidv4();
 
   async carStore(): Promise<DataStore> {
     return this.ebOpts.store.makeDataStore(this);
@@ -150,12 +149,12 @@ export class Loader implements Loadable {
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
     for (const meta of metas) {
       const writingFn = async () => {
-        this.isWriting = true;
+        // this.isWriting = true;
         // const id = uuidv7();
         // console.log("handleDbMetasFromStore-pre", this.id, id, meta.cars.toString());
         await this.mergeDbMetaIntoClock(meta);
         // console.log("handleDbMetasFromStore-post",this.id,  id, meta.cars.toString());
-        this.isWriting = false;
+        // this.isWriting = false;
       };
       void this._setWaitForWrite(writingFn);
       await writingFn();
@@ -573,13 +572,6 @@ export class Loader implements Loadable {
   }
 
   async _setWaitForWrite(_writingFn: () => Promise<unknown>): Promise<void> {
-    const wr = this.writing;
-    this.writing = wr.then(async () => {
-      await _writingFn();
-      return wr;
-    });
-    return this.writing.then(() => {
-      return;
-    });
+    await this.writeLimit(() => _writingFn());
   }
 }
