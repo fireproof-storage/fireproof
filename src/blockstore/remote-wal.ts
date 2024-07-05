@@ -3,7 +3,6 @@ import { ResolveOnce } from "@adviser/cement";
 
 import type { AnyLink, CommitOpts, DbMeta } from "./types.js";
 import { type Loadable, carLogIncludesGroup } from "./loader.js";
-import { STORAGE_VERSION } from "./store.js";
 import { CommitQueue } from "./commit-queue.js";
 import { Falsy, throwFalsy } from "../types.js";
 
@@ -19,7 +18,7 @@ export interface WALState {
 export abstract class RemoteWAL {
   readonly tag: string = "rwal-base";
 
-  readonly STORAGE_VERSION: string = STORAGE_VERSION;
+  // readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly loader: Loadable;
 
   readonly _ready = new ResolveOnce<void>();

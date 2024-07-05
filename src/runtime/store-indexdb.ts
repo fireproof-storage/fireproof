@@ -4,9 +4,16 @@ import { uuidv4 } from "uuidv7";
 import { ResolveOnce } from "@adviser/cement";
 
 import { AnyBlock, AnyLink, DbMeta, TestStore } from "../blockstore/types.js";
-import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase, STORAGE_VERSION } from "../blockstore/index.js";
+import { DataStore as DataStoreBase, Loadable, MetaStore as MetaStoreBase } from "../blockstore/index.js";
 import { RemoteWAL as RemoteWALBase, WALState } from "../blockstore/remote-wal.js";
 import { Falsy } from "../types.js";
+import { INDEXDB_VERSION } from "./store-indexdb-version.js";
+
+function ensureVersion(url: URL): URL {
+  const ret = new URL(url.toString());
+  ret.searchParams.set("version", url.searchParams.get("version") || INDEXDB_VERSION);
+  return ret;
+}
 
 const onceIndexDB = new Map<string, ResolveOnce<{ db: IDBPDatabase<unknown>; dbName: DbName }>>();
 
@@ -18,28 +25,42 @@ function sanitzeKey(key: string | string[]): string | string[] {
 }
 
 async function connectIdb<T>(url: URL, dbWorkFun: (arg0: SimpleDb) => Promise<T>): Promise<T> {
-  const urlStr = url.toString().replace(/\?.*$/, "");
-  let ro = onceIndexDB.get(urlStr);
+  const dbName = getIndexDBName(url); // `fp.${this.STORAGE_VERSION}.${this.name}`;
+  // const urlStr = url.toString().replace(/\?.*$/, "");
+  let ro = onceIndexDB.get(dbName.fullDb);
   if (!ro) {
     ro = new ResolveOnce();
-    onceIndexDB.set(urlStr, ro);
+    onceIndexDB.set(dbName.fullDb, ro);
   }
   // console.log(`get:${this.id}`);
+  // console.log(`connectIdb:pre:`, dbName, url.toString());
   const once = await ro.once(async () => {
-    const dbName = getIndexDBName(url); // `fp.${this.STORAGE_VERSION}.${this.name}`;
-    const db = await openDB(dbName.fullDb, 1, {
+    // console.log(`connectIdb:once:`, dbName, url.toString());
+    const db = await openDB(dbName.fullDb, dbName.version, {
       upgrade(db) {
-        db.createObjectStore("data", {
-          autoIncrement: false,
-        });
-        db.createObjectStore("meta", {
-          autoIncrement: false,
-        });
-        db.createObjectStore("wal", {
-          autoIncrement: false,
-        });
+        // console.log('upgrade:', dbName);
+        [
+          "version",
+          "data",
+          "wal",
+          "meta",
+          "idx.data",
+          "idx.wal",
+          "idx.meta"
+        ].map((store) => {
+          db.createObjectStore(store, {
+            autoIncrement: false,
+          });
+        })
       },
     });
+    const found = await db.get("version", "version");
+    const version = url.searchParams.get("version");
+    if (!found) {
+      await db.put("version", {version }, "version");
+    } else if (found.version !== version) {
+      console.error(`version mismatch:${url.toString()} ${version} !== ${found.version}`);
+    }
     return { db, dbName };
   });
 
@@ -70,31 +91,53 @@ async function connectIdb<T>(url: URL, dbWorkFun: (arg0: SimpleDb) => Promise<T>
 
 export interface DbName {
   readonly fullDb: string;
-  readonly type: "data" | "meta" | "wal";
+  readonly objStore: string;
+  readonly connectionKey: string
+  readonly version: number;
+  // readonly type: "data" | "meta" | "wal";
   readonly dbName: string;
 }
 
 function getStore(url: URL): string {
-  const result = url.searchParams.get("store");
+  let result = url.searchParams.get("store");
   if (!result) throw new Error(`store not found:${url.toString()}`);
+  if (url.searchParams.has("index")) {
+    result = joinDBName(url.searchParams.get("index") || "idx", result);
+  }
   return result;
 }
 
-export function getIndexDBName(url: URL, branch?: string): DbName {
+function joinDBName(...names: string[]): string {
+  return names.map(i => i.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_")).filter(i => i.length).join(".");
+}
+
+const schemaVersion = new Map<string, number>();
+export function getIndexDBName(iurl: URL): DbName {
+  const url = ensureVersion(iurl);
   const fullDb = url.pathname.replace(/^\/+/, "").replace(/\?.*$/, ""); // cut leading slashes
-  const type = getStore(url);
+  // const type = getStore(url);
+  // const storageVersion = url.searchParams.get("version");
+  // not nice but we need to pass the version to the db name
+  // url.searchParams.set("version", storageVersion);
   // console.log("getIndexDBName:", url.toString(), { fullDb, type, branch });
-  const dbName = fullDb.replace(new RegExp(`^fp.${STORAGE_VERSION}.`), ""); // cut fp prefix
+  // const dbName = fullDb.replace(new RegExp(`^fp.${storageVersion}.`), ""); // cut fp prefix
+  const dbName = url.searchParams.get("name");
+  if (!dbName) throw new Error(`name not found:${url.toString()}`);
+  const result = joinDBName(fullDb, dbName)
+  let objStore = getStore(url);
+  if (url.searchParams.has("index")) {
+    objStore = joinDBName(url.searchParams.get("index") || "idx", objStore);
+  }
+  /*
   let result: string;
   switch (type) {
     case "data":
-      result = `fp.${STORAGE_VERSION}.${dbName}`;
       break;
     case "meta":
-      result = `fp.${STORAGE_VERSION}.${dbName}`;
+      result = `fp.${storageVersion}.${dbName}`;
       break;
     case "wal":
-      result = `fp.${STORAGE_VERSION}.${dbName}`;
+      result = `fp.${storageVersion}.${dbName}`;
       break;
     default:
       throw new Error(`invalid type ${type}`);
@@ -102,10 +145,22 @@ export function getIndexDBName(url: URL, branch?: string): DbName {
   if (branch) {
     result += `.${branch}`;
   }
+    */
   // console.log("getIndexDBName:", { fullDb: result, dbName, });
+  const connectionKey = [result, objStore].join(":");
+  let version = 0
+  if (schemaVersion.has(result)) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    version = schemaVersion.get(result)!
+  }
+  version = version + 1;
+  schemaVersion.set(result, version);
   return {
     fullDb: result,
-    type,
+    objStore,
+    connectionKey,
+    version,
+    // type,
     dbName,
   };
 }
@@ -143,7 +198,7 @@ export class IndexDBDataStore extends DataStoreBase {
   readonly ensureDB: EnsureDB;
 
   constructor(name: string, url: URL) {
-    super(name, url);
+    super(name, ensureVersion(url));
     this.ensureDB = new EnsureDB(this.url);
   }
 
@@ -206,7 +261,7 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   readonly ensureDB: EnsureDB;
 
   constructor(loader: Loadable, url: URL) {
-    super(loader, url);
+    super(loader, ensureVersion(url));
     this.ensureDB = new EnsureDB(this.url);
   }
 
@@ -269,7 +324,7 @@ export class IndexDBMetaStore extends MetaStoreBase {
   readonly ensureDB: EnsureDB;
 
   constructor(name: string, url: URL) {
-    super(name, url);
+    super(name, ensureVersion(url));
     this.ensureDB = new EnsureDB(this.url);
   }
 
@@ -332,7 +387,7 @@ export class IndexDBMetaStore extends MetaStoreBase {
 }
 
 export class IndexDBTestStore implements TestStore {
-  constructor(readonly url: URL) {}
+  constructor(readonly url: URL) { }
   async get(key: string) {
     const ensureDB = new EnsureDB(this.url);
     const ret = await ensureDB.get(async (db) => {

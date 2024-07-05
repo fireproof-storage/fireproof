@@ -1,7 +1,7 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
 import { ResolveOnce } from "@adviser/cement";
-import { uuidv4 } from "uuidv7";
+import { uuidv4, uuidv7 } from "uuidv7";
 
 import {
   type AnyBlock,
@@ -117,23 +117,19 @@ export class Loader implements Loadable {
   }
 
   async close() {
-    // console.log("closing:1", this.id);
     const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
-    // console.log("closing:2", this.id, toClose);
     await Promise.all(toClose.map((store) => store.close()));
-    // console.log("closing:3", this.id);
   }
 
   async destroy() {
-    // console.log("destroy:1", this.id);
     const toDestroy = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
-    // console.log("destroy:2", this.id, toDestroy);
     await Promise.all(toDestroy.map((store) => store.destroy()));
-    // console.log("destroy:3", this.id);
   }
+
 
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
+    // console.log("Loader", name, ebOpts)
     this.ebOpts = defaultedBlockstoreRuntime({
       ...ebOpts,
       name,
@@ -155,7 +151,10 @@ export class Loader implements Loadable {
     for (const meta of metas) {
       const writingFn = async () => {
         this.isWriting = true;
+        // const id = uuidv7();
+        // console.log("handleDbMetasFromStore-pre", this.id, id, meta.cars.toString());
         await this.mergeDbMetaIntoClock(meta);
+        // console.log("handleDbMetasFromStore-post",this.id,  id, meta.cars.toString());
         this.isWriting = false;
       };
       void this._setWaitForWrite(writingFn);

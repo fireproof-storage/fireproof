@@ -1,4 +1,4 @@
-import { fireproof } from "@fireproof/core";
+import { fireproof, PACKAGE_VERSION } from "@fireproof/core";
 
 async function main() {
   // console.log(fireproof);
@@ -13,7 +13,7 @@ async function main() {
   // const doc =
   await db.get("test");
 
-  console.log("test working");
+  console.log(`test working version:${PACKAGE_VERSION}`);
 }
 
 main().catch(console.error);

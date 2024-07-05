@@ -200,11 +200,31 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 }
 
+function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
+  if (!set) return [];
+  return Object.entries(set)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => ({ [k]: v }));
+}
+
 export function fireproof(name: string, opts?: ConfigOpts): Database {
-  let db = Database.databases.get(name);
+  const key = JSON.stringify(
+    toSortedArray({
+      name,
+      stores: toSortedArray(opts?.store?.stores),
+
+      makeMetaStore: !!opts?.store?.makeMetaStore,
+      makeDataStore: !!opts?.store?.makeDataStore,
+      makeRemoteWAL: !!opts?.store?.makeRemoteWAL,
+
+      encodeFile: !!opts?.store?.encodeFile,
+      decodeFile: !!opts?.store?.decodeFile,
+    }),
+  );
+  let db = Database.databases.get(key);
   if (!db) {
     db = new Database(name, opts);
-    Database.databases.set(name, db);
+    Database.databases.set(key, db);
   }
   return db;
 }

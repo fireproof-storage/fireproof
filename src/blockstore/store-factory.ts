@@ -7,14 +7,24 @@ import { RemoteWAL } from "./remote-wal.js";
 import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
 
-export function toURL(path: string | URL): URL {
-  if (path instanceof URL) return path;
+function ensureIsIndex(url: URL, isIndex?: boolean): URL {
+  if (isIndex) {
+    url.searchParams.set("index", "idx");
+    return url;
+  } else {
+    url.searchParams.delete("index");
+    return url;
+  }
+}
+
+export function toURL(pathOrUrl: string | URL, isIndex?: boolean): URL {
+  if (pathOrUrl instanceof URL) return ensureIsIndex(pathOrUrl, isIndex);
   try {
-    const url = new URL(path);
-    return url;
+    const url = new URL(pathOrUrl);
+    return ensureIsIndex(url, isIndex);
   } catch (e) {
-    const url = new URL(`file://${path}`);
-    return url;
+    const url = new URL(`file://${pathOrUrl}`);
+    return ensureIsIndex(url, isIndex);
   }
 }
 interface StoreCache {
@@ -34,6 +44,7 @@ interface StoreFactories {
 }
 
 async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: StoreFactories): Promise<T> {
+  // console.log("cacheStore->", url.toString());
   const key = url.toString();
   let storeCache = factoryCache.get(key);
   if (!storeCache) {
@@ -59,7 +70,8 @@ async function cacheStore<T extends StoreTypes>(url: URL, loader: Loadable, sf: 
   throw new Error("unsupported store type");
 }
 
-async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> {
+async function dataStoreFactory(iurl: URL, loader: Loadable): Promise<DataStore> {
+  const url = new URL(iurl.toString());
   url.searchParams.set("store", "data");
   // console.log("dataStoreFactory->", url.toString());
   switch (url.protocol) {
@@ -68,8 +80,8 @@ async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> 
       return new FileDataStore(url, loader.name);
     }
     case "indexdb:": {
-      const { IndexDBDataStore, getIndexDBName } = await import("../runtime/store-indexdb.js");
-      return new IndexDBDataStore(getIndexDBName(url, "data").dbName, url);
+      const { IndexDBDataStore } = await import("../runtime/store-indexdb.js");
+      return new IndexDBDataStore(loader.name, url);
     }
     case "sqlite:": {
       const { SQLDataStore } = await import("../runtime/store-sql/store-sql.js");
@@ -80,19 +92,24 @@ async function dataStoreFactory(url: URL, loader: Loadable): Promise<DataStore> 
   }
 }
 
-async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> {
+async function metaStoreFactory(iurl: URL, loader: Loadable): Promise<MetaStore> {
+  const url = new URL(iurl.toString());
   url.searchParams.set("store", "meta");
   switch (url.protocol) {
     case "file:": {
+      console.log("metaStoreFactory->file->pre->", url.toString());
       const { FileMetaStore } = await import("../runtime/store-file.js");
+      console.log("metaStoreFactory->file->post->", url.toString());
       return new FileMetaStore(url, loader.name);
     }
     case "indexdb:": {
-      const { IndexDBMetaStore, getIndexDBName } = await import("../runtime/store-indexdb.js");
-      return new IndexDBMetaStore(getIndexDBName(url, "meta").dbName, url);
+      const { IndexDBMetaStore } = await import("../runtime/store-indexdb.js");
+      return new IndexDBMetaStore(loader.name, url);
     }
     case "sqlite:": {
+      console.log("metaStoreFactory->sqlite->pre->", url.toString());
       const { SQLMetaStore } = await import("../runtime/store-sql/store-sql.js");
+      console.log("metaStoreFactory->sqlite->post->", url.toString());
       return new SQLMetaStore(url, loader.name);
     }
     default:
@@ -100,7 +117,8 @@ async function metaStoreFactory(url: URL, loader: Loadable): Promise<MetaStore> 
   }
 }
 
-async function remoteWalFactory(url: URL, loader: Loadable): Promise<RemoteWAL> {
+async function remoteWalFactory(iurl: URL, loader: Loadable): Promise<RemoteWAL> {
+  const url = new URL(iurl.toString());
   url.searchParams.set("store", "wal");
   switch (url.protocol) {
     case "file:": {
@@ -142,18 +160,21 @@ export async function testStoreFactory(url: URL): Promise<TestStore> {
 
 export function toStoreRuntime(name: string | undefined = undefined, opts: StoreOpts = {}): StoreRuntime {
   return {
-    makeMetaStore: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.meta || dataDir(name || loader.name)), loader, {
+    makeMetaStore: (loader: Loadable) => {
+      return cacheStore(toURL(opts.stores?.meta || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
         meta: metaStoreFactory,
-      }),
-    makeDataStore: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.data || dataDir(name || loader.name)), loader, {
+      })
+    },
+    makeDataStore: (loader: Loadable) => {
+      return cacheStore(toURL(opts.stores?.data || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
         data: dataStoreFactory,
-      }),
-    makeRemoteWAL: (loader: Loadable) =>
-      cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name || loader.name)), loader, {
+      })
+    },
+    makeRemoteWAL: (loader: Loadable) => {
+      return cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
         remoteWAL: remoteWalFactory,
-      }),
+      })
+    },
 
     encodeFile,
     decodeFile,

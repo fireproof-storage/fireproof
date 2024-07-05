@@ -9,11 +9,11 @@ import { Falsy } from "../../types.js";
 import { TestStore } from "../../blockstore/types.js";
 import { SQLConnectionFactory } from "./sql-connection-factory.js";
 import { DataSQLStore, MetaSQLStore, WalSQLStore } from "./types.js";
-import { DataStoreFactory, MetaStoreFactory, WalStoreFactory } from "./store-version-factory.js";
+import { DataStoreFactory, MetaStoreFactory, WalStoreFactory, ensureSQLVersion } from "./store-version-factory.js";
 
 export class SQLRemoteWAL extends RemoteWAL {
-  constructor(dir: URL, loader: Loadable) {
-    super(loader, dir);
+  constructor(url: URL, loader: Loadable) {
+    super(loader, ensureSQLVersion(url));
   }
 
   readonly onceWalStore = new ResolveOnce<WalSQLStore>();
@@ -62,8 +62,8 @@ export class SQLRemoteWAL extends RemoteWAL {
 export class SQLMetaStore extends MetaStore {
   readonly tag: string = "header-sql";
 
-  constructor(dir: URL, name: string) {
-    super(name, dir);
+  constructor(url: URL, name: string) {
+    super(name, ensureSQLVersion(url));
   }
 
   readonly onceMetaStore = new ResolveOnce<MetaSQLStore>();
@@ -115,7 +115,7 @@ export class SQLDataStore extends DataStore {
   readonly tag: string = "car-sql";
 
   constructor(url: URL, name: string) {
-    super(name, url);
+    super(name, ensureSQLVersion(url));
   }
 
   readonly onceDataStore = new ResolveOnce<DataSQLStore>();
@@ -164,7 +164,10 @@ export class SQLDataStore extends DataStore {
 }
 
 export class SQLTestStore implements TestStore {
-  constructor(readonly url: URL) {}
+  readonly url: URL;
+  constructor(url: URL) {
+    this.url = ensureSQLVersion(url);
+  }
   async get(key: string): Promise<Uint8Array> {
     const conn = SQLConnectionFactory(this.url);
     switch (this.url.searchParams.get("store")) {

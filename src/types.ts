@@ -30,7 +30,7 @@ export interface ConfigOpts {
   readonly autoCompact?: number;
   readonly crypto?: CryptoOpts;
   readonly store?: StoreOpts;
-  readonly indexStore?: StoreOpts;
+  // readonly indexStore?: StoreOpts;
   readonly threshold?: number;
 }
 

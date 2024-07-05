@@ -3,6 +3,7 @@ import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../ensurer.js";
+import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
 
 export class WalSQLRecordBuilder {
   readonly #record: WalRecord;
@@ -45,6 +46,7 @@ export class V0_18_0SQLiteWalStore implements WalSQLStore {
   async start(): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
+    await ensureSQLiteVersion(this.dbConn);
     await this.dbConn.client
       .prepare(
         `CREATE TABLE IF NOT EXISTS ${this.table} (

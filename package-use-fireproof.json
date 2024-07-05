@@ -1,6 +1,6 @@
 {
   "name": "use-fireproof",
-  "version": "0.18.0",
+  "version": "must-set",
   "description": "Fireproof live database, JavaScript API and React hooks",
   "type": "module",
   "module": "index.js",

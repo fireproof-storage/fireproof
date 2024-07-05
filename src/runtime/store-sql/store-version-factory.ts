@@ -1,10 +1,25 @@
 import { ensureLogger } from "./ensurer";
 import { DBConnection, DataSQLStore, MetaSQLStore, WalSQLStore } from "./types";
+import { SQLITE_VERSION } from "./v0.19-sqlite/version";
+
+export function ensureSQLVersion(url: URL): URL {
+  if (url.searchParams.get("version")) return url;
+
+  switch (url.protocol) {
+    case "sqlite:": {
+      const ourl = new URL(url.toString());
+      ourl.searchParams.set("version", SQLITE_VERSION);
+      return ourl;
+    }
+    default:
+      throw ensureLogger({}, "ensureSQLVersion").Error().Str("url", url.toString()).Msg("unsupported protocol").AsError();
+  }
+}
 
 export async function WalStoreFactory(db: DBConnection): Promise<WalSQLStore> {
   switch (db.opts.sqlFlavor) {
     case "sqlite": {
-      const { V0_18_0SQLiteWalStore } = await import("./v0.18.0/sqlite-wal-store.js");
+      const { V0_18_0SQLiteWalStore } = await import("./v0.19-sqlite/sqlite-wal-store.js");
       const store = new V0_18_0SQLiteWalStore(db);
       return store;
     }
@@ -16,7 +31,7 @@ export async function WalStoreFactory(db: DBConnection): Promise<WalSQLStore> {
 export async function DataStoreFactory(db: DBConnection): Promise<DataSQLStore> {
   switch (db.opts.sqlFlavor) {
     case "sqlite": {
-      const { V0_18_0SQLiteDataStore } = await import("./v0.18.0/sqlite-data-store.js");
+      const { V0_18_0SQLiteDataStore } = await import("./v0.19-sqlite/sqlite-data-store.js");
       const store = new V0_18_0SQLiteDataStore(db);
       return store;
     }
@@ -28,7 +43,7 @@ export async function DataStoreFactory(db: DBConnection): Promise<DataSQLStore> 
 export async function MetaStoreFactory(db: DBConnection): Promise<MetaSQLStore> {
   switch (db.opts.sqlFlavor) {
     case "sqlite": {
-      const { V0_18_0SQLiteMetaStore } = await import("./v0.18.0/sqlite-meta-store.js");
+      const { V0_18_0SQLiteMetaStore } = await import("./v0.19-sqlite/sqlite-meta-store.js");
       const store = new V0_18_0SQLiteMetaStore(db);
       return store;
     }

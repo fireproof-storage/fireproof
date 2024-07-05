@@ -9,3 +9,5 @@ export * as blockstore from "./blockstore/index.js";
 
 export * as bs from "./blockstore/index.js";
 export * as rt from "./runtime/index.js";
+
+export * from "./version.js";
