@@ -249,6 +249,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         } as IdxMeta);
       }
     }
+    if (result.length === 0) {
+      return indexerMeta as unknown as IndexTransactionMeta;
+    }
     const { meta } = await this.blockstore.transaction<IndexTransactionMeta>(async (tblocks): Promise<IndexTransactionMeta> => {
       this.byId = await bulkIndex<K, R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
       this.byKey = await bulkIndex<K, R, CompareKey>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
