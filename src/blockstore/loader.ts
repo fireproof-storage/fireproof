@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
 // import { uuidv4 } from "uuidv7";
 
 import {
@@ -27,6 +27,7 @@ import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
 import type { Falsy, FileTransactionMeta } from "../types.js";
+import { ensureLogger } from "../utils.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -56,6 +57,7 @@ abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
 
 export abstract class Loadable {
   name = "";
+  abstract readonly logger: Logger;
   remoteCarStore?: DataStore;
   abstract carStore(): Promise<DataStore>;
   carLog: CarLog = new Array<CarGroup>();
@@ -125,13 +127,15 @@ export class Loader implements Loadable {
     await Promise.all(toDestroy.map((store) => store.destroy()));
   }
 
+  readonly logger: Logger;
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
     // console.log("Loader", name, ebOpts)
     this.ebOpts = defaultedBlockstoreRuntime({
       ...ebOpts,
       name,
-    });
+    }, "Loader");
+    this.logger = this.ebOpts.logger;
   }
 
   // async snapToCar(carCid: AnyLink | string) {
@@ -155,7 +159,7 @@ export class Loader implements Loadable {
 
   async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
     if (this.isCompacting) {
-      throw new Error("cannot merge while compacting");
+      throw this.logger.Error().Msg("cannot merge while compacting").AsError();
     }
 
     if (this.seenMeta.has(meta.cars.toString())) return;
@@ -289,7 +293,7 @@ export class Loader implements Loadable {
     const theKey = isPublic ? null : await this._getKey();
     const car =
       theKey && this.ebOpts.crypto
-        ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, roots[0], t)
+        ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, roots[0], t)
         : await encodeCarFile(roots, t);
     return [car];
   }
@@ -325,7 +329,7 @@ export class Loader implements Loadable {
     t: CarTransaction,
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     return theKey && this.ebOpts.crypto
-      ? await encryptedEncodeCarFile(this.ebOpts.crypto, theKey, cid, t)
+      ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, cid, t)
       : await encodeCarFile([cid], t);
   }
 
@@ -539,7 +543,7 @@ export class Loader implements Loadable {
     if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
       return reader;
     }
-    const { blocks, root } = await decodeEncryptedCar(this.ebOpts.crypto, theKey, reader);
+    const { blocks, root } = await decodeEncryptedCar(this.logger, this.ebOpts.crypto, theKey, reader);
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),

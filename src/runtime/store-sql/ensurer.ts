@@ -1,21 +1,6 @@
-import { Logger, LoggerImpl } from "@adviser/cement";
+import { Logger } from "@adviser/cement";
+import { ensureLogger } from "../../utils";
 import { SQLOpts, SQLTableNames, DefaultSQLTableNames } from "./types";
-
-const globalLogger = new LoggerImpl();
-
-// export const textEncoder = new TextEncoder()
-// export const textDecoder = new TextDecoder()
-
-export function ensureLogger(opts: Partial<SQLOpts> | undefined, componentName: string): Logger {
-  // if (!opts?.logger) {
-  //   throw new Error("logger is required");
-  // }
-  const logger = opts?.logger || globalLogger;
-  if (componentName) {
-    return logger.With().Module(componentName).Logger();
-  }
-  return logger;
-}
 
 function sqlTableName(...names: string[]): string {
   return names
@@ -67,12 +52,12 @@ function url2sqlFlavor(url: URL): "sqlite" | "mysql" | "postgres" {
   }
 }
 
-export function ensureSQLOpts(url: URL, opts: Partial<SQLOpts> | undefined, componentName: string): SQLOpts {
+export function ensureSQLOpts(url: URL, opts: Partial<SQLOpts>, componentName: string, ctx?: Record<string, unknown>): SQLOpts {
   return {
     url,
     sqlFlavor: url2sqlFlavor(url),
     tableNames: ensureTableNames(url, opts),
-    logger: ensureLogger(opts, componentName),
+    logger: ensureLogger(opts, componentName, ctx),
     textEncoder: ensureTextEncoder(opts),
     textDecoder: ensureTextDecoder(opts),
   };

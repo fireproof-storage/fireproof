@@ -283,7 +283,7 @@ describe("basic Index upon cold start", function () {
     expect(result).toBeTruthy();
     await crdt2.ready();
     const indexer2 = await index<string, TestType>({ _crdt: crdt2 }, "hello", mapFn);
-    await indexer2.xready();
+    await indexer2.ready();
     const result2 = await indexer2.query();
     expect(indexer2.indexHead).toEqual(head);
     expect(result2).toBeTruthy();

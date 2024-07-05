@@ -1,5 +1,5 @@
 import pLimit from "p-limit";
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
 
 import type { AnyLink, CommitOpts, DbMeta } from "./types.js";
 import { type Loadable, carLogIncludesGroup } from "./loader.js";
@@ -21,12 +21,13 @@ export abstract class RemoteWAL {
   // readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly loader: Loadable;
 
+
   readonly _ready = new ResolveOnce<void>();
 
   async ready() {
     return this._ready.once(async () => {
       const walState = await this._load().catch((e) => {
-        console.error("error loading wal", e);
+        this.logger.Error().Any("error", e).Msg("error loading wal");
         return undefined;
       });
       if (!walState) {
@@ -45,9 +46,12 @@ export abstract class RemoteWAL {
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
+  readonly logger: Logger;
+
   constructor(loader: Loadable, url: URL) {
     this.loader = loader;
     this.url = url;
+    this.logger = loader.logger;
   }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
@@ -135,16 +139,18 @@ export abstract class RemoteWAL {
         const res = await Promise.allSettled(uploads);
         const errors = res.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
         if (errors.length) {
-          console.error("error uploading", JSON.stringify(errors.map((e) => e.reason)));
-          throw errors[0].reason;
+          throw this.logger.Error().Any("errors",
+            errors.map((e) => e.reason)
+          ).Msg("error uploading").AsError();
+
+          errors[0].reason;
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
           // console.log('saving remote meta', lastOp.car.toString())
           await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
-            console.error("error saving remote meta", e);
             this.walState.operations.push(lastOp);
-            throw e;
+            throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();
           });
         }
       } finally {

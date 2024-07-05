@@ -1,8 +1,8 @@
-import { ensureLogger } from "./ensurer.js";
+import { ensureLogger } from "../../utils.js";
 import { SQLiteConnection } from "./sqlite-adapter-better-sqlite3.js";
 import { DBConnection, SQLOpts } from "./types.js";
 
-export function SQLConnectionFactory(databaseURL: URL, opts?: Partial<SQLOpts>): DBConnection {
+export function SQLConnectionFactory(databaseURL: URL, opts: Partial<SQLOpts> = {}): DBConnection {
   const logger = ensureLogger(opts, "SQLFactory");
   switch (databaseURL.protocol) {
     case "sqlite:":

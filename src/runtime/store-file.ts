@@ -6,7 +6,8 @@ import { SysContainer } from "./sys-container.js";
 import { Falsy } from "../types.js";
 import { TestStore } from "../blockstore/types.js";
 import { FILESTORE_VERSION } from "./store-file-version.js";
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
+import { ensureLogger } from "../utils.js";
 
 function ensureVersion(url: URL): URL {
   const ret = new URL(url.toString());
@@ -15,7 +16,7 @@ function ensureVersion(url: URL): URL {
 }
 
 const versionFiles = new Map<string, ResolveOnce<void>>();
-async function ensureVersionFile(path: string): Promise<string> {
+async function ensureVersionFile(path: string, logger:Logger): Promise<string> {
   let once = versionFiles.get(path);
   if (!once) {
     once = new ResolveOnce<void>();
@@ -29,7 +30,7 @@ async function ensureVersionFile(path: string): Promise<string> {
       await SysContainer.writefile(SysContainer.join(path, "version"), FILESTORE_VERSION);
       return;
     } else if (!vFileStat.isFile()) {
-      throw new Error(`version file is a directory:${vFile}`);
+      throw logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
     }
     const v = await SysContainer.readfile(vFile);
     if (v.toString() !== FILESTORE_VERSION) {
@@ -39,34 +40,34 @@ async function ensureVersionFile(path: string): Promise<string> {
   return path;
 }
 
-async function getPath(url: URL): Promise<string> {
+async function getPath(url: URL, logger: Logger): Promise<string> {
   const basePath = url
     .toString()
     .replace(/^file:\/\//, "")
     .replace(/\?.*$/, "");
   const name = url.searchParams.get("name");
-  if (!name) throw new Error(`name not found:${url.toString()}`);
+  if (!name) throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const version = url.searchParams.get("version");
-  if (!version) throw new Error(`version not found:${url.toString()}`);
+  if (!version) throw  logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
   // const index = url.searchParams.has("index");
   // if (index) name += index;
-  return ensureVersionFile(SysContainer.join(basePath, version, name));
+  return ensureVersionFile(SysContainer.join(basePath, version, name), logger);
 }
 
-function getStore(url: URL): string {
+function getStore(url: URL, logger: Logger): string {
   const result = url.searchParams.get("store");
-  if (!result) throw new Error(`store not found:${url.toString()}`);
+  if (!result) throw logger.Error().Str("url", url.toString()).Msg(`store not found`).AsError();
   return result;
 }
 
-function getFileName(url: URL, key: string): string {
-  switch (getStore(url)) {
+function getFileName(url: URL, key: string, logger: Logger): string {
+  switch (getStore(url, logger)) {
     case "data":
       return key + ".car";
     case "meta":
       return key + ".json";
     default:
-      throw new Error(`unsupported store type:${url.toString()}`);
+      throw logger.Error().Str("url", url.toString()).Msg(`unsupported store type`).AsError();
   }
 }
 
@@ -85,7 +86,7 @@ export class FileRemoteWAL extends RemoteWAL {
   readonly branches = new Set<string>();
 
   async filePathForBranch(branch: string): Promise<string> {
-    return SysContainer.join(await getPath(this.url), ensureIndexName(this.url, "wal"), branch + ".json");
+    return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "wal"), branch + ".json");
   }
 
   async _load(branch = "main"): Promise<WALState | Falsy> {
@@ -93,7 +94,7 @@ export class FileRemoteWAL extends RemoteWAL {
     const filepath = await this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return null;
-      throw e;
+      throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("load").AsError();
     });
     return bytes && parse<WALState>(bytes.toString());
   }
@@ -113,7 +114,7 @@ export class FileRemoteWAL extends RemoteWAL {
       const filepath = await this.filePathForBranch(branch);
       await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
         if (e.code === "ENOENT") return;
-        throw e;
+        throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("destroy").AsError();
       });
     }
   }
@@ -123,12 +124,14 @@ export class FileMetaStore extends MetaStore {
   readonly tag: string = "header-node-fs";
   readonly branches = new Set<string>();
 
-  constructor(url: URL, name: string) {
-    super(name, ensureVersion(url));
+  constructor(url: URL, name: string, logger: Logger) {
+    super(name,
+      ensureVersion(url),
+      ensureLogger(logger, "FileMetaStore", { name, url }));
   }
 
   async filePathForBranch(branch: string): Promise<string> {
-    return SysContainer.join(await getPath(this.url), ensureIndexName(this.url, "meta"), branch + ".json");
+    return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "meta"), branch + ".json");
   }
 
   async load(branch = "main"): Promise<DbMeta[] | Falsy> {
@@ -137,7 +140,7 @@ export class FileMetaStore extends MetaStore {
     const filepath = await this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return undefined;
-      throw e;
+      throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("load").AsError();
     });
     // currently FS is last-write-wins, assumes single writer process
     return bytes ? [this.parseHeader(bytes.toString())] : null;
@@ -158,7 +161,7 @@ export class FileMetaStore extends MetaStore {
       const filepath = await this.filePathForBranch(branch);
       await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
         if (e.code === "ENOENT") return;
-        throw e;
+        throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("destroy").AsError();
       });
     }
   }
@@ -167,12 +170,14 @@ export class FileMetaStore extends MetaStore {
 export class FileDataStore extends DataStore {
   readonly tag: string = "car-node-fs";
 
-  constructor(url: URL, name: string) {
+  readonly logger: Logger;
+  constructor(url: URL, name: string, logger: Logger) {
     super(name, ensureVersion(url));
+    this.logger = ensureLogger(logger, "FileDataStore", { name, url });
   }
 
   private async cidPath(cid: AnyLink): Promise<string> {
-    return SysContainer.join(await getPath(this.url), ensureIndexName(this.url, "data"), cid.toString() + ".car");
+    return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "data"), cid.toString() + ".car");
   }
 
   async save(car: AnyBlock): Promise<void> {
@@ -205,11 +210,15 @@ export class FileDataStore extends DataStore {
         try {
           await SysContainer.unlink(file);
         } catch (e: unknown) {
-          if ((e as { code: string }).code !== "ENOENT") throw e;
+          if ((e as { code: string }).code !== "ENOENT") {
+            throw this.logger.Error().Str("file", file).Msg("destroy");
+          }
         }
       }
     } catch (e: unknown) {
-      if ((e as { code: string }).code !== "ENOENT") throw e;
+      if ((e as { code: string }).code !== "ENOENT") {
+        throw this.logger.Error().Str("dir", filepath).Msg("destroy");
+      }
     }
   }
 }
@@ -229,10 +238,13 @@ function toArrayBuffer(buffer: Buffer) {
 }
 
 export class FileTestStore implements TestStore {
-  constructor(readonly url: URL) {}
+  readonly logger: Logger;
+  constructor(readonly url: URL, logger: Logger) {
+    this.logger = ensureLogger(logger, "FileTestStore", { url });
+  }
 
   async get(key: string) {
-    const dbFile = SysContainer.join(await getPath(this.url), getStore(this.url), getFileName(this.url, key));
+    const dbFile = SysContainer.join(await getPath(this.url, this.logger), getStore(this.url, this.logger), getFileName(this.url, key, this.logger));
     const buffer = await SysContainer.readfile(dbFile);
     return toArrayBuffer(buffer);
   }

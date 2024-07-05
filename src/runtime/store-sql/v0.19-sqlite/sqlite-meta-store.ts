@@ -2,9 +2,9 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
-import { ensureLogger } from "../ensurer.js";
 import { UploadMetaFnParams } from "../../../blockstore/types.js";
 import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
+import { ensureLogger } from "../../../utils.js";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;

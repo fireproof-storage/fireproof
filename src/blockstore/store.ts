@@ -2,6 +2,7 @@ import type { AnyBlock, AnyLink, DbMeta } from "./types.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 
 import { Falsy } from "../types.js";
+import { Logger } from "@adviser/cement";
 
 // const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
 // if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
@@ -11,11 +12,13 @@ abstract class VersionedStore {
   readonly STORAGE_VERSION: string;
   readonly name: string;
   readonly url: URL;
-  constructor(name: string, url: URL) {
+  readonly logger: Logger;
+  constructor(name: string, url: URL, logger: Logger) {
     this.name = name;
     this.url = url;
+    this.logger = logger;
     const sv = url.searchParams.get("version");
-    if (!sv) throw new Error(`version not found:${url.toString()}`);
+    if (!sv) throw this.logger.Error().Str("url", url.toString()).Msg(`version not found`);
     this.STORAGE_VERSION = sv;
   }
 }

@@ -2,8 +2,8 @@ import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
-import { ensureLogger } from "../ensurer.js";
 import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
+import { ensureLogger } from "../../../utils.js";
 
 export class WalSQLRecordBuilder {
   readonly #record: WalRecord;

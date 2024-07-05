@@ -1,4 +1,4 @@
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
 
 import type { AnyBlock, AnyLink, DbMeta } from "../../blockstore/index.js";
 import { MetaStore, DataStore, RemoteWAL, WALState } from "../../blockstore/index.js";
@@ -10,10 +10,11 @@ import { TestStore } from "../../blockstore/types.js";
 import { SQLConnectionFactory } from "./sql-connection-factory.js";
 import { DataSQLStore, MetaSQLStore, WalSQLStore } from "./types.js";
 import { DataStoreFactory, MetaStoreFactory, WalStoreFactory, ensureSQLVersion } from "./store-version-factory.js";
+import { ensureLogger } from "../../utils.js";
 
 export class SQLRemoteWAL extends RemoteWAL {
   constructor(url: URL, loader: Loadable) {
-    super(loader, ensureSQLVersion(url));
+    super(loader, ensureSQLVersion(url, loader.logger));
   }
 
   readonly onceWalStore = new ResolveOnce<WalSQLStore>();
@@ -53,7 +54,6 @@ export class SQLRemoteWAL extends RemoteWAL {
   }
 
   async _destroy() {
-    // throw new Error("Method not implemented.");
     const ws = await this.ensureStore();
     await ws.destroy();
   }
@@ -62,8 +62,9 @@ export class SQLRemoteWAL extends RemoteWAL {
 export class SQLMetaStore extends MetaStore {
   readonly tag: string = "header-sql";
 
-  constructor(url: URL, name: string) {
-    super(name, ensureSQLVersion(url));
+  constructor(url: URL, name: string, ilogger: Logger) {
+    const logger = ensureLogger(ilogger, "SQLMetaStore", { name, url });
+    super(name, ensureSQLVersion(url, logger), logger);
   }
 
   readonly onceMetaStore = new ResolveOnce<MetaSQLStore>();
@@ -114,8 +115,11 @@ export class SQLMetaStore extends MetaStore {
 export class SQLDataStore extends DataStore {
   readonly tag: string = "car-sql";
 
-  constructor(url: URL, name: string) {
-    super(name, ensureSQLVersion(url));
+  readonly logger: Logger;
+  constructor(url: URL, name: string, ilogger: Logger) {
+    const logger = ensureLogger(ilogger, "SQLDataStore", { name, url })
+    super(name, ensureSQLVersion(url, logger));
+    this.logger = logger;
   }
 
   readonly onceDataStore = new ResolveOnce<DataSQLStore>();
@@ -143,7 +147,7 @@ export class SQLDataStore extends DataStore {
     const ws = await this.ensureStore();
     const records = await ws.select(cid.toString());
     if (records.length === 0) {
-      throw new Error(`ENOENT: data missing idb block ${cid.toString()}`);
+      throw this.logger.Error().Str("cid", cid.toString()).Msg(`ENOENT: data missing idb block`).AsError();
     }
     return records[0] && { cid, bytes: records[0].data };
   }
@@ -165,8 +169,11 @@ export class SQLDataStore extends DataStore {
 
 export class SQLTestStore implements TestStore {
   readonly url: URL;
-  constructor(url: URL) {
-    this.url = ensureSQLVersion(url);
+  readonly logger: Logger;
+  constructor(url: URL, ilogger: Logger) {
+    const logger = ensureLogger(ilogger, "SQLTestStore", { url });
+    this.url = ensureSQLVersion(url, logger);
+    this.logger = logger;
   }
   async get(key: string): Promise<Uint8Array> {
     const conn = SQLConnectionFactory(this.url);
@@ -196,7 +203,7 @@ export class SQLTestStore implements TestStore {
         return records[0].data;
       }
       default:
-        throw new Error(`Method not implemented.${this.url}:${key}`);
+        throw this.logger.Error().Str("key", key).Msg(`Method not implemented`);
     }
   }
 }

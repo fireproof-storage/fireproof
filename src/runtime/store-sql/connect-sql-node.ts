@@ -2,10 +2,11 @@ import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadM
 
 import { DataSQLRecordBuilder } from "./v0.19-sqlite/sqlite-data-store.js";
 import { MetaSQLRecordBuilder } from "./v0.19-sqlite/sqlite-meta-store.js";
-import { Logger } from "@adviser/cement";
 import { ConnectionBase } from "../../blockstore/connection-base.js";
-import { ensureLogger, ensureSQLOpts } from "./ensurer.js";
+import { ensureSQLOpts } from "./ensurer.js";
 import { DataSQLStore, MetaSQLStore, SQLOpts, WalSQLStore } from "./types.js";
+import { Falsy } from "use-fireproof";
+import { ensureLogger } from "../../utils.js";
 
 export interface StoreOptions {
   readonly data: DataSQLStore;
@@ -15,14 +16,15 @@ export interface StoreOptions {
 
 export class ConnectSQL extends ConnectionBase {
   readonly store: StoreOptions;
-  readonly logger: Logger;
   readonly textEncoder = new TextEncoder();
 
-  constructor(store: StoreOptions, iopts?: Partial<SQLOpts>) {
-    super();
+  constructor(store: StoreOptions, iopts: Partial<SQLOpts> = {}) {
+    super(ensureLogger(iopts, "ConnectSQL"));
     this.store = store;
-    const opts = ensureSQLOpts(new URL("noready://"), iopts, "ConnectSQL");
-    this.logger = ensureLogger(opts, "ConnectSQL");
+    const opts = ensureSQLOpts(new URL("noready://"), {
+      ...iopts,
+      logger: this.logger
+    }, "ConnectSQL");
     this.textEncoder = opts.textEncoder;
   }
 
@@ -51,14 +53,14 @@ export class ConnectSQL extends ConnectionBase {
     return Promise.resolve(null);
   }
 
-  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | null> {
+  async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     this.logger.Debug().Msg("metaDownload");
     const result = await this.store.meta.select({
       name: params.name,
       branch: params.branch,
     });
-    if (result.length !== 1) return null;
-    return null;
+    if (result.length !== 1) return undefined;
+    return undefined;
     // return result[0].blob
     // const { name, branch } = params
     // const fetchUploadUrl = new URL(

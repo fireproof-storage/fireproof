@@ -1,5 +1,7 @@
+import { Logger } from "@adviser/cement";
 import { DbMetaEventBlock } from "./connection-base.js";
 import { AnyLink, Loader } from "./index.js";
+import { ensureLogger } from "../utils.js";
 
 interface TaskItem {
   readonly cid: string;
@@ -14,8 +16,10 @@ export class TaskManager {
   private queue: TaskItem[] = [];
   private isProcessing = false;
 
+  readonly logger: Logger;
   constructor(loader: Loader) {
     this.loader = loader;
+    this.logger = ensureLogger(loader.logger, "TaskManager");
   }
 
   async handleEvent(eventBlock: DbMetaEventBlock) {
@@ -43,12 +47,11 @@ export class TaskManager {
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {
       if (first.retries++ > 3) {
-        console.error("failed to process event block after 3 retries:" + first.cid);
+        this.logger.Error().Str("cid", first.cid).Msg("failed to process event block after 3 retries")
         this.queue = this.queue.filter(({ cid }) => cid !== first.cid);
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
-      console.error(JSON.stringify(err));
-      throw err;
+      throw this.logger.Error().Err(err).Msg("failed to process event block").AsError();
     } finally {
       this.isProcessing = false;
       if (this.queue.length > 0) {

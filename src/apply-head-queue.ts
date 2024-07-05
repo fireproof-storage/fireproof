@@ -1,3 +1,4 @@
+import { Logger } from "@adviser/cement";
 import { ClockHead, DocTypes, DocUpdate } from "./types.js";
 
 type ApplyHeadWorkerFunction = (newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) => Promise<void>;
@@ -20,7 +21,7 @@ export interface ApplyHeadQueue<T extends DocTypes> {
   size(): number;
 }
 
-export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFunction): ApplyHeadQueue<T> {
+export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFunction, logger: Logger): ApplyHeadQueue<T> {
   const queue: ApplyHeadTask<T>[] = [];
   let isProcessing = false;
 
@@ -36,8 +37,7 @@ export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFuncti
 
         // console.time('int_applyHead worker')
         await worker(task.newHead, task.prevHead, task.updates !== null).catch((e) => {
-          console.error("int_applyHead worker error", e);
-          throw e;
+          throw logger.Error().Err(e).Msg("int_applyHead worker error").AsError();
         });
         // console.timeEnd('int_applyHead worker')
 

@@ -1,8 +1,9 @@
-import { ensureLogger } from "./ensurer";
+import { Logger } from "@adviser/cement";
+import { ensureLogger, LoggerOpts } from "../../utils";
 import { DBConnection, DataSQLStore, MetaSQLStore, WalSQLStore } from "./types";
 import { SQLITE_VERSION } from "./v0.19-sqlite/version";
 
-export function ensureSQLVersion(url: URL): URL {
+export function ensureSQLVersion(url: URL, opts: LoggerOpts|Logger): URL {
   if (url.searchParams.get("version")) return url;
 
   switch (url.protocol) {
@@ -12,7 +13,7 @@ export function ensureSQLVersion(url: URL): URL {
       return ourl;
     }
     default:
-      throw ensureLogger({}, "ensureSQLVersion").Error().Str("url", url.toString()).Msg("unsupported protocol").AsError();
+      throw ensureLogger(opts, "ensureSQLVersion").Error().Str("url", url.toString()).Msg("unsupported protocol").AsError();
   }
 }
 

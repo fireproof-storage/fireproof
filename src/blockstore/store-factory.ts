@@ -1,4 +1,4 @@
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { dataDir } from "../runtime/data-dir.js";
 import { decodeFile, encodeFile } from "../runtime/files.js";
@@ -6,6 +6,7 @@ import { Loadable } from "./loader.js";
 import { RemoteWAL } from "./remote-wal.js";
 import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
+import { ensureLogger } from "../utils.js";
 
 function ensureIsIndex(url: URL, isIndex?: boolean): URL {
   if (isIndex) {
@@ -77,15 +78,15 @@ async function dataStoreFactory(iurl: URL, loader: Loadable): Promise<DataStore>
   switch (url.protocol) {
     case "file:": {
       const { FileDataStore } = await import("../runtime/store-file.js");
-      return new FileDataStore(url, loader.name);
+      return new FileDataStore(url, loader.name, loader.logger);
     }
     case "indexdb:": {
       const { IndexDBDataStore } = await import("../runtime/store-indexdb.js");
-      return new IndexDBDataStore(loader.name, url);
+      return new IndexDBDataStore(loader.name, url, loader.logger);
     }
     case "sqlite:": {
       const { SQLDataStore } = await import("../runtime/store-sql/store-sql.js");
-      return new SQLDataStore(url, loader.name);
+      return new SQLDataStore(url, loader.name, loader.logger);
     }
     default:
       throw new Error(`unsupported data store ${url.protocol}`);
@@ -97,20 +98,16 @@ async function metaStoreFactory(iurl: URL, loader: Loadable): Promise<MetaStore>
   url.searchParams.set("store", "meta");
   switch (url.protocol) {
     case "file:": {
-      console.log("metaStoreFactory->file->pre->", url.toString());
       const { FileMetaStore } = await import("../runtime/store-file.js");
-      console.log("metaStoreFactory->file->post->", url.toString());
-      return new FileMetaStore(url, loader.name);
+      return new FileMetaStore(url, loader.name, loader.logger);
     }
     case "indexdb:": {
       const { IndexDBMetaStore } = await import("../runtime/store-indexdb.js");
-      return new IndexDBMetaStore(loader.name, url);
+      return new IndexDBMetaStore(loader.name, url, loader.logger);
     }
     case "sqlite:": {
-      console.log("metaStoreFactory->sqlite->pre->", url.toString());
       const { SQLMetaStore } = await import("../runtime/store-sql/store-sql.js");
-      console.log("metaStoreFactory->sqlite->post->", url.toString());
-      return new SQLMetaStore(url, loader.name);
+      return new SQLMetaStore(url, loader.name, loader.logger);
     }
     default:
       throw new Error(`unsupported meta store ${url.protocol}`);
@@ -139,19 +136,22 @@ async function remoteWalFactory(iurl: URL, loader: Loadable): Promise<RemoteWAL>
   }
 }
 
-export async function testStoreFactory(url: URL): Promise<TestStore> {
+export async function testStoreFactory(url: URL, ilogger?: Logger): Promise<TestStore> {
+  const logger = ensureLogger({
+    logger: ilogger,
+  }, "testStoreFactory");
   switch (url.protocol) {
     case "file:": {
       const { FileTestStore } = await import("../runtime/store-file.js");
-      return new FileTestStore(url);
+      return new FileTestStore(url, logger);
     }
     case "indexdb:": {
       const { IndexDBTestStore } = await import("../runtime/store-indexdb.js");
-      return new IndexDBTestStore(url);
+      return new IndexDBTestStore(url, logger);
     }
     case "sqlite:": {
       const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
-      return new SQLTestStore(url);
+      return new SQLTestStore(url, logger);
     }
     default:
       throw new Error(`unsupported test store ${url.protocol}`);

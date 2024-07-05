@@ -15,25 +15,27 @@ import { RemoteWAL, WALState } from "./remote-wal.js";
 // import { Connectable, Connection } from "./connection.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { Falsy } from "../types.js";
+import { Logger } from "@adviser/cement";
+import { ensureLogger } from "../utils.js";
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
-export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams) {
+export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams, logger: Logger) {
   const { type, name, car } = params;
-  if (!name) throw new Error("name is required");
+  if (!name) throw logger.Error().Msg("name is required").AsError();
   if (!car) {
-    throw new Error("car is required");
+    throw logger.Error().Msg("car is required").AsError();
   }
   if (type !== "file" && type !== "data") {
-    throw new Error("type must be file or data");
+    throw logger.Error().Msg("type must be file or data").AsError();
   }
 }
 
-export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams) {
+export function validateMetaParams(params: DownloadMetaFnParams | UploadMetaFnParams, logger: Logger) {
   const { name, branch } = params;
-  if (!name) throw new Error("name is required");
+  if (!name) throw logger.Error().Msg("name is required").AsError();
   if (!branch) {
-    throw new Error("branch is required");
+    throw logger.Error().Msg("branch is required").AsError();
   }
 }
 
@@ -53,10 +55,12 @@ export class RemoteDataStore extends DataStore {
   readonly connection: Connection;
   readonly type: FnParamTypes;
 
-  constructor(url: URL, name: string, connection: Connection, type: FnParamTypes = "data") {
+  readonly logger: Logger;
+  constructor(url: URL, name: string, connection: Connection, logger: Logger, type: FnParamTypes = "data") {
     super(name, url);
     this.connection = connection;
     this.type = type;
+    this.logger = ensureLogger(logger, "RemoteDataStore", { name, url });
   }
 
   prefix() {
@@ -69,9 +73,9 @@ export class RemoteDataStore extends DataStore {
       name: this.prefix(),
       car: carCid.toString(),
     };
-    validateDataParams(params);
+    validateDataParams(params, this.logger);
     const bytes = await this.connection.dataDownload(params);
-    if (!bytes) throw new Error(`missing remote car ${carCid.toString()}`);
+    if (!bytes) throw this.logger.Error().Str("cid", carCid.toString()).Msg(`missing remote car`).AsError();
     return { cid: carCid, bytes };
   }
 
@@ -82,13 +86,13 @@ export class RemoteDataStore extends DataStore {
       car: car.cid.toString(),
       size: car.bytes.length.toString(),
     };
-    validateDataParams(uploadParams);
+    validateDataParams(uploadParams, this.logger);
     return await this.connection.dataUpload(car.bytes, uploadParams, opts);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async remove(cid: AnyLink): Promise<void> {
-    throw new Error("not implemented");
+    throw this.logger.Error().Msg("remove not implemented").AsError();
   }
   async close() {
     // no-op
@@ -104,8 +108,8 @@ export class RemoteMetaStore extends MetaStore {
   readonly connection: Connection;
   readonly subscribers = new Map<string, LoadHandler[]>();
 
-  constructor(url: URL, name: string, connection: Connection) {
-    super(name, url);
+  constructor(url: URL, name: string, connection: Connection, logger: Logger) {
+    super(name, url, logger);
     this.connection = connection;
   }
 
@@ -138,7 +142,7 @@ export class RemoteMetaStore extends MetaStore {
       name: this.prefix(),
       branch,
     };
-    validateMetaParams(params);
+    validateMetaParams(params, this.logger);
     const byteHeads = await this.connection.metaDownload(params);
     if (!byteHeads) return null;
     return this.handleByteHeads(byteHeads, branch);
@@ -147,7 +151,7 @@ export class RemoteMetaStore extends MetaStore {
   async save(meta: DbMeta, branch = "main") {
     const bytes = new TextEncoder().encode(this.makeHeader(meta));
     const params = { name: this.prefix(), branch };
-    validateMetaParams(params);
+    validateMetaParams(params, this.logger);
     const byteHeads = await this.connection.metaUpload(bytes, params);
     if (!byteHeads) return null;
     return this.handleByteHeads(byteHeads, branch);

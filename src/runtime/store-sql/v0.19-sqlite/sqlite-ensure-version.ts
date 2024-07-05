@@ -1,10 +1,15 @@
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3";
 import { SQLITE_VERSION } from "./version";
 import { ResolveOnce } from "@adviser/cement";
+import { ensureLogger } from "../../../utils";
 
 const once = new ResolveOnce<void>();
 export async function ensureSQLiteVersion(dbConn: SQLiteConnection) {
   once.once(async () => {
+    const logger = ensureLogger(dbConn.opts, "ensureSQLiteVersion", {
+      version: SQLITE_VERSION,
+      url: dbConn.url.toString(),
+    });
     await dbConn.client
       .prepare(
         `CREATE TABLE IF NOT EXISTS version (
@@ -14,7 +19,7 @@ export async function ensureSQLiteVersion(dbConn: SQLiteConnection) {
       .run();
     const rows = (await dbConn.client.prepare(`select version from version`).all()) as { version: string }[];
     if (rows.length > 1) {
-      throw new Error(`more than one version row found:${JSON.stringify(rows)}`);
+      throw logger.Error().Msg(`more than one version row found`).AsError();
     }
     if (rows.length === 0) {
       await dbConn.client
@@ -23,7 +28,7 @@ export async function ensureSQLiteVersion(dbConn: SQLiteConnection) {
       return;
     }
     if (rows[0].version !== SQLITE_VERSION) {
-      console.warn(`version mismatch: ${dbConn.url.toString()} expected ${SQLITE_VERSION}, got ${rows[0]}`);
+      logger.Warn().Any("row", rows[0]).Msg(`version mismatch`);
     }
   });
 }

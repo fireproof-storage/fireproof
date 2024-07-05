@@ -1,7 +1,10 @@
 import { CID } from "multiformats";
 import type { AnyLink, CryptoOpts, DecryptOpts, EncryptOpts } from "./types.js";
+import { ensureLogger } from "../utils.js";
+import { Logger } from "@adviser/cement";
 
-export function makeCodec(crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
+export function makeCodec(ilogger: Logger, crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
+  const logger = ensureLogger(ilogger, "makeCodec");
   const enc32 = (value: number) => {
     value = +value;
     const buff = new Uint8Array(4);
@@ -84,8 +87,7 @@ export function makeCodec(crypto: CryptoOpts, randomBytes: (size: number) => Uin
       );
       bytes = new Uint8Array(deBytes);
     } catch (e) {
-      console.log("ee", e);
-      throw e;
+      throw logger.Error().Err(e).Msg("encrypt failed").AsError();
     }
     return { value: { bytes, iv } };
   };

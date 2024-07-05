@@ -30,6 +30,8 @@ import {
   CompareKey,
 } from "./indexer-helpers.js";
 import { CRDT } from "./crdt.js";
+import { ensureLogger } from "./utils.js";
+import { Logger } from "@adviser/cement";
 
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
   { _crdt }: { _crdt: CRDT<T> | CRDT<NonNullable<unknown>> },
@@ -66,11 +68,14 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   includeDocsDefault = false;
   initError?: Error;
 
-  xready(): Promise<void> {
+  ready(): Promise<void> {
     return this.blockstore.ready();
   }
 
+  readonly logger: Logger;
+
   constructor(crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+    this.logger = ensureLogger(crdt.logger, "Index");
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt as CRDT<T>;
     this.applyMapFn(name, mapFn, meta);
@@ -97,13 +102,14 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       if (meta) {
         // hydrating from header
         if (this.indexHead && this.indexHead.map((c) => c.toString()).join() !== meta.head.map((c) => c.toString()).join()) {
-          throw new Error("cannot apply meta to existing index");
+          throw this.logger.Error().Msg("cannot apply different head meta").AsError();
         }
 
         if (this.mapFnString) {
           // we already initialized from application code
           if (this.mapFnString !== meta.map) {
-            console.log("cannot apply different mapFn meta: old mapFnString", this.mapFnString, "new mapFnString", meta.map);
+            this.logger.Warn().Msg(
+              `cannot apply different mapFn meta: old mapFnString ${this.mapFnString} new mapFnString ${meta.map}`);
             // throw new Error('cannot apply different mapFn meta')
           } else {
             this.byId.cid = meta.byId;
@@ -121,7 +127,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         if (this.mapFn) {
           // we already initialized from application code
           if (mapFn) {
-            if (this.mapFn.toString() !== mapFn.toString()) throw new Error("cannot apply different mapFn app2");
+            if (this.mapFn.toString() !== mapFn.toString()) {
+              throw this.logger.Error().Msg("cannot apply different mapFn app2").AsError();
+            }
           }
         } else {
           // application code is creating an index
@@ -131,7 +139,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (this.mapFnString) {
             // we already loaded from a header
             if (this.mapFnString !== mapFn.toString()) {
-              throw new Error("cannot apply different mapFn app");
+              throw this.logger.Error().Msg("cannot apply different mapFn app").AsError();
             }
           } else {
             // we are first
@@ -209,7 +217,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   async _updateIndex(): Promise<IndexTransactionMeta> {
-    await this.xready();
+    await this.ready();
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw new Error("No map function defined");
     let result: DocUpdate<T>[], head: ClockHead;
