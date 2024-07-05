@@ -3,8 +3,8 @@ import { DBConnection, DataRecord, DataSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
 import { UploadDataFnParams } from "../../../blockstore/types.js";
-import { ensureLogger } from "../ensurer.js";
 import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
+import { ensureLogger } from "../../../utils.js";
 
 export class DataSQLRecordBuilder {
   readonly dataRecord: DataRecord;

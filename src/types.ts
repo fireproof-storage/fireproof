@@ -2,6 +2,7 @@ import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
 import type { DbMeta, CryptoOpts, StoreOpts, AnyLink } from "./blockstore/index.js";
+import { Logger } from "@adviser/cement";
 
 export type Falsy = false | null | undefined;
 
@@ -32,6 +33,7 @@ export interface ConfigOpts {
   readonly store?: StoreOpts;
   // readonly indexStore?: StoreOpts;
   readonly threshold?: number;
+  readonly logger?: Logger;
 }
 
 export type ClockLink = EventLink<Operation>;

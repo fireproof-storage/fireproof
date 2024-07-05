@@ -10,6 +10,9 @@ import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, Down
 import { Loadable, type Loader } from "./loader.js";
 
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
+import { L } from "vitest/dist/reporters-yx5ZTtEV.js";
+import { Logger } from "@adviser/cement";
+import { ensureLogger } from "../utils.js";
 
 export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
 
@@ -35,9 +38,10 @@ export abstract class ConnectionBase implements Connection {
   abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 
-  // constructor() {
-  //   this.ready = Promise.resolve();
-  // }
+  readonly logger: Logger;
+  constructor(logger: Logger) {
+    this.logger = ensureLogger(logger, "ConnectionBase");
+  }
 
   async refresh() {
     await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
@@ -45,17 +49,17 @@ export abstract class ConnectionBase implements Connection {
   }
 
   connect({ loader }: { loader?: Loader }) {
-    if (!loader) throw new Error("loader is required");
+    if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
     this.connectMeta({ loader });
     this.connectStorage({ loader });
   }
 
   connectMeta({ loader }: { loader?: Loader }) {
-    if (!loader) throw new Error("loader is required");
+    if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
     this.onConnect();
-    const remote = new RemoteMetaStore(new URL(`remote://connectMeta`), this.loader.name, this);
+    const remote = new RemoteMetaStore(new URL(`remote://connectMeta`), this.loader.name, this, this.logger);
     remote.onLoad("main", async (metas) => {
       if (metas) {
         await throwFalsy(this.loader).handleDbMetasFromStore(metas);
@@ -74,10 +78,10 @@ export abstract class ConnectionBase implements Connection {
   }
 
   connectStorage({ loader }: { loader?: Loader }) {
-    if (!loader) throw new Error("loader is required");
+    if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
     this.loader = loader;
-    loader.remoteCarStore = new RemoteDataStore(new URL(`remote://remoteCarStore`), this.loader.name, this);
-    loader.remoteFileStore = new RemoteDataStore(new URL(`remote://remoteFileStore`), this.loader.name, this);
+    loader.remoteCarStore = new RemoteDataStore(new URL(`remote://remoteCarStore`), this.loader.name, this, this.logger);
+    loader.remoteFileStore = new RemoteDataStore(new URL(`remote://remoteFileStore`), this.loader.name, this, this.logger);
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {

@@ -1,5 +1,5 @@
 import { uuidv7 } from "uuidv7";
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { WriteQueue, writeQueue } from "./write-queue.js";
 import { CRDT } from "./crdt.js";
@@ -25,6 +25,7 @@ import type {
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { SysContainer } from "./runtime/sys-container.js";
+import { ensureLogger } from "./utils.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -58,9 +59,12 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     });
   }
 
+  readonly logger: Logger;
+
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name;
     this.opts = opts || this.opts;
+    this.logger = ensureLogger(this.opts, "Database");
     this._crdt = new CRDT(name, this.opts);
     this.blockstore = this._crdt.blockstore; // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
@@ -182,7 +186,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
       const docs: DocWithId<NonNullable<unknown>>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
         await (async () => await listener(docs as DocWithId<DT>[]))().catch((e: Error) => {
-          console.error("subscriber error", e);
+          this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
     }
@@ -193,7 +197,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     if (this._noupdate_listeners.size) {
       for (const listener of this._noupdate_listeners) {
         await (async () => await listener([]))().catch((e: Error) => {
-          console.error("subscriber error", e);
+          this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
     }

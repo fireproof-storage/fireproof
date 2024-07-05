@@ -1,11 +1,13 @@
 import type { DownloadMetaFnParams, DownloadDataFnParams, UploadMetaFnParams, UploadDataFnParams } from "./types.js";
 import { ConnectionBase } from "./connection-base.js";
+import { ensureLogger } from "../utils.js";
+import { Logger } from "@adviser/cement";
 
 export class ConnectREST extends ConnectionBase {
   readonly baseUrl: URL;
 
-  constructor(base: string) {
-    super();
+  constructor(base: string, logger: Logger) {
+    super(ensureLogger(logger, "ConnectREST"));
     this.baseUrl = new URL(base);
   }
 
@@ -17,7 +19,7 @@ export class ConnectREST extends ConnectionBase {
     const done = await fetch(uploadURL, { method: "PUT", body: bytes });
     // console.log('rest dataUpload done', params.car.toString(), done)
     if (!done.ok) {
-      throw new Error("failed to upload data " + done.statusText);
+      throw this.logger.Error().Msg("failed to upload data " + done.statusText);
     }
   }
 

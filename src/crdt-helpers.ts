@@ -31,6 +31,7 @@ import {
   throwFalsy,
 } from "./types.js";
 import { Result } from "@web3-storage/pail/crdt/api";
+import { Logger } from "@adviser/cement";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
@@ -42,13 +43,13 @@ function timeEnd(tag: string) {
   // console.timeEnd(tag)
 }
 
-function toString<K extends IndexKeyType>(key: K): string {
+function toString<K extends IndexKeyType>(key: K, logger: Logger): string {
   switch (typeof key) {
     case "string":
     case "number":
       return key.toString();
     default:
-      throw new Error("Invalid key type");
+      throw logger.Error().Msg("Invalid key type").AsError();
   }
 }
 
@@ -57,20 +58,21 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   tblocks: CarTransaction,
   head: ClockHead,
   updates: DocUpdate<T>[],
+  logger: Logger,
 ): Promise<CRDTMeta> {
   let result: Result | null = null;
   if (updates.length > 1) {
     const batch = await Batch.create(tblocks, head);
     for (const update of updates) {
-      const link = await writeDocContent(store, tblocks, update);
-      await batch.put(toString(update.id), link);
+      const link = await writeDocContent(store, tblocks, update, logger);
+      await batch.put(toString(update.id, logger), link);
     }
     result = await batch.commit();
   } else if (updates.length === 1) {
-    const link = await writeDocContent(store, tblocks, updates[0]);
-    result = await put(tblocks, head, toString(updates[0].id), link);
+    const link = await writeDocContent(store, tblocks, updates[0], logger);
+    result = await put(tblocks, head, toString(updates[0].id, logger), link);
   }
-  if (!result) throw new Error("Missing result, updates: " + updates.length);
+  if (!result) throw logger.Error().Uint64("updates.len", updates.length).Msg("Missing result").AsError();
 
   if (result.event) {
     for (const { cid, bytes } of [
@@ -89,13 +91,14 @@ async function writeDocContent<T extends DocTypes>(
   store: StoreRuntime,
   blocks: CarTransaction,
   update: DocUpdate<T>,
+  logger: Logger,
 ): Promise<AnyLink> {
   let value: Partial<DocValue<T>>;
   if (update.del) {
     value = { del: true };
   } else {
-    if (!update.value) throw new Error("Missing value");
-    await processFiles(store, blocks, update.value);
+    if (!update.value) throw logger.Error().Msg("Missing value").AsError();
+    await processFiles(store, blocks, update.value, logger);
     value = { doc: update.value as DocWithId<T> };
   }
   const block = await encode({ value, hasher, codec });
@@ -103,18 +106,18 @@ async function writeDocContent<T extends DocTypes>(
   return block.cid;
 }
 
-async function processFiles<T extends DocTypes>(store: StoreRuntime, blocks: CarTransaction, doc: DocSet<T>) {
+async function processFiles<T extends DocTypes>(store: StoreRuntime, blocks: CarTransaction, doc: DocSet<T>, logger: Logger) {
   if (doc._files) {
-    await processFileset(store, blocks, doc._files);
+    await processFileset(logger, store, blocks, doc._files);
   }
   if (doc._publicFiles) {
-    await processFileset(store, blocks, doc._publicFiles, true);
+    await processFileset(logger, store, blocks, doc._publicFiles, true);
   }
 }
 
-async function processFileset(store: StoreRuntime, blocks: CarTransaction, files: DocFiles, publicFiles = false) {
+async function processFileset(logger: Logger, store: StoreRuntime, blocks: CarTransaction, files: DocFiles, publicFiles = false) {
   const dbBlockstore = blocks.parent as EncryptedBlockstore;
-  if (!dbBlockstore.loader) throw new Error("Missing loader, database name is required");
+  if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, database name is required").AsError();
   const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
   const didPut = [];
   // let totalSize = 0
@@ -153,11 +156,12 @@ export async function getValueFromCrdt<T extends DocTypes>(
   blocks: BaseBlockstore,
   head: ClockHead,
   key: string,
+  logger: Logger
 ): Promise<DocValue<T>> {
-  if (!head.length) throw new Error("Getting from an empty database");
+  if (!head.length) throw logger.Error().Msg("Getting from an empty database").AsError();
   const link = await get(blocks, head, key);
-  if (!link) throw new Error(`Missing key ${key}`);
-  return await getValueFromLink(blocks, link);
+  if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
+  return await getValueFromLink(blocks, link, logger);
 }
 
 export function readFiles<T extends DocTypes>(blocks: BaseBlockstore, { doc }: Partial<DocValue<T>>) {
@@ -194,15 +198,14 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
   }
 }
 
-async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: AnyLink): Promise<DocValue<T>> {
+async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: AnyLink, logger: Logger): Promise<DocValue<T>> {
   const block = await blocks.get(link);
-  if (!block) throw new Error(`Missing linked block ${link.toString()}`);
+  if (!block) throw logger.Error().Str("link", link.toString()).Msg(`Missing linked block`).AsError();
   const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue<T> };
   const cvalue = {
     ...value,
     cid: link,
   };
-
   readFiles(blocks as EncryptedBlockstore, cvalue);
   return cvalue;
 }
@@ -223,12 +226,13 @@ export async function clockChangesSince<T extends DocTypes>(
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions,
+  logger: Logger
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
   const eventsFetcher = (
     opts.dirty ? new DirtyEventFetcher<Operation>(blocks) : new EventFetcher<Operation>(blocks)
   ) as EventFetcher<Operation>;
   const keys = new Set<string>();
-  const updates = await gatherUpdates<T>(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity);
+  const updates = await gatherUpdates<T>(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity, logger);
   return { result: updates.reverse(), head };
 }
 
@@ -241,6 +245,7 @@ async function gatherUpdates<T extends DocTypes>(
   keys: Set<string>,
   didLinks: Set<string>,
   limit: number,
+  logger: Logger
 ): Promise<DocUpdate<T>[]> {
   if (limit <= 0) return updates;
   // if (Math.random() < 0.001) console.log('gatherUpdates', head.length, since.length, updates.length)
@@ -266,23 +271,23 @@ async function gatherUpdates<T extends DocTypes>(
       const { key, value } = ops[i];
       if (!keys.has(key)) {
         // todo option to see all updates
-        const docValue = await getValueFromLink<T>(blocks, value);
+        const docValue = await getValueFromLink<T>(blocks, value, logger);
         updates.push({ id: key, value: docValue.doc, del: docValue.del, clock: link });
         limit--;
         keys.add(key);
       }
     }
     if (event.parents) {
-      updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit);
+      updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit, logger);
     }
   }
   return updates;
 }
 
-export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead) {
+export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
   // return entries(blocks, head)
   for await (const [key, link] of entries(blocks, head)) {
-    const docValue = await getValueFromLink(blocks, link);
+    const docValue = await getValueFromLink(blocks, link, logger);
     yield { id: key, value: docValue.doc, del: docValue.del } as DocUpdate<T>;
   }
 }
@@ -294,7 +299,7 @@ export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {
 }
 
 let isCompacting = false;
-export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
+export async function doCompact(blockLog: CompactionFetcher, head: ClockHead, logger: Logger) {
   if (isCompacting) {
     // console.log('already compacting')
     return;
@@ -321,7 +326,7 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
 
   time("compact all entries");
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  for await (const _entry of getAllEntries(blockLog, head)) {
+  for await (const _entry of getAllEntries(blockLog, head, logger)) {
     // result.push(entry)
     // void 1;
     continue;
@@ -353,7 +358,7 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead) {
   timeEnd("compact root blocks");
 
   time("compact changes");
-  await clockChangesSince(blockLog, head, [], {});
+  await clockChangesSince(blockLog, head, [], {}, logger);
   timeEnd("compact changes");
 
   isCompacting = false;

@@ -19,6 +19,8 @@ import { CryptoOpts } from "./types.js";
 import { falsyToUndef } from "../types.js";
 import { toCryptoOpts } from "../runtime/crypto.js";
 import { toStoreRuntime } from "./store-factory.js";
+import { Logger } from "@adviser/cement";
+import { ensureLogger } from "../utils.js";
 
 export type BlockFetcher = BlockFetcherApi;
 
@@ -41,7 +43,11 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   }
 }
 
-export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRuntime {
+export function defaultedBlockstoreRuntime(
+  opts: BlockstoreOpts,
+  component: string,
+  ctx?: Record<string, unknown>
+): BlockstoreRuntime {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     applyMeta: (meta: TransactionMeta, snap?: boolean): Promise<void> => {
@@ -56,6 +62,7 @@ export function defaultedBlockstoreRuntime(opts: BlockstoreOpts): BlockstoreRunt
     name: undefined,
     threshold: 1000 * 1000,
     ...opts,
+    logger: ensureLogger(opts, component, ctx),
     crypto: toCryptoOpts(opts.crypto),
     store: toStoreRuntime(opts.name, opts.store),
   };
@@ -75,8 +82,8 @@ export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
 
-  loader?: Loader;
-  name?: string;
+  readonly loader?: Loader;
+  readonly name?: string;
 
   // ready: Promise<void>;
   ready(): Promise<void> {
@@ -91,13 +98,15 @@ export class BaseBlockstore implements BlockFetcher {
     // no-op
   }
 
+  readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts = {}) {
     // console.log("BaseBlockstore", ebOpts)
-    this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
+    this.ebOpts = defaultedBlockstoreRuntime(ebOpts, "BaseBlockstore");
+    this.logger = this.ebOpts.logger
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
-    if (!cid) throw new Error("required cid");
+    if (!cid) throw this.logger.Error().Msg("required cid").AsError();
     for (const f of this.transactions) {
       // if (Math.random() < 0.001) console.log('get', cid.toString(), this.transactions.size)
       const v = await f.superGet(cid);
@@ -106,7 +115,7 @@ export class BaseBlockstore implements BlockFetcher {
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async put(cid: AnyAnyLink, block: Uint8Array): Promise<void> {
-    throw new Error("use a transaction to put");
+    throw this.logger.Error().Msg("use a transaction to put").AsError();
   }
 
   lastTxMeta?: unknown; // TransactionMeta
@@ -151,12 +160,14 @@ export class EncryptedBlockstore extends BaseBlockstore {
   }
 
   compacting = false;
+  readonly logger: Logger;
 
   constructor(ebOpts: BlockstoreOpts) {
     super(ebOpts);
+    this.logger = ensureLogger(ebOpts, "EncryptedBlockstore");
     const { name } = ebOpts;
     if (!name) {
-      throw new Error("name required");
+      throw  this.logger.Error().Msg("name required").AsError();
     }
     this.name = name;
     this.loader = new Loader(this.name, ebOpts);
@@ -184,23 +195,23 @@ export class EncryptedBlockstore extends BaseBlockstore {
       this.transactions.delete(t);
       return { meta: done, cars, t };
     }
-    throw new Error("failed to commit car files");
+    throw this.logger.Error().Msg("failed to commit car files").AsError();
   }
 
   async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
     await this.ready();
-    if (!this.loader) throw new Error("loader required to get file, database must be named");
+    if (!this.loader) throw this.logger.Error().Msg("loader required to get file, database must be named").AsError();
     const reader = await this.loader.loadFileCar(car, isPublic);
     const block = await reader.get(cid as CID);
-    if (!block) throw new Error(`Missing block ${cid.toString()}`);
+    if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;
   }
 
   async compact() {
     await this.ready();
-    if (!this.loader) throw new Error("loader required to compact");
+    if (!this.loader) throw this.logger.Error().Msg("loader required to compact").AsError();
     if (this.loader.carLog.length < 2) return;
-    const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks));
+    const compactFn = this.ebOpts.compact || ((blocks: CompactionFetcher) => this.defaultCompact(blocks, this.logger));
     if (!compactFn || this.compacting) return;
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
@@ -212,13 +223,13 @@ export class EncryptedBlockstore extends BaseBlockstore {
     this.compacting = false;
   }
 
-  async defaultCompact(blocks: CompactionFetcher): Promise<TransactionMeta> {
+  async defaultCompact(blocks: CompactionFetcher, logger: Logger): Promise<TransactionMeta> {
     // console.log('eb compact')
     if (!this.loader) {
-      throw new Error("no loader");
+      throw logger.Error().Msg("no loader").AsError();
     }
     if (!this.lastTxMeta) {
-      throw new Error("no lastTxMeta");
+      throw logger.Error().Msg("no lastTxMeta").AsError();
     }
     for await (const blk of this.loader.entries(false)) {
       blocks.loggedBlocks.putSync(blk.cid, blk.bytes);
@@ -262,6 +273,7 @@ export class CompactionFetcher implements BlockFetcher {
 export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>;
 
 export interface BlockstoreOpts {
+  readonly logger?: Logger;
   readonly applyMeta?: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
   readonly compact?: CompactFn;
   readonly autoCompact?: number;
@@ -274,6 +286,7 @@ export interface BlockstoreOpts {
 }
 
 export interface BlockstoreRuntime {
+  readonly logger: Logger;
   readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
   readonly compact: CompactFn;
   readonly autoCompact: number;

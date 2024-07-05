@@ -1,5 +1,5 @@
 import { Block } from "multiformats";
-import { ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce } from "@adviser/cement";
 
 import {
   EncryptedBlockstore,
@@ -34,6 +34,7 @@ import type {
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { blockstoreFactory } from "./blockstore/transaction.js";
+import { ensureLogger } from "./utils.js";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
@@ -59,8 +60,11 @@ export class CRDT<T extends DocTypes> {
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
   readonly clock: CRDTClock<T>;
 
+  readonly logger: Logger;
+
   constructor(name?: string, opts: ConfigOpts = {}) {
     this.name = name;
+    this.logger = ensureLogger(opts, "CRDT");
     this.opts = opts;
     this.blockstore = blockstoreFactory({
       name: name,
@@ -70,7 +74,7 @@ export class CRDT<T extends DocTypes> {
         await this.clock.applyHead(crdtMeta.head, []);
       },
       compact: async (blocks: CompactionFetcher) => {
-        await doCompact(blocks, this.clock.head);
+        await doCompact(blocks, this.clock.head, this.logger);
         return { head: this.clock.head } as TransactionMeta;
       },
       autoCompact: this.opts.autoCompact || 100,
@@ -106,7 +110,7 @@ export class CRDT<T extends DocTypes> {
     const prevHead = [...this.clock.head];
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
-      const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates);
+      const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates, this.logger);
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
@@ -123,7 +127,7 @@ export class CRDT<T extends DocTypes> {
   async allDocs(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
     await this.ready();
     const result: DocUpdate<T>[] = [];
-    for await (const entry of getAllEntries<T>(this.blockstore, this.clock.head)) {
+    for await (const entry of getAllEntries<T>(this.blockstore, this.clock.head, this.logger)) {
       result.push(entry);
     }
     return { result, head: this.clock.head };
@@ -145,7 +149,7 @@ export class CRDT<T extends DocTypes> {
 
   async get(key: string): Promise<DocValue<T> | Falsy> {
     await this.ready();
-    const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key);
+    const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key, this.logger);
     if (result.del) return undefined;
     return result;
   }
@@ -158,7 +162,7 @@ export class CRDT<T extends DocTypes> {
     head: ClockHead;
   }> {
     await this.ready();
-    return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts);
+    return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
   }
 
   async compact(): Promise<void> {

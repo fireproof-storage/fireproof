@@ -35,8 +35,8 @@ export class SQLiteConnection implements DBConnection {
 
   private constructor(url: URL, opts: Partial<SQLOpts>) {
     // console.log("better-sqlite3->url->", url);
-    this.opts = ensureSQLOpts(url, opts, "SQLiteConnection");
-    this.logger = this.opts.logger.With().Str("url", url.toString()).Logger();
+    this.opts = ensureSQLOpts(url, opts, "SQLiteConnection", { url });
+    this.logger = this.opts.logger;
     this.url = url;
     this.logger.Debug().Msg("constructor");
   }

@@ -18,6 +18,7 @@ import { create, load } from "prolly-trees/cid-set";
 import { encodeCarFile } from "./loader-helpers.js";
 import { makeCodec } from "./encrypt-codec.js";
 import type { AnyLinkFn, AnyBlock, CarMakeable, AnyLink, AnyDecodedBlock, CryptoOpts } from "./types.js";
+import { Logger } from "@adviser/cement";
 
 function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   return list.some((cid: AnyLink) => {
@@ -25,8 +26,8 @@ function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   });
 }
 
-function makeEncDec(crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
-  const codec = makeCodec(crypto, randomBytes);
+function makeEncDec(logger: Logger, crypto: CryptoOpts, randomBytes: (size: number) => Uint8Array) {
+  const codec = makeCodec(logger, crypto, randomBytes);
 
   const encrypt = async function* ({
     get,
@@ -140,7 +141,7 @@ function hexStringToUint8Array(hexString: string) {
   return uint8Array;
 }
 
-export async function encryptedEncodeCarFile(crypto: CryptoOpts, key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
+export async function encryptedEncodeCarFile(logger: Logger, crypto: CryptoOpts, key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
   const encryptionKey = hexStringToUint8Array(key);
   const encryptedBlocks = new MemoryBlockstore();
   const cidsToEncrypt = [] as AnyLink[];
@@ -150,7 +151,7 @@ export async function encryptedEncodeCarFile(crypto: CryptoOpts, key: string, ro
     if (!g) throw new Error(`missing cid block: ${bytes.length}:${cid.toString()}`);
   }
   let last: AnyBlock | null = null;
-  const { encrypt } = makeEncDec(crypto, crypto.randomBytes);
+  const { encrypt } = makeEncDec(logger, crypto, crypto.randomBytes);
 
   for await (const block of encrypt({
     cids: cidsToEncrypt,
@@ -169,12 +170,13 @@ export async function encryptedEncodeCarFile(crypto: CryptoOpts, key: string, ro
   return encryptedCar;
 }
 
-export async function decodeEncryptedCar(crypto: CryptoOpts, key: string, reader: CarReader) {
+export async function decodeEncryptedCar(logger: Logger, crypto: CryptoOpts, key: string, reader: CarReader) {
   const roots = await reader.getRoots();
   const root = roots[0];
-  return await decodeCarBlocks(crypto, root, reader.get.bind(reader) as AnyLinkFn, key);
+  return await decodeCarBlocks(logger, crypto, root, reader.get.bind(reader) as AnyLinkFn, key);
 }
 async function decodeCarBlocks(
+  logger: Logger,
   crypto: CryptoOpts,
   root: AnyLink,
   get: (cid: AnyLink) => Promise<AnyBlock | undefined>,
@@ -186,7 +188,7 @@ async function decodeCarBlocks(
   const decryptedBlocks = new MemoryBlockstore();
   let last: AnyBlock | null = null;
 
-  const { decrypt } = makeEncDec(crypto, crypto.randomBytes);
+  const { decrypt } = makeEncDec(logger, crypto, crypto.randomBytes);
 
   for await (const block of decrypt({
     root,

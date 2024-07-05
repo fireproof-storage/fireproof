@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.1.18
-        version: 0.1.18
+        specifier: ^0.1.19
+        version: 0.1.19
       '@ipld/car':
         specifier: ^5.3.1
         version: 5.3.1
@@ -139,8 +139,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.1.18':
-    resolution: {integrity: sha512-MuLajOH8Xfot8ARUx503DppZkTyjAF8yUs3bMLbz1+WM0Ngk2exbyQ9ixT8rb4z57BVN2V4eqchswRoFN28zOw==}
+  '@adviser/cement@0.1.19':
+    resolution: {integrity: sha512-LRnb2dU5cvNYLvfL+Gnd28hOM48U+wn/oLD+1a/0t1ygPkmxFuJW9nEEke5uJvOO2DVaJXNzJkAcvQ/C9Y57Xg==}
     engines: {node: '>=16'}
 
   '@babel/code-frame@7.24.7':
@@ -2877,7 +2877,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.1.18': {}
+  '@adviser/cement@0.1.19': {}
 
   '@babel/code-frame@7.24.7':
     dependencies:

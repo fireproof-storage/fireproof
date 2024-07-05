@@ -1,14 +1,22 @@
 import { format, parse, ToString } from "@ipld/dag-json";
 import { AnyBlock, AnyLink, DbMeta } from "./types.js";
 import { DataStore, MetaStore, RemoteWAL, WALState } from "./index.js";
+import { ensureLogger } from "../utils.js";
+import { Logger } from "@adviser/cement";
 
 export class MemoryDataStore extends DataStore {
   readonly tag: string = "car-mem";
   readonly store = new Map<string, Uint8Array>();
 
+  readonly logger: Logger;
+  constructor(name: string, url: URL, logger: Logger) {
+    super(name, url);
+    this.logger = ensureLogger(logger,  "MemoryDataStore", { name, url });
+  }
+
   async load(cid: AnyLink): Promise<AnyBlock> {
     const bytes = this.store.get(cid.toString());
-    if (!bytes) throw new Error(`missing memory block ${cid.toString()}`);
+    if (!bytes) throw this.logger.Error().Str("cid", cid.toString()).Msg(`missing memory block`);
     return { cid, bytes };
   }
 
@@ -91,8 +99,7 @@ export class MemoryRemoteWAL extends RemoteWAL {
       const encoded: ToString<WALState> = format(state);
       this.store.set(this.headerKey(branch), encoded);
     } catch (e) {
-      console.error("error saving wal", e);
-      throw e;
+      throw this.logger.Error().Any("error", e).Msg("error saving wal").AsError();
     }
   }
   async _close() {
