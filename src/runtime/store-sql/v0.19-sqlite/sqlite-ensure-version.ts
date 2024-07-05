@@ -1,4 +1,3 @@
-import { url } from "inspector";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3";
 import { SQLITE_VERSION } from "./version";
 import { ResolveOnce } from "@adviser/cement";
@@ -13,7 +12,7 @@ export async function ensureSQLiteVersion(dbConn: SQLiteConnection) {
         ).run();
         const rows = await dbConn.client.prepare(`select version from version`).all() as { version: string }[];
         if (rows.length > 1) {
-            throw new Error(`more than one version row found:${url.toString()}`);
+            throw new Error(`more than one version row found:${JSON.stringify(rows)}`);
         }
         if (rows.length === 0) {
             await dbConn.client.prepare(
