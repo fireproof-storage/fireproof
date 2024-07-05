@@ -1,20 +1,22 @@
 import type { AnyBlock, AnyLink, DbMeta } from "./types.js";
 import { format, parse, ToString } from "@ipld/dag-json";
 
-import { PACKAGE_VERSION } from "./version.js";
 import { Falsy } from "../types.js";
 
-const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
-if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
-export const STORAGE_VERSION = match[0];
+// const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
+// if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
+// export const STORAGE_VERSION = match[0];
 
 abstract class VersionedStore {
-  readonly STORAGE_VERSION: string = STORAGE_VERSION;
+  readonly STORAGE_VERSION: string;
   readonly name: string;
   readonly url: URL;
   constructor(name: string, url: URL) {
     this.name = name;
     this.url = url;
+    const sv = url.searchParams.get("version");
+    if (!sv) throw new Error(`version not found:${url.toString()}`);
+    this.STORAGE_VERSION = sv;
   }
 }
 
@@ -45,7 +47,7 @@ interface DataSaveOpts {
 export abstract class DataStore {
   readonly tag: string = "car-base";
 
-  readonly STORAGE_VERSION: string = STORAGE_VERSION;
+  // readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly name: string;
   readonly url: URL;
   constructor(name: string, url: URL) {

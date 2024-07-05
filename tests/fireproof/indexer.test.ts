@@ -35,13 +35,13 @@ describe("basic Index", () => {
   it("should call the map function on first query", async function () {
     didMap = false;
     await indexer.query();
-    expect(didMap).toBe(true);
+    expect(didMap).toBeTruthy();
   });
   it("should not call the map function on second query", async function () {
     await indexer.query();
     didMap = false;
     await indexer.query();
-    expect(didMap).toBe(false);
+    expect(didMap).toBeFalsy();
   });
   it("should get results", async function () {
     const result = await indexer.query();

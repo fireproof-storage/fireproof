@@ -74,6 +74,10 @@ export { blockstoreFactory };
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
+
+  loader?: Loader;
+  name?: string;
+
   // ready: Promise<void>;
   ready(): Promise<void> {
     return Promise.resolve();
@@ -88,6 +92,7 @@ export class BaseBlockstore implements BlockFetcher {
   }
 
   constructor(ebOpts: BlockstoreOpts = {}) {
+    // console.log("BaseBlockstore", ebOpts)
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts);
   }
 
@@ -154,7 +159,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
       throw new Error("name required");
     }
     this.name = name;
-    this.loader = new Loader(this.name, this.ebOpts);
+    this.loader = new Loader(this.name, ebOpts);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {

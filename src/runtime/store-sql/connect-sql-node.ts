@@ -1,7 +1,7 @@
 import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../blockstore/index.js";
 
-import { DataSQLRecordBuilder } from "./v0.18.0/sqlite-data-store.js";
-import { MetaSQLRecordBuilder } from "./v0.18.0/sqlite-meta-store.js";
+import { DataSQLRecordBuilder } from "./v0.19-sqlite/sqlite-data-store.js";
+import { MetaSQLRecordBuilder } from "./v0.19-sqlite/sqlite-meta-store.js";
 import { Logger } from "@adviser/cement";
 import { ConnectionBase } from "../../blockstore/connection-base.js";
 import { ensureLogger, ensureSQLOpts } from "./ensurer.js";

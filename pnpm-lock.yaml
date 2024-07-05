@@ -35,6 +35,9 @@ importers:
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0(encoding@0.1.13)
+      esbuild-plugin-replace:
+        specifier: ^1.4.0
+        version: 1.4.0
       idb:
         specifier: ^8.0.0
         version: 8.0.0
@@ -1331,6 +1334,9 @@ packages:
   err-code@3.0.1:
     resolution: {integrity: sha512-GiaH0KJUewYok+eeY05IIgjtAe4Yltygk9Wqp1V5yVWLdhf0hYZchRjNIT9bb0mSwRcIusT3cx7PJUf3zEIfUA==}
 
+  esbuild-plugin-replace@1.4.0:
+    resolution: {integrity: sha512-lP3ZAyzyRa5JXoOd59lJbRKNObtK8pJ/RO7o6vdjwLi71GfbL32NR22ZuS7/cLZkr10/L1lutoLma8E4DLngYg==}
+
   esbuild-plugin-resolve@2.0.0:
     resolution: {integrity: sha512-eJy9B8yDW5X/J48eWtR1uVmv+DKfHvYYnrrcqQoe/nUkVHVOTZlJnSevkYyGOz6hI90t036Y5QIPDrGzmppxfg==}
 
@@ -1884,6 +1890,9 @@ packages:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
     hasBin: true
 
+  magic-string@0.25.9:
+    resolution: {integrity: sha512-RmF0AsMzgt25qzqqLc1+MbHmhdx0ojF2Fvs4XnOqz2ZOBXzzkEwc/dJQZCYHAn7v1jbVOjAZfK8msRn4BxO4VQ==}
+
   magic-string@0.30.10:
     resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
 
@@ -2407,6 +2416,10 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+
+  sourcemap-codec@1.4.8:
+    resolution: {integrity: sha512-9NykojV5Uih4lgo5So5dtw+f0JgJX30KCNI8gwhz2J9A15wD0Ml6tjHKwf6fTSa6fAdVBdZeNOs9eJ71qCk8vA==}
+    deprecated: Please use @jridgewell/sourcemap-codec instead
 
   spacetrim@0.11.27:
     resolution: {integrity: sha512-dwH0FuVEdapG4Qb2kNlZXM5kCyOgqsC0LkZbF+ESICLMTWH3RQsisSlnNy9raB38qxvUlUvpFrbEirB0RFKv5A==}
@@ -3990,6 +4003,10 @@ snapshots:
 
   err-code@3.0.1: {}
 
+  esbuild-plugin-replace@1.4.0:
+    dependencies:
+      magic-string: 0.25.9
+
   esbuild-plugin-resolve@2.0.0: {}
 
   esbuild@0.21.5:
@@ -4667,6 +4684,10 @@ snapshots:
 
   lz-string@1.5.0: {}
 
+  magic-string@0.25.9:
+    dependencies:
+      sourcemap-codec: 1.4.8
+
   magic-string@0.30.10:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
@@ -5253,6 +5274,8 @@ snapshots:
   source-map@0.8.0-beta.0:
     dependencies:
       whatwg-url: 7.1.0
+
+  sourcemap-codec@1.4.8: {}
 
   spacetrim@0.11.27:
     optional: true

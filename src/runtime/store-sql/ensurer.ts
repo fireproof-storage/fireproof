@@ -17,8 +17,32 @@ export function ensureLogger(opts: Partial<SQLOpts> | undefined, componentName: 
   return logger;
 }
 
-function ensureTableNames(opts?: Partial<SQLOpts>): SQLTableNames {
-  return opts?.tableNames || DefaultSQLTableNames;
+function sqlTableName(...names: string[]): string {
+  return names.map((name) => name
+    .replace(/^[^a-zA-Z0-9]+/, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_"))
+    .filter(i => i.length).join("_");
+}
+
+function ensureTableNames(url: URL, opts?: Partial<SQLOpts>): SQLTableNames {
+  let isIndex = "";
+  if (url.searchParams.has("index")) {
+    isIndex = url.searchParams.get("index") || ".idx";
+  }
+  const ret = opts?.tableNames || DefaultSQLTableNames;
+  // console.log("isIndex->", opts?.url, isIndex, sqlTableName(isIndex,  ret.data));
+  if (isIndex.length) {
+    return {
+      data: sqlTableName(isIndex,  ret.data),
+      meta: sqlTableName(isIndex, ret.meta),
+      wal: sqlTableName(isIndex, ret.wal),
+    };
+  }
+  return {
+    data: sqlTableName(ret.data),
+    meta: sqlTableName(ret.meta),
+    wal: sqlTableName(ret.wal),
+  }
 }
 
 const textEncoder = new TextEncoder();
@@ -47,7 +71,7 @@ export function ensureSQLOpts(url: URL, opts: Partial<SQLOpts> | undefined, comp
   return {
     url,
     sqlFlavor: url2sqlFlavor(url),
-    tableNames: ensureTableNames(opts),
+    tableNames: ensureTableNames(url, opts),
     logger: ensureLogger(opts, componentName),
     textEncoder: ensureTextEncoder(opts),
     textDecoder: ensureTextDecoder(opts),

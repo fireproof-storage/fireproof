@@ -4,6 +4,7 @@ import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../ensurer.js";
 import { UploadMetaFnParams } from "../../../blockstore/types.js";
+import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;
@@ -66,6 +67,7 @@ export class V0_18_0SQLiteMetaStore implements MetaSQLStore {
   async start(): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
+    await ensureSQLiteVersion(this.dbConn);
     await this.dbConn.client
       .prepare(
         `CREATE TABLE IF NOT EXISTS ${this.table} (

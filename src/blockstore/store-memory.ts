@@ -28,6 +28,7 @@ export class MemoryDataStore extends DataStore {
 }
 
 export class MemoryMetaStore extends MetaStore {
+  readonly STORAGE_VERSION: string = "do-not-use";
   readonly tag: string = "header-mem";
   readonly store = new Map<string, string>();
 
@@ -68,6 +69,7 @@ export class MemoryMetaStore extends MetaStore {
 
 //
 export class MemoryRemoteWAL extends RemoteWAL {
+  readonly STORAGE_VERSION: string = "do-not-use";
   readonly tag: string = "wal-mem";
   readonly store = new Map<string, string>();
 

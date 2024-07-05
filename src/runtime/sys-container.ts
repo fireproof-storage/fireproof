@@ -1,4 +1,4 @@
-import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike } from "node:fs";
+import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "node:fs";
 
 import * as stdEnv from "std-env";
 import { uuidv4 } from "uuidv7";
@@ -21,6 +21,8 @@ export interface NodeMap {
   copyFile: (source: PathLike, destination: PathLike) => Promise<void>;
 
   readfile: (path: PathLike, options?: { encoding: BufferEncoding; flag?: string }) => Promise<string>;
+
+  stat: (path: PathLike) => Promise<Stats>;
 
   unlink: (path: PathLike) => Promise<void>;
   writefile: (path: PathLike, data: Uint8Array | string) => Promise<void>;
@@ -69,6 +71,7 @@ class sysContainer {
     readfile: () => Promise.reject(new Error("SysContainer:readfile is not available in seeded state")),
     unlink: () => Promise.reject(new Error("SysContainer:unlink is not available in seeded state")),
     writefile: () => Promise.reject(new Error("SysContainer:writefile is not available in seeded state")),
+    stat: () => Promise.reject(new Error("SysContainer:stat is not available in seeded state")),
   };
 
   readonly id = uuidv4();
@@ -78,7 +81,7 @@ class sysContainer {
       switch (this.freight.state) {
         case "seeded":
           if (stdEnv.isNode) {
-            const { createNodeSysContainer } = await saveImport("./node-sys-container.js");
+            const { createNodeSysContainer } = await import("./node-sys-container.js");
             // console.log("use NodeSysContainer");
             this.freight = await createNodeSysContainer();
           } else {
@@ -143,6 +146,11 @@ class sysContainer {
     return throwFalsy(this.freight).copyFile(source, destination);
   }
 
+  async stat(path: PathLike) {
+    this.logSeeded("stat");
+    return throwFalsy(this.freight).stat(path);
+  }
+
   fileURLToPath(url: string | URL) {
     this.logSeeded("fileURLToPath");
     return throwFalsy(this.freight).fileURLToPath(url);
@@ -171,15 +179,15 @@ class sysContainer {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function saveImport(fName: string): Promise<any> {
-  try {
-    const i = await import(fName);
-    return i;
-  } catch (e: unknown) {
-    console.error(`saveImport failed for ${fName} with`, e);
-    throw e;
-  }
-}
+// // eslint-disable-next-line @typescript-eslint/no-explicit-any
+// export async function saveImport(fName: string): Promise<any> {
+//   try {
+//     const i = await import(fName);
+//     return i;
+//   } catch (e: unknown) {
+//     console.error(`saveImport failed for ${fName} with`, e);
+//     throw e;
+//   }
+// }
 
 export const SysContainer = new sysContainer();

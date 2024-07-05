@@ -19,8 +19,6 @@ export type {
   TestStore,
 } from "./types.js";
 
-export { STORAGE_VERSION } from "./store.js";
-
 export * from "./store-factory.js";
 
 import { type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection-base.js";

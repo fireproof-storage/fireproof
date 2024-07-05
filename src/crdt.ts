@@ -75,13 +75,13 @@ export class CRDT<T extends DocTypes> {
       },
       autoCompact: this.opts.autoCompact || 100,
       crypto: this.opts.crypto,
-      store: this.opts.store,
+      store: {...this.opts.store, isIndex: false},
       public: this.opts.public,
       meta: this.opts.meta,
       threshold: this.opts.threshold,
     });
     this.indexBlockstore = blockstoreFactory({
-      name: this.opts.indexStore && name ? name + ".idx" : undefined,
+      name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const idxCarMeta = meta as IdxMetaMap;
         if (!idxCarMeta.indexes) throw new Error("missing indexes");
@@ -90,7 +90,7 @@ export class CRDT<T extends DocTypes> {
         }
       },
       crypto: this.opts.crypto,
-      store: this.opts.indexStore,
+      store: { ...this.opts.store, isIndex: true },
       public: this.opts.public,
     });
     this.clock = new CRDTClock<T>(this.blockstore);

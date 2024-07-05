@@ -8,11 +8,9 @@ describe("Fresh TransactionBlockstore", function () {
     blocks = new bs.BaseBlockstore();
   });
   it("should not have a name", function () {
-    // @ts-expect-error - name is not set on BaseBlockstore
     expect(blocks.name).toBeFalsy();
   });
   it("should not have a loader", function () {
-    // @ts-expect-error - loader is not set on BaseBlockstore
     expect(blocks.loader).toBeFalsy();
   });
   it("should not put", async function () {

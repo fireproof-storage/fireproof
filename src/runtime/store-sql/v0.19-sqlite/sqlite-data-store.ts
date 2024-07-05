@@ -4,6 +4,7 @@ import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
 import { Logger } from "@adviser/cement";
 import { UploadDataFnParams } from "../../../blockstore/types.js";
 import { ensureLogger } from "../ensurer.js";
+import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
 
 export class DataSQLRecordBuilder {
   readonly dataRecord: DataRecord;
@@ -70,6 +71,7 @@ export class V0_18_0SQLiteDataStore implements DataSQLStore {
   async start(): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
+    await ensureSQLiteVersion(this.dbConn);
     await this.dbConn.client
       .prepare(
         `CREATE TABLE IF NOT EXISTS ${this.table} (

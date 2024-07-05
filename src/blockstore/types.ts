@@ -116,12 +116,15 @@ export interface BlobLike {
 }
 
 export interface StoreOpts {
+  readonly isIndex?: boolean;
   readonly stores?: {
     // string means local storage
     // URL means schema selects the storeType
+    readonly base?: string | URL;
+
     readonly meta?: string | URL;
     readonly data?: string | URL;
-    readonly indexes?: string | URL;
+    readonly index?: string | URL;
     readonly remoteWAL?: string | URL;
   };
   makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;

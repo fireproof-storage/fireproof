@@ -5,12 +5,23 @@ import { format, parse, ToString } from "@ipld/dag-json";
 import { SysContainer } from "./sys-container.js";
 import { Falsy } from "../types.js";
 import { TestStore } from "../blockstore/types.js";
+import { FILESTORE_VERSION } from "./store-file-version.js";
+
+function ensureVersion(url: URL): URL {
+  const ret = new URL(url.toString());
+  ret.searchParams.set("version", url.searchParams.get("version") || FILESTORE_VERSION);
+  return ret;
+}
 
 function getPath(url: URL): string {
-  return url
-    .toString()
-    .replace(/^file:\/\//, "")
-    .replace(/\?.*$/, "");
+  const basePath = url.toString().replace(/^file:\/\//, "").replace(/\?.*$/, "");
+  const name = url.searchParams.get("name");
+  if (!name) throw new Error(`name not found:${url.toString()}`);
+  const version = url.searchParams.get("version");
+  if (!version) throw new Error(`version not found:${url.toString()}`);
+  // const index = url.searchParams.has("index");
+  // if (index) name += index;
+  return SysContainer.join(basePath, version, name);
 }
 
 function getStore(url: URL): string {
@@ -30,15 +41,22 @@ function getFileName(url: URL, key: string): string {
   }
 }
 
+function ensureIndexName(url: URL, name: string): string {
+  if (url.searchParams.has("index")) {
+    name = (url.searchParams.get("index")?.replace(/[^a-zA-Z0-9]/g, '') || "idx") + "-" + name;
+  }
+  return name
+}
+
 export class FileRemoteWAL extends RemoteWAL {
-  constructor(dir: URL, loader: Loadable) {
-    super(loader, dir);
+  constructor(url: URL, loader: Loadable) {
+    super(loader, ensureVersion(url));
   }
 
   readonly branches = new Set<string>();
 
   filePathForBranch(branch: string): string {
-    return SysContainer.join(getPath(this.url), "wal", branch + ".json");
+    return SysContainer.join(getPath(this.url), ensureIndexName(this.url, "wal"), branch + ".json");
   }
 
   async _load(branch = "main"): Promise<WALState | Falsy> {
@@ -76,12 +94,12 @@ export class FileMetaStore extends MetaStore {
   readonly tag: string = "header-node-fs";
   readonly branches = new Set<string>();
 
-  constructor(dir: URL, name: string) {
-    super(name, dir);
+  constructor(url: URL, name: string) {
+    super(name, ensureVersion(url));
   }
 
   filePathForBranch(branch: string): string {
-    return SysContainer.join(getPath(this.url), "meta", branch + ".json");
+    return SysContainer.join(getPath(this.url), ensureIndexName(this.url, "meta"), branch + ".json");
   }
 
   async load(branch = "main"): Promise<DbMeta[] | Falsy> {
@@ -120,12 +138,12 @@ export class FileMetaStore extends MetaStore {
 export class FileDataStore extends DataStore {
   readonly tag: string = "car-node-fs";
 
-  constructor(dir: URL, name: string) {
-    super(name, dir);
+  constructor(url: URL, name: string) {
+    super(name, ensureVersion(url));
   }
 
   private cidPath(cid: AnyLink) {
-    return SysContainer.join(getPath(this.url), "data", cid.toString() + ".car");
+    return SysContainer.join(getPath(this.url), ensureIndexName(this.url, "data"), cid.toString() + ".car");
   }
 
   async save(car: AnyBlock): Promise<void> {

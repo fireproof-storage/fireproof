@@ -1,7 +1,21 @@
+import fs from "fs";
 import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
+import { replace } from "esbuild-plugin-replace";
 
-const external = ["path", "fs", "util", "node:fs", "node:path", "node:os", "node:url", "assert"];
+const external = [
+  "path",
+  "react",
+  "fs",
+  "util",
+  "node:fs",
+  "node:path",
+  "node:os",
+  "node:url",
+  "assert",
+  "stream",
+  "better-sqlite3",
+];
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
@@ -14,17 +28,26 @@ const LIBRARY_BUNDLE_OPTIONS: Options = {
   minify: false,
 };
 
+function packageVersion(file: string) {
+  return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf-8")).version);
+}
+
 const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    name: "core",
+    format: ["esm", "cjs"],
+    name: "@fireproof/core",
     entry: ["src/index.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core",
     esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion("package.json"),
+        include: /version/,
+      }),
       resolve({
-        "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
-        "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
+        // "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
+        // "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
         // "./node-sys-container.js":  "../runtime/store-file-not-impl.js",
         // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
         // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
@@ -43,8 +66,11 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     entry: ["src/react/index.ts"],
     platform: "browser",
     outDir: "dist/use-fireproof",
-    external: [...external, "react"],
     esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion("package.json"),
+        include: /version/,
+      }),
       resolve({
         "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
         "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
@@ -60,38 +86,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       footer: "declare module 'use-fireproof'",
     },
   },
-  /*
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    name: "core/node",
-    entry: ["src/index.ts"],
-    platform: "node",
-    outDir: "dist/pubdir/node",
-    dts: {
-      footer: "declare module '@fireproof/core'"
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    name: "core/memory",
-    entry: ["src/index.ts"],
-    platform: "browser",
-    outDir: "dist/pubdir/memory",
-    esbuildPlugins: [
-      resolve({
-        // "./node-sys-container": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:url": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "assert": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-      })
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core'"
-    },
-  },
-*/
 ];
 
 export default defineConfig((options) => [...LIBRARY_BUNDLES, ...(options.watch || [])]);

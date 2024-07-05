@@ -99,6 +99,7 @@ export class RemoteDataStore extends DataStore {
 }
 
 export class RemoteMetaStore extends MetaStore {
+  readonly STORAGE_VERSION: string = "do-not-use";
   readonly tag: string = "remote-meta";
   readonly connection: Connection;
   readonly subscribers = new Map<string, LoadHandler[]>();
@@ -120,7 +121,7 @@ export class RemoteMetaStore extends MetaStore {
   }
 
   prefix() {
-    return `fp.${this.name}.${this.STORAGE_VERSION}`;
+    return `fp.${this.name}`; //.${this.STORAGE_VERSION}`;
   }
 
   async handleByteHeads(byteHeads: Uint8Array[], branch = "main") {
@@ -167,6 +168,7 @@ export class RemoteMetaStore extends MetaStore {
 }
 
 export class RemoteWALStore extends RemoteWAL {
+  readonly STORAGE_VERSION: string = "do-not-use";
   readonly tag: string = "wal-mem";
   readonly store: Map<string, string>;
 
@@ -176,7 +178,7 @@ export class RemoteWALStore extends RemoteWAL {
   }
 
   headerKey(branch: string) {
-    return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
+    return `fp.wal.${this.loader.name}.${branch}`;
   }
 
   async _load(branch = "main"): Promise<WALState | null> {
