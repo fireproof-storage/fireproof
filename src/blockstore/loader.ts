@@ -86,7 +86,7 @@ export class Loader implements Loadable {
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
-  private writeLimit = pLimit(1); 
+  private writeLimit = pLimit(1);
 
   // readonly id = uuidv4();
 
@@ -125,7 +125,6 @@ export class Loader implements Loadable {
     await Promise.all(toDestroy.map((store) => store.destroy()));
   }
 
-
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
     // console.log("Loader", name, ebOpts)
@@ -148,16 +147,9 @@ export class Loader implements Loadable {
 
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
     for (const meta of metas) {
-      const writingFn = async () => {
-        // this.isWriting = true;
-        // const id = uuidv7();
-        // console.log("handleDbMetasFromStore-pre", this.id, id, meta.cars.toString());
+      await this.writeLimit(async () => {
         await this.mergeDbMetaIntoClock(meta);
-        // console.log("handleDbMetasFromStore-post",this.id,  id, meta.cars.toString());
-        // this.isWriting = false;
-      };
-      void this._setWaitForWrite(writingFn);
-      await writingFn();
+      });
     }
   }
 
@@ -571,7 +563,4 @@ export class Loader implements Loadable {
     await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid))));
   }
 
-  async _setWaitForWrite(_writingFn: () => Promise<unknown>): Promise<void> {
-    await this.writeLimit(() => _writingFn());
-  }
 }
