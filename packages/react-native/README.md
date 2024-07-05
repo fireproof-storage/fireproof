@@ -4,10 +4,14 @@ React Native bindings for Fireproof
 
 ## Installation
 
-Add `@fireproof/react-native` dependency. We also need to add any native module dependencies so they autolink properly.
+* Add `@fireproof/react-native` dependency. We also need to add any native module dependencies so they autolink properly.
 
-    pnpm add @fireproof/react-native react-native-quick-crypto
-    pnpm pods
+      pnpm add @fireproof/react-native react-native-quick-crypto react-native-mmkv react-native-fast-encoder
+      pnpm pods
+
+* Install polyfills as early as possible in your application (`index.js` or `App.tsx`)
+
+      import '@fireproof/react-native/polyfills';
 
 ## Development
 

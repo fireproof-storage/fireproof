@@ -24,9 +24,11 @@ const TodoList = () => {
     completed: false,
   };
   const [todo, setTodo, saveTodo] = useDocument<Todo>(() => (defaultTodo));
-  // ============
-  // db.allDocs()
-  // ============
+
+  // // ============
+  // // db.allDocs()
+  // // ============
+
   // const [todos, setTodos] = useState<TodoFromAllDocs[]>([])
   // const getDocs = async () => {
   //   const { rows } = await db.allDocs<Todo>();
@@ -51,10 +53,9 @@ const TodoList = () => {
   // ============
   // useLiveQuery
   // ============
+
   const todos: Doc<Todo>[] = useLiveQuery<Todo>('date', {limit: 10, descending: true}).docs;
   console.log({todos});
-
-
 
   return (
     <View style={styles.container}>

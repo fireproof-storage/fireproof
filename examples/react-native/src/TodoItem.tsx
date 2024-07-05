@@ -10,7 +10,6 @@ type TodoItemProps = {
 }
 const TodoItem = ({item}: TodoItemProps) => {
   if (!item) {
-    console.error('Todo undefined');
     return null;
   }
   const { database: db, useDocument } = useFireproof('TodoDB', {public: true});

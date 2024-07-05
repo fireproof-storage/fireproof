@@ -110,8 +110,8 @@ importers:
         specifier: <3
         version: 2.12.2(react-native@0.73.7)(react@18.2.0)
       react-native-quick-crypto:
-        specifier: 0.7.0-rc.5
-        version: 0.7.0-rc.5(react-native@0.73.7)(react@18.2.0)
+        specifier: 0.7.1
+        version: 0.7.1(react-native@0.73.7)(react@18.2.0)
     devDependencies:
       '@babel/core':
         specifier: ^7.20.0
@@ -822,8 +822,8 @@ importers:
         specifier: <3
         version: 2.12.2(react-native@0.73.7)(react@18.2.0)
       react-native-quick-crypto:
-        specifier: ^0.7.0-rc.5
-        version: 0.7.0-rc.5(react-native@0.73.7)(react@18.2.0)
+        specifier: ^0.7.1
+        version: 0.7.1(react-native@0.73.7)(react@18.2.0)
       readable-stream:
         specifier: ^4.5.2
         version: 4.5.2
@@ -12857,8 +12857,8 @@ packages:
       react-native: 0.73.7(@babel/core@7.23.7)(@babel/preset-env@7.24.5)(react@18.2.0)
     dev: false
 
-  /react-native-quick-crypto@0.7.0-rc.5(react-native@0.73.7)(react@18.2.0):
-    resolution: {integrity: sha512-0C0OMuCW5aoct3BKQb83yed9k2/Wa/xu4xv6F/73UA0cEItL7DRmDtWHViBcadL13xBVzopXg+KQM51lT52z1w==}
+  /react-native-quick-crypto@0.7.1(react-native@0.73.7)(react@18.2.0):
+    resolution: {integrity: sha512-1F8D8oYdociccdiU5hciSJ+rvehdmaJRV2hIv/LgEwBthwkVdD7pSf6kFKwoY9Y2Ly6f7tfBCjYg4/uQRge8Jg==}
     dependencies:
       '@craftzdog/react-native-buffer': 6.0.5(react-native@0.73.7)(react@18.2.0)
       events: 3.3.0
