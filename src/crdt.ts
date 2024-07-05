@@ -75,7 +75,7 @@ export class CRDT<T extends DocTypes> {
       },
       autoCompact: this.opts.autoCompact || 100,
       crypto: this.opts.crypto,
-      store: {...this.opts.store, isIndex: false},
+      store: { ...this.opts.store, isIndex: false },
       public: this.opts.public,
       meta: this.opts.meta,
       threshold: this.opts.threshold,

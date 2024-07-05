@@ -18,10 +18,10 @@ export function ensureLogger(opts: Partial<SQLOpts> | undefined, componentName: 
 }
 
 function sqlTableName(...names: string[]): string {
-  return names.map((name) => name
-    .replace(/^[^a-zA-Z0-9]+/, "")
-    .replace(/[^a-zA-Z0-9]+/g, "_"))
-    .filter(i => i.length).join("_");
+  return names
+    .map((name) => name.replace(/^[^a-zA-Z0-9]+/, "").replace(/[^a-zA-Z0-9]+/g, "_"))
+    .filter((i) => i.length)
+    .join("_");
 }
 
 function ensureTableNames(url: URL, opts?: Partial<SQLOpts>): SQLTableNames {
@@ -33,7 +33,7 @@ function ensureTableNames(url: URL, opts?: Partial<SQLOpts>): SQLTableNames {
   // console.log("isIndex->", opts?.url, isIndex, sqlTableName(isIndex,  ret.data));
   if (isIndex.length) {
     return {
-      data: sqlTableName(isIndex,  ret.data),
+      data: sqlTableName(isIndex, ret.data),
       meta: sqlTableName(isIndex, ret.meta),
       wal: sqlTableName(isIndex, ret.wal),
     };
@@ -42,7 +42,7 @@ function ensureTableNames(url: URL, opts?: Partial<SQLOpts>): SQLTableNames {
     data: sqlTableName(ret.data),
     meta: sqlTableName(ret.meta),
     wal: sqlTableName(ret.wal),
-  }
+  };
 }
 
 const textEncoder = new TextEncoder();

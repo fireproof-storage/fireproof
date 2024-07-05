@@ -39,25 +39,17 @@ async function connectIdb<T>(url: URL, dbWorkFun: (arg0: SimpleDb) => Promise<T>
     const db = await openDB(dbName.fullDb, dbName.version, {
       upgrade(db) {
         // console.log('upgrade:', dbName);
-        [
-          "version",
-          "data",
-          "wal",
-          "meta",
-          "idx.data",
-          "idx.wal",
-          "idx.meta"
-        ].map((store) => {
+        ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
           db.createObjectStore(store, {
             autoIncrement: false,
           });
-        })
+        });
       },
     });
     const found = await db.get("version", "version");
     const version = url.searchParams.get("version");
     if (!found) {
-      await db.put("version", {version }, "version");
+      await db.put("version", { version }, "version");
     } else if (found.version !== version) {
       console.error(`version mismatch:${url.toString()} ${version} !== ${found.version}`);
     }
@@ -92,7 +84,7 @@ async function connectIdb<T>(url: URL, dbWorkFun: (arg0: SimpleDb) => Promise<T>
 export interface DbName {
   readonly fullDb: string;
   readonly objStore: string;
-  readonly connectionKey: string
+  readonly connectionKey: string;
   readonly version: number;
   // readonly type: "data" | "meta" | "wal";
   readonly dbName: string;
@@ -108,7 +100,10 @@ function getStore(url: URL): string {
 }
 
 function joinDBName(...names: string[]): string {
-  return names.map(i => i.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_")).filter(i => i.length).join(".");
+  return names
+    .map((i) => i.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_"))
+    .filter((i) => i.length)
+    .join(".");
 }
 
 const schemaVersion = new Map<string, number>();
@@ -123,7 +118,7 @@ export function getIndexDBName(iurl: URL): DbName {
   // const dbName = fullDb.replace(new RegExp(`^fp.${storageVersion}.`), ""); // cut fp prefix
   const dbName = url.searchParams.get("name");
   if (!dbName) throw new Error(`name not found:${url.toString()}`);
-  const result = joinDBName(fullDb, dbName)
+  const result = joinDBName(fullDb, dbName);
   let objStore = getStore(url);
   if (url.searchParams.has("index")) {
     objStore = joinDBName(url.searchParams.get("index") || "idx", objStore);
@@ -148,10 +143,10 @@ export function getIndexDBName(iurl: URL): DbName {
     */
   // console.log("getIndexDBName:", { fullDb: result, dbName, });
   const connectionKey = [result, objStore].join(":");
-  let version = 0
+  let version = 0;
   if (schemaVersion.has(result)) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    version = schemaVersion.get(result)!
+    version = schemaVersion.get(result)!;
   }
   version = version + 1;
   schemaVersion.set(result, version);
@@ -387,7 +382,7 @@ export class IndexDBMetaStore extends MetaStoreBase {
 }
 
 export class IndexDBTestStore implements TestStore {
-  constructor(readonly url: URL) { }
+  constructor(readonly url: URL) {}
   async get(key: string) {
     const ensureDB = new EnsureDB(this.url);
     const ret = await ensureDB.get(async (db) => {

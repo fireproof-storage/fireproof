@@ -16,18 +16,18 @@ function ensureVersion(url: URL): URL {
 
 const versionFiles = new Map<string, ResolveOnce<void>>();
 async function ensureVersionFile(path: string): Promise<string> {
-  let once = versionFiles.get(path)
+  let once = versionFiles.get(path);
   if (!once) {
     once = new ResolveOnce<void>();
     versionFiles.set(path, once);
   }
   once.once(async () => {
     await SysContainer.mkdir(path, { recursive: true });
-    const vFile = SysContainer.join(path, 'version');
-    const vFileStat = await SysContainer.stat(vFile).catch(() => undefined)
+    const vFile = SysContainer.join(path, "version");
+    const vFileStat = await SysContainer.stat(vFile).catch(() => undefined);
     if (!vFileStat) {
-      await SysContainer.writefile(SysContainer.join(path, 'version'), FILESTORE_VERSION);
-      return
+      await SysContainer.writefile(SysContainer.join(path, "version"), FILESTORE_VERSION);
+      return;
     } else if (!vFileStat.isFile()) {
       throw new Error(`version file is a directory:${vFile}`);
     }
@@ -35,12 +35,15 @@ async function ensureVersionFile(path: string): Promise<string> {
     if (v.toString() !== FILESTORE_VERSION) {
       console.warn(`version mismatch:${vFile}: ${v.toString()}!=${FILESTORE_VERSION}`);
     }
-  })
-  return path
+  });
+  return path;
 }
 
 async function getPath(url: URL): Promise<string> {
-  const basePath = url.toString().replace(/^file:\/\//, "").replace(/\?.*$/, "");
+  const basePath = url
+    .toString()
+    .replace(/^file:\/\//, "")
+    .replace(/\?.*$/, "");
   const name = url.searchParams.get("name");
   if (!name) throw new Error(`name not found:${url.toString()}`);
   const version = url.searchParams.get("version");
@@ -69,9 +72,9 @@ function getFileName(url: URL, key: string): string {
 
 function ensureIndexName(url: URL, name: string): string {
   if (url.searchParams.has("index")) {
-    name = (url.searchParams.get("index")?.replace(/[^a-zA-Z0-9]/g, '') || "idx") + "-" + name;
+    name = (url.searchParams.get("index")?.replace(/[^a-zA-Z0-9]/g, "") || "idx") + "-" + name;
   }
-  return name
+  return name;
 }
 
 export class FileRemoteWAL extends RemoteWAL {

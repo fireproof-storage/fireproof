@@ -15,7 +15,6 @@ import { ensureSQLOpts } from "./ensurer.js";
 //     }, opts)
 // }
 
-
 const onceSQLiteConnections = new Map<string, ResolveOnce<Database>>();
 export class SQLiteConnection implements DBConnection {
   static fromURL(url: URL, opts: Partial<SQLOpts> = {}): DBConnection {
