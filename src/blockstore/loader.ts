@@ -562,5 +562,4 @@ export class Loader implements Loadable {
     const missing = cids.filter((cid) => !this.carReaders.has(cid.toString()));
     await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid))));
   }
-
 }

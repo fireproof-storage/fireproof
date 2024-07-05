@@ -22,7 +22,7 @@ function _dataDir(name?: string, base?: string | URL): string {
     } catch (e) {
       try {
         base = `file://${base}`;
-        url = new URL(base)
+        url = new URL(base);
       } catch (e) {
         throw new Error(`invalid base url: ${base}`);
       }

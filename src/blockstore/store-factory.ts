@@ -163,17 +163,17 @@ export function toStoreRuntime(name: string | undefined = undefined, opts: Store
     makeMetaStore: (loader: Loadable) => {
       return cacheStore(toURL(opts.stores?.meta || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
         meta: metaStoreFactory,
-      })
+      });
     },
     makeDataStore: (loader: Loadable) => {
       return cacheStore(toURL(opts.stores?.data || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
         data: dataStoreFactory,
-      })
+      });
     },
     makeRemoteWAL: (loader: Loadable) => {
       return cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
         remoteWAL: remoteWalFactory,
-      })
+      });
     },
 
     encodeFile,
