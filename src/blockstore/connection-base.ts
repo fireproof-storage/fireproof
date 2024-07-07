@@ -10,7 +10,6 @@ import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, Down
 import { Loadable, type Loader } from "./loader.js";
 
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
-import { L } from "vitest/dist/reporters-yx5ZTtEV.js";
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../utils.js";
 
