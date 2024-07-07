@@ -1,6 +1,5 @@
 import { CID } from "multiformats";
 import { rt, bs } from "@fireproof/core";
-import { ensureLogger } from "../../src/utils";
 
 const decoder = new TextDecoder("utf-8");
 
@@ -16,7 +15,7 @@ describe("DataStore", function () {
   beforeEach(async () => {
     await rt.SysContainer.start();
     store = await bs.toStoreRuntime().makeDataStore({ name: "test" } as bs.Loadable);
-    raw = await bs.testStoreFactory(store.url, ensureLogger({}, "test"));
+    raw = await bs.testStoreFactory(store.url);
   });
 
   it("should have a name", function () {

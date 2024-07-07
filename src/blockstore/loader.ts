@@ -330,9 +330,14 @@ export class Loader implements Loadable {
     cid: AnyLink,
     t: CarTransaction,
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
+    try {
     return theKey && this.ebOpts.crypto
       ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, cid, t)
       : await encodeCarFile([cid], t);
+    } catch (e) {
+      console.error("error creating car file", e);
+      throw e;
+    }
   }
 
   protected makeFileCarHeader(result: FileTransactionMeta): TransactionMeta {

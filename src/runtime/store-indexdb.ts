@@ -37,7 +37,7 @@ async function connectIdb<T>(url: URL, logger: Logger, dbWorkFun: (arg0: SimpleD
   // console.log(`connectIdb:pre:`, dbName, url.toString());
   const once = await ro.once(async () => {
     // console.log(`connectIdb:once:`, dbName, url.toString());
-    const db = await openDB(dbName.fullDb, dbName.version, {
+    const db = await openDB(dbName.fullDb, 1, {
       upgrade(db) {
         // console.log('upgrade:', dbName);
         ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
@@ -60,14 +60,18 @@ async function connectIdb<T>(url: URL, logger: Logger, dbWorkFun: (arg0: SimpleD
         .Str("found", found.version)
         .Msg("version mismatch");
     }
+    // console.log("connectIdb-7");
     return { db, dbName };
   });
 
   const type = getStore(url, logger);
 
+  // console.log("connectIdb-9", { type }, dbName);
   // console.log(`get:${this.id}:once-done`);
-  return await dbWorkFun({
+  const ret = await dbWorkFun({
+    type,
     get: async (key: string | string[]) => {
+      // console.log("get", dbName, key);
       const tx = once.db.transaction([type], "readonly");
       const bytes = await tx.objectStore(type).get(sanitzeKey(key));
       await tx.done;
@@ -86,13 +90,15 @@ async function connectIdb<T>(url: URL, logger: Logger, dbWorkFun: (arg0: SimpleD
     },
     idb: () => once.db,
   });
+  // console.log("connectIdb-10");
+  return ret;
 }
 
 export interface DbName {
   readonly fullDb: string;
   readonly objStore: string;
   readonly connectionKey: string;
-  readonly version: number;
+  // readonly version: number;
   // readonly type: "data" | "meta" | "wal";
   readonly dbName: string;
 }
@@ -113,7 +119,7 @@ function joinDBName(...names: string[]): string {
     .join(".");
 }
 
-const schemaVersion = new Map<string, number>();
+// const schemaVersion = new Map<string, number>();
 export function getIndexDBName(iurl: URL, logger: Logger): DbName {
   const url = ensureVersion(iurl);
   const fullDb = url.pathname.replace(/^\/+/, "").replace(/\?.*$/, ""); // cut leading slashes
@@ -126,10 +132,10 @@ export function getIndexDBName(iurl: URL, logger: Logger): DbName {
   const dbName = url.searchParams.get("name");
   if (!dbName) throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const result = joinDBName(fullDb, dbName);
-  let objStore = getStore(url, logger);
-  if (url.searchParams.has("index")) {
-    objStore = joinDBName(url.searchParams.get("index") || "idx", objStore);
-  }
+  const objStore = getStore(url, logger);
+  // if (url.searchParams.has("index")) {
+  //   objStore = joinDBName(url.searchParams.get("index") || "idx", objStore);
+  // }
   /*
   let result: string;
   switch (type) {
@@ -150,24 +156,25 @@ export function getIndexDBName(iurl: URL, logger: Logger): DbName {
     */
   // console.log("getIndexDBName:", { fullDb: result, dbName, });
   const connectionKey = [result, objStore].join(":");
-  let version = 0;
-  if (schemaVersion.has(result)) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    version = schemaVersion.get(result)!;
-  }
-  version = version + 1;
-  schemaVersion.set(result, version);
+  // const version = 0;
+  // if (schemaVersion.has(result)) {
+  //   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  //   version = schemaVersion.get(result)!;
+  // }
+  // version = version + 1;
+  // schemaVersion.set(result, version);
   return {
     fullDb: result,
     objStore,
     connectionKey,
-    version,
+    // version,
     // type,
     dbName,
   };
 }
 
 export interface SimpleDb {
+  readonly type: string;
   get(key: string[]): Promise<unknown>;
   put(value: unknown, key: string[]): Promise<void>;
   delete(key: string[]): Promise<void>;
@@ -218,6 +225,7 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     return await this.ensureDB.get(async (db) => {
+      console.log("IndexDBDataStore:load", db.type, cid.toString());
       const bytes = (await db.get([cid.toString()])) as Uint8Array;
       // const tx = db.transaction([dbName.type], "readonly");
       // const bytes = (await tx.objectStore(dbName.type).get(cid.toString())) as Uint8Array;
@@ -231,6 +239,7 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async save(car: AnyBlock): Promise<void> {
     return await this.ensureDB.get(async (db: SimpleDb) => {
+    console.log("IndexDBDataStore:save", db.type, car.cid.toString());
       // await db.idb().put(getStore(this.url), car.bytes, car.cid.toString());
       // await db.put(car.bytes, [car.cid.toString()]);
       const tx = db.idb().transaction(getStore(this.url, this.logger), "readwrite");
@@ -242,10 +251,11 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async remove(cid: AnyLink): Promise<void> {
     return await this.ensureDB.get(async (db: SimpleDb) => {
+    console.log("IndexDBDataStore:remove", db.type, cid.toString());
       // const tx = db.transaction([dbName.type], "readwrite");
       // await tx.objectStore(dbName.type).delete(cid.toString());
       // await tx.done
-      db.delete([cid.toString()]);
+      await db.delete([cid.toString()]);
       return;
     });
   }
@@ -256,15 +266,17 @@ export class IndexDBDataStore extends DataStoreBase {
   async destroy() {
     // return deleteDB(getIndexDBName(this.url).fullDb);
     await this.ensureDB.get(async (db) => {
+      const type = db.type
+      // console.log("IndexDBDataStore:destroy", type);
       const idb = db.idb();
-      const trans = idb.transaction(getStore(this.url, this.logger), "readwrite");
-      const object_store = trans.objectStore(getStore(this.url, this.logger));
+      const trans = idb.transaction(type, "readwrite");
+      const object_store = trans.objectStore(type);
       const toDelete = [];
       for (let cursor = await object_store.openCursor(); cursor; cursor = await cursor.continue()) {
         toDelete.push(cursor.primaryKey);
       }
       for (const key of toDelete) {
-        await trans.db.delete(getStore(this.url, this.logger), key);
+        await trans.db.delete(type, key);
       }
       await trans.done;
     });
@@ -277,6 +289,8 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   readonly ensureDB: EnsureDB;
 
   readonly logger: Logger;
+  readonly branches = new Set<string>();
+
   constructor(loader: Loadable, url: URL) {
     super(loader, ensureVersion(url));
     this.logger = ensureLogger(loader.logger, "IndexDBRemoteWAL", {
@@ -286,7 +300,6 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
     this.ensureDB = new EnsureDB(this.url, this.logger);
   }
 
-  readonly branches = new Set<string>();
 
   headerKey(branch: string) {
     // return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
@@ -297,6 +310,7 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   async _load(branch = "main"): Promise<WALState | Falsy> {
     this.branches.add(branch);
     return await this.ensureDB.get(async (db: SimpleDb) => {
+      console.log("IndexDBRemoteWAL:load", db.type, branch);
       try {
         const bytesString = (await db.get([this.headerKey(branch)])) as string;
         if (!bytesString) return undefined;
@@ -312,6 +326,7 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
     this.branches.add(branch);
     return await this.ensureDB.get(async (db: SimpleDb) => {
       try {
+        console.log("IndexDBRemoteWAL:save", db.type, branch);
         const encoded: ToString<WALState> = format(state);
         db.put(encoded, [this.headerKey(branch)]);
         // const tx = db.transaction([dbName.type], "readwrite");
@@ -328,11 +343,14 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   }
   async _destroy() {
     await this.ensureDB.get(async (db) => {
+      const type = db.type
+      // console.log("IndexDBRemoteWAL:destroy", type);
       const idb = db.idb();
-      const trans = idb.transaction(getStore(this.url, this.logger), "readwrite");
+      const trans = idb.transaction(type, "readwrite");
       for (const branch of this.branches) {
-        await trans.db.delete(getStore(this.url, this.logger), branch);
+        await trans.db.delete(type, branch);
       }
+      this.branches.clear();
       await trans.done;
     });
   }
@@ -342,6 +360,8 @@ export class IndexDBMetaStore extends MetaStoreBase {
   readonly tag: string = "header-web-ls";
 
   readonly ensureDB: EnsureDB;
+
+  readonly id = uuidv4();
 
   constructor(name: string, url: URL, logger: Logger) {
     super(
@@ -365,6 +385,7 @@ export class IndexDBMetaStore extends MetaStoreBase {
     this.branches.add(branch);
     return await this.ensureDB.get(async (db: SimpleDb) => {
       try {
+        console.log("IndexDBMeta:load", db.type, branch);
         const bytesString = (await db.get([this.headerKey(branch)])) as string;
         if (!bytesString) {
           throw this.logger.Debug().Str("branch", branch).Msg(`ENOENT: missing idb block`).AsError();
@@ -383,9 +404,12 @@ export class IndexDBMetaStore extends MetaStoreBase {
   async save(meta: DbMeta, branch = "main") {
     this.branches.add(branch);
     return await this.ensureDB.get(async (db: SimpleDb) => {
+      console.log("IndexDBMeta:save", db.type, branch);
       try {
         const headerKey = this.headerKey(branch);
+        console.log(`xxxx->1`)
         const bytes = this.makeHeader(meta);
+        console.log(`xxxx->2`, bytes, headerKey)
         await db.put(bytes, [headerKey]);
         // const tx = db.transaction([dbName.type], "readwrite");
         // await tx.objectStore(dbName.type).put(bytes, headerKey);
@@ -404,16 +428,20 @@ export class IndexDBMetaStore extends MetaStoreBase {
   }
   async destroy() {
     await this.ensureDB.get(async (db) => {
+      const type = db.type
+      // console.log("IndexDBMeta:destroy", this.id, type);
       const idb = db.idb();
-      const trans = idb.transaction(getStore(this.url, this.logger), "readwrite");
+      const trans = idb.transaction(type, "readwrite");
       for (const branch of this.branches) {
-        await trans.db.delete(getStore(this.url, this.logger), branch);
+        await trans.db.delete(type, branch);
       }
+      this.branches.clear();
       await trans.done;
     });
   }
 }
 
+const txtEncoder = new TextEncoder();
 export class IndexDBTestStore implements TestStore {
   readonly logger: Logger;
   constructor(
@@ -427,9 +455,10 @@ export class IndexDBTestStore implements TestStore {
   async get(key: string) {
     const ensureDB = new EnsureDB(this.url, this.logger);
     const ret = await ensureDB.get(async (db) => {
+      console.log("IndexDBTestStore:get", this.url.toString(), key);
       let bytes = await db.get([key]);
       if (typeof bytes === "string") {
-        bytes = new TextEncoder().encode(bytes);
+        bytes = txtEncoder.encode(bytes);
       }
       return bytes as Uint8Array;
     });

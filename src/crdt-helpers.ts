@@ -158,7 +158,7 @@ export async function getValueFromCrdt<T extends DocTypes>(
   key: string,
   logger: Logger,
 ): Promise<DocValue<T>> {
-  if (!head.length) throw logger.Error().Msg("Getting from an empty database").AsError();
+  if (!head.length) throw logger.Debug().Msg("Getting from an empty database").AsError();
   const link = await get(blocks, head, key);
   if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
   return await getValueFromLink(blocks, link, logger);
