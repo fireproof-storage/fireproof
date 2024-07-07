@@ -137,9 +137,12 @@ async function remoteWalFactory(iurl: URL, loader: Loadable): Promise<RemoteWAL>
 }
 
 export async function testStoreFactory(url: URL, ilogger?: Logger): Promise<TestStore> {
-  const logger = ensureLogger({
-    logger: ilogger,
-  }, "testStoreFactory");
+  const logger = ensureLogger(
+    {
+      logger: ilogger,
+    },
+    "testStoreFactory",
+  );
   switch (url.protocol) {
     case "file:": {
       const { FileTestStore } = await import("../runtime/store-file.js");

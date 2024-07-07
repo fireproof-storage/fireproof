@@ -156,7 +156,7 @@ export async function getValueFromCrdt<T extends DocTypes>(
   blocks: BaseBlockstore,
   head: ClockHead,
   key: string,
-  logger: Logger
+  logger: Logger,
 ): Promise<DocValue<T>> {
   if (!head.length) throw logger.Error().Msg("Getting from an empty database").AsError();
   const link = await get(blocks, head, key);
@@ -226,13 +226,23 @@ export async function clockChangesSince<T extends DocTypes>(
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions,
-  logger: Logger
+  logger: Logger,
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
   const eventsFetcher = (
     opts.dirty ? new DirtyEventFetcher<Operation>(blocks) : new EventFetcher<Operation>(blocks)
   ) as EventFetcher<Operation>;
   const keys = new Set<string>();
-  const updates = await gatherUpdates<T>(blocks, eventsFetcher, head, since, [], keys, new Set<string>(), opts.limit || Infinity, logger);
+  const updates = await gatherUpdates<T>(
+    blocks,
+    eventsFetcher,
+    head,
+    since,
+    [],
+    keys,
+    new Set<string>(),
+    opts.limit || Infinity,
+    logger,
+  );
   return { result: updates.reverse(), head };
 }
 
@@ -245,7 +255,7 @@ async function gatherUpdates<T extends DocTypes>(
   keys: Set<string>,
   didLinks: Set<string>,
   limit: number,
-  logger: Logger
+  logger: Logger,
 ): Promise<DocUpdate<T>[]> {
   if (limit <= 0) return updates;
   // if (Math.random() < 0.001) console.log('gatherUpdates', head.length, since.length, updates.length)

@@ -16,7 +16,7 @@ function ensureVersion(url: URL): URL {
 }
 
 const versionFiles = new Map<string, ResolveOnce<void>>();
-async function ensureVersionFile(path: string, logger:Logger): Promise<string> {
+async function ensureVersionFile(path: string, logger: Logger): Promise<string> {
   let once = versionFiles.get(path);
   if (!once) {
     once = new ResolveOnce<void>();
@@ -48,7 +48,7 @@ async function getPath(url: URL, logger: Logger): Promise<string> {
   const name = url.searchParams.get("name");
   if (!name) throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const version = url.searchParams.get("version");
-  if (!version) throw  logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
+  if (!version) throw logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
   // const index = url.searchParams.has("index");
   // if (index) name += index;
   return ensureVersionFile(SysContainer.join(basePath, version, name), logger);
@@ -125,9 +125,7 @@ export class FileMetaStore extends MetaStore {
   readonly branches = new Set<string>();
 
   constructor(url: URL, name: string, logger: Logger) {
-    super(name,
-      ensureVersion(url),
-      ensureLogger(logger, "FileMetaStore", { name, url }));
+    super(name, ensureVersion(url), ensureLogger(logger, "FileMetaStore", { name, url }));
   }
 
   async filePathForBranch(branch: string): Promise<string> {
@@ -239,12 +237,19 @@ function toArrayBuffer(buffer: Buffer) {
 
 export class FileTestStore implements TestStore {
   readonly logger: Logger;
-  constructor(readonly url: URL, logger: Logger) {
+  constructor(
+    readonly url: URL,
+    logger: Logger,
+  ) {
     this.logger = ensureLogger(logger, "FileTestStore", { url });
   }
 
   async get(key: string) {
-    const dbFile = SysContainer.join(await getPath(this.url, this.logger), getStore(this.url, this.logger), getFileName(this.url, key, this.logger));
+    const dbFile = SysContainer.join(
+      await getPath(this.url, this.logger),
+      getStore(this.url, this.logger),
+      getFileName(this.url, key, this.logger),
+    );
     const buffer = await SysContainer.readfile(dbFile);
     return toArrayBuffer(buffer);
   }

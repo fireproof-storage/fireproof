@@ -131,10 +131,13 @@ export class Loader implements Loadable {
   constructor(name: string, ebOpts: BlockstoreOpts) {
     this.name = name;
     // console.log("Loader", name, ebOpts)
-    this.ebOpts = defaultedBlockstoreRuntime({
-      ...ebOpts,
-      name,
-    }, "Loader");
+    this.ebOpts = defaultedBlockstoreRuntime(
+      {
+        ...ebOpts,
+        name,
+      },
+      "Loader",
+    );
     this.logger = this.ebOpts.logger;
   }
 

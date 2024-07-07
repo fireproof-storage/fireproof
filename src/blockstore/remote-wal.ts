@@ -21,7 +21,6 @@ export abstract class RemoteWAL {
   // readonly STORAGE_VERSION: string = STORAGE_VERSION;
   readonly loader: Loadable;
 
-
   readonly _ready = new ResolveOnce<void>();
 
   async ready() {
@@ -139,9 +138,14 @@ export abstract class RemoteWAL {
         const res = await Promise.allSettled(uploads);
         const errors = res.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
         if (errors.length) {
-          throw this.logger.Error().Any("errors",
-            errors.map((e) => e.reason)
-          ).Msg("error uploading").AsError();
+          throw this.logger
+            .Error()
+            .Any(
+              "errors",
+              errors.map((e) => e.reason),
+            )
+            .Msg("error uploading")
+            .AsError();
 
           errors[0].reason;
         }

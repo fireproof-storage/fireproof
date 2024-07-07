@@ -108,8 +108,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         if (this.mapFnString) {
           // we already initialized from application code
           if (this.mapFnString !== meta.map) {
-            this.logger.Warn().Msg(
-              `cannot apply different mapFn meta: old mapFnString ${this.mapFnString} new mapFnString ${meta.map}`);
+            this.logger
+              .Warn()
+              .Msg(`cannot apply different mapFn meta: old mapFnString ${this.mapFnString} new mapFnString ${meta.map}`);
             // throw new Error('cannot apply different mapFn meta')
           } else {
             this.byId.cid = meta.byId;
