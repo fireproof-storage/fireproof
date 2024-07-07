@@ -52,7 +52,10 @@ async function connectIdb<T>(url: URL, logger: Logger, dbWorkFun: (arg0: SimpleD
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {
-      console.warn(`version mismatch:${url.toString()} ${version} !== ${found.version}`);
+      logger.Warn().Str("url", url.toString())
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        .Str("version", version!)
+        .Str("found", found.version).Msg("version mismatch");
     }
     return { db, dbName };
   });
@@ -217,7 +220,7 @@ export class IndexDBDataStore extends DataStoreBase {
       // const bytes = (await tx.objectStore(dbName.type).get(cid.toString())) as Uint8Array;
       // await tx.done
       if (!bytes) {
-        throw this.logger.Error().Str("cid", cid.toString()).Msg(`ENOENT: missing idb block`).AsError();
+        throw this.logger.Debug().Str("cid", cid.toString()).Msg(`ENOENT: missing idb block`).AsError();
       }
       return { cid, bytes };
     });
@@ -361,14 +364,14 @@ export class IndexDBMetaStore extends MetaStoreBase {
       try {
         const bytesString = (await db.get([this.headerKey(branch)])) as string;
         if (!bytesString) {
-          throw this.logger.Error().Str("branch", branch).Msg(`ENOENT: missing idb block`).AsError();
+          throw this.logger.Debug().Str("branch", branch).Msg(`ENOENT: missing idb block`).AsError();
         }
         // browser assumes a single writer process
         // to support concurrent updates to the same database across multiple tabs
         // we need to implement the same kind of mvcc.crdt solution as in store-fs and connect-s3
         return [this.parseHeader(bytesString)];
       } catch (e) {
-        this.logger.Error().Err(e).Msg("load");
+        this.logger.Debug().Err(e).Msg("load");
         return undefined;
       }
     });
