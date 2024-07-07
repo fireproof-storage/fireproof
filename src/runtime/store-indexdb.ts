@@ -52,10 +52,13 @@ async function connectIdb<T>(url: URL, logger: Logger, dbWorkFun: (arg0: SimpleD
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {
-      logger.Warn().Str("url", url.toString())
+      logger
+        .Warn()
+        .Str("url", url.toString())
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         .Str("version", version!)
-        .Str("found", found.version).Msg("version mismatch");
+        .Str("found", found.version)
+        .Msg("version mismatch");
     }
     return { db, dbName };
   });
