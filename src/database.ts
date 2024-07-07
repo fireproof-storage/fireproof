@@ -41,11 +41,13 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly blockstore: BaseBlockstore;
 
   async close() {
+    await this.ready();
     await this._crdt.close();
     await this.blockstore.close();
   }
 
   async destroy() {
+    await this.ready();
     await this._crdt.destroy();
     await this.blockstore.destroy();
   }

@@ -229,6 +229,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
     if (result.length === 0) {
       this.indexHead = head;
+      console.log("_updateIndex: no changes")
       // return { byId: this.byId, byKey: this.byKey } as IndexTransactionMeta;
     }
     let staleKeyIndexEntries: IndexUpdate<K>[] = [];
@@ -240,12 +241,13 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }
     const indexEntries = indexEntriesForChanges<T, K>(result, this.mapFn); // use a getter to translate from string
-    // console.log("indexEntries", indexEntries);
+    console.log("indexEntries", indexEntries);
     const byIdIndexEntries: IndexDocString[] = indexEntries.map(({ key }) => ({
       key: key[1],
       value: key,
     }));
     const indexerMeta: IdxMetaMap = { indexes: new Map() };
+    console.log("indexEntries-1");
 
     for (const [name, indexer] of this.crdt.indexers) {
       if (indexer.indexHead) {
@@ -258,13 +260,18 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         } as IdxMeta);
       }
     }
+    console.log("indexEntries-2");
     if (result.length === 0) {
+      console.log("indexEntries-3");
       return indexerMeta as unknown as IndexTransactionMeta;
     }
+    console.log("indexEntries-4");
     const { meta } = await this.blockstore.transaction<IndexTransactionMeta>(async (tblocks): Promise<IndexTransactionMeta> => {
+      console.log("indexEntries-4.1");
       this.byId = await bulkIndex<K, R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
       this.byKey = await bulkIndex<K, R, CompareKey>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
       this.indexHead = head;
+      console.log("indexEntries-4.2", this.byId.cid, this.byKey.cid);
       const idxMeta = {
         byId: this.byId.cid,
         byKey: this.byKey.cid,
@@ -275,6 +282,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       indexerMeta.indexes?.set(this.name, idxMeta); // should this move to after commit?
       return indexerMeta as unknown as IndexTransactionMeta;
     });
+    console.log("indexEntries-5");
     return meta;
   }
 }

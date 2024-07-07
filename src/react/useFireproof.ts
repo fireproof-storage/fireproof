@@ -34,7 +34,9 @@ type UpdateDocFn<T extends DocTypes> = (newDoc?: DocSet<T>, options?: UpdateDocF
 
 type StoreDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DbResponse>;
 
-export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>];
+type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DbResponse>;
+
+export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
 
 export type UseDocument = <T extends DocTypes>(initialDocFn: () => DocSet<T>) => UseDocumentResult<T>;
 
@@ -141,12 +143,26 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const saveDoc: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
+        console.log("saveDoc", existingDoc, doc)
         const res = await database.put(existingDoc ?? doc);
         // If the document was created, then we need to update the local state with the new `_id`
         if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
         return res;
       },
       [doc],
+    );
+
+    const deleteDoc: DeleteDocFn<T> = useCallback(
+      async (existingDoc) => {
+        const id = existingDoc?._id ?? docId;
+        const doc = await database.get<T>(id).catch(() => undefined);
+        if (!doc) throw new Error(`Document not found:${id}`);
+        const res = await database.del(id);
+        console.log("deleted", res, id, docId, initialDoc);
+        setDoc(initialDoc);
+        return res;
+      },
+      [docId, initialDoc],
     );
 
     const updateDoc: UpdateDocFn<T> = useCallback(
@@ -174,7 +190,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       void refreshDoc();
     }, [refreshDoc]);
 
-    return [{ _id: docId, ...doc }, updateDoc, saveDoc];
+    return [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc];
   }
 
   function useLiveQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(

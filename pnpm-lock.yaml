@@ -12,14 +12,14 @@ importers:
         specifier: ^0.1.19
         version: 0.1.26
       '@ipld/car':
-        specifier: ^5.3.1
-        version: 5.3.1
+        specifier: ^5.3.2
+        version: 5.3.2
       '@ipld/dag-cbor':
-        specifier: ^9.2.0
-        version: 9.2.0
+        specifier: ^9.2.1
+        version: 9.2.1
       '@ipld/dag-json':
-        specifier: ^10.2.1
-        version: 10.2.1
+        specifier: ^10.2.2
+        version: 10.2.2
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -2380,8 +2380,8 @@ packages:
     resolution: {integrity: sha512-MJttijd8rMFcKJC8NYmprWr6hD3r9Gd9qUC0XwPNwoEPWSMVJwA2MlXxF+nhZZNMY+HXsWa+o7KY2emWYIn0jQ==}
     engines: {node: '>=18'}
 
-  '@ipld/car@5.3.1':
-    resolution: {integrity: sha512-8fNkYAZvL9yX2zesF32k7tYqUDGG41felmmBnwjCZJto06QXCb0NOMPJc/mhNgnVa5gkKqxPO1ZdSoHuaYcVSw==}
+  '@ipld/car@5.3.2':
+    resolution: {integrity: sha512-Bb4XrCFlnsCb9tTzZ1I8zo9O61D9qm7HfvuYrQ9gzdE8YhjyVIjrjmHmnoSWV/uCmyc2/bcqiDPIg+9WljXNzg==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/car@5.4.2':
@@ -2392,16 +2392,16 @@ packages:
     resolution: {integrity: sha512-mHRuzgGXNk0Y5W7nNQdN37qJiig1Kdgf92icBVFRUNtBc9Ezl5DIdWfiGWBucHBrhqPBncxoH3As9cHPIRozxA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-cbor@9.2.0':
-    resolution: {integrity: sha512-N14oMy0q4gM6OuZkIpisKe0JBSjf1Jb39VI+7jMLiWX9124u1Z3Fdj/Tag1NA0cVxxqWDh0CqsjcVfOKtelPDA==}
+  '@ipld/dag-cbor@9.2.1':
+    resolution: {integrity: sha512-nyY48yE7r3dnJVlxrdaimrbloh4RokQaNRdI//btfTkcTEZbpmSrbYcBQ4VKTf8ZxXAOUJy4VsRpkJo+y9RTnA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-cbor@9.2.4':
     resolution: {integrity: sha512-GbDWYl2fdJgkYtIJN0HY9oO0o50d1nB4EQb7uYWKUd2ztxCjxiEW3PjwGG0nqUpN1G4Cug6LX8NzbA7fKT+zfA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-json@10.2.1':
-    resolution: {integrity: sha512-P3LXQ1HhroyWxpQtI0vqLigM7QyLLS/pcApEz8c46VEOR1878n/ufy5eGlsG840RDm4RMIG2UWp6snuD+h/edQ==}
+  '@ipld/dag-json@10.2.2':
+    resolution: {integrity: sha512-NnU8HdHKwAoGyrW3S09NMa8aZw0tImLRyR64hoafpLpDpAbA9g1+fb24JsdlugbL4sXUQVwDVA+qK4Ud8V83lA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-json@10.2.5':
@@ -9161,9 +9161,9 @@ snapshots:
 
   '@inquirer/figures@1.0.12': {}
 
-  '@ipld/car@5.3.1':
+  '@ipld/car@5.3.2':
     dependencies:
-      '@ipld/dag-cbor': 9.2.0
+      '@ipld/dag-cbor': 9.2.1
       cborg: 4.2.1
       multiformats: 13.1.1
       varint: 6.0.0
@@ -9180,7 +9180,7 @@ snapshots:
       cborg: 1.10.2
       multiformats: 11.0.2
 
-  '@ipld/dag-cbor@9.2.0':
+  '@ipld/dag-cbor@9.2.1':
     dependencies:
       cborg: 4.2.1
       multiformats: 13.1.1
@@ -9190,7 +9190,7 @@ snapshots:
       cborg: 4.2.11
       multiformats: 13.3.6
 
-  '@ipld/dag-json@10.2.1':
+  '@ipld/dag-json@10.2.2':
     dependencies:
       cborg: 4.2.1
       multiformats: 13.1.1
@@ -10266,6 +10266,7 @@ snapshots:
   '@web3-storage/access@18.4.0':
     dependencies:
       '@ipld/car': 5.4.2
+      '@ipld/dag-cbor': 9.2.1
       '@ipld/dag-ucan': 3.4.5
       '@scure/bip39': 1.6.0
       '@ucanto/client': 9.0.1
@@ -10278,7 +10279,7 @@ snapshots:
       '@web3-storage/did-mailto': 2.1.0
       bigint-mod-arith: 3.3.1
       conf: 11.0.2
-      multiformats: 12.1.3
+      multiformats: 13.1.1
       one-webcrypto: '@storacha/one-webcrypto@https://codeload.github.com/web3-storage/one-webcrypto/tar.gz/9e029e2fd477bd95bb80abd3553bbac704ccc7a6'
       p-defer: 4.0.1
       type-fest: 4.41.0
@@ -13080,8 +13081,8 @@ snapshots:
 
   ipfs-unixfs-exporter@13.5.0:
     dependencies:
-      '@ipld/dag-cbor': 9.2.0
-      '@ipld/dag-json': 10.2.1
+      '@ipld/dag-cbor': 9.2.1
+      '@ipld/dag-json': 10.2.2
       '@ipld/dag-pb': 4.1.1
       '@multiformats/murmur3': 2.1.8
       err-code: 3.0.1
