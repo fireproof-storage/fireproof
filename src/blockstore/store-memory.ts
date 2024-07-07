@@ -11,7 +11,7 @@ export class MemoryDataStore extends DataStore {
   readonly logger: Logger;
   constructor(name: string, url: URL, logger: Logger) {
     super(name, url);
-    this.logger = ensureLogger(logger,  "MemoryDataStore", { name, url });
+    this.logger = ensureLogger(logger, "MemoryDataStore", { name, url });
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {

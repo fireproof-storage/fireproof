@@ -141,7 +141,13 @@ function hexStringToUint8Array(hexString: string) {
   return uint8Array;
 }
 
-export async function encryptedEncodeCarFile(logger: Logger, crypto: CryptoOpts, key: string, rootCid: AnyLink, t: CarMakeable): Promise<AnyBlock> {
+export async function encryptedEncodeCarFile(
+  logger: Logger,
+  crypto: CryptoOpts,
+  key: string,
+  rootCid: AnyLink,
+  t: CarMakeable,
+): Promise<AnyBlock> {
   const encryptionKey = hexStringToUint8Array(key);
   const encryptedBlocks = new MemoryBlockstore();
   const cidsToEncrypt = [] as AnyLink[];

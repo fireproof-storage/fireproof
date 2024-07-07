@@ -120,7 +120,7 @@ export function getIndexDBName(iurl: URL, logger: Logger): DbName {
   const dbName = url.searchParams.get("name");
   if (!dbName) throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const result = joinDBName(fullDb, dbName);
-  let objStore = getStore(url,logger);
+  let objStore = getStore(url, logger);
   if (url.searchParams.has("index")) {
     objStore = joinDBName(url.searchParams.get("index") || "idx", objStore);
   }
@@ -178,8 +178,8 @@ export class EnsureDB {
     this.url = url;
     this.logger = ensureLogger(logger, "EnsureDB", {
       id: this.id,
-      url: url
-  });
+      url: url,
+    });
   }
   async get<T>(dbWorkFun: (arg0: SimpleDb) => Promise<T>): Promise<T> {
     return connectIdb(this.url, this.logger, dbWorkFun);
@@ -274,8 +274,9 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   constructor(loader: Loadable, url: URL) {
     super(loader, ensureVersion(url));
     this.logger = ensureLogger(loader.logger, "IndexDBRemoteWAL", {
-      url, name: loader.name
-    })
+      url,
+      name: loader.name,
+    });
     this.ensureDB = new EnsureDB(this.url, this.logger);
   }
 
@@ -337,10 +338,14 @@ export class IndexDBMetaStore extends MetaStoreBase {
   readonly ensureDB: EnsureDB;
 
   constructor(name: string, url: URL, logger: Logger) {
-    super(name, ensureVersion(url), ensureLogger(logger, "IndexDBMetaStore", {
+    super(
       name,
-      url
-    }));
+      ensureVersion(url),
+      ensureLogger(logger, "IndexDBMetaStore", {
+        name,
+        url,
+      }),
+    );
     this.ensureDB = new EnsureDB(this.url, this.logger);
   }
 
@@ -405,10 +410,13 @@ export class IndexDBMetaStore extends MetaStoreBase {
 
 export class IndexDBTestStore implements TestStore {
   readonly logger: Logger;
-  constructor(readonly url: URL, logger: Logger) {
+  constructor(
+    readonly url: URL,
+    logger: Logger,
+  ) {
     this.logger = ensureLogger(logger, "IndexDBTestStore", {
-      url
-    })
+      url,
+    });
   }
   async get(key: string) {
     const ensureDB = new EnsureDB(this.url, this.logger);

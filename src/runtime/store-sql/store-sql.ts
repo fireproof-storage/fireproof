@@ -117,7 +117,7 @@ export class SQLDataStore extends DataStore {
 
   readonly logger: Logger;
   constructor(url: URL, name: string, ilogger: Logger) {
-    const logger = ensureLogger(ilogger, "SQLDataStore", { name, url })
+    const logger = ensureLogger(ilogger, "SQLDataStore", { name, url });
     super(name, ensureSQLVersion(url, logger));
     this.logger = logger;
   }

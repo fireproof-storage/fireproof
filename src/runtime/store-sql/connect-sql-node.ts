@@ -21,10 +21,14 @@ export class ConnectSQL extends ConnectionBase {
   constructor(store: StoreOptions, iopts: Partial<SQLOpts> = {}) {
     super(ensureLogger(iopts, "ConnectSQL"));
     this.store = store;
-    const opts = ensureSQLOpts(new URL("noready://"), {
-      ...iopts,
-      logger: this.logger
-    }, "ConnectSQL");
+    const opts = ensureSQLOpts(
+      new URL("noready://"),
+      {
+        ...iopts,
+        logger: this.logger,
+      },
+      "ConnectSQL",
+    );
     this.textEncoder = opts.textEncoder;
   }
 

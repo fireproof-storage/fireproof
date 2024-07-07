@@ -46,7 +46,7 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
 export function defaultedBlockstoreRuntime(
   opts: BlockstoreOpts,
   component: string,
-  ctx?: Record<string, unknown>
+  ctx?: Record<string, unknown>,
 ): BlockstoreRuntime {
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -102,7 +102,7 @@ export class BaseBlockstore implements BlockFetcher {
   constructor(ebOpts: BlockstoreOpts = {}) {
     // console.log("BaseBlockstore", ebOpts)
     this.ebOpts = defaultedBlockstoreRuntime(ebOpts, "BaseBlockstore");
-    this.logger = this.ebOpts.logger
+    this.logger = this.ebOpts.logger;
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -167,7 +167,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
     this.logger = ensureLogger(ebOpts, "EncryptedBlockstore");
     const { name } = ebOpts;
     if (!name) {
-      throw  this.logger.Error().Msg("name required").AsError();
+      throw this.logger.Error().Msg("name required").AsError();
     }
     this.name = name;
     this.loader = new Loader(this.name, ebOpts);

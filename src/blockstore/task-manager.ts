@@ -47,7 +47,7 @@ export class TaskManager {
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {
       if (first.retries++ > 3) {
-        this.logger.Error().Str("cid", first.cid).Msg("failed to process event block after 3 retries")
+        this.logger.Error().Str("cid", first.cid).Msg("failed to process event block after 3 retries");
         this.queue = this.queue.filter(({ cid }) => cid !== first.cid);
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
