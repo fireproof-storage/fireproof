@@ -27,7 +27,6 @@ import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
 import type { Falsy, FileTransactionMeta } from "../types.js";
-import { ensureLogger } from "../utils.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {

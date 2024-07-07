@@ -1,4 +1,3 @@
-import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../../utils";
 import { SQLOpts, SQLTableNames, DefaultSQLTableNames } from "./types";
 
