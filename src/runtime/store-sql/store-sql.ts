@@ -14,12 +14,16 @@ import { ensureLogger } from "../../utils.js";
 
 export class SQLRemoteWAL extends RemoteWAL {
   constructor(url: URL, loader: Loadable) {
-    super(loader, ensureSQLVersion(url, loader.logger));
+    const logger = ensureLogger(loader.logger, "SQLRemoteWAL", { url });
+    super(loader, ensureSQLVersion(url, logger), logger);
+  }
+
+  async start(): Promise<void> {
+    await SysContainer.start();
   }
 
   readonly onceWalStore = new ResolveOnce<WalSQLStore>();
   async ensureStore() {
-    await SysContainer.start();
     return this.onceWalStore.once(async () => {
       const conn = SQLConnectionFactory(this.url);
       const ws = await WalStoreFactory(conn);
@@ -67,9 +71,12 @@ export class SQLMetaStore extends MetaStore {
     super(name, ensureSQLVersion(url, logger), logger);
   }
 
+  async start() {
+    await SysContainer.start();
+  }
+
   readonly onceMetaStore = new ResolveOnce<MetaSQLStore>();
   async ensureStore() {
-    await SysContainer.start();
     const conn = SQLConnectionFactory(this.url);
     return this.onceMetaStore.once(async () => {
       const ws = await MetaStoreFactory(conn);
@@ -115,11 +122,13 @@ export class SQLMetaStore extends MetaStore {
 export class SQLDataStore extends DataStore {
   readonly tag: string = "car-sql";
 
-  readonly logger: Logger;
   constructor(url: URL, name: string, ilogger: Logger) {
     const logger = ensureLogger(ilogger, "SQLDataStore", { name, url });
-    super(name, ensureSQLVersion(url, logger));
-    this.logger = logger;
+    super(name, ensureSQLVersion(url, logger), logger);
+  }
+
+  async start() {
+    await SysContainer.start();
   }
 
   readonly onceDataStore = new ResolveOnce<DataSQLStore>();

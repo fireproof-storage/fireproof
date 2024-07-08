@@ -212,15 +212,20 @@ export class IndexDBDataStore extends DataStoreBase {
 
   readonly ensureDB: EnsureDB;
 
-  readonly logger: Logger;
-
   constructor(name: string, url: URL, logger: Logger) {
-    super(name, ensureVersion(url));
-    this.logger = ensureLogger(logger, "IndexDBDataStore", {
+    super(
       name,
-      url,
-    });
+      ensureVersion(url),
+      ensureLogger(logger, "IndexDBDataStore", {
+        name,
+        url,
+      }),
+    );
     this.ensureDB = new EnsureDB(this.url, this.logger);
+  }
+
+  async start(): Promise<void> {
+    // no-op
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -239,7 +244,7 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async save(car: AnyBlock): Promise<void> {
     return await this.ensureDB.get(async (db: SimpleDb) => {
-    console.log("IndexDBDataStore:save", db.type, car.cid.toString());
+      console.log("IndexDBDataStore:save", db.type, car.cid.toString());
       // await db.idb().put(getStore(this.url), car.bytes, car.cid.toString());
       // await db.put(car.bytes, [car.cid.toString()]);
       const tx = db.idb().transaction(getStore(this.url, this.logger), "readwrite");
@@ -251,7 +256,7 @@ export class IndexDBDataStore extends DataStoreBase {
 
   async remove(cid: AnyLink): Promise<void> {
     return await this.ensureDB.get(async (db: SimpleDb) => {
-    console.log("IndexDBDataStore:remove", db.type, cid.toString());
+      console.log("IndexDBDataStore:remove", db.type, cid.toString());
       // const tx = db.transaction([dbName.type], "readwrite");
       // await tx.objectStore(dbName.type).delete(cid.toString());
       // await tx.done
@@ -266,7 +271,7 @@ export class IndexDBDataStore extends DataStoreBase {
   async destroy() {
     // return deleteDB(getIndexDBName(this.url).fullDb);
     await this.ensureDB.get(async (db) => {
-      const type = db.type
+      const type = db.type;
       // console.log("IndexDBDataStore:destroy", type);
       const idb = db.idb();
       const trans = idb.transaction(type, "readwrite");
@@ -288,18 +293,23 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
 
   readonly ensureDB: EnsureDB;
 
-  readonly logger: Logger;
   readonly branches = new Set<string>();
 
   constructor(loader: Loadable, url: URL) {
-    super(loader, ensureVersion(url));
-    this.logger = ensureLogger(loader.logger, "IndexDBRemoteWAL", {
-      url,
-      name: loader.name,
-    });
+    super(
+      loader,
+      ensureVersion(url),
+      ensureLogger(loader.logger, "IndexDBRemoteWAL", {
+        url,
+        name: loader.name,
+      }),
+    );
     this.ensureDB = new EnsureDB(this.url, this.logger);
   }
 
+  async start() {
+    // no-op
+  }
 
   headerKey(branch: string) {
     // return `fp.${this.STORAGE_VERSION}.wal.${this.loader.name}.${branch}`;
@@ -343,7 +353,7 @@ export class IndexDBRemoteWAL extends RemoteWALBase {
   }
   async _destroy() {
     await this.ensureDB.get(async (db) => {
-      const type = db.type
+      const type = db.type;
       // console.log("IndexDBRemoteWAL:destroy", type);
       const idb = db.idb();
       const trans = idb.transaction(type, "readwrite");
@@ -373,6 +383,10 @@ export class IndexDBMetaStore extends MetaStoreBase {
       }),
     );
     this.ensureDB = new EnsureDB(this.url, this.logger);
+  }
+
+  async start() {
+    // no-op
   }
 
   readonly branches = new Set<string>();
@@ -407,9 +421,9 @@ export class IndexDBMetaStore extends MetaStoreBase {
       console.log("IndexDBMeta:save", db.type, branch);
       try {
         const headerKey = this.headerKey(branch);
-        console.log(`xxxx->1`)
+        console.log(`xxxx->1`);
         const bytes = this.makeHeader(meta);
-        console.log(`xxxx->2`, bytes, headerKey)
+        console.log(`xxxx->2`, bytes, headerKey);
         await db.put(bytes, [headerKey]);
         // const tx = db.transaction([dbName.type], "readwrite");
         // await tx.objectStore(dbName.type).put(bytes, headerKey);
@@ -428,7 +442,7 @@ export class IndexDBMetaStore extends MetaStoreBase {
   }
   async destroy() {
     await this.ensureDB.get(async (db) => {
-      const type = db.type
+      const type = db.type;
       // console.log("IndexDBMeta:destroy", this.id, type);
       const idb = db.idb();
       const trans = idb.transaction(type, "readwrite");

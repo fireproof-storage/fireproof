@@ -11,6 +11,7 @@ export type {
   DbMeta,
   CommitOpts,
   CryptoOpts,
+  StoreFactory,
   StoreOpts,
   StoreRuntime,
   TransactionMeta,
@@ -26,7 +27,7 @@ export { ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };
 
 export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction.js";
 export { Loader, Loadable } from "./loader.js";
-export { DataStore, MetaStore } from "./store.js";
+export { DataStore, DataSaveOpts, MetaStore } from "./store.js";
 export { RemoteWAL, type WALState } from "./remote-wal.js";
 export { parseCarFile } from "./loader-helpers.js";
 export { ConnectionBase } from "./connection-base.js";

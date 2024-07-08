@@ -30,5 +30,11 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {},
-  "dependencies": {}
+  "dependencies": {
+    "@adviser/cement": "from-package-json",
+    "charwise": "from-package-json",
+    "prolly-trees": "from-package-json",
+    "ipfs-unixfs-exporter": "from-package-json",
+    "uuidv7": "from-package-json"
+  }
 }

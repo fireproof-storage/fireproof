@@ -55,16 +55,18 @@ export class RemoteDataStore extends DataStore {
   readonly connection: Connection;
   readonly type: FnParamTypes;
 
-  readonly logger: Logger;
   constructor(url: URL, name: string, connection: Connection, logger: Logger, type: FnParamTypes = "data") {
-    super(name, url);
+    super(name, url, ensureLogger(logger, "RemoteDataStore", { name, url }));
     this.connection = connection;
     this.type = type;
-    this.logger = ensureLogger(logger, "RemoteDataStore", { name, url });
   }
 
   prefix() {
     return `fp.${this.name}`;
+  }
+
+  async start() {
+    // no-op
   }
 
   async load(carCid: AnyLink): Promise<AnyBlock> {
@@ -111,6 +113,10 @@ export class RemoteMetaStore extends MetaStore {
   constructor(url: URL, name: string, connection: Connection, logger: Logger) {
     super(name, url, logger);
     this.connection = connection;
+  }
+
+  async start(): Promise<void> {
+    // no-op
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -177,12 +183,16 @@ export class RemoteWALStore extends RemoteWAL {
   readonly store: Map<string, string>;
 
   constructor(url: URL, loader: Loadable) {
-    super(loader, url);
+    super(loader, url, ensureLogger(loader.logger, "RemoteWALStore", { name: loader.name }));
     this.store = new Map<string, string>();
   }
 
   headerKey(branch: string) {
     return `fp.wal.${this.loader.name}.${branch}`;
+  }
+
+  async start(): Promise<void> {
+    // no-op
   }
 
   async _load(branch = "main"): Promise<WALState | null> {

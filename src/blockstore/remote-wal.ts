@@ -23,7 +23,7 @@ export abstract class RemoteWAL {
 
   readonly _ready = new ResolveOnce<void>();
 
-  async ready() {
+  private async ready() {
     return this._ready.once(async () => {
       const walState = await this._load().catch((e) => {
         this.logger.Error().Any("error", e).Msg("error loading wal");
@@ -47,10 +47,10 @@ export abstract class RemoteWAL {
 
   readonly logger: Logger;
 
-  constructor(loader: Loadable, url: URL) {
+  constructor(loader: Loadable, url: URL, logger: Logger) {
+    this.logger = logger;
     this.loader = loader;
     this.url = url;
-    this.logger = loader.logger;
   }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
@@ -164,6 +164,8 @@ export abstract class RemoteWAL {
     // this.loader.remoteMetaLoading = rmlp;
     await rmlp;
   }
+
+  abstract start(): Promise<void>;
 
   async load(): Promise<WALState | Falsy> {
     await this.ready();
