@@ -271,15 +271,17 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       this.byId = await bulkIndex<K, R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
       this.byKey = await bulkIndex<K, R, CompareKey>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
       this.indexHead = head;
-      console.log("indexEntries-4.2", this.byId.cid, this.byKey.cid);
-      const idxMeta = {
-        byId: this.byId.cid,
-        byKey: this.byKey.cid,
-        head,
-        map: this.mapFnString,
-        name: this.name,
-      } as IdxMeta;
-      indexerMeta.indexes?.set(this.name, idxMeta); // should this move to after commit?
+      console.log("indexEntries-4.2", this.byId.cid ? "ok" : "fail", this.byKey.cid ? "ok" : "fail");
+      if (this.byId.cid && this.byKey.cid) {
+        const idxMeta = {
+          byId: this.byId.cid,
+          byKey: this.byKey.cid,
+          head,
+          map: this.mapFnString,
+          name: this.name,
+        } as IdxMeta;
+        indexerMeta.indexes?.set(this.name, idxMeta);
+      }
       return indexerMeta as unknown as IndexTransactionMeta;
     });
     console.log("indexEntries-5");
