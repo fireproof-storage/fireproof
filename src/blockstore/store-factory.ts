@@ -8,9 +8,9 @@ import { DataStore, MetaStore } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
 import { ensureLogger } from "../utils.js";
 
-function ensureIsIndex(url: URL, isIndex?: boolean): URL {
+function ensureIsIndex(url: URL, isIndex?: string): URL {
   if (isIndex) {
-    url.searchParams.set("index", "idx");
+    url.searchParams.set("index", isIndex);
     return url;
   } else {
     url.searchParams.delete("index");
@@ -18,7 +18,7 @@ function ensureIsIndex(url: URL, isIndex?: boolean): URL {
   }
 }
 
-export function toURL(pathOrUrl: string | URL, isIndex?: boolean): URL {
+export function toURL(pathOrUrl: string | URL, isIndex?: string): URL {
   if (pathOrUrl instanceof URL) return ensureIsIndex(pathOrUrl, isIndex);
   try {
     const url = new URL(pathOrUrl);
@@ -164,22 +164,31 @@ export async function testStoreFactory(url: URL, ilogger?: Logger): Promise<Test
 export function toStoreRuntime(name: string | undefined = undefined, opts: StoreOpts = {}): StoreRuntime {
   return {
     makeMetaStore: (loader: Loadable) => {
-      return cacheStore(toURL(opts.stores?.meta || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
-        meta: metaStoreFactory,
-      });
+      return (
+        opts.makeMetaStore?.(loader) ||
+        cacheStore(toURL(opts.stores?.meta || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
+          meta: metaStoreFactory,
+        })
+      );
     },
     makeDataStore: (loader: Loadable) => {
-      return cacheStore(toURL(opts.stores?.data || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
-        data: dataStoreFactory,
-      });
+      return (
+        opts.makeDataStore?.(loader) ||
+        cacheStore(toURL(opts.stores?.data || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
+          data: dataStoreFactory,
+        })
+      );
     },
     makeRemoteWAL: (loader: Loadable) => {
-      return cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
-        remoteWAL: remoteWalFactory,
-      });
+      return (
+        opts.makeRemoteWAL?.(loader) ||
+        cacheStore(toURL(opts.stores?.remoteWAL || dataDir(name || loader.name, opts.stores?.base), opts.isIndex), loader, {
+          remoteWAL: remoteWalFactory,
+        })
+      );
     },
 
-    encodeFile,
-    decodeFile,
+    encodeFile: opts.encodeFile || encodeFile,
+    decodeFile: opts.decodeFile || decodeFile,
   };
 }

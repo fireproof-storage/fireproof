@@ -229,7 +229,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
     if (result.length === 0) {
       this.indexHead = head;
-      console.log("_updateIndex: no changes")
+      console.log("_updateIndex: no changes");
       // return { byId: this.byId, byKey: this.byKey } as IndexTransactionMeta;
     }
     let staleKeyIndexEntries: IndexUpdate<K>[] = [];

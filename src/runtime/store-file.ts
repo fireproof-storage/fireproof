@@ -80,13 +80,17 @@ function ensureIndexName(url: URL, name: string): string {
 
 export class FileRemoteWAL extends RemoteWAL {
   constructor(url: URL, loader: Loadable) {
-    super(loader, ensureVersion(url));
+    super(loader, ensureVersion(url), ensureLogger(loader.logger, "FileRemoteWAL", { url }));
   }
 
   readonly branches = new Set<string>();
 
   async filePathForBranch(branch: string): Promise<string> {
     return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "wal"), branch + ".json");
+  }
+
+  async start() {
+    await SysContainer.start();
   }
 
   async _load(branch = "main"): Promise<WALState | Falsy> {
@@ -128,13 +132,16 @@ export class FileMetaStore extends MetaStore {
     super(name, ensureVersion(url), ensureLogger(logger, "FileMetaStore", { name, url }));
   }
 
+  async start() {
+    await SysContainer.start();
+  }
+
   async filePathForBranch(branch: string): Promise<string> {
     return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "meta"), branch + ".json");
   }
 
   async load(branch = "main"): Promise<DbMeta[] | Falsy> {
     this.branches.add(branch);
-    await SysContainer.start();
     const filepath = await this.filePathForBranch(branch);
     const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
       if (e.code === "ENOENT") return undefined;
@@ -168,10 +175,12 @@ export class FileMetaStore extends MetaStore {
 export class FileDataStore extends DataStore {
   readonly tag: string = "car-node-fs";
 
-  readonly logger: Logger;
   constructor(url: URL, name: string, logger: Logger) {
-    super(name, ensureVersion(url));
-    this.logger = ensureLogger(logger, "FileDataStore", { name, url });
+    super(name, ensureVersion(url), ensureLogger(logger, "FileDataStore", { name, url }));
+  }
+
+  async start() {
+    await SysContainer.start();
   }
 
   private async cidPath(cid: AnyLink): Promise<string> {
@@ -179,14 +188,12 @@ export class FileDataStore extends DataStore {
   }
 
   async save(car: AnyBlock): Promise<void> {
-    await SysContainer.start();
     const filepath = await this.cidPath(car.cid);
     // console.log("save->", filepath);
     await writePathFile(filepath, car.bytes);
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
-    await SysContainer.start();
     const filepath = await this.cidPath(cid);
     const bytes = await SysContainer.readfile(filepath);
     return { cid, bytes: new Uint8Array(bytes) };

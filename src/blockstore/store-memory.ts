@@ -8,10 +8,8 @@ export class MemoryDataStore extends DataStore {
   readonly tag: string = "car-mem";
   readonly store = new Map<string, Uint8Array>();
 
-  readonly logger: Logger;
   constructor(name: string, url: URL, logger: Logger) {
-    super(name, url);
-    this.logger = ensureLogger(logger, "MemoryDataStore", { name, url });
+    super(name, url, ensureLogger(logger, "MemoryDataStore", { name, url }));
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -31,6 +29,9 @@ export class MemoryDataStore extends DataStore {
     // no-op
   }
   async destroy() {
+    // no-op
+  }
+  async start() {
     // no-op
   }
 }
@@ -73,6 +74,9 @@ export class MemoryMetaStore extends MetaStore {
   async destroy() {
     // no-op
   }
+  async start() {
+    // no-op
+  }
 }
 
 //
@@ -106,6 +110,9 @@ export class MemoryRemoteWAL extends RemoteWAL {
     // no-op
   }
   async _destroy() {
+    // no-op
+  }
+  async start() {
     // no-op
   }
 }

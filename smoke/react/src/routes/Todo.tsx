@@ -32,18 +32,18 @@ export default function TodoList() {
         />
         <button
           onClick={() => {
-            console.log(`saving todo-0: ${todo.text}`)
+            console.log(`saving todo-0: ${todo.text}`);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             delete (todo as any)._id;
-            console.log(`saving todo-1: ${todo.text}`)
+            console.log(`saving todo-1: ${todo.text}`);
             // console.log("saving todo", todo, saveTodo.toString());
             saveTodo()
               .then(() => {
-                console.log(`saving todo-2: ${todo.text}`)
+                console.log(`saving todo-2: ${todo.text}`);
                 // console.log("saved todo", todo.text);
                 setTodo({ text: "", _id: undefined });
               })
-              .catch((e) => console.error('Add-Todo Error:', e));
+              .catch((e) => console.error("Add-Todo Error:", e));
           }}
         >
           Add Todo

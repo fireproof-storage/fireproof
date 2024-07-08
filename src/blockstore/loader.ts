@@ -69,6 +69,25 @@ export abstract class Loadable {
   abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
 
+interface Startable {
+  start(): Promise<void>;
+}
+
+class EnsureStart<T extends Startable> {
+  readonly oncePerStore = new ResolveOnce<T>();
+
+  reset() {
+    this.oncePerStore.reset();
+  }
+  once(fn: () => Promise<T>) {
+    return this.oncePerStore.once(async () => {
+      const ret = await fn();
+      await ret.start();
+      return ret;
+    });
+  }
+}
+
 export class Loader implements Loadable {
   readonly name: string;
   readonly ebOpts: BlockstoreRuntime;
@@ -91,19 +110,31 @@ export class Loader implements Loadable {
 
   // readonly id = uuidv4();
 
+  readonly ensureCarStore = new EnsureStart<DataStore>();
   async carStore(): Promise<DataStore> {
-    return this.ebOpts.store.makeDataStore(this);
+    return this.ensureCarStore.once(() => {
+      return this.ebOpts.store.makeDataStore(this);
+    });
   }
 
+  readonly ensureFileStore = new EnsureStart<DataStore>();
   async fileStore(): Promise<DataStore> {
-    return this.ebOpts.store.makeDataStore(this);
+    return this.ensureFileStore.once(() => {
+      return this.ebOpts.store.makeDataStore(this);
+    });
   }
+  readonly ensureRemoteFileStore = new EnsureStart<RemoteWAL>();
   async remoteWAL(): Promise<RemoteWAL> {
-    return this.ebOpts.store.makeRemoteWAL(this);
+    return this.ensureRemoteFileStore.once(() => {
+      return this.ebOpts.store.makeRemoteWAL(this);
+    });
   }
 
+  readonly ensureMetaStore = new EnsureStart<MetaStore>();
   async metaStore(): Promise<MetaStore> {
-    return this.ebOpts.store.makeMetaStore(this);
+    return this.ensureMetaStore.once(() => {
+      return this.ebOpts.store.makeMetaStore(this);
+    });
   }
 
   readonly onceReady = new ResolveOnce<void>();
@@ -118,7 +149,15 @@ export class Loader implements Loadable {
 
   async close() {
     const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
-    await Promise.all(toClose.map((store) => store.close()));
+    await Promise.all(
+      toClose.map((store) => {
+        store.close();
+      }),
+    );
+    this.ensureCarStore.reset();
+    this.ensureFileStore.reset();
+    this.ensureRemoteFileStore.reset();
+    this.ensureMetaStore.reset();
   }
 
   async destroy() {
@@ -331,9 +370,9 @@ export class Loader implements Loadable {
     t: CarTransaction,
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     try {
-    return theKey && this.ebOpts.crypto
-      ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, cid, t)
-      : await encodeCarFile([cid], t);
+      return theKey && this.ebOpts.crypto
+        ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, cid, t)
+        : await encodeCarFile([cid], t);
     } catch (e) {
       console.error("error creating car file", e);
       throw e;

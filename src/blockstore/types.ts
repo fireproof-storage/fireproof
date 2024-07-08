@@ -115,8 +115,17 @@ export interface BlobLike {
   stream: () => ReadableStream;
 }
 
-export interface StoreOpts {
-  readonly isIndex?: boolean;
+export interface StoreFactory {
+  makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
+  makeDataStore?: (loader: Loadable) => Promise<DataStore>;
+  makeRemoteWAL?: (loader: Loadable) => Promise<RemoteWAL>;
+
+  encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
+}
+
+export interface StoreOpts extends StoreFactory {
+  readonly isIndex?: string; // index prefix
   readonly stores?: {
     // string means local storage
     // URL means schema selects the storeType
@@ -127,12 +136,6 @@ export interface StoreOpts {
     readonly index?: string | URL;
     readonly remoteWAL?: string | URL;
   };
-  makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
-  makeDataStore?: (loader: Loadable) => Promise<DataStore>;
-  makeRemoteWAL?: (loader: Loadable) => Promise<RemoteWAL>;
-
-  encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
-  decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
 }
 
 export interface TestStore {

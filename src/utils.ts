@@ -1,5 +1,7 @@
 import { Logger, LoggerImpl, IsLogger } from "@adviser/cement";
 
+export type { Logger };
+
 const globalLogger: Logger = new LoggerImpl();
 
 export interface LoggerOpts {

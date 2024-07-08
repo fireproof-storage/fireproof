@@ -21,6 +21,8 @@ abstract class VersionedStore {
     if (!sv) throw this.logger.Error().Str("url", url.toString()).Msg(`version not found`);
     this.STORAGE_VERSION = sv;
   }
+
+  abstract start(): Promise<void>;
 }
 
 export abstract class MetaStore extends VersionedStore {
@@ -43,20 +45,20 @@ export abstract class MetaStore extends VersionedStore {
   abstract destroy(): Promise<void>;
 }
 
-interface DataSaveOpts {
+export interface DataSaveOpts {
   readonly public: boolean;
 }
 
-export abstract class DataStore {
+export abstract class DataStore extends VersionedStore {
   readonly tag: string = "car-base";
 
   // readonly STORAGE_VERSION: string = STORAGE_VERSION;
-  readonly name: string;
-  readonly url: URL;
-  constructor(name: string, url: URL) {
-    this.name = name;
-    this.url = url;
-  }
+  // readonly name: string;
+  // readonly url: URL;
+  // constructor(name: string, url: URL) {
+  //   this.name = name;
+  //   this.url = url;
+  // }
 
   abstract load(cid: AnyLink): Promise<AnyBlock>;
   abstract save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;

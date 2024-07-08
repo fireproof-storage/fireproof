@@ -18,6 +18,7 @@ describe("fireproof/config", () => {
       expect(fileStore?.url.toString()).toMatch(new RegExp(`indexdb://fp\\?name=my-app&store=data&version=${rt.INDEXDB_VERSION}`));
       const metaStore = await db.blockstore.loader?.metaStore();
       expect(metaStore?.url.toString()).toMatch(new RegExp(`indexdb://fp\\?name=my-app&store=meta&version=${rt.INDEXDB_VERSION}`));
+      db.close();
     });
     return;
   }
@@ -55,6 +56,7 @@ describe("fireproof/config", () => {
     );
     expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
     process.env.FP_STORAGE_URL = old;
+    db.close();
   });
 
   it("set by env", async () => {
@@ -88,6 +90,7 @@ describe("fireproof/config", () => {
     );
     expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
     process.env.FP_STORAGE_URL = old;
+    db.close();
   });
 
   it("file path", async () => {
@@ -121,6 +124,7 @@ describe("fireproof/config", () => {
       new RegExp(`file://.\\/dist\\/data\\?name=my-app&store=meta&version=${rt.FILESTORE_VERSION}`),
     );
     expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
+    db.close();
   });
 
   it("sqlite path", async () => {
@@ -153,6 +157,7 @@ describe("fireproof/config", () => {
     expect(metaStore?.url.toString()).toMatch(
       new RegExp(`sqlite://./dist/sqlite\\?name=my-app&store=meta&version=${rt.SQLITE_VERSION}`),
     );
+    db.close();
   });
 
   it("full config path", async () => {
@@ -182,5 +187,6 @@ describe("fireproof/config", () => {
     expect(fileStore?.url.toString()).toMatch(new RegExp(`sqlite://./dist/sqlite/data\\?store=data&version=${rt.SQLITE_VERSION}`));
     const metaStore = await db.blockstore.loader?.metaStore();
     expect(metaStore?.url.toString()).toMatch(new RegExp(`sqlite://./dist/sqlite/meta\\?store=meta&version=${rt.SQLITE_VERSION}`));
+    db.close();
   });
 });

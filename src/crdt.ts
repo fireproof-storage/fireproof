@@ -79,7 +79,7 @@ export class CRDT<T extends DocTypes> {
       },
       autoCompact: this.opts.autoCompact || 100,
       crypto: this.opts.crypto,
-      store: { ...this.opts.store, isIndex: false },
+      store: { ...this.opts.store, isIndex: undefined },
       public: this.opts.public,
       meta: this.opts.meta,
       threshold: this.opts.threshold,
@@ -94,7 +94,7 @@ export class CRDT<T extends DocTypes> {
         }
       },
       crypto: this.opts.crypto,
-      store: { ...this.opts.store, isIndex: true },
+      store: { ...this.opts.store, isIndex: this.opts.store?.isIndex || "idx" },
       public: this.opts.public,
     });
     this.clock = new CRDTClock<T>(this.blockstore);
