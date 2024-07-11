@@ -9,6 +9,6 @@ export default defineConfig({
     exclude: ["tests/react/**"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     globals: true,
-    setupFiles: './setup.sqlite.js'
+    setupFiles: "./setup.sqlite.js",
   },
 });
