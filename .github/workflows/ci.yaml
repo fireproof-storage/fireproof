@@ -43,8 +43,7 @@ jobs:
           git log --show-signature | head -40
           echo "local"
           cat .git/config || true
-          echo "global"
-          cat ~/.gitconfig || true
+          git fetch --tags
           git tag -v $(git describe --tags --abbrev=0)
           node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
           pnpm run publish
