@@ -37,8 +37,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # add your signature allowed-signers
-          git config --local --add ssh.allowedSignersFile ./allowed_signers
-          git config --local --add gpg.allowedSignersFile ./allowed_signers
+          git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
           echo $GITHUB_REF
           git describe --tags --abbrev=0
           git tag -v $(git describe --tags --abbrev=0)
