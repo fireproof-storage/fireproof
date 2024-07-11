@@ -30,6 +30,14 @@ jobs:
         run: pnpm run test
       - name: publish
         if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          NPM_EMAIL: ${{ secrets.NPM_EMAIL }}
+          NPM_PASS: ${{ secrets.NPM_PASS }}
+          NPM_USER: ${{ secrets.NPM_USER }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          node ../.github/workflows/patch-package.json.mjs "$GITHUB_REF"
+          # add your signature to the grep
+          git tag -v $(git describe --tags --abbrev=0) | \
+            grep '^Good.*n1aH4YxvM2oDo6PFlfExLTJJwYDqq318mzdAjWWjdo4'
+          node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
           pnpm run publish
