@@ -37,6 +37,9 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           # add your signature to the grep
+          echo $GITHUB_REF
+          git describe --tags --abbrev=0
+          git tag -v $(git describe --tags --abbrev=0)
           git tag -v $(git describe --tags --abbrev=0) | \
             grep '^Good.*n1aH4YxvM2oDo6PFlfExLTJJwYDqq318mzdAjWWjdo4'
           node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
