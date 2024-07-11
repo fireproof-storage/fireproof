@@ -1,4 +1,4 @@
-import { ensureLogger } from "../../utils";
+import { ensureLogger, type Logger } from "../../utils";
 import { SQLOpts, SQLTableNames, DefaultSQLTableNames } from "./types";
 
 function sqlTableName(...names: string[]): string {
@@ -39,7 +39,7 @@ function ensureTextDecoder(opts?: Partial<SQLOpts>): TextDecoder {
   return opts?.textDecoder || textDecoder;
 }
 
-function url2sqlFlavor(url: URL): "sqlite" | "mysql" | "postgres" {
+function url2sqlFlavor(url: URL, logger: Logger): "sqlite" | "mysql" | "postgres" {
   const flavor = url.protocol.replace(/:.*$/, "");
   switch (flavor) {
     case "sqlite":
@@ -47,16 +47,17 @@ function url2sqlFlavor(url: URL): "sqlite" | "mysql" | "postgres" {
     case "postgres":
       return flavor;
     default:
-      throw new Error("unsupported protocol " + flavor);
+      throw logger.Error().Str("flavor", flavor).Msg("unsupported protocol").AsError();
   }
 }
 
 export function ensureSQLOpts(url: URL, opts: Partial<SQLOpts>, componentName: string, ctx?: Record<string, unknown>): SQLOpts {
+  const logger = ensureLogger(opts, componentName, ctx);
   return {
     url,
-    sqlFlavor: url2sqlFlavor(url),
+    sqlFlavor: url2sqlFlavor(url, logger),
     tableNames: ensureTableNames(url, opts),
-    logger: ensureLogger(opts, componentName, ctx),
+    logger,
     textEncoder: ensureTextEncoder(opts),
     textDecoder: ensureTextDecoder(opts),
   };

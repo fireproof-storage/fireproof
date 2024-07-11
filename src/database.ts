@@ -26,6 +26,7 @@ import type {
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { SysContainer } from "./runtime/sys-container.js";
 import { ensureLogger } from "./utils.js";
+import { NotFoundError } from "./blockstore/gateway.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -82,10 +83,9 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("get-post-ready");
     const got = await this._crdt.get(id).catch((e) => {
-      e.message = `Not found: ${id} - ` + e.message;
-      throw e;
+      throw new NotFoundError(`Not found: ${id} - ${e.message}`);
     });
-    if (!got) throw new Error(`Not found: ${id}`);
+    if (!got) throw new NotFoundError(`Not found: ${id}`);
     const { doc } = got;
     return { ...(doc as unknown as DocWithId<T>), _id: id };
   }

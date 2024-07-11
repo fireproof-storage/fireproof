@@ -156,7 +156,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       async (existingDoc) => {
         const id = existingDoc?._id ?? docId;
         const doc = await database.get<T>(id).catch(() => undefined);
-        if (!doc) throw new Error(`Document not found:${id}`);
+        if (!doc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
         const res = await database.del(id);
         console.log("deleted", res, id, docId, initialDoc);
         setDoc(initialDoc);

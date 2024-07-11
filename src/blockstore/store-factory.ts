@@ -58,7 +58,7 @@ function loadDataGateway(url: URL, logger: Logger) {
         }
         break;
       default:
-        throw new Error(`unsupported data store ${url.protocol}`);
+        throw logger.Error().Url(url).Msg(`unsupported data store`).AsError();
     }
   });
 }
@@ -101,7 +101,7 @@ function loadMetaGateway(url: URL, logger: Logger) {
         }
         break;
       default:
-        throw new Error(`unsupported meta store ${url.protocol}`);
+        throw logger.Error().Url(url).Msg(`unsupported meta store`).AsError();
     }
   });
 }
@@ -146,7 +146,7 @@ function loadWalGateway(url: URL, logger: Logger) {
         }
         break;
       default:
-        throw new Error(`unsupported remote WAL store ${url.protocol}`);
+        throw logger.Error().Url(url).Msg(`unsupported WAL store`).AsError();
     }
   });
 }
@@ -186,7 +186,7 @@ export async function testStoreFactory(url: URL, ilogger?: Logger): Promise<Test
       return new SQLTestStore(url, logger);
     }
     default:
-      throw new Error(`unsupported test store ${url.protocol}`);
+      throw logger.Error().Url(url).Msg(`unsupported test store`).AsError();
   }
 }
 

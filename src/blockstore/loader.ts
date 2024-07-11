@@ -192,7 +192,7 @@ export class Loader implements Loadable {
   async loadCarHeaderFromMeta<T>({ cars: cids }: DbMeta): Promise<CarHeader<T>> {
     //Call loadCar for every cid
     const reader = await this.loadCar(cids[0]);
-    return await parseCarFile(reader);
+    return await parseCarFile(reader, this.logger);
   }
 
   async _getKey(): Promise<string | undefined> {
@@ -431,7 +431,7 @@ export class Loader implements Loadable {
         throw this.logger.Error().Str("cid", carCid.toString()).Msg("missing car reader").AsError();
       }
 
-      const header = await parseCarFile(reader);
+      const header = await parseCarFile(reader, this.logger);
 
       const compacts = header.compact;
 
