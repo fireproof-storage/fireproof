@@ -5,8 +5,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
+    name: "indexdb",
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
-    // environment: "happy-dom",
+//    environment: "browser",
     browser: {
       enabled: true,
       headless: true,
