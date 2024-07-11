@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-          fetch-depth: 1
+        #with:
+        #  fetch-tags: true
+        #  fetch-depth: 1
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -36,6 +36,7 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          git fetch --tags
           # add your signature allowed-signers
           git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
           echo $GITHUB_REF
