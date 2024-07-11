@@ -36,7 +36,7 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          git fetch --tags
+          git fetch --tags --force
           # add your signature allowed-signers
           git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
           echo $GITHUB_REF
