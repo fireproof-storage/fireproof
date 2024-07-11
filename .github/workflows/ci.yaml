@@ -40,6 +40,7 @@ jobs:
           git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
           echo $GITHUB_REF
           git describe --tags --abbrev=0
+          git log --show-signature | head -40
           git tag -v $(git describe --tags --abbrev=0)
           node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
           pnpm run publish
