@@ -28,3 +28,8 @@ jobs:
         run: pnpm run smoke
       - name: test
         run: pnpm run test
+      - name: publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          node ../.github/workflows/patch-package.json.mjs "$GITHUB_REF"
+          pnpm run publish

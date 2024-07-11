@@ -5,6 +5,10 @@
   "description": "Live database for the web",
   "type": "module",
   "scripts": {
+    "prepublish": "pnpm run build",
+    "publish": "pnpm run '/publish:/'",
+    "publish:fireproof-core": "cd dist/fireproof-core/ && pnpm publish --access public --no-git-checks",
+    "publish:use-fireproof": "cd dist/use-fireproof/ && pnpm publish --access public --no-git-checks",
     "prebuild": "rm -rf dist",
     "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
     "build:tsc": "tsc",
