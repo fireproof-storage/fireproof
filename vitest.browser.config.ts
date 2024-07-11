@@ -7,7 +7,7 @@ export default defineConfig({
   test: {
     name: "indexdb",
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
-//    environment: "browser",
+    //    environment: "browser",
     browser: {
       enabled: true,
       headless: true,
