@@ -1,11 +1,9 @@
 import { DownloadDataFnParams, DownloadMetaFnParams, UploadDataFnParams, UploadMetaFnParams } from "../../blockstore/index.js";
 
-import { DataSQLRecordBuilder } from "./v0.19-sqlite/sqlite-data-store.js";
-import { MetaSQLRecordBuilder } from "./v0.19-sqlite/sqlite-meta-store.js";
 import { ConnectionBase } from "../../blockstore/connection-base.js";
 import { ensureSQLOpts } from "./ensurer.js";
 import { DataSQLStore, MetaSQLStore, SQLOpts, WalSQLStore } from "./types.js";
-import { Falsy } from "use-fireproof";
+import { Falsy } from "../../types.js";
 import { ensureLogger } from "../../utils.js";
 
 export interface StoreOptions {
@@ -32,9 +30,11 @@ export class ConnectSQL extends ConnectionBase {
     this.textEncoder = opts.textEncoder;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async dataUpload(bytes: Uint8Array, params: UploadDataFnParams) {
     this.logger.Debug().Msg("dataUpload");
-    await this.store.data.insert(DataSQLRecordBuilder.fromUploadParams(bytes, params).build());
+    throw this.logger.Error().Msg("dataUpload not implemented").AsError();
+    // await this.store.data.insert(DataSQLRecordBuilder.fromUploadParams(bytes, params).build());
     return Promise.resolve();
   }
 
@@ -51,19 +51,23 @@ export class ConnectSQL extends ConnectionBase {
     return Promise.resolve(null);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | null> {
     this.logger.Debug().Msg("metaUpload");
-    await this.store.meta.insert(MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params, this.textEncoder).build());
+    throw this.logger.Error().Msg("metaUpload not implemented").AsError();
+    // await this.store.meta.insert(MetaSQLRecordBuilder.fromUploadMetaFnParams(bytes, params, this.textEncoder).build());
     return Promise.resolve(null);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy> {
     this.logger.Debug().Msg("metaDownload");
-    const result = await this.store.meta.select({
-      name: params.name,
-      branch: params.branch,
-    });
-    if (result.length !== 1) return undefined;
+    throw this.logger.Error().Msg("metaDownload not implemented").AsError();
+    // const result = await this.store.meta.select({
+    //   name: params.name,
+    //   branch: params.branch,
+    // });
+    // if (result.length !== 1) return undefined;
     return undefined;
     // return result[0].blob
     // const { name, branch } = params
@@ -92,9 +96,10 @@ export class ConnectSQL extends ConnectionBase {
     if (!this.loader || !this.taskManager) {
       throw this.logger.Error().Msg("loader and taskManager must be set").AsError();
     }
-    await this.store.data.start();
-    await this.store.meta.start();
-    await this.store.wal.start();
+    throw this.logger.Error().Msg("onConnect not implemented").AsError();
+    // await this.store.data.start();
+    // await this.store.meta.start();
+    // await this.store.wal.start();
     return Promise.resolve();
   }
 }

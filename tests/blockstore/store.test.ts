@@ -1,7 +1,22 @@
 import { CID } from "multiformats";
 import { rt, bs } from "@fireproof/core";
+import { MockLogger } from "@adviser/cement";
+import { NotFoundError } from "../../src/blockstore/gateway";
 
 const decoder = new TextDecoder("utf-8");
+
+function runtime() {
+  return bs.toStoreRuntime({}, MockLogger().logger);
+}
+
+function mockLoader(name: string): bs.Loadable {
+  return {
+    name,
+    ebOpts: {
+      store: {},
+    },
+  } as bs.Loadable;
+}
 
 describe("DataStore", function () {
   let store: bs.DataStore;
@@ -14,7 +29,8 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     await rt.SysContainer.start();
-    store = await bs.toStoreRuntime().makeDataStore({ name: "test" } as bs.Loadable);
+    store = await runtime().makeDataStore(mockLoader("test"));
+    await store.start();
     raw = await bs.testStoreFactory(store.url);
   });
 
@@ -45,7 +61,8 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     await rt.SysContainer.start();
-    store = await bs.toStoreRuntime().makeDataStore({ name: "test2" } as bs.Loadable);
+    store = await runtime().makeDataStore(mockLoader("test2"));
+    await store.start();
     raw = await bs.testStoreFactory(store.url);
     car = {
       cid: "cid" as unknown as CID,
@@ -68,8 +85,8 @@ describe("DataStore with a saved car", function () {
 
   it("should remove a car", async function () {
     await store.remove(car.cid);
-    const error = (await store.load(car.cid).catch((e: Error) => e)) as Error;
-    expect(error.message).toMatch("ENOENT");
+    const error = (await store.load(car.cid).catch((e: Error) => e)) as NotFoundError;
+    expect(error.code).toMatch("ENOENT");
     // matches(error.message, "ENOENT");
   });
 });
@@ -85,7 +102,8 @@ describe("MetaStore", function () {
 
   beforeEach(async function () {
     await rt.SysContainer.start();
-    store = await bs.toStoreRuntime().makeMetaStore({ name: "test" } as unknown as bs.Loader);
+    store = await runtime().makeMetaStore(mockLoader("test"));
+    await store.start();
     raw = await bs.testStoreFactory(store.url);
   });
 
@@ -120,7 +138,8 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async function () {
     await rt.SysContainer.start();
-    store = await bs.toStoreRuntime().makeMetaStore({ name: "test-saved-header" } as unknown as bs.Loader);
+    store = await runtime().makeMetaStore(mockLoader("test-saved-header"));
+    await store.start();
     raw = await bs.testStoreFactory(store.url);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid], key: undefined });

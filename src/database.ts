@@ -78,7 +78,9 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
+    this.logger.Debug().Str("id", id).Msg("get-pre-ready");
     await this.ready();
+    this.logger.Debug().Str("id", id).Msg("get-post-ready");
     const got = await this._crdt.get(id).catch((e) => {
       e.message = `Not found: ${id} - ` + e.message;
       throw e;
@@ -89,7 +91,9 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DbResponse> {
+    this.logger.Debug().Str("id", doc._id).Msg("put-pre-ready");
     await this.ready();
+    this.logger.Debug().Str("id", doc._id).Msg("put-post-ready");
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
     const result = (await this._writeQueue.push({

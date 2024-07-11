@@ -3,18 +3,19 @@ import { ensureLogger, LoggerOpts } from "../../utils";
 import { DBConnection, DataSQLStore, MetaSQLStore, WalSQLStore } from "./types";
 import { SQLITE_VERSION } from "./v0.19-sqlite/version";
 
-export function ensureSQLVersion(url: URL, opts: LoggerOpts | Logger): URL {
-  if (url.searchParams.get("version")) return url;
-
+export function prepareSQLVersion(iurl: URL, opts: LoggerOpts | Logger): URL {
+  if (iurl.searchParams.get("version")) return iurl;
+  const url = new URL(iurl.toString());
   switch (url.protocol) {
-    case "sqlite:": {
-      const ourl = new URL(url.toString());
-      ourl.searchParams.set("version", SQLITE_VERSION);
-      return ourl;
-    }
+    case "sqlite:":
+      {
+        url.searchParams.set("version", SQLITE_VERSION);
+      }
+      break;
     default:
       throw ensureLogger(opts, "ensureSQLVersion").Error().Str("url", url.toString()).Msg("unsupported protocol").AsError();
   }
+  return url;
 }
 
 export async function WalStoreFactory(db: DBConnection): Promise<WalSQLStore> {

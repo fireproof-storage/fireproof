@@ -1,10 +1,10 @@
 import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, MetaRecord, MetaRecordKey, MetaSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
-import { Logger } from "@adviser/cement";
+import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 import { UploadMetaFnParams } from "../../../blockstore/types.js";
 import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger } from "../../../utils.js";
+import { ensureLogger, exception2Result, getStore } from "../../../utils.js";
 
 export class MetaSQLRecordBuilder {
   readonly record: MetaRecord;
@@ -52,73 +52,79 @@ interface SQLiteMetaRecord {
 }
 
 export class V0_18_0SQLiteMetaStore implements MetaSQLStore {
-  _insertStmt?: Statement;
-  _selectStmt?: Statement;
-  _deleteStmt?: Statement;
   readonly dbConn: SQLiteConnection;
-  readonly table: string;
   readonly logger: Logger;
   constructor(dbConn: DBConnection) {
     this.dbConn = dbConn as SQLiteConnection;
-    this.table = dbConn.opts.tableNames.meta;
-    this.logger = ensureLogger(dbConn.opts, "SQLiteMetaStore").With().Str("table", this.table).Logger();
+    this.logger = ensureLogger(dbConn.opts, "SQLiteMetaStore");
     this.logger.Debug().Msg("constructor");
   }
-  async start(): Promise<void> {
-    this.logger.Debug().Msg("start");
+  async start(url: URL): Promise<void> {
+    this.logger.Debug().Url(url).Msg("starting");
     await this.dbConn.connect();
-    await ensureSQLiteVersion(this.dbConn);
-    await this.dbConn.client
-      .prepare(
-        `CREATE TABLE IF NOT EXISTS ${this.table} (
-        name TEXT not null,
-        branch TEXT not null,
-        meta BLOB NOT NULL,
-        updated_at TEXT NOT NULL,
-        PRIMARY KEY (name, branch)
-        )`,
-      )
-      .run();
-    this._insertStmt = this.dbConn.client.prepare(`insert into ${this.table}
+    await ensureSQLiteVersion(url, this.dbConn);
+    this.logger.Debug().Url(url).Msg("started");
+  }
+
+  table(url: URL): string {
+    return getStore(url, this.logger, (...x: string[]) => x.join("_"));
+  }
+
+  readonly #createTable = new KeyedResolvOnce();
+  async createTable(url: URL) {
+    return this.#createTable.get(this.table(url)).once(async (table) => {
+      await this.dbConn.client
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS ${table} (
+            name TEXT not null,
+            branch TEXT not null,
+            meta BLOB NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY (name, branch)
+            )`,
+        )
+        .run();
+    });
+  }
+
+  readonly #insertStmt = new KeyedResolvOnce<Statement>();
+  private async insertStmt(url: URL) {
+    return this.#insertStmt.get(this.table(url)).once(async (table) => {
+      await this.createTable(url);
+      return this.dbConn.client.prepare(`insert into ${table}
           (name, branch, meta, updated_at)
           values (?, ?, ?, ?)
           ON CONFLICT(name, branch) DO UPDATE SET meta=?, updated_at=?
           `);
-    this._selectStmt = this.dbConn.client.prepare(
-      `select name, branch, meta, updated_at from ${this.table} where name = ? and branch = ?`,
-    );
-    this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where name = ? and branch = ?`);
+    });
   }
 
-  get insertStmt(): Statement {
-    if (!this._insertStmt) {
-      throw this.logger.Error().Msg("insert statement not prepared").AsError();
-    }
-    return this._insertStmt;
+  readonly #selectStmt = new KeyedResolvOnce<Statement>();
+  private async selectStmt(url: URL) {
+    return this.#selectStmt.get(this.table(url)).once(async (table) => {
+      await this.createTable(url);
+      return this.dbConn.client.prepare(`select name, branch, meta, updated_at from ${table} where name = ? and branch = ?`);
+    });
   }
 
-  get selectStmt(): Statement {
-    if (!this._selectStmt) {
-      throw this.logger.Error().Msg("select statement not prepared").AsError();
-    }
-    return this._selectStmt;
+  readonly #deleteStmt = new KeyedResolvOnce<Statement>();
+  private async deleteStmt(url: URL) {
+    return this.#deleteStmt.get(this.table(url)).once(async (table) => {
+      await this.createTable(url);
+      return this.dbConn.client.prepare(`delete from ${table} where name = ? and branch = ?`);
+    });
   }
 
-  get deleteStmt(): Statement {
-    if (!this._deleteStmt) {
-      throw this.logger.Error().Msg("delete statement not prepared").AsError();
-    }
-    return this._deleteStmt;
-  }
-
-  async insert(ose: MetaRecord): Promise<RunResult> {
+  async insert(url: URL, ose: MetaRecord): Promise<RunResult> {
     this.logger.Debug().Str("name", ose.name).Str("branch", ose.branch).Uint64("data-len", ose.meta.length).Msg("insert");
     const bufMeta = Buffer.from(ose.meta);
-    return this.insertStmt.run(ose.name, ose.branch, bufMeta, ose.updated_at.toISOString(), bufMeta, ose.updated_at.toISOString());
+    return this.insertStmt(url).then((i) =>
+      i.run(ose.name, ose.branch, bufMeta, ose.updated_at.toISOString(), bufMeta, ose.updated_at.toISOString()),
+    );
   }
-  async select(key: MetaRecordKey): Promise<MetaRecord[]> {
+  async select(url: URL, key: MetaRecordKey): Promise<MetaRecord[]> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("select");
-    return (await this.selectStmt.all(key.name, key.branch)).map((irow) => {
+    return (await this.selectStmt(url).then((i) => i.all(key.name, key.branch))).map((irow) => {
       const row = irow as SQLiteMetaRecord;
       return {
         name: row.name,
@@ -129,16 +135,20 @@ export class V0_18_0SQLiteMetaStore implements MetaSQLStore {
     });
   }
 
-  async delete(key: MetaRecordKey): Promise<RunResult> {
+  async delete(url: URL, key: MetaRecordKey): Promise<RunResult> {
     this.logger.Debug().Str("name", key.name).Str("branch", key.branch).Msg("delete");
-    return this.deleteStmt.run(key.name, key.branch);
+    return this.deleteStmt(url).then((i) => i.run(key.name, key.branch));
   }
-  async close(): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async close(url: URL): Promise<Result<void>> {
     this.logger.Debug().Msg("close");
     // await this.dbConn.close();
+    return Result.Ok(undefined);
   }
-  async destroy(): Promise<void> {
-    this.logger.Debug().Msg("destroy");
-    await this.dbConn.client.prepare(`delete from ${this.table}`).run();
+  async destroy(url: URL): Promise<Result<void>> {
+    return exception2Result(async () => {
+      this.logger.Debug().Msg("destroy");
+      await this.dbConn.client.prepare(`delete from ${this.table(url)}`).run();
+    });
   }
 }

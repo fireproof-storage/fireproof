@@ -14,6 +14,8 @@ describe("basic Index", () => {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -25,6 +27,7 @@ describe("basic Index", () => {
       didMap = true;
       return doc.title;
     });
+    await indexer.ready();
   });
   it("should have properties", function () {
     expect(indexer.crdt).toBe(db._crdt);
@@ -97,6 +100,8 @@ describe("Index query with compound key", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -108,6 +113,7 @@ describe("Index query with compound key", function () {
     indexer = new Index<[string, number], TestType>(db._crdt, "hello", (doc) => {
       return [doc.title, doc.score];
     });
+    await indexer.ready();
   });
   it("should prefix query", async function () {
     const { rows } = await indexer.query({ prefix: "creative" });
@@ -123,6 +129,8 @@ describe("basic Index with map fun", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -133,6 +141,7 @@ describe("basic Index with map fun", function () {
     indexer = new Index<string, TestType>(db._crdt, "hello", (doc, map) => {
       map(doc.title);
     });
+    await indexer.ready();
   });
   it("should get results", async function () {
     const result = await indexer.query();
@@ -186,6 +195,8 @@ describe("Index query with map and compound key", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -197,6 +208,7 @@ describe("Index query with map and compound key", function () {
     indexer = new Index<[string, number], TestType>(db._crdt, "hello", (doc, emit) => {
       emit([doc.title, doc.score]);
     });
+    await indexer.ready();
   });
   it("should prefix query", async function () {
     const { rows } = await indexer.query({ prefix: "creative" });
@@ -212,6 +224,8 @@ describe("basic Index with string fun", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -220,6 +234,7 @@ describe("basic Index with string fun", function () {
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
     indexer = new Index(db._crdt, "title");
+    await indexer.ready();
   });
   it("should get results", async function () {
     const result = await indexer.query();
@@ -248,6 +263,8 @@ describe("basic Index upon cold start", function () {
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -264,6 +281,7 @@ describe("basic Index upon cold start", function () {
       return doc.title;
     };
     indexer = await index<string, TestType>({ _crdt: crdt }, "hello", mapFn);
+    await indexer.ready();
     // new Index(db._crdt.indexBlockstore, db._crdt, 'hello', mapFn)
     result = await indexer.query();
     expect(indexer.indexHead).toEqual(crdt.clock.head);
@@ -279,6 +297,7 @@ describe("basic Index upon cold start", function () {
   });
   it("should work on cold load", async function () {
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
+    await crdt2.ready();
     const { result, head } = await crdt2.changes();
     expect(result).toBeTruthy();
     await crdt2.ready();
@@ -333,6 +352,8 @@ describe("basic Index with no data", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await indexer.close();
+    await indexer.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();
@@ -341,6 +362,7 @@ describe("basic Index with no data", function () {
       didMap = true;
       return doc.title;
     });
+    await indexer.ready();
   });
   it("should have properties", function () {
     expect(indexer.crdt).toEqual(db._crdt);

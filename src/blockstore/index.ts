@@ -27,7 +27,6 @@ export { ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };
 
 export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction.js";
 export { Loader, Loadable } from "./loader.js";
-export { DataStore, DataSaveOpts, MetaStore } from "./store.js";
-export { RemoteWAL, type WALState } from "./remote-wal.js";
+export { DataStore, type DataSaveOpts, MetaStore, RemoteWAL, type WALState } from "./store.js";
 export { parseCarFile } from "./loader-helpers.js";
 export { ConnectionBase } from "./connection-base.js";

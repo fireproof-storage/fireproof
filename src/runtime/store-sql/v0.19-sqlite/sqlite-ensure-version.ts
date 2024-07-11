@@ -3,9 +3,9 @@ import { SQLITE_VERSION } from "./version";
 import { ResolveOnce } from "@adviser/cement";
 import { ensureLogger } from "../../../utils";
 
-const once = new ResolveOnce<void>();
-export async function ensureSQLiteVersion(dbConn: SQLiteConnection) {
-  once.once(async () => {
+const once = new ResolveOnce<string>();
+export async function ensureSQLiteVersion(url: URL, dbConn: SQLiteConnection) {
+  const version = await once.once(async () => {
     const logger = ensureLogger(dbConn.opts, "ensureSQLiteVersion", {
       version: SQLITE_VERSION,
       url: dbConn.url.toString(),
@@ -25,10 +25,12 @@ export async function ensureSQLiteVersion(dbConn: SQLiteConnection) {
       await dbConn.client
         .prepare(`insert into version (version, updated_at) values (?, ?)`)
         .run(SQLITE_VERSION, new Date().toISOString());
-      return;
+      return SQLITE_VERSION;
     }
     if (rows[0].version !== SQLITE_VERSION) {
       logger.Warn().Any("row", rows[0]).Msg(`version mismatch`);
     }
+    return rows[0].version;
   });
+  url.searchParams.set("version", version);
 }

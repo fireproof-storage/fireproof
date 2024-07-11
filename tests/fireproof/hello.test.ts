@@ -19,6 +19,8 @@ describe("public API", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
+    await idx.close();
+    await idx.destroy();
   });
   beforeEach(async function () {
     await rt.SysContainer.start();

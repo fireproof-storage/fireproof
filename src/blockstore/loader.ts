@@ -19,10 +19,8 @@ import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction.js";
 import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers.js";
 import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers.js";
 
-import { DataStore, MetaStore } from "./store.js";
-import { RemoteWAL } from "./remote-wal.js";
+import { DataStore, MetaStore, RemoteWAL } from "./store.js";
 
-import { DataStore as AbstractDataStore, MetaStore as AbstractMetaStore } from "./store.js";
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
@@ -50,42 +48,24 @@ export function toHexString(byteArray: Uint8Array) {
     .join("");
 }
 
-abstract class AbstractRemoteMetaStore extends AbstractMetaStore {
-  abstract handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>;
-}
+type AbstractRemoteMetaStore = MetaStore & {
+  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>;
+};
 
 export abstract class Loadable {
   name = "";
   abstract readonly logger: Logger;
+  abstract readonly ebOpts: BlockstoreRuntime;
   remoteCarStore?: DataStore;
   abstract carStore(): Promise<DataStore>;
   carLog: CarLog = new Array<CarGroup>();
   remoteMetaStore?: AbstractRemoteMetaStore;
-  remoteFileStore?: AbstractDataStore;
+  remoteFileStore?: DataStore;
   abstract ready(): Promise<void>;
   abstract close(): Promise<void>;
   abstract fileStore(): Promise<DataStore>;
   abstract remoteWAL(): Promise<RemoteWAL>;
   abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
-}
-
-interface Startable {
-  start(): Promise<void>;
-}
-
-class EnsureStart<T extends Startable> {
-  readonly oncePerStore = new ResolveOnce<T>();
-
-  reset() {
-    this.oncePerStore.reset();
-  }
-  once(fn: () => Promise<T>) {
-    return this.oncePerStore.once(async () => {
-      const ret = await fn();
-      await ret.start();
-      return ret;
-    });
-  }
 }
 
 export class Loader implements Loadable {
@@ -101,8 +81,8 @@ export class Loader implements Loadable {
   key?: string;
   keyId?: string;
   remoteMetaStore?: AbstractRemoteMetaStore;
-  remoteCarStore?: AbstractDataStore;
-  remoteFileStore?: AbstractDataStore;
+  remoteCarStore?: DataStore;
+  remoteFileStore?: DataStore;
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
@@ -110,31 +90,19 @@ export class Loader implements Loadable {
 
   // readonly id = uuidv4();
 
-  readonly ensureCarStore = new EnsureStart<DataStore>();
   async carStore(): Promise<DataStore> {
-    return this.ensureCarStore.once(() => {
-      return this.ebOpts.store.makeDataStore(this);
-    });
+    return this.ebOpts.storeRuntime.makeDataStore(this);
   }
 
-  readonly ensureFileStore = new EnsureStart<DataStore>();
   async fileStore(): Promise<DataStore> {
-    return this.ensureFileStore.once(() => {
-      return this.ebOpts.store.makeDataStore(this);
-    });
+    return this.ebOpts.storeRuntime.makeDataStore(this);
   }
-  readonly ensureRemoteFileStore = new EnsureStart<RemoteWAL>();
   async remoteWAL(): Promise<RemoteWAL> {
-    return this.ensureRemoteFileStore.once(() => {
-      return this.ebOpts.store.makeRemoteWAL(this);
-    });
+    return this.ebOpts.storeRuntime.makeRemoteWAL(this);
   }
 
-  readonly ensureMetaStore = new EnsureStart<MetaStore>();
   async metaStore(): Promise<MetaStore> {
-    return this.ensureMetaStore.once(() => {
-      return this.ebOpts.store.makeMetaStore(this);
-    });
+    return this.ebOpts.storeRuntime.makeMetaStore(this);
   }
 
   readonly onceReady = new ResolveOnce<void>();
@@ -149,15 +117,7 @@ export class Loader implements Loadable {
 
   async close() {
     const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
-    await Promise.all(
-      toClose.map((store) => {
-        store.close();
-      }),
-    );
-    this.ensureCarStore.reset();
-    this.ensureFileStore.reset();
-    this.ensureRemoteFileStore.reset();
-    this.ensureMetaStore.reset();
+    await Promise.all(toClose.map((store) => store.close()));
   }
 
   async destroy() {
@@ -433,7 +393,7 @@ export class Loader implements Loadable {
       for (const cids of this.carLog) {
         for (const cid of cids) {
           const reader = await this.loadCar(cid);
-          if (!reader) throw new Error(`missing car reader ${cid.toString()}`);
+          if (!reader) throw this.logger.Error().Ref("cid", cid).Msg("missing car reader").AsError();
           for await (const block of reader.blocks()) {
             const sCid = block.cid.toString();
             if (!this.getBlockCache.has(sCid)) {
@@ -454,13 +414,13 @@ export class Loader implements Loadable {
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
       const reader = await this.loadCar(carCid);
       if (!reader) {
-        throw new Error(`missing car reader ${carCid.toString()}`);
+        throw this.logger.Error().Ref("cid", carCid).Msg("missing car reader").AsError();
       }
       await this.cacheCarReader(carCid.toString(), reader).catch(() => {
         return;
       });
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
-      throw new Error(`block not in reader: ${cid.toString()}`);
+      throw this.logger.Error().Str("cid", sCid).Msg("block not in reader").AsError();
     };
 
     const getCompactCarCids = async (carCid: AnyLink) => {
@@ -468,7 +428,7 @@ export class Loader implements Loadable {
 
       const reader = await this.loadCar(carCid);
       if (!reader) {
-        throw new Error(`missing car reader ${carCid.toString()}`);
+        throw this.logger.Error().Str("cid", carCid.toString()).Msg("missing car reader").AsError();
       }
 
       const header = await parseCarFile(reader);
@@ -493,7 +453,7 @@ export class Loader implements Loadable {
       }
 
       if (this.getBlockCache.has(sCid)) return this.getBlockCache.get(sCid);
-      throw new Error(`block not in compact reader: ${cid.toString()}`);
+      throw this.logger.Error().Str("cid", sCid).Msg("block not in compact reader").AsError();
     };
 
     let got;
@@ -527,19 +487,14 @@ export class Loader implements Loadable {
 
   async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) {
-      throw new Error("car store not initialized");
+      throw this.logger.Error().Msg("car store not initialized").AsError();
     }
     const loaded = await this.storesLoadCar(cid, await this.carStore(), this.remoteCarStore);
     return loaded;
   }
 
   //What if instead it returns an Array of CarHeader
-  protected async storesLoadCar(
-    cid: AnyLink,
-    local: AbstractDataStore,
-    remote?: AbstractDataStore,
-    publicFiles?: boolean,
-  ): Promise<CarReader> {
+  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore, publicFiles?: boolean): Promise<CarReader> {
     const cidsString = cid.toString();
     if (!this.carReaders.has(cidsString)) {
       this.carReaders.set(
@@ -548,19 +503,24 @@ export class Loader implements Loadable {
           let loadedCar: AnyBlock | undefined = undefined;
           try {
             //loadedCar now is an array of AnyBlocks
+            this.logger.Debug().Str("cid", cidsString).Msg("loading car");
             loadedCar = await local.load(cid);
+            this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
           } catch (e) {
             if (remote) {
               const remoteCar = await remote.load(cid);
               if (remoteCar) {
                 // todo test for this
+                this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
                 await local.save(remoteCar);
                 loadedCar = remoteCar;
               }
+            } else {
+              this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
             }
           }
           if (!loadedCar) {
-            throw new Error(`missing car files ${cidsString}`);
+            throw this.logger.Error().Url(local.url).Str("cid", cidsString).Msg("missing car files").AsError();
           }
           //This needs a fix as well as the fromBytes function expects a Uint8Array
           //Either we can merge the bytes or return an array of rawReaders
@@ -598,7 +558,8 @@ export class Loader implements Loadable {
   }
 
   protected async setKey(key: string) {
-    if (this.key && this.key !== key) throw new Error("key mismatch");
+    if (this.key && this.key !== key)
+      throw this.logger.Error().Str("this.key", this.key).Str("key", key).Msg("setting key").AsError();
     this.key = key;
     const encoder = new TextEncoder();
     const data = encoder.encode(key);

@@ -1,4 +1,4 @@
-import { Logger } from "@adviser/cement";
+import { Logger, Result } from "@adviser/cement";
 import type { RunResult } from "better-sqlite3";
 
 export interface DBConnection {
@@ -8,12 +8,12 @@ export interface DBConnection {
 
 export interface SQLStore<IType, KType, OType = IType[]> {
   readonly dbConn: DBConnection;
-  start(): Promise<void>;
-  insert(ose: IType): Promise<RunResult>;
-  select(car: KType): Promise<OType>;
-  delete(car: KType): Promise<RunResult>;
-  close(): Promise<void>;
-  destroy(): Promise<void>;
+  start(url: URL): Promise<void>;
+  insert(url: URL, ose: IType): Promise<RunResult>;
+  select(url: URL, car: KType): Promise<OType>;
+  delete(url: URL, car: KType): Promise<RunResult>;
+  close(url: URL): Promise<Result<void>>;
+  destroy(url: URL): Promise<Result<void>>;
 }
 
 export interface SQLTableNames {
