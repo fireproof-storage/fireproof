@@ -1,19 +1,9 @@
-import type { AnyBlock, AnyLink, DbMeta } from "../blockstore/index.js";
-import { MetaStore, DataStore, RemoteWAL, WALState } from "../blockstore/index.js";
-import type { Loadable } from "../blockstore/index.js";
-import { format, parse, ToString } from "@ipld/dag-json";
 import { SysContainer } from "./sys-container.js";
-import { Falsy } from "../types.js";
 import { TestStore } from "../blockstore/types.js";
 import { FILESTORE_VERSION } from "./store-file-version.js";
-import { Logger, ResolveOnce } from "@adviser/cement";
-import { ensureLogger } from "../utils.js";
-
-function ensureVersion(url: URL): URL {
-  const ret = new URL(url.toString());
-  ret.searchParams.set("version", url.searchParams.get("version") || FILESTORE_VERSION);
-  return ret;
-}
+import { Logger, ResolveOnce, Result } from "@adviser/cement";
+import { ensureLogger, exception2Result, exceptionWrapper, getStore } from "../utils.js";
+import { Gateway, GetResult, isNotFoundError, NotFoundError } from "../blockstore/gateway.js";
 
 const versionFiles = new Map<string, ResolveOnce<void>>();
 async function ensureVersionFile(path: string, logger: Logger): Promise<string> {
@@ -22,7 +12,7 @@ async function ensureVersionFile(path: string, logger: Logger): Promise<string> 
     once = new ResolveOnce<void>();
     versionFiles.set(path, once);
   }
-  once.once(async () => {
+  await once.once(async () => {
     await SysContainer.mkdir(path, { recursive: true });
     const vFile = SysContainer.join(path, "version");
     const vFileStat = await SysContainer.stat(vFile).catch(() => undefined);
@@ -46,22 +36,16 @@ async function getPath(url: URL, logger: Logger): Promise<string> {
     .replace(/^file:\/\//, "")
     .replace(/\?.*$/, "");
   const name = url.searchParams.get("name");
-  if (!name) throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
-  const version = url.searchParams.get("version");
-  if (!version) throw logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
-  // const index = url.searchParams.has("index");
-  // if (index) name += index;
-  return ensureVersionFile(SysContainer.join(basePath, version, name), logger);
-}
-
-function getStore(url: URL, logger: Logger): string {
-  const result = url.searchParams.get("store");
-  if (!result) throw logger.Error().Str("url", url.toString()).Msg(`store not found`).AsError();
-  return result;
+  if (name) {
+    const version = url.searchParams.get("version");
+    if (!version) throw logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
+    return SysContainer.join(basePath, version, name);
+  }
+  return SysContainer.join(basePath);
 }
 
 function getFileName(url: URL, key: string, logger: Logger): string {
-  switch (getStore(url, logger)) {
+  switch (getStore(url, logger, (...a: string[]) => a.join("/"))) {
     case "data":
       return key + ".car";
     case "meta":
@@ -78,159 +62,140 @@ function ensureIndexName(url: URL, name: string): string {
   return name;
 }
 
-export class FileRemoteWAL extends RemoteWAL {
-  constructor(url: URL, loader: Loadable) {
-    super(loader, ensureVersion(url), ensureLogger(loader.logger, "FileRemoteWAL", { url }));
+abstract class FileGateway implements Gateway {
+  readonly logger: Logger;
+  constructor(logger: Logger) {
+    this.logger = logger;
   }
-
-  readonly branches = new Set<string>();
-
-  async filePathForBranch(branch: string): Promise<string> {
-    return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "wal"), branch + ".json");
-  }
-
-  async start() {
-    await SysContainer.start();
-  }
-
-  async _load(branch = "main"): Promise<WALState | Falsy> {
-    this.branches.add(branch);
-    const filepath = await this.filePathForBranch(branch);
-    const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
-      if (e.code === "ENOENT") return null;
-      throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("load").AsError();
+  start(baseURL: URL): Promise<Result<void>> {
+    return exception2Result(async () => {
+      await SysContainer.start();
+      baseURL.searchParams.set("version", baseURL.searchParams.get("version") || FILESTORE_VERSION);
+      const url = await this.buildUrl(baseURL, "dummy");
+      if (url.isErr()) return url;
+      const dbdir = this.getFilePath(url.Ok());
+      // remove dummy
+      await SysContainer.mkdir(SysContainer.dirname(dbdir), { recursive: true });
+      const dbroot = SysContainer.dirname(dbdir);
+      this.logger.Debug().Str("url", url.Ok().toString()).Str("dbroot", SysContainer.dirname(dbroot)).Msg("start");
+      await ensureVersionFile(dbroot, this.logger);
     });
-    return bytes && parse<WALState>(bytes.toString());
+  }
+  async close(): Promise<Result<void>> {
+    return Result.Ok(undefined);
+  }
+  abstract destroy(baseUrl: URL): Promise<Result<void>>;
+  abstract buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
+
+  getFilePath(url: URL): string {
+    const path = url
+      .toString()
+      .replace(/^file:\/\//, "")
+      .replace(/\?.*$/, "");
+    this.logger.Debug().Str("url", url.toString()).Str("path", path).Msg("getFilePath");
+    return path;
   }
 
-  async _save(state: WALState, branch = "main"): Promise<void> {
-    this.branches.add(branch);
-    const encoded: ToString<WALState> = format(state);
-    const filepath = await this.filePathForBranch(branch);
-    await writePathFile(filepath, encoded);
-  }
-  async _close() {
-    // no-op
-  }
-
-  async _destroy() {
-    for (const branch of this.branches) {
-      const filepath = await this.filePathForBranch(branch);
-      await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
-        if (e.code === "ENOENT") return;
-        throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("destroy").AsError();
-      });
-    }
-  }
-}
-
-export class FileMetaStore extends MetaStore {
-  readonly tag: string = "header-node-fs";
-  readonly branches = new Set<string>();
-
-  constructor(url: URL, name: string, logger: Logger) {
-    super(name, ensureVersion(url), ensureLogger(logger, "FileMetaStore", { name, url }));
-  }
-
-  async start() {
-    await SysContainer.start();
-  }
-
-  async filePathForBranch(branch: string): Promise<string> {
-    return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "meta"), branch + ".json");
-  }
-
-  async load(branch = "main"): Promise<DbMeta[] | Falsy> {
-    this.branches.add(branch);
-    const filepath = await this.filePathForBranch(branch);
-    const bytes = await SysContainer.readfile(filepath).catch((e: Error & { code: string }) => {
-      if (e.code === "ENOENT") return undefined;
-      throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("load").AsError();
+  async put(url: URL, body: Uint8Array): Promise<Result<void>> {
+    return exception2Result(async () => {
+      const file = this.getFilePath(url);
+      this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
+      await SysContainer.writefile(file, body);
     });
-    // currently FS is last-write-wins, assumes single writer process
-    return bytes ? [this.parseHeader(bytes.toString())] : null;
+  }
+  async get(url: URL): Promise<GetResult> {
+    return exceptionWrapper(async () => {
+      const file = this.getFilePath(url);
+      try {
+        const res = await SysContainer.readfile(file);
+        this.logger.Debug().Url(url).Str("file", file).Msg("get");
+        return Result.Ok(new Uint8Array(res));
+      } catch (e: unknown) {
+        // this.logger.Error().Err(e).Str("file", file).Msg("get");
+        if (isNotFoundError(e)) {
+          return Result.Err(new NotFoundError(`file not found: ${file}`));
+        }
+        throw e;
+      }
+    });
+  }
+  async delete(url: URL): Promise<Result<void>> {
+    return exception2Result(async () => {
+      await SysContainer.unlink(this.getFilePath(url));
+    });
   }
 
-  async save(meta: DbMeta, branch = "main") {
-    this.branches.add(branch);
-    const filepath = await this.filePathForBranch(branch);
-    const bytes = this.makeHeader(meta);
-    await writePathFile(filepath, bytes);
-    return undefined;
-  }
-  async close() {
-    // no-op
-  }
-  async destroy() {
-    for (const branch of this.branches) {
-      const filepath = await this.filePathForBranch(branch);
-      await SysContainer.unlink(filepath).catch((e: Error & { code: string }) => {
-        if (e.code === "ENOENT") return;
-        throw this.logger.Error().Str("filepath", filepath).Err(e).Msg("destroy").AsError();
-      });
-    }
-  }
-}
-
-export class FileDataStore extends DataStore {
-  readonly tag: string = "car-node-fs";
-
-  constructor(url: URL, name: string, logger: Logger) {
-    super(name, ensureVersion(url), ensureLogger(logger, "FileDataStore", { name, url }));
-  }
-
-  async start() {
-    await SysContainer.start();
-  }
-
-  private async cidPath(cid: AnyLink): Promise<string> {
-    return SysContainer.join(await getPath(this.url, this.logger), ensureIndexName(this.url, "data"), cid.toString() + ".car");
-  }
-
-  async save(car: AnyBlock): Promise<void> {
-    const filepath = await this.cidPath(car.cid);
-    // console.log("save->", filepath);
-    await writePathFile(filepath, car.bytes);
-  }
-
-  async load(cid: AnyLink): Promise<AnyBlock> {
-    const filepath = await this.cidPath(cid);
-    const bytes = await SysContainer.readfile(filepath);
-    return { cid, bytes: new Uint8Array(bytes) };
-  }
-
-  async remove(cid: AnyLink): Promise<void> {
-    const filepath = await this.cidPath(cid);
-    // console.log("remove->", filepath);
-    await SysContainer.unlink(filepath);
-  }
-  async close() {
-    // no-op
-  }
-  async destroy() {
-    const filepath = SysContainer.dirname(await this.cidPath("x" as unknown as AnyLink));
+  async destroyDir(baseURL: URL): Promise<Result<void>> {
+    const url = await this.buildUrl(baseURL, "x");
+    if (url.isErr()) return url;
+    const filepath = SysContainer.dirname(this.getFilePath(url.Ok()));
+    let dir: string[] = [];
     try {
-      const dir = await SysContainer.readdir(filepath);
-      for (const file of dir) {
-        try {
-          await SysContainer.unlink(file);
-        } catch (e: unknown) {
-          if ((e as { code: string }).code !== "ENOENT") {
-            throw this.logger.Error().Str("file", file).Msg("destroy");
-          }
+      dir = await SysContainer.readdir(filepath);
+    } catch (e: unknown) {
+      if (!isNotFoundError(e)) {
+        throw this.logger.Error().Err(e).Str("dir", filepath).Msg("destroy:readdir").AsError();
+      }
+    }
+    for (const file of dir) {
+      const pathed = SysContainer.join(filepath, file);
+      try {
+        await SysContainer.unlink(pathed);
+      } catch (e: unknown) {
+        if (!isNotFoundError(e)) {
+          throw this.logger.Error().Err(e).Str("file", pathed).Msg("destroy:unlink").AsError();
         }
       }
-    } catch (e: unknown) {
-      if ((e as { code: string }).code !== "ENOENT") {
-        throw this.logger.Error().Str("dir", filepath).Msg("destroy");
-      }
     }
+    return Result.Ok(undefined);
   }
 }
 
-async function writePathFile(path: string, data: Uint8Array | string) {
-  await SysContainer.mkdir(SysContainer.dirname(path), { recursive: true });
-  return await SysContainer.writefile(path, data);
+export class FileWALGateway extends FileGateway {
+  constructor(logger: Logger) {
+    super(ensureLogger(logger, "FileWALGateway"));
+  }
+
+  async destroy(baseURL: URL): Promise<Result<void>> {
+    return this.destroyDir(baseURL);
+  }
+  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
+    const url = new URL(baseUrl.toString());
+    url.pathname = SysContainer.join(await getPath(baseUrl, this.logger), ensureIndexName(baseUrl, "wal"), key + ".json");
+    return Result.Ok(url);
+  }
+}
+
+export class FileMetaGateway extends FileGateway {
+  constructor(logger: Logger) {
+    super(ensureLogger(logger, "FileMetaGateway"));
+  }
+
+  async destroy(baseURL: URL): Promise<Result<void>> {
+    return this.destroyDir(baseURL);
+  }
+  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
+    const url = new URL(baseUrl.toString());
+    url.pathname = SysContainer.join(await getPath(baseUrl, this.logger), ensureIndexName(baseUrl, "meta"), key + ".json");
+    return Result.Ok(url);
+  }
+}
+
+export class FileDataGateway extends FileGateway {
+  readonly branches = new Set<string>();
+  constructor(logger: Logger) {
+    // console.log("FileDataGateway->", logger);
+    super(ensureLogger(logger, "FileDataGateway"));
+  }
+
+  async destroy(baseURL: URL): Promise<Result<void>> {
+    return this.destroyDir(baseURL);
+  }
+  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
+    const url = new URL(baseUrl.toString());
+    url.pathname = SysContainer.join(await getPath(baseUrl, this.logger), ensureIndexName(baseUrl, "data"), key + ".car");
+    return Result.Ok(url);
+  }
 }
 
 function toArrayBuffer(buffer: Buffer) {
@@ -254,7 +219,7 @@ export class FileTestStore implements TestStore {
   async get(key: string) {
     const dbFile = SysContainer.join(
       await getPath(this.url, this.logger),
-      getStore(this.url, this.logger),
+      getStore(this.url, this.logger, SysContainer.join),
       getFileName(this.url, key, this.logger),
     );
     const buffer = await SysContainer.readfile(dbFile);

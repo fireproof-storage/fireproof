@@ -48,6 +48,8 @@ export function defaultedBlockstoreRuntime(
   component: string,
   ctx?: Record<string, unknown>,
 ): BlockstoreRuntime {
+  const logger = ensureLogger(opts, component, ctx);
+  const store = opts.store || {};
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     applyMeta: (meta: TransactionMeta, snap?: boolean): Promise<void> => {
@@ -62,9 +64,10 @@ export function defaultedBlockstoreRuntime(
     name: undefined,
     threshold: 1000 * 1000,
     ...opts,
-    logger: ensureLogger(opts, component, ctx),
+    logger,
     crypto: toCryptoOpts(opts.crypto),
-    store: toStoreRuntime(opts.name, opts.store),
+    store,
+    storeRuntime: toStoreRuntime(store, logger),
   };
 }
 
@@ -291,7 +294,8 @@ export interface BlockstoreRuntime {
   readonly compact: CompactFn;
   readonly autoCompact: number;
   readonly crypto: CryptoOpts;
-  readonly store: StoreRuntime;
+  readonly store: StoreOpts;
+  readonly storeRuntime: StoreRuntime;
   readonly public: boolean;
   readonly meta?: DbMeta;
   readonly name?: string;

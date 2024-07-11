@@ -1,6 +1,5 @@
 import type { CID, Link, Version } from "multiformats";
-import { DataStore, MetaStore } from "./store.js";
-import { RemoteWAL } from "./remote-wal.js";
+import { DataStore, MetaStore, RemoteWAL } from "./store.js";
 import type { Loadable } from "./loader.js";
 import { DocFileMeta, Falsy } from "../types.js";
 import { CarTransaction } from "./transaction.js";
@@ -146,12 +145,11 @@ export interface TestStore {
 }
 
 export interface StoreRuntime {
-  // readonly stores: {
-  //   readonly meta: URL;
-  //   readonly data: URL;
-  //   readonly indexes: URL;
-  //   readonly remoteWAL: URL;
-  // };
+  // the factories should produce ready-to-use stores
+  // which means they have to call start() on the store
+  // to fullfill lifecycle requirements
+  // to release resources, like one database connection
+  // for all stores a refcount on close() should be used
   makeMetaStore(loader: Loadable): Promise<MetaStore>;
   makeDataStore(loader: Loadable): Promise<DataStore>;
   makeRemoteWAL(loader: Loadable): Promise<RemoteWAL>;

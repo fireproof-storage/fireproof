@@ -183,7 +183,7 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
       }
       if (fileMeta.car) {
         fileMeta.file = async () =>
-          await blocks.ebOpts.store.decodeFile(
+          await blocks.ebOpts.storeRuntime.decodeFile(
             {
               get: async (cid: AnyLink) => {
                 return await blocks.getFile(throwFalsy(fileMeta.car), cid, isPublic);

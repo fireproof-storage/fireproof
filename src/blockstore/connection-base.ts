@@ -2,15 +2,13 @@ import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import type { Link, Version } from "multiformats";
+import { Logger } from "@adviser/cement";
 
 import { Falsy, throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
 import type { BlockstoreOpts } from "./transaction.js";
 import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams, Connection } from "./types.js";
 import { Loadable, type Loader } from "./loader.js";
-
-import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
-import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../utils.js";
 
 export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
@@ -58,18 +56,19 @@ export abstract class ConnectionBase implements Connection {
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
     this.onConnect();
-    const remote = new RemoteMetaStore(new URL(`remote://connectMeta`), this.loader.name, this, this.logger);
-    remote.onLoad("main", async (metas) => {
-      if (metas) {
-        await throwFalsy(this.loader).handleDbMetasFromStore(metas);
-      }
-    });
-    this.loader.remoteMetaStore = remote;
-    this.loaded = this.loader.ready().then(async () => {
-      remote.load("main").then(async () => {
-        (await throwFalsy(this.loader).remoteWAL())._process();
-      });
-    });
+    this.logger.Warn().Msg("connectMeta: connecting to remote meta store is disabled");
+    // const remote = new RemoteMetaStore(new URL(`remote://connectMeta`), this.loader.name, this, this.logger);
+    // remote.onLoad("main", async (metas) => {
+    //   if (metas) {
+    //     await throwFalsy(this.loader).handleDbMetasFromStore(metas);
+    //   }
+    // });
+    // this.loader.remoteMetaStore = remote;
+    // this.loaded = this.loader.ready().then(async () => {
+    //   remote.load("main").then(async () => {
+    //     (await throwFalsy(this.loader).remoteWAL())._process();
+    //   });
+    // });
   }
 
   async onConnect() {
@@ -79,8 +78,9 @@ export abstract class ConnectionBase implements Connection {
   connectStorage({ loader }: { loader?: Loader }) {
     if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
     this.loader = loader;
-    loader.remoteCarStore = new RemoteDataStore(new URL(`remote://remoteCarStore`), this.loader.name, this, this.logger);
-    loader.remoteFileStore = new RemoteDataStore(new URL(`remote://remoteFileStore`), this.loader.name, this, this.logger);
+    this.logger.Warn().Msg("connectStorage: connecting to remote meta store is disabled");
+    // loader.remoteCarStore = new RemoteDataStore(new URL(`remote://remoteCarStore`), this.loader.name, this, this.logger);
+    // loader.remoteFileStore = new RemoteDataStore(new URL(`remote://remoteFileStore`), this.loader.name, this, this.logger);
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {

@@ -1,5 +1,5 @@
 import type { Database } from "better-sqlite3";
-import { Logger, ResolveOnce } from "@adviser/cement";
+import { KeyedResolvOnce, Logger } from "@adviser/cement";
 
 import { DBConnection, SQLOpts } from "./types.js";
 import { SysContainer } from "../sys-container.js";
@@ -15,7 +15,7 @@ import { ensureSQLOpts } from "./ensurer.js";
 //     }, opts)
 // }
 
-const onceSQLiteConnections = new Map<string, ResolveOnce<Database>>();
+const onceSQLiteConnections = new KeyedResolvOnce<Database>();
 export class SQLiteConnection implements DBConnection {
   static fromURL(url: URL, opts: Partial<SQLOpts> = {}): DBConnection {
     return new SQLiteConnection(url, opts);
@@ -56,12 +56,7 @@ export class SQLiteConnection implements DBConnection {
         fName += ".sqlite";
       }
     }
-    let ro = onceSQLiteConnections.get(fName);
-    if (!ro) {
-      ro = new ResolveOnce();
-      onceSQLiteConnections.set(fName, ro);
-    }
-    this._client = await ro.once(async () => {
+    this._client = await onceSQLiteConnections.get(fName).once(async () => {
       this.logger.Debug().Str("filename", fName).Msg("connect");
       const Sqlite3Database = (await import("better-sqlite3")).default;
       if (hasName) {

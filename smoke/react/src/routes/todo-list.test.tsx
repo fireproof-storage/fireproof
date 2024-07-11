@@ -21,7 +21,7 @@ describe("<TodoList />", () => {
     }
     console.log("be-post-create");
   });
-  it.skip("it will render an text input and a button", async () => {
+  it("it will render an text input and a button", async () => {
     render(<TodoList />);
     expect(await screen.findByPlaceholderText("new todo here")).not.toBeNull();
     expect(await screen.findByText("Add Todo")).not.toBeNull();

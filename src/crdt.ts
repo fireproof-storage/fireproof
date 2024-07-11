@@ -70,7 +70,7 @@ export class CRDT<T extends DocTypes> {
       name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
-        if (!crdtMeta.head) throw new Error("missing head");
+        if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
         await this.clock.applyHead(crdtMeta.head, []);
       },
       compact: async (blocks: CompactionFetcher) => {
@@ -88,7 +88,7 @@ export class CRDT<T extends DocTypes> {
       name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const idxCarMeta = meta as IdxMetaMap;
-        if (!idxCarMeta.indexes) throw new Error("missing indexes");
+        if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
           index({ _crdt: this }, name, undefined, idx);
         }
@@ -110,7 +110,13 @@ export class CRDT<T extends DocTypes> {
     const prevHead = [...this.clock.head];
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
-      const { head } = await applyBulkUpdateToCrdt<T>(this.blockstore.ebOpts.store, blocks, this.clock.head, updates, this.logger);
+      const { head } = await applyBulkUpdateToCrdt<T>(
+        this.blockstore.ebOpts.storeRuntime,
+        blocks,
+        this.clock.head,
+        updates,
+        this.logger,
+      );
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });

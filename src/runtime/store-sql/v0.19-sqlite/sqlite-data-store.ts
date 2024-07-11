@@ -1,10 +1,10 @@
 import type { RunResult, Statement } from "better-sqlite3";
 import { DBConnection, DataRecord, DataSQLStore } from "../types.js";
 import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
-import { Logger } from "@adviser/cement";
+import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 import { UploadDataFnParams } from "../../../blockstore/types.js";
 import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger } from "../../../utils.js";
+import { ensureLogger, exception2Result, getStore } from "../../../utils.js";
 
 export class DataSQLRecordBuilder {
   readonly dataRecord: DataRecord;
@@ -35,69 +35,76 @@ interface SQLiteDataRecord {
 
 export class V0_18_0SQLiteDataStore implements DataSQLStore {
   readonly dbConn: SQLiteConnection;
-  readonly table: string;
   readonly logger: Logger;
-  _insertStmt?: Statement;
-  _selectStmt?: Statement;
-  _deleteStmt?: Statement;
   constructor(dbConn: DBConnection) {
     this.dbConn = dbConn as SQLiteConnection;
-    this.table = dbConn.opts.tableNames.data;
     this.logger = ensureLogger(dbConn.opts, "SQLiteDataStore");
     this.logger.Debug().Msg("constructor");
   }
 
-  get insertStmt(): Statement {
-    if (!this._insertStmt) {
-      throw this.logger.Error().Msg("insert statement not prepared").AsError();
-    }
-    return this._insertStmt;
+  table(url: URL): string {
+    return getStore(url, this.logger, (...x: string[]) => x.join("_"));
   }
 
-  get selectStmt(): Statement {
-    if (!this._selectStmt) {
-      throw this.logger.Error().Msg("select statement not prepared").AsError();
-    }
-    return this._selectStmt;
-  }
-
-  get deleteStmt(): Statement {
-    if (!this._deleteStmt) {
-      throw this.logger.Error().Msg("delete statement not prepared").AsError();
-    }
-    return this._deleteStmt;
-  }
-
-  async start(): Promise<void> {
-    this.logger.Debug().Msg("start");
-    await this.dbConn.connect();
-    await ensureSQLiteVersion(this.dbConn);
-    await this.dbConn.client
-      .prepare(
-        `CREATE TABLE IF NOT EXISTS ${this.table} (
+  readonly #createTable = new KeyedResolvOnce();
+  async createTable(url: URL) {
+    return this.#createTable.get(this.table(url)).once(async (table) => {
+      await this.dbConn.client
+        .prepare(
+          `CREATE TABLE IF NOT EXISTS ${table} (
             name TEXT NOT NULL,
             car TEXT PRIMARY KEY,
             data BLOB NOT NULL,
             updated_at TEXT NOT NULL)`,
-      )
-      .run();
-    this._insertStmt = this.dbConn.client.prepare(`insert into ${this.table}
-      (name, car, data, updated_at) values (?, ?, ?, ?)
-      ON CONFLICT(car) DO UPDATE SET updated_at=?
-      `);
-    this._selectStmt = this.dbConn.client.prepare(`select name, car, data, updated_at from ${this.table} where car = ?`);
-    this._deleteStmt = this.dbConn.client.prepare(`delete from ${this.table} where car = ?`);
+        )
+        .run();
+    });
   }
 
-  async insert(ose: DataRecord): Promise<RunResult> {
+  readonly #insertStmt = new KeyedResolvOnce<Statement>();
+  private async insertStmt(url: URL) {
+    return this.#insertStmt.get(this.table(url)).once(async (table) => {
+      await this.createTable(url);
+      return this.dbConn.client.prepare(`
+        insert into ${table}
+          (name, car, data, updated_at) values (?, ?, ?, ?)
+          ON CONFLICT(car) DO UPDATE SET updated_at=?`);
+    });
+  }
+
+  readonly #selectStmt = new KeyedResolvOnce<Statement>();
+  private async selectStmt(url: URL) {
+    return this.#selectStmt.get(this.table(url)).once(async (table) => {
+      await this.createTable(url);
+      return this.dbConn.client.prepare(`select name, car, data, updated_at from ${table} where car = ?`);
+    });
+  }
+
+  readonly #deleteStmt = new KeyedResolvOnce<Statement>();
+  private async deleteStmt(url: URL) {
+    return this.#deleteStmt.get(this.table(url)).once(async (table) => {
+      await this.createTable(url);
+      return this.dbConn.client.prepare(`delete from ${table} where car = ?`);
+    });
+  }
+
+  async start(url: URL): Promise<void> {
+    this.logger.Debug().Msg("start-connect");
+    await this.dbConn.connect();
+    this.logger.Debug().Msg("start-connected");
+    await ensureSQLiteVersion(url, this.dbConn);
+    this.logger.Debug().Msg("start-set-version");
+  }
+
+  async insert(url: URL, ose: DataRecord): Promise<RunResult> {
     this.logger.Debug().Str("name", ose.name).Str("car", ose.car).Uint64("data-len", ose.data.length).Msg("insert");
     const updated_at = ose.updated_at.toISOString();
-    return this.insertStmt.run(ose.name, ose.car, Buffer.from(ose.data), updated_at, updated_at);
+    return this.insertStmt(url).then((i) => i.run(ose.name, ose.car, Buffer.from(ose.data), updated_at, updated_at));
   }
 
-  async select(car: string): Promise<DataRecord[]> {
+  async select(url: URL, car: string): Promise<DataRecord[]> {
     this.logger.Debug().Str("car", car).Msg("select");
-    return (await this.selectStmt.all(car)).map((irow) => {
+    return (await this.selectStmt(url).then((i) => i.all(car))).map((irow) => {
       const row = irow as SQLiteDataRecord;
       return {
         name: row.name,
@@ -108,20 +115,25 @@ export class V0_18_0SQLiteDataStore implements DataSQLStore {
     });
   }
 
-  async delete(car: string): Promise<RunResult> {
+  async delete(url: URL, car: string): Promise<RunResult> {
     this.logger.Debug().Str("car", car).Msg("delete");
-    const ret = await this.deleteStmt.run(car);
-    await this.select(car);
+    const ret = await this.deleteStmt(url).then((i) => i.run(car));
+    // await this.select(car);
     return ret;
   }
 
-  async close(): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async close(url: URL): Promise<Result<void>> {
     this.logger.Debug().Msg("close");
+    return Result.Ok(undefined);
     // await this.dbConn.close();
   }
 
-  async destroy(): Promise<void> {
-    this.logger.Debug().Msg("destroy");
-    await this.dbConn.client.prepare(`delete from ${this.table}`).run();
+  async destroy(url: URL): Promise<Result<void>> {
+    return exception2Result(async () => {
+      this.logger.Debug().Msg("destroy");
+      await this.createTable(url);
+      await this.dbConn.client.prepare(`delete from ${this.table(url)}`).run();
+    });
   }
 }
