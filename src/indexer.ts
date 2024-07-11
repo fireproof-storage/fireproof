@@ -39,8 +39,8 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
   mapFn?: MapFn<T>,
   meta?: IdxMeta,
 ): Index<K, T, R> {
-  if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
-  if (mapFn && mapFn.constructor.name !== "Function") throw new Error("mapFn must be a function");
+  if (mapFn && meta) throw _crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
+  if (mapFn && mapFn.constructor.name !== "Function") throw _crdt.logger.Error().Msg("mapFn must be a function").AsError();
   if (_crdt.indexers.has(name)) {
     const idx = _crdt.indexers.get(name) as unknown as Index<K, T>;
     idx.applyMapFn(name, mapFn, meta);
@@ -93,7 +93,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.crdt = crdt as CRDT<T>;
     this.applyMapFn(name, mapFn, meta);
     this.name = name;
-    if (!(this.mapFnString || this.initError)) throw new Error("missing mapFnString");
+    if (!(this.mapFnString || this.initError)) throw this.logger.Error().Msg("missing mapFnString").AsError();
     // this.ready = this.blockstore.ready.then(() => {
     //   return;
     // });
@@ -108,8 +108,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   applyMapFn(name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
-    if (mapFn && meta) throw new Error("cannot provide both mapFn and meta");
-    if (this.name && this.name !== name) throw new Error("cannot change name");
+    if (mapFn && meta) throw this.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
+    if (this.name && this.name !== name) throw this.logger.Error().Msg("cannot change name").AsError();
     this.name = name;
     try {
       if (meta) {
@@ -234,7 +234,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   async _updateIndex(): Promise<IndexTransactionMeta> {
     await this.ready();
     if (this.initError) throw this.initError;
-    if (!this.mapFn) throw new Error("No map function defined");
+    if (!this.mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
     let result: DocUpdate<T>[], head: ClockHead;
     if (!this.indexHead || this.indexHead.length === 0) {
       ({ result, head } = await this.crdt.allDocs());

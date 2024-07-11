@@ -79,7 +79,7 @@ describe("basic Loader simple", function () {
     expect(loader.carLog.length).toBe(1);
     const reader = await loader.loadCar(carGroup[0]);
     expect(reader).toBeTruthy();
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader);
+    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();
@@ -148,7 +148,7 @@ describe("basic Loader with two commits", function () {
   it("should commit", async function () {
     const reader = await loader.loadCar(carCid[0]);
     expect(reader).toBeTruthy();
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader);
+    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(0);
     expect(parsed.cars.length).toBe(1);
@@ -162,7 +162,7 @@ describe("basic Loader with two commits", function () {
 
     const reader = await loader.loadCar(compactCid[0]);
     expect(reader).toBeTruthy();
-    const parsed = await bs.parseCarFile<CRDTMeta>(reader);
+    const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.compact.length).toBe(2);
     expect(parsed.cars.length).toBe(0);
@@ -251,7 +251,7 @@ describe("basic Loader with index commits", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = await ib.loader.loadCar(carCid![0]);
     expect(reader).toBeTruthy();
-    const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader);
+    const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, ib.loader.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();

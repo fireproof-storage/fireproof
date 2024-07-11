@@ -319,7 +319,7 @@ export async function doCompact(blockLog: CompactionFetcher, head: ClockHead, lo
   time("compact head");
   for (const cid of head) {
     const bl = await blockLog.get(cid);
-    if (!bl) throw new Error("Missing head block: " + cid.toString());
+    if (!bl) throw logger.Error().Ref("cid", cid).Msg("Missing head block").AsError();
   }
   timeEnd("compact head");
 

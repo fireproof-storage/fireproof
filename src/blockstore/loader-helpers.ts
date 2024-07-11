@@ -5,6 +5,7 @@ import * as raw from "multiformats/codecs/raw";
 import * as CBW from "@ipld/car/buffer-writer";
 import * as codec from "@ipld/dag-cbor";
 import { CarReader } from "@ipld/car";
+import type { Logger } from "@adviser/cement";
 
 import { AnyBlock, AnyLink, CarHeader, CarMakeable } from "./types.js";
 
@@ -37,15 +38,15 @@ export async function encodeCarHeader<T>(fp: CarHeader<T>) {
   })) as AnyBlock;
 }
 
-export async function parseCarFile<T>(reader: CarReader): Promise<CarHeader<T>> {
+export async function parseCarFile<T>(reader: CarReader, logger: Logger): Promise<CarHeader<T>> {
   const roots = await reader.getRoots();
   const header = await reader.get(roots[0]);
-  if (!header) throw new Error("missing header block");
+  if (!header) throw logger.Error().Msg("missing header block").AsError();
   const { value } = await decode({ bytes: header.bytes, hasher, codec });
   const fpvalue = value as { readonly fp: CarHeader<T> };
   // @jchris where is the fp attribute coming from?
   if (fpvalue && !fpvalue.fp) {
-    throw new Error("missing fp");
+    throw logger.Error().Msg("missing fp").AsError();
   }
   return fpvalue.fp;
 }

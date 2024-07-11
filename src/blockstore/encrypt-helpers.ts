@@ -51,14 +51,14 @@ function makeEncDec(logger: Logger, crypto: CryptoOpts, randomBytes: (size: numb
     if (!carLogIncludesGroup(cids, root)) cids.push(root);
     for (const cid of cids) {
       const unencrypted = await get(cid);
-      if (!unencrypted) throw new Error("missing cid: " + cid.toString());
+      if (!unencrypted) throw logger.Error().Ref("cid", cid).Msg("missing cid block").AsError();
       const encrypted = await codec.encrypt({ ...unencrypted, key });
       const block = await encode({ ...encrypted, codec, hasher });
       yield block;
       set.add(block.cid.toString());
       if (unencrypted.cid.equals(root)) eroot = block.cid;
     }
-    if (!eroot) throw new Error("cids does not include root");
+    if (!eroot) throw logger.Error().Msg("cids does not include root").AsError();
     const list = [...set].map((s) => CID.parse(s));
     let last;
     for await (const node of create({ list, get, cache, chunker, hasher, codec: dagcbor })) {
@@ -66,7 +66,7 @@ function makeEncDec(logger: Logger, crypto: CryptoOpts, randomBytes: (size: numb
       yield block;
       last = block;
     }
-    if (!last) throw new Error("missing last block");
+    if (!last) throw logger.Error().Msg("missing last block").AsError();
     const head = [eroot, last.cid];
     const block = await encode({ value: head, codec: dagcbor, hasher });
     yield block;
@@ -100,20 +100,20 @@ function makeEncDec(logger: Logger, crypto: CryptoOpts, randomBytes: (size: numb
         return decoded;
       });
     const decodedRoot = await getWithDecode(root);
-    if (!decodedRoot) throw new Error("missing root");
-    if (!decodedRoot.bytes) throw new Error("missing bytes");
+    if (!decodedRoot) throw logger.Error().Msg("missing root").AsError();
+    if (!decodedRoot.bytes) throw logger.Error().Msg("missing bytes").AsError();
     const {
       value: [eroot, tree],
     } = decodedRoot as { value: [AnyLink, AnyLink] };
     const rootBlock = (await get(eroot)) as AnyDecodedBlock;
-    if (!rootBlock) throw new Error("missing root block");
+    if (!rootBlock) throw logger.Error().Msg("missing root block").AsError();
     const cidset = await load({ cid: tree, get: getWithDecode, cache, chunker, codec, hasher });
     const { result: nodes } = (await cidset.getAllEntries()) as { result: { cid: CID }[] };
     const unwrap = async (eblock?: AnyDecodedBlock) => {
-      if (!eblock) throw new Error("missing block");
+      if (!eblock) throw logger.Error().Msg("missing block").AsError();
       if (!eblock.value) {
         eblock = await decode({ ...eblock, codec, hasher });
-        if (!eblock.value) throw new Error("missing value");
+        if (!eblock.value) throw logger.Error().Msg("missing value").AsError();
       }
       const { bytes, cid } = await codec.decrypt({ ...eblock, key }).catch((e) => {
         throw e;
@@ -154,7 +154,7 @@ export async function encryptedEncodeCarFile(
   for (const { cid, bytes } of t.entries()) {
     cidsToEncrypt.push(cid);
     const g = await t.get(cid);
-    if (!g) throw new Error(`missing cid block: ${bytes.length}:${cid.toString()}`);
+    if (!g) throw logger.Error().Ref("cid", cid).Int("bytes", bytes.length).Msg("missing cid block").AsError();
   }
   let last: AnyBlock | null = null;
   const { encrypt } = makeEncDec(logger, crypto, crypto.randomBytes);
@@ -171,7 +171,7 @@ export async function encryptedEncodeCarFile(
     await encryptedBlocks.put(block.cid, block.bytes);
     last = block;
   }
-  if (!last) throw new Error("no blocks encrypted");
+  if (!last) throw logger.Error().Msg("no blocks encrypted").AsError();
   const encryptedCar = await encodeCarFile([last.cid], encryptedBlocks);
   return encryptedCar;
 }
@@ -207,6 +207,6 @@ async function decodeCarBlocks(
     await decryptedBlocks.put(block.cid, block.bytes);
     last = block;
   }
-  if (!last) throw new Error("no blocks decrypted");
+  if (!last) throw logger.Error().Msg("no blocks decrypted").AsError();
   return { blocks: decryptedBlocks, root: last.cid };
 }
