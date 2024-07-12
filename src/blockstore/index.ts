@@ -21,6 +21,7 @@ export type {
 } from "./types.js";
 
 export * from "./store-factory.js";
+export * from "./gateway.js";
 
 import { type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection-base.js";
 export { ConnectREST, CarClockHead, Connectable, DbMetaEventBlock };

@@ -44,7 +44,7 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const data = await raw.get(car.cid.toString());
+    const data = await raw.get(store.url, car.cid.toString());
     expect(decoder.decode(data)).toEqual(decoder.decode(car.bytes));
   });
 });
@@ -72,7 +72,7 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const data = await raw.get(car.cid.toString());
+    const data = await raw.get(store.url, car.cid.toString());
     expect(decoder.decode(data)).toEqual(decoder.decode(car.bytes));
   });
 
@@ -118,7 +118,7 @@ describe("MetaStore", function () {
       key: undefined,
     };
     await store.save(h);
-    const file = await raw.get("main");
+    const file = await raw.get(store.url, "main");
     const header = JSON.parse(decoder.decode(file));
     expect(header).toBeTruthy();
     expect(header.cars).toBeTruthy();
@@ -146,7 +146,7 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should have a header", async function () {
-    const data = decoder.decode(await raw.get("main"));
+    const data = decoder.decode(await raw.get(store.url, "main"));
     expect(data).toMatch(/car/);
     const header = JSON.parse(data);
     expect(header).toBeTruthy();

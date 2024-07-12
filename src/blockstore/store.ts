@@ -100,7 +100,7 @@ export class MetaStore extends VersionedStore {
     try {
       return [this.parseHeader(textDecoder.decode(bytes.Ok()))];
     } catch (e) {
-      throw this.logger.Error().Err(bytes.Err()).Msg("parseHeader").AsError();
+      throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
   }
 

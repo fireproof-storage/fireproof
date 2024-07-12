@@ -226,17 +226,12 @@ export class IndexDBMetaGateway extends IndexDBGateway {
 const txtEncoder = new TextEncoder();
 export class IndexDBTestStore implements TestStore {
   readonly logger: Logger;
-  constructor(
-    readonly url: URL,
-    logger: Logger,
-  ) {
-    this.logger = ensureLogger(logger, "IndexDBTestStore", {
-      url,
-    });
+  constructor(logger: Logger) {
+    this.logger = ensureLogger(logger, "IndexDBTestStore", {});
   }
-  async get(key: string) {
-    const db = await connectIdb(this.url, this.logger);
-    const store = getStore(this.url, this.logger, joinDBName);
+  async get(url: URL, key: string) {
+    const db = await connectIdb(url, this.logger);
+    const store = getStore(url, this.logger, joinDBName);
     this.logger.Debug().Str("key", key).Str("store", store).Msg("getting");
     let bytes = await db.get(store, sanitzeKey(key));
     this.logger.Debug().Str("key", key).Str("store", store).Int("len", bytes.length).Msg("got");

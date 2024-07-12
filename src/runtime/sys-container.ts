@@ -2,10 +2,9 @@ import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Sta
 
 import * as stdEnv from "std-env";
 import { uuidv4 } from "uuidv7";
-import { ResolveOnce } from "@adviser/cement";
+import { ResolveOnce, EnvImpl } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
-import { EnvImpl } from "./sys-env-action.js";
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
@@ -39,7 +38,14 @@ export function join(...paths: string[]): string {
   return paths.map((i) => i.replace(/\/+$/, "")).join("/");
 }
 
-const envImpl = new EnvImpl();
+const envImpl = new EnvImpl({
+  symbol: "FP_ENV",
+  presetEnv: new Map([
+    // ["FP_DEBUG", "xxx"],
+    // ["FP_ENV", "development"],
+  ]),
+});
+// console.log(`EnvImpl`, envImpl);
 
 class sysContainer {
   freight: NodeMap = {

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.1.26
-        version: 0.1.26
+        specifier: ^0.2.2
+        version: 0.2.2
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -937,8 +937,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.1.26':
-    resolution: {integrity: sha512-2tDiildR5goSj/UyfNCUZ45bz4ou2gigkuY49n3vaXbkx5kVRv/kNsxAU4XoWUD/Mhw8EQGrCkopwv5AbNUatw==}
+  '@adviser/cement@0.2.2':
+    resolution: {integrity: sha512-NdnagnWZm7LGOdayfrfoTR6tuMIRpaOiA5YNt0CzWo75Qkqx/p0EGyKBjhKfh/3saFQBuQFN2vWEKfZpLpEPWg==}
     engines: {node: '>=16'}
 
   '@alloc/quick-lru@5.2.0':
@@ -8375,7 +8375,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.1.26': {}
+  '@adviser/cement@0.2.2': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
