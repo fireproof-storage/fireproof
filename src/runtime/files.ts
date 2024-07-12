@@ -40,7 +40,7 @@ export async function decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMet
   const entry = await exporter(cid.toString(), blocks as ReadableStorage, { length: meta.size });
   const chunks = [];
   for await (const chunk of entry.content()) {
-    chunks.push(chunk as Buffer);
+    chunks.push(chunk);
   }
   return new File(chunks, entry.name, { type: meta.type, lastModified: 0 });
 }
