@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.1.24
+        specifier: ^0.1.26
         version: 0.1.26
       '@ipld/car':
         specifier: ^5.3.2
@@ -99,6 +99,9 @@ importers:
       '@vitest/browser':
         specifier: ^2.0.2
         version: 2.1.9(@types/node@20.19.0)(typescript@5.8.3)(vite@5.4.19(@types/node@20.19.0)(terser@5.41.0))(vitest@2.1.9)(webdriverio@8.44.1(encoding@0.1.13))
+      '@vitest/ui':
+        specifier: ^2.0.2
+        version: 2.1.9(vitest@2.1.9)
       esbuild:
         specifier: ^0.23.0
         version: 0.23.1
@@ -131,7 +134,10 @@ importers:
         version: 4.3.2(typescript@5.8.3)(vite@5.4.19(@types/node@20.19.0)(terser@5.41.0))
       vitest:
         specifier: ^2.0.2
-        version: 2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0)
+        version: 2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0)
+      webdriverio:
+        specifier: ^8.39.1
+        version: 8.44.1(encoding@0.1.13)
 
   examples/next-app:
     dependencies:
@@ -3404,6 +3410,11 @@ packages:
   '@vitest/spy@2.1.9':
     resolution: {integrity: sha512-E1B35FwzXXTs9FHNK6bDszs7mtydNi5MIfUWpceJ8Xbfb1gBMscAnwLbEu+B44ed6W3XjL9/ehLPHR1fkf1KLQ==}
 
+  '@vitest/ui@2.1.9':
+    resolution: {integrity: sha512-izzd2zmnk8Nl5ECYkW27328RbQ1nKvkm6Bb5DAaz1Gk59EbLkiCMa6OLT0NoaAYTjOFS6N+SMYW1nh4/9ljPiw==}
+    peerDependencies:
+      vitest: 2.1.9
+
   '@vitest/utils@1.6.1':
     resolution: {integrity: sha512-jOrrUvXM4Av9ZWiG1EajNto0u96kWAhJ1LmPmJhXXQx/32MecEKd10pOLYgS2BQx1TgkGhloPU1ArDW2vvaY6g==}
 
@@ -5051,6 +5062,9 @@ packages:
   fetch-blob@3.2.0:
     resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
     engines: {node: ^12.20 || >= 14.13}
+
+  fflate@0.8.2:
+    resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
 
   file-entry-cache@6.0.1:
     resolution: {integrity: sha512-7Gps/XWymbLk2QLYK4NzpMOrYjMhdIxXuIvy2QBsLE6ljuodKvdkWs/cpyJJ3CVIVpH0Oi1Hvg1ovbMzLdFBBg==}
@@ -9685,7 +9699,6 @@ snapshots:
   '@promptbook/utils@0.69.5':
     dependencies:
       spacetrim: 0.11.59
-    optional: true
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -9854,8 +9867,7 @@ snapshots:
 
   '@sinclair/typebox@0.27.8': {}
 
-  '@sindresorhus/is@5.6.0':
-    optional: true
+  '@sindresorhus/is@5.6.0': {}
 
   '@solidjs/router@0.10.10(solid-js@1.9.7)':
     dependencies:
@@ -9880,7 +9892,6 @@ snapshots:
   '@szmarczak/http-timer@5.0.1':
     dependencies:
       defer-to-connect: 2.0.1
-    optional: true
 
   '@testing-library/dom@10.4.0':
     dependencies:
@@ -9986,8 +9997,7 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
-  '@types/http-cache-semantics@4.0.4':
-    optional: true
+  '@types/http-cache-semantics@4.0.4': {}
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 
@@ -10008,7 +10018,6 @@ snapshots:
   '@types/node@22.15.30':
     dependencies:
       undici-types: 6.21.0
-    optional: true
 
   '@types/prop-types@15.7.14': {}
 
@@ -10037,13 +10046,11 @@ snapshots:
 
   '@types/tough-cookie@4.0.5': {}
 
-  '@types/which@2.0.2':
-    optional: true
+  '@types/which@2.0.2': {}
 
   '@types/ws@8.18.1':
     dependencies:
       '@types/node': 20.19.0
-    optional: true
 
   '@types/yauzl@2.10.3':
     dependencies:
@@ -10432,7 +10439,7 @@ snapshots:
       msw: 2.9.0(@types/node@20.19.0)(typescript@5.8.3)
       sirv: 3.0.1
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0)
+      vitest: 2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0)
       ws: 8.18.2
     optionalDependencies:
       webdriverio: 8.44.1(encoding@0.1.13)
@@ -10515,6 +10522,17 @@ snapshots:
     dependencies:
       tinyspy: 3.0.2
 
+  '@vitest/ui@2.1.9(vitest@2.1.9)':
+    dependencies:
+      '@vitest/utils': 2.1.9
+      fflate: 0.8.2
+      flatted: 3.3.3
+      pathe: 1.1.2
+      sirv: 3.0.1
+      tinyglobby: 0.2.14
+      tinyrainbow: 1.2.0
+      vitest: 2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0)
+
   '@vitest/utils@1.6.1':
     dependencies:
       diff-sequences: 29.6.3
@@ -10558,7 +10576,6 @@ snapshots:
       import-meta-resolve: 4.1.0
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   '@wdio/logger@8.38.0':
     dependencies:
@@ -10566,20 +10583,16 @@ snapshots:
       loglevel: 1.9.2
       loglevel-plugin-prefix: 0.8.4
       strip-ansi: 7.1.0
-    optional: true
 
-  '@wdio/protocols@8.44.0':
-    optional: true
+  '@wdio/protocols@8.44.0': {}
 
   '@wdio/repl@8.40.3':
     dependencies:
       '@types/node': 22.15.30
-    optional: true
 
   '@wdio/types@8.41.0':
     dependencies:
       '@types/node': 22.15.30
-    optional: true
 
   '@wdio/utils@8.41.0':
     dependencies:
@@ -10598,7 +10611,6 @@ snapshots:
       wait-port: 1.1.0
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   '@web3-storage/access@18.4.0':
     dependencies:
@@ -10884,13 +10896,11 @@ snapshots:
 
   '@xtuc/long@4.2.2': {}
 
-  '@zip.js/zip.js@2.7.62':
-    optional: true
+  '@zip.js/zip.js@2.7.62': {}
 
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
-    optional: true
 
   abort-error@1.0.1: {}
 
@@ -10973,7 +10983,6 @@ snapshots:
       lodash: 4.17.21
       normalize-path: 3.0.0
       readable-stream: 4.7.0
-    optional: true
 
   archiver@7.0.1:
     dependencies:
@@ -10984,7 +10993,6 @@ snapshots:
       readdir-glob: 1.1.3
       tar-stream: 3.1.7
       zip-stream: 6.0.1
-    optional: true
 
   archy@1.0.0: {}
 
@@ -11186,7 +11194,6 @@ snapshots:
     dependencies:
       buffers: 0.1.1
       chainsaw: 0.1.0
-    optional: true
 
   bindings@1.5.0:
     dependencies:
@@ -11204,8 +11211,7 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
 
-  bluebird@3.4.7:
-    optional: true
+  bluebird@3.4.7: {}
 
   bn.js@4.12.0: {}
 
@@ -11318,13 +11324,11 @@ snapshots:
 
   buffer-crc32@0.2.13: {}
 
-  buffer-crc32@1.0.0:
-    optional: true
+  buffer-crc32@1.0.0: {}
 
   buffer-from@1.1.2: {}
 
-  buffer-indexof-polyfill@1.0.2:
-    optional: true
+  buffer-indexof-polyfill@1.0.2: {}
 
   buffer-xor@1.0.3: {}
 
@@ -11338,8 +11342,7 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
-  buffers@0.1.1:
-    optional: true
+  buffers@0.1.1: {}
 
   builtin-modules@3.3.0: {}
 
@@ -11375,8 +11378,7 @@ snapshots:
 
   cac@6.7.14: {}
 
-  cacheable-lookup@7.0.0:
-    optional: true
+  cacheable-lookup@7.0.0: {}
 
   cacheable-request@10.2.14:
     dependencies:
@@ -11387,7 +11389,6 @@ snapshots:
       mimic-response: 4.0.0
       normalize-url: 8.0.1
       responselike: 3.0.0
-    optional: true
 
   call-bind-apply-helpers@1.0.2:
     dependencies:
@@ -11460,7 +11461,6 @@ snapshots:
   chainsaw@0.1.0:
     dependencies:
       traverse: 0.3.9
-    optional: true
 
   chalk@2.4.2:
     dependencies:
@@ -11596,8 +11596,7 @@ snapshots:
 
   commander@4.1.1: {}
 
-  commander@9.5.0:
-    optional: true
+  commander@9.5.0: {}
 
   commondir@1.0.1: {}
 
@@ -11608,7 +11607,6 @@ snapshots:
       is-stream: 2.0.1
       normalize-path: 3.0.0
       readable-stream: 4.7.0
-    optional: true
 
   concat-map@0.0.1: {}
 
@@ -11659,14 +11657,12 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.3
 
-  crc-32@1.2.2:
-    optional: true
+  crc-32@1.2.2: {}
 
   crc32-stream@6.0.0:
     dependencies:
       crc-32: 1.2.2
       readable-stream: 4.7.0
-    optional: true
 
   create-ecdh@4.0.4:
     dependencies:
@@ -11733,16 +11729,14 @@ snapshots:
       randombytes: 2.1.0
       randomfill: 1.0.4
 
-  css-shorthand-properties@1.1.2:
-    optional: true
+  css-shorthand-properties@1.1.2: {}
 
   css-tree@2.3.1:
     dependencies:
       mdn-data: 2.0.30
       source-map-js: 1.2.1
 
-  css-value@0.0.1:
-    optional: true
+  css-value@0.0.1: {}
 
   cssesc@3.0.0: {}
 
@@ -11762,8 +11756,7 @@ snapshots:
 
   data-uri-to-buffer@2.0.2: {}
 
-  data-uri-to-buffer@4.0.1:
-    optional: true
+  data-uri-to-buffer@4.0.1: {}
 
   data-uri-to-buffer@6.0.2: {}
 
@@ -11826,8 +11819,7 @@ snapshots:
 
   decamelize@4.0.0: {}
 
-  decamelize@6.0.0:
-    optional: true
+  decamelize@6.0.0: {}
 
   decimal.js@10.5.0: {}
 
@@ -11874,8 +11866,7 @@ snapshots:
     dependencies:
       clone: 1.0.4
 
-  defer-to-connect@2.0.1:
-    optional: true
+  defer-to-connect@2.0.1: {}
 
   define-data-property@1.1.1:
     dependencies:
@@ -11916,8 +11907,7 @@ snapshots:
 
   devtools-protocol@0.0.1232444: {}
 
-  devtools-protocol@0.0.1400418:
-    optional: true
+  devtools-protocol@0.0.1400418: {}
 
   didyoumean@1.2.2: {}
 
@@ -11966,7 +11956,6 @@ snapshots:
   duplexer2@0.1.4:
     dependencies:
       readable-stream: 2.3.8
-    optional: true
 
   eastasianwidth@0.2.0: {}
 
@@ -11974,7 +11963,6 @@ snapshots:
     dependencies:
       '@types/which': 2.0.2
       which: 2.0.2
-    optional: true
 
   edgedriver@5.6.1:
     dependencies:
@@ -11985,7 +11973,6 @@ snapshots:
       fast-xml-parser: 4.5.3
       node-fetch: 3.3.2
       which: 4.0.0
-    optional: true
 
   electron-fetch@1.9.1:
     dependencies:
@@ -12822,8 +12809,7 @@ snapshots:
 
   event-target-polyfill@0.0.4: {}
 
-  event-target-shim@5.0.1:
-    optional: true
+  event-target-shim@5.0.1: {}
 
   eventemitter3@5.0.1: {}
 
@@ -12886,8 +12872,7 @@ snapshots:
 
   fake-indexeddb@5.0.2: {}
 
-  fast-deep-equal@2.0.1:
-    optional: true
+  fast-deep-equal@2.0.1: {}
 
   fast-deep-equal@3.1.3: {}
 
@@ -12910,7 +12895,6 @@ snapshots:
   fast-xml-parser@4.5.3:
     dependencies:
       strnum: 1.1.2
-    optional: true
 
   fastest-levenshtein@1.0.16: {}
 
@@ -12930,7 +12914,8 @@ snapshots:
     dependencies:
       node-domexception: 1.0.0
       web-streams-polyfill: 3.3.3
-    optional: true
+
+  fflate@0.8.2: {}
 
   file-entry-cache@6.0.1:
     dependencies:
@@ -12995,8 +12980,7 @@ snapshots:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
 
-  form-data-encoder@2.1.4:
-    optional: true
+  form-data-encoder@2.1.4: {}
 
   form-data@4.0.3:
     dependencies:
@@ -13009,7 +12993,6 @@ snapshots:
   formdata-polyfill@4.0.10:
     dependencies:
       fetch-blob: 3.2.0
-    optional: true
 
   fs-constants@1.0.0: {}
 
@@ -13024,7 +13007,6 @@ snapshots:
       inherits: 2.0.4
       mkdirp: 0.5.6
       rimraf: 2.7.1
-    optional: true
 
   function-bind@1.1.2: {}
 
@@ -13051,7 +13033,6 @@ snapshots:
       which: 4.0.0
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   gensync@1.0.0-beta.2: {}
 
@@ -13081,8 +13062,7 @@ snapshots:
 
   get-iterator@1.0.2: {}
 
-  get-port@7.1.0:
-    optional: true
+  get-port@7.1.0: {}
 
   get-proto@1.0.1:
     dependencies:
@@ -13213,12 +13193,10 @@ snapshots:
       lowercase-keys: 3.0.0
       p-cancelable: 3.0.0
       responselike: 3.0.0
-    optional: true
 
   graceful-fs@4.2.11: {}
 
-  grapheme-splitter@1.0.4:
-    optional: true
+  grapheme-splitter@1.0.4: {}
 
   graphemer@1.4.0: {}
 
@@ -13310,8 +13288,7 @@ snapshots:
 
   html-tags@3.3.1: {}
 
-  http-cache-semantics@4.2.0:
-    optional: true
+  http-cache-semantics@4.2.0: {}
 
   http-proxy-agent@7.0.2:
     dependencies:
@@ -13324,7 +13301,6 @@ snapshots:
     dependencies:
       quick-lru: 5.1.1
       resolve-alpn: 1.2.1
-    optional: true
 
   https-browserify@1.0.0: {}
 
@@ -13359,8 +13335,7 @@ snapshots:
 
   ignore@5.3.2: {}
 
-  immediate@3.0.6:
-    optional: true
+  immediate@3.0.6: {}
 
   immer@9.0.21: {}
 
@@ -13381,8 +13356,7 @@ snapshots:
 
   import-meta-resolve@3.1.1: {}
 
-  import-meta-resolve@4.1.0:
-    optional: true
+  import-meta-resolve@4.1.0: {}
 
   imurmurhash@0.1.4: {}
 
@@ -13634,8 +13608,7 @@ snapshots:
 
   is-plain-obj@2.1.0: {}
 
-  is-plain-obj@4.1.0:
-    optional: true
+  is-plain-obj@4.1.0: {}
 
   is-plain-object@2.0.4:
     dependencies:
@@ -13716,8 +13689,7 @@ snapshots:
 
   isexe@2.0.0: {}
 
-  isexe@3.1.1:
-    optional: true
+  isexe@3.1.1: {}
 
   iso-url@1.2.1: {}
 
@@ -13938,7 +13910,6 @@ snapshots:
       pako: 1.0.11
       readable-stream: 2.3.8
       setimmediate: 1.0.5
-    optional: true
 
   kebab-case@1.0.2: {}
 
@@ -13950,8 +13921,7 @@ snapshots:
 
   known-css-properties@0.24.0: {}
 
-  ky@0.33.3:
-    optional: true
+  ky@0.33.3: {}
 
   kysely@0.23.5: {}
 
@@ -13964,7 +13934,6 @@ snapshots:
   lazystream@1.0.1:
     dependencies:
       readable-stream: 2.3.8
-    optional: true
 
   levn@0.4.1:
     dependencies:
@@ -13974,14 +13943,12 @@ snapshots:
   lie@3.3.0:
     dependencies:
       immediate: 3.0.6
-    optional: true
 
   lilconfig@3.1.3: {}
 
   lines-and-columns@1.2.4: {}
 
-  listenercount@1.0.1:
-    optional: true
+  listenercount@1.0.1: {}
 
   load-tsconfig@0.2.5: {}
 
@@ -13997,7 +13964,6 @@ snapshots:
       '@promptbook/utils': 0.69.5
       type-fest: 4.26.0
       userhome: 1.0.1
-    optional: true
 
   locate-path@3.0.0:
     dependencies:
@@ -14012,8 +13978,7 @@ snapshots:
     dependencies:
       p-locate: 5.0.0
 
-  lodash.clonedeep@4.5.0:
-    optional: true
+  lodash.clonedeep@4.5.0: {}
 
   lodash.merge@4.6.2: {}
 
@@ -14021,11 +13986,9 @@ snapshots:
 
   lodash.throttle@4.1.1: {}
 
-  lodash.zip@4.2.0:
-    optional: true
+  lodash.zip@4.2.0: {}
 
-  lodash@4.17.21:
-    optional: true
+  lodash@4.17.21: {}
 
   log-symbols@4.1.0:
     dependencies:
@@ -14037,11 +14000,9 @@ snapshots:
       chalk: 5.4.1
       is-unicode-supported: 1.3.0
 
-  loglevel-plugin-prefix@0.8.4:
-    optional: true
+  loglevel-plugin-prefix@0.8.4: {}
 
-  loglevel@1.9.2:
-    optional: true
+  loglevel@1.9.2: {}
 
   long@5.2.3: {}
 
@@ -14057,8 +14018,7 @@ snapshots:
 
   loupe@3.1.3: {}
 
-  lowercase-keys@3.0.0:
-    optional: true
+  lowercase-keys@3.0.0: {}
 
   lru-cache@10.4.3: {}
 
@@ -14164,8 +14124,7 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mimic-response@4.0.0:
-    optional: true
+  mimic-response@4.0.0: {}
 
   miniflare@3.20230922.0:
     dependencies:
@@ -14236,7 +14195,6 @@ snapshots:
   mkdirp@0.5.6:
     dependencies:
       minimist: 1.2.8
-    optional: true
 
   mlly@1.7.4:
     dependencies:
@@ -14370,8 +14328,7 @@ snapshots:
     dependencies:
       semver: 7.7.2
 
-  node-domexception@1.0.0:
-    optional: true
+  node-domexception@1.0.0: {}
 
   node-fetch@2.7.0(encoding@0.1.13):
     dependencies:
@@ -14384,7 +14341,6 @@ snapshots:
       data-uri-to-buffer: 4.0.1
       fetch-blob: 3.2.0
       formdata-polyfill: 4.0.10
-    optional: true
 
   node-releases@2.0.14: {}
 
@@ -14439,8 +14395,7 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
-  normalize-url@8.0.1:
-    optional: true
+  normalize-url@8.0.1: {}
 
   npm-run-path@4.0.1:
     dependencies:
@@ -14566,8 +14521,7 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
-  p-cancelable@3.0.0:
-    optional: true
+  p-cancelable@3.0.0: {}
 
   p-defer@3.0.0: {}
 
@@ -15034,8 +14988,7 @@ snapshots:
     dependencies:
       side-channel: 1.0.4
 
-  query-selector-shadow-dom@1.0.1:
-    optional: true
+  query-selector-shadow-dom@1.0.1: {}
 
   querystring-es3@0.2.1: {}
 
@@ -15043,8 +14996,7 @@ snapshots:
 
   queue-microtask@1.2.3: {}
 
-  quick-lru@5.1.1:
-    optional: true
+  quick-lru@5.1.1: {}
 
   rabin-rs@2.1.0: {}
 
@@ -15147,12 +15099,10 @@ snapshots:
       events: 3.3.0
       process: 0.11.10
       string_decoder: 1.3.0
-    optional: true
 
   readdir-glob@1.1.3:
     dependencies:
       minimatch: 5.1.6
-    optional: true
 
   readdirp@3.6.0:
     dependencies:
@@ -15192,8 +15142,7 @@ snapshots:
 
   requires-port@1.0.0: {}
 
-  resolve-alpn@1.2.1:
-    optional: true
+  resolve-alpn@1.2.1: {}
 
   resolve-cwd@3.0.0:
     dependencies:
@@ -15220,12 +15169,10 @@ snapshots:
   responselike@3.0.0:
     dependencies:
       lowercase-keys: 3.0.0
-    optional: true
 
   resq@1.11.0:
     dependencies:
       fast-deep-equal: 2.0.1
-    optional: true
 
   restore-cursor@3.1.0:
     dependencies:
@@ -15241,13 +15188,11 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rgb2hex@0.2.5:
-    optional: true
+  rgb2hex@0.2.5: {}
 
   rimraf@2.7.1:
     dependencies:
       glob: 7.2.3
-    optional: true
 
   rimraf@3.0.2:
     dependencies:
@@ -15320,8 +15265,7 @@ snapshots:
     dependencies:
       mri: 1.2.0
 
-  safaridriver@0.1.2:
-    optional: true
+  safaridriver@0.1.2: {}
 
   safe-array-concat@1.1.3:
     dependencies:
@@ -15375,7 +15319,6 @@ snapshots:
   serialize-error@11.0.3:
     dependencies:
       type-fest: 2.19.0
-    optional: true
 
   serialize-javascript@6.0.2:
     dependencies:
@@ -15542,13 +15485,11 @@ snapshots:
 
   sourcemap-codec@1.4.8: {}
 
-  spacetrim@0.11.59:
-    optional: true
+  spacetrim@0.11.59: {}
 
   sparse-array@1.3.2: {}
 
-  split2@4.2.0:
-    optional: true
+  split2@4.2.0: {}
 
   sprintf-js@1.1.3: {}
 
@@ -15697,8 +15638,7 @@ snapshots:
     dependencies:
       js-tokens: 9.0.1
 
-  strnum@1.1.2:
-    optional: true
+  strnum@1.1.2: {}
 
   stubborn-fs@1.2.5: {}
 
@@ -15934,8 +15874,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  traverse@0.3.9:
-    optional: true
+  traverse@0.3.9: {}
 
   tree-dump@1.0.3(tslib@2.8.1):
     dependencies:
@@ -16080,8 +16019,7 @@ snapshots:
 
   type-fest@3.13.1: {}
 
-  type-fest@4.26.0:
-    optional: true
+  type-fest@4.26.0: {}
 
   type-fest@4.41.0: {}
 
@@ -16210,7 +16148,6 @@ snapshots:
       listenercount: 1.0.1
       readable-stream: 2.3.8
       setimmediate: 1.0.5
-    optional: true
 
   update-browserslist-db@1.0.13(browserslist@4.22.2):
     dependencies:
@@ -16249,8 +16186,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  userhome@1.0.1:
-    optional: true
+  userhome@1.0.1: {}
 
   util-deprecate@1.0.2: {}
 
@@ -16413,7 +16349,7 @@ snapshots:
       - supports-color
       - terser
 
-  vitest@2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0):
+  vitest@2.1.9(@types/node@20.19.0)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(terser@5.41.0):
     dependencies:
       '@vitest/expect': 2.1.9
       '@vitest/mocker': 2.1.9(msw@2.9.0(@types/node@20.19.0)(typescript@5.8.3))(vite@5.4.19(@types/node@20.19.0)(terser@5.41.0))
@@ -16438,6 +16374,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 20.19.0
       '@vitest/browser': 2.1.9(@types/node@20.19.0)(typescript@5.8.3)(vite@5.4.19(@types/node@20.19.0)(terser@5.41.0))(vitest@2.1.9)(webdriverio@8.44.1(encoding@0.1.13))
+      '@vitest/ui': 2.1.9(vitest@2.1.9)
       happy-dom: 14.12.3
       jsdom: 23.2.0
     transitivePeerDependencies:
@@ -16464,7 +16401,6 @@ snapshots:
       debug: 4.4.1
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   watchpack@2.4.4:
     dependencies:
@@ -16475,8 +16411,7 @@ snapshots:
     dependencies:
       defaults: 1.0.4
 
-  web-streams-polyfill@3.3.3:
-    optional: true
+  web-streams-polyfill@3.3.3: {}
 
   webcrypto-core@1.8.1:
     dependencies:
@@ -16503,7 +16438,6 @@ snapshots:
       - bufferutil
       - supports-color
       - utf-8-validate
-    optional: true
 
   webdriverio@8.44.1(encoding@0.1.13):
     dependencies:
@@ -16537,7 +16471,6 @@ snapshots:
       - encoding
       - supports-color
       - utf-8-validate
-    optional: true
 
   webidl-conversions@3.0.1: {}
 
@@ -16742,7 +16675,6 @@ snapshots:
   which@4.0.0:
     dependencies:
       isexe: 3.1.1
-    optional: true
 
   why-is-node-running@2.3.0:
     dependencies:
@@ -16862,6 +16794,5 @@ snapshots:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
       readable-stream: 4.7.0
-    optional: true
 
   zod@3.25.56: {}

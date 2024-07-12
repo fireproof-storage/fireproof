@@ -19,6 +19,5 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
     readdir: fs.readdir as NodeMap["readdir"],
     readfile: fs.readFile as NodeMap["readfile"],
     writefile: fs.writeFile as NodeMap["writefile"],
-    // assert: (await saveImport(assert)).default,
   };
 }

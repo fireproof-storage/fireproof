@@ -5,6 +5,7 @@ import { uuidv4 } from "uuidv7";
 import { ResolveOnce } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
+import { EnvImpl } from "./sys-env-action.js";
 
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
@@ -37,6 +38,8 @@ const onceStart = new ResolveOnce<void>();
 export function join(...paths: string[]): string {
   return paths.map((i) => i.replace(/\/+$/, "")).join("/");
 }
+
+const envImpl = new EnvImpl();
 
 class sysContainer {
   freight: NodeMap = {
@@ -177,6 +180,7 @@ class sysContainer {
       console.warn(`SysContainer.${method} is not available in seeded state:`, err.stack);
     }
   }
+  readonly env = envImpl;
 }
 
 // // eslint-disable-next-line @typescript-eslint/no-explicit-any

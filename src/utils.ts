@@ -27,7 +27,7 @@ export function ensureLogger(
     logger = optsOrLogger.logger;
   }
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
-  let debug = typeof process === "object" && process.env && process.env.FP_DEBUG;
+  let debug = SysContainer.env.get("FP_DEBUG");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof globalThis === "object" && (globalThis as any)[FP_DEBUG]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

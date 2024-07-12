@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeAll } from "vitest";
 import { fireproof, rt } from "@fireproof/core";
 import { isNode } from "std-env";
 import { SysContainer } from "../../src/runtime";
@@ -10,12 +11,13 @@ describe("fireproof/config", () => {
   beforeAll(async () => {
     await rt.SysContainer.start();
     if (isNode) {
-      if (process.env.FP_STORAGE_URL) {
+      const fpStorageUrl = SysContainer.env.get("FP_STORAGE_URL");
+      if (fpStorageUrl) {
         let url: URL;
         try {
-          url = new URL(process.env.FP_STORAGE_URL);
+          url = new URL(fpStorageUrl);
         } catch (e) {
-          url = new URL(`file://${process.env.FP_STORAGE_URL}`);
+          url = new URL(`file://${fpStorageUrl}`);
         }
         _my_app = `my-app-${url.protocol.replace(/:$/, "")}`;
       }
@@ -38,8 +40,8 @@ describe("fireproof/config", () => {
     return;
   }
   it("node default", async () => {
-    const old = process.env.FP_STORAGE_URL;
-    delete process.env.FP_STORAGE_URL;
+    const old = SysContainer.env.get("FP_STORAGE_URL");
+    SysContainer.env.del("FP_STORAGE_URL");
     let baseDir = rt
       .dataDir(my_app())
       .replace(/\?.*$/, "")
@@ -70,13 +72,13 @@ describe("fireproof/config", () => {
       new RegExp(`file:.*\\/\\.fireproof\\?name=${my_app()}&store=meta&version=${rt.FILESTORE_VERSION}`),
     );
     expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
-    process.env.FP_STORAGE_URL = old;
+    SysContainer.env.set("FP_STORAGE_URL", old);
     await db.close();
   });
 
   it("set by env", async () => {
-    const old = process.env.FP_STORAGE_URL;
-    process.env.FP_STORAGE_URL = "./dist/env";
+    const old = SysContainer.env.get("FP_STORAGE_URL");
+    SysContainer.env.set("FP_STORAGE_URL", "./dist/env");
 
     let baseDir = rt
       .dataDir(my_app())
@@ -105,7 +107,7 @@ describe("fireproof/config", () => {
     );
     expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
     await db.close();
-    process.env.FP_STORAGE_URL = old;
+    SysContainer.env.set("FP_STORAGE_URL", old);
   });
 
   it("file path", async () => {

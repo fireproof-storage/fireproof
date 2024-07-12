@@ -103,6 +103,24 @@ Add the database to any web page via HTML script tag (global is `Fireproof`):
 
 Go ahead and write features, then [connect to any cloud backend](https://www.npmjs.com/package/@fireproof/connect) later.
 
+### Debug
+
+to control the log output you an either use the FP_DEBUG environment variable or set the debug level in your code:
+
+```shell
+FP_DEBUG='*' node myapp.js
+```
+
+```js
+logger.setDebug(...moduleNameList or '*')
+```
+
+if you are in the browser you can use the following code to set the debug level:
+
+```js
+this[Symbol.for("FP_ENV")].set("FP_DEBUG", "*");
+```
+
 ## Thanks 🙏
 
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
