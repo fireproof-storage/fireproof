@@ -7,7 +7,7 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      provider: 'webdriverio',
+      provider: "webdriverio",
       name: "chrome", // browser name is required
     },
     deps: {
