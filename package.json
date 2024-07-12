@@ -53,7 +53,7 @@
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.3",
     "@typescript-eslint/typescript-estree": "^7.15.0",
-    "@vitest/browser": "^1.6.0",
+    "@vitest/browser": "^2.0.2",
     "esbuild": "^0.23.0",
     "esbuild-plugin-resolve": "^2.0.0",
     "eslint": "^9.6.0",
@@ -64,7 +64,7 @@
     "typescript-eslint": "^7.13.1",
     "vite": "^5.3.1",
     "vite-tsconfig-paths": "^4.3.2",
-    "vitest": "^1.6.0"
+    "vitest": "^2.0.2"
   },
   "repository": {
     "type": "git",
