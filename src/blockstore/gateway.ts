@@ -18,17 +18,18 @@ export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotF
 }
 
 export type GetResult = Result<Uint8Array, NotFoundError | Error>;
+export type VoidResult = Result<void>;
 
 export interface Gateway {
   // all the methods never throw!
   // an error is reported as a Result
   buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
   // start updates URL --> hate this side effect
-  start(baseUrl: URL): Promise<Result<void>>;
-  close(baseUrl: URL): Promise<Result<void>>;
-  destroy(baseUrl: URL): Promise<Result<void>>;
-  put(url: URL, body: Uint8Array): Promise<Result<void>>;
+  start(baseUrl: URL): Promise<VoidResult>;
+  close(baseUrl: URL): Promise<VoidResult>;
+  destroy(baseUrl: URL): Promise<VoidResult>;
+  put(url: URL, body: Uint8Array): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
   get(url: URL): Promise<GetResult>;
-  delete(url: URL): Promise<Result<void>>;
+  delete(url: URL): Promise<VoidResult>;
 }

@@ -1,5 +1,6 @@
 export * from "./sys-container.js";
 export * from "./data-dir.js";
+export * from "./store-file-utils.js";
 
 export { FILESTORE_VERSION } from "./store-file-version.js";
 export { INDEXDB_VERSION } from "./store-indexdb-version.js";

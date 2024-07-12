@@ -30,7 +30,11 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {},
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
   "dependencies": {
+    "react": "from-package-json",
     "@adviser/cement": "from-package-json",
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",

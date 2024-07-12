@@ -34,32 +34,42 @@ function buildURL(optURL: string | URL | undefined, loader: Loadable): URL {
   return toURL(optURL || dataDir(loader.name, storeOpts.stores?.base), storeOpts.isIndex);
 }
 
+export interface StoreFactoryItem {
+  readonly protocol: string;
+  readonly data: (logger: Logger) => Promise<Gateway>;
+  readonly meta: (logger: Logger) => Promise<Gateway>;
+  readonly wal: (logger: Logger) => Promise<Gateway>;
+  readonly test: (logger: Logger) => Promise<TestStore>;
+}
+
+const storeFactory = new Map<string, StoreFactoryItem>();
+
+export function registerStoreProtocol(item: StoreFactoryItem) {
+  if (storeFactory.has(item.protocol)) {
+    throw new Error(`protocol ${item.protocol} already registered`);
+  }
+  storeFactory.set(item.protocol, item);
+}
+
+function runStoreFactory<T>(url: URL, logger: Logger, run: (item: StoreFactoryItem) => Promise<T>): Promise<T> {
+  const item = storeFactory.get(url.protocol);
+  if (!item) {
+    throw logger
+      .Error()
+      .Url(url)
+      .Str("protocol", url.protocol)
+      .Any("keys", Array(storeFactory.keys()))
+      .Msg(`unsupported protocol`)
+      .AsError();
+  }
+  logger.Debug().Str("protocol", url.protocol).Msg("run");
+  return run(item);
+}
+
 const onceLoadDataGateway = new KeyedResolvOnce<Gateway>();
 function loadDataGateway(url: URL, logger: Logger) {
   return onceLoadDataGateway.get(url.protocol).once(async () => {
-    logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
-    switch (url.protocol) {
-      case "file:":
-        {
-          const { FileDataGateway } = await import("../runtime/store-file.js");
-          return new FileDataGateway(logger);
-        }
-        break;
-      case "indexdb:":
-        {
-          const { IndexDBDataGateway } = await import("../runtime/store-indexdb.js");
-          return new IndexDBDataGateway(logger);
-        }
-        break;
-      case "sqlite:":
-        {
-          const { SQLDataGateway } = await import("../runtime/store-sql/store-sql.js");
-          return new SQLDataGateway(logger);
-        }
-        break;
-      default:
-        throw logger.Error().Url(url).Msg(`unsupported data store`).AsError();
-    }
+    return runStoreFactory(url, logger, async (item) => item.data(logger));
   });
 }
 
@@ -80,29 +90,7 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStore> {
 const onceLoadMetaGateway = new KeyedResolvOnce<Gateway>();
 function loadMetaGateway(url: URL, logger: Logger) {
   return onceLoadMetaGateway.get(url.protocol).once(async () => {
-    logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
-    switch (url.protocol) {
-      case "file:":
-        {
-          const { FileMetaGateway } = await import("../runtime/store-file.js");
-          return new FileMetaGateway(logger);
-        }
-        break;
-      case "indexdb:":
-        {
-          const { IndexDBMetaGateway } = await import("../runtime/store-indexdb.js");
-          return new IndexDBMetaGateway(logger);
-        }
-        break;
-      case "sqlite:":
-        {
-          const { SQLMetaGateway } = await import("../runtime/store-sql/store-sql.js");
-          return new SQLMetaGateway(logger);
-        }
-        break;
-      default:
-        throw logger.Error().Url(url).Msg(`unsupported meta store`).AsError();
-    }
+    return runStoreFactory(url, logger, async (item) => item.meta(logger));
   });
 }
 
@@ -125,29 +113,7 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStore> {
 const onceWalGateway = new KeyedResolvOnce<Gateway>();
 function loadWalGateway(url: URL, logger: Logger) {
   return onceWalGateway.get(url.protocol).once(async () => {
-    logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
-    switch (url.protocol) {
-      case "file:":
-        {
-          const { FileWALGateway } = await import("../runtime/store-file.js");
-          return new FileWALGateway(logger);
-        }
-        break;
-      case "indexdb:":
-        {
-          const { IndexDBWalGateway } = await import("../runtime/store-indexdb.js");
-          return new IndexDBWalGateway(logger);
-        }
-        break;
-      case "sqlite:":
-        {
-          const { SQLWalGateway } = await import("../runtime/store-sql/store-sql.js");
-          return new SQLWalGateway(logger);
-        }
-        break;
-      default:
-        throw logger.Error().Url(url).Msg(`unsupported WAL store`).AsError();
-    }
+    return runStoreFactory(url, logger, async (item) => item.wal(logger));
   });
 }
 
@@ -172,22 +138,7 @@ export async function testStoreFactory(url: URL, ilogger?: Logger): Promise<Test
     },
     "testStoreFactory",
   );
-  switch (url.protocol) {
-    case "file:": {
-      const { FileTestStore } = await import("../runtime/store-file.js");
-      return new FileTestStore(url, logger);
-    }
-    case "indexdb:": {
-      const { IndexDBTestStore } = await import("../runtime/store-indexdb.js");
-      return new IndexDBTestStore(url, logger);
-    }
-    case "sqlite:": {
-      const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
-      return new SQLTestStore(url, logger);
-    }
-    default:
-      throw logger.Error().Url(url).Msg(`unsupported test store`).AsError();
-  }
+  return runStoreFactory(url, logger, async (item) => item.test(logger));
 }
 
 export function toStoreRuntime(opts: StoreOpts, ilogger: Logger): StoreRuntime {
@@ -219,3 +170,63 @@ export function toStoreRuntime(opts: StoreOpts, ilogger: Logger): StoreRuntime {
     decodeFile: opts.decodeFile || decodeFile,
   };
 }
+
+registerStoreProtocol({
+  protocol: "file:",
+  data: async (logger) => {
+    const { FileDataGateway } = await import("../runtime/store-file.js");
+    return new FileDataGateway(logger);
+  },
+  meta: async (logger) => {
+    const { FileMetaGateway } = await import("../runtime/store-file.js");
+    return new FileMetaGateway(logger);
+  },
+  wal: async (logger) => {
+    const { FileWALGateway } = await import("../runtime/store-file.js");
+    return new FileWALGateway(logger);
+  },
+  test: async (logger) => {
+    const { FileTestStore } = await import("../runtime/store-file.js");
+    return new FileTestStore(logger);
+  },
+});
+
+registerStoreProtocol({
+  protocol: "indexdb:",
+  data: async (logger) => {
+    const { IndexDBDataGateway } = await import("../runtime/store-indexdb.js");
+    return new IndexDBDataGateway(logger);
+  },
+  meta: async (logger) => {
+    const { IndexDBMetaGateway } = await import("../runtime/store-indexdb.js");
+    return new IndexDBMetaGateway(logger);
+  },
+  wal: async (logger) => {
+    const { IndexDBMetaGateway } = await import("../runtime/store-indexdb.js");
+    return new IndexDBMetaGateway(logger);
+  },
+  test: async (logger) => {
+    const { IndexDBTestStore } = await import("../runtime/store-indexdb.js");
+    return new IndexDBTestStore(logger);
+  },
+});
+
+registerStoreProtocol({
+  protocol: "sqlite:",
+  data: async (logger) => {
+    const { SQLDataGateway } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLDataGateway(logger);
+  },
+  meta: async (logger) => {
+    const { SQLMetaGateway } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLMetaGateway(logger);
+  },
+  wal: async (logger) => {
+    const { SQLWalGateway } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLWalGateway(logger);
+  },
+  test: async (logger) => {
+    const { SQLTestStore } = await import("../runtime/store-sql/store-sql.js");
+    return new SQLTestStore(logger);
+  },
+});

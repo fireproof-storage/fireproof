@@ -1,4 +1,4 @@
-import { Logger, LoggerImpl, IsLogger, Result } from "@adviser/cement";
+import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce } from "@adviser/cement";
 import { SysContainer } from "./runtime";
 import { uuidv7 } from "uuidv7";
 
@@ -10,7 +10,7 @@ export interface LoggerOpts {
   readonly logger?: Logger;
 }
 
-const FP_DEBUG = Symbol.for("FP_DEBUG");
+const registerFP_DEBUG = new ResolveOnce();
 
 export function ensureLogger(
   optsOrLogger: Partial<LoggerOpts> | Logger,
@@ -27,25 +27,14 @@ export function ensureLogger(
     logger = optsOrLogger.logger;
   }
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
-  let debug = SysContainer.env.get("FP_DEBUG");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof globalThis === "object" && (globalThis as any)[FP_DEBUG]) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ctx = (globalThis as any)[FP_DEBUG];
-    if (Array.isArray(ctx)) {
-      debug = ctx.join(",");
-    } else {
-      debug = ctx as string;
-    }
-  }
+  const debug: string[] = [];
   if (ctx) {
     if ("debug" in ctx) {
       if (typeof ctx.debug === "string" && ctx.debug.length > 0) {
-        debug = [debug, ctx.debug].filter((i) => i).join(",");
+        debug.push(ctx.debug);
       } else {
-        debug = [debug, componentName].filter((i) => i).join(",");
+        debug.push(componentName);
       }
-      // console.log("ctx.debug", ctx.debug, debug)
       delete ctx.debug;
     }
     if ("this" in ctx) {
@@ -74,10 +63,22 @@ export function ensureLogger(
       }
     }
   }
-  // debug = componentName
-  if (debug && debug.length > 0) {
-    const modules = debug.split(/\s*,\s*/).filter((i) => !!i);
-    logger.SetDebug(...modules);
+  registerFP_DEBUG
+    .once(async () => {
+      // console.log("registerFP_DEBUG", SysContainer.env)
+      SysContainer.env.onSet((key, value) => {
+        // console.log("FP_DEBUG", key, value, debug)
+        if (value) {
+          logger.SetDebug(value);
+        }
+      }, "FP_DEBUG");
+    })
+    .finally(() => {
+      /* do nothing */
+    });
+
+  if (debug.length > 0) {
+    logger.SetDebug(debug);
   }
   const out = cLogger.Logger();
   // out.Debug().Msg("logger ready");

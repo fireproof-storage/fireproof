@@ -138,8 +138,8 @@ export interface StoreOpts extends StoreFactory {
 }
 
 export interface TestStore {
-  readonly url: URL;
-  get(key: string): Promise<Uint8Array>;
+  // readonly url: URL;
+  get(url: URL, key: string): Promise<Uint8Array>;
   // delete the underlying store and all its data
   // delete(): Promise<void>;
 }

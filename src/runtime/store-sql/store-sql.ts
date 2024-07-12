@@ -200,21 +200,19 @@ export class SQLDataGateway implements Gateway {
 }
 
 export class SQLTestStore implements TestStore {
-  readonly url: URL;
   readonly logger: Logger;
-  constructor(url: URL, ilogger: Logger) {
-    const logger = ensureLogger(ilogger, "SQLTestStore", { url });
-    this.url = url;
+  constructor(ilogger: Logger) {
+    const logger = ensureLogger(ilogger, "SQLTestStore");
     this.logger = logger;
   }
-  async get(key: string): Promise<Uint8Array> {
-    const conn = SQLConnectionFactory(this.url);
-    const name = getName(this.url, this.logger);
-    switch (this.url.searchParams.get("store")) {
+  async get(url: URL, key: string): Promise<Uint8Array> {
+    const conn = SQLConnectionFactory(url);
+    const name = getName(url, this.logger);
+    switch (url.searchParams.get("store")) {
       case "wal": {
         const sqlStore = await WalStoreFactory(conn);
-        await sqlStore.start(this.url);
-        const records = await sqlStore.select(this.url, {
+        await sqlStore.start(url);
+        const records = await sqlStore.select(url, {
           name,
           branch: key,
         });
@@ -222,8 +220,8 @@ export class SQLTestStore implements TestStore {
       }
       case "meta": {
         const sqlStore = await MetaStoreFactory(conn);
-        await sqlStore.start(this.url);
-        const records = await sqlStore.select(this.url, {
+        await sqlStore.start(url);
+        const records = await sqlStore.select(url, {
           name,
           branch: key,
         });
@@ -231,8 +229,8 @@ export class SQLTestStore implements TestStore {
       }
       case "data": {
         const sqlStore = await DataStoreFactory(conn);
-        await sqlStore.start(this.url);
-        const records = await sqlStore.select(this.url, key);
+        await sqlStore.start(url);
+        const records = await sqlStore.select(url, key);
         return records[0].data;
       }
       default:

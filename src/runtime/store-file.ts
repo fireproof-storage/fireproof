@@ -4,6 +4,7 @@ import { FILESTORE_VERSION } from "./store-file-version.js";
 import { Logger, ResolveOnce, Result } from "@adviser/cement";
 import { ensureLogger, exception2Result, exceptionWrapper, getStore } from "../utils.js";
 import { Gateway, GetResult, isNotFoundError, NotFoundError } from "../blockstore/gateway.js";
+import { ensureIndexName, getFileName, getPath } from "./store-file-utils.js";
 
 const versionFiles = new Map<string, ResolveOnce<void>>();
 async function ensureVersionFile(path: string, logger: Logger): Promise<string> {
@@ -28,38 +29,6 @@ async function ensureVersionFile(path: string, logger: Logger): Promise<string> 
     }
   });
   return path;
-}
-
-async function getPath(url: URL, logger: Logger): Promise<string> {
-  const basePath = url
-    .toString()
-    .replace(/^file:\/\//, "")
-    .replace(/\?.*$/, "");
-  const name = url.searchParams.get("name");
-  if (name) {
-    const version = url.searchParams.get("version");
-    if (!version) throw logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
-    return SysContainer.join(basePath, version, name);
-  }
-  return SysContainer.join(basePath);
-}
-
-function getFileName(url: URL, key: string, logger: Logger): string {
-  switch (getStore(url, logger, (...a: string[]) => a.join("/"))) {
-    case "data":
-      return key + ".car";
-    case "meta":
-      return key + ".json";
-    default:
-      throw logger.Error().Str("url", url.toString()).Msg(`unsupported store type`).AsError();
-  }
-}
-
-function ensureIndexName(url: URL, name: string): string {
-  if (url.searchParams.has("index")) {
-    name = (url.searchParams.get("index")?.replace(/[^a-zA-Z0-9]/g, "") || "idx") + "-" + name;
-  }
-  return name;
 }
 
 abstract class FileGateway implements Gateway {
@@ -115,7 +84,7 @@ abstract class FileGateway implements Gateway {
         if (isNotFoundError(e)) {
           return Result.Err(new NotFoundError(`file not found: ${file}`));
         }
-        throw e;
+        return Result.Err(e as Error);
       }
     });
   }
@@ -210,19 +179,22 @@ function toArrayBuffer(buffer: Buffer) {
 export class FileTestStore implements TestStore {
   readonly logger: Logger;
   constructor(
-    readonly url: URL,
+    // readonly url: URL,
     logger: Logger,
   ) {
-    this.logger = ensureLogger(logger, "FileTestStore", { url });
+    this.logger = ensureLogger(logger, "FileTestStore");
   }
 
-  async get(key: string) {
+  async get(url: URL, key: string) {
+    const logger = ensureLogger(this.logger, "get", { url: url.toString(), key });
     const dbFile = SysContainer.join(
-      await getPath(this.url, this.logger),
-      getStore(this.url, this.logger, SysContainer.join),
-      getFileName(this.url, key, this.logger),
+      await getPath(url, this.logger),
+      getStore(url, this.logger, SysContainer.join),
+      getFileName(url, key, this.logger),
     );
+    logger.Debug().Str("dbFile", dbFile).Msg("get");
     const buffer = await SysContainer.readfile(dbFile);
+    logger.Debug().Str("dbFile", dbFile).Len(buffer).Msg("got");
     return toArrayBuffer(buffer);
   }
 }
