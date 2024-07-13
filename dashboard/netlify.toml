@@ -3,3 +3,7 @@
   to = "/"
   status = 200
 
+[build]
+  publish = "build/"
+
+
