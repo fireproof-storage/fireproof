@@ -51,7 +51,7 @@ export default function DynamicTable({ hrefFn, dbName, headers, rows, th = '_id'
 
 function TableCell({ label, link = false, dbName, hrefFn } : { label : any, link : boolean, dbName : string, hrefFn : (label:string) => string }) {
   if (link) {
-    const href = hrefFn ? hrefFn(label) : `/doc/${dbName}/${label}`
+    const href = hrefFn ? hrefFn(label) : `/db/${dbName}/doc/${label}`;
     return (
       <a className="underline" href={href}>
         {formatTableCellContent(label)}

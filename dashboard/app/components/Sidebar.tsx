@@ -1,13 +1,48 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
+
+import { docs } from "../data";
+import { DocBase, useFireproof } from "use-fireproof";
 
 export function Sidebar() {
-  const { dbName } = useParams()
+  const { name: dbName } = useParams();
+
+  const { database } = useFireproof(dbName);
+  function addData() {
+    docs.forEach(async (doc: DocBase) => {
+      await database.put(doc);
+    });
+  }
+
   return (
-    <div className="Sidebar w-1/4 p-4 dark:bg-gray-900 bg-slate-200">
+    <div className="Sidebar p-4 dark:bg-gray-900 bg-slate-200">
       <ul className="mt-4">
         <li className="mb-2">
-          <a
-            href="/databases"
+          <button
+            onClick={addData}
+            className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <svg
+              className="w-6 h-6 text-gray-800 dark:text-white"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.1"
+                d="M3 10h14M3 6h14M3 14h14"
+              />
+            </svg>
+            <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">Data</span>
+          </button>
+        </li>
+
+        <li className="mb-2">
+          <Link
+            to="/db/"
             className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
           >
             <svg
@@ -25,17 +60,15 @@ export function Sidebar() {
                 d="M6 14H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v1M5 19h5m-9-9h5m4-4h8a1 1 0 0 1 1 1v12H9V7a1 1 0 0 1 1-1Zm6 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0Z"
               />
             </svg>
-            <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">
-              All Databases
-            </span>
-          </a>
+            <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">All Databases</span>
+          </Link>
         </li>
         <li className="ml-4">
           {dbName && (
             <ul>
               <li className="mb-2">
-                <a
-                  href={'/db/' + dbName}
+                <Link
+                  to={`/db/${dbName}`}
                   className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <svg
@@ -56,11 +89,11 @@ export function Sidebar() {
                   <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">
                     <code>{dbName}</code>
                   </span>
-                </a>
+                </Link>
               </li>
               <li className="mb-2">
-                <a
-                  href={'/all/' + dbName}
+                <Link
+                  to={`/db/${dbName}/create`}
                   className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <svg
@@ -78,38 +111,12 @@ export function Sidebar() {
                     />
                   </svg>
 
-                  <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">
-                    All Documents
-                  </span>
-                </a>
+                  <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">Create Document</span>
+                </Link>
               </li>
               <li className="mb-2">
-                <a
-                  href={'/doc/' + dbName}
-                  className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="flex-shrink-0 w-6 h-6 "
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-                    />
-                  </svg>
-                  <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">
-                    Create Document
-                  </span>
-                </a>
-              </li>
-              <li className="mb-2">
-                <a
-                  href={'/changes/' + dbName}
+                <Link
+                  to={`/db/${dbName}/history`}
                   className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
                   <svg
@@ -120,21 +127,37 @@ export function Sidebar() {
                     stroke="currentColor"
                     className="w-6 h-6"
                   >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">History</span>
+                </Link>
+              </li>
+              <li className="mb-2">
+                <Link
+                  to={`/db/${dbName}/query`}
+                  className="flex items-center p-2 text-gray-500 transition duration-75 dark:text-gray-400 hover:dark:text-white hover:text-black rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                      d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z"
                     />
                   </svg>
-                  <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">
-                    Changes
-                  </span>
-                </a>
+                  <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">Query</span>
+                </Link>
               </li>
             </ul>
           )}
         </li>
       </ul>
     </div>
-  )
+  );
 }

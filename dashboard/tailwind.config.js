@@ -1,14 +1,10 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'media', 
   content: [
-    './src/**/*.tsx', // TypeScript JSX files
-    './src/**/*.ts',  // TypeScript files
-    './index.html' // HTML files
+    "./app/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {},
   },
   plugins: [],
-}
-
+};
