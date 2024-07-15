@@ -31,6 +31,8 @@ jobs:
         run: pnpm run smoke
       - name: test
         run: pnpm run test
+      - name: Authenticate to npm
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
       - name: publish
         if: startsWith(github.ref, 'refs/tags/v')
         env:
@@ -46,4 +48,9 @@ jobs:
           #cat .git/config || true
           git tag -v $(git describe --tags --abbrev=0)
           node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
-          pnpm run publish
+          TAG_NAME=$(git describe --tags --abbrev=0)
+          if echo "$TAG_NAME" | grep -q '-'; then
+            pnpm run publish --tag "$TAG_NAME"
+          else
+            pnpm run publish
+          fi
