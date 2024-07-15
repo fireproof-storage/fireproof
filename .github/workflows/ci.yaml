@@ -50,7 +50,8 @@ jobs:
           node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
           TAG_NAME=$(git describe --tags --abbrev=0)
           if echo "$TAG_NAME" | grep -q '-'; then
-            pnpm run publish --tag "$TAG_NAME"
+            TAG_PART=$(echo "$TAG_NAME" | cut -d'-' -f2-)
+            pnpm run publish --tag "$TAG_PART"
           else
             pnpm run publish
           fi
