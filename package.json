@@ -14,7 +14,7 @@
     "build:tsc": "tsc",
     "build:tsup": "tsup",
     "pub:fireproof-core": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/fireproof-core/; tsx version-copy-package.ts dist/fireproof-core/package-fireproof-core.json; cd dist/fireproof-core ; pnpm pack",
-    "pub:use-fireproof": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/use-fireproof/; tsx version-copy-package.ts dist/use-fireproof/package-use-fireproof.json; cd dist/use-fireproof ; pnpm pack",
+    "pub:use-fireproof": "cp -pr ./.gitignore ./README.md ./LICENSE.md dist/use-fireproof/; tsx version-copy-package.ts dist/use-fireproof/package-use-fireproof.json; tsx version-use-fireproof-dep.ts dist/use-fireproof/package.json; cd dist/use-fireproof ; pnpm pack",
     "presmoke": "pnpm run build",
     "smoke": "pnpm run '/smoke:/'",
     "smoke:node": "sh smoke/it.sh",
