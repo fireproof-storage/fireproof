@@ -10,7 +10,7 @@ async function main() {
     fs.copyFileSync(path.basename(file), destPath);
     const destPackageJson = JSON.parse(fs.readFileSync(path.basename(file), "utf8"));
 
-    destPackageJson.dependencies["@fireproof/core"] = mainPackageJson.version
+    destPackageJson.dependencies["@fireproof/core"] = mainPackageJson.version;
 
     destPackageJson.version = mainPackageJson.version;
     fs.writeFileSync(destPath, JSON.stringify(destPackageJson, null, 2));
