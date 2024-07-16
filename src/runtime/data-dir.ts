@@ -2,12 +2,6 @@ import { SysContainer } from "./sys-container.js";
 import { isDeno, isNode } from "std-env";
 
 export function dataDir(name?: string, base?: string | URL): string {
-  const dataDir = _dataDir(name, base);
-  // console.log("dataDir->", dataDir, name, base);
-  return dataDir;
-}
-
-function _dataDir(name?: string, base?: string | URL): string {
   if (!base) {
     if (isNode || isDeno) {
       base = SysContainer.env.get("FP_STORAGE_URL") || `file://${SysContainer.join(SysContainer.homedir(), ".fireproof")}`;
