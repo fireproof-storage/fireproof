@@ -3,19 +3,14 @@ import process from "process";
 import path from "path";
 import { $ } from "zx";
 
-
 async function copyFilesToDist(destDir: string) {
-  for (const file of [
-    "./.gitignore",
-    "./README.md",
-    "./LICENSE.md"
-  ]) {
-    await fs.copyFile(file, path.join(destDir, file))
+  for (const file of ["./.gitignore", "./README.md", "./LICENSE.md"]) {
+    await fs.copyFile(file, path.join(destDir, file));
   }
 }
 
 async function patchVersion(packageJson: Record<string, unknown>) {
-  let version = 'refs/tags/v0.0.0-smoke';
+  let version = "refs/tags/v0.0.0-smoke";
   if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
     version = process.env.GITHUB_REF;
   }
@@ -31,15 +26,15 @@ async function main() {
     console.error("Usage: tsx version-copy-package.ts dist/<path>/template-package.json");
     process.exit(1);
   }
-  const destDir = path.dirname(buildDest)
-  if (!((await fs.stat(destDir)).isDirectory)) {
+  const destDir = path.dirname(buildDest);
+  if (!(await fs.stat(destDir)).isDirectory) {
     console.error(`Directory ${destDir} does not exist`);
     process.exit(1);
   }
   await copyFilesToDist(destDir);
   const mainPackageJson = JSON.parse(await fs.readFile("package.json", "utf8"));
-  const templateFile = path.basename(buildDest)
-  const destPackageJson = JSON.parse(await fs.readFile(templateFile, 'utf-8'))
+  const templateFile = path.basename(buildDest);
+  const destPackageJson = JSON.parse(await fs.readFile(templateFile, "utf-8"));
   // copy version from package.json
   for (const destDeps of Object.keys(destPackageJson.dependencies)) {
     if (!mainPackageJson.dependencies[destDeps]) {
@@ -52,7 +47,7 @@ async function main() {
   const destPackageJsonFile = path.join(destDir, "package.json");
   await fs.writeFile(destPackageJsonFile, JSON.stringify(destPackageJson, null, 2));
   console.log(`Copied ${templateFile} to ${destDir} with version ${destPackageJson.version}`);
-  await $`cd ${destDir} && pnpm pack`.pipe(process.stdout)
+  await $`cd ${destDir} && pnpm pack`.pipe(process.stdout);
 }
 
 main().catch(console.error);
