@@ -13,7 +13,7 @@
     "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
     "build:tsc": "tsc",
     "build:tsup": "tsup",
-    "pub:fireproof-core": "tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
+    "pub:fireproof-core": "cp -pr tests ./dist/fireproof-core; tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
     "pub:use-fireproof": "tsx ./version-copy-package.ts ./dist/use-fireproof/package-use-fireproof.json",
     "presmoke": "pnpm run build",
     "smoke": "pnpm run '/smoke:/'",
