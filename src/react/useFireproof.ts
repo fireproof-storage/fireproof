@@ -25,6 +25,14 @@ export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string,
   initialRows?: IndexRow<K, T, R>[],
 ) => LiveQueryResult<T, K, R>;
 
+export interface AllDocsResult<T extends DocTypes> {
+  readonly docs: DocWithId<T>[];
+}
+
+export type UseAllDocs = <T extends DocTypes>(
+  query?: QueryOpts<string>
+) => AllDocsResult<T>;
+
 interface UpdateDocFnOptions {
   readonly replace?: boolean;
   readonly reset?: boolean;
@@ -92,6 +100,22 @@ export interface UseFireproof {
    * local storage.
    */
   readonly useLiveQuery: UseLiveQuery;
+  /**
+   * ## Summary
+   * React hook that provides access to all documents in the database, sorted by `_id`.
+   *
+   * ## Usage
+   * ```tsx
+   * const result = useAllDocs({ limit: 10, descending: true }); // with options
+   * const result = useAllDocs(); // without options
+   * ```
+   *
+   * ## Overview
+   * Changes made via remote sync peers, or other members of your cloud replica group will appear automatically
+   * when you use the `useAllDocs` and `useDocument` APIs. By default, Fireproof stores data in the browser's
+   * local storage.
+   */
+  readonly useAllDocs: UseAllDocs;
 }
 
 /**
@@ -226,5 +250,34 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     return result;
   }
 
-  return { database, useLiveQuery, useDocument };
+  function useAllDocs<T extends DocTypes>(
+    query: QueryOpts<string> = {}
+  ): AllDocsResult<T> {
+    const [result, setResult] = useState<AllDocsResult<T>>({
+      docs: [],
+    });
+
+    const queryString = useMemo(() => JSON.stringify(query), [query]);
+
+    const refreshRows = useCallback(async () => {
+      const res = await database.allDocs<T, string>(query);
+      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
+    }, [queryString]);
+
+    useEffect(() => {
+      const unsubscribe = database.subscribe(refreshRows);
+
+      return () => {
+        unsubscribe();
+      };
+    }, [refreshRows]);
+
+    useEffect(() => {
+      refreshRows();
+    }, [refreshRows]);
+
+    return result;
+  }
+
+  return { database, useLiveQuery, useDocument, useAllDocs };
 }
