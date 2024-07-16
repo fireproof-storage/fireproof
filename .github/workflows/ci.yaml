@@ -31,27 +31,17 @@ jobs:
         run: pnpm run smoke
       - name: test
         run: pnpm run test
-      - name: Authenticate to npm
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
       - name: publish
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           git fetch --tags --force
-          # add your signature allowed-signers
+          # we need to have a safe way to store of allowedSigners
           git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
-          echo $GITHUB_REF
-          git describe --tags --abbrev=0
-          #git log --show-signature | head -40
-          #echo "local"
-          #cat .git/config || true
+          echo "GITHUB_REF->"$GITHUB_REF
+          # test tag signature
           git tag -v $(git describe --tags --abbrev=0)
-          node .github/workflows/patch-package.json.mjs "$GITHUB_REF"
-          TAG_NAME=$(git describe --tags --abbrev=0)
-          if echo "$TAG_NAME" | grep -q '-'; then
-            TAG_PART=$(echo "$TAG_NAME" | cut -d'-' -f2-)
-            pnpm run publish --tag "$TAG_PART"
-          else
-            pnpm run publish
-          fi
+          # should only run if a tag is set
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          pnpm run publish
