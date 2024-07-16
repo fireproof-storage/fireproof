@@ -170,6 +170,13 @@ export interface QueryOpts<K extends IndexKeyType> {
   prefix?: IndexKeyType;
 }
 
+export interface AllDocsQueryOpts extends QueryOpts<string> {
+  readonly key?: string;
+  readonly keys?: string[];
+  prefix?: string;
+}
+
+
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
 export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | unknown;
 

@@ -13,6 +13,7 @@ import type {
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AllDocsQueryOpts } from "../types";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
@@ -29,7 +30,7 @@ export interface AllDocsResult<T extends DocTypes> {
   readonly docs: DocWithId<T>[];
 }
 
-export type UseAllDocs = <T extends DocTypes>(query?: QueryOpts<string>) => AllDocsResult<T>;
+export type UseAllDocs = <T extends DocTypes>(query?: AllDocsQueryOpts) => AllDocsResult<T>;
 
 interface UpdateDocFnOptions {
   readonly replace?: boolean;
@@ -248,7 +249,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     return result;
   }
 
-  function useAllDocs<T extends DocTypes>(query: QueryOpts<string> = {}): AllDocsResult<T> {
+  function useAllDocs<T extends DocTypes>(query: AllDocsQueryOpts = {}): AllDocsResult<T> {
     const [result, setResult] = useState<AllDocsResult<T>>({
       docs: [],
     });
@@ -256,8 +257,8 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const queryString = useMemo(() => JSON.stringify(query), [query]);
 
     const refreshRows = useCallback(async () => {
-      const res = await database.allDocs<T, string>(query);
-      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
+      const res = await database.allDocs<T>(query);
+      setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
     }, [queryString]);
 
     useEffect(() => {

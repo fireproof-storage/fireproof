@@ -22,6 +22,7 @@ import type {
   DocFragment,
   ChangesResponseRow,
   CRDTMeta,
+  AllDocsQueryOpts,
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { SysContainer } from "./runtime/sys-container.js";
@@ -123,7 +124,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     return { rows, clock: head };
   }
 
-  async allDocs<T extends DocTypes>(): Promise<{
+  async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<{
     rows: {
       key: string;
       value: DocWithId<T>;
@@ -131,6 +132,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     clock: ClockHead;
   }> {
     await this.ready();
+    void opts
     const { result, head } = await this._crdt.allDocs();
     const rows = result.map(({ id: key, value, del }) => ({
       key,
