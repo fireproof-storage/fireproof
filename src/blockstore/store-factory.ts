@@ -41,6 +41,12 @@ export interface StoreFactoryItem {
 
 const storeFactory = new Map<string, StoreFactoryItem>();
 
+function ensureName(name: string, url: URL) {
+  if (!url.searchParams.has("name")) {
+    url.searchParams.set("name", name);
+  }
+}
+
 function buildURL(optURL: string | URL | undefined, loader: Loadable): URL {
   const storeOpts = loader.ebOpts.store;
   const obuItem = Array.from(storeFactory.values()).find((items) => items.overrideBaseURL);
@@ -96,6 +102,7 @@ function loadDataGateway(url: URL, logger: Logger) {
 const onceDataStoreFactory = new KeyedResolvOnce<DataStore>();
 async function dataStoreFactory(loader: Loadable): Promise<DataStore> {
   const url = buildURL(loader.ebOpts.store.stores?.data, loader);
+  ensureName(loader.name, url);
   const logger = ensureLogger(loader.logger, "dataStoreFactory", { url: url.toString() });
   url.searchParams.set("store", "data");
   return onceDataStoreFactory.get(url.toString()).once(async () => {
@@ -117,15 +124,14 @@ function loadMetaGateway(url: URL, logger: Logger) {
 const onceMetaStoreFactory = new KeyedResolvOnce<MetaStore>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStore> {
   const url = buildURL(loader.ebOpts.store.stores?.meta, loader);
+  ensureName(loader.name, url);
   const logger = ensureLogger(loader.logger, "metaStoreFactory", { url: () => url.toString() });
   url.searchParams.set("store", "meta");
   return onceMetaStoreFactory.get(url.toString()).once(async () => {
     logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
     const gateway = await loadMetaGateway(url, logger);
     const store = new MetaStore(loader.name, url, loader.logger, gateway);
-    logger.Debug().Msg("pre-start");
     await store.start();
-    logger.Debug().Msg("post-start");
     return store;
   });
 }
@@ -140,6 +146,7 @@ function loadWalGateway(url: URL, logger: Logger) {
 const onceRemoteWalFactory = new KeyedResolvOnce<RemoteWAL>();
 async function remoteWalFactory(loader: Loadable): Promise<RemoteWAL> {
   const url = buildURL(loader.ebOpts.store.stores?.meta, loader);
+  ensureName(loader.name, url);
   const logger = ensureLogger(loader.logger, "remoteWalFactory", { url: url.toString() });
   url.searchParams.set("store", "wal");
   return onceRemoteWalFactory.get(url.toString()).once(async () => {

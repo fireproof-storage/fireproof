@@ -191,19 +191,23 @@ describe("fireproof/config", () => {
       },
     });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
-    await db.put({ name: "my-app" });
+    await db.put({ name: my_app() });
     expect(db.name).toBe(my_app());
 
     const carStore = await db.blockstore.loader?.carStore();
     expect(carStore?.url.toString()).toMatch(
       // sqlite://./dist/sqlite/data?store=data&version=v0.19-sqlite
-      new RegExp(`sqlite://./dist/sqlite/data\\?store=data&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&version=${rt.SQLITE_VERSION}`),
     );
 
     const fileStore = await db.blockstore.loader?.fileStore();
-    expect(fileStore?.url.toString()).toMatch(new RegExp(`sqlite://./dist/sqlite/data\\?store=data&version=${rt.SQLITE_VERSION}`));
+    expect(fileStore?.url.toString()).toMatch(
+      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&version=${rt.SQLITE_VERSION}`),
+    );
     const metaStore = await db.blockstore.loader?.metaStore();
-    expect(metaStore?.url.toString()).toMatch(new RegExp(`sqlite://./dist/sqlite/meta\\?store=meta&version=${rt.SQLITE_VERSION}`));
+    expect(metaStore?.url.toString()).toMatch(
+      new RegExp(`sqlite://./dist/sqlite/meta\\?name=${my_app()}&store=meta&version=${rt.SQLITE_VERSION}`),
+    );
     await db.close();
   });
 });
