@@ -33,7 +33,10 @@
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
     "ipfs-unixfs-exporter": "from-package-json",
-    "uuidv7": "from-package-json"
+    "uuidv7": "from-package-json",
+    "@web3-storage/pail": "from-package-json",
+    "@ipld/unixfs": "from-package-json",
+    "@ipld/car": "from-package-json"
   },
   "peerDependencies": {
     "react": ">=18.0.0"

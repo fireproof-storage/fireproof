@@ -1,6 +1,4 @@
 import { rt } from "@fireproof/core";
-import { toCryptoOpts } from "../src/runtime/crypto.js";
-import { encodeFile } from "../src/runtime/files";
 
 const dataDir = rt.dataDir;
 export { dataDir };
@@ -66,7 +64,7 @@ export function itSkip(value: string, fn: () => unknown, options?: number) {
 async function toFileWithCid(buffer: Uint8Array, name: string, opts: FilePropertyBag): Promise<FileWithCid> {
   return {
     file: new File([new Blob([buffer])], name, opts),
-    cid: (await encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
+    cid: (await rt.files.encodeFile(new File([new Blob([buffer])], name, opts))).cid.toString(),
   };
 }
 
@@ -75,7 +73,7 @@ export interface FileWithCid {
   cid: string;
 }
 export async function buildBlobFiles(): Promise<FileWithCid[]> {
-  const cp = toCryptoOpts();
+  const cp = rt.crypto.toCryptoOpts();
   return [
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `image.jpg`, { type: "image/jpeg" }),
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `fireproof.png`, { type: "image/png" }),

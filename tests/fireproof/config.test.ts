@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { fireproof, rt } from "@fireproof/core";
 import { isNode } from "std-env";
-import { SysContainer } from "../../src/runtime";
 
 describe("fireproof/config", () => {
   let _my_app = "my-app";
@@ -11,7 +10,7 @@ describe("fireproof/config", () => {
   beforeAll(async () => {
     await rt.SysContainer.start();
     if (isNode) {
-      const fpStorageUrl = SysContainer.env.get("FP_STORAGE_URL");
+      const fpStorageUrl = rt.SysContainer.env.get("FP_STORAGE_URL");
       if (fpStorageUrl) {
         let url: URL;
         try {
@@ -40,14 +39,14 @@ describe("fireproof/config", () => {
     return;
   }
   it("node default", async () => {
-    const old = SysContainer.env.get("FP_STORAGE_URL");
-    SysContainer.env.del("FP_STORAGE_URL");
+    const old = rt.SysContainer.env.get("FP_STORAGE_URL");
+    rt.SysContainer.env.del("FP_STORAGE_URL");
     let baseDir = rt
       .dataDir(my_app())
       .replace(/\?.*$/, "")
       .replace(/^file:\/\//, "");
-    baseDir = SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
-    await SysContainer.rm(baseDir, { recursive: true }).catch(() => {
+    baseDir = rt.SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
+    await rt.SysContainer.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
 
@@ -61,7 +60,7 @@ describe("fireproof/config", () => {
     expect(carStore?.url.toString()).toMatch(
       new RegExp(`file:.*\\/\\.fireproof\\?name=${my_app()}&store=data&version=${rt.FILESTORE_VERSION}`),
     );
-    expect((await SysContainer.stat(SysContainer.join(baseDir, "data"))).isDirectory()).toBeTruthy();
+    expect((await rt.SysContainer.stat(rt.SysContainer.join(baseDir, "data"))).isDirectory()).toBeTruthy();
 
     const fileStore = await db.blockstore.loader?.fileStore();
     expect(fileStore?.url.toString()).toMatch(
@@ -71,21 +70,21 @@ describe("fireproof/config", () => {
     expect(metaStore?.url.toString()).toMatch(
       new RegExp(`file:.*\\/\\.fireproof\\?name=${my_app()}&store=meta&version=${rt.FILESTORE_VERSION}`),
     );
-    expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
-    SysContainer.env.set("FP_STORAGE_URL", old);
+    expect((await rt.SysContainer.stat(rt.SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
+    rt.SysContainer.env.set("FP_STORAGE_URL", old);
     await db.close();
   });
 
   it("set by env", async () => {
-    const old = SysContainer.env.get("FP_STORAGE_URL");
-    SysContainer.env.set("FP_STORAGE_URL", "./dist/env");
+    const old = rt.SysContainer.env.get("FP_STORAGE_URL");
+    rt.SysContainer.env.set("FP_STORAGE_URL", "./dist/env");
 
     let baseDir = rt
       .dataDir(my_app())
       .replace(/\?.*$/, "")
       .replace(/^file:\/\//, "");
-    baseDir = SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
-    await SysContainer.rm(baseDir, { recursive: true }).catch(() => {
+    baseDir = rt.SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
+    await rt.SysContainer.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
 
@@ -96,7 +95,7 @@ describe("fireproof/config", () => {
     expect(carStore?.url.toString()).toMatch(
       new RegExp(`file://\\./dist/env\\?name=${my_app()}&store=data&version=${rt.FILESTORE_VERSION}`),
     );
-    expect((await SysContainer.stat(SysContainer.join(baseDir, "data"))).isDirectory()).toBeTruthy();
+    expect((await rt.SysContainer.stat(rt.SysContainer.join(baseDir, "data"))).isDirectory()).toBeTruthy();
     const fileStore = await db.blockstore.loader?.fileStore();
     expect(fileStore?.url.toString()).toMatch(
       new RegExp(`file://\\./dist/env\\?name=${my_app()}&store=data&version=${rt.FILESTORE_VERSION}`),
@@ -105,15 +104,15 @@ describe("fireproof/config", () => {
     expect(metaStore?.url.toString()).toMatch(
       new RegExp(`file://\\./dist/env\\?name=${my_app()}&store=meta&version=${rt.FILESTORE_VERSION}`),
     );
-    expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
+    expect((await rt.SysContainer.stat(rt.SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
     await db.close();
-    SysContainer.env.set("FP_STORAGE_URL", old);
+    rt.SysContainer.env.set("FP_STORAGE_URL", old);
   });
 
   it("file path", async () => {
     let baseDir = "./dist/data".replace(/\?.*$/, "").replace(/^file:\/\//, "");
-    baseDir = SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
-    await SysContainer.rm(baseDir, { recursive: true }).catch(() => {
+    baseDir = rt.SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
+    await rt.SysContainer.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
 
@@ -135,19 +134,19 @@ describe("fireproof/config", () => {
     expect(fileStore?.url.toString()).toMatch(
       new RegExp(`file://.\\/dist\\/data\\?name=${my_app()}&store=data&version=${rt.FILESTORE_VERSION}`),
     );
-    expect((await SysContainer.stat(SysContainer.join(baseDir, "data"))).isDirectory()).toBeTruthy();
+    expect((await rt.SysContainer.stat(rt.SysContainer.join(baseDir, "data"))).isDirectory()).toBeTruthy();
     const metaStore = await db.blockstore.loader?.metaStore();
     expect(metaStore?.url.toString()).toMatch(
       new RegExp(`file://.\\/dist\\/data\\?name=${my_app()}&store=meta&version=${rt.FILESTORE_VERSION}`),
     );
-    expect((await SysContainer.stat(SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
+    expect((await rt.SysContainer.stat(rt.SysContainer.join(baseDir, "meta"))).isDirectory()).toBeTruthy();
     await db.close();
   });
 
   it("sqlite path", async () => {
     let dbFile = "sqlite://./dist/sqlite".replace(/\?.*$/, "").replace(/^sqlite:\/\//, "");
-    dbFile = SysContainer.join(dbFile, `${my_app()}.sqlite`);
-    await SysContainer.rm(dbFile, { recursive: true }).catch(() => {
+    dbFile = rt.SysContainer.join(dbFile, `${my_app()}.sqlite`);
+    await rt.SysContainer.rm(dbFile, { recursive: true }).catch(() => {
       /* */
     });
 
@@ -160,7 +159,7 @@ describe("fireproof/config", () => {
     });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
     await db.put({ name: "my-app" });
-    expect((await SysContainer.stat(dbFile)).isFile()).toBeTruthy();
+    expect((await rt.SysContainer.stat(dbFile)).isFile()).toBeTruthy();
     expect(db.name).toBe(my_app());
     const carStore = await db.blockstore.loader?.carStore();
     expect(carStore?.url.toString()).toMatch(
