@@ -176,7 +176,6 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
   prefix?: string;
 }
 
-
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
 export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | unknown;
 
