@@ -17,10 +17,15 @@ const external = [
   "better-sqlite3",
 ];
 
+const stopSQLandFile = {
+  "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
+  "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
+};
+
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
   target: ["esnext", "node18"],
-  globalName: "Fireproof",
+  globalName: "fireproof",
   external,
   clean: true,
   sourcemap: true,
@@ -35,7 +40,7 @@ function packageVersion(file: string) {
 const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
+    format: ["iife"],
     name: "@fireproof/core",
     entry: ["src/index.ts"],
     platform: "browser",
@@ -46,15 +51,26 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        // "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
-        // "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
-        // "./node-sys-container.js":  "../runtime/store-file-not-impl.js",
-        // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:url": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "assert": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        ...stopSQLandFile,
       }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/core'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/core",
+    entry: ["src/index.ts"],
+    platform: "browser",
+    outDir: "dist/fireproof-core",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion("package.json"),
+        include: /version/,
+      }),
+      resolve({}),
     ],
     dts: {
       footer: "declare module '@fireproof/core'",
@@ -72,14 +88,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
-        "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
-        // "./node-sys-container.js": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:fs": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:path": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:os": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "node:url": path.join(__dirname, './src/runtime/memory-sys-container.js'),
-        // "assert": path.join(__dirname, './src/runtime/memory-sys-container.js'),
+        ...stopSQLandFile,
       }),
     ],
     dts: {
