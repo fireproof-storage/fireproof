@@ -29,9 +29,7 @@ export interface AllDocsResult<T extends DocTypes> {
   readonly docs: DocWithId<T>[];
 }
 
-export type UseAllDocs = <T extends DocTypes>(
-  query?: QueryOpts<string>
-) => AllDocsResult<T>;
+export type UseAllDocs = <T extends DocTypes>(query?: QueryOpts<string>) => AllDocsResult<T>;
 
 interface UpdateDocFnOptions {
   readonly replace?: boolean;
@@ -250,9 +248,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     return result;
   }
 
-  function useAllDocs<T extends DocTypes>(
-    query: QueryOpts<string> = {}
-  ): AllDocsResult<T> {
+  function useAllDocs<T extends DocTypes>(query: QueryOpts<string> = {}): AllDocsResult<T> {
     const [result, setResult] = useState<AllDocsResult<T>>({
       docs: [],
     });
