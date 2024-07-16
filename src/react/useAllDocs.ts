@@ -3,9 +3,7 @@ import { Database, DocTypes } from "@fireproof/core";
 import { AllDocsResult, useFireproof, UseAllDocs } from "./useFireproof";
 
 export interface TLUseAllDocs {
-  <T extends DocTypes>(
-    ...args: Parameters<UseAllDocs>
-  ): AllDocsResult<T>;
+  <T extends DocTypes>(...args: Parameters<UseAllDocs>): AllDocsResult<T>;
   database: Database;
 }
 
