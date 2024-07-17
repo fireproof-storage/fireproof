@@ -6,13 +6,19 @@ import type { AnyBlock, AnyLink, CommitOpts, DbMeta } from "./types.js";
 import { Falsy, throwFalsy } from "../types.js";
 import { Gateway, isNotFoundError } from "./gateway.js";
 import { ensureLogger, exception2Result } from "../utils.js";
-import { guardVersion } from "../runtime/store-indexdb.js";
 import { carLogIncludesGroup, Loadable } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 
 // const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
 // if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
 // export const STORAGE_VERSION = match[0];
+
+function guardVersion(url: URL): Result<URL> {
+  if (!url.searchParams.has("version")) {
+    return Result.Err(`missing version: ${url.toString()}`);
+  }
+  return Result.Ok(url);
+}
 
 abstract class VersionedStore {
   // readonly STORAGE_VERSION: string;
