@@ -1,11 +1,43 @@
 import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "node:fs";
 
-import * as stdEnv from "std-env";
 import { uuidv4 } from "uuidv7";
 import { ResolveOnce, EnvImpl } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
 
+export interface Runtime {
+  isNodeIsh: boolean;
+  isBrowser: boolean;
+  isDeno: boolean;
+  isReactNative: boolean;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isSet(value: string, ref: any = globalThis): boolean {
+  const [head, ...tail] = value.split(".");
+  // console.log(`isSet: ${head} -> ${tail.join(".")} -> ${ref}`);
+  if (["object", "function"].includes(typeof ref) && ref && ["object", "function"].includes(typeof ref[head]) && ref[head]) {
+    if (tail.length <= 1) {
+      // console.log(`isSet: ${value} -> TRUE`);
+      return true;
+    }
+    return isSet(tail.join("."), ref[head]);
+  }
+  // console.log(`isSet: ${value} -> FALSE`);
+  return false;
+}
+
+function runtimeFn(): Runtime {
+  // console.log(`runtimeFn`);
+  const isNodeIsh = isSet("process.versions.node");
+  const isDeno = isSet("Deno");
+  return {
+    isNodeIsh,
+    isBrowser: !(isNodeIsh || isDeno),
+    isDeno,
+    isReactNative: false,
+  };
+}
 export interface NodeMap {
   state: "seeded" | "browser" | "node";
   join: (...args: string[]) => string;
@@ -89,7 +121,7 @@ class sysContainer {
     await onceStart.once(async () => {
       switch (this.freight.state) {
         case "seeded":
-          if (stdEnv.isNode) {
+          if (this.runtime().isNodeIsh) {
             const { createNodeSysContainer } = await import("./node-sys-container.js");
             // console.log("use NodeSysContainer");
             this.freight = await createNodeSysContainer();
@@ -186,6 +218,8 @@ class sysContainer {
       console.warn(`SysContainer.${method} is not available in seeded state:`, err.stack);
     }
   }
+
+  readonly runtime = runtimeFn;
   readonly env = envImpl;
 }
 

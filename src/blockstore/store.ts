@@ -157,13 +157,13 @@ export class DataStore extends VersionedStore {
     this.logger.Debug().Msg("starting-gateway");
     const res = await this.gateway.start(this.url);
     if (res.isErr()) {
-      this.logger.Error().Err(res.Err()).Msg("started-gateway");
+      this.logger.Error().Result("gw-start", res).Msg("started-gateway");
       return res;
     }
     this._onStarted.forEach((fn) => fn());
     const version = guardVersion(this.url);
     if (version.isErr()) {
-      this.logger.Error().Err(res.Err()).Msg("guardVersion");
+      this.logger.Error().Result("version", version).Msg("guardVersion");
       await this.close();
       return version;
     }

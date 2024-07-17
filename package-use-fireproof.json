@@ -36,7 +36,6 @@
     "idb": "from-package-json",
     "p-limit": "from-package-json",
     "uuidv7": "from-package-json",
-    "std-env": "from-package-json",
     "@web3-storage/pail": "from-package-json",
     "@ipld/unixfs": "from-package-json",
     "@ipld/car": "from-package-json"

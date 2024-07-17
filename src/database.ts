@@ -70,6 +70,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     this.name = name;
     this.opts = opts || this.opts;
     this.logger = ensureLogger(this.opts, "Database");
+    // this.logger.SetDebug("Database")
     this._crdt = new CRDT(name, this.opts);
     this.blockstore = this._crdt.blockstore; // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
@@ -81,9 +82,8 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    this.logger.Debug().Str("id", id).Msg("get-pre-ready");
     await this.ready();
-    this.logger.Debug().Str("id", id).Msg("get-post-ready");
+    this.logger.Debug().Str("id", id).Msg("get");
     const got = await this._crdt.get(id).catch((e) => {
       throw new NotFoundError(`Not found: ${id} - ${e.message}`);
     });
@@ -93,9 +93,8 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
-    this.logger.Debug().Str("id", doc._id).Msg("put-pre-ready");
     await this.ready();
-    this.logger.Debug().Str("id", doc._id).Msg("put-post-ready");
+    this.logger.Debug().Str("id", doc._id).Msg("put");
     const { _id, ...value } = doc;
     const docId = _id || uuidv7();
     const result = (await this._writeQueue.push({
@@ -110,12 +109,14 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
 
   async del(id: string): Promise<DocResponse> {
     await this.ready();
+    this.logger.Debug().Str("id", id).Msg("del");
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
     return { id, clock: result?.head, name: this.name } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     await this.ready();
+    this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
     const { result, head } = await this._crdt.changes(since, opts);
     const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
       key,
@@ -128,6 +129,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
     await this.ready();
     void opts;
+    this.logger.Debug().Msg("allDocs");
     const { result, head } = await this._crdt.allDocs();
     const rows = result.map(({ id: key, value, del }) => ({
       key,
@@ -147,6 +149,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
+    this.logger.Debug().Bool("updates", updates).Msg("subscribe");
     if (updates) {
       if (!this._listening) {
         this._listening = true;
@@ -172,6 +175,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     opts: QueryOpts<K> = {},
   ): Promise<IndexRows<K, T, R>> {
     await this.ready();
+    this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     const _crdt = this._crdt as unknown as CRDT<T>;
     const idx =
       typeof field === "string" ? index<K, T, R>({ _crdt }, field) : index<K, T, R>({ _crdt }, makeName(field.toString()), field);

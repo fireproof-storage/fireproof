@@ -13,13 +13,6 @@ function ensureVersion(url: URL): URL {
   return ret;
 }
 
-export function guardVersion(url: URL): Result<URL> {
-  if (!url.searchParams.has("version")) {
-    return Result.Err(`missing version: ${url.toString()}`);
-  }
-  return Result.Ok(url);
-}
-
 const onceIndexDB = new KeyedResolvOnce<{
   readonly db: IDBPDatabase<unknown>;
   readonly dbName: DbName;
