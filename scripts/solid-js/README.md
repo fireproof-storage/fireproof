@@ -141,7 +141,7 @@ setTodo({ text: "anotherTodo", count: 2, completed: false }, { replace: true });
 The last function from the tuple is the save/write to database function. It has the following signature:
 
 ```ts
-type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DocResponse>;
 ```
 
 This function has two modes of use:

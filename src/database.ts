@@ -15,7 +15,7 @@ import type {
   DocWithId,
   IndexKeyType,
   ListenerFn,
-  DbResponse,
+  DocResponse,
   ChangesResponse,
   DocTypes,
   IndexRows,
@@ -91,7 +91,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     return { ...(doc as unknown as DocWithId<T>), _id: id };
   }
 
-  async put<T extends DocTypes>(doc: DocSet<T>): Promise<DbResponse> {
+  async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
     this.logger.Debug().Str("id", doc._id).Msg("put-pre-ready");
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put-post-ready");
@@ -107,10 +107,10 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     return { id: docId, clock: result?.head };
   }
 
-  async del(id: string): Promise<DbResponse> {
+  async del(id: string): Promise<DocResponse> {
     await this.ready();
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head } as DbResponse;
+    return { id, clock: result?.head } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {

@@ -2,7 +2,7 @@ import { sleep, itSkip } from "../helpers.js";
 
 import { CID } from "multiformats/cid";
 
-import { bs, rt, fireproof, Database, index, DbResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
+import { bs, rt, fireproof, Database, index, DocResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -21,7 +21,7 @@ describe("dreamcode", function () {
     text: string;
     dream: boolean;
   }
-  let ok: DbResponse;
+  let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let result: IndexRows<string, Doc>;
   let db: Database;
@@ -63,7 +63,7 @@ describe("public API", function () {
     foo: string;
   }
   let db: Database;
-  let ok: DbResponse;
+  let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let query: IndexRows<string, Doc>;
 
@@ -171,7 +171,7 @@ describe("benchmarking with compaction", function () {
 
       const doing = null;
       for (let i = 0; i < numDocs; i += batchSize) {
-        const ops: Promise<DbResponse>[] = [];
+        const ops: Promise<DocResponse>[] = [];
         db.put({ foo: "fast" });
         // await doing
         // doing = db.compact()
@@ -242,7 +242,7 @@ describe("benchmarking a database", function () {
       console.time(`insert and read ${numDocs} records`);
 
       for (let i = 0; i < numDocs; i += batchSize) {
-        const ops: Promise<DbResponse>[] = [];
+        const ops: Promise<DocResponse>[] = [];
         for (let j = 0; j < batchSize && i + j < numDocs; j++) {
           ops.push(
             db

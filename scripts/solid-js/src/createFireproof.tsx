@@ -1,4 +1,4 @@
-import type { ConfigOpts, DbResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
+import type { ConfigOpts, DocResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
 import { Database, fireproof } from "@fireproof/core";
 import { deepmerge } from "deepmerge-ts";
 import { Accessor, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
@@ -20,7 +20,7 @@ interface UpdateDocFnOptions {
 
 type UpdateDocFn<T extends DocTypes> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
 
-type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DocResponse>;
 
 export type CreateDocumentResult<T extends DocTypes> = [Accessor<Doc<T>>, UpdateDocFn<T>, StoreDocFn<T>];
 

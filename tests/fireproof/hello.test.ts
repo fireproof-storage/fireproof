@@ -1,4 +1,4 @@
-import { rt, fireproof as database, Database, DbResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
+import { rt, fireproof as database, Database, DocResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
@@ -13,7 +13,7 @@ describe("public API", function () {
   }
   let db: Database;
   let idx: Index<string, TestDoc>;
-  let ok: DbResponse;
+  let ok: DocResponse;
   let doc: DocWithId<TestDoc>;
   let query: IndexRows<string, TestDoc>;
   afterEach(async function () {
