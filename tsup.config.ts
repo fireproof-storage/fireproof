@@ -42,7 +42,7 @@ function packageVersion(file: string) {
   version = version.split("/").slice(-1)[0].replace(/^v/, "");
   // console.log(`Patch version ${version} in package.json`);
   // packageJson.version = version;
-  return JSON.stringify(version)
+  return JSON.stringify(version);
 }
 
 const LIBRARY_BUNDLES: readonly Options[] = [
@@ -93,7 +93,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     target: ["esnext"],
     platform: "browser",
     outDir: "dist/use-fireproof",
-    noExternal: [ "std-env" ],
+    noExternal: ["std-env"],
     esbuildPlugins: [
       replace({
         __packageVersion__: packageVersion("package.json"),
