@@ -34,7 +34,15 @@ const LIBRARY_BUNDLE_OPTIONS: Options = {
 };
 
 function packageVersion(file: string) {
-  return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf-8")).version);
+  // return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf-8")).version);
+  let version = "refs/tags/v0.0.0-smoke";
+  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
+    version = process.env.GITHUB_REF;
+  }
+  version = version.split("/").slice(-1)[0].replace(/^v/, "");
+  // console.log(`Patch version ${version} in package.json`);
+  // packageJson.version = version;
+  return JSON.stringify(version)
 }
 
 const LIBRARY_BUNDLES: readonly Options[] = [
@@ -70,7 +78,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion("package.json"),
         include: /version/,
       }),
-      resolve({}),
+      resolve({
+        // "../runtime/store-indexdb.js": "../runtime/store-file-not-impl.js",
+      }),
     ],
     dts: {
       footer: "declare module '@fireproof/core'",
@@ -80,8 +90,10 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ...LIBRARY_BUNDLE_OPTIONS,
     name: "use-fireproof",
     entry: ["src/react/index.ts"],
+    target: ["esnext"],
     platform: "browser",
     outDir: "dist/use-fireproof",
+    noExternal: [ "std-env" ],
     esbuildPlugins: [
       replace({
         __packageVersion__: packageVersion("package.json"),
