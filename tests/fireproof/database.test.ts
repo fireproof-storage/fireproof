@@ -1,5 +1,5 @@
 import { buildBlobFiles, FileWithCid } from "../helpers.js";
-import { rt, bs, Database, DbResponse, DocFileMeta, DocWithId, DocFiles } from "@fireproof/core";
+import { rt, bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles } from "@fireproof/core";
 
 describe("basic Database", () => {
   let db: Database;
@@ -215,7 +215,7 @@ describe("named Database with record", function () {
 
 describe("basic Database parallel writes / public", function () {
   let db: Database;
-  const writes: Promise<DbResponse>[] = [];
+  const writes: Promise<DocResponse>[] = [];
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -253,7 +253,7 @@ describe("basic Database parallel writes / public", function () {
     }
   });
   it("should delete all in parallel", async function () {
-    const deletes: Promise<DbResponse>[] = [];
+    const deletes: Promise<DocResponse>[] = [];
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
       deletes.push(db.del(id));
@@ -373,7 +373,7 @@ describe("basic Database with no update subscription", function () {
 describe("database with files input", () => {
   let db: Database;
   let imagefiles: FileWithCid[] = [];
-  let result: DbResponse;
+  let result: DocResponse;
 
   afterEach(async () => {
     await db.close();

@@ -15,7 +15,7 @@ import type {
   DocWithId,
   IndexKeyType,
   ListenerFn,
-  DbResponse,
+  DocResponse,
   ChangesResponse,
   DocTypes,
   IndexRows,
@@ -23,6 +23,7 @@ import type {
   ChangesResponseRow,
   CRDTMeta,
   AllDocsQueryOpts,
+  AllDocsResponse,
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { SysContainer } from "./runtime/sys-container.js";
@@ -91,7 +92,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     return { ...(doc as unknown as DocWithId<T>), _id: id };
   }
 
-  async put<T extends DocTypes>(doc: DocSet<T>): Promise<DbResponse> {
+  async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
     this.logger.Debug().Str("id", doc._id).Msg("put-pre-ready");
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put-post-ready");
@@ -104,13 +105,13 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
         _id: docId,
       },
     })) as CRDTMeta;
-    return { id: docId, clock: result?.head };
+    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
   }
 
-  async del(id: string): Promise<DbResponse> {
+  async del(id: string): Promise<DocResponse> {
     await this.ready();
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head } as DbResponse;
+    return { id, clock: result?.head, name: this.name } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
@@ -121,18 +122,10 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
       clock,
     }));
-    return { rows, clock: head };
+    return { rows, clock: head, name: this.name };
   }
 
-  async allDocs<T extends DocTypes>(
-    opts: AllDocsQueryOpts = {},
-  ): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }> {
+  async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
     await this.ready();
     void opts;
     const { result, head } = await this._crdt.allDocs();
@@ -140,7 +133,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
-    return { rows, clock: head };
+    return { rows, clock: head, name: this.name };
   }
 
   async allDocuments<T extends DocTypes>(): Promise<{

@@ -176,6 +176,15 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
   prefix?: string;
 }
 
+export interface AllDocsResponse<T extends DocTypes> {
+  readonly rows: {
+    readonly key: string;
+    readonly value: DocWithId<T>;
+  }[];
+  readonly clock: ClockHead;
+  readonly name?: string;
+}
+
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
 export type MapFn<T extends DocTypes> = (doc: DocWithId<T>, emit: EmitFn) => DocFragment | unknown;
 
@@ -193,11 +202,13 @@ export interface ChangesResponseRow<T extends DocTypes> {
 export interface ChangesResponse<T extends DocTypes> {
   readonly clock: ClockHead;
   readonly rows: ChangesResponseRow<T>[];
+  readonly name?: string;
 }
 
-export interface DbResponse {
+export interface DocResponse {
   readonly id: string;
   readonly clock: ClockHead;
+  readonly name?: string;
 }
 
 export type UpdateListenerFn<T extends DocTypes> = (docs: DocWithId<T>[]) => Promise<void> | void;
