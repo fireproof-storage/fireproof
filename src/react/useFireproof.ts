@@ -1,7 +1,7 @@
 import type {
   ConfigOpts,
   Database,
-  DbResponse,
+  DocResponse,
   DocFragment,
   DocSet,
   DocTypes,
@@ -39,9 +39,9 @@ interface UpdateDocFnOptions {
 
 type UpdateDocFn<T extends DocTypes> = (newDoc?: DocSet<T>, options?: UpdateDocFnOptions) => void;
 
-type StoreDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DocResponse>;
 
-type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DbResponse>;
+type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DocResponse>;
 
 export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
 

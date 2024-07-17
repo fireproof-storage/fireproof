@@ -195,7 +195,7 @@ export interface ChangesResponse<T extends DocTypes> {
   readonly rows: ChangesResponseRow<T>[];
 }
 
-export interface DbResponse {
+export interface DocResponse {
   readonly id: string;
   readonly clock: ClockHead;
 }

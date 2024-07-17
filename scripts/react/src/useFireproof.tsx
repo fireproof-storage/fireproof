@@ -1,4 +1,4 @@
-import type { ConfigOpts, Database, DbResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
+import type { ConfigOpts, Database, DocResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -20,7 +20,7 @@ interface UpdateDocFnOptions {
 
 type UpdateDocFn<T extends DocTypes> = (newDoc?: Partial<Doc<T>>, options?: UpdateDocFnOptions) => void;
 
-type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DbResponse>;
+type StoreDocFn<T extends DocTypes> = (existingDoc?: Doc<T>) => Promise<DocResponse>;
 
 export type UseDocumentResult<T extends DocTypes> = [Doc<T>, UpdateDocFn<T>, StoreDocFn<T>];
 
