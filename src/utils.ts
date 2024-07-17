@@ -3,6 +3,7 @@ import { SysContainer } from "./runtime";
 import { uuidv7 } from "uuidv7";
 
 export type { Logger };
+export { Result };
 
 const globalLogger: Logger = new LoggerImpl();
 

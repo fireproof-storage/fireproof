@@ -62,9 +62,6 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
-      std-env:
-        specifier: ^3.7.0
-        version: 3.7.0
       uuidv7:
         specifier: ^1.0.0
         version: 1.0.1

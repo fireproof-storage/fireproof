@@ -89,18 +89,111 @@ export type TransactionMeta = unknown;
 //   };
 // }
 
+export interface FPJsonWebKey {
+  alg?: string;
+  crv?: string;
+  d?: string;
+  dp?: string;
+  dq?: string;
+  e?: string;
+  ext?: boolean;
+  k?: string;
+  key_ops?: string[];
+  kty?: string;
+  n?: string;
+  oth?: RsaOtherPrimesInfo[];
+  p?: string;
+  q?: string;
+  qi?: string;
+  use?: string;
+  x?: string;
+  y?: string;
+}
+
+export type FPKeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
+export type FPKeyUsage = "decrypt" | "deriveBits" | "deriveKey" | "encrypt" | "sign" | "unwrapKey" | "verify" | "wrapKey";
+
+export interface FPAlgorithm {
+  name: string;
+};
+export type FPAlgorithmIdentifier = FPAlgorithm | string
+
+export interface FPRsaHashedImportParams extends FPAlgorithm {
+  hash: FPAlgorithmIdentifier;
+}
+
+export type FPNamedCurve = string;
+export interface FPEcKeyImportParams extends FPAlgorithm {
+  namedCurve: FPNamedCurve;
+}
+
+export interface FPHmacImportParams extends FPAlgorithm {
+  hash: FPAlgorithmIdentifier;
+  length?: number;
+}
+
+export interface FPAesKeyAlgorithm extends FPAlgorithm {
+  length: number;
+}
+
+export type FPKeyType = "private" | "public" | "secret";
+
+export interface FPCryptoKey {
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/algorithm) */
+  readonly algorithm: FPAlgorithm;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/extractable) */
+  readonly extractable: boolean;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/type) */
+  readonly type: FPKeyType;
+  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/usages) */
+  readonly usages: FPKeyUsage[];
+}
+
+interface FPArrayBufferTypes {
+  ArrayBuffer: ArrayBuffer;
+}
+type FPArrayBufferLike = FPArrayBufferTypes[keyof FPArrayBufferTypes];
+
+export interface FPArrayBufferView {
+  /**
+   * The ArrayBuffer instance referenced by the array.
+   */
+  buffer: FPArrayBufferLike;
+
+  /**
+   * The length in bytes of the array.
+   */
+  byteLength: number;
+
+  /**
+   * The offset in bytes of the array.
+   */
+  byteOffset: number;
+}
+
+export type FPBufferSource = FPArrayBufferView | ArrayBuffer;
 export interface CryptoOpts {
-  // readonly crypto: MakeCodecCrypto; //| unknown;
-  readonly importKey: typeof crypto.subtle.importKey;
+  importKey(
+    format: FPKeyFormat,
+    keyData: FPJsonWebKey|FPBufferSource,
+    algorithm: FPAlgorithmIdentifier |
+      FPRsaHashedImportParams |
+      FPEcKeyImportParams |
+      FPHmacImportParams |
+      FPAesKeyAlgorithm,
+    extractable: boolean,
+    keyUsages: FPKeyUsage[]
+  ): Promise<FPCryptoKey>;
+
   //(format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
   readonly decrypt: (
     algo: { name: string; iv: Uint8Array; tagLength: number },
-    key: CryptoKey,
+    key: FPCryptoKey,
     data: Uint8Array,
   ) => Promise<ArrayBuffer>;
   readonly encrypt: (
     algo: { name: string; iv: Uint8Array; tagLength: number },
-    key: CryptoKey,
+    key: FPCryptoKey,
     data: Uint8Array,
   ) => Promise<ArrayBuffer>;
   readonly digestSHA256: (data: Uint8Array) => Promise<ArrayBuffer>;

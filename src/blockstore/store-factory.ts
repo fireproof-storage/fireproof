@@ -32,6 +32,7 @@ export function toURL(pathOrUrl: string | URL, isIndex?: string): URL {
 export interface StoreFactoryItem {
   readonly protocol: string;
   readonly overrideBaseURL?: string; // if this set it overrides the defaultURL
+  readonly overrideRegistration?: boolean; // if this is set, it will override the registration
   // which switches between file and indexdb
   readonly data: (logger: Logger) => Promise<Gateway>;
   readonly meta: (logger: Logger) => Promise<Gateway>;
@@ -58,8 +59,16 @@ function buildURL(optURL: string | URL | undefined, loader: Loadable): URL {
 }
 
 export function registerStoreProtocol(item: StoreFactoryItem) {
-  if (storeFactory.has(item.protocol)) {
-    throw new Error(`protocol ${item.protocol} already registered`);
+  let protocol = item.protocol;
+  if (!protocol.endsWith(":")) {
+    protocol += ":";
+  }
+  if (storeFactory.has(protocol)) {
+    if (!item.overrideBaseURL && storeFactory.get(protocol) !== item) {
+      const logger = ensureLogger({}, "registerStoreProtocol", { protocol });
+      logger.Warn().Msg(`protocol ${protocol} already registered`)
+      return
+    }
   }
   // we need to clear the overrideBaseURL if it is set
   if (item.overrideBaseURL) {
@@ -71,9 +80,9 @@ export function registerStoreProtocol(item: StoreFactoryItem) {
       ).overrideBaseURL = undefined;
     });
   }
-  storeFactory.set(item.protocol, item);
+  storeFactory.set(protocol, item);
   return () => {
-    storeFactory.delete(item.protocol);
+    storeFactory.delete(protocol);
   };
 }
 

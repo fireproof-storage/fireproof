@@ -97,7 +97,6 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
-    "std-env": "^3.7.0",
     "uuidv7": "^1.0.0"
   }
 }

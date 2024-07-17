@@ -93,7 +93,6 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     target: ["esnext"],
     platform: "browser",
     outDir: "dist/use-fireproof",
-    noExternal: ["std-env"],
     esbuildPlugins: [
       replace({
         __packageVersion__: packageVersion("package.json"),

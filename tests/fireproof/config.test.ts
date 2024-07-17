@@ -1,6 +1,17 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { fireproof, rt } from "@fireproof/core";
-import { isNode } from "std-env";
+
+describe("runtime", () => {
+  it("runtime", () => {
+    const isNode = !!(typeof process === "object" && process.versions?.node);
+    expect(rt.SysContainer.runtime()).toEqual({
+      isBrowser: !isNode,
+      isDeno: false,
+      isNodeIsh: isNode,
+      isReactNative: false,
+    });
+  });
+});
 
 describe("fireproof/config", () => {
   let _my_app = "my-app";
@@ -9,7 +20,7 @@ describe("fireproof/config", () => {
   }
   beforeAll(async () => {
     await rt.SysContainer.start();
-    if (isNode) {
+    if (rt.SysContainer.runtime().isNodeIsh) {
       const fpStorageUrl = rt.SysContainer.env.get("FP_STORAGE_URL");
       if (fpStorageUrl) {
         let url: URL;
@@ -23,7 +34,7 @@ describe("fireproof/config", () => {
     }
   });
 
-  if (!isNode) {
+  if (!rt.SysContainer.runtime().isNodeIsh) {
     it("default", async () => {
       const db = fireproof(my_app());
       await db.put({ name: "my-app" });
