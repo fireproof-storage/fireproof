@@ -151,7 +151,7 @@ export interface IdxMeta {
   readonly byId: AnyLink;
   readonly byKey: AnyLink;
   readonly map: string;
-  readonly name?: string;
+  readonly name: string;
   readonly head: ClockHead;
 }
 
