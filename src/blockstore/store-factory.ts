@@ -67,7 +67,7 @@ export function registerStoreProtocol(item: StoreFactoryItem) {
     if (!item.overrideBaseURL && storeFactory.get(protocol) !== item) {
       const logger = ensureLogger({}, "registerStoreProtocol", { protocol });
       logger.Warn().Msg(`protocol ${protocol} already registered`);
-      return;
+      return () => { /* no-op */ };
     }
   }
   // we need to clear the overrideBaseURL if it is set
