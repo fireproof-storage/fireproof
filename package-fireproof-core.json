@@ -34,7 +34,6 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "better-sqlite3": "from-package-json",
     "react": "from-package-json",
     "@adviser/cement": "from-package-json",
     "charwise": "from-package-json",
