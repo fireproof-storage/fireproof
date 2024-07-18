@@ -23,7 +23,7 @@ export class SQLWalGateway implements Gateway {
   async start(baseUrl: URL): Promise<Result<void>> {
     return exception2Result(async () => {
       this.logger.Debug().Url(baseUrl).Msg("start");
-      const conn = SQLConnectionFactory(baseUrl);
+      const conn = await SQLConnectionFactory(baseUrl);
       const ws = await WalStoreFactory(conn);
       await ws.start(baseUrl);
       this.walSQLStore = ws;
@@ -84,7 +84,7 @@ export class SQLMetaGateway implements Gateway {
   async start(baseUrl: URL): Promise<Result<void>> {
     return exception2Result(async () => {
       this.logger.Debug().Url(baseUrl).Msg("start");
-      const conn = SQLConnectionFactory(baseUrl);
+      const conn = await SQLConnectionFactory(baseUrl);
       const ws = await MetaStoreFactory(conn);
       await ws.start(baseUrl);
       this.metaSQLStore = ws;
@@ -152,7 +152,7 @@ export class SQLDataGateway implements Gateway {
   async start(baseUrl: URL): Promise<Result<void>> {
     return exception2Result(async () => {
       this.logger.Debug().Url(baseUrl).Msg("pre-sql-connection");
-      const conn = SQLConnectionFactory(baseUrl);
+      const conn = await SQLConnectionFactory(baseUrl);
       this.logger.Debug().Url(baseUrl).Msg("post-sql-connection");
       const ws = await DataStoreFactory(conn);
       this.logger.Debug().Url(baseUrl).Msg("post-data-store-factory");
@@ -206,7 +206,7 @@ export class SQLTestStore implements TestStore {
     this.logger = logger;
   }
   async get(url: URL, key: string): Promise<Uint8Array> {
-    const conn = SQLConnectionFactory(url);
+    const conn = await SQLConnectionFactory(url);
     const name = getName(url, this.logger);
     switch (url.searchParams.get("store")) {
       case "wal": {

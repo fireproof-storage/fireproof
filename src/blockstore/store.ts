@@ -90,9 +90,9 @@ export class MetaStore extends VersionedStore {
     if (url.isErr()) {
       throw this.logger
         .Error()
-        .Err(url.Err())
+        .Result("buidUrl", url)
         .Str("branch", branch || "")
-        .Str("url", this.url.toString())
+        .Url(this.url)
         .Msg("got error from gateway.buildUrl")
         .AsError();
     }
@@ -101,7 +101,7 @@ export class MetaStore extends VersionedStore {
       if (isNotFoundError(bytes)) {
         return undefined;
       }
-      throw this.logger.Error().Err(bytes.Err()).Msg("gateway get").AsError();
+      throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
     try {
       return [this.parseHeader(textDecoder.decode(bytes.Ok()))];

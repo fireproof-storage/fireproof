@@ -1,13 +1,13 @@
-import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3";
-import { SQLITE_VERSION } from "./version";
+import { V0_19BS3Connection } from "./sqlite-connection";
+import { V0_19SQL_VERSION } from "../version";
 import { ResolveOnce } from "@adviser/cement";
-import { ensureLogger } from "../../../utils";
+import { ensureLogger } from "../../../../utils";
 
 const once = new ResolveOnce<string>();
-export async function ensureSQLiteVersion(url: URL, dbConn: SQLiteConnection) {
+export async function ensureBS3Version(url: URL, dbConn: V0_19BS3Connection) {
   const version = await once.once(async () => {
-    const logger = ensureLogger(dbConn.opts, "ensureSQLiteVersion", {
-      version: SQLITE_VERSION,
+    const logger = ensureLogger(dbConn.opts, "ensureBS3Version", {
+      version: V0_19SQL_VERSION,
       url: dbConn.url.toString(),
     });
     await dbConn.client
@@ -24,10 +24,10 @@ export async function ensureSQLiteVersion(url: URL, dbConn: SQLiteConnection) {
     if (rows.length === 0) {
       await dbConn.client
         .prepare(`insert into version (version, updated_at) values (?, ?)`)
-        .run(SQLITE_VERSION, new Date().toISOString());
-      return SQLITE_VERSION;
+        .run(V0_19SQL_VERSION, new Date().toISOString());
+      return V0_19SQL_VERSION;
     }
-    if (rows[0].version !== SQLITE_VERSION) {
+    if (rows[0].version !== V0_19SQL_VERSION) {
       logger.Warn().Any("row", rows[0]).Msg(`version mismatch`);
     }
     return rows[0].version;

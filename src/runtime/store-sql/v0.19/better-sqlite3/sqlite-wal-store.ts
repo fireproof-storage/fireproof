@@ -1,9 +1,9 @@
 import type { RunResult, Statement } from "better-sqlite3";
-import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../types.js";
-import { SQLiteConnection } from "../sqlite-adapter-better-sqlite3.js";
+import { DBConnection, WalKey, WalRecord, WalSQLStore } from "../../types.js";
+import { V0_19BS3Connection } from "./sqlite-connection.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { ensureSQLiteVersion } from "./sqlite-ensure-version.js";
-import { ensureLogger, exception2Result, getStore } from "../../../utils.js";
+import { ensureBS3Version } from "./sqlite-ensure-version.js";
+import { ensureLogger, exception2Result, getStore } from "../../../../utils.js";
 
 export class WalSQLRecordBuilder {
   readonly #record: WalRecord;
@@ -28,20 +28,20 @@ interface SQLiteWalRecord {
   readonly updated_at: string;
 }
 
-export class V0_18_0SQLiteWalStore implements WalSQLStore {
-  readonly dbConn: SQLiteConnection;
+export class V0_19BS3WalStore implements WalSQLStore {
+  readonly dbConn: V0_19BS3Connection;
   readonly logger: Logger;
   readonly textEncoder: TextEncoder;
   constructor(dbConn: DBConnection) {
-    this.dbConn = dbConn as SQLiteConnection;
+    this.dbConn = dbConn as V0_19BS3Connection;
     this.textEncoder = dbConn.opts.textEncoder;
-    this.logger = ensureLogger(dbConn.opts, "SQLiteWalStore");
+    this.logger = ensureLogger(dbConn.opts, "V0_19BS3WalStore");
     this.logger.Debug().Msg("constructor");
   }
   async start(url: URL): Promise<void> {
     this.logger.Debug().Msg("start");
     await this.dbConn.connect();
-    await ensureSQLiteVersion(url, this.dbConn);
+    await ensureBS3Version(url, this.dbConn);
 
     // this._insertStmt =
     // this._selectStmt = this.dbConn.client.prepare(

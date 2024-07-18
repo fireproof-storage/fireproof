@@ -7,7 +7,10 @@ const external = [
   "path",
   "react",
   "fs",
+  "fs/promises",
   "util",
+  "os",
+  "url",
   "node:fs",
   "node:path",
   "node:os",
@@ -20,6 +23,14 @@ const external = [
 const stopSQLandFile = {
   "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
   "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
+  "./node-sys-container.js": "./store-file-not-impl.js",
+//  "./node-sys-container.js": "./store-file-not-impl.js",
+//  "src/runtime/node-sys-container.ts": "./store-file-not-impl.js",
+//  "fs/promises": `${__dirname}/src/runtime/store-file-not-impl.js`,
+//  "fs": `${__dirname}/src/runtime/store-file-not-impl.js`,
+//  "path": `${__dirname}/src/runtime/store-file-not-impl.js`,
+//  "os": `${__dirname}/src/runtime/store-file-not-impl.js`,
+//  "url": `${__dirname}/src/runtime/store-file-not-impl.js`,
 };
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
