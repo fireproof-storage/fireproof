@@ -115,8 +115,8 @@ export type FPKeyUsage = "decrypt" | "deriveBits" | "deriveKey" | "encrypt" | "s
 
 export interface FPAlgorithm {
   name: string;
-};
-export type FPAlgorithmIdentifier = FPAlgorithm | string
+}
+export type FPAlgorithmIdentifier = FPAlgorithm | string;
 
 export interface FPRsaHashedImportParams extends FPAlgorithm {
   hash: FPAlgorithmIdentifier;
@@ -175,14 +175,10 @@ export type FPBufferSource = FPArrayBufferView | ArrayBuffer;
 export interface CryptoOpts {
   importKey(
     format: FPKeyFormat,
-    keyData: FPJsonWebKey|FPBufferSource,
-    algorithm: FPAlgorithmIdentifier |
-      FPRsaHashedImportParams |
-      FPEcKeyImportParams |
-      FPHmacImportParams |
-      FPAesKeyAlgorithm,
+    keyData: FPJsonWebKey | FPBufferSource,
+    algorithm: FPAlgorithmIdentifier | FPRsaHashedImportParams | FPEcKeyImportParams | FPHmacImportParams | FPAesKeyAlgorithm,
     extractable: boolean,
-    keyUsages: FPKeyUsage[]
+    keyUsages: FPKeyUsage[],
   ): Promise<FPCryptoKey>;
 
   //(format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;

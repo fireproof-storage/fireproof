@@ -22,7 +22,6 @@
     "clean": "rm -rf node_modules dist",
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
-    "test:sqlite": "vitest --config vitest.sqlite.config.ts --run",
     "test:indexdb": "vitest --config vitest.browser.config.ts --run",
     "format": "prettier .",
     "lint": "eslint"
@@ -46,7 +45,6 @@
   "devDependencies": {
     "@eslint/js": "^9.6.0",
     "@testing-library/react": "^16.0.0",
-    "@types/better-sqlite3": "^7.6.10",
     "@types/eslint__js": "^8.42.3",
     "@types/jasmine": "^5.1.4",
     "@types/node": "^20.14.6",
@@ -85,7 +83,6 @@
     "@ipld/dag-json": "^10.2.2",
     "@ipld/unixfs": "^3.0.0",
     "@web3-storage/pail": "^0.6.0",
-    "better-sqlite3": "^11.0.0",
     "charwise": "^3.0.1",
     "cross-fetch": "^4.0.0",
     "esbuild-plugin-replace": "^1.4.0",
@@ -93,7 +90,6 @@
     "ipfs-unixfs-exporter": "^13.5.0",
     "js-base64": "^3.7.7",
     "multiformats": "^13.1.1",
-    "node-sqlite3-wasm": "^0.8.18",
     "p-limit": "^6.1.0",
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",

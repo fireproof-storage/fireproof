@@ -1,4 +1,3 @@
-import fs from "fs";
 import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
@@ -24,13 +23,13 @@ const stopSQLandFile = {
   "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
   "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
   "./node-sys-container.js": "./store-file-not-impl.js",
-//  "./node-sys-container.js": "./store-file-not-impl.js",
-//  "src/runtime/node-sys-container.ts": "./store-file-not-impl.js",
-//  "fs/promises": `${__dirname}/src/runtime/store-file-not-impl.js`,
-//  "fs": `${__dirname}/src/runtime/store-file-not-impl.js`,
-//  "path": `${__dirname}/src/runtime/store-file-not-impl.js`,
-//  "os": `${__dirname}/src/runtime/store-file-not-impl.js`,
-//  "url": `${__dirname}/src/runtime/store-file-not-impl.js`,
+  //  "./node-sys-container.js": "./store-file-not-impl.js",
+  //  "src/runtime/node-sys-container.ts": "./store-file-not-impl.js",
+  //  "fs/promises": `${__dirname}/src/runtime/store-file-not-impl.js`,
+  //  "fs": `${__dirname}/src/runtime/store-file-not-impl.js`,
+  //  "path": `${__dirname}/src/runtime/store-file-not-impl.js`,
+  //  "os": `${__dirname}/src/runtime/store-file-not-impl.js`,
+  //  "url": `${__dirname}/src/runtime/store-file-not-impl.js`,
 };
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
@@ -44,7 +43,7 @@ const LIBRARY_BUNDLE_OPTIONS: Options = {
   minify: false,
 };
 
-function packageVersion(file: string) {
+function packageVersion() {
   // return JSON.stringify(JSON.parse(fs.readFileSync(file, "utf-8")).version);
   let version = "refs/tags/v0.0.0-smoke";
   if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
@@ -66,7 +65,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     outDir: "dist/fireproof-core",
     esbuildPlugins: [
       replace({
-        __packageVersion__: packageVersion("package.json"),
+        __packageVersion__: packageVersion(),
         include: /version/,
       }),
       resolve({
@@ -86,7 +85,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     outDir: "dist/fireproof-core",
     esbuildPlugins: [
       replace({
-        __packageVersion__: packageVersion("package.json"),
+        __packageVersion__: packageVersion(),
         include: /version/,
       }),
       resolve({
@@ -106,7 +105,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     outDir: "dist/use-fireproof",
     esbuildPlugins: [
       replace({
-        __packageVersion__: packageVersion("package.json"),
+        __packageVersion__: packageVersion(),
         include: /version/,
       }),
       resolve({
