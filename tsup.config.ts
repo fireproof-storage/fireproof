@@ -35,7 +35,7 @@ const stopSQLandFile = {
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
   target: ["esnext", "node18"],
-  globalName: "fireproof",
+  globalName: "Fireproof",
   external,
   clean: true,
   sourcemap: true,
