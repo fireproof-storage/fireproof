@@ -1,25 +1,12 @@
 import type { Database } from "better-sqlite3";
 import { KeyedResolvOnce, Logger } from "@adviser/cement";
 
-import { DBConnection, SQLOpts } from "./types.js";
-import { SysContainer } from "../sys-container.js";
-import { ensureSQLOpts } from "./ensurer.js";
-
-// export function SimpleSQLite(filename: string, opts?: Partial<SQLOpts>): StoreOpts {
-//     ensureLogger(opts, "SimpleSQLite").Debug().Str("filename", filename).Msg("SimpleSQLite")
-//     const db = SQLiteConnection.fromFilename(filename, opts)
-//     return SQLiteStoreOptions({
-//         data: DataStoreFactory(db, opts),
-//         meta: MetaStoreFactory(db, opts),
-//         wal: WalStoreFactory(db, opts)
-//     }, opts)
-// }
+import { DBConnection, SQLOpts } from "../../types.js";
+import { SysContainer } from "../../../sys-container.js";
+import { ensureSQLOpts } from "../../ensurer.js";
 
 const onceSQLiteConnections = new KeyedResolvOnce<Database>();
-export class SQLiteConnection implements DBConnection {
-  static fromURL(url: URL, opts: Partial<SQLOpts> = {}): DBConnection {
-    return new SQLiteConnection(url, opts);
-  }
+export class V0_19BS3Connection implements DBConnection {
   readonly url: URL;
   readonly logger: Logger;
   _client?: Database;
@@ -35,7 +22,7 @@ export class SQLiteConnection implements DBConnection {
 
   private constructor(url: URL, opts: Partial<SQLOpts>) {
     // console.log("better-sqlite3->url->", url);
-    this.opts = ensureSQLOpts(url, opts, "SQLiteConnection", { url });
+    this.opts = ensureSQLOpts(url, opts, "V0_19BS3Connection", { url });
     this.logger = this.opts.logger;
     this.url = url;
     this.logger.Debug().Msg("constructor");

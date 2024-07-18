@@ -1,4 +1,4 @@
-import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "node:fs";
+import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "fs";
 
 import { uuidv4 } from "uuidv7";
 import { ResolveOnce, EnvImpl } from "@adviser/cement";

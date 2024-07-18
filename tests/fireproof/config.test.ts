@@ -174,15 +174,15 @@ describe("fireproof/config", () => {
     expect(db.name).toBe(my_app());
     const carStore = await db.blockstore.loader?.carStore();
     expect(carStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=data&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=data&version=${rt.V0_19SQL_VERSION}&taste`),
     );
     const fileStore = await db.blockstore.loader?.fileStore();
     expect(fileStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=data&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=data&version=${rt.V0_19SQL_VERSION}`),
     );
     const metaStore = await db.blockstore.loader?.metaStore();
     expect(metaStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=meta&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite\\?name=${my_app()}&store=meta&version=${rt.V0_19SQL_VERSION}`),
     );
     await db.close();
   });
@@ -207,16 +207,16 @@ describe("fireproof/config", () => {
     const carStore = await db.blockstore.loader?.carStore();
     expect(carStore?.url.toString()).toMatch(
       // sqlite://./dist/sqlite/data?store=data&version=v0.19-sqlite
-      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&version=${rt.V0_19SQL_VERSION}&taste`),
     );
 
     const fileStore = await db.blockstore.loader?.fileStore();
     expect(fileStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite/data\\?name=${my_app()}&store=data&version=${rt.V0_19SQL_VERSION}`),
     );
     const metaStore = await db.blockstore.loader?.metaStore();
     expect(metaStore?.url.toString()).toMatch(
-      new RegExp(`sqlite://./dist/sqlite/meta\\?name=${my_app()}&store=meta&version=${rt.SQLITE_VERSION}`),
+      new RegExp(`sqlite://./dist/sqlite/meta\\?name=${my_app()}&store=meta&version=${rt.V0_19SQL_VERSION}`),
     );
     await db.close();
   });

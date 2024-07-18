@@ -8,4 +8,4 @@ export * as files from "./files.js";
 
 export { FILESTORE_VERSION } from "./store-file-version.js";
 export { INDEXDB_VERSION } from "./store-indexdb-version.js";
-export { SQLITE_VERSION } from "./store-sql/v0.19-sqlite/version.js";
+export { V0_19SQL_VERSION } from "./store-sql/v0.19/version.js";

@@ -50,6 +50,9 @@ importers:
       multiformats:
         specifier: ^13.1.1
         version: 13.1.1
+      node-sqlite3-wasm:
+        specifier: ^0.8.18
+        version: 0.8.18
       p-limit:
         specifier: ^6.1.0
         version: 6.1.0
@@ -2117,6 +2120,9 @@ packages:
   node-sql-parser@3.9.4:
     resolution: {integrity: sha512-U8xa/QBpNz/dc4BERBkMg//XTrBDcj0uIg5YDYPV4ChYgHPEw4JhoT5YWTxQuKBg/3C1kfkTO4MuEYw7fCYHJw==}
     engines: {node: '>=8'}
+
+  node-sqlite3-wasm@0.8.18:
+    resolution: {integrity: sha512-5Jrn9chnvNt5vNkPAhtMTFkYCtZGmoXgO3uGR0XHTqtf3cz9UMhU+UZNBVN+v7TrKe7ExY5lCp1JzuYPGqkXnQ==}
 
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
@@ -4932,6 +4938,8 @@ snapshots:
   node-sql-parser@3.9.4:
     dependencies:
       big-integer: 1.6.52
+
+  node-sqlite3-wasm@0.8.18: {}
 
   normalize-path@3.0.0: {}
 

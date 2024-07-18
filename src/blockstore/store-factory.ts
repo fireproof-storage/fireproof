@@ -117,7 +117,10 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStore> {
   return onceDataStoreFactory.get(url.toString()).once(async () => {
     const gateway = await loadDataGateway(url, logger);
     const store = new DataStore(loader.name, url, loader.logger, gateway);
-    await store.start();
+    const ret = await store.start();
+    if (ret.isErr()) {
+      throw logger.Error().Result("start", ret).Msg("start failed").AsError();
+    }
     logger.Debug().Str("prepared", store.url.toString()).Msg("produced");
     return store;
   });
@@ -140,7 +143,10 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStore> {
     logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
     const gateway = await loadMetaGateway(url, logger);
     const store = new MetaStore(loader.name, url, loader.logger, gateway);
-    await store.start();
+    const ret = await store.start();
+    if (ret.isErr()) {
+      throw logger.Error().Result("start", ret).Msg("start failed").AsError();
+    }
     return store;
   });
 }
@@ -162,7 +168,10 @@ async function remoteWalFactory(loader: Loadable): Promise<RemoteWAL> {
     const gateway = await loadWalGateway(url, logger);
     logger.Debug().Str("prepared", url.toString()).Msg("produced");
     const store = new RemoteWAL(loader, url, loader.logger, gateway);
-    await store.start();
+    const ret = await store.start();
+    if (ret.isErr()) {
+      throw logger.Error().Result("start", ret).Msg("start failed").AsError();
+    }
     return store;
   });
 }

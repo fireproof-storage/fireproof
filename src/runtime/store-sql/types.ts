@@ -1,17 +1,21 @@
 import { Logger, Result } from "@adviser/cement";
-import type { RunResult } from "better-sqlite3";
 
 export interface DBConnection {
   connect(): Promise<void>;
   readonly opts: SQLOpts;
 }
 
+export interface SQLRunResult {
+  changes: number;
+  lastInsertRowid: number | bigint;
+}
+
 export interface SQLStore<IType, KType, OType = IType[]> {
   readonly dbConn: DBConnection;
   start(url: URL): Promise<void>;
-  insert(url: URL, ose: IType): Promise<RunResult>;
+  insert(url: URL, ose: IType): Promise<SQLRunResult>;
   select(url: URL, car: KType): Promise<OType>;
-  delete(url: URL, car: KType): Promise<RunResult>;
+  delete(url: URL, car: KType): Promise<SQLRunResult>;
   close(url: URL): Promise<Result<void>>;
   destroy(url: URL): Promise<Result<void>>;
 }
@@ -28,9 +32,15 @@ export const DefaultSQLTableNames: SQLTableNames = {
   wal: "Wals",
 };
 
+export interface SQLGestalt {
+    readonly flavor: "sqlite" | "mysql" | "postgres";
+    readonly version?: string;
+    readonly taste?: string; // bs3(better-sqlite3) - nsw(node-sqlite3-wasm)
+}
+
 export interface SQLOpts {
   readonly url: URL;
-  readonly sqlFlavor: "sqlite" | "mysql" | "postgres";
+  readonly sqlGestalt: SQLGestalt;
   readonly tableNames: SQLTableNames;
   readonly logger: Logger;
   readonly textEncoder: TextEncoder;
