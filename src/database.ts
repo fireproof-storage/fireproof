@@ -82,6 +82,8 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
+    if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
+
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("get");
     const got = await this._crdt.get(id).catch((e) => {
