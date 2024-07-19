@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "@remix-run/react";
 import { useFireproof } from "use-fireproof";
-import { themes } from "prism-react-renderer";
+
 import {
   CodeHighlight,
   EditableCodeHighlight,
@@ -54,7 +54,6 @@ export default function Document() {
       <EditableCodeHighlight
         onChange={editorChanged}
         code={JSON.stringify(data, null, 2)}
-        theme={themes.nightOwl}
       />
       <button
         onClick={() => {
@@ -81,10 +80,7 @@ export default function Document() {
         </button>
       )}
       <h3>Fireproof metadata</h3>
-      <CodeHighlight
-        code={JSON.stringify(idFirstMeta, null, 2)}
-        theme={themes.oneLight}
-      />
+      <CodeHighlight code={JSON.stringify(idFirstMeta, null, 2)} />
     </div>
   );
 }

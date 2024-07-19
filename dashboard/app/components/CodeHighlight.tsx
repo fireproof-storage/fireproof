@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Editor from "react-simple-code-editor";
 import hljs from "highlight.js";
+import "highlight.js/styles/tokyo-night-dark.css";
 import json from "highlight.js/lib/languages/json";
 hljs.registerLanguage("json", json);
 
@@ -12,13 +13,17 @@ function HighlightedCode({
   language: string;
 }) {
   const highlightedCode = hljs.highlight(code, { language }).value;
+  console.log(highlightedCode);
   return (
     <pre className={`language-${language}`}>
       <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
     </pre>
   );
 }
-
+const codeStyle = {
+  fontFamily: '"Fira code", "Fira Mono", monospace',
+  fontSize: 14,
+};
 export function CodeHighlight({
   code,
   language = "json",
@@ -27,7 +32,7 @@ export function CodeHighlight({
   language?: string;
 }): JSX.Element {
   return (
-    <div className="p-2">
+    <div className="p-2" style={codeStyle}>
       <HighlightedCode code={code} language={language} />
     </div>
   );
@@ -74,10 +79,7 @@ export function EditableCodeHighlight({
           <HighlightedCode code={code} language={language} />
         )}
         padding={10}
-        style={{
-          fontFamily: '"Fira code", "Fira Mono", monospace',
-          fontSize: 12,
-        }}
+        style={codeStyle}
       />
     </div>
   );
