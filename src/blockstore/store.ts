@@ -5,13 +5,9 @@ import { Logger, ResolveOnce, Result } from "@adviser/cement";
 import type { AnyBlock, AnyLink, CommitOpts, DbMeta } from "./types.js";
 import { Falsy, throwFalsy } from "../types.js";
 import { Gateway, isNotFoundError } from "./gateway.js";
-import { ensureLogger, exception2Result } from "../utils.js";
+import { ensureLogger, exception2Result, sanitizeURL } from "../utils.js";
 import { carLogIncludesGroup, Loadable } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
-
-// const match = PACKAGE_VERSION.match(/^([^.]*\.[^.]*)/);
-// if (!match) throw new Error("invalid version: " + PACKAGE_VERSION);
-// export const STORAGE_VERSION = match[0];
 
 function guardVersion(url: URL): Result<URL> {
   if (!url.searchParams.has("version")) {
@@ -25,26 +21,51 @@ abstract class VersionedStore {
   readonly name: string;
   readonly url: URL;
   readonly logger: Logger;
-  constructor(name: string, url: URL, logger: Logger) {
+  readonly gateway: Gateway;
+  constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
     this.name = name;
     this.url = url;
     this.logger = logger;
-    // const sv = url.searchParams.get("version");
-    // if (!sv) throw this.logger.Error().Str("url", url.toString()).Msg(`version not found`);
-    // this.STORAGE_VERSION = sv;
+    this.gateway = gateway;
   }
 
   readonly _onStarted: (() => void)[] = [];
   onStarted(fn: () => void) {
     this._onStarted.push(fn);
   }
-  abstract start(): Promise<Result<void>>;
-
   readonly _onClosed: (() => void)[] = [];
   onClosed(fn: () => void) {
     this._onClosed.push(fn);
   }
   abstract close(): Promise<Result<void>>;
+
+  readonly ready?: () => Promise<void>;
+  async start(): Promise<Result<void>> {
+    this.logger.Debug().Msg("starting-gateway");
+    const res = await this.gateway.start(this.url);
+    if (res.isErr()) {
+      this.logger.Error().Result("gw-start", res).Msg("started-gateway");
+      return res;
+    }
+    sanitizeURL(this.url);
+    const version = guardVersion(this.url);
+    if (version.isErr()) {
+      this.logger.Error().Result("version", version).Msg("guardVersion");
+      await this.close();
+      return version;
+    }
+    if (this.ready) {
+      const fn = this.ready.bind(this);
+      const ready = await exception2Result(fn);
+      if (ready.isErr()) {
+        await this.close();
+        return ready;
+      }
+    }
+    this._onStarted.forEach((fn) => fn());
+    this.logger.Debug().Msg("started");
+    return version;
+  }
 }
 
 const textEncoder = new TextEncoder();
@@ -53,11 +74,8 @@ const textDecoder = new TextDecoder();
 export class MetaStore extends VersionedStore {
   readonly tag: string = "header-base";
 
-  readonly gateway: Gateway;
-
   constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
-    super(name, url, ensureLogger(logger, "MetaStore", {}));
-    this.gateway = gateway;
+    super(name, url, ensureLogger(logger, "MetaStore", {}), gateway);
   }
 
   makeHeader({ cars, key }: DbMeta): ToString<DbMeta> {
@@ -69,16 +87,6 @@ export class MetaStore extends VersionedStore {
   parseHeader(headerData: ToString<DbMeta>): DbMeta {
     const got = parse<DbMeta>(headerData);
     return got;
-  }
-
-  async start(): Promise<Result<void>> {
-    this.logger.Debug().Msg("starting");
-    const res = await this.gateway.start(this.url);
-    if (res.isErr()) {
-      return res;
-    }
-    this._onStarted.forEach((fn) => fn());
-    return guardVersion(this.url);
   }
 
   async load(branch?: string): Promise<DbMeta[] | Falsy> {
@@ -140,7 +148,6 @@ export interface DataSaveOpts {
 
 export class DataStore extends VersionedStore {
   readonly tag: string = "car-base";
-  readonly gateway: Gateway;
 
   constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
     super(
@@ -149,26 +156,8 @@ export class DataStore extends VersionedStore {
       ensureLogger(logger, "DataStore", {
         url: () => url.toString(),
       }),
+      gateway,
     );
-    this.gateway = gateway;
-  }
-
-  async start(): Promise<Result<void>> {
-    this.logger.Debug().Msg("starting-gateway");
-    const res = await this.gateway.start(this.url);
-    if (res.isErr()) {
-      this.logger.Error().Result("gw-start", res).Msg("started-gateway");
-      return res;
-    }
-    this._onStarted.forEach((fn) => fn());
-    const version = guardVersion(this.url);
-    if (version.isErr()) {
-      this.logger.Error().Result("version", version).Msg("guardVersion");
-      await this.close();
-      return version;
-    }
-    this.logger.Debug().Msg("started");
-    return version;
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -230,7 +219,7 @@ export class RemoteWAL extends VersionedStore {
 
   readonly _ready = new ResolveOnce<void>();
 
-  private async ready() {
+  ready = async () => {
     return this._ready.once(async () => {
       const walState = await this.load().catch((e) => {
         this.logger.Error().Any("error", e).Msg("error loading wal");
@@ -244,18 +233,15 @@ export class RemoteWAL extends VersionedStore {
         this.walState.fileOperations = walState.fileOperations || [];
       }
     });
-  }
+  };
 
   walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  readonly gateway: Gateway;
-
   constructor(loader: Loadable, url: URL, logger: Logger, gateway: Gateway) {
-    super(loader.name, url, ensureLogger(logger, "RemoteWAL"));
+    super(loader.name, url, ensureLogger(logger, "RemoteWAL"), gateway);
     this.loader = loader;
-    this.gateway = gateway;
   }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
@@ -370,25 +356,6 @@ export class RemoteWAL extends VersionedStore {
     })();
     // this.loader.remoteMetaLoading = rmlp;
     await rmlp;
-  }
-
-  async start() {
-    const res = await this.gateway.start(this.url);
-    if (res.isErr()) {
-      return res;
-    }
-    const ver = guardVersion(this.url);
-    if (ver.isErr()) {
-      await this.close();
-      return ver;
-    }
-    const ready = await exception2Result(() => this.ready());
-    this._onStarted.forEach((fn) => fn());
-    if (ready.isErr()) {
-      await this.close();
-      return ready;
-    }
-    return ready;
   }
 
   async load(): Promise<WALState | Falsy> {
