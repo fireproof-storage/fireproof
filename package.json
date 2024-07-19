@@ -47,7 +47,7 @@
     "@testing-library/react": "^16.0.0",
     "@types/eslint__js": "^8.42.3",
     "@types/jasmine": "^5.1.4",
-    "@types/node": "^20.14.6",
+    "@types/node": "^20.14.11",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.3",
     "@typescript-eslint/typescript-estree": "^7.16.1",

@@ -76,7 +76,7 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4
       '@types/node':
-        specifier: ^20.14.6
+        specifier: ^20.14.11
         version: 20.19.0
       '@types/randombytes':
         specifier: ^2.0.3
@@ -3028,6 +3028,11 @@ packages:
 
   '@types/mocha@10.0.10':
     resolution: {integrity: sha512-xPyYSz1cMPnJQhl0CLMH68j3gprKZaTjG3s5Vi+fDgx+uhG9NOXwbVt52eFS8ECyXhyKcjDLCBEqBExKuiZb7Q==}
+
+  '@types/mute-stream@0.0.4': {}
+
+  '@types/node@20.14.11':
+    resolution: {integrity: sha512-kprQpL8MMeszbz6ojB5/tU8PLN4kesnN8Gjzw349rDlNgsSzg90lAVj3llK99Dh7JON+t9AuscPPFW6mPbTnSA==}
 
   '@types/node@20.19.0':
     resolution: {integrity: sha512-hfrc+1tud1xcdVTABC2JiomZJEklMcXYNTVtZLAeqTVWD+qL5jkHKT+1lOtqDdGxt+mB53DTtiz673vfjU8D1Q==}
@@ -9337,7 +9342,20 @@ snapshots:
 
   '@hyrious/esbuild-plugin-commonjs@0.2.6(esbuild@0.18.20)':
     dependencies:
+      '@inquirer/figures': 1.0.3
+      '@inquirer/type': 1.4.0
+      '@types/mute-stream': 0.0.4
+      '@types/node': 20.14.11
+      '@types/wrap-ansi': 3.0.0
+      ansi-escapes: 4.3.2
+      cli-width: 4.1.0
       esbuild: 0.18.20
+      mute-stream: 2.0.0
+      signal-exit: 4.1.0
+      wrap-ansi: 6.2.0
+      yoctocolors-cjs: 2.1.2
+    optionalDependencies:
+      '@types/node': 20.19.0
 
   '@hyrious/esbuild-plugin-commonjs@0.2.6(esbuild@0.19.12)':
     dependencies:
@@ -9944,6 +9962,14 @@ snapshots:
   '@types/minimatch@3.0.5': {}
 
   '@types/mocha@10.0.10': {}
+
+  '@types/mute-stream@0.0.4':
+    dependencies:
+      '@types/node': 20.14.11
+
+  '@types/node@20.14.11':
+    dependencies:
+      undici-types: 6.21.0
 
   '@types/node@20.19.0':
     dependencies:
@@ -16273,9 +16299,24 @@ snapshots:
     dependencies:
       '@peculiar/asn1-schema': 2.3.15
       '@peculiar/json-schema': 1.1.12
+      '@types/node': 20.14.11
+      '@types/ws': 8.5.10
+      '@wdio/config': 8.39.0
+      '@wdio/logger': 8.38.0
+      '@wdio/protocols': 8.44.0
+      '@wdio/types': 8.41.0
+      '@wdio/utils': 8.41.0
       asn1js: 3.0.6
+      deepmerge-ts: 5.1.0
+      got: 12.6.1
+      ky: 0.33.3
       pvtsutils: 1.3.6
       tslib: 2.8.1
+      ws: 8.18.2
+    transitivePeerDependencies:
+      - bufferutil
+      - supports-color
+      - utf-8-validate
 
   webdriver@8.44.0:
     dependencies:
