@@ -58,7 +58,7 @@
     "eslint": "^9.6.0",
     "prettier": "^3.3.2",
     "semver": "^7.6.2",
-    "tsup": "^8.1.0",
+    "tsup": "^8.2.0",
     "tsx": "^4.15.6",
     "typescript": "^5.5.2",
     "typescript-eslint": "^7.16.1",
