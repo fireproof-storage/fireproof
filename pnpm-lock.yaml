@@ -110,10 +110,10 @@ importers:
         version: 7.6.2
       tsup:
         specifier: ^8.2.0
-        version: 8.2.0(postcss@8.4.38)(tsx@4.15.7)(typescript@5.5.2)
+        version: 8.2.0(postcss@8.4.38)(tsx@4.16.2)(typescript@5.5.2)
       tsx:
-        specifier: ^4.15.6
-        version: 4.15.7
+        specifier: ^4.16.2
+        version: 4.16.2
       typescript:
         specifier: ^5.5.2
         version: 5.5.2
@@ -2652,8 +2652,8 @@ packages:
       typescript:
         optional: true
 
-  tsx@4.15.7:
-    resolution: {integrity: sha512-u3H0iSFDZM3za+VxkZ1kywdCeHCn+8/qHQS1MNoO2sONDgD95HlWtt8aB23OzeTmFP9IU4/8bZUdg58Uu5J4cg==}
+  tsx@4.16.2:
+    resolution: {integrity: sha512-C1uWweJDgdtX2x600HjaFaucXTilT7tgUZHbOE4+ypskZ1OP8CRCSDkCxG6Vya9EwaFIVagWwpaVAn5wzypaqQ==}
     engines: {node: '>=18.0.0'}
     hasBin: true
 
@@ -4946,12 +4946,12 @@ snapshots:
       fsevents: 2.3.2
     optional: true
 
-  postcss-load-config@6.0.1(postcss@8.4.38)(tsx@4.15.7):
+  postcss-load-config@6.0.1(postcss@8.4.38)(tsx@4.16.2):
     dependencies:
       lilconfig: 3.1.2
     optionalDependencies:
       postcss: 8.4.38
-      tsx: 4.15.7
+      tsx: 4.16.2
 
   postcss@8.4.38:
     dependencies:
@@ -5396,7 +5396,7 @@ snapshots:
 
   tslib@2.6.2: {}
 
-  tsup@8.2.0(postcss@8.4.38)(tsx@4.15.7)(typescript@5.5.2):
+  tsup@8.2.0(postcss@8.4.38)(tsx@4.16.2)(typescript@5.5.2):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.0)
       cac: 6.7.14
@@ -5407,7 +5407,7 @@ snapshots:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      postcss-load-config: 6.0.1(postcss@8.4.38)(tsx@4.15.7)
+      postcss-load-config: 6.0.1(postcss@8.4.38)(tsx@4.16.2)
       resolve-from: 5.0.0
       rollup: 4.18.1
       source-map: 0.8.0-beta.0
@@ -5422,7 +5422,7 @@ snapshots:
       - tsx
       - yaml
 
-  tsx@4.15.7:
+  tsx@4.16.2:
     dependencies:
       esbuild: 0.21.5
       get-tsconfig: 4.7.5
