@@ -45,8 +45,8 @@ importers:
         specifier: ^3.7.7
         version: 3.7.7
       multiformats:
-        specifier: ^13.1.1
-        version: 13.1.1
+        specifier: ^13.1.3
+        version: 13.1.3
       p-limit:
         specifier: ^6.1.0
         version: 6.1.0
@@ -1264,7 +1264,7 @@ packages:
     engines: {node: '>= 14'}
 
   concat-map@0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   cookie@0.5.0:
     resolution: {integrity: sha512-YZ3GUyn/o8gfKJlnlX7g7xq4gyO6OSuhGPKaaGssGB2qgDUS0gPgtTvoyZLTt9Ab6dC4hfc9dV5arkvc/OCmrw==}
@@ -2019,8 +2019,8 @@ packages:
     resolution: {integrity: sha512-eajQ/ZH7qXZQR2AgtfpmSMizQzmyYVmCql7pdhldPuYQi4atACekbJaQplk6dWyIi10jCaFnd6pqvcEFXjbaJw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  multiformats@13.1.1:
-    resolution: {integrity: sha512-JiptvwMmlxlzIlLLwhCi/srf/nk409UL0eUBr0kioRJq15hqqKyg68iftrBvhCRjR6Rw4fkNnSc4ZJXJDuta/Q==}
+  multiformats@13.1.3:
+    resolution: {integrity: sha512-CZPi9lFZCM/+7oRolWYsvalsyWQGFo+GpdaTmjxXXomC+nP/W1Rnxb9sUgjvmNmRZ5bOPqRAl4nuK+Ydw/4tGw==}
 
   murmurhash3js-revisited@3.0.0:
     resolution: {integrity: sha512-/sF3ee6zvScXMb1XFJ8gDsSnY+X8PbOyjIuBhtgis10W2Jx4ZjIhikUCIF9c4gpJxVnQIsPAFrSwTCuAjicP6g==}
@@ -3166,22 +3166,22 @@ snapshots:
     dependencies:
       '@ipld/dag-cbor': 9.2.1
       cborg: 4.1.3
-      multiformats: 13.1.1
+      multiformats: 13.1.3
       varint: 6.0.0
 
   '@ipld/dag-cbor@9.2.1':
     dependencies:
       cborg: 4.1.3
-      multiformats: 13.1.1
+      multiformats: 13.1.3
 
   '@ipld/dag-json@10.2.2':
     dependencies:
       cborg: 4.1.3
-      multiformats: 13.1.1
+      multiformats: 13.1.3
 
   '@ipld/dag-pb@4.0.8':
     dependencies:
-      multiformats: 13.1.1
+      multiformats: 13.1.3
 
   '@ipld/unixfs@3.0.0':
     dependencies:
@@ -3189,7 +3189,7 @@ snapshots:
       '@multiformats/murmur3': 2.1.8
       '@perma/map': 1.0.3
       actor: 2.3.1
-      multiformats: 13.1.1
+      multiformats: 13.1.3
       protobufjs: 7.2.5
       rabin-rs: 2.1.0
 
@@ -3245,7 +3245,7 @@ snapshots:
 
   '@multiformats/murmur3@2.1.8':
     dependencies:
-      multiformats: 13.1.1
+      multiformats: 13.1.3
       murmurhash3js-revisited: 3.0.0
 
   '@nodelib/fs.scandir@2.1.5':
@@ -3714,7 +3714,7 @@ snapshots:
   '@web3-storage/pail@0.6.0':
     dependencies:
       '@ipld/dag-cbor': 9.2.1
-      multiformats: 13.1.1
+      multiformats: 13.1.3
 
   '@zip.js/zip.js@2.7.45': {}
 
@@ -4507,7 +4507,7 @@ snapshots:
   interface-blockstore@5.2.9:
     dependencies:
       interface-store: 5.1.7
-      multiformats: 13.1.1
+      multiformats: 13.1.3
 
   interface-store@5.1.7: {}
 
@@ -4532,7 +4532,7 @@ snapshots:
       it-parallel: 3.0.6
       it-pipe: 3.0.1
       it-pushable: 3.2.3
-      multiformats: 13.1.1
+      multiformats: 13.1.3
       p-queue: 8.0.1
       progress-events: 1.0.0
 
@@ -4779,7 +4779,7 @@ snapshots:
 
   multiformats@12.1.3: {}
 
-  multiformats@13.1.1: {}
+  multiformats@13.1.3: {}
 
   murmurhash3js-revisited@3.0.0: {}
 
@@ -5450,7 +5450,7 @@ snapshots:
 
   uint8arrays@5.0.3:
     dependencies:
-      multiformats: 13.1.1
+      multiformats: 13.1.3
 
   unbzip2-stream@1.4.3:
     dependencies:
