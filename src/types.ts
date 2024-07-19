@@ -54,7 +54,7 @@ export type UnknownDoc = DocRecord<never>;
 
 export type DocFiles = Record<string, DocFileMeta | File>;
 
-export interface DocBase {
+export interface DocBase extends Record<string, unknown> {
   readonly _id: string;
   readonly _files?: DocFiles;
   readonly _publicFiles?: DocFiles;
