@@ -4,6 +4,7 @@ import { Doc } from '@fireproof/core';
 export function headersForDocs(docs: Doc[]) {
   const headers = new Map();
   for (const doc of docs) {
+    if (!doc) continue;
     for (const key of Object.keys(doc)) {
       if (headers.has(key)) {
         headers.set(key, headers.get(key) + 1);

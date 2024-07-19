@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "@remix-run/react";
-import { DocBase, useFireproof } from "use-fireproof";
+import { useFireproof } from "use-fireproof";
 import { themes } from "prism-react-renderer";
 import { CodeHighlight, EditableCodeHighlight } from "../components/CodeHighlight";
 
@@ -9,10 +9,10 @@ export default function Document() {
   const { useDocument, database } = useFireproof(name);
 
   const [doc] = useDocument(() => ({ _id: _id! }));
-  const [docToSave, setDocToSave] = useState<any>(JSON.stringify(doc, null, 2));
+  const [docToSave, setDocToSave] = useState<string>(JSON.stringify(doc, null, 2));
   const [needsSave, setNeedsSave] = useState(false);
 
-  async function saveDocument(_id: string) {
+  async function saveDocument(_id?: string) {
     const data = JSON.parse(docToSave);
     const resp = await database.put({ _id, ...data });
     if (!_id) {
@@ -34,7 +34,7 @@ export default function Document() {
   const { _id: id, ...data } = doc;
 
   const idFirstMeta = { _id };
-  const title = _id ? `Edit document: ${_id}` : 'Create new document';
+  const title = id ? `Edit document: ${_id}` : 'Create new document';
 
   return (
     <div className="bg-slate-800 p-6">
@@ -55,7 +55,7 @@ export default function Document() {
       </button>
       {_id && <button
         onClick={() => deleteDocument(_id)}
-        className={`${!!_id ? 'bg-gray-700 hover:bg-orange-700 hover:text-white' : 'bg-gray-700'
+        className={`${_id ? 'bg-gray-700 hover:bg-orange-700 hover:text-white' : 'bg-gray-700'
           } text-gray-400 font-bold py-2 px-4 my-5 rounded`}
       >
         Delete

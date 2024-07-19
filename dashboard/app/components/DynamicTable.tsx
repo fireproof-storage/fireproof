@@ -3,7 +3,9 @@ import { useState } from 'react'
 
 export default function DynamicTable({ hrefFn, dbName, headers, rows, th = '_id', link = ['_id'] }: any) {
   const [columnLinks, setColumnLinks] = useState(link)
+  // rows = rows.filter((row: any) => Boolean(row));
 
+  
   function toggleColumnLinks(header: string) {
     if (columnLinks.includes(header)) {
       setColumnLinks(columnLinks.filter((h: string) => h !== header))

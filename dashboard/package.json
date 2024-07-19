@@ -21,7 +21,7 @@
     "react-router-dom": "^6.24.0",
     "react-simple-code-editor": "^0.13.1",
     "use-editable": "^2.3.3",
-    "use-fireproof": "^0.18.0"
+    "use-fireproof": "0.19.8-dev-global"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.10.0",
