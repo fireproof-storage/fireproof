@@ -1,4 +1,4 @@
-export function headersForDocs(docs: Record<string, unknown>[]) {
+export function headersForDocs(docs: object[]) {
   const headers = new Map();
   for (const doc of docs) {
     if (!doc) continue;
