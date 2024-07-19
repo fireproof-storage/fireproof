@@ -4,7 +4,13 @@ import hljs from "highlight.js";
 import json from "highlight.js/lib/languages/json";
 hljs.registerLanguage("json", json);
 
-function HighlightedCode({ code, language }: { code: string; language: string }) {
+function HighlightedCode({
+  code,
+  language,
+}: {
+  code: string;
+  language: string;
+}) {
   const highlightedCode = hljs.highlight(code, { language }).value;
   return (
     <pre className={`language-${language}`}>
@@ -21,7 +27,11 @@ export function CodeHighlight({ code, language = "json" }: any) {
   );
 }
 
-export function EditableCodeHighlight({ code, onChange, language = "json" }: any) {
+export function EditableCodeHighlight({
+  code,
+  onChange,
+  language = "json",
+}: any) {
   const [liveCode, setCode] = useState(code);
 
   const onEditableChange = useCallback(
@@ -50,7 +60,9 @@ export function EditableCodeHighlight({ code, onChange, language = "json" }: any
       <Editor
         value={liveCode}
         onValueChange={onEditableChange}
-        highlight={(code) => <HighlightedCode code={code} language={language} />}
+        highlight={(code) => (
+          <HighlightedCode code={code} language={language} />
+        )}
         padding={10}
         style={{
           fontFamily: '"Fira code", "Fira Mono", monospace',

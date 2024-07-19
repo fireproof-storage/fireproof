@@ -1,5 +1,4 @@
-import { Doc } from '@fireproof/core';
-
+import { Doc } from "@fireproof/core";
 
 export function headersForDocs(docs: Doc[]) {
   const headers = new Map();
@@ -13,6 +12,11 @@ export function headersForDocs(docs: Doc[]) {
       }
     }
   }
-  headers.delete('_id');
-  return ['_id', ...Array.from(headers.entries()).sort((a, b) => b[1] - a[1]).map(([key]) => key)];
+  headers.delete("_id");
+  return [
+    "_id",
+    ...Array.from(headers.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([key]) => key),
+  ];
 }

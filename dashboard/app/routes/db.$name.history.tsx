@@ -8,7 +8,9 @@ export default function ChangesHistory() {
   const { name } = useParams();
   const { database } = useFireproof(name);
 
-  const [history, setHistory] = useState({ rows: [] } as { rows: { key: string; value: DocBase }[] });
+  const [history, setHistory] = useState({ rows: [] } as {
+    rows: { key: string; value: DocBase }[];
+  });
 
   useEffect(() => {
     const handleChanges = async () => {
@@ -27,7 +29,9 @@ export default function ChangesHistory() {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-2">
-        Recent Changes in <code className="bg-gray-200 p-1 rounded">{name}</code> Database
+        Recent Changes in{" "}
+        <code className="bg-gray-200 dark:bg-gray-700 p-1 rounded">{name}</code>{" "}
+        Database
       </h2>
       <p className="mb-4">These are the recent changes in the database.</p>
       <DynamicTable dbName={name} headers={headers} rows={rows} />

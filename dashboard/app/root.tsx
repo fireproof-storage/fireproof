@@ -4,7 +4,7 @@ import {
   Meta,
   Outlet,
   Scripts,
-  ScrollRestoration
+  ScrollRestoration,
 } from "@remix-run/react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -26,7 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />
+  return <Outlet />;
 }
 
 export function HydrateFallback() {
