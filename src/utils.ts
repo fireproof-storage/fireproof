@@ -123,3 +123,16 @@ export function exception2Result<T = void>(fn: () => Promise<T>): Promise<Result
 export async function exceptionWrapper<T, E extends Error>(fn: () => Promise<Result<T, E>>): Promise<Result<T, E>> {
   return fn().catch((e) => Result.Err(e));
 }
+
+// the big side effect party --- hate it
+export function sanitizeURL(url: URL) {
+  url.searchParams.sort();
+  // const searchParams = Object.entries(url.searchParams).sort(([a], [b]) => a.localeCompare(b));
+  // console.log("searchParams", searchParams);
+  // for (const [key] of searchParams) {
+  //   url.searchParams.delete(key);
+  // }
+  // for (const [key, value] of searchParams) {
+  //   url.searchParams.set(key, value);
+  // }
+}
