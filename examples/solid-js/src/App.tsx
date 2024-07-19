@@ -10,12 +10,10 @@ const AppLayout: ParentComponent = (props) => {
   return (
     <div id="app">
       <Navbar />
-      <main class="app-main-content">
-        {props.children}
-      </main>
+      <main class="app-main-content">{props.children}</main>
     </div>
-  )
-}
+  );
+};
 
 function App() {
   return (
@@ -24,7 +22,7 @@ function App() {
       <Route path="/todo" component={TodoList} />
       <Route path="/todoEdit" component={TodoListEditor} />
     </Router>
-  )
+  );
 }
 
 export default App;

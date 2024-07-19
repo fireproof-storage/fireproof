@@ -2,34 +2,46 @@ name: CI
 on:
   - push
   - pull_request
-
 jobs:
   quality-checks:
     name: Quality Checks
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+        #with:
+        #  fetch-tags: true
+        #  fetch-depth: 1
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20.10.0
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
         with:
-          version: 9.0.5
           run_install: false
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
-
-      - name: Lint Check
-        run: pnpm lint:check
-
-      - name: Format Check
-        run: pnpm format:check
-
-      - name: Run Tests
-        run: pnpm test
+          version: 9
+      - name: install
+        run: pnpm install
+      - name: format-check
+        run: pnpm run format --check
+      - name: lint
+        run: pnpm run lint
+      - name: build
+        run: pnpm run build
+      - name: smoke
+        run: pnpm run smoke
+      - name: test
+        run: pnpm run test
+      - name: publish
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          git fetch --tags --force
+          # we need to have a safe way to store of allowedSigners
+          git config --local --add gpg.ssh.allowedSignersFile ./allowed_signers
+          echo "GITHUB_REF->"$GITHUB_REF
+          # test tag signature
+          git tag -v $(git describe --tags --abbrev=0)
+          # should only run if a tag is set
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+          pnpm run publish
