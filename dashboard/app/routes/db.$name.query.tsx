@@ -8,7 +8,6 @@ export default function DbInfo() {
   const { useLiveQuery } = useFireproof(name);
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc) => doc);
-
   const headers = headersForDocs(docs);
 
   return (
