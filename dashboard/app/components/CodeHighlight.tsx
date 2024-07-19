@@ -19,7 +19,13 @@ function HighlightedCode({
   );
 }
 
-export function CodeHighlight({ code, language = "json" }: any) {
+export function CodeHighlight({
+  code,
+  language = "json",
+}: {
+  code: string;
+  language?: string;
+}): JSX.Element {
   return (
     <div className="p-2">
       <HighlightedCode code={code} language={language} />
@@ -31,7 +37,11 @@ export function EditableCodeHighlight({
   code,
   onChange,
   language = "json",
-}: any) {
+}: {
+  code: string;
+  language?: string;
+  onChange: (args: { code: string; valid: boolean }) => void;
+}) {
   const [liveCode, setCode] = useState(code);
 
   const onEditableChange = useCallback(

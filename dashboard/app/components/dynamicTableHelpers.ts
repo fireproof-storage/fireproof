@@ -1,6 +1,4 @@
-import { Doc } from "@fireproof/core";
-
-export function headersForDocs(docs: Doc[]) {
+export function headersForDocs(docs: Record<string, unknown>[]) {
   const headers = new Map();
   for (const doc of docs) {
     if (!doc) continue;
