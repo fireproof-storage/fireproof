@@ -65,7 +65,7 @@ export function Sidebar() {
                     />
                   </svg>
                   <span className="flex-1 ml-3 whitespace-nowrap text-black dark:text-white">
-                    <code>{dbName}</code>
+                    List Documents
                   </span>
                 </Link>
               </li>

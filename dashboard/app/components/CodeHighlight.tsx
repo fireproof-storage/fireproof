@@ -13,7 +13,6 @@ function HighlightedCode({
   language: string;
 }) {
   const highlightedCode = hljs.highlight(code, { language }).value;
-  console.log(highlightedCode);
   return (
     <pre className={`language-${language}`}>
       <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />

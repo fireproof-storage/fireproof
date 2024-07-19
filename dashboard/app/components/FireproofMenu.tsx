@@ -1,6 +1,6 @@
 export function FireproofMenu() {
   return (
-    <header className=" dark:bg-gray-800 bg-gray-300 pt-3 pb-1 px-5 flex items-center justify-between">
+    <header className=" bg-gray-800 pt-3 pb-1 px-5 flex items-center justify-between">
       <a href="https://fireproof.storage/">
         <img
           src="https://fireproof.storage/static/img/logo-animated.svg"
@@ -8,7 +8,7 @@ export function FireproofMenu() {
           className="h-16 w-auto pr-2"
         />
       </a>
-      <nav className="nav-menu  dark:text-white text-black">
+      <nav className="nav-menu  text-white">
         <ul className="flex">
           <li className="mr-6">
             <a href="https://fireproof.storage/developer/">Docs</a>

@@ -42,15 +42,15 @@ export default function Document() {
   const title = id ? `Edit document: ${_id}` : "Create new document";
 
   return (
-    <div className="bg-slate-800 p-6">
-      <h2 className="text-2xl pb-2">{title}</h2>
-      <p className="mb-4">
+    <div className="p-6 dark:bg-slate-800 bg-white">
+      <h2 className="text-2xl pb-2 dark:text-white text-black">{title}</h2>
+      <p className="mb-4 dark:text-gray-300 text-black">
         Database:{" "}
         <Link to={`/db/${name}`} className="text-blue-500 underline">
           {name}
         </Link>
       </p>
-      <h3>Editable data fields</h3>
+      <h3 className="dark:text-gray-300 text-black">Editable data fields</h3>
       <EditableCodeHighlight
         onChange={editorChanged}
         code={JSON.stringify(data, null, 2)}
@@ -62,7 +62,7 @@ export default function Document() {
         className={`${
           needsSave
             ? "bg-blue-500 hover:bg-blue-700 text-white"
-            : "bg-gray-700 text-gray-400"
+            : "dark:bg-gray-700 bg-gray-300 dark:text-gray-400 text-gray-700"
         } font-bold py-2 px-4 m-5 rounded`}
       >
         Save
@@ -72,14 +72,14 @@ export default function Document() {
           onClick={() => deleteDocument(_id)}
           className={`${
             _id
-              ? "bg-gray-700 hover:bg-orange-700 hover:text-white"
-              : "bg-gray-700"
-          } text-gray-400 font-bold py-2 px-4 my-5 rounded`}
+              ? "dark:bg-gray-700 bg-gray-300 hover:bg-orange-700 hover:text-white"
+              : "dark:bg-gray-700 bg-gray-300"
+          } dark:text-gray-400 text-gray-700 font-bold py-2 px-4 my-5 rounded`}
         >
           Delete
         </button>
       )}
-      <h3>Fireproof metadata</h3>
+      <h3 className="dark:text-gray-300 text-black">Fireproof metadata</h3>
       <CodeHighlight code={JSON.stringify(idFirstMeta, null, 2)} />
     </div>
   );
