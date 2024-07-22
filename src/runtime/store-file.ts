@@ -66,7 +66,7 @@ abstract class FileGateway implements Gateway {
   getFilePath(url: URL): string {
     const key = url.searchParams.get("key");
     if (!key) throw this.logger.Error().Url(url).Msg(`key not found`).AsError();
-    return SysContainer.join(getPath(url, this.logger), getFileName(url, key, this.logger));
+    return SysContainer.join(getPath(url, this.logger), getFileName(url, this.logger));
   }
 
   async put(url: URL, body: Uint8Array): Promise<Result<void>> {
@@ -162,12 +162,13 @@ export class FileTestStore implements TestStore {
     this.logger = ensureLogger(logger, "FileTestStore");
   }
 
-  async get(url: URL, key: string) {
-    const logger = ensureLogger(this.logger, "get", { url: url.toString(), key });
-    const dbFile = SysContainer.join(getPath(url, this.logger), getFileName(url, key, this.logger));
-    logger.Debug().Str("dbFile", dbFile).Msg("get");
+  async get(iurl: URL, key: string) {
+    const url = new URL(iurl.toString());
+    url.searchParams.set("key", key);
+    const dbFile = SysContainer.join(getPath(url, this.logger), getFileName(url, this.logger));
+    this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await SysContainer.readfile(dbFile);
-    logger.Debug().Str("dbFile", dbFile).Len(buffer).Msg("got");
+    this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
     return toArrayBuffer(buffer);
   }
 }

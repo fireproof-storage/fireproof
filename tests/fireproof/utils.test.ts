@@ -31,14 +31,14 @@ describe("utils", () => {
   it("getfilename plain", () => {
     for (const store of storeOpts) {
       const url = new URL(`file://./x/path?store=${store.type}&name=name&key=key&version=version`);
-      expect(rt.getFileName(url, "foo", logger)).toEqual(`${store.type}/foo${store.suffix}`);
+      expect(rt.getFileName(url, logger)).toEqual(`${store.type}/key${store.suffix}`);
     }
   });
 
   it("getfilename index", () => {
     for (const store of storeOpts) {
       const url = new URL(`file://./x/path?index=idx&store=${store.type}&name=name&key=key&version=version`);
-      expect(rt.getFileName(url, "foo", logger)).toEqual(`idx-${store.type}/foo${store.suffix}`);
+      expect(rt.getFileName(url, logger)).toEqual(`idx-${store.type}/key${store.suffix}`);
     }
   });
 
