@@ -91,7 +91,7 @@ export function getIndexDBName(iurl: URL, logger: Logger): DbName {
   const dbName = url.searchParams.get("name");
   if (!dbName) throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const result = joinDBName(fullDb, dbName);
-  const objStore = getStore(url, logger, joinDBName);
+  const objStore = getStore(url, logger, joinDBName).name;
   const connectionKey = [result, objStore].join(":");
   return {
     fullDb: result,
@@ -125,7 +125,7 @@ abstract class IndexDBGateway implements Gateway {
   async destroy(baseUrl: URL): Promise<Result<void>> {
     return exception2Result(async () => {
       // return deleteDB(getIndexDBName(this.url).fullDb);
-      const type = getStore(baseUrl, this.logger, joinDBName);
+      const type = getStore(baseUrl, this.logger, joinDBName).name;
       // console.log("IndexDBDataStore:destroy", type);
       const idb = this.db;
       const trans = idb.transaction(type, "readwrite");
@@ -141,12 +141,16 @@ abstract class IndexDBGateway implements Gateway {
     });
   }
 
-  abstract buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
+  buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
+    const url = new URL(baseUrl.toString());
+    url.searchParams.set("key", key);
+    return Promise.resolve(Result.Ok(url));
+  }
 
   async get(url: URL) {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
-      const store = getStore(url, this.logger, joinDBName);
+      const store = getStore(url, this.logger, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("getting");
       const tx = this.db.transaction([store], "readonly");
       const bytes = await tx.objectStore(store).get(sanitzeKey(key));
@@ -160,7 +164,7 @@ abstract class IndexDBGateway implements Gateway {
   async put(url: URL, value: Uint8Array) {
     return exception2Result(async () => {
       const key = getKey(url, this.logger);
-      const store = getStore(url, this.logger, joinDBName);
+      const store = getStore(url, this.logger, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
       const tx = this.db.transaction([store], "readwrite");
       await tx.objectStore(store).put(value, sanitzeKey(key));
@@ -170,7 +174,7 @@ abstract class IndexDBGateway implements Gateway {
   async delete(url: URL) {
     return exception2Result(async () => {
       const key = getKey(url, this.logger);
-      const store = getStore(url, this.logger, joinDBName);
+      const store = getStore(url, this.logger, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("deleting");
       const tx = this.db.transaction([store], "readwrite");
       await tx.objectStore(store).delete(sanitzeKey(key));
@@ -184,35 +188,16 @@ export class IndexDBDataGateway extends IndexDBGateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "IndexDBDataGateway", {}));
   }
-
-  buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const url = new URL(baseUrl.toString());
-    url.searchParams.set("key", key);
-    return Promise.resolve(Result.Ok(url));
-  }
 }
 
 export class IndexDBWalGateway extends IndexDBGateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "IndexDBWalGateway", {}));
   }
-  buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const url = new URL(baseUrl.toString());
-    url.searchParams.set("key", key);
-    return Promise.resolve(Result.Ok(url));
-  }
 }
 export class IndexDBMetaGateway extends IndexDBGateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "IndexDBDataGateway", {}));
-  }
-
-  readonly branches = new Set<string>();
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const url = new URL(baseUrl.toString());
-    this.branches.add(key);
-    url.searchParams.set("key", key);
-    return Result.Ok(url);
   }
 }
 
@@ -224,7 +209,7 @@ export class IndexDBTestStore implements TestStore {
   }
   async get(url: URL, key: string) {
     const db = await connectIdb(url, this.logger);
-    const store = getStore(url, this.logger, joinDBName);
+    const store = getStore(url, this.logger, joinDBName).name;
     this.logger.Debug().Str("key", key).Str("store", store).Msg("getting");
     let bytes = await db.get(store, sanitzeKey(key));
     this.logger.Debug().Str("key", key).Str("store", store).Int("len", bytes.length).Msg("got");
