@@ -196,15 +196,11 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     useEffect(() => {
       if (!docId) return;
-      const unsubscribe = database.subscribe((changes) => {
+      return database.subscribe((changes) => {
         if (changes.find((c) => c._id === docId)) {
           void refreshDoc(); // todo use change.value
         }
       });
-
-      return () => {
-        unsubscribe();
-      };
     }, [docId, refreshDoc]);
 
     useEffect(() => {
@@ -219,10 +215,10 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
-    const [result, setResult] = useState({
+    const [result, setResult] = useState<LiveQueryResult<T, K, R>>(() => ({
       rows: initialRows,
-      docs: initialRows.map((r) => r.doc).filter((r) => r) as DocWithId<T>[],
-    });
+      docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
+    }));
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
@@ -233,15 +229,8 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, [mapFnString, queryString]);
 
     useEffect(() => {
-      const unsubscribe = database.subscribe(refreshRows);
-
-      return () => {
-        unsubscribe();
-      };
-    }, [refreshRows]);
-
-    useEffect(() => {
-      refreshRows();
+      refreshRows(); // Initial data fetch
+      return database.subscribe(refreshRows);
     }, [refreshRows]);
 
     return result;
@@ -260,15 +249,8 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, [queryString]);
 
     useEffect(() => {
-      const unsubscribe = database.subscribe(refreshRows);
-
-      return () => {
-        unsubscribe();
-      };
-    }, [refreshRows]);
-
-    useEffect(() => {
-      refreshRows();
+      refreshRows(); // Initial data fetch
+      return database.subscribe(refreshRows);
     }, [refreshRows]);
 
     return result;
