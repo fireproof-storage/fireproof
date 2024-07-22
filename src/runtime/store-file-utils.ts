@@ -15,7 +15,9 @@ export function getPath(url: URL, logger: Logger): string {
   return SysContainer.join(basePath);
 }
 
-export function getFileName(url: URL, key: string, logger: Logger): string {
+export function getFileName(url: URL, logger: Logger): string {
+  const key = url.searchParams.get("key");
+  if (!key) throw logger.Error().Url(url).Msg(`key not found`).AsError();
   const res = getStore(url, logger, (...a: string[]) => a.join("-"));
   switch (res.store) {
     case "data":
