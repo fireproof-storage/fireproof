@@ -215,6 +215,7 @@ class sysContainer {
   logSeeded(method: string) {
     if (this.freight.state === "seeded") {
       const err = new Error();
+      // eslint-disable-next-line no-console
       console.warn(`SysContainer.${method} is not available in seeded state:`, err.stack);
     }
   }

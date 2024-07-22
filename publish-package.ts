@@ -1,3 +1,4 @@
+/* eslint no-console: "off" */
 import { $ } from "zx";
 import { SemVer } from "semver";
 import fs from "fs";

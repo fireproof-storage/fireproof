@@ -211,11 +211,16 @@ async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: 
 }
 
 class DirtyEventFetcher<T> extends EventFetcher<T> {
+  readonly logger: Logger;
+  constructor(logger: Logger, blocks: BlockFetcher) {
+    super(blocks);
+    this.logger = logger;
+  }
   async get(link: EventLink<T>): Promise<EventBlockView<T>> {
     try {
       return super.get(link);
     } catch (e) {
-      console.error("missing event", link.toString(), e);
+      this.logger.Error().Ref("link", link.toString()).Err(e).Msg("Missing event");
       return { value: undefined } as unknown as EventBlockView<T>;
     }
   }
@@ -229,7 +234,7 @@ export async function clockChangesSince<T extends DocTypes>(
   logger: Logger,
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
   const eventsFetcher = (
-    opts.dirty ? new DirtyEventFetcher<Operation>(blocks) : new EventFetcher<Operation>(blocks)
+    opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(blocks)
   ) as EventFetcher<Operation>;
   const keys = new Set<string>();
   const updates = await gatherUpdates<T>(

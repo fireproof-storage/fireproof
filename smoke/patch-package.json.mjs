@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as process from "process";
 let version = process.argv[process.argv.length - 1];
 version = version.split("/").slice(-1)[0].replace(/^v/, "");
+// eslint-disable-next-line no-console
 console.error(`Patch package.json version to ${version}`);
 const packageJson = JSON.parse(fs.readFileSync("package.json").toString());
 packageJson.type = "module";

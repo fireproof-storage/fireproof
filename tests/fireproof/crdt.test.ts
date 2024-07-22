@@ -1,5 +1,3 @@
-import { itSkip } from "../helpers.js";
-
 import { uuidv4 } from "uuidv7";
 
 import { CRDT } from "@fireproof/core";
@@ -237,7 +235,7 @@ describe("Compact a named CRDT with writes", function () {
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
   });
-  itSkip("should have fewer blocks after compact", async function () {
+  it.skip("should have fewer blocks after compact", async function () {
     await crdt.compact();
     const blz: bs.AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {

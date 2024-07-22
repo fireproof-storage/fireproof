@@ -15,15 +15,14 @@ const opts = tseslint.config(
       "**/node_modules/",
       "**/scripts/",
       "**/examples/",
+      "scripts/",
       "smoke/react/",
     ],
-    /*
-    languageOptions: {
-	globals: {
-           process: true
-        }
-    }
-*/
+  },
+  {
+    rules: {
+      "no-console": ["warn"],
+    },
   },
 );
 

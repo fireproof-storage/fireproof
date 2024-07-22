@@ -25,7 +25,7 @@ async function ensureVersionFile(path: string, logger: Logger): Promise<string> 
     }
     const v = await SysContainer.readfile(vFile);
     if (v.toString() !== FILESTORE_VERSION) {
-      console.warn(`version mismatch:${vFile}: ${v.toString()}!=${FILESTORE_VERSION}`);
+      logger.Warn().Str("file", vFile).Str("from", v.toString()).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
     }
   });
   return path;
