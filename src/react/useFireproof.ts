@@ -13,7 +13,7 @@ import type {
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AllDocsQueryOpts } from "../types";
+import { AllDocsQueryOpts, ClockHead, ChangesOptions } from "../types";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
@@ -30,7 +30,13 @@ export interface AllDocsResult<T extends DocTypes> {
   readonly docs: DocWithId<T>[];
 }
 
+export interface ChangesResult<T extends DocTypes> {
+  readonly docs: DocWithId<T>[];
+}
+
 export type UseAllDocs = <T extends DocTypes>(query?: AllDocsQueryOpts) => AllDocsResult<T>;
+
+export type UseChanges = <T extends DocTypes>(since: ClockHead, opts: ChangesOptions) => ChangesResult<T>;
 
 interface UpdateDocFnOptions {
   readonly replace?: boolean;
@@ -115,6 +121,23 @@ export interface UseFireproof {
    * local storage.
    */
   readonly useAllDocs: UseAllDocs;
+  /**
+ * ## Summary
+ * React hook that provides access to all new documents in the database added since the last time the changes was called
+ *
+ * ## Usage
+ * ```tsx
+ * const result = useChanges(prevresult.clock,{limit:10}); // with options
+ * const result = useChanges(); // without options
+ * const database = useChanges.database; // underlying "useFireproof" database accessor
+ * ```
+ *
+ * ## Overview
+ * Changes made via remote sync peers, or other members of your cloud replica group will appear automatically
+ * when you use the `useAllDocs`, `useChanges` and `useDocument` APIs. By default, Fireproof stores data in the browser's
+ * local storage.
+ */
+  readonly useChanges: UseChanges;
 }
 
 /**
@@ -256,5 +279,25 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     return result;
   }
 
-  return { database, useLiveQuery, useDocument, useAllDocs };
+  function useChanges<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): ChangesResult<T> {
+    const [result, setResult] = useState<ChangesResult<T>>({
+      docs: [],
+    });
+
+    const queryString = useMemo(() => JSON.stringify(opts), [opts]);
+
+    const refreshRows = useCallback(async () => {
+      const res = await database.changes<T>(since, opts);
+      setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
+    }, [since, queryString]);
+
+    useEffect(() => {
+      refreshRows(); // Initial data fetch
+      return database.subscribe(refreshRows);
+    }, [refreshRows]);
+
+    return result;
+  }
+
+  return { database, useLiveQuery, useDocument, useAllDocs, useChanges };
 }
