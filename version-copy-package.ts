@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import fs from "fs/promises";
 import process from "process";
 import path from "path";
@@ -15,7 +16,7 @@ async function patchVersion(packageJson: Record<string, unknown>) {
     version = process.env.GITHUB_REF;
   }
   version = version.split("/").slice(-1)[0].replace(/^v/, "");
-  Console.log(`Patch version ${version} in package.json`);
+  console.log(`Patch version ${version} in package.json`);
   packageJson.version = version;
 }
 
@@ -23,12 +24,12 @@ async function main() {
   $.verbose = true;
   const buildDest = process.argv[process.argv.length - 1];
   if (!(buildDest.startsWith("dist/") || buildDest.startsWith("./dist/"))) {
-    Console.error("Usage: tsx version-copy-package.ts dist/<path>/template-package.json");
+    console.error("Usage: tsx version-copy-package.ts dist/<path>/template-package.json");
     process.exit(1);
   }
   const destDir = path.dirname(buildDest);
   if (!(await fs.stat(destDir)).isDirectory) {
-    Console.error(`Directory ${destDir} does not exist`);
+    console.error(`Directory ${destDir} does not exist`);
     process.exit(1);
   }
   await copyFilesToDist(destDir);
@@ -38,7 +39,7 @@ async function main() {
   // copy version from package.json
   for (const destDeps of Object.keys(destPackageJson.dependencies)) {
     if (!mainPackageJson.dependencies[destDeps]) {
-      Console.error(`Dependency ${destDeps} not found in main package.json`);
+      console.error(`Dependency ${destDeps} not found in main package.json`);
     } else {
       destPackageJson.dependencies[destDeps] = mainPackageJson.dependencies[destDeps];
     }
@@ -46,8 +47,8 @@ async function main() {
   patchVersion(destPackageJson);
   const destPackageJsonFile = path.join(destDir, "package.json");
   await fs.writeFile(destPackageJsonFile, JSON.stringify(destPackageJson, null, 2));
-  Console.log(`Copied ${templateFile} to ${destDir} with version ${destPackageJson.version}`);
+  console.log(`Copied ${templateFile} to ${destDir} with version ${destPackageJson.version}`);
   await $`cd ${destDir} && pnpm pack`.pipe(process.stdout);
 }
 
-main().catch(Console.error);
+main().catch(console.error);
