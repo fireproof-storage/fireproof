@@ -2,9 +2,9 @@ import { SysContainer } from "./sys-container.js";
 import { TestStore } from "../blockstore/types.js";
 import { FILESTORE_VERSION } from "./store-file-version.js";
 import { Logger, ResolveOnce, Result } from "@adviser/cement";
-import { ensureLogger, exception2Result, exceptionWrapper, getStore } from "../utils.js";
+import { ensureLogger, exception2Result, exceptionWrapper } from "../utils.js";
 import { Gateway, GetResult, isNotFoundError, NotFoundError } from "../blockstore/gateway.js";
-import { ensureIndexName, getFileName, getPath } from "./store-file-utils.js";
+import { getFileName, getPath } from "./store-file-utils.js";
 
 const versionFiles = new Map<string, ResolveOnce<void>>();
 async function ensureVersionFile(path: string, logger: Logger): Promise<string> {
@@ -50,24 +50,28 @@ abstract class FileGateway implements Gateway {
       await ensureVersionFile(dbroot, this.logger);
     });
   }
+
+  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
+    const url = new URL(baseUrl.toString());
+    // url.pathname = SysContainer.join(getPath(baseUrl, this.logger), getFileName(baseUrl, key, this.logger));
+    url.searchParams.set("key", key);
+    return Result.Ok(url);
+  }
+
   async close(): Promise<Result<void>> {
     return Result.Ok(undefined);
   }
-  abstract destroy(baseUrl: URL): Promise<Result<void>>;
-  abstract buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
+  // abstract buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
 
   getFilePath(url: URL): string {
-    const path = url
-      .toString()
-      .replace(/^file:\/\//, "")
-      .replace(/\?.*$/, "");
-    this.logger.Debug().Str("url", url.toString()).Str("path", path).Msg("getFilePath");
-    return path;
+    const key = url.searchParams.get("key");
+    if (!key) throw this.logger.Error().Url(url).Msg(`key not found`).AsError();
+    return SysContainer.join(getPath(url, this.logger), getFileName(url, key, this.logger));
   }
 
   async put(url: URL, body: Uint8Array): Promise<Result<void>> {
     return exception2Result(async () => {
-      const file = this.getFilePath(url);
+      const file = await this.getFilePath(url);
       this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
       await SysContainer.writefile(file, body);
     });
@@ -94,7 +98,7 @@ abstract class FileGateway implements Gateway {
     });
   }
 
-  async destroyDir(baseURL: URL): Promise<Result<void>> {
+  async destroy(baseURL: URL): Promise<Result<void>> {
     const url = await this.buildUrl(baseURL, "x");
     if (url.isErr()) return url;
     const filepath = SysContainer.dirname(this.getFilePath(url.Ok()));
@@ -124,29 +128,11 @@ export class FileWALGateway extends FileGateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "FileWALGateway"));
   }
-
-  async destroy(baseURL: URL): Promise<Result<void>> {
-    return this.destroyDir(baseURL);
-  }
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const url = new URL(baseUrl.toString());
-    url.pathname = SysContainer.join(await getPath(baseUrl, this.logger), ensureIndexName(baseUrl, "wal"), key + ".json");
-    return Result.Ok(url);
-  }
 }
 
 export class FileMetaGateway extends FileGateway {
   constructor(logger: Logger) {
     super(ensureLogger(logger, "FileMetaGateway"));
-  }
-
-  async destroy(baseURL: URL): Promise<Result<void>> {
-    return this.destroyDir(baseURL);
-  }
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const url = new URL(baseUrl.toString());
-    url.pathname = SysContainer.join(await getPath(baseUrl, this.logger), ensureIndexName(baseUrl, "meta"), key + ".json");
-    return Result.Ok(url);
   }
 }
 
@@ -155,15 +141,6 @@ export class FileDataGateway extends FileGateway {
   constructor(logger: Logger) {
     // console.log("FileDataGateway->", logger);
     super(ensureLogger(logger, "FileDataGateway"));
-  }
-
-  async destroy(baseURL: URL): Promise<Result<void>> {
-    return this.destroyDir(baseURL);
-  }
-  async buildUrl(baseUrl: URL, key: string): Promise<Result<URL>> {
-    const url = new URL(baseUrl.toString());
-    url.pathname = SysContainer.join(await getPath(baseUrl, this.logger), ensureIndexName(baseUrl, "data"), key + ".car");
-    return Result.Ok(url);
   }
 }
 
@@ -187,11 +164,7 @@ export class FileTestStore implements TestStore {
 
   async get(url: URL, key: string) {
     const logger = ensureLogger(this.logger, "get", { url: url.toString(), key });
-    const dbFile = SysContainer.join(
-      await getPath(url, this.logger),
-      getStore(url, this.logger, SysContainer.join),
-      getFileName(url, key, this.logger),
-    );
+    const dbFile = SysContainer.join(getPath(url, this.logger), getFileName(url, key, this.logger));
     logger.Debug().Str("dbFile", dbFile).Msg("get");
     const buffer = await SysContainer.readfile(dbFile);
     logger.Debug().Str("dbFile", dbFile).Len(buffer).Msg("got");

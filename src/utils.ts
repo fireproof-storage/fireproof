@@ -88,13 +88,25 @@ export function ensureLogger(
 
 export type Joiner = (...toJoin: string[]) => string;
 
-export function getStore(url: URL, logger: Logger, joiner: Joiner): string {
-  let result = url.searchParams.get("store");
-  if (!result) throw logger.Error().Str("url", url.toString()).Msg(`store not found`).AsError();
-  if (url.searchParams.has("index")) {
-    result = joiner(url.searchParams.get("index") || "idx", result);
+export interface Store {
+  readonly store: "data" | "wal" | "meta";
+  readonly name: string;
+}
+export function getStore(url: URL, logger: Logger, joiner: Joiner): Store {
+  const store = url.searchParams.get("store");
+  switch (store) {
+    case "data":
+    case "wal":
+    case "meta":
+      break;
+    default:
+      throw logger.Error().Url(url).Msg(`store not found`).AsError();
   }
-  return result;
+  let name: string = store;
+  if (url.searchParams.has("index")) {
+    name = joiner(url.searchParams.get("index") || "idx", name);
+  }
+  return { store, name };
 }
 
 export function getKey(url: URL, logger: Logger): string {
