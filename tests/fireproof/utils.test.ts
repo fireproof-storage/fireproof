@@ -1,11 +1,10 @@
 import { ensureLogger, sanitizeURL, rt, getStore } from "@fireproof/core";
-import { SysContainer } from "../../src/runtime";
 
 describe("utils", () => {
   const logger = ensureLogger({}, "getfilename");
 
   beforeAll(async () => {
-    await SysContainer.start();
+    await rt.SysContainer.start();
   });
 
   it("sorts search params", () => {
