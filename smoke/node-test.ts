@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { fireproof, PACKAGE_VERSION } from "@fireproof/core";
 
 async function main() {

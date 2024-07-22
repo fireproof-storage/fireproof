@@ -334,8 +334,7 @@ export class Loader implements Loadable {
         ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, cid, t)
         : await encodeCarFile([cid], t);
     } catch (e) {
-      console.error("error creating car file", e);
-      throw e;
+      throw this.logger.Error().Err(e).Msg("error creating car file").AsError();
     }
   }
 
