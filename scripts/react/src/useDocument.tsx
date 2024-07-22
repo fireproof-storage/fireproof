@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { Database, Doc, DocRecord } from "@fireproof/core";
 
 import { UseDocument, UseDocumentResult, useFireproof } from "./useFireproof";

@@ -1,5 +1,3 @@
-import { itSkip } from "../helpers.js";
-
 import { rt, Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
 
 interface TestType {
@@ -309,7 +307,7 @@ describe("basic Index upon cold start", function () {
     expect(result2.rows.length).toEqual(3);
     expect(indexer2.indexHead).toEqual(head);
   });
-  itSkip("should not rerun the map function on seen changes", async function () {
+  it.skip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     const indexer2 = await index({ _crdt: crdt2 }, "hello", mapFn);

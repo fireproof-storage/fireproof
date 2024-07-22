@@ -1,7 +1,7 @@
 import { Logger, getStore } from "../utils.js";
 import { SysContainer } from "./sys-container.js";
 
-export async function getPath(url: URL, logger: Logger): Promise<string> {
+export function getPath(url: URL, logger: Logger): string {
   const basePath = url
     .toString()
     .replace(new RegExp(`^${url.protocol}//`), "")
@@ -9,26 +9,23 @@ export async function getPath(url: URL, logger: Logger): Promise<string> {
   const name = url.searchParams.get("name");
   if (name) {
     const version = url.searchParams.get("version");
-    if (!version) throw logger.Error().Str("url", url.toString()).Msg(`version not found`).AsError();
+    if (!version) throw logger.Error().Url(url).Msg(`version not found`).AsError();
     return SysContainer.join(basePath, version, name);
   }
   return SysContainer.join(basePath);
 }
 
-export function getFileName(url: URL, key: string, logger: Logger): string {
-  switch (getStore(url, logger, (...a: string[]) => a.join("/"))) {
+export function getFileName(url: URL, logger: Logger): string {
+  const key = url.searchParams.get("key");
+  if (!key) throw logger.Error().Url(url).Msg(`key not found`).AsError();
+  const res = getStore(url, logger, (...a: string[]) => a.join("-"));
+  switch (res.store) {
     case "data":
-      return key + ".car";
+      return SysContainer.join(res.name, key + ".car");
+    case "wal":
     case "meta":
-      return key + ".json";
+      return SysContainer.join(res.name, key + ".json");
     default:
-      throw logger.Error().Str("url", url.toString()).Msg(`unsupported store type`).AsError();
+      throw logger.Error().Url(url).Msg(`unsupported store type`).AsError();
   }
-}
-
-export function ensureIndexName(url: URL, name: string): string {
-  if (url.searchParams.has("index")) {
-    name = (url.searchParams.get("index")?.replace(/[^a-zA-Z0-9]/g, "") || "idx") + "-" + name;
-  }
-  return name;
 }
