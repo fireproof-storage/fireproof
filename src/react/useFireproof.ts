@@ -122,21 +122,21 @@ export interface UseFireproof {
    */
   readonly useAllDocs: UseAllDocs;
   /**
- * ## Summary
- * React hook that provides access to all new documents in the database added since the last time the changes was called
- *
- * ## Usage
- * ```tsx
- * const result = useChanges(prevresult.clock,{limit:10}); // with options
- * const result = useChanges(); // without options
- * const database = useChanges.database; // underlying "useFireproof" database accessor
- * ```
- *
- * ## Overview
- * Changes made via remote sync peers, or other members of your cloud replica group will appear automatically
- * when you use the `useAllDocs`, `useChanges` and `useDocument` APIs. By default, Fireproof stores data in the browser's
- * local storage.
- */
+   * ## Summary
+   * React hook that provides access to all new documents in the database added since the last time the changes was called
+   *
+   * ## Usage
+   * ```tsx
+   * const result = useChanges(prevresult.clock,{limit:10}); // with options
+   * const result = useChanges(); // without options
+   * const database = useChanges.database; // underlying "useFireproof" database accessor
+   * ```
+   *
+   * ## Overview
+   * Changes made via remote sync peers, or other members of your cloud replica group will appear automatically
+   * when you use the `useAllDocs`, `useChanges` and `useDocument` APIs. By default, Fireproof stores data in the browser's
+   * local storage.
+   */
   readonly useChanges: UseChanges;
 }
 
