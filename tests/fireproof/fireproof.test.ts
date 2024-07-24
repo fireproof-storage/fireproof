@@ -144,11 +144,16 @@ describe("basic database", function () {
     expect(result.rows[0].key).toBe("bar");
   });
   it("should query with multiple successive functions", async function () {
-    const ok = await db.put({ _id: "test", foo: "bar", baz: "qux" });
-    const query1 = await db.query((doc) => {
+    interface TestDoc {
+      _id: string;
+      foo: string;
+      baz: string;
+    }
+    await db.put<TestDoc>({ _id: "test", foo: "bar", baz: "qux" });
+    const query1 = await db.query<string, TestDoc>((doc) => {
       return doc.foo;
     });
-    const query2 = await db.query((doc) => {
+    const query2 = await db.query<string, TestDoc>((doc) => {
       return doc.baz;
     });
     expect(query1).toBeTruthy();
