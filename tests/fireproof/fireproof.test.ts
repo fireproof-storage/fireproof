@@ -143,17 +143,21 @@ describe("basic database", function () {
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe("bar");
   });
-  it('should query with multiple successive functions', async function () {
+  it("should query with multiple successive functions", async function () {
     const ok = await db.put({ _id: "test", foo: "bar", baz: "qux" });
-    const query1 = await db.query(doc => { return doc.foo })
-    const query2 = await db.query(doc => { return doc.baz })
+    const query1 = await db.query((doc) => {
+      return doc.foo;
+    });
+    const query2 = await db.query((doc) => {
+      return doc.baz;
+    });
     expect(query1).toBeTruthy();
     expect(query1.rows).toBeTruthy();
     expect(query1.rows.length).toBe(1);
     expect(query2).toBeTruthy();
     expect(query2.rows).toBeTruthy();
     expect(query2.rows.length).toBe(1);
-  })
+  });
 });
 
 describe("benchmarking with compaction", function () {
