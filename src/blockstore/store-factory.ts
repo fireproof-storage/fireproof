@@ -3,7 +3,7 @@ import { Logger, KeyedResolvOnce } from "@adviser/cement";
 import { dataDir } from "../runtime/data-dir.js";
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { Loadable } from "./loader.js";
-import { DataStore, MetaStore, RemoteWAL } from "./store.js";
+import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
 import { ensureLogger } from "../utils.js";
 import { Gateway } from "./gateway.js";
@@ -58,6 +58,35 @@ function buildURL(optURL: string | URL | undefined, loader: Loadable): URL {
   return toURL(optURL || obuUrl || dataDir(loader.name, storeOpts.stores?.base), storeOpts.isIndex);
 }
 
+export async function getGatewayFromURL(url: URL, logger: Logger): Promise<Gateway|undefined> {
+  const item = storeFactory.get(url.protocol);
+  if (item) {
+    let ret: Promise<Gateway>;
+    switch (url.searchParams.get("store")) {
+      case "data":
+        ret = item.data(logger)
+        break
+      case "meta":
+        ret = item.meta(logger)
+        break
+      case "wal":
+        ret = item.wal(logger)
+        break
+      default:
+        logger.Warn().Url(url).Msg("unsupported store")
+        return undefined;
+    }
+    const res = await (await ret).start(url)
+    if (res.isErr()) {
+      logger.Error().Result("start", res).Msg("start failed")
+      return undefined
+    }
+    return ret
+  }
+  logger.Warn().Url(url).Msg("unsupported protocol")
+  return undefined
+}
+
 export function registerStoreProtocol(item: StoreFactoryItem) {
   let protocol = item.protocol;
   if (!protocol.endsWith(":")) {
@@ -110,15 +139,15 @@ function loadDataGateway(url: URL, logger: Logger) {
   });
 }
 
-const onceDataStoreFactory = new KeyedResolvOnce<DataStore>();
-async function dataStoreFactory(loader: Loadable): Promise<DataStore> {
+const onceDataStoreFactory = new KeyedResolvOnce<DataStoreImpl>();
+async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
   const url = buildURL(loader.ebOpts.store.stores?.data, loader);
   ensureName(loader.name, url);
   const logger = ensureLogger(loader.logger, "dataStoreFactory", { url: url.toString() });
   url.searchParams.set("store", "data");
   return onceDataStoreFactory.get(url.toString()).once(async () => {
     const gateway = await loadDataGateway(url, logger);
-    const store = new DataStore(loader.name, url, loader.logger, gateway);
+    const store = new DataStoreImpl(loader.name, url, loader.logger, gateway);
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();
@@ -135,8 +164,8 @@ function loadMetaGateway(url: URL, logger: Logger) {
   });
 }
 
-const onceMetaStoreFactory = new KeyedResolvOnce<MetaStore>();
-async function metaStoreFactory(loader: Loadable): Promise<MetaStore> {
+const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
+async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
   const url = buildURL(loader.ebOpts.store.stores?.meta, loader);
   ensureName(loader.name, url);
   const logger = ensureLogger(loader.logger, "metaStoreFactory", { url: () => url.toString() });
@@ -144,7 +173,7 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStore> {
   return onceMetaStoreFactory.get(url.toString()).once(async () => {
     logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
     const gateway = await loadMetaGateway(url, logger);
-    const store = new MetaStore(loader.name, url, loader.logger, gateway);
+    const store = new MetaStoreImpl(loader.name, url, loader.logger, gateway);
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();
@@ -160,8 +189,8 @@ function loadWalGateway(url: URL, logger: Logger) {
   });
 }
 
-const onceRemoteWalFactory = new KeyedResolvOnce<RemoteWAL>();
-async function remoteWalFactory(loader: Loadable): Promise<RemoteWAL> {
+const onceRemoteWalFactory = new KeyedResolvOnce<WALStoreImpl>();
+async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   const url = buildURL(loader.ebOpts.store.stores?.meta, loader);
   ensureName(loader.name, url);
   const logger = ensureLogger(loader.logger, "remoteWalFactory", { url: url.toString() });
@@ -169,7 +198,7 @@ async function remoteWalFactory(loader: Loadable): Promise<RemoteWAL> {
   return onceRemoteWalFactory.get(url.toString()).once(async () => {
     const gateway = await loadWalGateway(url, logger);
     logger.Debug().Str("prepared", url.toString()).Msg("produced");
-    const store = new RemoteWAL(loader, url, loader.logger, gateway);
+    const store = new WALStoreImpl(loader, url, loader.logger, gateway);
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();
@@ -205,12 +234,12 @@ export function toStoreRuntime(opts: StoreOpts, ilogger: Logger): StoreRuntime {
         .Msg("makeDataStore");
       return (loader.ebOpts.store.makeDataStore || dataStoreFactory)(loader);
     },
-    makeRemoteWAL: (loader: Loadable) => {
+    makeWALStore: (loader: Loadable) => {
       logger
         .Debug()
-        .Str("fromOpts", "" + !!loader.ebOpts.store.makeRemoteWAL)
+        .Str("fromOpts", "" + !!loader.ebOpts.store.makeWALStore)
         .Msg("makeRemoteWAL");
-      return (loader.ebOpts.store.makeRemoteWAL || remoteWalFactory)(loader);
+      return (loader.ebOpts.store.makeWALStore || remoteWalFactory)(loader);
     },
 
     encodeFile: opts.encodeFile || encodeFile,
@@ -221,19 +250,19 @@ export function toStoreRuntime(opts: StoreOpts, ilogger: Logger): StoreRuntime {
 registerStoreProtocol({
   protocol: "file:",
   data: async (logger) => {
-    const { FileDataGateway } = await import("../runtime/store-file.js");
+    const { FileDataGateway } = await import("../runtime/gateways/file/gateway.js");
     return new FileDataGateway(logger);
   },
   meta: async (logger) => {
-    const { FileMetaGateway } = await import("../runtime/store-file.js");
+    const { FileMetaGateway } = await import("../runtime/gateways/file/gateway.js");
     return new FileMetaGateway(logger);
   },
   wal: async (logger) => {
-    const { FileWALGateway } = await import("../runtime/store-file.js");
+    const { FileWALGateway } = await import("../runtime/gateways/file/gateway.js");
     return new FileWALGateway(logger);
   },
   test: async (logger) => {
-    const { FileTestStore } = await import("../runtime/store-file.js");
+    const { FileTestStore } = await import("../runtime/gateways/file/gateway.js");
     return new FileTestStore(logger);
   },
 });
@@ -241,19 +270,19 @@ registerStoreProtocol({
 registerStoreProtocol({
   protocol: "indexdb:",
   data: async (logger) => {
-    const { IndexDBDataGateway } = await import("../runtime/store-indexdb.js");
+    const { IndexDBDataGateway } = await import("../runtime/gateways/indexdb/gateway.js");
     return new IndexDBDataGateway(logger);
   },
   meta: async (logger) => {
-    const { IndexDBMetaGateway } = await import("../runtime/store-indexdb.js");
+    const { IndexDBMetaGateway } = await import("../runtime/gateways/indexdb/gateway.js");
     return new IndexDBMetaGateway(logger);
   },
   wal: async (logger) => {
-    const { IndexDBMetaGateway } = await import("../runtime/store-indexdb.js");
+    const { IndexDBMetaGateway } = await import("../runtime/gateways/indexdb/gateway.js");
     return new IndexDBMetaGateway(logger);
   },
   test: async (logger) => {
-    const { IndexDBTestStore } = await import("../runtime/store-indexdb.js");
+    const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway.js");
     return new IndexDBTestStore(logger);
   },
 });

@@ -1,5 +1,5 @@
-import { Logger, getStore } from "../utils.js";
-import { SysContainer } from "./sys-container.js";
+import { Logger, getStore } from "../../../utils.js";
+import { SysContainer } from "../../sys-container.js";
 
 export function getPath(url: URL, logger: Logger): string {
   const basePath = url
@@ -28,4 +28,16 @@ export function getFileName(url: URL, logger: Logger): string {
     default:
       throw logger.Error().Url(url).Msg(`unsupported store type`).AsError();
   }
+}
+
+export function toArrayBuffer(buffer: Buffer | string) {
+  if (typeof buffer === "string") {
+    buffer = Buffer.from(buffer);
+  }
+  const ab = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(ab);
+  for (let i = 0; i < buffer.length; ++i) {
+    view[i] = buffer[i];
+  }
+  return view;
 }

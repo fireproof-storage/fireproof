@@ -56,6 +56,7 @@
     "esbuild": "^0.23.0",
     "esbuild-plugin-resolve": "^2.0.0",
     "eslint": "^9.8.0",
+    "memfs": "^4.9.4",
     "prettier": "^3.3.3",
     "semver": "^7.6.3",
     "tsup": "^8.2.3",
@@ -77,7 +78,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "0.2.2",
+    "@adviser/cement": "^0.2.4",
     "@ipld/car": "^5.3.2",
     "@ipld/dag-cbor": "^9.2.1",
     "@ipld/dag-json": "^10.2.2",
@@ -95,5 +96,10 @@
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
     "uuidv7": "^1.0.0"
+  },
+  "bundle-phobia": {
+    "max-size": "390kB",
+    "max-gzip-size": "110kB",
+    "max-overall-size": "1MB"
   }
 }

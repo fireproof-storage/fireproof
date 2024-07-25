@@ -1,11 +1,11 @@
 import { openDB, IDBPDatabase } from "idb";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 
-import { TestStore } from "../blockstore/types.js";
-import { INDEXDB_VERSION } from "./store-indexdb-version.js";
-import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore } from "../utils.js";
-import { Gateway, NotFoundError } from "../blockstore/gateway.js";
-import { SysContainer } from "./sys-container.js";
+import { TestStore } from "../../../blockstore/types.js";
+import { INDEXDB_VERSION } from "./version.js";
+import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore } from "../../../utils.js";
+import { Gateway, NotFoundError } from "../../../blockstore/gateway.js";
+import { SysContainer } from "../../sys-container.js";
 
 function ensureVersion(url: URL): URL {
   const ret = new URL(url.toString());
@@ -66,8 +66,6 @@ export interface DbName {
   readonly fullDb: string;
   readonly objStore: string;
   readonly connectionKey: string;
-  // readonly version: number;
-  // readonly type: "data" | "meta" | "wal";
   readonly dbName: string;
 }
 

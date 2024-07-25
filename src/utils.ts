@@ -88,8 +88,10 @@ export function ensureLogger(
 
 export type Joiner = (...toJoin: string[]) => string;
 
+export type StoreType = "data" | "wal" | "meta";
+
 export interface Store {
-  readonly store: "data" | "wal" | "meta";
+  readonly store: StoreType
   readonly name: string;
 }
 export function getStore(url: URL, logger: Logger, joiner: Joiner): Store {

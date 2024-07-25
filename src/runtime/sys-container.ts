@@ -1,63 +1,30 @@
-import type { Dirent, MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "fs";
+import type { MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "fs";
 
-import { uuidv4 } from "uuidv7";
-import { ResolveOnce, EnvImpl } from "@adviser/cement";
+// import { uuidv4 } from "uuidv7";
+import { ResolveOnce, envFactory } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
+import { runtimeFn } from "./runtime.js";
 
-export interface Runtime {
-  isNodeIsh: boolean;
-  isBrowser: boolean;
-  isDeno: boolean;
-  isReactNative: boolean;
+export interface SysFileSystem {
+  start(): Promise<void>;
+  mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined>;
+  readdir(path: PathLike, options?: unknown): Promise<string[]>;
+  rm(path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }): Promise<void>;
+  copyFile(source: PathLike, destination: PathLike): Promise<void>;
+  readfile(path: PathLike, options?: { encoding: BufferEncoding; flag?: string }): Promise<Uint8Array>;
+  stat(path: PathLike): Promise<Stats>;
+  unlink(path: PathLike): Promise<void>;
+  writefile(path: PathLike, data: Uint8Array | string): Promise<void>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isSet(value: string, ref: any = globalThis): boolean {
-  const [head, ...tail] = value.split(".");
-  // console.log(`isSet: ${head} -> ${tail.join(".")} -> ${ref}`);
-  if (["object", "function"].includes(typeof ref) && ref && ["object", "function"].includes(typeof ref[head]) && ref[head]) {
-    if (tail.length <= 1) {
-      // console.log(`isSet: ${value} -> TRUE`);
-      return true;
-    }
-    return isSet(tail.join("."), ref[head]);
-  }
-  // console.log(`isSet: ${value} -> FALSE`);
-  return false;
-}
-
-function runtimeFn(): Runtime {
-  // console.log(`runtimeFn`);
-  const isNodeIsh = isSet("process.versions.node");
-  const isDeno = isSet("Deno");
-  return {
-    isNodeIsh,
-    isBrowser: !(isNodeIsh || isDeno),
-    isDeno,
-    isReactNative: false,
-  };
-}
-export interface NodeMap {
+export interface NodeMap extends Omit<SysFileSystem, "start"> {
   state: "seeded" | "browser" | "node";
   join: (...args: string[]) => string;
   dirname: (path: string) => string;
   homedir: () => string;
-  fileURLToPath: (url: string | URL) => string;
+  // fileURLToPath: (url: string | URL) => string;
   // assert: (condition: unknown, message?: string | Error) => void;
-
-  mkdir: (path: PathLike, options?: { recursive: boolean }) => Promise<string | undefined>;
-  readdir: (path: PathLike, options?: unknown) => Promise<unknown[]>;
-
-  rm: (path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }) => Promise<void>;
-  copyFile: (source: PathLike, destination: PathLike) => Promise<void>;
-
-  readfile: (path: PathLike, options?: { encoding: BufferEncoding; flag?: string }) => Promise<string>;
-
-  stat: (path: PathLike) => Promise<Stats>;
-
-  unlink: (path: PathLike) => Promise<void>;
-  writefile: (path: PathLike, data: Uint8Array | string) => Promise<void>;
 }
 
 // export function assert(condition: unknown, message?: string | Error): asserts condition {
@@ -70,16 +37,15 @@ export function join(...paths: string[]): string {
   return paths.map((i) => i.replace(/\/+$/, "")).join("/");
 }
 
-const envImpl = new EnvImpl({
+const envImpl = envFactory({
   symbol: "FP_ENV",
   presetEnv: new Map([
     // ["FP_DEBUG", "xxx"],
     // ["FP_ENV", "development"],
   ]),
 });
-// console.log(`EnvImpl`, envImpl);
 
-class sysContainer {
+class sysContainer implements SysFileSystem {
   freight: NodeMap = {
     state: "seeded",
     join,
@@ -87,15 +53,15 @@ class sysContainer {
     homedir: () => {
       throw new Error("SysContainer:homedir is not available in seeded state");
     },
-    fileURLToPath: (strurl: string | URL) => {
-      let url: URL;
-      if (typeof strurl === "string") {
-        url = new URL(strurl);
-      } else {
-        url = strurl;
-      }
-      return url.pathname;
-    },
+    // fileURLToPath: (strurl: string | URL) => {
+    //   let url: URL;
+    //   if (typeof strurl === "string") {
+    //     url = new URL(strurl);
+    //   } else {
+    //     url = strurl;
+    //   }
+    //   return url.pathname;
+    // },
     // assert: (condition: unknown, message?: string | Error) => {
     //   if (!condition) {
     //     if (message instanceof Error) {
@@ -115,7 +81,7 @@ class sysContainer {
     stat: () => Promise.reject(new Error("SysContainer:stat is not available in seeded state")),
   };
 
-  readonly id = uuidv4();
+  // readonly id = uuidv4();
 
   async start(): Promise<void> {
     await onceStart.once(async () => {
@@ -148,18 +114,18 @@ class sysContainer {
     this.logSeeded("readdir");
     return (throwFalsy(this.freight).readdir(path, options) as Promise<string[]>) || [];
   }
-  async readdirent(
-    path: PathLike,
-    options: (ObjectEncodingOptions & { withFileTypes: true; recursive?: boolean }) | BufferEncoding | null | undefined,
-  ): Promise<Dirent[]> {
-    this.logSeeded("readdirent");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (throwFalsy(this.freight).readdir(path, { ...(options as any), withFileTypes: true }) as Promise<Dirent[]>) || [];
-  }
+  // async readdirent(
+  //   path: PathLike,
+  //   options: (ObjectEncodingOptions & { withFileTypes: true; recursive?: boolean }) | BufferEncoding | null | undefined,
+  // ): Promise<Dirent[]> {
+  //   this.logSeeded("readdirent");
+  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   return (throwFalsy(this.freight).readdir(path, { ...(options as any), withFileTypes: true }) as Promise<Dirent[]>) || [];
+  // }
 
   async readfile(path: PathLike, options?: { encoding: BufferEncoding; flag?: string }) {
     this.logSeeded("readfile");
-    return throwFalsy(this.freight).readfile(path, options) as unknown as Promise<Buffer>;
+    return await throwFalsy(this.freight).readfile(path, options);
   }
 
   async mkdir(path: PathLike, options: { recursive: boolean }) {
@@ -192,10 +158,10 @@ class sysContainer {
     return throwFalsy(this.freight).stat(path);
   }
 
-  fileURLToPath(url: string | URL) {
-    this.logSeeded("fileURLToPath");
-    return throwFalsy(this.freight).fileURLToPath(url);
-  }
+  // fileURLToPath(url: string | URL) {
+  //   this.logSeeded("fileURLToPath");
+  //   return throwFalsy(this.freight).fileURLToPath(url);
+  // }
 
   dirname(path: string) {
     this.logSeeded("dirname");

@@ -1,8 +1,19 @@
 import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { Logger, ResolveOnce, Result } from "@adviser/cement";
+import { Logger, logValue, ResolveOnce, Result } from "@adviser/cement";
 
-import type { AnyBlock, AnyLink, CommitOpts, DbMeta } from "./types.js";
+import type {
+  AnyBlock,
+  AnyLink,
+  CommitOpts,
+  DataSaveOpts,
+  DataStore,
+  DbMeta,
+  MetaStore,
+  WALStore as WALStore,
+  WALState,
+  LoadHandler,
+} from "./types.js";
 import { Falsy, throwFalsy } from "../types.js";
 import { Gateway, isNotFoundError } from "./gateway.js";
 import { ensureLogger, exception2Result, sanitizeURL } from "../utils.js";
@@ -16,17 +27,41 @@ function guardVersion(url: URL): Result<URL> {
   return Result.Ok(url);
 }
 
-abstract class VersionedStore {
+export interface StoreOpts {
+  readonly textEncoder: TextEncoder;
+  readonly textDecoder: TextDecoder;
+}
+
+const _lazyTextEncoder = new ResolveOnce<TextEncoder>();
+const _lazyTextDecoder = new ResolveOnce<TextDecoder>();
+
+function defaultStoreOpts(opts: Partial<StoreOpts>): StoreOpts {
+  return {
+    ...opts,
+    textEncoder: opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder()),
+    textDecoder: opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder()),
+  };
+}
+
+abstract class BaseStoreImpl {
+  // should be injectable
+  readonly textEncoder;
+  readonly textDecoder;
+
   // readonly STORAGE_VERSION: string;
   readonly name: string;
   readonly url: URL;
   readonly logger: Logger;
   readonly gateway: Gateway;
-  constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
+  readonly opts: StoreOpts;
+  constructor(name: string, url: URL, logger: Logger, gateway: Gateway, opts: Partial<StoreOpts> = {}) {
     this.name = name;
     this.url = url;
     this.logger = logger;
     this.gateway = gateway;
+    this.opts = defaultStoreOpts(opts);
+    this.textDecoder = this.opts.textDecoder;
+    this.textEncoder = this.opts.textEncoder;
   }
 
   readonly _onStarted: (() => void)[] = [];
@@ -68,14 +103,26 @@ abstract class VersionedStore {
   }
 }
 
-const textEncoder = new TextEncoder();
-const textDecoder = new TextDecoder();
 
-export class MetaStore extends VersionedStore {
-  readonly tag: string = "header-base";
+export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
+  readonly subscribers = new Map<string, LoadHandler[]>();
 
   constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
-    super(name, url, ensureLogger(logger, "MetaStore", {}), gateway);
+    super(name, url, ensureLogger(logger, "MetaStoreImpl", {
+      url: logValue(() => url.toString()),
+      name
+    }), gateway);
+  }
+
+  onLoad(branch: string, loadHandler: LoadHandler): () => void {
+    const subscribers = this.subscribers.get(branch) || [];
+    subscribers.push(loadHandler);
+    this.subscribers.set(branch, subscribers);
+    return () => {
+      const subscribers = this.subscribers.get(branch) || [];
+      const idx = subscribers.indexOf(loadHandler);
+      if (idx > -1) subscribers.splice(idx, 1);
+    };
   }
 
   makeHeader({ cars, key }: DbMeta): ToString<DbMeta> {
@@ -89,17 +136,44 @@ export class MetaStore extends VersionedStore {
     return got;
   }
 
+  async handleSubscribers(dbMetas: DbMeta[], branch: string) {
+    try {
+      const subscribers = this.subscribers.get(branch) || [];
+      await Promise.all(subscribers.map((subscriber) => subscriber(dbMetas)));
+    } catch (e) {
+      throw this.logger.Error().Err(e).Msg("handleSubscribers").AsError();
+    }
+  }
+
+  async handleByteHeads(byteHeads: Uint8Array[], branch = "main") {
+    let dbMetas: DbMeta[];
+    try {
+      dbMetas = this.dbMetasForByteHeads(byteHeads);
+    } catch (e) {
+      throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
+    }
+    await this.handleSubscribers(dbMetas, branch);
+    return dbMetas;
+  }
+  dbMetasForByteHeads(byteHeads: Uint8Array[]) {
+    return byteHeads.map((bytes) => {
+      const txt = this.textDecoder.decode(bytes);
+      return this.parseHeader(txt);
+    });
+  }
+
   async load(branch?: string): Promise<DbMeta[] | Falsy> {
+    branch = branch || "main";
     this.logger
       .Debug()
-      .Str("branch", branch || "")
+      .Str("branch", branch)
       .Msg("loading");
-    const url = await this.gateway.buildUrl(this.url, branch || "main");
+    const url = await this.gateway.buildUrl(this.url, branch);
     if (url.isErr()) {
       throw this.logger
         .Error()
         .Result("buidUrl", url)
-        .Str("branch", branch || "")
+        .Str("branch", branch)
         .Url(this.url)
         .Msg("got error from gateway.buildUrl")
         .AsError();
@@ -111,25 +185,23 @@ export class MetaStore extends VersionedStore {
       }
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
-    try {
-      return [this.parseHeader(textDecoder.decode(bytes.Ok()))];
-    } catch (e) {
-      throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
-    }
+    return this.handleByteHeads([bytes.Ok()], branch);
   }
 
-  async save(meta: DbMeta, branch = "main") {
+  async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
+    branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
     const bytes = this.makeHeader(meta);
     const url = await this.gateway.buildUrl(this.url, branch);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("branch", branch).Url(this.url).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.put(url.Ok(), textEncoder.encode(bytes));
+    const res = await this.gateway.put(url.Ok(), this.textEncoder.encode(bytes));
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    return res.Ok();
+    await this.handleSubscribers([meta], branch);
+    return res;
   }
 
   async close(): Promise<Result<void>> {
@@ -142,19 +214,16 @@ export class MetaStore extends VersionedStore {
   }
 }
 
-export interface DataSaveOpts {
-  readonly public: boolean;
-}
-
-export class DataStore extends VersionedStore {
-  readonly tag: string = "car-base";
+export class DataStoreImpl extends BaseStoreImpl implements DataStore {
+  // readonly tag: string = "car-base";
 
   constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
     super(
       name,
       url,
-      ensureLogger(logger, "DataStore", {
-        url: () => url.toString(),
+      ensureLogger(logger, "DataStoreImpl", {
+        url: logValue(() => url.toString()),
+        name,
       }),
       gateway,
     );
@@ -203,21 +272,23 @@ export class DataStore extends VersionedStore {
   }
 }
 
-export interface WALState {
-  operations: DbMeta[];
-  noLoaderOps: DbMeta[];
-  fileOperations: {
-    readonly cid: AnyLink;
-    readonly public: boolean;
-  }[];
-}
-
-export class RemoteWAL extends VersionedStore {
-  readonly tag: string = "rwal-base";
+export class WALStoreImpl extends BaseStoreImpl implements WALStore {
+  // readonly tag: string = "rwal-base";
 
   readonly loader: Loadable;
 
   readonly _ready = new ResolveOnce<void>();
+
+  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
+  readonly processing: Promise<void> | undefined = undefined;
+  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
+
+  constructor(loader: Loadable, url: URL, logger: Logger, gateway: Gateway) {
+    super(loader.name, url, ensureLogger(logger, "WALStoreImpl", {
+      url: logValue(() => url.toString()),
+    }), gateway);
+    this.loader = loader;
+  }
 
   ready = async () => {
     return this._ready.once(async () => {
@@ -235,14 +306,7 @@ export class RemoteWAL extends VersionedStore {
     });
   };
 
-  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
-  readonly processing: Promise<void> | undefined = undefined;
-  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  constructor(loader: Loadable, url: URL, logger: Logger, gateway: Gateway) {
-    super(loader.name, url, ensureLogger(logger, "RemoteWAL"), gateway);
-    this.loader = loader;
-  }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
@@ -252,7 +316,7 @@ export class RemoteWAL extends VersionedStore {
       this.walState.operations.push(dbMeta);
     }
     await this.save(this.walState);
-    void this._process();
+    void this.process();
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
@@ -261,13 +325,13 @@ export class RemoteWAL extends VersionedStore {
     // await this.save(this.walState)
   }
 
-  async _process() {
+  async process() {
     await this.ready();
     if (!this.loader.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
       await this._doProcess();
       if (this.walState.operations.length || this.walState.fileOperations.length || this.walState.noLoaderOps.length) {
-        setTimeout(() => void this._process(), 0);
+        setTimeout(() => void this.process(), 0);
       }
     });
   }
@@ -335,7 +399,7 @@ export class RemoteWAL extends VersionedStore {
             .Error()
             .Any(
               "errors",
-              errors.map((e) => e.reason),
+              errors
             )
             .Msg("error uploading")
             .AsError();
@@ -372,7 +436,7 @@ export class RemoteWAL extends VersionedStore {
       throw this.logger.Error().Err(bytes.Err()).Msg("error get").AsError();
     }
     try {
-      return bytes && parse<WALState>(textDecoder.decode(bytes.Ok()));
+      return bytes && parse<WALState>(this.textDecoder.decode(bytes.Ok()));
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("error parse").AsError();
     }
@@ -389,7 +453,7 @@ export class RemoteWAL extends VersionedStore {
     } catch (e) {
       throw this.logger.Error().Err(e).Any("state", state).Msg("error format").AsError();
     }
-    const res = await this.gateway.put(filepath.Ok(), textEncoder.encode(encoded));
+    const res = await this.gateway.put(filepath.Ok(), this.textEncoder.encode(encoded));
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Str("filePath", filepath.Ok().toString()).Msg("error saving").AsError();
     }

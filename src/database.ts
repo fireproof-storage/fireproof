@@ -228,7 +228,7 @@ export function fireproof(name: string, opts?: ConfigOpts): Database {
 
       makeMetaStore: !!opts?.store?.makeMetaStore,
       makeDataStore: !!opts?.store?.makeDataStore,
-      makeRemoteWAL: !!opts?.store?.makeRemoteWAL,
+      makeRemoteWAL: !!opts?.store?.makeWALStore,
 
       encodeFile: !!opts?.store?.encodeFile,
       decodeFile: !!opts?.store?.decodeFile,
