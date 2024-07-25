@@ -1,6 +1,7 @@
 import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce } from "@adviser/cement";
 import { SysContainer } from "./runtime";
 import { uuidv7 } from "uuidv7";
+import { StoreType } from "./types";
 
 export type { Logger };
 export { Result };
@@ -88,10 +89,8 @@ export function ensureLogger(
 
 export type Joiner = (...toJoin: string[]) => string;
 
-export type StoreType = "data" | "wal" | "meta";
-
 export interface Store {
-  readonly store: StoreType
+  readonly store: StoreType;
   readonly name: string;
 }
 export function getStore(url: URL, logger: Logger, joiner: Joiner): Store {

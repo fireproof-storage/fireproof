@@ -1,5 +1,6 @@
 import { SysContainer, SysFileSystem } from "../../sys-container.js";
-import { StoreType, TestStore } from "../../../blockstore/types.js";
+import { TestStore } from "../../../blockstore/types.js";
+import { StoreType } from "../../../types.js";
 import { FILESTORE_VERSION } from "./version.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 import { ensureLogger, exception2Result, exceptionWrapper } from "../../../utils.js";
@@ -22,7 +23,7 @@ async function getFileSystem(url: URL): Promise<SysFileSystem> {
 }
 
 abstract class FileGateway implements Gateway {
-  abstract readonly storeType: StoreType
+  abstract readonly storeType: StoreType;
   readonly logger: Logger;
   _fs?: SysFileSystem;
 
@@ -58,6 +59,7 @@ abstract class FileGateway implements Gateway {
       this._fs = await getFileSystem(baseURL);
       await this.fs.start();
       baseURL.searchParams.set("version", baseURL.searchParams.get("version") || FILESTORE_VERSION);
+      baseURL.searchParams.set("store", baseURL.searchParams.get("store") || this.storeType);
       const url = await this.buildUrl(baseURL, "dummy");
       if (url.isErr()) return url;
       const dbdir = this.getFilePath(url.Ok());

@@ -6,6 +6,7 @@ import { INDEXDB_VERSION } from "./version.js";
 import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore } from "../../../utils.js";
 import { Gateway, NotFoundError } from "../../../blockstore/gateway.js";
 import { SysContainer } from "../../sys-container.js";
+import { StoreType } from "../../../types.js";
 
 function ensureVersion(url: URL): URL {
   const ret = new URL(url.toString());
@@ -100,6 +101,7 @@ export function getIndexDBName(iurl: URL, logger: Logger): DbName {
 }
 
 abstract class IndexDBGateway implements Gateway {
+  abstract readonly storeType: StoreType;
   readonly logger: Logger;
   constructor(logger: Logger) {
     this.logger = logger;
@@ -113,6 +115,8 @@ abstract class IndexDBGateway implements Gateway {
     return exception2Result(async () => {
       this.logger.Debug().Url(baseURL).Msg("starting");
       await SysContainer.start();
+      baseURL.searchParams.set("version", baseURL.searchParams.get("version") || INDEXDB_VERSION);
+      baseURL.searchParams.set("store", baseURL.searchParams.get("store") || this.storeType);
       this.db = await connectIdb(baseURL, this.logger);
       this.logger.Debug().Url(baseURL).Msg("started");
     });
@@ -183,17 +187,20 @@ abstract class IndexDBGateway implements Gateway {
 }
 
 export class IndexDBDataGateway extends IndexDBGateway {
+  readonly storeType = "data";
   constructor(logger: Logger) {
     super(ensureLogger(logger, "IndexDBDataGateway", {}));
   }
 }
 
 export class IndexDBWalGateway extends IndexDBGateway {
+  readonly storeType = "wal";
   constructor(logger: Logger) {
     super(ensureLogger(logger, "IndexDBWalGateway", {}));
   }
 }
 export class IndexDBMetaGateway extends IndexDBGateway {
+  readonly storeType = "meta";
   constructor(logger: Logger) {
     super(ensureLogger(logger, "IndexDBDataGateway", {}));
   }

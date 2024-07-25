@@ -66,12 +66,12 @@ export abstract class ConnectionBase implements Connection {
     const gateway = await getGatewayFromURL(metaUrl, this.logger);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
     const name = metaUrl.toString();
-    const remote = new RemoteMetaStore(name, metaUrl, this.logger, gateway);
+    const remote = await RemoteMetaStore(name, metaUrl, this.logger, gateway);
     remote.onLoad("main", async (metas) => {
       if (metas) {
-        this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre")
+        this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
         await throwFalsy(this.loader).handleDbMetasFromStore(metas);
-        this.logger.Debug().Any("metas", metas).Msg("connectMeta_X: handleDbMetasFromStore post")
+        this.logger.Debug().Any("metas", metas).Msg("connectMeta_X: handleDbMetasFromStore post");
       }
     });
     this.loader.remoteMetaStore = remote;
@@ -92,7 +92,7 @@ export abstract class ConnectionBase implements Connection {
     const gateway = await getGatewayFromURL(dataUrl, this.logger);
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.toString();
-    loader.remoteCarStore = new RemoteDataStore(name, this.url, this.logger, gateway);
+    loader.remoteCarStore = await RemoteDataStore(name, this.url, this.logger, gateway);
     // @jchris why we have a differention between remoteCarStore and remoteFileStore?
     loader.remoteFileStore = loader.remoteCarStore;
   }

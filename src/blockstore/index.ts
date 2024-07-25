@@ -1,28 +1,4 @@
-export type {
-  AnyBlock,
-  AnyLink,
-  AnyAnyLink,
-  CarGroup,
-  // UploadDataFnParams,
-  // UploadMetaFnParams,
-  // DownloadDataFnParams,
-  // DownloadMetaFnParams,
-  DbMeta,
-  CommitOpts,
-  CryptoOpts,
-  StoreFactory,
-  StoreOpts,
-  StoreRuntime,
-  TransactionMeta,
-  BlobLike,
-  Connection,
-  TestStore,
-  DataStore,
-  DataSaveOpts,
-  MetaStore,
-  WALStore as RemoteWAL,
-  WALState,
-} from "./types.js";
+export * from "./types.js";
 
 export * from "./store-factory.js";
 export * from "./gateway.js";

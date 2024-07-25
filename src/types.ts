@@ -24,6 +24,8 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
   return value;
 }
 
+export type StoreType = "data" | "wal" | "meta";
+
 export interface ConfigOpts {
   readonly public?: boolean;
   readonly meta?: DbMeta;

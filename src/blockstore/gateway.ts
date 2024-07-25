@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { StoreType } from "./types.js";
+import { StoreType } from "../types.js";
 
 export interface GatewayOpts {
   readonly gateway: Gateway;
@@ -22,7 +22,7 @@ export type GetResult = Result<Uint8Array, NotFoundError | Error>;
 export type VoidResult = Result<void>;
 
 export interface Gateway {
-  readonly storeType: StoreType
+  readonly storeType: StoreType;
   // all the methods never throw!
   // an error is reported as a Result
   buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
