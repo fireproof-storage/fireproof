@@ -51,7 +51,7 @@ describe("fireproof/config", () => {
   }
   it("node default", async () => {
     const old = rt.SysContainer.env.get("FP_STORAGE_URL");
-    rt.SysContainer.env.del("FP_STORAGE_URL");
+    rt.SysContainer.env.delete("FP_STORAGE_URL");
     let baseDir = rt
       .dataDir(my_app())
       .replace(/\?.*$/, "")

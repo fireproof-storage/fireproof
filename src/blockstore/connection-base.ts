@@ -4,12 +4,14 @@ import { MemoryBlockstore } from "@web3-storage/pail/block";
 import type { Link, Version } from "multiformats";
 import { Logger } from "@adviser/cement";
 
-import { Falsy, throwFalsy } from "../types.js";
+import { throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
 import type { BlockstoreOpts } from "./transaction.js";
-import type { UploadMetaFnParams, UploadDataFnParams, DownloadMetaFnParams, DownloadDataFnParams, Connection } from "./types.js";
+import type { Connection } from "./types.js";
 import { Loadable, type Loader } from "./loader.js";
-import { ensureLogger } from "../utils.js";
+import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
+import { getGatewayFromURL } from "./store-factory.js";
+// import { ensureLogger } from "../utils.js";
 
 export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
 
@@ -30,57 +32,69 @@ export abstract class ConnectionBase implements Connection {
   taskManager?: TaskManager;
   loaded: Promise<void> = Promise.resolve();
 
-  abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
-  abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
-  abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
-  abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
+  readonly url: URL;
+
+  // abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  // abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
+  // abstract metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  // abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 
   readonly logger: Logger;
-  constructor(logger: Logger) {
-    this.logger = ensureLogger(logger, "ConnectionBase");
+  constructor(url: URL, logger: Logger) {
+    this.logger = logger;
+    this.url = url;
   }
 
   async refresh() {
     await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
-    await (await throwFalsy(this.loader).remoteWAL())._process();
+    await (await throwFalsy(this.loader).WALStore()).process();
   }
 
-  connect({ loader }: { loader?: Loader }) {
+  async connect_X({ loader }: { readonly loader?: Loader }) {
     if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
-    this.connectMeta({ loader });
-    this.connectStorage({ loader });
+    await this.connectMeta_X({ loader });
+    await this.connectStorage_X({ loader });
   }
 
-  connectMeta({ loader }: { loader?: Loader }) {
-    if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
+  async connectMeta_X({ loader }: { loader?: Loadable }) {
+    if (!loader) throw this.logger.Error().Msg("connectMeta_X: loader is required").AsError();
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
-    this.onConnect();
-    this.logger.Warn().Msg("connectMeta: connecting to remote meta store is disabled");
-    // const remote = new RemoteMetaStore(new URL(`remote://connectMeta`), this.loader.name, this, this.logger);
-    // remote.onLoad("main", async (metas) => {
-    //   if (metas) {
-    //     await throwFalsy(this.loader).handleDbMetasFromStore(metas);
-    //   }
-    // });
-    // this.loader.remoteMetaStore = remote;
-    // this.loaded = this.loader.ready().then(async () => {
-    //   remote.load("main").then(async () => {
-    //     (await throwFalsy(this.loader).remoteWAL())._process();
-    //   });
-    // });
+    await this.onConnect();
+    const metaUrl = new URL(this.url.toString());
+    metaUrl.searchParams.set("store", metaUrl.searchParams.get("store") || "meta");
+    const gateway = await getGatewayFromURL(metaUrl, this.logger);
+    if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
+    const name = metaUrl.toString();
+    const remote = new RemoteMetaStore(name, metaUrl, this.logger, gateway);
+    remote.onLoad("main", async (metas) => {
+      if (metas) {
+        this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre")
+        await throwFalsy(this.loader).handleDbMetasFromStore(metas);
+        this.logger.Debug().Any("metas", metas).Msg("connectMeta_X: handleDbMetasFromStore post")
+      }
+    });
+    this.loader.remoteMetaStore = remote;
+    this.loaded = this.loader.ready().then(async () => {
+      remote.load("main").then(async () => {
+        (await throwFalsy(this.loader).WALStore()).process();
+      });
+    });
   }
 
-  async onConnect() {
-    return;
-  }
+  abstract onConnect(): Promise<void>;
 
-  connectStorage({ loader }: { loader?: Loader }) {
-    if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
+  async connectStorage_X({ loader }: { loader?: Loadable }) {
+    if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
     this.loader = loader;
-    this.logger.Warn().Msg("connectStorage: connecting to remote meta store is disabled");
-    // loader.remoteCarStore = new RemoteDataStore(new URL(`remote://remoteCarStore`), this.loader.name, this, this.logger);
-    // loader.remoteFileStore = new RemoteDataStore(new URL(`remote://remoteFileStore`), this.loader.name, this, this.logger);
+    const dataUrl = new URL(this.url.toString());
+    dataUrl.searchParams.set("store", dataUrl.searchParams.get("store") || "data");
+    const gateway = await getGatewayFromURL(dataUrl, this.logger);
+    if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
+    const name = dataUrl.toString();
+    loader.remoteCarStore = new RemoteDataStore(name, this.url, this.logger, gateway);
+    // @jchris why we have a differention between remoteCarStore and remoteFileStore?
+    loader.remoteFileStore = loader.remoteCarStore;
   }
 
   async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {

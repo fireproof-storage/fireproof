@@ -1,7 +1,7 @@
 import { CID } from "multiformats";
-// import { matches, equalsJSON } from "../helpers.js";
 import { bs } from "@fireproof/core";
 
+const txtEncoder = new TextEncoder();
 describe("Fresh TransactionBlockstore", function () {
   let blocks: bs.BaseBlockstore;
   beforeEach(function () {
@@ -14,7 +14,7 @@ describe("Fresh TransactionBlockstore", function () {
     expect(blocks.loader).toBeFalsy();
   });
   it("should not put", async function () {
-    const value = new TextEncoder().encode("value");
+    const value = txtEncoder.encode("value");
     const e = await blocks.put("key" as unknown as bs.AnyLink, value).catch((e) => e);
     expect(e.message).toMatch(/transaction/g);
   });
@@ -42,7 +42,7 @@ describe("TransactionBlockstore with name", function () {
     expect(blocks.loader).toBeTruthy();
   });
   it("should get from loader", async function () {
-    const bytes = new TextEncoder().encode("bytes");
+    const bytes = txtEncoder.encode("bytes");
     expect(blocks.loader).toBeTruthy();
     blocks.loader.getBlock = async (cid) => {
       return { cid, bytes };
@@ -62,7 +62,7 @@ describe("A transaction", function () {
   });
   it("should put and get", async function () {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-    const bytes = new TextEncoder().encode("bytes");
+    const bytes = txtEncoder.encode("bytes");
     await tblocks.put(cid, bytes);
     expect(blocks.transactions.has(tblocks)).toBeTruthy();
     const got = await tblocks.get(cid);
@@ -73,7 +73,7 @@ describe("A transaction", function () {
 });
 
 function asUInt8Array(str: string) {
-  return new TextEncoder().encode(str);
+  return txtEncoder.encode(str);
 }
 
 describe("TransactionBlockstore with a completed transaction", function () {

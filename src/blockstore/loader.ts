@@ -13,13 +13,17 @@ import {
   type CarGroup,
   type CarLog,
   toCIDBlock,
+  DataStore,
+  WALStore,
+  RemoteMetaStore,
+  MetaStore,
 } from "./types.js";
 import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction.js";
 
 import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers.js";
 import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers.js";
 
-import { DataStore, MetaStore, RemoteWAL } from "./store.js";
+// import { DataStoreImpl, MetaStoreImpl, RemoteWALImpl } from "./store.js";
 
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
@@ -48,10 +52,6 @@ export function toHexString(byteArray: Uint8Array) {
     .join("");
 }
 
-type AbstractRemoteMetaStore = MetaStore & {
-  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>;
-};
-
 export abstract class Loadable {
   name = "";
   abstract readonly logger: Logger;
@@ -59,12 +59,12 @@ export abstract class Loadable {
   remoteCarStore?: DataStore;
   abstract carStore(): Promise<DataStore>;
   carLog: CarLog = new Array<CarGroup>();
-  remoteMetaStore?: AbstractRemoteMetaStore;
+  remoteMetaStore?: RemoteMetaStore;
   remoteFileStore?: DataStore;
   abstract ready(): Promise<void>;
   abstract close(): Promise<void>;
   abstract fileStore(): Promise<DataStore>;
-  abstract remoteWAL(): Promise<RemoteWAL>;
+  abstract WALStore(): Promise<WALStore>;
   abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
 
@@ -80,7 +80,7 @@ export class Loader implements Loadable {
   carLog: CarLog = [];
   key?: string;
   keyId?: string;
-  remoteMetaStore?: AbstractRemoteMetaStore;
+  remoteMetaStore?: RemoteMetaStore;
   remoteCarStore?: DataStore;
   remoteFileStore?: DataStore;
 
@@ -97,8 +97,8 @@ export class Loader implements Loadable {
   async fileStore(): Promise<DataStore> {
     return this.ebOpts.storeRuntime.makeDataStore(this);
   }
-  async remoteWAL(): Promise<RemoteWAL> {
-    return this.ebOpts.storeRuntime.makeRemoteWAL(this);
+  async WALStore(): Promise<WALStore> {
+    return this.ebOpts.storeRuntime.makeWALStore(this);
   }
 
   async metaStore(): Promise<MetaStore> {
@@ -116,12 +116,12 @@ export class Loader implements Loadable {
   }
 
   async close() {
-    const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
+    const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     await Promise.all(toClose.map((store) => store.close()));
   }
 
   async destroy() {
-    const toDestroy = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.remoteWAL()]);
+    const toDestroy = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     await Promise.all(toDestroy.map((store) => store.destroy()));
   }
 
@@ -151,6 +151,7 @@ export class Loader implements Loadable {
   // }
 
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
+    this.logger.Debug().Any("metas", metas).Msg("handleDbMetasFromStore");
     for (const meta of metas) {
       await this.writeLimit(async () => {
         await this.mergeDbMetaIntoClock(meta);
@@ -226,7 +227,7 @@ export class Loader implements Loadable {
     for (const car of cars) {
       const { cid, bytes } = car;
       await (await this.fileStore()).save({ cid, bytes });
-      await (await this.remoteWAL()).enqueueFile(cid, !!opts.public);
+      await (await this.WALStore()).enqueueFile(cid, !!opts.public);
       cids.push(cid);
     }
 
@@ -280,7 +281,7 @@ export class Loader implements Loadable {
 
     await this.cacheTransaction(t);
     const newDbMeta = { cars: cids, key: this.key || null } as DbMeta;
-    await (await this.remoteWAL()).enqueue(newDbMeta, opts);
+    await (await this.WALStore()).enqueue(newDbMeta, opts);
     await (await this.metaStore()).save(newDbMeta);
     await this.updateCarLog(cids, fp, !!opts.compact);
     return cids;
@@ -558,7 +559,7 @@ export class Loader implements Loadable {
 
   protected async setKey(key: string) {
     if (this.key && this.key !== key)
-      throw this.logger.Error().Str("this.key", this.key).Str("key", key).Msg("setting key").AsError();
+      throw this.logger.Error().Str("name", this.name).Str("this.key", this.key).Str("key", key).Msg("setting key").AsError();
     this.key = key;
     const encoder = new TextEncoder();
     const data = encoder.encode(key);

@@ -1,8 +1,9 @@
 import type { CID, Link, Version } from "multiformats";
-import { DataStore, MetaStore, RemoteWAL } from "./store.js";
 import type { Loadable } from "./loader.js";
 import { DocFileMeta, Falsy } from "../types.js";
 import { CarTransaction } from "./transaction.js";
+import { Result } from "../utils.js";
+import { CommitQueue } from "./commit-queue.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -206,7 +207,7 @@ export interface BlobLike {
 export interface StoreFactory {
   makeMetaStore?: (loader: Loadable) => Promise<MetaStore>;
   makeDataStore?: (loader: Loadable) => Promise<DataStore>;
-  makeRemoteWAL?: (loader: Loadable) => Promise<RemoteWAL>;
+  makeWALStore?: (loader: Loadable) => Promise<WALStore>;
 
   encodeFile?: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
@@ -222,7 +223,7 @@ export interface StoreOpts extends StoreFactory {
     readonly meta?: string | URL;
     readonly data?: string | URL;
     readonly index?: string | URL;
-    readonly remoteWAL?: string | URL;
+    readonly wal?: string | URL;
   };
 }
 
@@ -241,7 +242,7 @@ export interface StoreRuntime {
   // for all stores a refcount on close() should be used
   makeMetaStore(loader: Loadable): Promise<MetaStore>;
   makeDataStore(loader: Loadable): Promise<DataStore>;
-  makeRemoteWAL(loader: Loadable): Promise<RemoteWAL>;
+  makeWALStore(loader: Loadable): Promise<WALStore>;
   encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File>;
 }
@@ -257,39 +258,96 @@ export interface DbMeta {
   key?: string;
 }
 
-export interface UploadMetaFnParams {
-  readonly name: string;
-  readonly branch: string;
-}
+// export interface UploadMetaFnParams {
+//   readonly name: string;
+//   readonly branch: string;
+// }
 
-export type FnParamTypes = "data" | "file";
+// export type FnParamTypes = "data" | "file";
 
-export interface UploadDataFnParams {
-  readonly type: FnParamTypes;
-  readonly name: string;
-  readonly car: string;
-  readonly size: string;
-}
+// export interface UploadDataFnParams {
+//   readonly type: FnParamTypes;
+//   readonly name: string;
+//   readonly car: string;
+//   readonly size: string;
+// }
 
-export interface DownloadDataFnParams {
-  readonly type: FnParamTypes;
-  readonly name: string;
-  readonly car: string;
-}
+// export interface DownloadDataFnParams {
+//   readonly type: FnParamTypes;
+//   readonly name: string;
+//   readonly car: string;
+// }
 
-export interface DownloadMetaFnParams {
-  readonly name: string;
-  readonly branch: string;
-}
+// export interface DownloadMetaFnParams {
+//   readonly name: string;
+//   readonly branch: string;
+// }
+
+export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
 export interface Connection {
   readonly loader?: Loadable;
   readonly loaded: Promise<void>;
-  connectMeta({ loader }: { loader?: Loadable }): void;
-  connectStorage({ loader }: { loader?: Loadable }): void;
+  connectMeta_X({ loader }: { loader?: Loadable }): void;
+  connectStorage_X({ loader }: { loader?: Loadable }): void;
 
-  metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
-  dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
-  metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
-  dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
+  // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  // dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
+  // metaDownload(params: DownloadMetaFnParams): Promise<Uint8Array[] | Falsy>;
+  // dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 }
+
+export interface BaseStore {
+  readonly url: URL;
+  readonly name: string;
+  onStarted(fn: () => void): void;
+  onClosed(fn: () => void): void;
+
+  close(): Promise<Result<void>>;
+  destroy(): Promise<Result<void>>;
+  readonly ready?: () => Promise<void>;
+  start(): Promise<Result<void>>;
+}
+
+export interface MetaStore extends BaseStore {
+  load(branch?: string): Promise<DbMeta[] | Falsy>;
+  // branch is defaulted to "main"
+  save(meta: DbMeta, branch?: string): Promise<Result<void>>;
+}
+
+export interface RemoteMetaStore extends MetaStore {
+  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>;
+}
+
+export interface DataSaveOpts {
+  readonly public: boolean;
+}
+
+export interface DataStore extends BaseStore {
+  load(cid: AnyLink): Promise<AnyBlock>;
+  save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
+  remove(cid: AnyLink): Promise<Result<void>>;
+}
+
+export interface WALState {
+  operations: DbMeta[];
+  noLoaderOps: DbMeta[];
+  fileOperations: {
+    readonly cid: AnyLink;
+    readonly public: boolean;
+  }[];
+}
+
+export interface WALStore extends BaseStore {
+  ready: () => Promise<void>;
+  readonly processing?: Promise<void> | undefined;
+  readonly processQueue: CommitQueue<void>;
+
+  process(): Promise<void>;
+  enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;
+  enqueueFile(fileCid: AnyLink, publicFile?: boolean): Promise<void>;
+  load(): Promise<WALState | Falsy>;
+  save(state: WALState): Promise<void>;
+}
+
+export type StoreType = "data" | "wal" | "meta";
