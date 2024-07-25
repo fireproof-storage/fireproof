@@ -349,5 +349,3 @@ export interface WALStore extends BaseStore {
   load(): Promise<WALState | Falsy>;
   save(state: WALState): Promise<void>;
 }
-
-export type StoreType = "data" | "wal" | "meta";

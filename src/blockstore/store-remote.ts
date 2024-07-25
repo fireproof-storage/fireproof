@@ -1,3 +1,5 @@
+import { Logger } from "../utils.js";
+import { Gateway } from "./gateway.js";
 import { DataStoreImpl, MetaStoreImpl } from "./store.js";
 
 // export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
@@ -20,12 +22,23 @@ import { DataStoreImpl, MetaStoreImpl } from "./store.js";
 //   }
 // }
 
-export class RemoteDataStore extends DataStoreImpl {
-  // just for explaining the concept
-}
+// export class RemoteDataStore extends DataStoreImpl {
+//   // just for explaining the concept
+// }
 
-export class RemoteMetaStore extends MetaStoreImpl {
-  // just for explaining the concept
+// export class RemoteMetaStore extends MetaStoreImpl {
+//   // just for explaining the concept
+// }
+
+export async function RemoteDataStore(name: string, url: URL, logger: Logger, gw: Gateway) {
+  const ds = new DataStoreImpl(name, url, logger, gw);
+  await ds.start();
+  return ds;
+}
+export async function RemoteMetaStore(name: string, url: URL, logger: Logger, gw: Gateway) {
+  const ms = new MetaStoreImpl(name, url, logger, gw);
+  await ms.start();
+  return ms;
 }
 
 // export class RemoteWALStore extends WALStoreImpl {

@@ -103,15 +103,19 @@ abstract class BaseStoreImpl {
   }
 }
 
-
 export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly subscribers = new Map<string, LoadHandler[]>();
 
   constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
-    super(name, url, ensureLogger(logger, "MetaStoreImpl", {
-      url: logValue(() => url.toString()),
-      name
-    }), gateway);
+    super(
+      name,
+      url,
+      ensureLogger(logger, "MetaStoreImpl", {
+        url: logValue(() => url.toString()),
+        name,
+      }),
+      gateway,
+    );
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -141,7 +145,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       const subscribers = this.subscribers.get(branch) || [];
       await Promise.all(subscribers.map((subscriber) => subscriber(dbMetas)));
     } catch (e) {
-      throw this.logger.Error().Err(e).Msg("handleSubscribers").AsError();
+      this.logger.Error().Err(e).Msg("handleSubscribers").AsError();
     }
   }
 
@@ -164,10 +168,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async load(branch?: string): Promise<DbMeta[] | Falsy> {
     branch = branch || "main";
-    this.logger
-      .Debug()
-      .Str("branch", branch)
-      .Msg("loading");
+    this.logger.Debug().Str("branch", branch).Msg("loading");
     const url = await this.gateway.buildUrl(this.url, branch);
     if (url.isErr()) {
       throw this.logger
@@ -284,9 +285,14 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
   constructor(loader: Loadable, url: URL, logger: Logger, gateway: Gateway) {
-    super(loader.name, url, ensureLogger(logger, "WALStoreImpl", {
-      url: logValue(() => url.toString()),
-    }), gateway);
+    super(
+      loader.name,
+      url,
+      ensureLogger(logger, "WALStoreImpl", {
+        url: logValue(() => url.toString()),
+      }),
+      gateway,
+    );
     this.loader = loader;
   }
 
@@ -305,8 +311,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       }
     });
   };
-
-
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
@@ -329,7 +333,11 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     await this.ready();
     if (!this.loader.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
-      await this._doProcess();
+      try {
+        await this._doProcess();
+      } catch (e) {
+        this.logger.Error().Any("error", e).Msg("error processing wal");
+      }
       if (this.walState.operations.length || this.walState.fileOperations.length || this.walState.noLoaderOps.length) {
         setTimeout(() => void this.process(), 0);
       }
@@ -395,14 +403,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         const res = await Promise.allSettled(uploads);
         const errors = res.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
         if (errors.length) {
-          throw this.logger
-            .Error()
-            .Any(
-              "errors",
-              errors
-            )
-            .Msg("error uploading")
-            .AsError();
+          throw this.logger.Error().Any("errors", errors).Msg("error uploading").AsError();
 
           errors[0].reason;
         }

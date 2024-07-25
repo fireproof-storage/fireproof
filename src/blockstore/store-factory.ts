@@ -58,33 +58,33 @@ function buildURL(optURL: string | URL | undefined, loader: Loadable): URL {
   return toURL(optURL || obuUrl || dataDir(loader.name, storeOpts.stores?.base), storeOpts.isIndex);
 }
 
-export async function getGatewayFromURL(url: URL, logger: Logger): Promise<Gateway|undefined> {
+export async function getGatewayFromURL(url: URL, logger: Logger): Promise<Gateway | undefined> {
   const item = storeFactory.get(url.protocol);
   if (item) {
     let ret: Promise<Gateway>;
     switch (url.searchParams.get("store")) {
       case "data":
-        ret = item.data(logger)
-        break
+        ret = item.data(logger);
+        break;
       case "meta":
-        ret = item.meta(logger)
-        break
+        ret = item.meta(logger);
+        break;
       case "wal":
-        ret = item.wal(logger)
-        break
+        ret = item.wal(logger);
+        break;
       default:
-        logger.Warn().Url(url).Msg("unsupported store")
+        logger.Warn().Url(url).Msg("unsupported store");
         return undefined;
     }
-    const res = await (await ret).start(url)
+    const res = await (await ret).start(url);
     if (res.isErr()) {
-      logger.Error().Result("start", res).Msg("start failed")
-      return undefined
+      logger.Error().Result("start", res).Msg("start failed");
+      return undefined;
     }
-    return ret
+    return ret;
   }
-  logger.Warn().Url(url).Msg("unsupported protocol")
-  return undefined
+  logger.Warn().Url(url).Msg("unsupported protocol");
+  return undefined;
 }
 
 export function registerStoreProtocol(item: StoreFactoryItem) {

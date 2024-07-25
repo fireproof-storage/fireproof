@@ -40,7 +40,9 @@ export class CommitQueue<T = void> {
       this.processing = true;
       const queueFn = this.queue.shift();
       if (queueFn) {
-        queueFn().finally(() => {/**/});
+        queueFn().finally(() => {
+          /**/
+        });
       }
     }
     if (this.queue.length === 0 && !this.processing) {

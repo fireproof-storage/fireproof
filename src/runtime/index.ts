@@ -6,7 +6,7 @@ export * from "./gateways/file/utils.js";
 export * as crypto from "./crypto.js";
 export * as files from "./files.js";
 
-export * from './runtime.js'
+export * from "./runtime.js";
 
 export { FILESTORE_VERSION } from "./gateways/file/version.js";
 export { INDEXDB_VERSION } from "./gateways/indexdb/version.js";
