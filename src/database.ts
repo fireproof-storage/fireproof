@@ -247,7 +247,10 @@ function makeName(fnString: string) {
   let found: RegExpExecArray | null = null;
   const matches = Array.from(fnString.matchAll(regex), (match) => match[1].trim());
   if (matches.length === 0) {
-    found = /=>\s*(.*)/.exec(fnString);
+    found = /=>\s*{?\s*([^{}]+)\s*}?/.exec(fnString);
+    if (found && found[1].includes("return")) {
+      found = null;
+    }
   }
   if (!found) {
     return fnString;

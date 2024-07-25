@@ -2,7 +2,7 @@ import { sleep } from "../helpers.js";
 
 import { CID } from "multiformats/cid";
 
-import { bs, rt, fireproof, Database, index, DocResponse, IndexRows, DocWithId, Index, MapFn } from "@fireproof/core";
+import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index, rt } from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -142,6 +142,26 @@ describe("basic database", function () {
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe("bar");
+  });
+  it("should query with multiple successive functions", async function () {
+    interface TestDoc {
+      _id: string;
+      foo: string;
+      baz: string;
+    }
+    await db.put<TestDoc>({ _id: "test", foo: "bar", baz: "qux" });
+    const query1 = await db.query<string, TestDoc>((doc) => {
+      return doc.foo;
+    });
+    const query2 = await db.query<string, TestDoc>((doc) => {
+      return doc.baz;
+    });
+    expect(query1).toBeTruthy();
+    expect(query1.rows).toBeTruthy();
+    expect(query1.rows.length).toBe(1);
+    expect(query2).toBeTruthy();
+    expect(query2.rows).toBeTruthy();
+    expect(query2.rows.length).toBe(1);
   });
 });
 
