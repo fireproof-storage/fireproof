@@ -248,11 +248,15 @@ function makeName(fnString: string) {
   const matches = Array.from(fnString.matchAll(regex), (match) => match[1].trim());
   if (matches.length === 0) {
     found = /=>\s*{?\s*([^{}]+)\s*}?/.exec(fnString);
+    if (found && found[1].includes("return")) {
+      found = null;
+    }
   }
   if (!found) {
     return fnString;
   } else {
     // it's a consise arrow function, match everything after the arrow
+    console.log("found", found[1], fnString);
     return found[1];
   }
 }
