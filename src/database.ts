@@ -256,7 +256,6 @@ function makeName(fnString: string) {
     return fnString;
   } else {
     // it's a consise arrow function, match everything after the arrow
-    console.log("found", found[1], fnString);
     return found[1];
   }
 }
