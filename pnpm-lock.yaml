@@ -109,7 +109,7 @@ importers:
         specifier: ^7.6.3
         version: 7.7.2
       tsup:
-        specifier: ^8.2.1
+        specifier: ^8.2.3
         version: 8.5.0(jiti@1.21.7)(postcss@8.5.4)(tsx@4.16.2)(typescript@5.8.3)(yaml@2.8.0)
       tsx:
         specifier: ^4.16.2
