@@ -50,7 +50,7 @@
     "@types/node": "^20.14.11",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.3",
-    "@typescript-eslint/typescript-estree": "^7.16.1",
+    "@typescript-eslint/typescript-estree": "^7.17.0",
     "@vitest/browser": "^2.0.2",
     "@vitest/ui": "^2.0.2",
     "esbuild": "^0.23.0",

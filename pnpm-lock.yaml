@@ -85,7 +85,7 @@ importers:
         specifier: ^18.3.3
         version: 18.3.23
       '@typescript-eslint/typescript-estree':
-        specifier: ^7.16.1
+        specifier: ^7.17.0
         version: 7.18.0(typescript@5.8.3)
       '@vitest/browser':
         specifier: ^2.0.2
@@ -3367,7 +3367,20 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
-  '@vitest/browser@2.0.2': {}
+  '@vitest/browser@2.0.2':
+    resolution: {integrity: sha512-0U0LY7Yq5INXwS1+CDlKEntgtWGYu5pdVmuzD9alXEBDeNnjMD0fKL4dO7V7uIWnzMgzVjKxE205y4IoRBPn/A==}
+    peerDependencies:
+      playwright: '*'
+      safaridriver: '*'
+      vitest: 2.1.9
+      webdriverio: '*'
+    peerDependenciesMeta:
+      playwright:
+        optional: true
+      safaridriver:
+        optional: true
+      webdriverio:
+        optional: true
 
   '@vitest/browser@2.1.9':
     resolution: {integrity: sha512-AHDanTP4Ed6J5R6wRBcWRQ+AxgMnNJxsbaa229nFQz5KOMFZqlW11QkIDoLgCjBOpQ1+c78lTN5jVxO8ME+S4w==}
