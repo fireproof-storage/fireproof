@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "file",
-    exclude: ["tests/react/**"],
+    exclude: ["tests/react/**", "examples/**"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     globals: true,
     setupFiles: "./setup.file.js",

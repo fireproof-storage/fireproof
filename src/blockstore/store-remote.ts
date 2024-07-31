@@ -1,6 +1,4 @@
-import { Logger } from "../utils.js";
-import { Gateway } from "./gateway.js";
-import { DataStoreImpl, MetaStoreImpl } from "./store.js";
+import { DataStoreImpl, MetaStoreImpl, StoreOpts } from "./store.js";
 
 // export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 // export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams, logger: Logger) {
@@ -30,13 +28,13 @@ import { DataStoreImpl, MetaStoreImpl } from "./store.js";
 //   // just for explaining the concept
 // }
 
-export async function RemoteDataStore(name: string, url: URL, logger: Logger, gw: Gateway) {
-  const ds = new DataStoreImpl(name, url, logger, gw);
+export async function RemoteDataStore(name: string, url: URL, opts: StoreOpts) {
+  const ds = new DataStoreImpl(name, url, opts);
   await ds.start();
   return ds;
 }
-export async function RemoteMetaStore(name: string, url: URL, logger: Logger, gw: Gateway) {
-  const ms = new MetaStoreImpl(name, url, logger, gw);
+export async function RemoteMetaStore(name: string, url: URL, opts: StoreOpts) {
+  const ms = new MetaStoreImpl(name, url, opts);
   await ms.start();
   return ms;
 }

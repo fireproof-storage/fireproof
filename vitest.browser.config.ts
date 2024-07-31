@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "indexdb",
+    exclude: ["examples/**"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     //    environment: "browser",
     browser: {

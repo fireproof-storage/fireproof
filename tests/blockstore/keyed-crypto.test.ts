@@ -1,0 +1,248 @@
+import { bs, rt } from "@fireproof/core";
+import { Logger, MockLogger } from "@adviser/cement";
+
+describe("KeyBag", () => {
+  beforeAll(async () => {
+    await rt.SysContainer.start();
+  })
+  it("default-path", async () => {
+    const old = rt.SysContainer.env.get("FP_KEYBAG_URL");
+    rt.SysContainer.env.delete("FP_KEYBAG_URL");
+    const kb = await rt.kb.getKeyBag();
+    expect(kb.rt.url.toString()).toBe(`file://${rt.SysContainer.env.get("HOME")}/.fireproof/keybag`);
+    rt.SysContainer.env.set("FP_KEYBAG_URL", old);
+  })
+  it("from env", async () => {
+    const old = rt.SysContainer.env.get("FP_KEYBAG_URL");
+    rt.SysContainer.env.set("FP_KEYBAG_URL", "file://./dist/tests/key.bag");
+    const kb = await rt.kb.getKeyBag();
+    expect(kb.rt.url.toString()).toBe(`file://./dist/tests/key.bag`);
+    rt.SysContainer.env.set("FP_KEYBAG_URL", old);
+  })
+  it("simple add", async () => {
+    const kb = await rt.kb.getKeyBag({
+      url: `file://./dist/tests/key.bag`,
+      crypto: rt.crypto.toCryptoRuntime({
+        randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
+      })
+    });
+    const name = "setkey" + Math.random();
+    expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
+
+    const key = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const res = await kb.setNamedKey(name, key);
+    expect(res.isOk()).toBeTruthy();
+    expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
+
+    const name2 = "implicit"
+    const created = await kb.getNamedKey(name2);
+    expect(created.isOk()).toBeTruthy();
+
+    expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
+
+    const provider = await kb.rt.getBag();
+    const diskBag = await rt.SysContainer.readfile((await provider._prepare(name)).fName).then((data) => {
+      return JSON.parse((new TextDecoder()).decode(data)) as rt.kb.KeyItem
+    })
+    const diskBag2 = await rt.SysContainer.readfile((await provider._prepare(name2)).fName).then((data) => {
+      return JSON.parse((new TextDecoder()).decode(data)) as rt.kb.KeyItem
+    })
+
+    expect(await kb.toKeyWithFingerPrint(diskBag.key)).toEqual(res)
+    expect(await kb.toKeyWithFingerPrint(diskBag2.key)).toEqual(created)
+    const algo = {
+      name: "AES-GCM",
+      iv: kb.rt.crypto.randomBytes(12),
+      tagLength: 128,
+    }
+    const data = kb.rt.crypto.randomBytes(122)
+    expect(
+      await kb.rt.crypto.encrypt(algo, res.Ok().key, data)
+    ).toEqual(
+      await kb.rt.crypto.encrypt(algo, created.Ok().key, data)
+    )
+    expect(
+      await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag.key), data)
+    ).toEqual(
+      await kb.rt.crypto.encrypt(algo, created.Ok().key, data)
+    )
+    expect(
+      await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag2.key), data)
+    ).toEqual(
+      await kb.rt.crypto.encrypt(algo, created.Ok().key, data)
+    )
+  })
+
+})
+
+describe("KeyedCryptoStore", () => {
+  let kb: rt.kb.KeyBag;
+  let logger: Logger;
+  beforeEach(async () => {
+    await rt.SysContainer.start();
+    logger = MockLogger().logger;
+    kb = await rt.kb.getKeyBag({
+      url: `file://./dist/tests/key.bag`
+    });
+  })
+  it("no crypto", async () => {
+    const loader = {
+      name: "test",
+      ebOpts: {
+          keyBag: {
+            keyRuntime: kb.rt,
+          },
+        store: {
+          stores: {
+            base: "file://./dist/tests/keyed-crypto-store?storekey=insecure",
+          }
+        },
+      }
+    } as unknown as bs.Loadable;
+    const strt = bs.toStoreRuntime({}, logger);
+
+    for (const pstore of [
+      strt.makeDataStore(loader),
+      strt.makeMetaStore(loader),
+      strt.makeWALStore(loader),
+    ]) {
+      const store = await pstore
+      // await store.start();
+      const kc = await store.keyedCrypto();
+      expect(kc.isEncrypting).toBe(false);
+    }
+  })
+
+  it("create key", async () => {
+    const loader = {
+      name: "test",
+      ebOpts: {
+        keyBag: {
+          keyRuntime: kb.rt,
+        },
+        store: {
+          stores: {
+            base: `file://./dist/tests/keyed-crypto-store`,
+          }
+        },
+      }
+    } as unknown as bs.Loadable;
+    const strt = bs.toStoreRuntime({}, logger);
+    for (const pstore of [
+      strt.makeDataStore(loader),
+      strt.makeMetaStore(loader),
+      strt.makeWALStore(loader),
+    ]) {
+      const store = await pstore
+      // await store.start();
+      const kc = await store.keyedCrypto();
+      expect(kc.isEncrypting).toBe(true);
+      expect(store.url.searchParams.get("storekey")).toBe(`@test:${store.url.searchParams.get("store")}@`)
+    }
+  })
+
+  it("key ref keybag", async () => {
+    const key = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const genKey = await kb.setNamedKey("@heute@", key);
+    const loader = {
+      name: "test",
+      ebOpts: {
+        keyBag: {
+          keyRuntime: kb.rt,
+        },
+        store: {
+          stores: {
+            base: `file://./dist/tests/keyed-crypto-store?storekey=@heute@`,
+          }
+        },
+      }
+    } as unknown as bs.Loadable;
+    const strt = bs.toStoreRuntime({}, logger);
+    for (const pstore of [
+      strt.makeDataStore(loader),
+      strt.makeMetaStore(loader),
+      strt.makeWALStore(loader),
+    ]) {
+      const store = await pstore
+      // await store.start();
+      expect(store.url.searchParams.get("storekey")).toBe(`@heute@`)
+      const kc = await store.keyedCrypto();
+      expect(kc.isEncrypting).toBe(true);
+      const testData = kb.rt.crypto.randomBytes(1024);
+      const iv = kb.rt.crypto.randomBytes(12);
+      const blk = await kc._encrypt({bytes: testData, iv})
+      expect(blk).not.toEqual(testData);
+      const dec = await kc.crypto.decrypt(kc.algo(iv), genKey.Ok().key, blk);
+      expect(dec).not.toEqual(testData);
+    }
+  })
+
+  it("key", async () => {
+    const key = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const loader = {
+      name: "test",
+      ebOpts: {
+        keyBag: {
+          keyRuntime: kb.rt,
+        },
+        store: {
+          stores: {
+            base: `file://./dist/tests/keyed-crypto-store?storekey=${key}`,
+          }
+        },
+      }
+    } as unknown as bs.Loadable;
+    const strt = bs.toStoreRuntime({}, logger);
+    for (const pstore of [
+      strt.makeDataStore(loader),
+      strt.makeMetaStore(loader),
+      strt.makeWALStore(loader),
+    ]) {
+      const store = await pstore
+      // await store.start();
+      expect(store.url.searchParams.get("storekey")).toBe(`@test:${store.url.searchParams.get("store")}@`)
+      const kc = await store.keyedCrypto();
+      expect(kc.isEncrypting).toBe(true);
+      const testData = kb.rt.crypto.randomBytes(1024);
+      const iv = kb.rt.crypto.randomBytes(12);
+      const blk = await kc._encrypt({bytes: testData, iv})
+      expect(blk).not.toEqual(testData);
+      const dec = await kc._decrypt({bytes: blk, iv});
+      expect(dec).toEqual(testData);
+    }
+  })
+
+})
+
+describe("KeyedCrypto", () => {
+  let kb: rt.kb.KeyBag;
+  let kycr: bs.KeyedCrypto;
+  let keyStr: string
+  beforeEach(async () => {
+    const logger = MockLogger().logger;
+    kb = await rt.kb.getKeyBag({
+      url: `file://./dist/tests/key.bag`
+    });
+    keyStr = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    kycr = await rt.kc.keyedCryptoFactory(new URL(`test://bla?storekey=${keyStr}`), kb, logger);
+  })
+  it("codec explict iv", async () => {
+    const testData = kb.rt.crypto.randomBytes(1024);
+    const iv = kb.rt.crypto.randomBytes(12);
+    const codec = kycr.codec(iv);
+    const blk = await codec.encode(testData);
+    expect(blk.length).toBeGreaterThanOrEqual(iv.length + testData.length);
+    expect(blk.slice(0, 12)).toEqual(iv);
+    const dec = await codec.decode(blk);
+    expect(dec).toEqual(testData);
+  })
+
+  it("codec implict iv", async () => {
+    const testData = kb.rt.crypto.randomBytes(1024);
+    const codec = kycr.codec();
+    const blk = await codec.encode(testData);
+    expect(blk.length).toBeGreaterThanOrEqual(12 + testData.length);
+    const dec = await codec.decode(blk);
+    expect(dec).toEqual(testData);
+  })
+})

@@ -6,11 +6,12 @@ import { Logger } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
-import type { BlockstoreOpts } from "./transaction.js";
+import type { BlockstoreRuntime } from "./transaction.js";
 import type { Connection } from "./types.js";
 import { Loadable, type Loader } from "./loader.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
 import { getGatewayFromURL } from "./store-factory.js";
+import { getKeyBag } from "../runtime/key-bag.js";
 // import { ensureLogger } from "../utils.js";
 
 export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
@@ -18,7 +19,7 @@ export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
 export interface Connectable {
   readonly blockstore: {
     readonly loader?: Loader;
-    readonly ebOpts: BlockstoreOpts;
+    readonly ebOpts: BlockstoreRuntime
   };
   readonly name?: string;
 }
@@ -66,7 +67,11 @@ export abstract class ConnectionBase implements Connection {
     const gateway = await getGatewayFromURL(metaUrl, this.logger);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
     const name = metaUrl.toString();
-    const remote = await RemoteMetaStore(name, metaUrl, this.logger, gateway);
+    const remote = await RemoteMetaStore(name, metaUrl, {
+      logger: this.logger,
+      gateway,
+      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag)
+    })
     remote.onLoad("main", async (metas) => {
       if (metas) {
         this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
@@ -92,7 +97,11 @@ export abstract class ConnectionBase implements Connection {
     const gateway = await getGatewayFromURL(dataUrl, this.logger);
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.toString();
-    loader.remoteCarStore = await RemoteDataStore(name, this.url, this.logger, gateway);
+    loader.remoteCarStore = await RemoteDataStore(name, this.url, {
+      logger: this.logger,
+      gateway,
+      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag)
+    })
     // @jchris why we have a differention between remoteCarStore and remoteFileStore?
     loader.remoteFileStore = loader.remoteCarStore;
   }

@@ -40,20 +40,7 @@ export class CRDT<T extends DocTypes> {
   readonly name?: string;
   readonly opts: ConfigOpts;
 
-  readonly onceReady = new ResolveOnce<void>();
-  async ready(): Promise<void> {
-    return this.onceReady.once(async () => {
-      await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
-    });
-  }
 
-  async close(): Promise<void> {
-    await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
-  }
-
-  async destroy(): Promise<void> {
-    await Promise.all([this.blockstore.destroy(), this.indexBlockstore.destroy()]);
-  }
 
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
@@ -127,6 +114,41 @@ export class CRDT<T extends DocTypes> {
     await this.clock.applyHead(done.meta.head, prevHead, updates);
     return done.meta;
   }
+
+
+
+  readonly onceReady = new ResolveOnce<void>();
+  async ready(): Promise<void> {
+    return this.onceReady.once(async () => {
+      try {
+        // eslint-disable-next-line no-console
+        console.log("blockstore ready", this.name);
+        await this.blockstore.ready()
+        // eslint-disable-next-line no-console
+        console.log("idxblockstore ready", this.name);
+        await this.indexBlockstore.ready()
+        // eslint-disable-next-line no-console
+        console.log("clockReady ready", this.name);
+        await this.clock.ready()
+        // eslint-disable-next-line no-console
+        console.log("clockReady done", this.name);
+        // await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.log((e as Error).stack)
+        throw this.logger.Error().Err(e).Msg("CRDT not ready").AsError();
+      }
+    });
+  }
+
+  async close(): Promise<void> {
+    await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
+  }
+
+  async destroy(): Promise<void> {
+    await Promise.all([this.blockstore.destroy(), this.indexBlockstore.destroy()]);
+  }
+
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 

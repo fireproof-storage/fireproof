@@ -13,12 +13,15 @@ import type {
   WALStore as WALStore,
   WALState,
   LoadHandler,
+  KeyedCrypto,
 } from "./types.js";
-import { Falsy, throwFalsy } from "../types.js";
+import { Falsy, StoreType, throwFalsy } from "../types.js";
 import { Gateway, isNotFoundError } from "./gateway.js";
 import { ensureLogger, exception2Result, sanitizeURL } from "../utils.js";
 import { carLogIncludesGroup, Loadable } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
+import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
+import { KeyBag } from "../runtime/key-bag.js";
 
 function guardVersion(url: URL): Result<URL> {
   if (!url.searchParams.has("version")) {
@@ -28,20 +31,15 @@ function guardVersion(url: URL): Result<URL> {
 }
 
 export interface StoreOpts {
-  readonly textEncoder: TextEncoder;
-  readonly textDecoder: TextDecoder;
+  readonly gateway: Gateway;
+  readonly logger: Logger;
+  readonly textEncoder?: TextEncoder;
+  readonly textDecoder?: TextDecoder;
+  readonly keybag: () => Promise<KeyBag>;
 }
 
 const _lazyTextEncoder = new ResolveOnce<TextEncoder>();
 const _lazyTextDecoder = new ResolveOnce<TextDecoder>();
-
-function defaultStoreOpts(opts: Partial<StoreOpts>): StoreOpts {
-  return {
-    ...opts,
-    textEncoder: opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder()),
-    textDecoder: opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder()),
-  };
-}
 
 abstract class BaseStoreImpl {
   // should be injectable
@@ -49,19 +47,20 @@ abstract class BaseStoreImpl {
   readonly textDecoder;
 
   // readonly STORAGE_VERSION: string;
+  abstract readonly storeType: StoreType;
   readonly name: string;
   readonly url: URL;
   readonly logger: Logger;
   readonly gateway: Gateway;
-  readonly opts: StoreOpts;
-  constructor(name: string, url: URL, logger: Logger, gateway: Gateway, opts: Partial<StoreOpts> = {}) {
+  readonly keybag: () => Promise<KeyBag>;
+  constructor(name: string, url: URL, opts: StoreOpts) {
     this.name = name;
-    this.url = url;
-    this.logger = logger;
-    this.gateway = gateway;
-    this.opts = defaultStoreOpts(opts);
-    this.textDecoder = this.opts.textDecoder;
-    this.textEncoder = this.opts.textEncoder;
+    this.url = new URL(url.toString());
+    this.keybag = opts.keybag;
+    this.logger = opts.logger;
+    this.gateway = opts.gateway;
+    this.textEncoder = opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder())
+    this.textDecoder = opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder())
   }
 
   readonly _onStarted: (() => void)[] = [];
@@ -75,6 +74,11 @@ abstract class BaseStoreImpl {
   abstract close(): Promise<Result<void>>;
 
   readonly ready?: () => Promise<void>;
+
+  async keyedCrypto(): Promise<KeyedCrypto> {
+    return keyedCryptoFactory(this.url, await this.keybag(), this.logger);
+  }
+
   async start(): Promise<Result<void>> {
     this.logger.Debug().Msg("starting-gateway");
     const res = await this.gateway.start(this.url);
@@ -82,6 +86,36 @@ abstract class BaseStoreImpl {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
       return res;
     }
+    // add storekey to url
+    const storeKey = this.url.searchParams.get("storekey");
+    if (storeKey !== "insecure") {
+      const idx = this.url.searchParams.get("index");
+      const storeKeyName = [this.name];
+      if (idx) {
+        storeKeyName.push(idx);
+      }
+      storeKeyName.push(this.storeType);
+      let keyName = `@${storeKeyName.join(":")}@`
+      let failIfNotFound = true
+      const kb = await this.keybag()
+      if (storeKey && storeKey.startsWith('@') && storeKey.endsWith('@')) {
+        keyName = storeKey
+      } else if (storeKey) {
+        const ret = await kb.getNamedKey(keyName, true)
+        if (ret.isErr()) {
+          await kb.setNamedKey(keyName, storeKey)
+        }
+      } else {
+        failIfNotFound = false // create key if not found
+      }
+      const ret = await kb.getNamedKey(keyName, failIfNotFound)
+      if (ret.isErr()) {
+        return ret
+      }
+      this.url.searchParams.set("storekey", keyName);
+    }
+
+
     sanitizeURL(this.url);
     const version = guardVersion(this.url);
     if (version.isErr()) {
@@ -104,17 +138,22 @@ abstract class BaseStoreImpl {
 }
 
 export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
+  readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
 
-  constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
+  constructor(name: string, url: URL, opts: StoreOpts) {
+    // const my = new URL(url.toString());
+    // my.searchParams.set("storekey", 'insecure');
     super(
       name,
       url,
-      ensureLogger(logger, "MetaStoreImpl", {
-        url: logValue(() => url.toString()),
-        name,
-      }),
-      gateway,
+      {
+        ...opts,
+        logger: ensureLogger(opts.logger, "MetaStoreImpl", {
+            url: logValue(() => this.url.toString()),
+            name,
+          })
+      }
     );
   }
 
@@ -129,9 +168,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     };
   }
 
-  makeHeader({ cars, key }: DbMeta): ToString<DbMeta> {
+  makeHeader({ cars }: DbMeta): ToString<DbMeta> {
     const toEncode: DbMeta = { cars };
-    if (key) toEncode.key = key;
+    // if (key) toEncode.key = key;
     return format(toEncode);
   }
 
@@ -216,18 +255,20 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 }
 
 export class DataStoreImpl extends BaseStoreImpl implements DataStore {
+  readonly storeType = "data";
   // readonly tag: string = "car-base";
 
-  constructor(name: string, url: URL, logger: Logger, gateway: Gateway) {
+  constructor(name: string, url: URL, opts: StoreOpts) {
     super(
       name,
       url,
-      ensureLogger(logger, "DataStoreImpl", {
-        url: logValue(() => url.toString()),
-        name,
-      }),
-      gateway,
-    );
+      {
+        ...opts,
+        logger: ensureLogger(opts.logger, "DataStoreImpl", {
+            url: logValue(() => this.url.toString()),
+            name,
+          })
+      })
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -274,6 +315,7 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
 }
 
 export class WALStoreImpl extends BaseStoreImpl implements WALStore {
+  readonly storeType = "wal";
   // readonly tag: string = "rwal-base";
 
   readonly loader: Loadable;
@@ -284,15 +326,19 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  constructor(loader: Loadable, url: URL, logger: Logger, gateway: Gateway) {
+  constructor(loader: Loadable, url: URL, opts: StoreOpts) {
+    // const my = new URL(url.toString());
+    // my.searchParams.set("storekey", 'insecure');
     super(
       loader.name,
       url,
-      ensureLogger(logger, "WALStoreImpl", {
-        url: logValue(() => url.toString()),
-      }),
-      gateway,
-    );
+      {
+        ...opts,
+        logger: ensureLogger(opts.logger, "WALStoreImpl", {
+            url: logValue(() => this.url.toString()),
+            name: loader.name,
+          })
+      })
     this.loader = loader;
   }
 
