@@ -19,7 +19,7 @@ export interface FileWithCid {
   cid: string;
 }
 export async function buildBlobFiles(): Promise<FileWithCid[]> {
-  const cp = rt.crypto.toCryptoOpts();
+  const cp = rt.crypto.toCryptoRuntime();
   return [
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `image.jpg`, { type: "image/jpeg" }),
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `fireproof.png`, { type: "image/png" }),

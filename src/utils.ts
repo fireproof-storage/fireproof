@@ -127,6 +127,10 @@ export function getName(url: URL, logger: Logger): string {
   return result;
 }
 
+export function getPathname(url: URL): string {
+  return url.toString().replace(/^.*:\/\//, "").replace(/\?.*$/, "");
+}
+
 export function exception2Result<T = void>(fn: () => Promise<T>): Promise<Result<T>> {
   return fn()
     .then((value) => Result.Ok(value))

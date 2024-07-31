@@ -17,6 +17,7 @@ import {
   WALStore,
   RemoteMetaStore,
   MetaStore,
+  BaseStore,
 } from "./types.js";
 import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction.js";
 
@@ -29,6 +30,7 @@ import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import * as CBW from "@ipld/car/buffer-writer";
 import type { Falsy, FileTransactionMeta } from "../types.js";
+import { getKeyBag } from "../runtime/key-bag.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -46,11 +48,7 @@ function uniqueCids(list: CarLog, remove = new Set<string>()): CarLog {
   return [...byString.values()];
 }
 
-export function toHexString(byteArray: Uint8Array) {
-  return Array.from(byteArray)
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("");
-}
+
 
 export abstract class Loadable {
   name = "";
@@ -68,18 +66,24 @@ export abstract class Loadable {
   abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
 
+// export interface DecoderAndCarReader extends CarReader {
+//   readonly decoder: BlockDecoder<number, Uint8Array>;
+// }
+
+export type DecoderAndCarReader = CarReader;
+
 export class Loader implements Loadable {
   readonly name: string;
   readonly ebOpts: BlockstoreRuntime;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
-  readonly carReaders = new Map<string, Promise<CarReader>>();
+  readonly carReaders = new Map<string, Promise<DecoderAndCarReader>>();
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
 
   carLog: CarLog = [];
-  key?: string;
-  keyId?: string;
+  // key?: string;
+  // keyId?: string;
   remoteMetaStore?: RemoteMetaStore;
   remoteCarStore?: DataStore;
   remoteFileStore?: DataStore;
@@ -89,6 +93,10 @@ export class Loader implements Loadable {
   private writeLimit = pLimit(1);
 
   // readonly id = uuidv4();
+
+  async keyBag() {
+    return getKeyBag(this.ebOpts.keyBag);
+  }
 
   async carStore(): Promise<DataStore> {
     return this.ebOpts.storeRuntime.makeDataStore(this);
@@ -167,9 +175,9 @@ export class Loader implements Loadable {
     if (this.seenMeta.has(meta.cars.toString())) return;
     this.seenMeta.add(meta.cars.toString());
 
-    if (meta.key) {
-      await this.setKey(meta.key);
-    }
+    // if (meta.key) {
+    //   await this.setKey(meta.key);
+    // }
     if (carLogIncludesGroup(this.carLog, meta.cars)) {
       return;
     }
@@ -183,12 +191,12 @@ export class Loader implements Loadable {
     await this.ebOpts.applyMeta?.(carHeader.meta);
   }
 
-  protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
-    const { key } = meta;
-    if (key) {
-      await this.setKey(key);
-    }
-  }
+  // protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
+  //   const { key } = meta;
+  //   if (key) {
+  //     await this.setKey(key);
+  //   }
+  // }
 
   async loadCarHeaderFromMeta<T>({ cars: cids }: DbMeta): Promise<CarHeader<T>> {
     //Call loadCar for every cid
@@ -196,46 +204,47 @@ export class Loader implements Loadable {
     return await parseCarFile(reader, this.logger);
   }
 
-  async _getKey(): Promise<string | undefined> {
-    if (this.key) return this.key;
-    // generate a random key
-    if (!this.ebOpts.public) {
-      await this.setKey(toHexString(this.ebOpts.crypto.randomBytes(32)));
-    }
-    return this.key || undefined;
-  }
+  // async _getKey(): Promise<string | undefined> {
+  //   if (this.key) return this.key;
+  //   // generate a random key
+  //   if (!this.ebOpts.public) {
+  //     await this.setKey(toHexString(this.ebOpts.crypto.randomBytes(32)));
+  //   }
+  //   return this.key || undefined;
+  // }
 
   async commitFiles(
     t: CarTransaction,
     done: TransactionMeta,
-    opts: CommitOpts = { noLoader: false, compact: false },
+    // opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
-    return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done, opts));
+    return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done));
   }
   // can these skip the queue? or have a file queue?
   async _commitInternalFiles(
     t: CarTransaction,
     done: TransactionMeta,
-    opts: CommitOpts = { noLoader: false, compact: false },
+    // opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.ready();
     const { files: roots } = this.makeFileCarHeader(done as FileTransactionMeta) as {
       files: AnyLink[];
     };
     const cids: AnyLink[] = [];
-    const cars = await this.prepareCarFilesFiles(roots, t, !!opts.public);
+    const fileStore = await this.fileStore();
+    const cars = await this.prepareCarFilesFiles(fileStore, roots, t);
     for (const car of cars) {
       const { cid, bytes } = car;
-      await (await this.fileStore()).save({ cid, bytes });
-      await (await this.WALStore()).enqueueFile(cid, !!opts.public);
+      await fileStore.save({ cid, bytes });
+      await (await this.WALStore()).enqueueFile(cid/*, !!opts.public*/);
       cids.push(cid);
     }
 
     return cids;
   }
 
-  async loadFileCar(cid: AnyLink, isPublic = false): Promise<CarReader> {
-    return await this.storesLoadCar(cid, await this.fileStore(), this.remoteFileStore, isPublic);
+  async loadFileCar(cid: AnyLink/*, isPublic = false*/): Promise<CarReader> {
+    return await this.storesLoadCar(cid, await this.fileStore(), this.remoteFileStore);
   }
 
   async commit<T = TransactionMeta>(
@@ -243,7 +252,8 @@ export class Loader implements Loadable {
     done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
-    return this.commitQueue.enqueue(() => this._commitInternal(t, done, opts));
+    const fstore = await this.fileStore();
+    return this.commitQueue.enqueue(() => this._commitInternal(fstore, t, done, opts));
   }
 
   async cacheTransaction(t: CarTransaction) {
@@ -266,12 +276,12 @@ export class Loader implements Loadable {
     }
   }
 
-  async _commitInternal<T>(t: CarTransaction, done: T, opts: CommitOpts = { noLoader: false, compact: false }): Promise<CarGroup> {
+  async _commitInternal<T>(store: BaseStore, t: CarTransaction, done: T, opts: CommitOpts = { noLoader: false, compact: false }): Promise<CarGroup> {
     await this.ready();
     const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact);
     const rootBlock = await encodeCarHeader(fp);
 
-    const cars = await this.prepareCarFiles(rootBlock, t, !!opts.public);
+    const cars = await this.prepareCarFiles(store, rootBlock, t);
     const cids: AnyLink[] = [];
     for (const car of cars) {
       const { cid, bytes } = car;
@@ -280,7 +290,7 @@ export class Loader implements Loadable {
     }
 
     await this.cacheTransaction(t);
-    const newDbMeta = { cars: cids, key: this.key || null } as DbMeta;
+    const newDbMeta = { cars: cids } as DbMeta;
     await (await this.WALStore()).enqueue(newDbMeta, opts);
     await (await this.metaStore()).save(newDbMeta);
     await this.updateCarLog(cids, fp, !!opts.compact);
@@ -288,20 +298,23 @@ export class Loader implements Loadable {
   }
 
   async prepareCarFilesFiles(
+    store: BaseStore,
     roots: AnyLink[],
     t: CarTransaction,
-    isPublic: boolean,
+    // isPublic: boolean,
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
-    const theKey = isPublic ? null : await this._getKey();
-    const car =
-      theKey && this.ebOpts.crypto
-        ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, roots[0], t)
-        : await encodeCarFile(roots, t);
+    // const theKey = isPublic ? null : await this._getKey();
+    const kc = await store.keyedCrypto()
+    const car = kc.isEncrypting
+      ? await encryptedEncodeCarFile(this.logger, kc, roots[0], t)
+      : await encodeCarFile(roots, t);
     return [car];
   }
 
-  async prepareCarFiles(rootBlock: AnyBlock, t: CarTransaction, isPublic: boolean): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
-    const theKey = isPublic ? undefined : await this._getKey();
+  async prepareCarFiles(
+    store: BaseStore,
+    rootBlock: AnyBlock, t: CarTransaction): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
+    // const theKey = isPublic ? undefined : await this._getKey();
     const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
     const threshold = this.ebOpts.threshold || 1000 * 1000;
     let clonedt = new CarTransaction(t.parent, { add: false });
@@ -311,7 +324,7 @@ export class Loader implements Loadable {
     for (const { cid, bytes } of t.entries()) {
       newsize += CBW.blockLength(toCIDBlock({ cid: cid, bytes }));
       if (newsize >= threshold) {
-        carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt));
+        carFiles.push(await this.createCarFile(store, cidRootBlock.cid, clonedt));
         clonedt = new CarTransaction(t.parent, { add: false });
         clonedt.putSync(cid, bytes);
         cidRootBlock = { cid, bytes };
@@ -320,19 +333,20 @@ export class Loader implements Loadable {
         clonedt.putSync(cid, bytes);
       }
     }
-    carFiles.push(await this.createCarFile(theKey, cidRootBlock.cid, clonedt));
+    carFiles.push(await this.createCarFile(store, cidRootBlock.cid, clonedt));
     // console.log("split to ", carFiles.length, "files")
     return carFiles;
   }
 
   private async createCarFile(
-    theKey: string | undefined,
+    store: BaseStore,
     cid: AnyLink,
     t: CarTransaction,
   ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
     try {
-      return theKey && this.ebOpts.crypto
-        ? await encryptedEncodeCarFile(this.logger, this.ebOpts.crypto, theKey, cid, t)
+      const keycr = await store.keyedCrypto()
+      return keycr.isEncrypting
+        ? await encryptedEncodeCarFile(this.logger, keycr, cid, t)
         : await encodeCarFile([cid], t);
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("error creating car file").AsError();
@@ -485,7 +499,7 @@ export class Loader implements Loadable {
     return { ...coreHeader, meta };
   }
 
-  async loadCar(cid: AnyLink): Promise<CarReader> {
+  async loadCar(cid: AnyLink): Promise<DecoderAndCarReader> {
     if (!this.carStore) {
       throw this.logger.Error().Msg("car store not initialized").AsError();
     }
@@ -493,63 +507,69 @@ export class Loader implements Loadable {
     return loaded;
   }
 
-  //What if instead it returns an Array of CarHeader
-  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore, publicFiles?: boolean): Promise<CarReader> {
-    const cidsString = cid.toString();
-    if (!this.carReaders.has(cidsString)) {
-      this.carReaders.set(
-        cidsString,
-        (async () => {
-          let loadedCar: AnyBlock | undefined = undefined;
-          try {
-            //loadedCar now is an array of AnyBlocks
-            this.logger.Debug().Str("cid", cidsString).Msg("loading car");
-            loadedCar = await local.load(cid);
-            this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
-          } catch (e) {
-            if (remote) {
-              const remoteCar = await remote.load(cid);
-              if (remoteCar) {
-                // todo test for this
-                this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
-                await local.save(remoteCar);
-                loadedCar = remoteCar;
-              }
-            } else {
-              this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
-            }
-          }
-          if (!loadedCar) {
-            throw this.logger.Error().Url(local.url).Str("cid", cidsString).Msg("missing car files").AsError();
-          }
-          //This needs a fix as well as the fromBytes function expects a Uint8Array
-          //Either we can merge the bytes or return an array of rawReaders
-          const rawReader = await CarReader.fromBytes(loadedCar.bytes);
-          const readerP = publicFiles ? Promise.resolve(rawReader) : this.ensureDecryptedReader(rawReader);
 
-          const cachedReaderP = readerP.then(async (reader) => {
-            await this.cacheCarReader(cidsString, reader).catch(() => {
-              return;
-            });
-            return reader;
-          });
-          this.carReaders.set(cidsString, cachedReaderP);
-          return readerP;
-        })().catch((e) => {
-          this.carReaders.delete(cidsString);
-          throw e;
-        }),
-      );
+  async makeDecoderAndCarReader(cid: AnyLink, local: DataStore, remote?: DataStore) {
+    const cidsString = cid.toString();
+    let loadedCar: AnyBlock | undefined = undefined;
+    let activeStore: BaseStore = local;
+    try {
+      //loadedCar now is an array of AnyBlocks
+      this.logger.Debug().Str("cid", cidsString).Msg("loading car");
+      loadedCar = await local.load(cid);
+      this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
+    } catch (e) {
+      if (remote) {
+        const remoteCar = await remote.load(cid);
+        if (remoteCar) {
+          // todo test for this
+          this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
+          await local.save(remoteCar);
+          loadedCar = remoteCar;
+          activeStore = remote
+        }
+      } else {
+        this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
+      }
     }
-    return this.carReaders.get(cidsString) as Promise<CarReader>;
+    if (!loadedCar) {
+      throw this.logger.Error().Url(local.url).Str("cid", cidsString).Msg("missing car files").AsError();
+    }
+    //This needs a fix as well as the fromBytes function expects a Uint8Array
+    //Either we can merge the bytes or return an array of rawReaders
+    const rawReader = await CarReader.fromBytes(loadedCar.bytes);
+    const kc = await activeStore.keyedCrypto()
+    const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
+
+    const cachedReaderP = readerP.then(async (reader) => {
+      await this.cacheCarReader(cidsString, reader).catch((e) => {
+        this.logger.Error().Err(e).Str("cid", cidsString).Msg("error caching car reader")
+        return;
+      });
+      return reader;
+    });
+    this.carReaders.set(cidsString, cachedReaderP);
+    return readerP;
   }
 
-  protected async ensureDecryptedReader(reader: CarReader): Promise<CarReader> {
-    const theKey = await this._getKey();
-    if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
+  //What if instead it returns an Array of CarHeader
+  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<DecoderAndCarReader> {
+    const cidsString = cid.toString();
+    let dacr = this.carReaders.get(cidsString)
+    if (!dacr) {
+      dacr = this.makeDecoderAndCarReader(cid, local, remote);
+      this.carReaders.set(cidsString, dacr);
+    }
+    return dacr;
+  }
+
+  protected async ensureDecryptedReader(store: BaseStore, reader: CarReader): Promise<CarReader> {
+    // const theKey = await this._getKey();
+    // if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
+    const kycy = await store.keyedCrypto();
+    if (!kycy.isEncrypting) {
       return reader;
     }
-    const { blocks, root } = await decodeEncryptedCar(this.logger, this.ebOpts.crypto, theKey, reader);
+    const { blocks, root } = await decodeEncryptedCar(this.logger, kycy, reader);
     return {
       getRoots: () => [root],
       get: blocks.get.bind(blocks),
@@ -557,16 +577,16 @@ export class Loader implements Loadable {
     } as unknown as CarReader;
   }
 
-  protected async setKey(key: string) {
-    if (this.key && this.key !== key)
-      throw this.logger.Error().Str("name", this.name).Str("this.key", this.key).Str("key", key).Msg("setting key").AsError();
-    this.key = key;
-    const encoder = new TextEncoder();
-    const data = encoder.encode(key);
-    const hashBuffer = await this.ebOpts.crypto.digestSHA256(data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    this.keyId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  }
+  // protected async setKey(key: string) {
+  //   if (this.key && this.key !== key)
+  //     throw this.logger.Error().Str("name", this.name).Str("this.key", this.key).Str("key", key).Msg("setting key").AsError();
+  //   this.key = key;
+  //   const encoder = new TextEncoder();
+  //   const data = encoder.encode(key);
+  //   const hashBuffer = await this.ebOpts.crypto.digestSHA256(data);
+  //   const hashArray = Array.from(new Uint8Array(hashBuffer));
+  //   this.keyId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  // }
 
   protected async getMoreReaders(cids: AnyLink[]) {
     const limit = pLimit(5);

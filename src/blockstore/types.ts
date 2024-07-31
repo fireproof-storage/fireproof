@@ -1,6 +1,6 @@
-import type { CID, Link, Version } from "multiformats";
+import type { BlockCodec, CID, Link, Version } from "multiformats";
 import type { Loadable } from "./loader.js";
-import { DocFileMeta, Falsy } from "../types.js";
+import { DocFileMeta, Falsy, StoreType } from "../types.js";
 import { CarTransaction } from "./transaction.js";
 import { Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
@@ -30,26 +30,31 @@ export interface AnyAnyBlock {
   readonly bytes: Uint8Array;
 }
 
-export interface EncryptOpts {
-  readonly key: ArrayBuffer;
-  readonly cid: AnyLink;
-  readonly bytes: Uint8Array;
-}
+// export interface EncryptOpts {
+//   readonly key: ArrayBuffer;
+//   readonly cid: AnyLink;
+//   readonly bytes: Uint8Array;
+// }
 
-export interface DecryptOptsValue {
+export interface IvAndBytes {
   readonly bytes: Uint8Array;
   readonly iv: Uint8Array;
 }
 
-export interface DecryptOpts {
-  readonly key: ArrayBuffer;
-  readonly value: DecryptOptsValue;
+export interface BytesWithIv {
+  readonly bytes: Uint8Array;
+  readonly iv?: Uint8Array;
 }
+
+// export interface DecryptOpts {
+//   readonly key: ArrayBuffer;
+//   readonly value: IvAndBytes;
+// }
 
 export interface AnyDecodedBlock {
   readonly cid: AnyLink;
   readonly bytes: Uint8Array;
-  readonly value: DecryptOptsValue;
+  readonly value: Uint8Array;
 }
 
 export interface CarMakeable {
@@ -173,7 +178,7 @@ export interface FPArrayBufferView {
 }
 
 export type FPBufferSource = FPArrayBufferView | ArrayBuffer;
-export interface CryptoOpts {
+export interface CryptoRuntime {
   importKey(
     format: FPKeyFormat,
     keyData: FPJsonWebKey | FPBufferSource,
@@ -183,19 +188,45 @@ export interface CryptoOpts {
   ): Promise<FPCryptoKey>;
 
   //(format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
-  readonly decrypt: (
+  decrypt(
     algo: { name: string; iv: Uint8Array; tagLength: number },
     key: FPCryptoKey,
     data: Uint8Array,
-  ) => Promise<ArrayBuffer>;
-  readonly encrypt: (
+  ): Promise<ArrayBuffer>;
+  encrypt(
     algo: { name: string; iv: Uint8Array; tagLength: number },
     key: FPCryptoKey,
     data: Uint8Array,
-  ) => Promise<ArrayBuffer>;
-  readonly digestSHA256: (data: Uint8Array) => Promise<ArrayBuffer>;
-  readonly randomBytes: (size: number) => Uint8Array;
+  ): Promise<ArrayBuffer>;
+  digestSHA256(data: Uint8Array): Promise<ArrayBuffer>;
+  randomBytes(size: number): Uint8Array;
 }
+
+// an implementation of this Interface contains the keymaterial
+// so that the fp-core can use the decrypt and encrypt without knowing the key
+export interface EncryptedBlock {
+  readonly value: IvAndBytes;
+}
+
+export interface KeyWithFingerPrint {
+  readonly fingerPrint: string;
+  readonly key: FPCryptoKey;
+}
+
+
+export interface KeyedCrypto {
+  readonly crypto: CryptoRuntime;
+  // readonly codec: BlockCodec<number, IvAndBytes>;
+  readonly isEncrypting: boolean;
+  fingerPrint(): Promise<string>;
+  algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number };
+  codec(iv?: Uint8Array): BlockCodec<number, Uint8Array>;
+  _decrypt(data: IvAndBytes): Promise<ArrayBuffer>;
+  _encrypt(data: BytesWithIv): Promise<Uint8Array>;
+  // encode(data: Uint8Array): Promise<Uint8Array>;
+  // decode(bytes: Uint8Array | ArrayBuffer): Promise<Uint8Array>;
+}
+
 
 export interface BlobLike {
   /**
@@ -250,12 +281,12 @@ export interface StoreRuntime {
 export interface CommitOpts {
   readonly noLoader?: boolean;
   readonly compact?: boolean;
-  readonly public?: boolean;
+  // readonly public?: boolean;
 }
 
 export interface DbMeta {
   readonly cars: CarGroup;
-  key?: string;
+  // key?: string;
 }
 
 // export interface UploadMetaFnParams {
@@ -298,10 +329,13 @@ export interface Connection {
 }
 
 export interface BaseStore {
+  readonly storeType: StoreType;
   readonly url: URL;
   readonly name: string;
   onStarted(fn: () => void): void;
   onClosed(fn: () => void): void;
+
+  keyedCrypto(): Promise<KeyedCrypto>;
 
   close(): Promise<Result<void>>;
   destroy(): Promise<Result<void>>;
@@ -310,6 +344,7 @@ export interface BaseStore {
 }
 
 export interface MetaStore extends BaseStore {
+  readonly storeType: "meta";
   load(branch?: string): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
@@ -324,6 +359,7 @@ export interface DataSaveOpts {
 }
 
 export interface DataStore extends BaseStore {
+  readonly storeType: "data";
   load(cid: AnyLink): Promise<AnyBlock>;
   save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void>;
   remove(cid: AnyLink): Promise<Result<void>>;
@@ -339,13 +375,14 @@ export interface WALState {
 }
 
 export interface WALStore extends BaseStore {
+  readonly storeType: "wal";
   ready: () => Promise<void>;
   readonly processing?: Promise<void> | undefined;
   readonly processQueue: CommitQueue<void>;
 
   process(): Promise<void>;
   enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;
-  enqueueFile(fileCid: AnyLink, publicFile?: boolean): Promise<void>;
+  enqueueFile(fileCid: AnyLink/*, publicFile?: boolean*/): Promise<void>;
   load(): Promise<WALState | Falsy>;
   save(state: WALState): Promise<void>;
 }

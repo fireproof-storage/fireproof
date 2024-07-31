@@ -294,10 +294,15 @@ describe("basic Index upon cold start", function () {
     expect(result.rows.length).toEqual(3);
   });
   it("should work on cold load", async function () {
+    console.log("-1")
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
+    console.log("-2")
     await crdt2.ready();
+    console.log("-3")
     const { result, head } = await crdt2.changes();
+    console.log("-4")
     expect(result).toBeTruthy();
+    console.log("-5")
     await crdt2.ready();
     const indexer2 = await index<string, TestType>({ _crdt: crdt2 }, "hello", mapFn);
     await indexer2.ready();
@@ -334,10 +339,13 @@ describe("basic Index upon cold start", function () {
     expect(didMap).toEqual(1);
   });
   it("should ignore meta when map function definiton changes", async function () {
+    console.log("1")
     const crdt2 = new CRDT<TestType>("test-indexer-cold");
+    console.log("2")
     const result = await index<string, TestType>({ _crdt: crdt2 }, "hello", (doc) =>
       doc.title.split("").reverse().join(""),
     ).query();
+    console.log("3")
     expect(result.rows.length).toEqual(3);
     expect(result.rows[0].key).toEqual("evitaerc"); // creative
   });

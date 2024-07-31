@@ -9,7 +9,7 @@ import { getFileName, getPath } from "./utils.js";
 
 const versionFiles = new KeyedResolvOnce<void>();
 
-async function getFileSystem(url: URL): Promise<SysFileSystem> {
+export async function getFileSystem(url: URL): Promise<SysFileSystem> {
   const name = url.searchParams.get("fs");
   switch (name) {
     case "mem": {
@@ -48,8 +48,9 @@ abstract class FileGateway implements Gateway {
         throw logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
       }
       const v = await this.fs.readfile(vFile);
-      if (v.toString() !== FILESTORE_VERSION) {
-        logger.Warn().Str("file", vFile).Str("from", v.toString()).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
+      const vStr = (new TextDecoder()).decode(v);
+      if (vStr !== FILESTORE_VERSION) {
+        logger.Warn().Str("file", vFile).Str("from", vStr).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
       }
     });
     return path;

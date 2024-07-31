@@ -6,6 +6,9 @@ export * from "./gateways/file/utils.js";
 export * as crypto from "./crypto.js";
 export * as files from "./files.js";
 
+export * as kb from "./key-bag.js";
+export * as kc from "./keyed-crypto.js";
+
 export * from "./runtime.js";
 
 export { FILESTORE_VERSION } from "./gateways/file/version.js";

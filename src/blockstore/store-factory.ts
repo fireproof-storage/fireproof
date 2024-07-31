@@ -7,6 +7,7 @@ import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
 import { ensureLogger } from "../utils.js";
 import { Gateway } from "./gateway.js";
+import { getKeyBag, } from "../runtime/key-bag.js";
 
 function ensureIsIndex(url: URL, isIndex?: string): URL {
   if (isIndex) {
@@ -147,7 +148,15 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
   url.searchParams.set("store", "data");
   return onceDataStoreFactory.get(url.toString()).once(async () => {
     const gateway = await loadDataGateway(url, logger);
-    const store = new DataStoreImpl(loader.name, url, loader.logger, gateway);
+    const store = new DataStoreImpl(loader.name, url, {
+      logger: loader.logger,
+      gateway,
+      keybag: () => getKeyBag({
+        logger: loader.logger,
+        ...loader.ebOpts.keyBag
+      }),
+    })
+
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();
@@ -164,6 +173,7 @@ function loadMetaGateway(url: URL, logger: Logger) {
   });
 }
 
+
 const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
   const url = buildURL(loader.ebOpts.store.stores?.meta, loader);
@@ -173,7 +183,14 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
   return onceMetaStoreFactory.get(url.toString()).once(async () => {
     logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
     const gateway = await loadMetaGateway(url, logger);
-    const store = new MetaStoreImpl(loader.name, url, loader.logger, gateway);
+    const store = new MetaStoreImpl(loader.name, url, {
+      logger: loader.logger,
+      gateway,
+      keybag: () => getKeyBag({
+        logger: loader.logger,
+        ...loader.ebOpts.keyBag
+      }),
+    });
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();
@@ -198,7 +215,14 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   return onceRemoteWalFactory.get(url.toString()).once(async () => {
     const gateway = await loadWalGateway(url, logger);
     logger.Debug().Str("prepared", url.toString()).Msg("produced");
-    const store = new WALStoreImpl(loader, url, loader.logger, gateway);
+    const store = new WALStoreImpl(loader, url, {
+      logger: loader.logger,
+      gateway,
+      keybag: () => getKeyBag({
+        logger: loader.logger,
+        ...loader.ebOpts.keyBag
+      }),
+    })
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();
