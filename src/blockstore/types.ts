@@ -1,4 +1,5 @@
-import type { BlockCodec, CID, Link, Version } from "multiformats";
+import type { CID, Link, Version } from "multiformats";
+import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface";
 import { DocFileMeta, Falsy, StoreType } from "../types.js";
 import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
