@@ -267,16 +267,12 @@ describe("basic Index upon cold start", function () {
   beforeEach(async function () {
     await rt.SysContainer.start();
     // db = database()
-    // eslint-disable-next-line no-console
-    console.log("writing data");
     crdt = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     await crdt.bulk([
       { id: "abc1", value: { title: "amazing" } },
       { id: "abc2", value: { title: "creative" } },
       { id: "abc3", value: { title: "bazillas" } },
     ]);
-    // eslint-disable-next-line no-console
-    console.log("writing done");
     didMap = 0;
     mapFn = (doc) => {
       didMap++;
@@ -286,8 +282,6 @@ describe("basic Index upon cold start", function () {
     await indexer.ready();
     // new Index(db._crdt.indexBlockstore, db._crdt, 'hello', mapFn)
     result = await indexer.query();
-    // eslint-disable-next-line no-console
-    console.log("index done");
     expect(indexer.indexHead).toEqual(crdt.clock.head);
   });
   it("should call map on first query", function () {

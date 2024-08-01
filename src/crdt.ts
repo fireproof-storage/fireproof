@@ -117,21 +117,11 @@ export class CRDT<T extends DocTypes> {
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       try {
-        // eslint-disable-next-line no-console
-        console.log("blockstore ready", this.name);
-        await this.blockstore.ready();
-        // eslint-disable-next-line no-console
-        console.log("idxblockstore ready", this.name);
-        await this.indexBlockstore.ready();
-        // eslint-disable-next-line no-console
-        console.log("clockReady ready", this.name);
-        await this.clock.ready();
-        // eslint-disable-next-line no-console
-        console.log("clockReady done", this.name);
-        // await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
+        // await this.blockstore.ready();
+        // await this.indexBlockstore.ready();
+        // await this.clock.ready();
+        await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.log((e as Error).stack);
         throw this.logger.Error().Err(e).Msg("CRDT not ready").AsError();
       }
     });

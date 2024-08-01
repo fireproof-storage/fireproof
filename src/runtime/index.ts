@@ -9,6 +9,8 @@ export * as files from "./files.js";
 export * as kb from "./key-bag.js";
 export * as kc from "./keyed-crypto.js";
 
+export * as mf from "./multiformats/block.js";
+
 export * from "./runtime.js";
 
 export { FILESTORE_VERSION } from "./gateways/file/version.js";
