@@ -6,9 +6,8 @@ import { Logger } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
-import type { BlockstoreRuntime } from "./transaction.js";
-import type { Connection } from "./types.js";
-import { Loadable, type Loader } from "./loader.js";
+import type { BlockstoreRuntime, Connection, Loadable } from "./types.js";
+import { type Loader } from "./loader.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
 import { getGatewayFromURL } from "./store-factory.js";
 import { getKeyBag } from "../runtime/key-bag.js";

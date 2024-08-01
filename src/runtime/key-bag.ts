@@ -4,8 +4,8 @@ import { SysContainer, SysFileSystem } from "./sys-container.js";
 import { runtimeFn } from "./runtime.js";
 import { toCryptoRuntime } from "./crypto.js";
 import { ensureLogger, getPathname, sanitizeURL } from "../utils.js";
-import { hexStringToUint8Array, toHexString } from "./keyed-crypto.js";
 import { isNotFoundError } from "../blockstore/gateway.js";
+import { base58btc } from "multiformats/bases/base58";
 // import { getFileSystem } from "./gateways/file/gateway.js";
 
 export class KeyBag {
@@ -19,7 +19,8 @@ export class KeyBag {
     async subtleKey(key: string) {
         return await this.rt.crypto.importKey(
             "raw", // raw or jwk
-            hexStringToUint8Array(key), // raw data
+            base58btc.decode(key),
+            // hexStringToUint8Array(key), // raw data
             "AES-GCM",
             false, // extractable
             ["encrypt", "decrypt"],
@@ -27,10 +28,10 @@ export class KeyBag {
     }
 
     async toKeyWithFingerPrint(key: string): Promise<Result<KeyWithFingerPrint>> {
-        const material = hexStringToUint8Array(key);
+        const material = base58btc.decode(key); //
         return Result.Ok({
             key: await this.subtleKey(key),
-            fingerPrint: toHexString(new Uint8Array(await this.rt.crypto.digestSHA256(material)))
+            fingerPrint: base58btc.encode(new Uint8Array(await this.rt.crypto.digestSHA256(material)))
         })
     }
 
@@ -64,7 +65,7 @@ export class KeyBag {
                 return Result.Err(new Error(`Key not found: ${name}`));
             }
             this.logger.Debug().Str("name", name).Msg("createKey getNamedKey");
-            return this._setNamedKey(name, toHexString(this.rt.crypto.randomBytes(this.rt.keyLength)));
+            return this._setNamedKey(name, base58btc.encode(this.rt.crypto.randomBytes(this.rt.keyLength)));
         })
     }
 }

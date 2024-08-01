@@ -15,6 +15,7 @@ import {
   AnyLink,
   StoreRuntime,
   BaseBlockstore,
+  CompactFetcher,
 } from "./blockstore/index.js";
 import {
   type IndexKeyType,
@@ -314,7 +315,7 @@ export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {
 }
 
 let isCompacting = false;
-export async function doCompact(blockLog: CompactionFetcher, head: ClockHead, logger: Logger) {
+export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logger: Logger) {
   if (isCompacting) {
     // console.log('already compacting')
     return;

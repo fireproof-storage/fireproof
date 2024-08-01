@@ -1,5 +1,6 @@
 import { bs, rt } from "@fireproof/core";
 import { Logger, MockLogger } from "@adviser/cement";
+import { base58btc } from 'multiformats/bases/base58';
 
 describe("KeyBag", () => {
   beforeAll(async () => {
@@ -29,7 +30,7 @@ describe("KeyBag", () => {
     const name = "setkey" + Math.random();
     expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
 
-    const key = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const res = await kb.setNamedKey(name, key);
     expect(res.isOk()).toBeTruthy();
     expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
@@ -142,7 +143,7 @@ describe("KeyedCryptoStore", () => {
   })
 
   it("key ref keybag", async () => {
-    const key = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const genKey = await kb.setNamedKey("@heute@", key);
     const loader = {
       name: "test",
@@ -178,7 +179,7 @@ describe("KeyedCryptoStore", () => {
   })
 
   it("key", async () => {
-    const key = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const loader = {
       name: "test",
       ebOpts: {
@@ -223,7 +224,7 @@ describe("KeyedCrypto", () => {
     kb = await rt.kb.getKeyBag({
       url: `file://./dist/tests/key.bag`
     });
-    keyStr = rt.kc.toHexString(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    keyStr = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     kycr = await rt.kc.keyedCryptoFactory(new URL(`test://bla?storekey=${keyStr}`), kb, logger);
   })
   it("codec explict iv", async () => {
@@ -232,7 +233,8 @@ describe("KeyedCrypto", () => {
     const codec = kycr.codec(iv);
     const blk = await codec.encode(testData);
     expect(blk.length).toBeGreaterThanOrEqual(iv.length + testData.length);
-    expect(blk.slice(0, 12)).toEqual(iv);
+    expect(blk.slice(1, 1+12)).toEqual(iv);
+    expect(base58btc.encode(blk.slice(1+12+1, 1+12+1+256/8))).toEqual(await kycr.fingerPrint());
     const dec = await codec.decode(blk);
     expect(dec).toEqual(testData);
   })
@@ -244,5 +246,28 @@ describe("KeyedCrypto", () => {
     expect(blk.length).toBeGreaterThanOrEqual(12 + testData.length);
     const dec = await codec.decode(blk);
     expect(dec).toEqual(testData);
+  })
+})
+
+describe("KeyedCryptoStore RunLength", () => {
+  const logger = MockLogger().logger;
+  it("de/encode", () => {
+    for (const data of [
+      new Uint8Array(),
+      new Uint8Array(10).fill(10),
+      new Uint8Array(127).fill(127),
+      new Uint8Array(128).fill(128),
+      new Uint8Array(1024).fill(17),
+    ]) {
+      const res = rt.kc.encodeRunLength(data, logger)
+      expect(res.length).toBeLessThanOrEqual(data.length + (data.length > 127 ? 4 : 1));
+      for (let ofs = 0; ofs < 1024; ofs+=61) {
+        const ofsRes = new Uint8Array([...new Uint8Array(ofs).fill(23), ...res]);
+        const dec = rt.kc.decodeRunLength(ofsRes, ofs, logger);
+        expect(dec.data).toEqual(data);
+        expect(dec.data.length).toBe(data.length);
+        expect(dec.next).toBe(ofs + data.length + (data.length > 127 ? 4 : 1));
+      }
+    }
   })
 })

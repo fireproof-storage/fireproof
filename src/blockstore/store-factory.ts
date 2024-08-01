@@ -2,9 +2,8 @@ import { Logger, KeyedResolvOnce } from "@adviser/cement";
 
 import { dataDir } from "../runtime/data-dir.js";
 import { decodeFile, encodeFile } from "../runtime/files.js";
-import { Loadable } from "./loader.js";
 import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
-import { StoreOpts, StoreRuntime, TestStore } from "./types.js";
+import { Loadable, StoreOpts, StoreRuntime, TestStore } from "./types.js";
 import { ensureLogger } from "../utils.js";
 import { Gateway } from "./gateway.js";
 import { getKeyBag, } from "../runtime/key-bag.js";

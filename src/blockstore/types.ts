@@ -1,9 +1,9 @@
 import type { BlockCodec, CID, Link, Version } from "multiformats";
-import type { Loadable } from "./loader.js";
 import { DocFileMeta, Falsy, StoreType } from "../types.js";
-import { CarTransaction } from "./transaction.js";
-import { Result } from "../utils.js";
+import { BlockFetcher, CarTransaction } from "./transaction.js";
+import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
+import { KeyBagOpts } from "../runtime/key-bag.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -385,4 +385,55 @@ export interface WALStore extends BaseStore {
   enqueueFile(fileCid: AnyLink/*, publicFile?: boolean*/): Promise<void>;
   load(): Promise<WALState | Falsy>;
   save(state: WALState): Promise<void>;
+}
+
+export type CompactFetcher = BlockFetcher & {
+  readonly loggedBlocks: CarTransaction;
+};
+export type CompactFn = (blocks: CompactFetcher) => Promise<TransactionMeta>;
+
+export type BlockstoreOpts = Partial<{
+  readonly logger: Logger;
+  readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
+  readonly compact: CompactFn;
+  readonly autoCompact: number;
+  readonly crypto: CryptoRuntime;
+  readonly store: StoreOpts;
+  readonly keyBag: KeyBagOpts;
+  readonly public: boolean;
+  readonly meta: DbMeta;
+  readonly name: string;
+  readonly threshold: number;
+}>
+
+export interface BlockstoreRuntime {
+  readonly logger: Logger;
+  readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
+  readonly compact: CompactFn;
+  readonly autoCompact: number;
+  readonly crypto: CryptoRuntime;
+  readonly store: StoreOpts;
+  readonly storeRuntime: StoreRuntime;
+  readonly keyBag: Partial<KeyBagOpts>;
+  // readonly public: boolean;
+  readonly meta?: DbMeta;
+  readonly name?: string;
+  readonly threshold: number;
+}
+
+
+export interface Loadable {
+  readonly name: string; // = "";
+  readonly logger: Logger;
+  readonly ebOpts: BlockstoreRuntime;
+  remoteCarStore?: DataStore;
+  carStore(): Promise<DataStore>;
+  carLog: CarLog; // = new Array<CarGroup>();
+  remoteMetaStore?: RemoteMetaStore;
+  remoteFileStore?: DataStore;
+  ready(): Promise<void>;
+  close(): Promise<void>;
+  fileStore(): Promise<DataStore>;
+  WALStore(): Promise<WALStore>;
+  handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
