@@ -26,6 +26,10 @@ const stopFile = {
   "./node-sys-container.js": "../bundle-not-impl.js",
 };
 
+const ourMultiformat = {
+  // "multiformats/block": `${__dirname}/src/runtime/multiformat/block.ts`
+};
+
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
   target: ["esnext", "node18"],
@@ -64,6 +68,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
       resolve({
         ...stopFile,
+        ...ourMultiformat,
       }),
     ],
     dts: {
@@ -82,7 +87,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      resolve({}),
+      resolve({
+        ...ourMultiformat,
+      }),
     ],
     dts: {
       footer: "declare module '@fireproof/core'",
@@ -102,6 +109,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
       resolve({
         ...stopFile,
+        ...ourMultiformat,
       }),
     ],
     dts: {

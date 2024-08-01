@@ -1,6 +1,6 @@
 import { sha256 } from "multiformats/hashes/sha2";
 // import { CID } from "multiformats";
-import { encode, decode, create as mfCreate } from "multiformats/block";
+import { encode, decode, create as mfCreate } from "../runtime/multiformats/block.js";
 // import type { MultihashHasher, ToString } from "multiformats";
 
 import type { CarReader } from "@ipld/car";
