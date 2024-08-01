@@ -200,10 +200,10 @@ export class EncryptedBlockstore extends BaseBlockstore {
     throw this.logger.Error().Msg("failed to commit car files").AsError();
   }
 
-  async getFile(car: AnyLink, cid: AnyLink/*, isPublic = false*/): Promise<Uint8Array> {
+  async getFile(car: AnyLink, cid: AnyLink /*, isPublic = false*/): Promise<Uint8Array> {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, database must be named").AsError();
-    const reader = await this.loader.loadFileCar(car/*, isPublic */);
+    const reader = await this.loader.loadFileCar(car /*, isPublic */);
     const block = await reader.get(cid as CID);
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;
@@ -271,4 +271,3 @@ export class CompactionFetcher implements BlockFetcher {
     return falsyToUndef(block) as Block<T, C, A, V>;
   }
 }
-

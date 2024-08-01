@@ -8,7 +8,6 @@ import { CarHeader } from "./types.js";
 // import { base58btc } from "multiformats/bases/base58";
 import { CarReader } from "@ipld/car";
 
-
 // export async function encodeCarHeader<T>(fp: CarHeader<T>) {
 //   return (await encode({
 //     value: { fp },
@@ -49,7 +48,7 @@ export async function parseCarFile<T>(reader: CarReader, logger: Logger): Promis
   //     }
   //   })
   // });
-  const fpvalue = dec.value  as CarDecoded<T>;
+  const fpvalue = dec.value as CarDecoded<T>;
   // @jchris where is the fp attribute coming from?
   if (fpvalue && !fpvalue.fp) {
     throw logger.Error().Msg("missing fp").AsError();

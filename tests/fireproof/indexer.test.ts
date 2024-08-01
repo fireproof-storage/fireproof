@@ -268,7 +268,7 @@ describe("basic Index upon cold start", function () {
     await rt.SysContainer.start();
     // db = database()
     // eslint-disable-next-line no-console
-    console.log('writing data')
+    console.log("writing data");
     crdt = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
     await crdt.bulk([
       { id: "abc1", value: { title: "amazing" } },
@@ -276,7 +276,7 @@ describe("basic Index upon cold start", function () {
       { id: "abc3", value: { title: "bazillas" } },
     ]);
     // eslint-disable-next-line no-console
-    console.log('writing done')
+    console.log("writing done");
     didMap = 0;
     mapFn = (doc) => {
       didMap++;
@@ -287,7 +287,7 @@ describe("basic Index upon cold start", function () {
     // new Index(db._crdt.indexBlockstore, db._crdt, 'hello', mapFn)
     result = await indexer.query();
     // eslint-disable-next-line no-console
-    console.log('index done')
+    console.log("index done");
     expect(indexer.indexHead).toEqual(crdt.clock.head);
   });
   it("should call map on first query", function () {
@@ -300,15 +300,10 @@ describe("basic Index upon cold start", function () {
     expect(result.rows.length).toEqual(3);
   });
   it("should work on cold load", async function () {
-    console.log("-1")
     const crdt2 = new CRDT<TestType>("test-indexer-cold", { persistIndexes: true });
-    console.log("-2")
     await crdt2.ready();
-    console.log("-3")
     const { result, head } = await crdt2.changes();
-    console.log("-4")
     expect(result).toBeTruthy();
-    console.log("-5")
     await crdt2.ready();
     const indexer2 = await index<string, TestType>({ _crdt: crdt2 }, "hello", mapFn);
     await indexer2.ready();
@@ -345,13 +340,10 @@ describe("basic Index upon cold start", function () {
     expect(didMap).toEqual(1);
   });
   it("should ignore meta when map function definiton changes", async function () {
-    console.log("1")
     const crdt2 = new CRDT<TestType>("test-indexer-cold");
-    console.log("2")
     const result = await index<string, TestType>({ _crdt: crdt2 }, "hello", (doc) =>
       doc.title.split("").reverse().join(""),
     ).query();
-    console.log("3")
     expect(result.rows.length).toEqual(3);
     expect(result.rows[0].key).toEqual("evitaerc"); // creative
   });

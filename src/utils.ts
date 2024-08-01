@@ -128,7 +128,10 @@ export function getName(url: URL, logger: Logger): string {
 }
 
 export function getPathname(url: URL): string {
-  return url.toString().replace(/^.*:\/\//, "").replace(/\?.*$/, "");
+  return url
+    .toString()
+    .replace(/^.*:\/\//, "")
+    .replace(/\?.*$/, "");
 }
 
 export function exception2Result<T = void>(fn: () => Promise<T>): Promise<Result<T>> {

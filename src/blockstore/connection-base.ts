@@ -18,7 +18,7 @@ export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
 export interface Connectable {
   readonly blockstore: {
     readonly loader?: Loader;
-    readonly ebOpts: BlockstoreRuntime
+    readonly ebOpts: BlockstoreRuntime;
   };
   readonly name?: string;
 }
@@ -69,8 +69,8 @@ export abstract class ConnectionBase implements Connection {
     const remote = await RemoteMetaStore(name, metaUrl, {
       logger: this.logger,
       gateway,
-      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag)
-    })
+      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag),
+    });
     remote.onLoad("main", async (metas) => {
       if (metas) {
         this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
@@ -99,8 +99,8 @@ export abstract class ConnectionBase implements Connection {
     loader.remoteCarStore = await RemoteDataStore(name, this.url, {
       logger: this.logger,
       gateway,
-      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag)
-    })
+      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag),
+    });
     // @jchris why we have a differention between remoteCarStore and remoteFileStore?
     loader.remoteFileStore = loader.remoteCarStore;
   }

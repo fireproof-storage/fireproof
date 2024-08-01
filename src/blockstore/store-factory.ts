@@ -6,7 +6,7 @@ import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { Loadable, StoreOpts, StoreRuntime, TestStore } from "./types.js";
 import { ensureLogger } from "../utils.js";
 import { Gateway } from "./gateway.js";
-import { getKeyBag, } from "../runtime/key-bag.js";
+import { getKeyBag } from "../runtime/key-bag.js";
 
 function ensureIsIndex(url: URL, isIndex?: string): URL {
   if (isIndex) {
@@ -150,11 +150,12 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
     const store = new DataStoreImpl(loader.name, url, {
       logger: loader.logger,
       gateway,
-      keybag: () => getKeyBag({
-        logger: loader.logger,
-        ...loader.ebOpts.keyBag
-      }),
-    })
+      keybag: () =>
+        getKeyBag({
+          logger: loader.logger,
+          ...loader.ebOpts.keyBag,
+        }),
+    });
 
     const ret = await store.start();
     if (ret.isErr()) {
@@ -172,7 +173,6 @@ function loadMetaGateway(url: URL, logger: Logger) {
   });
 }
 
-
 const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
   const url = buildURL(loader.ebOpts.store.stores?.meta, loader);
@@ -185,10 +185,11 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
     const store = new MetaStoreImpl(loader.name, url, {
       logger: loader.logger,
       gateway,
-      keybag: () => getKeyBag({
-        logger: loader.logger,
-        ...loader.ebOpts.keyBag
-      }),
+      keybag: () =>
+        getKeyBag({
+          logger: loader.logger,
+          ...loader.ebOpts.keyBag,
+        }),
     });
     const ret = await store.start();
     if (ret.isErr()) {
@@ -217,11 +218,12 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
     const store = new WALStoreImpl(loader, url, {
       logger: loader.logger,
       gateway,
-      keybag: () => getKeyBag({
-        logger: loader.logger,
-        ...loader.ebOpts.keyBag
-      }),
-    })
+      keybag: () =>
+        getKeyBag({
+          logger: loader.logger,
+          ...loader.ebOpts.keyBag,
+        }),
+    });
     const ret = await store.start();
     if (ret.isErr()) {
       throw logger.Error().Result("start", ret).Msg("start failed").AsError();

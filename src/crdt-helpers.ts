@@ -8,7 +8,6 @@ import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import {
   type EncryptedBlockstore,
-  type CompactionFetcher,
   CarTransaction,
   BlockFetcher,
   TransactionMeta,
@@ -112,11 +111,16 @@ async function processFiles<T extends DocTypes>(store: StoreRuntime, blocks: Car
     await processFileset(logger, store, blocks, doc._files);
   }
   if (doc._publicFiles) {
-    await processFileset(logger, store, blocks, doc._publicFiles/*, true*/);
+    await processFileset(logger, store, blocks, doc._publicFiles /*, true*/);
   }
 }
 
-async function processFileset(logger: Logger, store: StoreRuntime, blocks: CarTransaction, files: DocFiles/*, publicFiles = false */) {
+async function processFileset(
+  logger: Logger,
+  store: StoreRuntime,
+  blocks: CarTransaction,
+  files: DocFiles /*, publicFiles = false */,
+) {
   const dbBlockstore = blocks.parent as EncryptedBlockstore;
   if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, database name is required").AsError();
   const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
@@ -142,9 +146,12 @@ async function processFileset(logger: Logger, store: StoreRuntime, blocks: CarTr
   }
 
   if (didPut.length) {
-    const car = await dbBlockstore.loader.commitFiles(t, { files } as unknown as TransactionMeta,/* {
+    const car = await dbBlockstore.loader.commitFiles(
+      t,
+      { files } as unknown as TransactionMeta /* {
       public: publicFiles,
-    } */);
+    } */,
+    );
     if (car) {
       for (const name of didPut) {
         files[name] = { car, ...files[name] } as DocFileMeta;

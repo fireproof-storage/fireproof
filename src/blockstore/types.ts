@@ -188,16 +188,8 @@ export interface CryptoRuntime {
   ): Promise<FPCryptoKey>;
 
   //(format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
-  decrypt(
-    algo: { name: string; iv: Uint8Array; tagLength: number },
-    key: FPCryptoKey,
-    data: Uint8Array,
-  ): Promise<ArrayBuffer>;
-  encrypt(
-    algo: { name: string; iv: Uint8Array; tagLength: number },
-    key: FPCryptoKey,
-    data: Uint8Array,
-  ): Promise<ArrayBuffer>;
+  decrypt(algo: { name: string; iv: Uint8Array; tagLength: number }, key: FPCryptoKey, data: Uint8Array): Promise<ArrayBuffer>;
+  encrypt(algo: { name: string; iv: Uint8Array; tagLength: number }, key: FPCryptoKey, data: Uint8Array): Promise<ArrayBuffer>;
   digestSHA256(data: Uint8Array): Promise<ArrayBuffer>;
   randomBytes(size: number): Uint8Array;
 }
@@ -213,7 +205,6 @@ export interface KeyWithFingerPrint {
   readonly key: FPCryptoKey;
 }
 
-
 export interface KeyedCrypto {
   readonly crypto: CryptoRuntime;
   // readonly codec: BlockCodec<number, IvAndBytes>;
@@ -226,7 +217,6 @@ export interface KeyedCrypto {
   // encode(data: Uint8Array): Promise<Uint8Array>;
   // decode(bytes: Uint8Array | ArrayBuffer): Promise<Uint8Array>;
 }
-
 
 export interface BlobLike {
   /**
@@ -382,7 +372,7 @@ export interface WALStore extends BaseStore {
 
   process(): Promise<void>;
   enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;
-  enqueueFile(fileCid: AnyLink/*, publicFile?: boolean*/): Promise<void>;
+  enqueueFile(fileCid: AnyLink /*, publicFile?: boolean*/): Promise<void>;
   load(): Promise<WALState | Falsy>;
   save(state: WALState): Promise<void>;
 }
@@ -404,7 +394,7 @@ export type BlockstoreOpts = Partial<{
   readonly meta: DbMeta;
   readonly name: string;
   readonly threshold: number;
-}>
+}>;
 
 export interface BlockstoreRuntime {
   readonly logger: Logger;
@@ -420,7 +410,6 @@ export interface BlockstoreRuntime {
   readonly name?: string;
   readonly threshold: number;
 }
-
 
 export interface Loadable {
   readonly name: string; // = "";

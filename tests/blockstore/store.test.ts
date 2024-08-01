@@ -141,7 +141,7 @@ describe("MetaStore with a saved header", function () {
     await store.start();
     raw = await bs.testStoreFactory(store.url);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-    await store.save({ cars: [cid]/*, key: undefined */});
+    await store.save({ cars: [cid] /*, key: undefined */ });
   });
 
   it("should have a header", async function () {
