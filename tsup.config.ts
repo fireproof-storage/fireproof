@@ -24,6 +24,7 @@ const stopFile = {
   "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
   "./gateways/file/gateway.js": "../bundle-not-impl.js",
   "./node-sys-container.js": "../bundle-not-impl.js",
+  "./key-bag-file.js": "../bundle-not-impl.js",
 };
 
 const ourMultiformat = {

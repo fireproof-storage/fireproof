@@ -1,21 +1,9 @@
 import { Result } from "@adviser/cement";
 import { StoreType } from "../types.js";
+import { NotFoundError } from "../utils.js";
 
 export interface GatewayOpts {
   readonly gateway: Gateway;
-}
-
-export class NotFoundError extends Error {
-  readonly code = "ENOENT";
-}
-
-export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
-  if (Result.Is(e)) {
-    if (e.isOk()) return false;
-    e = e.Err();
-  }
-  if ((e as NotFoundError).code === "ENOENT") return true;
-  return false;
 }
 
 export type GetResult = Result<Uint8Array, NotFoundError | Error>;

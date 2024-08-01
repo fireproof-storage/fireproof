@@ -9,7 +9,7 @@ export * as files from "./files.js";
 export * as kb from "./key-bag.js";
 export * as kc from "./keyed-crypto.js";
 
-export * as mf from "./multiformats/block.js";
+export * as mf from "./wait-pr-multiformats/block.js";
 
 export * from "./runtime.js";
 

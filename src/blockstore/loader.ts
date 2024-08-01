@@ -33,7 +33,7 @@ import type { Falsy } from "../types.js";
 import { getKeyBag } from "../runtime/key-bag.js";
 import { CID } from "multiformats";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
-import { decode } from "../runtime/multiformats/block.js";
+import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {

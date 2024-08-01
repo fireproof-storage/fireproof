@@ -1,4 +1,4 @@
-import { decode } from "../runtime/multiformats/block.js";
+import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import type { Logger } from "@adviser/cement";
