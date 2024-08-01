@@ -45,7 +45,7 @@ importers:
         specifier: ^3.7.7
         version: 3.7.7
       multiformats:
-        specifier: ^13.2.1
+        specifier: ^13.2.2
         version: 13.2.2
       p-limit:
         specifier: ^6.1.0

@@ -16,10 +16,12 @@ import {
   WALStore,
 } from "./types";
 import * as CBW from "@ipld/car/buffer-writer";
-import { CID, BlockEncoder } from "multiformats";
+import { CID } from "multiformats";
 import { encode } from "../runtime/wait-pr-multiformats/block.js";
+import { BlockEncoder } from "../runtime/wait-pr-multiformats/codec-interface.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
+
 async function encodeCarFile(roots: AnyLink[], t: CarMakeable, codec: BlockEncoder<number, Uint8Array>): Promise<AnyBlock> {
   let size = 0;
   const headerSize = CBW.headerLength({ roots } as { roots: CID<unknown, number, number, 1>[] });

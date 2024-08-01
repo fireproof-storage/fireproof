@@ -2,7 +2,7 @@ import { Logger } from "@adviser/cement";
 import { BytesWithIv, CryptoRuntime, IvAndBytes, KeyedCrypto, KeyWithFingerPrint } from "../blockstore";
 import { ensureLogger } from "../utils.js";
 import { KeyBag } from "./key-bag";
-import type { BlockCodec } from "multiformats";
+import type { BlockCodec } from "./wait-pr-multiformats/codec-interface";
 import { base58btc } from "multiformats/bases/base58";
 
 function concat(buffers: (ArrayBuffer | Uint8Array)[]) {

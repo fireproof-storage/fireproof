@@ -23,15 +23,11 @@ import {
 } from "./types.js";
 
 import { parseCarFile } from "./loader-helpers.js";
-import { decodeEncryptedCar } from "./encrypt-helpers.js";
-
-// import { DataStoreImpl, MetaStoreImpl, RemoteWALImpl } from "./store.js";
 
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import type { Falsy } from "../types.js";
 import { getKeyBag } from "../runtime/key-bag.js";
-import { CID } from "multiformats";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
@@ -459,24 +455,24 @@ export class Loader implements Loadable {
 
   // }
 
-  protected async ensureDecryptedReader(store: BaseStore, reader: CarReader): Promise<CarReader> {
-    // const theKey = await this._getKey();
-    // if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
-    const kycy = await store.keyedCrypto();
-    if (!kycy.isEncrypting) {
-      return reader;
-    }
-    const { blocks, root } = await decodeEncryptedCar(this.logger, kycy, reader);
-    return {
-      getRoots: () => [root],
-      get: async (cid: CID) => {
-        const res = await blocks.get(cid);
-        this.logger.Debug().Str("cid", cid.toString()).Len(res?.bytes).Msg("get block");
-        return res;
-      },
-      blocks: blocks.entries.bind(blocks),
-    } as unknown as CarReader;
-  }
+  // protected async ensureDecryptedReader(store: BaseStore, reader: CarReader): Promise<CarReader> {
+  //   // const theKey = await this._getKey();
+  //   // if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
+  //   const kycy = await store.keyedCrypto();
+  //   if (!kycy.isEncrypting) {
+  //     return reader;
+  //   }
+  //   const { blocks, root } = await decodeEncryptedCar(this.logger, kycy, reader);
+  //   return {
+  //     getRoots: () => [root],
+  //     get: async (cid: CID) => {
+  //       const res = await blocks.get(cid);
+  //       this.logger.Debug().Str("cid", cid.toString()).Len(res?.bytes).Msg("get block");
+  //       return res;
+  //     },
+  //     blocks: blocks.entries.bind(blocks),
+  //   } as unknown as CarReader;
+  // }
 
   // protected async setKey(key: string) {
   //   if (this.key && this.key !== key)
