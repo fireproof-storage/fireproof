@@ -12,25 +12,29 @@ import {
   type TransactionMeta,
   type CarGroup,
   type CarLog,
-  toCIDBlock,
   DataStore,
   WALStore,
   RemoteMetaStore,
   MetaStore,
   BaseStore,
+  type Loadable,
+  BlockstoreRuntime,
+  BlockstoreOpts,
 } from "./types.js";
-import type { BlockstoreOpts, BlockstoreRuntime } from "./transaction.js";
 
-import { encodeCarFile, encodeCarHeader, parseCarFile } from "./loader-helpers.js";
-import { decodeEncryptedCar, encryptedEncodeCarFile } from "./encrypt-helpers.js";
+import { parseCarFile } from "./loader-helpers.js";
+import { decodeEncryptedCar } from "./encrypt-helpers.js";
 
 // import { DataStoreImpl, MetaStoreImpl, RemoteWALImpl } from "./store.js";
 
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import * as CBW from "@ipld/car/buffer-writer";
-import type { Falsy, FileTransactionMeta } from "../types.js";
+import type { Falsy } from "../types.js";
 import { getKeyBag } from "../runtime/key-bag.js";
+import { CID } from "multiformats";
+import { commit, commitFiles, CommitParams } from "./commitor.js";
+import { decode } from "multiformats/block";
+import { sha256 as hasher } from "multiformats/hashes/sha2";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -50,34 +54,17 @@ function uniqueCids(list: CarLog, remove = new Set<string>()): CarLog {
 
 
 
-export abstract class Loadable {
-  name = "";
-  abstract readonly logger: Logger;
-  abstract readonly ebOpts: BlockstoreRuntime;
-  remoteCarStore?: DataStore;
-  abstract carStore(): Promise<DataStore>;
-  carLog: CarLog = new Array<CarGroup>();
-  remoteMetaStore?: RemoteMetaStore;
-  remoteFileStore?: DataStore;
-  abstract ready(): Promise<void>;
-  abstract close(): Promise<void>;
-  abstract fileStore(): Promise<DataStore>;
-  abstract WALStore(): Promise<WALStore>;
-  abstract handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
-}
 
 // export interface DecoderAndCarReader extends CarReader {
 //   readonly decoder: BlockDecoder<number, Uint8Array>;
 // }
-
-export type DecoderAndCarReader = CarReader;
 
 export class Loader implements Loadable {
   readonly name: string;
   readonly ebOpts: BlockstoreRuntime;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
-  readonly carReaders = new Map<string, Promise<DecoderAndCarReader>>();
+  readonly carReaders = new Map<string, Promise<CarReader>>();
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
 
@@ -218,29 +205,10 @@ export class Loader implements Loadable {
     done: TransactionMeta,
     // opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
-    return this.commitQueue.enqueue(() => this._commitInternalFiles(t, done));
-  }
-  // can these skip the queue? or have a file queue?
-  async _commitInternalFiles(
-    t: CarTransaction,
-    done: TransactionMeta,
-    // opts: CommitOpts = { noLoader: false, compact: false },
-  ): Promise<CarGroup> {
     await this.ready();
-    const { files: roots } = this.makeFileCarHeader(done as FileTransactionMeta) as {
-      files: AnyLink[];
-    };
-    const cids: AnyLink[] = [];
-    const fileStore = await this.fileStore();
-    const cars = await this.prepareCarFilesFiles(fileStore, roots, t);
-    for (const car of cars) {
-      const { cid, bytes } = car;
-      await fileStore.save({ cid, bytes });
-      await (await this.WALStore()).enqueueFile(cid/*, !!opts.public*/);
-      cids.push(cid);
-    }
-
-    return cids;
+    const fstore = await this.fileStore();
+    const wstore = await this.WALStore();
+    return this.commitQueue.enqueue(() => commitFiles(fstore, wstore, t, done));
   }
 
   async loadFileCar(cid: AnyLink/*, isPublic = false*/): Promise<CarReader> {
@@ -252,9 +220,34 @@ export class Loader implements Loadable {
     done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
+    await this.ready();
     const fstore = await this.fileStore();
-    return this.commitQueue.enqueue(() => this._commitInternal(fstore, t, done, opts));
+    const params: CommitParams = {
+      encoder: (await fstore.keyedCrypto()).codec(),
+      carLog: this.carLog,
+      carStore: fstore,
+      WALStore: await this.WALStore(),
+      metaStore: await this.metaStore(),
+    };
+    return this.commitQueue.enqueue(async () => {
+      await this.cacheTransaction(t);
+      const ret = await commit(params, t, done, opts)
+      await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
+      return ret.cgrp;
+  });
   }
+
+  async updateCarLog<T>(cids: CarGroup, fp: CarHeader<T>, compact: boolean): Promise<void> {
+    if (compact) {
+      const previousCompactCid = fp.compact[fp.compact.length - 1];
+      fp.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
+      this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)];
+      await this.removeCidsForCompact(previousCompactCid[0]);
+    } else {
+      this.carLog.unshift(cids);
+    }
+  }
+
 
   async cacheTransaction(t: CarTransaction) {
     for await (const block of t.entries()) {
@@ -276,103 +269,9 @@ export class Loader implements Loadable {
     }
   }
 
-  async _commitInternal<T>(store: BaseStore, t: CarTransaction, done: T, opts: CommitOpts = { noLoader: false, compact: false }): Promise<CarGroup> {
-    await this.ready();
-    const fp = this.makeCarHeader<T>(done, this.carLog, !!opts.compact);
-    const rootBlock = await encodeCarHeader(fp);
 
-    const cars = await this.prepareCarFiles(store, rootBlock, t);
-    const cids: AnyLink[] = [];
-    for (const car of cars) {
-      const { cid, bytes } = car;
-      await (await this.carStore()).save({ cid, bytes });
-      cids.push(cid);
-    }
 
-    await this.cacheTransaction(t);
-    const newDbMeta = { cars: cids } as DbMeta;
-    await (await this.WALStore()).enqueue(newDbMeta, opts);
-    await (await this.metaStore()).save(newDbMeta);
-    await this.updateCarLog(cids, fp, !!opts.compact);
-    return cids;
-  }
 
-  async prepareCarFilesFiles(
-    store: BaseStore,
-    roots: AnyLink[],
-    t: CarTransaction,
-    // isPublic: boolean,
-  ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
-    // const theKey = isPublic ? null : await this._getKey();
-    const kc = await store.keyedCrypto()
-    const car = kc.isEncrypting
-      ? await encryptedEncodeCarFile(this.logger, kc, roots[0], t)
-      : await encodeCarFile(roots, t);
-    return [car];
-  }
-
-  async prepareCarFiles(
-    store: BaseStore,
-    rootBlock: AnyBlock, t: CarTransaction): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
-    // const theKey = isPublic ? undefined : await this._getKey();
-    const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
-    const threshold = this.ebOpts.threshold || 1000 * 1000;
-    let clonedt = new CarTransaction(t.parent, { add: false });
-    clonedt.putSync(rootBlock.cid, rootBlock.bytes);
-    let newsize = CBW.blockLength(toCIDBlock(rootBlock));
-    let cidRootBlock = rootBlock;
-    for (const { cid, bytes } of t.entries()) {
-      newsize += CBW.blockLength(toCIDBlock({ cid: cid, bytes }));
-      if (newsize >= threshold) {
-        carFiles.push(await this.createCarFile(store, cidRootBlock.cid, clonedt));
-        clonedt = new CarTransaction(t.parent, { add: false });
-        clonedt.putSync(cid, bytes);
-        cidRootBlock = { cid, bytes };
-        newsize = CBW.blockLength(toCIDBlock({ cid, bytes })); //+ CBW.blockLength(rootBlock)
-      } else {
-        clonedt.putSync(cid, bytes);
-      }
-    }
-    carFiles.push(await this.createCarFile(store, cidRootBlock.cid, clonedt));
-    // console.log("split to ", carFiles.length, "files")
-    return carFiles;
-  }
-
-  private async createCarFile(
-    store: BaseStore,
-    cid: AnyLink,
-    t: CarTransaction,
-  ): Promise<{ cid: AnyLink; bytes: Uint8Array }> {
-    try {
-      const keycr = await store.keyedCrypto()
-      return keycr.isEncrypting
-        ? await encryptedEncodeCarFile(this.logger, keycr, cid, t)
-        : await encodeCarFile([cid], t);
-    } catch (e) {
-      throw this.logger.Error().Err(e).Msg("error creating car file").AsError();
-    }
-  }
-
-  protected makeFileCarHeader(result: FileTransactionMeta): TransactionMeta {
-    const files: AnyLink[] = [];
-    for (const [, meta] of Object.entries(result.files || {})) {
-      if (meta && typeof meta === "object" && "cid" in meta && meta !== null) {
-        files.push(meta.cid as AnyLink);
-      }
-    }
-    return { ...result, files };
-  }
-
-  async updateCarLog<T>(cids: CarGroup, fp: CarHeader<T>, compact: boolean): Promise<void> {
-    if (compact) {
-      const previousCompactCid = fp.compact[fp.compact.length - 1];
-      fp.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
-      this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)];
-      await this.removeCidsForCompact(previousCompactCid[0]);
-    } else {
-      this.carLog.unshift(cids);
-    }
-  }
 
   async removeCidsForCompact(cid: AnyLink) {
     const carHeader = await this.loadCarHeaderFromMeta({
@@ -494,12 +393,9 @@ export class Loader implements Loadable {
     return got;
   }
 
-  protected makeCarHeader<T>(meta: T, cars: CarLog, compact = false): CarHeader<T> {
-    const coreHeader = compact ? { cars: [], compact: cars } : { cars, compact: [] };
-    return { ...coreHeader, meta };
-  }
 
-  async loadCar(cid: AnyLink): Promise<DecoderAndCarReader> {
+
+  async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) {
       throw this.logger.Error().Msg("car store not initialized").AsError();
     }
@@ -536,9 +432,11 @@ export class Loader implements Loadable {
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
-    const rawReader = await CarReader.fromBytes(loadedCar.bytes);
-    const kc = await activeStore.keyedCrypto()
-    const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
+    const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }) // as Uint8Array,
+    const rawReader = await CarReader.fromBytes(bytes.value)
+    const readerP = Promise.resolve(rawReader)
+    // const kc = await activeStore.keyedCrypto()
+    // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
 
     const cachedReaderP = readerP.then(async (reader) => {
       await this.cacheCarReader(cidsString, reader).catch((e) => {
@@ -552,7 +450,7 @@ export class Loader implements Loadable {
   }
 
   //What if instead it returns an Array of CarHeader
-  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<DecoderAndCarReader> {
+  protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let dacr = this.carReaders.get(cidsString)
     if (!dacr) {
@@ -561,6 +459,16 @@ export class Loader implements Loadable {
     }
     return dacr;
   }
+
+  // class decryptedReader extends CarReader {
+  //   constructor(rawReader: CarReader) {
+  //     super(rawReader._header, rawReader._blocks);
+  //   }
+  //   getRoots(): Promise<CID[]> {
+  //     return this._header.roots;
+  //   }
+
+  // }
 
   protected async ensureDecryptedReader(store: BaseStore, reader: CarReader): Promise<CarReader> {
     // const theKey = await this._getKey();
@@ -572,7 +480,11 @@ export class Loader implements Loadable {
     const { blocks, root } = await decodeEncryptedCar(this.logger, kycy, reader);
     return {
       getRoots: () => [root],
-      get: blocks.get.bind(blocks),
+      get: async (cid: CID) => {
+        const res = await blocks.get(cid)
+        this.logger.Debug().Str("cid", cid.toString()).Len(res?.bytes).Msg("get block")
+        return res
+      },
       blocks: blocks.entries.bind(blocks),
     } as unknown as CarReader;
   }

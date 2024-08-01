@@ -6,22 +6,19 @@ import {
   AnyBlock,
   AnyLink,
   CarMakeable,
-  DbMeta,
-  StoreRuntime,
-  StoreOpts,
   TransactionMeta,
   TransactionWrapper,
+  BlockstoreOpts,
+  BlockstoreRuntime,
 } from "./types.js";
 
 import { Loader } from "./loader.js";
 import type { CID, Block, Version } from "multiformats";
-import { CryptoRuntime } from "./types.js";
 import { falsyToUndef } from "../types.js";
 import { toCryptoRuntime } from "../runtime/crypto.js";
 import { toStoreRuntime } from "./store-factory.js";
 import { Logger } from "@adviser/cement";
 import { ensureLogger } from "../utils.js";
-import { KeyBagOpts } from "../runtime/key-bag.js";
 
 export type BlockFetcher = BlockFetcherApi;
 
@@ -57,7 +54,7 @@ export function defaultedBlockstoreRuntime(
       return Promise.resolve();
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    compact: async (blocks: CompactionFetcher) => {
+    compact: async (blocks: BlockFetcher) => {
       return {} as unknown as TransactionMeta;
     },
     autoCompact: 100,
@@ -258,9 +255,9 @@ export class EncryptedBlockstore extends BaseBlockstore {
 }
 
 export class CompactionFetcher implements BlockFetcher {
-  blockstore: EncryptedBlockstore;
+  readonly blockstore: EncryptedBlockstore;
   // loader: Loader | null = null
-  loggedBlocks: CarTransaction;
+  readonly loggedBlocks: CarTransaction;
 
   constructor(blocks: EncryptedBlockstore) {
     this.blockstore = blocks;
@@ -275,33 +272,3 @@ export class CompactionFetcher implements BlockFetcher {
   }
 }
 
-export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>;
-
-export interface BlockstoreOpts {
-  readonly logger?: Logger;
-  readonly applyMeta?: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  readonly compact?: CompactFn;
-  readonly autoCompact?: number;
-  readonly crypto?: CryptoRuntime;
-  readonly store?: StoreOpts;
-  readonly keyBag?: KeyBagOpts;
-  readonly public?: boolean;
-  readonly meta?: DbMeta;
-  readonly name?: string;
-  readonly threshold?: number;
-}
-
-export interface BlockstoreRuntime {
-  readonly logger: Logger;
-  readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  readonly compact: CompactFn;
-  readonly autoCompact: number;
-  readonly crypto: CryptoRuntime;
-  readonly store: StoreOpts;
-  readonly storeRuntime: StoreRuntime;
-  readonly keyBag: Partial<KeyBagOpts>;
-  // readonly public: boolean;
-  readonly meta?: DbMeta;
-  readonly name?: string;
-  readonly threshold: number;
-}

@@ -7,6 +7,7 @@ import {
   type TransactionMeta,
   type CarTransaction,
   BaseBlockstore,
+  CompactFetcher,
 } from "./blockstore/index.js";
 import {
   clockChangesSince,
@@ -33,7 +34,7 @@ import type {
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
-import { blockstoreFactory } from "./blockstore/transaction.js";
+import { BlockFetcher, blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
 
 export class CRDT<T extends DocTypes> {
@@ -60,7 +61,7 @@ export class CRDT<T extends DocTypes> {
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
         await this.clock.applyHead(crdtMeta.head, []);
       },
-      compact: async (blocks: CompactionFetcher) => {
+      compact: async (blocks: CompactFetcher) => {
         await doCompact(blocks, this.clock.head, this.logger);
         return { head: this.clock.head } as TransactionMeta;
       },

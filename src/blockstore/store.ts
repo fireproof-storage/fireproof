@@ -14,11 +14,12 @@ import type {
   WALState,
   LoadHandler,
   KeyedCrypto,
+  Loadable,
 } from "./types.js";
 import { Falsy, StoreType, throwFalsy } from "../types.js";
 import { Gateway, isNotFoundError } from "./gateway.js";
 import { ensureLogger, exception2Result, sanitizeURL } from "../utils.js";
-import { carLogIncludesGroup, Loadable } from "./loader.js";
+import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
