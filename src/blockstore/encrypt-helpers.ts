@@ -28,19 +28,15 @@ function carLogIncludesGroup(list: AnyLink[], cidMatch: AnyLink) {
   });
 }
 
-
 type getFn = (cid: AnyLink) => Promise<AnyBlock | undefined>;
 
-function getWithByCodec(
-  get: getFn,
-  hasher: MultihashHasher<number>,
-  codec: BlockCodec<number, unknown>
-): getFn {
-  return (cid: AnyLink) => get(cid).then(async (block) => {
-    if (!block) return;
-    const decoded = await decode({ ...block, codec, hasher });
-    return decoded;
-  });
+function getWithByCodec(get: getFn, hasher: MultihashHasher<number>, codec: BlockCodec<number, unknown>): getFn {
+  return (cid: AnyLink) =>
+    get(cid).then(async (block) => {
+      if (!block) return;
+      const decoded = await decode({ ...block, codec, hasher });
+      return decoded;
+    });
 }
 
 export class EnDeCryptor<T = Uint8Array> {
@@ -76,16 +72,23 @@ export class EnDeCryptor<T = Uint8Array> {
       const unencrypted = await get(cid);
       if (!unencrypted) throw this.logger.Error().Ref("cid", cid).Msg("missing cid block").AsError();
       const block = await encode({ value: unencrypted.bytes, codec: this.kycr.codec(), hasher });
-      this.logger.Debug().Str("cid", block.cid.toString()).Len(block.bytes)
-        /*.Any("stack", (new Error).stack)*/.Msg("encrypt-cid");
-      yield block as T
+      this.logger
+        .Debug()
+        .Str("cid", block.cid.toString())
+        .Len(block.bytes)
+        /*.Any("stack", (new Error).stack)*/ .Msg("encrypt-cid");
+      yield block as T;
       set.add(block.cid.toString());
       if (unencrypted.cid.equals(rootCid)) eroot = block.cid;
     }
     if (!eroot) throw this.logger.Error().Msg("cids does not include root").AsError();
     const list = [...set].map((s) => CID.parse(s));
     let last;
-    this.logger.Debug().Str("cid", rootCid.toString()).Any("list", list.map(i => i.toString()).sort()).Msg("encrypt-node");
+    this.logger
+      .Debug()
+      .Str("cid", rootCid.toString())
+      .Any("list", list.map((i) => i.toString()).sort())
+      .Msg("encrypt-node");
     for await (const node of create({ list, get, cache, chunker, hasher, codec: dagcbor })) {
       const block = (await node.block) as AnyBlock;
       yield block as T;
@@ -96,7 +99,7 @@ export class EnDeCryptor<T = Uint8Array> {
     const block = await encode({ value: head, codec: dagcbor, hasher });
     this.logger.Debug().Str("cid", block.cid.toString()).Any("head", head).Msg("encrypt-root");
     yield block as T;
-  };
+  }
 
   async *decrypt({
     rootCid,
@@ -114,32 +117,41 @@ export class EnDeCryptor<T = Uint8Array> {
     const get = (cid: AnyLink) => {
       // this.logger.Debug().Str("cid", cid.toString()).Msg("decrypt-get");
       return iget(cid);
-    }
+    };
     const decodedRoot = await getWithByCodec(get, hasher, dagcbor)(rootCid);
     if (!decodedRoot) throw this.logger.Error().Msg("missing root").AsError();
     if (!decodedRoot.bytes) throw this.logger.Error().Msg("missing bytes").AsError();
     const {
-      value: {
-        root: eroot,
-        last: tree,
-      }
+      value: { root: eroot, last: tree },
       // value: [eroot, tree],
     } = decodedRoot as unknown as {
       value: {
         root: CID;
         last: CID;
-      }
-    }
-    this.logger.Debug().Str("cid", rootCid.toString()).Any("head", { root: eroot.toString(), last: tree.toString() }).Msg("decrypting-head")
+      };
+    };
+    this.logger
+      .Debug()
+      .Str("cid", rootCid.toString())
+      .Any("head", { root: eroot.toString(), last: tree.toString() })
+      .Msg("decrypting-head");
 
     const rootBlock = (await get(eroot)) as AnyDecodedBlock;
     if (!rootBlock) throw this.logger.Error().Msg("missing root block").AsError();
 
-    const cidset = await load({ cid: tree, get: getWithByCodec(get, hasher, dagcbor), cache, chunker, /*codec: this.kycr.codec,*/ hasher });
+    const cidset = await load({
+      cid: tree,
+      get: getWithByCodec(get, hasher, dagcbor),
+      cache,
+      chunker,
+      /*codec: this.kycr.codec,*/ hasher,
+    });
     const { result: nodes } = (await cidset.getAllEntries()) as { result: { cid: CID }[] };
-    this.logger.Debug().Str("cid", tree.toString())
+    this.logger
+      .Debug()
+      .Str("cid", tree.toString())
       .Any("list", nodes.map(({ cid }) => cid.toString()).sort())
-      .Msg("decrypting-list")
+      .Msg("decrypting-list");
     const toBlock = async (eblock?: AnyBlock) => {
       if (!eblock) throw this.logger.Error().Msg("missing block").AsError();
       const adb = eblock as AnyDecodedBlock;
@@ -157,16 +169,17 @@ export class EnDeCryptor<T = Uint8Array> {
       //   .Len(adb.bytes)
       //   .Any("eblock", Object.keys(eblock)).Msg("decrypting-synunwrap")
       // } else {
-      this.logger.Debug().Str("cid", adb.cid.toString()).Len(adb.bytes).Msg("decrypting-unwrap")
+      this.logger.Debug().Str("cid", adb.cid.toString()).Len(adb.bytes).Msg("decrypting-unwrap");
       // }
       const block = await mfCreate({
         cid: adb.cid,
         bytes: adb.bytes,
         hasher,
-        codec: { // noop codec
+        codec: {
+          // noop codec
           code: 0,
           decode: async (bytes) => bytes,
-        }
+        },
       });
       return block as AnyBlock;
     };
@@ -187,7 +200,11 @@ export class EnDeCryptor<T = Uint8Array> {
     const promises = [];
     for (const { cid } of nodes) {
       if (!rootBlock.cid.equals(cid)) {
-        this.logger.Debug().Str("root", rootBlock.cid.toString()).Str("cid", (cid as CID).toString()).Msg("decrypting-nodes");
+        this.logger
+          .Debug()
+          .Str("root", rootBlock.cid.toString())
+          .Str("cid", (cid as CID).toString())
+          .Msg("decrypting-nodes");
         promises.push(getWithByCodec(get, hasher, this.kycr.codec())(cid).then(toBlock));
       }
     }
@@ -202,7 +219,7 @@ export class EnDeCryptor<T = Uint8Array> {
     //     decode: async (bytes) => bytes,
     //   }
     // });
-  };
+  }
   // return { encrypt, decrypt };
 }
 
@@ -251,7 +268,8 @@ async function decodeCarBlocks(
   logger: Logger,
   kycy: KeyedCrypto,
   root: AnyLink,
-  get: (cid: AnyLink) => Promise<AnyBlock | undefined>): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
+  get: (cid: AnyLink) => Promise<AnyBlock | undefined>,
+): Promise<{ blocks: MemoryBlockstore; root: AnyLink }> {
   // const decryptionKeyUint8 = hexStringToUint8Array(keyMaterial);
   // const decryptionKey = decryptionKeyUint8.buffer.slice(0, decryptionKeyUint8.byteLength);
   const decryptedBlocks = new MemoryBlockstore();
@@ -265,7 +283,7 @@ async function decodeCarBlocks(
   decryptedBlocks.get = async (blocks: any): Promise<any> => {
     logger.Debug().Any("blocks", blocks).Msg("decryptedBlocks-get");
     return prevGet.apply(decryptedBlocks, [blocks]);
-  }
+  };
 
   for await (const block of encDec.decrypt({
     rootCid: root,

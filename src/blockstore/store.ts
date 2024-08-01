@@ -60,8 +60,8 @@ abstract class BaseStoreImpl {
     this.keybag = opts.keybag;
     this.logger = opts.logger;
     this.gateway = opts.gateway;
-    this.textEncoder = opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder())
-    this.textDecoder = opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder())
+    this.textEncoder = opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder());
+    this.textDecoder = opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder());
   }
 
   readonly _onStarted: (() => void)[] = [];
@@ -96,26 +96,25 @@ abstract class BaseStoreImpl {
         storeKeyName.push(idx);
       }
       storeKeyName.push(this.storeType);
-      let keyName = `@${storeKeyName.join(":")}@`
-      let failIfNotFound = true
-      const kb = await this.keybag()
-      if (storeKey && storeKey.startsWith('@') && storeKey.endsWith('@')) {
-        keyName = storeKey
+      let keyName = `@${storeKeyName.join(":")}@`;
+      let failIfNotFound = true;
+      const kb = await this.keybag();
+      if (storeKey && storeKey.startsWith("@") && storeKey.endsWith("@")) {
+        keyName = storeKey;
       } else if (storeKey) {
-        const ret = await kb.getNamedKey(keyName, true)
+        const ret = await kb.getNamedKey(keyName, true);
         if (ret.isErr()) {
-          await kb.setNamedKey(keyName, storeKey)
+          await kb.setNamedKey(keyName, storeKey);
         }
       } else {
-        failIfNotFound = false // create key if not found
+        failIfNotFound = false; // create key if not found
       }
-      const ret = await kb.getNamedKey(keyName, failIfNotFound)
+      const ret = await kb.getNamedKey(keyName, failIfNotFound);
       if (ret.isErr()) {
-        return ret
+        return ret;
       }
       this.url.searchParams.set("storekey", keyName);
     }
-
 
     sanitizeURL(this.url);
     const version = guardVersion(this.url);
@@ -145,17 +144,13 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   constructor(name: string, url: URL, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(
-      name,
-      url,
-      {
-        ...opts,
-        logger: ensureLogger(opts.logger, "MetaStoreImpl", {
-            url: logValue(() => this.url.toString()),
-            name,
-          })
-      }
-    );
+    super(name, url, {
+      ...opts,
+      logger: ensureLogger(opts.logger, "MetaStoreImpl", {
+        url: logValue(() => this.url.toString()),
+        name,
+      }),
+    });
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -260,16 +255,13 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   // readonly tag: string = "car-base";
 
   constructor(name: string, url: URL, opts: StoreOpts) {
-    super(
-      name,
-      url,
-      {
-        ...opts,
-        logger: ensureLogger(opts.logger, "DataStoreImpl", {
-            url: logValue(() => this.url.toString()),
-            name,
-          })
-      })
+    super(name, url, {
+      ...opts,
+      logger: ensureLogger(opts.logger, "DataStoreImpl", {
+        url: logValue(() => this.url.toString()),
+        name,
+      }),
+    });
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -330,16 +322,13 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   constructor(loader: Loadable, url: URL, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(
-      loader.name,
-      url,
-      {
-        ...opts,
-        logger: ensureLogger(opts.logger, "WALStoreImpl", {
-            url: logValue(() => this.url.toString()),
-            name: loader.name,
-          })
-      })
+    super(loader.name, url, {
+      ...opts,
+      logger: ensureLogger(opts.logger, "WALStoreImpl", {
+        url: logValue(() => this.url.toString()),
+        name: loader.name,
+      }),
+    });
     this.loader = loader;
   }
 

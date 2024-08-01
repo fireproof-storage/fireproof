@@ -52,9 +52,6 @@ function uniqueCids(list: CarLog, remove = new Set<string>()): CarLog {
   return [...byString.values()];
 }
 
-
-
-
 // export interface DecoderAndCarReader extends CarReader {
 //   readonly decoder: BlockDecoder<number, Uint8Array>;
 // }
@@ -211,7 +208,7 @@ export class Loader implements Loadable {
     return this.commitQueue.enqueue(() => commitFiles(fstore, wstore, t, done));
   }
 
-  async loadFileCar(cid: AnyLink/*, isPublic = false*/): Promise<CarReader> {
+  async loadFileCar(cid: AnyLink /*, isPublic = false*/): Promise<CarReader> {
     return await this.storesLoadCar(cid, await this.fileStore(), this.remoteFileStore);
   }
 
@@ -231,10 +228,10 @@ export class Loader implements Loadable {
     };
     return this.commitQueue.enqueue(async () => {
       await this.cacheTransaction(t);
-      const ret = await commit(params, t, done, opts)
+      const ret = await commit(params, t, done, opts);
       await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
       return ret.cgrp;
-  });
+    });
   }
 
   async updateCarLog<T>(cids: CarGroup, fp: CarHeader<T>, compact: boolean): Promise<void> {
@@ -247,7 +244,6 @@ export class Loader implements Loadable {
       this.carLog.unshift(cids);
     }
   }
-
 
   async cacheTransaction(t: CarTransaction) {
     for await (const block of t.entries()) {
@@ -268,10 +264,6 @@ export class Loader implements Loadable {
       }
     }
   }
-
-
-
-
 
   async removeCidsForCompact(cid: AnyLink) {
     const carHeader = await this.loadCarHeaderFromMeta({
@@ -393,8 +385,6 @@ export class Loader implements Loadable {
     return got;
   }
 
-
-
   async loadCar(cid: AnyLink): Promise<CarReader> {
     if (!this.carStore) {
       throw this.logger.Error().Msg("car store not initialized").AsError();
@@ -402,7 +392,6 @@ export class Loader implements Loadable {
     const loaded = await this.storesLoadCar(cid, await this.carStore(), this.remoteCarStore);
     return loaded;
   }
-
 
   async makeDecoderAndCarReader(cid: AnyLink, local: DataStore, remote?: DataStore) {
     const cidsString = cid.toString();
@@ -421,7 +410,7 @@ export class Loader implements Loadable {
           this.logger.Debug().Ref("cid", remoteCar.cid).Msg("saving remote car locally");
           await local.save(remoteCar);
           loadedCar = remoteCar;
-          activeStore = remote
+          activeStore = remote;
         }
       } else {
         this.logger.Error().Str("cid", cidsString).Err(e).Msg("loading car");
@@ -432,15 +421,15 @@ export class Loader implements Loadable {
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
-    const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }) // as Uint8Array,
-    const rawReader = await CarReader.fromBytes(bytes.value)
-    const readerP = Promise.resolve(rawReader)
+    const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
+    const rawReader = await CarReader.fromBytes(bytes.value);
+    const readerP = Promise.resolve(rawReader);
     // const kc = await activeStore.keyedCrypto()
     // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
 
     const cachedReaderP = readerP.then(async (reader) => {
       await this.cacheCarReader(cidsString, reader).catch((e) => {
-        this.logger.Error().Err(e).Str("cid", cidsString).Msg("error caching car reader")
+        this.logger.Error().Err(e).Str("cid", cidsString).Msg("error caching car reader");
         return;
       });
       return reader;
@@ -452,7 +441,7 @@ export class Loader implements Loadable {
   //What if instead it returns an Array of CarHeader
   protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
     const cidsString = cid.toString();
-    let dacr = this.carReaders.get(cidsString)
+    let dacr = this.carReaders.get(cidsString);
     if (!dacr) {
       dacr = this.makeDecoderAndCarReader(cid, local, remote);
       this.carReaders.set(cidsString, dacr);
@@ -481,9 +470,9 @@ export class Loader implements Loadable {
     return {
       getRoots: () => [root],
       get: async (cid: CID) => {
-        const res = await blocks.get(cid)
-        this.logger.Debug().Str("cid", cid.toString()).Len(res?.bytes).Msg("get block")
-        return res
+        const res = await blocks.get(cid);
+        this.logger.Debug().Str("cid", cid.toString()).Len(res?.bytes).Msg("get block");
+        return res;
       },
       blocks: blocks.entries.bind(blocks),
     } as unknown as CarReader;
