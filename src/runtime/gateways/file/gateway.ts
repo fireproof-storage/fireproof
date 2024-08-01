@@ -3,8 +3,8 @@ import { TestStore } from "../../../blockstore/types.js";
 import { StoreType } from "../../../types.js";
 import { FILESTORE_VERSION } from "./version.js";
 import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
-import { ensureLogger, exception2Result, exceptionWrapper } from "../../../utils.js";
-import { Gateway, GetResult, isNotFoundError, NotFoundError } from "../../../blockstore/gateway.js";
+import { ensureLogger, exception2Result, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
+import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { getFileName, getPath } from "./utils.js";
 
 const versionFiles = new KeyedResolvOnce<void>();

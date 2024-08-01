@@ -156,3 +156,39 @@ export function sanitizeURL(url: URL) {
   //   url.searchParams.set(key, value);
   // }
 }
+
+export class NotFoundError extends Error {
+  readonly code = "ENOENT";
+}
+
+export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
+  if (Result.Is(e)) {
+    if (e.isOk()) return false;
+    e = e.Err();
+  }
+  if ((e as NotFoundError).code === "ENOENT") return true;
+  return false;
+}
+
+export function ensureURLWithDefaultProto(url?: string | URL, defaultProtocol = "file:"): URL {
+  if (!url) {
+    return new URL(`${defaultProtocol}//`);
+  }
+  if (typeof url === "string") {
+    try {
+      return new URL(url);
+    } catch (e) {
+      return new URL(`${defaultProtocol}//${url}`);
+    }
+  } else {
+    return url;
+  }
+}
+
+export function ensureURL(url: string | URL): URL {
+  if (typeof url === "string") {
+    return new URL(url);
+  } else {
+    return url;
+  }
+}

@@ -3,8 +3,8 @@ import { KeyedResolvOnce, Logger, Result } from "@adviser/cement";
 
 import { TestStore } from "../../../blockstore/types.js";
 import { INDEXDB_VERSION } from "./version.js";
-import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore } from "../../../utils.js";
-import { Gateway, NotFoundError } from "../../../blockstore/gateway.js";
+import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
+import { Gateway } from "../../../blockstore/gateway.js";
 import { SysContainer } from "../../sys-container.js";
 import { StoreType } from "../../../types.js";
 

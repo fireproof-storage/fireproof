@@ -1,5 +1,5 @@
 import type { Block, Link } from "multiformats";
-import { create } from "./runtime/multiformats/block.js";
+import { create } from "./runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
 

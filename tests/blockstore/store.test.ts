@@ -1,5 +1,5 @@
 import { CID } from "multiformats";
-import { rt, bs } from "@fireproof/core";
+import { rt, bs, NotFoundError } from "@fireproof/core";
 import { MockLogger } from "@adviser/cement";
 
 const decoder = new TextDecoder("utf-8");
@@ -84,7 +84,7 @@ describe("DataStore with a saved car", function () {
 
   it("should remove a car", async function () {
     await store.remove(car.cid);
-    const error = (await store.load(car.cid).catch((e: Error) => e)) as bs.NotFoundError;
+    const error = (await store.load(car.cid).catch((e: Error) => e)) as NotFoundError;
     expect(error.code).toMatch("ENOENT");
     // matches(error.message, "ENOENT");
   });

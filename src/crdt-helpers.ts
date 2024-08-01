@@ -1,4 +1,4 @@
-import { encode, decode, Block } from "./runtime/multiformats/block.js";
+import { encode, decode, Block } from "./runtime/wait-pr-multiformats/block.js";
 import { parse } from "multiformats/link";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";

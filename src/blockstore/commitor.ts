@@ -17,7 +17,7 @@ import {
 } from "./types";
 import * as CBW from "@ipld/car/buffer-writer";
 import { CID, BlockEncoder } from "multiformats";
-import { encode } from "../runtime/multiformats/block.js";
+import { encode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 async function encodeCarFile(roots: AnyLink[], t: CarMakeable, codec: BlockEncoder<number, Uint8Array>): Promise<AnyBlock> {
