@@ -1,15 +1,7 @@
 // this enable async codec
 // it should be gone if this in multiformats is merged:
 // https://github.com/multiformats/js-multiformats/pull/305
-import {
-  bytes as binary,
-  CID,
-  MultihashHasher,
-  BlockView,
-  ByteView,
-  Version,
-  Link,
-} from "multiformats";
+import { bytes as binary, CID, MultihashHasher, BlockView, ByteView, Version, Link } from "multiformats";
 import { Block as mfBlock } from "multiformats/block";
 import { BlockDecoder, BlockEncoder } from "./codec-interface";
 
@@ -88,17 +80,19 @@ export async function create<T, Code extends number, Alg extends number, V exten
   });
 }
 
-type CreateUnsafeInput <T, Code extends number, Alg extends number, V extends Version> = {
-  cid: Link<T, Code, Alg, V>
-  value: T
-  codec?: BlockDecoder<Code, T>
-  bytes: ByteView<T>
-} | {
-  cid: Link<T, Code, Alg, V>
-  value?: undefined
-  codec: BlockDecoder<Code, T>
-  bytes: ByteView<T>
-}
+type CreateUnsafeInput<T, Code extends number, Alg extends number, V extends Version> =
+  | {
+      cid: Link<T, Code, Alg, V>;
+      value: T;
+      codec?: BlockDecoder<Code, T>;
+      bytes: ByteView<T>;
+    }
+  | {
+      cid: Link<T, Code, Alg, V>;
+      value?: undefined;
+      codec: BlockDecoder<Code, T>;
+      bytes: ByteView<T>;
+    };
 
 /**
  * @template T - Logical type of the data encoded in the block
@@ -106,16 +100,19 @@ type CreateUnsafeInput <T, Code extends number, Alg extends number, V extends Ve
  * @template Alg - multicodec code corresponding to the hashing algorithm used in CID creation.
  * @template V - CID version
  */
-export async function createUnsafe <T, Code extends number, Alg extends number, V extends Version> ({ bytes, cid, value: maybeValue, codec }: CreateUnsafeInput<T, Code, Alg, V>): Promise<BlockView<T, Code, Alg, V>> {
-  const value = await Promise.resolve(maybeValue !== undefined
-    ? maybeValue
-    : (codec?.decode(bytes)))
+export async function createUnsafe<T, Code extends number, Alg extends number, V extends Version>({
+  bytes,
+  cid,
+  value: maybeValue,
+  codec,
+}: CreateUnsafeInput<T, Code, Alg, V>): Promise<BlockView<T, Code, Alg, V>> {
+  const value = await Promise.resolve(maybeValue !== undefined ? maybeValue : codec?.decode(bytes));
 
-  if (value === undefined) throw new Error('Missing required argument, must either provide "value" or "codec"')
+  if (value === undefined) throw new Error('Missing required argument, must either provide "value" or "codec"');
 
   return new Block({
     cid: cid as CID<T, Code, Alg, V>,
     bytes,
-    value
-  })
+    value,
+  });
 }
