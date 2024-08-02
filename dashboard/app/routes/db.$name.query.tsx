@@ -86,13 +86,13 @@ export default function Query() {
 
 function QueryDynamicTable({ mapFn, name }: { mapFn: string, name: string }) {
   const { useLiveQuery } = useFireproof(name);
-console.log(mapFn)
+// console.log(mapFn)
   const allDocs = useLiveQuery(mapFn);
   const docs = allDocs.docs.filter((doc) => doc);
   const headers = headersForDocs(docs);
 
   return <>
-  <pre>{mapFn.toString()}</pre>
+  {/* <pre>{mapFn.toString()}</pre> */}
   <DynamicTable headers={headers} th="key" link={["id"]} rows={docs} /></>;
 }
 
