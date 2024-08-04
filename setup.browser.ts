@@ -1,4 +1,3 @@
-
 function gthis() {
   return globalThis;
 }
