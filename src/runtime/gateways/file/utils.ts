@@ -3,10 +3,10 @@ import { Logger, getStore } from "../../../utils.js";
 import { SysContainer } from "../../sys-container.js";
 
 export function getPath(url: URI, logger: Logger): string {
-  const basePath = url.pathname
-    // .toString()
-    // .replace(new RegExp(`^${url.protocol}//`), "")
-    // .replace(/\?.*$/, "");
+  const basePath = url.pathname;
+  // .toString()
+  // .replace(new RegExp(`^${url.protocol}//`), "")
+  // .replace(/\?.*$/, "");
   const name = url.getParam("name");
   if (name) {
     const version = url.getParam("version");

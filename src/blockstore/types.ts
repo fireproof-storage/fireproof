@@ -5,7 +5,7 @@ import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
-import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from '@adviser/cement'
+import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -103,7 +103,6 @@ export type TransactionMeta = unknown;
 //   };
 // }
 
-
 // an implementation of this Interface contains the keymaterial
 // so that the fp-core can use the decrypt and encrypt without knowing the key
 export interface EncryptedBlock {
@@ -150,16 +149,14 @@ export interface StoreOpts extends StoreFactory {
   readonly stores?: {
     // string means local storage
     // URL means schema selects the storeType
-    readonly base?: CoerceURI
+    readonly base?: CoerceURI;
 
-    readonly meta?: CoerceURI
-    readonly data?: CoerceURI
-    readonly index?: CoerceURI
-    readonly wal?: CoerceURI
+    readonly meta?: CoerceURI;
+    readonly data?: CoerceURI;
+    readonly index?: CoerceURI;
+    readonly wal?: CoerceURI;
   };
 }
-
-
 
 export interface StoreRuntime {
   // the factories should produce ready-to-use stores

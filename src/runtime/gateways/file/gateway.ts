@@ -58,7 +58,7 @@ export class FileGateway implements Gateway {
     return exception2Result(async () => {
       this._fs = await getFileSystem(baseURL);
       await this.fs.start();
-      const url = baseURL.build()
+      const url = baseURL.build();
       url.defParam("version", FILESTORE_VERSION);
       // url.defParam("store", this.storeType);
       const dbUrl = await this.buildUrl(url.URI(), "dummy");
@@ -66,7 +66,7 @@ export class FileGateway implements Gateway {
       await this.fs.mkdir(SysContainer.dirname(dbdirFile), { recursive: true });
       const dbroot = SysContainer.dirname(dbdirFile);
       this.logger.Debug().Url(url.URI()).Str("dbroot", dbroot).Msg("start");
-      url.setParam("version", await this.getVersionFromFile(dbroot, this.logger))
+      url.setParam("version", await this.getVersionFromFile(dbroot, this.logger));
       return url.URI();
     });
   }

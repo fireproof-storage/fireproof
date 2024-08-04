@@ -172,5 +172,8 @@ export function dataDir(name?: string, base?: CoerceURI): URI {
       base = SysContainer.env.get("FP_STORAGE_URL") || `indexdb://fp`;
     }
   }
-  return URI.from(base.toString()).build().setParam("name", name || "").URI()
+  return URI.from(base.toString())
+    .build()
+    .setParam("name", name || "")
+    .URI();
 }

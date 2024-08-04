@@ -121,6 +121,13 @@ if you are in the browser you can use the following code to set the debug level:
 this[Symbol.for("FP_ENV")].set("FP_DEBUG", "*");
 ```
 
+```js
+// vitest pass env
+globalThis[Symbol.for("FP_PRESET_ENV")] = {
+  FP_DEBUG: "*",
+};
+```
+
 ## Thanks 🙏
 
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.

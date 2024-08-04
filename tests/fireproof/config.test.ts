@@ -2,7 +2,6 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { dataDir, fireproof, rt } from "@fireproof/core";
 import { runtimeFn, URI } from "@adviser/cement";
 
-
 describe("runtime", () => {
   it("runtime", () => {
     const isNode = !!(typeof process === "object" && process.versions?.node);
@@ -58,7 +57,7 @@ describe("fireproof/config", () => {
   it("node default", async () => {
     const old = rt.SysContainer.env.get("FP_STORAGE_URL");
     rt.SysContainer.env.delete("FP_STORAGE_URL");
-    let baseDir = dataDir(my_app()).pathname
+    let baseDir = dataDir(my_app()).pathname;
     baseDir = rt.SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
     await rt.SysContainer.rm(baseDir, { recursive: true }).catch(() => {
       /* */
@@ -104,7 +103,7 @@ describe("fireproof/config", () => {
     const testUrl = URI.merge(`./dist/env`, old);
     rt.SysContainer.env.set("FP_STORAGE_URL", testUrl.toString());
 
-    let baseDir = dataDir(my_app()).pathname
+    let baseDir = dataDir(my_app()).pathname;
     baseDir = rt.SysContainer.join(baseDir, rt.FILESTORE_VERSION, my_app());
     await rt.SysContainer.rm(baseDir, { recursive: true }).catch(() => {
       /* */
