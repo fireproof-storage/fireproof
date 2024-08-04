@@ -1,3 +1,4 @@
+import { URI } from "@adviser/cement";
 import { DataStoreImpl, MetaStoreImpl, StoreOpts } from "./store.js";
 
 // export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
@@ -28,12 +29,12 @@ import { DataStoreImpl, MetaStoreImpl, StoreOpts } from "./store.js";
 //   // just for explaining the concept
 // }
 
-export async function RemoteDataStore(name: string, url: URL, opts: StoreOpts) {
+export async function RemoteDataStore(name: string, url: URI, opts: StoreOpts) {
   const ds = new DataStoreImpl(name, url, opts);
   await ds.start();
   return ds;
 }
-export async function RemoteMetaStore(name: string, url: URL, opts: StoreOpts) {
+export async function RemoteMetaStore(name: string, url: URI, opts: StoreOpts) {
   const ms = new MetaStoreImpl(name, url, opts);
   await ms.start();
   return ms;

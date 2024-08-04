@@ -1,10 +1,9 @@
 import type { MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "fs";
 
 // import { uuidv4 } from "uuidv7";
-import { ResolveOnce, envFactory } from "@adviser/cement";
+import { ResolveOnce, envFactory, runtimeFn } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
-import { runtimeFn } from "./runtime.js";
 
 export interface SysFileSystem {
   start(): Promise<void>;

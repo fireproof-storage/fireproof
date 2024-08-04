@@ -1,22 +1,23 @@
+import { URI } from "@adviser/cement";
 import { Logger, getStore } from "../../../utils.js";
 import { SysContainer } from "../../sys-container.js";
 
-export function getPath(url: URL, logger: Logger): string {
-  const basePath = url
-    .toString()
-    .replace(new RegExp(`^${url.protocol}//`), "")
-    .replace(/\?.*$/, "");
-  const name = url.searchParams.get("name");
+export function getPath(url: URI, logger: Logger): string {
+  const basePath = url.pathname
+    // .toString()
+    // .replace(new RegExp(`^${url.protocol}//`), "")
+    // .replace(/\?.*$/, "");
+  const name = url.getParam("name");
   if (name) {
-    const version = url.searchParams.get("version");
+    const version = url.getParam("version");
     if (!version) throw logger.Error().Url(url).Msg(`version not found`).AsError();
     return SysContainer.join(basePath, version, name);
   }
   return SysContainer.join(basePath);
 }
 
-export function getFileName(url: URL, logger: Logger): string {
-  const key = url.searchParams.get("key");
+export function getFileName(url: URI, logger: Logger): string {
+  const key = url.getParam("key");
   if (!key) throw logger.Error().Url(url).Msg(`key not found`).AsError();
   const res = getStore(url, logger, (...a: string[]) => a.join("-"));
   switch (res.store) {

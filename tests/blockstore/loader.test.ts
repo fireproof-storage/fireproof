@@ -62,7 +62,7 @@ describe("basic Loader simple", function () {
     t = new bs.CarTransaction(mockM as bs.EncryptedBlockstore);
     loader = new bs.Loader(testDbName, { public: true });
     await loader.ready();
-    block = await rt.mf.encode({
+    block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,
       codec,
@@ -106,7 +106,7 @@ describe("basic Loader with two commits", function () {
     const mockM = new MyMemoryBlockStore();
     t = new bs.CarTransaction(mockM);
     loader = new bs.Loader("test-loader-two-commit", { public: true });
-    block = await rt.mf.encode({
+    block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,
       codec,
@@ -114,7 +114,7 @@ describe("basic Loader with two commits", function () {
     await t.put(block.cid, block.bytes);
     carCid0 = await loader.commit(t, { head: [block.cid] });
 
-    block2 = await rt.mf.encode({
+    block2 = await rt.mf.block.encode({
       value: { hello: "universe" },
       hasher,
       codec,
@@ -122,14 +122,14 @@ describe("basic Loader with two commits", function () {
     await t.put(block2.cid, block2.bytes);
     carCid = await loader.commit(t, { head: [block2.cid] });
 
-    block3 = await rt.mf.encode({
+    block3 = await rt.mf.block.encode({
       value: { hello: "multiverse" },
       hasher,
       codec,
     });
     await t.put(block3.cid, block3.bytes);
 
-    block4 = await rt.mf.encode({
+    block4 = await rt.mf.block.encode({
       value: { hello: "megaverse" },
       hasher,
       codec,
@@ -207,7 +207,7 @@ describe("basic Loader with index commits", function () {
     await rt.SysContainer.start();
     // t = new CarTransaction()
     ib = new bs.EncryptedBlockstore({ name });
-    block = await rt.mf.encode({
+    block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,
       codec,

@@ -1,14 +1,14 @@
 import { IDBPDatabase, openDB } from "idb";
 import { KeyBagProvider, KeyItem } from "./key-bag.js";
 import { getPath } from "./gateways/file/utils.js";
-import { Logger, ResolveOnce } from "@adviser/cement";
+import { Logger, ResolveOnce, URI } from "@adviser/cement";
 
 export class KeyBagProviderIndexDB implements KeyBagProvider {
   readonly _db = new ResolveOnce<IDBPDatabase<unknown>>();
 
   readonly dbName: string;
   constructor(
-    readonly url: URL,
+    readonly url: URI,
     readonly logger: Logger,
   ) {
     this.dbName = getPath(this.url, this.logger);

@@ -1,8 +1,8 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
-import type { DbMeta, CryptoRuntime, StoreOpts, AnyLink } from "./blockstore/index.js";
-import { Logger } from "@adviser/cement";
+import type { DbMeta, StoreOpts, AnyLink } from "./blockstore/index.js";
+import { CryptoRuntime, Logger } from "@adviser/cement";
 
 export type Falsy = false | null | undefined;
 
