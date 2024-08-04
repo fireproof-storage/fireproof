@@ -3,7 +3,6 @@ import { Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/ce
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
-import { IvKeyIdData } from "../../src/blockstore";
 
 describe("KeyBag", () => {
   let url: URI;
@@ -12,7 +11,7 @@ describe("KeyBag", () => {
     if (runtimeFn().isBrowser) {
       url = URI.from("indexdb://fp-keybag");
     } else {
-      url = URI.merge(`file://./dist/tests/key.bag`,  rt.SysContainer.env.get("FP_KEYBAG_URL"));
+      url = URI.merge(`file://./dist/tests/key.bag`, rt.SysContainer.env.get("FP_KEYBAG_URL"));
     }
   });
   it("default-path", async () => {
@@ -63,7 +62,7 @@ describe("KeyBag", () => {
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
       const p = provider as rt.kb.KeyBagProviderFile;
-      const {sysFS } = await p._prepare(name);
+      const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
         return JSON.parse(new TextDecoder().decode(data)) as rt.kb.KeyItem;
@@ -106,7 +105,7 @@ describe("KeyedCryptoStore", () => {
       baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", rt.SysContainer.env.get("FP_STORAGE_URL"));
     }
     kb = await rt.kb.getKeyBag({
-      url: kbUrl
+      url: kbUrl,
     });
   });
   it("no crypto", async () => {
@@ -149,9 +148,7 @@ describe("KeyedCryptoStore", () => {
     } as unknown as bs.Loadable;
     const strt = bs.toStoreRuntime({}, logger);
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
-      const store = await pstore;
-      // await store.start();
-      console.log("store", store.url().toString(), baseUrl.toString());
+      const store = await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
       expect(kc.isEncrypting).toBe(true);
       expect(store.url().getParam("storekey")).toBe(`@test:${store.url().getParam("store")}@`);
@@ -185,7 +182,7 @@ describe("KeyedCryptoStore", () => {
       const iv = kb.rt.crypto.randomBytes(12);
       const blk = await kc._encrypt({ bytes: testData, iv });
       expect(blk).not.toEqual(testData);
-      const fpkey = genKey.Ok()
+      const fpkey = genKey.Ok();
       expect(fpkey.fingerPrint).toEqual(await kc.fingerPrint());
       const dec = new Uint8Array(await kc.crypto.decrypt(kc.algo(iv), fpkey.key, blk));
       expect(dec).toEqual(testData);
@@ -247,7 +244,7 @@ describe("KeyedCrypto", () => {
     const iv = kb.rt.crypto.randomBytes(12);
     const codec = kycr.codec(iv);
     const blk = (await codec.encode(testData)) as Uint8Array;
-    const myDec = await rt.mf.block.decode<IvKeyIdData, number,number>({bytes: blk, hasher, codec: dagCodec });
+    const myDec = await rt.mf.block.decode<bs.IvKeyIdData, number, number>({ bytes: blk, hasher, codec: dagCodec });
     expect(myDec.value.iv).toEqual(iv);
     expect(base58btc.encode(myDec.value.keyId)).toEqual(await kycr.fingerPrint());
     const dec = await codec.decode(blk);

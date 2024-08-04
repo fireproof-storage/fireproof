@@ -16,5 +16,6 @@ export default defineConfig({
       name: "chrome", // browser name is required
     },
     globals: true,
+    setupFiles: "./setup.browser.ts",
   },
 });

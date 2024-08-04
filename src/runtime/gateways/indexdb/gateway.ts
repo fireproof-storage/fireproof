@@ -11,10 +11,10 @@ function ensureVersion(url: URI): URI {
 }
 
 interface IDBConn {
-    readonly db: IDBPDatabase<unknown>;
-    readonly dbName: DbName;
-    readonly version: string;
-    readonly url: URI;
+  readonly db: IDBPDatabase<unknown>;
+  readonly dbName: DbName;
+  readonly version: string;
+  readonly url: URI;
 }
 const onceIndexDB = new KeyedResolvOnce<IDBConn>();
 
@@ -42,16 +42,14 @@ async function connectIdb(url: URI, logger: Logger): Promise<IDBConn> {
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {
-      logger
-        .Warn()
-        .Str("url", url.toString())
-        .Str("version", version)
-        .Str("found", found.version)
-        .Msg("version mismatch");
+      logger.Warn().Str("url", url.toString()).Str("version", version).Str("found", found.version).Msg("version mismatch");
     }
-    return { db, dbName, version, url: url.build().setParam("version", version).URI() };
+    return { db, dbName, version, url };
   });
-  return once;
+  return {
+    ...once,
+    url: url.build().setParam("version", once.version).URI(),
+  };
 }
 
 export interface DbName {
@@ -94,7 +92,7 @@ export function getIndexDBName(iurl: URI, logger: Logger): DbName {
 export class IndexDBGateway implements Gateway {
   readonly logger: Logger;
   constructor(logger: Logger) {
-    this.logger = logger;
+    this.logger = ensureLogger(logger, "IndexDBGateway");
   }
   _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
@@ -105,7 +103,7 @@ export class IndexDBGateway implements Gateway {
       const ic = await connectIdb(baseURL, this.logger);
       this._db = ic.db;
       this.logger.Debug().Url(ic.url).Msg("started");
-      return ic.url
+      return ic.url;
     });
   }
   async close(): Promise<Result<void>> {

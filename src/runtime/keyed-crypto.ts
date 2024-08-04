@@ -84,15 +84,17 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     const fprt = await this.ko.fingerPrint();
     const keyId = base58btc.decode(fprt);
     this.ko.logger.Debug().Str("fp", fprt).Msg("encode");
-    return (await encode<IvKeyIdData, number, number>({
-      value: {
-        iv: iv,
-        keyId: keyId,
-        data: await this.ko._encrypt({ iv, bytes: data }),
-      },
-      hasher,
-      codec: dagCodec
-    })).bytes
+    return (
+      await encode<IvKeyIdData, number, number>({
+        value: {
+          iv: iv,
+          keyId: keyId,
+          data: await this.ko._encrypt({ iv, bytes: data }),
+        },
+        hasher,
+        codec: dagCodec,
+      })
+    ).bytes;
     // return concat([
     //   encodeRunLength(iv, this.ko.logger),
     //   encodeRunLength(keyId, this.ko.logger),
@@ -108,19 +110,14 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     } else {
       bytes = new Uint8Array(abytes);
     }
-    const { iv, keyId, data } = (await decode<IvKeyIdData, number, number> ({ bytes, hasher, codec: dagCodec })).value;
+    const { iv, keyId, data } = (await decode<IvKeyIdData, number, number>({ bytes, hasher, codec: dagCodec })).value;
     // const iv = decodeRunLength(bytes, 0, this.ko.logger);
     // const keyId = decodeRunLength(bytes, iv.next, this.ko.logger);
     // const data = decodeRunLength(bytes, keyId.next, this.ko.logger);
     const fprt = await this.ko.fingerPrint();
     this.ko.logger.Debug().Str("fp", base58btc.encode(keyId)).Msg("decode");
     if (base58btc.encode(keyId) !== fprt) {
-      throw this.ko.logger
-        .Error()
-        .Str("fp", fprt)
-        .Str("keyId", base58btc.encode(keyId))
-        .Msg("keyId mismatch")
-        .AsError();
+      throw this.ko.logger.Error().Str("fp", fprt).Str("keyId", base58btc.encode(keyId)).Msg("keyId mismatch").AsError();
     }
     return this.ko._decrypt({ iv: iv, bytes: data });
   }

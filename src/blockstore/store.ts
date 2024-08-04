@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { Logger, logValue, ResolveOnce, Result, URI } from "@adviser/cement";
+import { Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 
 import type {
   AnyBlock,
@@ -56,11 +56,13 @@ abstract class BaseStoreImpl {
   readonly keybag: () => Promise<KeyBag>;
   constructor(name: string, url: URI, opts: StoreOpts) {
     this.name = name;
-    this._url = url
+    this._url = url;
     this.keybag = opts.keybag;
-    this.logger = opts.logger.With()
-      .Ref("url", logValue(() => this._url.toString()))
-      .Str("name", name).Logger();
+    this.logger = opts.logger
+      .With()
+      .Ref("url", () => this._url.toString())
+      .Str("name", name)
+      .Logger();
     this.gateway = opts.gateway;
     this.textEncoder = opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder());
     this.textDecoder = opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder());
@@ -87,7 +89,7 @@ abstract class BaseStoreImpl {
   }
 
   async start(): Promise<Result<URI>> {
-    this.logger.Debug().Msg("starting-gateway");
+    this.logger.Debug().Str("storeType", this.storeType).Msg("starting-gateway-pre");
     this._url = this._url.build().setParam("store", this.storeType).URI();
     const res = await this.gateway.start(this._url);
     if (res.isErr()) {
@@ -95,7 +97,6 @@ abstract class BaseStoreImpl {
       return res as Result<URI>;
     }
     this._url = res.Ok();
-
     // add storekey to url
     const storeKey = this._url.getParam("storekey");
     if (storeKey !== "insecure") {
@@ -153,7 +154,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     // my.searchParams.set("storekey", 'insecure');
     super(name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "MetaStoreImpl")
+      logger: ensureLogger(opts.logger, "MetaStoreImpl"),
     });
   }
 
@@ -210,12 +211,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     this.logger.Debug().Str("branch", branch).Msg("loading");
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
-      throw this.logger
-        .Error()
-        .Result("buidUrl", url)
-        .Str("branch", branch)
-        .Msg("got error from gateway.buildUrl")
-        .AsError();
+      throw this.logger.Error().Result("buidUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
     const bytes = await this.gateway.get(url.Ok());
     if (bytes.isErr()) {
@@ -260,7 +256,7 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   constructor(name: string, url: URI, opts: StoreOpts) {
     super(name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "DataStoreImpl")
+      logger: ensureLogger(opts.logger, "DataStoreImpl"),
     });
   }
 
@@ -324,7 +320,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     // my.searchParams.set("storekey", 'insecure');
     super(loader.name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "WALStoreImpl")
+      logger: ensureLogger(opts.logger, "WALStoreImpl"),
     });
     this.loader = loader;
   }

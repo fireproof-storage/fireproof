@@ -36,12 +36,24 @@ export function join(...paths: string[]): string {
   return paths.map((i) => i.replace(/\/+$/, "")).join("/");
 }
 
-const envImpl = envFactory({
-  symbol: "FP_ENV",
-  presetEnv: new Map([
+function presetEnv() {
+  const penv = new Map([
     // ["FP_DEBUG", "xxx"],
     // ["FP_ENV", "development"],
-  ]),
+    ...Array.from(
+      Object.entries(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ((globalThis as any)[Symbol.for("FP_PRESET_ENV")] || {}) as Record<string, string>,
+      ),
+    ), // .map(([k, v]) => [k, v as string])
+  ]);
+  // console.log(">>>>>>", penv)
+  return penv;
+}
+// console.log('>>>>>>', new Array(Object.entries(globalThis[Symbol.for("FP_PRESET_ENV")])))
+const envImpl = envFactory({
+  symbol: "FP_ENV",
+  presetEnv: presetEnv(),
 });
 
 class sysContainer implements SysFileSystem {
