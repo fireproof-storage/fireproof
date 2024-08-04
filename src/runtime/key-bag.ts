@@ -1,9 +1,7 @@
-import { KeyedResolvOnce, Logger, ResolveSeq, Result } from "@adviser/cement";
-import { CryptoRuntime, KeyWithFingerPrint } from "../blockstore/types.js";
+import { CoerceURI, CryptoRuntime, KeyedResolvOnce, Logger, ResolveSeq, Result, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
+import { KeyWithFingerPrint } from "../blockstore/types.js";
 import { SysContainer } from "./sys-container.js";
-import { runtimeFn } from "./runtime.js";
-import { toCryptoRuntime } from "./crypto.js";
-import { ensureLogger, ensureURL, ensureURLWithDefaultProto, sanitizeURL } from "../utils.js";
+import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
 // import { getFileSystem } from "./gateways/file/gateway.js";
 
@@ -80,7 +78,7 @@ export type KeyBagFile = Record<string, KeyItem>;
 
 export interface KeyBagOpts {
   // in future you can encrypt the keybag with ?masterkey=xxxxx
-  readonly url: string; // default: "file://$HOME/.fireproof/keybag"
+  readonly url: CoerceURI;
   // readonly key: string; // key to encrypt the keybag
   readonly crypto: CryptoRuntime;
   readonly keyLength: number; // default: 16
@@ -93,7 +91,7 @@ export interface KeyBagProvider {
   set(id: string, item: KeyItem): Promise<void>;
 }
 export interface KeyBagRuntime {
-  readonly url: URL;
+  readonly url: URI;
   readonly crypto: CryptoRuntime;
   readonly logger: Logger;
   readonly keyLength: number;
@@ -107,20 +105,20 @@ function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
     return kbo.keyRuntime;
   }
   const logger = ensureLogger(kbo, "KeyBag");
-  let url: URL;
+  let url: URI;
   if (kbo.url) {
-    url = new URL(kbo.url);
+    url = URI.from(kbo.url);
   } else {
     let bagFnameOrUrl = SysContainer.env.get("FP_KEYBAG_URL");
     if (runtimeFn().isBrowser) {
-      url = ensureURL(bagFnameOrUrl || "indexdb://fp-keybag");
+      url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
     } else {
       if (!bagFnameOrUrl) {
         const home = SysContainer.env.get("HOME");
         bagFnameOrUrl = `${home}/.fireproof/keybag`;
-        url = new URL(`file://${bagFnameOrUrl}`);
+        url = URI.from(`file://${bagFnameOrUrl}`);
       } else {
-        url = ensureURLWithDefaultProto(bagFnameOrUrl);
+        url = URI.from(bagFnameOrUrl);
       }
     }
   }
@@ -141,7 +139,7 @@ function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
     default:
       throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
   }
-  if (url.searchParams.has("masterkey")) {
+  if (url.hasParam("masterkey")) {
     throw logger.Error().Url(url).Msg("masterkey is not supported").AsError();
   }
   return {
@@ -151,7 +149,6 @@ function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
     keyLength: kbo.keyLength || 16,
     getBag: keyProviderFactory,
     id: () => {
-      sanitizeURL(url);
       return url.toString();
     },
   };

@@ -1,4 +1,5 @@
-import { getPathname, isNotFoundError, Logger } from "../utils.js";
+import { URI } from "@adviser/cement";
+import { isNotFoundError, Logger } from "../utils.js";
 import { KeyBagProvider, KeyItem } from "./key-bag.js";
 import { SysContainer, SysFileSystem } from "./sys-container.js";
 
@@ -20,7 +21,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
       default:
         throw this.logger.Error().Url(this.url).Msg("unsupported protocol").AsError();
     }
-    const dirName = getPathname(this.url);
+    const dirName = this.url.pathname;
     await sysFS.mkdir(dirName, { recursive: true });
     return {
       dirName,
@@ -30,7 +31,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
   }
 
   constructor(
-    private readonly url: URL,
+    private readonly url: URI,
     readonly logger: Logger,
   ) {}
 

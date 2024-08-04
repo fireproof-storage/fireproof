@@ -5,6 +5,7 @@ import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
+import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from '@adviser/cement'
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -36,6 +37,12 @@ export interface AnyAnyBlock {
 //   readonly cid: AnyLink;
 //   readonly bytes: Uint8Array;
 // }
+
+export interface IvKeyIdData {
+  readonly iv: Uint8Array;
+  readonly keyId: Uint8Array;
+  readonly data: Uint8Array;
+}
 
 export interface IvAndBytes {
   readonly bytes: Uint8Array;
@@ -96,104 +103,6 @@ export type TransactionMeta = unknown;
 //   };
 // }
 
-export interface FPJsonWebKey {
-  alg?: string;
-  crv?: string;
-  d?: string;
-  dp?: string;
-  dq?: string;
-  e?: string;
-  ext?: boolean;
-  k?: string;
-  key_ops?: string[];
-  kty?: string;
-  n?: string;
-  oth?: RsaOtherPrimesInfo[];
-  p?: string;
-  q?: string;
-  qi?: string;
-  use?: string;
-  x?: string;
-  y?: string;
-}
-
-export type FPKeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
-export type FPKeyUsage = "decrypt" | "deriveBits" | "deriveKey" | "encrypt" | "sign" | "unwrapKey" | "verify" | "wrapKey";
-
-export interface FPAlgorithm {
-  name: string;
-}
-export type FPAlgorithmIdentifier = FPAlgorithm | string;
-
-export interface FPRsaHashedImportParams extends FPAlgorithm {
-  hash: FPAlgorithmIdentifier;
-}
-
-export type FPNamedCurve = string;
-export interface FPEcKeyImportParams extends FPAlgorithm {
-  namedCurve: FPNamedCurve;
-}
-
-export interface FPHmacImportParams extends FPAlgorithm {
-  hash: FPAlgorithmIdentifier;
-  length?: number;
-}
-
-export interface FPAesKeyAlgorithm extends FPAlgorithm {
-  length: number;
-}
-
-export type FPKeyType = "private" | "public" | "secret";
-
-export interface FPCryptoKey {
-  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/algorithm) */
-  readonly algorithm: FPAlgorithm;
-  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/extractable) */
-  readonly extractable: boolean;
-  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/type) */
-  readonly type: FPKeyType;
-  /** [MDN Reference](https://developer.mozilla.org/docs/Web/API/CryptoKey/usages) */
-  readonly usages: FPKeyUsage[];
-}
-
-interface FPArrayBufferTypes {
-  ArrayBuffer: ArrayBuffer;
-}
-type FPArrayBufferLike = FPArrayBufferTypes[keyof FPArrayBufferTypes];
-
-export interface FPArrayBufferView {
-  /**
-   * The ArrayBuffer instance referenced by the array.
-   */
-  buffer: FPArrayBufferLike;
-
-  /**
-   * The length in bytes of the array.
-   */
-  byteLength: number;
-
-  /**
-   * The offset in bytes of the array.
-   */
-  byteOffset: number;
-}
-
-export type FPBufferSource = FPArrayBufferView | ArrayBuffer;
-export interface CryptoRuntime {
-  importKey(
-    format: FPKeyFormat,
-    keyData: FPJsonWebKey | FPBufferSource,
-    algorithm: FPAlgorithmIdentifier | FPRsaHashedImportParams | FPEcKeyImportParams | FPHmacImportParams | FPAesKeyAlgorithm,
-    extractable: boolean,
-    keyUsages: FPKeyUsage[],
-  ): Promise<FPCryptoKey>;
-
-  //(format: "raw", key: ArrayBuffer, algo: string, extractable: boolean, usages: string[]) => Promise<CryptoKey>;
-  decrypt(algo: { name: string; iv: Uint8Array; tagLength: number }, key: FPCryptoKey, data: Uint8Array): Promise<ArrayBuffer>;
-  encrypt(algo: { name: string; iv: Uint8Array; tagLength: number }, key: FPCryptoKey, data: Uint8Array): Promise<ArrayBuffer>;
-  digestSHA256(data: Uint8Array): Promise<ArrayBuffer>;
-  randomBytes(size: number): Uint8Array;
-}
 
 // an implementation of this Interface contains the keymaterial
 // so that the fp-core can use the decrypt and encrypt without knowing the key
@@ -203,17 +112,18 @@ export interface EncryptedBlock {
 
 export interface KeyWithFingerPrint {
   readonly fingerPrint: string;
-  readonly key: FPCryptoKey;
+  readonly key: CTCryptoKey;
 }
 
 export interface KeyedCrypto {
+  readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   // readonly codec: BlockCodec<number, IvAndBytes>;
   readonly isEncrypting: boolean;
   fingerPrint(): Promise<string>;
   algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number };
   codec(iv?: Uint8Array): BlockCodec<number, Uint8Array>;
-  _decrypt(data: IvAndBytes): Promise<ArrayBuffer>;
+  _decrypt(data: IvAndBytes): Promise<Uint8Array>;
   _encrypt(data: BytesWithIv): Promise<Uint8Array>;
   // encode(data: Uint8Array): Promise<Uint8Array>;
   // decode(bytes: Uint8Array | ArrayBuffer): Promise<Uint8Array>;
@@ -240,21 +150,16 @@ export interface StoreOpts extends StoreFactory {
   readonly stores?: {
     // string means local storage
     // URL means schema selects the storeType
-    readonly base?: string | URL;
+    readonly base?: CoerceURI
 
-    readonly meta?: string | URL;
-    readonly data?: string | URL;
-    readonly index?: string | URL;
-    readonly wal?: string | URL;
+    readonly meta?: CoerceURI
+    readonly data?: CoerceURI
+    readonly index?: CoerceURI
+    readonly wal?: CoerceURI
   };
 }
 
-export interface TestStore {
-  // readonly url: URL;
-  get(url: URL, key: string): Promise<Uint8Array>;
-  // delete the underlying store and all its data
-  // delete(): Promise<void>;
-}
+
 
 export interface StoreRuntime {
   // the factories should produce ready-to-use stores
@@ -321,7 +226,8 @@ export interface Connection {
 
 export interface BaseStore {
   readonly storeType: StoreType;
-  readonly url: URL;
+  // readonly url: URI
+  url(): URI;
   readonly name: string;
   onStarted(fn: () => void): void;
   onClosed(fn: () => void): void;
@@ -331,7 +237,7 @@ export interface BaseStore {
   close(): Promise<Result<void>>;
   destroy(): Promise<Result<void>>;
   readonly ready?: () => Promise<void>;
-  start(): Promise<Result<void>>;
+  start(): Promise<Result<URI>>;
 }
 
 export interface MetaStore extends BaseStore {

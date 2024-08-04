@@ -413,7 +413,7 @@ export class Loader implements Loadable {
       }
     }
     if (!loadedCar) {
-      throw this.logger.Error().Url(local.url).Str("cid", cidsString).Msg("missing car files").AsError();
+      throw this.logger.Error().Url(local.url()).Str("cid", cidsString).Msg("missing car files").AsError();
     }
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders

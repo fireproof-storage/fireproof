@@ -1,91 +1,104 @@
-import { Logger } from "@adviser/cement";
-import { BytesWithIv, CryptoRuntime, IvAndBytes, KeyedCrypto, KeyWithFingerPrint } from "../blockstore";
+import { CryptoRuntime, Logger, URI } from "@adviser/cement";
+import { BytesWithIv, IvAndBytes, IvKeyIdData, KeyedCrypto, KeyWithFingerPrint } from "../blockstore";
 import { ensureLogger } from "../utils.js";
 import { KeyBag } from "./key-bag";
 import type { BlockCodec } from "./wait-pr-multiformats/codec-interface";
 import { base58btc } from "multiformats/bases/base58";
+import { sha256 as hasher } from "multiformats/hashes/sha2";
+import * as dagCodec from "@ipld/dag-cbor";
+import { decode, encode } from "./wait-pr-multiformats/block";
 
-function concat(buffers: (ArrayBuffer | Uint8Array)[]) {
-  const uint8Arrays = buffers.map((b) => (b instanceof ArrayBuffer ? new Uint8Array(b) : b));
-  const totalLength = uint8Arrays.reduce((sum, arr) => sum + arr.length, 0);
-  const result = new Uint8Array(totalLength);
+// function concat(buffers: (ArrayBuffer | Uint8Array)[]) {
+//   const uint8Arrays = buffers.map((b) => (b instanceof ArrayBuffer ? new Uint8Array(b) : b));
+//   const totalLength = uint8Arrays.reduce((sum, arr) => sum + arr.length, 0);
+//   const result = new Uint8Array(totalLength);
 
-  let offset = 0;
-  for (const arr of uint8Arrays) {
-    result.set(arr, offset);
-    offset += arr.length;
-  }
+//   let offset = 0;
+//   for (const arr of uint8Arrays) {
+//     result.set(arr, offset);
+//     offset += arr.length;
+//   }
 
-  return result;
-}
+//   return result;
+// }
 
-export function encodeRunLength(data: Uint8Array, logger: Logger): Uint8Array {
-  if (data.length < 0x80) {
-    return new Uint8Array([data.length, ...data]);
-  }
-  if (data.length > 0x7fffffff) {
-    throw logger.Error().Len(data).Msg("enRl:data len 31Bit").AsError();
-  }
-  const length = data.length | 0x80000000; // MSB is set to indicate that the length is encoded as 32Bit
-  return new Uint8Array([
-    (length & 0xff000000) >> 24,
-    (length & 0x00ff0000) >> 16,
-    (length & 0x0000ff00) >> 8,
-    length & 0x000000ff,
-    ...data,
-  ]);
-}
+// export function encodeRunLength(data: Uint8Array, logger: Logger): Uint8Array {
+//   if (data.length < 0x80) {
+//     return new Uint8Array([data.length, ...data]);
+//   }
+//   if (data.length > 0x7fffffff) {
+//     throw logger.Error().Len(data).Msg("enRl:data len 31Bit").AsError();
+//   }
+//   const length = data.length | 0x80000000; // MSB is set to indicate that the length is encoded as 32Bit
+//   return new Uint8Array([
+//     (length & 0xff000000) >> 24,
+//     (length & 0x00ff0000) >> 16,
+//     (length & 0x0000ff00) >> 8,
+//     length & 0x000000ff,
+//     ...data,
+//   ]);
+// }
 
-export function decodeRunLength(
-  data: Uint8Array,
-  ofs: number,
-  logger: Logger,
-): {
-  data: Uint8Array;
-  next: number;
-} {
-  if (data.length - ofs < 1) {
-    throw logger.Error().Len(data).Msg("deRl:data too short").AsError();
-  }
-  let length: number;
-  let rl: number;
-  if (data[ofs] & 0x80) {
-    length = ((data[ofs] & 0x7f) << 24) | (data[ofs + 1] << 16) | (data[ofs + 2] << 8) | data[ofs + 3];
-    rl = 4;
-  } else {
-    length = data[ofs];
-    rl = 1;
-  }
-  if (length > data.length - ofs - rl) {
-    throw logger.Error().Len(data).Uint64("ofs", ofs).Msg("deRl:data decodeError").AsError();
-  }
-  return {
-    data: data.slice(ofs + rl, ofs + rl + length),
-    next: ofs + length + rl,
-  };
-}
+// export function decodeRunLength(
+//   data: Uint8Array,
+//   ofs: number,
+//   logger: Logger,
+// ): {
+//   data: Uint8Array;
+//   next: number;
+// } {
+//   if (data.length - ofs < 1) {
+//     throw logger.Error().Len(data).Msg("deRl:data too short").AsError();
+//   }
+//   let length: number;
+//   let rl: number;
+//   if (data[ofs] & 0x80) {
+//     length = ((data[ofs] & 0x7f) << 24) | (data[ofs + 1] << 16) | (data[ofs + 2] << 8) | data[ofs + 3];
+//     rl = 4;
+//   } else {
+//     length = data[ofs];
+//     rl = 1;
+//   }
+//   if (length > data.length - ofs - rl) {
+//     throw logger.Error().Len(data).Uint64("ofs", ofs).Msg("deRl:data decodeError").AsError();
+//   }
+//   return {
+//     data: data.slice(ofs + rl, ofs + rl + length),
+//     next: ofs + length + rl,
+//   };
+// }
 
-class keyedCodec implements BlockCodec<0x300539, Uint8Array> {
+export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
   readonly code = 0x300539;
   readonly name = "Fireproof@encrypted-block:aes-gcm";
 
-  readonly ko: keyedCrypto;
+  readonly ko: KeyedCrypto;
   readonly iv?: Uint8Array;
-  constructor(ko: keyedCrypto, iv?: Uint8Array) {
+  constructor(ko: KeyedCrypto, iv?: Uint8Array) {
     this.ko = ko;
     this.iv = iv;
   }
 
   async encode(data: Uint8Array): Promise<Uint8Array> {
     const { iv } = this.ko.algo(this.iv);
-    const keyId = base58btc.decode(this.ko.key.fingerPrint);
-    this.ko.logger.Debug().Str("fp", this.ko.key.fingerPrint).Msg("encode");
-    return concat([
-      encodeRunLength(iv, this.ko.logger),
-      encodeRunLength(keyId, this.ko.logger),
-      // not nice it is a copy of the data
-      encodeRunLength(await this.ko._encrypt({ iv, bytes: data }), this.ko.logger),
-    ]);
+    const fprt = await this.ko.fingerPrint();
+    const keyId = base58btc.decode(fprt);
+    this.ko.logger.Debug().Str("fp", fprt).Msg("encode");
+    return (await encode<IvKeyIdData, number, number>({
+      value: {
+        iv: iv,
+        keyId: keyId,
+        data: await this.ko._encrypt({ iv, bytes: data }),
+      },
+      hasher,
+      codec: dagCodec
+    })).bytes
+    // return concat([
+    //   encodeRunLength(iv, this.ko.logger),
+    //   encodeRunLength(keyId, this.ko.logger),
+    //   // not nice it is a copy of the data
+    //   encodeRunLength(await this.ko._encrypt({ iv, bytes: data }), this.ko.logger),
+    // ]);
   }
 
   async decode(abytes: Uint8Array | ArrayBuffer): Promise<Uint8Array> {
@@ -95,19 +108,21 @@ class keyedCodec implements BlockCodec<0x300539, Uint8Array> {
     } else {
       bytes = new Uint8Array(abytes);
     }
-    const iv = decodeRunLength(bytes, 0, this.ko.logger);
-    const keyId = decodeRunLength(bytes, iv.next, this.ko.logger);
-    const data = decodeRunLength(bytes, keyId.next, this.ko.logger);
-    this.ko.logger.Debug().Str("fp", base58btc.encode(keyId.data)).Msg("decode");
-    if (base58btc.encode(keyId.data) !== this.ko.key.fingerPrint) {
+    const { iv, keyId, data } = (await decode<IvKeyIdData, number, number> ({ bytes, hasher, codec: dagCodec })).value;
+    // const iv = decodeRunLength(bytes, 0, this.ko.logger);
+    // const keyId = decodeRunLength(bytes, iv.next, this.ko.logger);
+    // const data = decodeRunLength(bytes, keyId.next, this.ko.logger);
+    const fprt = await this.ko.fingerPrint();
+    this.ko.logger.Debug().Str("fp", base58btc.encode(keyId)).Msg("decode");
+    if (base58btc.encode(keyId) !== fprt) {
       throw this.ko.logger
         .Error()
-        .Str("fp", this.ko.key.fingerPrint)
-        .Str("keyId", base58btc.encode(keyId.data))
+        .Str("fp", fprt)
+        .Str("keyId", base58btc.encode(keyId))
         .Msg("keyId mismatch")
         .AsError();
     }
-    return this.ko._decrypt({ iv: iv.data, bytes: data.data });
+    return this.ko._decrypt({ iv: iv, bytes: data });
   }
 }
 
@@ -127,7 +142,7 @@ class keyedCrypto implements KeyedCrypto {
     return Promise.resolve(this.key.fingerPrint);
   }
   codec(iv?: Uint8Array): BlockCodec<number, Uint8Array> {
-    return new keyedCodec(this, iv);
+    return new BlockIvKeyIdCodec(this, iv);
   }
   algo(iv?: Uint8Array) {
     return {
@@ -191,7 +206,7 @@ class noCrypto implements KeyedCrypto {
       tagLength: 0,
     };
   }
-  _decrypt(): Promise<ArrayBuffer> {
+  _decrypt(): Promise<Uint8Array> {
     throw this.logger.Error().Msg("noCrypto.decrypt not implemented").AsError();
   }
   _encrypt(): Promise<Uint8Array> {
@@ -199,8 +214,8 @@ class noCrypto implements KeyedCrypto {
   }
 }
 
-export async function keyedCryptoFactory(url: URL, kb: KeyBag, logger: Logger): Promise<KeyedCrypto> {
-  const storekey = url.searchParams.get("storekey");
+export async function keyedCryptoFactory(url: URI, kb: KeyBag, logger: Logger): Promise<KeyedCrypto> {
+  const storekey = url.getParam("storekey");
   if (storekey && storekey !== "insecure") {
     let rkey = await kb.getNamedKey(storekey, true);
     if (rkey.isErr()) {

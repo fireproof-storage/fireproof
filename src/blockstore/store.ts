@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { Logger, logValue, ResolveOnce, Result } from "@adviser/cement";
+import { Logger, logValue, ResolveOnce, Result, URI } from "@adviser/cement";
 
 import type {
   AnyBlock,
@@ -18,14 +18,14 @@ import type {
 } from "./types.js";
 import { Falsy, StoreType, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
-import { ensureLogger, exception2Result, isNotFoundError, sanitizeURL } from "../utils.js";
+import { ensureLogger, exception2Result, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 
-function guardVersion(url: URL): Result<URL> {
-  if (!url.searchParams.has("version")) {
+function guardVersion(url: URI): Result<URI> {
+  if (!url.hasParam("version")) {
     return Result.Err(`missing version: ${url.toString()}`);
   }
   return Result.Ok(url);
@@ -47,21 +47,27 @@ abstract class BaseStoreImpl {
   readonly textEncoder;
   readonly textDecoder;
 
-  // readonly STORAGE_VERSION: string;
   abstract readonly storeType: StoreType;
   readonly name: string;
-  readonly url: URL;
+
+  private _url: URI;
   readonly logger: Logger;
   readonly gateway: Gateway;
   readonly keybag: () => Promise<KeyBag>;
-  constructor(name: string, url: URL, opts: StoreOpts) {
+  constructor(name: string, url: URI, opts: StoreOpts) {
     this.name = name;
-    this.url = new URL(url.toString());
+    this._url = url
     this.keybag = opts.keybag;
-    this.logger = opts.logger;
+    this.logger = opts.logger.With()
+      .Ref("url", logValue(() => this._url.toString()))
+      .Str("name", name).Logger();
     this.gateway = opts.gateway;
     this.textEncoder = opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder());
     this.textDecoder = opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder());
+  }
+
+  url(): URI {
+    return this._url;
   }
 
   readonly _onStarted: (() => void)[] = [];
@@ -77,20 +83,23 @@ abstract class BaseStoreImpl {
   readonly ready?: () => Promise<void>;
 
   async keyedCrypto(): Promise<KeyedCrypto> {
-    return keyedCryptoFactory(this.url, await this.keybag(), this.logger);
+    return keyedCryptoFactory(this._url, await this.keybag(), this.logger);
   }
 
-  async start(): Promise<Result<void>> {
+  async start(): Promise<Result<URI>> {
     this.logger.Debug().Msg("starting-gateway");
-    const res = await this.gateway.start(this.url);
+    this._url = this._url.build().setParam("store", this.storeType).URI();
+    const res = await this.gateway.start(this._url);
     if (res.isErr()) {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
-      return res;
+      return res as Result<URI>;
     }
+    this._url = res.Ok();
+
     // add storekey to url
-    const storeKey = this.url.searchParams.get("storekey");
+    const storeKey = this._url.getParam("storekey");
     if (storeKey !== "insecure") {
-      const idx = this.url.searchParams.get("index");
+      const idx = this._url.getParam("index");
       const storeKeyName = [this.name];
       if (idx) {
         storeKeyName.push(idx);
@@ -111,13 +120,11 @@ abstract class BaseStoreImpl {
       }
       const ret = await kb.getNamedKey(keyName, failIfNotFound);
       if (ret.isErr()) {
-        return ret;
+        return ret as unknown as Result<URI>;
       }
-      this.url.searchParams.set("storekey", keyName);
+      this._url = this._url.build().setParam("storekey", keyName).URI();
     }
-
-    sanitizeURL(this.url);
-    const version = guardVersion(this.url);
+    const version = guardVersion(this._url);
     if (version.isErr()) {
       this.logger.Error().Result("version", version).Msg("guardVersion");
       await this.close();
@@ -128,7 +135,7 @@ abstract class BaseStoreImpl {
       const ready = await exception2Result(fn);
       if (ready.isErr()) {
         await this.close();
-        return ready;
+        return ready as Result<URI>;
       }
     }
     this._onStarted.forEach((fn) => fn());
@@ -141,15 +148,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
 
-  constructor(name: string, url: URL, opts: StoreOpts) {
+  constructor(name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "MetaStoreImpl", {
-        url: logValue(() => this.url.toString()),
-        name,
-      }),
+      logger: ensureLogger(opts.logger, "MetaStoreImpl")
     });
   }
 
@@ -204,13 +208,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   async load(branch?: string): Promise<DbMeta[] | Falsy> {
     branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Msg("loading");
-    const url = await this.gateway.buildUrl(this.url, branch);
+    const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
       throw this.logger
         .Error()
         .Result("buidUrl", url)
         .Str("branch", branch)
-        .Url(this.url)
         .Msg("got error from gateway.buildUrl")
         .AsError();
     }
@@ -228,9 +231,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
     const bytes = this.makeHeader(meta);
-    const url = await this.gateway.buildUrl(this.url, branch);
+    const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
-      throw this.logger.Error().Err(url.Err()).Str("branch", branch).Url(this.url).Msg("got error from gateway.buildUrl").AsError();
+      throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
     const res = await this.gateway.put(url.Ok(), this.textEncoder.encode(bytes));
     if (res.isErr()) {
@@ -241,12 +244,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 
   async close(): Promise<Result<void>> {
-    await this.gateway.close(this.url);
+    await this.gateway.close(this.url());
     this._onClosed.forEach((fn) => fn());
     return Result.Ok(undefined);
   }
   async destroy(): Promise<Result<void>> {
-    return this.gateway.destroy(this.url);
+    return this.gateway.destroy(this.url());
   }
 }
 
@@ -254,19 +257,16 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   readonly storeType = "data";
   // readonly tag: string = "car-base";
 
-  constructor(name: string, url: URL, opts: StoreOpts) {
+  constructor(name: string, url: URI, opts: StoreOpts) {
     super(name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "DataStoreImpl", {
-        url: logValue(() => this.url.toString()),
-        name,
-      }),
+      logger: ensureLogger(opts.logger, "DataStoreImpl")
     });
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     this.logger.Debug().Any("cid", cid).Msg("loading");
-    const url = await this.gateway.buildUrl(this.url, cid.toString());
+    const url = await this.gateway.buildUrl(this.url(), cid.toString());
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("cid", cid.toString()).Msg("got error from gateway.buildUrl").AsError();
     }
@@ -280,7 +280,7 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void> {
     this.logger.Debug().Any("cid", car.cid.toString()).Msg("saving");
-    const url = await this.gateway.buildUrl(this.url, car.cid.toString());
+    const url = await this.gateway.buildUrl(this.url(), car.cid.toString());
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Ref("cid", car.cid).Msg("got error from gateway.buildUrl").AsError();
     }
@@ -291,19 +291,19 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     return res.Ok();
   }
   async remove(cid: AnyLink): Promise<Result<void>> {
-    const url = await this.gateway.buildUrl(this.url, cid.toString());
+    const url = await this.gateway.buildUrl(this.url(), cid.toString());
     if (url.isErr()) {
       return url;
     }
     return this.gateway.delete(url.Ok());
   }
   async close(): Promise<Result<void>> {
-    await this.gateway.close(this.url);
+    await this.gateway.close(this.url());
     this._onClosed.forEach((fn) => fn());
     return Result.Ok(undefined);
   }
   destroy(): Promise<Result<void>> {
-    return this.gateway.destroy(this.url);
+    return this.gateway.destroy(this.url());
   }
 }
 
@@ -319,15 +319,12 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  constructor(loader: Loadable, url: URL, opts: StoreOpts) {
+  constructor(loader: Loadable, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(loader.name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "WALStoreImpl", {
-        url: logValue(() => this.url.toString()),
-        name: loader.name,
-      }),
+      logger: ensureLogger(opts.logger, "WALStoreImpl")
     });
     this.loader = loader;
   }
@@ -440,8 +437,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         const errors = res.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
         if (errors.length) {
           throw this.logger.Error().Any("errors", errors).Msg("error uploading").AsError();
-
-          errors[0].reason;
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
@@ -461,9 +456,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async load(): Promise<WALState | Falsy> {
     this.logger.Debug().Msg("loading");
-    const filepath = await this.gateway.buildUrl(this.url, "main");
+    const filepath = await this.gateway.buildUrl(this.url(), "main");
     if (filepath.isErr()) {
-      throw this.logger.Error().Err(filepath.Err()).Str("url", this.url.toString()).Msg("error building url").AsError();
+      throw this.logger.Error().Err(filepath.Err()).Url(this.url()).Msg("error building url").AsError();
     }
     const bytes = await this.gateway.get(filepath.Ok());
     if (bytes.isErr()) {
@@ -480,9 +475,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   }
 
   async save(state: WALState) {
-    const filepath = await this.gateway.buildUrl(this.url, "main");
+    const filepath = await this.gateway.buildUrl(this.url(), "main");
     if (filepath.isErr()) {
-      throw this.logger.Error().Err(filepath.Err()).Str("url", this.url.toString()).Msg("error building url").AsError();
+      throw this.logger.Error().Err(filepath.Err()).Url(this.url()).Msg("error building url").AsError();
     }
     let encoded: ToString<WALState>;
     try {
@@ -497,12 +492,12 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   }
 
   async close() {
-    await this.gateway.close(this.url);
+    await this.gateway.close(this.url());
     this._onClosed.forEach((fn) => fn());
     return Result.Ok(undefined);
   }
 
   destroy() {
-    return this.gateway.destroy(this.url);
+    return this.gateway.destroy(this.url());
   }
 }

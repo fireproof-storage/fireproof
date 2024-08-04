@@ -2,7 +2,7 @@ import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import type { Link, Version } from "multiformats";
-import { Logger } from "@adviser/cement";
+import { Logger, URI } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
@@ -32,7 +32,7 @@ export abstract class ConnectionBase implements Connection {
   taskManager?: TaskManager;
   loaded: Promise<void> = Promise.resolve();
 
-  readonly url: URL;
+  readonly url: URI;
 
   // abstract metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   // abstract dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
@@ -40,7 +40,7 @@ export abstract class ConnectionBase implements Connection {
   // abstract dataDownload(params: DownloadDataFnParams): Promise<Uint8Array | Falsy>;
 
   readonly logger: Logger;
-  constructor(url: URL, logger: Logger) {
+  constructor(url: URI, logger: Logger) {
     this.logger = logger;
     this.url = url;
   }
@@ -61,14 +61,13 @@ export abstract class ConnectionBase implements Connection {
     this.loader = loader;
     this.taskManager = new TaskManager(loader);
     await this.onConnect();
-    const metaUrl = new URL(this.url.toString());
-    metaUrl.searchParams.set("store", metaUrl.searchParams.get("store") || "meta");
+    const metaUrl = this.url.build().defParam("store", "meta").URI();
     const gateway = await getGatewayFromURL(metaUrl, this.logger);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
     const name = metaUrl.toString();
     const remote = await RemoteMetaStore(name, metaUrl, {
       logger: this.logger,
-      gateway,
+      gateway: gateway.gateway,
       keybag: () => getKeyBag(this.loader?.ebOpts.keyBag),
     });
     remote.onLoad("main", async (metas) => {
@@ -91,14 +90,13 @@ export abstract class ConnectionBase implements Connection {
   async connectStorage_X({ loader }: { loader?: Loadable }) {
     if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
     this.loader = loader;
-    const dataUrl = new URL(this.url.toString());
-    dataUrl.searchParams.set("store", dataUrl.searchParams.get("store") || "data");
+    const dataUrl = this.url.build().defParam("store", "data").URI();
     const gateway = await getGatewayFromURL(dataUrl, this.logger);
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.toString();
     loader.remoteCarStore = await RemoteDataStore(name, this.url, {
       logger: this.logger,
-      gateway,
+      gateway: gateway.gateway,
       keybag: () => getKeyBag(this.loader?.ebOpts.keyBag),
     });
     // @jchris why we have a differention between remoteCarStore and remoteFileStore?

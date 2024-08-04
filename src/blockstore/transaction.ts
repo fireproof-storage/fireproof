@@ -15,9 +15,8 @@ import {
 import { Loader } from "./loader.js";
 import type { CID, Block, Version } from "multiformats";
 import { falsyToUndef } from "../types.js";
-import { toCryptoRuntime } from "../runtime/crypto.js";
 import { toStoreRuntime } from "./store-factory.js";
-import { Logger } from "@adviser/cement";
+import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger } from "../utils.js";
 
 export type BlockFetcher = BlockFetcherApi;
