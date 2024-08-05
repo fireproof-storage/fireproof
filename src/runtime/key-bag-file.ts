@@ -14,7 +14,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
     let sysFS: SysFileSystem;
     switch (this.url.protocol) {
       case "file:": {
-        const { getFileSystem } = await import("./gateways/file/gateway.js");
+        const { getFileSystem } = await import("./gateways/file/utils.js");
         sysFS = await getFileSystem(this.url);
         break;
       }

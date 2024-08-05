@@ -1,7 +1,7 @@
 import type { MakeDirectoryOptions, ObjectEncodingOptions, PathLike, Stats } from "fs";
 
 // import { uuidv4 } from "uuidv7";
-import { ResolveOnce, envFactory, runtimeFn } from "@adviser/cement";
+import { ResolveOnce, URI, envFactory, runtimeFn } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
 
@@ -100,6 +100,7 @@ class sysContainer implements SysFileSystem {
         case "seeded":
           if (this.runtime().isNodeIsh) {
             const { createNodeSysContainer } = await import("./node-sys-container.js");
+            URI.from(this.env.get("FP_STORAGE_URL"));
             // console.log("use NodeSysContainer");
             this.freight = await createNodeSysContainer();
           } else {

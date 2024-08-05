@@ -34,16 +34,17 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
-    "react": "from-package-json",
     "@adviser/cement": "from-package-json",
+    "@ipld/unixfs": "from-package-json",
+    "@ipld/car": "from-package-json",
+    "@web3-storage/pail": "from-package-json",
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
     "idb": "from-package-json",
     "ipfs-unixfs-exporter": "from-package-json",
+    "memfs": "from-package-json",
     "uuidv7": "from-package-json",
     "p-limit": "from-package-json",
-    "@web3-storage/pail": "from-package-json",
-    "@ipld/unixfs": "from-package-json",
-    "@ipld/car": "from-package-json"
+    "react": "from-package-json"
   }
 }
