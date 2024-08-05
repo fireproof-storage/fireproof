@@ -3,22 +3,9 @@ import { FILESTORE_VERSION } from "./version.js";
 import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 import { ensureLogger, exception2Result, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
-import { getFileName, getPath } from "./utils.js";
+import { getFileName, getFileSystem, getPath } from "./utils.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
-
-export async function getFileSystem(url: URI): Promise<SysFileSystem> {
-  const name = url.getParam("fs");
-  switch (name) {
-    case "mem": {
-      const { MemFileSystem } = await import("./mem-filesystem.js");
-      return new MemFileSystem();
-    }
-    case "sys":
-    default:
-      return SysContainer;
-  }
-}
 
 export class FileGateway implements Gateway {
   // abstract readonly storeType: StoreType;

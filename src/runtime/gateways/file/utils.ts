@@ -1,6 +1,19 @@
 import { URI } from "@adviser/cement";
 import { Logger, getStore } from "../../../utils.js";
-import { SysContainer } from "../../sys-container.js";
+import { SysContainer, SysFileSystem } from "../../sys-container.js";
+
+export async function getFileSystem(url: URI): Promise<SysFileSystem> {
+  const name = url.getParam("fs");
+  switch (name) {
+    case "mem": {
+      const { MemFileSystem } = await import("./mem-filesystem.js");
+      return new MemFileSystem();
+    }
+    case "sys":
+    default:
+      return SysContainer;
+  }
+}
 
 export function getPath(url: URI, logger: Logger): string {
   const basePath = url.pathname;
