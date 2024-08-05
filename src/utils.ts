@@ -1,6 +1,7 @@
-import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce } from "@adviser/cement";
+import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce, isURI, URI, CoerceURI, runtimeFn } from "@adviser/cement";
 import { SysContainer } from "./runtime";
 import { uuidv7 } from "uuidv7";
+import { StoreType } from "./types";
 
 export type { Logger };
 export { Result };
@@ -53,7 +54,7 @@ export function ensureLogger(
         default:
           if (value instanceof Date) {
             cLogger.Str(key, value.toISOString());
-          } else if (value instanceof URL) {
+          } else if (isURI(value)) {
             cLogger.Str(key, value.toString());
           } else if (typeof value === "function") {
             cLogger.Ref(key, value);
@@ -89,11 +90,12 @@ export function ensureLogger(
 export type Joiner = (...toJoin: string[]) => string;
 
 export interface Store {
-  readonly store: "data" | "wal" | "meta";
+  readonly store: StoreType;
   readonly name: string;
 }
-export function getStore(url: URL, logger: Logger, joiner: Joiner): Store {
-  const store = url.searchParams.get("store");
+
+export function getStore(url: URI, logger: Logger, joiner: Joiner): Store {
+  const store = url.getParam("store");
   switch (store) {
     case "data":
     case "wal":
@@ -103,20 +105,20 @@ export function getStore(url: URL, logger: Logger, joiner: Joiner): Store {
       throw logger.Error().Url(url).Msg(`store not found`).AsError();
   }
   let name: string = store;
-  if (url.searchParams.has("index")) {
-    name = joiner(url.searchParams.get("index") || "idx", name);
+  if (url.hasParam("index")) {
+    name = joiner(url.getParam("index") || "idx", name);
   }
   return { store, name };
 }
 
-export function getKey(url: URL, logger: Logger): string {
-  const result = url.searchParams.get("key");
+export function getKey(url: URI, logger: Logger): string {
+  const result = url.getParam("key");
   if (!result) throw logger.Error().Str("url", url.toString()).Msg(`key not found`).AsError();
   return result;
 }
 
-export function getName(url: URL, logger: Logger): string {
-  let result = url.searchParams.get("name");
+export function getName(url: URI, logger: Logger): string {
+  let result = url.getParam("name");
   if (!result) {
     result = SysContainer.dirname(url.pathname);
     if (result.length === 0) {
@@ -136,15 +138,42 @@ export async function exceptionWrapper<T, E extends Error>(fn: () => Promise<Res
   return fn().catch((e) => Result.Err(e));
 }
 
-// the big side effect party --- hate it
-export function sanitizeURL(url: URL) {
-  url.searchParams.sort();
-  // const searchParams = Object.entries(url.searchParams).sort(([a], [b]) => a.localeCompare(b));
-  // console.log("searchParams", searchParams);
-  // for (const [key] of searchParams) {
-  //   url.searchParams.delete(key);
-  // }
-  // for (const [key, value] of searchParams) {
-  //   url.searchParams.set(key, value);
-  // }
+// // the big side effect party --- hate it
+// export function sanitizeURL(url: URL) {
+//   url.searchParams.sort();
+//   // const searchParams = Object.entries(url.searchParams).sort(([a], [b]) => a.localeCompare(b));
+//   // console.log("searchParams", searchParams);
+//   // for (const [key] of searchParams) {
+//   //   url.searchParams.delete(key);
+//   // }
+//   // for (const [key, value] of searchParams) {
+//   //   url.searchParams.set(key, value);
+//   // }
+// }
+
+export class NotFoundError extends Error {
+  readonly code = "ENOENT";
+}
+
+export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
+  if (Result.Is(e)) {
+    if (e.isOk()) return false;
+    e = e.Err();
+  }
+  if ((e as NotFoundError).code === "ENOENT") return true;
+  return false;
+}
+
+export function dataDir(name?: string, base?: CoerceURI): URI {
+  if (!base) {
+    if (!runtimeFn().isBrowser) {
+      base = SysContainer.env.get("FP_STORAGE_URL") || `file://${SysContainer.join(SysContainer.homedir(), ".fireproof")}`;
+    } else {
+      base = SysContainer.env.get("FP_STORAGE_URL") || `indexdb://fp`;
+    }
+  }
+  return URI.from(base.toString())
+    .build()
+    .setParam("name", name || "")
+    .URI();
 }

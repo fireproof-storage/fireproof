@@ -6,20 +6,17 @@ import {
   AnyBlock,
   AnyLink,
   CarMakeable,
-  DbMeta,
-  StoreRuntime,
-  StoreOpts,
   TransactionMeta,
   TransactionWrapper,
+  BlockstoreOpts,
+  BlockstoreRuntime,
 } from "./types.js";
 
 import { Loader } from "./loader.js";
 import type { CID, Block, Version } from "multiformats";
-import { CryptoOpts } from "./types.js";
 import { falsyToUndef } from "../types.js";
-import { toCryptoOpts } from "../runtime/crypto.js";
 import { toStoreRuntime } from "./store-factory.js";
-import { Logger } from "@adviser/cement";
+import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger } from "../utils.js";
 
 export type BlockFetcher = BlockFetcherApi;
@@ -56,7 +53,7 @@ export function defaultedBlockstoreRuntime(
       return Promise.resolve();
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    compact: async (blocks: CompactionFetcher) => {
+    compact: async (blocks: BlockFetcher) => {
       return {} as unknown as TransactionMeta;
     },
     autoCompact: 100,
@@ -65,7 +62,8 @@ export function defaultedBlockstoreRuntime(
     threshold: 1000 * 1000,
     ...opts,
     logger,
-    crypto: toCryptoOpts(opts.crypto),
+    keyBag: opts.keyBag || {},
+    crypto: toCryptoRuntime(opts.crypto),
     store,
     storeRuntime: toStoreRuntime(store, logger),
   };
@@ -201,10 +199,10 @@ export class EncryptedBlockstore extends BaseBlockstore {
     throw this.logger.Error().Msg("failed to commit car files").AsError();
   }
 
-  async getFile(car: AnyLink, cid: AnyLink, isPublic = false): Promise<Uint8Array> {
+  async getFile(car: AnyLink, cid: AnyLink /*, isPublic = false*/): Promise<Uint8Array> {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, database must be named").AsError();
-    const reader = await this.loader.loadFileCar(car, isPublic);
+    const reader = await this.loader.loadFileCar(car /*, isPublic */);
     const block = await reader.get(cid as CID);
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;
@@ -256,9 +254,9 @@ export class EncryptedBlockstore extends BaseBlockstore {
 }
 
 export class CompactionFetcher implements BlockFetcher {
-  blockstore: EncryptedBlockstore;
+  readonly blockstore: EncryptedBlockstore;
   // loader: Loader | null = null
-  loggedBlocks: CarTransaction;
+  readonly loggedBlocks: CarTransaction;
 
   constructor(blocks: EncryptedBlockstore) {
     this.blockstore = blocks;
@@ -271,33 +269,4 @@ export class CompactionFetcher implements BlockFetcher {
     if (block) this.loggedBlocks.putSync(cid, block.bytes);
     return falsyToUndef(block) as Block<T, C, A, V>;
   }
-}
-
-export type CompactFn = (blocks: CompactionFetcher) => Promise<TransactionMeta>;
-
-export interface BlockstoreOpts {
-  readonly logger?: Logger;
-  readonly applyMeta?: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  readonly compact?: CompactFn;
-  readonly autoCompact?: number;
-  readonly crypto?: CryptoOpts;
-  readonly store?: StoreOpts;
-  readonly public?: boolean;
-  readonly meta?: DbMeta;
-  readonly name?: string;
-  readonly threshold?: number;
-}
-
-export interface BlockstoreRuntime {
-  readonly logger: Logger;
-  readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
-  readonly compact: CompactFn;
-  readonly autoCompact: number;
-  readonly crypto: CryptoOpts;
-  readonly store: StoreOpts;
-  readonly storeRuntime: StoreRuntime;
-  readonly public: boolean;
-  readonly meta?: DbMeta;
-  readonly name?: string;
-  readonly threshold: number;
 }

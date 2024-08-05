@@ -323,7 +323,7 @@ describe("Loader with a committed transaction", function () {
     // expect(done.cars).toBeTruthy();
     expect(loader.carLog.length).toBe(1);
   });
-  it("can load the car", async function () {
+  it("can load the car", async () => {
     const blk = loader.carLog[0][0];
     expect(blk).toBeTruthy();
     const reader = await loader.loadCar(blk);

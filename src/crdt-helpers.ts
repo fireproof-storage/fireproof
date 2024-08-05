@@ -1,4 +1,4 @@
-import { encode, decode, Block } from "multiformats/block";
+import { encode, decode, Block } from "./runtime/wait-pr-multiformats/block.js";
 import { parse } from "multiformats/link";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as codec from "@ipld/dag-cbor";
@@ -8,13 +8,13 @@ import { EventFetcher, vis } from "@web3-storage/pail/clock";
 import * as Batch from "@web3-storage/pail/crdt/batch";
 import {
   type EncryptedBlockstore,
-  type CompactionFetcher,
   CarTransaction,
   BlockFetcher,
   TransactionMeta,
   AnyLink,
   StoreRuntime,
   BaseBlockstore,
+  CompactFetcher,
 } from "./blockstore/index.js";
 import {
   type IndexKeyType,
@@ -111,11 +111,16 @@ async function processFiles<T extends DocTypes>(store: StoreRuntime, blocks: Car
     await processFileset(logger, store, blocks, doc._files);
   }
   if (doc._publicFiles) {
-    await processFileset(logger, store, blocks, doc._publicFiles, true);
+    await processFileset(logger, store, blocks, doc._publicFiles /*, true*/);
   }
 }
 
-async function processFileset(logger: Logger, store: StoreRuntime, blocks: CarTransaction, files: DocFiles, publicFiles = false) {
+async function processFileset(
+  logger: Logger,
+  store: StoreRuntime,
+  blocks: CarTransaction,
+  files: DocFiles /*, publicFiles = false */,
+) {
   const dbBlockstore = blocks.parent as EncryptedBlockstore;
   if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, database name is required").AsError();
   const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
@@ -141,9 +146,12 @@ async function processFileset(logger: Logger, store: StoreRuntime, blocks: CarTr
   }
 
   if (didPut.length) {
-    const car = await dbBlockstore.loader.commitFiles(t, { files } as unknown as TransactionMeta, {
+    const car = await dbBlockstore.loader.commitFiles(
+      t,
+      { files } as unknown as TransactionMeta /* {
       public: publicFiles,
-    });
+    } */,
+    );
     if (car) {
       for (const name of didPut) {
         files[name] = { car, ...files[name] } as DocFileMeta;
@@ -186,7 +194,7 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
           await blocks.ebOpts.storeRuntime.decodeFile(
             {
               get: async (cid: AnyLink) => {
-                return await blocks.getFile(throwFalsy(fileMeta.car), cid, isPublic);
+                return await blocks.getFile(throwFalsy(fileMeta.car), cid);
               },
             },
             fileMeta.cid,
@@ -314,7 +322,7 @@ export async function* clockVis(blocks: BlockFetcher, head: ClockHead) {
 }
 
 let isCompacting = false;
-export async function doCompact(blockLog: CompactionFetcher, head: ClockHead, logger: Logger) {
+export async function doCompact(blockLog: CompactFetcher, head: ClockHead, logger: Logger) {
   if (isCompacting) {
     // console.log('already compacting')
     return;

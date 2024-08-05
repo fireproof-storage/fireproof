@@ -1,6 +1,6 @@
-import { rt } from "@fireproof/core";
+import { toCryptoRuntime } from "@adviser/cement";
+import { dataDir, rt } from "@fireproof/core";
 
-const dataDir = rt.dataDir;
 export { dataDir };
 
 export function sleep(ms: number) {
@@ -19,7 +19,7 @@ export interface FileWithCid {
   cid: string;
 }
 export async function buildBlobFiles(): Promise<FileWithCid[]> {
-  const cp = rt.crypto.toCryptoOpts();
+  const cp = toCryptoRuntime();
   return [
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `image.jpg`, { type: "image/jpeg" }),
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `fireproof.png`, { type: "image/png" }),

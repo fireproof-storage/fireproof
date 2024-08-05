@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "indexdb",
+    exclude: ["examples/**"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     //    environment: "browser",
     browser: {
@@ -15,5 +16,6 @@ export default defineConfig({
       name: "chrome", // browser name is required
     },
     globals: true,
+    setupFiles: "./setup.browser.ts",
   },
 });

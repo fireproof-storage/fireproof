@@ -3,10 +3,10 @@ import { Logger, ResolveOnce } from "@adviser/cement";
 
 import {
   EncryptedBlockstore,
-  type CompactionFetcher,
   type TransactionMeta,
   type CarTransaction,
   BaseBlockstore,
+  CompactFetcher,
 } from "./blockstore/index.js";
 import {
   clockChangesSince,
@@ -40,21 +40,6 @@ export class CRDT<T extends DocTypes> {
   readonly name?: string;
   readonly opts: ConfigOpts;
 
-  readonly onceReady = new ResolveOnce<void>();
-  async ready(): Promise<void> {
-    return this.onceReady.once(async () => {
-      await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
-    });
-  }
-
-  async close(): Promise<void> {
-    await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
-  }
-
-  async destroy(): Promise<void> {
-    await Promise.all([this.blockstore.destroy(), this.indexBlockstore.destroy()]);
-  }
-
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
   readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
@@ -73,7 +58,7 @@ export class CRDT<T extends DocTypes> {
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
         await this.clock.applyHead(crdtMeta.head, []);
       },
-      compact: async (blocks: CompactionFetcher) => {
+      compact: async (blocks: CompactFetcher) => {
         await doCompact(blocks, this.clock.head, this.logger);
         return { head: this.clock.head } as TransactionMeta;
       },
@@ -126,6 +111,28 @@ export class CRDT<T extends DocTypes> {
     });
     await this.clock.applyHead(done.meta.head, prevHead, updates);
     return done.meta;
+  }
+
+  readonly onceReady = new ResolveOnce<void>();
+  async ready(): Promise<void> {
+    return this.onceReady.once(async () => {
+      try {
+        // await this.blockstore.ready();
+        // await this.indexBlockstore.ready();
+        // await this.clock.ready();
+        await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
+      } catch (e) {
+        throw this.logger.Error().Err(e).Msg("CRDT not ready").AsError();
+      }
+    });
+  }
+
+  async close(): Promise<void> {
+    await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
+  }
+
+  async destroy(): Promise<void> {
+    await Promise.all([this.blockstore.destroy(), this.indexBlockstore.destroy()]);
   }
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)

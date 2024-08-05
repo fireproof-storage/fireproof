@@ -1,8 +1,10 @@
 import { type NodeMap, join } from "./sys-container.js";
+import type { ObjectEncodingOptions, PathLike } from "fs";
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as os from "os";
 import * as url from "url";
+import { toArrayBuffer } from "./gateways/file/utils.js";
 
 export async function createNodeSysContainer(): Promise<NodeMap> {
   // const nodePath = "node:path";
@@ -23,7 +25,10 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
     join,
     stat: fs.stat as NodeMap["stat"],
     readdir: fs.readdir as NodeMap["readdir"],
-    readfile: fs.readFile as NodeMap["readfile"],
+    readfile: async (path: PathLike, options?: ObjectEncodingOptions): Promise<Uint8Array> => {
+      const rs = await fs.readFile(path, options);
+      return toArrayBuffer(rs);
+    },
     writefile: fs.writeFile as NodeMap["writefile"],
   };
 }

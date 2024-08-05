@@ -5,10 +5,13 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    name: "file",
-    exclude: ["tests/react/**", "examples/**"],
+    name: "mem-file",
+    exclude: ["tests/react/**", "**/smoke/**", "**/scripts/**", "**/examples/**"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
+    coverage: {
+      exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
+    },
     globals: true,
-    setupFiles: "./setup.file.js",
+    setupFiles: "./setup.mem-file.js",
   },
 });

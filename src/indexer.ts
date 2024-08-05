@@ -153,7 +153,12 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (this.mapFnString) {
             // we already loaded from a header
             if (this.mapFnString !== mapFn.toString()) {
-              throw this.logger.Error().Msg("cannot apply different mapFn app").AsError();
+              throw this.logger
+                .Error()
+                .Str("mapFnString", this.mapFnString)
+                .Str("mapFn", mapFn.toString())
+                .Msg("cannot apply different mapFn app")
+                .AsError();
             }
           } else {
             // we are first

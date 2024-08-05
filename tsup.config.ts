@@ -19,17 +19,16 @@ const external = [
   "better-sqlite3",
 ];
 
-const stopSQLandFile = {
-  "../runtime/store-sql/store-sql.js": "../runtime/store-sql/not-impl.js",
-  "../runtime/store-file.js": "../runtime/store-file-not-impl.js",
-  "./node-sys-container.js": "./store-file-not-impl.js",
-  //  "./node-sys-container.js": "./store-file-not-impl.js",
-  //  "src/runtime/node-sys-container.ts": "./store-file-not-impl.js",
-  //  "fs/promises": `${__dirname}/src/runtime/store-file-not-impl.js`,
-  //  "fs": `${__dirname}/src/runtime/store-file-not-impl.js`,
-  //  "path": `${__dirname}/src/runtime/store-file-not-impl.js`,
-  //  "os": `${__dirname}/src/runtime/store-file-not-impl.js`,
-  //  "url": `${__dirname}/src/runtime/store-file-not-impl.js`,
+const stopFile = {
+  "../runtime/store-file.js": "../../bundle-not-impl.js",
+  "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
+  "./gateways/file/gateway.js": "../bundle-not-impl.js",
+  "./node-sys-container.js": "../bundle-not-impl.js",
+  "./key-bag-file.js": "../bundle-not-impl.js",
+};
+
+const ourMultiformat = {
+  // "multiformats/block": `${__dirname}/src/runtime/multiformat/block.ts`
 };
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
@@ -69,7 +68,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        ...stopSQLandFile,
+        ...stopFile,
+        ...ourMultiformat,
       }),
     ],
     dts: {
@@ -89,7 +89,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        // "../runtime/store-indexdb.js": "../runtime/store-file-not-impl.js",
+        ...ourMultiformat,
       }),
     ],
     dts: {
@@ -109,7 +109,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       resolve({
-        ...stopSQLandFile,
+        ...stopFile,
+        ...ourMultiformat,
       }),
     ],
     dts: {

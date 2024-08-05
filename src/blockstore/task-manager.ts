@@ -1,6 +1,6 @@
 import { Logger } from "@adviser/cement";
 import { DbMetaEventBlock } from "./connection-base.js";
-import { AnyLink, Loader } from "./index.js";
+import { AnyLink, Loadable } from "./index.js";
 import { ensureLogger } from "../utils.js";
 
 interface TaskItem {
@@ -11,13 +11,13 @@ interface TaskItem {
 
 export class TaskManager {
   private readonly eventsWeHandled = new Set<string>();
-  private readonly loader: Loader;
+  private readonly loader: Loadable;
 
   private queue: TaskItem[] = [];
   private isProcessing = false;
 
   readonly logger: Logger;
-  constructor(loader: Loader) {
+  constructor(loader: Loadable) {
     this.loader = loader;
     this.logger = ensureLogger(loader.logger, "TaskManager");
   }

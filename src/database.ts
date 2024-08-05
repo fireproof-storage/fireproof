@@ -27,8 +27,7 @@ import type {
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { SysContainer } from "./runtime/sys-container.js";
-import { ensureLogger } from "./utils.js";
-import { NotFoundError } from "./blockstore/gateway.js";
+import { ensureLogger, NotFoundError } from "./utils.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -228,7 +227,7 @@ export function fireproof(name: string, opts?: ConfigOpts): Database {
 
       makeMetaStore: !!opts?.store?.makeMetaStore,
       makeDataStore: !!opts?.store?.makeDataStore,
-      makeRemoteWAL: !!opts?.store?.makeRemoteWAL,
+      makeRemoteWAL: !!opts?.store?.makeWALStore,
 
       encodeFile: !!opts?.store?.encodeFile,
       decodeFile: !!opts?.store?.decodeFile,

@@ -1,35 +1,27 @@
-import { Result } from "@adviser/cement";
+import { Result, URI } from "@adviser/cement";
+import { NotFoundError } from "../utils.js";
 
 export interface GatewayOpts {
   readonly gateway: Gateway;
 }
 
-export class NotFoundError extends Error {
-  readonly code = "ENOENT";
-}
-
-export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotFoundError {
-  if (Result.Is(e)) {
-    if (e.isOk()) return false;
-    e = e.Err();
-  }
-  if ((e as NotFoundError).code === "ENOENT") return true;
-  return false;
-}
-
 export type GetResult = Result<Uint8Array, NotFoundError | Error>;
 export type VoidResult = Result<void>;
+
+export interface TestGateway {
+  get(url: URI, key: string): Promise<Uint8Array>;
+}
 
 export interface Gateway {
   // all the methods never throw!
   // an error is reported as a Result
-  buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
+  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>>;
   // start updates URL --> hate this side effect
-  start(baseUrl: URL): Promise<VoidResult>;
-  close(baseUrl: URL): Promise<VoidResult>;
-  destroy(baseUrl: URL): Promise<VoidResult>;
-  put(url: URL, body: Uint8Array): Promise<VoidResult>;
+  start(baseUrl: URI): Promise<Result<URI>>;
+  close(baseUrl: URI): Promise<VoidResult>;
+  destroy(baseUrl: URI): Promise<VoidResult>;
+  put(url: URI, body: Uint8Array): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
-  get(url: URL): Promise<GetResult>;
-  delete(url: URL): Promise<VoidResult>;
+  get(url: URI): Promise<GetResult>;
+  delete(url: URI): Promise<VoidResult>;
 }
