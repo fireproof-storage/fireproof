@@ -41,6 +41,9 @@ importers:
       ipfs-unixfs-exporter:
         specifier: ^13.5.0
         version: 13.5.0
+      memfs:
+        specifier: ^4.11.0
+        version: 4.17.2
       multiformats:
         specifier: ^13.2.2
         version: 13.3.6
@@ -96,9 +99,6 @@ importers:
       eslint:
         specifier: ^9.8.0
         version: 9.28.0(jiti@1.21.7)
-      memfs:
-        specifier: ^4.11.0
-        version: 4.17.2
       prettier:
         specifier: ^3.3.3
         version: 3.3.3
