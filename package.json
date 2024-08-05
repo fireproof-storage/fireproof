@@ -48,7 +48,7 @@
     "@types/node": "^22.1.0",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.3",
-    "@typescript-eslint/typescript-estree": "^8.0.0",
+    "@typescript-eslint/typescript-estree": "^8.0.1",
     "@vitest/browser": "^2.0.5",
     "@vitest/coverage-v8": "^2.0.5",
     "@vitest/ui": "^2.0.5",
