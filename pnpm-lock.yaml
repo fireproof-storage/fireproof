@@ -76,8 +76,8 @@ importers:
         specifier: ^18.3.3
         version: 18.3.23
       '@typescript-eslint/typescript-estree':
-        specifier: ^8.0.0
-        version: 8.0.0(typescript@5.8.3)
+        specifier: ^8.0.1
+        version: 8.0.1(typescript@5.8.3)
       '@vitest/browser':
         specifier: ^2.0.5
         version: 2.1.9(@types/node@22.1.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.1.0)(terser@5.41.0))(vitest@2.1.9)(webdriverio@8.44.1(encoding@0.1.13))
@@ -3147,6 +3147,10 @@ packages:
     resolution: {integrity: sha512-wgdSGs9BTMWQ7ooeHtu5quddKKs5Z5dS+fHLbrQI+ID0XWJLODGMHRfhwImiHoeO2S5Wir2yXuadJN6/l4JRxw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@typescript-eslint/types@8.0.1':
+    resolution: {integrity: sha512-PpqTVT3yCA/bIgJ12czBuE3iBlM3g4inRSC5J0QOdQFAn07TYrYEQBBKgXH1lQpglup+Zy6c1fxuwTk4MTNKIw==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
   '@typescript-eslint/typescript-estree@6.21.0':
     resolution: {integrity: sha512-6npJTkZcO+y2/kr+z0hc4HwNfrrP4kNYh57ek7yCNlrBjWQ1Y0OS7jiZTkgumrvkX5HkEKXFZkkdFNkaW2wmUQ==}
     engines: {node: ^16.0.0 || >=18.0.0}
@@ -3158,6 +3162,15 @@ packages:
 
   '@typescript-eslint/typescript-estree@8.0.0':
     resolution: {integrity: sha512-5b97WpKMX+Y43YKi4zVcCVLtK5F98dFls3Oxui8LbnmRsseKenbbDinmvxrWegKDMmlkIq/XHuyy0UGLtpCDKg==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '*'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@typescript-eslint/typescript-estree@8.0.1':
+    resolution: {integrity: sha512-8V9hriRvZQXPWU3bbiUV4Epo7EvgM6RTs+sUmxp5G//dBGy402S7Fx0W0QkB2fb4obCF8SInoUzvTYtc3bkb5w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '*'
@@ -3183,6 +3196,10 @@ packages:
 
   '@typescript-eslint/visitor-keys@8.0.0':
     resolution: {integrity: sha512-oN0K4nkHuOyF3PVMyETbpP5zp6wfyOvm7tWhTMfoqxSSsPmJIh6JNASuZDlODE8eE+0EB9uar+6+vxr9DBTYOA==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/visitor-keys@8.0.1':
+    resolution: {integrity: sha512-W5E+o0UfUcK5EgchLZsyVWqARmsM7v54/qEq6PY3YI5arkgmCzHiuk0zKSJJbm71V0xdRna4BGomkCTXz2/LkQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@ucanto/client@4.2.3':
@@ -3338,6 +3355,21 @@ packages:
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
+
+  '@vitest/browser@2.0.5':
+    resolution: {integrity: sha512-VbOYtu/6R3d7ASZREcrJmRY/sQuRFO9wMVsEDqfYbWiJRh2fDNi8CL1Csn7Ux31pOcPmmM5QvzFCMpiojvVh8g==}
+    peerDependencies:
+      playwright: '*'
+      safaridriver: '*'
+      vitest: 2.1.9
+      webdriverio: '*'
+    peerDependenciesMeta:
+      playwright:
+        optional: true
+      safaridriver:
+        optional: true
+      webdriverio:
+        optional: true
 
   '@vitest/browser@2.1.9':
     resolution: {integrity: sha512-AHDanTP4Ed6J5R6wRBcWRQ+AxgMnNJxsbaa229nFQz5KOMFZqlW11QkIDoLgCjBOpQ1+c78lTN5jVxO8ME+S4w==}
@@ -10138,6 +10170,8 @@ snapshots:
 
   '@typescript-eslint/types@8.0.0': {}
 
+  '@typescript-eslint/types@8.0.1': {}
+
   '@typescript-eslint/typescript-estree@6.21.0(typescript@5.8.3)':
     dependencies:
       '@typescript-eslint/types': 6.21.0
@@ -10157,6 +10191,21 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.0.0
       '@typescript-eslint/visitor-keys': 8.0.0
+      debug: 4.4.1
+      globby: 11.1.0
+      is-glob: 4.0.3
+      minimatch: 9.0.5
+      semver: 7.7.2
+      ts-api-utils: 1.4.3(typescript@5.8.3)
+    optionalDependencies:
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - supports-color
+
+  '@typescript-eslint/typescript-estree@8.0.1(typescript@5.8.3)':
+    dependencies:
+      '@typescript-eslint/types': 8.0.1
+      '@typescript-eslint/visitor-keys': 8.0.1
       debug: 4.4.1
       globby: 11.1.0
       is-glob: 4.0.3
@@ -10201,6 +10250,11 @@ snapshots:
   '@typescript-eslint/visitor-keys@8.0.0':
     dependencies:
       '@typescript-eslint/types': 8.0.0
+      eslint-visitor-keys: 3.4.3
+
+  '@typescript-eslint/visitor-keys@8.0.1':
+    dependencies:
+      '@typescript-eslint/types': 8.0.1
       eslint-visitor-keys: 3.4.3
 
   '@ucanto/client@4.2.3':
@@ -10407,6 +10461,28 @@ snapshots:
       vite: 5.4.19(@types/node@22.15.30)(terser@5.41.0)
     transitivePeerDependencies:
       - supports-color
+
+  '@vitest/browser@2.0.5(playwright@1.45.1)(typescript@5.5.4)(vitest@2.0.5)(webdriverio@8.39.1(encoding@0.1.13)(typescript@5.5.4))':
+    dependencies:
+      '@testing-library/dom': 10.4.0
+      '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
+      '@vitest/mocker': 2.1.9(msw@2.9.0(@types/node@22.1.0)(typescript@5.8.3))(vite@5.4.19(@types/node@22.1.0)(terser@5.41.0))
+      '@vitest/utils': 2.1.9
+      magic-string: 0.30.17
+      msw: 2.9.0(@types/node@22.1.0)(typescript@5.8.3)
+      sirv: 3.0.1
+      tinyrainbow: 1.2.0
+      vitest: 2.1.9(@types/node@22.1.0)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.1.0)(typescript@5.8.3))(terser@5.41.0)
+      ws: 8.18.2
+    optionalDependencies:
+      webdriverio: 8.44.1(encoding@0.1.13)
+    transitivePeerDependencies:
+      - '@types/node'
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - vite
+    optional: true
 
   '@vitest/browser@2.1.9(@types/node@22.1.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.1.0)(terser@5.41.0))(vitest@2.1.9)(webdriverio@8.44.1(encoding@0.1.13))':
     dependencies:
