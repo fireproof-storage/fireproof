@@ -1,4 +1,4 @@
-import pLimit from "p-limit";
+// import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
 import { Logger, ResolveOnce } from "@adviser/cement";
 // import { uuidv4 } from "uuidv7";
@@ -234,7 +234,9 @@ export class Loader implements Loadable {
     done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
+    this.logger.Debug().Msg("commit-0");
     await this.ready();
+    this.logger.Debug().Msg("commit-1");
     const fstore = await this.fileStore();
     const encoder = (await fstore.keyedCrypto()).codec();
     const WALStore = await this.WALStore();
@@ -249,12 +251,18 @@ export class Loader implements Loadable {
       WALStore,
       metaStore,
     };
+    this.logger.Debug().Msg("commit-3");
     const ret = this.commitQueue.enqueue(async () => {
+      this.logger.Debug().Msg("commit-3.1");
       await this.cacheTransaction(t);
+      this.logger.Debug().Msg("commit-3.2");
       const ret = await commit(params, t, done, opts);
+      this.logger.Debug().Msg("commit-3.3");
       await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
+      this.logger.Debug().Msg("commit-3.4");
       return ret.cgrp;
     });
+    this.logger.Debug().Msg("commit-4");
     return ret;
   }
 

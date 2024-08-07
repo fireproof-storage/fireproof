@@ -55,6 +55,7 @@ abstract class BaseStoreImpl {
     this.logger = logger
       .With()
       .Ref("url", () => this._url.toString())
+      .Str("id", "" + Math.random())
       .Str("name", name)
       .Logger();
     this.gateway = opts.gateway;
