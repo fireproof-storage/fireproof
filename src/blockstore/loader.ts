@@ -1,4 +1,4 @@
-// import pLimit from "p-limit";
+import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
 import { Logger, ResolveOnce } from "@adviser/cement";
 // import { uuidv4 } from "uuidv7";
