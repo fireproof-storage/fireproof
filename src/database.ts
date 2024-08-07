@@ -73,8 +73,11 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     // this.logger.SetDebug("Database")
     this._crdt = new CRDT(this.sthis, name, this.opts);
     this.blockstore = this._crdt.blockstore; // for connector compatibility
-    this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
-      return await this._crdt.bulk(updates);
+    this._writeQueue = writeQueue(this.logger, async (updates: DocUpdate<DT>[]) => {
+      this.logger.Debug().Len(updates).Msg("writeQueue-pre");
+      const meta = await this._crdt.bulk(updates);
+      this.logger.Debug().Len(updates).Msg("writeQueue-post");
+      return meta;
     }); //, Infinity)
     this._crdt.clock.onTock(() => {
       this._no_update_notify();

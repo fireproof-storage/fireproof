@@ -23,11 +23,18 @@ export async function decode<T, Code extends number, Alg extends number>({
   if (bytes == null) throw new Error('Missing required argument "bytes"');
   if (codec == null || hasher == null) throw new Error("Missing required argument: codec or hasher");
 
+  // const id = Math.random().toString(36).substring(7);
+  // console.log("decode>1", id)
   const value = await Promise.resolve(codec.decode(bytes));
+  // console.log("decode>2", id)
   const hash = await hasher.digest(bytes);
+  // console.log("decode>3", id)
   const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
+  // console.log("decode>4", id)
 
-  return new mfBlock({ value, bytes, cid });
+  const blk = new mfBlock({ value, bytes, cid });
+  // console.log("decode>5", id)
+  return blk;
 }
 
 interface EncodeInput<T, Code extends number, Alg extends number> {

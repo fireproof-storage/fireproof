@@ -12,6 +12,7 @@ import {
   Env,
   toCryptoRuntime,
   CryptoRuntime,
+  BuildURI,
 } from "@adviser/cement";
 import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
 import { base58btc } from "multiformats/bases/base58";
@@ -304,10 +305,12 @@ export function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI 
       base = sthis.env.get("FP_STORAGE_URL") || `indexdb://fp`;
     }
   }
-  return URI.from(base.toString())
-    .build()
+  // console.log("dataDir-0", base, typeof base);
+  const ret = BuildURI.from(base)
     .setParam("name", name || "")
     .URI();
+  // console.log("dataDir-1", base);
+  return ret;
 }
 
 export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array) {

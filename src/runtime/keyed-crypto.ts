@@ -192,12 +192,17 @@ class noCrypto implements KeyedCrypto {
 }
 
 export async function keyedCryptoFactory(url: URI, kb: KeyBag, sthis: SuperThis): Promise<KeyedCrypto> {
+  const { logger } = sthis;
   const storekey = url.getParam("storekey");
   if (storekey && storekey !== "insecure") {
+    logger.Debug().Str("storekey", url.getParam("storekey")).Msg("keyedCryptoFactory-1");
     let rkey = await kb.getNamedKey(storekey, true);
+    logger.Debug().Str("storekey", url.getParam("storekey")).Msg("keyedCryptoFactory-2");
     if (rkey.isErr()) {
       try {
+        logger.Debug().Str("storekey", url.getParam("storekey")).Msg("keyedCryptoFactory-3");
         rkey = await kb.toKeyWithFingerPrint(storekey);
+        logger.Debug().Str("storekey", url.getParam("storekey")).Msg("keyedCryptoFactory-4");
       } catch (e) {
         throw (
           sthis.logger

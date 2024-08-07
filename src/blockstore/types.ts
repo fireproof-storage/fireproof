@@ -155,6 +155,7 @@ export interface StoreOpts extends StoreFactory {
   readonly stores?: {
     // string means local storage
     // URL means schema selects the storeType
+    readonly useEncryptedBlockstore?: boolean;
     readonly base?: CoerceURI;
 
     readonly meta?: CoerceURI;

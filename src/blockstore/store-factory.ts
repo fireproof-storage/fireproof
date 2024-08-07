@@ -59,14 +59,19 @@ interface GatewayReady {
 }
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
 export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<GatewayReady | undefined> {
+  const logger = sthis.logger;
+  logger.Debug().Url(url).Msg("getGatewayFromURL");
   return onceGateway.get(url.toString()).once(async () => {
     const item = storeFactory.get(url.protocol);
     if (item) {
+      logger.Debug().Str("protocol", url.protocol).Msg("getGatewayFromURL-1");
       const ret = {
         gateway: await item.gateway(sthis),
         test: await item.test(sthis),
       };
+      logger.Debug().Str("protocol", url.protocol).Msg("getGatewayFromURL-2");
       const res = await ret.gateway.start(url);
+      logger.Debug().Str("protocol", url.protocol).Msg("getGatewayFromURL-3");
       if (res.isErr()) {
         sthis.logger.Error().Result("start", res).Msg("start failed");
         return undefined;
@@ -190,6 +195,7 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
         ...loader.ebOpts.keyBag,
       }),
   });
+  sthis.logger.Debug().Str("protocol", url.protocol).Msg("MetaStoreImpl-post");
   // const ret = await store.start();
   // if (ret.isErr()) {
   //   throw logger.Error().Result("start", ret).Msg("start failed").AsError();
@@ -247,7 +253,9 @@ export async function testStoreFactory(url: URI, sthis: SuperThis): Promise<Test
 }
 
 export async function ensureStart<T>(store: T & { start: () => Promise<Result<URI>> }, logger: Logger): Promise<T> {
+  logger.Debug().Any("x", store).Msg("ensureStart-0");
   const ret = await store.start();
+  logger.Debug().Msg("ensureStart-1");
   if (ret.isErr()) {
     throw logger.Error().Result("start", ret).Msg("start failed").AsError();
   }
@@ -256,9 +264,10 @@ export async function ensureStart<T>(store: T & { start: () => Promise<Result<UR
 }
 
 export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime {
-  const logger = ensureLogger(sthis, "toStoreRuntime", {});
+  // const logger = ensureLogger(sthis, "toStoreRuntime", {});
   return {
     makeMetaStore: async (loader: Loadable) => {
+      const logger = ensureLogger(sthis, "makeMetaStore");
       logger
         .Debug()
         .Str("fromOpts", "" + !!loader.ebOpts.store.makeMetaStore)
@@ -266,6 +275,7 @@ export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime 
       return ensureStart(await (loader.ebOpts.store.makeMetaStore || metaStoreFactory)(loader), logger);
     },
     makeDataStore: async (loader: Loadable) => {
+      const logger = ensureLogger(loader.sthis, "makeDataStore");
       logger
         .Debug()
         .Str("fromOpts", "" + !!loader.ebOpts.store.makeDataStore)
@@ -273,6 +283,7 @@ export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime 
       return ensureStart(await (loader.ebOpts.store.makeDataStore || dataStoreFactory)(loader), logger);
     },
     makeWALStore: async (loader: Loadable) => {
+      const logger = ensureLogger(loader.sthis, "makeWALStore");
       logger
         .Debug()
         .Str("fromOpts", "" + !!loader.ebOpts.store.makeWALStore)

@@ -90,8 +90,11 @@ export class KeyBag {
   async getNamedKey(name: string, failIfNotFound = false): Promise<Result<KeyWithFingerPrint>> {
     const id = this.rt.sthis.nextId();
     return this._seq.add(async () => {
+      this.logger.Debug().Str("id", id).Str("name", name).Msg("getNamedKey-0");
       const bag = await this.rt.getBag();
+      this.logger.Debug().Str("id", id).Str("name", name).Msg("getNamedKey-1");
       const named = await bag.get(name);
+      this.logger.Debug().Str("id", id).Str("name", name).Msg("getNamedKey-2");
       if (named) {
         const fpr = await this.toKeyWithFingerPrint(named.key);
         this.logger.Debug().Str("id", id).Str("name", name).Result("fpr", fpr).Msg("fingerPrint getNamedKey");

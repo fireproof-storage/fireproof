@@ -1,4 +1,4 @@
-import pLimit from "p-limit";
+// import pLimit from "p-limit";
 import { CarReader } from "@ipld/car";
 import { Logger, ResolveOnce } from "@adviser/cement";
 // import { uuidv4 } from "uuidv7";
@@ -31,6 +31,7 @@ import { getKeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
+import { ensureLogger } from "use-fireproof";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -71,7 +72,7 @@ export class Loader implements Loadable {
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
-  private writeLimit = pLimit(1);
+  // private writeLimit = pLimit(1);
 
   // readonly id = uuidv4();
 
@@ -142,36 +143,53 @@ export class Loader implements Loadable {
   // }
 
   async handleDbMetasFromStore(metas: DbMeta[]): Promise<void> {
-    this.logger.Debug().Any("metas", metas).Msg("handleDbMetasFromStore");
+    const logger = ensureLogger(this.sthis, "handleDbMetasFromStore", {
+      id: Math.random().toString(36).substring(7),
+    });
+    logger.Debug().Any("metas", metas).Msg("handleDbMetasFromStore");
     for (const meta of metas) {
-      await this.writeLimit(async () => {
-        await this.mergeDbMetaIntoClock(meta);
-      });
+      logger.Debug().Any("meta", meta).Msg("handleDbMetasFromStore-1");
+      // await this.writeLimit(async () => {
+      // logger.Debug().Any("meta", meta).Msg("handleDbMetasFromStore-2");
+      await this.mergeDbMetaIntoClock(meta, logger);
+      // logger.Debug().Any("meta", meta).Msg("handleDbMetasFromStore-3");
+      // });
+      logger.Debug().Any("meta", meta).Msg("handleDbMetasFromStore-4");
     }
   }
 
-  async mergeDbMetaIntoClock(meta: DbMeta): Promise<void> {
+  async mergeDbMetaIntoClock(meta: DbMeta, logger: Logger): Promise<void> {
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-1");
     if (this.isCompacting) {
-      throw this.logger.Error().Msg("cannot merge while compacting").AsError();
+      throw logger.Error().Msg("cannot merge while compacting").AsError();
     }
 
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-2");
     if (this.seenMeta.has(meta.cars.toString())) return;
     this.seenMeta.add(meta.cars.toString());
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-3");
 
     // if (meta.key) {
     //   await this.setKey(meta.key);
     // }
     if (carLogIncludesGroup(this.carLog, meta.cars)) {
+      logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-3.1");
       return;
     }
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-4");
     const carHeader = await this.loadCarHeaderFromMeta<TransactionMeta>(meta);
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-5");
     // fetch other cars down the compact log?
     // todo we should use a CID set for the compacted cids (how to expire?)
     // console.log('merge carHeader', carHeader.head.length, carHeader.head.toString(), meta.car.toString())
     carHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
-    await this.getMoreReaders(carHeader.cars.flat());
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-6");
+    await this.getMoreReaders(carHeader.cars.flat(), logger);
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-7");
     this.carLog = [...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)];
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-8");
     await this.ebOpts.applyMeta?.(carHeader.meta);
+    logger.Debug().Any("meta", meta).Msg("mergeDbMetaIntoClock-9");
   }
 
   // protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {
@@ -216,21 +234,40 @@ export class Loader implements Loadable {
     done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
+    this.logger.Debug().Msg("commit-0");
     await this.ready();
+    this.logger.Debug().Msg("commit-1");
     const fstore = await this.fileStore();
+    this.logger.Debug().Msg("commit-2");
+    const encoder = (await fstore.keyedCrypto()).codec();
+    this.logger.Debug().Msg("commit-2.1");
+    const WALStore = await this.WALStore();
+    this.logger.Debug().Msg("commit-2.2");
+    const metaStore = await this.metaStore();
+    this.logger.Debug().Msg("commit-2.3");
     const params: CommitParams = {
-      encoder: (await fstore.keyedCrypto()).codec(),
+      // encoder: (await fstore.keyedCrypto()).codec(),
+      encoder,
       carLog: this.carLog,
       carStore: fstore,
-      WALStore: await this.WALStore(),
-      metaStore: await this.metaStore(),
+      // WALStore: await this.WALStore(),
+      // metaStore: await this.metaStore(),
+      WALStore,
+      metaStore,
     };
-    return this.commitQueue.enqueue(async () => {
+    this.logger.Debug().Msg("commit-3");
+    const ret = this.commitQueue.enqueue(async () => {
+      this.logger.Debug().Msg("commit-3.1");
       await this.cacheTransaction(t);
+      this.logger.Debug().Msg("commit-3.2");
       const ret = await commit(params, t, done, opts);
+      this.logger.Debug().Msg("commit-3.3");
       await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
+      this.logger.Debug().Msg("commit-3.4");
       return ret.cgrp;
     });
+    this.logger.Debug().Msg("commit-4");
+    return ret;
   }
 
   async updateCarLog<T>(cids: CarGroup, fp: CarHeader<T>, compact: boolean): Promise<void> {
@@ -388,7 +425,14 @@ export class Loader implements Loadable {
     if (!this.carStore) {
       throw this.logger.Error().Msg("car store not initialized").AsError();
     }
-    const loaded = await this.storesLoadCar(cid, await this.carStore(), this.remoteCarStore);
+    const carStore = await this.carStore();
+    this.logger
+      .Debug()
+      .Str("cid", cid.toString())
+      .Url(carStore.url(), "local")
+      .Url(this.remoteCarStore?.url() || "remote://", "remote")
+      .Msg("load car");
+    const loaded = await this.storesLoadCar(cid, carStore, this.remoteCarStore);
     return loaded;
   }
 
@@ -398,7 +442,12 @@ export class Loader implements Loadable {
     let activeStore: BaseStore = local;
     try {
       //loadedCar now is an array of AnyBlocks
-      this.logger.Debug().Str("cid", cidsString).Msg("loading car");
+      this.logger
+        .Debug()
+        .Url(remote?.url() || "")
+        .Url(local.url())
+        .Str("cid", cidsString)
+        .Msg("loading car");
       loadedCar = await local.load(cid);
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
@@ -418,22 +467,31 @@ export class Loader implements Loadable {
     if (!loadedCar) {
       throw this.logger.Error().Url(local.url()).Str("cid", cidsString).Msg("missing car files").AsError();
     }
+    this.logger.Debug().Str("cid", cidsString).Len(loadedCar.bytes).Msg("loading car-1");
     //This needs a fix as well as the fromBytes function expects a Uint8Array
     //Either we can merge the bytes or return an array of rawReaders
-    const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec: (await activeStore.keyedCrypto()).codec() }); // as Uint8Array,
+    const codec = (await activeStore.keyedCrypto()).codec();
+    this.logger.Debug().Str("cid", cidsString).Msg("loading car-1.5");
+    const bytes = await decode({ bytes: loadedCar.bytes, hasher, codec }); // as Uint8Array,
+    this.logger.Debug().Str("cid", cidsString).Msg("loading car-2");
     const rawReader = await CarReader.fromBytes(bytes.value);
+    this.logger.Debug().Str("cid", cidsString).Msg("loading car-3");
     const readerP = Promise.resolve(rawReader);
+    this.logger.Debug().Str("cid", cidsString).Msg("loading car-4");
     // const kc = await activeStore.keyedCrypto()
     // const readerP = !kc.isEncrypting ? Promise.resolve(rawReader) : this.ensureDecryptedReader(activeStore, rawReader);
 
     const cachedReaderP = readerP.then(async (reader) => {
+      this.logger.Debug().Msg("caching car reader-pre");
       await this.cacheCarReader(cidsString, reader).catch((e) => {
         this.logger.Error().Err(e).Str("cid", cidsString).Msg("error caching car reader");
         return;
       });
+      this.logger.Debug().Msg("caching car reader-post");
       return reader;
     });
     this.carReaders.set(cidsString, cachedReaderP);
+    this.logger.Debug().Msg("exit reader");
     return readerP;
   }
 
@@ -441,6 +499,7 @@ export class Loader implements Loadable {
   protected async storesLoadCar(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let dacr = this.carReaders.get(cidsString);
+    this.logger.Debug().Str("cid", cidsString).Bool("dacr", dacr).Msg("storesLoadCar");
     if (!dacr) {
       dacr = this.makeDecoderAndCarReader(cid, local, remote);
       this.carReaders.set(cidsString, dacr);
@@ -448,9 +507,23 @@ export class Loader implements Loadable {
     return dacr;
   }
 
-  protected async getMoreReaders(cids: AnyLink[]) {
-    const limit = pLimit(5);
+  protected async getMoreReaders(cids: AnyLink[], logger: Logger) {
+    logger.Debug().Any("cids", cids).Msg("getMoreReaders-0");
+    // const limit = pLimit(5);
+    logger.Debug().Any("cids", cids).Msg("getMoreReaders-1");
     const missing = cids.filter((cid) => !this.carReaders.has(cid.toString()));
-    await Promise.all(missing.map((cid) => limit(() => this.loadCar(cid))));
+    logger.Debug().Any("cids", cids).Msg("getMoreReaders-2");
+    await Promise.all(
+      missing.map((cid, idx) => {
+        logger.Debug().Any("cid", cid).Uint64("idx", idx).Msg("getMoreReaders-map");
+        // return limit(async () => {
+        logger.Debug().Any("cid", cid).Uint64("idx", idx).Msg("getMoreReaders-loadCar-pre");
+        const ret = this.loadCar(cid);
+        logger.Debug().Any("cid", cid).Uint64("idx", idx).Msg("getMoreReaders-loadCar-post");
+        return ret;
+        // })
+      }),
+    );
+    logger.Debug().Any("cids", cids).Msg("getMoreReaders-3");
   }
 }

@@ -92,10 +92,13 @@ export class CRDT<T extends DocTypes> {
   }
 
   async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
+    this.logger.Debug().Len(updates).Msg("bulk-pre-ready");
     await this.ready();
     const prevHead = [...this.clock.head];
 
+    this.logger.Debug().Len(updates).Msg("bulk-pre-transaction");
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
+      this.logger.Debug().Len(updates).Msg("bulk-pre-transaction-pre");
       const { head } = await applyBulkUpdateToCrdt<T>(
         this.blockstore.ebOpts.storeRuntime,
         blocks,
@@ -103,14 +106,18 @@ export class CRDT<T extends DocTypes> {
         updates,
         this.logger,
       );
+      this.logger.Debug().Len(updates).Msg("bulk-pre-transaction-1");
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
         readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
         return dupdate;
       });
+      this.logger.Debug().Len(updates).Msg("bulk-pre-transaction-done");
       return { head };
     });
+    this.logger.Debug().Len(updates).Msg("bulk-pre-applying");
     await this.clock.applyHead(done.meta.head, prevHead, updates);
+    this.logger.Debug().Len(updates).Msg("bulk-pre-done");
     return done.meta;
   }
 

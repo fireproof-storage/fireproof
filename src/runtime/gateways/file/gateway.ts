@@ -21,7 +21,7 @@ export class FileGateway implements Gateway {
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
-    this.logger = sthis.logger;
+    this.logger = ensureLogger(sthis, "FileGateway");
   }
 
   async getVersionFromFile(path: string, logger: Logger): Promise<string> {
@@ -46,6 +46,7 @@ export class FileGateway implements Gateway {
 
   start(baseURL: URI): Promise<Result<URI>> {
     return exception2Result(async () => {
+      this.logger.Debug().Url(baseURL).Msg("start");
       this._fs = await getFileSystem(baseURL);
       await this.fs.start();
       const url = baseURL.build();

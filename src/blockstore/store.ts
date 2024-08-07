@@ -55,6 +55,7 @@ abstract class BaseStoreImpl {
     this.logger = logger
       .With()
       .Ref("url", () => this._url.toString())
+      .Str("id", "" + Math.random())
       .Str("name", name)
       .Logger();
     this.gateway = opts.gateway;
@@ -77,7 +78,12 @@ abstract class BaseStoreImpl {
   readonly ready?: () => Promise<void>;
 
   async keyedCrypto(): Promise<KeyedCrypto> {
-    return keyedCryptoFactory(this._url, await this.keybag(), this.sthis);
+    this.logger.Debug().Msg("keyedCrypto");
+    const kb = await this.keybag();
+    this.logger.Debug().Msg("keyedCrypto-keybag");
+    const kcf = await keyedCryptoFactory(this._url, kb, this.sthis);
+    this.logger.Debug().Msg("keyedCrypto-kcf");
+    return kcf;
   }
 
   async start(): Promise<Result<URI>> {
@@ -89,6 +95,7 @@ abstract class BaseStoreImpl {
       return res as Result<URI>;
     }
     this._url = res.Ok();
+    this.logger.Debug().Str("storeType", this.storeType).Msg("starting-gateway-post-0");
     // add storekey to url
     const kb = await this.keybag();
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
@@ -112,12 +119,14 @@ abstract class BaseStoreImpl {
     }
     if (this.ready) {
       const fn = this.ready.bind(this);
+      this.logger.Debug().Str("storeType", this.storeType).Msg("starting-gateway-1");
       const ready = await exception2Result(fn);
       if (ready.isErr()) {
         await this.close();
         return ready as Result<URI>;
       }
     }
+    this.logger.Debug().Str("storeType", this.storeType).Msg("starting-gateway-2");
     this._onStarted.forEach((fn) => fn());
     this.logger.Debug().Msg("started");
     return version;
