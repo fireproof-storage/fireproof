@@ -130,7 +130,12 @@ export class CRDT<T extends DocTypes> {
         // await this.clock.ready();
         await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
       } catch (e) {
-        throw this.logger.Error().Err(e).Msg("CRDT not ready").AsError();
+        throw this.logger
+          .Error()
+          .Any("stack", (e as Error).stack)
+          .Err(e)
+          .Msg("CRDT not ready")
+          .AsError();
       }
     });
   }

@@ -17,8 +17,8 @@ import {
 import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
 import { base58btc } from "multiformats/bases/base58";
 
-export type { Logger };
-export { Result };
+export type { Logger, CoerceURI };
+export { Result, URI, BuildURI };
 
 const globalLogger: Logger = new LoggerImpl();
 
