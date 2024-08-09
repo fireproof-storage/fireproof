@@ -8,7 +8,7 @@ project.addSourceFilesAtPaths("src/**/*.ts");
 
 project.getSourceFiles().map((sourceFile) => {
   const foundDebug: Node[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   sourceFile.forEachDescendant((node, traversal) => {
     // sourceFile.forEachChild(node => {
     //  console.log(node.getKind());
@@ -17,7 +17,6 @@ project.getSourceFiles().map((sourceFile) => {
         {
           let found = false;
           node.forEachDescendant((child) => {
-            // eslint-disable-next-line no-console
             switch (child.getKind()) {
               case SyntaxKind.Identifier:
                 if (child.getText() === "Debug") {
@@ -28,6 +27,7 @@ project.getSourceFiles().map((sourceFile) => {
           });
           const txt = node.getFirstChild()?.getText();
           if (found && node.getKind() === SyntaxKind.CallExpression && txt?.includes("logger.Debug()")) {
+            // eslint-disable-next-line no-console
             console.log(">>>>>>>>>>>>>>>", sourceFile.getFilePath(), txt);
             // node.forEachDescendant(child => {
             //   console.log(child.getKindName(), child.getText());
