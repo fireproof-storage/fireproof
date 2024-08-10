@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { Link } from "@remix-run/react";
 import { useState } from "react";
 
 export default function DynamicTable({
@@ -89,9 +90,9 @@ function TableCell({
   if (link) {
     const href = hrefFn ? hrefFn(label) : `/db/${dbName}/doc/${label}`;
     return (
-      <a className="underline" href={href}>
+      <Link to={href} className="underline">
         {formatTableCellContent(label)}
-      </a>
+      </Link>
     );
   } else {
     return <>{formatTableCellContent(label)}</>;
