@@ -259,6 +259,14 @@ describe("KeyedCrypto", () => {
     const dec = await codec.decode(blk);
     expect(dec).toEqual(testData);
   });
+
+  it("codec implict iv same for multiple clients", async () => {
+    const testData = kb.rt.crypto.randomBytes(1024);
+    const codec = kycr.codec();
+    const blk = await codec.encode(testData);
+    const blk2 = await codec.encode(testData);
+    expect(blk).toEqual(blk2)
+  });
 });
 
 // describe("KeyedCryptoStore RunLength", () => {
