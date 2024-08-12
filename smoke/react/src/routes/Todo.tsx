@@ -43,7 +43,7 @@ export default function TodoList() {
                 // console.log("saved todo", todo.text);
                 setTodo({ text: "", _id: undefined });
               })
-              .catch((e) => console.error("Add-Todo Error:", e));
+              .catch((e: Error) => console.error("Add-Todo Error:", e));
           }}
         >
           Add Todo

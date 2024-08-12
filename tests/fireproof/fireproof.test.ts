@@ -609,6 +609,16 @@ describe("basic js verify", function () {
     await db.close();
     await db.destroy();
   });
+
+  it("ignore _id === Falsy", async function () {
+    const db = fireproof("test-ignore");
+    const ok = await db.put({ _id: undefined, foo: ["bar", "bam"] });
+    expect(ok.id).toMatch(/^[a-f0-9-]{36}$/);
+    const ok2 = await db.put({ foo: ["bar", "bam"] });
+    expect(ok2.id).toBe(/^[a-f0-9-]{36}$/);
+    await db.close();
+    await db.destroy();
+  });
 });
 
 describe("same workload twice, same CID", function () {

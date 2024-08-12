@@ -177,20 +177,24 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   async query(opts: QueryOpts<K> = {}): Promise<IndexRows<K, T, R>> {
+    this.logger.Debug().Any("opts", opts).Msg("query")
     await this.ready();
     // this._resetIndex();
     await this._updateIndex();
     await this._hydrateIndex();
     if (!this.byKey.root) {
+      this.logger.Debug().Any("opts", opts).Msg("query !byKey.root")
       return await applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
     }
     if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
     if (opts.range) {
       const eRange = encodeRange(opts.range);
+      this.logger.Debug().Any("opts", opts).Msg("query range")
       return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
     }
     if (opts.key) {
       const encodedKey = encodeKey(opts.key);
+      this.logger.Debug().Any("opts", opts).Str("eKey", encodedKey).Msg("query key")
       return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
     }
     if (Array.isArray(opts.keys)) {
@@ -200,6 +204,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           return (await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
         }),
       );
+      this.logger.Debug().Any("opts", opts).Msg("query array")
       return { rows: results.flat() };
     }
     if (opts.prefix) {
@@ -208,9 +213,11 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       const start = [...opts.prefix, NaN];
       const end = [...opts.prefix, Infinity];
       const encodedR = encodeRange([start, end]);
+      this.logger.Debug().Any("opts", opts).Msg("query prefix")
       return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
     }
     const all = await this.byKey.root.getAllEntries(); // funky return type
+    this.logger.Debug().Msg("all")
     return await applyQuery<K, T, R>(
       this.crdt,
       {

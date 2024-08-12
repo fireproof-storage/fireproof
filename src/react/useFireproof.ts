@@ -11,7 +11,7 @@ import type {
   MapFn,
   QueryOpts,
 } from "@fireproof/core";
-import { fireproof } from "@fireproof/core";
+import { ensureLogger, fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AllDocsQueryOpts, ClockHead, ChangesOptions } from "../types";
 
@@ -170,16 +170,21 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
+  const logger = ensureLogger(config, "useFireproof");
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
   function useDocument<T extends DocTypes>(initialDocFn: () => DocSet<T>): UseDocumentResult<T> {
+    const idoc = initialDocFn()
+    logger.Debug().Any("doc", idoc).Msg("useDocument");
     // We purposely refetch the docId everytime to check if it has changed
-    const docId = initialDocFn()._id ?? "";
+    const docId = idoc._id || "";
 
     // We do not want to force consumers to memoize their initial document so we do it for them.
     // We use the stringified generator function to ensure that the memoization is stable across renders.
     const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
+    // logger.Debug().Any("doc", idoc).Msg("useDocument-1");
     const [doc, setDoc] = useState(initialDoc);
+    // logger.Debug().Any("doc", idoc).Msg("useDocument-2");
 
     const refreshDoc = useCallback(async () => {
       // todo add option for mvcc checks
@@ -189,9 +194,16 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const saveDoc: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
+        logger.Debug().Any("doc", existingDoc ?? doc).Msg("saveDoc")
         const res = await database.put(existingDoc ?? doc);
         // If the document was created, then we need to update the local state with the new `_id`
-        if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
+        if (!existingDoc && !doc._id) {
+          setDoc((d) => {
+            const m = { ...d, _id: res.id }
+            logger.Debug().Any("doc", m).Msg("saveDoc-setDoc")
+            return m
+          });
+        }
         return res;
       },
       [doc],
@@ -220,6 +232,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     useEffect(() => {
       if (!docId) return;
       return database.subscribe((changes) => {
+        logger.Debug().Any("changes", changes).Str("docId", docId).Msg("subscribe")
         if (changes.find((c) => c._id === docId)) {
           void refreshDoc(); // todo use change.value
         }
@@ -246,8 +259,11 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
+    logger.Debug().Str("qString", queryString).Str("mapFn", mapFnString).Msg("useLiveQuery")
     const refreshRows = useCallback(async () => {
+      const all = await database.allDocs()
       const res = await database.query<K, T, R>(mapFn, query);
+      logger.Debug().Any("all", all).Any("mapFn", mapFn).Any("query", query).Any("res", res).Msg("db.querty")
       setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
     }, [mapFnString, queryString]);
 
