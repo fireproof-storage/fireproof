@@ -265,7 +265,7 @@ describe("KeyedCrypto", () => {
     const codec = kycr.codec();
     const blk = await codec.encode(testData);
     const blk2 = await codec.encode(testData);
-    expect(blk).toEqual(blk2)
+    expect(blk).toEqual(blk2);
   });
 });
 
