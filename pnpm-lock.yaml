@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.10
-        version: 0.2.45(typescript@5.8.3)
+        specifier: 0.2.10
+        version: 0.2.10
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -931,8 +931,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.2.45':
-    resolution: {integrity: sha512-322C+IWgUhjomzTKohy86maLoOASUf5ZrIAs01dfZF2NLey/6GlUi3vehR4MpDXo/8lceuvemVCw/wd7kmWOtg==}
+  '@adviser/cement@0.2.10':
+    resolution: {integrity: sha512-IbbZ93R+1Wb5hnxmJa9VZ/pnKguNMARNIQKByNyYD9nEjyfH52XOoEohu3jPdtBwufoibmrXclUsZCJKbHLUcw==}
     engines: {node: '>=16'}
 
   '@alloc/quick-lru@5.2.0':
@@ -7676,14 +7676,6 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
-  ts-essentials@10.0.4:
-    resolution: {integrity: sha512-lwYdz28+S4nicm+jFi6V58LaAIpxzhg9rLdgNC1VsdP/xiFBseGhF1M/shwCk6zMmwahBZdXcl34LVHrEang3A==}
-    peerDependencies:
-      typescript: '>=4.5.0'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
@@ -8359,12 +8351,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.2.45(typescript@5.8.3)':
-    dependencies:
-      ts-essentials: 10.0.4(typescript@5.8.3)
-      yaml: 2.8.0
-    transitivePeerDependencies:
-      - typescript
+  '@adviser/cement@0.2.10': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -15935,10 +15922,6 @@ snapshots:
 
   ts-api-utils@1.4.3(typescript@5.8.3):
     dependencies:
-      typescript: 5.8.3
-
-  ts-essentials@10.0.4(typescript@5.8.3):
-    optionalDependencies:
       typescript: 5.8.3
 
   ts-interface-checker@0.1.13: {}
