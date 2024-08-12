@@ -80,11 +80,11 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
   }
 
   async encode(data: Uint8Array): Promise<Uint8Array> {
-    
     let hashArray;
     if (!this.iv) {
       const hash = await hasher.digest(data);
-      hashArray = new Uint8Array(hash.bytes);
+      const doubleHash = await hasher.digest(hash.bytes);
+      hashArray = new Uint8Array(doubleHash.bytes);
     }
     const { iv } = this.ko.algo(this.iv || hashArray);
     const fprt = await this.ko.fingerPrint();
