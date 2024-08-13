@@ -83,8 +83,11 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     let hashArray;
     if (!this.iv) {
       const hash = await hasher.digest(data);
-      const doubleHash = await hasher.digest(hash.bytes);
-      hashArray = new Uint8Array(doubleHash.bytes);
+      const hashBytes = new Uint8Array(hash.bytes);
+      hashArray = new Uint8Array(12); // 96 bits = 12 bytes
+      for (let i = 0; i < hashBytes.length; i++) {
+        hashArray[i % 12] ^= hashBytes[i];
+      }
     }
     const { iv } = this.ko.algo(this.iv || hashArray);
     const fprt = await this.ko.fingerPrint();
