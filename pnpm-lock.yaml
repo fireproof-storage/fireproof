@@ -4999,12 +4999,26 @@ snapshots:
       fsevents: 2.3.2
     optional: true
 
+<<<<<<< HEAD
   postcss-load-config@6.0.1(postcss@8.4.41)(tsx@4.17.0):
+||||||| parent of 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
+  postcss-load-config@6.0.1(postcss@8.4.39)(tsx@4.16.2):
+=======
+  postcss-load-config@6.0.1(postcss@8.4.39)(tsx@4.17.0):
+>>>>>>> 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
     dependencies:
       lilconfig: 3.1.2
     optionalDependencies:
+<<<<<<< HEAD
       postcss: 8.4.41
       tsx: 4.17.0
+||||||| parent of 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
+      postcss: 8.4.39
+      tsx: 4.16.2
+=======
+      postcss: 8.4.39
+      tsx: 4.17.0
+>>>>>>> 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
 
   postcss@8.4.41:
     dependencies:
@@ -5456,7 +5470,13 @@ snapshots:
 
   tslib@2.6.2: {}
 
+<<<<<<< HEAD
   tsup@8.2.4(postcss@8.4.41)(tsx@4.17.0)(typescript@5.5.4):
+||||||| parent of 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
+  tsup@8.2.4(postcss@8.4.39)(tsx@4.16.2)(typescript@5.5.4):
+=======
+  tsup@8.2.4(postcss@8.4.39)(tsx@4.17.0)(typescript@5.5.4):
+>>>>>>> 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.1)
       cac: 6.7.14
@@ -5468,7 +5488,13 @@ snapshots:
       globby: 11.1.0
       joycon: 3.1.1
       picocolors: 1.0.1
+<<<<<<< HEAD
       postcss-load-config: 6.0.1(postcss@8.4.41)(tsx@4.17.0)
+||||||| parent of 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
+      postcss-load-config: 6.0.1(postcss@8.4.39)(tsx@4.16.2)
+=======
+      postcss-load-config: 6.0.1(postcss@8.4.39)(tsx@4.17.0)
+>>>>>>> 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
       resolve-from: 5.0.0
       rollup: 4.20.0
       source-map: 0.8.0-beta.0
@@ -5485,7 +5511,13 @@ snapshots:
 
   tsx@4.17.0:
     dependencies:
+<<<<<<< HEAD
       esbuild: 0.23.1
+||||||| parent of 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
+      esbuild: 0.21.5
+=======
+      esbuild: 0.23.0
+>>>>>>> 9749b320 (chore(deps-dev): bump tsx from 4.16.2 to 4.17.0)
       get-tsconfig: 4.7.5
     optionalDependencies:
       fsevents: 2.3.3
