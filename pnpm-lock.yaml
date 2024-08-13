@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.10
+        specifier: 0.2.10
         version: 0.2.10
       '@ipld/car':
         specifier: ^5.3.2
