@@ -1,5 +1,5 @@
 import { sleep } from "../helpers.js";
-
+import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
 import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index, rt } from "@fireproof/core";
@@ -601,4 +601,60 @@ describe("basic js verify", function () {
     await db.close();
     await db.destroy();
   });
+});
+
+describe("same workload twice, same CID", function () {
+  let dbA: Database;
+  let dbB: Database;
+  let headA: string;
+  let headB: string;
+
+  afterEach(async function () {
+    await dbA.close();
+    await dbA.destroy();
+    await dbB.close();
+    await dbB.destroy();
+  });
+  beforeEach(async function () {
+    let ok: DocResponse;
+    await rt.SysContainer.start();
+
+    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    dbA = fireproof("test-dual-workload-a");
+    for (const doc of docs) {
+      ok = await dbA.put(doc);
+      expect(ok).toBeTruthy();
+      expect(ok.id).toBeTruthy();
+    }
+    headA = dbA._crdt.clock.head.toString();
+    
+    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    dbB = fireproof("test-dual-workload-b");
+    for (const doc of docs) {
+      ok = await dbB.put(doc);
+      expect(ok).toBeTruthy();
+      expect(ok.id).toBeTruthy();
+    }
+    headB = dbB._crdt.clock.head.toString();
+  });
+  it("should have head A and B", async function () {
+    expect(headA).toBeTruthy();
+    expect(headB).toBeTruthy();
+    expect(headA).toEqual(headB);
+    expect(headA.length).toBeGreaterThan(10);
+  });
+  it("should have same car log", async function () {
+    const logA = dbA._crdt.blockstore.loader?.carLog;
+    expect(logA).toBeTruthy();
+    assert(logA);
+    const logB = dbB._crdt.blockstore.loader?.carLog;
+    expect(logB).toBeTruthy();
+    assert(logB);
+
+    const logA2 = logA.map((c) => c.toString());
+    const logB2 = logB.map((c) => c.toString());
+
+    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    expect(logA2).toEqual(logB2);
+  })
 });
