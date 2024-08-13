@@ -13,7 +13,7 @@ export default defineConfig({
       enabled: true,
       headless: true,
       provider: "webdriverio",
-      name: "chrome", // browser name is required
+      name: process.env.FP_BROWSER || "chrome", // browser name is required
     },
     globals: true,
     setupFiles: "./setup.browser.ts",
