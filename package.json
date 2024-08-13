@@ -76,7 +76,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "0.2.10",
+    "@adviser/cement": "0.2.12",
     "@ipld/car": "^5.3.2",
     "@ipld/dag-cbor": "^9.2.1",
     "@ipld/dag-json": "^10.2.2",
