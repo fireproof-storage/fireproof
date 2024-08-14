@@ -679,7 +679,7 @@ describe("same workload twice, same CID", function () {
     expect(logA2.length).toBe(logB2.length);
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    // expect(logA2).toEqual(logB2);
+    expect(logA2).toEqual(logB2);
   });
   it("should have same car log after compact", async function () {
     await dbA.compact();
@@ -701,6 +701,6 @@ describe("same workload twice, same CID", function () {
     expect(cmpLogA2.length).toBe(cmpLogB2.length);
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    // expect(cmpLogA2).toEqual(cmpLogB2);
+    expect(cmpLogA2).toEqual(cmpLogB2);
   });
 });
