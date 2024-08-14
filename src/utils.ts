@@ -1,4 +1,4 @@
-import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce, isURI, URI, CoerceURI, runtimeFn } from "@adviser/cement";
+import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce, isURL, URI, CoerceURI, runtimeFn } from "@adviser/cement";
 import { SysContainer } from "./runtime";
 import { uuidv7 } from "uuidv7";
 import { StoreType } from "./types";
@@ -54,7 +54,7 @@ export function ensureLogger(
         default:
           if (value instanceof Date) {
             cLogger.Str(key, value.toISOString());
-          } else if (isURI(value)) {
+          } else if (isURL(value)) {
             cLogger.Str(key, value.toString());
           } else if (typeof value === "function") {
             cLogger.Ref(key, value);
