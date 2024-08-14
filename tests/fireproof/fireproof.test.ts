@@ -657,7 +657,7 @@ describe("same workload twice, same CID", function () {
     expect(headA).toEqual(headB);
     expect(headA.length).toBeGreaterThan(10);
     // this may change when the implementation changes
-    expect(headA).toEqual('bafyreihwrvlgs2rh3u6gy5uni7prp2ipggykywxumqadzsvswopttvjwtu')
+    expect(headA).toEqual("bafyreihwrvlgs2rh3u6gy5uni7prp2ipggykywxumqadzsvswopttvjwtu");
   });
   it("should have same car log", async function () {
     const logA = dbA._crdt.blockstore.loader?.carLog;
