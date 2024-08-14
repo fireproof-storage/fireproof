@@ -609,9 +609,6 @@ describe("same workload twice, same CID", function () {
   let headA: string;
   let headB: string;
 
-  // let configA: any;
-  // let configB: any;
-
   const configA = {
     store: {
       stores: {
@@ -638,7 +635,6 @@ describe("same workload twice, same CID", function () {
     let ok: DocResponse;
     await rt.SysContainer.start();
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
     dbA = fireproof("test-dual-workload-a", configA);
     for (const doc of docs) {
       ok = await dbA.put(doc);
@@ -647,7 +643,6 @@ describe("same workload twice, same CID", function () {
     }
     headA = dbA._crdt.clock.head.toString();
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
     dbB = fireproof("test-dual-workload-b", configB);
     for (const doc of docs) {
       ok = await dbB.put(doc);
@@ -661,6 +656,8 @@ describe("same workload twice, same CID", function () {
     expect(headB).toBeTruthy();
     expect(headA).toEqual(headB);
     expect(headA.length).toBeGreaterThan(10);
+    // this may change when the implementation changes
+    expect(headA).toEqual('bafyreihwrvlgs2rh3u6gy5uni7prp2ipggykywxumqadzsvswopttvjwtu')
   });
   it("should have same car log", async function () {
     const logA = dbA._crdt.blockstore.loader?.carLog;
@@ -678,7 +675,7 @@ describe("same workload twice, same CID", function () {
 
     expect(logA2.length).toBe(logB2.length);
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    // todo this fails
     expect(logA2).toEqual(logB2);
   });
   it("should have same car log after compact", async function () {
@@ -700,7 +697,7 @@ describe("same workload twice, same CID", function () {
 
     expect(cmpLogA2.length).toBe(cmpLogB2.length);
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    // todo this fails
     expect(cmpLogA2).toEqual(cmpLogB2);
   });
 });
