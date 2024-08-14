@@ -609,6 +609,22 @@ describe("same workload twice, same CID", function () {
   let headA: string;
   let headB: string;
 
+  const configA = {
+    store: {
+      stores: {
+        base: "file://./dist/databaseA?storekey=@same@",
+      },
+    },
+  };
+
+  const configB = {
+    store: {
+      stores: {
+        base: "file://./dist/databaseB?storekey=@same@",
+      },
+    },
+  };
+
   afterEach(async function () {
     await dbA.close();
     await dbA.destroy();
@@ -620,7 +636,7 @@ describe("same workload twice, same CID", function () {
     await rt.SysContainer.start();
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbA = fireproof("test-dual-workload-a");
+    dbA = fireproof("test-dual-workload-a", configA);
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
@@ -629,7 +645,7 @@ describe("same workload twice, same CID", function () {
     headA = dbA._crdt.clock.head.toString();
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbB = fireproof("test-dual-workload-b");
+    dbB = fireproof("test-dual-workload-b", configB);
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
@@ -653,6 +669,8 @@ describe("same workload twice, same CID", function () {
 
     const logA2 = logA.map((c) => c.toString());
     const logB2 = logB.map((c) => c.toString());
+
+    expect(logA2.length).toBe(logB2.length);
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     expect(logA2).toEqual(logB2);
