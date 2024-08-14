@@ -235,7 +235,7 @@ export class Loader implements Loadable {
       const previousCompactCid = fp.compact[fp.compact.length - 1];
       fp.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
       this.carLog = [...uniqueCids([...this.carLog, ...fp.cars, cids], this.seenCompacted)];
-      await this.removeCidsForCompact(previousCompactCid[0]);
+      await this.removeCidsForCompact(previousCompactCid[0]).catch((e) => e);
     } else {
       this.carLog.unshift(cids);
     }

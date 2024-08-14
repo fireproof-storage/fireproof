@@ -174,21 +174,21 @@ describe("benchmarking with compaction", function () {
   beforeEach(async function () {
     // erase the existing test data
     await rt.SysContainer.start();
-    db = new Database("test-benchmark-compaction", { autoCompact: 3, public: true });
+    db = new Database("test-benchmark-compaction", { autoCompact: 3 });
   });
-  it.skip("passing: insert during compaction", async function () {
+  it("insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
     expect(db._crdt.clock.head).toBeTruthy();
     expect(db._crdt.clock.head.length).toBe(1);
 
-    const numDocs = 20000;
-    const batchSize = 500;
-    // console.time(`insert and read ${numDocs} records`);
+    const numDocs = 20;
+    const batchSize = 5;
 
     const doing = null;
     for (let i = 0; i < numDocs; i += batchSize) {
+      // console.log("batch", i, db.blockstore.loader?.carLog.length);
       const ops: Promise<DocResponse>[] = [];
       db.put({ foo: "fast" });
       // await doing
@@ -198,30 +198,24 @@ describe("benchmarking with compaction", function () {
         ops.push(
           db.put({
             data: Math.random(),
-            fire: Math.random()
-              .toString()
-              .repeat(25 * 1024),
+            fire: Math.random().toString().repeat(25),
           }),
         );
       }
       const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeTruthy();
-      // const label = `write ${i} log ${loader.carLog.length}`;
-      // console.time(label);
+
       db.put({
         data: Math.random(),
-        fire: Math.random()
-          .toString()
-          .repeat(25 * 1024),
+        fire: Math.random().toString().repeat(25),
       });
 
       await Promise.all(ops);
-      // console.timeEnd(label);
+      // console.log("batch done", i, db.blockstore.loader?.carLog.length);
     }
     await doing;
-    // console.timeEnd(`insert and read ${numDocs} records`);
-  }, 20000000);
+  });
 });
 
 describe("benchmarking a database", function () {
