@@ -663,9 +663,12 @@ describe("same workload twice, same CID", function () {
     const logA = dbA._crdt.blockstore.loader?.carLog;
     expect(logA).toBeTruthy();
     assert(logA);
+    expect(logA.length).toBe(38);
+
     const logB = dbB._crdt.blockstore.loader?.carLog;
     expect(logB).toBeTruthy();
     assert(logB);
+    expect(logB.length).toBe(38);
 
     const logA2 = logA.map((c) => c.toString());
     const logB2 = logB.map((c) => c.toString());
@@ -674,5 +677,25 @@ describe("same workload twice, same CID", function () {
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     expect(logA2).toEqual(logB2);
+  });
+  it("should have same car log after compact", async function () {
+    await dbA.compact();
+    await dbB.compact();
+
+    const cmpLogA = dbA._crdt.blockstore.loader?.carLog;
+    expect(cmpLogA).toBeTruthy();
+    assert(cmpLogA);
+    expect(cmpLogA.length).toBe(1);
+
+    const cmpLogB = dbB._crdt.blockstore.loader?.carLog;
+    expect(cmpLogB).toBeTruthy();
+    assert(cmpLogB);
+    expect(cmpLogB.length).toBe(1);
+
+    const cmpLogA2 = cmpLogA.map((c) => c.toString());
+    const cmpLogB2 = cmpLogB.map((c) => c.toString());
+
+    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    expect(cmpLogA2).toEqual(cmpLogB2);
   });
 });
