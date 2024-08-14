@@ -1,6 +1,6 @@
 import { CryptoRuntime, Logger, URI } from "@adviser/cement";
-import { BytesWithIv, IvAndBytes, IvKeyIdData, KeyedCrypto, KeyWithFingerPrint } from "../blockstore";
-import { ensureLogger } from "../utils.js";
+import { BytesWithIv, CodecOpts, IvAndBytes, IvKeyIdData, KeyedCrypto, KeyWithFingerPrint } from "../blockstore";
+import { ensureLogger, UInt8ArrayEqual } from "../utils.js";
 import { KeyBag } from "./key-bag";
 import type { BlockCodec } from "./wait-pr-multiformats/codec-interface";
 import { base58btc } from "multiformats/bases/base58";
@@ -8,65 +8,42 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import { decode, encode } from "./wait-pr-multiformats/block";
 
-// function concat(buffers: (ArrayBuffer | Uint8Array)[]) {
-//   const uint8Arrays = buffers.map((b) => (b instanceof ArrayBuffer ? new Uint8Array(b) : b));
-//   const totalLength = uint8Arrays.reduce((sum, arr) => sum + arr.length, 0);
-//   const result = new Uint8Array(totalLength);
+interface GenerateIVFn {
+  calc(ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;
+  verify(ko: KeyedCrypto, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): Promise<boolean>;
+}
 
-//   let offset = 0;
-//   for (const arr of uint8Arrays) {
-//     result.set(arr, offset);
-//     offset += arr.length;
-//   }
+const generateIV: Record<string, GenerateIVFn> = {
+  random: {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    calc: async (ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array> => {
+      return crypto.randomBytes(ko.ivLength);
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    verify: async (ko: KeyedCrypto, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): Promise<boolean> => {
+      return true;
+    },
+  },
+  hash: {
+    calc: async (ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array> => {
+      const hash = await hasher.digest(data);
+      const hashBytes = new Uint8Array(hash.bytes);
+      const hashArray = new Uint8Array(ko.ivLength * 8);
+      for (let i = 0; i < hashBytes.length; i++) {
+        hashArray[i % ko.ivLength] ^= hashBytes[i];
+      }
+      return hashArray;
+    },
+    verify: async function (ko: KeyedCrypto, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): Promise<boolean> {
+      return ko.url.getParam("ivverify") !== "disable" && UInt8ArrayEqual(iv, await this.calc(ko, crypto, data));
+    },
+  },
+};
 
-//   return result;
-// }
-
-// export function encodeRunLength(data: Uint8Array, logger: Logger): Uint8Array {
-//   if (data.length < 0x80) {
-//     return new Uint8Array([data.length, ...data]);
-//   }
-//   if (data.length > 0x7fffffff) {
-//     throw logger.Error().Len(data).Msg("enRl:data len 31Bit").AsError();
-//   }
-//   const length = data.length | 0x80000000; // MSB is set to indicate that the length is encoded as 32Bit
-//   return new Uint8Array([
-//     (length & 0xff000000) >> 24,
-//     (length & 0x00ff0000) >> 16,
-//     (length & 0x0000ff00) >> 8,
-//     length & 0x000000ff,
-//     ...data,
-//   ]);
-// }
-
-// export function decodeRunLength(
-//   data: Uint8Array,
-//   ofs: number,
-//   logger: Logger,
-// ): {
-//   data: Uint8Array;
-//   next: number;
-// } {
-//   if (data.length - ofs < 1) {
-//     throw logger.Error().Len(data).Msg("deRl:data too short").AsError();
-//   }
-//   let length: number;
-//   let rl: number;
-//   if (data[ofs] & 0x80) {
-//     length = ((data[ofs] & 0x7f) << 24) | (data[ofs + 1] << 16) | (data[ofs + 2] << 8) | data[ofs + 3];
-//     rl = 4;
-//   } else {
-//     length = data[ofs];
-//     rl = 1;
-//   }
-//   if (length > data.length - ofs - rl) {
-//     throw logger.Error().Len(data).Uint64("ofs", ofs).Msg("deRl:data decodeError").AsError();
-//   }
-//   return {
-//     data: data.slice(ofs + rl, ofs + rl + length),
-//     next: ofs + length + rl,
-//   };
-// }
+function getGenerateIVFn(url: URI, opts: Partial<CodecOpts>): GenerateIVFn {
+  const ivhash = opts.ivCalc || url.getParam("ivhash") || "hash";
+  return generateIV[ivhash] || generateIV["hash"];
+}
 
 export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
   readonly code = 0x300539;
@@ -74,13 +51,16 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
 
   readonly ko: KeyedCrypto;
   readonly iv?: Uint8Array;
-  constructor(ko: KeyedCrypto, iv?: Uint8Array) {
+  readonly opts: Partial<CodecOpts>;
+  constructor(ko: KeyedCrypto, iv?: Uint8Array, opts?: CodecOpts) {
     this.ko = ko;
     this.iv = iv;
+    this.opts = opts || {};
   }
 
   async encode(data: Uint8Array): Promise<Uint8Array> {
-    const { iv } = this.ko.algo(this.iv);
+    const calcIv = this.iv || (await getGenerateIVFn(this.ko.url, this.opts).calc(this.ko, this.ko.crypto, data));
+    const { iv } = this.ko.algo(calcIv);
     const fprt = await this.ko.fingerPrint();
     const keyId = base58btc.decode(fprt);
     this.ko.logger.Debug().Str("fp", fprt).Msg("encode");
@@ -95,12 +75,6 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
         codec: dagCodec,
       })
     ).bytes;
-    // return concat([
-    //   encodeRunLength(iv, this.ko.logger),
-    //   encodeRunLength(keyId, this.ko.logger),
-    //   // not nice it is a copy of the data
-    //   encodeRunLength(await this.ko._encrypt({ iv, bytes: data }), this.ko.logger),
-    // ]);
   }
 
   async decode(abytes: Uint8Array | ArrayBuffer): Promise<Uint8Array> {
@@ -111,35 +85,37 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
       bytes = new Uint8Array(abytes);
     }
     const { iv, keyId, data } = (await decode<IvKeyIdData, number, number>({ bytes, hasher, codec: dagCodec })).value;
-    // const iv = decodeRunLength(bytes, 0, this.ko.logger);
-    // const keyId = decodeRunLength(bytes, iv.next, this.ko.logger);
-    // const data = decodeRunLength(bytes, keyId.next, this.ko.logger);
     const fprt = await this.ko.fingerPrint();
     this.ko.logger.Debug().Str("fp", base58btc.encode(keyId)).Msg("decode");
     if (base58btc.encode(keyId) !== fprt) {
       throw this.ko.logger.Error().Str("fp", fprt).Str("keyId", base58btc.encode(keyId)).Msg("keyId mismatch").AsError();
     }
-    return this.ko._decrypt({ iv: iv, bytes: data });
+    const result = await this.ko._decrypt({ iv: iv, bytes: data });
+    if (!this.opts?.noIVVerify && !(await getGenerateIVFn(this.ko.url, this.opts).verify(this.ko, this.ko.crypto, iv, result))) {
+      throw this.ko.logger.Error().Msg("iv missmatch").AsError();
+    }
+    return result;
   }
 }
 
 class keyedCrypto implements KeyedCrypto {
   readonly ivLength = 12;
-
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   readonly key: KeyWithFingerPrint;
   readonly isEncrypting = true;
-  constructor(key: KeyWithFingerPrint, cyopt: CryptoRuntime, logger: Logger) {
+  readonly url: URI;
+  constructor(url: URI, key: KeyWithFingerPrint, cyopt: CryptoRuntime, logger: Logger) {
     this.logger = ensureLogger(logger, "keyedCrypto");
     this.crypto = cyopt;
     this.key = key;
+    this.url = url;
   }
   fingerPrint(): Promise<string> {
     return Promise.resolve(this.key.fingerPrint);
   }
-  codec(iv?: Uint8Array): BlockCodec<number, Uint8Array> {
-    return new BlockIvKeyIdCodec(this, iv);
+  codec(iv?: Uint8Array, opts?: CodecOpts): BlockCodec<number, Uint8Array> {
+    return new BlockIvKeyIdCodec(this, iv, opts);
   }
   algo(iv?: Uint8Array) {
     return {
@@ -177,15 +153,18 @@ class nullCodec implements BlockCodec<0x0, Uint8Array> {
 }
 
 class noCrypto implements KeyedCrypto {
+  readonly ivLength = 0;
   readonly code = 0x0;
   readonly name = "Fireproof@unencrypted-block";
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   readonly isEncrypting = false;
   readonly _fingerPrint = "noCrypto:" + Math.random();
-  constructor(cyrt: CryptoRuntime, logger: Logger) {
+  readonly url: URI;
+  constructor(url: URI, cyrt: CryptoRuntime, logger: Logger) {
     this.logger = ensureLogger(logger, "noCrypto");
     this.crypto = cyrt;
+    this.url = url;
   }
 
   fingerPrint(): Promise<string> {
@@ -231,7 +210,7 @@ export async function keyedCryptoFactory(url: URI, kb: KeyBag, logger: Logger): 
         );
       }
     }
-    return new keyedCrypto(rkey.Ok(), kb.rt.crypto, logger);
+    return new keyedCrypto(url, rkey.Ok(), kb.rt.crypto, logger);
   }
-  return new noCrypto(kb.rt.crypto, logger);
+  return new noCrypto(url, kb.rt.crypto, logger);
 }

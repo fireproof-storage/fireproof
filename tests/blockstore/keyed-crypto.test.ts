@@ -242,7 +242,7 @@ describe("KeyedCrypto", () => {
   it("codec explict iv", async () => {
     const testData = kb.rt.crypto.randomBytes(1024);
     const iv = kb.rt.crypto.randomBytes(12);
-    const codec = kycr.codec(iv);
+    const codec = kycr.codec(iv, { noIVVerify: true });
     const blk = (await codec.encode(testData)) as Uint8Array;
     const myDec = await rt.mf.block.decode<bs.IvKeyIdData, number, number>({ bytes: blk, hasher, codec: dagCodec });
     expect(myDec.value.iv).toEqual(iv);
@@ -258,6 +258,14 @@ describe("KeyedCrypto", () => {
     expect(blk.length).toBeGreaterThanOrEqual(12 + testData.length);
     const dec = await codec.decode(blk);
     expect(dec).toEqual(testData);
+  });
+
+  it("codec implict iv same for multiple clients", async () => {
+    const testData = kb.rt.crypto.randomBytes(1024);
+    const codec = kycr.codec();
+    const blk = await codec.encode(testData);
+    const blk2 = await codec.encode(testData);
+    expect(blk).toEqual(blk2);
   });
 });
 
