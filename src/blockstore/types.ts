@@ -115,6 +115,7 @@ export interface KeyWithFingerPrint {
 }
 
 export interface KeyedCrypto {
+  readonly ivLength: number;
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   // readonly codec: BlockCodec<number, IvAndBytes>;
