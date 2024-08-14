@@ -183,8 +183,8 @@ describe("benchmarking with compaction", function () {
     expect(db._crdt.clock.head).toBeTruthy();
     expect(db._crdt.clock.head.length).toBe(1);
 
-    const numDocs = 10;
-    const batchSize = 10;
+    const numDocs = 20;
+    const batchSize = 5;
 
     const doing = null;
     for (let i = 0; i < numDocs; i += batchSize) {
