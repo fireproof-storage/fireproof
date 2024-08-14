@@ -190,10 +190,10 @@ describe("benchmarking with compaction", function () {
     for (let i = 0; i < numDocs; i += batchSize) {
       // console.log("batch", i, db.blockstore.loader?.carLog.length);
       const ops: Promise<DocResponse>[] = [];
-      await db.put({ foo: "fast" });
+      db.put({ foo: "fast" });
       // await doing
       // doing = db.compact()
-      await db.put({ foo: "fast" });
+      db.put({ foo: "fast" });
       for (let j = 0; j < batchSize && i + j < numDocs; j++) {
         ops.push(
           db.put({
@@ -206,7 +206,7 @@ describe("benchmarking with compaction", function () {
       const loader = blocks.loader;
       expect(loader).toBeTruthy();
 
-      await db.put({
+      db.put({
         data: Math.random(),
         fire: Math.random().toString().repeat(25),
       });
