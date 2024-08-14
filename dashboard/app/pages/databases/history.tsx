@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
 import { useParams } from "@remix-run/react";
+import { useEffect, useState } from "react";
 import { DocBase, useFireproof } from "use-fireproof";
-import DynamicTable from "../components/DynamicTable";
+import DynamicTable from "~/components/DynamicTable";
 import { headersForDocs } from "~/components/dynamicTableHelpers";
 
 export default function ChangesHistory() {

@@ -88,7 +88,7 @@ function TableCell({
   hrefFn: (label: string) => string;
 }) {
   if (link) {
-    const href = hrefFn ? hrefFn(label) : `/db/${dbName}/doc/${label}`;
+    const href = hrefFn ? hrefFn(label) : `docs/${label}`;
     return (
       <Link to={href} className="underline">
         {formatTableCellContent(label)}

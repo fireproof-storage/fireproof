@@ -1,11 +1,11 @@
+import { Link, useParams } from "@remix-run/react";
 import { useState } from "react";
-import { useParams, Link } from "@remix-run/react";
 import { useFireproof } from "use-fireproof";
 
 import {
   CodeHighlight,
   EditableCodeHighlight,
-} from "../components/CodeHighlight";
+} from "~/components/CodeHighlight";
 
 export default function Document() {
   const { name, id: _id } = useParams();
@@ -13,7 +13,7 @@ export default function Document() {
 
   const [doc] = useDocument(() => ({ _id: _id! }));
   const [docToSave, setDocToSave] = useState<string>(
-    JSON.stringify(doc, null, 2),
+    JSON.stringify(doc, null, 2)
   );
   const [needsSave, setNeedsSave] = useState(false);
 

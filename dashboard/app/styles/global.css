@@ -28,10 +28,14 @@
 }
 
 @layer base {
-  body {
-    @apply bg-[--background]
+  * {
+    @apply border-border;
   }
-/* 
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+
   h1,
   h2,
   h3,
@@ -39,5 +43,5 @@
   h5,
   h6 {
     @apply font-heading;
-  } */
+  }
 }
