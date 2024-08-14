@@ -84,9 +84,9 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     if (!this.iv) {
       const hash = await hasher.digest(data);
       const hashBytes = new Uint8Array(hash.bytes);
-      hashArray = new Uint8Array(12); // 96 bits = 12 bytes
+      hashArray = new Uint8Array(this.ko.ivLength * 8);
       for (let i = 0; i < hashBytes.length; i++) {
-        hashArray[i % 12] ^= hashBytes[i];
+        hashArray[i % this.ko.ivLength] ^= hashBytes[i];
       }
     }
     const { iv } = this.ko.algo(this.iv || hashArray);
@@ -134,7 +134,6 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
 
 class keyedCrypto implements KeyedCrypto {
   readonly ivLength = 12;
-
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   readonly key: KeyWithFingerPrint;
@@ -186,6 +185,7 @@ class nullCodec implements BlockCodec<0x0, Uint8Array> {
 }
 
 class noCrypto implements KeyedCrypto {
+  readonly ivLength = 0;
   readonly code = 0x0;
   readonly name = "Fireproof@unencrypted-block";
   readonly logger: Logger;
