@@ -2,7 +2,7 @@ import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import type { Link, Version } from "multiformats";
-import { Logger, URI } from "@adviser/cement";
+import { Logger, LoggerImpl, LogValue, URI } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
@@ -64,24 +64,35 @@ export abstract class ConnectionBase implements Connection {
     const metaUrl = this.url.build().defParam("store", "meta").URI();
     const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
+
     const name = metaUrl.toString();
     const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
     });
     remote.onLoad("main", async (metas) => {
+      console.log("connectMeta_X: handleDbMetasFromStore pre",
+        (new Error()).stack,
+        metas, ((this.logger as LoggerImpl)._attributes.module as LogValue).fn());
+      this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
       if (metas) {
-        this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
         await throwFalsy(this.loader).handleDbMetasFromStore(metas);
         this.logger.Debug().Any("metas", metas).Msg("connectMeta_X: handleDbMetasFromStore post");
       }
+      console.log("connectMeta_X: handleDbMetasFromStore post", metas);
     });
     this.loader.remoteMetaStore = remote;
+    // if leave this out everything is fine
     this.loaded = this.loader.ready().then(async () => {
       this.logger.Debug().Msg("connectMeta_X: loader.ready");
-      remote.load("main").then(async () => {
-        this.logger.Debug().Msg("connectMeta_X: main -> process");
-        (await throwFalsy(this.loader).WALStore()).process();
+      // so this line stalls
+      const loaded = remote.load("main")
+      loaded.then(async () => {
+        this.logger.Debug().Msg("connectMeta_X: main -> process-pre");
+        const wal = await throwFalsy(this.loader).WALStore();
+        this.logger.Debug().Msg("connectMeta_X: main -> process-wal");
+        await wal.process();
+        this.logger.Debug().Msg("connectMeta_X: main -> process-post");
       });
     });
   }

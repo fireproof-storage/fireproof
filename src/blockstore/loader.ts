@@ -234,17 +234,11 @@ export class Loader implements Loadable {
     done: T,
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
-    this.logger.Debug().Msg("commit-0");
     await this.ready();
-    this.logger.Debug().Msg("commit-1");
     const fstore = await this.fileStore();
-    this.logger.Debug().Msg("commit-2");
     const encoder = (await fstore.keyedCrypto()).codec();
-    this.logger.Debug().Msg("commit-2.1");
     const WALStore = await this.WALStore();
-    this.logger.Debug().Msg("commit-2.2");
     const metaStore = await this.metaStore();
-    this.logger.Debug().Msg("commit-2.3");
     const params: CommitParams = {
       // encoder: (await fstore.keyedCrypto()).codec(),
       encoder,
@@ -255,18 +249,12 @@ export class Loader implements Loadable {
       WALStore,
       metaStore,
     };
-    this.logger.Debug().Msg("commit-3");
     const ret = this.commitQueue.enqueue(async () => {
-      this.logger.Debug().Msg("commit-3.1");
       await this.cacheTransaction(t);
-      this.logger.Debug().Msg("commit-3.2");
       const ret = await commit(params, t, done, opts);
-      this.logger.Debug().Msg("commit-3.3");
       await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
-      this.logger.Debug().Msg("commit-3.4");
       return ret.cgrp;
     });
-    this.logger.Debug().Msg("commit-4");
     return ret;
   }
 

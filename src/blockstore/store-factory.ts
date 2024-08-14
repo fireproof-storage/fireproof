@@ -218,7 +218,7 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
 // }
 
 // const onceRemoteWalFactory = new KeyedResolvOnce<WALStoreImpl>();
-async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
+async function walStoreFactory(loader: Loadable): Promise<WALStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.wal, loader)).build().setParam("store", "wal").URI();
   const sthis = ensureSuperLog(loader.sthis, "remoteWalFactory", { url: url.toString() });
   // return onceRemoteWalFactory.get(url.toString()).once(async () => {
@@ -253,7 +253,7 @@ export async function testStoreFactory(url: URI, sthis: SuperThis): Promise<Test
 }
 
 export async function ensureStart<T>(store: T & { start: () => Promise<Result<URI>> }, logger: Logger): Promise<T> {
-  logger.Debug().Any("x", store).Msg("ensureStart-0");
+  logger.Debug().Msg("ensureStart-0");
   const ret = await store.start();
   logger.Debug().Msg("ensureStart-1");
   if (ret.isErr()) {
@@ -288,7 +288,7 @@ export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime 
         .Debug()
         .Str("fromOpts", "" + !!loader.ebOpts.store.makeWALStore)
         .Msg("makeRemoteWAL");
-      return ensureStart(await (loader.ebOpts.store.makeWALStore || remoteWalFactory)(loader), logger);
+      return ensureStart(await (loader.ebOpts.store.makeWALStore || walStoreFactory)(loader), logger);
     },
 
     encodeFile: opts.encodeFile || encodeFile,

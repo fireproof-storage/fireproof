@@ -146,6 +146,7 @@ export function ensureLogger(
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
   const debug: string[] = [];
   let exposeStack = false;
+  let constructorLog = false
   if (ctx) {
     if ("debug" in ctx) {
       if (typeof ctx.debug === "string" && ctx.debug.length > 0) {
@@ -162,6 +163,10 @@ export function ensureLogger(
     if ("this" in ctx) {
       cLogger.Str("this", sthis.nextId());
       delete ctx.this;
+    }
+    if ("log" in ctx) {
+      constructorLog = true
+      delete ctx.log;
     }
     for (const [key, value] of Object.entries(ctx)) {
       switch (typeof value) {
@@ -215,7 +220,9 @@ export function ensureLogger(
     logger.SetExposeStack(true);
   }
   const out = cLogger.Logger();
-  // out.Debug().Msg("logger ready");
+  if (constructorLog) {
+    out.Debug().Msg("logger ready");
+  }
   return out;
 }
 
