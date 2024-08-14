@@ -627,7 +627,7 @@ describe("same workload twice, same CID", function () {
       expect(ok.id).toBeTruthy();
     }
     headA = dbA._crdt.clock.head.toString();
-    
+
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     dbB = fireproof("test-dual-workload-b");
     for (const doc of docs) {
@@ -656,5 +656,5 @@ describe("same workload twice, same CID", function () {
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     expect(logA2).toEqual(logB2);
-  })
+  });
 });
