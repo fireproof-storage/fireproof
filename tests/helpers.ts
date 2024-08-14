@@ -1,4 +1,4 @@
-import { toCryptoRuntime } from "@adviser/cement";
+import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { dataDir, rt } from "@fireproof/core";
 
 export { dataDir };
@@ -24,4 +24,12 @@ export async function buildBlobFiles(): Promise<FileWithCid[]> {
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `image.jpg`, { type: "image/jpeg" }),
     await toFileWithCid(cp.randomBytes(Math.random() * 51283), `fireproof.png`, { type: "image/png" }),
   ];
+}
+
+export function storageURL(): URI {
+  const old = rt.SysContainer.env.get("FP_STORAGE_URL");
+  if (runtimeFn().isBrowser) {
+    return URI.merge(`indexdb://fp`, old);
+  }
+  return URI.merge(`./dist/env`, old);
 }

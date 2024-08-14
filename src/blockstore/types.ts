@@ -114,15 +114,20 @@ export interface KeyWithFingerPrint {
   readonly key: CTCryptoKey;
 }
 
+export interface CodecOpts {
+  readonly ivCalc: "random" | "hash";
+  readonly noIVVerify: boolean;
+}
 export interface KeyedCrypto {
   readonly ivLength: number;
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
+  readonly url: URI;
   // readonly codec: BlockCodec<number, IvAndBytes>;
   readonly isEncrypting: boolean;
   fingerPrint(): Promise<string>;
   algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number };
-  codec(iv?: Uint8Array): BlockCodec<number, Uint8Array>;
+  codec(iv?: Uint8Array, codecOpts?: Partial<CodecOpts>): BlockCodec<number, Uint8Array>;
   _decrypt(data: IvAndBytes): Promise<Uint8Array>;
   _encrypt(data: BytesWithIv): Promise<Uint8Array>;
   // encode(data: Uint8Array): Promise<Uint8Array>;

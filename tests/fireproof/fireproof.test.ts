@@ -1,9 +1,8 @@
-import { sleep } from "../helpers.js";
+import { sleep, storageURL } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
 import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index, rt } from "@fireproof/core";
-import exp from "constants";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -616,7 +615,7 @@ describe("same workload twice, same CID", function () {
   const configA = {
     store: {
       stores: {
-        base: "file://./dist/databaseA?storekey=zTvTPEPQRWij8rfb3FrFqBm",
+        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
       },
     },
   };
@@ -624,7 +623,7 @@ describe("same workload twice, same CID", function () {
   const configB = {
     store: {
       stores: {
-        base: "file://./dist/databaseB?storekey=zTvTPEPQRWij8rfb3FrFqBm",
+        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
       },
     },
   };
@@ -638,10 +637,6 @@ describe("same workload twice, same CID", function () {
   beforeEach(async function () {
     let ok: DocResponse;
     await rt.SysContainer.start();
-
-
-
-
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     dbA = fireproof("test-dual-workload-a", configA);
