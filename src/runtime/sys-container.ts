@@ -22,6 +22,7 @@ export interface NodeMap extends Omit<SysFileSystem, "start"> {
   join: (...args: string[]) => string;
   dirname: (path: string) => string;
   homedir: () => string;
+  websocket: () => any;
   // fileURLToPath: (url: string | URL) => string;
   // assert: (condition: unknown, message?: string | Error) => void;
 }
@@ -90,6 +91,7 @@ class sysContainer implements SysFileSystem {
     unlink: () => Promise.reject(new Error("SysContainer:unlink is not available in seeded state")),
     writefile: () => Promise.reject(new Error("SysContainer:writefile is not available in seeded state")),
     stat: () => Promise.reject(new Error("SysContainer:stat is not available in seeded state")),
+    websocket: () => Promise.reject(new Error("SysContainer:websocket is not available in seeded state"))
   };
 
   // readonly id = uuidv4();
@@ -188,6 +190,11 @@ class sysContainer implements SysFileSystem {
   homedir = () => {
     this.logSeeded("homedir");
     return throwFalsy(this.freight).homedir();
+  };
+
+  websocket = () => {
+    this.logSeeded("websocket");
+    return throwFalsy(this.freight).websocket();
   };
 
   logSeeded(method: string) {

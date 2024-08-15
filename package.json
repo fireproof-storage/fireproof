@@ -48,6 +48,7 @@
     "@types/node": "^22.2.0",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.3",
+    "@types/ws": "^8.5.12",
     "@typescript-eslint/typescript-estree": "^8.0.1",
     "@vitest/browser": "^2.0.5",
     "@vitest/coverage-v8": "^2.0.5",
@@ -93,7 +94,8 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
-    "uuidv7": "^1.0.0"
+    "uuidv7": "^1.0.0",
+    "ws": "^8.18.0"
   },
   "bundle-phobia": {
     "max-size": "390kB",

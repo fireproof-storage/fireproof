@@ -5,6 +5,7 @@ import * as path from "path";
 import * as os from "os";
 import * as url from "url";
 import { toArrayBuffer } from "./gateways/file/utils.js";
+import WebSocket from 'ws';
 
 export async function createNodeSysContainer(): Promise<NodeMap> {
   // const nodePath = "node:path";
@@ -30,5 +31,6 @@ export async function createNodeSysContainer(): Promise<NodeMap> {
       return toArrayBuffer(rs);
     },
     writefile: fs.writeFile as NodeMap["writefile"],
+    websocket: () => { return WebSocket }
   };
 }
