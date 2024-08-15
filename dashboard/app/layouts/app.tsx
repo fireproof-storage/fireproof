@@ -1,6 +1,5 @@
 import { Link, NavLink, Outlet, useLoaderData } from "@remix-run/react";
 
-
 export async function clientLoader() {
   const databases = await getIndexedDBNames();
   return databases;
@@ -18,15 +17,18 @@ async function getIndexedDBNames(): Promise<string[]> {
   }
 }
 
-
 export default function Layout() {
-  const databases = useLoaderData()
+  const databases = useLoaderData();
 
   return (
     <div className="grid min-h-screen w-full grid-cols-1 md:grid-cols-[280px_1fr]">
       <div className="flex flex-col border-b md:border-r bg-muted/40">
         <div className="flex h-[60px] items-center px-6">
-          <Link href="#" className="flex items-center gap-2 font-semibold" prefetch={false}>
+          <Link
+            href="#"
+            className="flex items-center gap-2 font-semibold"
+            prefetch={false}
+          >
             <span>Fireproof Console</span>
           </Link>
         </div>
@@ -45,27 +47,31 @@ export default function Layout() {
               </Link>
             </div>
             <div className="grid gap-2">
-            {databases.map((db, index) => (
+              {databases.map((db, index) => (
                 <NavLink
-                key={index}
-                to={`/fp/databases/${db}`}
-                style={({ isActive }) => {
-                  return {
-                    fontWeight: isActive ? "bold" : "",
-                  };
-                } }
-                className="flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground">
-                {db.substring(0, 20)} {db.length >= 20 && '...'}
-              </NavLink>
-            ))}
-            </div>            
+                  key={index}
+                  to={`/fp/databases/${db}`}
+                  style={({ isActive }) => {
+                    return {
+                      fontWeight: isActive ? "bold" : "",
+                    };
+                  }}
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
+                >
+                  {db.substring(0, 20)} {db.length >= 20 && "..."}
+                </NavLink>
+              ))}
+            </div>
           </nav>
         </div>
       </div>
       <div className="flex flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-6 shadow-sm">
-          <h1 className="flex-1 text-lg font-semibold">Acme Database</h1>
+          <h1 className="flex-1 text-lg font-semibold">Current Database</h1>
           <div className="flex items-center gap-4">
+            <div>Docs</div>
+            <div>Blog</div>
+            <div>Community</div>
           </div>
         </header>
         <main className="flex-1 overflow-auto p-6 md:p-10">
