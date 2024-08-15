@@ -91,7 +91,7 @@ class sysContainer implements SysFileSystem {
     unlink: () => Promise.reject(new Error("SysContainer:unlink is not available in seeded state")),
     writefile: () => Promise.reject(new Error("SysContainer:writefile is not available in seeded state")),
     stat: () => Promise.reject(new Error("SysContainer:stat is not available in seeded state")),
-    websocket: () => Promise.reject(new Error("SysContainer:websocket is not available in seeded state"))
+    websocket: () => Promise.reject(new Error("SysContainer:websocket is not available in seeded state")),
   };
 
   // readonly id = uuidv4();
