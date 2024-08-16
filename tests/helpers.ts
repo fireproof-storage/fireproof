@@ -2,7 +2,7 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { dataDir, rt } from "@fireproof/core";
 import { renderHook, RenderHookResult } from "@testing-library/react";
 import { Database, useFireproof } from "use-fireproof";
-import type { UseFireproof, ConfigOpts, LiveQueryResult, QueryOpts, IndexRow, DocFragment, MapFn, UseLiveQuery } from "use-fireproof";
+import type { UseFireproof, ConfigOpts } from "use-fireproof";
 
 
 export { dataDir };
@@ -69,10 +69,4 @@ export async function populateDatabase(db: Database, texts: string[]) {
 type UseFireproofProps = [Partial<string | Database>, Partial<ConfigOpts>];
 export function getUseFireproofHook(db: Database): RenderHookResult<UseFireproof, UseFireproofProps> {
   return renderHook(() => useFireproof(db));
-}
-
-type UseLiveQueryHook = RenderHookResult<LiveQueryResult<Todo, string>, UseLiveQueryProps>;
-type UseLiveQueryProps = [string | MapFn<Todo>, QueryOpts<string>, IndexRow<string, Todo, DocFragment>[]];
-export function getUseLiveQueryHook(useLiveQuery: UseLiveQuery): UseLiveQueryHook {
-  return renderHook(() => useLiveQuery("date", { limit: 100, descending: true }));
 }

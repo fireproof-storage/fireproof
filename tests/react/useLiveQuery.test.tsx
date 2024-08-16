@@ -33,11 +33,9 @@ describe("HOOK: useLiveQuery", () => {
     expect(typeof useLiveQuery).toBe("function");
   });
 
-
   it("reads from the database", async () => {
     // populate database with test data
     await populateDatabase(db, texts);
-    // const allDocs = await db.allDocs();
 
     // render component
     const { getByText } = render(<TestComponent />);
@@ -47,7 +45,6 @@ describe("HOOK: useLiveQuery", () => {
       expect(countTxt).toBeTruthy();
     });
   });
-
 });
 
 function TestComponent() {
