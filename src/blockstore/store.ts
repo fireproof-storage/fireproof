@@ -16,13 +16,13 @@ import type {
   KeyedCrypto,
   Loadable,
 } from "./types.js";
-import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
+import { Falsy, StoreType, SuperThis } from "../types.js";
 import { Gateway } from "./gateway.js";
 import { ensureLogger, exception2Result, isNotFoundError } from "../utils.js";
-import { carLogIncludesGroup } from "./loader.js";
-import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
+import { walProcessor, withLoader } from "./wal-processor.js";
+import { uuidv7 } from "uuidv7";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -145,7 +145,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-<<<<<<< HEAD
     super(
       name,
       url,
@@ -155,17 +154,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       sthis,
       ensureLogger(sthis, "MetaStoreImpl"),
     );
-||||||| parent of 15c80dba (WIP)
-    super(name, url, {
-      ...opts,
-      logger: ensureLogger(opts.logger, "MetaStoreImpl"),
-    });
-=======
-    super(name, url, {
-      ...opts,
-      logger: ensureLogger(opts.logger, "MetaStoreImpl", {"this": 1, log: 1}),
-    });
->>>>>>> 15c80dba (WIP)
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -219,20 +207,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {
     this.logger.Debug().Len(byteHeads).Msg("dbMetasForByteHeads-enter");
     return byteHeads.map((bytes) => {
-<<<<<<< HEAD
       const txt = this.sthis.txt.decode(bytes);
       return this.parseHeader(txt);
-||||||| parent of 15c80dba (WIP)
-      const txt = this.textDecoder.decode(bytes);
-      this.logger.Debug().Str("txt", txt).Msg("dbMetasForByteHeads");
-      return this.parseHeader(txt);
-=======
-      const txt = this.textDecoder.decode(bytes);
-      this.logger.Debug().Str("txt", txt).Msg("dbMetasForByteHeads-decode");
-      const ret = this.parseHeader(txt);
-      this.logger.Debug().Msg("dbMetasForByteHeads-parseHeader");
-      return ret
->>>>>>> 15c80dba (WIP)
     });
   }
 
@@ -283,7 +259,6 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   readonly storeType = "data";
   // readonly tag: string = "car-base";
 
-<<<<<<< HEAD
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     super(
       name,
@@ -294,19 +269,6 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
       sthis,
       ensureLogger(sthis, "DataStoreImpl"),
     );
-||||||| parent of 15c80dba (WIP)
-  constructor(name: string, url: URI, opts: StoreOpts) {
-    super(name, url, {
-      ...opts,
-      logger: ensureLogger(opts.logger, "DataStoreImpl"),
-    });
-=======
-  constructor(name: string, url: URI, opts: StoreOpts) {
-    super(name, url, {
-      ...opts,
-      logger: ensureLogger(opts.logger, "DataStoreImpl", {"this": 1, log: 1}),
-    });
->>>>>>> 15c80dba (WIP)
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -354,20 +316,11 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
 
 export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly storeType = "wal";
-  // readonly tag: string = "rwal-base";
-
   readonly loader: Loadable;
-
   readonly _ready = new ResolveOnce<void>();
-
-  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
-  // readonly processing: Promise<void> | undefined = undefined;
-  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
+  readonly id = uuidv7();
 
   constructor(loader: Loadable, url: URI, opts: StoreOpts) {
-    // const my = new URL(url.toString());
-    // my.searchParams.set("storekey", 'insecure');
-<<<<<<< HEAD
     super(
       loader.name,
       url,
@@ -377,17 +330,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       loader.sthis,
       ensureLogger(loader.sthis, "WALStoreImpl"),
     );
-||||||| parent of 15c80dba (WIP)
-    super(loader.name, url, {
-      ...opts,
-      logger: ensureLogger(opts.logger, "WALStoreImpl"),
-    });
-=======
-    super(loader.name, url, {
-      ...opts,
-      logger: ensureLogger(opts.logger, "WALStoreImpl", {"this": 1, log: 1}),
-    });
->>>>>>> 15c80dba (WIP)
     this.loader = loader;
   }
 
@@ -397,163 +339,36 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       const walState = await this.load().catch((e) => {
         this.logger.Error().Any("error", e).Msg("error loading wal");
         return undefined;
-      });
+      }) as WALState;
       this.logger.Debug().Msg("ready-once-post");
-      const state: Partial<WALState> = walState || {}
-      this.walState.operations = state.operations || [];
-      this.walState.fileOperations = state.fileOperations || [];
+      walProcessor(this.logger).addState({
+        operations: withLoader(this.loader, this, walState?.operations || []),
+        fileOperations: withLoader(this.loader, this, walState?.fileOperations || []),
+      });
     });
   };
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
+    const wp = walProcessor(this.logger);
     if (opts.noLoader) {
-      this.logger.Debug().Any("dbMeta", dbMeta).Msg("enqueue-noLoader");
-      this.walState.noLoaderOps.push(dbMeta);
+      wp.addState({ noLoaderOps: withLoader(this.loader, this, dbMeta) });
+      // this.walState.noLoaderOps.push(dbMeta);
     } else {
-      this.logger.Debug().Any("dbMeta", dbMeta).Msg("enqueue-operations");
-      this.walState.operations.push(dbMeta);
+      wp.addState({ operations: withLoader(this.loader, this, dbMeta) });
     }
-    this.logger.Debug().Any("dbMeta", dbMeta).Msg("pre-save");
-    await this.save(this.walState);
-    this.logger.Debug().Any("dbMeta", dbMeta).Msg("pre-process");
-    void this.process();
-    this.logger.Debug().Any("dbMeta", dbMeta).Msg("post-process");
+    await this.save(wp.snapState(this.loader));
+    // void this.process();
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
     await this.ready();
     this.logger.Debug().Str("fileCid", fileCid.toString()).Msg("enqueue-file");
-    this.walState.fileOperations.push({ cid: fileCid, public: publicFile });
-    // await this.save(this.walState)
-  }
-
-  inProcess = false;
-  async process() {
-    await this.ready();
-    this.logger.Debug().Msg("process");
-    if (!this.loader.remoteCarStore) return;
-    this.logger.Debug().Msg("process-pre-enqueue");
-    await this.processQueue.enqueue(async () => {
-      if (this.inProcess) {
-        throw this.logger.Error().Msg("already processing").AsError();
-        return;
-      }
-      this.inProcess = true;
-      try {
-        this.logger.Debug().Msg("process-pre-_doProcess");
-        await this._doProcess();
-        this.logger.Debug().Msg("process-post-_doProcess");
-      } catch (e) {
-        this.logger.Error().Err(e).Msg("error processing wal");
-      } finally {
-        this.inProcess = false;
-      }
-      if (this.walState.operations.length || this.walState.fileOperations.length || this.walState.noLoaderOps.length) {
-        this.logger.Debug().Len(this.walState.operations, "ops" ).Len(this.walState.fileOperations, "fops").Len(this.walState.noLoaderOps, "lops").Msg("process-post-reschedule");
-        setTimeout(() => void this.process(), 0);
-      }
+    walProcessor(this.logger).addState({
+      fileOperations: withLoader(this.loader, this, { cid: fileCid, public: publicFile })
     });
-  }
-
-  async _doProcess() {
-    this.logger.Debug().Msg("_doProcess enter");
-    if (!this.loader.remoteCarStore) return;
-    this.logger.Debug().Msg("_doProcess pre rmlp");
-    const rmlp = (async () => {
-      this.logger.Debug().Msg("_doProcess:rmlp enter");
-      const operations = [...this.walState.operations];
-      const fileOperations = [...this.walState.fileOperations];
-      const uploads: (() => Promise<void>)[] = [];
-      const noLoaderOps = [...this.walState.noLoaderOps];
-
-      if (operations.length + fileOperations.length + noLoaderOps.length === 0) {
-        this.logger.Debug().Msg("_doProcess:rmlp return");
-        return;
-      }
-
-      this.logger.Debug().Msg("_doProcess:rmlp pre noLoaderOps");
-      for (const dbMeta of noLoaderOps) {
-        const uploadP = async () => {
-          for (const cid of dbMeta.cars) {
-            const car = await (await this.loader.carStore()).load(cid);
-            if (!car) {
-              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
-                throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
-            } else {
-              await throwFalsy(this.loader.remoteCarStore).save(car);
-            }
-            this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
-          }
-        };
-        uploads.push(uploadP);
-      }
-
-      this.logger.Debug().Len(operations).Msg("_doProcess:rmlp pre operations");
-      for (const dbMeta of operations) {
-        const uploadP = async () => {
-          this.logger.Debug().Any("dbMeta", dbMeta.cars).Msg("in uploadP");
-          const carStore = await this.loader.carStore();
-          this.logger.Debug().Any("dbMeta", dbMeta.cars).Msg("in uploadP-carStore");
-          for (const cid of dbMeta.cars) {
-            this.logger.Debug().Any("dbMeta", dbMeta.cars).Msg("in uploadP-pre-load");
-            const car = await carStore.load(cid).catch(() => undefined);
-            this.logger.Debug().Any("car", car?.cid.toString()).Msg("in uploadP-post-load");
-            if (!car) {
-              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
-                throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
-              }
-            } else {
-              this.logger.Debug().Any("car", car?.cid.toString()).Msg("in uploadP-pre-save");
-              await throwFalsy(this.loader.remoteCarStore).save(car);
-              this.logger.Debug().Any("car", car?.cid.toString()).Msg("in uploadP-post-save");
-            }
-          }
-          this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
-          this.logger.Debug().Msg("out uploadP");
-        };
-        uploads.push(uploadP);
-      }
-
-      this.logger.Debug().Len(fileOperations).Msg("_doProcess:rmlp pre fileOperations");
-      if (fileOperations.length) {
-        const dbLoader = this.loader;
-        for (const { cid: fileCid, public: publicFile } of fileOperations) {
-          const uploadP = async () => {
-            const fileBlock = await (await dbLoader.fileStore()).load(fileCid); // .catch(() => false)
-            await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile });
-            this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
-          }
-          uploads.push(uploadP);
-        }
-      }
-
-      try {
-        this.logger.Debug().Len(uploads).Msg("_doProcess:rmlp pre uploads");
-        const res = await Promise.allSettled(uploads);
-        const errors = res.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
-        this.logger.Debug().Len(errors).Msg("_doProcess:rmlp errors");
-        if (errors.length) {
-          throw this.logger.Error().Any("errors", errors).Msg("error uploading").AsError();
-        }
-        this.logger.Debug().Len(operations).Msg("_doProcess:rmlp operations");
-        if (operations.length) {
-          const lastOp = operations[operations.length - 1];
-          // console.log('saving remote meta', lastOp.car.toString())
-          await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
-            this.walState.operations.push(lastOp);
-            throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();
-          });
-        }
-      } finally {
-        this.logger.Debug().Any("walState", this.walState).Msg("_doProcess:rmlp saveWalState");
-        await this.save(this.walState);
-      }
-    })();
-    // this.loader.remoteMetaLoading = rmlp;
-    this.logger.Debug().Msg("_doProcess pre invoke rmlp");
-    await rmlp;
-    this.logger.Debug().Msg("_doProcess post invoke rmlp");
+    // this.walState.fileOperations.push({ cid: fileCid, public: publicFile });
+    // await this.save(this.walState)
   }
 
   async load(): Promise<WALState | Falsy> {

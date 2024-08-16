@@ -116,10 +116,12 @@ export class Loader implements Loadable {
   }
 
   readonly logger: Logger;
+  readonly id: string;
   constructor(name: string, ebOpts: BlockstoreOpts, sthis: SuperThis) {
     this.name = name;
     // console.log("Loader", name, ebOpts)
     this.sthis = sthis;
+    this.id = sthis.nextId();
     this.ebOpts = defaultedBlockstoreRuntime(
       sthis,
       {

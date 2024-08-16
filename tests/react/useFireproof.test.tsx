@@ -1,7 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { useFireproof, LiveQueryResult } from "use-fireproof";
+import { useFireproof } from "use-fireproof";
 
 type Todo = Partial<{
   readonly text: string;

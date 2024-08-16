@@ -47,7 +47,7 @@ export abstract class ConnectionBase implements Connection {
 
   async refresh() {
     await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
-    await (await throwFalsy(this.loader).WALStore()).process();
+    // await (await throwFalsy(this.loader).WALStore()).process();
   }
 
   async connect_X({ loader }: { readonly loader?: Loadable }) {
@@ -89,9 +89,9 @@ export abstract class ConnectionBase implements Connection {
       const loaded = remote.load("main")
       loaded.then(async () => {
         this.logger.Debug().Msg("connectMeta_X: main -> process-pre");
-        const wal = await throwFalsy(this.loader).WALStore();
+        // const wal = await throwFalsy(this.loader).WALStore();
         this.logger.Debug().Msg("connectMeta_X: main -> process-wal");
-        await wal.process();
+        // await wal.process();
         this.logger.Debug().Msg("connectMeta_X: main -> process-post");
       });
     });

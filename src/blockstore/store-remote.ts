@@ -40,13 +40,3 @@ export async function RemoteMetaStore(sthis: SuperThis, name: string, url: URI, 
   await ms.start();
   return ms;
 }
-
-// export class RemoteWALStore extends WALStoreImpl {
-//   // basicly do nothing write the WAL into memory
-//   constructor(loader: Loadable) {
-
-//     //import { FileWALGateway } from "../runtime/gateways/file/gateway.js";
-//     // super(loader, new URL("file:///dummy?fs=mem"), loader.logger, new FileWALGateway(loader.logger));
-//   }
-
-// }

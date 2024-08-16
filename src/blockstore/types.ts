@@ -3,7 +3,7 @@ import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface
 import { DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
-import { CommitQueue } from "./commit-queue.js";
+// import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 
@@ -266,22 +266,26 @@ export interface DataStore extends BaseStore {
   remove(cid: AnyLink): Promise<Result<void>>;
 }
 
+export interface FileOp {
+  readonly cid: AnyLink;
+  readonly public: boolean;
+}
+
 export interface WALState {
-  operations: DbMeta[];
-  noLoaderOps: DbMeta[];
-  fileOperations: {
-    readonly cid: AnyLink;
-    readonly public: boolean;
-  }[];
+  readonly operations: DbMeta[];
+  readonly noLoaderOps: DbMeta[];
+  readonly fileOperations: FileOp[];
 }
 
 export interface WALStore extends BaseStore {
   readonly storeType: "wal";
+  readonly id: string;
   ready: () => Promise<void>;
-  readonly processing?: Promise<void> | undefined;
-  readonly processQueue: CommitQueue<void>;
 
-  process(): Promise<void>;
+  // readonly processing?: Promise<void> | undefined;
+  // readonly processQueue: CommitQueue<void>;
+
+  // process(): Promise<void>;
   enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;
   enqueueFile(fileCid: AnyLink /*, publicFile?: boolean*/): Promise<void>;
   load(): Promise<WALState | Falsy>;
@@ -323,6 +327,7 @@ export interface BlockstoreRuntime {
 }
 
 export interface Loadable {
+  readonly id: string;
   readonly name: string; // = "";
   readonly sthis: SuperThis;
   readonly ebOpts: BlockstoreRuntime;
