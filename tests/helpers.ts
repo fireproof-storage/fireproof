@@ -4,7 +4,6 @@ import { renderHook, RenderHookResult } from "@testing-library/react";
 import { Database, useFireproof } from "use-fireproof";
 import type { UseFireproof, ConfigOpts } from "use-fireproof";
 
-
 export { dataDir };
 
 export function sleep(ms: number) {
@@ -57,7 +56,7 @@ export function generateTexts(): string[] {
     texts.push(text);
   }
   return texts;
-};
+}
 
 export async function populateDatabase(db: Database, texts: string[]) {
   for (const text of texts) {
