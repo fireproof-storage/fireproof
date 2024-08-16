@@ -1,5 +1,5 @@
 export { type TLUseDocument, useDocument } from "./useDocument";
-export { FireproofCtx, type UseFireproof, useFireproof } from "./useFireproof";
+export { FireproofCtx, type UseFireproof, useFireproof, type LiveQueryResult, type UseLiveQuery } from "./useFireproof";
 export { type TLUseLiveQuery, useLiveQuery } from "./useLiveQuery";
 export { type TLUseAllDocs, useAllDocs } from "./useAllDocs";
 export { type TLUseChanges, useChanges } from "./useChanges";

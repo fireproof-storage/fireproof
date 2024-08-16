@@ -1,5 +1,9 @@
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { dataDir, rt } from "@fireproof/core";
+import { renderHook, RenderHookResult } from "@testing-library/react";
+import { Database, useFireproof } from "use-fireproof";
+import type { UseFireproof, ConfigOpts, LiveQueryResult, QueryOpts, IndexRow, DocFragment, MapFn, UseLiveQuery } from "use-fireproof";
+
 
 export { dataDir };
 
@@ -32,4 +36,43 @@ export function storageURL(): URI {
     return URI.merge(`indexdb://fp`, old);
   }
   return URI.merge(`./dist/env`, old);
+}
+
+export type Todo = Partial<{
+  readonly text: string;
+  readonly date: number;
+  readonly completed: boolean;
+}>;
+
+export const defaultTodo: Todo = {
+  text: "",
+  date: Date.now(),
+  completed: false,
+};
+
+export function generateTexts(): string[] {
+  const texts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const text = ">" + Math.random().toString(36).substring(7);
+    texts.push(text);
+  }
+  return texts;
+};
+
+export async function populateDatabase(db: Database, texts: string[]) {
+  for (const text of texts) {
+    const ok = await db.put<Todo>({ text, date: Date.now(), completed: false });
+    expect(ok.id).toBeDefined();
+  }
+}
+
+type UseFireproofProps = [Partial<string | Database>, Partial<ConfigOpts>];
+export function getUseFireproofHook(db: Database): RenderHookResult<UseFireproof, UseFireproofProps> {
+  return renderHook(() => useFireproof(db));
+}
+
+type UseLiveQueryHook = RenderHookResult<LiveQueryResult<Todo, string>, UseLiveQueryProps>;
+type UseLiveQueryProps = [string | MapFn<Todo>, QueryOpts<string>, IndexRow<string, Todo, DocFragment>[]];
+export function getUseLiveQueryHook(useLiveQuery: UseLiveQuery): UseLiveQueryHook {
+  return renderHook(() => useLiveQuery("date", { limit: 100, descending: true }));
 }
