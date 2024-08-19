@@ -76,7 +76,7 @@ export function blockstoreFactory(sthis: SuperThis, opts: BlockstoreOpts): BaseB
   } else {
     return new BaseBlockstore(opts);
   }
-};
+}
 
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();

@@ -274,7 +274,7 @@ describe("CRDT with an index", function () {
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<number, CRDTTestType>(sthis,{ _crdt: crdt }, "points");
+    idx = await index<number, CRDTTestType>(sthis, { _crdt: crdt }, "points");
   });
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });

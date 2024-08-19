@@ -5,7 +5,7 @@ import { SysFileSystem } from "../../../types.js";
 
 export class NodeFileSystem implements SysFileSystem {
   async start(): Promise<SysFileSystem> {
-    return this
+    return this;
   }
   mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
     return fs.promises.mkdir(path, options);
@@ -33,9 +33,6 @@ export class NodeFileSystem implements SysFileSystem {
     return fs.promises.writeFile(path, Buffer.from(data));
   }
 }
-
-
-
 
 // import { type NodeMap, join } from "../../sys-container.js";
 // import type { ObjectEncodingOptions, PathLike } from "fs";

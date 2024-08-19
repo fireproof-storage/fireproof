@@ -180,7 +180,9 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     const _crdt = this._crdt as unknown as CRDT<T>;
     const idx =
-      typeof field === "string" ? index<K, T, R>(this.sthis, { _crdt }, field) : index<K, T, R>(this.sthis, { _crdt }, makeName(field.toString()), field);
+      typeof field === "string"
+        ? index<K, T, R>(this.sthis, { _crdt }, field)
+        : index<K, T, R>(this.sthis, { _crdt }, makeName(field.toString()), field);
     return await idx.query(opts);
   }
 
