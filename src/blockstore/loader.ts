@@ -14,7 +14,7 @@ import {
   type CarLog,
   DataStore,
   WALStore,
-  RemoteMetaStore,
+  // RemoteMetaStore,
   MetaStore,
   BaseStore,
   type Loadable,
@@ -26,7 +26,7 @@ import { parseCarFile } from "./loader-helpers.js";
 
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import type { Falsy } from "../types.js";
+import type { Falsy, SuperThis } from "../types.js";
 import { getKeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
@@ -60,11 +60,12 @@ export class Loader implements Loadable {
   readonly carReaders = new Map<string, Promise<CarReader>>();
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
+  readonly sthis: SuperThis
 
   carLog: CarLog = [];
   // key?: string;
   // keyId?: string;
-  remoteMetaStore?: RemoteMetaStore;
+  // remoteMetaStore?: RemoteMetaStore;
   remoteCarStore?: DataStore;
   remoteFileStore?: DataStore;
 
@@ -75,7 +76,7 @@ export class Loader implements Loadable {
   // readonly id = uuidv4();
 
   async keyBag() {
-    return getKeyBag(this.ebOpts.keyBag);
+    return getKeyBag(this.sthis, this.ebOpts.keyBag);
   }
 
   async carStore(): Promise<DataStore> {
@@ -114,10 +115,11 @@ export class Loader implements Loadable {
   }
 
   readonly logger: Logger;
-  constructor(name: string, ebOpts: BlockstoreOpts) {
+  constructor(name: string, ebOpts: BlockstoreOpts, sthis: SuperThis) {
     this.name = name;
     // console.log("Loader", name, ebOpts)
     this.ebOpts = defaultedBlockstoreRuntime(
+      sthis,
       {
         ...ebOpts,
         name,
@@ -125,6 +127,8 @@ export class Loader implements Loadable {
       "Loader",
     );
     this.logger = this.ebOpts.logger;
+    throw new Error("Loader constructor superthis");
+    this.sthis = {} as SuperThis
   }
 
   // async snapToCar(carCid: AnyLink | string) {

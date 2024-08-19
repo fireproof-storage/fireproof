@@ -2,7 +2,9 @@ import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
 import type { DbMeta, StoreOpts, AnyLink } from "./blockstore/index.js";
-import { CryptoRuntime, Logger } from "@adviser/cement";
+import { CryptoRuntime, Env, Logger } from "@adviser/cement";
+
+import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 
 export type Falsy = false | null | undefined;
 
@@ -26,6 +28,37 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
 
 export type StoreType = "data" | "wal" | "meta";
 
+export interface SysFileSystem {
+  start(): Promise<SysFileSystem>;
+  mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined>;
+  readdir(path: PathLike, options?: unknown): Promise<string[]>;
+  rm(path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }): Promise<void>;
+  copyFile(source: PathLike, destination: PathLike): Promise<void>;
+  readfile(path: PathLike, options?: { encoding: BufferEncoding; flag?: string }): Promise<Uint8Array>;
+  stat(path: PathLike): Promise<Stats>;
+  unlink(path: PathLike): Promise<void>;
+  writefile(path: PathLike, data: Uint8Array | string): Promise<void>;
+}
+
+export interface SysFsHelper {
+  join(...args: string[]): string;
+  dirname(path: string): string;
+  homedir(): string;
+}
+
+export interface Sys {
+  fs: SysFileSystem;
+  fsHelper: SysFsHelper;
+}
+
+export interface SuperThis {
+  readonly logger: Logger;
+  readonly env: Env
+  readonly sys: Sys;
+  nextId(): string;
+  start(): Promise<void>;
+}
+
 export interface ConfigOpts {
   readonly public?: boolean;
   readonly meta?: DbMeta;
@@ -36,6 +69,7 @@ export interface ConfigOpts {
   // readonly indexStore?: StoreOpts;
   readonly threshold?: number;
   readonly logger?: Logger;
+  readonly sysCtx?: Sys;
 }
 
 export type ClockLink = EventLink<Operation>;

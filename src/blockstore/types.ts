@@ -1,6 +1,6 @@
 import type { CID, Link, Version } from "multiformats";
 import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface";
-import { DocFileMeta, Falsy, StoreType } from "../types.js";
+import { DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
@@ -323,6 +323,7 @@ export interface BlockstoreRuntime {
 
 export interface Loadable {
   readonly name: string; // = "";
+  readonly sthis: SuperThis;
   readonly logger: Logger;
   readonly ebOpts: BlockstoreRuntime;
   remoteCarStore?: DataStore;

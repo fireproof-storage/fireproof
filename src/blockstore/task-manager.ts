@@ -19,7 +19,7 @@ export class TaskManager {
   readonly logger: Logger;
   constructor(loader: Loadable) {
     this.loader = loader;
-    this.logger = ensureLogger(loader.logger, "TaskManager");
+    this.logger = ensureLogger(loader.sthis, "TaskManager");
   }
 
   async handleEvent(eventBlock: DbMetaEventBlock) {

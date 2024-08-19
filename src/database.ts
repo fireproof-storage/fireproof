@@ -1,4 +1,3 @@
-import { uuidv7 } from "uuidv7";
 import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { WriteQueue, writeQueue } from "./write-queue.js";
@@ -24,10 +23,10 @@ import type {
   CRDTMeta,
   AllDocsQueryOpts,
   AllDocsResponse,
+  SuperThis,
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
-import { SysContainer } from "./runtime/sys-container.js";
-import { ensureLogger, NotFoundError } from "./utils.js";
+import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -57,20 +56,22 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly _ready = new ResolveOnce<void>();
   async ready() {
     return this._ready.once(async () => {
-      await SysContainer.start();
+      await this.sthis.start();
       await this._crdt.ready();
       await this.blockstore.ready();
     });
   }
 
   readonly logger: Logger;
+  readonly sthis: SuperThis;
 
   constructor(name?: string, opts?: ConfigOpts) {
     this.name = name;
     this.opts = opts || this.opts;
-    this.logger = ensureLogger(this.opts, "Database");
+    this.sthis = ensureSuperThis(this.opts);
+    this.logger = ensureLogger(this.sthis, "Database");
     // this.logger.SetDebug("Database")
-    this._crdt = new CRDT(name, this.opts);
+    this._crdt = new CRDT(this.sthis, name, this.opts);
     this.blockstore = this._crdt.blockstore; // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
       return await this._crdt.bulk(updates);
@@ -97,7 +98,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put");
     const { _id, ...value } = doc;
-    const docId = _id || uuidv7();
+    const docId = _id || this.sthis.nextId();
     const result = (await this._writeQueue.push({
       id: docId,
       value: {
@@ -179,7 +180,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     const _crdt = this._crdt as unknown as CRDT<T>;
     const idx =
-      typeof field === "string" ? index<K, T, R>({ _crdt }, field) : index<K, T, R>({ _crdt }, makeName(field.toString()), field);
+      typeof field === "string" ? index<K, T, R>(this.sthis, { _crdt }, field) : index<K, T, R>(this.sthis, { _crdt }, makeName(field.toString()), field);
     return await idx.query(opts);
   }
 

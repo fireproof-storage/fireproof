@@ -3,15 +3,18 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
-import { CRDTMeta, IndexTransactionMeta, bs, rt } from "@fireproof/core";
+import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, rt } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
-  constructor() {
+  loader: bs.Loader;
+  constructor(sthis: SuperThis) {
     const ebOpts = {
       name: "MyMemoryBlockStore",
     };
-    super(ebOpts);
+    super(sthis, ebOpts);
+    this.loader = new bs.Loader("MyMemoryBlockStore", {}, sthis);
   }
   ready(): Promise<void> {
     return Promise.resolve();
@@ -19,7 +22,6 @@ class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   close(): Promise<void> {
     return this.loader.close();
   }
-  loader = new bs.Loader("MyMemoryBlockStore", {});
   readonly transactions = new Set<bs.CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
@@ -49,6 +51,7 @@ describe("basic Loader simple", function () {
   let loader: bs.Loader;
   let block: BlockView;
   let t: bs.CarTransaction;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await loader.close();
@@ -57,10 +60,10 @@ describe("basic Loader simple", function () {
 
   beforeEach(async function () {
     const testDbName = "test-loader-commit";
-    await rt.SysContainer.start();
-    const mockM = new MyMemoryBlockStore();
+    await sthis.start();
+    const mockM = new MyMemoryBlockStore(sthis);
     t = new bs.CarTransaction(mockM as bs.EncryptedBlockstore);
-    loader = new bs.Loader(testDbName, { public: true });
+    loader = new bs.Loader(testDbName, { public: true }, sthis);
     await loader.ready();
     block = await rt.mf.block.encode({
       value: { hello: "world" },
@@ -96,16 +99,18 @@ describe("basic Loader with two commits", function () {
   let carCid: bs.CarGroup;
   let carCid0: bs.CarGroup;
 
+  const sthis = mockSuperThis();
+
   afterEach(async function () {
     await loader.close();
     await loader.destroy();
   });
 
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    const mockM = new MyMemoryBlockStore();
+    await sthis.start();
+    const mockM = new MyMemoryBlockStore(sthis);
     t = new bs.CarTransaction(mockM);
-    loader = new bs.Loader("test-loader-two-commit", { public: true });
+    loader = new bs.Loader("test-loader-two-commit", { public: true }, sthis);
     block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,
@@ -196,6 +201,7 @@ describe("basic Loader with index commits", function () {
   let indexerResult: IndexTransactionMeta;
   let cid: CID;
   // let indexMap: Map<string, CID>;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await ib.close();
@@ -204,9 +210,9 @@ describe("basic Loader with index commits", function () {
 
   beforeEach(async function () {
     const name = "test-loader-index" + Math.random();
-    await rt.SysContainer.start();
+    await sthis.start();
     // t = new CarTransaction()
-    ib = new bs.EncryptedBlockstore({ name });
+    ib = new bs.EncryptedBlockstore(sthis, { name });
     block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,

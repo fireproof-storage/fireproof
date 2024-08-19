@@ -1,14 +1,15 @@
-import { buildBlobFiles, FileWithCid } from "../helpers.js";
-import { rt, bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles } from "@fireproof/core";
+import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
+import { bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles } from "@fireproof/core";
 
 describe("basic Database", () => {
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async () => {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database();
   });
   it("should put", async () => {
@@ -38,12 +39,13 @@ describe("basic Database with record", function () {
     readonly value: string;
   }
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database();
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
@@ -91,12 +93,13 @@ describe("named Database with record", function () {
     readonly value: string;
   }
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
@@ -217,12 +220,13 @@ describe("named Database with record", function () {
 describe("basic Database parallel writes / public", function () {
   let db: Database;
   const writes: Promise<DocResponse>[] = [];
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -296,12 +300,13 @@ describe("basic Database with subscription", function () {
   let unsubscribe: () => void;
   let lastDoc: DocWithId<NonNullable<unknown>>;
   let waitForSub: Promise<void>;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database();
     didRun = 0;
     waitForSub = new Promise((resolve) => {
@@ -339,12 +344,13 @@ describe("basic Database with no update subscription", function () {
   let db: Database;
   let didRun: number;
   let unsubscribe: () => void;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database();
     didRun = 0;
 
@@ -375,13 +381,14 @@ describe("database with files input", () => {
   let db: Database;
   let imagefiles: FileWithCid[] = [];
   let result: DocResponse;
+  const sthis = mockSuperThis();
 
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     imagefiles = await buildBlobFiles();
     db = new Database("fireproof-with-images");
     const doc = {

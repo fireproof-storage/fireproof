@@ -30,6 +30,7 @@ import type {
   DocWithId,
   DocTypes,
   Falsy,
+  SuperThis,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
@@ -46,12 +47,14 @@ export class CRDT<T extends DocTypes> {
   readonly clock: CRDTClock<T>;
 
   readonly logger: Logger;
+  readonly sthis: SuperThis;
 
-  constructor(name?: string, opts: ConfigOpts = {}) {
+  constructor(sthis: SuperThis, name?: string, opts: ConfigOpts = {}) {
+    this.sthis = sthis;
     this.name = name;
-    this.logger = ensureLogger(opts, "CRDT");
+    this.logger = ensureLogger(sthis, "CRDT");
     this.opts = opts;
-    this.blockstore = blockstoreFactory({
+    this.blockstore = blockstoreFactory(sthis, {
       name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
@@ -69,13 +72,13 @@ export class CRDT<T extends DocTypes> {
       meta: this.opts.meta,
       threshold: this.opts.threshold,
     });
-    this.indexBlockstore = blockstoreFactory({
+    this.indexBlockstore = blockstoreFactory(sthis, {
       name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const idxCarMeta = meta as IdxMetaMap;
         if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index({ _crdt: this }, name, undefined, idx);
+          index(this.sthis, { _crdt: this }, name, undefined, idx);
         }
       },
       crypto: this.opts.crypto,

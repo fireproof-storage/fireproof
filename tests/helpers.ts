@@ -1,5 +1,5 @@
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
-import { dataDir, rt } from "@fireproof/core";
+import { dataDir, LoggerOpts, rt, SuperThis } from "@fireproof/core";
 
 export { dataDir };
 
@@ -26,8 +26,8 @@ export async function buildBlobFiles(): Promise<FileWithCid[]> {
   ];
 }
 
-export function storageURL(): URI {
-  const old = rt.SysContainer.env.get("FP_STORAGE_URL");
+export function storageURL(sthis: SuperThis): URI {
+  const old = sthis.env.get("FP_STORAGE_URL");
   let merged: URI;
   if (runtimeFn().isBrowser) {
     merged = URI.merge(`indexdb://fp`, old, "indexdb:");
@@ -35,4 +35,10 @@ export function storageURL(): URI {
     merged = URI.merge(`./dist/env`, old);
   }
   return merged;
+}
+
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function mockSuperThis(sthis?: Partial<LoggerOpts>): SuperThis {
+  throw new Error("ensureSuperThis is not implemented");
 }

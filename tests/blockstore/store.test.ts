@@ -1,11 +1,11 @@
 import { CID } from "multiformats";
-import { rt, bs, NotFoundError } from "@fireproof/core";
-import { MockLogger } from "@adviser/cement";
+import { bs, NotFoundError, SuperThis } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 const decoder = new TextDecoder("utf-8");
 
-function runtime() {
-  return bs.toStoreRuntime({}, MockLogger().logger);
+function runtime(sthis: SuperThis) {
+  return bs.toStoreRuntime({}, sthis);
 }
 
 function mockLoader(name: string): bs.Loadable {
@@ -21,16 +21,17 @@ describe("DataStore", function () {
   let store: bs.DataStore;
   let raw: bs.TestGateway;
 
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await store.close();
     await store.destroy();
   });
 
   beforeEach(async () => {
-    await rt.SysContainer.start();
-    store = await runtime().makeDataStore(mockLoader("test"));
+    await sthis.start();
+    store = await runtime(sthis).makeDataStore(mockLoader("test"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url());
+    raw = await bs.testStoreFactory(store.url(), sthis);
   });
 
   it("should have a name", function () {
@@ -53,16 +54,18 @@ describe("DataStore with a saved car", function () {
   let raw: bs.TestGateway;
   let car: bs.AnyBlock;
 
+  const sthis = mockSuperThis();
+
   afterEach(async () => {
     await store.close();
     await store.destroy();
   });
 
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    store = await runtime().makeDataStore(mockLoader("test2"));
+    await sthis.start();
+    store = await runtime(sthis).makeDataStore(mockLoader("test2"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url());
+    raw = await bs.testStoreFactory(store.url(), sthis);
     car = {
       cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -94,16 +97,18 @@ describe("MetaStore", function () {
   let store: bs.MetaStore;
   let raw: bs.TestGateway;
 
+  const sthis = mockSuperThis();
+
   afterEach(async () => {
     await store.close();
     await store.destroy();
   });
 
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    store = await runtime().makeMetaStore(mockLoader("test"));
+    await sthis.start();
+    store = await runtime(sthis).makeMetaStore(mockLoader("test"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url());
+    raw = await bs.testStoreFactory(store.url(), sthis);
   });
 
   it("should have a name", function () {
@@ -129,6 +134,7 @@ describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
   let raw: bs.TestGateway;
   let cid: CID;
+  const sthis = mockSuperThis();
 
   afterEach(async () => {
     await store.close();
@@ -136,10 +142,10 @@ describe("MetaStore with a saved header", function () {
   });
 
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    store = await runtime().makeMetaStore(mockLoader("test-saved-header"));
+    await sthis.start();
+    store = await runtime(sthis).makeMetaStore(mockLoader("test-saved-header"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url());
+    raw = await bs.testStoreFactory(store.url(), sthis);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid] /*, key: undefined */ });
   });

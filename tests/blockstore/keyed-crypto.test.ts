@@ -3,37 +3,39 @@ import { BuildURI, Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
+import { mockSuperThis } from "../helpers";
 
 describe("KeyBag", () => {
   let url: URI;
+  const sthis = mockSuperThis();
   beforeAll(async () => {
-    await rt.SysContainer.start();
+    await sthis.start();
     if (runtimeFn().isBrowser) {
       url = URI.from("indexdb://fp-keybag");
     } else {
-      url = URI.merge(`file://./dist/tests/key.bag`, rt.SysContainer.env.get("FP_KEYBAG_URL"));
+      url = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
     }
   });
   it("default-path", async () => {
-    const old = rt.SysContainer.env.get("FP_KEYBAG_URL");
-    rt.SysContainer.env.delete("FP_KEYBAG_URL");
-    const kb = await rt.kb.getKeyBag();
+    const old = sthis.env.get("FP_KEYBAG_URL");
+    sthis.env.delete("FP_KEYBAG_URL");
+    const kb = await rt.kb.getKeyBag(sthis);
     if (runtimeFn().isBrowser) {
       expect(kb.rt.url.toString()).toBe(`indexdb://fp-keybag`);
     } else {
-      expect(kb.rt.url.toString()).toBe(`file://${rt.SysContainer.env.get("HOME")}/.fireproof/keybag`);
+      expect(kb.rt.url.toString()).toBe(`file://${sthis.env.get("HOME")}/.fireproof/keybag`);
     }
-    rt.SysContainer.env.set("FP_KEYBAG_URL", old);
+    sthis.env.set("FP_KEYBAG_URL", old);
   });
   it("from env", async () => {
-    const old = rt.SysContainer.env.get("FP_KEYBAG_URL");
-    rt.SysContainer.env.set("FP_KEYBAG_URL", url.toString());
-    const kb = await rt.kb.getKeyBag();
+    const old = sthis.env.get("FP_KEYBAG_URL");
+    sthis.env.set("FP_KEYBAG_URL", url.toString());
+    const kb = await rt.kb.getKeyBag(sthis);
     expect(kb.rt.url.toString()).toBe(url.toString());
-    rt.SysContainer.env.set("FP_KEYBAG_URL", old);
+    sthis.env.set("FP_KEYBAG_URL", old);
   });
   it("simple add", async () => {
-    const kb = await rt.kb.getKeyBag({
+    const kb = await rt.kb.getKeyBag(sthis, {
       url: url.toString(),
       crypto: toCryptoRuntime({
         randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
@@ -93,18 +95,19 @@ describe("KeyedCryptoStore", () => {
   let kb: rt.kb.KeyBag;
   let logger: Logger;
   let baseUrl: URI;
+  const sthis = mockSuperThis();
   beforeEach(async () => {
-    await rt.SysContainer.start();
+    await sthis.start();
     logger = MockLogger().logger;
     let kbUrl: URI;
     if (runtimeFn().isBrowser) {
       kbUrl = URI.from("indexdb://fp-keybag");
       baseUrl = URI.from("indexdb://fp-keyed-crypto-store");
     } else {
-      kbUrl = URI.merge(`file://./dist/tests/key.bag`, rt.SysContainer.env.get("FP_KEYBAG_URL"));
-      baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", rt.SysContainer.env.get("FP_STORAGE_URL"));
+      kbUrl = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
+      baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", sthis.env.get("FP_STORAGE_URL"));
     }
-    kb = await rt.kb.getKeyBag({
+    kb = await rt.kb.getKeyBag(sthis, {
       url: kbUrl,
     });
   });
@@ -122,7 +125,7 @@ describe("KeyedCryptoStore", () => {
         },
       },
     } as unknown as bs.Loadable;
-    const strt = bs.toStoreRuntime({}, logger);
+    const strt = bs.toStoreRuntime({}, sthis);
 
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
@@ -147,7 +150,7 @@ describe("KeyedCryptoStore", () => {
         },
       },
     } as unknown as bs.Loadable;
-    const strt = bs.toStoreRuntime({}, logger);
+    const strt = bs.toStoreRuntime({}, sthis);
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
@@ -173,7 +176,7 @@ describe("KeyedCryptoStore", () => {
         },
       },
     } as unknown as bs.Loadable;
-    const strt = bs.toStoreRuntime({}, logger);
+    const strt = bs.toStoreRuntime({}, sthis);
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
       // await store.start();
@@ -206,7 +209,7 @@ describe("KeyedCryptoStore", () => {
         },
       },
     } as unknown as bs.Loadable;
-    const strt = bs.toStoreRuntime({}, logger);
+    const strt = bs.toStoreRuntime({}, sthis);
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
       // await store.start();
@@ -227,19 +230,19 @@ describe("KeyedCrypto", () => {
   let kb: rt.kb.KeyBag;
   let kycr: bs.KeyedCrypto;
   let keyStr: string;
+  const sthis = mockSuperThis();
   beforeEach(async () => {
-    const logger = MockLogger().logger;
     let url: URI;
     if (runtimeFn().isBrowser) {
       url = URI.from("indexdb://fp-keybag");
     } else {
-      url = URI.merge(`file://./dist/tests/key.bag`, rt.SysContainer.env.get("FP_KEYBAG_URL"));
+      url = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
     }
-    kb = await rt.kb.getKeyBag({
+    kb = await rt.kb.getKeyBag(sthis, {
       url,
     });
     keyStr = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-    kycr = await rt.kc.keyedCryptoFactory(URI.from(`test://bla?storekey=${keyStr}`), kb, logger);
+    kycr = await rt.kc.keyedCryptoFactory(URI.from(`test://bla?storekey=${keyStr}`), kb, sthis);
   });
   it("codec explict iv", async () => {
     const testData = kb.rt.crypto.randomBytes(1024);

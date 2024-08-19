@@ -36,7 +36,7 @@ export class CRDTClock<T extends DocTypes> {
   readonly logger: Logger;
   constructor(blockstore: BaseBlockstore) {
     this.blockstore = blockstore;
-    this.logger = ensureLogger(blockstore.logger, "CRDTClock");
+    this.logger = ensureLogger(blockstore.sthis, "CRDTClock");
     this.applyHeadQueue = applyHeadQueue(this.int_applyHead.bind(this), this.logger);
   }
 

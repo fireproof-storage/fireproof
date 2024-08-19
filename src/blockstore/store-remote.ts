@@ -1,5 +1,6 @@
 import { URI } from "@adviser/cement";
 import { DataStoreImpl, MetaStoreImpl, StoreOpts } from "./store.js";
+import { SuperThis } from "../types.js";
 
 // export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 // export function validateDataParams(params: DownloadDataFnParams | UploadDataFnParams, logger: Logger) {
@@ -29,13 +30,13 @@ import { DataStoreImpl, MetaStoreImpl, StoreOpts } from "./store.js";
 //   // just for explaining the concept
 // }
 
-export async function RemoteDataStore(name: string, url: URI, opts: StoreOpts) {
-  const ds = new DataStoreImpl(name, url, opts);
+export async function RemoteDataStore(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+  const ds = new DataStoreImpl(sthis, name, url, opts);
   await ds.start();
   return ds;
 }
-export async function RemoteMetaStore(name: string, url: URI, opts: StoreOpts) {
-  const ms = new MetaStoreImpl(name, url, opts);
+export async function RemoteMetaStore(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+  const ms = new MetaStoreImpl(sthis, name, url, opts);
   await ms.start();
   return ms;
 }

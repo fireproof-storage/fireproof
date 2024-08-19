@@ -13,6 +13,7 @@ import {
   type IndexUpdateString,
   throwFalsy,
   IndexTransactionMeta,
+  SuperThis,
 } from "./types.js";
 import { BaseBlockstore } from "./blockstore/index.js";
 
@@ -34,6 +35,7 @@ import { ensureLogger } from "./utils.js";
 import { Logger } from "@adviser/cement";
 
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
+  sthis: SuperThis,
   { _crdt }: { _crdt: CRDT<T> | CRDT<NonNullable<unknown>> },
   name: string,
   mapFn?: MapFn<T>,
@@ -45,7 +47,7 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
     const idx = _crdt.indexers.get(name) as unknown as Index<K, T>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<K, T>(_crdt, name, mapFn, meta);
+    const idx = new Index<K, T>(sthis, _crdt, name, mapFn, meta);
     _crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
   }
   return _crdt.indexers.get(name) as unknown as Index<K, T, R>;
@@ -87,8 +89,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   readonly logger: Logger;
 
-  constructor(crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
-    this.logger = ensureLogger(crdt.logger, "Index");
+  constructor(sthis: SuperThis,crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+    this.logger = ensureLogger(sthis, "Index");
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt as CRDT<T>;
     this.applyMapFn(name, mapFn, meta);
