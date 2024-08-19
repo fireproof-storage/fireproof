@@ -1,13 +1,12 @@
 import type { PathLike, MakeDirectoryOptions, Stats } from "fs";
-import { SysFileSystem } from "../../sys-container.js";
-
 import { fs } from "memfs";
 import { IReaddirOptions } from "memfs/lib/node/types/options.js";
 import { toArrayBuffer } from "./utils.js";
+import { SysFileSystem } from "../../../types.js";
 
 export class MemFileSystem implements SysFileSystem {
-  async start(): Promise<void> {
-    /* do nothing */
+  async start(): Promise<SysFileSystem> {
+    return this
   }
   mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
     return fs.promises.mkdir(path, options);

@@ -3,9 +3,10 @@ import { Logger, KeyedResolvOnce, CoerceURI, URI, Result } from "@adviser/cement
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { Loadable, StoreOpts, StoreRuntime } from "./types.js";
-import { dataDir, ensureLogger } from "../utils.js";
+import { dataDir, ensureLogger, ensureSuperLog } from "../utils.js";
 import { Gateway, TestGateway } from "./gateway.js";
 import { getKeyBag } from "../runtime/key-bag.js";
+import { SuperThis } from "use-fireproof";
 
 function ensureIsIndex(url: URI, isIndex?: string): URI {
   if (isIndex) {
@@ -26,8 +27,8 @@ export interface GatewayFactoryItem {
   readonly overrideBaseURL?: string; // if this set it overrides the defaultURL
   readonly overrideRegistration?: boolean; // if this is set, it will override the registration
 
-  readonly gateway: (logger: Logger) => Promise<Gateway>;
-  readonly test: (logger: Logger) => Promise<TestGateway>;
+  readonly gateway: (sthis: SuperThis) => Promise<Gateway>;
+  readonly test: (sthis: SuperThis) => Promise<TestGateway>;
   // which switches between file and indexdb
   // readonly data: (logger: Logger) => Promise<Gateway>;
   // readonly meta: (logger: Logger) => Promise<Gateway>;
@@ -44,7 +45,7 @@ function buildURL(optURL: CoerceURI, loader: Loadable): URI {
   if (obuItem && obuItem.overrideBaseURL) {
     obuUrl = URI.from(obuItem.overrideBaseURL);
   }
-  const ret = ensureIsIndex(URI.from(optURL || obuUrl || dataDir(loader.name, storeOpts.stores?.base)), storeOpts.isIndex);
+  const ret = ensureIsIndex(URI.from(optURL || obuUrl || dataDir(loader.sthis, loader.name, storeOpts.stores?.base)), storeOpts.isIndex);
   // console.log("buildURL", storeOpts.isIndex);
   return ret;
 }
@@ -54,35 +55,36 @@ interface GatewayReady {
   readonly test: TestGateway;
 }
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
-export async function getGatewayFromURL(url: URI, logger: Logger): Promise<GatewayReady | undefined> {
+export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<GatewayReady | undefined> {
   return onceGateway.get(url.toString()).once(async () => {
     const item = storeFactory.get(url.protocol);
     if (item) {
       const ret = {
-        gateway: await item.gateway(logger),
-        test: await item.test(logger),
+        gateway: await item.gateway(sthis),
+        test: await item.test(sthis),
       };
       const res = await ret.gateway.start(url);
       if (res.isErr()) {
-        logger.Error().Result("start", res).Msg("start failed");
+        sthis.logger.Error().Result("start", res).Msg("start failed");
         return undefined;
       }
       return ret;
     }
-    logger.Warn().Url(url).Msg("unsupported protocol");
+    sthis.logger.Warn().Url(url).Msg("unsupported protocol");
     return undefined;
   });
 }
 
-export function registerStoreProtocol(item: GatewayFactoryItem) {
+export function registerStoreProtocol(item: GatewayFactoryItem): () => void {
   let protocol = item.protocol;
   if (!protocol.endsWith(":")) {
     protocol += ":";
   }
   if (storeFactory.has(protocol)) {
     if (!item.overrideBaseURL && storeFactory.get(protocol) !== item) {
-      const logger = ensureLogger({}, "registerStoreProtocol", { protocol });
-      logger.Warn().Msg(`protocol ${protocol} already registered`);
+      throw new Error(`we need a logger here`);
+      // const logger = ensureLogger(sthis, "registerStoreProtocol", { protocol });
+      // logger.Warn().Msg(`protocol ${protocol} already registered`);
       return () => {
         /* no-op */
       };
@@ -139,18 +141,17 @@ export function registerStoreProtocol(item: GatewayFactoryItem) {
 // const onceDataStoreFactory = new KeyedResolvOnce<DataStoreImpl>();
 async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.data, loader)).build().setParam("store", "data").URI();
-  const logger = ensureLogger(loader.logger, "dataStoreFactory", { url: url.toString() });
+  const sthis = ensureSuperLog(loader.sthis, "dataStoreFactory", { url: url.toString() });
   // return onceDataStoreFactory.get(url.toString()).once(async () => {
-  const gateway = await getGatewayFromURL(url, logger);
+  const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
-    throw logger.Error().Url(url).Msg("gateway not found").AsError();
+    throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
   }
-  const store = new DataStoreImpl(loader.name, url, {
+  const store = new DataStoreImpl(loader.sthis, loader.name, url, {
     logger: loader.logger,
     gateway: gateway.gateway,
     keybag: () =>
-      getKeyBag({
-        logger: loader.logger,
+      getKeyBag(loader.sthis, {
         ...loader.ebOpts.keyBag,
       }),
   });
@@ -173,19 +174,18 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
 // const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.meta, loader)).build().setParam("store", "meta").URI();
-  const logger = ensureLogger(loader.logger, "metaStoreFactory", { url: () => url.toString() });
+  const sthis = ensureSuperLog(loader.sthis, "metaStoreFactory", { url: () => url.toString() });
   // return onceMetaStoreFactory.get(url.toString()).once(async () => {
-  logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
-  const gateway = await getGatewayFromURL(url, logger);
+  sthis.logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
+  const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
-    throw logger.Error().Url(url).Msg("gateway not found").AsError();
+    throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
   }
-  const store = new MetaStoreImpl(loader.name, url, {
+  const store = new MetaStoreImpl(loader.sthis, loader.name, url, {
     logger: loader.logger,
     gateway: gateway.gateway,
     keybag: () =>
-      getKeyBag({
-        logger: loader.logger,
+      getKeyBag(loader.sthis, {
         ...loader.ebOpts.keyBag,
       }),
   });
@@ -213,19 +213,18 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
 // const onceRemoteWalFactory = new KeyedResolvOnce<WALStoreImpl>();
 async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.wal, loader)).build().setParam("store", "wal").URI();
-  const logger = ensureLogger(loader.logger, "remoteWalFactory", { url: url.toString() });
+  const sthis = ensureSuperLog(loader.sthis, "remoteWalFactory", { url: url.toString() });
   // return onceRemoteWalFactory.get(url.toString()).once(async () => {
-  const gateway = await getGatewayFromURL(url, logger);
+  const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
-    throw logger.Error().Url(url).Msg("gateway not found").AsError();
+    throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
   }
-  logger.Debug().Str("prepared", url.toString()).Msg("produced");
+  sthis.logger.Debug().Str("prepared", url.toString()).Msg("produced");
   const store = new WALStoreImpl(loader, url, {
     logger: loader.logger,
     gateway: gateway.gateway,
     keybag: () =>
-      getKeyBag({
-        logger: loader.logger,
+      getKeyBag(loader.sthis, {
         ...loader.ebOpts.keyBag,
       }),
   });
@@ -238,11 +237,11 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   // });
 }
 
-export async function testStoreFactory(url: URI, ilogger?: Logger): Promise<TestGateway> {
-  const logger = ensureLogger({ logger: ilogger }, "testStoreFactory");
-  const gateway = await getGatewayFromURL(url, logger);
+export async function testStoreFactory(url: URI, sthis: SuperThis): Promise<TestGateway> {
+  sthis = ensureSuperLog(sthis, "testStoreFactory");
+  const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
-    throw logger.Error().Url(url).Msg("gateway not found").AsError();
+    throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
   }
   return gateway.test;
 }
@@ -256,8 +255,8 @@ export async function ensureStart<T>(store: T & { start: () => Promise<Result<UR
   return store;
 }
 
-export function toStoreRuntime(opts: StoreOpts, ilogger: Logger): StoreRuntime {
-  const logger = ensureLogger(ilogger, "toStoreRuntime", {});
+export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime {
+  const logger = ensureLogger(sthis, "toStoreRuntime", {});
   return {
     makeMetaStore: async (loader: Loadable) => {
       logger

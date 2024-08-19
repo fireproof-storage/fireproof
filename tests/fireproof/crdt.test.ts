@@ -1,19 +1,19 @@
-import { uuidv4 } from "uuidv7";
-
 import { CRDT } from "@fireproof/core";
-import { bs, rt } from "@fireproof/core";
+import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT();
+    await sthis.start();
+    crdt = new CRDT(sthis);
   });
   it("should have an empty head", async function () {
     const head = crdt.clock.head;
@@ -41,6 +41,7 @@ describe("CRDT with one record", function () {
   }
   let crdt: CRDT<Partial<CRDTTestType>>;
   let firstPut: CRDTMeta;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await crdt.close();
@@ -48,8 +49,8 @@ describe("CRDT with one record", function () {
   });
 
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT(`test@${uuidv4()}`);
+    await sthis.start();
+    crdt = new CRDT(sthis, `test@${sthis.nextId()}`);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
   });
   it("should have a one-element head", async function () {
@@ -91,14 +92,15 @@ describe("CRDT with a multi-write", function () {
   }
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT();
+    await sthis.start();
+    crdt = new CRDT(sthis);
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -156,13 +158,14 @@ describe("CRDT with two multi-writes", function () {
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async () => {
-    await rt.SysContainer.start();
-    crdt = new CRDT();
+    await sthis.start();
+    crdt = new CRDT(sthis);
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -203,13 +206,14 @@ describe("CRDT with two multi-writes", function () {
 
 describe("Compact a named CRDT with writes", function () {
   let crdt: CRDT<CRDTTestType>;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT("named-crdt-compaction");
+    await sthis.start();
+    crdt = new CRDT(sthis, "named-crdt-compaction");
     for (let i = 0; i < 10; i++) {
       const bulk = [
         { id: "ace", value: { points: 11 } },
@@ -258,18 +262,19 @@ describe("Compact a named CRDT with writes", function () {
 describe("CRDT with an index", function () {
   let crdt: CRDT<CRDTTestType>;
   let idx: Index<number, CRDTTestType>;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT<CRDTTestType>();
+    await sthis.start();
+    crdt = new CRDT<CRDTTestType>(sthis);
     await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<number, CRDTTestType>({ _crdt: crdt }, "points");
+    idx = await index<number, CRDTTestType>(sthis,{ _crdt: crdt }, "points");
   });
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });
@@ -278,7 +283,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("should register the index", async function () {
-    const rIdx = await index<number, CRDTTestType>({ _crdt: crdt }, "points");
+    const rIdx = await index<number, CRDTTestType>(sthis, { _crdt: crdt }, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
     const got = await rIdx.query({ range: [9, 12] });
@@ -287,7 +292,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("creating a different index with same name should not work", async function () {
-    const e = await index({ _crdt: crdt }, "points", (doc) => doc._id)
+    const e = await index(sthis, { _crdt: crdt }, "points", (doc) => doc._id)
       .query()
       .catch((err) => err);
     expect(e.message).toMatch(/cannot apply/);
@@ -303,13 +308,14 @@ describe("Loader with a committed transaction", function () {
   let crdt: CRDT<CRDTTestType>;
   let done: CRDTMeta;
   const dbname = "test-loader";
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT(dbname);
+    await sthis.start();
+    crdt = new CRDT(sthis, dbname);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
     loader = blockstore.loader;
@@ -345,13 +351,14 @@ describe("Loader with two committed transactions", function () {
   let blockstore: bs.EncryptedBlockstore;
   let done1: CRDTMeta;
   let done2: CRDTMeta;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT("test-loader");
+    await sthis.start();
+    crdt = new CRDT(sthis, "test-loader");
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
     loader = blockstore.loader;
@@ -394,13 +401,14 @@ describe("Loader with many committed transactions", function () {
   let crdt: CRDT<Doc>;
   let dones: CRDTMeta[];
   const count = 10;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
-    crdt = new CRDT("test-loader-many");
+    await sthis.start();
+    crdt = new CRDT(sthis, "test-loader-many");
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
     loader = blockstore.loader;

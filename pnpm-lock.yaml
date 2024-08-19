@@ -59,9 +59,6 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
-      uuidv7:
-        specifier: ^1.0.0
-        version: 1.0.1
     devDependencies:
       '@eslint/js':
         specifier: ^9.8.0
@@ -2743,10 +2740,6 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
-
-  uuidv7@1.0.1:
-    resolution: {integrity: sha512-2noB909GbI352dKfASOY6VHHl59KvevZ1FF8gCAXCwDyrt2kkZhuFbczF9udqTfeejiRYEmO4wzUZ0WhVP+IUA==}
-    hasBin: true
 
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
@@ -5559,8 +5552,6 @@ snapshots:
   userhome@1.0.0: {}
 
   util-deprecate@1.0.2: {}
-
-  uuidv7@1.0.1: {}
 
   varint@6.0.0: {}
 

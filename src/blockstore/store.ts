@@ -16,7 +16,7 @@ import type {
   KeyedCrypto,
   Loadable,
 } from "./types.js";
-import { Falsy, StoreType, throwFalsy } from "../types.js";
+import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
 import { ensureLogger, exception2Result, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
@@ -33,6 +33,7 @@ function guardVersion(url: URI): Result<URI> {
 
 export interface StoreOpts {
   readonly gateway: Gateway;
+  // readonly sthis: SuperThis;
   readonly logger: Logger;
   readonly textEncoder?: TextEncoder;
   readonly textDecoder?: TextDecoder;
@@ -52,12 +53,14 @@ abstract class BaseStoreImpl {
 
   private _url: URI;
   readonly logger: Logger;
+  readonly sthis: SuperThis;
   readonly gateway: Gateway;
   readonly keybag: () => Promise<KeyBag>;
-  constructor(name: string, url: URI, opts: StoreOpts) {
+  constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis) {
     this.name = name;
     this._url = url;
     this.keybag = opts.keybag;
+    this.sthis = sthis;
     this.logger = opts.logger
       .With()
       .Ref("url", () => this._url.toString())
@@ -85,7 +88,7 @@ abstract class BaseStoreImpl {
   readonly ready?: () => Promise<void>;
 
   async keyedCrypto(): Promise<KeyedCrypto> {
-    return keyedCryptoFactory(this._url, await this.keybag(), this.logger);
+    return keyedCryptoFactory(this._url, await this.keybag(), this.sthis);
   }
 
   async start(): Promise<Result<URI>> {
@@ -136,13 +139,13 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
 
-  constructor(name: string, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "MetaStoreImpl"),
-    });
+      logger: ensureLogger(sthis, "MetaStoreImpl"),
+    }, sthis);
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -240,11 +243,11 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   readonly storeType = "data";
   // readonly tag: string = "car-base";
 
-  constructor(name: string, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     super(name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "DataStoreImpl"),
-    });
+      logger: ensureLogger(sthis, "DataStoreImpl"),
+    }, sthis);
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -307,8 +310,8 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     // my.searchParams.set("storekey", 'insecure');
     super(loader.name, url, {
       ...opts,
-      logger: ensureLogger(opts.logger, "WALStoreImpl"),
-    });
+      logger: ensureLogger(loader.sthis, "WALStoreImpl"),
+    }, loader.sthis);
     this.loader = loader;
   }
 

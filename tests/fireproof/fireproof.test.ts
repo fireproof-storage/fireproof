@@ -1,8 +1,8 @@
-import { sleep, storageURL } from "../helpers.js";
+import { mockSuperThis, sleep, storageURL } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
-import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index, rt } from "@fireproof/core";
+import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index } from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -25,12 +25,13 @@ describe("dreamcode", function () {
   let doc: DocWithId<Doc>;
   let result: IndexRows<string, Doc>;
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = fireproof("test-db");
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
     doc = await db.get(ok.id);
@@ -66,14 +67,15 @@ describe("public API", function () {
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let query: IndexRows<string, Doc>;
+  const sthis = mockSuperThis();
 
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
 
-  beforeEach(async () => {
-    await rt.SysContainer.start();
+  beforeEach(async function () {
+    await sthis.start();
     db = fireproof("test-api");
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
@@ -104,12 +106,13 @@ describe("basic database", function () {
     foo: string;
   }
   let db: Database<Doc>;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database("test-basic");
   });
   it("can put with id", async function () {
@@ -126,7 +129,7 @@ describe("basic database", function () {
   it("can define an index", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
+    const idx = index<string, { foo: string }>(sthis, db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -136,7 +139,7 @@ describe("basic database", function () {
   it("can define an index with a default function", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index(db, "foo");
+    const idx = index(sthis, db, "foo");
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -167,13 +170,14 @@ describe("basic database", function () {
 
 describe("benchmarking with compaction", function () {
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
     // erase the existing test data
-    await rt.SysContainer.start();
+    await sthis.start();
     db = new Database("test-benchmark-compaction", { autoCompact: 3 });
   });
   it("insert during compaction", async function () {
@@ -221,12 +225,13 @@ describe("benchmarking with compaction", function () {
 describe("benchmarking a database", function () {
   /** @type {Database} */
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     // erase the existing test data
     db = new Database("test-benchmark", { autoCompact: 100000, public: true });
     // db = new Database(null, {autoCompact: 100000})
@@ -378,13 +383,14 @@ describe("Reopening a database", function () {
     foo: string;
   }
   let db: Database;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
     // erase the existing test data
-    await rt.SysContainer.start();
+    await sthis.start();
 
     db = new Database("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -482,12 +488,13 @@ describe("Reopening a database with indexes", function () {
   let idx: Index<string, Doc>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = fireproof("test-reopen-idx");
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok.id).toBe("test");
@@ -498,13 +505,13 @@ describe("Reopening a database with indexes", function () {
       didMap = true;
       return doc.foo;
     };
-    idx = index<string, Doc>(db, "foo", mapFn);
+    idx = index<string, Doc>(sthis, db, "foo", mapFn);
   });
 
   it("should persist data", async function () {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
-    const idx2 = index<string, Doc>(db, "foo");
+    const idx2 = index<string, Doc>(sthis, db, "foo");
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();
@@ -515,7 +522,7 @@ describe("Reopening a database with indexes", function () {
   });
 
   it("should reuse the index", async function () {
-    const idx2 = index(db, "foo", mapFn);
+    const idx2 = index(sthis, db, "foo", mapFn);
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();
@@ -578,8 +585,9 @@ describe("Reopening a database with indexes", function () {
 });
 
 describe("basic js verify", function () {
+  const sthis = mockSuperThis();
   beforeAll(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
   });
   it("should include cids in arrays", async function () {
     const db = fireproof("test-verify");
@@ -609,13 +617,20 @@ describe("same workload twice, same CID", function () {
   let headA: string;
   let headB: string;
 
+  const sthis = mockSuperThis();
   // let configA: any;
   // let configB: any;
 
   const configA = {
     store: {
       stores: {
+<<<<<<< HEAD
         base: storageURL().build().setParam("storekey", "@test@"),
+||||||| parent of edcda983 (chore: compiler complete)
+        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
+=======
+        base: storageURL(sthis).build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
+>>>>>>> edcda983 (chore: compiler complete)
       },
     },
   };
@@ -623,7 +638,13 @@ describe("same workload twice, same CID", function () {
   const configB = {
     store: {
       stores: {
+<<<<<<< HEAD
         base: storageURL().build().setParam("storekey", "@test@"),
+||||||| parent of edcda983 (chore: compiler complete)
+        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
+=======
+        base: storageURL(sthis).build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
+>>>>>>> edcda983 (chore: compiler complete)
       },
     },
   };
@@ -636,7 +657,7 @@ describe("same workload twice, same CID", function () {
   });
   beforeEach(async function () {
     let ok: DocResponse;
-    await rt.SysContainer.start();
+    await sthis.start();
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     dbA = fireproof("test-dual-workload-a", configA);

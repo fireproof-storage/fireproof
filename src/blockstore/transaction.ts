@@ -14,7 +14,7 @@ import {
 
 import { Loader } from "./loader.js";
 import type { CID, Block, Version } from "multiformats";
-import { falsyToUndef } from "../types.js";
+import { falsyToUndef, SuperThis } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger } from "../utils.js";
@@ -41,11 +41,12 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
 }
 
 export function defaultedBlockstoreRuntime(
+  sthis: SuperThis,
   opts: BlockstoreOpts,
   component: string,
   ctx?: Record<string, unknown>,
 ): BlockstoreRuntime {
-  const logger = ensureLogger(opts, component, ctx);
+  const logger = ensureLogger(sthis, component, ctx);
   const store = opts.store || {};
   return {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -65,23 +66,22 @@ export function defaultedBlockstoreRuntime(
     keyBag: opts.keyBag || {},
     crypto: toCryptoRuntime(opts.crypto),
     store,
-    storeRuntime: toStoreRuntime(store, logger),
+    storeRuntime: toStoreRuntime(store, sthis),
   };
 }
 
-const blockstoreFactory = function (opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
+export function blockstoreFactory(sthis: SuperThis, opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
   if (opts.name) {
-    return new EncryptedBlockstore(opts);
+    return new EncryptedBlockstore(sthis, opts);
   } else {
     return new BaseBlockstore(opts);
   }
 };
 
-export { blockstoreFactory };
-
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
+  readonly sthis: SuperThis;
 
   readonly loader?: Loader;
   readonly name?: string;
@@ -102,8 +102,10 @@ export class BaseBlockstore implements BlockFetcher {
   readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts = {}) {
     // console.log("BaseBlockstore", ebOpts)
-    this.ebOpts = defaultedBlockstoreRuntime(ebOpts, "BaseBlockstore");
+    this.sthis = {} as SuperThis;
+    this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.logger = this.ebOpts.logger;
+    throw new Error("BaseBlockstore must be extended");
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -163,15 +165,15 @@ export class EncryptedBlockstore extends BaseBlockstore {
   compacting = false;
   readonly logger: Logger;
 
-  constructor(ebOpts: BlockstoreOpts) {
+  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts) {
     super(ebOpts);
-    this.logger = ensureLogger(ebOpts, "EncryptedBlockstore");
+    this.logger = ensureLogger(this.sthis, "EncryptedBlockstore");
     const { name } = ebOpts;
     if (!name) {
       throw this.logger.Error().Msg("name required").AsError();
     }
     this.name = name;
-    this.loader = new Loader(this.name, ebOpts);
+    this.loader = new Loader(this.name, ebOpts, sthis);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
