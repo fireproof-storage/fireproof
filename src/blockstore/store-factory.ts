@@ -45,7 +45,10 @@ function buildURL(optURL: CoerceURI, loader: Loadable): URI {
   if (obuItem && obuItem.overrideBaseURL) {
     obuUrl = URI.from(obuItem.overrideBaseURL);
   }
-  const ret = ensureIsIndex(URI.from(optURL || obuUrl || dataDir(loader.sthis, loader.name, storeOpts.stores?.base)), storeOpts.isIndex);
+  const ret = ensureIsIndex(
+    URI.from(optURL || obuUrl || dataDir(loader.sthis, loader.name, storeOpts.stores?.base)),
+    storeOpts.isIndex,
+  );
   // console.log("buildURL", storeOpts.isIndex);
   return ret;
 }

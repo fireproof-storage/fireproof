@@ -5,7 +5,6 @@
 
 // import { SysFileSystem, throwFalsy } from "../types.js";
 
-
 // export interface NodeMap extends Omit<SysFileSystem, "start"> {
 //   state: "seeded" | "browser" | "node";
 //   join: (...args: string[]) => string;
