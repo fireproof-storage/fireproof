@@ -89,7 +89,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   readonly logger: Logger;
 
-  constructor(sthis: SuperThis,crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  constructor(sthis: SuperThis, crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.logger = ensureLogger(sthis, "Index");
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt as CRDT<T>;
