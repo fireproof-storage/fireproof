@@ -1,21 +1,27 @@
 import { URI } from "@adviser/cement";
-import { Logger, getStore } from "../../../utils.js";
-import { SysContainer, SysFileSystem } from "../../sys-container.js";
+import { getStore } from "../../../utils.js";
+import { SuperThis, SysFileSystem } from "../../../types.js";
 
 export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   const name = url.getParam("fs");
+  let fs: SysFileSystem;
   switch (name) {
     case "mem": {
       const { MemFileSystem } = await import("./mem-filesystem.js");
-      return new MemFileSystem();
+      fs = new MemFileSystem();
     }
+    break
+    case "node":
     case "sys":
-    default:
-      return SysContainer;
+    default: {
+      const { NodeFileSystem } = await import("./node-filesystem.js");
+      fs = new NodeFileSystem();
+    }
   }
+  return fs.start()
 }
 
-export function getPath(url: URI, logger: Logger): string {
+export function getPath(url: URI, sthis: SuperThis): string {
   const basePath = url.pathname;
   // .toString()
   // .replace(new RegExp(`^${url.protocol}//`), "")
@@ -23,24 +29,24 @@ export function getPath(url: URI, logger: Logger): string {
   const name = url.getParam("name");
   if (name) {
     const version = url.getParam("version");
-    if (!version) throw logger.Error().Url(url).Msg(`version not found`).AsError();
-    return SysContainer.join(basePath, version, name);
+    if (!version) throw sthis.logger.Error().Url(url).Msg(`version not found`).AsError();
+    return sthis.sys.fsHelper.join(basePath, version, name);
   }
-  return SysContainer.join(basePath);
+  return sthis.sys.fsHelper.join(basePath);
 }
 
-export function getFileName(url: URI, logger: Logger): string {
+export function getFileName(url: URI, sthis: SuperThis): string {
   const key = url.getParam("key");
-  if (!key) throw logger.Error().Url(url).Msg(`key not found`).AsError();
-  const res = getStore(url, logger, (...a: string[]) => a.join("-"));
+  if (!key) throw sthis.logger.Error().Url(url).Msg(`key not found`).AsError();
+  const res = getStore(url, sthis, (...a: string[]) => a.join("-"));
   switch (res.store) {
     case "data":
-      return SysContainer.join(res.name, key + ".car");
+      return sthis.sys.fsHelper.join(res.name, key + ".car");
     case "wal":
     case "meta":
-      return SysContainer.join(res.name, key + ".json");
+      return sthis.sys.fsHelper.join(res.name, key + ".json");
     default:
-      throw logger.Error().Url(url).Msg(`unsupported store type`).AsError();
+      throw sthis.logger.Error().Url(url).Msg(`unsupported store type`).AsError();
   }
 }
 

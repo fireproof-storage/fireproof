@@ -1,7 +1,5 @@
 import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce, isURL, URI, CoerceURI, runtimeFn } from "@adviser/cement";
-import { SysContainer } from "./runtime";
-import { uuidv7 } from "uuidv7";
-import { StoreType } from "./types";
+import { StoreType, SuperThis } from "./types";
 
 export type { Logger };
 export { Result };
@@ -14,8 +12,18 @@ export interface LoggerOpts {
 
 const registerFP_DEBUG = new ResolveOnce();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function ensureSuperThis(sthis?: Partial<LoggerOpts>): SuperThis {
+  throw new Error("ensureSuperThis is not implemented");
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function ensureSuperLog(sthis: SuperThis, componentName: string, ctx?: Record<string, unknown>): SuperThis {
+  throw new Error("ensureSuperThis is not implemented");
+}
+
 export function ensureLogger(
-  optsOrLogger: Partial<LoggerOpts> | Logger,
+  sthis: SuperThis/* Partial<LoggerOpts> | Logger */,
   componentName: string,
   ctx?: Record<string, unknown>,
 ): Logger {
@@ -23,10 +31,10 @@ export function ensureLogger(
   //   throw new Error("logger is required");
   // }
   let logger = globalLogger;
-  if (IsLogger(optsOrLogger)) {
-    logger = optsOrLogger;
-  } else if (optsOrLogger && IsLogger(optsOrLogger.logger)) {
-    logger = optsOrLogger.logger;
+  if (IsLogger(sthis)) {
+    logger = sthis;
+  } else if (sthis && IsLogger(sthis.logger)) {
+    logger = sthis.logger;
   }
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
   const debug: string[] = [];
@@ -40,7 +48,7 @@ export function ensureLogger(
       delete ctx.debug;
     }
     if ("this" in ctx) {
-      cLogger.Str("this", uuidv7());
+      cLogger.Str("this", sthis.nextId());
       delete ctx.this;
     }
     for (const [key, value] of Object.entries(ctx)) {
@@ -68,7 +76,7 @@ export function ensureLogger(
   registerFP_DEBUG
     .once(async () => {
       // console.log("registerFP_DEBUG", SysContainer.env)
-      SysContainer.env.onSet((key, value) => {
+      sthis.env.onSet((key, value) => {
         // console.log("FP_DEBUG", key, value, debug)
         if (value) {
           logger.SetDebug(value);
@@ -94,7 +102,7 @@ export interface Store {
   readonly name: string;
 }
 
-export function getStore(url: URI, logger: Logger, joiner: Joiner): Store {
+export function getStore(url: URI, sthis: SuperThis, joiner: Joiner): Store {
   const store = url.getParam("store");
   switch (store) {
     case "data":
@@ -102,7 +110,7 @@ export function getStore(url: URI, logger: Logger, joiner: Joiner): Store {
     case "meta":
       break;
     default:
-      throw logger.Error().Url(url).Msg(`store not found`).AsError();
+      throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
   }
   let name: string = store;
   if (url.hasParam("index")) {
@@ -117,12 +125,12 @@ export function getKey(url: URI, logger: Logger): string {
   return result;
 }
 
-export function getName(url: URI, logger: Logger): string {
+export function getName(sthis: SuperThis, url: URI): string {
   let result = url.getParam("name");
   if (!result) {
-    result = SysContainer.dirname(url.pathname);
+    result = sthis.sys.fsHelper.dirname(url.pathname);
     if (result.length === 0) {
-      throw logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
+      throw sthis.logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
     }
   }
   return result;
@@ -164,12 +172,12 @@ export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotF
   return false;
 }
 
-export function dataDir(name?: string, base?: CoerceURI): URI {
+export function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI {
   if (!base) {
     if (!runtimeFn().isBrowser) {
-      base = SysContainer.env.get("FP_STORAGE_URL") || `file://${SysContainer.join(SysContainer.homedir(), ".fireproof")}`;
+      base = sthis.env.get("FP_STORAGE_URL") || `file://${sthis.sys.fsHelper.join(sthis.sys.fsHelper.homedir(), ".fireproof")}`;
     } else {
-      base = SysContainer.env.get("FP_STORAGE_URL") || `indexdb://fp`;
+      base = sthis.env.get("FP_STORAGE_URL") || `indexdb://fp`;
     }
   }
   return URI.from(base.toString())
