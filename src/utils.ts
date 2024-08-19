@@ -128,7 +128,7 @@ export function getKey(url: URI, logger: Logger): string {
 export function getName(sthis: SuperThis, url: URI): string {
   let result = url.getParam("name");
   if (!result) {
-    result = sthis.sys.fsHelper.dirname(url.pathname);
+    result = sthis.pathOps.dirname(url.pathname);
     if (result.length === 0) {
       throw sthis.logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
     }
@@ -175,7 +175,7 @@ export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotF
 export function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI {
   if (!base) {
     if (!runtimeFn().isBrowser) {
-      base = sthis.env.get("FP_STORAGE_URL") || `file://${sthis.sys.fsHelper.join(sthis.sys.fsHelper.homedir(), ".fireproof")}`;
+      base = sthis.env.get("FP_STORAGE_URL") || `file://${sthis.pathOps.join(sthis.pathOps.homedir(), ".fireproof")}`;
     } else {
       base = sthis.env.get("FP_STORAGE_URL") || `indexdb://fp`;
     }

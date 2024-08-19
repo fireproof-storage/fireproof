@@ -40,21 +40,21 @@ export interface SysFileSystem {
   writefile(path: PathLike, data: Uint8Array | string): Promise<void>;
 }
 
-export interface SysFsHelper {
+export interface PathOps {
   join(...args: string[]): string;
   dirname(path: string): string;
   homedir(): string;
 }
 
-export interface Sys {
-  fs: SysFileSystem;
-  fsHelper: SysFsHelper;
-}
+// export interface Sys {
+//   // fs: SysFileSystem;
+//   fsHelper: PathOps;
+// }
 
 export interface SuperThis {
   readonly logger: Logger;
   readonly env: Env;
-  readonly sys: Sys;
+  readonly pathOps: PathOps;
   nextId(): string;
   start(): Promise<void>;
 }
@@ -69,7 +69,7 @@ export interface ConfigOpts {
   // readonly indexStore?: StoreOpts;
   readonly threshold?: number;
   readonly logger?: Logger;
-  readonly sysCtx?: Sys;
+  readonly pathOps?: PathOps;
 }
 
 export type ClockLink = EventLink<Operation>;

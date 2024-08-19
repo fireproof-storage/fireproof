@@ -26,7 +26,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
     return {
       dirName,
       sysFS,
-      fName: this.sthis.sys.fsHelper.join(dirName, `${id.replace(/[^a-zA-Z0-9]/g, "_")}.json`),
+      fName: this.sthis.pathOps.join(dirName, `${id.replace(/[^a-zA-Z0-9]/g, "_")}.json`),
     };
   }
 

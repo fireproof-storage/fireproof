@@ -31,9 +31,9 @@ export function getPath(url: URI, sthis: SuperThis): string {
   if (name) {
     const version = url.getParam("version");
     if (!version) throw sthis.logger.Error().Url(url).Msg(`version not found`).AsError();
-    return sthis.sys.fsHelper.join(basePath, version, name);
+    return sthis.pathOps.join(basePath, version, name);
   }
-  return sthis.sys.fsHelper.join(basePath);
+  return sthis.pathOps.join(basePath);
 }
 
 export function getFileName(url: URI, sthis: SuperThis): string {
@@ -42,10 +42,10 @@ export function getFileName(url: URI, sthis: SuperThis): string {
   const res = getStore(url, sthis, (...a: string[]) => a.join("-"));
   switch (res.store) {
     case "data":
-      return sthis.sys.fsHelper.join(res.name, key + ".car");
+      return sthis.pathOps.join(res.name, key + ".car");
     case "wal":
     case "meta":
-      return sthis.sys.fsHelper.join(res.name, key + ".json");
+      return sthis.pathOps.join(res.name, key + ".json");
     default:
       throw sthis.logger.Error().Url(url).Msg(`unsupported store type`).AsError();
   }
