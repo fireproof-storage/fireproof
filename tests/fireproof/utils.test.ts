@@ -1,11 +1,13 @@
 import { URI } from "@adviser/cement";
-import { ensureLogger, rt, getStore } from "@fireproof/core";
+import { rt, getStore, ensureSuperLog } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 describe("utils", () => {
-  const logger = ensureLogger({}, "getfilename");
+  const sthis = mockSuperThis({});
+  const logger = ensureSuperLog(sthis, "getfilename");
 
   beforeAll(async () => {
-    await rt.SysContainer.start();
+    await sthis.start();
   });
 
   it("sorts search params", () => {

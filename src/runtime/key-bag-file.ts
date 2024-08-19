@@ -1,7 +1,7 @@
 import { URI } from "@adviser/cement";
 import { isNotFoundError, Logger } from "../utils.js";
 import { KeyBagProvider, KeyItem } from "./key-bag.js";
-import { SysContainer, SysFileSystem } from "./sys-container.js";
+import { SuperThis, SysFileSystem } from "../types.js";
 
 interface KeyBagCtx {
   readonly dirName: string;
@@ -26,14 +26,18 @@ export class KeyBagProviderFile implements KeyBagProvider {
     return {
       dirName,
       sysFS,
-      fName: SysContainer.join(dirName, `${id.replace(/[^a-zA-Z0-9]/g, "_")}.json`),
+      fName: this.sthis.sys.fsHelper.join(dirName, `${id.replace(/[^a-zA-Z0-9]/g, "_")}.json`),
     };
   }
 
-  constructor(
-    private readonly url: URI,
-    readonly logger: Logger,
-  ) {}
+  private readonly url: URI
+  readonly logger: Logger
+  readonly sthis: SuperThis
+  constructor(url: URI, sthis: SuperThis) {
+    this.url = url;
+    this.sthis = sthis;
+    this.logger = sthis.logger;
+  }
 
   async get(id: string): Promise<KeyItem | undefined> {
     const ctx = await this._prepare(id);

@@ -50,7 +50,7 @@ export abstract class ConnectionBase implements Connection {
     await (await throwFalsy(this.loader).WALStore()).process();
   }
 
-  async connect_X({ loader }: { readonly loader?: Loader }) {
+  async connect_X({ loader }: { readonly loader?: Loadable }) {
     if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
     await this.connectMeta_X({ loader });
     await this.connectStorage_X({ loader });
@@ -62,13 +62,13 @@ export abstract class ConnectionBase implements Connection {
     this.taskManager = new TaskManager(loader);
     await this.onConnect();
     const metaUrl = this.url.build().defParam("store", "meta").URI();
-    const gateway = await getGatewayFromURL(metaUrl, this.logger);
+    const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
     const name = metaUrl.toString();
-    const remote = await RemoteMetaStore(name, metaUrl, {
+    const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
       logger: this.logger,
       gateway: gateway.gateway,
-      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag),
+      keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
     });
     remote.onLoad("main", async (metas) => {
       if (metas) {
@@ -91,13 +91,13 @@ export abstract class ConnectionBase implements Connection {
     if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
     this.loader = loader;
     const dataUrl = this.url.build().defParam("store", "data").URI();
-    const gateway = await getGatewayFromURL(dataUrl, this.logger);
+    const gateway = await getGatewayFromURL(dataUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.toString();
-    loader.remoteCarStore = await RemoteDataStore(name, this.url, {
+    loader.remoteCarStore = await RemoteDataStore(loader.sthis, name, this.url, {
       logger: this.logger,
       gateway: gateway.gateway,
-      keybag: () => getKeyBag(this.loader?.ebOpts.keyBag),
+      keybag: () => getKeyBag(loader.sthis, this.loader?.ebOpts.keyBag),
     });
     // @jchris why we have a differention between remoteCarStore and remoteFileStore?
     loader.remoteFileStore = loader.remoteCarStore;

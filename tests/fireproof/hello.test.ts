@@ -1,4 +1,5 @@
-import { rt, fireproof as database, Database, DocResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
+import { fireproof as database, Database, DocResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
@@ -16,6 +17,7 @@ describe("hello public API", function () {
   let ok: DocResponse;
   let doc: DocWithId<TestDoc>;
   let query: IndexRows<string, TestDoc>;
+  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -23,9 +25,9 @@ describe("hello public API", function () {
     await idx.destroy();
   });
   beforeEach(async function () {
-    await rt.SysContainer.start();
+    await sthis.start();
     db = database("test-public-api");
-    idx = index<string, TestDoc>(db, "test-index", (doc) => doc.foo);
+    idx = index<string, TestDoc>(sthis, db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
     query = await idx.query();

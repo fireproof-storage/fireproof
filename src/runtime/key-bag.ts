@@ -10,9 +10,9 @@ import {
   URI,
 } from "@adviser/cement";
 import { KeyWithFingerPrint } from "../blockstore/types.js";
-import { SysContainer } from "./sys-container.js";
 import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
+import { SuperThis } from "../types.js";
 
 export type { KeyBagProviderFile } from "./key-bag-file.js";
 export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
@@ -20,7 +20,7 @@ export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
 export class KeyBag {
   readonly logger: Logger;
   constructor(readonly rt: KeyBagRuntime) {
-    this.logger = ensureLogger(rt, "KeyBag", {
+    this.logger = ensureLogger(rt.sthis, "KeyBag", {
       id: rt.id(),
     });
     this.logger.Debug().Msg("KeyBag created");
@@ -115,7 +115,6 @@ export interface KeyBagOpts {
   // readonly key: string; // key to encrypt the keybag
   readonly crypto: CryptoRuntime;
   readonly keyLength: number; // default: 16
-  readonly logger: Logger;
   readonly keyRuntime: KeyBagRuntime;
 }
 
@@ -127,27 +126,28 @@ export interface KeyBagRuntime {
   readonly url: URI;
   readonly crypto: CryptoRuntime;
   readonly logger: Logger;
+  readonly sthis: SuperThis;
   readonly keyLength: number;
   // readonly key?: FPCryptoKey;
   getBag(): Promise<KeyBagProvider>;
   id(): string;
 }
 
-function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
+function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRuntime {
   if (kbo.keyRuntime) {
     return kbo.keyRuntime;
   }
-  const logger = ensureLogger(kbo, "KeyBag");
+  const logger = ensureLogger(sthis, "KeyBag");
   let url: URI;
   if (kbo.url) {
     url = URI.from(kbo.url);
   } else {
-    let bagFnameOrUrl = SysContainer.env.get("FP_KEYBAG_URL");
+    let bagFnameOrUrl =  sthis.env.get("FP_KEYBAG_URL");
     if (runtimeFn().isBrowser) {
       url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
     } else {
       if (!bagFnameOrUrl) {
-        const home = SysContainer.env.get("HOME");
+        const home =  sthis.env.get("HOME");
         bagFnameOrUrl = `${home}/.fireproof/keybag`;
         url = URI.from(`file://${bagFnameOrUrl}`);
       } else {
@@ -160,13 +160,13 @@ function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
     case "file:":
       keyProviderFactory = async () => {
         const { KeyBagProviderFile } = await import("./key-bag-file.js");
-        return new KeyBagProviderFile(url, logger);
+        return new KeyBagProviderFile(url, sthis);
       };
       break;
     case "indexdb:":
       keyProviderFactory = async () => {
         const { KeyBagProviderIndexDB } = await import("./key-bag-indexdb.js");
-        return new KeyBagProviderIndexDB(url, logger);
+        return new KeyBagProviderIndexDB(url, sthis);
       };
       break;
     default:
@@ -178,6 +178,7 @@ function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
   return {
     url,
     crypto: kbo.crypto || toCryptoRuntime({}),
+    sthis,
     logger,
     keyLength: kbo.keyLength || 16,
     getBag: keyProviderFactory,
@@ -188,8 +189,8 @@ function defaultKeyBagOpts(kbo: Partial<KeyBagOpts>): KeyBagRuntime {
 }
 
 const _keyBags = new KeyedResolvOnce<KeyBag>();
-export async function getKeyBag(kbo: Partial<KeyBagOpts> = {}): Promise<KeyBag> {
-  await SysContainer.start();
-  const rt = defaultKeyBagOpts(kbo);
+export async function getKeyBag(sthis: SuperThis, kbo: Partial<KeyBagOpts> = {}): Promise<KeyBag> {
+  await sthis.start();
+  const rt = defaultKeyBagOpts(sthis, kbo);
   return _keyBags.get(rt.id()).once(async () => new KeyBag(rt));
 }

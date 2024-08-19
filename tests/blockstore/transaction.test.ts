@@ -1,5 +1,6 @@
 import { CID } from "multiformats";
 import { bs } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 const txtEncoder = new TextEncoder();
 describe("Fresh TransactionBlockstore", function () {
@@ -32,8 +33,9 @@ describe("Fresh TransactionBlockstore", function () {
 
 describe("TransactionBlockstore with name", function () {
   let blocks: bs.EncryptedBlockstore;
+  const sthis = mockSuperThis();
   beforeEach(function () {
-    blocks = new bs.EncryptedBlockstore({ name: "test" });
+    blocks = new bs.EncryptedBlockstore(sthis, { name: "test" });
   });
   it("should have a name", function () {
     expect(blocks.name).toEqual("test");
@@ -55,8 +57,9 @@ describe("TransactionBlockstore with name", function () {
 describe("A transaction", function () {
   let tblocks: bs.CarTransaction;
   let blocks: bs.EncryptedBlockstore;
+  const sthis = mockSuperThis();
   beforeEach(async function () {
-    blocks = new bs.EncryptedBlockstore({ name: "test" });
+    blocks = new bs.EncryptedBlockstore(sthis, { name: "test" });
     tblocks = new bs.CarTransaction(blocks);
     blocks.transactions.add(tblocks);
   });

@@ -7,6 +7,7 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import { decode, encode } from "./wait-pr-multiformats/block";
+import { SuperThis } from "..";
 
 interface GenerateIVFn {
   calc(ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;
@@ -105,8 +106,8 @@ class keyedCrypto implements KeyedCrypto {
   readonly key: KeyWithFingerPrint;
   readonly isEncrypting = true;
   readonly url: URI;
-  constructor(url: URI, key: KeyWithFingerPrint, cyopt: CryptoRuntime, logger: Logger) {
-    this.logger = ensureLogger(logger, "keyedCrypto");
+  constructor(url: URI, key: KeyWithFingerPrint, cyopt: CryptoRuntime, sthis: SuperThis) {
+    this.logger = ensureLogger(sthis, "keyedCrypto");
     this.crypto = cyopt;
     this.key = key;
     this.url = url;
@@ -161,8 +162,8 @@ class noCrypto implements KeyedCrypto {
   readonly isEncrypting = false;
   readonly _fingerPrint = "noCrypto:" + Math.random();
   readonly url: URI;
-  constructor(url: URI, cyrt: CryptoRuntime, logger: Logger) {
-    this.logger = ensureLogger(logger, "noCrypto");
+  constructor(url: URI, cyrt: CryptoRuntime, sthis: SuperThis) {
+    this.logger = ensureLogger(sthis, "noCrypto");
     this.crypto = cyrt;
     this.url = url;
   }
@@ -190,7 +191,7 @@ class noCrypto implements KeyedCrypto {
   }
 }
 
-export async function keyedCryptoFactory(url: URI, kb: KeyBag, logger: Logger): Promise<KeyedCrypto> {
+export async function keyedCryptoFactory(url: URI, kb: KeyBag, sthis: SuperThis): Promise<KeyedCrypto> {
   const storekey = url.getParam("storekey");
   if (storekey && storekey !== "insecure") {
     let rkey = await kb.getNamedKey(storekey, true);
@@ -199,7 +200,7 @@ export async function keyedCryptoFactory(url: URI, kb: KeyBag, logger: Logger): 
         rkey = await kb.toKeyWithFingerPrint(storekey);
       } catch (e) {
         throw (
-          logger
+          sthis.logger
             .Error()
             .Err(e)
             .Str("keybag", kb.rt.id())
@@ -210,7 +211,7 @@ export async function keyedCryptoFactory(url: URI, kb: KeyBag, logger: Logger): 
         );
       }
     }
-    return new keyedCrypto(url, rkey.Ok(), kb.rt.crypto, logger);
+    return new keyedCrypto(url, rkey.Ok(), kb.rt.crypto, sthis);
   }
-  return new noCrypto(url, kb.rt.crypto, logger);
+  return new noCrypto(url, kb.rt.crypto, sthis);
 }
