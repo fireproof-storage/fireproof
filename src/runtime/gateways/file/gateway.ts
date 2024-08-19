@@ -27,10 +27,10 @@ export class FileGateway implements Gateway {
   async getVersionFromFile(path: string, logger: Logger): Promise<string> {
     return versionFiles.get(path).once(async () => {
       await this.fs.mkdir(path, { recursive: true });
-      const vFile = this.sthis.sys.fsHelper.join(path, "version");
+      const vFile = this.sthis.pathOps.join(path, "version");
       const vFileStat = await this.fs.stat(vFile).catch(() => undefined);
       if (!vFileStat) {
-        await this.fs.writefile(this.sthis.sys.fsHelper.join(path, "version"), FILESTORE_VERSION);
+        await this.fs.writefile(this.sthis.pathOps.join(path, "version"), FILESTORE_VERSION);
         return FILESTORE_VERSION;
       } else if (!vFileStat.isFile()) {
         throw logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
@@ -53,8 +53,8 @@ export class FileGateway implements Gateway {
       // url.defParam("store", this.storeType);
       const dbUrl = await this.buildUrl(url.URI(), "dummy");
       const dbdirFile = this.getFilePath(dbUrl.Ok());
-      await this.fs.mkdir(this.sthis.sys.fsHelper.dirname(dbdirFile), { recursive: true });
-      const dbroot = this.sthis.sys.fsHelper.dirname(dbdirFile);
+      await this.fs.mkdir(this.sthis.pathOps.dirname(dbdirFile), { recursive: true });
+      const dbroot = this.sthis.pathOps.dirname(dbdirFile);
       this.logger.Debug().Url(url.URI()).Str("dbroot", dbroot).Msg("start");
       url.setParam("version", await this.getVersionFromFile(dbroot, this.logger));
       return url.URI();
@@ -73,7 +73,7 @@ export class FileGateway implements Gateway {
   getFilePath(url: URI): string {
     const key = url.getParam("key");
     if (!key) throw this.logger.Error().Url(url).Msg(`key not found`).AsError();
-    return this.sthis.sys.fsHelper.join(getPath(url, this.sthis), getFileName(url, this.sthis));
+    return this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
   }
 
   async put(url: URI, body: Uint8Array): Promise<Result<void>> {
@@ -110,7 +110,7 @@ export class FileGateway implements Gateway {
   async destroy(baseURL: URI): Promise<Result<void>> {
     const url = await this.buildUrl(baseURL, "x");
     if (url.isErr()) return url;
-    const filepath = this.sthis.sys.fsHelper.dirname(this.getFilePath(url.Ok()));
+    const filepath = this.sthis.pathOps.dirname(this.getFilePath(url.Ok()));
     let files: string[] = [];
     try {
       files = await this.fs.readdir(filepath);
@@ -120,7 +120,7 @@ export class FileGateway implements Gateway {
       }
     }
     for (const file of files) {
-      const pathed = this.sthis.sys.fsHelper.join(filepath, file);
+      const pathed = this.sthis.pathOps.join(filepath, file);
       try {
         await this.fs.unlink(pathed);
       } catch (e: unknown) {
@@ -166,7 +166,7 @@ export class FileTestStore implements TestGateway {
 
   async get(iurl: URI, key: string) {
     const url = iurl.build().setParam("key", key).URI();
-    const dbFile = this.sthis.sys.fsHelper.join(getPath(url, this.sthis), getFileName(url, this.sthis));
+    const dbFile = this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await (await getFileSystem(url)).readfile(dbFile);
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
