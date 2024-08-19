@@ -23,7 +23,7 @@ export function ensureSuperLog(sthis: SuperThis, componentName: string, ctx?: Re
 }
 
 export function ensureLogger(
-  sthis: SuperThis/* Partial<LoggerOpts> | Logger */,
+  sthis: SuperThis /* Partial<LoggerOpts> | Logger */,
   componentName: string,
   ctx?: Record<string, unknown>,
 ): Logger {

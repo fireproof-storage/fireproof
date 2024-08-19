@@ -6,11 +6,12 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   const name = url.getParam("fs");
   let fs: SysFileSystem;
   switch (name) {
-    case "mem": {
-      const { MemFileSystem } = await import("./mem-filesystem.js");
-      fs = new MemFileSystem();
-    }
-    break
+    case "mem":
+      {
+        const { MemFileSystem } = await import("./mem-filesystem.js");
+        fs = new MemFileSystem();
+      }
+      break;
     case "node":
     case "sys":
     default: {
@@ -18,7 +19,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
       fs = new NodeFileSystem();
     }
   }
-  return fs.start()
+  return fs.start();
 }
 
 export function getPath(url: URI, sthis: SuperThis): string {

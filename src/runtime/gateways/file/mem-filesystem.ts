@@ -6,7 +6,7 @@ import { SysFileSystem } from "../../../types.js";
 
 export class MemFileSystem implements SysFileSystem {
   async start(): Promise<SysFileSystem> {
-    return this
+    return this;
   }
   mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
     return fs.promises.mkdir(path, options);

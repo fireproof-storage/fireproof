@@ -30,9 +30,9 @@ export class KeyBagProviderFile implements KeyBagProvider {
     };
   }
 
-  private readonly url: URI
-  readonly logger: Logger
-  readonly sthis: SuperThis
+  private readonly url: URI;
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
   constructor(url: URI, sthis: SuperThis) {
     this.url = url;
     this.sthis = sthis;

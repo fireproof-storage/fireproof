@@ -60,7 +60,7 @@ export class Loader implements Loadable {
   readonly carReaders = new Map<string, Promise<CarReader>>();
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
-  readonly sthis: SuperThis
+  readonly sthis: SuperThis;
 
   carLog: CarLog = [];
   // key?: string;
@@ -128,7 +128,7 @@ export class Loader implements Loadable {
     );
     this.logger = this.ebOpts.logger;
     throw new Error("Loader constructor superthis");
-    this.sthis = {} as SuperThis
+    this.sthis = {} as SuperThis;
   }
 
   // async snapToCar(carCid: AnyLink | string) {

@@ -142,12 +142,12 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
   if (kbo.url) {
     url = URI.from(kbo.url);
   } else {
-    let bagFnameOrUrl =  sthis.env.get("FP_KEYBAG_URL");
+    let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
     if (runtimeFn().isBrowser) {
       url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
     } else {
       if (!bagFnameOrUrl) {
-        const home =  sthis.env.get("HOME");
+        const home = sthis.env.get("HOME");
         bagFnameOrUrl = `${home}/.fireproof/keybag`;
         url = URI.from(`file://${bagFnameOrUrl}`);
       } else {

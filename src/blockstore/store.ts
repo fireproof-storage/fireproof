@@ -142,10 +142,15 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(name, url, {
-      ...opts,
-      logger: ensureLogger(sthis, "MetaStoreImpl"),
-    }, sthis);
+    super(
+      name,
+      url,
+      {
+        ...opts,
+        logger: ensureLogger(sthis, "MetaStoreImpl"),
+      },
+      sthis,
+    );
   }
 
   onLoad(branch: string, loadHandler: LoadHandler): () => void {
@@ -244,10 +249,15 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   // readonly tag: string = "car-base";
 
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
-    super(name, url, {
-      ...opts,
-      logger: ensureLogger(sthis, "DataStoreImpl"),
-    }, sthis);
+    super(
+      name,
+      url,
+      {
+        ...opts,
+        logger: ensureLogger(sthis, "DataStoreImpl"),
+      },
+      sthis,
+    );
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -308,10 +318,15 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   constructor(loader: Loadable, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(loader.name, url, {
-      ...opts,
-      logger: ensureLogger(loader.sthis, "WALStoreImpl"),
-    }, loader.sthis);
+    super(
+      loader.name,
+      url,
+      {
+        ...opts,
+        logger: ensureLogger(loader.sthis, "WALStoreImpl"),
+      },
+      loader.sthis,
+    );
     this.loader = loader;
   }
 

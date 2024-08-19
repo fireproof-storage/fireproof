@@ -53,7 +53,7 @@ export interface Sys {
 
 export interface SuperThis {
   readonly logger: Logger;
-  readonly env: Env
+  readonly env: Env;
   readonly sys: Sys;
   nextId(): string;
   start(): Promise<void>;

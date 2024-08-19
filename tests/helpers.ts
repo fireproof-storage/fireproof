@@ -37,7 +37,6 @@ export function storageURL(sthis: SuperThis): URI {
   return merged;
 }
 
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function mockSuperThis(sthis?: Partial<LoggerOpts>): SuperThis {
   throw new Error("ensureSuperThis is not implemented");
