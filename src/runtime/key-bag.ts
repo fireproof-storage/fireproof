@@ -13,7 +13,6 @@ import { KeyWithFingerPrint } from "../blockstore/types.js";
 import { SysContainer } from "./sys-container.js";
 import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
-// import { getFileSystem } from "./gateways/file/gateway.js";
 
 export type { KeyBagProviderFile } from "./key-bag-file.js";
 export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
@@ -35,6 +34,30 @@ export class KeyBag {
       false, // extractable
       ["encrypt", "decrypt"],
     );
+  }
+
+  async ensureKeyFromUrl(url: URI, keyFactory: () => string): Promise<Result<URI>> {
+    // add storekey to url
+    const storeKey = url.getParam("storekey");
+    if (storeKey === "insecure") {
+      return Result.Ok(url);
+    }
+    if (!storeKey) {
+      const keyName = `@${keyFactory()}@`;
+      const ret = await this.getNamedKey(keyName);
+      if (ret.isErr()) {
+        return ret as unknown as Result<URI>;
+      }
+      const urb = url.build().setParam("storekey", keyName);
+      return Result.Ok(urb.URI());
+    }
+    if (storeKey.startsWith("@") && storeKey.endsWith("@")) {
+      const ret = await this.getNamedKey(storeKey);
+      if (ret.isErr()) {
+        return ret as unknown as Result<URI>;
+      }
+    }
+    return Result.Ok(url);
   }
 
   async toKeyWithFingerPrint(key: string): Promise<Result<KeyWithFingerPrint>> {

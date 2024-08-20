@@ -7,7 +7,7 @@ describe("Hello World Test", function () {
   });
 });
 
-describe("public API", function () {
+describe("hello public API", function () {
   interface TestDoc {
     foo: string;
   }

@@ -124,7 +124,7 @@ export interface KeyedCrypto {
   readonly crypto: CryptoRuntime;
   readonly url: URI;
   // readonly codec: BlockCodec<number, IvAndBytes>;
-  readonly isEncrypting: boolean;
+  // readonly isEncrypting: boolean;
   fingerPrint(): Promise<string>;
   algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number };
   codec(iv?: Uint8Array, codecOpts?: Partial<CodecOpts>): BlockCodec<number, Uint8Array>;
