@@ -164,7 +164,7 @@ async function prepareCarFiles(
   // const theKey = isPublic ? undefined : await this._getKey();
   const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
   threshold = threshold || 1000 * 1000;
-  let clonedt = new CarTransaction(t.parent, { add: false,noLoader: false });
+  let clonedt = new CarTransaction(t.parent, { add: false, noLoader: false });
   clonedt.putSync(rootBlock.cid, rootBlock.bytes);
   let newsize = CBW.blockLength(toCIDBlock(rootBlock));
   let cidRootBlock = rootBlock;
