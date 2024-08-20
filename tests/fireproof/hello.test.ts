@@ -1,8 +1,9 @@
-import { fireproof as database, Database, DocResponse, DocWithId } from "@fireproof/core";
+import { fireproof, Database, DocResponse, DocWithId, index } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
-    const result = database("hello"); // call to your library function
+    const result = fireproof("hello"); // call to your library function
     expect(result.name).toBe("hello");
   });
 });
@@ -14,12 +15,16 @@ describe("hello public API", function () {
   let db: Database;
   let ok: DocResponse;
   let doc: DocWithId<TestDoc>;
-  afterEach(async function () {
+  // let idx: Index<string, TestDoc>;
+  const sthis = mockSuperThis();
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
-    db = database("test-public-api");
+  beforeEach(async () => {
+    await sthis.start();
+    db = fireproof("test-public-api");
+    index<string, TestDoc>(sthis, db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
   });
@@ -37,7 +42,7 @@ describe("hello public API", function () {
   it("should get when you open it again", async function () {
     await db.close();
     await db.destroy();
-    const db2 = database("test-public-api");
+    const db2 = fireproof("test-public-api");
     doc = await db2.get("test");
     expect(doc.foo).toBe("bar");
   });
@@ -50,7 +55,7 @@ describe("Simplified Reopening a database", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-reopen-simple");
+    db = fireproof("test-reopen-simple");
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
@@ -62,7 +67,7 @@ describe("Simplified Reopening a database", function () {
   });
 
   it("should have the same data on reopen", async function () {
-    const db2 = new Database("test-reopen-simple");
+    const db2 = fireproof("test-reopen-simple");
     const doc = await db2.get<{ foo: string }>("test");
     expect(doc.foo).toBe("bar");
     await db2.close();

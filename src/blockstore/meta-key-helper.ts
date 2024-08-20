@@ -1,14 +1,14 @@
 import { format, parse } from "@ipld/dag-json";
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
-import type { DbMeta, CarClockHead, DbMetaEventBlock, CarClockLink } from "./types.js";
+import type { DbMeta, CarClockHead, DbMetaEventBlock, CarClockLink, DbMetaEvent } from "./types.js";
 import { SuperThis, CRDTEntry } from "../types.js";
 import { CID, Link } from "multiformats";
 import { base64pad } from "multiformats/bases/base64";
 import { Result, URI } from "@adviser/cement";
 import { getKeyBag } from "../runtime/key-bag.js";
 
-export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
+export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array): Promise<DbMetaEvent[]> {
   const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
   if (!crdtEntries.length) {
     sthis.logger.Debug().Str("byteHeads", new TextDecoder().decode(byteHeads)).Msg("No CRDT entries found");

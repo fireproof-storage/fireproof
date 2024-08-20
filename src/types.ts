@@ -1,15 +1,35 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
-import type { DbMeta, StoreOpts, AnyLink } from "./blockstore/index.js";
+import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile } from "./blockstore/index.js";
 import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";
 
 import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
+import { KeyBagOpts } from "./runtime/key-bag.js";
 
 export type Falsy = false | null | undefined;
 
 export function isFalsy(value: unknown): value is Falsy {
   return value === false && value === null && value === undefined;
+}
+
+export enum PARAM {
+  SUFFIX = "suffix",
+  URL_GEN = "urlGen", // "urlGen" | "default"
+  STORE_KEY = "storekey",
+  STORE = "store",
+  KEY = "key",
+  INDEX = "index",
+  NAME = "name",
+  VERSION = "version",
+  FRAG_SIZE = "fragSize",
+  IV_VERIFY = "ivVerify",
+  IV_HASH = "ivHash",
+  FRAG_FID = "fid",
+  FRAG_OFS = "ofs",
+  FRAG_LEN = "len",
+  FRAG_HEAD = "headerSize",
+  // FS = "fs",
 }
 
 export function throwFalsy<T>(value: T | Falsy): T {
@@ -43,13 +63,9 @@ export interface SysFileSystem {
 export interface PathOps {
   join(...args: string[]): string;
   dirname(path: string): string;
-  // homedir(): string;
+  basename(path: string): string;
 }
 
-// export interface Sys {
-//   // fs: SysFileSystem;
-//   fsHelper: PathOps;
-// }
 export interface TextEndeCoder {
   encode(input: string): Uint8Array;
   decode(input: Uint8Array): string;
@@ -70,8 +86,8 @@ export interface SuperThis {
   readonly pathOps: PathOps;
   readonly ctx: Record<string, unknown>;
   readonly txt: TextEndeCoder;
-  nextId(bytes?: number): { str: string; bin: Uint8Array };
-  timeOrderedNextId(time?: number): { str: string };
+  timeOrderedNextId(time?: number): { str: string; toString: () => string };
+  nextId(bytes?: number): { str: string; bin: Uint8Array; toString: () => string };
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;
 }
@@ -79,10 +95,12 @@ export interface SuperThis {
 export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly public?: boolean;
   readonly meta?: DbMeta;
-  readonly persistIndexes?: boolean;
+  // readonly persistIndexes?: boolean;
   readonly autoCompact?: number;
-  readonly store?: StoreOpts;
+  readonly storeUrls?: StoreUrlsOpts;
+  readonly storeEnDe?: StoreEnDeFile;
   readonly threshold?: number;
+  readonly keyBag?: Partial<KeyBagOpts>;
 }
 
 export type ClockLink = EventLink<Operation>;
