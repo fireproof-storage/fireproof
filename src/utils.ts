@@ -1,19 +1,15 @@
 import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce, isURL, URI, CoerceURI, runtimeFn } from "@adviser/cement";
-import { StoreType, SuperThis } from "./types";
+import { StoreType, SuperThis, SuperThisOpts } from "./types";
 
 export type { Logger };
 export { Result };
 
 const globalLogger: Logger = new LoggerImpl();
 
-export interface LoggerOpts {
-  readonly logger?: Logger;
-}
-
 const registerFP_DEBUG = new ResolveOnce();
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ensureSuperThis(sthis?: Partial<LoggerOpts>): SuperThis {
+export function ensureSuperThis(sthis?: Partial<SuperThisOpts>): SuperThis {
   throw new Error("ensureSuperThis is not implemented");
 }
 
