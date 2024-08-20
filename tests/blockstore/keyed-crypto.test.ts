@@ -1,5 +1,5 @@
 import { bs, rt } from "@fireproof/core";
-import { Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
+import { BuildURI, Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
@@ -117,7 +117,7 @@ describe("KeyedCryptoStore", () => {
         },
         store: {
           stores: {
-            base: baseUrl.build().setParam("storekey", "insecure").URI(),
+            base: baseUrl.build().setParam("storekey", "insecure"),
           },
         },
       },
@@ -128,7 +128,8 @@ describe("KeyedCryptoStore", () => {
       const store = await pstore;
       // await store.start();
       const kc = await store.keyedCrypto();
-      expect(kc.isEncrypting).toBe(false);
+      expect(kc.constructor.name).toBe("noCrypto");
+      // expect(kc.isEncrypting).toBe(false);
     }
   });
 
@@ -150,7 +151,8 @@ describe("KeyedCryptoStore", () => {
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
-      expect(kc.isEncrypting).toBe(true);
+      expect(kc.constructor.name).toBe("keyedCrypto");
+      // expect(kc.isEncrypting).toBe(true);
       expect(store.url().getParam("storekey")).toBe(`@test:${store.url().getParam("store")}@`);
     }
   });
@@ -177,7 +179,7 @@ describe("KeyedCryptoStore", () => {
       // await store.start();
       expect(store.url().getParam("storekey")).toBe(`@heute@`);
       const kc = await store.keyedCrypto();
-      expect(kc.isEncrypting).toBe(true);
+      expect(kc.constructor.name).toBe("keyedCrypto");
       const testData = kb.rt.crypto.randomBytes(1024);
       const iv = kb.rt.crypto.randomBytes(12);
       const blk = await kc._encrypt({ bytes: testData, iv });
@@ -199,7 +201,7 @@ describe("KeyedCryptoStore", () => {
         },
         store: {
           stores: {
-            base: `${baseUrl}?storekey=${key}`,
+            base: BuildURI.from(baseUrl).setParam("storekey", key),
           },
         },
       },
@@ -208,9 +210,9 @@ describe("KeyedCryptoStore", () => {
     for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
       // await store.start();
-      expect(store.url().getParam("storekey")).toBe(`@test:${store.url().getParam("store")}@`);
+      expect(store.url().getParam("storekey")).toBe(key);
       const kc = await store.keyedCrypto();
-      expect(kc.isEncrypting).toBe(true);
+      expect(kc.constructor.name).toBe("keyedCrypto");
       const testData = kb.rt.crypto.randomBytes(1024);
       const iv = kb.rt.crypto.randomBytes(12);
       const blk = await kc._encrypt({ bytes: testData, iv });
