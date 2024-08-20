@@ -66,7 +66,6 @@ export class CRDT<T extends DocTypes> {
         return { head: this.clock.head } as TransactionMeta;
       },
       autoCompact: this.opts.autoCompact || 100,
-      crypto: this.opts.crypto,
       store: { ...this.opts.store, isIndex: undefined },
       public: this.opts.public,
       meta: this.opts.meta,
@@ -81,7 +80,6 @@ export class CRDT<T extends DocTypes> {
           index(this.sthis, { _crdt: this }, name, undefined, idx);
         }
       },
-      crypto: this.opts.crypto,
       store: { ...this.opts.store, isIndex: this.opts.store?.isIndex || "idx" },
       public: this.opts.public,
     });
