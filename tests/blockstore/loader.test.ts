@@ -4,17 +4,18 @@ import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, rt } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis, simpleBlockOpts } from "../helpers";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
   loader: bs.Loader;
   constructor(sthis: SuperThis) {
-    const ebOpts = {
-      name: "MyMemoryBlockStore",
-    };
+    const ebOpts = simpleBlockOpts(sthis, "MyMemoryBlockStore"); //, "MyMemoryBlockStore");
+    // const ebOpts = {
+    //   name: "MyMemoryBlockStore",
+    // } as bs.BlockstoreOpts;
     super(sthis, ebOpts);
-    this.loader = new bs.Loader("MyMemoryBlockStore", {}, sthis);
+    this.loader = new bs.Loader(sthis, ebOpts);
   }
   ready(): Promise<void> {
     return Promise.resolve();
@@ -63,7 +64,10 @@ describe("basic Loader simple", function () {
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
     t = new bs.CarTransaction(mockM as bs.EncryptedBlockstore);
-    loader = new bs.Loader(testDbName, { public: true }, sthis);
+    loader = new bs.Loader(sthis, {
+      ...simpleBlockOpts(sthis, testDbName),
+      public: true,
+    });
     await loader.ready();
     block = await rt.mf.block.encode({
       value: { hello: "world" },
@@ -100,17 +104,20 @@ describe("basic Loader with two commits", function () {
   let carCid0: bs.CarGroup;
 
   const sthis = mockSuperThis();
-
-  afterEach(async function () {
+  afterEach(async () => {
     await loader.close();
     await loader.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
     t = new bs.CarTransaction(mockM);
-    loader = new bs.Loader("test-loader-two-commit", { public: true }, sthis);
+    loader = new bs.Loader(sthis, {
+      ...simpleBlockOpts(sthis, "test-loader-two-commit"),
+      public: true,
+    });
+
     block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,
@@ -211,8 +218,9 @@ describe("basic Loader with index commits", function () {
   beforeEach(async function () {
     const name = "test-loader-index" + Math.random();
     await sthis.start();
+    await sthis.start();
     // t = new CarTransaction()
-    ib = new bs.EncryptedBlockstore(sthis, { name });
+    ib = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
     block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,

@@ -1,8 +1,6 @@
-import { URI } from "@adviser/cement";
+import { runtimeFn, URI } from "@adviser/cement";
 import { rt, getStore, ensureSuperLog } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
-
-// only for test
 import { UUID } from "uuidv7";
 
 describe("utils", () => {
@@ -21,7 +19,7 @@ describe("utils", () => {
   const storeOpts = [
     {
       type: "data",
-      suffix: ".car",
+      suffix: ".tar",
     },
     {
       type: "wal",
@@ -34,14 +32,16 @@ describe("utils", () => {
   ];
   it("getfilename plain", () => {
     for (const store of storeOpts) {
-      const url = URI.from(`file://./x/path?store=${store.type}&name=name&key=key&version=version`);
+      const url = URI.from(`file://./x/path?store=${store.type}&name=name&key=key&version=version&suffix=${store.suffix}`);
       expect(rt.getFileName(url, logger)).toEqual(`${store.type}/key${store.suffix}`);
     }
   });
 
   it("getfilename index", () => {
     for (const store of storeOpts) {
-      const url = URI.from(`file://./x/path?index=idx&store=${store.type}&name=name&key=key&version=version`);
+      const url = URI.from(
+        `file://./x/path?index=idx&store=${store.type}&name=name&key=key&version=version&suffix=${store.suffix}`,
+      );
       expect(rt.getFileName(url, logger)).toEqual(`idx-${store.type}/key${store.suffix}`);
     }
   });
@@ -80,5 +80,17 @@ describe("utils", () => {
   it("timeorderednextid is uuidv7", () => {
     const id = sthis.timeOrderedNextId(0xcafebabebeef).str;
     expect(id.slice(0, 15)).toBe("cafebabe-beef-7");
+  });
+});
+
+describe("runtime", () => {
+  it("runtime", () => {
+    const isNode = !!(typeof process === "object" && process.versions?.node);
+    expect(runtimeFn()).toEqual({
+      isBrowser: !isNode,
+      isDeno: false,
+      isNodeIsh: isNode,
+      isReactNative: false,
+    });
   });
 });
