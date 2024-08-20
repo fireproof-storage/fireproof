@@ -20,6 +20,7 @@ const external = [
 ];
 
 const stopFile = {
+  "fs/promises": "../../../bundle-not-impl.js",
   "../runtime/store-file.js": "../../bundle-not-impl.js",
   "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
   "./mem-filesystem.js": "../../../bundle-not-impl.js",

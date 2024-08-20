@@ -143,7 +143,7 @@ describe("fireproof/config", () => {
     let baseDir = "./dist/data".replace(/\?.*$/, "").replace(/^file:\/\//, "");
     baseDir = sthis.pathOps.join(baseDir, rt.FILESTORE_VERSION, my_app());
 
-    const base = "./dist/data"
+    const base = "./dist/data";
     const sysfs = await rt.getFileSystem(URI.from(base));
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
