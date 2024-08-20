@@ -23,7 +23,7 @@ export type BlockFetcher = BlockFetcherApi;
 
 export interface CarTransactionOpts {
   readonly add: boolean;
-  readonly noLoader: boolean
+  readonly noLoader: boolean;
 }
 
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
