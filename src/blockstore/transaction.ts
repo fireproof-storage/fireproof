@@ -17,13 +17,17 @@ import type { CID, Block, Version } from "multiformats";
 import { falsyToUndef, SuperThis } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
-import { ensureLogger } from "../utils.js";
+import { ensureLogger, ensureSuperThis } from "../utils.js";
 
 export type BlockFetcher = BlockFetcherApi;
 
+export interface CarTransactionOpts {
+  readonly add: boolean;
+}
+
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   readonly parent: BaseBlockstore;
-  constructor(parent: BaseBlockstore, opts = { add: true }) {
+  constructor(parent: BaseBlockstore, opts: CarTransactionOpts = { add: true }) {
     super();
     if (opts.add) {
       parent.transactions.add(this);
@@ -102,10 +106,9 @@ export class BaseBlockstore implements BlockFetcher {
   readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts = {}) {
     // console.log("BaseBlockstore", ebOpts)
-    this.sthis = {} as SuperThis;
+    this.sthis = ensureSuperThis(ebOpts);
     this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.logger = this.ebOpts.logger;
-    throw new Error("BaseBlockstore must be extended");
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -125,10 +128,9 @@ export class BaseBlockstore implements BlockFetcher {
 
   async transaction<M extends TransactionMeta>(
     fn: (t: CarTransaction) => Promise<M>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _opts = {},
+    _opts?: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
-    const t = new CarTransaction(this);
+    const t = new CarTransaction(this, _opts);
     const done: M = await fn(t);
     this.lastTxMeta = done;
     return { t, meta: done };

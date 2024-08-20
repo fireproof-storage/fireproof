@@ -624,13 +624,7 @@ describe("same workload twice, same CID", function () {
   const configA = {
     store: {
       stores: {
-<<<<<<< HEAD
-        base: storageURL().build().setParam("storekey", "@test@"),
-||||||| parent of edcda983 (chore: compiler complete)
-        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
-=======
-        base: storageURL(sthis).build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
->>>>>>> edcda983 (chore: compiler complete)
+        base: storageURL(sthis).build().setParam("storekey", "@test@"),
       },
     },
   };
@@ -638,13 +632,7 @@ describe("same workload twice, same CID", function () {
   const configB = {
     store: {
       stores: {
-<<<<<<< HEAD
-        base: storageURL().build().setParam("storekey", "@test@"),
-||||||| parent of edcda983 (chore: compiler complete)
-        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
-=======
-        base: storageURL(sthis).build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
->>>>>>> edcda983 (chore: compiler complete)
+        base: storageURL(sthis).build().setParam("storekey", "@test@"),
       },
     },
   };

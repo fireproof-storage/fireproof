@@ -66,7 +66,6 @@ export abstract class ConnectionBase implements Connection {
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
     const name = metaUrl.toString();
     const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
-      logger: this.logger,
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
     });
@@ -95,7 +94,6 @@ export abstract class ConnectionBase implements Connection {
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.toString();
     loader.remoteCarStore = await RemoteDataStore(loader.sthis, name, this.url, {
-      logger: this.logger,
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, this.loader?.ebOpts.keyBag),
     });

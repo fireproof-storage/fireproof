@@ -2,7 +2,7 @@ import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
 import type { DbMeta, StoreOpts, AnyLink } from "./blockstore/index.js";
-import { EnvFactoryOpts, Env, Logger } from "@adviser/cement";
+import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";
 
 import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 
@@ -43,7 +43,7 @@ export interface SysFileSystem {
 export interface PathOps {
   join(...args: string[]): string;
   dirname(path: string): string;
-  homedir(): string;
+  // homedir(): string;
 }
 
 // export interface Sys {
@@ -54,15 +54,19 @@ export interface SuperThisOpts {
   // readonly crypto?: CryptoRuntime;
   readonly logger: Logger;
   readonly pathOps: PathOps;
-  readonly env: EnvFactoryOpts
+  readonly crypto: CryptoRuntime;
+  readonly env: EnvFactoryOpts;
+  readonly ctx: Record<string, unknown>;
 }
 
 export interface SuperThis {
   readonly logger: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
+  readonly ctx: Record<string, unknown>;
   nextId(): string;
   start(): Promise<void>;
+  clone(override: Partial<SuperThisOpts>): SuperThis;
 }
 
 export interface ConfigOpts extends Partial<SuperThisOpts> {
@@ -73,8 +77,6 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly store?: StoreOpts;
   readonly threshold?: number;
 }
-
-
 
 export type ClockLink = EventLink<Operation>;
 
