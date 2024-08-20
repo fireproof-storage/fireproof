@@ -4,10 +4,10 @@ import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser
 import { INDEXDB_VERSION } from "./version.js";
 import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
-import { SuperThis } from "../../../types.js";
+import { PARAM, SuperThis } from "../../../types.js";
 
 function ensureVersion(url: URI): URI {
-  return url.build().defParam("version", INDEXDB_VERSION).URI();
+  return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
 }
 
 interface IDBConn {
@@ -38,17 +38,17 @@ async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
       },
     });
     const found = await db.get("version", "version");
-    const version = ensureVersion(url).getParam("version") as string;
+    const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {
-      sthis.logger.Warn().Str("url", url.toString()).Str("version", version).Str("found", found.version).Msg("version mismatch");
+      sthis.logger.Warn().Url(url).Str("version", version).Str("found", found.version).Msg("version mismatch");
     }
     return { db, dbName, version, url };
   });
   return {
     ...once,
-    url: url.build().setParam("version", once.version).URI(),
+    url: url.build().setParam(PARAM.VERSION, once.version).URI(),
   };
 }
 
@@ -76,7 +76,7 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   // url.searchParams.set("version", storageVersion);
   // console.log("getIndexDBName:", url.toString(), { fullDb, type, branch });
   // const dbName = fullDb.replace(new RegExp(`^fp.${storageVersion}.`), ""); // cut fp prefix
-  const dbName = url.getParam("name");
+  const dbName = url.getParam(PARAM.NAME);
   if (!dbName) throw sthis.logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const result = joinDBName(fullDb, dbName);
   const objStore = getStore(url, sthis, joinDBName).name;
@@ -131,7 +131,7 @@ export class IndexDBGateway implements Gateway {
   }
 
   buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    return Promise.resolve(Result.Ok(baseUrl.build().setParam("key", key).URI()));
+    return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
   async get(url: URI): Promise<GetResult> {

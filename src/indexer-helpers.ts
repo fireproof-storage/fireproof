@@ -30,6 +30,7 @@ import {
 } from "./types.js";
 import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { CRDT } from "./crdt.js";
+import { Logger } from "use-fireproof";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
@@ -107,11 +108,13 @@ function makeProllyGetBlock(blocks: BlockFetcher): (address: AnyLink) => Promise
 }
 
 export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, CT>(
+  logger: Logger,
   tblocks: CarTransaction,
   inIndex: IndexTree<K, T>,
   indexEntries: (IndexUpdate<K> | IndexUpdateString)[],
   opts: StaticProllyOptions<CT>,
 ): Promise<IndexTree<K, T>> {
+  logger.Debug().Msg("enter bulkIndex");
   if (!indexEntries.length) return inIndex;
   if (!inIndex.root) {
     if (!inIndex.cid) {
@@ -129,18 +132,22 @@ export async function bulkIndex<K extends IndexKeyType, T extends DocFragment, C
         returnNode = node;
       }
       if (!returnNode || !returnRootBlock) throw new Error("failed to create index");
+      logger.Debug().Msg("exit !root bulkIndex");
       return { root: returnNode, cid: returnRootBlock.cid };
     } else {
       inIndex.root = (await DbIndex.load({ cid: inIndex.cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
     }
   }
+  logger.Debug().Msg("pre bulk bulkIndex");
   const { root, blocks: newBlocks } = await inIndex.root.bulk(indexEntries);
   if (root) {
+    logger.Debug().Msg("pre root put bulkIndex");
     for await (const block of newBlocks) {
       await tblocks.put(block.cid, block.bytes);
     }
     return { root, cid: (await root.block).cid };
   } else {
+    logger.Debug().Msg("pre !root bulkIndex");
     return { root: undefined, cid: undefined };
   }
 }

@@ -1,12 +1,12 @@
 import { Block } from "multiformats";
 import { Logger, ResolveOnce } from "@adviser/cement";
-
 import {
   EncryptedBlockstore,
   type TransactionMeta,
   type CarTransaction,
   BaseBlockstore,
   CompactFetcher,
+  toStoreRuntime,
 } from "./blockstore/index.js";
 import {
   clockChangesSince,
@@ -22,24 +22,27 @@ import type {
   DocUpdate,
   CRDTMeta,
   ClockHead,
-  ConfigOpts,
   ChangesOptions,
-  IdxMetaMap,
   DocValue,
   IndexKeyType,
   DocWithId,
   DocTypes,
   Falsy,
   SuperThis,
+  IndexTransactionMeta,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
+import { DatabaseOpts } from "./database.js";
+
+export interface HasCRDT<T extends DocTypes> {
+  readonly crdt: CRDT<T> | CRDT<NonNullable<unknown>>;
+}
 
 export class CRDT<T extends DocTypes> {
-  readonly name?: string;
-  readonly opts: ConfigOpts;
+  readonly opts: DatabaseOpts;
 
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
@@ -52,13 +55,11 @@ export class CRDT<T extends DocTypes> {
   readonly logger: Logger;
   readonly sthis: SuperThis;
 
-  constructor(sthis: SuperThis, name?: string, opts: ConfigOpts = {}) {
+  constructor(sthis: SuperThis, opts: DatabaseOpts) {
     this.sthis = sthis;
-    this.name = name;
     this.logger = ensureLogger(sthis, "CRDT");
     this.opts = opts;
     this.blockstore = blockstoreFactory(sthis, {
-      name: name,
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
@@ -68,23 +69,27 @@ export class CRDT<T extends DocTypes> {
         await doCompact(blocks, this.clock.head, this.logger);
         return { head: this.clock.head } as TransactionMeta;
       },
-      autoCompact: this.opts.autoCompact || 100,
-      store: { ...this.opts.store, isIndex: undefined },
-      public: this.opts.public,
+      // autoCompact: this.opts.autoCompact || 100,
+      storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
+      storeUrls: this.opts.storeUrls.data,
+      keyBag: this.opts.keyBag,
+      // public: this.opts.public,
       meta: this.opts.meta,
-      threshold: this.opts.threshold,
+      // threshold: this.opts.threshold,
     });
     this.indexBlockstore = blockstoreFactory(sthis, {
-      name: name,
+      // name: opts.name,
       applyMeta: async (meta: TransactionMeta) => {
-        const idxCarMeta = meta as IdxMetaMap;
+        const idxCarMeta = meta as IndexTransactionMeta;
         if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index(this.sthis, { _crdt: this }, name, undefined, idx);
+          index(this.sthis, { crdt: this }, name, undefined, idx);
         }
       },
-      store: { ...this.opts.store, isIndex: this.opts.store?.isIndex || "idx" },
-      public: this.opts.public,
+      storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
+      storeUrls: this.opts.storeUrls.idx,
+      keyBag: this.opts.keyBag,
+      // public: this.opts.public,
     });
     this.clock = new CRDTClock<T>(this.blockstore);
     this.clock.onZoom(() => {
@@ -132,6 +137,9 @@ export class CRDT<T extends DocTypes> {
   }
 
   async close(): Promise<void> {
+    // for (let val of this.indexers.values()) {
+    //   await val.close()
+    // }
     await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
   }
 

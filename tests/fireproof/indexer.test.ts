@@ -1,4 +1,4 @@
-import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
+import { Index, index, Database, CRDT, IndexRows, DatabaseOpts, toStoreURIRuntime, bs, rt } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
 interface TestType {
@@ -14,24 +14,24 @@ describe("basic Index", () => {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
+    db = Database.factory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index<string, TestType>(sthis, db._crdt, "hello", (doc) => {
+    indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
     });
     await indexer.ready();
   });
   it("should have properties", function () {
-    expect(indexer.crdt).toBe(db._crdt);
-    expect(indexer.crdt.name).toBe("test-indexer");
+    expect(indexer.crdt).toBe(db.crdt);
+    // expect(indexer.crdt.name).toBe("test-indexer");
     expect(indexer.name).toBe("hello");
     expect(indexer.mapFn).toBeTruthy();
   });
@@ -101,17 +101,17 @@ describe("Index query with compound key", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
+    db = Database.factory("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
     await db.put({ title: "bazillas", score: 3 });
-    indexer = new Index<[string, number], TestType>(sthis, db._crdt, "hello", (doc) => {
+    indexer = new Index<[string, number], TestType>(sthis, db.crdt, "hello", (doc) => {
       return [doc.title, doc.score];
     });
     await indexer.ready();
@@ -131,16 +131,16 @@ describe("basic Index with map fun", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
+    db = Database.factory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index<string, TestType>(sthis, db._crdt, "hello", (doc, map) => {
+    indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc, map) => {
       map(doc.title);
     });
     await indexer.ready();
@@ -164,11 +164,11 @@ describe("basic Index with map fun with value", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
+    db = Database.factory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index<string, TestType, number>(sthis, db._crdt, "hello", (doc, map) => {
+    indexer = new Index<string, TestType, number>(sthis, db.crdt, "hello", (doc, map) => {
       map(doc.title, doc.title.length);
     });
   });
@@ -199,17 +199,17 @@ describe("Index query with map and compound key", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
+    db = Database.factory("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
     await db.put({ title: "bazillas", score: 3 });
-    indexer = new Index<[string, number], TestType>(sthis, db._crdt, "hello", (doc, emit) => {
+    indexer = new Index<[string, number], TestType>(sthis, db.crdt, "hello", (doc, emit) => {
       emit([doc.title, doc.score]);
     });
     await indexer.ready();
@@ -229,16 +229,16 @@ describe("basic Index with string fun", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
+    db = Database.factory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index(sthis, db._crdt, "title");
+    indexer = new Index(sthis, db.crdt, "title");
     await indexer.ready();
   });
   it("should get results", async function () {
@@ -265,31 +265,43 @@ describe("basic Index upon cold start", function () {
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
   const sthis = mockSuperThis();
+  let dbOpts: DatabaseOpts;
   // result, mapFn;
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    // db = database()
-    crdt = new CRDT<TestType>(sthis, "test-indexer-cold", { persistIndexes: true });
+    const logger = sthis.logger.With().Module("IndexerTest").Logger();
+    logger.Debug().Msg("enter beforeEach");
+    dbOpts = {
+      keyBag: rt.kb.defaultKeyBagOpts(sthis),
+      storeUrls: toStoreURIRuntime(sthis, "test-indexer-cold"),
+      storeEnDe: bs.ensureStoreEnDeFile({}),
+    };
+    crdt = new CRDT<TestType>(sthis, dbOpts);
     await crdt.bulk([
       { id: "abc1", value: { title: "amazing" } },
       { id: "abc2", value: { title: "creative" } },
       { id: "abc3", value: { title: "bazillas" } },
     ]);
+    logger.Debug().Msg("post bulk beforeEach");
     didMap = 0;
     mapFn = (doc) => {
       didMap++;
       return doc.title;
     };
-    indexer = await index<string, TestType>(sthis, { _crdt: crdt }, "hello", mapFn);
+    indexer = await index<string, TestType>(sthis, { crdt: crdt }, "hello", mapFn);
+    logger.Debug().Msg("post index beforeEach");
     await indexer.ready();
+    logger.Debug().Msg("post indexer.ready beforeEach");
     // new Index(db._crdt.indexBlockstore, db._crdt, 'hello', mapFn)
     result = await indexer.query();
+
+    logger.Debug().Msg("post indexer.query beforeEach");
     expect(indexer.indexHead).toEqual(crdt.clock.head);
   });
   it("should call map on first query", function () {
@@ -302,12 +314,12 @@ describe("basic Index upon cold start", function () {
     expect(result.rows.length).toEqual(3);
   });
   it("should work on cold load", async function () {
-    const crdt2 = new CRDT<TestType>(sthis, "test-indexer-cold", { persistIndexes: true });
+    const crdt2 = new CRDT<TestType>(sthis, dbOpts);
     await crdt2.ready();
     const { result, head } = await crdt2.changes();
     expect(result).toBeTruthy();
     await crdt2.ready();
-    const indexer2 = await index<string, TestType>(sthis, { _crdt: crdt2 }, "hello", mapFn);
+    const indexer2 = await index<string, TestType>(sthis, { crdt: crdt2 }, "hello", mapFn);
     await indexer2.ready();
     const result2 = await indexer2.query();
     expect(indexer2.indexHead).toEqual(head);
@@ -317,8 +329,8 @@ describe("basic Index upon cold start", function () {
   });
   it.skip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
-    const crdt2 = new CRDT<TestType>(sthis, "test-indexer-cold", { persistIndexes: true });
-    const indexer2 = await index(sthis, { _crdt: crdt2 }, "hello", mapFn);
+    const crdt2 = new CRDT<TestType>(sthis, dbOpts);
+    const indexer2 = await index(sthis, { crdt: crdt2 }, "hello", mapFn);
     const { result, head } = await crdt2.changes([]);
     expect(result.length).toEqual(3);
     expect(head.length).toEqual(1);
@@ -342,8 +354,8 @@ describe("basic Index upon cold start", function () {
     expect(didMap).toEqual(1);
   });
   it("should ignore meta when map function definiton changes", async function () {
-    const crdt2 = new CRDT<TestType>(sthis, "test-indexer-cold");
-    const result = await index<string, TestType>(sthis, { _crdt: crdt2 }, "hello", (doc) =>
+    const crdt2 = new CRDT<TestType>(sthis, dbOpts);
+    const result = await index<string, TestType>(sthis, { crdt: crdt2 }, "hello", (doc) =>
       doc.title.split("").reverse().join(""),
     ).query();
     expect(result.rows.length).toEqual(3);
@@ -359,20 +371,20 @@ describe("basic Index with no data", function () {
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await indexer.close();
-    await indexer.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-indexer");
-    indexer = new Index<string, TestType>(sthis, db._crdt, "hello", (doc) => {
+    db = Database.factory("test-indexer");
+    indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
     });
     await indexer.ready();
   });
   it("should have properties", function () {
-    expect(indexer.crdt).toEqual(db._crdt);
+    expect(indexer.crdt).toEqual(db.crdt);
     expect(indexer.name).toEqual("hello");
     expect(indexer.mapFn).toBeTruthy();
   });

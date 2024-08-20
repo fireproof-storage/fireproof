@@ -1,16 +1,16 @@
 import { CID } from "multiformats";
 import { bs, SuperThis } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis, simpleBlockOpts } from "../helpers";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: bs.BaseBlockstore;
   const sthis = mockSuperThis();
   beforeEach(function () {
-    blocks = new bs.BaseBlockstore();
+    blocks = new bs.BaseBlockstore(simpleBlockOpts(sthis));
   });
-  it("should not have a name", function () {
-    expect(blocks.name).toBeFalsy();
-  });
+  // it("should not have a name", function () {
+  //   expect(blocks.name).toBeFalsy();
+  // });
   it("should not have a loader", function () {
     expect(blocks.loader).toBeFalsy();
   });
@@ -34,12 +34,12 @@ describe("Fresh TransactionBlockstore", function () {
 describe("TransactionBlockstore with name", function () {
   let blocks: bs.EncryptedBlockstore;
   const sthis = mockSuperThis();
-  beforeEach(function () {
-    blocks = new bs.EncryptedBlockstore(sthis, { name: "test" });
+  beforeEach(async function () {
+    blocks = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis));
   });
-  it("should have a name", function () {
-    expect(blocks.name).toEqual("test");
-  });
+  // it("should have a name", function () {
+  //   expect(blocks.name).toEqual("test");
+  // });
   it("should have a loader", function () {
     expect(blocks.loader).toBeTruthy();
   });
@@ -59,7 +59,7 @@ describe("A transaction", function () {
   let blocks: bs.EncryptedBlockstore;
   const sthis = mockSuperThis();
   beforeEach(async function () {
-    blocks = new bs.EncryptedBlockstore(sthis, { name: "test" });
+    blocks = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, "test"));
     tblocks = new bs.CarTransaction(blocks);
     blocks.transactions.add(tblocks);
   });
@@ -89,7 +89,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     cid2 = CID.parse("bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm");
 
-    blocks = new bs.BaseBlockstore();
+    blocks = new bs.BaseBlockstore(simpleBlockOpts(sthis));
     await blocks.transaction(async (tblocks) => {
       await tblocks.put(cid, asUInt8Array("value", sthis));
       await tblocks.put(cid, asUInt8Array("value", sthis));

@@ -15,6 +15,7 @@ import {
   DataStore,
   WALStore,
   // RemoteMetaStore,
+  // RemoteMetaStore,
   MetaStore,
   BaseStore,
   type Loadable,
@@ -54,7 +55,7 @@ function uniqueCids(list: CarLog, remove = new Set<string>()): CarLog {
 // }
 
 export class Loader implements Loadable {
-  readonly name: string;
+  // readonly name: string;
   readonly ebOpts: BlockstoreRuntime;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
@@ -62,7 +63,7 @@ export class Loader implements Loadable {
   readonly seenCompacted: Set<string> = new Set<string>();
   readonly processedCars: Set<string> = new Set<string>();
   readonly sthis: SuperThis;
-  readonly taskManager?: TaskManager;
+  readonly taskManager: TaskManager;
 
   carLog: CarLog = [];
   // key?: string;
@@ -75,25 +76,51 @@ export class Loader implements Loadable {
   private seenMeta = new Set<string>();
   private writeLimit = pLimit(1);
 
-  // readonly id = uuidv4();
-
-  async keyBag(): Promise<KeyBag> {
-    return getKeyBag(this.sthis, this.ebOpts.keyBag);
-  }
-
+  readonly _carStore = new ResolveOnce<DataStore>();
   async carStore(): Promise<DataStore> {
-    return this.ebOpts.storeRuntime.makeDataStore(this);
+    return this._carStore.once(async () =>
+      this.ebOpts.storeRuntime.makeDataStore({
+        sthis: this.sthis,
+        url: this.ebOpts.storeUrls.data,
+        keybag: await this.keyBag(),
+      }),
+    );
   }
 
+  readonly _fileStore = new ResolveOnce<DataStore>();
   async fileStore(): Promise<DataStore> {
-    return this.ebOpts.storeRuntime.makeDataStore(this);
+    return this._fileStore.once(async () =>
+      this.ebOpts.storeRuntime.makeDataStore({
+        sthis: this.sthis,
+        url: this.ebOpts.storeUrls.file,
+        keybag: await this.keyBag(),
+      }),
+    );
   }
+  readonly _WALStore = new ResolveOnce<WALStore>();
   async WALStore(): Promise<WALStore> {
-    return this.ebOpts.storeRuntime.makeWALStore(this);
+    return this._WALStore.once(async () =>
+      this.ebOpts.storeRuntime.makeWALStore({
+        sthis: this.sthis,
+        url: this.ebOpts.storeUrls.wal,
+        keybag: await this.keyBag(),
+      }),
+    );
   }
 
+  readonly _metaStore = new ResolveOnce<MetaStore>();
   async metaStore(): Promise<MetaStore> {
-    return this.ebOpts.storeRuntime.makeMetaStore(this);
+    return this._metaStore.once(async () =>
+      this.ebOpts.storeRuntime.makeMetaStore({
+        sthis: this.sthis,
+        url: this.ebOpts.storeUrls.meta,
+        keybag: await this.keyBag(),
+      }),
+    );
+  }
+
+  keyBag(): Promise<KeyBag> {
+    return getKeyBag(this.sthis, this.ebOpts.keyBag);
   }
 
   readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
@@ -109,6 +136,7 @@ export class Loader implements Loadable {
   }
 
   async close() {
+    await this.commitQueue.waitIdle();
     const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     await Promise.all(toClose.map((store) => store.close()));
   }
@@ -119,15 +147,15 @@ export class Loader implements Loadable {
   }
 
   readonly logger: Logger;
-  constructor(name: string, ebOpts: BlockstoreOpts, sthis: SuperThis) {
-    this.name = name;
+  constructor(sthis: SuperThis, ebOpts: BlockstoreOpts) {
+    // this.name = name;
     // console.log("Loader", name, ebOpts)
     this.sthis = sthis;
     this.ebOpts = defaultedBlockstoreRuntime(
       sthis,
       {
         ...ebOpts,
-        name,
+        // name,
       },
       "Loader",
     );
@@ -224,11 +252,11 @@ export class Loader implements Loadable {
     opts: CommitOpts = { noLoader: false, compact: false },
   ): Promise<CarGroup> {
     await this.ready();
-    const fstore = await this.fileStore();
+    const carStore = await this.carStore();
     const params: CommitParams = {
-      encoder: (await fstore.keyedCrypto()).codec(),
+      encoder: (await carStore.keyedCrypto()).codec(),
       carLog: this.carLog,
-      carStore: fstore,
+      carStore: carStore,
       WALStore: await this.WALStore(),
       metaStore: await this.metaStore(),
       threshold: this.ebOpts.threshold,

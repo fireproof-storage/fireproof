@@ -13,7 +13,7 @@ import {
 import { KeyWithFingerExtract, KeyWithFingerPrint } from "../blockstore/types.js";
 import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
-import { SuperThis } from "../types.js";
+import { PARAM, SuperThis } from "../types.js";
 
 export type { KeyBagProviderFile } from "./key-bag-file.js";
 export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
@@ -21,7 +21,9 @@ export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
 export class KeyBag {
   readonly logger: Logger;
   constructor(readonly rt: KeyBagRuntime) {
-    this.logger = ensureLogger(rt.sthis, "KeyBag");
+    this.logger = ensureLogger(rt.sthis, "KeyBag", {
+      id: rt.id(),
+    });
     this.logger.Debug().Msg("KeyBag created");
   }
 
@@ -45,7 +47,7 @@ export class KeyBag {
 
   async ensureKeyFromUrl(url: URI, keyFactory: () => string): Promise<Result<URI>> {
     // add storekey to url
-    const storeKey = url.getParam("storekey");
+    const storeKey = url.getParam(PARAM.STORE_KEY);
     if (storeKey === "insecure") {
       return Result.Ok(url);
     }
@@ -55,7 +57,7 @@ export class KeyBag {
       if (ret.isErr()) {
         return ret as unknown as Result<URI>;
       }
-      const urb = url.build().setParam("storekey", keyName);
+      const urb = url.build().setParam(PARAM.STORE_KEY, keyName);
       return Result.Ok(urb.URI());
     }
     if (storeKey.startsWith("@") && storeKey.endsWith("@")) {
@@ -202,7 +204,8 @@ export function registerKeyBagProviderFactory(item: KeyBagProviderFactoryItem) {
   });
 }
 
-function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRuntime {
+export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): KeyBagRuntime {
+  kbo = kbo || {};
   if (kbo.keyRuntime) {
     return kbo.keyRuntime;
   }
@@ -226,11 +229,29 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
     }
     logger.Debug().Url(url).Msg("from env");
   }
-  const kitem = keyBagProviderFactories.get(url.protocol);
-  if (!kitem) {
-    throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
+  let keyProviderFactory: () => Promise<KeyBagProvider>;
+  switch (url.protocol) {
+    case "file:":
+      keyProviderFactory = async () => {
+        const { KeyBagProviderFile } = await import("./key-bag-file.js");
+        return new KeyBagProviderFile(url, sthis);
+      };
+      break;
+    case "indexdb:":
+      keyProviderFactory = async () => {
+        const { KeyBagProviderIndexDB } = await import("./key-bag-indexdb.js");
+        return new KeyBagProviderIndexDB(url, sthis);
+      };
+      break;
+    case "memory:":
+      keyProviderFactory = async () => {
+        const { KeyBagProviderMemory } = await import("./key-bag-memory.js");
+        return new KeyBagProviderMemory(url, sthis);
+      };
+      break;
+    default:
+      throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
   }
-  const getBag = async () => kitem.factory(url, sthis);
 
   if (url.hasParam("masterkey")) {
     throw logger.Error().Url(url).Msg("masterkey is not supported").AsError();
@@ -241,7 +262,7 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
     sthis,
     logger,
     keyLength: kbo.keyLength || 16,
-    getBag,
+    getBag: keyProviderFactory,
     id: () => {
       return url.toString();
     },

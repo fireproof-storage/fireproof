@@ -1,8 +1,7 @@
-import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } from "node:fs";
-import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
+import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } from "fs";
+import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "fs/promises";
 import { toArrayBuffer } from "./utils.js";
 import { SysFileSystem } from "../../../types.js";
-import { runtimeFn } from "@adviser/cement";
 
 export class NodeFileSystem implements SysFileSystem {
   fs?: {
@@ -17,7 +16,7 @@ export class NodeFileSystem implements SysFileSystem {
   };
 
   async start(): Promise<SysFileSystem> {
-    this.fs = await import("node:fs/promises");
+    this.fs = await import("fs/promises");
     return this;
   }
   async mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
@@ -43,9 +42,6 @@ export class NodeFileSystem implements SysFileSystem {
     return this.fs?.unlink(path);
   }
   async writefile(path: PathLike, data: Uint8Array | string): Promise<void> {
-    if (runtimeFn().isDeno) {
-      return this.fs?.writeFile(path, data);
-    }
     return this.fs?.writeFile(path, Buffer.from(data));
   }
 }

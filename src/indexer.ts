@@ -30,27 +30,27 @@ import {
   IndexDocString,
   CompareKey,
 } from "./indexer-helpers.js";
-import { CRDT } from "./crdt.js";
+import { CRDT, HasCRDT } from "./crdt.js";
 import { ensureLogger } from "./utils.js";
 import { Logger } from "@adviser/cement";
 
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
   sthis: SuperThis,
-  { _crdt }: { _crdt: CRDT<T> | CRDT<NonNullable<unknown>> },
+  { crdt }: HasCRDT<T>,
   name: string,
   mapFn?: MapFn<T>,
   meta?: IdxMeta,
 ): Index<K, T, R> {
-  if (mapFn && meta) throw _crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
-  if (mapFn && mapFn.constructor.name !== "Function") throw _crdt.logger.Error().Msg("mapFn must be a function").AsError();
-  if (_crdt.indexers.has(name)) {
-    const idx = _crdt.indexers.get(name) as unknown as Index<K, T>;
+  if (mapFn && meta) throw crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
+  if (mapFn && mapFn.constructor.name !== "Function") throw crdt.logger.Error().Msg("mapFn must be a function").AsError();
+  if (crdt.indexers.has(name)) {
+    const idx = crdt.indexers.get(name) as unknown as Index<K, T>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<K, T>(sthis, _crdt, name, mapFn, meta);
-    _crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
+    const idx = new Index<K, T>(sthis, crdt, name, mapFn, meta);
+    crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
   }
-  return _crdt.indexers.get(name) as unknown as Index<K, T, R>;
+  return crdt.indexers.get(name) as unknown as Index<K, T, R>;
 }
 
 // interface ByIdIndexIten<K extends IndexKeyType> {
@@ -61,7 +61,7 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
 export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
   readonly blockstore: BaseBlockstore;
   readonly crdt: CRDT<T>;
-  name: string;
+  readonly name: string;
   mapFn?: MapFn<T>;
   mapFnString = "";
   byKey: IndexTree<K, R> = new IndexTree<K, R>();
@@ -76,16 +76,16 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     });
   }
 
-  close(): Promise<void> {
-    return Promise.all([this.blockstore.close(), this.crdt.close()]).then(() => {
-      /* noop */
-    });
-  }
-  destroy(): Promise<void> {
-    return Promise.all([this.blockstore.destroy(), this.crdt.destroy()]).then(() => {
-      /* noop */
-    });
-  }
+  // close(): Promise<void> {
+  //   return Promise.all([this.blockstore.close(), this.crdt.close()]).then(() => {
+  //     /* noop */
+  //   });
+  // }
+  // destroy(): Promise<void> {
+  //   return Promise.all([this.blockstore.destroy(), this.crdt.destroy()]).then(() => {
+  //     /* noop */
+  //   });
+  // }
 
   readonly logger: Logger;
 
@@ -112,7 +112,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   applyMapFn(name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     if (mapFn && meta) throw this.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
     if (this.name && this.name !== name) throw this.logger.Error().Msg("cannot change name").AsError();
-    this.name = name;
+    // this.name = name;
     try {
       if (meta) {
         // hydrating from header
@@ -177,10 +177,14 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   async query(opts: QueryOpts<K> = {}): Promise<IndexRows<K, T, R>> {
+    this.logger.Debug().Msg("enter query");
     await this.ready();
     // this._resetIndex();
+    this.logger.Debug().Msg("post ready query");
     await this._updateIndex();
+    this.logger.Debug().Msg("post _updateIndex query");
     await this._hydrateIndex();
+    this.logger.Debug().Msg("post _hydrateIndex query");
     if (!this.byKey.root) {
       return await applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
     }
@@ -240,13 +244,16 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   async _updateIndex(): Promise<IndexTransactionMeta> {
     await this.ready();
+    this.logger.Debug().Msg("enter _updateIndex");
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
     let result: DocUpdate<T>[], head: ClockHead;
     if (!this.indexHead || this.indexHead.length === 0) {
       ({ result, head } = await this.crdt.allDocs());
+      this.logger.Debug().Msg("enter crdt.allDocs");
     } else {
       ({ result, head } = await this.crdt.changes(this.indexHead));
+      this.logger.Debug().Msg("enter crdt.changes");
     }
     if (result.length === 0) {
       this.indexHead = head;
@@ -281,9 +288,22 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     if (result.length === 0) {
       return indexerMeta as unknown as IndexTransactionMeta;
     }
+    this.logger.Debug().Msg("pre this.blockstore.transaction");
     const { meta } = await this.blockstore.transaction<IndexTransactionMeta>(async (tblocks): Promise<IndexTransactionMeta> => {
-      this.byId = await bulkIndex<K, R, K>(tblocks, this.byId, removeIdIndexEntries.concat(byIdIndexEntries), byIdOpts);
-      this.byKey = await bulkIndex<K, R, CompareKey>(tblocks, this.byKey, staleKeyIndexEntries.concat(indexEntries), byKeyOpts);
+      this.byId = await bulkIndex<K, R, K>(
+        this.logger,
+        tblocks,
+        this.byId,
+        removeIdIndexEntries.concat(byIdIndexEntries),
+        byIdOpts,
+      );
+      this.byKey = await bulkIndex<K, R, CompareKey>(
+        this.logger,
+        tblocks,
+        this.byKey,
+        staleKeyIndexEntries.concat(indexEntries),
+        byKeyOpts,
+      );
       this.indexHead = head;
       if (this.byId.cid && this.byKey.cid) {
         const idxMeta = {
@@ -295,8 +315,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         } as IdxMeta;
         indexerMeta.indexes?.set(this.name, idxMeta);
       }
+      this.logger.Debug().Any("indexerMeta", new Array(indexerMeta.indexes?.entries())).Msg("exit this.blockstore.transaction fn");
       return indexerMeta as unknown as IndexTransactionMeta;
     });
+    this.logger.Debug().Msg("post this.blockstore.transaction");
     return meta;
   }
 }

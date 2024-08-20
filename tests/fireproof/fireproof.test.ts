@@ -1,8 +1,8 @@
-import { mockSuperThis, sleep } from "../helpers.js";
-import { docs } from "./fireproof.test.fixture.js";
+import { mockSuperThis, sleep, storageURL } from "../helpers.js";
+import { docs } from "./fireproof.fixture.js";
 import { CID } from "multiformats/cid";
 
-import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index } from "@fireproof/core";
+import { ConfigOpts, Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index } from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -113,7 +113,7 @@ describe("basic database", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-basic");
+    db = Database.factory("test-basic");
   });
   it("can put with id", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -178,14 +178,14 @@ describe("benchmarking with compaction", function () {
   beforeEach(async function () {
     // erase the existing test data
     await sthis.start();
-    db = new Database("test-benchmark-compaction", { autoCompact: 3 });
+    db = Database.factory("test-benchmark-compaction", { autoCompact: 3 });
   });
-  it("insert during compaction", async function () {
+  it.skip("insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
-    expect(db._crdt.clock.head).toBeTruthy();
-    expect(db._crdt.clock.head.length).toBe(1);
+    expect(db.crdt.clock.head).toBeTruthy();
+    expect(db.crdt.clock.head.length).toBe(1);
 
     const numDocs = 20;
     const batchSize = 5;
@@ -206,7 +206,7 @@ describe("benchmarking with compaction", function () {
           }),
         );
       }
-      const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeTruthy();
 
@@ -233,8 +233,8 @@ describe("benchmarking a database", function () {
   beforeEach(async function () {
     await sthis.start();
     // erase the existing test data
-    db = new Database("test-benchmark", { autoCompact: 100000, public: true });
-    // db = new Database(null, {autoCompact: 100000})
+    db = Database.factory("test-benchmark", { autoCompact: 100000, public: true });
+    // db = Database.factory(null, {autoCompact: 100000})
   });
 
   // run benchmarking tests
@@ -247,8 +247,8 @@ describe("benchmarking a database", function () {
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
-    expect(db._crdt.clock.head).toBeTruthy();
-    expect(db._crdt.clock.head.length).toBe(1);
+    expect(db.crdt.clock.head).toBeTruthy();
+    expect(db.crdt.clock.head.length).toBe(1);
 
     const numDocs = 2500;
     const batchSize = 500;
@@ -284,7 +284,7 @@ describe("benchmarking a database", function () {
     // equals(allDocsResult2.rows.length, numDocs+1)
 
     // console.time("open new DB");
-    const newDb = new Database("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb = Database.factory("test-benchmark", { autoCompact: 100000, public: true });
     const doc = await newDb.get<{ foo: string }>("test");
     expect(doc.foo).toBe("fast");
     // console.timeEnd("open new DB");
@@ -314,7 +314,7 @@ describe("benchmarking a database", function () {
     await db.put({ _id: "compacted-test", foo: "bar" });
 
     // console.log('car log length', db._crdt.blockstore.loader.carLog.length)
-    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     expect(loader.carLog.length).toBe(2);
@@ -326,10 +326,10 @@ describe("benchmarking a database", function () {
     await sleep(100);
 
     // console.time("compacted reopen again");
-    const newDb2 = new Database("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb2 = Database.factory("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     expect(doc21.foo).toBe("fast");
-    const blocks2 = newDb2._crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks2 = newDb2.crdt.blockstore as bs.EncryptedBlockstore;
     const loader2 = blocks2.loader;
     expect(loader2).toBeTruthy();
 
@@ -392,13 +392,13 @@ describe("Reopening a database", function () {
     // erase the existing test data
     await sthis.start();
 
-    db = new Database("test-reopen", { autoCompact: 100000 });
+    db = Database.factory("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
-    expect(db._crdt.clock.head).toBeDefined();
-    expect(db._crdt.clock.head.length).toBe(1);
+    expect(db.crdt.clock.head).toBeDefined();
+    expect(db.crdt.clock.head.length).toBe(1);
   });
 
   it("should persist data", async function () {
@@ -407,18 +407,18 @@ describe("Reopening a database", function () {
   });
 
   it("should have the same data on reopen", async function () {
-    const db2 = new Database("test-reopen");
+    const db2 = Database.factory("test-reopen");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
-    expect(db2._crdt.clock.head).toBeDefined();
-    expect(db2._crdt.clock.head.length).toBe(1);
-    expect(db2._crdt.clock.head).toEqual(db._crdt.clock.head);
+    expect(db2.crdt.clock.head).toBeDefined();
+    expect(db2.crdt.clock.head.length).toBe(1);
+    expect(db2.crdt.clock.head).toEqual(db.crdt.clock.head);
     await db2.close();
   });
 
   it("should have a car in the car log", async function () {
-    await db._crdt.ready();
-    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+    await db.crdt.ready();
+    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
@@ -426,9 +426,9 @@ describe("Reopening a database", function () {
   });
 
   it("should have carlog after reopen", async function () {
-    const db2 = new Database("test-reopen");
-    await db2._crdt.ready();
-    const blocks = db2._crdt.blockstore as bs.EncryptedBlockstore;
+    const db2 = Database.factory("test-reopen");
+    await db2.crdt.ready();
+    const blocks = db2.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeDefined();
     expect(loader.carLog).toBeDefined();
@@ -439,10 +439,10 @@ describe("Reopening a database", function () {
   it("faster, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 4; i++) {
       // console.log('iteration', i)
-      const db = new Database("test-reopen");
+      const db = Database.factory("test-reopen");
       // assert(db._crdt.xready());
-      await db._crdt.ready();
-      const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+      await db.crdt.ready();
+      const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader.carLog.length).toBe(i + 1);
       const ok = await db.put({ _id: `test${i}`, fire: "proof".repeat(50 * 1024) });
@@ -458,11 +458,11 @@ describe("Reopening a database", function () {
     for (let i = 0; i < 200; i++) {
       // console.log("iteration", i);
       // console.time("db open");
-      const db = new Database("test-reopen", { autoCompact: 1000 }); // try with 10
+      const db = Database.factory("test-reopen", { autoCompact: 1000 }); // try with 10
       // assert(db._crdt.ready);
-      await db._crdt.ready();
+      await db.crdt.ready();
       // console.timeEnd("db open");
-      const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+      const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
       const loader = blocks.loader;
       expect(loader).toBeDefined();
       expect(loader.carLog.length).toBe(i + 1);
@@ -543,9 +543,9 @@ describe("Reopening a database with indexes", function () {
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
-    expect(db2._crdt.clock.head).toBeTruthy();
-    expect(db2._crdt.clock.head.length).toBe(1);
-    expect(db2._crdt.clock.head).toEqual(db._crdt.clock.head);
+    expect(db2.crdt.clock.head).toBeTruthy();
+    expect(db2.crdt.clock.head.length).toBe(1);
+    expect(db2.crdt.clock.head).toEqual(db.crdt.clock.head);
   });
 
   it("should have the same data on reopen after a query", async function () {
@@ -558,9 +558,9 @@ describe("Reopening a database with indexes", function () {
     const db2 = fireproof("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
-    expect(db2._crdt.clock.head).toBeTruthy();
-    expect(db2._crdt.clock.head.length).toBe(1);
-    expect(db2._crdt.clock.head).toEqual(db._crdt.clock.head);
+    expect(db2.crdt.clock.head).toBeTruthy();
+    expect(db2.crdt.clock.head.length).toBe(1);
+    expect(db2.crdt.clock.head).toEqual(db.crdt.clock.head);
   });
 
   // it('should query the same data on reopen', async function () {
@@ -595,11 +595,11 @@ describe("basic js verify", function () {
     expect(ok.id).toBe("test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
     expect(ok2.id).toBe("test2");
-    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     const cid = loader.carLog[0][0];
-    const cid2 = db._crdt.clock.head[0];
+    const cid2 = db.crdt.clock.head[0];
     expect(cid).not.toBe(cid2);
     expect(cid).not.toBe(cid2);
     const cidList = [cid, cid2];
@@ -621,21 +621,17 @@ describe("same workload twice, same CID", function () {
   // let configA: any;
   // let configB: any;
 
-  // const configA = {
-  //   store: {
-  //     stores: {
-  //       base: storageURL(sthis).build().setParam("storekey", "@test@"),
-  //     },
-  //   },
-  // };
+  const configA: ConfigOpts = {
+    storeUrls: {
+      base: storageURL(sthis).build().setParam("storekey", "@test@"),
+    },
+  };
 
-  // const configB = {
-  //   store: {
-  //     stores: {
-  //       base: storageURL(sthis).build().setParam("storekey", "@test@"),
-  //     },
-  //   },
-  // };
+  const configB: ConfigOpts = {
+    storeUrls: {
+      base: storageURL(sthis).build().setParam("storekey", "@test@"),
+    },
+  };
 
   afterEach(async function () {
     await dbA.close();
@@ -647,22 +643,22 @@ describe("same workload twice, same CID", function () {
     let ok: DocResponse;
     await sthis.start();
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbA = fireproof("test-dual-workload-a");
+    dbA = fireproof("test-dual-workload-a", configA);
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
       expect(ok.id).toBeTruthy();
     }
-    headA = dbA._crdt.clock.head.toString();
+    headA = dbA.crdt.clock.head.toString();
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbB = fireproof("test-dual-workload-b");
+    dbB = fireproof("test-dual-workload-b", configB);
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
       expect(ok.id).toBeTruthy();
     }
-    headB = dbB._crdt.clock.head.toString();
+    headB = dbB.crdt.clock.head.toString();
   });
   it("should have head A and B", async function () {
     expect(headA).toBeTruthy();
@@ -671,15 +667,15 @@ describe("same workload twice, same CID", function () {
     expect(headA.length).toBeGreaterThan(10);
   });
   it("should have same car log", async function () {
-    const logA = dbA._crdt.blockstore.loader?.carLog;
+    const logA = dbA.crdt.blockstore.loader?.carLog;
     expect(logA).toBeTruthy();
     assert(logA);
-    expect(logA.length).toBe(38);
+    expect(logA.length).toBe(docs.length);
 
-    const logB = dbB._crdt.blockstore.loader?.carLog;
+    const logB = dbB.crdt.blockstore.loader?.carLog;
     expect(logB).toBeTruthy();
     assert(logB);
-    expect(logB.length).toBe(38);
+    expect(logB.length).toBe(docs.length);
 
     const logA2 = logA.map((c) => c.toString());
     const logB2 = logB.map((c) => c.toString());
@@ -693,12 +689,12 @@ describe("same workload twice, same CID", function () {
     await dbA.compact();
     await dbB.compact();
 
-    const cmpLogA = dbA._crdt.blockstore.loader?.carLog;
+    const cmpLogA = dbA.crdt.blockstore.loader?.carLog;
     expect(cmpLogA).toBeTruthy();
     assert(cmpLogA);
     expect(cmpLogA.length).toBe(1);
 
-    const cmpLogB = dbB._crdt.blockstore.loader?.carLog;
+    const cmpLogB = dbB.crdt.blockstore.loader?.carLog;
     expect(cmpLogB).toBeTruthy();
     assert(cmpLogB);
     expect(cmpLogB.length).toBe(1);

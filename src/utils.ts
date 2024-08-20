@@ -6,8 +6,6 @@ import {
   ResolveOnce,
   isURL,
   URI,
-  CoerceURI,
-  runtimeFn,
   envFactory,
   Env,
   toCryptoRuntime,
@@ -15,7 +13,7 @@ import {
   JSONFormatter,
   YAMLFormatter,
 } from "@adviser/cement";
-import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
+import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
 import { base58btc } from "multiformats/bases/base58";
 
 export type { Logger };
@@ -116,6 +114,9 @@ class pathOpsImpl implements PathOps {
   dirname(path: string) {
     return path.split("/").slice(0, -1).join("/");
   }
+  basename(path: string): string {
+    return path.split("/").pop() || "";
+  }
   // homedir() {
   //     throw new Error("SysContainer:homedir is not available in seeded state");
   //   }
@@ -173,6 +174,10 @@ export function ensureLogger(
         debug.push(componentName);
       }
       delete ctx.debug;
+    }
+    if ("exposeStack" in ctx) {
+      exposeStack = true;
+      delete ctx.exposeStack;
     }
     if ("exposeStack" in ctx) {
       exposeStack = true;
@@ -250,7 +255,9 @@ export function ensureLogger(
     logger.SetExposeStack(true);
   }
   const out = cLogger.Logger();
-  // out.Debug().Msg("logger ready");
+  if (sthis.env.get("FP_CONSTRUCTOR_DEBUG")) {
+    out.Debug().Msg("constructor");
+  }
   return out;
 }
 
@@ -262,7 +269,7 @@ export interface Store {
 }
 
 export function getStore(url: URI, sthis: SuperThis, joiner: Joiner): Store {
-  const store = url.getParam("store");
+  const store = url.getParam(PARAM.STORE);
   switch (store) {
     case "data":
     case "wal":
@@ -270,22 +277,23 @@ export function getStore(url: URI, sthis: SuperThis, joiner: Joiner): Store {
       break;
     default:
       throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
+      throw sthis.logger.Error().Url(url).Msg(`store not found`).AsError();
   }
   let name: string = store;
   if (url.hasParam("index")) {
-    name = joiner(url.getParam("index") || "idx", name);
+    name = joiner(url.getParam(PARAM.INDEX) || "idx", name);
   }
   return { store, name };
 }
 
 export function getKey(url: URI, logger: Logger): string {
-  const result = url.getParam("key");
+  const result = url.getParam(PARAM.KEY);
   if (!result) throw logger.Error().Str("url", url.toString()).Msg(`key not found`).AsError();
   return result;
 }
 
 export function getName(sthis: SuperThis, url: URI): string {
-  let result = url.getParam("name");
+  let result = url.getParam(PARAM.NAME);
   if (!result) {
     result = sthis.pathOps.dirname(url.pathname);
     if (result.length === 0) {
@@ -329,21 +337,6 @@ export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotF
   }
   if ((e as NotFoundError).code === "ENOENT") return true;
   return false;
-}
-
-export function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI {
-  if (!base) {
-    if (!runtimeFn().isBrowser) {
-      const home = sthis.env.get("HOME") || "./";
-      base = sthis.env.get("FP_STORAGE_URL") || `file://${sthis.pathOps.join(home, ".fireproof")}`;
-    } else {
-      base = sthis.env.get("FP_STORAGE_URL") || `indexdb://fp`;
-    }
-  }
-  return URI.from(base.toString())
-    .build()
-    .setParam("name", name || "")
-    .URI();
 }
 
 export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array): boolean {

@@ -1,7 +1,8 @@
 import { Database, bs } from "@fireproof/core";
-import { URI } from "@adviser/cement";
+import { Logger, URI } from "@adviser/cement";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+import { mockSuperThis } from "../helpers.js";
 
 function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
   try {
@@ -14,15 +15,15 @@ function customExpect(value: unknown, matcher: (val: unknown) => void, message: 
 }
 
 interface ExtendedGateway extends bs.Gateway {
-  logger: { _attributes: { module: string; url?: string } };
-  headerSize: number;
-  fidLength: number;
+  readonly logger: Logger;
+  readonly headerSize: number;
+  readonly fidLength: number;
 }
 
 interface ExtendedStore {
-  gateway: ExtendedGateway;
-  _url: URI;
-  name: string;
+  readonly gateway: ExtendedGateway;
+  readonly _url: URI;
+  readonly name: string;
 }
 
 describe("noop Gateway", function () {
@@ -35,19 +36,20 @@ describe("noop Gateway", function () {
   let metaGateway: ExtendedGateway;
   let fileGateway: ExtendedGateway;
   let walGateway: ExtendedGateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+    db = Database.factory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
-    carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
-    fileStore = (await db.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
-    walStore = (await db.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
+    carStore = (await db.crdt.blockstore.loader?.carStore()) as unknown as ExtendedStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    fileStore = (await db.crdt.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
+    walStore = (await db.crdt.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
 
     // Extract and log gateways
     carGateway = carStore?.gateway;
@@ -267,32 +269,44 @@ describe("noop Gateway", function () {
     // CAR Gateway assertions
     expect(carGateway?.fidLength).toBe(4);
     expect(carGateway?.headerSize).toBe(36);
-    expect(carGateway?.logger._attributes).toHaveProperty("module");
-    expect(carGateway?.logger._attributes).toHaveProperty("url");
+    carGateway.logger.Error().Msg("CAR Gateway properties");
+    await sthis.logger.Flush();
+    const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+    expect(last).toHaveProperty("module");
+    expect(last).toHaveProperty("url");
   });
 
   it("should have correct Meta Gateway properties", async function () {
     // Meta Gateway assertions
     expect(metaGateway?.fidLength).toBe(4);
     expect(metaGateway?.headerSize).toBe(36);
-    expect(metaGateway?.logger._attributes).toHaveProperty("module");
-    expect(metaGateway?.logger._attributes).not.toHaveProperty("url");
+    metaGateway.logger.Error().Msg("CAR Gateway properties");
+    await sthis.logger.Flush();
+    const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+    expect(last).toHaveProperty("module");
+    expect(last).not.toHaveProperty("url");
   });
 
   it("should have correct File Gateway properties", async function () {
     // File Gateway assertions
     expect(fileGateway?.fidLength).toBe(4);
     expect(fileGateway?.headerSize).toBe(36);
-    expect(fileGateway?.logger._attributes).toHaveProperty("module");
-    expect(fileGateway?.logger._attributes).toHaveProperty("url");
+    fileGateway.logger.Error().Msg("CAR Gateway properties");
+    await sthis.logger.Flush();
+    const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+    expect(last).toHaveProperty("module");
+    expect(last).toHaveProperty("url");
   });
 
   it("should have correct WAL Gateway properties", async function () {
     // WAL Gateway assertions
     expect(walGateway?.fidLength).toBe(4);
     expect(walGateway?.headerSize).toBe(36);
-    expect(walGateway?.logger._attributes).toHaveProperty("module");
-    expect(walGateway?.logger._attributes).not.toHaveProperty("url");
+    walGateway.logger.Error().Msg("CAR Gateway properties");
+    await sthis.logger.Flush();
+    const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+    expect(last).toHaveProperty("module");
+    expect(last).not.toHaveProperty("url");
   });
 });
 
@@ -302,16 +316,17 @@ describe("noop Gateway subscribe", function () {
   let metaStore: ExtendedStore;
 
   let metaGateway: ExtendedGateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+    db = Database.factory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
-    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
 
     metaGateway = metaStore?.gateway;
   });
@@ -357,14 +372,14 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+    db = Database.factory("test-gateway-" + mockSuperThis().nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
     // Extract stores from the loader
     // carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
     // fileStore = (await db.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
     // walStore = (await db.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
 
