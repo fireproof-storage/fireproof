@@ -1,36 +1,48 @@
-import type { PathLike, MakeDirectoryOptions, Stats } from "fs";
-import * as fs from "fs";
+import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } from "fs";
+import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "fs/promises";
 import { toArrayBuffer } from "./utils.js";
 import { SysFileSystem } from "../../../types.js";
 
 export class NodeFileSystem implements SysFileSystem {
+  fs?: {
+    mkdir: typeof mkdir;
+    readdir: typeof readdir;
+    rm: typeof rm;
+    copyFile: typeof copyFile;
+    readFile: typeof readFile;
+    stat: typeof stat;
+    unlink: typeof unlink;
+    writeFile: typeof writeFile;
+  };
+
   async start(): Promise<SysFileSystem> {
+    this.fs = await import("fs/promises");
     return this;
   }
-  mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
-    return fs.promises.mkdir(path, options);
+  async mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined> {
+    return this.fs?.mkdir(path, options);
   }
-  readdir(path: PathLike, options?: fs.ObjectEncodingOptions): Promise<string[]> {
-    return fs.promises.readdir(path, options) as Promise<string[]>;
+  async readdir(path: PathLike, options?: ObjectEncodingOptions): Promise<string[]> {
+    return this.fs?.readdir(path, options) as Promise<string[]>;
   }
-  rm(path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }): Promise<void> {
-    return fs.promises.rm(path, options);
+  async rm(path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }): Promise<void> {
+    return this.fs?.rm(path, options);
   }
-  copyFile(source: PathLike, destination: PathLike): Promise<void> {
-    return fs.promises.copyFile(source, destination);
+  async copyFile(source: PathLike, destination: PathLike): Promise<void> {
+    return this.fs?.copyFile(source, destination);
   }
   async readfile(path: PathLike, options?: { encoding: BufferEncoding; flag?: string }): Promise<Uint8Array> {
-    const ret = await fs.promises.readFile(path, options);
+    const ret = (await this.fs?.readFile(path, options)) as Buffer;
     return toArrayBuffer(ret);
   }
   stat(path: PathLike): Promise<Stats> {
-    return fs.promises.stat(path) as Promise<Stats>;
+    return this.fs?.stat(path) as Promise<Stats>;
   }
-  unlink(path: PathLike): Promise<void> {
-    return fs.promises.unlink(path);
+  async unlink(path: PathLike): Promise<void> {
+    return this.fs?.unlink(path);
   }
-  writefile(path: PathLike, data: Uint8Array | string): Promise<void> {
-    return fs.promises.writeFile(path, Buffer.from(data));
+  async writefile(path: PathLike, data: Uint8Array | string): Promise<void> {
+    return this.fs?.writeFile(path, Buffer.from(data));
   }
 }
 

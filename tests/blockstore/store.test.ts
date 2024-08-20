@@ -8,8 +8,9 @@ function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime({}, sthis);
 }
 
-function mockLoader(name: string): bs.Loadable {
+function mockLoader(sthis: SuperThis, name: string): bs.Loadable {
   return {
+    sthis,
     name,
     ebOpts: {
       store: {},
@@ -29,7 +30,7 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(mockLoader("test"));
+    store = await runtime(sthis).makeDataStore(mockLoader(sthis, "test"));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
   });
@@ -63,7 +64,7 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(mockLoader("test2"));
+    store = await runtime(sthis).makeDataStore(mockLoader(sthis, "test2"));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
     car = {
@@ -106,7 +107,7 @@ describe("MetaStore", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(mockLoader("test"));
+    store = await runtime(sthis).makeMetaStore(mockLoader(sthis, "test"));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
   });
@@ -143,7 +144,7 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(mockLoader("test-saved-header"));
+    store = await runtime(sthis).makeMetaStore(mockLoader(sthis, "test-saved-header"));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
