@@ -28,8 +28,11 @@ export async function buildBlobFiles(): Promise<FileWithCid[]> {
 
 export function storageURL(): URI {
   const old = rt.SysContainer.env.get("FP_STORAGE_URL");
+  let merged: URI;
   if (runtimeFn().isBrowser) {
-    return URI.merge(`indexdb://fp`, old);
+    merged = URI.merge(`indexdb://fp`, old, "indexdb:");
+  } else {
+    merged = URI.merge(`./dist/env`, old);
   }
-  return URI.merge(`./dist/env`, old);
+  return merged;
 }
