@@ -352,3 +352,10 @@ export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array): boolean {
   }
   return true;
 }
+
+export function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
+  if (!set) return [];
+  return Object.entries(set)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => ({ [k]: v }));
+}
