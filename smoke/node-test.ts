@@ -17,4 +17,7 @@ async function main() {
   console.log(`test working version:${PACKAGE_VERSION}`);
 }
 
-main().catch(console.error);
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
