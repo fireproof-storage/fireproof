@@ -1,5 +1,5 @@
 import { URI } from "@adviser/cement";
-import { MetaStoreImpl, DataStoreImpl, StoreOpts } from "./store.js";
+import { DataStoreImpl, MetaStoreImpl, StoreOpts } from "./store.js";
 import { SuperThis } from "../types.js";
 
 // export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
