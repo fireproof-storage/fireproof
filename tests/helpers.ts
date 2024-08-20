@@ -1,5 +1,5 @@
-import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
-import { dataDir, LoggerOpts, rt, SuperThis } from "@fireproof/core";
+import { MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
+import { dataDir, ensureSuperThis, rt, SuperThis, SuperThisOpts } from "@fireproof/core";
 
 export { dataDir };
 
@@ -38,6 +38,12 @@ export function storageURL(sthis: SuperThis): URI {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function mockSuperThis(sthis?: Partial<LoggerOpts>): SuperThis {
-  throw new Error("ensureSuperThis is not implemented");
+export function mockSuperThis(sthis?: Partial<SuperThisOpts>): SuperThis {
+  const mockLog = MockLogger();
+  return ensureSuperThis({
+    logger: mockLog.logger,
+    ctx: {
+      logCollector: mockLog.logCollector,
+    },
+  });
 }

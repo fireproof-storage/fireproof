@@ -1,5 +1,20 @@
-import { Logger, LoggerImpl, IsLogger, Result, ResolveOnce, isURL, URI, CoerceURI, runtimeFn } from "@adviser/cement";
-import { StoreType, SuperThis, SuperThisOpts } from "./types";
+import {
+  Logger,
+  LoggerImpl,
+  IsLogger,
+  Result,
+  ResolveOnce,
+  isURL,
+  URI,
+  CoerceURI,
+  runtimeFn,
+  envFactory,
+  Env,
+  toCryptoRuntime,
+  CryptoRuntime,
+} from "@adviser/cement";
+import { PathOps, StoreType, SuperThis, SuperThisOpts } from "./types";
+import { base58btc } from "multiformats/bases/base58";
 
 export type { Logger };
 export { Result };
@@ -8,14 +23,99 @@ const globalLogger: Logger = new LoggerImpl();
 
 const registerFP_DEBUG = new ResolveOnce();
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function ensureSuperThis(sthis?: Partial<SuperThisOpts>): SuperThis {
-  throw new Error("ensureSuperThis is not implemented");
+interface superThisOpts {
+  readonly logger: Logger;
+  readonly env: Env;
+  readonly pathOps: PathOps;
+  readonly crypto: CryptoRuntime;
+  readonly ctx: Record<string, unknown>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+class superThis implements SuperThis {
+  readonly logger: Logger;
+  readonly env: Env;
+  readonly pathOps: PathOps;
+  readonly ctx: Record<string, unknown>;
+  readonly crypto: CryptoRuntime;
+
+  constructor(opts: superThisOpts) {
+    this.logger = opts.logger;
+    this.env = opts.env;
+    this.crypto = opts.crypto;
+    this.pathOps = opts.pathOps;
+    this.ctx = { ...opts.ctx };
+  }
+
+  nextId(): string {
+    return base58btc.encode(this.crypto.randomBytes(12));
+  }
+
+  start(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  clone(override: Partial<SuperThisOpts>): SuperThis {
+    return new superThis({
+      logger: override.logger || this.logger,
+      env: envFactory(override.env) || this.env,
+      crypto: override.crypto || this.crypto,
+      pathOps: override.pathOps || this.pathOps,
+      ctx: { ...this.ctx, ...override.ctx },
+    });
+  }
+}
+
+// const pathOps =
+function presetEnv() {
+  const penv = new Map([
+    // ["FP_DEBUG", "xxx"],
+    // ["FP_ENV", "development"],
+    ...Array.from(
+      Object.entries(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ((globalThis as any)[Symbol.for("FP_PRESET_ENV")] || {}) as Record<string, string>,
+      ),
+    ), // .map(([k, v]) => [k, v as string])
+  ]);
+  // console.log(">>>>>>", penv)
+  return penv;
+}
+// const envImpl = envFactory({
+//   symbol: "FP_ENV",
+//   presetEnv: presetEnv(),
+// });
+class pathOpsImpl implements PathOps {
+  join(...paths: string[]): string {
+    return paths.map((i) => i.replace(/\/+$/, "")).join("/");
+  }
+  dirname(path: string) {
+    return path.split("/").slice(0, -1).join("/");
+  }
+  // homedir() {
+  //     throw new Error("SysContainer:homedir is not available in seeded state");
+  //   }
+}
+const pathOps = new pathOpsImpl();
+
+export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
+  const env = envFactory({
+    symbol: osthis?.env?.symbol || "FP_ENV",
+    presetEnv: osthis?.env?.presetEnv || presetEnv(),
+  });
+  return new superThis({
+    logger: osthis?.logger || globalLogger,
+    env,
+    crypto: osthis?.crypto || toCryptoRuntime(),
+    ctx: osthis?.ctx || {},
+    pathOps,
+  });
+}
+
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ensureSuperLog(sthis: SuperThis, componentName: string, ctx?: Record<string, unknown>): SuperThis {
-  throw new Error("ensureSuperThis is not implemented");
+  return sthis.clone({
+    logger: ensureLogger(sthis, componentName, ctx),
+  });
 }
 
 export function ensureLogger(
@@ -171,7 +271,8 @@ export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotF
 export function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI {
   if (!base) {
     if (!runtimeFn().isBrowser) {
-      base = sthis.env.get("FP_STORAGE_URL") || `file://${sthis.pathOps.join(sthis.pathOps.homedir(), ".fireproof")}`;
+      const home = sthis.env.get("HOME") || "./";
+      base = sthis.env.get("FP_STORAGE_URL") || `file://${sthis.pathOps.join(home, ".fireproof")}`;
     } else {
       base = sthis.env.get("FP_STORAGE_URL") || `indexdb://fp`;
     }

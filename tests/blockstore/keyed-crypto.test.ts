@@ -113,6 +113,7 @@ describe("KeyedCryptoStore", () => {
   });
   it("no crypto", async () => {
     const loader = {
+      sthis,
       name: "test",
       ebOpts: {
         keyBag: {
@@ -138,6 +139,7 @@ describe("KeyedCryptoStore", () => {
 
   it("create key", async () => {
     const loader = {
+      sthis,
       name: "test",
       ebOpts: {
         keyBag: {
@@ -164,6 +166,7 @@ describe("KeyedCryptoStore", () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const genKey = await kb.setNamedKey("@heute@", key);
     const loader = {
+      sthis,
       name: "test",
       ebOpts: {
         keyBag: {
@@ -197,6 +200,7 @@ describe("KeyedCryptoStore", () => {
   it("key", async () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const loader = {
+      sthis,
       name: "test",
       ebOpts: {
         keyBag: {

@@ -34,7 +34,7 @@ function guardVersion(url: URI): Result<URI> {
 export interface StoreOpts {
   readonly gateway: Gateway;
   // readonly sthis: SuperThis;
-  readonly logger: Logger;
+  // readonly logger: Logger;
   readonly textEncoder?: TextEncoder;
   readonly textDecoder?: TextDecoder;
   readonly keybag: () => Promise<KeyBag>;
@@ -56,12 +56,12 @@ abstract class BaseStoreImpl {
   readonly sthis: SuperThis;
   readonly gateway: Gateway;
   readonly keybag: () => Promise<KeyBag>;
-  constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis) {
+  constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis, logger: Logger) {
     this.name = name;
     this._url = url;
     this.keybag = opts.keybag;
     this.sthis = sthis;
-    this.logger = opts.logger
+    this.logger = logger
       .With()
       .Ref("url", () => this._url.toString())
       .Str("name", name)
@@ -147,9 +147,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       url,
       {
         ...opts,
-        logger: ensureLogger(sthis, "MetaStoreImpl"),
       },
       sthis,
+      ensureLogger(sthis, "MetaStoreImpl"),
     );
   }
 
@@ -254,9 +254,9 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
       url,
       {
         ...opts,
-        logger: ensureLogger(sthis, "DataStoreImpl"),
       },
       sthis,
+      ensureLogger(sthis, "DataStoreImpl"),
     );
   }
 
@@ -323,9 +323,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       url,
       {
         ...opts,
-        logger: ensureLogger(loader.sthis, "WALStoreImpl"),
       },
       loader.sthis,
+      ensureLogger(loader.sthis, "WALStoreImpl"),
     );
     this.loader = loader;
   }

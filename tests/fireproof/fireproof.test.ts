@@ -624,7 +624,7 @@ describe("same workload twice, same CID", function () {
   const configA = {
     store: {
       stores: {
-        base: storageURL().build().setParam("storekey", "@test@"),
+        base: storageURL(sthis).build().setParam("storekey", "@test@"),
       },
     },
   };
@@ -632,7 +632,7 @@ describe("same workload twice, same CID", function () {
   const configB = {
     store: {
       stores: {
-        base: storageURL().build().setParam("storekey", "@test@"),
+        base: storageURL(sthis).build().setParam("storekey", "@test@"),
       },
     },
   };

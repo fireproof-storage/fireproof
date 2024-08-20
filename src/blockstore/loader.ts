@@ -118,6 +118,7 @@ export class Loader implements Loadable {
   constructor(name: string, ebOpts: BlockstoreOpts, sthis: SuperThis) {
     this.name = name;
     // console.log("Loader", name, ebOpts)
+    this.sthis = sthis;
     this.ebOpts = defaultedBlockstoreRuntime(
       sthis,
       {
@@ -127,8 +128,6 @@ export class Loader implements Loadable {
       "Loader",
     );
     this.logger = this.ebOpts.logger;
-    throw new Error("Loader constructor superthis");
-    this.sthis = {} as SuperThis;
   }
 
   // async snapToCar(carCid: AnyLink | string) {

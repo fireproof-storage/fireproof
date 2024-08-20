@@ -324,7 +324,6 @@ export interface BlockstoreRuntime {
 export interface Loadable {
   readonly name: string; // = "";
   readonly sthis: SuperThis;
-  readonly logger: Logger;
   readonly ebOpts: BlockstoreRuntime;
   remoteCarStore?: DataStore;
   carStore(): Promise<DataStore>;

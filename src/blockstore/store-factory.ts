@@ -150,8 +150,7 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
   if (!gateway) {
     throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
   }
-  const store = new DataStoreImpl(loader.sthis, loader.name, url, {
-    logger: loader.logger,
+  const store = new DataStoreImpl(sthis, loader.name, url, {
     gateway: gateway.gateway,
     keybag: () =>
       getKeyBag(loader.sthis, {
@@ -185,7 +184,6 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
     throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
   }
   const store = new MetaStoreImpl(loader.sthis, loader.name, url, {
-    logger: loader.logger,
     gateway: gateway.gateway,
     keybag: () =>
       getKeyBag(loader.sthis, {
@@ -224,7 +222,6 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   }
   sthis.logger.Debug().Str("prepared", url.toString()).Msg("produced");
   const store = new WALStoreImpl(loader, url, {
-    logger: loader.logger,
     gateway: gateway.gateway,
     keybag: () =>
       getKeyBag(loader.sthis, {
