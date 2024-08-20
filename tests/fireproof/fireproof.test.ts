@@ -67,12 +67,12 @@ describe("public API", function () {
   let doc: DocWithId<Doc>;
   let query: IndexRows<string, Doc>;
 
-  afterEach(async function () {
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () => {
     await rt.SysContainer.start();
     db = fireproof("test-api");
     // index = index(db, 'test-index', (doc) => doc.foo)
@@ -615,7 +615,7 @@ describe("same workload twice, same CID", function () {
   const configA = {
     store: {
       stores: {
-        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
+        base: storageURL().build().setParam("storekey", "@test@"),
       },
     },
   };
@@ -623,7 +623,7 @@ describe("same workload twice, same CID", function () {
   const configB = {
     store: {
       stores: {
-        base: storageURL().build().setParam("storagekey", "zTvTPEPQRWij8rfb3FrFqBm"),
+        base: storageURL().build().setParam("storekey", "@test@"),
       },
     },
   };

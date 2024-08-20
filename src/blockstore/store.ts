@@ -98,33 +98,20 @@ abstract class BaseStoreImpl {
     }
     this._url = res.Ok();
     // add storekey to url
-    const storeKey = this._url.getParam("storekey");
-    if (storeKey !== "insecure") {
+    const kb = await this.keybag();
+    const skRes = await kb.ensureKeyFromUrl(this._url, () => {
       const idx = this._url.getParam("index");
       const storeKeyName = [this.name];
       if (idx) {
         storeKeyName.push(idx);
       }
       storeKeyName.push(this.storeType);
-      let keyName = `@${storeKeyName.join(":")}@`;
-      let failIfNotFound = true;
-      const kb = await this.keybag();
-      if (storeKey && storeKey.startsWith("@") && storeKey.endsWith("@")) {
-        keyName = storeKey;
-      } else if (storeKey) {
-        const ret = await kb.getNamedKey(keyName, true);
-        if (ret.isErr()) {
-          await kb.setNamedKey(keyName, storeKey);
-        }
-      } else {
-        failIfNotFound = false; // create key if not found
-      }
-      const ret = await kb.getNamedKey(keyName, failIfNotFound);
-      if (ret.isErr()) {
-        return ret as unknown as Result<URI>;
-      }
-      this._url = this._url.build().setParam("storekey", keyName).URI();
+      return storeKeyName.join(":");
+    });
+    if (skRes.isErr()) {
+      return skRes as Result<URI>;
     }
+    this._url = skRes.Ok();
     const version = guardVersion(this._url);
     if (version.isErr()) {
       this.logger.Error().Result("version", version).Msg("guardVersion");
