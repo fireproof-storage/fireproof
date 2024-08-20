@@ -27,19 +27,12 @@ import {
   PARAM,
 } from "./types.js";
 import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, getDefaultURI, GatewayInterceptor } from "./blockstore/index.js";
-import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
+import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 
 const databases = new KeyedResolvOnce<Database>();
-
-function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
-  if (!set) return [];
-  return Object.entries(set)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => ({ [k]: v }));
-}
 
 export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
   return JSON.stringify(
