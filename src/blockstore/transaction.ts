@@ -26,6 +26,11 @@ export interface CarTransactionOpts {
   readonly noLoader: boolean;
 }
 
+export interface CarTransactionOpts {
+  readonly add: boolean;
+  readonly noLoader: boolean;
+}
+
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   readonly parent: BaseBlockstore;
   constructor(parent: BaseBlockstore, opts: CarTransactionOpts = { add: true, noLoader: false }) {
