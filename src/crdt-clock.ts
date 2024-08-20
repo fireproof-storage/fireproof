@@ -115,7 +115,7 @@ export class CRDTClock<T extends DocTypes> {
         }
         return { head: advancedHead };
       },
-      { noLoader },
+      { noLoader, add: false },
     );
     this.setHead(meta.head);
   }
