@@ -1,18 +1,21 @@
 import { IDBPDatabase, openDB } from "idb";
 import { KeyBagProvider, KeyItem } from "./key-bag.js";
 import { getPath } from "./gateways/file/utils.js";
-import { ResolveOnce, URI } from "@adviser/cement";
+import { Logger, ResolveOnce, URI } from "@adviser/cement";
 import { SuperThis } from "use-fireproof";
 
 export class KeyBagProviderIndexDB implements KeyBagProvider {
   readonly _db = new ResolveOnce<IDBPDatabase<unknown>>();
 
   readonly dbName: string;
-  constructor(
-    readonly url: URI,
-    readonly sthis: SuperThis,
-  ) {
-    this.dbName = getPath(this.url, sthis);
+  readonly url: URI;
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  constructor(url: URI, sthis: SuperThis) {
+    this.sthis = sthis;
+    this.logger = sthis.logger;
+    this.url = url;
+    this.dbName = getPath(this.url, this.sthis);
   }
 
   async _prepare() {

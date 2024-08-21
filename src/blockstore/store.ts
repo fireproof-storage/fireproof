@@ -33,20 +33,11 @@ function guardVersion(url: URI): Result<URI> {
 
 export interface StoreOpts {
   readonly gateway: Gateway;
-  // readonly sthis: SuperThis;
-  // readonly logger: Logger;
-  readonly textEncoder?: TextEncoder;
-  readonly textDecoder?: TextDecoder;
   readonly keybag: () => Promise<KeyBag>;
 }
 
-const _lazyTextEncoder = new ResolveOnce<TextEncoder>();
-const _lazyTextDecoder = new ResolveOnce<TextDecoder>();
-
 abstract class BaseStoreImpl {
   // should be injectable
-  readonly textEncoder;
-  readonly textDecoder;
 
   abstract readonly storeType: StoreType;
   readonly name: string;
@@ -67,8 +58,6 @@ abstract class BaseStoreImpl {
       .Str("name", name)
       .Logger();
     this.gateway = opts.gateway;
-    this.textEncoder = opts.textEncoder || _lazyTextEncoder.once(() => new TextEncoder());
-    this.textDecoder = opts.textDecoder || _lazyTextDecoder.once(() => new TextDecoder());
   }
 
   url(): URI {
@@ -196,7 +185,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
   dbMetasForByteHeads(byteHeads: Uint8Array[]) {
     return byteHeads.map((bytes) => {
-      const txt = this.textDecoder.decode(bytes);
+      const txt = this.sthis.txt.decode(bytes);
       return this.parseHeader(txt);
     });
   }
@@ -226,7 +215,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.put(url.Ok(), this.textEncoder.encode(bytes));
+    const res = await this.gateway.put(url.Ok(), this.sthis.txt.encode(bytes));
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
@@ -469,7 +458,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       throw this.logger.Error().Err(bytes.Err()).Msg("error get").AsError();
     }
     try {
-      return bytes && parse<WALState>(this.textDecoder.decode(bytes.Ok()));
+      return bytes && parse<WALState>(this.sthis.txt.decode(bytes.Ok()));
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("error parse").AsError();
     }
@@ -486,7 +475,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     } catch (e) {
       throw this.logger.Error().Err(e).Any("state", state).Msg("error format").AsError();
     }
-    const res = await this.gateway.put(filepath.Ok(), this.textEncoder.encode(encoded));
+    const res = await this.gateway.put(filepath.Ok(), this.sthis.txt.encode(encoded));
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Str("filePath", filepath.Ok().toString()).Msg("error saving").AsError();
     }

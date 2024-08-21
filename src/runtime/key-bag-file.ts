@@ -11,6 +11,7 @@ interface KeyBagCtx {
 
 export class KeyBagProviderFile implements KeyBagProvider {
   async _prepare(id: string): Promise<KeyBagCtx> {
+    await this.sthis.start();
     let sysFS: SysFileSystem;
     switch (this.url.protocol) {
       case "file:": {
@@ -43,7 +44,8 @@ export class KeyBagProviderFile implements KeyBagProvider {
     const ctx = await this._prepare(id);
     try {
       const p = await ctx.sysFS.readfile(ctx.fName);
-      return JSON.parse(new TextDecoder().decode(p)) as KeyItem;
+      const ki = JSON.parse(this.sthis.txt.decode(p)) as KeyItem;
+      return ki;
     } catch (e) {
       if (isNotFoundError(e)) {
         return undefined;
@@ -54,7 +56,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
 
   async set(id: string, item: KeyItem): Promise<void> {
     const ctx = await this._prepare(id);
-    const p = new TextEncoder().encode(JSON.stringify(item, null, 2));
+    const p = this.sthis.txt.encode(JSON.stringify(item, null, 2));
     await ctx.sysFS.writefile(ctx.fName, p);
   }
 }
