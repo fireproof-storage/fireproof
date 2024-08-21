@@ -7,7 +7,7 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import { decode, encode } from "./wait-pr-multiformats/block";
-import { SuperThis } from "..";
+import { SuperThis } from "../types.js";
 
 interface GenerateIVFn {
   calc(ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;
