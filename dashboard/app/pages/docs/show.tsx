@@ -8,7 +8,10 @@ import {
 } from "~/components/CodeHighlight";
 
 export default function Document() {
-  const { name, id: _id } = useParams();
+  const { name } = useParams();
+  let { id: _id } = useParams();
+  _id = _id === "new" ? undefined : _id;
+
   const { useDocument, database } = useFireproof(name);
 
   const [doc] = useDocument(() => ({ _id: _id! }));
@@ -21,14 +24,14 @@ export default function Document() {
     const data = JSON.parse(docToSave);
     const resp = await database.put({ _id, ...data });
     if (!_id) {
-      window.location.href = `/db/${name}/doc/${resp.id}`;
+      window.location.href = `/fp/databases/${name}/docs/${resp.id}`;
     }
     setNeedsSave(false);
   }
 
   async function deleteDocument(_id: string) {
     await database.del(_id);
-    window.location.href = `docs`;
+    window.location.href = "";
   }
 
   function editorChanged({ code, valid }: { code: string; valid: boolean }) {
@@ -42,44 +45,51 @@ export default function Document() {
   const title = id ? `Edit document: ${_id}` : "Create new document";
 
   return (
-    <div className="p-6 dark:bg-slate-800 bg-white">
-      <h2 className="text-2xl pb-2 dark:text-white text-black">{title}</h2>
-      <p className="mb-4 dark:text-gray-300 text-black">
+    <div className="p-6 bg-card dark:bg-card text-card-foreground dark:text-card-foreground">
+      <h2 className="text-2xl pb-2">{title}</h2>
+      <p className="mb-4">
         Database:{" "}
-        <Link to={`/db/${name}`} className="text-blue-500 underline">
+        <Link
+          to={`/fp/databases/${name}`}
+          className="text-[--accent] hover:underline"
+        >
           {name}
         </Link>
       </p>
-      <h3 className="dark:text-gray-300 text-black">Editable data fields</h3>
+      <h3>Editable data fields</h3>
       <EditableCodeHighlight
         onChange={editorChanged}
         code={JSON.stringify(data, null, 2)}
       />
-      <button
-        onClick={() => {
-          saveDocument(_id);
-        }}
-        className={`${
-          needsSave
-            ? "bg-blue-500 hover:bg-blue-700 text-white"
-            : "dark:bg-gray-700 bg-gray-300 dark:text-gray-400 text-gray-700"
-        } font-bold py-2 px-4 m-5 rounded`}
-      >
-        Save
-      </button>
-      {_id && (
+      <div className="flex space-x-4">
         <button
-          onClick={() => deleteDocument(_id)}
+          onClick={() => {
+            saveDocument(_id);
+          }}
           className={`${
-            _id
-              ? "dark:bg-gray-700 bg-gray-300 hover:bg-orange-700 hover:text-white"
-              : "dark:bg-gray-700 bg-gray-300"
-          } dark:text-gray-400 text-gray-700 font-bold py-2 px-4 my-5 rounded`}
+            needsSave
+              ? "bg-[--accent] hover:bg-[--accent]/80 text-accent-foreground"
+              : "bg-[--muted] text-muted-foreground"
+          } font-bold py-2 px-4 rounded`}
         >
-          Delete
+          Save
         </button>
-      )}
-      <h3 className="dark:text-gray-300 text-black">Fireproof metadata</h3>
+        {_id && (
+          <button
+            onClick={() => deleteDocument(_id)}
+            className="bg-[--destructive] hover:bg-[--destructive]/80 text-destructive-foreground font-bold py-2 px-4 rounded"
+          >
+            Delete
+          </button>
+        )}
+        <Link
+          to={`/fp/databases/${name}`}
+          className="bg-[--muted] hover:bg-[--muted]/80 text-muted-foreground font-bold py-2 px-4 rounded"
+        >
+          Cancel
+        </Link>
+      </div>
+      <h3 className="mt-4">Fireproof metadata</h3>
       <CodeHighlight code={JSON.stringify(idFirstMeta, null, 2)} />
     </div>
   );

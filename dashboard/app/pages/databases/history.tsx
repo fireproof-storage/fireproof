@@ -27,13 +27,13 @@ export default function ChangesHistory() {
   const rows = history.rows.map((row) => row.value).reverse();
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-2">
+    <div className="p-6 bg-[--muted]">
+      <h2 className="text-2xl text-[--foreground] mb-2">
         Recent Changes in{" "}
-        <code className="bg-gray-200 dark:bg-gray-700 p-1 rounded">{name}</code>{" "}
+        <code className="bg-[--accent] text-[--accent-foreground] p-1 rounded">{name}</code>{" "}
         Database
       </h2>
-      <p className="mb-4">These are the recent changes in the database.</p>
+      <p className="mb-4 text-[--muted-foreground]">These are the recent changes in the database.</p>
       <DynamicTable dbName={name} headers={headers} rows={rows} />
     </div>
   );
