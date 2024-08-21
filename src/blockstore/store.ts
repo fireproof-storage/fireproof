@@ -231,7 +231,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";
-    this.logger.Debug().Str("branch", branch).Any("meta", meta).Any("stack", (new Error()).stack).Msg("saving meta");
+    this.logger.Debug().Str("branch", branch).Any("meta", meta).Any("stack", new Error().stack).Msg("saving meta");
     const bytes = this.makeHeader(meta);
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
@@ -336,12 +336,12 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly ready = async () => {
     return this._ready.once(async () => {
       this.logger.Debug().Msg("ready-once-pre");
-      const walState = await this.load().catch((e) => {
+      const walState = (await this.load().catch((e) => {
         this.logger.Error().Any("error", e).Msg("error loading wal");
         return undefined;
-      }) as WALState;
+      })) as WALState;
       this.logger.Debug().Msg("ready-once-post");
-      walProcessor(this.logger).addState({
+      walProcessor(this.sthis).addState({
         operations: withLoader(this.loader, this, walState?.operations || []),
         fileOperations: withLoader(this.loader, this, walState?.fileOperations || []),
       });
@@ -350,7 +350,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
-    const wp = walProcessor(this.logger);
+    const wp = walProcessor(this.sthis);
     if (opts.noLoader) {
       wp.addState({ noLoaderOps: withLoader(this.loader, this, dbMeta) });
       // this.walState.noLoaderOps.push(dbMeta);
@@ -364,8 +364,8 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
     await this.ready();
     this.logger.Debug().Str("fileCid", fileCid.toString()).Msg("enqueue-file");
-    walProcessor(this.logger).addState({
-      fileOperations: withLoader(this.loader, this, { cid: fileCid, public: publicFile })
+    walProcessor(this.sthis).addState({
+      fileOperations: withLoader(this.loader, this, { cid: fileCid, public: publicFile }),
     });
     // this.walState.fileOperations.push({ cid: fileCid, public: publicFile });
     // await this.save(this.walState)

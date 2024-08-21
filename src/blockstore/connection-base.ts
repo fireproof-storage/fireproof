@@ -5,7 +5,7 @@ import type { Link, Version } from "multiformats";
 import { Logger, LoggerImpl, LogValue, URI } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
-import { TaskManager } from "./task-manager.js";
+// import { TaskManager } from "./task-manager.js";
 import type { BlockstoreRuntime, Connection, Loadable } from "./types.js";
 import { type Loader } from "./loader.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
@@ -29,7 +29,7 @@ export abstract class ConnectionBase implements Connection {
   readonly eventBlocks = new MemoryBlockstore();
   parents: CarClockHead = [];
   loader?: Loadable;
-  taskManager?: TaskManager;
+  // taskManager?: TaskManager;
   loaded: Promise<void> = Promise.resolve();
 
   readonly url: URI;
@@ -59,7 +59,7 @@ export abstract class ConnectionBase implements Connection {
   async connectMeta_X({ loader }: { loader?: Loadable }) {
     if (!loader) throw this.logger.Error().Msg("connectMeta_X: loader is required").AsError();
     this.loader = loader;
-    this.taskManager = new TaskManager(loader);
+    // this.taskManager = new TaskManager(loader);
     await this.onConnect();
     const metaUrl = this.url.build().defParam("store", "meta").URI();
     const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);
@@ -71,9 +71,12 @@ export abstract class ConnectionBase implements Connection {
       keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
     });
     remote.onLoad("main", async (metas) => {
-      console.log("connectMeta_X: handleDbMetasFromStore pre",
-        (new Error()).stack,
-        metas, ((this.logger as LoggerImpl)._attributes.module as LogValue).fn());
+      console.log(
+        "connectMeta_X: handleDbMetasFromStore pre",
+        new Error().stack,
+        metas,
+        ((this.logger as LoggerImpl)._attributes.module as LogValue).fn(),
+      );
       this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
       if (metas) {
         await throwFalsy(this.loader).handleDbMetasFromStore(metas);
@@ -86,7 +89,7 @@ export abstract class ConnectionBase implements Connection {
     this.loaded = this.loader.ready().then(async () => {
       this.logger.Debug().Msg("connectMeta_X: loader.ready");
       // so this line stalls
-      const loaded = remote.load("main")
+      const loaded = remote.load("main");
       loaded.then(async () => {
         this.logger.Debug().Msg("connectMeta_X: main -> process-pre");
         // const wal = await throwFalsy(this.loader).WALStore();

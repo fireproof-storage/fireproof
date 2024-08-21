@@ -1,6 +1,5 @@
 import type {
   ConfigOpts,
-  Database,
   DocResponse,
   DocFragment,
   DocSet,
@@ -10,10 +9,11 @@ import type {
   IndexRow,
   MapFn,
   QueryOpts,
-} from "@fireproof/core";
-import { ensureLogger, fireproof } from "@fireproof/core";
+} from "../types.js";
+import { Database, fireproof } from "../database.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AllDocsQueryOpts, ClockHead, ChangesOptions } from "../types";
+import type { AllDocsQueryOpts, ClockHead, ChangesOptions } from "../types";
+import { ensureLogger, ensureSuperThis } from "../utils.js";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
@@ -170,11 +170,12 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  const logger = ensureLogger(config, "useFireproof");
+  const sthis = typeof name === "string" ? ensureSuperThis(config) : name.sthis;
+  const logger = ensureLogger(sthis, "useFireproof");
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
   function useDocument<T extends DocTypes>(initialDocFn: () => DocSet<T>): UseDocumentResult<T> {
-    const idoc = initialDocFn()
+    const idoc = initialDocFn();
     logger.Debug().Any("doc", idoc).Msg("useDocument");
     // We purposely refetch the docId everytime to check if it has changed
     const docId = idoc._id || "";
@@ -194,14 +195,17 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const saveDoc: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        logger.Debug().Any("doc", existingDoc ?? doc).Msg("saveDoc")
+        logger
+          .Debug()
+          .Any("doc", existingDoc ?? doc)
+          .Msg("saveDoc");
         const res = await database.put(existingDoc ?? doc);
         // If the document was created, then we need to update the local state with the new `_id`
         if (!existingDoc && !doc._id) {
           setDoc((d) => {
-            const m = { ...d, _id: res.id }
-            logger.Debug().Any("doc", m).Msg("saveDoc-setDoc")
-            return m
+            const m = { ...d, _id: res.id };
+            logger.Debug().Any("doc", m).Msg("saveDoc-setDoc");
+            return m;
           });
         }
         return res;
@@ -232,7 +236,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     useEffect(() => {
       if (!docId) return;
       return database.subscribe((changes) => {
-        logger.Debug().Any("changes", changes).Str("docId", docId).Msg("subscribe")
+        logger.Debug().Any("changes", changes).Str("docId", docId).Msg("subscribe");
         if (changes.find((c) => c._id === docId)) {
           void refreshDoc(); // todo use change.value
         }
@@ -259,11 +263,11 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
-    logger.Debug().Str("qString", queryString).Str("mapFn", mapFnString).Msg("useLiveQuery")
+    logger.Debug().Str("qString", queryString).Str("mapFn", mapFnString).Msg("useLiveQuery");
     const refreshRows = useCallback(async () => {
-      const all = await database.allDocs()
+      const all = await database.allDocs();
       const res = await database.query<K, T, R>(mapFn, query);
-      logger.Debug().Any("all", all).Any("mapFn", mapFn).Any("query", query).Any("res", res).Msg("db.querty")
+      logger.Debug().Any("all", all).Any("mapFn", mapFn).Any("query", query).Any("res", res).Msg("db.querty");
       setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
     }, [mapFnString, queryString]);
 

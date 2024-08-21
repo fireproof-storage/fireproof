@@ -165,7 +165,7 @@ export function ensureLogger(
       delete ctx.this;
     }
     if ("log" in ctx) {
-      constructorLog = true
+      constructorLog = true;
       delete ctx.log;
     }
     for (const [key, value] of Object.entries(ctx)) {

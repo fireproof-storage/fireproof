@@ -48,15 +48,12 @@ describe("HOOK: useFireproof", () => {
     }
 
     const resUseLiveQuery = renderHook(() => useLiveQuery<Todo>("date", { limit: 100, descending: true }));
-    await new Promise((res) => setTimeout(res, 500))
-    resUseLiveQuery.rerender()
-    await new Promise((res) => setTimeout(res, 500))
-    resUseLiveQuery.rerender()
-    await new Promise((res) => setTimeout(res, 500))
-    console.log(new Date(), resUseLiveQuery.result.current)
-
-
-
+    await new Promise((res) => setTimeout(res, 500));
+    resUseLiveQuery.rerender();
+    await new Promise((res) => setTimeout(res, 500));
+    resUseLiveQuery.rerender();
+    await new Promise((res) => setTimeout(res, 500));
+    console.log(new Date(), resUseLiveQuery.result.current);
 
     //     const todos = await act(() => useLiveQuery<Todo>("date", { limit: 10, descending: true }));
     //     let text = texts[texts.length - 1];
