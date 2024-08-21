@@ -448,46 +448,6 @@ export class Loader implements Loadable {
     return dacr;
   }
 
-  // class decryptedReader extends CarReader {
-  //   constructor(rawReader: CarReader) {
-  //     super(rawReader._header, rawReader._blocks);
-  //   }
-  //   getRoots(): Promise<CID[]> {
-  //     return this._header.roots;
-  //   }
-
-  // }
-
-  // protected async ensureDecryptedReader(store: BaseStore, reader: CarReader): Promise<CarReader> {
-  //   // const theKey = await this._getKey();
-  //   // if (this.ebOpts.public || !(theKey && this.ebOpts.crypto)) {
-  //   const kycy = await store.keyedCrypto();
-  //   if (!kycy.isEncrypting) {
-  //     return reader;
-  //   }
-  //   const { blocks, root } = await decodeEncryptedCar(this.logger, kycy, reader);
-  //   return {
-  //     getRoots: () => [root],
-  //     get: async (cid: CID) => {
-  //       const res = await blocks.get(cid);
-  //       this.logger.Debug().Str("cid", cid.toString()).Len(res?.bytes).Msg("get block");
-  //       return res;
-  //     },
-  //     blocks: blocks.entries.bind(blocks),
-  //   } as unknown as CarReader;
-  // }
-
-  // protected async setKey(key: string) {
-  //   if (this.key && this.key !== key)
-  //     throw this.logger.Error().Str("name", this.name).Str("this.key", this.key).Str("key", key).Msg("setting key").AsError();
-  //   this.key = key;
-  //   const encoder = new TextEncoder();
-  //   const data = encoder.encode(key);
-  //   const hashBuffer = await this.ebOpts.crypto.digestSHA256(data);
-  //   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  //   this.keyId = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-  // }
-
   protected async getMoreReaders(cids: AnyLink[]) {
     const limit = pLimit(5);
     const missing = cids.filter((cid) => !this.carReaders.has(cid.toString()));

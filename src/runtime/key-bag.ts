@@ -60,11 +60,13 @@ export class KeyBag {
     return Result.Ok(url);
   }
 
-  async toKeyWithFingerPrint(key: string): Promise<Result<KeyWithFingerPrint>> {
-    const material = base58btc.decode(key); //
+  async toKeyWithFingerPrint(keyStr: string): Promise<Result<KeyWithFingerPrint>> {
+    const material = base58btc.decode(keyStr); //
+    const key = await this.subtleKey(keyStr);
+    const fpr = await this.rt.crypto.digestSHA256(material);
     return Result.Ok({
-      key: await this.subtleKey(key),
-      fingerPrint: base58btc.encode(new Uint8Array(await this.rt.crypto.digestSHA256(material))),
+      key,
+      fingerPrint: base58btc.encode(new Uint8Array(fpr)),
     });
   }
 
@@ -86,19 +88,23 @@ export class KeyBag {
   }
 
   async getNamedKey(name: string, failIfNotFound = false): Promise<Result<KeyWithFingerPrint>> {
+    const id = this.rt.sthis.nextId();
     return this._seq.add(async () => {
       const bag = await this.rt.getBag();
       const named = await bag.get(name);
       if (named) {
-        this.logger.Debug().Str("name", name).Msg("found getNamedKey");
-        return await this.toKeyWithFingerPrint(named.key);
+        const fpr = await this.toKeyWithFingerPrint(named.key);
+        this.logger.Debug().Str("id", id).Str("name", name).Result("fpr", fpr).Msg("fingerPrint getNamedKey");
+        return fpr;
       }
       if (failIfNotFound) {
-        this.logger.Debug().Str("name", name).Msg("failIfNotFound getNamedKey");
+        this.logger.Debug().Str("id", id).Str("name", name).Msg("failIfNotFound getNamedKey");
         return Result.Err(new Error(`Key not found: ${name}`));
       }
-      this.logger.Debug().Str("name", name).Msg("createKey getNamedKey");
-      return this._setNamedKey(name, base58btc.encode(this.rt.crypto.randomBytes(this.rt.keyLength)));
+      // this.logger.Debug().Str("id", id).Str("name", name).Msg("createKey getNamedKey-pre");
+      const ret = await this._setNamedKey(name, base58btc.encode(this.rt.crypto.randomBytes(this.rt.keyLength)));
+      this.logger.Debug().Str("id", id).Str("name", name).Result("fpr", ret).Msg("createKey getNamedKey-post");
+      return ret;
     });
   }
 }
@@ -115,6 +121,7 @@ export interface KeyBagOpts {
   // readonly key: string; // key to encrypt the keybag
   readonly crypto: CryptoRuntime;
   readonly keyLength: number; // default: 16
+  // readonly logger: Logger;
   readonly keyRuntime: KeyBagRuntime;
 }
 
@@ -133,6 +140,42 @@ export interface KeyBagRuntime {
   id(): string;
 }
 
+export type KeyBackProviderFactory = (url: URI, sthis: SuperThis) => Promise<KeyBagProvider>;
+
+export interface KeyBagProviderFactoryItem {
+  readonly protocol: string;
+  // if this is set the default protocol selection is overridden
+  readonly override?: boolean;
+  readonly factory: KeyBackProviderFactory;
+}
+
+const keyBagProviderFactories = new Map<string, KeyBagProviderFactoryItem>(
+  [
+    {
+      protocol: "file:",
+      factory: async (url: URI, sthis: SuperThis) => {
+        const { KeyBagProviderFile } = await import("./key-bag-file.js");
+        return new KeyBagProviderFile(url, sthis);
+      },
+    },
+    {
+      protocol: "indexdb:",
+      factory: async (url: URI, sthis: SuperThis) => {
+        const { KeyBagProviderIndexDB } = await import("./key-bag-indexdb.js");
+        return new KeyBagProviderIndexDB(url, sthis);
+      },
+    },
+  ].map((i) => [i.protocol, i]),
+);
+
+export function registerKeyBagProviderFactory(item: KeyBagProviderFactoryItem) {
+  const protocol = item.protocol.endsWith(":") ? item.protocol : item.protocol + ":";
+  keyBagProviderFactories.set(protocol, {
+    ...item,
+    protocol,
+  });
+}
+
 function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRuntime {
   if (kbo.keyRuntime) {
     return kbo.keyRuntime;
@@ -141,6 +184,7 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
   let url: URI;
   if (kbo.url) {
     url = URI.from(kbo.url);
+    logger.Debug().Url(url).Msg("from opts");
   } else {
     let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
     if (runtimeFn().isBrowser) {
@@ -154,6 +198,7 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
         url = URI.from(bagFnameOrUrl);
       }
     }
+    logger.Debug().Url(url).Msg("from env");
   }
   let keyProviderFactory: () => Promise<KeyBagProvider>;
   switch (url.protocol) {
@@ -172,6 +217,7 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
     default:
       throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
   }
+
   if (url.hasParam("masterkey")) {
     throw logger.Error().Url(url).Msg("masterkey is not supported").AsError();
   }

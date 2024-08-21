@@ -6,7 +6,7 @@ import { Loadable, StoreOpts, StoreRuntime } from "./types.js";
 import { dataDir, ensureLogger, ensureSuperLog } from "../utils.js";
 import { Gateway, TestGateway } from "./gateway.js";
 import { getKeyBag } from "../runtime/key-bag.js";
-import { SuperThis } from "use-fireproof";
+import { SuperThis } from "../types.js";
 
 function ensureIsIndex(url: URI, isIndex?: string): URI {
   if (isIndex) {

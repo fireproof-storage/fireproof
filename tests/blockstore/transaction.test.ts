@@ -1,10 +1,10 @@
 import { CID } from "multiformats";
-import { bs } from "@fireproof/core";
+import { bs, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
-const txtEncoder = new TextEncoder();
 describe("Fresh TransactionBlockstore", function () {
   let blocks: bs.BaseBlockstore;
+  const sthis = mockSuperThis();
   beforeEach(function () {
     blocks = new bs.BaseBlockstore();
   });
@@ -15,7 +15,7 @@ describe("Fresh TransactionBlockstore", function () {
     expect(blocks.loader).toBeFalsy();
   });
   it("should not put", async function () {
-    const value = txtEncoder.encode("value");
+    const value = sthis.txt.encode("value");
     const e = await blocks.put("key" as unknown as bs.AnyLink, value).catch((e) => e);
     expect(e.message).toMatch(/transaction/g);
   });
@@ -44,7 +44,7 @@ describe("TransactionBlockstore with name", function () {
     expect(blocks.loader).toBeTruthy();
   });
   it("should get from loader", async function () {
-    const bytes = txtEncoder.encode("bytes");
+    const bytes = sthis.txt.encode("bytes");
     expect(blocks.loader).toBeTruthy();
     blocks.loader.getBlock = async (cid) => {
       return { cid, bytes };
@@ -65,7 +65,7 @@ describe("A transaction", function () {
   });
   it("should put and get", async function () {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
-    const bytes = txtEncoder.encode("bytes");
+    const bytes = sthis.txt.encode("bytes");
     await tblocks.put(cid, bytes);
     expect(blocks.transactions.has(tblocks)).toBeTruthy();
     const got = await tblocks.get(cid);
@@ -75,14 +75,15 @@ describe("A transaction", function () {
   });
 });
 
-function asUInt8Array(str: string) {
-  return txtEncoder.encode(str);
+function asUInt8Array(str: string, sthis: SuperThis) {
+  return sthis.txt.encode(str);
 }
 
 describe("TransactionBlockstore with a completed transaction", function () {
   let blocks: bs.BaseBlockstore;
   let cid: CID;
   let cid2: CID;
+  const sthis = mockSuperThis();
 
   beforeEach(async function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
@@ -90,13 +91,13 @@ describe("TransactionBlockstore with a completed transaction", function () {
 
     blocks = new bs.BaseBlockstore();
     await blocks.transaction(async (tblocks) => {
-      await tblocks.put(cid, asUInt8Array("value"));
-      await tblocks.put(cid2, asUInt8Array("value2"));
+      await tblocks.put(cid, asUInt8Array("value", sthis));
+      await tblocks.put(cid, asUInt8Array("value", sthis));
       return { head: [] };
     });
     await blocks.transaction(async (tblocks) => {
-      await tblocks.put(cid, asUInt8Array("value"));
-      await tblocks.put(cid2, asUInt8Array("value2"));
+      await tblocks.put(cid, asUInt8Array("value", sthis));
+      await tblocks.put(cid2, asUInt8Array("value2", sthis));
       return { head: [] };
     });
   });
@@ -107,10 +108,10 @@ describe("TransactionBlockstore with a completed transaction", function () {
   it("should get", async function () {
     const value = (await blocks.get(cid)) as bs.AnyBlock;
     expect(value.cid).toEqual(cid);
-    expect(value.bytes.toString()).toEqual(asUInt8Array("value").toString());
+    expect(value.bytes.toString()).toEqual(asUInt8Array("value", sthis).toString());
 
     const value2 = (await blocks.get(cid2)) as bs.AnyBlock;
-    expect(value2.bytes.toString()).toEqual(asUInt8Array("value2").toString());
+    expect(value2.bytes.toString()).toEqual(asUInt8Array("value2", sthis).toString());
   });
   it("should yield entries", async function () {
     const blz = [];

@@ -50,12 +50,17 @@ export interface PathOps {
 //   // fs: SysFileSystem;
 //   fsHelper: PathOps;
 // }
+export interface TextEndeCoder {
+  encode(input: string): Uint8Array;
+  decode(input: Uint8Array): string;
+}
 export interface SuperThisOpts {
   // readonly crypto?: CryptoRuntime;
   readonly logger: Logger;
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
   readonly env: EnvFactoryOpts;
+  readonly txt: TextEndeCoder;
   readonly ctx: Record<string, unknown>;
 }
 
@@ -64,6 +69,7 @@ export interface SuperThis {
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly ctx: Record<string, unknown>;
+  readonly txt: TextEndeCoder;
   nextId(): string;
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;

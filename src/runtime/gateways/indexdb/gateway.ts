@@ -4,7 +4,7 @@ import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 import { INDEXDB_VERSION } from "./version.js";
 import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
 import { Gateway, TestGateway } from "../../../blockstore/gateway.js";
-import { SuperThis } from "use-fireproof";
+import { SuperThis } from "../../../types.js";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam("version", INDEXDB_VERSION).URI();
@@ -191,7 +191,6 @@ export class IndexDBGateway implements Gateway {
 //   }
 // }
 
-const txtEncoder = new TextEncoder();
 export class IndexDBTestStore implements TestGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
@@ -206,7 +205,7 @@ export class IndexDBTestStore implements TestGateway {
     let bytes = await ic.db.get(store, sanitzeKey(key));
     this.logger.Debug().Str("key", key).Str("store", store).Int("len", bytes.length).Msg("got");
     if (typeof bytes === "string") {
-      bytes = txtEncoder.encode(bytes);
+      bytes = this.sthis.txt.encode(bytes);
     }
     return bytes as Uint8Array;
   }
