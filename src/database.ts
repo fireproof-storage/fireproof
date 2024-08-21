@@ -227,13 +227,6 @@ export function fireproof(name: string, opts?: ConfigOpts): Database {
     toSortedArray({
       name,
       stores: toSortedArray(opts?.store?.stores),
-
-      makeMetaStore: !!opts?.store?.makeMetaStore,
-      makeDataStore: !!opts?.store?.makeDataStore,
-      makeRemoteWAL: !!opts?.store?.makeWALStore,
-
-      encodeFile: !!opts?.store?.encodeFile,
-      decodeFile: !!opts?.store?.decodeFile,
     }),
   );
   let db = Database.databases.get(key);
