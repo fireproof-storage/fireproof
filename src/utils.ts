@@ -47,6 +47,7 @@ class superThis implements SuperThis {
     this.pathOps = opts.pathOps;
     this.txt = opts.txt;
     this.ctx = { ...opts.ctx };
+    // console.log("superThis", this);
   }
 
   nextId(): string {
@@ -143,6 +144,7 @@ export function ensureLogger(
   }
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
   const debug: string[] = [];
+  let exposeStack = false;
   if (ctx) {
     if ("debug" in ctx) {
       if (typeof ctx.debug === "string" && ctx.debug.length > 0) {
@@ -151,6 +153,10 @@ export function ensureLogger(
         debug.push(componentName);
       }
       delete ctx.debug;
+    }
+    if ("exposeStack" in ctx) {
+      exposeStack = true;
+      delete ctx.exposeStack;
     }
     if ("this" in ctx) {
       cLogger.Str("this", sthis.nextId());
@@ -181,12 +187,21 @@ export function ensureLogger(
   registerFP_DEBUG
     .once(async () => {
       // console.log("registerFP_DEBUG", SysContainer.env)
-      sthis.env.onSet((key, value) => {
-        // console.log("FP_DEBUG", key, value, debug)
-        if (value) {
-          logger.SetDebug(value);
-        }
-      }, "FP_DEBUG");
+      sthis.env.onSet(
+        (key, value) => {
+          // console.log("FP_DEBUG", key, value, debug)
+          switch (key) {
+            case "FP_DEBUG":
+              logger.SetDebug(value || []);
+              break;
+            case "FP_STACK":
+              logger.SetExposeStack(!!value);
+              break;
+          }
+        },
+        "FP_DEBUG",
+        "FP_STACK",
+      );
     })
     .finally(() => {
       /* do nothing */
@@ -194,6 +209,9 @@ export function ensureLogger(
 
   if (debug.length > 0) {
     logger.SetDebug(debug);
+  }
+  if (exposeStack) {
+    logger.SetExposeStack(true);
   }
   const out = cLogger.Logger();
   // out.Debug().Msg("logger ready");
