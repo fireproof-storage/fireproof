@@ -21,9 +21,9 @@ export default function DynamicTable({
   }
 
   return (
-    <div className="relative overflow-x-auto dark mt-4">
-      <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-        <thead className="text-xs text-gray-700 bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+    <div className="relative overflow-x-auto mt-4">
+      <table className="w-full text-sm text-left text-[--muted-foreground]">
+        <thead className="text-xs text-[--foreground] bg-[--muted]">
           <tr key={"header" + Math.random()}>
             {headers.map((header: string) => (
               <th
@@ -41,14 +41,14 @@ export default function DynamicTable({
           {rows.map((fields: any) => (
             <tr
               key={fields._id || JSON.stringify(fields)}
-              className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+              className="bg-[--background] border-b border-[--muted]"
             >
               {headers.map((header: string) =>
                 header === th ? (
                   <th
                     key={header}
                     scope="row"
-                    className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"
+                    className="px-6 py-4 font-medium text-[--foreground] whitespace-nowrap"
                   >
                     <TableCell
                       hrefFn={hrefFn}
@@ -66,7 +66,7 @@ export default function DynamicTable({
                       label={fields[header]}
                     />
                   </td>
-                ),
+                )
               )}
             </tr>
           ))}
@@ -88,9 +88,11 @@ function TableCell({
   hrefFn: (label: string) => string;
 }) {
   if (link) {
-    const href = hrefFn ? hrefFn(label) : `docs/${label}`;
+    const href = hrefFn
+      ? hrefFn(label)
+      : `/fp/databases/${dbName}/docs/${label}`;
     return (
-      <Link to={href} className="underline">
+      <Link to={href} className="underline text-[--accent]">
         {formatTableCellContent(label)}
       </Link>
     );

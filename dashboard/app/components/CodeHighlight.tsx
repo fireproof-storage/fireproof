@@ -1,9 +1,12 @@
-import { useState, useCallback, useEffect } from "react";
-import Editor from "react-simple-code-editor";
 import hljs from "highlight.js";
-import "highlight.js/styles/tokyo-night-dark.css";
+import javascript from "highlight.js/lib/languages/javascript";
 import json from "highlight.js/lib/languages/json";
+
+import "highlight.js/styles/tokyo-night-dark.css";
+import { useCallback, useEffect, useState } from "react";
+import Editor from "react-simple-code-editor";
 hljs.registerLanguage("json", json);
+hljs.registerLanguage("javascript", javascript);
 
 function HighlightedCode({
   code,
@@ -62,7 +65,7 @@ export function EditableCodeHighlight({
       }
       setCode(liveCode);
     },
-    [language, onChange],
+    [language, onChange]
   );
 
   useEffect(() => {
@@ -79,6 +82,7 @@ export function EditableCodeHighlight({
         )}
         padding={10}
         style={codeStyle}
+        autoFocus
       />
     </div>
   );
