@@ -13,7 +13,7 @@ import {
   toCryptoRuntime,
   CryptoRuntime,
 } from "@adviser/cement";
-import { PathOps, StoreType, SuperThis, SuperThisOpts } from "./types";
+import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
 import { base58btc } from "multiformats/bases/base58";
 
 export type { Logger };
@@ -29,6 +29,7 @@ interface superThisOpts {
   readonly pathOps: PathOps;
   readonly crypto: CryptoRuntime;
   readonly ctx: Record<string, unknown>;
+  readonly txt: TextEndeCoder;
 }
 
 class superThis implements SuperThis {
@@ -36,6 +37,7 @@ class superThis implements SuperThis {
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly ctx: Record<string, unknown>;
+  readonly txt: TextEndeCoder;
   readonly crypto: CryptoRuntime;
 
   constructor(opts: superThisOpts) {
@@ -43,6 +45,7 @@ class superThis implements SuperThis {
     this.env = opts.env;
     this.crypto = opts.crypto;
     this.pathOps = opts.pathOps;
+    this.txt = opts.txt;
     this.ctx = { ...opts.ctx };
   }
 
@@ -60,6 +63,7 @@ class superThis implements SuperThis {
       env: envFactory(override.env) || this.env,
       crypto: override.crypto || this.crypto,
       pathOps: override.pathOps || this.pathOps,
+      txt: override.txt || this.txt,
       ctx: { ...this.ctx, ...override.ctx },
     });
   }
@@ -96,6 +100,10 @@ class pathOpsImpl implements PathOps {
   //   }
 }
 const pathOps = new pathOpsImpl();
+const txtOps = {
+  encode: (input: string) => new TextEncoder().encode(input),
+  decode: (input: Uint8Array) => new TextDecoder().decode(input),
+};
 
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
   const env = envFactory({
@@ -108,6 +116,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     crypto: osthis?.crypto || toCryptoRuntime(),
     ctx: osthis?.ctx || {},
     pathOps,
+    txt: osthis?.txt || txtOps,
   });
 }
 
