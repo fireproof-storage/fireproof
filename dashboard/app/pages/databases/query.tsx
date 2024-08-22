@@ -11,10 +11,9 @@ export default function Query() {
   const { name } = useParams();
   if (!name) throw new Error("No database name provided");
 
-  const emptyMap = `
-  (doc, emit) => {
+  const emptyMap = `(doc, emit) => {
     emit(doc._id, doc) 
-  }
+}
   `;
 
   const [editorCode, setEditorCode] = useState<string>(emptyMap);
@@ -50,7 +49,7 @@ export default function Query() {
         <EditableCodeHighlight
           onChange={editorChanged}
           code={editorCode}
-          language="js"
+          language="javascript"
         />
         <div className="flow-root p-4">
           <button
