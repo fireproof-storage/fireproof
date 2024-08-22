@@ -21,13 +21,21 @@ export default function Query() {
   const [editorCodeFnString, setEditorCodeFnString] = useState<string>(
     () => editorCode
   );
+  const [userCodeError, setUserCodeError] = useState<string | null>(null);
 
   function editorChanged({ code }: { code: string }) {
     setEditorCode(code);
   }
 
   async function runTempQuery() {
-    setEditorCodeFnString(editorCode);
+    try {
+      // Try to evaluate the function to check for  errors
+      eval(`(${editorCode})`);
+      setEditorCodeFnString(editorCode);
+      setUserCodeError(null);
+    } catch (error) {
+      setUserCodeError(error.message);
+    }
   }
 
   function saveTempQuery() {
@@ -59,14 +67,21 @@ export default function Query() {
           </button>
         </div>
       </>
-      <QueryDynamicTable mapFn={editorCodeFnString} name={name} />
+      {userCodeError ? (
+        <div className="text-[--destructive] mt-4 p-4 bg-[--destructive]/10 rounded">
+          <h3 className="font-bold">Error:</h3>
+          <p>{userCodeError}</p>
+        </div>
+      ) : (
+        <QueryDynamicTable mapFn={editorCodeFnString} name={name} />
+      )}
     </div>
   );
 }
 
 function QueryDynamicTable({ mapFn, name }: { mapFn: string; name: string }) {
   const { useLiveQuery } = useFireproof(name);
-  const allDocs = useLiveQuery(eval(mapFn));
+  const allDocs = useLiveQuery(eval(`(${mapFn})`));
   const docs = allDocs.docs.filter((doc) => doc);
   const headers = headersForDocs(docs);
 
