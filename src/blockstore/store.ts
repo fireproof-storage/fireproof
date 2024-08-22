@@ -22,7 +22,6 @@ import { ensureLogger, exception2Result, isNotFoundError } from "../utils.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { walProcessor, withLoader } from "./wal-processor.js";
-import { uuidv7 } from "uuidv7";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -45,6 +44,7 @@ abstract class BaseStoreImpl {
   private _url: URI;
   readonly logger: Logger;
   readonly sthis: SuperThis;
+  readonly id: string
   readonly gateway: Gateway;
   readonly keybag: () => Promise<KeyBag>;
   constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis, logger: Logger) {
@@ -52,6 +52,7 @@ abstract class BaseStoreImpl {
     this._url = url;
     this.keybag = opts.keybag;
     this.sthis = sthis;
+    this.id = sthis.nextId()
     this.logger = logger
       .With()
       .Ref("url", () => this._url.toString())
@@ -318,7 +319,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly storeType = "wal";
   readonly loader: Loadable;
   readonly _ready = new ResolveOnce<void>();
-  readonly id = uuidv7();
 
   constructor(loader: Loadable, url: URI, opts: StoreOpts) {
     super(

@@ -112,6 +112,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     symbol: osthis?.env?.symbol || "FP_ENV",
     presetEnv: osthis?.env?.presetEnv || presetEnv(),
   });
+  console.log("ensureSuperThis", env.get("FP_DEBUG"));
   return new superThis({
     logger: osthis?.logger || globalLogger,
     env,
@@ -137,12 +138,13 @@ export function ensureLogger(
   // if (!opts?.logger) {
   //   throw new Error("logger is required");
   // }
-  let logger = globalLogger;
-  if (IsLogger(sthis)) {
-    logger = sthis;
-  } else if (sthis && IsLogger(sthis.logger)) {
-    logger = sthis.logger;
-  }
+  // let logger = globalLogger;
+  // if (IsLogger(sthis)) {
+  //   logger = sthis;
+  // } else if (sthis && IsLogger(sthis.logger)) {
+  //   logger = sthis.logger;
+  // }
+  const logger = sthis.logger;
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
   const debug: string[] = [];
   let exposeStack = false;
@@ -195,7 +197,7 @@ export function ensureLogger(
       // console.log("registerFP_DEBUG", SysContainer.env)
       sthis.env.onSet(
         (key, value) => {
-          // console.log("FP_DEBUG", key, value, debug)
+          console.log("onSet=>", key, value, debug)
           switch (key) {
             case "FP_DEBUG":
               logger.SetDebug(value || []);

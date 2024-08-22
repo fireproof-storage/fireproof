@@ -3,7 +3,6 @@ import { ensureLogger, Logger } from "../utils.js";
 import { AnyLink, DbMeta, FileOp, Loadable, WALState, WALStore } from "./types.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { SuperThis, throwFalsy } from "../types.js";
-import { uuidv7 } from "uuidv7";
 
 export interface LoadableOp<T> {
   readonly loader: Loadable;
@@ -56,7 +55,7 @@ abstract class Action<T> {
     this.loader = loader;
     this.op = op;
     this.logger = logger;
-    this.id = uuidv7();
+    this.id = sthis.nextId();
   }
 
   abstract key(): string;

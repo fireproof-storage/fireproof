@@ -39,7 +39,9 @@ export function storageURL(sthis: SuperThis): URI {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function mockSuperThis(sthis?: Partial<SuperThisOpts>): SuperThis {
-  const mockLog = MockLogger();
+  const mockLog = MockLogger({
+    pass: new ConsoleStreamWriter(),
+  });
   return ensureSuperThis({
     logger: mockLog.logger,
     ctx: {

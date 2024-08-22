@@ -52,7 +52,7 @@ describe("blockstore/wal-processor", () => {
     (ref as unknown as { trigger: () => void }).trigger = () => {
       /* noop */
     };
-    const loader = { id: "l1" } as Loadable;
+    const loader = { id: "l1", sthis } as Loadable;
     const walStore = { id: "wal1" } as WALStore;
     await createState(ref, loader, walStore);
     expect(ref.snapState(loader)).toEqual({
@@ -66,7 +66,7 @@ describe("blockstore/wal-processor", () => {
     (ref as unknown as { trigger: () => void }).trigger = () => {
       /* noop */
     };
-    const loader = { id: "l1", remoteCarStore: {} } as Loadable;
+    const loader = { id: "l1", remoteCarStore: {} , sthis} as Loadable;
     const walStore = { id: "wal1" } as WALStore;
     await createState(ref, loader, walStore);
     expect(ref.snapState(loader)).toEqual({
@@ -111,6 +111,7 @@ describe("blockstore/wal-processor", () => {
     };
     const loader = {
       id: "l1",
+      sthis,
       remoteCarStore: {
         save: async (...args: object[]) => {
           await new Promise((resolve) => setTimeout(resolve, 50));
@@ -160,8 +161,11 @@ describe("blockstore/wal-processor", () => {
       /* background fill */
       createComplete = true;
     });
+    console.log(sthis.logger)
     while (!createComplete) {
+      console.log("-1", sthis.env.get("FP_DEBUG"));
       await ref.sync();
+      console.log("-2");
       expect(ref.snapState(loader)).toEqual({
         fileOperations: [],
         noLoaderOps: [],
@@ -169,7 +173,9 @@ describe("blockstore/wal-processor", () => {
       });
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
+    console.log("-3");
     await ref.sync();
+    console.log("-4");
     expect(ref.snapState(loader)).toEqual({
       fileOperations: [],
       noLoaderOps: [],

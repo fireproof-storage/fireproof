@@ -5,7 +5,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    name: "indexdb",
+    name: "browser",
     exclude: ["examples/**"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     //    environment: "browser",
