@@ -50,8 +50,12 @@ class superThis implements SuperThis {
     // console.log("superThis", this);
   }
 
-  nextId(): string {
-    return base58btc.encode(this.crypto.randomBytes(12));
+  nextId(bytes = 6): { str: string; bin: Uint8Array } {
+    const bin = this.crypto.randomBytes(bytes);
+    return {
+      str: base58btc.encode(bin),
+      bin,
+    };
   }
 
   start(): Promise<void> {
@@ -159,7 +163,7 @@ export function ensureLogger(
       delete ctx.exposeStack;
     }
     if ("this" in ctx) {
-      cLogger.Str("this", sthis.nextId());
+      cLogger.Str("this", sthis.nextId(4).str);
       delete ctx.this;
     }
     for (const [key, value] of Object.entries(ctx)) {

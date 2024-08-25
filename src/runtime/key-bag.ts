@@ -88,7 +88,7 @@ export class KeyBag {
   }
 
   async getNamedKey(name: string, failIfNotFound = false): Promise<Result<KeyWithFingerPrint>> {
-    const id = this.rt.sthis.nextId();
+    const id = this.rt.sthis.nextId(4).str;
     return this._seq.add(async () => {
       const bag = await this.rt.getBag();
       const named = await bag.get(name);

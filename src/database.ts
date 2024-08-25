@@ -98,7 +98,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put");
     const { _id, ...value } = doc;
-    const docId = _id || this.sthis.nextId();
+    const docId = _id || this.sthis.nextId().str;
     const result = (await this._writeQueue.push({
       id: docId,
       value: {

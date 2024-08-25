@@ -5,8 +5,7 @@ import { KeyBag } from "./key-bag";
 import type { BlockCodec } from "./wait-pr-multiformats/codec-interface";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as dagCodec from "@ipld/dag-cbor";
-import { decode, encode } from "./wait-pr-multiformats/block";
+import * as CBOR from "cborg";
 import { SuperThis } from "../types.js";
 
 interface GenerateIVFn {
@@ -65,17 +64,11 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     const fprt = await this.ko.fingerPrint();
     const keyId = base58btc.decode(fprt);
     this.ko.logger.Debug().Str("fp", fprt).Msg("encode");
-    return (
-      await encode<IvKeyIdData, number, number>({
-        value: {
-          iv: iv,
-          keyId: keyId,
-          data: await this.ko._encrypt({ iv, bytes: data }),
-        },
-        hasher,
-        codec: dagCodec,
-      })
-    ).bytes;
+    return CBOR.encode({
+      iv: iv,
+      keyId: keyId,
+      data: await this.ko._encrypt({ iv, bytes: data }),
+    } as IvKeyIdData);
   }
 
   async decode(abytes: Uint8Array | ArrayBuffer): Promise<Uint8Array> {
@@ -85,7 +78,7 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
     } else {
       bytes = new Uint8Array(abytes);
     }
-    const { iv, keyId, data } = (await decode<IvKeyIdData, number, number>({ bytes, hasher, codec: dagCodec })).value;
+    const { iv, keyId, data } = CBOR.decode(bytes) as IvKeyIdData;
     const fprt = await this.ko.fingerPrint();
     this.ko.logger.Debug().Str("fp", base58btc.encode(keyId)).Msg("decode");
     if (base58btc.encode(keyId) !== fprt) {

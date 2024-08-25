@@ -38,6 +38,7 @@
     "@ipld/unixfs": "from-package-json",
     "@ipld/car": "from-package-json",
     "@web3-storage/pail": "from-package-json",
+    "cborg": "from-package-json",
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
     "idb": "from-package-json",
