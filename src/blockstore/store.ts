@@ -23,6 +23,7 @@ import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
+import { FragmentGateway } from "./fragment-gateway.js";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -45,7 +46,7 @@ abstract class BaseStoreImpl {
   private _url: URI;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly gateway: Gateway;
+  readonly gateway: FragmentGateway;
   readonly keybag: () => Promise<KeyBag>;
   constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis, logger: Logger) {
     this.name = name;
@@ -57,7 +58,7 @@ abstract class BaseStoreImpl {
       .Ref("url", () => this._url.toString())
       .Str("name", name)
       .Logger();
-    this.gateway = opts.gateway;
+    this.gateway = new FragmentGateway(this.sthis, opts.gateway);
   }
 
   url(): URI {

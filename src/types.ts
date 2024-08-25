@@ -70,7 +70,7 @@ export interface SuperThis {
   readonly pathOps: PathOps;
   readonly ctx: Record<string, unknown>;
   readonly txt: TextEndeCoder;
-  nextId(): string;
+  nextId(bytes?: number): { str: string; bin: Uint8Array };
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;
 }
