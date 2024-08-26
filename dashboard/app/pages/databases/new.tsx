@@ -43,12 +43,12 @@ export default function New() {
               placeholder="New database name"
               autoFocus
               className="flex h-10 border border-input ring-[--offset-background] focus-visible:ring-1 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[--muted-foreground] focus-visible:outline-none 
-              disabled:cursor-not-allowed disabled:opacity-50 w-40 bg-[--muted] rounded-md px-3 py-2 text-sm"
+              disabled:cursor-not-allowed disabled:opacity-50 w-40 bg-[--muted] rounded px-3 py-2 text-sm"
             />
           </div>
           <button
             type="submit"
-            className="mt-3 inline-flex w-full items-center justify-center rounded-md bg-[--primary] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto"
+            className="mt-3 inline-flex w-full items-center justify-center rounded bg-[--primary] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto"
           >
             Create
           </button>
