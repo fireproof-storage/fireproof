@@ -46,7 +46,7 @@ function TableView({ name }) {
         <div className="flex space-x-2">
           <Link
             to={`/fp/databases/${name}/docs/new`}
-            className="inline-flex items-center justify-center rounded-md bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80"
+            className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -64,7 +64,7 @@ function TableView({ name }) {
           </Link>
           <button
             onClick={handleDeleteDatabase}
-            className="inline-flex items-center justify-center rounded-md bg-[--destructive] px-3 py-2 text-sm text-destructive-foreground transition-colors hover:bg-[--destructive]/80"
+            className="inline-flex items-center justify-center rounded bg-[--destructive] px-3 py-2 text-sm text-destructive-foreground transition-colors hover:bg-[--destructive]/80"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -107,7 +107,7 @@ function TableView({ name }) {
                 <td className="p-2 text-right">
                   <Link
                     to={`/fp/databases/${name}/docs/${doc._id}`}
-                    className="inline-flex items-center justify-center rounded-md bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80 mr-2"
+                    className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80 mr-2"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -121,7 +121,7 @@ function TableView({ name }) {
                   </Link>
                   <button
                     onClick={() => deleteDocument(doc._id)}
-                    className="inline-flex items-center justify-center rounded-md bg-[--destructive] px-3 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-[--destructive]/80"
+                    className="inline-flex items-center justify-center rounded bg-[--destructive] px-3 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-[--destructive]/80"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"

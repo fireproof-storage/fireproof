@@ -89,7 +89,7 @@ export default function Layout() {
               </div>
               <Link
                 data-id="15"
-                className="inline-flex h-8 items-center justify-center rounded-md bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
+                className="inline-flex h-8 items-center justify-center rounded bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
                 to="/fp/databases/new"
               >
                 <svg
@@ -116,7 +116,7 @@ export default function Layout() {
                   <div className="flex items-center justify-between w-full">
                     <button
                       onClick={() => navigateToDatabase(db.name)}
-                      className="flex-grow text-left rounded-md px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
+                      className="flex-grow text-left rounded px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
                     >
                       <span>
                         {db.name.substring(0, 20)}{" "}
@@ -128,7 +128,7 @@ export default function Layout() {
                         e.stopPropagation();
                         toggleMenu(db.name);
                       }}
-                      className="flex items-center justify-center w-8 h-8 rounded-md transition-colors hover:bg-muted"
+                      className="flex items-center justify-center w-8 h-8 rounded transition-colors hover:bg-muted"
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -159,7 +159,7 @@ export default function Layout() {
                         key={link.to}
                         to={`/fp/databases/${db.name}${link.to}`}
                         className={({ isActive }) =>
-                          `block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground ${
+                          `block rounded px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground ${
                             isActive ? "font-bold" : ""
                           }`
                         }
@@ -174,7 +174,7 @@ export default function Layout() {
                           <NavLink
                             key={index}
                             to={`/fp/databases/${db.name}/query/${query._id}`}
-                            className="block rounded-md px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
+                            className="block rounded px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
                           >
                             {query.name || `Query ${index + 1}`}
                           </NavLink>
