@@ -77,7 +77,7 @@ export default function Document() {
         {_id && (
           <button
             onClick={() => deleteDocument(_id)}
-            className="bg-[--destructive] hover:bg-[--destructive]/80 text-destructive-foreground font-bold py-2 px-4 rounded"
+            className="text-white bg-[--destructive] hover:bg-[--destructive]/80 text-destructive-foreground font-bold py-2 px-4 rounded"
           >
             Delete
           </button>

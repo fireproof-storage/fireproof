@@ -8,25 +8,41 @@ export default function Show() {
 }
 
 function TableView({ name }) {
-  const { useLiveQuery } = useFireproof(name);
+  const { useLiveQuery, database } = useFireproof(name);
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc) => doc);
 
   const headers = headersForDocs(docs);
 
-  const handleDeleteDatabase = () => {
+  const handleDeleteDatabase = async () => {
     if (
       window.confirm(`Are you sure you want to delete the database "${name}"?`)
     ) {
-      indexedDB.deleteDatabase(`fp.${name}`);
+      const DBDeleteRequest = window.indexedDB.deleteDatabase(`fp.${name}`);
+
+      DBDeleteRequest.onerror = (event) => {
+        console.error("Error deleting database.");
+      };
+
+      DBDeleteRequest.onsuccess = (event) => {
+        console.log("Database deleted successfully");
+
+        console.log(event); // should be undefined
+      };
       window.location = "/";
+    }
+  };
+
+  const deleteDocument = async (docId: string) => {
+    if (window.confirm(`Are you sure you want to delete this document?`)) {
+      await database.del(docId);
     }
   };
 
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold">All Documents</h2>
+        <h2 className="text-2xl font-semibold">{name} &gt; All Documents</h2>
         <div className="flex space-x-2">
           <Link
             to={`/fp/databases/${name}/docs/new`}
@@ -48,7 +64,7 @@ function TableView({ name }) {
           </Link>
           <button
             onClick={handleDeleteDatabase}
-            className="inline-flex items-center justify-center rounded-md bg-[--destructive] px-3 py-2 text-sm font-medium text-destructive-foreground transition-colors hover:bg-[--destructive]/80"
+            className="inline-flex items-center justify-center rounded-md bg-[--destructive] px-3 py-2 text-sm text-destructive-foreground transition-colors hover:bg-[--destructive]/80"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -129,11 +145,4 @@ function TableView({ name }) {
       </div>
     </>
   );
-
-  // return (
-  //   <div className="p-4" key={name}>
-  //     <h3 className="text-lg font-semibold mb-2">All Documents:</h3>
-  //     <DynamicTable dbName={name} headers={headers} rows={docs} />
-  //   </div>
-  // );
 }
