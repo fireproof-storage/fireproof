@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { fireproof } from "use-fireproof";
 
 export async function clientLoader() {
+  console.log("loading databases");
   const databases = await getIndexedDBNamesWithQueries();
   return databases;
 }
