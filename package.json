@@ -24,6 +24,7 @@
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexdb": "vitest --config vitest.browser.config.ts --run",
     "format": "prettier .",
+    "format-fix": "prettier . --write",
     "lint": "eslint"
   },
   "keywords": [
