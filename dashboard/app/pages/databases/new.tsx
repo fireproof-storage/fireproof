@@ -42,7 +42,7 @@ export default function New() {
               type="text"
               placeholder="New database name"
               autoFocus
-              className="w-full py-2 px-3 bg-[#e6d7bf] border border-blue-400 rounded text-base font-medium text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-transparent transition duration-200 ease-in-out"
+              className="w-full py-2 px-3 bg-[#e6d7bf] border border-blue-400 rounded text-sm font-medium text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-transparent transition duration-200 ease-in-out"
             />
           </div>
           <button
