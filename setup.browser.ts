@@ -3,5 +3,5 @@ function gthis() {
 }
 
 gthis()[Symbol.for("FP_PRESET_ENV")] = {
-  //	FP_DEBUG: "DataStoreImpl,MetaStoreImpl,IndexDBGateway"
+  // FP_DEBUG: "metaStoreFactory"
 };
