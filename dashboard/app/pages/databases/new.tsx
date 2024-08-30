@@ -42,8 +42,7 @@ export default function New() {
               type="text"
               placeholder="New database name"
               autoFocus
-              className="flex h-10 border border-input ring-[--offset-background] focus-visible:ring-1 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[--muted-foreground] focus-visible:outline-none 
-              disabled:cursor-not-allowed disabled:opacity-50 w-40 bg-[--muted] rounded px-3 py-2 text-sm"
+              className="w-full py-2 px-3 bg-[#e6d7bf] border border-blue-400 rounded text-base font-medium text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-transparent transition duration-200 ease-in-out"
             />
           </div>
           <button
