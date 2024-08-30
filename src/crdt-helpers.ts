@@ -32,6 +32,7 @@ import {
 } from "./types.js";
 import { Result } from "@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
+import {context, trace} from "@opentelemetry/api";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
@@ -60,30 +61,36 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   updates: DocUpdate<T>[],
   logger: Logger,
 ): Promise<CRDTMeta> {
-  let result: Result | null = null;
-  if (updates.length > 1) {
-    const batch = await Batch.create(tblocks, head);
-    for (const update of updates) {
-      const link = await writeDocContent(store, tblocks, update, logger);
-      await batch.put(toString(update.id, logger), link);
+  const tracer = trace.getTracer('fireproof', '0.1.0');
+  const span = tracer.startSpan('crdt applyBulkUpdateToCrdt');
+  const ctx = trace.setSpan(context.active(), span);
+  return context.with(ctx, async () => {
+    let result: Result | null = null;
+    if (updates.length > 1) {
+      const batch = await Batch.create(tblocks, head);
+      for (const update of updates) {
+        const link = await writeDocContent(store, tblocks, update, logger);
+        await batch.put(toString(update.id, logger), link);
+      }
+      result = await batch.commit();
+    } else if (updates.length === 1) {
+      const link = await writeDocContent(store, tblocks, updates[0], logger);
+      result = await put(tblocks, head, toString(updates[0].id, logger), link);
     }
-    result = await batch.commit();
-  } else if (updates.length === 1) {
-    const link = await writeDocContent(store, tblocks, updates[0], logger);
-    result = await put(tblocks, head, toString(updates[0].id, logger), link);
-  }
-  if (!result) throw logger.Error().Uint64("updates.len", updates.length).Msg("Missing result").AsError();
+    if (!result) throw logger.Error().Uint64("updates.len", updates.length).Msg("Missing result").AsError();
 
-  if (result.event) {
-    for (const { cid, bytes } of [
-      ...result.additions,
-      // ...result.removals,
-      result.event,
-    ]) {
-      tblocks.putSync(cid, bytes);
+    if (result.event) {
+      for (const { cid, bytes } of [
+        ...result.additions,
+        // ...result.removals,
+        result.event,
+      ]) {
+        tblocks.putSync(cid, bytes);
+      }
     }
-  }
-  return { head: result.head } as CRDTMeta;
+    span.end();
+    return { head: result.head } as CRDTMeta;
+  });
 }
 
 // this whole thing can get pulled outside of the write queue
@@ -166,10 +173,17 @@ export async function getValueFromCrdt<T extends DocTypes>(
   key: string,
   logger: Logger,
 ): Promise<DocValue<T>> {
-  if (!head.length) throw logger.Debug().Msg("Getting from an empty database").AsError();
-  const link = await get(blocks, head, key);
-  if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
-  return await getValueFromLink(blocks, link, logger);
+  const tracer = trace.getTracer('fireproof', '0.1.0');
+  const span = tracer.startSpan('crdt getValueFromCrdt');
+  span.setAttribute("key", key);
+  const ctx = trace.setSpan(context.active(), span);
+  return context.with(ctx, async () => {
+    if (!head.length) throw logger.Debug().Msg("Getting from an empty database").AsError();
+    const link = await get(blocks, head, key);
+    if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
+    span.end();
+    return await getValueFromLink(blocks, link, logger);
+  });
 }
 
 export function readFiles<T extends DocTypes>(blocks: BaseBlockstore, { doc }: Partial<DocValue<T>>) {
@@ -207,15 +221,22 @@ function readFileset(blocks: EncryptedBlockstore, files: DocFiles, isPublic = fa
 }
 
 async function getValueFromLink<T extends DocTypes>(blocks: BlockFetcher, link: AnyLink, logger: Logger): Promise<DocValue<T>> {
-  const block = await blocks.get(link);
-  if (!block) throw logger.Error().Str("link", link.toString()).Msg(`Missing linked block`).AsError();
-  const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue<T> };
-  const cvalue = {
-    ...value,
-    cid: link,
-  };
-  readFiles(blocks as EncryptedBlockstore, cvalue);
-  return cvalue;
+  const tracer = trace.getTracer('fireproof', '0.1.0');
+  const span = tracer.startSpan('crdt getValueFromLink');
+  span.setAttribute("cid", link.toString());
+  const ctx = trace.setSpan(context.active(), span);
+  return context.with(ctx, async () => {
+    const block = await blocks.get(link);
+    if (!block) throw logger.Error().Str("link", link.toString()).Msg(`Missing linked block`).AsError();
+    const { value } = (await decode({ bytes: block.bytes, hasher, codec })) as { value: DocValue<T> };
+    const cvalue = {
+      ...value,
+      cid: link,
+    };
+    readFiles(blocks as EncryptedBlockstore, cvalue);
+    span.end();
+    return cvalue;
+  });
 }
 
 class DirtyEventFetcher<T> extends EventFetcher<T> {

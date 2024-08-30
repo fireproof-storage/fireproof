@@ -36,6 +36,7 @@ import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
+import {context, trace} from "@opentelemetry/api";
 
 export class CRDT<T extends DocTypes> {
   readonly name?: string;
@@ -92,26 +93,32 @@ export class CRDT<T extends DocTypes> {
   }
 
   async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
-    await this.ready();
-    const prevHead = [...this.clock.head];
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('crdt bulk');
+    const ctx = trace.setSpan(context.active(), span);
+    return await context.with(ctx, async () => {
+      await this.ready();
+      const prevHead = [...this.clock.head];
 
-    const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
-      const { head } = await applyBulkUpdateToCrdt<T>(
-        this.blockstore.ebOpts.storeRuntime,
-        blocks,
-        this.clock.head,
-        updates,
-        this.logger,
-      );
-      updates = updates.map((dupdate: DocUpdate<T>) => {
-        // if (!dupdate.value) throw new Error("missing value");
-        readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
-        return dupdate;
+      const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
+        const { head } = await applyBulkUpdateToCrdt<T>(
+            this.blockstore.ebOpts.storeRuntime,
+            blocks,
+            this.clock.head,
+            updates,
+            this.logger,
+        );
+        updates = updates.map((dupdate: DocUpdate<T>) => {
+          // if (!dupdate.value) throw new Error("missing value");
+          readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
+          return dupdate;
+        });
+        return { head };
       });
-      return { head };
+      await this.clock.applyHead(done.meta.head, prevHead, updates);
+      span.end();
+      return done.meta;
     });
-    await this.clock.applyHead(done.meta.head, prevHead, updates);
-    return done.meta;
   }
 
   readonly onceReady = new ResolveOnce<void>();
@@ -162,10 +169,17 @@ export class CRDT<T extends DocTypes> {
   }
 
   async get(key: string): Promise<DocValue<T> | Falsy> {
-    await this.ready();
-    const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key, this.logger);
-    if (result.del) return undefined;
-    return result;
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('crdt get');
+    span.setAttribute("key", key);
+    const ctx = trace.setSpan(context.active(), span);
+    return context.with(ctx, async () => {
+      await this.ready();
+      const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key, this.logger);
+      span.end()
+      if (result.del) return undefined;
+      return result;
+    });
   }
 
   async changes(

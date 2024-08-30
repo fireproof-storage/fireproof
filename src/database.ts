@@ -27,6 +27,7 @@ import type {
 } from "./types.js";
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
+import {context, trace} from "@opentelemetry/api";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
@@ -82,31 +83,45 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('database get');
+    span.setAttribute("_id", id);
+    const ctx = trace.setSpan(context.active(), span);
+    return context.with(ctx, async () => {
+      if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
 
-    await this.ready();
-    this.logger.Debug().Str("id", id).Msg("get");
-    const got = await this._crdt.get(id).catch((e) => {
-      throw new NotFoundError(`Not found: ${id} - ${e.message}`);
+      await this.ready();
+      this.logger.Debug().Str("id", id).Msg("get");
+      const got = await this._crdt.get(id).catch((e) => {
+        throw new NotFoundError(`Not found: ${id} - ${e.message}`);
+      });
+      if (!got) throw new NotFoundError(`Not found: ${id}`);
+      const { doc } = got;
+      span.end();
+      return { ...(doc as unknown as DocWithId<T>), _id: id };
     });
-    if (!got) throw new NotFoundError(`Not found: ${id}`);
-    const { doc } = got;
-    return { ...(doc as unknown as DocWithId<T>), _id: id };
   }
 
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
-    await this.ready();
-    this.logger.Debug().Str("id", doc._id).Msg("put");
-    const { _id, ...value } = doc;
-    const docId = _id || this.sthis.nextId();
-    const result = (await this._writeQueue.push({
-      id: docId,
-      value: {
-        ...(value as unknown as DocSet<DT>),
-        _id: docId,
-      },
-    })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('database put');
+    span.setAttribute("_id", doc._id as string);
+    const ctx = trace.setSpan(context.active(), span);
+    return context.with(ctx, async () => {
+      await this.ready();
+      this.logger.Debug().Str("id", doc._id).Msg("put");
+      const { _id, ...value } = doc;
+      const docId = _id || this.sthis.nextId();
+      const result = (await this._writeQueue.push({
+        id: docId,
+        value: {
+          ...(value as unknown as DocSet<DT>),
+          _id: docId,
+        },
+      })) as CRDTMeta;
+      span.end();
+      return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+    });
   }
 
   async del(id: string): Promise<DocResponse> {

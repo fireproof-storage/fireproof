@@ -7,6 +7,7 @@ import type { BaseBlockstore, CarTransaction } from "./blockstore/index.js";
 import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "./utils.js";
+import {context, trace} from "@opentelemetry/api";
 
 export class CRDTClock<T extends DocTypes> {
   // todo: track local and remote clocks independently, merge on read
@@ -45,13 +46,19 @@ export class CRDTClock<T extends DocTypes> {
   }
 
   async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<T>[]) {
-    for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({
-      newHead,
-      prevHead,
-      updates,
-    })) {
-      return this.processUpdates(updatesAcc, all, prevHead);
-    }
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('crdt clock applyHead');
+    const ctx = trace.setSpan(context.active(), span);
+    return context.with(ctx, async () => {
+      for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({
+        newHead,
+        prevHead,
+        updates,
+      })) {
+        span.end();
+        return this.processUpdates(updatesAcc, all, prevHead);
+      }
+    });
   }
 
   async processUpdates(updatesAcc: DocUpdate<T>[], all: boolean, prevHead: ClockHead) {
@@ -82,42 +89,50 @@ export class CRDTClock<T extends DocTypes> {
   }
 
   async int_applyHead(newHead: ClockHead, prevHead: ClockHead, localUpdates: boolean) {
-    // if (!(this.head && prevHead && newHead)) {
-    //   throw new Error("missing head");
-    // }
-    // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
-    const ogHead = sortClockHead(this.head);
-    newHead = sortClockHead(newHead);
-    if (compareClockHeads(ogHead, newHead)) {
-      return;
-    }
-    const ogPrev = sortClockHead(prevHead);
-    if (compareClockHeads(ogHead, ogPrev)) {
-      this.setHead(newHead);
-      return;
-    }
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('crdt clock int_applyHead');
+    const ctx = trace.setSpan(context.active(), span);
+    await context.with(ctx, async () => {
+      // if (!(this.head && prevHead && newHead)) {
+      //   throw new Error("missing head");
+      // }
+      // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
+      const ogHead = sortClockHead(this.head);
+      newHead = sortClockHead(newHead);
+      if (compareClockHeads(ogHead, newHead)) {
+        span.end();
+        return;
+      }
+      const ogPrev = sortClockHead(prevHead);
+      if (compareClockHeads(ogHead, ogPrev)) {
+        this.setHead(newHead);
+        span.end();
+        return;
+      }
 
-    const noLoader = !localUpdates;
-    // const noLoader = this.head.length === 1 && !updates?.length
-    if (!this.blockstore) {
-      throw this.logger.Error().Msg("missing blockstore").AsError();
-    }
-    await validateBlocks(this.logger, newHead, this.blockstore);
-    const { meta } = await this.blockstore.transaction<CRDTMeta>(
-      async (tblocks: CarTransaction) => {
-        const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
-        const result = await root(tblocks, advancedHead);
-        for (const { cid, bytes } of [
-          ...result.additions,
-          // ...result.removals
-        ]) {
-          tblocks.putSync(cid, bytes);
-        }
-        return { head: advancedHead };
-      },
-      { noLoader, add: false },
-    );
-    this.setHead(meta.head);
+      const noLoader = !localUpdates;
+      // const noLoader = this.head.length === 1 && !updates?.length
+      if (!this.blockstore) {
+        throw this.logger.Error().Msg("missing blockstore").AsError();
+      }
+      await validateBlocks(this.logger, newHead, this.blockstore);
+      const { meta } = await this.blockstore.transaction<CRDTMeta>(
+          async (tblocks: CarTransaction) => {
+            const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
+            const result = await root(tblocks, advancedHead);
+            for (const { cid, bytes } of [
+              ...result.additions,
+              // ...result.removals
+            ]) {
+              tblocks.putSync(cid, bytes);
+            }
+            return { head: advancedHead };
+          },
+          { noLoader, add: false },
+      );
+      this.setHead(meta.head);
+      span.end();
+    });
   }
 }
 

@@ -1,3 +1,5 @@
+import {sdk} from "../../setup.otel-tracing";
+import { trace, context } from '@opentelemetry/api';
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
 import { bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles } from "@fireproof/core";
 
@@ -40,6 +42,8 @@ describe("basic Database with record", function () {
   }
   let db: Database;
   const sthis = mockSuperThis();
+  const tracer = trace.getTracer('fireproof', '0.1.0');
+  console.log("tracer", tracer)
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -50,6 +54,10 @@ describe("basic Database with record", function () {
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
+  afterAll(async () => {
+    await new Promise((res) => setTimeout(res, 3000));
+    await sdk.shutdown()
+  });
   it("should get", async function () {
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
@@ -57,12 +65,19 @@ describe("basic Database with record", function () {
     expect(doc.value).toBe("world");
   });
   it("should update", async function () {
-    const ok = await db.put({ _id: "hello", value: "universe" });
-    expect(ok.id).toBe("hello");
-    const doc = await db.get<Doc>("hello");
-    expect(doc).toBeTruthy();
-    expect(doc._id).toBe("hello");
-    expect(doc.value).toBe("universe");
+    const span = tracer.startSpan('should update');
+    const ctx = trace.setSpan(context.active(), span);
+    context.with(ctx, async () => {
+      console.log("in new context", span.isRecording());
+      const ok = await db.put({ _id: "hello", value: "universe" });
+      expect(ok.id).toBe("hello");
+      const doc = await db.get<Doc>("hello");
+      expect(doc).toBeTruthy();
+      expect(doc._id).toBe("hello");
+      expect(doc.value).toBe("universe");
+      span.end();
+    });
+
   });
   it("should del last record", async function () {
     const ok = await db.del("hello");

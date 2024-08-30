@@ -18,6 +18,7 @@ import { falsyToUndef, SuperThis } from "../types.js";
 import { toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "../utils.js";
+import {context, trace} from "@opentelemetry/api";
 
 export type BlockFetcher = BlockFetcherApi;
 
@@ -131,10 +132,16 @@ export class BaseBlockstore implements BlockFetcher {
     fn: (t: CarTransaction) => Promise<M>,
     _opts?: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
-    const t = new CarTransaction(this, _opts);
-    const done: M = await fn(t);
-    this.lastTxMeta = done;
-    return { t, meta: done };
+    const tracer = trace.getTracer('fireproof', '0.1.0');
+    const span = tracer.startSpan('transaction');
+    const ctx = trace.setSpan(context.active(), span);
+    return context.with(ctx, async () => {
+      const t = new CarTransaction(this, _opts);
+      const done: M = await fn(t);
+      this.lastTxMeta = done;
+      span.end();
+      return { t, meta: done };
+    });
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
