@@ -67,7 +67,7 @@ importers:
         specifier: ^9.9.1
         version: 9.28.0
       '@testing-library/react':
-        specifier: ^16.0.0
+        specifier: ^16.0.1
         version: 16.3.0(@testing-library/dom@10.4.0)(@types/react-dom@18.3.7(@types/react@18.3.23))(@types/react@18.3.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@types/node':
         specifier: ^22.5.0
