@@ -210,7 +210,7 @@ describe("Compact a named CRDT with writes", function () {
   beforeEach(async function () {
     await rt.SysContainer.start();
     crdt = new CRDT("named-crdt-compaction");
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 80; i++) {
       const bulk = [
         { id: "ace", value: { points: 11 } },
         { id: "king", value: { points: 10 } },
@@ -228,20 +228,29 @@ describe("Compact a named CRDT with writes", function () {
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
-    expect(blz.length).toBe(13);
+    expect(blz.length).toBe(83);
   });
   it("should start with changes", async function () {
     const { result } = await crdt.changes();
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
   });
-  it.skip("should have fewer blocks after compact", async function () {
+  it('has car log entries', async function () {
+    expect(crdt.blockstore.loader?.carLog.length).toBe(80);
+  });
+  it("should have fewer car log entries after compact", async function () {
     await crdt.compact();
+    expect(crdt.blockstore.loader?.carLog.length).toBe(1);
+  });
+  it("should have fewer blocks after compact", async function () {
+    await crdt.compact();
+    crdt = new CRDT("named-crdt-compaction");
+    await crdt.ready();
     const blz: bs.AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
-    expect(blz.length).toBe(23);
+    expect(blz.length).toBe(84);
   });
   it("should have data after compact", async function () {
     await crdt.compact();
