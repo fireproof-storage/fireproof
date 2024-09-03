@@ -263,11 +263,11 @@ export function getName(sthis: SuperThis, url: URI): string {
   return result;
 }
 
-export function exception2Result<T = void>(fn: () => Promise<T>): Promise<Result<T>> {
-  return fn()
-    .then((value) => Result.Ok(value))
-    .catch((e) => Result.Err(e));
-}
+// export function exception2Result<T = void>(fn: () => Promise<T>): Promise<Result<T>> {
+//   return fn()
+//     .then((value) => Result.Ok(value))
+//     .catch((e) => Result.Err(e));
+// }
 
 export async function exceptionWrapper<T, E extends Error>(fn: () => Promise<Result<T, E>>): Promise<Result<T, E>> {
   return fn().catch((e) => Result.Err(e));

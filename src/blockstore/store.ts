@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { Logger, ResolveOnce, Result, URI } from "@adviser/cement";
+import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 
 import type {
   AnyBlock,
@@ -18,7 +18,7 @@ import type {
 } from "./types.js";
 import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
-import { ensureLogger, exception2Result, isNotFoundError } from "../utils.js";
+import { ensureLogger, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";

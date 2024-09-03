@@ -1,6 +1,6 @@
 import { FILESTORE_VERSION } from "./version.js";
-import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
-import { ensureLogger, exception2Result, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
+import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
 import { getFileName, getFileSystem, getPath } from "./utils.js";
 import { SuperThis, SysFileSystem } from "../../../types.js";
