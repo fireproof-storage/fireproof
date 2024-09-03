@@ -139,16 +139,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-<<<<<<< HEAD
   '@adviser/cement@0.2.22':
     resolution: {integrity: sha512-SsGqnbG3Ef54DSDJMZGJdkYaHerF/xXNWIhFfrHPWNY7jW3hCeWv31wUAOw0mqIbBu2M0MhJODEtTwlqwgPdng==}
-||||||| parent of 22d92213 (chore: update cement)
-  '@adviser/cement@0.2.16':
-    resolution: {integrity: sha512-28UxsMfDGOTlz38G4VTcxLUnfCvwm2XznUbmBpGWOer1FiFjKMNEtL0J3ICEBqWAbWGVDlqbVBCL7PF8LIkV7g==}
-=======
-  '@adviser/cement@0.2.18':
-    resolution: {integrity: sha512-ZYKiEAFvAVqziYMOmWO5NTOlAGBo99wvnrNLcNYTakre93fPYP2CRpWA56ulr7jncnlueUnE0EXh9AjUz9PRSw==}
->>>>>>> 22d92213 (chore: update cement)
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -2925,13 +2917,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-<<<<<<< HEAD
   '@adviser/cement@0.2.22': {}
-||||||| parent of 22d92213 (chore: update cement)
-  '@adviser/cement@0.2.16': {}
-=======
-  '@adviser/cement@0.2.18': {}
->>>>>>> 22d92213 (chore: update cement)
 
   '@ampproject/remapping@2.3.0':
     dependencies:

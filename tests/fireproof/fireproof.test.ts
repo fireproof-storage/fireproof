@@ -646,7 +646,6 @@ describe("same workload twice, same CID", function () {
   beforeEach(async function () {
     let ok: DocResponse;
     await sthis.start();
-
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
     dbA = fireproof("test-dual-workload-a", configA);
     for (const doc of docs) {
