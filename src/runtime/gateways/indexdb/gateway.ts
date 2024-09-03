@@ -1,9 +1,9 @@
 import { openDB, IDBPDatabase } from "idb";
-import { KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 
 import { INDEXDB_VERSION } from "./version.js";
-import { ensureLogger, exception2Result, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
-import { Gateway, TestGateway } from "../../../blockstore/gateway.js";
+import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
+import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
 import { SuperThis } from "../../../types.js";
 
 function ensureVersion(url: URI): URI {
@@ -134,7 +134,7 @@ export class IndexDBGateway implements Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam("key", key).URI()));
   }
 
-  async get(url: URI) {
+  async get(url: URI): Promise<GetResult> {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
