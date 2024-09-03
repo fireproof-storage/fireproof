@@ -287,24 +287,24 @@ export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime 
 
 registerStoreProtocol({
   protocol: "file:",
-  gateway: async (logger) => {
+  gateway: async (sthis) => {
     const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
-    return new FileGateway(logger);
+    return new FileGateway(sthis);
   },
-  test: async (logger) => {
+  test: async (sthis) => {
     const { FileTestStore } = await import("../runtime/gateways/file/gateway.js");
-    return new FileTestStore(logger);
+    return new FileTestStore(sthis);
   },
 });
 
 registerStoreProtocol({
   protocol: "indexdb:",
-  gateway: async (logger) => {
+  gateway: async (sthis) => {
     const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway.js");
-    return new IndexDBGateway(logger);
+    return new IndexDBGateway(sthis);
   },
-  test: async (logger) => {
+  test: async (sthis) => {
     const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway.js");
-    return new IndexDBTestStore(logger);
+    return new IndexDBTestStore(sthis);
   },
 });
