@@ -1,5 +1,7 @@
-import { LoaderFunctionArgs, redirect } from "react-router-dom";
+import { redirect } from "react-router-dom";
 
-export const loader = async ({ params, request }: LoaderFunctionArgs) => {
+export async function clientLoader() {
   return redirect(`/fp/databases`);
-};
+}
+
+export default function Index() {}

@@ -43,7 +43,7 @@ export default function Query() {
 
   return (
     <div className="p-6 bg-[--muted]">
-      <h2 className="text-2xl text-[--foreground]">Index</h2>
+      <h2 className="text-2xl text-[--foreground]">Query Function:</h2>
 
       <>
         <EditableCodeHighlight
@@ -84,5 +84,13 @@ function QueryDynamicTable({ mapFn, name }: { mapFn: string; name: string }) {
   const docs = allDocs.docs.filter((doc) => doc);
   const headers = headersForDocs(docs);
 
-  return <DynamicTable headers={headers} th="key" link={["id"]} rows={docs} />;
+  return (
+    <DynamicTable
+      headers={headers}
+      th="key"
+      link={["_id"]}
+      rows={docs}
+      name={name}
+    />
+  );
 }
