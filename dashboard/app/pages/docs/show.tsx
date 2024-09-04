@@ -1,4 +1,4 @@
-import { Link, useParams } from "@remix-run/react";
+import { Link, useNavigate, useParams } from "@remix-run/react";
 import { useState } from "react";
 import { useFireproof } from "use-fireproof";
 
@@ -9,6 +9,7 @@ import {
 
 export default function Document() {
   const { name } = useParams();
+  const navigate = useNavigate();
   let { id: _id } = useParams();
   _id = _id === "new" ? undefined : _id;
 
@@ -30,8 +31,9 @@ export default function Document() {
   }
 
   async function deleteDocument(_id: string) {
+    alert("Are you sure?");
     await database.del(_id);
-    window.location.href = "";
+    navigate(-1);
   }
 
   function editorChanged({ code, valid }: { code: string; valid: boolean }) {
