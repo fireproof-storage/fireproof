@@ -90,7 +90,7 @@ function QueryDynamicTable({ mapFn, name }: { mapFn: string; name: string }) {
       th="key"
       link={["_id"]}
       rows={docs}
-      name={name}
+      dbName={name}
     />
   );
 }
