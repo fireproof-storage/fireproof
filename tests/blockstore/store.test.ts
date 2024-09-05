@@ -1,6 +1,7 @@
 import { CID } from "multiformats";
 import { bs, NotFoundError, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
+import { DbMeta } from "../../src/blockstore";
 
 const decoder = new TextDecoder("utf-8");
 
@@ -136,7 +137,7 @@ describe("MetaStore with a saved header", function () {
   let raw: bs.TestGateway;
   let cid: CID;
   const sthis = mockSuperThis();
-  let onload = false;
+  let onload: DbMeta[] | undefined = undefined;
 
   afterEach(async () => {
     await store.close();
@@ -146,8 +147,8 @@ describe("MetaStore with a saved header", function () {
   beforeEach(async function () {
     await sthis.start();
     store = await runtime(sthis).makeMetaStore(mockLoader(sthis, "test-saved-header"));
-    store.onLoad("main", async () => {
-      onload = true;
+    store.onLoad("main", async (metas) => {
+      onload = metas;
     });
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
@@ -157,6 +158,8 @@ describe("MetaStore with a saved header", function () {
 
   it("should load", async function () {
     expect(onload).toBeTruthy();
+    expect(onload?.length).toEqual(1);
+    expect(onload?.[0].cars.toString()).toEqual(cid.toString());
   });
 
   it("should have a header", async function () {
