@@ -134,17 +134,6 @@ export class IndexDBGateway implements Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam("key", key).URI()));
   }
 
-  async getMeta(url: URI) {
-    return this.get(url);
-  }
-
-  async putMeta(url: URI, value: Uint8Array) {
-    // get passed CID? make event block?
-    // send the metaw/cid and the current parents to the server
-    // update parents = [CID] assuming our next write should replace that CID
-    return this.put(url, value);
-  }
-
   async get(url: URI): Promise<GetResult> {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
