@@ -98,7 +98,7 @@ export default function Layout() {
             to="/fp/databases"
             className="flex items-center gap-2 font-semibold"
           >
-            <img src="/fp-logo.png" alt="Fireproof Logo" className="h-6 w-6" />
+            <img src="/fp-logo.svg" alt="Fireproof Logo" className="h-6 w-6" />
             <span>Fireproof Console</span>
           </Link>
         </div>
