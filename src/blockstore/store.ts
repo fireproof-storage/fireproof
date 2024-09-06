@@ -160,11 +160,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return format(toEncode);
   }
 
-  parseHeader(headerData: ToString<DbMeta>): DbMeta {
-    const got = parse<DbMeta>(headerData);
-    return got;
-  }
-
   async handleSubscribers(dbMetas: DbMeta[], branch: string) {
     try {
       const subscribers = this.subscribers.get(branch) || [];
@@ -177,18 +172,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   async handleByteHeads(byteHeads: Uint8Array[], branch = "main") {
     let dbMetas: DbMeta[];
     try {
-      dbMetas = this.dbMetasForByteHeads(byteHeads);
+      dbMetas = byteHeads.map((bytes) => parse<DbMeta>(this.sthis.txt.decode(bytes)));
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
     await this.handleSubscribers(dbMetas, branch);
     return dbMetas;
-  }
-  dbMetasForByteHeads(byteHeads: Uint8Array[]) {
-    return byteHeads.map((bytes) => {
-      const txt = this.sthis.txt.decode(bytes);
-      return this.parseHeader(txt);
-    });
   }
 
   async load(branch?: string): Promise<DbMeta[] | Falsy> {
