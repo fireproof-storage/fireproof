@@ -1,4 +1,4 @@
-import { useParams } from "@remix-run/react";
+import { Link, useParams } from "@remix-run/react";
 import { useState } from "react";
 import { MapFn, useFireproof } from "use-fireproof";
 import { EditableCodeHighlight } from "~/components/CodeHighlight";
@@ -43,8 +43,28 @@ export default function Query() {
 
   return (
     <div className="p-6 bg-[--muted]">
-      <h2 className="text-2xl text-[--foreground]">Query Function:</h2>
+      <div className="flex justify-between items-center mb-4">
+        <nav className="text-lg text-[--muted-foreground]">
+          <Link
+            to={`/fp/databases/${name}`}
+            className="font-medium text-[--foreground] hover:underline"
+          >
+            {name}
+          </Link>
+          <span className="mx-2">&gt;</span>
+          <span>Query</span>
+        </nav>
+      </div>
 
+      <div className="mb-6 p-4 bg-[--accent]/20 rounded-lg border-2 border-[--accent] shadow-md">
+        <h2 className="text-xl font-bold text-[--accent-foreground] mb-2">
+          Query Editor
+        </h2>
+        <p className="text-[--muted-foreground]">
+          Enter your map function below. This function will be used to query the
+          database.
+        </p>
+      </div>
       <>
         <EditableCodeHighlight
           onChange={editorChanged}

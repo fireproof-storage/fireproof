@@ -1,4 +1,4 @@
-import { useParams } from "@remix-run/react";
+import { Link, useParams } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { DocBase, useFireproof } from "use-fireproof";
 import DynamicTable from "~/components/DynamicTable";
@@ -28,16 +28,18 @@ export default function ChangesHistory() {
 
   return (
     <div className="p-6 bg-[--muted]">
-      <h2 className="text-2xl text-[--foreground] mb-2">
-        Recent Changes in{" "}
-        <code className="bg-[--accent] text-[--accent-foreground] p-1 rounded">
-          {name}
-        </code>{" "}
-        Database
-      </h2>
-      <p className="mb-4 text-[--muted-foreground]">
-        These are the recent changes in the database.
-      </p>
+      <div className="flex justify-between items-center mb-4">
+        <nav className="text-lg text-[--muted-foreground]">
+          <Link
+            to={`/fp/databases/${name}`}
+            className="font-medium text-[--foreground] hover:underline"
+          >
+            {name}
+          </Link>
+          <span className="mx-2">&gt;</span>
+          <span>History</span>
+        </nav>
+      </div>
       <DynamicTable dbName={name} headers={headers} rows={rows} />
     </div>
   );

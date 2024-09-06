@@ -47,23 +47,25 @@ export default function Document() {
   const title = id ? `Edit document: ${_id}` : "Create new document";
 
   return (
-    <div className="p-6 bg-card dark:bg-card text-card-foreground dark:text-card-foreground">
-      <h2 className="text-2xl pb-2">{title}</h2>
-      <p className="mb-4">
-        Database:{" "}
-        <Link
-          to={`/fp/databases/${name}`}
-          className="text-[--accent] hover:underline"
-        >
-          {name}
-        </Link>
-      </p>
+    <div className="p-6 bg-[--muted]">
+      <div className="flex justify-between items-center mb-4">
+        <nav className="text-lg text-[--muted-foreground]">
+          <Link
+            to={`/fp/databases/${name}`}
+            className="font-medium text-[--foreground] hover:underline"
+          >
+            {name}
+          </Link>
+          <span className="mx-2">&gt;</span>
+          <span>{_id ? `Document: ${_id}` : "New Document"}</span>
+        </nav>
+      </div>
       <h3>Editable data fields</h3>
       <EditableCodeHighlight
         onChange={editorChanged}
         code={JSON.stringify(data, null, 2)}
       />
-      <div className="flex space-x-4">
+      <div className="flex space-x-4 mt-4">
         <button
           onClick={() => {
             saveDocument(_id);
