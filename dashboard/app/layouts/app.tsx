@@ -49,12 +49,23 @@ export default function Layout() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const navigate = useNavigate();
   const params = useParams();
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    const darkModePreference = localStorage.getItem("darkMode");
+    return darkModePreference === "true";
+  });
 
   useEffect(() => {
     if (params.name) {
       setOpenMenu(params.name);
     }
   }, [params.name]);
+
+  useEffect(() => {
+    // Apply dark mode class to the root element
+    document.documentElement.classList.toggle("dark", isDarkMode);
+    // Save user's preference
+    localStorage.setItem("darkMode", isDarkMode.toString());
+  }, [isDarkMode]);
 
   const toggleMenu = (dbName: string) => {
     setOpenMenu(openMenu === dbName ? null : dbName);
@@ -64,11 +75,20 @@ export default function Layout() {
     navigate(`/fp/databases/${dbName}`);
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
   const navLinks = [
     { to: "", label: "All Documents" },
     { to: "/history", label: "History" },
     { to: "/query", label: "Query" },
   ];
+
+  const truncateDbName = (name: string, maxLength: number) => {
+    if (name.length <= maxLength) return name;
+    return `${name.substring(0, maxLength - 3)}...`;
+  };
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -78,11 +98,12 @@ export default function Layout() {
             to="/fp/databases"
             className="flex items-center gap-2 font-semibold"
           >
+            <img src="/fp-logo.png" alt="Fireproof Logo" className="h-6 w-6" />
             <span>Fireproof Console</span>
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <nav className="grid gap-4 px-4 py-4 text-sm font-medium">
+          <nav className="grid gap-4 px-6 py-4 text-sm font-medium">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="font-semibold">Databases</span>
@@ -118,10 +139,7 @@ export default function Layout() {
                       onClick={() => navigateToDatabase(db.name)}
                       className="flex-grow text-left rounded px-3 py-2 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground"
                     >
-                      <span>
-                        {db.name.substring(0, 20)}{" "}
-                        {db.name.length >= 20 && "..."}
-                      </span>
+                      <span title={db.name}>{truncateDbName(db.name, 20)}</span>
                     </button>
                     <button
                       onClick={(e) => {
@@ -192,9 +210,63 @@ export default function Layout() {
         <header className="flex h-14 items-center gap-4 border-b bg-background px-6 shadow-sm flex-shrink-0">
           <h1 className="flex-1 text-lg font-semibold"></h1>
           <div className="flex items-center gap-4">
-            <div>Docs</div>
-            <div>Blog</div>
-            <div>Community</div>
+            <a href="https://use-fireproof.com" className="hover:underline">
+              Docs
+            </a>
+            <a
+              href="https://fireproof.storage/blog/"
+              className="hover:underline"
+            >
+              Blog
+            </a>
+            <a
+              href="https://discord.com/invite/cCryrNHePH"
+              className="hover:underline"
+            >
+              Community
+            </a>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full bg-[--muted] text-[--muted-foreground] hover:bg-[--muted]/80"
+            >
+              {isDarkMode ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-6 md:p-10">
