@@ -30,10 +30,14 @@ export default function ChangesHistory() {
     <div className="p-6 bg-[--muted]">
       <h2 className="text-2xl text-[--foreground] mb-2">
         Recent Changes in{" "}
-        <code className="bg-[--accent] text-[--accent-foreground] p-1 rounded">{name}</code>{" "}
+        <code className="bg-[--accent] text-[--accent-foreground] p-1 rounded">
+          {name}
+        </code>{" "}
         Database
       </h2>
-      <p className="mb-4 text-[--muted-foreground]">These are the recent changes in the database.</p>
+      <p className="mb-4 text-[--muted-foreground]">
+        These are the recent changes in the database.
+      </p>
       <DynamicTable dbName={name} headers={headers} rows={rows} />
     </div>
   );

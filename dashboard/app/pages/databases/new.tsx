@@ -22,9 +22,9 @@ export default function New() {
   };
 
   return (
-    <div className="bg-white shadow sm:rounded-lg">
+    <div className="bg-[--muted] shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-base font-semibold leading-6 text-gray-900">
+        <h3 className="text-base font-semibold leading-6 text-[--foreground]">
           New Database Name:
         </h3>
 
@@ -42,12 +42,12 @@ export default function New() {
               type="text"
               placeholder="New database name"
               autoFocus
-              className="w-full py-2 px-3 bg-[#e6d7bf] border border-blue-400 rounded text-sm font-medium text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-300 focus:border-transparent transition duration-200 ease-in-out"
+              className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent transition duration-200 ease-in-out"
             />
           </div>
           <button
             type="submit"
-            className="mt-3 inline-flex w-full items-center justify-center rounded bg-[--primary] px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto"
+            className="mt-3 inline-flex w-full items-center justify-center rounded bg-[--primary] px-3 py-2 text-sm font-semibold text-[--primary-foreground] shadow-sm hover:bg-[--primary-hover] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--primary] sm:ml-3 sm:mt-0 sm:w-auto"
           >
             Create
           </button>
