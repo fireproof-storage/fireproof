@@ -1,5 +1,4 @@
 import pLimit from "p-limit";
-import { Base64 } from "js-base64";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
@@ -35,6 +34,8 @@ function guardVersion(url: URI): Result<URI> {
   }
   return Result.Ok(url);
 }
+
+
 
 export interface StoreOpts {
   readonly gateway: Gateway;
@@ -180,7 +181,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async decodeMetaBlocks(bytes: Uint8Array): Promise<DbMeta> {
     const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string };
-    const eventBytes = Base64.toUint8Array(crdtEntry.data);
+    const eventBytes = decodeFromBase64(crdtEntry.data);
     const eventBlock = await this.decodeEventBlock(eventBytes);
     return parse<DbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta));
   }
@@ -214,7 +215,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 
   async encodeEventWithParents(event: EventBlock<{ dbMeta: Uint8Array }>): Promise<Uint8Array> {
-    const base64String = Base64.fromUint8Array(event.bytes);
+    const base64String = encodeToBase64(event.bytes);
     const crdtEntry = {
       cid: event.cid.toString(),
       data: base64String,
@@ -508,4 +509,50 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   destroy() {
     return this.gateway.destroy(this.url());
   }
+}
+
+
+function encodeToBase64(bytes: Uint8Array): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let base64 = "";
+  let i;
+  for (i = 0; i < bytes.length - 2; i += 3) {
+    base64 += chars[bytes[i] >> 2];
+    base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+    base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+    base64 += chars[bytes[i + 2] & 63];
+  }
+  if (i < bytes.length) {
+    base64 += chars[bytes[i] >> 2];
+    if (i === bytes.length - 1) {
+      base64 += chars[(bytes[i] & 3) << 4];
+      base64 += "==";
+    } else {
+      base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+      base64 += chars[(bytes[i + 1] & 15) << 2];
+      base64 += "=";
+    }
+  }
+  return base64;
+}
+
+function decodeFromBase64(base64: string): Uint8Array {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const bytes = new Uint8Array((base64.length * 3) / 4);
+  let i;
+  let j = 0;
+  for (i = 0; i < base64.length; i += 4) {
+    const a = chars.indexOf(base64[i]);
+    const b = chars.indexOf(base64[i + 1]);
+    const c = chars.indexOf(base64[i + 2]);
+    const d = chars.indexOf(base64[i + 3]);
+    bytes[j++] = (a << 2) | (b >> 4);
+    if (base64[i + 2] !== "=") {
+      bytes[j++] = ((b & 15) << 4) | (c >> 2);
+    }
+    if (base64[i + 3] !== "=") {
+      bytes[j++] = ((c & 3) << 6) | d;
+    }
+  }
+  return bytes.slice(0, j);
 }
