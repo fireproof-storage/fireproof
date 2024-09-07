@@ -193,7 +193,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    this.loader?.handleDbMetasFromStore([meta]);
+    await this.loader?.handleDbMetasFromStore([meta]);
     return res;
   }
 
