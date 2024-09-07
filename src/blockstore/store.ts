@@ -35,6 +35,7 @@ function guardVersion(url: URI): Result<URI> {
 export interface StoreOpts {
   readonly gateway: Gateway;
   readonly keybag: () => Promise<KeyBag>;
+  readonly loader?: Loadable;
 }
 
 abstract class BaseStoreImpl {
@@ -48,6 +49,7 @@ abstract class BaseStoreImpl {
   readonly sthis: SuperThis;
   readonly gateway: FragmentGateway;
   readonly keybag: () => Promise<KeyBag>;
+  readonly loader?: Loadable;
   constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis, logger: Logger) {
     this.name = name;
     this._url = url;
@@ -59,6 +61,7 @@ abstract class BaseStoreImpl {
       .Str("name", name)
       .Logger();
     this.gateway = new FragmentGateway(this.sthis, opts.gateway);
+    this.loader = opts.loader;
   }
 
   url(): URI {
@@ -143,56 +146,24 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     );
   }
 
-  onLoad(branch: string, loadHandler: LoadHandler): () => void {
-    const subscribers = this.subscribers.get(branch) || [];
-    subscribers.push(loadHandler);
-    this.subscribers.set(branch, subscribers);
-    return () => {
-      const subscribers = this.subscribers.get(branch) || [];
-      const idx = subscribers.indexOf(loadHandler);
-      if (idx > -1) subscribers.splice(idx, 1);
-    };
-  }
-
   makeHeader({ cars }: DbMeta): ToString<DbMeta> {
     const toEncode: DbMeta = { cars };
     // if (key) toEncode.key = key;
     return format(toEncode);
   }
 
-  parseHeader(headerData: ToString<DbMeta>): DbMeta {
-    const got = parse<DbMeta>(headerData);
-    return got;
-  }
-
-  async handleSubscribers(dbMetas: DbMeta[], branch: string) {
-    try {
-      const subscribers = this.subscribers.get(branch) || [];
-      await Promise.all(subscribers.map((subscriber) => subscriber(dbMetas)));
-    } catch (e) {
-      this.logger.Error().Err(e).Msg("handleSubscribers").AsError();
-    }
-  }
-
-  async handleByteHeads(byteHeads: Uint8Array[], branch = "main") {
+  async handleByteHeads(byteHeads: Uint8Array[]) {
     let dbMetas: DbMeta[];
     try {
-      dbMetas = this.dbMetasForByteHeads(byteHeads);
+      dbMetas = byteHeads.map((bytes) => parse<DbMeta>(this.sthis.txt.decode(bytes)));
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
-    await this.handleSubscribers(dbMetas, branch);
     return dbMetas;
   }
-  dbMetasForByteHeads(byteHeads: Uint8Array[]) {
-    return byteHeads.map((bytes) => {
-      const txt = this.sthis.txt.decode(bytes);
-      return this.parseHeader(txt);
-    });
-  }
 
-  async load(branch?: string): Promise<DbMeta[] | Falsy> {
-    branch = branch || "main";
+  async load(): Promise<DbMeta[] | Falsy> {
+    const branch = "main";
     this.logger.Debug().Str("branch", branch).Msg("loading");
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
@@ -205,7 +176,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       }
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
-    return this.handleByteHeads([bytes.Ok()], branch);
+    const dbMetas = await this.handleByteHeads([bytes.Ok()]);
+    await this.loader?.handleDbMetasFromStore(dbMetas); // the old one didn't await
+    return dbMetas;
   }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
@@ -220,7 +193,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    await this.handleSubscribers([meta], branch);
+    await this.loader?.handleDbMetasFromStore([meta]);
     return res;
   }
 

@@ -46,7 +46,7 @@ export abstract class ConnectionBase implements Connection {
   }
 
   async refresh() {
-    await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
+    await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load();
     await (await throwFalsy(this.loader).WALStore()).process();
   }
 
@@ -68,17 +68,12 @@ export abstract class ConnectionBase implements Connection {
     const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
+      loader,
     });
-    remote.onLoad("main", async (metas) => {
-      if (metas) {
-        this.logger.Debug().Any("metas", metas).Bool("loader", this.loader).Msg("connectMeta_X: handleDbMetasFromStore pre");
-        await throwFalsy(this.loader).handleDbMetasFromStore(metas);
-        this.logger.Debug().Any("metas", metas).Msg("connectMeta_X: handleDbMetasFromStore post");
-      }
-    });
+
     this.loader.remoteMetaStore = remote;
     this.loaded = this.loader.ready().then(async () => {
-      remote.load("main").then(async () => {
+      remote.load().then(async () => {
         (await throwFalsy(this.loader).WALStore()).process();
       });
     });
@@ -97,7 +92,7 @@ export abstract class ConnectionBase implements Connection {
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, this.loader?.ebOpts.keyBag),
     });
-    // @jchris why we have a differention between remoteCarStore and remoteFileStore?
+    // @jchris why we have a differention between remoteCarStore and remoteFileStore? -- file store is for on-demand attachment loading
     loader.remoteFileStore = loader.remoteCarStore;
   }
 

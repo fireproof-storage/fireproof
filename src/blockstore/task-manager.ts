@@ -42,7 +42,10 @@ export class TaskManager {
       return;
     }
     try {
-      this.loader?.remoteMetaStore?.handleByteHeads([first.eventBlock.value.data.dbMeta]);
+      if (this.loader.remoteMetaStore) {
+        const dbMetas = await this.loader.remoteMetaStore.handleByteHeads([first.eventBlock.value.data.dbMeta]);
+        await this.loader.handleDbMetasFromStore(dbMetas); // the old one didn't await
+      }
       this.eventsWeHandled.add(first.cid);
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {
