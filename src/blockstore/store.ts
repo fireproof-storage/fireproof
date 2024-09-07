@@ -178,7 +178,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
     const dbMetas = await this.handleByteHeads([bytes.Ok()]);
     await this.loader?.handleDbMetasFromStore(dbMetas); // the old one didn't await
-    return dbMetas
+    return dbMetas;
   }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
