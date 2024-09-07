@@ -1,7 +1,4 @@
-// import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
-// import { EventView } from "@web3-storage/pail/clock/api";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
-// import type { Link, Version } from "multiformats";
 import { Logger, URI } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
@@ -11,7 +8,6 @@ import { type Loader } from "./loader.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
 import { getGatewayFromURL } from "./store-factory.js";
 import { getKeyBag } from "../runtime/key-bag.js";
-// import { ensureLogger } from "../utils.js";
 
 export interface Connectable {
   readonly blockstore: {
@@ -93,23 +89,6 @@ export abstract class ConnectionBase implements Connection {
     // @jchris why we have a differention between remoteCarStore and remoteFileStore? -- file store is for on-demand attachment loading
     loader.remoteFileStore = loader.remoteCarStore;
   }
-
-  // async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
-  //   const data = {
-  //     dbMeta: bytes,
-  //   };
-  //   const event = await EventBlock.create(
-  //     data,
-  //     this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[],
-  //   );
-  //   await this.eventBlocks.put(event.cid, event.bytes);
-  //   return event as EventBlock<{ dbMeta: Uint8Array }>; // todo test these `as` casts
-  // }
-
-  // async decodeEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
-  //   const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes);
-  //   return event as EventBlock<{ dbMeta: Uint8Array }>; // todo test these `as` casts
-  // }
 
   // move this stuff to connect
   // async getDashboardURL(compact = true) {
