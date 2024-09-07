@@ -35,8 +35,6 @@ function guardVersion(url: URI): Result<URI> {
   return Result.Ok(url);
 }
 
-
-
 export interface StoreOpts {
   readonly gateway: Gateway;
   readonly keybag: () => Promise<KeyBag>;
@@ -510,7 +508,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     return this.gateway.destroy(this.url());
   }
 }
-
 
 function encodeToBase64(bytes: Uint8Array): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
