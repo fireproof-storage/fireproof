@@ -248,7 +248,6 @@ export interface MetaStore extends BaseStore {
   load(branch?: string): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
-  decodeMetaBlocks(bytes: Uint8Array): Promise<DbMeta>;
 }
 
 export interface RemoteMetaStore extends MetaStore {
