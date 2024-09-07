@@ -6,6 +6,7 @@ import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
+import { EventBlock } from "@web3-storage/pail/clock";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -251,7 +252,7 @@ export interface MetaStore extends BaseStore {
 }
 
 export interface RemoteMetaStore extends MetaStore {
-  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>;
+  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }[]>;
 }
 
 export interface DataSaveOpts {
@@ -336,3 +337,7 @@ export interface Loadable {
   WALStore(): Promise<WALStore>;
   handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
+
+export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>;
+export type CarClockLink = Link<DbMetaEventBlock, number, number, Version>;
+export type CarClockHead = CarClockLink[];

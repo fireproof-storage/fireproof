@@ -43,8 +43,9 @@ export class TaskManager {
     }
     try {
       if (this.loader.remoteMetaStore) {
-        const dbMetas = await this.loader.remoteMetaStore.handleByteHeads([first.eventBlock.value.data.dbMeta]);
-        await this.loader.handleDbMetasFromStore(dbMetas); // the old one didn't await
+        //  this doesn't need to be its own remote store
+        const eventData = await this.loader.remoteMetaStore.handleByteHeads([first.eventBlock.value.data.dbMeta]);
+        await this.loader.handleDbMetasFromStore(eventData.map((m) => m.dbMeta)); // the old one didn't await
       }
       this.eventsWeHandled.add(first.cid);
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
