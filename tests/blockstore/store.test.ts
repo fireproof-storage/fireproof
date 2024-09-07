@@ -124,7 +124,9 @@ describe("MetaStore", function () {
     };
     await store.save(h);
     const file = await raw.get(store.url(), "main");
-    const decodedHeader = await store.decodeMetaBlocks(file);
+    const decodedHeader = await (
+      store as unknown as { decodeMetaBlocks: (file: Uint8Array) => Promise<bs.DbMeta> }
+    ).decodeMetaBlocks(file);
     expect(decodedHeader).toBeTruthy();
     expect(decodedHeader.cars).toBeTruthy();
     expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());
@@ -159,7 +161,9 @@ describe("MetaStore with a saved header", function () {
     expect(header).toBeDefined();
     expect(header.parents).toBeDefined();
 
-    const decodedHeader = await store.decodeMetaBlocks(bytes);
+    const decodedHeader = await (
+      store as unknown as { decodeMetaBlocks: (file: Uint8Array) => Promise<bs.DbMeta> }
+    ).decodeMetaBlocks(bytes);
     expect(decodedHeader).toBeDefined();
     expect(decodedHeader.cars).toBeDefined();
     expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());
