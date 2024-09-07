@@ -249,9 +249,6 @@ export interface MetaStore extends BaseStore {
   load(branch?: string): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
-}
-
-export interface RemoteMetaStore extends MetaStore {
   handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }[]>;
 }
 
@@ -329,7 +326,7 @@ export interface Loadable {
   remoteCarStore?: DataStore;
   carStore(): Promise<DataStore>;
   carLog: CarLog; // = new Array<CarGroup>();
-  remoteMetaStore?: RemoteMetaStore;
+  remoteMetaStore?: MetaStore;
   remoteFileStore?: DataStore;
   ready(): Promise<void>;
   close(): Promise<void>;

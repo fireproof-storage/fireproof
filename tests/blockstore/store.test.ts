@@ -1,7 +1,7 @@
 import { CID } from "multiformats";
 import { bs, NotFoundError, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
-import { RemoteMetaStore } from "../../src/blockstore";
+import { MetaStore } from "../../src/blockstore";
 
 const decoder = new TextDecoder("utf-8");
 
@@ -125,7 +125,7 @@ describe("MetaStore", function () {
     };
     await store.save(h);
     const file = await raw.get(store.url(), "main");
-    const [blockMeta] = await (store as RemoteMetaStore).handleByteHeads([file]);
+    const [blockMeta] = await store.handleByteHeads([file]);
     const decodedHeader = blockMeta.dbMeta;
     expect(decodedHeader).toBeTruthy();
     expect(decodedHeader.cars).toBeTruthy();
@@ -160,7 +160,7 @@ describe("MetaStore with a saved header", function () {
     const header = JSON.parse(data);
     expect(header).toBeDefined();
     expect(header.parents).toBeDefined();
-    const [blockMeta] = await (store as RemoteMetaStore).handleByteHeads([bytes]);
+    const [blockMeta] = await store.handleByteHeads([bytes]);
     const decodedHeader = blockMeta.dbMeta;
     expect(decodedHeader).toBeDefined();
     expect(decodedHeader.cars).toBeDefined();
