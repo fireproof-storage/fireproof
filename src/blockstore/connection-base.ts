@@ -71,7 +71,7 @@ export abstract class ConnectionBase implements Connection {
       loader,
     });
 
-    this.loader?.remoteMetaStore = remote;
+    this.loader.remoteMetaStore = remote;
     this.loaded = this.loader.ready().then(async () => {
       remote.load("main").then(async () => {
         (await throwFalsy(this.loader).WALStore()).process();
