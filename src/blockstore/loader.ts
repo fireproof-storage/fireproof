@@ -97,8 +97,8 @@ export class Loader implements Loadable {
   readonly onceReady = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
-      // await (await this.metaStore()).load("main");
-      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load("main");
+      // await (await this.metaStore()).load();
+      const metas = this.ebOpts.meta ? [this.ebOpts.meta] : await (await this.metaStore()).load();
       if (metas) {
         await this.handleDbMetasFromStore(metas);
       }
