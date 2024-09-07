@@ -1,4 +1,3 @@
-import { MemoryBlockstore } from "@web3-storage/pail/block";
 import { Logger, URI } from "@adviser/cement";
 
 import { throwFalsy } from "../types.js";
