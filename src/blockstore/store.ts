@@ -169,12 +169,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[],
     );
     // await this.eventBlocks.put(event.cid, event.bytes);
-    return event as EventBlock<{ dbMeta: Uint8Array }>; // todo test these `as` casts
+    return event as EventBlock<{ dbMeta: Uint8Array }>;
   }
 
   async decodeEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
     const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes);
-    return event as EventBlock<{ dbMeta: Uint8Array }>; // todo test these `as` casts
+    return event as EventBlock<{ dbMeta: Uint8Array }>;
   }
 
   async decodeMetaBlocks(bytes: Uint8Array): Promise<DbMeta> {
