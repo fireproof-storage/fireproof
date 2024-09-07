@@ -46,7 +46,7 @@ export abstract class ConnectionBase implements Connection {
   }
 
   async refresh() {
-    await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load("main");
+    await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load();
     await (await throwFalsy(this.loader).WALStore()).process();
   }
 
@@ -73,7 +73,7 @@ export abstract class ConnectionBase implements Connection {
 
     this.loader.remoteMetaStore = remote;
     this.loaded = this.loader.ready().then(async () => {
-      remote.load("main").then(async () => {
+      remote.load().then(async () => {
         (await throwFalsy(this.loader).WALStore()).process();
       });
     });
