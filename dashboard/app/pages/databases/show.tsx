@@ -51,7 +51,7 @@ function TableView({ name }: { name: string }) {
             {name}
           </Link>
           <span className="mx-2">&gt;</span>
-          <span>All Documents</span>
+          <span>All Documents ({docs.length})</span>
         </nav>
         <div className="flex space-x-2">
           <Link
