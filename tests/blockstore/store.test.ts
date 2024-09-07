@@ -1,7 +1,6 @@
 import { CID } from "multiformats";
 import { bs, NotFoundError, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
-import { MetaStore } from "../../src/blockstore";
 
 const decoder = new TextDecoder("utf-8");
 
