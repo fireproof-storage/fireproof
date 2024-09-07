@@ -4,8 +4,11 @@ export * from "./store-factory.js";
 export * from "./gateway.js";
 export * from "./fragment-gateway.js";
 
-import { type CarClockHead, type Connectable, type DbMetaEventBlock } from "./connection-base.js";
-export { CarClockHead, Connectable, DbMetaEventBlock };
+import { type Connectable } from "./connection-base.js";
+export { Connectable };
+
+import { type CarClockHead, type DbMetaEventBlock } from "./store.js";
+export { CarClockHead, DbMetaEventBlock };
 
 export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction.js";
 export { Loader } from "./loader.js";

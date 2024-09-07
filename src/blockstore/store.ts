@@ -1,6 +1,9 @@
 import pLimit from "p-limit";
+import { Base64 } from "js-base64";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
+import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
+import { EventView } from "@web3-storage/pail/clock/api";
 
 import type {
   AnyBlock,
@@ -24,6 +27,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
+import { Link, Version } from "multiformats";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -128,9 +132,14 @@ abstract class BaseStoreImpl {
   }
 }
 
+export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>;
+
+export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
+
 export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
+  parents: CarClockHead = [];
 
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
@@ -152,14 +161,37 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return format(toEncode);
   }
 
+  async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
+    const data = {
+      dbMeta: bytes,
+    };
+    const event = await EventBlock.create(
+      data,
+      this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[],
+    );
+    // await this.eventBlocks.put(event.cid, event.bytes);
+    return event as EventBlock<{ dbMeta: Uint8Array }>; // todo test these `as` casts
+  }
+
+  async decodeEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
+    const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes);
+    return event as EventBlock<{ dbMeta: Uint8Array }>; // todo test these `as` casts
+  }
+
+  async decodeMetaBlocks(bytes: Uint8Array): Promise<DbMeta> {
+    const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string };
+    const eventBytes = Base64.toUint8Array(crdtEntry.data);
+    const eventBlock = await this.decodeEventBlock(eventBytes);
+    return parse<DbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta));
+  }
+
   async handleByteHeads(byteHeads: Uint8Array[]) {
-    let dbMetas: DbMeta[];
     try {
-      dbMetas = byteHeads.map((bytes) => parse<DbMeta>(this.sthis.txt.decode(bytes)));
+      const dbMetas = await Promise.all(byteHeads.map((bytes) => this.decodeMetaBlocks(bytes)));
+      return dbMetas;
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
-    return dbMetas;
   }
 
   async load(): Promise<DbMeta[] | Falsy> {
@@ -181,19 +213,31 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return dbMetas;
   }
 
+  async encodeEventWithParents(event: EventBlock<{ dbMeta: Uint8Array }>): Promise<Uint8Array> {
+    const base64String = Base64.fromUint8Array(event.bytes);
+    const crdtEntry = {
+      cid: event.cid.toString(),
+      data: base64String,
+      parents: this.parents.map((p) => p.toString()),
+    };
+    return this.sthis.txt.encode(JSON.stringify(crdtEntry));
+  }
+
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
-    const bytes = this.makeHeader(meta);
+    const event = await this.createEventBlock(this.sthis.txt.encode(this.makeHeader(meta)));
+    const bytes = await this.encodeEventWithParents(event);
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.put(url.Ok(), this.sthis.txt.encode(bytes));
+    const res = await this.gateway.put(url.Ok(), bytes);
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
     await this.loader?.handleDbMetasFromStore([meta]);
+    this.parents = [event.cid];
     return res;
   }
 

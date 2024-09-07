@@ -88,6 +88,7 @@
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.0",
     "ipfs-unixfs-exporter": "^13.5.0",
+    "js-base64": "^3.7.7",
     "memfs": "^4.11.0",
     "multiformats": "^13.2.2",
     "p-limit": "^6.1.0",
