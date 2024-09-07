@@ -20,10 +20,9 @@ export interface Connectable {
 export abstract class ConnectionBase implements Connection {
   // readonly ready: Promise<unknown>;
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
-  readonly eventBlocks = new MemoryBlockstore();
-  // parents: CarClockHead = [];
+  // readonly eventBlocks = new MemoryBlockstore();
   loader?: Loadable;
-  taskManager?: TaskManager;
+  taskManager?: TaskManager; // can probably remove
   loaded: Promise<void> = Promise.resolve();
 
   readonly url: URI;
