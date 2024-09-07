@@ -17,6 +17,9 @@ import type {
   LoadHandler,
   KeyedCrypto,
   Loadable,
+  CarClockHead,
+  DbMetaEventBlock,
+  CarClockLink,
 } from "./types.js";
 import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
@@ -26,7 +29,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
-import { Link, Version } from "multiformats";
+import { Link } from "multiformats";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -131,10 +134,6 @@ abstract class BaseStoreImpl {
   }
 }
 
-export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>;
-
-export type CarClockHead = Link<DbMetaEventBlock, number, number, Version>[];
-
 export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
@@ -177,11 +176,14 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return event as EventBlock<{ dbMeta: Uint8Array }>;
   }
 
-  async decodeMetaBlocks(bytes: Uint8Array): Promise<DbMeta> {
+  async decodeMetaBlocks(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }> {
     const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string };
     const eventBytes = decodeFromBase64(crdtEntry.data);
     const eventBlock = await this.decodeEventBlock(eventBytes);
-    return parse<DbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta));
+    return {
+      eventCid: eventBlock.cid as CarClockLink,
+      dbMeta: parse<DbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta)),
+    };
   }
 
   async handleByteHeads(byteHeads: Uint8Array[]) {
@@ -208,8 +210,11 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
     const dbMetas = await this.handleByteHeads([bytes.Ok()]);
-    await this.loader?.handleDbMetasFromStore(dbMetas); // the old one didn't await
-    return dbMetas;
+    await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
+    const cids = dbMetas.map((m) => m.eventCid);
+    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
+    this.parents = Array.from(uniqueParentsMap.values());
+    return dbMetas.map((m) => m.dbMeta);
   }
 
   async encodeEventWithParents(event: EventBlock<{ dbMeta: Uint8Array }>): Promise<Uint8Array> {
