@@ -1,5 +1,5 @@
 import { Logger } from "@adviser/cement";
-import { DbMetaEventBlock } from "./store.js";
+import type { DbMetaEventBlock } from "./types.js";
 import { AnyLink, Loadable } from "./index.js";
 import { ensureLogger } from "../utils.js";
 

@@ -7,8 +7,8 @@ export * from "./fragment-gateway.js";
 import { type Connectable } from "./connection-base.js";
 export { Connectable };
 
-import { type CarClockHead, type DbMetaEventBlock } from "./store.js";
-export { CarClockHead, DbMetaEventBlock };
+// import { type CarClockHead, type DbMetaEventBlock } from "./types.js";
+// export { CarClockHead, DbMetaEventBlock };
 
 export { EncryptedBlockstore, BaseBlockstore, CompactionFetcher, type BlockFetcher, CarTransaction } from "./transaction.js";
 export { Loader } from "./loader.js";
