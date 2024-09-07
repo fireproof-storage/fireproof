@@ -159,12 +159,11 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
-    this.loader?.handleDbMetasFromStore(dbMetas);
     return dbMetas;
   }
 
-  async load(branch?: string): Promise<DbMeta[] | Falsy> {
-    branch = branch || "main";
+  async load(): Promise<DbMeta[] | Falsy> {
+    const branch = "main";
     this.logger.Debug().Str("branch", branch).Msg("loading");
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
@@ -177,7 +176,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       }
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
-    return this.handleByteHeads([bytes.Ok()]);
+    const dbMetas = await this.handleByteHeads([bytes.Ok()]);
+    await this.loader?.handleDbMetasFromStore(dbMetas); // the old one didn't await
+    return dbMetas
   }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
