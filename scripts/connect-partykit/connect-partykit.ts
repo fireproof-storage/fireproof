@@ -46,6 +46,7 @@ export class ConnectPartyKit extends Connection {
         const base64String = event.data;
         const uint8ArrayBuffer = Base64.toUint8Array(base64String);
         const eventBlock = await this.decodeEventBlock(uint8ArrayBuffer);
+        // there should be a callback in the MetaStore that we can call from places like this
         await this.taskManager!.handleEvent(eventBlock);
         // @ts-ignore
         this.messageResolve?.([eventBlock.value.data.dbMeta as Uint8Array]);

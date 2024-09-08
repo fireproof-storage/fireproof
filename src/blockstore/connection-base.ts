@@ -21,7 +21,7 @@ export abstract class ConnectionBase implements Connection {
   // todo move to LRU blockstore https://github.com/web3-storage/w3clock/blob/main/src/worker/block.js
   // readonly eventBlocks = new MemoryBlockstore();
   loader?: Loadable;
-  taskManager?: TaskManager; // can probably remove
+  taskManager?: TaskManager;
   loaded: Promise<void> = Promise.resolve();
 
   readonly url: URI;
