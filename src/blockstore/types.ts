@@ -7,6 +7,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
+import { TaskManager } from "./task-manager";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -328,6 +329,7 @@ export interface Loadable {
   carLog: CarLog; // = new Array<CarGroup>();
   remoteMetaStore?: MetaStore;
   remoteFileStore?: DataStore;
+  taskManager?: TaskManager;
   ready(): Promise<void>;
   close(): Promise<void>;
   fileStore(): Promise<DataStore>;
