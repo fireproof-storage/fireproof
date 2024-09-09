@@ -45,7 +45,7 @@
   "devDependencies": {
     "@eslint/js": "^9.9.1",
     "@testing-library/react": "^16.0.1",
-    "@types/node": "^22.5.0",
+    "@types/node": "^22.5.4",
     "@types/randombytes": "^2.0.3",
     "@types/react": "^18.3.3",
     "@typescript-eslint/typescript-estree": "^8.3.0",
