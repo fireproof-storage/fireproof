@@ -124,10 +124,11 @@ describe("MetaStore", function () {
     };
     await store.save(h);
     const file = await raw.get(store.url(), "main");
-    const header = JSON.parse(decoder.decode(file));
-    expect(header).toBeTruthy();
-    expect(header.cars).toBeTruthy();
-    expect(header.cars[0]["/"]).toEqual(cid.toString());
+    const [blockMeta] = await store.handleByteHeads([file]);
+    const decodedHeader = blockMeta.dbMeta;
+    expect(decodedHeader).toBeTruthy();
+    expect(decodedHeader.cars).toBeTruthy();
+    expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());
   });
 });
 
@@ -152,12 +153,17 @@ describe("MetaStore with a saved header", function () {
   });
 
   it("should have a header", async function () {
-    const data = decoder.decode(await raw.get(store.url(), "main"));
-    expect(data).toMatch(/car/);
+    const bytes = await raw.get(store.url(), "main");
+    const data = decoder.decode(bytes);
+    expect(data).toMatch(/parents/);
     const header = JSON.parse(data);
-    expect(header).toBeTruthy();
-    expect(header.cars).toBeTruthy();
-    expect(header.cars[0]["/"]).toEqual(cid.toString());
+    expect(header).toBeDefined();
+    expect(header.parents).toBeDefined();
+    const [blockMeta] = await store.handleByteHeads([bytes]);
+    const decodedHeader = blockMeta.dbMeta;
+    expect(decodedHeader).toBeDefined();
+    expect(decodedHeader.cars).toBeDefined();
+    expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());
   });
 
   it("should load a header", async function () {

@@ -1,11 +1,11 @@
 import { Logger } from "@adviser/cement";
-import { DbMetaEventBlock } from "./connection-base.js";
-import { AnyLink, Loadable } from "./index.js";
+import type { CarClockLink, DbMeta } from "./types.js";
+import { Loadable } from "./index.js";
 import { ensureLogger } from "../utils.js";
 
 interface TaskItem {
   readonly cid: string;
-  readonly eventBlock: DbMetaEventBlock;
+  readonly dbMeta: DbMeta;
   retries: number;
 }
 
@@ -22,13 +22,11 @@ export class TaskManager {
     this.logger = ensureLogger(loader.sthis, "TaskManager");
   }
 
-  async handleEvent(eventBlock: DbMetaEventBlock) {
-    const cid = eventBlock.cid.toString();
-    const parents = eventBlock.value.parents.map((cid: AnyLink) => cid.toString());
+  async handleEvent(cid: CarClockLink, parents: string[], dbMeta: DbMeta) {
     for (const parent of parents) {
-      this.eventsWeHandled.add(parent);
+      this.eventsWeHandled.add(parent.toString());
     }
-    this.queue.push({ cid, eventBlock, retries: 0 });
+    this.queue.push({ cid: cid.toString(), dbMeta, retries: 0 });
     this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     void this.processQueue();
   }
@@ -43,8 +41,7 @@ export class TaskManager {
     }
     try {
       if (this.loader.remoteMetaStore) {
-        const dbMetas = await this.loader.remoteMetaStore.handleByteHeads([first.eventBlock.value.data.dbMeta]);
-        await this.loader.handleDbMetasFromStore(dbMetas); // the old one didn't await
+        await this.loader.handleDbMetasFromStore([first.dbMeta]); // the old one didn't await
       }
       this.eventsWeHandled.add(first.cid);
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));

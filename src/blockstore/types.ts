@@ -6,6 +6,8 @@ import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
+import { EventBlock } from "@web3-storage/pail/clock";
+import { TaskManager } from "./task-manager";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -248,10 +250,7 @@ export interface MetaStore extends BaseStore {
   load(branch?: string): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
-}
-
-export interface RemoteMetaStore extends MetaStore {
-  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<DbMeta[]>;
+  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }[]>;
 }
 
 export interface DataSaveOpts {
@@ -328,11 +327,16 @@ export interface Loadable {
   remoteCarStore?: DataStore;
   carStore(): Promise<DataStore>;
   carLog: CarLog; // = new Array<CarGroup>();
-  remoteMetaStore?: RemoteMetaStore;
+  remoteMetaStore?: MetaStore;
   remoteFileStore?: DataStore;
+  taskManager?: TaskManager;
   ready(): Promise<void>;
   close(): Promise<void>;
   fileStore(): Promise<DataStore>;
   WALStore(): Promise<WALStore>;
   handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
+
+export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>;
+export type CarClockLink = Link<DbMetaEventBlock, number, number, Version>;
+export type CarClockHead = CarClockLink[];

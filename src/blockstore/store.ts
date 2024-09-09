@@ -1,6 +1,8 @@
 import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
+import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
+import { EventView } from "@web3-storage/pail/clock/api";
 
 import type {
   AnyBlock,
@@ -15,6 +17,9 @@ import type {
   LoadHandler,
   KeyedCrypto,
   Loadable,
+  CarClockHead,
+  DbMetaEventBlock,
+  CarClockLink,
 } from "./types.js";
 import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
@@ -24,6 +29,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
+import { Link } from "multiformats";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -131,6 +137,7 @@ abstract class BaseStoreImpl {
 export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
+  parents: CarClockHead = [];
 
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
@@ -152,14 +159,46 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return format(toEncode);
   }
 
+  async createEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
+    const data = {
+      dbMeta: bytes,
+    };
+    const event = await EventBlock.create(
+      data,
+      this.parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[],
+    );
+    // await this.eventBlocks.put(event.cid, event.bytes);
+    return event as EventBlock<{ dbMeta: Uint8Array }>;
+  }
+
+  async decodeEventBlock(bytes: Uint8Array): Promise<DbMetaEventBlock> {
+    const event = await decodeEventBlock<{ dbMeta: Uint8Array }>(bytes);
+    return event as EventBlock<{ dbMeta: Uint8Array }>;
+  }
+
+  async decodeMetaBlock(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
+    const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string; parents: string[]; cid: string };
+    const eventBytes = decodeFromBase64(crdtEntry.data);
+    const eventBlock = await this.decodeEventBlock(eventBytes);
+    return {
+      eventCid: eventBlock.cid as CarClockLink,
+      parents: crdtEntry.parents,
+      dbMeta: parse<DbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta)),
+    };
+  }
+
   async handleByteHeads(byteHeads: Uint8Array[]) {
-    let dbMetas: DbMeta[];
     try {
-      dbMetas = byteHeads.map((bytes) => parse<DbMeta>(this.sthis.txt.decode(bytes)));
+      const dbMetas = await Promise.all(byteHeads.map((bytes) => this.decodeMetaBlock(bytes)));
+      return dbMetas;
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
-    return dbMetas;
+  }
+
+  async handleEventByteHead(byteHead: Uint8Array) {
+    const { eventCid, dbMeta, parents } = await this.decodeMetaBlock(byteHead);
+    this.loader?.taskManager?.handleEvent(eventCid, parents, dbMeta);
   }
 
   async load(): Promise<DbMeta[] | Falsy> {
@@ -177,23 +216,38 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
     const dbMetas = await this.handleByteHeads([bytes.Ok()]);
-    await this.loader?.handleDbMetasFromStore(dbMetas); // the old one didn't await
-    return dbMetas;
+    await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
+    const cids = dbMetas.map((m) => m.eventCid);
+    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
+    this.parents = Array.from(uniqueParentsMap.values());
+    return dbMetas.map((m) => m.dbMeta);
+  }
+
+  async encodeEventWithParents(event: EventBlock<{ dbMeta: Uint8Array }>): Promise<Uint8Array> {
+    const base64String = encodeToBase64(event.bytes);
+    const crdtEntry = {
+      cid: event.cid.toString(),
+      data: base64String,
+      parents: this.parents.map((p) => p.toString()),
+    };
+    return this.sthis.txt.encode(JSON.stringify(crdtEntry));
   }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
-    const bytes = this.makeHeader(meta);
+    const event = await this.createEventBlock(this.sthis.txt.encode(this.makeHeader(meta)));
+    const bytes = await this.encodeEventWithParents(event);
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.put(url.Ok(), this.sthis.txt.encode(bytes));
+    const res = await this.gateway.put(url.Ok(), bytes);
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
     await this.loader?.handleDbMetasFromStore([meta]);
+    this.parents = [event.cid];
     return res;
   }
 
@@ -464,4 +518,49 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   destroy() {
     return this.gateway.destroy(this.url());
   }
+}
+
+function encodeToBase64(bytes: Uint8Array): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  let base64 = "";
+  let i;
+  for (i = 0; i < bytes.length - 2; i += 3) {
+    base64 += chars[bytes[i] >> 2];
+    base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+    base64 += chars[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+    base64 += chars[bytes[i + 2] & 63];
+  }
+  if (i < bytes.length) {
+    base64 += chars[bytes[i] >> 2];
+    if (i === bytes.length - 1) {
+      base64 += chars[(bytes[i] & 3) << 4];
+      base64 += "==";
+    } else {
+      base64 += chars[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+      base64 += chars[(bytes[i + 1] & 15) << 2];
+      base64 += "=";
+    }
+  }
+  return base64;
+}
+
+function decodeFromBase64(base64: string): Uint8Array {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  const bytes = new Uint8Array((base64.length * 3) / 4);
+  let i;
+  let j = 0;
+  for (i = 0; i < base64.length; i += 4) {
+    const a = chars.indexOf(base64[i]);
+    const b = chars.indexOf(base64[i + 1]);
+    const c = chars.indexOf(base64[i + 2]);
+    const d = chars.indexOf(base64[i + 3]);
+    bytes[j++] = (a << 2) | (b >> 4);
+    if (base64[i + 2] !== "=") {
+      bytes[j++] = ((b & 15) << 4) | (c >> 2);
+    }
+    if (base64[i + 3] !== "=") {
+      bytes[j++] = ((c & 3) << 6) | d;
+    }
+  }
+  return bytes.slice(0, j);
 }
