@@ -51,7 +51,6 @@ export abstract class ConnectionBase implements Connection {
   async connectMeta_X({ loader }: { loader?: Loadable }) {
     if (!loader) throw this.logger.Error().Msg("connectMeta_X: loader is required").AsError();
     this.loader = loader;
-    this.taskManager = new TaskManager(loader);
     await this.onConnect();
     const metaUrl = this.url.build().defParam("store", "meta").URI();
     const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);

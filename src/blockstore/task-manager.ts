@@ -1,7 +1,7 @@
 import { Logger } from "@adviser/cement";
 import type { CarClockLink, DbMeta } from "./types.js";
-import { Loadable } from "./index.js";
 import { ensureLogger } from "../utils.js";
+import { SuperThis } from "use-fireproof";
 
 interface TaskItem {
   readonly cid: string;
@@ -11,15 +11,15 @@ interface TaskItem {
 
 export class TaskManager {
   private readonly eventsWeHandled = new Set<string>();
-  private readonly loader: Loadable;
 
   private queue: TaskItem[] = [];
   private isProcessing = false;
 
   readonly logger: Logger;
-  constructor(loader: Loadable) {
-    this.loader = loader;
-    this.logger = ensureLogger(loader.sthis, "TaskManager");
+  readonly callback: (dbMeta: DbMeta) => Promise<void>;
+  constructor(sthis: SuperThis, callback: (dbMeta: DbMeta) => Promise<void>) {
+    this.logger = ensureLogger(sthis, "TaskManager");
+    this.callback = callback;
   }
 
   async handleEvent(cid: CarClockLink, parents: string[], dbMeta: DbMeta) {
@@ -40,9 +40,7 @@ export class TaskManager {
       return;
     }
     try {
-      if (this.loader.remoteMetaStore) {
-        await this.loader.handleDbMetasFromStore([first.dbMeta]); // the old one didn't await
-      }
+      await this.callback(first.dbMeta);
       this.eventsWeHandled.add(first.cid);
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {

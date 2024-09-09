@@ -131,7 +131,9 @@ export class Loader implements Loadable {
       "Loader",
     );
     this.logger = this.ebOpts.logger;
-    this.taskManager = new TaskManager(this);
+    this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta) => {
+      await this.handleDbMetasFromStore([dbMeta]);
+    });
   }
 
   // async snapToCar(carCid: AnyLink | string) {
