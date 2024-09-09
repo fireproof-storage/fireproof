@@ -31,6 +31,7 @@ import { getKeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
+import { TaskManager } from "./task-manager.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -61,6 +62,7 @@ export class Loader implements Loadable {
   readonly seenCompacted = new Set<string>();
   readonly processedCars = new Set<string>();
   readonly sthis: SuperThis;
+  readonly taskManager?: TaskManager;
 
   carLog: CarLog = [];
   // key?: string;
@@ -129,6 +131,7 @@ export class Loader implements Loadable {
       "Loader",
     );
     this.logger = this.ebOpts.logger;
+    this.taskManager = new TaskManager(this);
   }
 
   // async snapToCar(carCid: AnyLink | string) {

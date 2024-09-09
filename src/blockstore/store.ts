@@ -176,23 +176,29 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return event as EventBlock<{ dbMeta: Uint8Array }>;
   }
 
-  async decodeMetaBlocks(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }> {
-    const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string };
+  async decodeMetaBlock(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
+    const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string; parents: string[]; cid: string };
     const eventBytes = decodeFromBase64(crdtEntry.data);
     const eventBlock = await this.decodeEventBlock(eventBytes);
     return {
       eventCid: eventBlock.cid as CarClockLink,
+      parents: crdtEntry.parents,
       dbMeta: parse<DbMeta>(this.sthis.txt.decode(eventBlock.value.data.dbMeta)),
     };
   }
 
   async handleByteHeads(byteHeads: Uint8Array[]) {
     try {
-      const dbMetas = await Promise.all(byteHeads.map((bytes) => this.decodeMetaBlocks(bytes)));
+      const dbMetas = await Promise.all(byteHeads.map((bytes) => this.decodeMetaBlock(bytes)));
       return dbMetas;
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
     }
+  }
+
+  async handleEventByteHead(byteHead: Uint8Array) {
+    const { eventCid, dbMeta, parents } = await this.decodeMetaBlock(byteHead);
+    this.loader?.taskManager?.handleEvent(eventCid, parents, dbMeta);
   }
 
   async load(): Promise<DbMeta[] | Falsy> {
