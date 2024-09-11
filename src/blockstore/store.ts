@@ -139,7 +139,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly subscribers = new Map<string, LoadHandler[]>();
   parents: CarClockHead = [];
 
-  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts, remote?: boolean) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(
@@ -151,7 +151,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       sthis,
       ensureLogger(sthis, "MetaStoreImpl"),
     );
-    if (opts.gateway.subscribe) {
+    this.logger.Debug().Str("gateway", opts.gateway.subscribe?.toString()).Msg("Gateway information");
+    if (remote && opts.gateway.subscribe) {
       this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway with URL");
       opts.gateway.subscribe(url, (byteHead: Uint8Array) => this.handleEventByteHead(byteHead));
     }
