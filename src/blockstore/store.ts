@@ -151,6 +151,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       sthis,
       ensureLogger(sthis, "MetaStoreImpl"),
     );
+    if (opts.gateway.subscribe) {
+      this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway with URL");
+      opts.gateway.subscribe(url, (byteHead: Uint8Array) => this.handleEventByteHead(byteHead));
+    }
   }
 
   makeHeader({ cars }: DbMeta): ToString<DbMeta> {

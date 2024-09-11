@@ -167,6 +167,13 @@ export class FragmentGateway implements bs.Gateway {
     return Result.Ok(buffer || new Uint8Array(0));
   }
 
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<void> {
+    if (!this.innerGW.subscribe) {
+      throw this.logger.Error().Msg("Subscribe not supported").AsError();
+    }
+    return this.innerGW.subscribe(url, callback);
+  }
+
   async delete(url: URI): Promise<bs.VoidResult> {
     const rfrags = await getFrags(url, this.innerGW, this.headerSize, this.logger);
     for (const rfrag of rfrags) {
