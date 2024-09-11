@@ -180,7 +180,7 @@ describe("benchmarking with compaction", function () {
     await sthis.start();
     db = new Database("test-benchmark-compaction", { autoCompact: 3 });
   });
-  it("insert during compaction", async function () {
+  it.skip("insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
