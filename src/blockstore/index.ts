@@ -4,6 +4,8 @@ export * from "./store-factory.js";
 export * from "./gateway.js";
 export * from "./fragment-gateway.js";
 
+export * from "./fp-envelope.js"
+
 import { type Connectable } from "./connection-base.js";
 export { Connectable };
 

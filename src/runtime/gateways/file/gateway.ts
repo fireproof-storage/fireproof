@@ -4,6 +4,7 @@ import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
 import { getFileName, getFileSystem, getPath } from "./utils.js";
 import { SuperThis, SysFileSystem } from "../../../types.js";
+import { FPEnvelopeCar, FPEnvelopeFile, FPMsg2Car, FPMsgMatch2Envelope } from "../../../blockstore/fp-envelope.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 
@@ -77,10 +78,18 @@ export class FileGateway implements Gateway {
   }
 
   async put(url: URI, body: Uint8Array): Promise<Result<void>> {
+    const rbuf = FPMsgMatch2Envelope(body) as Result<FPEnvelopeCar | FPEnvelopeFile>;
+    if (rbuf.isErr()) {
+      return Result.Err(rbuf.Err());
+    }
+    let payload = body
+    if (["car", "file"].includes(rbuf.Ok().type)) {
+      payload = rbuf.Ok().payload
+    }
     return exception2Result(async () => {
       const file = await this.getFilePath(url);
       this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
-      await this.fs.writefile(file, body);
+      await this.fs.writefile(file, payload);
     });
   }
 
@@ -90,6 +99,9 @@ export class FileGateway implements Gateway {
       try {
         const res = await this.fs.readfile(file);
         this.logger.Debug().Url(url.asURL()).Str("file", file).Msg("get");
+        if (url.getParam("store") === "data") {
+          return FPMsg2Car(res);
+        }
         return Result.Ok(new Uint8Array(res));
       } catch (e: unknown) {
         // this.logger.Error().Err(e).Str("file", file).Msg("get");
