@@ -21,7 +21,7 @@ import type {
   DbMetaEventBlock,
   CarClockLink,
 } from "./types.js";
-import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
+import { Falsy, StoreType, SuperThis, throwFalsy, CRDTEntry } from "../types.js";
 import { Gateway } from "./gateway.js";
 import { ensureLogger, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
@@ -180,9 +180,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return event as EventBlock<{ dbMeta: Uint8Array }>;
   }
 
-  async decodeMetaBlock(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
-    const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string; parents: string[]; cid: string };
-    const eventBlock = await this.decodeEventBlock(decodeFromBase64(crdtEntry.data));
+  async decodeMetaBlock(crdtEntry: CRDTEntry): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
+    const eventBytes = decodeFromBase64(crdtEntry.data);
+    const eventBlock = await this.decodeEventBlock(eventBytes);
     return {
       eventCid: eventBlock.cid as CarClockLink,
       parents: crdtEntry.parents,
@@ -190,9 +190,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     };
   }
 
-  async handleByteHeads(byteHeads: Uint8Array[]) {
+  async handleByteHeads(byteHeads: Uint8Array) {
+    const crdtEntries = JSON.parse(this.sthis.txt.decode(byteHeads)) as CRDTEntry[];
     try {
-      const dbMetas = await Promise.all(byteHeads.map((bytes) => this.decodeMetaBlock(bytes)));
+      const dbMetas = await Promise.all(crdtEntries.map((entry) => this.decodeMetaBlock(entry)));
       return dbMetas;
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
@@ -200,7 +201,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 
   async handleEventByteHead(byteHead: Uint8Array) {
-    const { eventCid, dbMeta, parents } = await this.decodeMetaBlock(byteHead);
+    const crdtEntry = JSON.parse(this.sthis.txt.decode(byteHead)) as CRDTEntry;
+    const { eventCid, dbMeta, parents } = await this.decodeMetaBlock(crdtEntry);
     this.loader?.taskManager?.handleEvent(eventCid, parents, dbMeta);
   }
 
@@ -217,7 +219,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       }
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
-    const dbMetas = await this.handleByteHeads([bytes.Ok()]);
+    const dbMetas = await this.handleByteHeads(bytes.Ok());
     await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
     const cids = dbMetas.map((m) => m.eventCid);
     const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
@@ -232,7 +234,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       data: base64String,
       parents: this.parents.map((p) => p.toString()),
     };
-    return this.sthis.txt.encode(JSON.stringify(crdtEntry));
+    return this.sthis.txt.encode(JSON.stringify([crdtEntry]));
   }
 
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {

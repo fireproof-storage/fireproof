@@ -250,7 +250,7 @@ export interface MetaStore extends BaseStore {
   load(branch?: string): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
-  handleByteHeads(byteHeads: Uint8Array[], branch?: string): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }[]>;
+  handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }[]>;
 }
 
 export interface DataSaveOpts {
