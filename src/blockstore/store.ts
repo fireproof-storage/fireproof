@@ -259,7 +259,19 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     if (res.isErr()) {
       throw res.Err();
     }
-    return { cid, bytes: res.Ok() };
+    const rfpenv = FPMsgMatch2Envelope(res.Ok(), "car", "file");
+    if (rfpenv.isErr()) {
+      throw this.logger.Error().Err(rfpenv.Err()).Msg("got error from FPMsgMatch2Envelope").AsError();
+    }
+    const fpenv = rfpenv.Ok() as FPEnvelopeFile|FPEnvelopeCar
+    switch (fpenv.type) {
+      case "car":
+        return { cid, bytes: fpenv.payload };
+      case "file":
+        return { cid, bytes: fpenv.payload };
+      default:
+        throw this.logger.Error().Msg("unexpected type").AsError();
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -269,7 +281,13 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Ref("cid", car.cid).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.put(url.Ok(), car.bytes);
+    // without URL changes in super-this branch we
+    // can distinguish between car and file
+    const rfpenv = FPMsg2Car(car.bytes);
+    if (rfpenv.isErr()) {
+      throw this.logger.Error().Err(rfpenv.Err()).Msg("got error from FPMsg2Car").AsError();
+    }
+    const res = await this.gateway.put(url.Ok(), rfpenv.Ok());
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
