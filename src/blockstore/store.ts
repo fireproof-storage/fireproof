@@ -151,8 +151,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       sthis,
       ensureLogger(sthis, "MetaStoreImpl"),
     );
-    this.logger.Debug().Str("gateway", opts.gateway.subscribe?.toString()).Msg("Gateway information");
     if (remote && opts.gateway.subscribe) {
+      this.logger.Debug().Str("gateway", opts.gateway.subscribe?.toString()).Msg("Gateway information");
       this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway with URL");
       opts.gateway.subscribe(url, (byteHead: Uint8Array) => this.handleEventByteHead(byteHead));
     }
@@ -182,9 +182,18 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 
   async decodeMetaBlock(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
-    const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string; parents: string[]; cid: string };
+    const decodedString = this.sthis.txt.decode(bytes);
+    this.logger.Debug().Str("decodedString", decodedString).Int("length", decodedString.length).Msg("Decoded string before JSON parse");
+
+    const crdtEntry = JSON.parse(decodedString) as { data: string; parents: string[]; cid: string };
+    this.logger.Debug().Any("crdtEntry", crdtEntry).Msg("Parsed CRDT entry");
+    
     const eventBytes = decodeFromBase64(crdtEntry.data);
+    this.logger.Debug().Any("eventBytes", eventBytes).Msg("Decoded event bytes from base64");
+    
     const eventBlock = await this.decodeEventBlock(eventBytes);
+    this.logger.Debug().Any("eventBlock", eventBlock).Msg("Decoded event block");
+    
     return {
       eventCid: eventBlock.cid as CarClockLink,
       parents: crdtEntry.parents,
@@ -208,7 +217,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async load(): Promise<DbMeta[] | Falsy> {
     const branch = "main";
-    this.logger.Debug().Str("branch", branch).Msg("loading");
+    this.logger.Debug().Str("branch", branch).Msg("loadingMeta");
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
       throw this.logger.Error().Result("buidUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
@@ -216,10 +225,13 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const bytes = await this.gateway.get(url.Ok());
     if (bytes.isErr()) {
       if (isNotFoundError(bytes)) {
+        this.logger.Debug().Msg("meta not found");
         return undefined;
       }
       throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
     }
+    this.logger.Debug().Int("bytesLength", bytes.Ok().length).Msg("Length of bytes");
+    this.logger.Debug().Str("decodedBytes", this.sthis.txt.decode(bytes.Ok())).Msg("Decoded bytes as string");
     const dbMetas = await this.handleByteHeads([bytes.Ok()]);
     await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
     const cids = dbMetas.map((m) => m.eventCid);
