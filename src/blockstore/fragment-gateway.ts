@@ -3,7 +3,7 @@ import { bs, ensureSuperLog, Logger, Result, SuperThis } from "@fireproof/core";
 
 import { base58btc } from "multiformats/bases/base58";
 import { encode, decode } from "cborg";
-import { VoidResult } from "./gateway";
+
 
 function getFragSize(url: URI): number {
   const fragSize = url.getParam("fragSize");
