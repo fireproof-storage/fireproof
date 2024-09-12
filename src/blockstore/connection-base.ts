@@ -61,7 +61,6 @@ export abstract class ConnectionBase implements Connection {
       keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
       loader,
     });
-
     this.loader.remoteMetaStore = remote;
     this.loaded = this.loader.ready().then(async () => {
       remote.load().then(async () => {
