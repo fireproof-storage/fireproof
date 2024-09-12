@@ -25,5 +25,5 @@ export interface Gateway {
   get(url: URI): Promise<GetResult>;
   delete(url: URI): Promise<VoidResult>;
   // be notified of remote meta
-  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<void>;
+  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<VoidResult>;
 }

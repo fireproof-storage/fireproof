@@ -3,6 +3,7 @@ import { bs, ensureSuperLog, Logger, Result, SuperThis } from "@fireproof/core";
 
 import { base58btc } from "multiformats/bases/base58";
 import { encode, decode } from "cborg";
+import { VoidResult } from "./gateway";
 
 function getFragSize(url: URI): number {
   const fragSize = url.getParam("fragSize");
@@ -167,11 +168,12 @@ export class FragmentGateway implements bs.Gateway {
     return Result.Ok(buffer || new Uint8Array(0));
   }
 
-  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<void> {
-    if (!this.innerGW.subscribe) {
-      throw this.logger.Error().Msg("Subscribe not supported").AsError();
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.VoidResult> {
+    if (this.innerGW.subscribe) {
+      return this.innerGW.subscribe(url, callback);
+    } else {
+      return Result.Err(this.logger.Error().Msg("Subscribe not supported").AsError());
     }
-    return this.innerGW.subscribe(url, callback);
   }
 
   async delete(url: URI): Promise<bs.VoidResult> {
