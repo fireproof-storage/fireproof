@@ -139,7 +139,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly subscribers = new Map<string, LoadHandler[]>();
   parents: CarClockHead = [];
 
-  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts, remote?: boolean) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
     super(
@@ -151,6 +151,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       sthis,
       ensureLogger(sthis, "MetaStoreImpl"),
     );
+    if (remote && opts.gateway.subscribe) {
+      this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway");
+      opts.gateway.subscribe(url, (byteHead: Uint8Array) => this.handleEventByteHead(byteHead));
+    }
   }
 
   makeHeader({ cars }: DbMeta): ToString<DbMeta> {
@@ -178,8 +182,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async decodeMetaBlock(bytes: Uint8Array): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
     const crdtEntry = JSON.parse(this.sthis.txt.decode(bytes)) as { data: string; parents: string[]; cid: string };
-    const eventBytes = decodeFromBase64(crdtEntry.data);
-    const eventBlock = await this.decodeEventBlock(eventBytes);
+    const eventBlock = await this.decodeEventBlock(decodeFromBase64(crdtEntry.data));
     return {
       eventCid: eventBlock.cid as CarClockLink,
       parents: crdtEntry.parents,
@@ -203,7 +206,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async load(): Promise<DbMeta[] | Falsy> {
     const branch = "main";
-    this.logger.Debug().Str("branch", branch).Msg("loading");
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
       throw this.logger.Error().Result("buidUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();

@@ -24,4 +24,6 @@ export interface Gateway {
   // get could return a NotFoundError if the key is not found
   get(url: URI): Promise<GetResult>;
   delete(url: URI): Promise<VoidResult>;
+  // be notified of remote meta
+  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<VoidResult>;
 }

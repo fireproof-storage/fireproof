@@ -53,4 +53,11 @@ describe("hello public API", function () {
     expect(query.rows.length).toBe(1);
     expect(query.rows[0].key).toBe("bar");
   });
+  it("should get when you open it again", async function () {
+    await db.close();
+    await db.destroy();
+    const db2 = database("test-public-api");
+    doc = await db2.get("test");
+    expect(doc.foo).toBe("bar");
+  });
 });
