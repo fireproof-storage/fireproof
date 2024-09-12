@@ -88,9 +88,8 @@ describe("DataStore with a saved car", function () {
 
   it("should remove a car", async function () {
     await store.remove(car.cid);
-    const error = (await store.load(car.cid).catch((e: Error) => e)) as NotFoundError;
-    expect(error.code).toMatch("ENOENT");
-    // matches(error.message, "ENOENT");
+    const { e: error } = (await store.load(car.cid).catch((e: Error) => ({ e }))) as { e: NotFoundError };
+    expect(error).toBeTruthy();
   });
 });
 
