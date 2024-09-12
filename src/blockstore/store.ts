@@ -478,7 +478,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async load(): Promise<WALState | Falsy> {
     this.logger.Debug().Msg("loading");
-    const filepath = await this.gateway.buildUrl(this.url(), "main");
+    const filepath = await this.gateway.buildUrl(this.url(), "wal");
     if (filepath.isErr()) {
       throw this.logger.Error().Err(filepath.Err()).Url(this.url()).Msg("error building url").AsError();
     }
@@ -497,7 +497,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   }
 
   async save(state: WALState) {
-    const filepath = await this.gateway.buildUrl(this.url(), "main");
+    const filepath = await this.gateway.buildUrl(this.url(), "wal");
     if (filepath.isErr()) {
       throw this.logger.Error().Err(filepath.Err()).Url(this.url()).Msg("error building url").AsError();
     }
