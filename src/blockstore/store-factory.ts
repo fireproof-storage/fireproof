@@ -66,6 +66,7 @@ export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<Gat
         gateway: await item.gateway(sthis),
         test: await item.test(sthis),
       };
+      console.log("getGatewayFromURL", url.toString());
       const res = await ret.gateway.start(url);
       if (res.isErr()) {
         sthis.logger.Error().Result("start", res).Msg("start failed");
