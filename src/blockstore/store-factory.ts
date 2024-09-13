@@ -59,7 +59,7 @@ interface GatewayReady {
 }
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
 export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<GatewayReady | undefined> {
-  console.trace("getGatewayFromURL", url.toString());
+  // console.log("getGatewayFromURL", url.toString());
   return onceGateway.get(url.toString()).once(async () => {
     console.log("GOT getGatewayFromURL", url.toString());
     const item = storeFactory.get(url.protocol);
