@@ -68,7 +68,7 @@ export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<Gat
         gateway: await item.gateway(sthis),
         test: await item.test(sthis),
       };
-      console.log("getGatewayFromURL", url.toString());
+      // console.log("getGatewayFromURL", url.toString());
       const res = await ret.gateway.start(url);
       if (res.isErr()) {
         sthis.logger.Error().Result("start", res).Msg("start failed");
@@ -179,7 +179,7 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
 
 // const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
-  console.log("metaStoreFactory.stores", loader.ebOpts.store.stores);
+  // console.log("metaStoreFactory.stores", loader.ebOpts.store.stores);
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.meta, loader)).build().setParam("store", "meta").URI();
   console.log("metaStoreFactory", url.toString());
   const sthis = ensureSuperLog(loader.sthis, "metaStoreFactory", { url: () => url.toString() });
