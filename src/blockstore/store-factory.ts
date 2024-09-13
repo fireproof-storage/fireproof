@@ -59,7 +59,9 @@ interface GatewayReady {
 }
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
 export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<GatewayReady | undefined> {
+  console.trace("getGatewayFromURL", url.toString());
   return onceGateway.get(url.toString()).once(async () => {
+    console.log("GOT getGatewayFromURL", url.toString());
     const item = storeFactory.get(url.protocol);
     if (item) {
       const ret = {
@@ -145,6 +147,7 @@ export function registerStoreProtocol(item: GatewayFactoryItem): () => void {
 // const onceDataStoreFactory = new KeyedResolvOnce<DataStoreImpl>();
 async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.data, loader)).build().setParam("store", "data").URI();
+  console.log("dataStoreFactory", url.toString());
   const sthis = ensureSuperLog(loader.sthis, "dataStoreFactory", { url: url.toString() });
   // return onceDataStoreFactory.get(url.toString()).once(async () => {
   const gateway = await getGatewayFromURL(url, sthis);
@@ -176,7 +179,9 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
 
 // const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
+  console.log("metaStoreFactory.stores", loader.ebOpts.store.stores);
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.meta, loader)).build().setParam("store", "meta").URI();
+  console.log("metaStoreFactory", url.toString());
   const sthis = ensureSuperLog(loader.sthis, "metaStoreFactory", { url: () => url.toString() });
   // return onceMetaStoreFactory.get(url.toString()).once(async () => {
   sthis.logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
@@ -217,6 +222,7 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.wal, loader)).build().setParam("store", "wal").URI();
   const sthis = ensureSuperLog(loader.sthis, "remoteWalFactory", { url: url.toString() });
   // return onceRemoteWalFactory.get(url.toString()).once(async () => {
+  console.log("remoteWalFactory", url.toString());
   const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
     throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
@@ -240,6 +246,7 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
 
 export async function testStoreFactory(url: URI, sthis: SuperThis): Promise<TestGateway> {
   sthis = ensureSuperLog(sthis, "testStoreFactory");
+  console.log("testStoreFactory", url.toString());
   const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
     throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
