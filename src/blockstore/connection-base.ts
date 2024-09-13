@@ -53,6 +53,7 @@ export abstract class ConnectionBase implements Connection {
     this.loader = loader;
     await this.onConnect();
     const metaUrl = this.url.build().defParam("store", "meta").URI();
+    console.log("metaUrl", metaUrl.toString(), this.url.toString());
     const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
     const name = metaUrl.toString();
