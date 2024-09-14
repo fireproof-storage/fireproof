@@ -14,9 +14,8 @@ describe("Hello World Test", function () {
 function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
   try {
     matcher(value);
-    
   } catch (error) {
-    void error
+    void error;
     // console.error(error);
     throw new Error(message);
   }
