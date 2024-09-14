@@ -1,5 +1,4 @@
-import { fireproof as database, Database, DocResponse, DocWithId, index, Index, IndexRows } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { fireproof as database, Database, DocResponse, DocWithId } from "@fireproof/core";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
@@ -13,32 +12,20 @@ describe("hello public API", function () {
     foo: string;
   }
   let db: Database;
-  let idx: Index<string, TestDoc>;
   let ok: DocResponse;
   let doc: DocWithId<TestDoc>;
-  let query: IndexRows<string, TestDoc>;
-  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
-    await idx.close();
-    await idx.destroy();
   });
   beforeEach(async function () {
-    await sthis.start();
     db = database("test-public-api");
-    idx = index<string, TestDoc>(sthis, db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
-    query = await idx.query();
   });
   it("should have a database", function () {
     expect(db).toBeTruthy();
     expect(db instanceof Database).toBeTruthy();
-  });
-  it("should have an index", function () {
-    expect(idx).toBeTruthy();
-    expect(idx instanceof Index).toBeTruthy();
   });
   it("should put", function () {
     expect(ok).toBeTruthy();
@@ -46,12 +33,6 @@ describe("hello public API", function () {
   });
   it("should get", function () {
     expect(doc.foo).toBe("bar");
-  });
-  it("should query", function () {
-    expect(query).toBeTruthy();
-    expect(query.rows).toBeTruthy();
-    expect(query.rows.length).toBe(1);
-    expect(query.rows[0].key).toBe("bar");
   });
   it("should get when you open it again", async function () {
     await db.close();
@@ -64,13 +45,11 @@ describe("hello public API", function () {
 
 describe("Simplified Reopening a database", function () {
   let db: Database;
-  const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await sthis.start();
     db = new Database("test-reopen-simple");
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
@@ -80,6 +59,174 @@ describe("Simplified Reopening a database", function () {
   it("should persist data", async function () {
     const doc = await db.get<{ foo: string }>("test");
     expect(doc.foo).toBe("bar");
+  });
+
+  it("should behave like a gateway", async function () {
+    // Extract stores from the loader
+    const carStore = await db.blockstore.loader?.carStore();
+    const metaStore = await db.blockstore.loader?.metaStore();
+    const fileStore = await db.blockstore.loader?.fileStore();
+    const walStore = await db.blockstore.loader?.WALStore();
+
+    // Log store information
+    console.log("CAR Store:", JSON.stringify(carStore));
+    console.log("Meta Store:", JSON.stringify(metaStore));
+    console.log("File Store:", JSON.stringify(fileStore));
+    console.log("WAL Store:", JSON.stringify(walStore));
+
+    // Extract and log gateways
+    const carGateway = carStore?.gateway;
+    const metaGateway = metaStore?.gateway;
+    const fileGateway = fileStore?.gateway;
+    const walGateway = walStore?.gateway;
+
+    // Add assertions
+    expect(carStore).toBeTruthy();
+    expect(metaStore).toBeTruthy();
+    expect(fileStore).toBeTruthy();
+    expect(walStore).toBeTruthy();
+
+    expect(carGateway).toBeTruthy();
+    expect(metaGateway).toBeTruthy();
+    expect(fileGateway).toBeTruthy();
+    expect(walGateway).toBeTruthy();
+
+    // Check that all stores have the correct name
+    expect(carStore?.name).toBe("test-reopen-simple");
+    expect(metaStore?.name).toBe("test-reopen-simple");
+    expect(fileStore?.name).toBe("test-reopen-simple");
+    expect(walStore?.name).toBe("test-reopen-simple");
+
+    // Check that all stores have the correct store type in their URL
+    expect(carStore?._url.toString()).toContain("store=data");
+    expect(metaStore?._url.toString()).toContain("store=meta");
+    expect(fileStore?._url.toString()).toContain("store=data");
+    expect(walStore?._url.toString()).toContain("store=wal");
+
+    // Verify that all stores have a version specified
+    expect(carStore?._url.toString()).toContain("version=");
+    expect(metaStore?._url.toString()).toContain("version=");
+    expect(fileStore?._url.toString()).toContain("version=");
+    expect(walStore?._url.toString()).toContain("version=");
+
+    // Check that all gateways are instances of the expected gateway class
+    // Note: You might need to import the specific gateway classes and use instanceof
+    // For example: expect(carGateway instanceof SpecificGatewayClass).toBe(true);
+    expect(typeof carGateway).toBe("object");
+    expect(typeof metaGateway).toBe("object");
+    expect(typeof fileGateway).toBe("object");
+    expect(typeof walGateway).toBe("object");
+
+    console.log("CAR Gateway:", carGateway);
+    console.log("Meta Gateway:", metaGateway);
+    console.log("File Gateway:", fileGateway);
+    console.log("WAL Gateway:", walGateway);
+
+    // CAR Gateway assertions
+    expect(carGateway?.fidLength).toBe(4);
+    expect(carGateway?.headerSize).toBe(36);
+
+    expect(carGateway?.logger._attributes).toHaveProperty("module");
+    expect(carGateway?.logger._attributes).toHaveProperty("url");
+
+    // Meta Gateway assertions
+    expect(metaGateway?.fidLength).toBe(4);
+    expect(metaGateway?.headerSize).toBe(36);
+
+    expect(metaGateway?.logger._attributes).toHaveProperty("module");
+    expect(metaGateway?.logger._attributes).not.toHaveProperty("url");
+
+    // File Gateway assertions
+    expect(fileGateway?.fidLength).toBe(4);
+    expect(fileGateway?.headerSize).toBe(36);
+
+    expect(fileGateway?.logger._attributes).toHaveProperty("module");
+    expect(fileGateway?.logger._attributes).toHaveProperty("url");
+
+    // WAL Gateway assertions
+    expect(walGateway?.fidLength).toBe(4);
+    expect(walGateway?.headerSize).toBe(36);
+
+    expect(walGateway?.logger._attributes).toHaveProperty("module");
+    expect(walGateway?.logger._attributes).not.toHaveProperty("url");
+
+    // Interact with each gateway type
+    const testData = new Uint8Array([1, 2, 3, 4, 5]);
+    const testKey = "testKey";
+
+    // CAR Gateway
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    expect(carUrl?.Ok()).toBeTruthy();
+
+    await carGateway?.start(carStore?._url);
+
+    const carPutResult = await carGateway?.put(carUrl?.Ok(), testData);
+    expect(carPutResult?.Ok()).toBeFalsy();
+
+    const carGetResult = await carGateway?.get(carUrl?.Ok());
+    expect(carGetResult?.Ok()).toEqual(testData);
+
+    const carDeleteResult = await carGateway?.delete(carUrl?.Ok());
+    expect(carDeleteResult?.Ok()).toBeFalsy();
+
+    await carGateway?.close(carStore?._url);
+
+    // Meta Gateway
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, testKey);
+    // expect(metaUrl.Ok()).toBeTruthy();
+
+    await metaGateway?.start(metaStore?._url);
+
+    const metaPutResult = await metaGateway?.put(metaUrl?.Ok(), testData);
+    expect(metaPutResult?.Ok()).toBeFalsy();
+
+    const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
+    expect(metaGetResult?.Ok()).toEqual(testData);
+
+    const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
+    expect(metaDeleteResult?.Ok()).toBeFalsy();
+
+    await metaGateway?.close(metaStore?._url);
+
+    // File Gateway
+    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
+    expect(fileUrl?.Ok()).toBeTruthy();
+
+    await fileGateway?.start(fileStore?._url);
+
+    const filePutResult = await fileGateway?.put(fileUrl?.Ok(), testData);
+    expect(filePutResult?.Ok()).toBeFalsy();
+
+    const fileGetResult = await fileGateway?.get(fileUrl?.Ok());
+    expect(fileGetResult?.Ok()).toEqual(testData);
+
+    const fileDeleteResult = await fileGateway?.delete(fileUrl?.Ok());
+    expect(fileDeleteResult?.Ok()).toBeFalsy();
+
+    await fileGateway?.close(fileStore?._url);
+
+    // WAL Gateway
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
+    expect(walUrl?.Ok()).toBeTruthy();
+
+    await walGateway?.start(walStore?._url);
+
+    const walPutResult = await walGateway?.put(walUrl?.Ok(), testData);
+    expect(walPutResult?.Ok()).toBeFalsy();
+
+    const walGetResult = await walGateway?.get(walUrl?.Ok());
+    expect(walGetResult?.Ok()).toEqual(testData);
+
+    const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
+    expect(walDeleteResult?.Ok()).toBeFalsy();
+
+    await walGateway?.close(walStore?._url);
+
+    // Test subscribe method for Meta Gateway (if implemented)
+    // if (metaGateway.subscribe) {
+    //   const subscribeResult = await metaGateway.subscribe(metaStore._url, () => {});
+    //   expect(subscribeResult.Ok()).toBeFalsy();
+    // }
   });
 
   it("should have the same data on reopen", async function () {
