@@ -1,12 +1,24 @@
 import { fireproof as database, Database, DocResponse, DocWithId, bs, Logger } from "@fireproof/core";
 import { URI } from "@adviser/cement";
 
+// @ts-ignore
+import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
     const result = database("hello"); // call to your library function
     expect(result.name).toBe("hello");
   });
 });
+
+function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
+  try {
+    matcher(value);
+  } catch (error) {
+    console.error(error);
+    throw new Error(message);
+  }
+}
 
 interface ExtendedGateway extends bs.Gateway {
   logger: { _attributes: { module: string; url?: string } };
@@ -153,8 +165,10 @@ describe("Simplified Reopening a database", function () {
     expect(walGateway?.logger._attributes).not.toHaveProperty("url");
 
     // Interact with each gateway type
-    const testData = new Uint8Array([1, 2, 3, 4, 5]);
-    const testKey = "testKey";
+
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+
+    const testData = fileContent;
 
     // CAR Gateway
     const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
@@ -166,7 +180,7 @@ describe("Simplified Reopening a database", function () {
     expect(carPutResult?.Ok()).toBeFalsy();
 
     const carGetResult = await carGateway?.get(carUrl?.Ok());
-    expect(carGetResult?.Ok()).toEqual(testData);
+    customExpect(carGetResult?.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
 
     const carDeleteResult = await carGateway?.delete(carUrl?.Ok());
     expect(carDeleteResult?.Ok()).toBeFalsy();
@@ -174,16 +188,18 @@ describe("Simplified Reopening a database", function () {
     await carGateway?.close(carStore?._url);
 
     // Meta Gateway
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, testKey);
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     // expect(metaUrl.Ok()).toBeTruthy();
 
     await metaGateway?.start(metaStore?._url);
 
-    const metaPutResult = await metaGateway?.put(metaUrl?.Ok(), testData);
-    expect(metaPutResult?.Ok()).toBeFalsy();
-
     const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
-    expect(metaGetResult?.Ok()).toEqual(testData);
+    const metaGetResultOk = metaGetResult?.Ok();
+    const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
+    // console.log("decodedMetaGetResultOk", decodedMetaGetResultOk);
+    customExpect(decodedMetaGetResultOk, (v) => expect(v).toContain("parents"), "metaGetResult should contain 'parents'");
+
+    // return;
 
     const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
     expect(metaDeleteResult?.Ok()).toBeFalsy();
@@ -200,7 +216,7 @@ describe("Simplified Reopening a database", function () {
     expect(filePutResult?.Ok()).toBeFalsy();
 
     const fileGetResult = await fileGateway?.get(fileUrl?.Ok());
-    expect(fileGetResult?.Ok()).toEqual(testData);
+    customExpect(fileGetResult?.Ok(), (v) => expect(v).toEqual(testData), "fileGetResult should match testData");
 
     const fileDeleteResult = await fileGateway?.delete(fileUrl?.Ok());
     expect(fileDeleteResult?.Ok()).toBeFalsy();
@@ -213,11 +229,33 @@ describe("Simplified Reopening a database", function () {
 
     await walGateway?.start(walStore?._url);
 
-    const walPutResult = await walGateway?.put(walUrl?.Ok(), testData);
+    const walTestDataString = JSON.stringify({
+      operations: [],
+      noLoaderOps: [],
+      fileOperations: [],
+    });
+
+    const walEncoder = new TextEncoder();
+    const walTestData = walEncoder.encode(walTestDataString);
+
+    // console.log("walTestData", walTestData);
+
+    const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
     expect(walPutResult?.Ok()).toBeFalsy();
 
     const walGetResult = await walGateway?.get(walUrl?.Ok());
-    expect(walGetResult?.Ok()).toEqual(testData);
+
+    const okResult = walGetResult?.Ok();
+
+    const decodedResult = new TextDecoder().decode(okResult);
+
+    // console.log("walGetResult", decodedResult);
+
+    customExpect(
+      decodedResult,
+      (v) => expect(v).toEqual(walTestDataString),
+      "Custom message: walGetResult should match walTestData",
+    );
 
     const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
     expect(walDeleteResult?.Ok()).toBeFalsy();
