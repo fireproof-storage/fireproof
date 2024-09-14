@@ -59,7 +59,6 @@ interface GatewayReady {
 }
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
 export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<GatewayReady | undefined> {
-  // console.log("getGatewayFromURL", url.toString());
   return onceGateway.get(url.toString()).once(async () => {
     const item = storeFactory.get(url.protocol);
     if (item) {
@@ -67,7 +66,6 @@ export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<Gat
         gateway: await item.gateway(sthis),
         test: await item.test(sthis),
       };
-      // console.log("getGatewayFromURL", url.toString());
       const res = await ret.gateway.start(url);
       if (res.isErr()) {
         sthis.logger.Error().Result("start", res).Msg("start failed");
@@ -177,7 +175,6 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
 
 const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
-  // console.log("metaStoreFactory.stores", loader.ebOpts.store.stores);
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.meta, loader)).build().setParam("store", "meta").URI();
   const sthis = ensureSuperLog(loader.sthis, "metaStoreFactory", { url: () => url.toString() });
   return onceMetaStoreFactory.get(url.toString()).once(async () => {
@@ -242,7 +239,6 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
 
 export async function testStoreFactory(url: URI, sthis: SuperThis): Promise<TestGateway> {
   sthis = ensureSuperLog(sthis, "testStoreFactory");
-  console.log("testStoreFactory", url.toString());
   const gateway = await getGatewayFromURL(url, sthis);
   if (!gateway) {
     throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
