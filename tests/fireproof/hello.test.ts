@@ -1,4 +1,5 @@
-import { fireproof as database, Database, DocResponse, DocWithId } from "@fireproof/core";
+import { fireproof as database, Database, DocResponse, DocWithId, bs, Logger } from "@fireproof/core";
+import { URI } from "@adviser/cement";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
@@ -6,6 +7,18 @@ describe("Hello World Test", function () {
     expect(result.name).toBe("hello");
   });
 });
+
+interface ExtendedGateway extends bs.Gateway {
+  logger: { _attributes: { module: string; url?: string } };
+  headerSize: number;
+  fidLength: number;
+}
+
+interface ExtendedStore {
+  gateway: ExtendedGateway;
+  _url: URI;
+  name: string;
+}
 
 describe("hello public API", function () {
   interface TestDoc {
@@ -63,16 +76,10 @@ describe("Simplified Reopening a database", function () {
 
   it("should behave like a gateway", async function () {
     // Extract stores from the loader
-    const carStore = await db.blockstore.loader?.carStore();
-    const metaStore = await db.blockstore.loader?.metaStore();
-    const fileStore = await db.blockstore.loader?.fileStore();
-    const walStore = await db.blockstore.loader?.WALStore();
-
-    // Log store information
-    console.log("CAR Store:", JSON.stringify(carStore));
-    console.log("Meta Store:", JSON.stringify(metaStore));
-    console.log("File Store:", JSON.stringify(fileStore));
-    console.log("WAL Store:", JSON.stringify(walStore));
+    const carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
+    const metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    const fileStore = (await db.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
+    const walStore = (await db.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
 
     // Extract and log gateways
     const carGateway = carStore?.gateway;
@@ -116,11 +123,6 @@ describe("Simplified Reopening a database", function () {
     expect(typeof metaGateway).toBe("object");
     expect(typeof fileGateway).toBe("object");
     expect(typeof walGateway).toBe("object");
-
-    console.log("CAR Gateway:", carGateway);
-    console.log("Meta Gateway:", metaGateway);
-    console.log("File Gateway:", fileGateway);
-    console.log("WAL Gateway:", walGateway);
 
     // CAR Gateway assertions
     expect(carGateway?.fidLength).toBe(4);
