@@ -1,4 +1,4 @@
-import { fireproof as database, Database, DocResponse, DocWithId, bs, Logger } from "@fireproof/core";
+import { fireproof as database, Database, DocResponse, DocWithId, bs } from "@fireproof/core";
 import { URI } from "@adviser/cement";
 
 // @ts-ignore
