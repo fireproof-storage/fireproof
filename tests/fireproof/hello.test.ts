@@ -61,3 +61,31 @@ describe("hello public API", function () {
     expect(doc.foo).toBe("bar");
   });
 });
+
+describe("Simplified Reopening a database", function () {
+  let db: Database;
+  const sthis = mockSuperThis();
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  });
+  beforeEach(async function () {
+    await sthis.start();
+    db = new Database("test-reopen-simple");
+    const ok = await db.put({ _id: "test", foo: "bar" });
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test");
+  });
+
+  it("should persist data", async function () {
+    const doc = await db.get<{ foo: string }>("test");
+    expect(doc.foo).toBe("bar");
+  });
+
+  it("should have the same data on reopen", async function () {
+    const db2 = new Database("test-reopen-simple");
+    const doc = await db2.get<{ foo: string }>("test");
+    expect(doc.foo).toBe("bar");
+    await db2.close();
+  });
+});
