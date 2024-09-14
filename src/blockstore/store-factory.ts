@@ -61,7 +61,6 @@ const onceGateway = new KeyedResolvOnce<GatewayReady>();
 export async function getGatewayFromURL(url: URI, sthis: SuperThis): Promise<GatewayReady | undefined> {
   // console.log("getGatewayFromURL", url.toString());
   return onceGateway.get(url.toString()).once(async () => {
-    console.log("GOT getGatewayFromURL", url.toString());
     const item = storeFactory.get(url.protocol);
     if (item) {
       const ret = {
@@ -149,7 +148,6 @@ async function dataStoreFactory(loader: Loadable): Promise<DataStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.data, loader)).build().setParam("store", "data").URI();
   const sthis = ensureSuperLog(loader.sthis, "dataStoreFactory", { url: url.toString() });
   return onceDataStoreFactory.get(url.toString()).once(async () => {
-    console.log("dataStoreFactory", url.toString());
     const gateway = await getGatewayFromURL(url, sthis);
     if (!gateway) {
       throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
@@ -183,7 +181,6 @@ async function metaStoreFactory(loader: Loadable): Promise<MetaStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.meta, loader)).build().setParam("store", "meta").URI();
   const sthis = ensureSuperLog(loader.sthis, "metaStoreFactory", { url: () => url.toString() });
   return onceMetaStoreFactory.get(url.toString()).once(async () => {
-    console.log("metaStoreFactory", url.toString());
     sthis.logger.Debug().Str("protocol", url.protocol).Msg("pre-protocol switch");
     const gateway = await getGatewayFromURL(url, sthis);
     if (!gateway) {
@@ -222,7 +219,6 @@ async function remoteWalFactory(loader: Loadable): Promise<WALStoreImpl> {
   const url = ensureName(loader.name, buildURL(loader.ebOpts.store.stores?.wal, loader)).build().setParam("store", "wal").URI();
   const sthis = ensureSuperLog(loader.sthis, "remoteWalFactory", { url: url.toString() });
   return onceRemoteWalFactory.get(url.toString()).once(async () => {
-    console.log("remoteWalFactory", url.toString());
     const gateway = await getGatewayFromURL(url, sthis);
     if (!gateway) {
       throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
