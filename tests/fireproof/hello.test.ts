@@ -198,7 +198,7 @@ describe("Simplified Reopening a database", function () {
     const metaGetResultOk = metaGetResult?.Ok();
     const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
     // console.log("decodedMetaGetResultOk", decodedMetaGetResultOk);
-    customExpect(decodedMetaGetResultOk, (v) => expect(v).toContain("parents"), "metaGetResult should contain 'parents'");
+    expect(decodedMetaGetResultOk).toContain("parents");
 
     // return;
 
@@ -239,7 +239,7 @@ describe("Simplified Reopening a database", function () {
     const walEncoder = new TextEncoder();
     const walTestData = walEncoder.encode(walTestDataString);
 
-    // console.log("walTestData", walTestData);
+    // console.log(" walTestData", walTestDataString);
 
     const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
     expect(walPutResult?.Ok()).toBeFalsy();
@@ -252,11 +252,7 @@ describe("Simplified Reopening a database", function () {
 
     // console.log("walGetResult", decodedResult);
 
-    customExpect(
-      decodedResult,
-      (v) => expect(v).toEqual(walTestDataString),
-      "Custom message: walGetResult should match walTestData",
-    );
+    expect(decodedResult).toEqual(walTestDataString);
 
     const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
     expect(walDeleteResult?.Ok()).toBeFalsy();
