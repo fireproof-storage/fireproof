@@ -208,7 +208,7 @@ describe("Gateway", function () {
     await metaGateway?.start(metaStore?._url);
     await metaGateway?.close(metaStore?._url);
   });
-  
+
   it("should build File Gateway URL", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
