@@ -26,7 +26,7 @@ interface ExtendedStore {
   name: string;
 }
 
-describe("Simplified Reopening a database", function () {
+describe("Gateway", function () {
   let db: Database;
   let carStore: ExtendedStore;
   let metaStore: ExtendedStore;
@@ -137,56 +137,137 @@ describe("Simplified Reopening a database", function () {
     expect(walGateway?.logger._attributes).not.toHaveProperty("url");
   });
 
-  it("should interact with CAR Gateway", async function () {
-    // Interact with CAR Gateway
+  it("should build CAR Gateway URL", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    expect(carUrl?.Ok()).toBeTruthy();
+  });
+
+  it("should start CAR Gateway", async function () {
+    await carGateway?.start(carStore?._url);
+  });
+
+  it("should put data in CAR Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const testData = fileContent;
     const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-    expect(carUrl?.Ok()).toBeTruthy();
     await carGateway?.start(carStore?._url);
     const carPutResult = await carGateway?.put(carUrl?.Ok(), testData);
     expect(carPutResult?.Ok()).toBeFalsy();
-    const carGetResult = await carGateway?.get(carUrl?.Ok());
-    customExpect(carGetResult?.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
-    const carDeleteResult = await carGateway?.delete(carUrl?.Ok());
-    expect(carDeleteResult?.Ok()).toBeFalsy();
-    await carGateway?.close(carStore?._url);
   });
 
-  it("should interact with Meta Gateway", async function () {
-    // Interact with Meta Gateway
+  it("should get data from CAR Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const testData = fileContent;
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    await carGateway?.start(carStore?._url);
+    await carGateway?.put(carUrl?.Ok(), testData);
+    const carGetResult = await carGateway?.get(carUrl?.Ok());
+    customExpect(carGetResult?.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
+  });
+
+  it("should delete data from CAR Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const testData = fileContent;
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    await carGateway?.start(carStore?._url);
+    await carGateway?.put(carUrl?.Ok(), testData);
+    const carDeleteResult = await carGateway?.delete(carUrl?.Ok());
+    expect(carDeleteResult?.Ok()).toBeFalsy();
+  });
+
+  it("should close CAR Gateway", async function () {
+    await carGateway?.close(carStore?._url);
+  });
+  it("should build Meta Gateway URL", async function () {
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    expect(metaUrl?.Ok()).toBeTruthy();
+  });
+
+  it("should start Meta Gateway", async function () {
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    await metaGateway?.start(metaStore?._url);
+  });
+
+  it("should get data from Meta Gateway", async function () {
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
     const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
     const metaGetResultOk = metaGetResult?.Ok();
     const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
     expect(decodedMetaGetResultOk).toContain("parents");
-    const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
-    expect(metaDeleteResult?.Ok()).toBeFalsy();
-    await metaGateway?.close(metaStore?._url);
   });
 
-  it("should interact with File Gateway", async function () {
-    // Interact with File Gateway
+  it("should delete data from Meta Gateway", async function () {
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    await metaGateway?.start(metaStore?._url);
+    const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
+    expect(metaDeleteResult?.Ok()).toBeFalsy();
+  });
+
+  it("should close Meta Gateway", async function () {
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    await metaGateway?.start(metaStore?._url);
+    await metaGateway?.close(metaStore?._url);
+  });
+  
+  it("should build File Gateway URL", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
+    expect(fileUrl?.Ok()).toBeTruthy();
+  });
+
+  it("should start File Gateway", async function () {
+    await fileGateway?.start(fileStore?._url);
+  });
+
+  it("should put data to File Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const testData = fileContent;
     const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
-    expect(fileUrl?.Ok()).toBeTruthy();
     await fileGateway?.start(fileStore?._url);
     const filePutResult = await fileGateway?.put(fileUrl?.Ok(), testData);
     expect(filePutResult?.Ok()).toBeFalsy();
-    const fileGetResult = await fileGateway?.get(fileUrl?.Ok());
-    customExpect(fileGetResult?.Ok(), (v) => expect(v).toEqual(testData), "fileGetResult should match testData");
-    const fileDeleteResult = await fileGateway?.delete(fileUrl?.Ok());
-    expect(fileDeleteResult?.Ok()).toBeFalsy();
-    await fileGateway?.close(fileStore?._url);
   });
 
-  it("should interact with WAL Gateway", async function () {
-    // Interact with WAL Gateway
+  it("should get data from File Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const testData = fileContent;
+    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
+    await fileGateway?.start(fileStore?._url);
+    await fileGateway?.put(fileUrl?.Ok(), testData);
+    const fileGetResult = await fileGateway?.get(fileUrl?.Ok());
+    customExpect(fileGetResult?.Ok(), (v) => expect(v).toEqual(testData), "fileGetResult should match testData");
+  });
+
+  it("should delete data from File Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const testData = fileContent;
+    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
+    await fileGateway?.start(fileStore?._url);
+    await fileGateway?.put(fileUrl?.Ok(), testData);
+    const fileDeleteResult = await fileGateway?.delete(fileUrl?.Ok());
+    expect(fileDeleteResult?.Ok()).toBeFalsy();
+  });
+
+  it("should close File Gateway", async function () {
+    await fileGateway?.close(fileStore?._url);
+  });
+  it("should build WAL Gateway URL", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
     expect(walUrl?.Ok()).toBeTruthy();
+  });
+
+  it("should start WAL Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
+    await walGateway?.start(walStore?._url);
+  });
+
+  it("should put data to WAL Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
     await walGateway?.start(walStore?._url);
     const walTestDataString = JSON.stringify({
       operations: [],
@@ -197,12 +278,46 @@ describe("Simplified Reopening a database", function () {
     const walTestData = walEncoder.encode(walTestDataString);
     const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
     expect(walPutResult?.Ok()).toBeFalsy();
+  });
+
+  it("should get data from WAL Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
+    await walGateway?.start(walStore?._url);
+    const walTestDataString = JSON.stringify({
+      operations: [],
+      noLoaderOps: [],
+      fileOperations: [],
+    });
+    const walEncoder = new TextEncoder();
+    const walTestData = walEncoder.encode(walTestDataString);
+    await walGateway?.put(walUrl?.Ok(), walTestData);
     const walGetResult = await walGateway?.get(walUrl?.Ok());
     const okResult = walGetResult?.Ok();
     const decodedResult = new TextDecoder().decode(okResult);
     expect(decodedResult).toEqual(walTestDataString);
+  });
+
+  it("should delete data from WAL Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
+    await walGateway?.start(walStore?._url);
+    const walTestDataString = JSON.stringify({
+      operations: [],
+      noLoaderOps: [],
+      fileOperations: [],
+    });
+    const walEncoder = new TextEncoder();
+    const walTestData = walEncoder.encode(walTestDataString);
+    await walGateway?.put(walUrl?.Ok(), walTestData);
     const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
     expect(walDeleteResult?.Ok()).toBeFalsy();
+  });
+
+  it("should close WAL Gateway", async function () {
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
+    await walGateway?.start(walStore?._url);
     await walGateway?.close(walStore?._url);
   });
 });
