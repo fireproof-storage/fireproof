@@ -185,7 +185,6 @@ describe("Gateway", function () {
   });
 
   it("should start Meta Gateway", async function () {
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
   });
 
@@ -206,7 +205,6 @@ describe("Gateway", function () {
   });
 
   it("should close Meta Gateway", async function () {
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
     await metaGateway?.close(metaStore?._url);
   });
@@ -260,8 +258,6 @@ describe("Gateway", function () {
   });
 
   it("should start WAL Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
     await walGateway?.start(walStore?._url);
   });
 
@@ -315,8 +311,6 @@ describe("Gateway", function () {
   });
 
   it("should close WAL Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
     await walGateway?.start(walStore?._url);
     await walGateway?.close(walStore?._url);
   });
