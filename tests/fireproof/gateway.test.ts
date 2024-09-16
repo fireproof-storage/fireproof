@@ -1,4 +1,4 @@
-import { fireproof as database, Database, DocResponse, DocWithId, bs } from "@fireproof/core";
+import { Database, bs } from "@fireproof/core";
 import { URI } from "@adviser/cement";
 
 // @ts-expect-error - This import has no type definitions

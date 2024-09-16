@@ -1,8 +1,4 @@
-import { fireproof as database, Database, DocResponse, DocWithId, bs } from "@fireproof/core";
-import { URI } from "@adviser/cement";
-
-// @ts-expect-error - This import has no type definitions
-import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+import { fireproof as database, Database, DocResponse, DocWithId } from "@fireproof/core";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
@@ -10,28 +6,6 @@ describe("Hello World Test", function () {
     expect(result.name).toBe("hello");
   });
 });
-
-function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
-  try {
-    matcher(value);
-  } catch (error) {
-    void error;
-    // console.error(error);
-    throw new Error(message);
-  }
-}
-
-interface ExtendedGateway extends bs.Gateway {
-  logger: { _attributes: { module: string; url?: string } };
-  headerSize: number;
-  fidLength: number;
-}
-
-interface ExtendedStore {
-  gateway: ExtendedGateway;
-  _url: URI;
-  name: string;
-}
 
 describe("hello public API", function () {
   interface TestDoc {
