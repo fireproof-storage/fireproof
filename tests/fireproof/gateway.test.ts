@@ -1,0 +1,208 @@
+import { fireproof as database, Database, DocResponse, DocWithId, bs } from "@fireproof/core";
+import { URI } from "@adviser/cement";
+
+// @ts-expect-error - This import has no type definitions
+import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+
+function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
+  try {
+    matcher(value);
+  } catch (error) {
+    void error;
+    // console.error(error);
+    throw new Error(message);
+  }
+}
+
+interface ExtendedGateway extends bs.Gateway {
+  logger: { _attributes: { module: string; url?: string } };
+  headerSize: number;
+  fidLength: number;
+}
+
+interface ExtendedStore {
+  gateway: ExtendedGateway;
+  _url: URI;
+  name: string;
+}
+
+describe("Simplified Reopening a database", function () {
+  let db: Database;
+  let carStore: ExtendedStore;
+  let metaStore: ExtendedStore;
+  let fileStore: ExtendedStore;
+  let walStore: ExtendedStore;
+  let carGateway: ExtendedGateway;
+  let metaGateway: ExtendedGateway;
+  let fileGateway: ExtendedGateway;
+  let walGateway: ExtendedGateway;
+
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  });
+  beforeEach(async function () {
+    db = new Database("test-gateway");
+    const ok = await db.put({ _id: "test", foo: "bar" });
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("test");
+
+    // Extract stores from the loader
+    carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
+    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    fileStore = (await db.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
+    walStore = (await db.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
+
+    // Extract and log gateways
+    carGateway = carStore?.gateway;
+    metaGateway = metaStore?.gateway;
+    fileGateway = fileStore?.gateway;
+    walGateway = walStore?.gateway;
+  });
+
+  it("should have valid stores and gateways", async function () {
+    // Add assertions
+    expect(carStore).toBeTruthy();
+    expect(metaStore).toBeTruthy();
+    expect(fileStore).toBeTruthy();
+    expect(walStore).toBeTruthy();
+
+    expect(carGateway).toBeTruthy();
+    expect(metaGateway).toBeTruthy();
+    expect(fileGateway).toBeTruthy();
+    expect(walGateway).toBeTruthy();
+  });
+
+  it("should have correct store names", async function () {
+    // Check that all stores have the correct name
+    expect(carStore?.name).toBe("test-gateway");
+    expect(metaStore?.name).toBe("test-gateway");
+    expect(fileStore?.name).toBe("test-gateway");
+    expect(walStore?.name).toBe("test-gateway");
+  });
+
+  it("should have correct store types in URLs", async function () {
+    // Check that all stores have the correct store type in their URL
+    expect(carStore?._url.toString()).toContain("store=data");
+    expect(metaStore?._url.toString()).toContain("store=meta");
+    expect(fileStore?._url.toString()).toContain("store=data");
+    expect(walStore?._url.toString()).toContain("store=wal");
+  });
+
+  it("should have version specified in URLs", async function () {
+    // Verify that all stores have a version specified
+    expect(carStore?._url.toString()).toContain("version=");
+    expect(metaStore?._url.toString()).toContain("version=");
+    expect(fileStore?._url.toString()).toContain("version=");
+    expect(walStore?._url.toString()).toContain("version=");
+  });
+
+  it("should have correct gateway types", async function () {
+    // Check that all gateways are instances of the expected gateway class
+    expect(typeof carGateway).toBe("object");
+    expect(typeof metaGateway).toBe("object");
+    expect(typeof fileGateway).toBe("object");
+    expect(typeof walGateway).toBe("object");
+  });
+
+  it("should have correct CAR Gateway properties", async function () {
+    // CAR Gateway assertions
+    expect(carGateway?.fidLength).toBe(4);
+    expect(carGateway?.headerSize).toBe(36);
+    expect(carGateway?.logger._attributes).toHaveProperty("module");
+    expect(carGateway?.logger._attributes).toHaveProperty("url");
+  });
+
+  it("should have correct Meta Gateway properties", async function () {
+    // Meta Gateway assertions
+    expect(metaGateway?.fidLength).toBe(4);
+    expect(metaGateway?.headerSize).toBe(36);
+    expect(metaGateway?.logger._attributes).toHaveProperty("module");
+    expect(metaGateway?.logger._attributes).not.toHaveProperty("url");
+  });
+
+  it("should have correct File Gateway properties", async function () {
+    // File Gateway assertions
+    expect(fileGateway?.fidLength).toBe(4);
+    expect(fileGateway?.headerSize).toBe(36);
+    expect(fileGateway?.logger._attributes).toHaveProperty("module");
+    expect(fileGateway?.logger._attributes).toHaveProperty("url");
+  });
+
+  it("should have correct WAL Gateway properties", async function () {
+    // WAL Gateway assertions
+    expect(walGateway?.fidLength).toBe(4);
+    expect(walGateway?.headerSize).toBe(36);
+    expect(walGateway?.logger._attributes).toHaveProperty("module");
+    expect(walGateway?.logger._attributes).not.toHaveProperty("url");
+  });
+
+  it("should interact with CAR Gateway", async function () {
+    // Interact with CAR Gateway
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const testData = fileContent;
+    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
+    expect(carUrl?.Ok()).toBeTruthy();
+    await carGateway?.start(carStore?._url);
+    const carPutResult = await carGateway?.put(carUrl?.Ok(), testData);
+    expect(carPutResult?.Ok()).toBeFalsy();
+    const carGetResult = await carGateway?.get(carUrl?.Ok());
+    customExpect(carGetResult?.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
+    const carDeleteResult = await carGateway?.delete(carUrl?.Ok());
+    expect(carDeleteResult?.Ok()).toBeFalsy();
+    await carGateway?.close(carStore?._url);
+  });
+
+  it("should interact with Meta Gateway", async function () {
+    // Interact with Meta Gateway
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    await metaGateway?.start(metaStore?._url);
+    const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
+    const metaGetResultOk = metaGetResult?.Ok();
+    const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
+    expect(decodedMetaGetResultOk).toContain("parents");
+    const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
+    expect(metaDeleteResult?.Ok()).toBeFalsy();
+    await metaGateway?.close(metaStore?._url);
+  });
+
+  it("should interact with File Gateway", async function () {
+    // Interact with File Gateway
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const testData = fileContent;
+    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
+    expect(fileUrl?.Ok()).toBeTruthy();
+    await fileGateway?.start(fileStore?._url);
+    const filePutResult = await fileGateway?.put(fileUrl?.Ok(), testData);
+    expect(filePutResult?.Ok()).toBeFalsy();
+    const fileGetResult = await fileGateway?.get(fileUrl?.Ok());
+    customExpect(fileGetResult?.Ok(), (v) => expect(v).toEqual(testData), "fileGetResult should match testData");
+    const fileDeleteResult = await fileGateway?.delete(fileUrl?.Ok());
+    expect(fileDeleteResult?.Ok()).toBeFalsy();
+    await fileGateway?.close(fileStore?._url);
+  });
+
+  it("should interact with WAL Gateway", async function () {
+    // Interact with WAL Gateway
+    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
+    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
+    expect(walUrl?.Ok()).toBeTruthy();
+    await walGateway?.start(walStore?._url);
+    const walTestDataString = JSON.stringify({
+      operations: [],
+      noLoaderOps: [],
+      fileOperations: [],
+    });
+    const walEncoder = new TextEncoder();
+    const walTestData = walEncoder.encode(walTestDataString);
+    const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
+    expect(walPutResult?.Ok()).toBeFalsy();
+    const walGetResult = await walGateway?.get(walUrl?.Ok());
+    const okResult = walGetResult?.Ok();
+    const decodedResult = new TextDecoder().decode(okResult);
+    expect(decodedResult).toEqual(walTestDataString);
+    const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
+    expect(walDeleteResult?.Ok()).toBeFalsy();
+    await walGateway?.close(walStore?._url);
+  });
+});
