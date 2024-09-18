@@ -128,6 +128,12 @@ globalThis[Symbol.for("FP_PRESET_ENV")] = {
 };
 ```
 
+it's possible to change the logformat by setting FP_FORMAT to:
+
+- jsonice makes the log output in multiline json
+- yaml makes the log output in yaml
+- json makes the log output in singleline json (default)
+
 ## Thanks 🙏
 
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.

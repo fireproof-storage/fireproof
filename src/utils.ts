@@ -12,6 +12,8 @@ import {
   Env,
   toCryptoRuntime,
   CryptoRuntime,
+  JSONFormatter,
+  YAMLFormatter,
 } from "@adviser/cement";
 import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
 import { base58btc } from "multiformats/bases/base58";
@@ -195,6 +197,21 @@ export function ensureLogger(
         (key, value) => {
           // console.log("FP_DEBUG", key, value, debug)
           switch (key) {
+            case "FP_FORMAT": {
+              switch (value) {
+                case "jsonice":
+                  logger.SetFormatter(new JSONFormatter(logger.TxtEnDe(), 2));
+                  break;
+                case "yaml":
+                  logger.SetFormatter(new YAMLFormatter(logger.TxtEnDe(), 2));
+                  break;
+                case "json":
+                default:
+                  logger.SetFormatter(new JSONFormatter(logger.TxtEnDe()));
+                  break;
+              }
+              break;
+            }
             case "FP_DEBUG":
               logger.SetDebug(value || []);
               break;
@@ -203,6 +220,7 @@ export function ensureLogger(
               break;
           }
         },
+        "FP_FORMAT",
         "FP_DEBUG",
         "FP_STACK",
       );
