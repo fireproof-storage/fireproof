@@ -42,7 +42,7 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway");
+    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
@@ -75,10 +75,10 @@ describe("Gateway", function () {
 
   it("should have correct store names", async function () {
     // Check that all stores have the correct name
-    expect(carStore?.name).toBe("test-gateway");
-    expect(metaStore?.name).toBe("test-gateway");
-    expect(fileStore?.name).toBe("test-gateway");
-    expect(walStore?.name).toBe("test-gateway");
+    expect(carStore?.name).toContain("test-gateway");
+    expect(metaStore?.name).toContain("test-gateway");
+    expect(fileStore?.name).toContain("test-gateway");
+    expect(walStore?.name).toContain("test-gateway");
   });
 
   it("should have correct store types in URLs", async function () {
