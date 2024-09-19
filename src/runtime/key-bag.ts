@@ -3,13 +3,14 @@ import {
   CryptoRuntime,
   KeyedResolvOnce,
   Logger,
+  ResolveOnce,
   ResolveSeq,
   Result,
   runtimeFn,
   toCryptoRuntime,
   URI,
 } from "@adviser/cement";
-import { KeyWithFingerPrint } from "../blockstore/types.js";
+import { KeyWithFingerExtract, KeyWithFingerPrint } from "../blockstore/types.js";
 import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
 import { SuperThis } from "../types.js";
@@ -20,18 +21,22 @@ export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
 export class KeyBag {
   readonly logger: Logger;
   constructor(readonly rt: KeyBagRuntime) {
-    this.logger = ensureLogger(rt.sthis, "KeyBag", {
-      id: rt.id(),
-    });
+    this.logger = ensureLogger(rt.sthis, "KeyBag");
     this.logger.Debug().Msg("KeyBag created");
   }
+
+  readonly _warnOnce = new ResolveOnce();
   async subtleKey(key: string) {
+    const extractable = this.rt.url.getParam("extractKey") === "iknownwhatidoing";
+    if (extractable) {
+      this._warnOnce.once(() => this.logger.Warn().Msg("extractKey is enabled --- hopefully you know what you are doing!!!"));
+    }
     return await this.rt.crypto.importKey(
       "raw", // raw or jwk
       base58btc.decode(key),
       // hexStringToUint8Array(key), // raw data
       "AES-GCM",
-      false, // extractable
+      extractable,
       ["encrypt", "decrypt"],
     );
   }
@@ -85,6 +90,24 @@ export class KeyBag {
     this.logger.Debug().Str("name", name).Msg("setNamedKey");
     await bag.set(name, item);
     return await this.toKeyWithFingerPrint(item.key);
+  }
+
+  async getNamedExtractableKey(name: string, failIfNotFound = false): Promise<Result<KeyWithFingerExtract>> {
+    const ret = await this.getNamedKey(name, failIfNotFound);
+    if (ret.isErr()) {
+      return ret as unknown as Result<KeyWithFingerExtract>;
+    }
+    const named = ret.Ok();
+    return Result.Ok({
+      ...named,
+      extract: async () => {
+        const ext = new Uint8Array((await this.rt.crypto.exportKey("raw", named.key)) as ArrayBuffer);
+        return {
+          key: ext,
+          keyStr: base58btc.encode(ext),
+        };
+      },
+    });
   }
 
   async getNamedKey(name: string, failIfNotFound = false): Promise<Result<KeyWithFingerPrint>> {
@@ -200,23 +223,11 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
     }
     logger.Debug().Url(url).Msg("from env");
   }
-  let keyProviderFactory: () => Promise<KeyBagProvider>;
-  switch (url.protocol) {
-    case "file:":
-      keyProviderFactory = async () => {
-        const { KeyBagProviderFile } = await import("./key-bag-file.js");
-        return new KeyBagProviderFile(url, sthis);
-      };
-      break;
-    case "indexdb:":
-      keyProviderFactory = async () => {
-        const { KeyBagProviderIndexDB } = await import("./key-bag-indexdb.js");
-        return new KeyBagProviderIndexDB(url, sthis);
-      };
-      break;
-    default:
-      throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
+  const kitem = keyBagProviderFactories.get(url.protocol);
+  if (!kitem) {
+    throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
   }
+  const getBag = async () => kitem.factory(url, sthis);
 
   if (url.hasParam("masterkey")) {
     throw logger.Error().Url(url).Msg("masterkey is not supported").AsError();
@@ -227,7 +238,7 @@ function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRu
     sthis,
     logger,
     keyLength: kbo.keyLength || 16,
-    getBag: keyProviderFactory,
+    getBag,
     id: () => {
       return url.toString();
     },

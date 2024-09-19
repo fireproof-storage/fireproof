@@ -1,4 +1,4 @@
-import { MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
+import { LogCollector, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { dataDir, ensureSuperThis, rt, SuperThis, SuperThisOpts } from "@fireproof/core";
 
 export { dataDir };
@@ -37,13 +37,16 @@ export function storageURL(sthis: SuperThis): URI {
   return merged;
 }
 
+export type MockSuperThis = SuperThis & { logCollector: LogCollector };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function mockSuperThis(sthis?: Partial<SuperThisOpts>): SuperThis {
+export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   const mockLog = MockLogger();
-  return ensureSuperThis({
+  const ethis = ensureSuperThis({
     logger: mockLog.logger,
     ctx: {
       logCollector: mockLog.logCollector,
     },
-  });
+  }) as MockSuperThis;
+  ethis.logCollector = mockLog.logCollector;
+  return ethis;
 }
