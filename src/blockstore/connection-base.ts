@@ -1,6 +1,6 @@
 import { Logger, URI } from "@adviser/cement";
 
-import { throwFalsy } from "../types.js";
+import {type SuperThis, throwFalsy} from "../types.js";
 import { TaskManager } from "./task-manager.js";
 import type { BlockstoreRuntime, Connection, Loadable } from "./types.js";
 import { type Loader } from "./loader.js";
@@ -14,6 +14,7 @@ export interface Connectable {
     readonly ebOpts: BlockstoreRuntime;
   };
   readonly name?: string;
+  readonly sthis: SuperThis;
 }
 
 export abstract class ConnectionBase implements Connection {
