@@ -1,6 +1,6 @@
 import { Logger, URI } from "@adviser/cement";
 
-import {type SuperThis, throwFalsy} from "../types.js";
+import { type SuperThis, throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
 import type { BlockstoreRuntime, Connection, Loadable } from "./types.js";
 import { type Loader } from "./loader.js";
