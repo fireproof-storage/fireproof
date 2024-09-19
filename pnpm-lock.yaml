@@ -118,7 +118,7 @@ importers:
         specifier: ^8.4.0
         version: 8.4.0(eslint@9.28.0(jiti@1.21.7))(typescript@5.8.3)
       vite:
-        specifier: ^5.4.3
+        specifier: ^5.4.6
         version: 5.4.19(@types/node@22.5.4)(terser@5.41.0)
       vite-tsconfig-paths:
         specifier: ^5.0.1
