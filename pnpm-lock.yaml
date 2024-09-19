@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.27
-        version: 0.2.27
+        specifier: ^0.2.28
+        version: 0.2.28
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -139,8 +139,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.27':
-    resolution: {integrity: sha512-pYfVKGT1mp05S2qruD34wB3UyfHgyYfPzNBs6zb4Eshd7glNiwUxTaljXz1ekIDlIxsw285lcb4lwyZrFJlzqA==}
+  '@adviser/cement@0.2.28':
+    resolution: {integrity: sha512-M4PmNUZPV90/AEo6yqKQ2uhh9kfCmJzkqasG8GzQOw9ONJv0Zn4zHNLgcvSgIr5k0AOpLd/dL6Fc5vQSERow+Q==}
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -2921,7 +2921,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.27': {}
+  '@adviser/cement@0.2.28': {}
 
   '@ampproject/remapping@2.3.0':
     dependencies:

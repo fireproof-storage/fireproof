@@ -3,12 +3,14 @@ import { BuildURI, Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
-import { mockSuperThis } from "../helpers";
+import { MockSuperThis, mockSuperThis } from "../helpers";
 
 describe("KeyBag", () => {
   let url: URI;
-  const sthis = mockSuperThis();
-  beforeAll(async () => {
+  let sthis: MockSuperThis;
+
+  beforeEach(async () => {
+    sthis = mockSuperThis();
     await sthis.start();
     if (runtimeFn().isBrowser) {
       url = URI.from("indexdb://fp-keybag");
@@ -34,6 +36,33 @@ describe("KeyBag", () => {
     expect(kb.rt.url.toString()).toBe(url.toString());
     sthis.env.set("FP_KEYBAG_URL", old);
   });
+
+  it("extract keyMaterial", async () => {
+    const dkb = await rt.kb.getKeyBag(sthis);
+    const old = sthis.env.get("FP_KEYBAG_URL");
+    sthis.env.set("FP_KEYBAG_URL", BuildURI.from(dkb.rt.url).setParam("extractKey", "iknownwhatidoing").toString());
+    const kb = await rt.kb.getKeyBag(sthis);
+    const key = kb.rt.crypto.randomBytes(kb.rt.keyLength);
+    const keyStr = base58btc.encode(key);
+    const res = await kb.setNamedKey("extract.test", keyStr);
+    expect(res.isOk()).toBeTruthy();
+    const gkb = await kb.getNamedExtractableKey("extract.test", true);
+    expect(gkb.isOk()).toBeTruthy();
+    expect(await gkb.Ok().extract()).toEqual({
+      key,
+      keyStr,
+    });
+    sthis.env.set("FP_KEYBAG_URL", old);
+    await sthis.logger.Flush();
+    expect(sthis.logCollector.Logs()).toEqual([
+      {
+        level: "warn",
+        module: "KeyBag",
+        msg: "extractKey is enabled --- hopefully you know what you are doing!!!",
+      },
+    ]);
+  });
+
   it("simple add", async () => {
     const kb = await rt.kb.getKeyBag(sthis, {
       url: url.toString(),
