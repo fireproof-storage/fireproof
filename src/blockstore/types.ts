@@ -111,9 +111,18 @@ export interface EncryptedBlock {
   readonly value: IvAndBytes;
 }
 
+export interface KeyMaterial {
+  readonly key: Uint8Array;
+  readonly keyStr: string;
+}
+
 export interface KeyWithFingerPrint {
   readonly fingerPrint: string;
   readonly key: CTCryptoKey;
+}
+
+export interface KeyWithFingerExtract extends KeyWithFingerPrint {
+  extract(): Promise<KeyMaterial>;
 }
 
 export interface CodecOpts {
