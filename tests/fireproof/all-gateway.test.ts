@@ -297,6 +297,54 @@ describe("noop Gateway", function () {
   });
 });
 
+describe("noop Gateway subscribe", function () {
+  let db: Database;
+
+  let metaStore: ExtendedStore;
+
+  let metaGateway: ExtendedGateway;
+
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+  });
+  beforeEach(async function () {
+    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+
+    // Extract stores from the loader
+    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+
+    metaGateway = metaStore?.gateway;
+  });
+  it("should subscribe to meta Gateway", async function () {
+    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
+    await metaGateway?.start(metaStore?._url);
+
+    if (metaGateway.subscribe) {
+      let resolve: () => void;
+      let didCall = false;
+      const p = new Promise<void>((r) => {
+        resolve = r;
+      });
+
+      const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
+        const decodedData = new TextDecoder().decode(data);
+        expect(decodedData).toContain("parents");
+        didCall = true
+        resolve();
+      });
+      expect(metaSubscribeResult?.Ok()).toBeTruthy();
+      const ok = await db.put({ _id: "key1", hello: "world1" });
+      expect(ok).toBeTruthy();
+      expect(ok.id).toBe("key1");
+      await p
+      expect(didCall).toBeTruthy();
+    }
+  });
+    
+  });
+});
+
 describe("Gateway", function () {
   let db: Database;
   // let carStore: ExtendedStore;
