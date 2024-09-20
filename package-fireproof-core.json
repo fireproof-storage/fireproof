@@ -35,8 +35,11 @@
   },
   "dependencies": {
     "@adviser/cement": "from-package-json",
+    "multiformats": "from-package-json",
     "@ipld/unixfs": "from-package-json",
     "@ipld/car": "from-package-json",
+    "@ipld/dag-json": "from-package-json",
+    "@ipld/dag-cbor": "from-package-json",
     "@web3-storage/pail": "from-package-json",
     "cborg": "from-package-json",
     "charwise": "from-package-json",
