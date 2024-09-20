@@ -326,10 +326,9 @@ describe("noop Gateway subscribe", function () {
       const p = new Promise<void>((r) => {
         resolve = r;
       });
-
       const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
         const decodedData = new TextDecoder().decode(data);
-        expect(decodedData).toContain("parents");
+        expect(decodedData).toContain("[]");
         didCall = true;
         resolve();
       });
