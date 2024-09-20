@@ -27,7 +27,7 @@ import { parseCarFile } from "./loader-helpers.js";
 import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import type { Falsy, SuperThis } from "../types.js";
-import { getKeyBag } from "../runtime/key-bag.js";
+import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
@@ -58,9 +58,9 @@ export class Loader implements Loadable {
   readonly ebOpts: BlockstoreRuntime;
   readonly commitQueue: CommitQueue<CarGroup> = new CommitQueue<CarGroup>();
   readonly isCompacting = false;
-  readonly carReaders = new Map<string, Promise<CarReader>>();
-  readonly seenCompacted = new Set<string>();
-  readonly processedCars = new Set<string>();
+  readonly carReaders: Map<string, Promise<CarReader>> = new Map<string, Promise<CarReader>>();
+  readonly seenCompacted: Set<string> = new Set<string>();
+  readonly processedCars: Set<string> = new Set<string>();
   readonly sthis: SuperThis;
   readonly taskManager?: TaskManager;
 
@@ -77,7 +77,7 @@ export class Loader implements Loadable {
 
   // readonly id = uuidv4();
 
-  async keyBag() {
+  async keyBag(): Promise<KeyBag> {
     return getKeyBag(this.sthis, this.ebOpts.keyBag);
   }
 
@@ -96,7 +96,7 @@ export class Loader implements Loadable {
     return this.ebOpts.storeRuntime.makeMetaStore(this);
   }
 
-  readonly onceReady = new ResolveOnce<void>();
+  readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       const metas = await (await this.metaStore()).load();
@@ -399,7 +399,7 @@ export class Loader implements Loadable {
     return loaded;
   }
 
-  async makeDecoderAndCarReader(cid: AnyLink, local: DataStore, remote?: DataStore) {
+  async makeDecoderAndCarReader(cid: AnyLink, local: DataStore, remote?: DataStore): Promise<CarReader> {
     const cidsString = cid.toString();
     let loadedCar: AnyBlock | undefined = undefined;
     let activeStore: BaseStore = local;

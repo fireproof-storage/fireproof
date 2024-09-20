@@ -1,8 +1,10 @@
-import { URI } from "@adviser/cement";
-import { bs, ensureSuperLog, Logger, Result, SuperThis } from "@fireproof/core";
+import { Logger, Result, URI } from "@adviser/cement";
 
 import { base58btc } from "multiformats/bases/base58";
 import { encode, decode } from "cborg";
+import { Gateway, GetResult, VoidResult } from "./gateway.js";
+import { SuperThis } from "../types.js";
+import { ensureSuperLog } from "../utils.js";
 
 function getFragSize(url: URI): number {
   const fragSize = url.getParam("fragSize");
@@ -16,7 +18,7 @@ function getFragSize(url: URI): number {
   return ret;
 }
 
-async function getFrags(url: URI, innerGW: bs.Gateway, headerSize: number, logger: Logger): Promise<Result<Fragment>[]> {
+async function getFrags(url: URI, innerGW: Gateway, headerSize: number, logger: Logger): Promise<Result<Fragment>[]> {
   const fragSize = getFragSize(url);
   if (!fragSize) {
     const res = await innerGW.get(url);
@@ -75,21 +77,21 @@ interface Fragment {
   readonly data: Uint8Array;
 }
 
-export class FragmentGateway implements bs.Gateway {
+export class FragmentGateway implements Gateway {
   readonly sthis: SuperThis;
   readonly logger: Logger;
   readonly fidLength = 4;
 
-  readonly innerGW: bs.Gateway;
+  readonly innerGW: Gateway;
   headerSize = 32;
 
-  constructor(sthis: SuperThis, innerGW: bs.Gateway) {
+  constructor(sthis: SuperThis, innerGW: Gateway) {
     this.sthis = ensureSuperLog(sthis, "FragmentGateway");
     this.logger = this.sthis.logger;
     this.innerGW = innerGW;
   }
 
-  slicer(url: URI, body: Uint8Array): Promise<bs.VoidResult>[] {
+  slicer(url: URI, body: Uint8Array): Promise<VoidResult>[] {
     const fragSize = getFragSize(url);
     if (!fragSize) {
       return [this.innerGW.put(url, body)];
@@ -103,7 +105,7 @@ export class FragmentGateway implements bs.Gateway {
         .Msg("Fragment size is too small")
         .AsError();
     }
-    const ops: Promise<bs.VoidResult>[] = [];
+    const ops: Promise<VoidResult>[] = [];
     const fid = this.sthis.nextId(this.fidLength);
     const fragUrl = url
       .build()
@@ -144,16 +146,16 @@ export class FragmentGateway implements bs.Gateway {
     return this.innerGW.start(url);
   }
 
-  async close(url: URI): Promise<bs.VoidResult> {
+  async close(url: URI): Promise<VoidResult> {
     return this.innerGW.close(url);
   }
 
-  async put(url: URI, body: Uint8Array): Promise<bs.VoidResult> {
+  async put(url: URI, body: Uint8Array): Promise<VoidResult> {
     await Promise.all(this.slicer(url, body));
     return Result.Ok(undefined);
   }
 
-  async get(url: URI): Promise<bs.GetResult> {
+  async get(url: URI): Promise<GetResult> {
     const rfrags = await getFrags(url, this.innerGW, this.headerSize, this.logger);
     let buffer: Uint8Array | undefined = undefined;
     for (const rfrag of rfrags) {
@@ -167,7 +169,7 @@ export class FragmentGateway implements bs.Gateway {
     return Result.Ok(buffer || new Uint8Array(0));
   }
 
-  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<bs.VoidResult> {
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<VoidResult> {
     if (this.innerGW.subscribe) {
       return this.innerGW.subscribe(url, callback);
     } else {
@@ -195,7 +197,7 @@ export class FragmentGateway implements bs.Gateway {
     }
   }
 
-  async delete(url: URI): Promise<bs.VoidResult> {
+  async delete(url: URI): Promise<VoidResult> {
     const rfrags = await getFrags(url, this.innerGW, this.headerSize, this.logger);
     for (const rfrag of rfrags) {
       if (rfrag.isErr()) {

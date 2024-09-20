@@ -29,14 +29,14 @@ import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
 
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
-  static databases = new Map<string, Database>();
+  static databases: Map<string, Database> = new Map<string, Database>();
 
   readonly name?: string;
   readonly opts: ConfigOpts = {};
 
   _listening = false;
-  readonly _listeners = new Set<ListenerFn<DT>>();
-  readonly _noupdate_listeners = new Set<ListenerFn<DT>>();
+  readonly _listeners: Set<ListenerFn<DT>> = new Set<ListenerFn<DT>>();
+  readonly _noupdate_listeners: Set<ListenerFn<DT>> = new Set<ListenerFn<DT>>();
   readonly _crdt: CRDT<DT>;
   readonly _writeQueue: WriteQueue<DT>;
   readonly blockstore: BaseBlockstore;
@@ -53,8 +53,8 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     await this.blockstore.destroy();
   }
 
-  readonly _ready = new ResolveOnce<void>();
-  async ready() {
+  readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
+  async ready(): Promise<void> {
     return this._ready.once(async () => {
       await this.sthis.start();
       await this._crdt.ready();

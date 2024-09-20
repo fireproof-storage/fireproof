@@ -63,7 +63,7 @@ export function getFileName(url: URI, sthis: SuperThis): string {
   }
 }
 
-export function toArrayBuffer(buffer: Buffer | string) {
+export function toArrayBuffer(buffer: Buffer | string): Uint8Array {
   if (typeof buffer === "string") {
     buffer = Buffer.from(buffer);
   }

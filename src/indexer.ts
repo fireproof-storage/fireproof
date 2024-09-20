@@ -64,8 +64,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   name: string;
   mapFn?: MapFn<T>;
   mapFnString = "";
-  byKey = new IndexTree<K, R>();
-  byId = new IndexTree<K, R>();
+  byKey: IndexTree<K, R> = new IndexTree<K, R>();
+  byId: IndexTree<K, R> = new IndexTree<K, R>();
   indexHead?: ClockHead;
   includeDocsDefault = false;
   initError?: Error;
