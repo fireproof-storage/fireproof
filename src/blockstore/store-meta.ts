@@ -24,7 +24,7 @@ async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8
   );
 }
 
-export async function setCryptoKeyFromGatewayMetaPayload(sthis: SuperThis, data: Uint8Array, uri: URI): Promise<void> {
+export async function setCryptoKeyFromGatewayMetaPayload(uri: URI, sthis: SuperThis, data: Uint8Array): Promise<void> {
   const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
   if (keyInfo.length) {
     const dbMeta = keyInfo[0].dbMeta;
