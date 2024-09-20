@@ -7,6 +7,8 @@ import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 import { KeyBagOpts } from "./runtime/key-bag.js";
 
+export type { DbMeta };
+
 export type Falsy = false | null | undefined;
 
 export function isFalsy(value: unknown): value is Falsy {
