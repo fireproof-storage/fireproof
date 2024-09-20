@@ -6,8 +6,8 @@ export class CommitQueue<T = void> {
   readonly queue: QueueFunction<void>[] = [];
   processing = false;
 
-  readonly _waitIdleItems = new Set<Future<void>>();
-  waitIdle() {
+  readonly _waitIdleItems: Set<Future<void>> = new Set<Future<void>>();
+  waitIdle(): Promise<void> {
     if (this.queue.length === 0 && !this.processing) {
       return Promise.resolve();
     }

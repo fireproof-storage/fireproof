@@ -43,7 +43,10 @@ export class CRDT<T extends DocTypes> {
 
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
-  readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
+  readonly indexers: Map<string, Index<IndexKeyType, NonNullable<unknown>>> = new Map<
+    string,
+    Index<IndexKeyType, NonNullable<unknown>>
+  >();
   readonly clock: CRDTClock<T>;
 
   readonly logger: Logger;
@@ -114,7 +117,7 @@ export class CRDT<T extends DocTypes> {
     return done.meta;
   }
 
-  readonly onceReady = new ResolveOnce<void>();
+  readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       try {

@@ -25,8 +25,8 @@ export class KeyBag {
     this.logger.Debug().Msg("KeyBag created");
   }
 
-  readonly _warnOnce = new ResolveOnce();
-  async subtleKey(key: string) {
+  readonly _warnOnce: ResolveOnce<void> = new ResolveOnce<void>();
+  async subtleKey(key: string): Promise<CryptoKey> {
     const extractable = this.rt.url.getParam("extractKey") === "_deprecated_internal_api";
     if (extractable) {
       this._warnOnce.once(() =>
@@ -77,7 +77,7 @@ export class KeyBag {
     });
   }
 
-  readonly _seq = new ResolveSeq<Result<KeyWithFingerPrint>>();
+  readonly _seq: ResolveSeq<Result<KeyWithFingerPrint>> = new ResolveSeq<Result<KeyWithFingerPrint>>();
   async setNamedKey(name: string, key: string): Promise<Result<KeyWithFingerPrint>> {
     return this._seq.add(() => this._setNamedKey(name, key));
   }

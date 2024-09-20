@@ -14,16 +14,16 @@ export class CRDTClock<T extends DocTypes> {
   // should go with making sure the local clock only references locally available blockstore on write
   head: ClockHead = [];
 
-  readonly zoomers = new Set<() => void>();
-  readonly watchers = new Set<(updates: DocUpdate<T>[]) => void>();
-  readonly emptyWatchers = new Set<() => void>();
+  readonly zoomers: Set<() => void> = new Set<() => void>();
+  readonly watchers: Set<(updates: DocUpdate<T>[]) => void> = new Set<(updates: DocUpdate<T>[]) => void>();
+  readonly emptyWatchers: Set<() => void> = new Set<() => void>();
 
   readonly blockstore: BaseBlockstore;
 
   readonly applyHeadQueue: ApplyHeadQueue<T>;
 
-  readonly _ready = new ResolveOnce<void>();
-  async ready() {
+  readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
+  async ready(): Promise<void> {
     return this._ready.once(async () => {
       await this.blockstore.ready();
     });
@@ -44,7 +44,7 @@ export class CRDTClock<T extends DocTypes> {
     this.head = head;
   }
 
-  async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<T>[]) {
+  async applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<T>[]): Promise<void> {
     for await (const { updates: updatesAcc, all } of this.applyHeadQueue.push({
       newHead,
       prevHead,
