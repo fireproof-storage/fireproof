@@ -128,11 +128,15 @@ globalThis[Symbol.for("FP_PRESET_ENV")] = {
 };
 ```
 
+### Log Formatting
+
 It's possible to change the logformat by setting FP_FORMAT to:
 
 - jsonice makes the log output in multiline json
 - yaml makes the log output in yaml
 - json makes the log output in singleline json (default)
+
+### KeyBag
 
 If you add `extractKey` with the value `_deprecated_internal_api` to the `FP_STORAGE_URL` url
 you can bypass the security check to extract the key material. This is the default configuration,
@@ -142,7 +146,7 @@ but there is a warning emitted if you use this feature, and roadmap plans for mo
 
 Fireproof is compatible with Deno. To runit in Deno you need to add the following flags:
 
-Currently the hole tests are not run with deno -- TODO
+Currently the tests are not run with deno -- TODO
 
 It might be that using our provided deno.json is somekind of odd
 --- TODO is to add fireproof to jsr and deno.land
