@@ -5,7 +5,7 @@ import { Logger, ResolveOnce, URI } from "@adviser/cement";
 import { SuperThis } from "use-fireproof";
 
 export class KeyBagProviderIndexDB implements KeyBagProvider {
-  readonly _db = new ResolveOnce<IDBPDatabase<unknown>>();
+  readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
 
   readonly dbName: string;
   readonly url: URI;
@@ -18,7 +18,7 @@ export class KeyBagProviderIndexDB implements KeyBagProvider {
     this.dbName = getPath(this.url, this.sthis);
   }
 
-  async _prepare() {
+  async _prepare(): Promise<IDBPDatabase<unknown>> {
     return this._db.once(async () => {
       return await openDB(this.dbName, 1, {
         upgrade(db) {
