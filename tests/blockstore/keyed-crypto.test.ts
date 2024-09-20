@@ -58,7 +58,7 @@ describe("KeyBag", () => {
       {
         level: "warn",
         module: "KeyBag",
-        msg: "extractKey is enabled --- hopefully you know what you are doing!!!",
+        msg: "extractKey is enabled via _deprecated_internal_api --- handle keys safely!!!",
       },
     ]);
   });
