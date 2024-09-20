@@ -20,6 +20,20 @@ async function patchVersion(packageJson: Record<string, unknown>) {
   packageJson.version = version;
 }
 
+async function createDenoJson(destDir: string, packageJson: Record<string, unknown>) {
+  const denoJson = {
+    imports: {
+      "@fireproof/core": "./index.js",
+    },
+  };
+  const pdeps = packageJson.dependencies as Record<string, string>;
+  for (const dep of Object.keys(pdeps)) {
+    denoJson.imports[dep] = `npm:${dep}@${pdeps[dep]}`;
+  }
+  const denoJsonFile = path.join(destDir, "deno.json");
+  await fs.writeFile(denoJsonFile, JSON.stringify(denoJson, null, 2));
+}
+
 async function main() {
   $.verbose = true;
   const buildDest = process.argv[process.argv.length - 1];
@@ -45,6 +59,9 @@ async function main() {
     }
   }
   patchVersion(destPackageJson);
+
+  await createDenoJson(destDir, destPackageJson);
+
   const destPackageJsonFile = path.join(destDir, "package.json");
   await fs.writeFile(destPackageJsonFile, JSON.stringify(destPackageJson, null, 2));
   console.log(`Copied ${templateFile} to ${destDir} with version ${destPackageJson.version}`);

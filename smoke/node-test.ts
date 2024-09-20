@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { fireproof, PACKAGE_VERSION } from "@fireproof/core";
+import { fireproof, PACKAGE_VERSION, rt } from "@fireproof/core";
 
 async function main() {
   // console.log(fireproof);
@@ -14,7 +14,7 @@ async function main() {
   // const doc =
   await db.get("test");
 
-  console.log(`test working version:${PACKAGE_VERSION}`);
+  console.log(`${rt.runtimeFn().isDeno ? "DENO" : "NODE"} test working version:${PACKAGE_VERSION}`);
 }
 
 main().catch((e) => {
