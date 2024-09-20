@@ -10,12 +10,12 @@ import type {
   DbMeta,
   WALStore as WALStore,
   WALState,
-  KeyedCrypto,
-  MetaStore,
   LoadHandler,
+  KeyedCrypto,
+  Loadable,
   CarClockHead,
   CarClockLink,
-  Loadable,
+  MetaStore,
 } from "./types.js";
 import { Falsy, PARAM, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway, GatewayInterceptor } from "./gateway.js";
@@ -34,6 +34,7 @@ import pMap from "p-map";
 
 import { carLogIncludesGroup } from "./loader.js";
 import { InterceptorGateway } from "./interceptor-gateway.js";
+import { FPEnvelopeCar, FPEnvelopeFile, FPMsg2Car, FPMsgMatch2Envelope } from "./fp-envelope.js";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -49,7 +50,7 @@ export interface StoreOpts {
   readonly loader?: Loadable;
 }
 
-abstract class BaseStoreImpl {
+export abstract class BaseStoreImpl {
   // should be injectable
 
   abstract readonly storeType: StoreType;
