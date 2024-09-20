@@ -90,6 +90,7 @@ export class KeyBag {
     };
     const bag = await this.rt.getBag();
     this.logger.Debug().Str("name", name).Msg("setNamedKey");
+    // there should be a version that throws if key exists
     await bag.set(name, item);
     return await this.toKeyWithFingerPrint(item.key);
   }
