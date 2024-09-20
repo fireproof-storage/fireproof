@@ -128,15 +128,15 @@ globalThis[Symbol.for("FP_PRESET_ENV")] = {
 };
 ```
 
-it's possible to change the logformat by setting FP_FORMAT to:
+It's possible to change the logformat by setting FP_FORMAT to:
 
 - jsonice makes the log output in multiline json
 - yaml makes the log output in yaml
 - json makes the log output in singleline json (default)
 
-if you add extractKey with the value iknownwhatidoing to the url
-you can bypass the security check to the extractKey the keymaterial
-There is a warning emitted if you use this feature
+If you add `extractKey` with the value `_deprecated_internal_api` to the `FP_STORAGE_URL` url
+you can bypass the security check to extract the key material. This is the default configuration,
+but there is a warning emitted if you use this feature, and roadmap plans for more secure key management.
 
 ## Thanks 🙏
 
