@@ -40,7 +40,7 @@ describe("KeyBag", () => {
   it("extract keyMaterial", async () => {
     const dkb = await rt.kb.getKeyBag(sthis);
     const old = sthis.env.get("FP_KEYBAG_URL");
-    sthis.env.set("FP_KEYBAG_URL", BuildURI.from(dkb.rt.url).setParam("extractKey", "iknownwhatidoing").toString());
+    sthis.env.set("FP_KEYBAG_URL", BuildURI.from(dkb.rt.url).setParam("extractKey", "_deprecated_internal_api").toString());
     const kb = await rt.kb.getKeyBag(sthis);
     const key = kb.rt.crypto.randomBytes(kb.rt.keyLength);
     const keyStr = base58btc.encode(key);
