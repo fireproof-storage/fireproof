@@ -29,7 +29,9 @@ export class KeyBag {
   async subtleKey(key: string) {
     const extractable = this.rt.url.getParam("extractKey") === "_deprecated_internal_api";
     if (extractable) {
-      this._warnOnce.once(() => this.logger.Warn().Msg("extractKey is enabled via _deprecated_internal_api --- handle keys safely!!!"));
+      this._warnOnce.once(() =>
+        this.logger.Warn().Msg("extractKey is enabled via _deprecated_internal_api --- handle keys safely!!!"),
+      );
     }
     return await this.rt.crypto.importKey(
       "raw", // raw or jwk

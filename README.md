@@ -135,7 +135,7 @@ It's possible to change the logformat by setting FP_FORMAT to:
 - json makes the log output in singleline json (default)
 
 If you add `extractKey` with the value `_deprecated_internal_api` to the `FP_STORAGE_URL` url
-you can bypass the security check to extract the key material. This is the default configuruation, 
+you can bypass the security check to extract the key material. This is the default configuration,
 but there is a warning emitted if you use this feature, and roadmap plans for more secure key management.
 
 ## Thanks 🙏
