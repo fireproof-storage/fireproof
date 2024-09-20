@@ -1,7 +1,7 @@
 import { Logger } from "@adviser/cement";
 import type { CarClockLink, DbMeta } from "./types.js";
 import { ensureLogger } from "../utils.js";
-import { SuperThis } from "use-fireproof";
+import { SuperThis } from "../types.js";
 
 interface TaskItem {
   readonly cid: string;

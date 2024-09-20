@@ -7,10 +7,11 @@ const external = [
   "react",
   "fs",
   "fs/promises",
+  "node:fs",
+  "node:fs/promises",
   "util",
   "os",
   "url",
-  "node:fs",
   "node:path",
   "node:os",
   "node:url",
@@ -20,6 +21,7 @@ const external = [
 ];
 
 const stopFile = {
+  "node:fs/promises": "../../../bundle-not-impl.js",
   "fs/promises": "../../../bundle-not-impl.js",
   "../runtime/store-file.js": "../../bundle-not-impl.js",
   "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",

@@ -130,7 +130,7 @@ export interface CodecOpts {
   readonly noIVVerify: boolean;
 }
 export interface KeyedCrypto {
-  readonly ivLength: number;
+  readonly ivLength: number; // in bytes only 12 and 16 are allowed
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   readonly url: URI;

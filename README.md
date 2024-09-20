@@ -138,6 +138,19 @@ If you add `extractKey` with the value `_deprecated_internal_api` to the `FP_STO
 you can bypass the security check to extract the key material. This is the default configuration,
 but there is a warning emitted if you use this feature, and roadmap plans for more secure key management.
 
+### Deno
+
+Fireproof is compatible with Deno. To runit in Deno you need to add the following flags:
+
+Currently the hole tests are not run with deno -- TODO
+
+It might be that using our provided deno.json is somekind of odd
+--- TODO is to add fireproof to jsr and deno.land
+
+```shell
+deno run --config node_modules/@fireproof/core/deno.json --allow-read --allow-write --allow-env --unstable-sloppy-imports ./node-test.ts
+```
+
 ## Thanks 🙏
 
 Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.

@@ -28,7 +28,7 @@ const generateIV: Record<string, GenerateIVFn> = {
     calc: async (ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array> => {
       const hash = await hasher.digest(data);
       const hashBytes = new Uint8Array(hash.bytes);
-      const hashArray = new Uint8Array(ko.ivLength * 8);
+      const hashArray = new Uint8Array(ko.ivLength);
       for (let i = 0; i < hashBytes.length; i++) {
         hashArray[i % ko.ivLength] ^= hashBytes[i];
       }
@@ -119,12 +119,7 @@ class keyedCrypto implements KeyedCrypto {
     };
   }
   async _decrypt(data: IvAndBytes): Promise<Uint8Array> {
-    this.logger
-      .Debug()
-      .Len(data.bytes)
-      .Str("fp", this.key.fingerPrint)
-      // .Hash("iv", data.iv).Hash("bytes", data.bytes)
-      .Msg("decrypting");
+    this.logger.Debug().Len(data.bytes, "bytes").Len(data.iv, "iv").Str("fp", this.key.fingerPrint).Msg("decrypting");
     return new Uint8Array(await this.crypto.decrypt(this.algo(data.iv), this.key.key, data.bytes));
   }
   async _encrypt(data: BytesWithIv): Promise<Uint8Array> {

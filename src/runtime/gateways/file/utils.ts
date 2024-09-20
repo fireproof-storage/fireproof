@@ -12,11 +12,23 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
         fs = new MemFileSystem();
       }
       break;
-    case "node":
-    case "sys":
-    default: {
+    // case 'deno': {
+    //   const { DenoFileSystem } = await import("./deno-filesystem.js");
+    //   fs = new DenoFileSystem();
+    //   break;
+    // }
+    case "node": {
       const { NodeFileSystem } = await import("./node-filesystem.js");
       fs = new NodeFileSystem();
+      break;
+    }
+    case "sys":
+    default: {
+      // if (runtimeFn().isDeno) {
+      //   return getFileSystem(url.build().setParam("fs", "deno").URI());
+      // } else  {
+      return getFileSystem(url.build().setParam("fs", "node").URI());
+      // }
     }
   }
   return fs.start();
