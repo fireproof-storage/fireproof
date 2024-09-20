@@ -7,37 +7,70 @@ import { SuperThis, CRDTEntry, Falsy } from "../types.js";
 import { Link } from "multiformats";
 import { Result, URI } from "@adviser/cement";
 import { ensureLogger, isNotFoundError } from "../utils.js";
+import * as rt from "../runtime/index.js";
 
-export async function encodeGatewayDbMetaToBytes(sthis: SuperThis, dbMetas: DbMeta[]): Promise<Uint8Array> {
-  const events = await Promise.all(dbMetas.map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, [])));
+async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
+  const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
+  return Promise.all(
+    crdtEntries.map(async (crdtEntry) => {
+      const eventBlock = await decodeEventBlock<{ dbMeta: Uint8Array }>(decodeFromBase64(crdtEntry.data));
+      const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
+      return {
+        eventCid: eventBlock.cid as CarClockLink,
+        parents: crdtEntry.parents,
+        dbMeta: dbMeta,
+      };
+    }),
+  );
+}
+
+export async function setCryptoKeyFromGatewayMetaPayload(sthis: SuperThis, data: Uint8Array, uri: URI): Promise<void> {
+  const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
+  if (keyInfo.length) {
+    const dbMeta = keyInfo[0].dbMeta;
+    if (dbMeta.key) {
+      const kb = await rt.kb.getKeyBag(sthis);
+      const keyName = getStoreKeyName(uri);
+      const res = await kb.setNamedKey(keyName, dbMeta.key);
+      if (res.isErr()) {
+        throw res.Err();
+      }
+    }
+  }
+}
+
+export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThis, body: Uint8Array): Promise<Uint8Array> {
+  const keyName = getStoreKeyName(uri);
+  const kb = await rt.kb.getKeyBag(sthis);
+  const res = await kb.getNamedExtractableKey(keyName, true);
+  if (res.isErr()) {
+    throw new Error(`Failed to get named extractable key: ${keyName}`);
+  }
+  const keyData = await res.Ok().extract();
+  const dbMetas = await decodeGatewayMetaBytesToDbMeta(sthis, body);
+  const { dbMeta } = dbMetas[0] as { dbMeta: DbMeta };
+  dbMeta.key = keyData.keyStr;
+  const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, [])));
   return encodeEventsWithParents(sthis, events, []);
 }
 
-export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
-  const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
-  return Promise.all(crdtEntries.map(async (crdtEntry) => decodeMetaBlock(sthis, crdtEntry)));
-}
-
-async function decodeMetaBlock(
-  sthis: SuperThis,
-  crdtEntry: CRDTEntry,
-): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta; parents: string[] }> {
-  const eventBlock = await decodeEventBlock<{ dbMeta: Uint8Array }>(decodeFromBase64(crdtEntry.data));
-  const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
-  return {
-    eventCid: eventBlock.cid as CarClockLink,
-    parents: crdtEntry.parents,
-    dbMeta: dbMeta,
-  };
+function getStoreKeyName(url: URI): string {
+  const storeKeyName = [url.getParam("name")];
+  const idx = url.getParam("index");
+  if (idx) {
+    storeKeyName.push(idx);
+  }
+  storeKeyName.push("meta");
+  return `@${storeKeyName.join(":")}@`;
 }
 
 async function createDbMetaEventBlock(sthis: SuperThis, dbMeta: DbMeta, parents: CarClockHead): Promise<DbMetaEventBlock> {
-  // const toEncode: DbMeta = { cars: dbMeta.cars };
-  const encodedMeta = format(dbMeta);
-  const data = {
-    dbMeta: sthis.txt.encode(encodedMeta),
-  };
-  const event = await EventBlock.create(data, parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[]);
+  const event = await EventBlock.create(
+    {
+      dbMeta: sthis.txt.encode(format(dbMeta)),
+    },
+    parents as unknown as Link<EventView<{ dbMeta: Uint8Array }>, number, number, 1>[],
+  );
   return event as EventBlock<{ dbMeta: Uint8Array }>;
 }
 
@@ -81,18 +114,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   }
 
   async handleByteHeads(byteHeads: Uint8Array) {
-    // try {
     return await decodeGatewayMetaBytesToDbMeta(this.sthis, byteHeads);
-    // } catch (e) {
-    //   throw this.logger.Error().Err(e).Msg("parseHeader").AsError();
-    // }
   }
-
-  // async handleEventByteHead(byteHead: Uint8Array) {
-  //   const crdtEntry = JSON.parse(this.sthis.txt.decode(byteHead)) as CRDTEntry;
-  //   const { eventCid, dbMeta, parents } = await decodeMetaBlock(this.sthis, crdtEntry);
-  //   this.loader?.taskManager?.handleEvent(eventCid, parents, dbMeta);
-  // }
 
   async load(): Promise<DbMeta[] | Falsy> {
     const branch = "main";
@@ -118,7 +141,6 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
-    // below is same as: const bytes = await encodeGatewayDbMetaToBytes(this.sthis, [meta]) but we need the event cid
     const event = await createDbMetaEventBlock(this.sthis, meta, this.parents);
     const bytes = await encodeEventsWithParents(this.sthis, [event], this.parents);
     const url = await this.gateway.buildUrl(this.url(), branch);
