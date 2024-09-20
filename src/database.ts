@@ -28,8 +28,6 @@ import type {
 import { BaseBlockstore, Connectable } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
 
-export { Connectable };
-
 export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
   static databases = new Map<string, Database>();
 
