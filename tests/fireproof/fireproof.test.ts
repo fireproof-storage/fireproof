@@ -1,4 +1,4 @@
-import { mockSuperThis, sleep, storageURL } from "../helpers.js";
+import { mockSuperThis, sleep } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
@@ -621,21 +621,21 @@ describe("same workload twice, same CID", function () {
   // let configA: any;
   // let configB: any;
 
-  const configA = {
-    store: {
-      stores: {
-        base: storageURL(sthis).build().setParam("storekey", "@test@"),
-      },
-    },
-  };
+  // const configA = {
+  //   store: {
+  //     stores: {
+  //       base: storageURL(sthis).build().setParam("storekey", "@test@"),
+  //     },
+  //   },
+  // };
 
-  const configB = {
-    store: {
-      stores: {
-        base: storageURL(sthis).build().setParam("storekey", "@test@"),
-      },
-    },
-  };
+  // const configB = {
+  //   store: {
+  //     stores: {
+  //       base: storageURL(sthis).build().setParam("storekey", "@test@"),
+  //     },
+  //   },
+  // };
 
   afterEach(async function () {
     await dbA.close();
