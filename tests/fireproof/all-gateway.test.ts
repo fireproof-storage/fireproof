@@ -388,6 +388,7 @@ describe("Gateway", function () {
   it("should delete data from Meta Gateway", async function () {
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
+    // should we be testing .destroy() instead?
     const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
     expect(metaDeleteResult?.Ok()).toBeFalsy();
   });
