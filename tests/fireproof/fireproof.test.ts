@@ -1,4 +1,4 @@
-import { mockSuperThis, sleep, storageURL } from "../helpers.js";
+import { mockSuperThis, sleep } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
@@ -621,21 +621,21 @@ describe("same workload twice, same CID", function () {
   // let configA: any;
   // let configB: any;
 
-  const configA = {
-    store: {
-      stores: {
-        base: storageURL(sthis).build().setParam("storekey", "@test@"),
-      },
-    },
-  };
+  // const configA = {
+  //   store: {
+  //     stores: {
+  //       base: storageURL(sthis).build().setParam("storekey", "@test@"),
+  //     },
+  //   },
+  // };
 
-  const configB = {
-    store: {
-      stores: {
-        base: storageURL(sthis).build().setParam("storekey", "@test@"),
-      },
-    },
-  };
+  // const configB = {
+  //   store: {
+  //     stores: {
+  //       base: storageURL(sthis).build().setParam("storekey", "@test@"),
+  //     },
+  //   },
+  // };
 
   afterEach(async function () {
     await dbA.close();
@@ -647,7 +647,7 @@ describe("same workload twice, same CID", function () {
     let ok: DocResponse;
     await sthis.start();
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbA = fireproof("test-dual-workload-a", configA);
+    dbA = fireproof("test-dual-workload-a");
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
@@ -656,7 +656,7 @@ describe("same workload twice, same CID", function () {
     headA = dbA._crdt.clock.head.toString();
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbB = fireproof("test-dual-workload-b", configB);
+    dbB = fireproof("test-dual-workload-b");
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
