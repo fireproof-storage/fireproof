@@ -56,8 +56,9 @@ export abstract class ConnectionBase implements Connection {
     const metaUrl = this.url.build().defParam("store", "meta").URI();
     const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
-    const name = metaUrl.toString();
-    const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
+    const dbName = metaUrl.getParam("name");
+    if (!dbName) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: name is required").AsError();
+    const remote = await RemoteMetaStore(loader.sthis, dbName, metaUrl, {
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
       loader,
@@ -78,7 +79,8 @@ export abstract class ConnectionBase implements Connection {
     const dataUrl = this.url.build().defParam("store", "data").URI();
     const gateway = await getGatewayFromURL(dataUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
-    const name = dataUrl.toString();
+    const name = dataUrl.getParam("name");
+    if (!name) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: name is required").AsError;
     loader.remoteCarStore = await RemoteDataStore(loader.sthis, name, this.url, {
       gateway: gateway.gateway,
       keybag: () => getKeyBag(loader.sthis, this.loader?.ebOpts.keyBag),

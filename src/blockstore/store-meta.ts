@@ -24,7 +24,11 @@ async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8
   );
 }
 
-export async function setCryptoKeyFromGatewayMetaPayload(uri: URI, sthis: SuperThis, data: Uint8Array): Promise<void> {
+export async function setCryptoKeyFromGatewayMetaPayload(
+  uri: URI,
+  sthis: SuperThis,
+  data: Uint8Array,
+): Promise<DbMeta | undefined> {
   const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
   if (keyInfo.length) {
     const dbMeta = keyInfo[0].dbMeta;
@@ -36,6 +40,7 @@ export async function setCryptoKeyFromGatewayMetaPayload(uri: URI, sthis: SuperT
         throw res.Err();
       }
     }
+    return dbMeta;
   }
 }
 
@@ -60,7 +65,7 @@ function getStoreKeyName(url: URI): string {
   if (idx) {
     storeKeyName.push(idx);
   }
-  storeKeyName.push("meta");
+  storeKeyName.push("data");
   return `@${storeKeyName.join(":")}@`;
 }
 
@@ -109,7 +114,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     );
     if (remote && opts.gateway.subscribe) {
       this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway");
-      opts.gateway.subscribe(url, (byteHead: Uint8Array) => this.handleByteHeads(byteHead));
+      opts.gateway.subscribe(url, (message: Uint8Array) => decodeGatewayMetaBytesToDbMeta(this.sthis, message));
     }
   }
 
@@ -121,7 +126,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const branch = "main";
     const url = await this.gateway.buildUrl(this.url(), branch);
     if (url.isErr()) {
-      throw this.logger.Error().Result("buidUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
+      throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
     const bytes = await this.gateway.get(url.Ok());
     if (bytes.isErr()) {
