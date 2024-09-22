@@ -114,8 +114,14 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       ensureLogger(sthis, "MetaStoreImpl"),
     );
     if (remote && opts.gateway.subscribe) {
-      this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway");
-      opts.gateway.subscribe(url, (message: Uint8Array) => decodeGatewayMetaBytesToDbMeta(this.sthis, message));
+      this.onStarted(async () => {
+        this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
+        opts.gateway.subscribe?.(this.url(), async (message: Uint8Array) => {
+          this.logger.Debug().Msg("Received message from gateway");
+          const dbMetas = await decodeGatewayMetaBytesToDbMeta(this.sthis, message);
+          await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta));
+        });
+      });
     }
   }
 
