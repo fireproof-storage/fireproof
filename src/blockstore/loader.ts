@@ -67,7 +67,7 @@ export class Loader implements Loadable {
   carLog: CarLog = [];
   // key?: string;
   // keyId?: string;
-  // remoteMetaStore?: RemoteMetaStore;
+  remoteMetaStore?: MetaStore;
   remoteCarStore?: DataStore;
   remoteFileStore?: DataStore;
 
