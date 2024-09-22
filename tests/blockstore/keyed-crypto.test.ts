@@ -134,7 +134,8 @@ describe("KeyedCryptoStore", () => {
       baseUrl = URI.from("indexdb://fp-keyed-crypto-store");
     } else {
       kbUrl = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
-      baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", sthis.env.get("FP_STORAGE_URL"));
+      // baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", sthis.env.get("FP_STORAGE_URL"));
+      baseUrl = URI.from(sthis.env.get("FP_STORAGE_URL"));
     }
     kb = await rt.kb.getKeyBag(sthis, {
       url: kbUrl,

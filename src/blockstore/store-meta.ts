@@ -49,7 +49,8 @@ export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThi
   const kb = await rt.kb.getKeyBag(sthis);
   const res = await kb.getNamedExtractableKey(keyName, true);
   if (res.isErr()) {
-    throw new Error(`Failed to get named extractable key: ${keyName}`);
+    sthis.logger.Error().Str("keyName", keyName).Msg("Failed to get named extractable key");
+    return body;
   }
   const keyData = await res.Ok().extract();
   const dbMetas = await decodeGatewayMetaBytesToDbMeta(sthis, body);

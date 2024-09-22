@@ -647,7 +647,7 @@ describe("same workload twice, same CID", function () {
     let ok: DocResponse;
     await sthis.start();
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbA = fireproof("test-dual-workload-a", configA);
+    dbA = fireproof("test-dual-workload-a");
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
@@ -656,7 +656,7 @@ describe("same workload twice, same CID", function () {
     headA = dbA._crdt.clock.head.toString();
 
     // todo this fails because the test setup doesn't properly configure both databases to use the same key
-    dbB = fireproof("test-dual-workload-b", configB);
+    dbB = fireproof("test-dual-workload-b");
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
