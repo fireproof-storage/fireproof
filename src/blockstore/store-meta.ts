@@ -4,7 +4,7 @@ import { EventView } from "@web3-storage/pail/clock/api";
 import { BaseStoreImpl, StoreOpts } from "./store.js";
 import type { DbMeta, MetaStore, CarClockHead, DbMetaEventBlock, CarClockLink, LoadHandler } from "./types.js";
 import { SuperThis, CRDTEntry, Falsy } from "../types.js";
-import { Link } from "multiformats";
+import { CID, Link } from "multiformats";
 import { Result, URI } from "@adviser/cement";
 import { ensureLogger, isNotFoundError } from "../utils.js";
 import * as rt from "../runtime/index.js";
@@ -54,10 +54,11 @@ export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThi
   }
   const keyData = await res.Ok().extract();
   const dbMetas = await decodeGatewayMetaBytesToDbMeta(sthis, body);
-  const { dbMeta } = dbMetas[0] as { dbMeta: DbMeta };
+  const { dbMeta, parents } = dbMetas[0]; // as { dbMeta: DbMeta };
+  const parentLinks = parents.map((p) => CID.parse(p) as CarClockLink);
   dbMeta.key = keyData.keyStr;
-  const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, [])));
-  return encodeEventsWithParents(sthis, events, []);
+  const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, parentLinks)));
+  return encodeEventsWithParents(sthis, events, parentLinks);
 }
 
 function getStoreKeyName(url: URI): string {
@@ -119,7 +120,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
         opts.gateway.subscribe?.(this.url(), async (message: Uint8Array) => {
           this.logger.Debug().Msg("Received message from gateway");
           const dbMetas = await decodeGatewayMetaBytesToDbMeta(this.sthis, message);
-          await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta));
+          await Promise.all(
+            dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
+          );
         });
       });
     }
