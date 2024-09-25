@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.28
-        version: 0.2.28
+        specifier: ^0.2.29
+        version: 0.2.29(typescript@5.5.4)
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -107,7 +107,7 @@ importers:
         version: 7.6.3
       tsup:
         specifier: ^8.2.3
-        version: 8.2.4(postcss@8.4.45)(tsx@4.19.1)(typescript@5.5.4)
+        version: 8.2.4(postcss@8.4.45)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1)
       tsx:
         specifier: ^4.19.1
         version: 4.19.1
@@ -139,8 +139,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.28':
-    resolution: {integrity: sha512-M4PmNUZPV90/AEo6yqKQ2uhh9kfCmJzkqasG8GzQOw9ONJv0Zn4zHNLgcvSgIr5k0AOpLd/dL6Fc5vQSERow+Q==}
+  '@adviser/cement@0.2.29':
+    resolution: {integrity: sha512-QcFXTCG1nyp3SxKoAT1AUS/CUBPx82VJZllFOAawuds83XRqx0DKcMh0cUGyd7FTSwuZpsEZzJJkWU1OD20pjA==}
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -486,10 +486,6 @@ packages:
 
   '@eslint/eslintrc@3.1.0':
     resolution: {integrity: sha512-4Bfj15dVJdoy3RfZmmo86RK1Fwzn6SstsvK9JS+BaVKqC6QQQQyXekNaC+g+LKNgkQ+2VhGAzm6hO40AhMR3zQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@eslint/js@9.10.0':
-    resolution: {integrity: sha512-fuXtbiP5GWIn8Fz+LWoOMVf/Jxm+aajZYkhi6CuEm4SxymFM+eUWzbO9qXT+L0iCkL5+KGYMCSGxo686H19S1g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/js@9.11.0':
@@ -2597,6 +2593,14 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
+  ts-essentials@10.0.2:
+    resolution: {integrity: sha512-Xwag0TULqriaugXqVdDiGZ5wuZpqABZlpwQ2Ho4GDyiu/R2Xjkp/9+zcFxL7uzeLl/QCPrflnvpVYyS3ouT7Zw==}
+    peerDependencies:
+      typescript: '>=4.5.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
@@ -2885,6 +2889,11 @@ packages:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
 
+  yaml@2.5.1:
+    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
+    engines: {node: '>= 14'}
+    hasBin: true
+
   yargs-parser@21.1.1:
     resolution: {integrity: sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw==}
     engines: {node: '>=12'}
@@ -2921,7 +2930,12 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.28': {}
+  '@adviser/cement@0.2.29(typescript@5.5.4)':
+    dependencies:
+      ts-essentials: 10.0.2(typescript@5.5.4)
+      yaml: 2.5.1
+    transitivePeerDependencies:
+      - typescript
 
   '@ampproject/remapping@2.3.0':
     dependencies:
@@ -3142,8 +3156,6 @@ snapshots:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
-
-  '@eslint/js@9.10.0': {}
 
   '@eslint/js@9.11.0': {}
 
@@ -5002,12 +5014,13 @@ snapshots:
       fsevents: 2.3.2
     optional: true
 
-  postcss-load-config@6.0.1(postcss@8.4.45)(tsx@4.19.1):
+  postcss-load-config@6.0.1(postcss@8.4.45)(tsx@4.19.1)(yaml@2.5.1):
     dependencies:
       lilconfig: 3.1.2
     optionalDependencies:
       postcss: 8.4.45
       tsx: 4.19.1
+      yaml: 2.5.1
 
   postcss@8.4.45:
     dependencies:
@@ -5409,6 +5422,10 @@ snapshots:
     dependencies:
       typescript: 5.5.4
 
+  ts-essentials@10.0.2(typescript@5.5.4):
+    optionalDependencies:
+      typescript: 5.5.4
+
   ts-interface-checker@0.1.13: {}
 
   tsconfck@3.1.0(typescript@5.5.4):
@@ -5417,7 +5434,7 @@ snapshots:
 
   tslib@2.6.2: {}
 
-  tsup@8.2.4(postcss@8.4.45)(tsx@4.19.1)(typescript@5.5.4):
+  tsup@8.2.4(postcss@8.4.45)(tsx@4.19.1)(typescript@5.5.4)(yaml@2.5.1):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.23.1)
       cac: 6.7.14
@@ -5429,7 +5446,7 @@ snapshots:
       globby: 11.1.0
       joycon: 3.1.1
       picocolors: 1.0.1
-      postcss-load-config: 6.0.1(postcss@8.4.45)(tsx@4.19.1)
+      postcss-load-config: 6.0.1(postcss@8.4.45)(tsx@4.19.1)(yaml@2.5.1)
       resolve-from: 5.0.0
       rollup: 4.20.0
       source-map: 0.8.0-beta.0
@@ -5717,6 +5734,8 @@ snapshots:
   ws@8.18.0: {}
 
   y18n@5.0.8: {}
+
+  yaml@2.5.1: {}
 
   yargs-parser@21.1.1: {}
 
