@@ -30,7 +30,7 @@ export async function setCryptoKeyFromGatewayMetaPayload(
   data: Uint8Array,
 ): Promise<Result<DbMeta | undefined>> {
   try {
-    console.log("Setting crypto key from gateway meta payload", uri.toString());
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Setting crypto key from gateway meta payload");
     const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
     if (keyInfo.length) {
       const dbMeta = keyInfo[0].dbMeta;
@@ -39,24 +39,24 @@ export async function setCryptoKeyFromGatewayMetaPayload(
         const keyName = getStoreKeyName(uri);
         const res = await kb.setNamedKey(keyName, dbMeta.key);
         if (res.isErr()) {
-          console.log("Failed to set named key", keyName, dbMeta.key);
+          sthis.logger.Debug().Str("keyName", keyName).Str("dbMeta.key", dbMeta.key).Msg("Failed to set named key");
           throw res.Err();
         }
       }
-      console.log("Set crypto key from gateway meta payload", dbMeta.key, uri.toString());
+      sthis.logger.Debug().Str("dbMeta.key", dbMeta.key).Str("uri", uri.toString()).Msg("Set crypto key from gateway meta payload");
       return Result.Ok(dbMeta);
     }
-    console.log("No crypto in gateway meta payload", new TextDecoder().decode(data));
+    sthis.logger.Debug().Str("data", new TextDecoder().decode(data)).Msg("No crypto in gateway meta payload");
     return Result.Ok(undefined);
   } catch (error) {
-    console.log("Failed to set crypto key from gateway meta payload", error);
+    sthis.logger.Debug().Err(error).Msg("Failed to set crypto key from gateway meta payload");
     return Result.Err(error as Error);
   }
 }
 
 export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThis, body: Uint8Array): Promise<Result<Uint8Array>> {
   try {
-    console.log("Adding crypto key to gateway meta payload", uri.toString());
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Adding crypto key to gateway meta payload");
     const keyName = getStoreKeyName(uri);
     const kb = await rt.kb.getKeyBag(sthis);
     const res = await kb.getNamedExtractableKey(keyName, true);
@@ -71,10 +71,10 @@ export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThi
     dbMeta.key = keyData.keyStr;
     const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, parentLinks)));
     const encoded = await encodeEventsWithParents(sthis, events, parentLinks);
-    console.log("Added crypto key to gateway meta payload", uri.toString());
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Added crypto key to gateway meta payload");
     return Result.Ok(encoded);
   } catch (error) {
-    console.error("Failed to add crypto key to gateway meta payload", error);
+    sthis.logger.Error().Err(error).Msg("Failed to add crypto key to gateway meta payload");
     return Result.Err(error as Error);
   }
 }
