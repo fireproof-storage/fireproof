@@ -80,7 +80,7 @@ export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThi
 }
 
 function getStoreKeyName(url: URI): string {
-  const storeKeyName = [url.getParam("name")];
+  const storeKeyName = [url.getParam("localName") || url.getParam("name")];
   const idx = url.getParam("index");
   if (idx) {
     storeKeyName.push(idx);
