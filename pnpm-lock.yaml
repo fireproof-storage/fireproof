@@ -42,8 +42,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       ipfs-unixfs-exporter:
-        specifier: ^13.5.0
-        version: 13.5.0
+        specifier: ^13.6.1
+        version: 13.6.1
       memfs:
         specifier: ^4.12.0
         version: 4.12.0
@@ -488,10 +488,6 @@ packages:
     resolution: {integrity: sha512-4Bfj15dVJdoy3RfZmmo86RK1Fwzn6SstsvK9JS+BaVKqC6QQQQyXekNaC+g+LKNgkQ+2VhGAzm6hO40AhMR3zQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@eslint/js@9.10.0':
-    resolution: {integrity: sha512-fuXtbiP5GWIn8Fz+LWoOMVf/Jxm+aajZYkhi6CuEm4SxymFM+eUWzbO9qXT+L0iCkL5+KGYMCSGxo686H19S1g==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   '@eslint/js@9.11.0':
     resolution: {integrity: sha512-LPkkenkDqyzTFauZLLAPhIb48fj6drrfMvRGSL9tS3AcZBSVTllemLSNyCvHNNL2t797S/6DJNSIwRwXgMO/eQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
@@ -542,6 +538,10 @@ packages:
 
   '@ipld/dag-pb@4.0.8':
     resolution: {integrity: sha512-693AqMY2jvhe+w4jSwjnDrbhxIu39gm1H4f6/KD5gG+6VFMM6EXV7vq85BvEf8CRsnA0+auWfA29/S8gbWI0Ew==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+
+  '@ipld/dag-pb@4.1.2':
+    resolution: {integrity: sha512-BSztO4l3C+ya9HjCaQot26Y4AVsqIKtnn6+23ubc1usucnf6yoTBme18oCCdM6gKBMxuPqju5ye3lh9WEJsdeQ==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/unixfs@3.0.0':
@@ -1628,9 +1628,8 @@ packages:
     resolution: {integrity: sha512-GGTKBX4SD7Wdb8mqeDLni2oaRGYQWjWHGKPQ24ZMnUtKfcsVoiv4uX8+LJr1K6U5VW2Lu1BwJnj7uiori0YtRw==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
-  hamt-sharding@3.0.2:
-    resolution: {integrity: sha512-f0DzBD2tSmLFdFsLAvOflIBqFPjerbA7BfmwO8mVho/5hXwgyyYhv+ijIzidQf/DpDX3bRjAQvhGoBFj+DBvPw==}
-    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+  hamt-sharding@3.0.6:
+    resolution: {integrity: sha512-nZeamxfymIWLpVcAN0CRrb7uVq3hCOGj9IcL6NMA6VVCVWqj+h9Jo/SmaWuS92AEDf1thmHsM5D5c70hM3j2Tg==}
 
   happy-dom@14.12.3:
     resolution: {integrity: sha512-vsYlEs3E9gLwA1Hp+w3qzu+RUDFf4VTT8cyKqVICoZ2k7WM++Qyd2LwzyTi5bqMJFiIC/vNpTDYuxdreENRK/g==}
@@ -1707,18 +1706,18 @@ packages:
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
 
-  interface-blockstore@5.2.9:
-    resolution: {integrity: sha512-2nyiiOcmGSE5Z0K/Dck5Ayp2a51g1CEG1JyasqNYU/y+n0ykrT9sxuq+Dtc2w3qGpPuBBUirC4HwfGgBT4Z5lA==}
+  interface-blockstore@5.3.1:
+    resolution: {integrity: sha512-nhgrQnz6yUQEqxTFLhlOBurQOy5lWlwCpgFmZ3GTObTVTQS9RZjK/JTozY6ty9uz2lZs7VFJSqwjWAltorJ4Vw==}
 
-  interface-store@5.1.7:
-    resolution: {integrity: sha512-DVMTgZ43NAdDtXL3QsEq8N0vuUYVBxiGbxN0uI0lrNasuX/CGSrU7bjOO2DaGTMNut4Pt3ae+VQYFvNtH4Oyeg==}
+  interface-store@6.0.2:
+    resolution: {integrity: sha512-KSFCXtBlNoG0hzwNa0RmhHtrdhzexp+S+UY2s0rWTBJyfdEIgn6i6Zl9otVqrcFYbYrneBT7hbmHQ8gE0C3umA==}
 
   ip-address@9.0.5:
     resolution: {integrity: sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==}
     engines: {node: '>= 12'}
 
-  ipfs-unixfs-exporter@13.5.0:
-    resolution: {integrity: sha512-s1eWXzoyhQFNEAB1p+QE3adjhW+lBdgpORmmjiCLiruHs5z7T5zsAgRVcWpM8LWYhq2flRtJHObb7Hg73J+oLQ==}
+  ipfs-unixfs-exporter@13.6.1:
+    resolution: {integrity: sha512-pYPI4oBTWao2//sFzAL0pURyojn79q/u5BuK6L5/nVbVUQVw6DcVP5uB1ySdWlTM2H+0Zlhp9+OL9aJBRIICpg==}
 
   ipfs-unixfs@11.1.2:
     resolution: {integrity: sha512-HVjrACOhU8RgMskcrfydk+FDAE9pFKr8tneKLaVYQ2f81HUKXoiSdgsAJY/jt7Ieyj4tE12TZGduIeWtNpScOw==}
@@ -1789,20 +1788,20 @@ packages:
     resolution: {integrity: sha512-BewmUXImeuRk2YY0PVbxgKAysvhRPUQE0h5QRM++nVWyubKGV0l8qQ5op8+B2DOmwSe63Jivj0BjkPQVf8fP5g==}
     engines: {node: '>=8'}
 
-  it-filter@3.0.4:
-    resolution: {integrity: sha512-e0sz+st4sudK/zH6GZ/gRTRP8A/ADuJFCYDmRgMbZvR79y5+v4ZXav850bBZk5wL9zXaYZFxS1v/6Qi+Vjwh5g==}
+  it-filter@3.1.1:
+    resolution: {integrity: sha512-TOXmVuaSkxlLp2hXKoMTra0WMZMKVFxE3vSsbIA+PbADNCBAHhjJ/lM31vBOUTddHMO34Ku++vU8T9PLlBxQtg==}
 
-  it-last@3.0.4:
-    resolution: {integrity: sha512-Ns+KTsQWhs0KCvfv5X3Ck3lpoYxHcp4zUp4d+AOdmC8cXXqDuoZqAjfWhgCbxJubXyIYWdfE2nRcfWqgvZHP8Q==}
+  it-last@3.0.6:
+    resolution: {integrity: sha512-M4/get95O85u2vWvWQinF8SJUc/RPC5bWTveBTYXvlP2q5TF9Y+QhT3nz+CRCyS2YEc66VJkyl/da6WrJ0wKhw==}
 
-  it-map@3.0.5:
-    resolution: {integrity: sha512-hB0TDXo/h4KSJJDSRLgAPmDroiXP6Fx1ck4Bzl3US9hHfZweTKsuiP0y4gXuTMcJlS6vj0bb+f70rhkD47ZA3w==}
+  it-map@3.1.1:
+    resolution: {integrity: sha512-9bCSwKD1yN1wCOgJ9UOl+46NQtdatosPWzxxUk2NdTLwRPXLh+L7iwCC9QKsbgM60RQxT/nH8bKMqm3H/o8IHQ==}
 
   it-merge@3.0.3:
     resolution: {integrity: sha512-FYVU15KC5pb/GQX1Ims+lee8d4pdqGVCpWr0lkNj8o4xuNo7jY71k6GuEiWdP+T7W1bJqewSxX5yoTy5yZpRVA==}
 
-  it-parallel@3.0.6:
-    resolution: {integrity: sha512-i7UM7I9LTkDJw3YIqXHFAPZX6CWYzGc+X3irdNrVExI4vPazrJdI7t5OqrSVN8CONXLAunCiqaSV/zZRbQR56A==}
+  it-parallel@3.0.8:
+    resolution: {integrity: sha512-URLhs6eG4Hdr4OdvgBBPDzOjBeSSmI+Kqex2rv/aAyYClME26RYHirLVhZsZP5M+ZP6M34iRlXk8Wlqtezuqpg==}
 
   it-peekable@3.0.3:
     resolution: {integrity: sha512-Wx21JX/rMzTEl9flx3DGHuPV1KQFGOl8uoKfQtmZHgPQtGb89eQ6RyVd82h3HuP9Ghpt0WgBDlmmdWeHXqyx7w==}
@@ -1995,12 +1994,11 @@ packages:
       typescript:
         optional: true
 
-  multiformats@12.1.3:
-    resolution: {integrity: sha512-eajQ/ZH7qXZQR2AgtfpmSMizQzmyYVmCql7pdhldPuYQi4atACekbJaQplk6dWyIi10jCaFnd6pqvcEFXjbaJw==}
-    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
-
   multiformats@13.2.2:
     resolution: {integrity: sha512-RWI+nyf0q64vyOxL8LbKtjJMki0sogRL/8axvklNtiTM0iFCVtHwME9w6+0P1/v4dQvsIg8A45oT3ka1t/M/+A==}
+
+  multiformats@13.3.0:
+    resolution: {integrity: sha512-CBiqvsufgmpo01VT5ze94O+uc+Pbf6f/sThlvWss0sBZmAOu6GQn5usrYV2sf2mr17FWYc0rO8c/CNe2T90QAA==}
 
   murmurhash3js-revisited@3.0.0:
     resolution: {integrity: sha512-/sF3ee6zvScXMb1XFJ8gDsSnY+X8PbOyjIuBhtgis10W2Jx4ZjIhikUCIF9c4gpJxVnQIsPAFrSwTCuAjicP6g==}
@@ -2085,6 +2083,10 @@ packages:
 
   p-defer@4.0.0:
     resolution: {integrity: sha512-Vb3QRvQ0Y5XnF40ZUWW7JfLogicVh/EnA5gBIvKDJoYpeI82+1E3AlB9yOcKFS0AhHrWVnAQO39fbR0G99IVEQ==}
+    engines: {node: '>=12'}
+
+  p-defer@4.0.1:
+    resolution: {integrity: sha512-Mr5KC5efvAK5VUptYEIopP1bakB85k2IWXaRC0rsh1uwn1L6M0LVml8OIQ4Gudg4oyZakf7FmeRLkMMtZW1i5A==}
     engines: {node: '>=12'}
 
   p-limit@3.1.0:
@@ -2230,9 +2232,8 @@ packages:
     resolution: {integrity: sha512-cdGef/drWFoydD1JsMzuFf8100nZl+GT+yacc2bEced5f9Rjk4z+WtFUTBu9PhOi9j/jfmBPu0mMEY4wIdAF8A==}
     engines: {node: '>= 0.6.0'}
 
-  progress-events@1.0.0:
-    resolution: {integrity: sha512-zIB6QDrSbPfRg+33FZalluFIowkbV5Xh1xSuetjG+rlC5he6u2dc6VQJ0TbMdlN3R1RHdpOqxEFMKTnQ+itUwA==}
-    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+  progress-events@1.0.1:
+    resolution: {integrity: sha512-MOzLIwhpt64KIVN64h1MwdKWiyKFNc/S6BoYKPIVUHFg0/eIEyBulhWCgn678v/4c0ri3FdGuzXymNCv02MUIw==}
 
   progress@2.0.3:
     resolution: {integrity: sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA==}
@@ -2673,9 +2674,6 @@ packages:
 
   uint8arraylist@2.4.8:
     resolution: {integrity: sha512-vc1PlGOzglLF0eae1M8mLRTBivsvrGsdmJ5RbK3e+QRvRLOZfZhQROTwH/OfyF3+ZVUg9/8hE8bmKP2CvP9quQ==}
-
-  uint8arrays@4.0.10:
-    resolution: {integrity: sha512-AnJNUGGDJAgFw/eWu/Xb9zrVKEGlwJJCaeInlf3BkecE/zcTobk5YXYIPNQJO1q5Hh1QZrQQHf0JvcHqz2hqoA==}
 
   uint8arrays@5.0.3:
     resolution: {integrity: sha512-6LBuKji28kHjgPJMkQ6GDaBb1lRwIhyOYq6pDGwYMoDPfImE9SkuYENVmR0yu9yGgs2clHUSY9fKDukR+AXfqQ==}
@@ -3143,8 +3141,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@eslint/js@9.10.0': {}
-
   '@eslint/js@9.11.0': {}
 
   '@eslint/object-schema@2.1.4': {}
@@ -3204,6 +3200,10 @@ snapshots:
   '@ipld/dag-pb@4.0.8':
     dependencies:
       multiformats: 13.2.2
+
+  '@ipld/dag-pb@4.1.2':
+    dependencies:
+      multiformats: 13.3.0
 
   '@ipld/unixfs@3.0.0':
     dependencies:
@@ -3270,7 +3270,7 @@ snapshots:
 
   '@multiformats/murmur3@2.1.8':
     dependencies:
-      multiformats: 13.2.2
+      multiformats: 13.3.0
       murmurhash3js-revisited: 3.0.0
 
   '@nodelib/fs.scandir@2.1.5':
@@ -4459,10 +4459,10 @@ snapshots:
 
   graphql@16.9.0: {}
 
-  hamt-sharding@3.0.2:
+  hamt-sharding@3.0.6:
     dependencies:
       sparse-array: 1.3.2
-      uint8arrays: 4.0.10
+      uint8arrays: 5.0.3
 
   happy-dom@14.12.3:
     dependencies:
@@ -4531,37 +4531,36 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  interface-blockstore@5.2.9:
+  interface-blockstore@5.3.1:
     dependencies:
-      interface-store: 5.1.7
-      multiformats: 13.2.2
+      interface-store: 6.0.2
+      multiformats: 13.3.0
 
-  interface-store@5.1.7: {}
+  interface-store@6.0.2: {}
 
   ip-address@9.0.5:
     dependencies:
       jsbn: 1.1.0
       sprintf-js: 1.1.3
 
-  ipfs-unixfs-exporter@13.5.0:
+  ipfs-unixfs-exporter@13.6.1:
     dependencies:
       '@ipld/dag-cbor': 9.2.1
       '@ipld/dag-json': 10.2.2
-      '@ipld/dag-pb': 4.0.8
+      '@ipld/dag-pb': 4.1.2
       '@multiformats/murmur3': 2.1.8
-      err-code: 3.0.1
-      hamt-sharding: 3.0.2
-      interface-blockstore: 5.2.9
+      hamt-sharding: 3.0.6
+      interface-blockstore: 5.3.1
       ipfs-unixfs: 11.1.2
-      it-filter: 3.0.4
-      it-last: 3.0.4
-      it-map: 3.0.5
-      it-parallel: 3.0.6
+      it-filter: 3.1.1
+      it-last: 3.0.6
+      it-map: 3.1.1
+      it-parallel: 3.0.8
       it-pipe: 3.0.1
       it-pushable: 3.2.3
-      multiformats: 13.2.2
+      multiformats: 13.3.0
       p-queue: 8.0.1
-      progress-events: 1.0.0
+      progress-events: 1.0.1
 
   ipfs-unixfs@11.1.2:
     dependencies:
@@ -4620,13 +4619,13 @@ snapshots:
       html-escaper: 2.0.2
       istanbul-lib-report: 3.0.1
 
-  it-filter@3.0.4:
+  it-filter@3.1.1:
     dependencies:
       it-peekable: 3.0.3
 
-  it-last@3.0.4: {}
+  it-last@3.0.6: {}
 
-  it-map@3.0.5:
+  it-map@3.1.1:
     dependencies:
       it-peekable: 3.0.3
 
@@ -4634,9 +4633,9 @@ snapshots:
     dependencies:
       it-pushable: 3.2.3
 
-  it-parallel@3.0.6:
+  it-parallel@3.0.8:
     dependencies:
-      p-defer: 4.0.0
+      p-defer: 4.0.1
 
   it-peekable@3.0.3: {}
 
@@ -4828,9 +4827,9 @@ snapshots:
     optionalDependencies:
       typescript: 5.5.4
 
-  multiformats@12.1.3: {}
-
   multiformats@13.2.2: {}
+
+  multiformats@13.3.0: {}
 
   murmurhash3js-revisited@3.0.0: {}
 
@@ -4906,6 +4905,8 @@ snapshots:
   outvariant@1.4.3: {}
 
   p-defer@4.0.0: {}
+
+  p-defer@4.0.1: {}
 
   p-limit@3.1.0:
     dependencies:
@@ -5029,7 +5030,7 @@ snapshots:
 
   process@0.11.10: {}
 
-  progress-events@1.0.0: {}
+  progress-events@1.0.1: {}
 
   progress@2.0.3: {}
 
@@ -5480,13 +5481,9 @@ snapshots:
     dependencies:
       uint8arrays: 5.0.3
 
-  uint8arrays@4.0.10:
-    dependencies:
-      multiformats: 12.1.3
-
   uint8arrays@5.0.3:
     dependencies:
-      multiformats: 13.2.2
+      multiformats: 13.3.0
 
   unbzip2-stream@1.4.3:
     dependencies:
