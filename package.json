@@ -87,7 +87,7 @@
     "cross-fetch": "^4.0.0",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.0",
-    "ipfs-unixfs-exporter": "^13.5.0",
+    "ipfs-unixfs-exporter": "^13.6.1",
     "memfs": "^4.12.0",
     "multiformats": "^13.2.2",
     "p-limit": "^6.1.0",
