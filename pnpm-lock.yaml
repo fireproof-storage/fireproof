@@ -3371,6 +3371,8 @@ snapshots:
 
   '@eslint/js@9.13.0': {}
 
+  '@eslint/object-schema@2.1.4': {}
+
   '@eslint/plugin-kit@0.2.0':
     dependencies:
       levn: 0.4.1
