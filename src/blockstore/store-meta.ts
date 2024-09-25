@@ -28,37 +28,55 @@ export async function setCryptoKeyFromGatewayMetaPayload(
   uri: URI,
   sthis: SuperThis,
   data: Uint8Array,
-): Promise<DbMeta | undefined> {
-  const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
-  if (keyInfo.length) {
-    const dbMeta = keyInfo[0].dbMeta;
-    if (dbMeta.key) {
-      const kb = await rt.kb.getKeyBag(sthis);
-      const keyName = getStoreKeyName(uri);
-      const res = await kb.setNamedKey(keyName, dbMeta.key);
-      if (res.isErr()) {
-        throw res.Err();
+): Promise<Result<DbMeta | undefined>> {
+  try {
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Setting crypto key from gateway meta payload");
+    const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
+    if (keyInfo.length) {
+      const dbMeta = keyInfo[0].dbMeta;
+      if (dbMeta.key) {
+        const kb = await rt.kb.getKeyBag(sthis);
+        const keyName = getStoreKeyName(uri);
+        const res = await kb.setNamedKey(keyName, dbMeta.key);
+        if (res.isErr()) {
+          sthis.logger.Debug().Str("keyName", keyName).Str("dbMeta.key", dbMeta.key).Msg("Failed to set named key");
+          throw res.Err();
+        }
       }
+      sthis.logger.Debug().Str("dbMeta.key", dbMeta.key).Str("uri", uri.toString()).Msg("Set crypto key from gateway meta payload");
+      return Result.Ok(dbMeta);
     }
-    return dbMeta;
+    sthis.logger.Debug().Str("data", new TextDecoder().decode(data)).Msg("No crypto in gateway meta payload");
+    return Result.Ok(undefined);
+  } catch (error) {
+    sthis.logger.Debug().Err(error).Msg("Failed to set crypto key from gateway meta payload");
+    return Result.Err(error as Error);
   }
 }
 
-export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThis, body: Uint8Array): Promise<Uint8Array> {
-  const keyName = getStoreKeyName(uri);
-  const kb = await rt.kb.getKeyBag(sthis);
-  const res = await kb.getNamedExtractableKey(keyName, true);
-  if (res.isErr()) {
-    sthis.logger.Error().Str("keyName", keyName).Msg("Failed to get named extractable key");
-    return body;
+export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThis, body: Uint8Array): Promise<Result<Uint8Array>> {
+  try {
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Adding crypto key to gateway meta payload");
+    const keyName = getStoreKeyName(uri);
+    const kb = await rt.kb.getKeyBag(sthis);
+    const res = await kb.getNamedExtractableKey(keyName, true);
+    if (res.isErr()) {
+      sthis.logger.Error().Str("keyName", keyName).Msg("Failed to get named extractable key");
+      throw res.Err();
+    }
+    const keyData = await res.Ok().extract();
+    const dbMetas = await decodeGatewayMetaBytesToDbMeta(sthis, body);
+    const { dbMeta, parents } = dbMetas[0]; // as { dbMeta: DbMeta };
+    const parentLinks = parents.map((p) => CID.parse(p) as CarClockLink);
+    dbMeta.key = keyData.keyStr;
+    const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, parentLinks)));
+    const encoded = await encodeEventsWithParents(sthis, events, parentLinks);
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Added crypto key to gateway meta payload");
+    return Result.Ok(encoded);
+  } catch (error) {
+    sthis.logger.Error().Err(error).Msg("Failed to add crypto key to gateway meta payload");
+    return Result.Err(error as Error);
   }
-  const keyData = await res.Ok().extract();
-  const dbMetas = await decodeGatewayMetaBytesToDbMeta(sthis, body);
-  const { dbMeta, parents } = dbMetas[0]; // as { dbMeta: DbMeta };
-  const parentLinks = parents.map((p) => CID.parse(p) as CarClockLink);
-  dbMeta.key = keyData.keyStr;
-  const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, parentLinks)));
-  return encodeEventsWithParents(sthis, events, parentLinks);
 }
 
 function getStoreKeyName(url: URI): string {
