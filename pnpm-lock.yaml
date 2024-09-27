@@ -64,7 +64,7 @@ importers:
         version: 18.3.1
     devDependencies:
       '@eslint/js':
-        specifier: ^9.11.0
+        specifier: ^9.11.1
         version: 9.28.0
       '@testing-library/react':
         specifier: ^16.0.1
