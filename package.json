@@ -47,7 +47,7 @@
     "@testing-library/react": "^16.0.1",
     "@types/node": "^22.5.4",
     "@types/randombytes": "^2.0.3",
-    "@types/react": "^18.3.10",
+    "@types/react": "^18.3.11",
     "@typescript-eslint/typescript-estree": "^8.6.0",
     "@vitest/browser": "^2.0.5",
     "@vitest/coverage-v8": "^2.0.5",
