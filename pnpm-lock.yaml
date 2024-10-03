@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.28
-        version: 0.2.28
+        specifier: ^0.2.31
+        version: 0.2.31(typescript@5.8.3)
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -931,8 +931,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.2.28':
-    resolution: {integrity: sha512-M4PmNUZPV90/AEo6yqKQ2uhh9kfCmJzkqasG8GzQOw9ONJv0Zn4zHNLgcvSgIr5k0AOpLd/dL6Fc5vQSERow+Q==}
+  '@adviser/cement@0.2.31':
+    resolution: {integrity: sha512-z8UCOqy0FgKtKTub9efBtGNeWn0JghlfUq6Rz7FsTmt/AjR+jPPPZuzVckVkYqNlyKdY+hu+SlfiTockzW+uEw==}
     engines: {node: '>=16'}
 
   '@alloc/quick-lru@5.2.0':
@@ -7774,6 +7774,14 @@ packages:
     peerDependencies:
       typescript: '>=4.2.0'
 
+  ts-essentials@10.0.2:
+    resolution: {integrity: sha512-Xwag0TULqriaugXqVdDiGZ5wuZpqABZlpwQ2Ho4GDyiu/R2Xjkp/9+zcFxL7uzeLl/QCPrflnvpVYyS3ouT7Zw==}
+    peerDependencies:
+      typescript: '>=4.5.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
 
@@ -8395,6 +8403,11 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  yaml@2.5.1:
+    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
+    engines: {node: '>= 14'}
+    hasBin: true
+
   yaml@2.8.0:
     resolution: {integrity: sha512-4lLa/EcQCB0cJkyts+FpIRx5G/llPxfP6VQU5KByHEhLxY3IJCH0f0Hy1MHI8sClTvsIb8qwRJ6R/ZdlDJ/leQ==}
     engines: {node: '>= 14.6'}
@@ -8459,7 +8472,12 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.2.28': {}
+  '@adviser/cement@0.2.31(typescript@5.8.3)':
+    dependencies:
+      ts-essentials: 10.0.2(typescript@5.8.3)
+      yaml: 2.5.1
+    transitivePeerDependencies:
+      - typescript
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -16194,6 +16212,10 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
+  ts-essentials@10.0.2(typescript@5.8.3):
+    optionalDependencies:
+      typescript: 5.8.3
+
   ts-interface-checker@0.1.13: {}
 
   ts-loader@9.5.2(typescript@5.8.3)(webpack@5.99.9(esbuild@0.25.5)):
@@ -17210,6 +17232,8 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
+
+  yaml@2.5.1: {}
 
   yaml@2.8.0: {}
 
