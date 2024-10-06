@@ -81,11 +81,7 @@
         const doRedraw = async () => {
           drawInfo();
           const result = await db.allDocs().catch((e) => {
-            console.error(
-              "allDocs error",
-              e,
-              ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${1}`,
-            );
+            console.error("allDocs error", e, ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${1}`);
             return { rows: [] };
           });
           drawInfo();

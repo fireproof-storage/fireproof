@@ -21,7 +21,6 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
-import { json } from "node:stream/consumers";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -231,7 +230,10 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
     if (opts.noLoader) {
-      console.log("enqueue noLoader", dbMeta.cars.map((c) => c.toString()));
+      console.log(
+        "enqueue noLoader",
+        dbMeta.cars.map((c) => c.toString()),
+      );
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);
