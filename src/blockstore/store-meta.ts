@@ -11,6 +11,14 @@ import * as rt from "../runtime/index.js";
 
 async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
   const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
+  if (!crdtEntries.length) {
+    sthis.logger.Debug().Str("byteHeads", new TextDecoder().decode(byteHeads)).Msg("No CRDT entries found");
+    return [];
+  }
+  if (!crdtEntries.map) {
+    sthis.logger.Debug().Str("crdtEntries", JSON.stringify(crdtEntries)).Msg("No data in CRDT entries");
+    return [];
+  }
   return Promise.all(
     crdtEntries.map(async (crdtEntry) => {
       const eventBlock = await decodeEventBlock<{ dbMeta: Uint8Array }>(decodeFromBase64(crdtEntry.data));
@@ -141,9 +149,16 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
           await Promise.all(
             dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
           );
+          this.updateParentsFromDbMetas(dbMetas);
         });
       });
     }
+  }
+
+  private updateParentsFromDbMetas(dbMetas: { eventCid: CarClockLink }[]) {
+    const cids = dbMetas.map((m) => m.eventCid);
+    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
+    this.parents = Array.from(uniqueParentsMap.values());
   }
 
   async handleByteHeads(byteHeads: Uint8Array) {
@@ -165,9 +180,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
     const dbMetas = await this.handleByteHeads(bytes.Ok());
     await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
-    const cids = dbMetas.map((m) => m.eventCid);
-    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
-    this.parents = Array.from(uniqueParentsMap.values());
+    this.updateParentsFromDbMetas(dbMetas);
     return dbMetas.map((m) => m.dbMeta);
   }
 
