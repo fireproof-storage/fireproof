@@ -86,7 +86,6 @@ export class CRDTClock<T extends DocTypes> {
     //   throw new Error("missing head");
     // }
     const noLoader = !localUpdates;
-    console.log("int_applyHead noLoader", noLoader);
 
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);

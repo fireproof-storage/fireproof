@@ -320,7 +320,6 @@ describe("noop Gateway subscribe", function () {
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
 
-    // if (metaGateway.subscribe) {
     let resolve: () => void;
     let didCall = false;
     const p = new Promise<void>((r) => {
