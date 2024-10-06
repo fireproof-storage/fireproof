@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fireproof Test</title>
-    <script src="./fireproof.iife.js"></script>
-    <script src="./connect-partykit.iife.js"></script>
+    <script src="index.global.js"></script>
+    <script src="partykit.global.js"></script>
     <script type="text/javascript">
       function todoApp() {
         const actorTag = Math.random().toString(36).substring(2, 7);
         const { fireproof, index } = Fireproof;
-        const { connect } = FireproofConnect;
+        const { connect } = Connect;
 
         // console.log('connect', connect)
 
@@ -38,10 +38,11 @@
           } else {
             dbName = name;
             db = fireproof(name, { autoCompact: 100, threshold: 50000 });
-            cx = connect.partykitRest(db);
-            cx.ready.then(async () => {
+            cx = connect(db);
+            cx.loaded.then(async () => {
               const span = document.querySelector("#cxInfo");
-              span.innerText = `📡 ${cx.party.id}`;
+              console.log("cx", cx);
+              span.innerText = `📡 ${cx.url.toString()}`;
             });
           }
 
@@ -52,7 +53,7 @@
             if (changes.clock.length > 0) {
               input.disabled = false;
             } else {
-              cx.ready.then(async () => {
+              cx.loaded.then(async () => {
                 input.disabled = false;
               });
             }
@@ -75,7 +76,7 @@
         let compactor = "🚗";
         function drawInfo() {
           document.querySelector("#carLog").innerText =
-            ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`;
+            ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${1}`;
         }
         const doRedraw = async () => {
           drawInfo();
@@ -83,7 +84,7 @@
             console.error(
               "allDocs error",
               e,
-              ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${cx.loader.remoteWAL.walState.operations.length}`,
+              ` ⏰ ${db._crdt.clock.head.length} ${compactor} ${cx.loader.carLog.length}  📩 ${1}`,
             );
             return { rows: [] };
           });
