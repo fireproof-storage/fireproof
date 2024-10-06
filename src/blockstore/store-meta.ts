@@ -15,6 +15,90 @@ export async function encodeGatewayDbMetaToBytes(sthis: SuperThis, dbMetas: DbMe
 
 export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
   const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
+  if (!crdtEntries.length) {
+    sthis.logger.Debug().Str("byteHeads", new TextDecoder().decode(byteHeads)).Msg("No CRDT entries found");
+    return [];
+  }
+  if (!crdtEntries.map) {
+    sthis.logger.Debug().Str("crdtEntries", JSON.stringify(crdtEntries)).Msg("No data in CRDT entries");
+    return [];
+  }
+  return Promise.all(
+    crdtEntries.map(async (crdtEntry) => {
+      const eventBlock = await decodeEventBlock<{ dbMeta: Uint8Array }>(decodeFromBase64(crdtEntry.data));
+      const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
+      return {
+        eventCid: eventBlock.cid as CarClockLink,
+        parents: crdtEntry.parents,
+        dbMeta: dbMeta,
+      };
+    }),
+  );
+}
+
+export async function setCryptoKeyFromGatewayMetaPayload(
+  uri: URI,
+  sthis: SuperThis,
+  data: Uint8Array,
+): Promise<Result<DbMeta | undefined>> {
+  try {
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Setting crypto key from gateway meta payload");
+    const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
+    if (keyInfo.length) {
+      const dbMeta = keyInfo[0].dbMeta;
+      if (dbMeta.key) {
+        const kb = await rt.kb.getKeyBag(sthis);
+        const keyName = getStoreKeyName(uri);
+        const res = await kb.setNamedKey(keyName, dbMeta.key);
+        if (res.isErr()) {
+          sthis.logger.Debug().Str("keyName", keyName).Str("dbMeta.key", dbMeta.key).Msg("Failed to set named key");
+          throw res.Err();
+        }
+      }
+      sthis.logger.Debug().Str("dbMeta.key", dbMeta.key).Str("uri", uri.toString()).Msg("Set crypto key from gateway meta payload");
+      return Result.Ok(dbMeta);
+    }
+    sthis.logger.Debug().Str("data", new TextDecoder().decode(data)).Msg("No crypto in gateway meta payload");
+    return Result.Ok(undefined);
+  } catch (error) {
+    sthis.logger.Debug().Err(error).Msg("Failed to set crypto key from gateway meta payload");
+    return Result.Err(error as Error);
+  }
+}
+
+export async function addCryptoKeyToGatewayMetaPayload(uri: URI, sthis: SuperThis, body: Uint8Array): Promise<Result<Uint8Array>> {
+  try {
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Adding crypto key to gateway meta payload");
+    const keyName = getStoreKeyName(uri);
+    const kb = await rt.kb.getKeyBag(sthis);
+    const res = await kb.getNamedExtractableKey(keyName, true);
+    if (res.isErr()) {
+      sthis.logger.Error().Str("keyName", keyName).Msg("Failed to get named extractable key");
+      throw res.Err();
+    }
+    const keyData = await res.Ok().extract();
+    const dbMetas = await decodeGatewayMetaBytesToDbMeta(sthis, body);
+    const { dbMeta, parents } = dbMetas[0]; // as { dbMeta: DbMeta };
+    const parentLinks = parents.map((p) => CID.parse(p) as CarClockLink);
+    dbMeta.key = keyData.keyStr;
+    const events = await Promise.all([dbMeta].map((dbMeta) => createDbMetaEventBlock(sthis, dbMeta, parentLinks)));
+    const encoded = await encodeEventsWithParents(sthis, events, parentLinks);
+    sthis.logger.Debug().Str("uri", uri.toString()).Msg("Added crypto key to gateway meta payload");
+    return Result.Ok(encoded);
+  } catch (error) {
+    sthis.logger.Error().Err(error).Msg("Failed to add crypto key to gateway meta payload");
+    return Result.Err(error as Error);
+  }
+}
+
+function getStoreKeyName(url: URI): string {
+  const storeKeyName = [url.getParam("localName") || url.getParam("name")];
+  const idx = url.getParam("index");
+  if (idx) {
+    storeKeyName.push(idx);
+  }
+  storeKeyName.push("data");
+  return `@${storeKeyName.join(":")}@`;
   return Promise.all(crdtEntries.map(async (crdtEntry) => decodeMetaBlock(sthis, crdtEntry)));
 }
 
@@ -75,9 +159,24 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       ensureLogger(sthis, "MetaStoreImpl"),
     );
     if (remote && opts.gateway.subscribe) {
-      this.logger.Debug().Str("url", url.toString()).Msg("Subscribing to the gateway");
-      opts.gateway.subscribe(url, (byteHead: Uint8Array) => this.handleByteHeads(byteHead));
+      this.onStarted(async () => {
+        this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
+        opts.gateway.subscribe?.(this.url(), async (message: Uint8Array) => {
+          this.logger.Debug().Msg("Received message from gateway");
+          const dbMetas = await decodeGatewayMetaBytesToDbMeta(this.sthis, message);
+          await Promise.all(
+            dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
+          );
+          this.updateParentsFromDbMetas(dbMetas);
+        });
+      });
     }
+  }
+
+  private updateParentsFromDbMetas(dbMetas: { eventCid: CarClockLink }[]) {
+    const cids = dbMetas.map((m) => m.eventCid);
+    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
+    this.parents = Array.from(uniqueParentsMap.values());
   }
 
   async handleByteHeads(byteHeads: Uint8Array) {
@@ -109,9 +208,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
     const dbMetas = await this.handleByteHeads(bytes.Ok());
     await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
-    const cids = dbMetas.map((m) => m.eventCid);
-    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
-    this.parents = Array.from(uniqueParentsMap.values());
+    this.updateParentsFromDbMetas(dbMetas);
     return dbMetas.map((m) => m.dbMeta);
   }
 
