@@ -230,10 +230,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
     if (opts.noLoader) {
-      console.log(
-        "enqueue noLoader",
-        dbMeta.cars.map((c) => c.toString()),
-      );
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);
@@ -328,7 +324,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
-          // console.log("saving remote meta", JSON.stringify(lastOp));
           await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
             this.walState.operations.push(lastOp);
             throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();
