@@ -62,6 +62,9 @@ importers:
       react:
         specifier: ^18.3.1
         version: 18.3.1
+      uuidv7:
+        specifier: ^1.0.2
+        version: 1.0.2
     devDependencies:
       '@eslint/js':
         specifier: ^9.11.1
@@ -8023,6 +8026,10 @@ packages:
 
   uuidv7@0.6.3:
     resolution: {integrity: sha512-zV3eW2NlXTsun/aJ7AixxZjH/byQcH/r3J99MI0dDEkU2cJIBJxhEWUHDTpOaLPRNhebPZoeHuykYREkI9HafA==}
+    hasBin: true
+
+  uuidv7@1.0.2:
+    resolution: {integrity: sha512-8JQkH4ooXnm1JCIhqTMbtmdnYEn6oKukBxHn1Ic9878jMkL7daTI7anTExfY18VRCX7tcdn5quzvCb6EWrR8PA==}
     hasBin: true
 
   v8-to-istanbul@9.3.0:
@@ -16529,6 +16536,8 @@ snapshots:
       which-typed-array: 1.1.19
 
   uuidv7@0.6.3: {}
+
+  uuidv7@1.0.2: {}
 
   v8-to-istanbul@9.3.0:
     dependencies:

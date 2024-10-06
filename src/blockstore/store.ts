@@ -21,6 +21,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
+import { json } from "node:stream/consumers";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -230,12 +231,15 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
     if (opts.noLoader) {
+      console.log("enqueue noLoader", dbMeta.cars.map((c) => c.toString()));
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);
     }
     await this.save(this.walState);
-    void this.process();
+    if (!opts.noLoader) {
+      void this.process();
+    }
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
@@ -322,7 +326,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
-          // console.log('saving remote meta', lastOp.car.toString())
+          // console.log("saving remote meta", JSON.stringify(lastOp));
           await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
             this.walState.operations.push(lastOp);
             throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();
