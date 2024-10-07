@@ -48,6 +48,8 @@
     "ipfs-unixfs-exporter": "from-package-json",
     "memfs": "from-package-json",
     "p-limit": "from-package-json",
-    "react": "from-package-json"
+    "react": "from-package-json",
+    "p-map": "from-package-json",
+    "p-retry": "from-package-json"
   }
 }
