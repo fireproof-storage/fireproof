@@ -2,7 +2,7 @@ import { Logger, Result, URI } from "@adviser/cement";
 
 import { base58btc } from "multiformats/bases/base58";
 import { encode, decode } from "cborg";
-import { Gateway, GetResult, VoidResult } from "./gateway.js";
+import { Gateway, GetResult, UnsubscribeResult, VoidResult } from "./gateway.js";
 import { SuperThis } from "../types.js";
 import { ensureSuperLog } from "../utils.js";
 
@@ -169,11 +169,11 @@ export class FragmentGateway implements Gateway {
     return Result.Ok(buffer || new Uint8Array(0));
   }
 
-  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<VoidResult> {
+  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<UnsubscribeResult> {
     if (this.innerGW.subscribe) {
       return this.innerGW.subscribe(url, callback);
     } else {
-      return Result.Err(this.logger.Error().Msg("subscribe not supported").AsError());
+      return Result.Err(this.logger.Error().Url(url).Msg("subscribe not supported").AsError());
     }
   }
 
