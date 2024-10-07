@@ -127,6 +127,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
   parents: CarClockHead = [];
+  remote: boolean;
 
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts, remote?: boolean) {
     // const my = new URL(url.toString());
@@ -140,7 +141,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       sthis,
       ensureLogger(sthis, "MetaStoreImpl"),
     );
-    if (remote && opts.gateway.subscribe) {
+    this.remote = !!remote;
+    if (this.remote && opts.gateway.subscribe) {
       this.onStarted(async () => {
         this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
         opts.gateway.subscribe?.(this.url(), async (message: Uint8Array) => {
@@ -149,6 +151,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
           await Promise.all(
             dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
           );
+          console.log("got subscribed dbMetas", dbMetas.map((m) => m.eventCid.toString()));
           this.updateParentsFromDbMetas(dbMetas);
         });
       });
@@ -159,6 +162,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const cids = dbMetas.map((m) => m.eventCid);
     const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
     this.parents = Array.from(uniqueParentsMap.values());
+    console.log("updated parents to ", this.remote, this.url().toString(), this.parents.map((p) => p.toString()));
   }
 
   async handleByteHeads(byteHeads: Uint8Array) {
@@ -180,6 +184,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
     const dbMetas = await this.handleByteHeads(bytes.Ok());
     await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
+    console.log("got loaded dbMetas", dbMetas.map((m) => m.eventCid.toString()));
     this.updateParentsFromDbMetas(dbMetas);
     return dbMetas.map((m) => m.dbMeta);
   }
@@ -193,12 +198,20 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
+    console.log("putting event", url.Ok().toString(), event.cid.toString());
+    this.parents = [event.cid];
     const res = await this.gateway.put(url.Ok(), bytes);
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    await this.loader?.handleDbMetasFromStore([meta]);
-    this.parents = [event.cid];
+    // await this.loader?.handleDbMetasFromStore([meta]);
+    console.log("new parent is ", 
+      this.remote,
+      this.url().toString(),
+      event.cid.toString(),
+      this.parents.map((p) => p.toString()),
+    );
+    // this.loader?.taskManager?.eventsWeHandled.add(event.cid.toString());
     return res;
   }
 
