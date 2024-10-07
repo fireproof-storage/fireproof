@@ -231,6 +231,7 @@ export class Loader implements Loadable {
       carStore: fstore,
       WALStore: await this.WALStore(),
       metaStore: await this.metaStore(),
+      threshold: this.ebOpts.threshold,
     };
     return this.commitQueue.enqueue(async () => {
       await this.cacheTransaction(t);

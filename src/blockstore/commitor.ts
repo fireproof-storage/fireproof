@@ -163,7 +163,7 @@ async function prepareCarFiles(
 ): Promise<{ cid: AnyLink; bytes: Uint8Array }[]> {
   // const theKey = isPublic ? undefined : await this._getKey();
   const carFiles: { cid: AnyLink; bytes: Uint8Array }[] = [];
-  threshold = threshold || 1000 * 1000;
+  threshold = threshold || 128000;
   let clonedt = new CarTransaction(t.parent, { add: false, noLoader: false });
   clonedt.putSync(rootBlock.cid, rootBlock.bytes);
   let newsize = CBW.blockLength(toCIDBlock(rootBlock));
