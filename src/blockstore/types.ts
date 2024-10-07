@@ -284,7 +284,7 @@ export interface WALState {
 
 export interface WALStore extends BaseStore {
   readonly storeType: "wal";
-  ready: () => Promise<void>;
+  ready(): Promise<void>;
   readonly processing?: Promise<void> | undefined;
   readonly processQueue: CommitQueue<void>;
 
