@@ -26,13 +26,12 @@ import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
 
-import pRetry from "p-retry";
-import pMap from "p-map";
-
 import { carLogIncludesGroup } from "./loader.js";
 import { InterceptorGateway } from "./interceptor-gateway.js";
 import { FPEnvelopeCar, FPEnvelopeFile, FPMsg2Car, FPMsgMatch2Envelope } from "./fp-envelope.js";
 import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
+import pRetry from 'p-retry';
+import pMap from 'p-map';
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -356,10 +355,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
     if (opts.noLoader) {
-      console.log(
-        "enqueue noLoader",
-        dbMeta.cars.map((c) => c.toString()),
-      );
+      this.logger.Debug().Any("cars", dbMeta.cars.map((c) => c.toString())).Msg("noOps")
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);
@@ -420,7 +416,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         noLoaderOps,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
+            if (!this.loader) {
+              return
+            }
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
               if (!car) {
@@ -443,7 +441,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         operations,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
+            if (!this.loader) {
+              return
+            }
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
               if (!car) {
@@ -466,7 +466,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         fileOperations,
         async ({ cid: fileCid, public: publicFile }) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
+            if (!this.loader) {
+              return
+            }
             const fileBlock = await (await this.loader.fileStore()).load(fileCid);
             if (!fileBlock) {
               throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
@@ -476,14 +478,16 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
           }, `fileOperation with cid=${fileCid.toString()}`);
         },
-        { concurrency: concurrencyLimit },
+        { concurrency: concurrencyLimit }
       );
 
       // If all uploads succeeded, send the last dbMeta to remoteMetaStore
       if (operations.length) {
         const lastOp = operations[operations.length - 1];
         await retryableUpload(async () => {
-          if (!this.loader) return;
+          if (!this.loader) {
+            return
+          }
           await this.loader.remoteMetaStore?.save(lastOp);
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
       }
