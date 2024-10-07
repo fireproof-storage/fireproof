@@ -229,7 +229,10 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
-    if (opts.noLoader) {
+    if (opts.compact) {
+      this.walState.operations = [];
+      this.walState.noLoaderOps = [dbMeta];
+    } else if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);

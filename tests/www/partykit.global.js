@@ -51659,7 +51659,10 @@ You can use close({ resize: true }) to resize header`);
     }
     async enqueue(dbMeta, opts) {
       await this.ready();
-      if (opts.noLoader) {
+      if (opts.compact) {
+        this.walState.operations = [];
+        this.walState.noLoaderOps = [dbMeta];
+      } else if (opts.noLoader) {
         this.walState.noLoaderOps.push(dbMeta);
       } else {
         this.walState.operations.push(dbMeta);
