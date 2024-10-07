@@ -51694,7 +51694,7 @@ You can use close({ resize: true }) to resize header`);
         const fileOperations = [...this.walState.fileOperations];
         const uploads = [];
         const noLoaderOps = [...this.walState.noLoaderOps];
-        const limit = pLimit(5);
+        const limit = pLimit(3);
         if (operations.length + fileOperations.length + noLoaderOps.length === 0) return;
         for (const dbMeta of noLoaderOps) {
           const uploadP = limit(async () => {
@@ -51952,8 +51952,10 @@ You can use close({ resize: true }) to resize header`);
     }
     updateParentsFromDbMetas(dbMetas) {
       const cids = dbMetas.map((m6) => m6.eventCid);
+      const dbMetaParents = dbMetas.flatMap((m6) => m6.parents);
       const uniqueParentsMap = new Map([...this.parents, ...cids].map((p7) => [p7.toString(), p7]));
-      this.parents = Array.from(uniqueParentsMap.values());
+      const dbMetaParentsSet = new Set(dbMetaParents.map((p7) => p7.toString()));
+      this.parents = Array.from(uniqueParentsMap.values()).filter((p7) => !dbMetaParentsSet.has(p7.toString()));
       console.log("updated parents to ", this.remote, this.url().toString(), this.parents.map((p7) => p7.toString()));
     }
     async handleByteHeads(byteHeads) {

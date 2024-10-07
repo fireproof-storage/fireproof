@@ -268,7 +268,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       const fileOperations = [...this.walState.fileOperations];
       const uploads: Promise<void>[] = [];
       const noLoaderOps = [...this.walState.noLoaderOps];
-      const limit = pLimit(5);
+      const limit = pLimit(3);
 
       if (operations.length + fileOperations.length + noLoaderOps.length === 0) return;
 
