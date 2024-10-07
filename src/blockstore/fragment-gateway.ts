@@ -174,27 +174,6 @@ export class FragmentGateway implements Gateway {
       return this.innerGW.subscribe(url, callback);
     } else {
       return Result.Err(this.logger.Error().Msg("subscribe not supported").AsError());
-      // let lastData: Uint8Array | undefined = undefined;
-      // let interval = 100;
-      // const fetchData = async () => {
-      //   const result = await this.innerGW.get(url); // this should be store.load()
-      //   if (result.isOk()) {
-      //     const data = result.Ok();
-      //     if (!lastData || !data.every((value, index) => lastData && value === lastData[index])) {
-      //       lastData = data;
-      //       callback(data);
-      //       interval = 100; // Reset interval when data changes
-      //     } else {
-      //       interval *= 2; // Double the interval when data is unchanged
-      //     }
-      //   }
-      //   timeoutId = setTimeout(fetchData, interval);
-      // };
-      // let timeoutId = setTimeout(fetchData, interval);
-
-      // return Result.Ok(() => {
-      //   clearTimeout(timeoutId);
-      // });
     }
   }
 

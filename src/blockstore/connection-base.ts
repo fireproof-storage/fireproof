@@ -76,9 +76,8 @@ export abstract class ConnectionBase implements Connection {
   async connectStorage_X({ loader }: { loader?: Loadable }) {
     if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
     this.loader = loader;
-    // urlObj.searchParams.set("fragSize", "128000");
-
-    const dataUrl = this.url.build().defParam("store", "data").defParam("fragSize", "128000").URI();
+    // const dataUrl = this.url.build().defParam("store", "data").defParam("fragSize", "128000").URI();
+    const dataUrl = this.url.build().defParam("store", "data").URI();
     const gateway = await getGatewayFromURL(dataUrl, this.loader.sthis);
     if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.getParam("name");
