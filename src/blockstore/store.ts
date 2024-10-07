@@ -362,8 +362,8 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             } else {
               await throwFalsy(this.loader.remoteCarStore).save(car);
             }
-            this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
           }
+          this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
         });
         uploads.push(uploadP);
       }
