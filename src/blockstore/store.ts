@@ -26,6 +26,8 @@ import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
 import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
+import pRetry from 'p-retry';
+import pMap from 'p-map';
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -343,78 +345,104 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async _doProcess() {
     if (!this.loader.remoteCarStore) return;
-    const rmlp = (async () => {
-      const operations = [...this.walState.operations];
-      const fileOperations = [...this.walState.fileOperations];
-      const uploads: Promise<void>[] = [];
-      const noLoaderOps = [...this.walState.noLoaderOps];
-      const limit = pLimit(3);
 
-      if (operations.length + fileOperations.length + noLoaderOps.length === 0) return;
+    const operations = [...this.walState.operations];
+    const noLoaderOps = [...this.walState.noLoaderOps];
+    const fileOperations = [...this.walState.fileOperations];
 
-      for (const dbMeta of noLoaderOps) {
-        const uploadP = limit(async () => {
-          for (const cid of dbMeta.cars) {
-            const car = await (await this.loader.carStore()).load(cid);
-            if (!car) {
-              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
-                throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
-            } else {
-              await limit(() => throwFalsy(this.loader.remoteCarStore).save(car));
+    if (operations.length + noLoaderOps.length + fileOperations.length === 0) return;
+
+    const concurrencyLimit = 3;
+
+    // Helper function to retry uploads
+    const retryableUpload = <T>(fn: () => Promise<T>, description: string) =>
+      pRetry(fn, {
+        retries: 5,
+        onFailedAttempt: (error) => {
+          this.logger
+            .Warn()
+            .Msg(`Attempt ${error.attemptNumber} failed for ${description}. There are ${error.retriesLeft} retries left.`);
+        },
+      });
+
+    try {
+      // Process noLoaderOps
+      await pMap(
+        noLoaderOps,
+        async (dbMeta) => {
+          await retryableUpload(async () => {
+            for (const cid of dbMeta.cars) {
+              const car = await (await this.loader.carStore()).load(cid);
+              if (!car) {
+                if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
+                  throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
+                }
+              } else {
+                await throwFalsy(this.loader.remoteCarStore).save(car);
+              }
             }
-          }
-          this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
-        });
-        uploads.push(uploadP);
-      }
+            // Remove from walState after successful upload
+            this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
+          }, `noLoaderOp with dbMeta.cars=${dbMeta.cars.toString()}`);
+        },
+        { concurrency: concurrencyLimit }
+      );
 
-      for (const dbMeta of operations) {
-        const uploadP = limit(async () => {
-          for (const cid of dbMeta.cars) {
-            const car = await (await this.loader.carStore()).load(cid).catch(() => null);
-            if (!car) {
-              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
-                throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
-            } else {
-              await limit(() => throwFalsy(this.loader.remoteCarStore).save(car));
+      // Process operations
+      await pMap(
+        operations,
+        async (dbMeta) => {
+          await retryableUpload(async () => {
+            for (const cid of dbMeta.cars) {
+              const car = await (await this.loader.carStore()).load(cid);
+              if (!car) {
+                if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
+                  throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
+                }
+              } else {
+                await throwFalsy(this.loader.remoteCarStore).save(car);
+              }
             }
-          }
-          this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
-        });
-        uploads.push(uploadP);
-      }
+            // Remove from walState after successful upload
+            this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
+          }, `operation with dbMeta.cars=${dbMeta.cars.toString()}`);
+        },
+        { concurrency: concurrencyLimit }
+      );
 
-      if (fileOperations.length) {
-        const dbLoader = this.loader;
-        for (const { cid: fileCid, public: publicFile } of fileOperations) {
-          const uploadP = limit(async () => {
-            const fileBlock = await (await dbLoader.fileStore()).load(fileCid); // .catch(() => false)
-            await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile });
+      // Process fileOperations
+      await pMap(
+        fileOperations,
+        async ({ cid: fileCid, public: publicFile }) => {
+          await retryableUpload(async () => {
+            const fileBlock = await (await this.loader.fileStore()).load(fileCid);
+            if (!fileBlock) {
+              throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
+            }
+            await this.loader.remoteFileStore?.save(fileBlock, { public: publicFile });
+            // Remove from walState after successful upload
             this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
-          });
-          uploads.push(uploadP);
-        }
-      }
+          }, `fileOperation with cid=${fileCid.toString()}`);
+        },
+        { concurrency: concurrencyLimit }
+      );
 
-      try {
-        const res = await Promise.allSettled(uploads);
-        const errors = res.filter((r) => r.status === "rejected") as PromiseRejectedResult[];
-        if (errors.length) {
-          throw this.logger.Error().Any("errors", errors).Msg("error uploading").AsError();
-        }
-        if (operations.length) {
-          const lastOp = operations[operations.length - 1];
-          await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
-            this.walState.operations.push(lastOp);
-            throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();
-          });
-        }
-      } finally {
-        await this.save(this.walState);
+      // If all uploads succeeded, send the last dbMeta to remoteMetaStore
+      if (operations.length) {
+        const lastOp = operations[operations.length - 1];
+        await retryableUpload(async () => {
+          await this.loader.remoteMetaStore?.save(lastOp);
+        }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
       }
-    })();
-    // this.loader.remoteMetaLoading = rmlp;
-    await rmlp;
+    } catch (error) {
+      // Log the error
+      this.logger.Error().Any("error", error).Msg("Processing failed");
+      // Do not proceed to send metadata if any uploads failed
+      return;
+    } finally {
+      // Always save the WAL state
+      await this.save(this.walState);
+    }
   }
 
   async load(): Promise<WALState | Falsy> {
