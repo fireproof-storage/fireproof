@@ -26,8 +26,8 @@ import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
 import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
-import pRetry from 'p-retry';
-import pMap from 'p-map';
+import pRetry from "p-retry";
+import pMap from "p-map";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -385,7 +385,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
           }, `noLoaderOp with dbMeta.cars=${dbMeta.cars.toString()}`);
         },
-        { concurrency: concurrencyLimit }
+        { concurrency: concurrencyLimit },
       );
 
       // Process operations
@@ -407,7 +407,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
           }, `operation with dbMeta.cars=${dbMeta.cars.toString()}`);
         },
-        { concurrency: concurrencyLimit }
+        { concurrency: concurrencyLimit },
       );
 
       // Process fileOperations
@@ -424,7 +424,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
           }, `fileOperation with cid=${fileCid.toString()}`);
         },
-        { concurrency: concurrencyLimit }
+        { concurrency: concurrencyLimit },
       );
 
       // If all uploads succeeded, send the last dbMeta to remoteMetaStore
