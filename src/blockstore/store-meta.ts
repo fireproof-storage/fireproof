@@ -158,10 +158,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
   }
 
-  private updateParentsFromDbMetas(dbMetas: { eventCid: CarClockLink }[]) {
+  private updateParentsFromDbMetas(dbMetas: { eventCid: CarClockLink; parents: string[] }[]) {
     const cids = dbMetas.map((m) => m.eventCid);
+    const dbMetaParents = dbMetas.flatMap((m) => m.parents);
     const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
-    this.parents = Array.from(uniqueParentsMap.values());
+    const dbMetaParentsSet = new Set(dbMetaParents.map((p) => p.toString()));
+    this.parents = Array.from(uniqueParentsMap.values()).filter((p) => !dbMetaParentsSet.has(p.toString()));
     console.log("updated parents to ", this.remote, this.url().toString(), this.parents.map((p) => p.toString()));
   }
 
