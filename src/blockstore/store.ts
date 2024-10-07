@@ -80,7 +80,9 @@ export abstract class BaseStoreImpl {
   }
   abstract close(): Promise<Result<void>>;
 
-  readonly ready?: () => Promise<void>;
+  async ready() {
+    return;
+  }
 
   async keyedCrypto(): Promise<KeyedCrypto> {
     return keyedCryptoFactory(this._url, await this.keybag(), this.sthis);
@@ -139,15 +141,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(
-      name,
-      url,
-      {
-        ...opts,
-      },
-      sthis,
-      ensureLogger(sthis, "MetaStoreImpl"),
-    );
+    super(name, url, { ...opts }, sthis, ensureLogger(sthis, "MetaStoreImpl"));
     // this.remote = !!remote;
     if (/*this.remote && */ opts.gateway.subscribe) {
       this.onStarted(async () => {
@@ -229,15 +223,7 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   // readonly tag: string = "car-base";
 
   constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
-    super(
-      name,
-      url,
-      {
-        ...opts,
-      },
-      sthis,
-      ensureLogger(sthis, "DataStoreImpl"),
-    );
+    super(name, url, { ...opts }, sthis, ensureLogger(sthis, "DataStoreImpl"));
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -298,19 +284,11 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   constructor(loader: Loadable, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(
-      loader.name,
-      url,
-      {
-        ...opts,
-      },
-      loader.sthis,
-      ensureLogger(loader.sthis, "WALStoreImpl"),
-    );
+    super(loader.name, url, { ...opts }, loader.sthis, ensureLogger(loader.sthis, "WALStoreImpl"));
     this.loader = loader;
   }
 
-  ready = async () => {
+  async ready(): Promise<void> {
     return this._ready.once(async () => {
       const walState = await this.load().catch((e) => {
         this.logger.Error().Any("error", e).Msg("error loading wal");
@@ -324,7 +302,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         this.walState.fileOperations = walState.fileOperations || [];
       }
     });
-  };
+  }
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
