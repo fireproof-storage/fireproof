@@ -91,6 +91,8 @@
     "memfs": "^4.12.0",
     "multiformats": "^13.3.0",
     "p-limit": "^6.1.0",
+    "p-map": "^7.0.2",
+    "p-retry": "^6.2.0",
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
