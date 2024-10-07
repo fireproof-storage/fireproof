@@ -12,6 +12,8 @@ export interface TestGateway {
   get(url: URI, key: string): Promise<Uint8Array>;
 }
 
+export type UnsubscribeResult = Result<() => void>;
+
 export interface Gateway {
   // all the methods never throw!
   // an error is reported as a Result
@@ -25,5 +27,5 @@ export interface Gateway {
   get(url: URI): Promise<GetResult>;
   delete(url: URI): Promise<VoidResult>;
   // be notified of remote meta
-  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<VoidResult>;
+  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<UnsubscribeResult>;
 }

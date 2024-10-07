@@ -1,8 +1,7 @@
 import { Logger, KeyedResolvOnce, CoerceURI, URI, Result } from "@adviser/cement";
 
 import { decodeFile, encodeFile } from "../runtime/files.js";
-import { DataStoreImpl, WALStoreImpl } from "./store.js";
-import { MetaStoreImpl } from "./store-meta.js";
+import { DataStoreImpl, WALStoreImpl, MetaStoreImpl } from "./store.js";
 import { Loadable, StoreOpts, StoreRuntime } from "./types.js";
 import { dataDir, ensureLogger, ensureSuperLog } from "../utils.js";
 import { Gateway, TestGateway } from "./gateway.js";

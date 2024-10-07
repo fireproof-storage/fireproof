@@ -1,6 +1,6 @@
 import { Logger, URI } from "@adviser/cement";
 
-import { type SuperThis, throwFalsy } from "../types.js";
+import { throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
 import type { BlockstoreRuntime, Connection, Loadable } from "./types.js";
 import { type Loader } from "./loader.js";
@@ -14,7 +14,7 @@ export interface Connectable {
     readonly ebOpts: BlockstoreRuntime;
   };
   readonly name?: string;
-  readonly sthis: SuperThis;
+  // readonly sthis: SuperThis;
 }
 
 export abstract class ConnectionBase implements Connection {
@@ -87,6 +87,8 @@ export abstract class ConnectionBase implements Connection {
       keybag: () => getKeyBag(loader.sthis, this.loader?.ebOpts.keyBag),
     });
     // @jchris why we have a differention between remoteCarStore and remoteFileStore? -- file store is for on-demand attachment loading
+    // for now we don't have any difference but in superthis car store and
+    // file store could have different urls/gateways
     loader.remoteFileStore = loader.remoteCarStore;
   }
 
