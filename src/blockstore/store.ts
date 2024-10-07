@@ -12,6 +12,10 @@ import type {
   WALState,
   KeyedCrypto,
   Loadable,
+  MetaStore,
+  LoadHandler,
+  CarClockHead,
+  CarClockLink,
 } from "./types.js";
 import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
@@ -21,6 +25,7 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
+import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -122,6 +127,100 @@ export abstract class BaseStoreImpl {
     this._onStarted.forEach((fn) => fn());
     this.logger.Debug().Msg("started");
     return version;
+  }
+}
+
+export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
+  readonly storeType = "meta";
+  readonly subscribers = new Map<string, LoadHandler[]>();
+  parents: CarClockHead = [];
+  // remote: boolean;
+
+  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+    // const my = new URL(url.toString());
+    // my.searchParams.set("storekey", 'insecure');
+    super(
+      name,
+      url,
+      {
+        ...opts,
+      },
+      sthis,
+      ensureLogger(sthis, "MetaStoreImpl"),
+    );
+    // this.remote = !!remote;
+    if (/*this.remote && */ opts.gateway.subscribe) {
+      this.onStarted(async () => {
+        this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
+        opts.gateway.subscribe?.(this.url(), async (message: Uint8Array) => {
+          this.logger.Debug().Msg("Received message from gateway");
+          const dbMetas = await decodeGatewayMetaBytesToDbMeta(this.sthis, message);
+          await Promise.all(
+            dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
+          );
+          this.updateParentsFromDbMetas(dbMetas);
+        });
+      });
+    }
+  }
+
+  private updateParentsFromDbMetas(dbMetas: { eventCid: CarClockLink; parents: string[] }[]) {
+    const cids = dbMetas.map((m) => m.eventCid);
+    const dbMetaParents = dbMetas.flatMap((m) => m.parents);
+    const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
+    const dbMetaParentsSet = new Set(dbMetaParents.map((p) => p.toString()));
+    this.parents = Array.from(uniqueParentsMap.values()).filter((p) => !dbMetaParentsSet.has(p.toString()));
+  }
+
+  async handleByteHeads(byteHeads: Uint8Array) {
+    return await decodeGatewayMetaBytesToDbMeta(this.sthis, byteHeads);
+  }
+
+  async load(): Promise<DbMeta[] | Falsy> {
+    const branch = "main";
+    const url = await this.gateway.buildUrl(this.url(), branch);
+    if (url.isErr()) {
+      throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
+    }
+    const bytes = await this.gateway.get(url.Ok());
+    if (bytes.isErr()) {
+      if (isNotFoundError(bytes)) {
+        return undefined;
+      }
+      throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
+    }
+    const dbMetas = await this.handleByteHeads(bytes.Ok());
+    await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
+    this.updateParentsFromDbMetas(dbMetas);
+    return dbMetas.map((m) => m.dbMeta);
+  }
+
+  async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
+    branch = branch || "main";
+    this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
+    const event = await createDbMetaEventBlock(this.sthis, meta, this.parents);
+    const bytes = await encodeEventsWithParents(this.sthis, [event], this.parents);
+    const url = await this.gateway.buildUrl(this.url(), branch);
+    if (url.isErr()) {
+      throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
+    }
+    this.parents = [event.cid];
+    const res = await this.gateway.put(url.Ok(), bytes);
+    if (res.isErr()) {
+      throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
+    }
+    // await this.loader?.handleDbMetasFromStore([meta]);
+    // this.loader?.taskManager?.eventsWeHandled.add(event.cid.toString());
+    return res;
+  }
+
+  async close(): Promise<Result<void>> {
+    await this.gateway.close(this.url());
+    this._onClosed.forEach((fn) => fn());
+    return Result.Ok(undefined);
+  }
+  async destroy(): Promise<Result<void>> {
+    return this.gateway.destroy(this.url());
   }
 }
 

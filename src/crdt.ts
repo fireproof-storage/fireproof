@@ -126,8 +126,7 @@ export class CRDT<T extends DocTypes> {
         // await this.clock.ready();
         await Promise.all([this.blockstore.ready(), this.indexBlockstore.ready(), this.clock.ready()]);
       } catch (e) {
-        const ee = e as Error;
-        throw this.logger.Error().Err(e).Msg(`CRDT is not ready: ${ee.stack}`).AsError();
+        throw this.logger.Error().Err(e).Msg(`CRDT is not ready`).AsError();
       }
     });
   }
