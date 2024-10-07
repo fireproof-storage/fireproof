@@ -320,18 +320,18 @@ describe("noop Gateway subscribe", function () {
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
 
-    if (metaGateway.subscribe) {
-      let resolve: () => void;
-      let didCall = false;
-      const p = new Promise<void>((r) => {
-        resolve = r;
-      });
-      const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
-        const decodedData = new TextDecoder().decode(data);
-        expect(decodedData).toContain("[]");
-        didCall = true;
-        resolve();
-      });
+    let resolve: () => void;
+    let didCall = false;
+    const p = new Promise<void>((r) => {
+      resolve = r;
+    });
+    const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
+      const decodedData = new TextDecoder().decode(data);
+      expect(decodedData).toContain("[]");
+      didCall = true;
+      resolve();
+    });
+    if (!metaSubscribeResult?.isErr()) {
       expect(metaSubscribeResult?.Ok()).toBeTruthy();
       const ok = await db.put({ _id: "key1", hello: "world1" });
       expect(ok).toBeTruthy();

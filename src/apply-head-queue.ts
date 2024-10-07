@@ -35,8 +35,7 @@ export function applyHeadQueue<T extends DocTypes>(worker: ApplyHeadWorkerFuncti
         const task = queue.shift();
         if (!task) continue;
 
-        // console.time('int_applyHead worker')
-        await worker(task.newHead, task.prevHead, task.updates !== null).catch((e) => {
+        await worker(task.newHead, task.prevHead, task.updates !== undefined).catch((e) => {
           throw logger.Error().Err(e).Msg("int_applyHead worker error").AsError();
         });
         // console.timeEnd('int_applyHead worker')

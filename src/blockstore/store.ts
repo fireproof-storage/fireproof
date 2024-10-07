@@ -229,13 +229,18 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
-    if (opts.noLoader) {
+    if (opts.compact) {
+      this.walState.operations = [];
+      this.walState.noLoaderOps = [dbMeta];
+    } else if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
       this.walState.operations.push(dbMeta);
     }
     await this.save(this.walState);
-    void this.process();
+    if (!opts.noLoader) {
+      void this.process();
+    }
   }
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
@@ -266,7 +271,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       const fileOperations = [...this.walState.fileOperations];
       const uploads: Promise<void>[] = [];
       const noLoaderOps = [...this.walState.noLoaderOps];
-      const limit = pLimit(5);
+      const limit = pLimit(3);
 
       if (operations.length + fileOperations.length + noLoaderOps.length === 0) return;
 
@@ -322,7 +327,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
-          // console.log('saving remote meta', lastOp.car.toString())
           await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
             this.walState.operations.push(lastOp);
             throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();

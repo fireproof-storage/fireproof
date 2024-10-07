@@ -85,6 +85,8 @@ export class CRDTClock<T extends DocTypes> {
     // if (!(this.head && prevHead && newHead)) {
     //   throw new Error("missing head");
     // }
+    const noLoader = !localUpdates;
+
     // console.log("int_applyHead", this.applyHeadQueue.size(), this.head, newHead, prevHead, localUpdates);
     const ogHead = sortClockHead(this.head);
     newHead = sortClockHead(newHead);
@@ -97,7 +99,6 @@ export class CRDTClock<T extends DocTypes> {
       return;
     }
 
-    const noLoader = !localUpdates;
     // const noLoader = this.head.length === 1 && !updates?.length
     if (!this.blockstore) {
       throw this.logger.Error().Msg("missing blockstore").AsError();
