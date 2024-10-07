@@ -151,7 +151,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
           await Promise.all(
             dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
           );
-          console.log("got subscribed dbMetas", dbMetas.map((m) => m.eventCid.toString()));
+          console.log(
+            "got subscribed dbMetas",
+            dbMetas.map((m) => m.eventCid.toString()),
+          );
           this.updateParentsFromDbMetas(dbMetas);
         });
       });
@@ -164,7 +167,12 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
     const dbMetaParentsSet = new Set(dbMetaParents.map((p) => p.toString()));
     this.parents = Array.from(uniqueParentsMap.values()).filter((p) => !dbMetaParentsSet.has(p.toString()));
-    console.log("updated parents to ", this.remote, this.url().toString(), this.parents.map((p) => p.toString()));
+    console.log(
+      "updated parents to ",
+      this.remote,
+      this.url().toString(),
+      this.parents.map((p) => p.toString()),
+    );
   }
 
   async handleByteHeads(byteHeads: Uint8Array) {
@@ -186,7 +194,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
     const dbMetas = await this.handleByteHeads(bytes.Ok());
     await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
-    console.log("got loaded dbMetas", dbMetas.map((m) => m.eventCid.toString()));
+    console.log(
+      "got loaded dbMetas",
+      dbMetas.map((m) => m.eventCid.toString()),
+    );
     this.updateParentsFromDbMetas(dbMetas);
     return dbMetas.map((m) => m.dbMeta);
   }
@@ -207,7 +218,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
     // await this.loader?.handleDbMetasFromStore([meta]);
-    console.log("new parent is ", 
+    console.log(
+      "new parent is ",
       this.remote,
       this.url().toString(),
       event.cid.toString(),
