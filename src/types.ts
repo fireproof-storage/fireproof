@@ -71,6 +71,7 @@ export interface SuperThis {
   readonly ctx: Record<string, unknown>;
   readonly txt: TextEndeCoder;
   nextId(bytes?: number): { str: string; bin: Uint8Array };
+  timeOrderedNextId(time?: number): { str: string };
   start(): Promise<void>;
   clone(override: Partial<SuperThisOpts>): SuperThis;
 }

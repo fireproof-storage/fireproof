@@ -2,6 +2,9 @@ import { URI } from "@adviser/cement";
 import { rt, getStore, ensureSuperLog } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
+// only for test
+import { UUID } from "uuidv7";
+
 describe("utils", () => {
   const sthis = mockSuperThis({});
   const logger = ensureSuperLog(sthis, "getfilename");
@@ -61,5 +64,21 @@ describe("utils", () => {
         store: store.type,
       });
     }
+  });
+
+  it("order timeorderednextid", () => {
+    let last = sthis.timeOrderedNextId().str;
+    for (let i = 0; i < 10; i++) {
+      const id = sthis.timeOrderedNextId().str;
+      const x = UUID.parse(id);
+      expect(x.getVariant()).toBe("VAR_10");
+      assert(id !== last, "id should be greater than last");
+      assert(id.slice(0, 13) >= last.slice(0, 13), `id should be greater than last ${id.slice(0, 13)} ${last.slice(0, 13)}`);
+      last = id;
+    }
+  });
+  it("timeorderednextid is uuidv7", () => {
+    const id = sthis.timeOrderedNextId(0xcafebabebeef).str;
+    expect(id.slice(0, 15)).toBe("cafebabe-beef-7");
   });
 });

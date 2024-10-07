@@ -60,6 +60,20 @@ class superThis implements SuperThis {
     };
   }
 
+  timeOrderedNextId(now?: number): { str: string } {
+    now = typeof now === "number" ? now : new Date().getTime();
+    // 49th bit
+    const t = (0x1000000000000 + now).toString(16).replace(/^1/, "");
+    const bin = this.crypto.randomBytes(10);
+    bin[1] = (bin[1] & 0xf0) | (bin[1] | 0x08 && 0x0b);
+    const hex = Array.from(bin)
+      .map((i) => i.toString(16).padStart(2, "0"))
+      .join("");
+    return {
+      str: `${t.slice(0, 8)}-${t.slice(8)}-7${hex.slice(0, 3)}-${hex.slice(3, 7)}-${hex.slice(7, 19)}`,
+    };
+  }
+
   start(): Promise<void> {
     return Promise.resolve();
   }
