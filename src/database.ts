@@ -1,5 +1,4 @@
 import { Logger, ResolveOnce } from "@adviser/cement";
-import { uuidv7 } from "uuidv7";
 
 import { WriteQueue, writeQueue } from "./write-queue.js";
 import { CRDT } from "./crdt.js";
@@ -99,7 +98,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put");
     const { _id, ...value } = doc;
-    const docId = _id || uuidv7();
+    const docId = _id || this.sthis.timeOrderedNextId().str;
     const result = (await this._writeQueue.push({
       id: docId,
       value: {
