@@ -75,7 +75,21 @@ export class Loader implements Loadable {
   private seenMeta = new Set<string>();
   private writeLimit = pLimit(1);
 
-  // readonly id = uuidv4();
+
+  private eventListeners: Record<string, (() => void)[]> = {};
+
+  on(event: "compact", fn: () => void): void {
+    if (!this.eventListeners[event]) {
+      this.eventListeners[event] = [];
+    }
+    this.eventListeners[event].push(fn);
+  }
+
+  emit(event: "compact"): void {
+    if (this.eventListeners[event]) {
+      this.eventListeners[event].forEach((fn) => fn());
+    }
+  }
 
   async keyBag(): Promise<KeyBag> {
     return getKeyBag(this.sthis, this.ebOpts.keyBag);

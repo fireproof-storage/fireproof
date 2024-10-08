@@ -276,6 +276,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   // readonly tag: string = "rwal-base";
 
   readonly loader: Loadable;
+  waitingForCompact = false;
 
   readonly _ready = new ResolveOnce<void>();
 
@@ -309,8 +310,16 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
     if (opts.compact) {
-      this.walState.operations = [];
-      this.walState.noLoaderOps = [dbMeta];
+      if (this.waitingForCompact) {
+        this.walState.operations = [dbMeta];
+        this.walState.noLoaderOps = [];
+        this.waitingForCompact = false;
+        await this.save(this.walState);
+        return void this.process();
+      } else {
+        this.walState.operations = [];
+        this.walState.noLoaderOps = [dbMeta];
+      }
     } else if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
@@ -318,9 +327,17 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     }
     await this.save(this.walState);
     if (!opts.noLoader) {
+      if (this.walState.operations.length + this.walState.noLoaderOps.length > 5) {
+        this.waitingForCompact = true;
+        return void setTimeout(() => this.loader.emit("compact"), 0);
+      }
       void this.process();
     }
   }
+
+  // idea is when the wal is long, we kill return without kicking of the process, but first we request a compact
+  // compact will enqueue a noLoaderOp which will start the process back up
+  // if we are waiting for a compact, then we process on first compact complete
 
   async enqueueFile(fileCid: AnyLink, publicFile = false) {
     await this.ready();
@@ -331,13 +348,14 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async process() {
     await this.ready();
     if (!this.loader.remoteCarStore) return;
+
     await this.processQueue.enqueue(async () => {
       try {
         await this._doProcess();
       } catch (e) {
         this.logger.Error().Any("error", e).Msg("error processing wal");
       }
-      if (this.walState.operations.length || this.walState.fileOperations.length || this.walState.noLoaderOps.length) {
+      if (this.walState.operations.length || this.walState.fileOperations.length) {
         setTimeout(() => void this.process(), 0);
       }
     });
@@ -350,7 +368,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
     const noLoaderOps = [...this.walState.noLoaderOps];
     const fileOperations = [...this.walState.fileOperations];
 
-    if (operations.length + noLoaderOps.length + fileOperations.length === 0) return;
+    if (operations.length + fileOperations.length === 0) return;
 
     const concurrencyLimit = 3;
 
