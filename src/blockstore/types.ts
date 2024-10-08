@@ -333,6 +333,8 @@ export interface Loadable {
   readonly name: string; // = "";
   readonly sthis: SuperThis;
   readonly ebOpts: BlockstoreRuntime;
+  on(event: "compact", fn: () => void): void;
+  emit(event: "compact"): void;
   remoteCarStore?: DataStore;
   carStore(): Promise<DataStore>;
   carLog: CarLog; // = new Array<CarGroup>();

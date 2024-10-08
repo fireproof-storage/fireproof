@@ -177,6 +177,9 @@ export class EncryptedBlockstore extends BaseBlockstore {
     }
     this.name = name;
     this.loader = new Loader(this.name, ebOpts, sthis);
+    this.loader.on("compact", () => {
+      void this.compact();
+    });
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
