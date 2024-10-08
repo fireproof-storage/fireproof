@@ -28,7 +28,7 @@ import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import type { Falsy, SuperThis } from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
-import { commit, commitFiles, CommitParams } from "./commitor.js";
+import { commit, commitFiles, CommitParams, encodeCarFiles } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { TaskManager } from "./task-manager.js";
@@ -239,6 +239,23 @@ export class Loader implements Loadable {
       await this.updateCarLog(ret.cgrp, ret.header, !!opts.compact);
       return ret.cgrp;
     });
+  }
+
+  async encodeCarFiles<T>(t: CarTransaction, meta:T,): Promise<{fp: CarHeader<T>, cars: {cid: AnyLink, bytes: Uint8Array}[] }> {
+    await this.ready();
+    const fstore = await this.fileStore();
+    const params: CommitParams = {
+      encoder: (await fstore.keyedCrypto()).codec(),
+      carLog: this.carLog,
+      carStore: fstore,
+      WALStore: await this.WALStore(),
+      metaStore: await this.metaStore(),
+      threshold: this.ebOpts.threshold,
+    };
+    if (!meta) {
+      meta = {} as T;
+    }
+    return encodeCarFiles(params, t, meta, { noLoader: false, compact: false });
   }
 
   async updateCarLog<T>(cids: CarGroup, fp: CarHeader<T>, compact: boolean): Promise<void> {

@@ -131,16 +131,25 @@ export interface CommitParams {
   readonly threshold?: number;
 }
 
+export async function encodeCarFiles<T>(
+  params: CommitParams,
+  t: CarTransaction,
+  done: T,
+  opts: CommitOpts,
+): Promise<{ fp: CarHeader<T>; cars: { cid: AnyLink; bytes: Uint8Array }[] }> {
+  const fp = makeCarHeader<T>(done, params.carLog, !!opts.compact);
+  const rootBlock = await encodeCarHeader(fp);
+  const cars = await prepareCarFiles(params.encoder, params.threshold, rootBlock, t);
+  return { fp, cars };
+} 
+
 export async function commit<T>(
   params: CommitParams,
   t: CarTransaction,
   done: T,
   opts: CommitOpts = { noLoader: false, compact: false },
 ): Promise<{ cgrp: CarGroup; header: CarHeader<T> }> {
-  const fp = makeCarHeader<T>(done, params.carLog, !!opts.compact);
-  const rootBlock = await encodeCarHeader(fp);
-
-  const cars = await prepareCarFiles(params.encoder, params.threshold, rootBlock, t);
+  const { fp, cars } = await encodeCarFiles(params, t, done, opts);
   const cids: AnyLink[] = [];
   for (const car of cars) {
     const { cid, bytes } = car;

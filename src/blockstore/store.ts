@@ -1,4 +1,4 @@
-import pLimit from "p-limit";
+// import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 import type {
@@ -16,6 +16,7 @@ import type {
   LoadHandler,
   CarClockHead,
   CarClockLink,
+  CarGroup,
 } from "./types.js";
 import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
@@ -25,6 +26,9 @@ import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
+import { MemoryBlockstore } from "@web3-storage/pail/block";
+import { commit, commitFiles, CommitParams } from "./commitor.js";
+
 import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
 import pRetry from "p-retry";
 import pMap from "p-map";
@@ -337,20 +341,51 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       } catch (e) {
         this.logger.Error().Any("error", e).Msg("error processing wal");
       }
-      if (this.walState.operations.length || this.walState.fileOperations.length || this.walState.noLoaderOps.length) {
+      if (this.walState.operations.length || this.walState.fileOperations.length) {
         setTimeout(() => void this.process(), 0);
       }
     });
+  }
+  // when the user hasn't modified in a while they can end up with local car files that they dont need to send 100 of at a time. so we can compact before send as described here: #280 (comment)
+
+  // at beginning of _doProcess coalece all operations and noLoaderOps into a single car file (or files if fragment or threshold are active). file uploads should not be modified.
+  // upload the new car file, with the latest db meta pointing to it. the header of the new car file should be from the most recent car file in the coalced group.
+  // coalce can be block level (default compaction) not database compaction
+  async coaleceOperations(operations: DbMeta[], noLoaderOps: DbMeta[]): Promise<AnyBlock[]> {
+    if (operations.length + noLoaderOps.length === 0) throw this.logger.Error().Msg("no operations to coalesce").AsError();
+    // load all the cars into a blockstore
+
+    const allOps = [...noLoaderOps, ...operations];
+
+    const bs = new MemoryBlockstore();
+
+    for (const op of allOps) {
+      for (const cid of op.cars) {
+        const car = await this.loader.loadCar(cid);
+        if (car) {
+          for await (const block of car.blocks()) {
+            await bs.put(block.cid, block.bytes);
+          }
+        }
+      }
+    }
+
+    const { meta } = await this.loader.loadCarHeaderFromMeta(allOps[allOps.length - 1]);
+    const { cars } = await this.loader.encodeCarFiles(bs, meta);
+    return cars;
   }
 
   async _doProcess() {
     if (!this.loader.remoteCarStore) return;
 
     const operations = [...this.walState.operations];
-    const noLoaderOps = [...this.walState.noLoaderOps];
     const fileOperations = [...this.walState.fileOperations];
+    const noLoaderOps = [...this.walState.noLoaderOps];
 
-    if (operations.length + noLoaderOps.length + fileOperations.length === 0) return;
+    if (operations.length + fileOperations.length === 0) {
+      // No operations to process, return
+      return;
+    }
 
     const concurrencyLimit = 3;
 
@@ -366,73 +401,47 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       });
 
     try {
-      // Process noLoaderOps
-      await pMap(
-        noLoaderOps,
-        async (dbMeta) => {
-          await retryableUpload(async () => {
-            for (const cid of dbMeta.cars) {
-              const car = await (await this.loader.carStore()).load(cid);
-              if (!car) {
-                if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
-                  throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
-                }
-              } else {
-                await throwFalsy(this.loader.remoteCarStore).save(car);
-              }
-            }
-            // Remove from walState after successful upload
-            this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
-          }, `noLoaderOp with dbMeta.cars=${dbMeta.cars.toString()}`);
-        },
-        { concurrency: concurrencyLimit },
-      );
-
-      // Process operations
-      await pMap(
-        operations,
-        async (dbMeta) => {
-          await retryableUpload(async () => {
-            for (const cid of dbMeta.cars) {
-              const car = await (await this.loader.carStore()).load(cid);
-              if (!car) {
-                if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars)) {
-                  throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
-                }
-              } else {
-                await throwFalsy(this.loader.remoteCarStore).save(car);
-              }
-            }
-            // Remove from walState after successful upload
-            this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
-          }, `operation with dbMeta.cars=${dbMeta.cars.toString()}`);
-        },
-        { concurrency: concurrencyLimit },
-      );
-
-      // Process fileOperations
+      // Process file operations
       await pMap(
         fileOperations,
         async ({ cid: fileCid, public: publicFile }) => {
           await retryableUpload(async () => {
             const fileBlock = await (await this.loader.fileStore()).load(fileCid);
-            if (!fileBlock) {
-              throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
-            }
             await this.loader.remoteFileStore?.save(fileBlock, { public: publicFile });
-            // Remove from walState after successful upload
-            this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
-          }, `fileOperation with cid=${fileCid.toString()}`);
+          }, `file with cid=${fileCid.toString()}`);
+          this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
         },
         { concurrency: concurrencyLimit },
       );
 
-      // If all uploads succeeded, send the last dbMeta to remoteMetaStore
+      // Save all car files
       if (operations.length) {
-        const lastOp = operations[operations.length - 1];
-        await retryableUpload(async () => {
-          await this.loader.remoteMetaStore?.save(lastOp);
-        }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
+        const cars = await this.coaleceOperations(operations, noLoaderOps);
+
+        await pMap(
+          cars,
+          async ({ cid, bytes }) => {
+            await retryableUpload(async () => {
+              await throwFalsy(this.loader.remoteCarStore).save({ cid, bytes });
+            }, `car with cid=${cid.toString()}`);
+          },
+          { concurrency: concurrencyLimit },
+        );
+        this.walState.operations = [];
+        this.walState.noLoaderOps = [];
+
+        const dbMeta = { cars: cars.map((c) => c.cid) };
+        await retryableUpload(
+          async () => {
+            try {
+              await this.loader.remoteMetaStore?.save(dbMeta);
+            } catch (error) {
+              this.logger.Error().Any("error", error).Msg("Error saving to remoteMetaStore");
+              throw error;
+            }
+          },
+          `remoteMetaStore save with dbMeta.cars=${JSON.stringify(dbMeta.cars)}`,
+        );
       }
     } catch (error) {
       // Log the error

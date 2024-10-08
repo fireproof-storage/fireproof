@@ -8,6 +8,7 @@ import { KeyBagOpts } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager";
+import { CarReader } from "@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -335,6 +336,9 @@ export interface Loadable {
   readonly ebOpts: BlockstoreRuntime;
   remoteCarStore?: DataStore;
   carStore(): Promise<DataStore>;
+  loadCar(cid: AnyLink): Promise<CarReader | Falsy>;
+  encodeCarFiles(bs: unknown, meta: unknown): Promise<{ fp: CarHeader<unknown>; cars: { cid: AnyLink; bytes: Uint8Array }[] }>;
+  loadCarHeaderFromMeta<T>(meta: DbMeta): Promise<CarHeader<T>>;
   carLog: CarLog; // = new Array<CarGroup>();
   remoteMetaStore?: MetaStore;
   remoteFileStore?: DataStore;
