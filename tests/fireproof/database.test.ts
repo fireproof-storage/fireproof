@@ -1,6 +1,17 @@
 import { URI } from "@adviser/cement";
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
-import { bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles, toStoreURIRuntime, keyConfigOpts } from "@fireproof/core";
+import {
+  bs,
+  Database,
+  DocResponse,
+  DocFileMeta,
+  DocWithId,
+  DocFiles,
+  toStoreURIRuntime,
+  keyConfigOpts,
+  DatabaseFactory,
+  DatabaseShell,
+} from "@fireproof/core";
 import { fileGatewayFactoryItem } from "../../src/blockstore/register-store-protocol.js";
 import { FILESTORE_VERSION } from "../../src/runtime/index.js";
 
@@ -13,7 +24,7 @@ describe("basic Database", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = Database.factory(undefined, {
+    db = DatabaseFactory(undefined, {
       logger: sthis.logger,
     });
   });
@@ -43,7 +54,7 @@ describe("basic Database with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: Database;
+  let db: DatabaseShell;
   const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
@@ -51,7 +62,7 @@ describe("basic Database with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("factory-name");
+    db = DatabaseFactory("factory-name") as DatabaseShell;
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
@@ -83,10 +94,10 @@ describe("basic Database with record", function () {
     expect(rows[0].value._id).toBe("hello");
   });
   it("is not persisted", async function () {
-    const db2 = Database.factory("factory-name");
+    const db2 = DatabaseFactory("factory-name") as DatabaseShell;
     const { rows } = await db2.changes([]);
     expect(rows.length).toBe(1);
-    expect(db2).toBe(db);
+    expect(db2.ref).toBe(db.ref);
     const doc = await db2.get<Doc>("hello").catch((e) => e);
     expect(doc.value).toBe("world");
     await db2.close();
@@ -105,7 +116,7 @@ describe("named Database with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-db-name");
+    db = DatabaseFactory("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
     const ok = await db.put(doc);
@@ -232,7 +243,7 @@ describe("basic Database parallel writes / public", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-parallel-writes", { public: true });
+    db = DatabaseFactory("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -312,7 +323,7 @@ describe("basic Database with subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("factory-name");
+    db = DatabaseFactory("factory-name");
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -356,7 +367,7 @@ describe("basic Database with no update subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("factory-name");
+    db = DatabaseFactory("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
       didRun++;
@@ -394,7 +405,7 @@ describe("database with files input", () => {
   beforeEach(async function () {
     await sthis.start();
     imagefiles = await buildBlobFiles();
-    db = Database.factory("fireproof-with-images");
+    db = DatabaseFactory("fireproof-with-images");
     const doc = {
       _id: "images-main",
       type: "files",

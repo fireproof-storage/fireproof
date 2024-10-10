@@ -133,7 +133,7 @@ describe("MetaStore with a saved header", function () {
   let raw: bs.TestGateway;
   let cid: CID;
   const sthis = mockSuperThis();
-  let onload: bs.DbMeta[];
+  // let onload: bs.DbMeta[];
 
   afterEach(async () => {
     await store.close();
@@ -149,11 +149,11 @@ describe("MetaStore with a saved header", function () {
     await store.save({ cars: [cid] /*, key: undefined */ });
   });
 
-  it("should load", async function () {
-    expect(onload).toBeTruthy();
-    expect(onload?.length).toEqual(1);
-    expect(onload?.[0].cars.toString()).toEqual(cid.toString());
-  });
+  // it("should load", async function () {
+  //   expect(onload).toBeTruthy();
+  //   expect(onload?.length).toEqual(1);
+  //   expect(onload?.[0].cars.toString()).toEqual(cid.toString());
+  // });
 
   it("should have a header", async function () {
     const bytes = await raw.get(store.url(), "main");

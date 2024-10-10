@@ -35,22 +35,21 @@ import { ensureLogger } from "./utils.js";
 import { Logger } from "@adviser/cement";
 
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
-  sthis: SuperThis,
-  { crdt }: HasCRDT<T>,
+  refDb: HasCRDT<T>,
   name: string,
   mapFn?: MapFn<T>,
   meta?: IdxMeta,
 ): Index<K, T, R> {
-  if (mapFn && meta) throw crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
-  if (mapFn && mapFn.constructor.name !== "Function") throw crdt.logger.Error().Msg("mapFn must be a function").AsError();
-  if (crdt.indexers.has(name)) {
-    const idx = crdt.indexers.get(name) as unknown as Index<K, T>;
+  if (mapFn && meta) throw refDb.crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
+  if (mapFn && mapFn.constructor.name !== "Function") throw refDb.crdt.logger.Error().Msg("mapFn must be a function").AsError();
+  if (refDb.crdt.indexers.has(name)) {
+    const idx = refDb.crdt.indexers.get(name) as unknown as Index<K, T>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<K, T>(sthis, crdt, name, mapFn, meta);
-    crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
+    const idx = new Index<K, T>(refDb.crdt.sthis, refDb.crdt, name, mapFn, meta);
+    refDb.crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
   }
-  return crdt.indexers.get(name) as unknown as Index<K, T, R>;
+  return refDb.crdt.indexers.get(name) as unknown as Index<K, T, R>;
 }
 
 // interface ByIdIndexIten<K extends IndexKeyType> {

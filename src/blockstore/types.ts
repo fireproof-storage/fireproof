@@ -8,6 +8,7 @@ import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager";
+import { Gateway } from "./gateway";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -280,6 +281,7 @@ export interface Connection {
 
 export interface BaseStore {
   readonly storeType: StoreType;
+  readonly realGateway: Gateway;
   // readonly url: URI
   url(): URI;
   readonly name: string;

@@ -2,7 +2,20 @@ import { mockSuperThis, sleep, storageURL } from "../helpers.js";
 import { docs } from "./fireproof.fixture.js";
 import { CID } from "multiformats/cid";
 
-import { ConfigOpts, Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index } from "@fireproof/core";
+import {
+  ConfigOpts,
+  Database,
+  DatabaseFactory,
+  DocResponse,
+  DocWithId,
+  Index,
+  IndexRows,
+  MapFn,
+  bs,
+  fireproof,
+  index,
+  isDatabase,
+} from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -84,7 +97,7 @@ describe("public API", function () {
   });
   it("should be a database instance", function () {
     expect(db).toBeTruthy();
-    expect(db instanceof Database).toBeTruthy();
+    expect(isDatabase(db)).toBeTruthy();
   });
   it("should put", function () {
     expect(ok).toBeTruthy();
@@ -113,7 +126,7 @@ describe("basic database", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-basic");
+    db = DatabaseFactory("test-basic");
   });
   it("can put with id", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -129,7 +142,7 @@ describe("basic database", function () {
   it("can define an index", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index<string, { foo: string }>(sthis, db, "test-index", (doc) => doc.foo);
+    const idx = index<string, { foo: string }>(db, "test-index", (doc) => doc.foo);
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -139,7 +152,7 @@ describe("basic database", function () {
   it("can define an index with a default function", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
-    const idx = index(sthis, db, "foo");
+    const idx = index(db, "foo");
     const result = await idx.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -178,7 +191,7 @@ describe("benchmarking with compaction", function () {
   beforeEach(async function () {
     // erase the existing test data
     await sthis.start();
-    db = Database.factory("test-benchmark-compaction", { autoCompact: 3 });
+    db = DatabaseFactory("test-benchmark-compaction", { autoCompact: 3 });
   });
   it.skip("insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
@@ -233,8 +246,8 @@ describe("benchmarking a database", function () {
   beforeEach(async function () {
     await sthis.start();
     // erase the existing test data
-    db = Database.factory("test-benchmark", { autoCompact: 100000, public: true });
-    // db = Database.factory(null, {autoCompact: 100000})
+    db = DatabaseFactory("test-benchmark", { autoCompact: 100000, public: true });
+    // db = DatabaseFactory(null, {autoCompact: 100000})
   });
 
   // run benchmarking tests
@@ -284,7 +297,7 @@ describe("benchmarking a database", function () {
     // equals(allDocsResult2.rows.length, numDocs+1)
 
     // console.time("open new DB");
-    const newDb = Database.factory("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb = DatabaseFactory("test-benchmark", { autoCompact: 100000, public: true });
     const doc = await newDb.get<{ foo: string }>("test");
     expect(doc.foo).toBe("fast");
     // console.timeEnd("open new DB");
@@ -326,7 +339,7 @@ describe("benchmarking a database", function () {
     await sleep(100);
 
     // console.time("compacted reopen again");
-    const newDb2 = Database.factory("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb2 = DatabaseFactory("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     expect(doc21.foo).toBe("fast");
     const blocks2 = newDb2.crdt.blockstore as bs.EncryptedBlockstore;
@@ -392,7 +405,7 @@ describe("Reopening a database", function () {
     // erase the existing test data
     await sthis.start();
 
-    db = Database.factory("test-reopen", { autoCompact: 100000 });
+    db = DatabaseFactory("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
@@ -407,7 +420,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have the same data on reopen", async function () {
-    const db2 = Database.factory("test-reopen");
+    const db2 = DatabaseFactory("test-reopen");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
     expect(db2.crdt.clock.head).toBeDefined();
@@ -426,7 +439,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have carlog after reopen", async function () {
-    const db2 = Database.factory("test-reopen");
+    const db2 = DatabaseFactory("test-reopen");
     await db2.crdt.ready();
     const blocks = db2.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
@@ -439,7 +452,7 @@ describe("Reopening a database", function () {
   it("faster, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 4; i++) {
       // console.log('iteration', i)
-      const db = Database.factory("test-reopen");
+      const db = DatabaseFactory("test-reopen");
       // assert(db._crdt.xready());
       await db.crdt.ready();
       const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
@@ -458,7 +471,7 @@ describe("Reopening a database", function () {
     for (let i = 0; i < 200; i++) {
       // console.log("iteration", i);
       // console.time("db open");
-      const db = Database.factory("test-reopen", { autoCompact: 1000 }); // try with 10
+      const db = DatabaseFactory("test-reopen", { autoCompact: 1000 }); // try with 10
       // assert(db._crdt.ready);
       await db.crdt.ready();
       // console.timeEnd("db open");
@@ -505,13 +518,13 @@ describe("Reopening a database with indexes", function () {
       didMap = true;
       return doc.foo;
     };
-    idx = index<string, Doc>(sthis, db, "foo", mapFn);
+    idx = index<string, Doc>(db, "foo", mapFn);
   });
 
   it("should persist data", async function () {
     const doc = await db.get<Doc>("test");
     expect(doc.foo).toBe("bar");
-    const idx2 = index<string, Doc>(sthis, db, "foo");
+    const idx2 = index<string, Doc>(db, "foo");
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();
@@ -522,7 +535,7 @@ describe("Reopening a database with indexes", function () {
   });
 
   it("should reuse the index", async function () {
-    const idx2 = index(sthis, db, "foo", mapFn);
+    const idx2 = index(db, "foo", mapFn);
     expect(idx2).toBe(idx);
     const result = await idx2.query();
     expect(result).toBeTruthy();

@@ -1,14 +1,14 @@
-import { fireproof, Database, DocResponse, DocWithId, index } from "@fireproof/core";
+import { fireproof, Database, DocResponse, DocWithId, index, isDatabase } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
     const result = fireproof("hello"); // call to your library function
-    expect(result.name).toBe("hello");
+    expect(result.name()).toBe("hello");
   });
 });
 
-describe("hello public API", function () {
+describe("hello public API", () => {
   interface TestDoc {
     foo: string;
   }
@@ -24,13 +24,13 @@ describe("hello public API", function () {
   beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-public-api");
-    index<string, TestDoc>(sthis, db, "test-index", (doc) => doc.foo);
+    index<string, TestDoc>(db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
   });
   it("should have a database", function () {
     expect(db).toBeTruthy();
-    expect(db instanceof Database).toBeTruthy();
+    expect(isDatabase(db)).toBeTruthy();
   });
   it("should put", function () {
     expect(ok).toBeTruthy();
@@ -39,11 +39,10 @@ describe("hello public API", function () {
   it("should get", function () {
     expect(doc.foo).toBe("bar");
   });
-  it("should get when you open it again", async function () {
+  it("should get when you open it again", async () => {
     await db.close();
-    await db.destroy();
-    const db2 = fireproof("test-public-api");
-    doc = await db2.get("test");
+    db = fireproof("test-public-api");
+    doc = await db.get("test");
     expect(doc.foo).toBe("bar");
   });
 });

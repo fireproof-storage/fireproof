@@ -184,13 +184,19 @@ export class FragmentGateway implements Gateway {
         return Result.Err(rfrag.Err());
       }
       const frag = rfrag.Ok();
-      const fidStr = base58btc.encode(frag.fid);
-      const fragUrl = url
-        .build()
-        .setParam(PARAM.FRAG_FID, fidStr)
-        .setParam(PARAM.FRAG_LEN, frag.len.toString())
-        .setParam(PARAM.FRAG_HEAD, this.headerSize.toString())
-        .URI();
+      let fragUrl: URI;
+      // if no fragments, just delete the url
+      if (rfrags.length > 1) {
+        const fidStr = base58btc.encode(frag.fid);
+        fragUrl = url
+          .build()
+          .setParam(PARAM.FRAG_FID, fidStr)
+          .setParam(PARAM.FRAG_LEN, frag.len.toString())
+          .setParam(PARAM.FRAG_HEAD, this.headerSize.toString())
+          .URI();
+      } else {
+        fragUrl = url;
+      }
       await this.innerGW.delete(fragUrl);
     }
     return Result.Ok(undefined);

@@ -35,7 +35,7 @@ describe("config file gateway", () => {
   it("loader", async () => {
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.name()).toBe(my_app());
 
     const fileStore = await db.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
@@ -113,7 +113,7 @@ describe("config file gateway", () => {
     const db = fireproof(my_app(), { storeUrls: { base } });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.name()).toBe(my_app());
     const carStore = await db.crdt.blockstore.loader?.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
@@ -179,7 +179,7 @@ describe("config file gateway", () => {
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.name()).toBe(my_app());
     const carStore = await db.crdt.blockstore.loader?.carStore();
 
     expect(carStore?.url().asObj()).toEqual({
@@ -249,7 +249,7 @@ describe("config file gateway", () => {
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.name()).toBe(my_app());
     const carStore = await db.crdt.blockstore.loader?.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",

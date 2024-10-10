@@ -83,7 +83,7 @@ export class CRDT<T extends DocTypes> {
         const idxCarMeta = meta as IndexTransactionMeta;
         if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index(this.sthis, { crdt: this }, name, undefined, idx);
+          index({ crdt: this }, name, undefined, idx);
         }
       },
       storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
@@ -137,9 +137,9 @@ export class CRDT<T extends DocTypes> {
   }
 
   async close(): Promise<void> {
-    // for (let val of this.indexers.values()) {
-    //   await val.close()
-    // }
+    // await this.blockstore.close();
+    // await this.indexBlockstore.close();
+    // await this.clock.close();
     await Promise.all([this.blockstore.close(), this.indexBlockstore.close(), this.clock.close()]);
   }
 
