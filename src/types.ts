@@ -4,7 +4,7 @@ import type { Operation } from "@web3-storage/pail/crdt/api";
 import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile } from "./blockstore/index.js";
 import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";
 
-import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
+// import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 import { KeyBagOpts } from "./runtime/key-bag.js";
 
 export type Falsy = false | null | undefined;
@@ -47,17 +47,33 @@ export function falsyToUndef<T>(value: T | Falsy): T | undefined {
 }
 
 export type StoreType = "data" | "wal" | "meta";
+export interface FPStats {
+  isFile(): boolean;
+  isDirectory(): boolean;
+  isBlockDevice(): boolean;
+  isCharacterDevice(): boolean;
+  isSymbolicLink(): boolean;
+  isFIFO(): boolean;
+  isSocket(): boolean;
+  uid: number | Falsy;
+  gid: number | Falsy;
+  size: number | Falsy;
+  atime: Date | Falsy;
+  mtime: Date | Falsy;
+  ctime: Date | Falsy;
+  birthtime: Date | Falsy;
+}
 
 export interface SysFileSystem {
   start(): Promise<SysFileSystem>;
-  mkdir(path: PathLike, options?: { recursive: boolean }): Promise<string | undefined>;
-  readdir(path: PathLike, options?: unknown): Promise<string[]>;
-  rm(path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }): Promise<void>;
-  copyFile(source: PathLike, destination: PathLike): Promise<void>;
-  readfile(path: PathLike, options?: { encoding: BufferEncoding; flag?: string }): Promise<Uint8Array>;
-  stat(path: PathLike): Promise<Stats>;
-  unlink(path: PathLike): Promise<void>;
-  writefile(path: PathLike, data: Uint8Array | string): Promise<void>;
+  mkdir(path: string, options?: { recursive: boolean }): Promise<string | undefined>;
+  readdir(path: string /*, options?: unknown*/): Promise<string[]>;
+  rm(path: string, options?: { recursive: boolean }): Promise<void>;
+  copyFile(source: string, destination: string): Promise<void>;
+  readfile(path: string /*, options?: { encoding: BufferEncoding; flag?: string }*/): Promise<Uint8Array>;
+  stat(path: string): Promise<FPStats>;
+  unlink(path: string): Promise<void>;
+  writefile(path: string, data: Uint8Array | string): Promise<void>;
 }
 
 export interface PathOps {
