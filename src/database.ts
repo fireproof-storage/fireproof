@@ -1,4 +1,4 @@
-import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI, wrapRefcounted } from "@adviser/cement";
+import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
 import { WriteQueue, writeQueue } from "./write-queue.js";
 import { CRDT, HasCRDT } from "./crdt.js";
@@ -34,6 +34,13 @@ import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 
 const databases = new KeyedResolvOnce<Database>();
 
+function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
+  if (!set) return [];
+  return Object.entries(set)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => ({ [k]: v }));
+}
+
 export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
   return JSON.stringify(
     toSortedArray({
@@ -56,32 +63,146 @@ export interface DatabaseOpts {
   // readonly threshold?: number;
 }
 
-export class Database<DT extends DocTypes = NonNullable<unknown>> implements HasCRDT<DT> {
-  static factory<T extends DocTypes = NonNullable<unknown>>(name: string | undefined, opts?: ConfigOpts): Database<T> {
-    const sthis = ensureSuperThis(opts);
-    return wrapRefcounted(
-      databases.get(keyConfigOpts(sthis, name, opts)).once((key) => {
-        const db = new Database<T>(sthis, {
-          name,
-          meta: opts?.meta,
-          keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
-          storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
-          storeEnDe: {
-            encodeFile,
-            decodeFile,
-            ...opts?.storeEnDe,
-          },
-        });
-        db.onClosed(() => {
-          databases.unget(key);
-        });
-        return db;
-      }),
-      "close",
-    );
+export interface Database<DT extends DocTypes = NonNullable<unknown>> extends HasCRDT<DT> {
+  // readonly name: string;
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  readonly id: string;
+
+  name(): string;
+
+  onClosed(fn: () => void): void;
+
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+  ready(): Promise<void>;
+
+  get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
+  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
+  del(id: string): Promise<DocResponse>;
+  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
+  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
+  allDocuments<T extends DocTypes>(): Promise<{
+    rows: {
+      key: string;
+      value: DocWithId<T>;
+    }[];
+    clock: ClockHead;
+  }>;
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): Promise<IndexRows<K, T, R>>;
+  compact(): Promise<void>;
+}
+
+export function isDatabase<T extends DocTypes = NonNullable<unknown>>(db: unknown): db is Database<T> {
+  return db instanceof DatabaseImpl || db instanceof DatabaseShell;
+}
+
+export function DatabaseFactory<T extends DocTypes = NonNullable<unknown>>(
+  name: string | undefined,
+  opts?: ConfigOpts,
+): Database<T> {
+  const sthis = ensureSuperThis(opts);
+  return new DatabaseShell<T>(
+    databases.get(keyConfigOpts(sthis, name, opts)).once((key) => {
+      const db = new DatabaseImpl<T>(sthis, {
+        name,
+        meta: opts?.meta,
+        keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
+        storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
+        storeEnDe: {
+          encodeFile,
+          decodeFile,
+          ...opts?.storeEnDe,
+        },
+      });
+      db.onClosed(() => {
+        databases.unget(key);
+      });
+      return db;
+    }),
+  );
+}
+
+export class DatabaseShell<DT extends DocTypes = NonNullable<unknown>> implements Database<DT> {
+  readonly ref: DatabaseImpl<DT>;
+  constructor(ref: DatabaseImpl<DT>) {
+    this.ref = ref;
+    ref.addShell(this);
   }
 
-  readonly name?: string;
+  get id(): string {
+    return this.ref.id;
+  }
+  get logger(): Logger {
+    return this.ref.logger;
+  }
+  get sthis(): SuperThis {
+    return this.ref.sthis;
+  }
+  get crdt(): CRDT<DT> {
+    return this.ref.crdt;
+  }
+
+  name(): string {
+    return this.ref.name();
+  }
+  onClosed(fn: () => void): void {
+    return this.ref.onClosed(fn);
+  }
+  close(): Promise<void> {
+    return this.ref.shellClose(this);
+  }
+  destroy(): Promise<void> {
+    return this.ref.destroy();
+  }
+  ready(): Promise<void> {
+    return this.ref.ready();
+  }
+  get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
+    return this.ref.get(id);
+  }
+  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
+    return this.ref.put(doc);
+  }
+  del(id: string): Promise<DocResponse> {
+    return this.ref.del(id);
+  }
+  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>> {
+    return this.ref.changes(since, opts);
+  }
+  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> {
+    return this.ref.allDocs(opts);
+  }
+  allDocuments<T extends DocTypes>(): Promise<{
+    rows: {
+      key: string;
+      value: DocWithId<T>;
+    }[];
+    clock: ClockHead;
+  }> {
+    return this.ref.allDocuments();
+  }
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
+    return this.ref.subscribe(listener, updates);
+  }
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): Promise<IndexRows<K, T, R>> {
+    return this.ref.query(field, opts);
+  }
+  compact(): Promise<void> {
+    return this.ref.compact();
+  }
+}
+
+class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Database<DT> {
+  // readonly name: string;
   readonly opts: DatabaseOpts;
 
   _listening = false;
@@ -91,14 +212,29 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
   readonly _writeQueue: WriteQueue<DT>;
   // readonly blockstore: BaseBlockstore;
 
+  readonly shells: Set<DatabaseShell<DT>> = new Set<DatabaseShell<DT>>();
+
+  addShell(shell: DatabaseShell<DT>) {
+    this.shells.add(shell);
+  }
+
   readonly _onClosedFns = new Set<() => void>();
   onClosed(fn: () => void) {
     this._onClosedFns.add(fn);
   }
   async close() {
-    await this.ready();
-    await this.crdt.close();
-    this._onClosedFns.forEach((fn) => fn());
+    throw this.logger.Error().Str("db", this.name()).Msg(`use shellClose`).AsError();
+  }
+  async shellClose(db: DatabaseShell<DT>) {
+    if (!this.shells.has(db)) {
+      throw this.logger.Error().Str("db", this.name()).Msg(`Database Shell mismatch`).AsError();
+    }
+    this.shells.delete(db);
+    if (this.shells.size === 0) {
+      await this.ready();
+      await this.crdt.close();
+      this._onClosedFns.forEach((fn) => fn());
+    }
     // await this.blockstore.close();
   }
 
@@ -110,20 +246,23 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
 
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
-    return this._ready.once(async () => {
+    const ret = await this._ready.once(async () => {
       await this.sthis.start();
       await this.crdt.ready();
       // await this.blockstore.ready();
     });
+    return ret;
   }
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
+  readonly id: string;
 
-  private constructor(sthis: SuperThis, opts: DatabaseOpts) {
+  constructor(sthis: SuperThis, opts: DatabaseOpts) {
     this.opts = opts; // || this.opts;
-    this.name = opts.name;
+    // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
     this.sthis = sthis;
+    this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Database");
     // this.logger.SetDebug("Database")
     this.crdt = new CRDT(this.sthis, this.opts);
@@ -136,8 +275,12 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
     });
   }
 
+  name(): string {
+    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
+  }
+
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
+    if (!id) throw this.logger.Error().Str("db", this.name()).Msg(`Doc id is required`).AsError();
 
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("get");
@@ -161,14 +304,14 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
         _id: docId,
       },
     })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+    return { id: docId, clock: result?.head, name: this.name() } as DocResponse;
   }
 
   async del(id: string): Promise<DocResponse> {
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("del");
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head, name: this.name } as DocResponse;
+    return { id, clock: result?.head, name: this.name() } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
@@ -180,7 +323,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
       clock,
     }));
-    return { rows, clock: head, name: this.name };
+    return { rows, clock: head, name: this.name() };
   }
 
   async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
@@ -192,7 +335,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
-    return { rows, clock: head, name: this.name };
+    return { rows, clock: head, name: this.name() };
   }
 
   async allDocuments<T extends DocTypes>(): Promise<{
@@ -236,8 +379,8 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
     const _crdt = this.crdt as unknown as CRDT<T>;
     const idx =
       typeof field === "string"
-        ? index<K, T, R>(this.sthis, { crdt: _crdt }, field)
-        : index<K, T, R>(this.sthis, { crdt: _crdt }, makeName(field.toString()), field);
+        ? index<K, T, R>({ crdt: _crdt }, field)
+        : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
     return await idx.query(opts);
   }
 
@@ -268,13 +411,6 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Has
       }
     }
   }
-}
-
-function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
-  if (!set) return [];
-  return Object.entries(set)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => ({ [k]: v }));
 }
 
 function defaultURI(
@@ -349,7 +485,7 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
 }
 
 export function fireproof(name: string, opts?: ConfigOpts): Database {
-  return Database.factory(name, opts);
+  return DatabaseFactory(name, opts);
 }
 
 function makeName(fnString: string) {

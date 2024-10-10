@@ -53,6 +53,7 @@ abstract class BaseStoreImpl {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   readonly gateway: FragmentGateway;
+  readonly realGateway: Gateway;
   readonly keybag: KeyBag;
   readonly name: string;
   readonly loader?: Loadable;
@@ -72,6 +73,7 @@ abstract class BaseStoreImpl {
       .Str("this", this.sthis.nextId().str)
       .Ref("url", () => this._url.toString())
       .Logger();
+    this.realGateway = opts.gateway;
     this.gateway = new FragmentGateway(this.sthis, opts.gateway);
   }
 
