@@ -14,7 +14,7 @@ describe("fireproof config indexdb", () => {
   it("indexdb-loader", async () => {
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.name()).toBe(my_app());
 
     const fileStore = await db.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({

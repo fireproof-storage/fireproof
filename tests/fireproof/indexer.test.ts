@@ -1,4 +1,4 @@
-import { Index, index, Database, CRDT, IndexRows, DatabaseOpts, toStoreURIRuntime, bs, rt } from "@fireproof/core";
+import { Index, index, Database, CRDT, IndexRows, DatabaseOpts, toStoreURIRuntime, bs, rt, DatabaseFactory } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
 interface TestType {
@@ -19,7 +19,7 @@ describe("basic Index", () => {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -106,7 +106,7 @@ describe("Index query with compound key", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
@@ -136,7 +136,7 @@ describe("basic Index with map fun", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -164,7 +164,7 @@ describe("basic Index with map fun with value", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -204,7 +204,7 @@ describe("Index query with map and compound key", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
@@ -234,7 +234,7 @@ describe("basic Index with string fun", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -294,7 +294,7 @@ describe("basic Index upon cold start", function () {
       didMap++;
       return doc.title;
     };
-    indexer = await index<string, TestType>(sthis, { crdt: crdt }, "hello", mapFn);
+    indexer = await index<string, TestType>({ crdt: crdt }, "hello", mapFn);
     logger.Debug().Msg("post index beforeEach");
     await indexer.ready();
     logger.Debug().Msg("post indexer.ready beforeEach");
@@ -319,7 +319,7 @@ describe("basic Index upon cold start", function () {
     const { result, head } = await crdt2.changes();
     expect(result).toBeTruthy();
     await crdt2.ready();
-    const indexer2 = await index<string, TestType>(sthis, { crdt: crdt2 }, "hello", mapFn);
+    const indexer2 = await index<string, TestType>({ crdt: crdt2 }, "hello", mapFn);
     await indexer2.ready();
     const result2 = await indexer2.query();
     expect(indexer2.indexHead).toEqual(head);
@@ -330,7 +330,7 @@ describe("basic Index upon cold start", function () {
   it.skip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
     const crdt2 = new CRDT<TestType>(sthis, dbOpts);
-    const indexer2 = await index(sthis, { crdt: crdt2 }, "hello", mapFn);
+    const indexer2 = await index({ crdt: crdt2 }, "hello", mapFn);
     const { result, head } = await crdt2.changes([]);
     expect(result.length).toEqual(3);
     expect(head.length).toEqual(1);
@@ -355,9 +355,7 @@ describe("basic Index upon cold start", function () {
   });
   it("should ignore meta when map function definiton changes", async function () {
     const crdt2 = new CRDT<TestType>(sthis, dbOpts);
-    const result = await index<string, TestType>(sthis, { crdt: crdt2 }, "hello", (doc) =>
-      doc.title.split("").reverse().join(""),
-    ).query();
+    const result = await index<string, TestType>({ crdt: crdt2 }, "hello", (doc) => doc.title.split("").reverse().join("")).query();
     expect(result.rows.length).toEqual(3);
     expect(result.rows[0].key).toEqual("evitaerc"); // creative
   });
@@ -376,7 +374,7 @@ describe("basic Index with no data", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = Database.factory("test-indexer");
+    db = DatabaseFactory("test-indexer");
     indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
