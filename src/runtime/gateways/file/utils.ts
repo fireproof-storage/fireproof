@@ -1,4 +1,4 @@
-import { URI } from "@adviser/cement";
+import { runtimeFn, URI } from "@adviser/cement";
 import { getStore } from "../../../utils.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
 
@@ -16,10 +16,16 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   // case "node":
   // case "sys":
   // default: {
-  const { NodeFileSystem } = await import("./node-filesystem.js");
-  const fs = new NodeFileSystem();
-  // }
-  // }
+  let fs: SysFileSystem;
+  if (runtimeFn().isDeno) {
+    const { DenoFileSystem } = await import("./deno-filesystem.js");
+    fs = new DenoFileSystem();
+  } else if (runtimeFn().isNodeIsh) {
+    const { NodeFileSystem } = await import("./node-filesystem.js");
+    fs = new NodeFileSystem();
+  } else {
+    throw new Error("unsupported runtime");
+  }
   return fs.start();
 }
 
