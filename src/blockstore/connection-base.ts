@@ -1,21 +1,19 @@
 import { Logger, URI } from "@adviser/cement";
 
-import { throwFalsy } from "../types.js";
+import { PARAM, throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
-import type { BlockstoreRuntime, Connection, Loadable } from "./types.js";
-import { type Loader } from "./loader.js";
+import type { Connection, Loadable } from "./types.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
-import { getGatewayFromURL } from "./store-factory.js";
-import { getKeyBag } from "../runtime/key-bag.js";
+import { getStartedGateway } from "./store-factory.js";
 
-export interface Connectable {
-  readonly blockstore: {
-    readonly loader?: Loader;
-    readonly ebOpts: BlockstoreRuntime;
-  };
-  readonly name?: string;
-  // readonly sthis: SuperThis;
-}
+// export interface Connectable {
+//   // readonly blockstore: {
+//   //   readonly loader?: Loader;
+//   //   readonly ebOpts: BlockstoreRuntime;
+//   // };
+//   readonly name?: string;
+//   // readonly sthis: SuperThis;
+// }
 
 export abstract class ConnectionBase implements Connection {
   // readonly ready: Promise<unknown>;
@@ -53,14 +51,18 @@ export abstract class ConnectionBase implements Connection {
     if (!loader) throw this.logger.Error().Msg("connectMeta_X: loader is required").AsError();
     this.loader = loader;
     await this.onConnect();
-    const metaUrl = this.url.build().defParam("store", "meta").URI();
-    const gateway = await getGatewayFromURL(metaUrl, this.loader.sthis);
-    if (!gateway) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
+    const metaUrl = this.url.build().defParam(PARAM.STORE, "meta").URI();
+    const rgateway = await getStartedGateway(loader.sthis, metaUrl);
+    if (rgateway.isErr())
+      throw this.logger.Error().Result("err", rgateway).Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
+    const name = metaUrl.toString();
     const dbName = metaUrl.getParam("name");
-    if (!dbName) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: name is required").AsError();
-    const remote = await RemoteMetaStore(loader.sthis, dbName, metaUrl, {
+    if (!dbName) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: dbName is required").AsError();
+
+    const gateway = rgateway.Ok();
+    const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
       gateway: gateway.gateway,
-      keybag: () => getKeyBag(loader.sthis, loader.ebOpts.keyBag),
+      keybag: await loader.keyBag(),
       loader,
     });
     this.loader.remoteMetaStore = remote;
@@ -76,15 +78,15 @@ export abstract class ConnectionBase implements Connection {
   async connectStorage_X({ loader }: { loader?: Loadable }) {
     if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
     this.loader = loader;
-    // const dataUrl = this.url.build().defParam("store", "data").defParam("fragSize", "128000").URI();
-    const dataUrl = this.url.build().defParam("store", "data").URI();
-    const gateway = await getGatewayFromURL(dataUrl, this.loader.sthis);
-    if (!gateway) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
+    const dataUrl = this.url.build().defParam(PARAM.STORE, "data").URI();
+    const rgateway = await getStartedGateway(loader.sthis, dataUrl);
+    if (rgateway.isErr())
+      throw this.logger.Error().Result("err", rgateway).Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
     const name = dataUrl.getParam("name");
     if (!name) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: name is required").AsError;
     loader.remoteCarStore = await RemoteDataStore(loader.sthis, name, this.url, {
-      gateway: gateway.gateway,
-      keybag: () => getKeyBag(loader.sthis, this.loader?.ebOpts.keyBag),
+      gateway: rgateway.Ok().gateway,
+      keybag: await loader.keyBag(),
     });
     // @jchris why we have a differention between remoteCarStore and remoteFileStore? -- file store is for on-demand attachment loading
     // for now we don't have any difference but in superthis car store and

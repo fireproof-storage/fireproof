@@ -1,9 +1,9 @@
 import { FILESTORE_VERSION } from "./version.js";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
-import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
+import { ensureLogger, ensureSuperLog, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
 import { getFileName, getFileSystem, getPath } from "./utils.js";
-import { SuperThis, SysFileSystem } from "../../../types.js";
+import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 
@@ -20,8 +20,8 @@ export class FileGateway implements Gateway {
   }
 
   constructor(sthis: SuperThis) {
-    this.sthis = sthis;
-    this.logger = sthis.logger;
+    this.sthis = ensureSuperLog(sthis, "FileGateway", { this: 1 });
+    this.logger = this.sthis.logger;
   }
 
   async getVersionFromFile(path: string, logger: Logger): Promise<string> {
@@ -47,22 +47,21 @@ export class FileGateway implements Gateway {
   start(baseURL: URI): Promise<Result<URI>> {
     return exception2Result(async () => {
       this._fs = await getFileSystem(baseURL);
-      await this.fs.start();
       const url = baseURL.build();
-      url.defParam("version", FILESTORE_VERSION);
+      url.defParam(PARAM.VERSION, FILESTORE_VERSION);
       // url.defParam("store", this.storeType);
       const dbUrl = await this.buildUrl(url.URI(), "dummy");
       const dbdirFile = this.getFilePath(dbUrl.Ok());
       await this.fs.mkdir(this.sthis.pathOps.dirname(dbdirFile), { recursive: true });
       const dbroot = this.sthis.pathOps.dirname(dbdirFile);
       this.logger.Debug().Url(url.URI()).Str("dbroot", dbroot).Msg("start");
-      url.setParam("version", await this.getVersionFromFile(dbroot, this.logger));
+      url.setParam(PARAM.VERSION, await this.getVersionFromFile(dbroot, this.logger));
       return url.URI();
     });
   }
 
   async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    return Result.Ok(baseUrl.build().setParam("key", key).URI());
+    return Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI());
   }
 
   async close(): Promise<Result<void>> {
@@ -71,7 +70,7 @@ export class FileGateway implements Gateway {
   // abstract buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
 
   getFilePath(url: URI): string {
-    const key = url.getParam("key");
+    const key = url.getParam(PARAM.KEY);
     if (!key) throw this.logger.Error().Url(url).Msg(`key not found`).AsError();
     return this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
   }
@@ -88,11 +87,10 @@ export class FileGateway implements Gateway {
     return exceptionWrapper(async () => {
       const file = this.getFilePath(url);
       try {
+        this.logger.Debug().Url(url).Str("file", file).Msg("get");
         const res = await this.fs.readfile(file);
-        this.logger.Debug().Url(url.asURL()).Str("file", file).Msg("get");
         return Result.Ok(new Uint8Array(res));
       } catch (e: unknown) {
-        // this.logger.Error().Err(e).Str("file", file).Msg("get");
         if (isNotFoundError(e)) {
           return Result.Err(new NotFoundError(`file not found: ${file}`));
         }
@@ -165,7 +163,7 @@ export class FileTestStore implements TestGateway {
   }
 
   async get(iurl: URI, key: string) {
-    const url = iurl.build().setParam("key", key).URI();
+    const url = iurl.build().setParam(PARAM.KEY, key).URI();
     const dbFile = this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await (await getFileSystem(url)).readfile(dbFile);

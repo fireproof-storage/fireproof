@@ -1,7 +1,7 @@
 import { defineWorkspace } from "vitest/config";
 
 import file from "./vitest.file.config.ts";
-import mem_file from "./vitest.mem-file.config.ts";
-import browser from "./vitest.browser.config.ts";
+import memory from "./vitest.memory.config.ts";
+import indexdb from "./vitest.indexdb.config.ts";
 
-export default defineWorkspace([mem_file, file, browser]);
+export default defineWorkspace([memory, file, indexdb]);

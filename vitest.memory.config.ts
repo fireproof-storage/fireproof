@@ -5,13 +5,21 @@ import tsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
-    name: "mem-file",
-    exclude: ["tests/react/**", "**/smoke/**", "**/scripts/**", "**/examples/**"],
+    name: "memory",
+    exclude: [
+      "tests/react/**",
+      "**/smoke/**",
+      "**/scripts/**",
+      "**/examples/**",
+      "tests/gateway/indexdb",
+      "tests/gateway/file",
+      "tests/blockstore/keyed-crypto-indexdb-file.test.ts",
+    ],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
       exclude: ["**/smoke/**", "**/scripts/**", "**/examples/**"],
     },
     globals: true,
-    setupFiles: "./setup.mem-file.js",
+    setupFiles: "./setup.memory.js",
   },
 });

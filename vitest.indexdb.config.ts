@@ -6,9 +6,8 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     name: "indexdb",
-    exclude: ["examples/**"],
+    exclude: ["examples/**", "tests/gateway/file"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
-    //    environment: "browser",
     browser: {
       enabled: true,
       headless: true,
@@ -16,6 +15,6 @@ export default defineConfig({
       name: process.env.FP_BROWSER || "chrome", // browser name is required
     },
     globals: true,
-    setupFiles: "./setup.browser.ts",
+    setupFiles: "./setup.indexdb.ts",
   },
 });

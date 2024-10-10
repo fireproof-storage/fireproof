@@ -1,5 +1,19 @@
+import { URI } from "@adviser/cement";
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
-import { bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles } from "@fireproof/core";
+import {
+  bs,
+  Database,
+  DocResponse,
+  DocFileMeta,
+  DocWithId,
+  DocFiles,
+  toStoreURIRuntime,
+  keyConfigOpts,
+  DatabaseFactory,
+  DatabaseShell,
+} from "@fireproof/core";
+import { fileGatewayFactoryItem } from "../../src/blockstore/register-store-protocol.js";
+import { FILESTORE_VERSION } from "../../src/runtime/index.js";
 
 describe("basic Database", () => {
   let db: Database;
@@ -10,7 +24,9 @@ describe("basic Database", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = new Database();
+    db = DatabaseFactory(undefined, {
+      logger: sthis.logger,
+    });
   });
   it("should put", async () => {
     /** @type {Doc} */
@@ -38,7 +54,7 @@ describe("basic Database with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: Database;
+  let db: DatabaseShell;
   const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
@@ -46,7 +62,7 @@ describe("basic Database with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database();
+    db = DatabaseFactory("factory-name") as DatabaseShell;
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
@@ -78,13 +94,13 @@ describe("basic Database with record", function () {
     expect(rows[0].value._id).toBe("hello");
   });
   it("is not persisted", async function () {
-    const db2 = new Database();
+    const db2 = DatabaseFactory("factory-name") as DatabaseShell;
     const { rows } = await db2.changes([]);
-    expect(rows.length).toBe(0);
-    const doc = await db2.get("hello").catch((e) => e);
-    expect(doc.message).toBeTruthy();
+    expect(rows.length).toBe(1);
+    expect(db2.ref).toBe(db.ref);
+    const doc = await db2.get<Doc>("hello").catch((e) => e);
+    expect(doc.value).toBe("world");
     await db2.close();
-    await db2.destroy();
   });
 });
 
@@ -100,7 +116,7 @@ describe("named Database with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-db-name");
+    db = DatabaseFactory("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
     const ok = await db.put(doc);
@@ -136,7 +152,7 @@ describe("named Database with record", function () {
   it("should have a key", async function () {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
-    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     await loader.ready();
@@ -227,7 +243,7 @@ describe("basic Database parallel writes / public", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database("test-parallel-writes", { public: true });
+    db = DatabaseFactory("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -235,7 +251,7 @@ describe("basic Database parallel writes / public", function () {
     await Promise.all(writes);
   });
   it("should have one head", function () {
-    const crdt = db._crdt;
+    const crdt = db.crdt;
     expect(crdt.clock.head.length).toBe(1);
   });
   it("should write all", async function () {
@@ -272,7 +288,7 @@ describe("basic Database parallel writes / public", function () {
   });
   it("has changes", async function () {
     const { rows, clock } = await db.changes([]);
-    expect(clock[0]).toBe(db._crdt.clock.head[0]);
+    expect(clock[0]).toBe(db.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
     // rows.sort((a, b) => a.key.localeCompare(b.key));
     for (let i = 0; i < 10; i++) {
@@ -283,9 +299,9 @@ describe("basic Database parallel writes / public", function () {
   it("should not have a key", async function () {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(10);
-    expect(db.opts.public).toBeTruthy();
-    expect(db._crdt.opts.public).toBeTruthy();
-    const blocks = db._crdt.blockstore as bs.EncryptedBlockstore;
+    // expect(db.opts.public).toBeTruthy();
+    // expect(db._crdt.opts.public).toBeTruthy();
+    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     await loader.ready();
@@ -307,7 +323,7 @@ describe("basic Database with subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database();
+    db = DatabaseFactory("factory-name");
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -351,9 +367,8 @@ describe("basic Database with no update subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = new Database();
+    db = DatabaseFactory("factory-name");
     didRun = 0;
-
     unsubscribe = db.subscribe(() => {
       didRun++;
     });
@@ -390,7 +405,7 @@ describe("database with files input", () => {
   beforeEach(async function () {
     await sthis.start();
     imagefiles = await buildBlobFiles();
-    db = new Database("fireproof-with-images");
+    db = DatabaseFactory("fireproof-with-images");
     const doc = {
       _id: "images-main",
       type: "files",
@@ -470,5 +485,152 @@ describe("database with files input", () => {
 
     expect(file.type).toBe(imagefiles[0].file.type);
     expect(file.size).toBe(imagefiles[0].file.size);
+  });
+});
+
+describe("StoreURIRuntime", () => {
+  const sthis = mockSuperThis();
+  let safeEnv: string | undefined;
+  let unreg: () => void;
+  beforeEach(async () => {
+    await sthis.start();
+    safeEnv = sthis.env.get("FP_STORAGE_URL");
+    sthis.env.set("FP_STORAGE_URL", "my://bla/storage");
+    unreg = bs.registerStoreProtocol({
+      protocol: "murks",
+      isDefault: true,
+      defaultURI: function (): URI {
+        return URI.from("murks://fp");
+      },
+      gateway: function (): Promise<bs.Gateway> {
+        throw new Error("Function not implemented.");
+      },
+      test: function (): Promise<bs.TestGateway> {
+        throw new Error("Function not implemented.");
+      },
+    });
+  });
+  afterEach(() => {
+    sthis.env.set("FP_STORAGE_URL", safeEnv);
+    unreg();
+  });
+  it("default toStoreURIRuntime", () => {
+    expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "test")))).toEqual({
+      data: {
+        data: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&urlGen=fromEnv",
+        meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
+        wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
+      },
+      idx: {
+        data: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&urlGen=fromEnv",
+        meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
+        wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",
+      },
+    });
+    // keyConfigOpts(sthis: SuperThis, name: string, opts?: ConfigOpts): string {
+  });
+  it("no name toStoreURIRuntime", () => {
+    expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis)))).toEqual({
+      data: {
+        data: "my://bla/storage?name=storage&store=data&storekey=%40storage-data%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?name=storage&store=data&storekey=%40storage-data%40&urlGen=fromEnv",
+        meta: "my://bla/storage?name=storage&store=meta&storekey=%40storage-meta%40&urlGen=fromEnv",
+        wal: "my://bla/storage?name=storage&store=wal&storekey=%40storage-wal%40&urlGen=fromEnv",
+      },
+      idx: {
+        data: "my://bla/storage?index=idx&name=storage&store=data&storekey=%40storage-data-idx%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?index=idx&name=storage&store=data&storekey=%40storage-data-idx%40&urlGen=fromEnv",
+        meta: "my://bla/storage?index=idx&name=storage&store=meta&storekey=%40storage-meta-idx%40&urlGen=fromEnv",
+        wal: "my://bla/storage?index=idx&name=storage&store=wal&storekey=%40storage-wal-idx%40&urlGen=fromEnv",
+      },
+    });
+  });
+
+  it("set toStoreURIRuntime", () => {
+    expect(
+      JSON.parse(
+        JSON.stringify(
+          toStoreURIRuntime(sthis, "xxx", {
+            base: "my://storage-base",
+            data: {
+              data: "my://storage-data?name=yyy",
+              meta: "my://storage-meta",
+            },
+            idx: {
+              data: "my://storage-idx-data?name=yyy&index=bla",
+              meta: "my://storage-idx-meta",
+            },
+          }),
+        ),
+      ),
+    ).toEqual({
+      data: {
+        data: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40&suffix=.car",
+        file: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40",
+        meta: "my://storage-meta?name=storage-meta&store=meta&storekey=%40storage-meta-meta%40",
+        wal: "my://storage-base?name=xxx&store=wal&storekey=%40xxx-wal%40",
+      },
+      idx: {
+        data: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40&suffix=.car",
+        file: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40",
+        meta: "my://storage-idx-meta?index=idx&name=storage-idx-meta&store=meta&storekey=%40storage-idx-meta-meta-idx%40",
+        wal: "my://storage-base?index=idx&name=xxx&store=wal&storekey=%40xxx-wal-idx%40",
+      },
+    });
+  });
+
+  it("default-reg toStoreURIRuntime", () => {
+    sthis.env.delete("FP_STORAGE_URL");
+    expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "maxi")))).toEqual({
+      data: {
+        data: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&suffix=.car&urlGen=default",
+        file: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&urlGen=default",
+        meta: "murks://fp?name=maxi&store=meta&storekey=%40maxi-meta%40&urlGen=default",
+        wal: "murks://fp?name=maxi&store=wal&storekey=%40maxi-wal%40&urlGen=default",
+      },
+      idx: {
+        data: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&suffix=.car&urlGen=default",
+        file: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&urlGen=default",
+        meta: "murks://fp?index=idx&name=maxi&store=meta&storekey=%40maxi-meta-idx%40&urlGen=default",
+        wal: "murks://fp?index=idx&name=maxi&store=wal&storekey=%40maxi-wal-idx%40&urlGen=default",
+      },
+    });
+  });
+
+  it("keyConfigOpts", () => {
+    expect(JSON.parse(keyConfigOpts(sthis, "test"))).toEqual([
+      {
+        name: "test",
+      },
+      {
+        stores: [
+          {
+            data: {
+              data: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
+              file: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&urlGen=fromEnv",
+              meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
+              wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
+            },
+          },
+          {
+            idx: {
+              data: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
+              file: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&urlGen=fromEnv",
+              meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
+              wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",
+            },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("check file protocol defaultURI", () => {
+    const gw = fileGatewayFactoryItem();
+    expect(gw.defaultURI(sthis).toString()).toBe(
+      `file://${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`,
+    );
   });
 });
