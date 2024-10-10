@@ -34,6 +34,13 @@ import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 
 const databases = new KeyedResolvOnce<Database>();
 
+function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
+  if (!set) return [];
+  return Object.entries(set)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => ({ [k]: v }));
+}
+
 export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
   return JSON.stringify(
     toSortedArray({
