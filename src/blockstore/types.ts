@@ -4,10 +4,11 @@ import { DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
-import { KeyBagOpts } from "../runtime/key-bag.js";
+import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager";
+import { Gateway } from "./gateway";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -161,29 +162,69 @@ export interface StoreFactory {
   decodeFile?: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
 }
 
-export interface StoreOpts extends StoreFactory {
-  readonly isIndex?: string; // index prefix
-  readonly stores?: {
-    // string means local storage
-    // URL means schema selects the storeType
-    readonly base?: CoerceURI;
+export interface StoreUrls {
+  // string means local storage
+  // URL means schema selects the storeType
+  // readonly base: CoerceURI;
+  readonly meta: CoerceURI;
+  readonly data: CoerceURI;
+  // readonly index: CoerceURI;
+  readonly wal: CoerceURI;
+}
 
-    readonly meta?: CoerceURI;
-    readonly data?: CoerceURI;
-    readonly index?: CoerceURI;
-    readonly wal?: CoerceURI;
-  };
+// export interface StoreUrlBaseOpts {
+//   readonly base?: CoerceURI;
+//   readonly data?: Partial<StoreUrls>
+//   readonly idx?: Partial<StoreUrls>
+// }
+
+export interface StoreEnDeFile {
+  readonly encodeFile: (blob: BlobLike) => Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
+  readonly decodeFile: (blocks: unknown, cid: AnyLink, meta: DocFileMeta) => Promise<File>;
+}
+
+export interface StoreUrlsOpts {
+  // readonly urls?: StoreUrlBaseOpts;
+  // readonly func?: StoreFactory;
+  readonly base?: CoerceURI;
+  readonly data?: Partial<StoreUrls>;
+  readonly idx?: Partial<StoreUrls>;
+}
+
+// export interface StoreOpts extends StoreFactory {
+//   // readonly isIndex?: string; // index prefix
+//   readonly stores?: Partial<Stores>;
+// }
+
+export interface StoreURIs {
+  readonly meta: URI;
+  readonly data: URI;
+  readonly file: URI;
+  readonly wal: URI;
+}
+
+export interface StoreURIRuntime {
+  readonly data: StoreURIs;
+  readonly idx: StoreURIs;
+}
+
+export interface StoreFactoryItem {
+  readonly sthis: SuperThis;
+  readonly url: URI;
+  readonly keybag: KeyBag;
 }
 
 export interface StoreRuntime {
+  // readonly isIndex?: string; // index prefix
+  //xx readonly stores: Partial<Stores>;
   // the factories should produce ready-to-use stores
   // which means they have to call start() on the store
   // to fullfill lifecycle requirements
   // to release resources, like one database connection
   // for all stores a refcount on close() should be used
-  makeMetaStore(loader: Loadable): Promise<MetaStore>;
-  makeDataStore(loader: Loadable): Promise<DataStore>;
-  makeWALStore(loader: Loadable): Promise<WALStore>;
+  makeMetaStore(sfi: StoreFactoryItem): Promise<MetaStore>;
+  makeDataStore(sfi: StoreFactoryItem): Promise<DataStore>;
+  makeWALStore(sfi: StoreFactoryItem): Promise<WALStore>;
   encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File>;
 }
@@ -240,6 +281,7 @@ export interface Connection {
 
 export interface BaseStore {
   readonly storeType: StoreType;
+  readonly realGateway: Gateway;
   // readonly url: URI
   url(): URI;
   readonly name: string;
@@ -254,13 +296,23 @@ export interface BaseStore {
   start(): Promise<Result<URI>>;
 }
 
+export interface DbMetaEvent {
+  readonly eventCid: CarClockLink;
+  readonly parents: string[];
+  readonly dbMeta: DbMeta;
+}
+
 export interface MetaStore extends BaseStore {
   readonly storeType: "meta";
   load(branch?: string): Promise<DbMeta[] | Falsy>;
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
-  handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<{ eventCid: CarClockLink; dbMeta: DbMeta }[]>;
+  // onLoad(branch: string, loadHandler: LoadHandler): () => void;
+  handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<DbMetaEvent[]>;
 }
+
+// export interface RemoteMetaStore extends MetaStore {
+// }
 
 export interface DataSaveOpts {
   readonly public: boolean;
@@ -300,19 +352,27 @@ export type CompactFetcher = BlockFetcher & {
 };
 export type CompactFn = (blocks: CompactFetcher) => Promise<TransactionMeta>;
 
+export interface StoreRuntimeUrls {
+  readonly meta: URI;
+  readonly data: URI;
+  readonly wal: URI;
+}
+
 export type BlockstoreOpts = Partial<{
   readonly logger: Logger;
   readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
   readonly compact: CompactFn;
   readonly autoCompact: number;
   readonly crypto: CryptoRuntime;
-  readonly store: StoreOpts;
-  readonly keyBag: KeyBagOpts;
   readonly public: boolean;
   readonly meta: DbMeta;
-  readonly name: string;
   readonly threshold: number;
-}>;
+  readonly storeEnDeFile: Partial<StoreEnDeFile>;
+}> & {
+  readonly keyBag: KeyBagRuntime;
+  readonly storeUrls: StoreURIs;
+  readonly storeRuntime: StoreRuntime;
+};
 
 export interface BlockstoreRuntime {
   readonly logger: Logger;
@@ -320,29 +380,35 @@ export interface BlockstoreRuntime {
   readonly compact: CompactFn;
   readonly autoCompact: number;
   readonly crypto: CryptoRuntime;
-  readonly store: StoreOpts;
   readonly storeRuntime: StoreRuntime;
-  readonly keyBag: Partial<KeyBagOpts>;
+  readonly keyBag: KeyBagRuntime;
+  readonly storeUrls: StoreURIs;
+  // readonly storeEnDeFile: StoreEnDeFile;
   // readonly public: boolean;
   readonly meta?: DbMeta;
-  readonly name?: string;
+  // readonly name?: string;
   readonly threshold: number;
 }
 
 export interface Loadable {
-  readonly name: string; // = "";
+  // readonly name: string; // = "";
   readonly sthis: SuperThis;
   readonly ebOpts: BlockstoreRuntime;
-  remoteCarStore?: DataStore;
-  carStore(): Promise<DataStore>;
-  carLog: CarLog; // = new Array<CarGroup>();
+  carLog: CarLog;
   remoteMetaStore?: MetaStore;
   remoteFileStore?: DataStore;
-  taskManager?: TaskManager;
+  remoteCarStore?: DataStore;
+  readonly taskManager: TaskManager;
+
   ready(): Promise<void>;
   close(): Promise<void>;
+
+  keyBag(): Promise<KeyBag>;
+  metaStore(): Promise<MetaStore>;
   fileStore(): Promise<DataStore>;
   WALStore(): Promise<WALStore>;
+  carStore(): Promise<DataStore>;
+
   handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
 

@@ -1,21 +1,18 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
-
-const decoder = new TextDecoder("utf-8");
+import { bs, NotFoundError, SuperThis, rt } from "@fireproof/core";
+import { mockSuperThis, noopUrl } from "../helpers";
 
 function runtime(sthis: SuperThis) {
-  return bs.toStoreRuntime({}, sthis);
+  return bs.toStoreRuntime(sthis);
 }
 
-function mockLoader(sthis: SuperThis, name: string): bs.Loadable {
+async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFactoryItem> {
+  const url = noopUrl(name);
   return {
     sthis,
-    name,
-    ebOpts: {
-      store: {},
-    },
-  } as bs.Loadable;
+    url: url,
+    keybag: await rt.kb.getKeyBag(sthis),
+  };
 }
 
 describe("DataStore", function () {
@@ -30,7 +27,7 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(mockLoader(sthis, "test"));
+    store = await runtime(sthis).makeDataStore(await mockLoader(sthis));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
   });
@@ -46,7 +43,7 @@ describe("DataStore", function () {
     };
     await store.save(car);
     const data = await raw.get(store.url(), car.cid.toString());
-    expect(decoder.decode(data)).toEqual(decoder.decode(car.bytes));
+    expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
 
@@ -54,7 +51,6 @@ describe("DataStore with a saved car", function () {
   let store: bs.DataStore;
   let raw: bs.TestGateway;
   let car: bs.AnyBlock;
-
   const sthis = mockSuperThis();
 
   afterEach(async () => {
@@ -64,8 +60,9 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(mockLoader(sthis, "test2"));
+    store = await runtime(sthis).makeDataStore(await mockLoader(sthis, "test2"));
     await store.start();
+    raw = await bs.testStoreFactory(store.url(), sthis);
     raw = await bs.testStoreFactory(store.url(), sthis);
     car = {
       cid: "cid" as unknown as CID,
@@ -76,7 +73,7 @@ describe("DataStore with a saved car", function () {
 
   it("should have a car", async function () {
     const data = await raw.get(store.url(), car.cid.toString());
-    expect(decoder.decode(data)).toEqual(decoder.decode(car.bytes));
+    expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
   it("should load a car", async function () {
@@ -106,7 +103,7 @@ describe("MetaStore", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(mockLoader(sthis, "test"));
+    store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test"));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
   });
@@ -136,6 +133,7 @@ describe("MetaStore with a saved header", function () {
   let raw: bs.TestGateway;
   let cid: CID;
   const sthis = mockSuperThis();
+  // let onload: bs.DbMeta[];
 
   afterEach(async () => {
     await store.close();
@@ -144,16 +142,22 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(mockLoader(sthis, "test-saved-header"));
+    store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test-saved-header"));
     await store.start();
     raw = await bs.testStoreFactory(store.url(), sthis);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid] /*, key: undefined */ });
   });
 
+  // it("should load", async function () {
+  //   expect(onload).toBeTruthy();
+  //   expect(onload?.length).toEqual(1);
+  //   expect(onload?.[0].cars.toString()).toEqual(cid.toString());
+  // });
+
   it("should have a header", async function () {
     const bytes = await raw.get(store.url(), "main");
-    const data = decoder.decode(bytes);
+    const data = sthis.txt.decode(bytes);
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];
     expect(header).toBeDefined();

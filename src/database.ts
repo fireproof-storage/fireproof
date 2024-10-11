@@ -1,92 +1,290 @@
-import { Logger, ResolveOnce } from "@adviser/cement";
+import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
 import { WriteQueue, writeQueue } from "./write-queue.js";
-import { CRDT } from "./crdt.js";
+import { CRDT, HasCRDT } from "./crdt.js";
 import { index } from "./indexer.js";
-import type {
-  DocUpdate,
-  ClockHead,
-  ConfigOpts,
-  MapFn,
-  QueryOpts,
-  ChangesOptions,
-  DocSet,
-  DocWithId,
-  IndexKeyType,
-  ListenerFn,
-  DocResponse,
-  ChangesResponse,
-  DocTypes,
-  IndexRows,
-  DocFragment,
-  ChangesResponseRow,
-  CRDTMeta,
-  AllDocsQueryOpts,
-  AllDocsResponse,
-  SuperThis,
+import {
+  type DocUpdate,
+  type ClockHead,
+  type ConfigOpts,
+  type MapFn,
+  type QueryOpts,
+  type ChangesOptions,
+  type DocSet,
+  type DocWithId,
+  type IndexKeyType,
+  type ListenerFn,
+  type DocResponse,
+  type ChangesResponse,
+  type DocTypes,
+  type IndexRows,
+  type DocFragment,
+  type ChangesResponseRow,
+  type CRDTMeta,
+  type AllDocsQueryOpts,
+  type AllDocsResponse,
+  type SuperThis,
+  PARAM,
 } from "./types.js";
-import { BaseBlockstore, Connectable } from "./blockstore/index.js";
+import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, getDefaultURI } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
 
-export class Database<DT extends DocTypes = NonNullable<unknown>> implements Connectable {
-  static databases: Map<string, Database> = new Map<string, Database>();
+import { decodeFile, encodeFile } from "./runtime/files.js";
+import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 
+const databases = new KeyedResolvOnce<Database>();
+
+function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
+  if (!set) return [];
+  return Object.entries(set)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => ({ [k]: v }));
+}
+
+export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
+  return JSON.stringify(
+    toSortedArray({
+      name,
+      stores: toSortedArray(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, name, opts?.storeUrls)))),
+    }),
+  );
+}
+
+export interface DatabaseOpts {
   readonly name?: string;
-  readonly opts: ConfigOpts = {};
+  // readonly public?: boolean;
+  readonly meta?: DbMeta;
+  // readonly factoryUnreg?: () => void;
+  // readonly persistIndexes?: boolean;
+  // readonly autoCompact?: number;
+  readonly storeUrls: StoreURIRuntime;
+  readonly storeEnDe: StoreEnDeFile;
+  readonly keyBag: KeyBagRuntime;
+  // readonly threshold?: number;
+}
+
+export interface Database<DT extends DocTypes = NonNullable<unknown>> extends HasCRDT<DT> {
+  // readonly name: string;
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  readonly id: string;
+
+  name(): string;
+
+  onClosed(fn: () => void): void;
+
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+  ready(): Promise<void>;
+
+  get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
+  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
+  del(id: string): Promise<DocResponse>;
+  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
+  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
+  allDocuments<T extends DocTypes>(): Promise<{
+    rows: {
+      key: string;
+      value: DocWithId<T>;
+    }[];
+    clock: ClockHead;
+  }>;
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): Promise<IndexRows<K, T, R>>;
+  compact(): Promise<void>;
+}
+
+export function isDatabase<T extends DocTypes = NonNullable<unknown>>(db: unknown): db is Database<T> {
+  return db instanceof DatabaseImpl || db instanceof DatabaseShell;
+}
+
+export function DatabaseFactory<T extends DocTypes = NonNullable<unknown>>(
+  name: string | undefined,
+  opts?: ConfigOpts,
+): Database<T> {
+  const sthis = ensureSuperThis(opts);
+  return new DatabaseShell<T>(
+    databases.get(keyConfigOpts(sthis, name, opts)).once((key) => {
+      const db = new DatabaseImpl<T>(sthis, {
+        name,
+        meta: opts?.meta,
+        keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
+        storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
+        storeEnDe: {
+          encodeFile,
+          decodeFile,
+          ...opts?.storeEnDe,
+        },
+      });
+      db.onClosed(() => {
+        databases.unget(key);
+      });
+      return db;
+    }),
+  );
+}
+
+export class DatabaseShell<DT extends DocTypes = NonNullable<unknown>> implements Database<DT> {
+  readonly ref: DatabaseImpl<DT>;
+  constructor(ref: DatabaseImpl<DT>) {
+    this.ref = ref;
+    ref.addShell(this);
+  }
+
+  get id(): string {
+    return this.ref.id;
+  }
+  get logger(): Logger {
+    return this.ref.logger;
+  }
+  get sthis(): SuperThis {
+    return this.ref.sthis;
+  }
+  get crdt(): CRDT<DT> {
+    return this.ref.crdt;
+  }
+
+  name(): string {
+    return this.ref.name();
+  }
+  onClosed(fn: () => void): void {
+    return this.ref.onClosed(fn);
+  }
+  close(): Promise<void> {
+    return this.ref.shellClose(this);
+  }
+  destroy(): Promise<void> {
+    return this.ref.destroy();
+  }
+  ready(): Promise<void> {
+    return this.ref.ready();
+  }
+  get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
+    return this.ref.get(id);
+  }
+  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
+    return this.ref.put(doc);
+  }
+  del(id: string): Promise<DocResponse> {
+    return this.ref.del(id);
+  }
+  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>> {
+    return this.ref.changes(since, opts);
+  }
+  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> {
+    return this.ref.allDocs(opts);
+  }
+  allDocuments<T extends DocTypes>(): Promise<{
+    rows: {
+      key: string;
+      value: DocWithId<T>;
+    }[];
+    clock: ClockHead;
+  }> {
+    return this.ref.allDocuments();
+  }
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
+    return this.ref.subscribe(listener, updates);
+  }
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): Promise<IndexRows<K, T, R>> {
+    return this.ref.query(field, opts);
+  }
+  compact(): Promise<void> {
+    return this.ref.compact();
+  }
+}
+
+class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Database<DT> {
+  // readonly name: string;
+  readonly opts: DatabaseOpts;
 
   _listening = false;
-  readonly _listeners: Set<ListenerFn<DT>> = new Set<ListenerFn<DT>>();
-  readonly _noupdate_listeners: Set<ListenerFn<DT>> = new Set<ListenerFn<DT>>();
-  readonly _crdt: CRDT<DT>;
+  readonly _listeners = new Set<ListenerFn<DT>>();
+  readonly _noupdate_listeners = new Set<ListenerFn<DT>>();
+  readonly crdt: CRDT<DT>;
   readonly _writeQueue: WriteQueue<DT>;
-  readonly blockstore: BaseBlockstore;
+  // readonly blockstore: BaseBlockstore;
 
+  readonly shells: Set<DatabaseShell<DT>> = new Set<DatabaseShell<DT>>();
+
+  addShell(shell: DatabaseShell<DT>) {
+    this.shells.add(shell);
+  }
+
+  readonly _onClosedFns = new Set<() => void>();
+  onClosed(fn: () => void) {
+    this._onClosedFns.add(fn);
+  }
   async close() {
-    await this.ready();
-    await this._crdt.close();
-    await this.blockstore.close();
+    throw this.logger.Error().Str("db", this.name()).Msg(`use shellClose`).AsError();
+  }
+  async shellClose(db: DatabaseShell<DT>) {
+    if (!this.shells.has(db)) {
+      throw this.logger.Error().Str("db", this.name()).Msg(`Database Shell mismatch`).AsError();
+    }
+    this.shells.delete(db);
+    if (this.shells.size === 0) {
+      await this.ready();
+      await this.crdt.close();
+      this._onClosedFns.forEach((fn) => fn());
+    }
+    // await this.blockstore.close();
   }
 
   async destroy() {
     await this.ready();
-    await this._crdt.destroy();
-    await this.blockstore.destroy();
+    await this.crdt.destroy();
+    // await this.blockstore.destroy();
   }
 
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
-    return this._ready.once(async () => {
+    const ret = await this._ready.once(async () => {
       await this.sthis.start();
-      await this._crdt.ready();
-      await this.blockstore.ready();
+      await this.crdt.ready();
+      // await this.blockstore.ready();
     });
+    return ret;
   }
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
+  readonly id: string;
 
-  constructor(name?: string, opts?: ConfigOpts) {
-    this.name = name;
-    this.opts = opts || this.opts;
-    this.sthis = ensureSuperThis(this.opts);
+  constructor(sthis: SuperThis, opts: DatabaseOpts) {
+    this.opts = opts; // || this.opts;
+    // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
+    this.sthis = sthis;
+    this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Database");
     // this.logger.SetDebug("Database")
-    this._crdt = new CRDT(this.sthis, name, this.opts);
-    this.blockstore = this._crdt.blockstore; // for connector compatibility
+    this.crdt = new CRDT(this.sthis, this.opts);
+    // this.blockstore = this._crdt.blockstore; // for connector compatibility
     this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
-      return await this._crdt.bulk(updates);
+      return await this.crdt.bulk(updates);
     }); //, Infinity)
-    this._crdt.clock.onTock(() => {
+    this.crdt.clock.onTock(() => {
       this._no_update_notify();
     });
   }
 
+  name(): string {
+    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
+  }
+
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
+    if (!id) throw this.logger.Error().Str("db", this.name()).Msg(`Doc id is required`).AsError();
 
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("get");
-    const got = await this._crdt.get(id).catch((e) => {
+    const got = await this.crdt.get(id).catch((e) => {
       throw new NotFoundError(`Not found: ${id} - ${e.message}`);
     });
     if (!got) throw new NotFoundError(`Not found: ${id}`);
@@ -106,38 +304,38 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
         _id: docId,
       },
     })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+    return { id: docId, clock: result?.head, name: this.name() } as DocResponse;
   }
 
   async del(id: string): Promise<DocResponse> {
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("del");
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head, name: this.name } as DocResponse;
+    return { id, clock: result?.head, name: this.name() } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     await this.ready();
     this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
-    const { result, head } = await this._crdt.changes(since, opts);
+    const { result, head } = await this.crdt.changes(since, opts);
     const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
       clock,
     }));
-    return { rows, clock: head, name: this.name };
+    return { rows, clock: head, name: this.name() };
   }
 
   async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
     await this.ready();
     void opts;
     this.logger.Debug().Msg("allDocs");
-    const { result, head } = await this._crdt.allDocs();
+    const { result, head } = await this.crdt.allDocs();
     const rows = result.map(({ id: key, value, del }) => ({
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
-    return { rows, clock: head, name: this.name };
+    return { rows, clock: head, name: this.name() };
   }
 
   async allDocuments<T extends DocTypes>(): Promise<{
@@ -155,7 +353,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     if (updates) {
       if (!this._listening) {
         this._listening = true;
-        this._crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+        this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
           void this._notify(updates);
         });
       }
@@ -178,17 +376,17 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   ): Promise<IndexRows<K, T, R>> {
     await this.ready();
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
-    const _crdt = this._crdt as unknown as CRDT<T>;
+    const _crdt = this.crdt as unknown as CRDT<T>;
     const idx =
       typeof field === "string"
-        ? index<K, T, R>(this.sthis, { _crdt }, field)
-        : index<K, T, R>(this.sthis, { _crdt }, makeName(field.toString()), field);
+        ? index<K, T, R>({ crdt: _crdt }, field)
+        : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
     return await idx.query(opts);
   }
 
   async compact() {
     await this.ready();
-    await this._crdt.compact();
+    await this.crdt.compact();
   }
 
   async _notify(updates: DocUpdate<NonNullable<unknown>>[]) {
@@ -215,26 +413,79 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   }
 }
 
-function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
-  if (!set) return [];
-  return Object.entries(set)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => ({ [k]: v }));
+function defaultURI(
+  sthis: SuperThis,
+  curi: CoerceURI | undefined,
+  uri: URI,
+  store: "data" | "meta" | "wal",
+  ctx?: Partial<{
+    readonly idx: boolean;
+    readonly file: boolean;
+  }>,
+): URI {
+  ctx = ctx || {};
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store);
+  if (!ret.hasParam(PARAM.NAME)) {
+    const name = sthis.pathOps.basename(ret.URI().pathname);
+    if (!name) {
+      throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Database name is required").AsError();
+    }
+    ret.setParam(PARAM.NAME, name);
+  }
+  if (ctx.idx) {
+    ret.defParam(PARAM.INDEX, "idx");
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${store}-idx@`);
+  } else {
+    ret.defParam(PARAM.STORE_KEY, `@${ret.getParam(PARAM.NAME)}-${store}@`);
+  }
+  if (store === "data") {
+    if (ctx.file) {
+      // ret.defParam(PARAM.SUFFIX, "");
+    } else {
+      ret.defParam(PARAM.SUFFIX, ".car");
+    }
+  }
+  return ret.URI();
+}
+
+export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
+  sopts = sopts || {};
+  if (!sopts.base) {
+    const fp_env = sthis.env.get("FP_STORAGE_URL");
+    if (fp_env) {
+      sopts = { ...sopts, base: BuildURI.from(fp_env).setParam(PARAM.URL_GEN, "fromEnv") };
+    } else {
+      sopts = { ...sopts, base: getDefaultURI(sthis).build().setParam(PARAM.URL_GEN, "default") };
+    }
+  }
+  const bbase = BuildURI.from(sopts.base);
+  if (name) {
+    bbase.setParam(PARAM.NAME, name);
+  }
+  const base = bbase.URI();
+  // readonly public?: boolean;
+  // readonly meta?: DbMeta;
+  // readonly persistIndexes?: boolean;
+  // readonly autoCompact?: number;
+  // readonly threshold?: number;
+  return {
+    idx: {
+      data: defaultURI(sthis, sopts.idx?.data, base, "data", { idx: true }),
+      file: defaultURI(sthis, sopts.idx?.data, base, "data", { file: true, idx: true }),
+      meta: defaultURI(sthis, sopts.idx?.meta, base, "meta", { idx: true }),
+      wal: defaultURI(sthis, sopts.idx?.wal, base, "wal", { idx: true }),
+    },
+    data: {
+      data: defaultURI(sthis, sopts.data?.data, base, "data"),
+      file: defaultURI(sthis, sopts.data?.data, base, "data", { file: true }),
+      meta: defaultURI(sthis, sopts.data?.meta, base, "meta"),
+      wal: defaultURI(sthis, sopts.data?.wal, base, "wal"),
+    },
+  };
 }
 
 export function fireproof(name: string, opts?: ConfigOpts): Database {
-  const key = JSON.stringify(
-    toSortedArray({
-      name,
-      stores: toSortedArray(opts?.store?.stores),
-    }),
-  );
-  let db = Database.databases.get(key);
-  if (!db) {
-    db = new Database(name, opts);
-    Database.databases.set(key, db);
-  }
-  return db;
+  return DatabaseFactory(name, opts);
 }
 
 function makeName(fnString: string) {
