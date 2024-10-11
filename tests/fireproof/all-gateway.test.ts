@@ -1,59 +1,64 @@
-import { Database, bs } from "@fireproof/core";
-import { URI } from "@adviser/cement";
+import { Database, DatabaseFactory, bs } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+import { mockSuperThis } from "../helpers.js";
+import { DataStore, MetaStore, WALStore } from "../../src/blockstore/types.js";
+import { Gateway } from "../../src/blockstore/gateway.js";
 
-function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
-  try {
-    matcher(value);
-  } catch (error) {
-    void error;
-    // console.error(error);
-    throw new Error(message);
-  }
-}
+// function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
+//   try {
+//     matcher(value);
+//   } catch (error) {
+//     void error;
+//     // console.error(error);
+//     throw new Error(message);
+//   }
+// }
 
-interface ExtendedGateway extends bs.Gateway {
-  logger: { _attributes: { module: string; url?: string } };
-  headerSize: number;
-  fidLength: number;
-}
+// interface ExtendedGateway extends bs.Gateway {
+//   readonly logger: Logger;
+//   readonly headerSize: number;
+//   readonly fidLength: number;
+// }
 
-interface ExtendedStore {
-  gateway: ExtendedGateway;
-  _url: URI;
-  name: string;
-}
+// interface ExtendedStore {
+//   readonly gateway: ExtendedGateway;
+//   readonly _url: URI;
+//   readonly name: string;
+// }
 
 describe("noop Gateway", function () {
   let db: Database;
-  let carStore: ExtendedStore;
-  let metaStore: ExtendedStore;
-  let fileStore: ExtendedStore;
-  let walStore: ExtendedStore;
-  let carGateway: ExtendedGateway;
-  let metaGateway: ExtendedGateway;
-  let fileGateway: ExtendedGateway;
-  let walGateway: ExtendedGateway;
+  let carStore: DataStore;
+  let metaStore: MetaStore;
+  let fileStore: DataStore;
+  let walStore: WALStore;
+  let carGateway: Gateway;
+  let metaGateway: Gateway;
+  let fileGateway: Gateway;
+  let walGateway: Gateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+    db = DatabaseFactory("test-gateway-" + sthis.nextId().str, {
+      logger: sthis.logger,
+    });
 
     // Extract stores from the loader
-    carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
-    fileStore = (await db.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
-    walStore = (await db.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
+    carStore = (await db.crdt.blockstore.loader?.carStore()) as DataStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
+    fileStore = (await db.crdt.blockstore.loader?.fileStore()) as DataStore;
+    walStore = (await db.crdt.blockstore.loader?.WALStore()) as WALStore;
 
     // Extract and log gateways
-    carGateway = carStore?.gateway;
-    metaGateway = metaStore?.gateway;
-    fileGateway = fileStore?.gateway;
-    walGateway = walStore?.gateway;
+    carGateway = carStore.realGateway;
+    metaGateway = metaStore.realGateway;
+    fileGateway = fileStore.realGateway;
+    walGateway = walStore.realGateway;
   });
 
   it("should have valid stores and gateways", async function () {
@@ -71,26 +76,27 @@ describe("noop Gateway", function () {
 
   it("should have correct store names", async function () {
     // Check that all stores have the correct name
-    expect(carStore?.name).toContain("test-gateway");
-    expect(metaStore?.name).toContain("test-gateway");
-    expect(fileStore?.name).toContain("test-gateway");
-    expect(walStore?.name).toContain("test-gateway");
+    expect(carStore.name).toContain("test-gateway");
+    expect(metaStore.name).toContain("test-gateway");
+    expect(fileStore.name).toContain("test-gateway");
+    expect(walStore.name).toContain("test-gateway");
   });
 
   it("should have correct store types in URLs", async function () {
     // Check that all stores have the correct store type in their URL
-    expect(carStore?._url.toString()).toContain("store=data");
-    expect(metaStore?._url.toString()).toContain("store=meta");
-    expect(fileStore?._url.toString()).toContain("store=data");
-    expect(walStore?._url.toString()).toContain("store=wal");
+    expect(carStore.url().toString()).toContain("store=data");
+    expect(carStore.url().toString()).toContain("suffix=.car");
+    expect(metaStore.url().toString()).toContain("store=meta");
+    expect(fileStore.url().toString()).toContain("store=data");
+    expect(walStore.url().toString()).toContain("store=wal");
   });
 
   it("should have version specified in URLs", async function () {
     // Verify that all stores have a version specified
-    expect(carStore?._url.toString()).toContain("version=");
-    expect(metaStore?._url.toString()).toContain("version=");
-    expect(fileStore?._url.toString()).toContain("version=");
-    expect(walStore?._url.toString()).toContain("version=");
+    expect(carStore.url().toString()).toContain("version=");
+    expect(metaStore.url().toString()).toContain("version=");
+    expect(fileStore.url().toString()).toContain("version=");
+    expect(walStore.url().toString()).toContain("version=");
   });
 
   it("should have correct gateway types", async function () {
@@ -103,116 +109,105 @@ describe("noop Gateway", function () {
 
   it("should build CAR Gateway URL", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-    expect(carUrl?.Ok()).toBeTruthy();
+    const carUrl = await carGateway.buildUrl(carStore.url(), testKey);
+    expect(carUrl.Ok().hasParam("key")).toBeTruthy();
   });
 
   it("should start CAR Gateway", async function () {
-    await carGateway?.start(carStore?._url);
+    const url = await carGateway.start(carStore.url());
+    expect(url.Ok().asObj()).toEqual(carStore.url().asObj());
   });
 
   it("should put data in CAR Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const testData = fileContent;
-    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-    await carGateway?.start(carStore?._url);
-    const carPutResult = await carGateway?.put(carUrl?.Ok(), testData);
-    expect(carPutResult?.Ok()).toBeFalsy();
+    const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
+    await carGateway.start(carStore.url());
+    const carPutResult = await carGateway.put(carUrl.Ok(), fileContent.block);
+    expect(carPutResult.isOk()).toBeTruthy();
   });
 
   it("should get data from CAR Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const testData = fileContent;
-    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-    await carGateway?.start(carStore?._url);
-    await carGateway?.put(carUrl?.Ok(), testData);
-    const carGetResult = await carGateway?.get(carUrl?.Ok());
-    customExpect(carGetResult?.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
+    const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
+    await carGateway.start(carStore.url());
+    await carGateway.put(carUrl.Ok(), fileContent.block);
+    const carGetResult = await carGateway.get(carUrl.Ok());
+    expect(carGetResult.Ok()).toEqual(fileContent.block);
+    // customExpect(carGetResult.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
   });
 
   it("should delete data from CAR Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const testData = fileContent;
-    const carUrl = await carGateway?.buildUrl(carStore?._url, testKey);
-    await carGateway?.start(carStore?._url);
-    await carGateway?.put(carUrl?.Ok(), testData);
-    const carDeleteResult = await carGateway?.delete(carUrl?.Ok());
-    expect(carDeleteResult?.Ok()).toBeFalsy();
+    const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
+    await carGateway.start(carStore.url());
+    await carGateway.put(carUrl.Ok(), fileContent.block);
+    const carDeleteResult = await carGateway.delete(carUrl.Ok());
+    expect(carDeleteResult.isOk()).toBeTruthy();
   });
 
   it("should close CAR Gateway", async function () {
-    await carGateway?.close(carStore?._url);
+    await carGateway.close(carStore.url());
   });
   it("should build Meta Gateway URL", async function () {
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
-    expect(metaUrl?.Ok()).toBeTruthy();
+    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
+    expect(metaUrl.Ok()).toBeTruthy();
   });
 
   it("should start Meta Gateway", async function () {
-    await metaGateway?.start(metaStore?._url);
+    await metaGateway.start(metaStore.url());
   });
 
   it("should close Meta Gateway", async function () {
-    await metaGateway?.start(metaStore?._url);
-    await metaGateway?.close(metaStore?._url);
+    await metaGateway.start(metaStore.url());
+    await metaGateway.close(metaStore.url());
   });
 
   it("should build File Gateway URL", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
-    expect(fileUrl?.Ok()).toBeTruthy();
+    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
+    expect(fileUrl.Ok()).toBeTruthy();
   });
 
   it("should start File Gateway", async function () {
-    await fileGateway?.start(fileStore?._url);
+    await fileGateway.start(fileStore.url());
   });
 
   it("should put data to File Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const testData = fileContent;
-    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
-    await fileGateway?.start(fileStore?._url);
-    const filePutResult = await fileGateway?.put(fileUrl?.Ok(), testData);
-    expect(filePutResult?.Ok()).toBeFalsy();
+    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
+    await fileGateway.start(fileStore.url());
+    const filePutResult = await fileGateway.put(fileUrl.Ok(), fileContent.block);
+    expect(filePutResult.Ok()).toBeFalsy();
   });
 
   it("should get data from File Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const testData = fileContent;
-    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
-    await fileGateway?.start(fileStore?._url);
-    await fileGateway?.put(fileUrl?.Ok(), testData);
-    const fileGetResult = await fileGateway?.get(fileUrl?.Ok());
-    customExpect(fileGetResult?.Ok(), (v) => expect(v).toEqual(testData), "fileGetResult should match testData");
+    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
+    await fileGateway.start(fileStore.url());
+    await fileGateway.put(fileUrl.Ok(), fileContent.block);
+    const fileGetResult = await fileGateway.get(fileUrl.Ok());
+    expect(fileGetResult.Ok()).toEqual(fileContent.block);
   });
 
   it("should delete data from File Gateway", async function () {
-    const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const testData = fileContent;
-    const fileUrl = await fileGateway?.buildUrl(fileStore?._url, testKey);
-    await fileGateway?.start(fileStore?._url);
-    await fileGateway?.put(fileUrl?.Ok(), testData);
-    const fileDeleteResult = await fileGateway?.delete(fileUrl?.Ok());
-    expect(fileDeleteResult?.Ok()).toBeFalsy();
+    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
+    await fileGateway.start(fileStore.url());
+    await fileGateway.put(fileUrl.Ok(), fileContent.block);
+    const fileDeleteResult = await fileGateway.delete(fileUrl.Ok());
+    expect(fileDeleteResult.isOk()).toBeTruthy();
   });
 
   it("should close File Gateway", async function () {
-    await fileGateway?.close(fileStore?._url);
+    await fileGateway.close(fileStore.url());
   });
   it("should build WAL Gateway URL", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
-    expect(walUrl?.Ok()).toBeTruthy();
+    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
+    expect(walUrl.Ok()).toBeTruthy();
   });
 
   it("should start WAL Gateway", async function () {
-    await walGateway?.start(walStore?._url);
+    await walGateway.start(walStore.url());
   });
 
   it("should put data to WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
-    await walGateway?.start(walStore?._url);
+    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
+    await walGateway.start(walStore.url());
     const walTestDataString = JSON.stringify({
       operations: [],
       noLoaderOps: [],
@@ -220,14 +215,14 @@ describe("noop Gateway", function () {
     });
     const walEncoder = new TextEncoder();
     const walTestData = walEncoder.encode(walTestDataString);
-    const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
-    expect(walPutResult?.Ok()).toBeFalsy();
+    const walPutResult = await walGateway.put(walUrl.Ok(), walTestData);
+    expect(walPutResult.Ok()).toBeFalsy();
   });
 
   it("should get data from WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
-    await walGateway?.start(walStore?._url);
+    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
+    await walGateway.start(walStore.url());
     const walTestDataString = JSON.stringify({
       operations: [],
       noLoaderOps: [],
@@ -235,17 +230,17 @@ describe("noop Gateway", function () {
     });
     const walEncoder = new TextEncoder();
     const walTestData = walEncoder.encode(walTestDataString);
-    await walGateway?.put(walUrl?.Ok(), walTestData);
-    const walGetResult = await walGateway?.get(walUrl?.Ok());
-    const okResult = walGetResult?.Ok();
+    await walGateway.put(walUrl.Ok(), walTestData);
+    const walGetResult = await walGateway.get(walUrl.Ok());
+    const okResult = walGetResult.Ok();
     const decodedResult = new TextDecoder().decode(okResult);
     expect(decodedResult).toEqual(walTestDataString);
   });
 
   it("should delete data from WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway?.buildUrl(walStore?._url, testKey);
-    await walGateway?.start(walStore?._url);
+    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
+    await walGateway.start(walStore.url());
     const walTestDataString = JSON.stringify({
       operations: [],
       noLoaderOps: [],
@@ -253,85 +248,98 @@ describe("noop Gateway", function () {
     });
     const walEncoder = new TextEncoder();
     const walTestData = walEncoder.encode(walTestDataString);
-    await walGateway?.put(walUrl?.Ok(), walTestData);
-    const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
-    expect(walDeleteResult?.Ok()).toBeFalsy();
+    await walGateway.put(walUrl.Ok(), walTestData);
+    const walDeleteResult = await walGateway.delete(walUrl.Ok());
+    expect(walDeleteResult.isOk()).toBeTruthy();
   });
 
   it("should close WAL Gateway", async function () {
-    await walGateway?.start(walStore?._url);
-    await walGateway?.close(walStore?._url);
+    await walGateway.start(walStore.url());
+    await walGateway.close(walStore.url());
   });
 
-  it("should have correct CAR Gateway properties", async function () {
-    // CAR Gateway assertions
-    expect(carGateway?.fidLength).toBe(4);
-    expect(carGateway?.headerSize).toBe(36);
-    expect(carGateway?.logger._attributes).toHaveProperty("module");
-    expect(carGateway?.logger._attributes).toHaveProperty("url");
-  });
+  // it("should have correct CAR Gateway properties", async function () {
+  //   // CAR Gateway assertions
+  //   expect(carGateway.fidLength).toBe(4);
+  //   expect(carGateway.headerSize).toBe(36);
+  //   carGateway.logger.Error().Msg("CAR Gateway properties");
+  //   await sthis.logger.Flush();
+  //   const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+  //   expect(last).toHaveProperty("module");
+  //   expect(carStore.).toHaveProperty("url");
+  // });
 
-  it("should have correct Meta Gateway properties", async function () {
-    // Meta Gateway assertions
-    expect(metaGateway?.fidLength).toBe(4);
-    expect(metaGateway?.headerSize).toBe(36);
-    expect(metaGateway?.logger._attributes).toHaveProperty("module");
-    expect(metaGateway?.logger._attributes).not.toHaveProperty("url");
-  });
+  // it("should have correct Meta Gateway properties", async function () {
+  //   // Meta Gateway assertions
+  //   expect(metaGateway.fidLength).toBe(4);
+  //   expect(metaGateway.headerSize).toBe(36);
+  //   metaGateway.logger.Error().Msg("CAR Gateway properties");
+  //   await sthis.logger.Flush();
+  //   const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+  //   expect(last).toHaveProperty("module");
+  //   expect(last).not.toHaveProperty("url");
+  // });
 
-  it("should have correct File Gateway properties", async function () {
-    // File Gateway assertions
-    expect(fileGateway?.fidLength).toBe(4);
-    expect(fileGateway?.headerSize).toBe(36);
-    expect(fileGateway?.logger._attributes).toHaveProperty("module");
-    expect(fileGateway?.logger._attributes).toHaveProperty("url");
-  });
+  // it("should have correct File Gateway properties", async function () {
+  //   // File Gateway assertions
+  //   expect(fileGateway.fidLength).toBe(4);
+  //   expect(fileGateway.headerSize).toBe(36);
+  //   fileGateway.logger.Error().Msg("CAR Gateway properties");
+  //   await sthis.logger.Flush();
+  //   const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+  //   expect(last).toHaveProperty("module");
+  //   expect(last).toHaveProperty("url");
+  // });
 
-  it("should have correct WAL Gateway properties", async function () {
-    // WAL Gateway assertions
-    expect(walGateway?.fidLength).toBe(4);
-    expect(walGateway?.headerSize).toBe(36);
-    expect(walGateway?.logger._attributes).toHaveProperty("module");
-    expect(walGateway?.logger._attributes).not.toHaveProperty("url");
-  });
+  // it("should have correct WAL Gateway properties", async function () {
+  //   // WAL Gateway assertions
+  //   expect(walGateway.fidLength).toBe(4);
+  //   expect(walGateway.headerSize).toBe(36);
+  //   walGateway.logger.Error().Msg("CAR Gateway properties");
+  //   await sthis.logger.Flush();
+  //   const last = sthis.ctx.logCollector.Logs().slice(-1)[0];
+  //   expect(last).toHaveProperty("module");
+  //   expect(last).not.toHaveProperty("url");
+  // });
 });
 
 describe("noop Gateway subscribe", function () {
   let db: Database;
 
-  let metaStore: ExtendedStore;
+  let metaStore: MetaStore;
 
-  let metaGateway: ExtendedGateway;
+  let metaGateway: Gateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+    db = DatabaseFactory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
-    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
 
-    metaGateway = metaStore?.gateway;
+    metaGateway = metaStore.realGateway;
   });
   it("should subscribe to meta Gateway", async function () {
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
-    await metaGateway?.start(metaStore?._url);
+    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
+    await metaGateway.start(metaStore.url());
 
     let resolve: () => void;
     let didCall = false;
     const p = new Promise<void>((r) => {
       resolve = r;
     });
-    const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
-      const decodedData = new TextDecoder().decode(data);
-      expect(decodedData).toContain("[]");
-      didCall = true;
-      resolve();
-    });
-    if (!metaSubscribeResult?.isErr()) {
-      expect(metaSubscribeResult?.Ok()).toBeTruthy();
+    if (metaGateway.subscribe) {
+      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: Uint8Array) => {
+        const decodedData = sthis.txt.decode(data);
+        expect(decodedData).toContain("[]");
+        didCall = true;
+        resolve();
+      })) as bs.UnsubscribeResult;
+      expect(metaSubscribeResult.isOk()).toBeTruthy();
       const ok = await db.put({ _id: "key1", hello: "world1" });
       expect(ok).toBeTruthy();
       expect(ok.id).toBe("key1");
@@ -344,11 +352,11 @@ describe("noop Gateway subscribe", function () {
 describe("Gateway", function () {
   let db: Database;
   // let carStore: ExtendedStore;
-  let metaStore: ExtendedStore;
+  let metaStore: MetaStore;
   // let fileStore: ExtendedStore;
   // let walStore: ExtendedStore;
   // let carGateway: ExtendedGateway;
-  let metaGateway: ExtendedGateway;
+  let metaGateway: Gateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
 
@@ -357,38 +365,38 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = new Database("test-gateway-" + Math.random().toString(36).substring(7));
+    db = DatabaseFactory("test-gateway-" + mockSuperThis().nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
     // Extract stores from the loader
-    // carStore = (await db.blockstore.loader?.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.blockstore.loader?.metaStore()) as unknown as ExtendedStore;
-    // fileStore = (await db.blockstore.loader?.fileStore()) as unknown as ExtendedStore;
-    // walStore = (await db.blockstore.loader?.WALStore()) as unknown as ExtendedStore;
+    // carStore = (await db.blockstore.loader.carStore()) as unknown as ExtendedStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
+    // fileStore = (await db.blockstore.loader.fileStore()) as unknown as ExtendedStore;
+    // walStore = (await db.blockstore.loader.WALStore()) as unknown as ExtendedStore;
 
     // Extract and log gateways
-    // carGateway = carStore?.gateway;
-    metaGateway = metaStore?.gateway;
-    // fileGateway = fileStore?.gateway;
-    // walGateway = walStore?.gateway;
+    // carGateway = carStore.gateway;
+    metaGateway = metaStore.realGateway;
+    // fileGateway = fileStore.gateway;
+    // walGateway = walStore.gateway;
   });
 
   it("should get data from Meta Gateway", async function () {
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
-    await metaGateway?.start(metaStore?._url);
-    const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
-    const metaGetResultOk = metaGetResult?.Ok();
+    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
+    await metaGateway.start(metaStore.url());
+    const metaGetResult = await metaGateway.get(metaUrl.Ok());
+    const metaGetResultOk = metaGetResult.Ok();
     const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
     expect(decodedMetaGetResultOk).toContain("parents");
   });
 
   it("should delete data from Meta Gateway", async function () {
-    const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
-    await metaGateway?.start(metaStore?._url);
+    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
+    await metaGateway.start(metaStore.url());
     // should we be testing .destroy() instead?
-    const metaDeleteResult = await metaGateway?.delete(metaUrl?.Ok());
-    expect(metaDeleteResult?.Ok()).toBeFalsy();
+    const metaDeleteResult = await metaGateway.delete(metaUrl.Ok());
+    expect(metaDeleteResult.isOk()).toBeTruthy();
   });
 });

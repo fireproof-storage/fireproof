@@ -1,6 +1,7 @@
-import pLimit from "p-limit";
+// import pLimit from "p-limit";
 import { format, parse, ToString } from "@ipld/dag-json";
-import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
+import { Logger, ResolveOnce, Result, URI, exception2Result } from "@adviser/cement";
+
 import type {
   AnyBlock,
   AnyLink,
@@ -11,21 +12,23 @@ import type {
   WALStore as WALStore,
   WALState,
   KeyedCrypto,
-  Loadable,
   MetaStore,
   LoadHandler,
   CarClockHead,
   CarClockLink,
+  Loadable,
 } from "./types.js";
-import { Falsy, StoreType, SuperThis, throwFalsy } from "../types.js";
+import { Falsy, PARAM, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway } from "./gateway.js";
 import { ensureLogger, isNotFoundError } from "../utils.js";
-import { carLogIncludesGroup } from "./loader.js";
+// import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
 import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
+import pLimit from "p-limit";
+import { carLogIncludesGroup } from "./loader.js";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -36,34 +39,42 @@ function guardVersion(url: URI): Result<URI> {
 
 export interface StoreOpts {
   readonly gateway: Gateway;
-  readonly keybag: () => Promise<KeyBag>;
+  readonly keybag: KeyBag;
   readonly loader?: Loadable;
 }
 
-export abstract class BaseStoreImpl {
+abstract class BaseStoreImpl {
   // should be injectable
 
   abstract readonly storeType: StoreType;
-  readonly name: string;
+  // readonly name: string;
 
   private _url: URI;
   readonly logger: Logger;
   readonly sthis: SuperThis;
   readonly gateway: FragmentGateway;
-  readonly keybag: () => Promise<KeyBag>;
+  readonly realGateway: Gateway;
+  readonly keybag: KeyBag;
+  readonly name: string;
   readonly loader?: Loadable;
-  constructor(name: string, url: URI, opts: StoreOpts, sthis: SuperThis, logger: Logger) {
-    this.name = name;
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
+    // this.name = name;
     this._url = url;
     this.keybag = opts.keybag;
+    this.loader = opts.loader;
     this.sthis = sthis;
+    const name = this._url.getParam(PARAM.NAME);
+    if (!name) {
+      throw logger.Error().Str("url", this._url.toString()).Msg("missing name").AsError();
+    }
+    this.name = name;
     this.logger = logger
       .With()
+      .Str("this", this.sthis.nextId().str)
       .Ref("url", () => this._url.toString())
-      .Str("name", name)
       .Logger();
+    this.realGateway = opts.gateway;
     this.gateway = new FragmentGateway(this.sthis, opts.gateway);
-    this.loader = opts.loader;
   }
 
   url(): URI {
@@ -85,12 +96,12 @@ export abstract class BaseStoreImpl {
   }
 
   async keyedCrypto(): Promise<KeyedCrypto> {
-    return keyedCryptoFactory(this._url, await this.keybag(), this.sthis);
+    return keyedCryptoFactory(this._url, this.keybag, this.sthis);
   }
 
   async start(): Promise<Result<URI>> {
     this.logger.Debug().Str("storeType", this.storeType).Msg("starting-gateway-pre");
-    this._url = this._url.build().setParam("store", this.storeType).URI();
+    this._url = this._url.build().setParam(PARAM.STORE, this.storeType).URI();
     const res = await this.gateway.start(this._url);
     if (res.isErr()) {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
@@ -98,9 +109,9 @@ export abstract class BaseStoreImpl {
     }
     this._url = res.Ok();
     // add storekey to url
-    const kb = await this.keybag();
+    const kb = await this.keybag;
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
-      const idx = this._url.getParam("index");
+      const idx = this._url.getParam(PARAM.INDEX);
       const storeKeyName = [this.name];
       if (idx) {
         storeKeyName.push(idx);
@@ -138,10 +149,10 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   parents: CarClockHead = [];
   // remote: boolean;
 
-  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(name, url, { ...opts }, sthis, ensureLogger(sthis, "MetaStoreImpl"));
+    super(sthis, url, { ...opts }, ensureLogger(sthis, "MetaStoreImpl"));
     // this.remote = !!remote;
     if (/*this.remote && */ opts.gateway.subscribe) {
       this.onStarted(async () => {
@@ -214,6 +225,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     return Result.Ok(undefined);
   }
   async destroy(): Promise<Result<void>> {
+    this.logger.Debug().Msg("destroy");
     return this.gateway.destroy(this.url());
   }
 }
@@ -222,8 +234,15 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   readonly storeType = "data";
   // readonly tag: string = "car-base";
 
-  constructor(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
-    super(name, url, { ...opts }, sthis, ensureLogger(sthis, "DataStoreImpl"));
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
+    super(
+      sthis,
+      url,
+      {
+        ...opts,
+      },
+      ensureLogger(sthis, "DataStoreImpl"),
+    );
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
@@ -265,6 +284,7 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     return Result.Ok(undefined);
   }
   destroy(): Promise<Result<void>> {
+    this.logger.Debug().Msg("destroy");
     return this.gateway.destroy(this.url());
   }
 }
@@ -273,7 +293,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly storeType = "wal";
   // readonly tag: string = "rwal-base";
 
-  readonly loader: Loadable;
+  // readonly loader: Loadable;
 
   readonly _ready = new ResolveOnce<void>();
 
@@ -281,17 +301,23 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
-  constructor(loader: Loadable, url: URI, opts: StoreOpts) {
+  constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(loader.name, url, { ...opts }, loader.sthis, ensureLogger(loader.sthis, "WALStoreImpl"));
-    this.loader = loader;
+    super(
+      sthis,
+      url,
+      {
+        ...opts,
+      },
+      ensureLogger(sthis, "WALStoreImpl"),
+    );
   }
 
   async ready(): Promise<void> {
     return this._ready.once(async () => {
       const walState = await this.load().catch((e) => {
-        this.logger.Error().Any("error", e).Msg("error loading wal");
+        this.logger.Error().Err(e).Msg("error loading wal");
         return undefined;
       });
       if (!walState) {
@@ -328,7 +354,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async process() {
     await this.ready();
-    if (!this.loader.remoteCarStore) return;
+    if (!this.loader?.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
       try {
         await this._doProcess();
@@ -342,7 +368,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   }
 
   async _doProcess() {
-    if (!this.loader.remoteCarStore) return;
+    if (!this.loader?.remoteCarStore) return;
     const rmlp = (async () => {
       const operations = [...this.walState.operations];
       const fileOperations = [...this.walState.fileOperations];
@@ -354,13 +380,14 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
       for (const dbMeta of noLoaderOps) {
         const uploadP = limit(async () => {
+          const carStore = (await this.loader?.carStore()) as DataStore;
           for (const cid of dbMeta.cars) {
-            const car = await (await this.loader.carStore()).load(cid);
+            const car = await carStore.load(cid);
             if (!car) {
-              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
+              if (carLogIncludesGroup(this.loader?.carLog || [], dbMeta.cars))
                 throw this.logger.Error().Ref("cid", cid).Msg("missing local car").AsError();
             } else {
-              await throwFalsy(this.loader.remoteCarStore).save(car);
+              await throwFalsy(this.loader?.remoteCarStore).save(car);
             }
             this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
           }
@@ -370,13 +397,14 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
       for (const dbMeta of operations) {
         const uploadP = limit(async () => {
+          const carStore = (await this.loader?.carStore()) as DataStore;
           for (const cid of dbMeta.cars) {
-            const car = await (await this.loader.carStore()).load(cid).catch(() => null);
+            const car = await carStore.load(cid).catch(() => null);
             if (!car) {
-              if (carLogIncludesGroup(this.loader.carLog, dbMeta.cars))
+              if (carLogIncludesGroup(this.loader?.carLog || [], dbMeta.cars))
                 throw this.logger.Error().Ref("cid", cid).Msg(`missing local car`).AsError();
             } else {
-              await throwFalsy(this.loader.remoteCarStore).save(car);
+              await throwFalsy(this.loader?.remoteCarStore).save(car);
             }
           }
           this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
@@ -385,11 +413,11 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       }
 
       if (fileOperations.length) {
-        const dbLoader = this.loader;
         for (const { cid: fileCid, public: publicFile } of fileOperations) {
           const uploadP = limit(async () => {
-            const fileBlock = await (await dbLoader.fileStore()).load(fileCid); // .catch(() => false)
-            await dbLoader.remoteFileStore?.save(fileBlock, { public: publicFile });
+            const fileStore = (await this.loader?.fileStore()) as DataStore;
+            const fileBlock = await fileStore.load(fileCid); // .catch(() => false)
+            await this.loader?.remoteFileStore?.save(fileBlock, { public: publicFile });
             this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
           });
           uploads.push(uploadP);
@@ -404,7 +432,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         }
         if (operations.length) {
           const lastOp = operations[operations.length - 1];
-          await this.loader.remoteMetaStore?.save(lastOp).catch((e: Error) => {
+          await this.loader?.remoteMetaStore?.save(lastOp).catch((e: Error) => {
             this.walState.operations.push(lastOp);
             throw this.logger.Error().Any("error", e).Msg("error saving remote meta").AsError();
           });
@@ -431,6 +459,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       throw this.logger.Error().Err(bytes.Err()).Msg("error get").AsError();
     }
     try {
+      return bytes && parse<WALState>(this.sthis.txt.decode(bytes.Ok()));
       return bytes && parse<WALState>(this.sthis.txt.decode(bytes.Ok()));
     } catch (e) {
       throw this.logger.Error().Err(e).Msg("error parse").AsError();
@@ -461,6 +490,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   }
 
   destroy() {
+    this.logger.Debug().Msg("destroy");
     return this.gateway.destroy(this.url());
   }
 }

@@ -6,7 +6,7 @@ import type { BlockCodec } from "./wait-pr-multiformats/codec-interface";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as CBOR from "cborg";
-import { SuperThis } from "../types.js";
+import { PARAM, SuperThis } from "../types.js";
 
 interface GenerateIVFn {
   calc(ko: KeyedCrypto, crypto: CryptoRuntime, data: Uint8Array): Promise<Uint8Array>;
@@ -35,13 +35,13 @@ const generateIV: Record<string, GenerateIVFn> = {
       return hashArray;
     },
     verify: async function (ko: KeyedCrypto, crypto: CryptoRuntime, iv: Uint8Array, data: Uint8Array): Promise<boolean> {
-      return ko.url.getParam("ivverify") !== "disable" && UInt8ArrayEqual(iv, await this.calc(ko, crypto, data));
+      return ko.url.getParam(PARAM.IV_VERIFY) !== "disable" && UInt8ArrayEqual(iv, await this.calc(ko, crypto, data));
     },
   },
 };
 
 function getGenerateIVFn(url: URI, opts: Partial<CodecOpts>): GenerateIVFn {
-  const ivhash = opts.ivCalc || url.getParam("ivhash") || "hash";
+  const ivhash = opts.ivCalc || url.getParam(PARAM.IV_HASH) || "hash";
   return generateIV[ivhash] || generateIV["hash"];
 }
 
@@ -180,7 +180,7 @@ class noCrypto implements KeyedCrypto {
 }
 
 export async function keyedCryptoFactory(url: URI, kb: KeyBag, sthis: SuperThis): Promise<KeyedCrypto> {
-  const storekey = url.getParam("storekey");
+  const storekey = url.getParam(PARAM.STORE_KEY);
   if (storekey && storekey !== "insecure") {
     let rkey = await kb.getNamedKey(storekey, true);
     if (rkey.isErr()) {

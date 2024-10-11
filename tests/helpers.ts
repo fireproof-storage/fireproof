@@ -1,7 +1,5 @@
-import { LogCollector, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
-import { dataDir, ensureSuperThis, rt, SuperThis, SuperThisOpts } from "@fireproof/core";
-
-export { dataDir };
+import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector } from "@adviser/cement";
+import { ensureSuperThis, rt, SuperThis, SuperThisOpts, bs, PARAM } from "@fireproof/core";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,16 +35,36 @@ export function storageURL(sthis: SuperThis): URI {
   return merged;
 }
 
-export type MockSuperThis = SuperThis & { logCollector: LogCollector };
+export type MockSuperThis = SuperThis & { ctx: { logCollector: LogCollector } };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
-  const mockLog = MockLogger();
-  const ethis = ensureSuperThis({
+  const mockLog = MockLogger({
+    pass: new utils.ConsoleWriterStreamDefaultWriter(new utils.ConsoleWriterStream()),
+  });
+  return ensureSuperThis({
     logger: mockLog.logger,
     ctx: {
       logCollector: mockLog.logCollector,
     },
   }) as MockSuperThis;
-  ethis.logCollector = mockLog.logCollector;
-  return ethis;
+}
+
+export function noopUrl(name?: string): URI {
+  const burl = BuildURI.from("memory://noop");
+  burl.setParam(PARAM.NAME, name || "test");
+  return burl.URI();
+}
+
+export function simpleBlockOpts(sthis: SuperThis, name?: string) {
+  const url = noopUrl(name);
+  return {
+    keyBag: rt.kb.defaultKeyBagOpts(sthis),
+    storeRuntime: bs.toStoreRuntime(sthis),
+    storeUrls: {
+      file: url,
+      wal: url,
+      meta: url,
+      data: url,
+    },
+  };
 }

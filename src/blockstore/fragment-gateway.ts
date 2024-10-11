@@ -3,11 +3,11 @@ import { Logger, Result, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { encode, decode } from "cborg";
 import { Gateway, GetResult, UnsubscribeResult, VoidResult } from "./gateway.js";
-import { SuperThis } from "../types.js";
+import { PARAM, SuperThis } from "../types.js";
 import { ensureSuperLog } from "../utils.js";
 
 function getFragSize(url: URI): number {
-  const fragSize = url.getParam("fragSize");
+  const fragSize = url.getParam(PARAM.FRAG_SIZE);
   let ret = 0;
   if (fragSize) {
     ret = parseInt(fragSize);
@@ -45,9 +45,9 @@ async function getFrags(url: URI, innerGW: Gateway, headerSize: number, logger: 
   const fidStr = base58btc.encode(firstFragment.fid);
   const fragUrl = url
     .build()
-    .setParam("fid", fidStr)
-    .setParam("len", firstFragment.len.toString())
-    .setParam("headerSize", headerSize.toString());
+    .setParam(PARAM.FRAG_FID, fidStr)
+    .setParam(PARAM.FRAG_LEN, firstFragment.len.toString())
+    .setParam(PARAM.FRAG_HEAD, headerSize.toString());
 
   for (let ofs = blockSize; ofs < firstFragment.len; ofs += blockSize) {
     ops.push(
@@ -100,8 +100,8 @@ export class FragmentGateway implements Gateway {
     if (blocksize <= 0) {
       throw this.logger
         .Error()
-        .Uint64("fragSize", fragSize)
-        .Uint64("headerSize", this.headerSize)
+        .Uint64(PARAM.FRAG_SIZE, fragSize)
+        .Uint64(PARAM.FRAG_HEAD, this.headerSize)
         .Msg("Fragment size is too small")
         .AsError();
     }
@@ -109,9 +109,9 @@ export class FragmentGateway implements Gateway {
     const fid = this.sthis.nextId(this.fidLength);
     const fragUrl = url
       .build()
-      .setParam("fid", fid.str)
-      .setParam("len", body.length.toString())
-      .setParam("headerSize", this.headerSize.toString());
+      .setParam(PARAM.FRAG_FID, fid.str)
+      .setParam(PARAM.FRAG_LEN, body.length.toString())
+      .setParam(PARAM.FRAG_HEAD, this.headerSize.toString());
     for (let ofs = 0; ofs < body.length; ofs += blocksize) {
       const block = encode({
         fid: fid.bin,
@@ -184,13 +184,19 @@ export class FragmentGateway implements Gateway {
         return Result.Err(rfrag.Err());
       }
       const frag = rfrag.Ok();
-      const fidStr = base58btc.encode(frag.fid);
-      const fragUrl = url
-        .build()
-        .setParam("fid", fidStr)
-        .setParam("len", frag.len.toString())
-        .setParam("headerSize", this.headerSize.toString())
-        .URI();
+      let fragUrl: URI;
+      // if no fragments, just delete the url
+      if (rfrags.length > 1) {
+        const fidStr = base58btc.encode(frag.fid);
+        fragUrl = url
+          .build()
+          .setParam(PARAM.FRAG_FID, fidStr)
+          .setParam(PARAM.FRAG_LEN, frag.len.toString())
+          .setParam(PARAM.FRAG_HEAD, this.headerSize.toString())
+          .URI();
+      } else {
+        fragUrl = url;
+      }
       await this.innerGW.delete(fragUrl);
     }
     return Result.Ok(undefined);
