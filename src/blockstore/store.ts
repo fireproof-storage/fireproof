@@ -26,6 +26,8 @@ import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { KeyBag } from "../runtime/key-bag.js";
 import { FragmentGateway } from "./fragment-gateway.js";
 import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
+import pRetry from "p-retry";
+import pMap from "p-map";
 
 import pRetry from "p-retry";
 import pMap from "p-map";
@@ -398,7 +400,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         noLoaderOps,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
               if (!car) {
@@ -421,7 +422,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         operations,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
               if (!car) {
@@ -444,7 +444,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         fileOperations,
         async ({ cid: fileCid, public: publicFile }) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
             const fileBlock = await (await this.loader.fileStore()).load(fileCid);
             if (!fileBlock) {
               throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
@@ -461,7 +460,6 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       if (operations.length) {
         const lastOp = operations[operations.length - 1];
         await retryableUpload(async () => {
-          if (!this.loader) return;
           await this.loader.remoteMetaStore?.save(lastOp);
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
       }
