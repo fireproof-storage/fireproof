@@ -23,12 +23,11 @@ const opts = tseslint.config(
   {
     rules: {
       "no-console": ["warn"],
-    }
-   },
-   {
+    },
+  },
+  {
     rules: {
       "no-restricted-globals": ["error", "URL", "TextDecoder", "TextEncoder"],
-      ],
     },
   },
 );
