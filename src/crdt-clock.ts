@@ -4,7 +4,7 @@ import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { clockChangesSince } from "./crdt-helpers.js";
 import type { BaseBlockstore, CarTransaction } from "./blockstore/index.js";
-import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } from "./types.js";
+import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "./utils.js";
 
@@ -21,6 +21,7 @@ export class CRDTClock<T extends DocTypes> {
   readonly blockstore: BaseBlockstore;
 
   readonly applyHeadQueue: ApplyHeadQueue<T>;
+  transaction?: CarTransaction;
 
   readonly _ready: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
@@ -104,21 +105,24 @@ export class CRDTClock<T extends DocTypes> {
       throw this.logger.Error().Msg("missing blockstore").AsError();
     }
     await validateBlocks(this.logger, newHead, this.blockstore);
-    const { meta } = await this.blockstore.transaction<CRDTMeta>(
-      async (tblocks: CarTransaction) => {
-        const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
-        const result = await root(tblocks, advancedHead);
-        for (const { cid, bytes } of [
-          ...result.additions,
-          // ...result.removals
-        ]) {
-          tblocks.putSync(cid, bytes);
-        }
-        return { head: advancedHead };
-      },
-      { noLoader, add: false },
-    );
-    this.setHead(meta.head);
+    if (!this.transaction) {
+      this.transaction = this.blockstore.openTransaction({ noLoader, add: false });
+    }
+    const tblocks = this.transaction;
+
+    const advancedHead = await advanceBlocks(this.logger, newHead, tblocks, this.head);
+    const result = await root(tblocks, advancedHead);
+    for (const { cid, bytes } of [
+      ...result.additions,
+      // ...result.removals
+    ]) {
+      tblocks.putSync(cid, bytes);
+    }
+    if (!noLoader) {
+      await this.blockstore.commitTransaction(tblocks, { head: advancedHead }, { add: false, noLoader });
+      this.transaction = undefined;
+    }
+    this.setHead(advancedHead);
   }
 }
 
