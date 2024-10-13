@@ -26,11 +26,6 @@ export interface CarTransactionOpts {
   readonly noLoader: boolean;
 }
 
-export interface CarTransactionOpts {
-  readonly add: boolean;
-  readonly noLoader: boolean;
-}
-
 export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   readonly parent: BaseBlockstore;
   constructor(parent: BaseBlockstore, opts: CarTransactionOpts = { add: true, noLoader: false }) {
@@ -111,6 +106,10 @@ export class BaseBlockstore implements BlockFetcher {
     // no-op
   }
 
+  async compact(): Promise<void> {
+    // no-op
+  }
+
   readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts) {
     // console.log("BaseBlockstore", ebOpts)
@@ -147,6 +146,27 @@ export class BaseBlockstore implements BlockFetcher {
     this.logger.Debug().Msg("post fn");
     this.lastTxMeta = done;
     return { t, meta: done };
+  }
+
+  openTransaction(opts: CarTransactionOpts = { add: true, noLoader: false }): CarTransaction {
+    return new CarTransaction(this, opts);
+  }
+
+  async commitTransaction<M extends TransactionMeta>(
+    t: CarTransaction,
+    done: M,
+    opts: CarTransactionOpts,
+  ): Promise<TransactionWrapper<M>> {
+    if (!this.loader) throw this.logger.Error().Msg("loader required to commit").AsError();
+    const cars = await this.loader?.commit<M>(t, done, opts);
+    if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
+      setTimeout(() => void this.compact(), 10);
+    }
+    if (cars) {
+      this.transactions.delete(t);
+      return { meta: done, cars, t };
+    }
+    throw this.logger.Error().Msg("failed to commit car files").AsError();
   }
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
