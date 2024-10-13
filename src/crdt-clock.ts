@@ -4,7 +4,7 @@ import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { clockChangesSince } from "./crdt-helpers.js";
 import type { BaseBlockstore, CarTransaction } from "./blockstore/index.js";
-import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy, CRDTMeta } from "./types.js";
+import { type DocUpdate, type ClockHead, type DocTypes, throwFalsy } from "./types.js";
 import { applyHeadQueue, ApplyHeadQueue } from "./apply-head-queue.js";
 import { ensureLogger } from "./utils.js";
 

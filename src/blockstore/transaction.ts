@@ -157,7 +157,11 @@ export class BaseBlockstore implements BlockFetcher {
     return new CarTransaction(this, opts);
   }
 
-  async commitTransaction<M extends TransactionMeta>(t: CarTransaction, done: M, opts: CarTransactionOpts): Promise<TransactionWrapper<M>> {
+  async commitTransaction<M extends TransactionMeta>(
+    t: CarTransaction,
+    done: M,
+    opts: CarTransactionOpts,
+  ): Promise<TransactionWrapper<M>> {
     if (!this.loader) throw this.logger.Error().Msg("loader required to commit").AsError();
     const cars = await this.loader?.commit<M>(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
@@ -169,7 +173,6 @@ export class BaseBlockstore implements BlockFetcher {
     }
     throw this.logger.Error().Msg("failed to commit car files").AsError();
   }
-
 
   async *entries(): AsyncIterableIterator<AnyBlock> {
     const seen = new Set<string>();
