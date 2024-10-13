@@ -11,11 +11,11 @@ import { getKeyBag } from "../runtime/key-bag.js";
 export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array): Promise<DbMetaEvent[]> {
   const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
   if (!crdtEntries.length) {
-    sthis.logger.Debug().Str("byteHeads", new TextDecoder().decode(byteHeads)).Msg("No CRDT entries found");
+    sthis.logger.Debug().Any("byteHeads", byteHeads).Msg("No CRDT entries found");
     return [];
   }
   if (!crdtEntries.map) {
-    sthis.logger.Debug().Str("crdtEntries", JSON.stringify(crdtEntries)).Msg("No data in CRDT entries");
+    sthis.logger.Debug().Any("crdtEntries", crdtEntries).Msg("No data in CRDT entries");
     return [];
   }
   return Promise.all(
@@ -31,11 +31,7 @@ export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads
   );
 }
 
-export async function setCryptoKeyFromGatewayMetaPayload(
-  uri: URI,
-  sthis: SuperThis,
-  data: Uint8Array,
-): Promise<Result<DbMeta | undefined>> {
+export async function setCryptoKeyFromGatewayMetaPayload(uri: URI, sthis: SuperThis, data: Uint8Array): Promise<Result<DbMeta[]>> {
   try {
     sthis.logger.Debug().Str("uri", uri.toString()).Msg("Setting crypto key from gateway meta payload");
     const keyInfo = await decodeGatewayMetaBytesToDbMeta(sthis, data);
@@ -51,13 +47,12 @@ export async function setCryptoKeyFromGatewayMetaPayload(
         }
       }
       sthis.logger.Debug().Str("dbMeta.key", dbMeta.key).Str("uri", uri.toString()).Msg("Set crypto key from gateway meta payload");
-      return Result.Ok(dbMeta);
+      return Result.Ok([dbMeta]);
     }
-    sthis.logger.Debug().Str("data", new TextDecoder().decode(data)).Msg("No crypto in gateway meta payload");
-    return Result.Ok(undefined);
+    sthis.logger.Debug().Any("data", data).Msg("No crypto in gateway meta payload");
+    return Result.Ok([]);
   } catch (error) {
-    sthis.logger.Debug().Err(error).Msg("Failed to set crypto key from gateway meta payload");
-    return Result.Err(error as Error);
+    return sthis.logger.Debug().Err(error).Msg("Failed to set crypto key from gateway meta payload").ResultError();
   }
 }
 
