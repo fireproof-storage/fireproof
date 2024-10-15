@@ -195,12 +195,11 @@
         };
         window.toggleWorker = toggleWorker;
 
-
         async function writeStorm(e) {
           e.preventDefault();
           compactor = "🐦‍🔥";
           drawInfo();
-          
+
           const dcs = await db.allDocs();
           const lastRow = dcs.rows[dcs.rows.length - 1];
           const theDoc = lastRow.value;
