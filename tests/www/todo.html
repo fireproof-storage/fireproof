@@ -195,6 +195,26 @@
         };
         window.toggleWorker = toggleWorker;
 
+
+        async function writeStorm(e) {
+          e.preventDefault();
+          compactor = "🐦‍🔥";
+          drawInfo();
+          
+          const dcs = await db.allDocs();
+          const lastRow = dcs.rows[dcs.rows.length - 1];
+          const theDoc = lastRow.value;
+          for (let i = 0; i < 50; i++) {
+            theDoc.clicks = (theDoc.clicks || 0) + 1;
+            theDoc.completed = !theDoc.completed;
+            await db.put(theDoc);
+          }
+
+          drawInfo();
+          compactor = "🚗";
+        }
+        window.writeStorm = writeStorm;
+
         async function doCompact(e) {
           e.preventDefault();
           compactor = "🚕";
@@ -221,6 +241,7 @@
 
     <p>This version of the Fireprof test app uses PartyKit as the storage backend. Refresh is automatic and live.</p>
 
+    <button id="rocket" onclick="writeStorm(event)">🚀</button>
     <button id="robot" onclick="toggleWorker(event)">🤖</button>
     <span id="carLog" onclick="doCompact(event)"></span>
     <span id="cxInfo"></span>
