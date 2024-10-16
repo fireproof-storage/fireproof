@@ -18,7 +18,7 @@ import type {
   Loadable,
 } from "./types.js";
 import { Falsy, PARAM, StoreType, SuperThis, throwFalsy } from "../types.js";
-import { Gateway } from "./gateway.js";
+import { Gateway, GatewayInterceptor } from "./gateway.js";
 import { ensureLogger, isNotFoundError } from "../utils.js";
 // import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
@@ -31,6 +31,7 @@ import pRetry from "p-retry";
 import pMap from "p-map";
 
 import { carLogIncludesGroup } from "./loader.js";
+import { InterceptorGateway } from "./interceptor-gateway.js";
 
 function guardVersion(url: URI): Result<URI> {
   if (!url.hasParam("version")) {
@@ -41,6 +42,7 @@ function guardVersion(url: URI): Result<URI> {
 
 export interface StoreOpts {
   readonly gateway: Gateway;
+  readonly gatewayInterceptor?: GatewayInterceptor;
   readonly keybag: KeyBag;
   readonly loader?: Loadable;
 }
@@ -54,7 +56,7 @@ abstract class BaseStoreImpl {
   private _url: URI;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly gateway: FragmentGateway;
+  readonly gateway: InterceptorGateway;
   readonly realGateway: Gateway;
   readonly keybag: KeyBag;
   readonly name: string;
@@ -76,7 +78,7 @@ abstract class BaseStoreImpl {
       .Ref("url", () => this._url.toString())
       .Logger();
     this.realGateway = opts.gateway;
-    this.gateway = new FragmentGateway(this.sthis, opts.gateway);
+    this.gateway = new InterceptorGateway(this.sthis, new FragmentGateway(this.sthis, opts.gateway), opts.gatewayInterceptor);
   }
 
   url(): URI {

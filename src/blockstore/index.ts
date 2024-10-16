@@ -2,6 +2,7 @@ export * from "./types.js";
 
 export * from "./store-factory.js";
 export * from "./gateway.js";
+export * from "./interceptor-gateway.js";
 export * from "./fragment-gateway.js";
 export * from "./register-store-protocol.js";
 
