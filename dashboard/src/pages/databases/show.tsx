@@ -1,7 +1,9 @@
-import { Link, useParams } from "@remix-run/react";
-import { useFireproof } from "use-fireproof";
-import DynamicTable from "~/components/DynamicTable";
-import { headersForDocs } from "~/components/dynamicTableHelpers";
+// import { cloudConnect } from "@fireproof/partykit";
+import React from "react";
+import { Link, useParams } from "react-router-dom";
+import { fireproof, useFireproof } from "use-fireproof";
+import DynamicTable from "../../components/DynamicTable";
+import { headersForDocs } from "../../components/dynamicTableHelpers";
 
 export default function Show() {
   const { name } = useParams();
@@ -10,6 +12,22 @@ export default function Show() {
 
 function TableView({ name }: { name: string }) {
   const { useLiveQuery, database } = useFireproof(name);
+  const petnames = fireproof("petname.mappings");
+
+  const getPetname = () => {
+    return petnames
+      .get<{
+        remoteName: string;
+        firstConnect: boolean;
+      }>(name)
+      .then((doc) => ({ remoteName: doc.remoteName, firstConnect: false }))
+      .catch(() => {});
+  };
+
+  getPetname().then((result) => {
+    // cloudConnect(database);
+  });
+
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc) => doc);
 

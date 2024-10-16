@@ -1,9 +1,9 @@
-import { Link, useParams } from "@remix-run/react";
 import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { MapFn, useFireproof } from "use-fireproof";
-import { EditableCodeHighlight } from "~/components/CodeHighlight";
-import DynamicTable from "~/components/DynamicTable";
-import { headersForDocs } from "~/components/dynamicTableHelpers";
+import { EditableCodeHighlight } from "../../components/CodeHighlight";
+import DynamicTable from "../../components/DynamicTable";
+import { headersForDocs } from "../../components/dynamicTableHelpers";
 
 type AnyMapFn = MapFn<object>;
 
@@ -102,6 +102,7 @@ function QueryDynamicTable({ mapFn, name }: { mapFn: string; name: string }) {
   const { useLiveQuery } = useFireproof(name);
   const allDocs = useLiveQuery(eval(`(${mapFn})`));
   const docs = allDocs.docs.filter((doc) => doc);
+  console.log(docs);
   const headers = headersForDocs(docs);
 
   return (

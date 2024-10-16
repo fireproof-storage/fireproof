@@ -1,8 +1,8 @@
-import { Link, useParams } from "@remix-run/react";
 import { useEffect, useState } from "react";
-import { DocBase, useFireproof } from "use-fireproof";
-import DynamicTable from "~/components/DynamicTable";
-import { headersForDocs } from "~/components/dynamicTableHelpers";
+import { Link, useParams } from "react-router-dom";
+import { type DocBase, useFireproof } from "use-fireproof";
+import DynamicTable from "../../components/DynamicTable";
+import { headersForDocs } from "../../components/dynamicTableHelpers";
 
 export default function ChangesHistory() {
   const { name } = useParams();
