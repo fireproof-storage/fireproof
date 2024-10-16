@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createRoutesFromElements, Route } from "react-router";
+import { createRoutesFromElements, Route } from "react-router-dom";
 
 import ReactDOM from "react-dom/client";
 import {
