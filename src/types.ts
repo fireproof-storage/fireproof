@@ -1,7 +1,7 @@
 import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
-import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile } from "./blockstore/index.js";
+import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile, GatewayInterceptor } from "./blockstore/index.js";
 import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
@@ -112,6 +112,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly public?: boolean;
   readonly meta?: DbMeta;
   // readonly persistIndexes?: boolean;
+  readonly gatewayInterceptor?: GatewayInterceptor;
   readonly autoCompact?: number;
   readonly storeUrls?: StoreUrlsOpts;
   readonly storeEnDe?: StoreEnDeFile;

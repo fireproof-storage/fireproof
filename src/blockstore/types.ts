@@ -1,5 +1,5 @@
 import type { CID, Link, Version } from "multiformats";
-import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface";
+import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 import { DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
@@ -7,8 +7,8 @@ import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
-import { TaskManager } from "./task-manager";
-import { Gateway } from "./gateway";
+import { TaskManager } from "./task-manager.js";
+import { Gateway, GatewayInterceptor } from "./gateway.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -211,6 +211,7 @@ export interface StoreURIRuntime {
 export interface StoreFactoryItem {
   readonly sthis: SuperThis;
   readonly url: URI;
+  readonly gatewayInterceptor?: GatewayInterceptor;
   readonly keybag: KeyBag;
 }
 
@@ -367,6 +368,7 @@ export type BlockstoreOpts = Partial<{
   readonly public: boolean;
   readonly meta: DbMeta;
   readonly threshold: number;
+  readonly gatewayInterceptor?: GatewayInterceptor;
   readonly storeEnDeFile: Partial<StoreEnDeFile>;
 }> & {
   readonly keyBag: KeyBagRuntime;
@@ -383,6 +385,7 @@ export interface BlockstoreRuntime {
   readonly storeRuntime: StoreRuntime;
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
+  readonly gatewayInterceptor?: GatewayInterceptor;
   // readonly storeEnDeFile: StoreEnDeFile;
   // readonly public: boolean;
   readonly meta?: DbMeta;
