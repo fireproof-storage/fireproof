@@ -1,11 +1,11 @@
-import { Link, useNavigate, useParams } from "@remix-run/react";
 import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 
 import {
   CodeHighlight,
   EditableCodeHighlight,
-} from "~/components/CodeHighlight";
+} from "../../components/CodeHighlight";
 
 export default function Document() {
   const { name } = useParams();
@@ -25,7 +25,8 @@ export default function Document() {
     const data = JSON.parse(docToSave);
     const resp = await database.put({ _id, ...data });
     if (!_id) {
-      window.location.href = `/fp/databases/${name}/docs/${resp.id}`;
+      navigate(`/fp/databases/${name}/docs/${resp.id}`);
+      return;
     }
     setNeedsSave(false);
   }

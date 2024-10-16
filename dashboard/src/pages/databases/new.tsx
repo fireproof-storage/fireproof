@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { Form, redirect, useSubmit } from "react-router-dom";
 import { fireproof } from "use-fireproof";
 
-export async function clientAction({ request }) {
+export async function Action({ request }) {
   const dbName = (await request.json()).dbName;
   const database = fireproof(dbName);
   await database.blockstore.loader?.ready();

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Link } from "@remix-run/react";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 
 export default function DynamicTable({
