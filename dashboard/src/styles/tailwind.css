@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: hsl(36 39% 88%);
+    --foreground: hsl(36 45% 15%);
+    --primary: hsl(36 45% 70%);
+    --primary-foreground: hsl(36 45% 11%);
+    --secondary: hsl(40 35% 77%);
+    --secondary-foreground: hsl(36 45% 25%);
+    --accent: hsl(36 64% 57%);
+    --accent-foreground: hsl(36 72% 17%);
+    --destructive: hsl(0, 83%, 45%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --muted: hsl(36 33% 75%);
+    --muted-foreground: hsl(36 45% 25%);
+    --card: hsl(36 46% 82%);
+    --card-foreground: hsl(36 45% 20%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(240 10% 3.9%);
+    --border: hsl(36 45% 60%);
+    --input: hsl(36 45% 60%);
+    --ring: hsl(36 45% 30%);
+    --radius: 0rem;
+  }
+
+  .dark {
+    --background: rgb(15 23 42);
+    --foreground: hsl(210 40% 98%);
+    --primary: hsl(210 40% 30%);
+    --primary-foreground: hsl(210 40% 98%);
+    --secondary: hsl(210 35% 23%);
+    --secondary-foreground: hsl(210 40% 90%);
+    --accent: hsl(210 64% 43%);
+    --accent-foreground: hsl(210 72% 95%);
+    --destructive: hsl(0, 63%, 55%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --muted: hsl(210 33% 25%);
+    --muted-foreground: hsl(210 40% 75%);
+    --card: hsl(210 46% 18%);
+    --card-foreground: hsl(210 40% 90%);
+    --popover: hsl(210 40% 10%);
+    --popover-foreground: hsl(210 40% 98%);
+    --border: hsl(210 40% 40%);
+    --input: hsl(210 40% 40%);
+    --ring: hsl(210 40% 70%);
+  }
+}
+
+@layer base {
+  /* * {
+    @apply border-border;
+  } */
+
+  body {
+    @apply bg-[--background] text-[--foreground];
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    /* @apply font-heading; */
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover);
+}
