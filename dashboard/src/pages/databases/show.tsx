@@ -15,13 +15,14 @@ function TableView({ name }: { name: string }) {
   const petnames = fireproof("petname.mappings");
 
   const getPetname = () => {
-    return petnames
-      .get<{
-        remoteName: string;
-        firstConnect: boolean;
-      }>(name)
-      .then((doc) => ({ remoteName: doc.remoteName, firstConnect: false }))
-      .catch(() => {});
+    const { rows } = await petnames.query("localName", {key : name, includeDocs: true})
+    if (rows.length) {
+      // todo handle more than one match
+      const { remoteName } = rows[0].doc
+      return { remoteName: doc.remoteName, firstConnect: false }
+    } else {
+      return {}
+    }
   };
 
   getPetname().then((result) => {
