@@ -9,10 +9,12 @@ export async function loader({ request }) {
     throw new Error("Local name is required");
   }
   const remoteName = url.searchParams.get("remoteName");
+  const endpoint = url.searchParams.get("endpoint");
   const petnames = fireproof("petname.mappings");
   const ok = await petnames.put({
-    _id: localName,
-    remoteName,
+    _id: "db:" + remoteName,
+    localName,
+    endpoint,
     firstConnect: false,
   });
   console.log(ok);
