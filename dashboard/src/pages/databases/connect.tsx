@@ -12,13 +12,18 @@ export async function loader({ request }) {
   const endpoint = url.searchParams.get("endpoint");
   const petnames = fireproof("petname.mappings");
   const ok = await petnames.put({
-    _id: "db:" + remoteName,
+    remoteName,
     localName,
     endpoint,
     firstConnect: false,
   });
   console.log(ok);
-  return redirect(`/fp/databases/${localName}`);
+  if (endpoint) {
+    return redirect(
+      `/fp/databases/${remoteName}?endpoint=${encodeURIComponent(endpoint)}`
+    );
+  }
+  return redirect(`/fp/databases/${remoteName}`);
 }
 
 export default function DatabasesConnect() {
