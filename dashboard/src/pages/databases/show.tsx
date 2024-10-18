@@ -6,6 +6,7 @@ import DynamicTable from "../../components/DynamicTable";
 import { headersForDocs } from "../../components/dynamicTableHelpers";
 
 const DEFAULT_ENDPOINT = "https://fireproof-cloud.jchris.partykit.dev/";
+const SYNC_DB_NAME = "_fp.sync";
 
 export default function Show() {
   const { name, endpoint } = useParams();
@@ -20,11 +21,9 @@ function TableView({ name, endpoint }: { name: string, endpoint: string }) {
 
 /// todo connect this to the endpoint using name as remoteName
   const connection = connect(database, name, endpoint);
-  console.log('connection', connection);
+  // console.log('connection', connection);
 
-  const petnames = fireproof("petname.mappings");
-
-  const { useLiveQuery: usePetnameLiveQuery, database: petnamesDb } = useFireproof("petname.mappings");
+  const { useLiveQuery: usePetnameLiveQuery } = useFireproof(SYNC_DB_NAME);
 
   const myPetnames = usePetnameLiveQuery<{ localName: string }>("remoteName", { key: name });
 
