@@ -14,20 +14,12 @@ function TableView({ name }: { name: string }) {
   const { useLiveQuery, database } = useFireproof(name);
   const petnames = fireproof("petname.mappings");
 
-  const getPetname = () => {
-    const { rows } = await petnames.query("localName", {key : name, includeDocs: true})
-    if (rows.length) {
-      // todo handle more than one match
-      const { remoteName } = rows[0].doc
-      return { remoteName: doc.remoteName, firstConnect: false }
-    } else {
-      return {}
-    }
-  };
+  const { useLiveQuery: usePetnameLiveQuery, database: petnamesDb } = useFireproof("petname.mappings");
 
-  getPetname().then((result) => {
-    // cloudConnect(database);
-  });
+  const myPetnames = usePetnameLiveQuery<{ localName: string }>("remoteName", { key: name });
+
+  const petNames = myPetnames.docs.map((doc) => doc.localName);
+
 
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc) => doc);
@@ -69,7 +61,9 @@ function TableView({ name }: { name: string }) {
           >
             {name}
           </Link>
-          <span className="mx-2">&gt;</span>
+          {petNames.map((petName) => (
+            <span key={petName} className="mx-2">&gt; {petName}</span>
+          ))}
           <span>All Documents ({docs.length})</span>
         </nav>
         <div className="flex space-x-2">
