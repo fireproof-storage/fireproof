@@ -1,17 +1,27 @@
-// import { cloudConnect } from "@fireproof/partykit";
+import { connect } from "@fireproof/partykit";
 import React from "react";
 import { Link, useParams } from "react-router-dom";
 import { fireproof, useFireproof } from "use-fireproof";
 import DynamicTable from "../../components/DynamicTable";
 import { headersForDocs } from "../../components/dynamicTableHelpers";
 
+const DEFAULT_ENDPOINT = "https://fireproof-cloud.jchris.partykit.dev/";
+
 export default function Show() {
-  const { name } = useParams();
-  return <TableView key={name} name={name} />;
+  const { name, endpoint } = useParams();
+  if (!name) {
+    throw new Error("Name is required");
+  }
+  return <TableView key={name} name={name} endpoint={endpoint || DEFAULT_ENDPOINT} />;
 }
 
-function TableView({ name }: { name: string }) {
+function TableView({ name, endpoint }: { name: string, endpoint: string }) {
   const { useLiveQuery, database } = useFireproof(name);
+
+/// todo connect this to the endpoint using name as remoteName
+  const connection = connect(database, name, endpoint);
+  console.log('connection', connection);
+
   const petnames = fireproof("petname.mappings");
 
   const { useLiveQuery: usePetnameLiveQuery, database: petnamesDb } = useFireproof("petname.mappings");
