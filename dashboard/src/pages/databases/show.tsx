@@ -1,4 +1,4 @@
-import { connect } from "@fireproof/partykit";
+import { rawConnect } from "@fireproof/cloud";
 import React from "react";
 import { Link, useParams } from "react-router-dom";
 import { fireproof, useFireproof } from "use-fireproof";
@@ -19,9 +19,9 @@ export default function Show() {
 function TableView({ name, endpoint }: { name: string, endpoint: string }) {
   const { useLiveQuery, database } = useFireproof(name);
 
-/// todo connect this to the endpoint using name as remoteName
-  const connection = connect(database, name, endpoint);
-  // console.log('connection', connection);
+  // @ts-expect-error something database type
+  const connection = rawConnect(database, name, endpoint);
+  console.log('connection', connection);
 
   const { useLiveQuery: usePetnameLiveQuery } = useFireproof(SYNC_DB_NAME);
 
