@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@fireproof/cloud": "^0.19.103",
+    "@fireproof/cloud": "^0.19.104",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
     "npm": "^10.9.0",
@@ -22,7 +22,7 @@
     "react-router-dom": "^6.27.0",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
-    "use-fireproof": "^0.19.103"
+    "use-fireproof": "^0.19.104"
   },
   "devDependencies": {
     "@eslint/js": "^9.12.0",
