@@ -8,9 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@fireproof/partykit':
-        specifier: ^0.19.102
-        version: 0.19.102(react@18.3.1)
+      '@fireproof/cloud':
+        specifier: ^0.19.103
+        version: 0.19.103(react@18.3.1)
       highlight.js:
         specifier: ^11.10.0
         version: 11.10.0
@@ -45,8 +45,8 @@ importers:
         specifier: ^2.3.3
         version: 2.3.3(react@18.3.1)
       use-fireproof:
-        specifier: ^0.19.102
-        version: 0.19.102(react@18.3.1)
+        specifier: ^0.19.103
+        version: 0.19.103(react@18.3.1)
     devDependencies:
       '@eslint/js':
         specifier: ^9.12.0
@@ -405,13 +405,13 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/core@0.19.102':
-    resolution: {integrity: sha512-88n1Es1SvAChWsw3/T/GQE0UglOHpPsJnWXNsO0lz0VC7b8UNpF8VKz+CVg7/UgvyOJT0zVFkKO7GmiTpUS7FA==}
+  '@fireproof/cloud@0.19.103':
+    resolution: {integrity: sha512-ZhB+23f3J5XZrm31PuGeAoEHN3n0GedptXOCuorPdqzf1YJa5X/rZW1a3S8WxmiRowptWQhiN1SYLTRvvh/OIw==}
+
+  '@fireproof/core@0.19.103':
+    resolution: {integrity: sha512-SbL68C//SKPDkj7SBhmMs92sABmGdzizCrYBBws0WMDA+m+3Znn8hwnZ8aA3KwhJcgK+pPHyreHe1ez02PeL5g==}
     peerDependencies:
       react: '>=18.0.0'
-
-  '@fireproof/partykit@0.19.102':
-    resolution: {integrity: sha512-0pKi14e8UA+wlmgDuw9Tm47No5aEAqjklkCzu0YRS4fhQdsocUzm74yy6lKwTHJ/iE+EWC55fRDHY3+GNhNpjg==}
 
   '@humanfs/core@0.19.0':
     resolution: {integrity: sha512-2cbWIHbZVEweE853g8jymffCA+NCMiuqeECeBBLm8dg2oFdjuGJhgN4UAbI+6v0CKbbhvtXA4qV8YR5Ji86nmw==}
@@ -2225,8 +2225,8 @@ packages:
     peerDependencies:
       react: '>= 16.8.0'
 
-  use-fireproof@0.19.102:
-    resolution: {integrity: sha512-T6MzBBw5/yArD/EugPQJI80F1V4ef9YsxUITdBzg/EIaRtjrsFnM59AKT6tNvKMmLhdoctTKOr+4JdYWVF3+7A==}
+  use-fireproof@0.19.103:
+    resolution: {integrity: sha512-jNhOllyxleBixlQ09iHB8VXJKDSt+7hkgf8EAJDzgYhcQgAuF7CslTiwW3YUJoshnr9IluwEJwnM1OW6ceDWTQ==}
     peerDependencies:
       react: '>=18.0.0'
 
@@ -2618,7 +2618,20 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/core@0.19.102(react@18.3.1)':
+  '@fireproof/cloud@0.19.103(react@18.3.1)':
+    dependencies:
+      '@fireproof/core': 0.19.103(react@18.3.1)
+      cross-fetch: 4.0.0
+      partykit: 0.0.110
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - react
+      - supports-color
+      - typescript
+      - utf-8-validate
+
+  '@fireproof/core@0.19.103(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.34
       '@ipld/car': 5.3.2
@@ -2639,19 +2652,6 @@ snapshots:
       react: 18.3.1
     transitivePeerDependencies:
       - typescript
-
-  '@fireproof/partykit@0.19.102(react@18.3.1)':
-    dependencies:
-      '@fireproof/core': 0.19.102(react@18.3.1)
-      cross-fetch: 4.0.0
-      partykit: 0.0.110
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - react
-      - supports-color
-      - typescript
-      - utf-8-validate
 
   '@humanfs/core@0.19.0': {}
 
@@ -4591,7 +4591,7 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  use-fireproof@0.19.102(react@18.3.1):
+  use-fireproof@0.19.103(react@18.3.1):
     dependencies:
       '@adviser/cement': 0.2.34
       '@ipld/car': 5.3.2
