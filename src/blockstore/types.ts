@@ -271,6 +271,8 @@ export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 export interface Connection {
   readonly loader?: Loadable;
   readonly loaded: Promise<void>;
+  dashboardUrl?: URI;
+
   connectMeta_X({ loader }: { loader?: Loadable }): void;
   connectStorage_X({ loader }: { loader?: Loadable }): void;
 
