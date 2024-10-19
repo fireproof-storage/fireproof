@@ -5,7 +5,7 @@ import { fireproof, useFireproof } from "use-fireproof";
 import DynamicTable from "../../components/DynamicTable";
 import { headersForDocs } from "../../components/dynamicTableHelpers";
 
-const DEFAULT_ENDPOINT = "https://fireproof-cloud.jchris.partykit.dev/";
+const DEFAULT_ENDPOINT = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
 const SYNC_DB_NAME = "_fp.sync";
 
 export default function Show() {
