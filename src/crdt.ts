@@ -69,6 +69,7 @@ export class CRDT<T extends DocTypes> {
         await doCompact(blocks, this.clock.head, this.logger);
         return { head: this.clock.head } as TransactionMeta;
       },
+      gatewayInterceptor: opts.gatewayInterceptor,
       // autoCompact: this.opts.autoCompact || 100,
       storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
       storeUrls: this.opts.storeUrls.data,
@@ -86,6 +87,7 @@ export class CRDT<T extends DocTypes> {
           index({ crdt: this }, name, undefined, idx);
         }
       },
+      gatewayInterceptor: opts.gatewayInterceptor,
       storeRuntime: toStoreRuntime(this.sthis, this.opts.storeEnDe),
       storeUrls: this.opts.storeUrls.idx,
       keyBag: this.opts.keyBag,

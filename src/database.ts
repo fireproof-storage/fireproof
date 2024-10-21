@@ -26,7 +26,7 @@ import {
   type SuperThis,
   PARAM,
 } from "./types.js";
-import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, getDefaultURI } from "./blockstore/index.js";
+import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, getDefaultURI, GatewayInterceptor } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
@@ -54,6 +54,7 @@ export interface DatabaseOpts {
   readonly name?: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
+  readonly gatewayInterceptor?: GatewayInterceptor;
   // readonly factoryUnreg?: () => void;
   // readonly persistIndexes?: boolean;
   // readonly autoCompact?: number;
@@ -114,6 +115,7 @@ export function DatabaseFactory<T extends DocTypes = NonNullable<unknown>>(
         meta: opts?.meta,
         keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
         storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
+        gatewayInterceptor: opts?.gatewayInterceptor,
         storeEnDe: {
           encodeFile,
           decodeFile,

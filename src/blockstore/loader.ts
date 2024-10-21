@@ -81,6 +81,7 @@ export class Loader implements Loadable {
     return this._carStore.once(async () =>
       this.ebOpts.storeRuntime.makeDataStore({
         sthis: this.sthis,
+        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.data,
         keybag: await this.keyBag(),
       }),
@@ -92,6 +93,7 @@ export class Loader implements Loadable {
     return this._fileStore.once(async () =>
       this.ebOpts.storeRuntime.makeDataStore({
         sthis: this.sthis,
+        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.file,
         keybag: await this.keyBag(),
       }),
@@ -102,6 +104,7 @@ export class Loader implements Loadable {
     return this._WALStore.once(async () =>
       this.ebOpts.storeRuntime.makeWALStore({
         sthis: this.sthis,
+        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.wal,
         keybag: await this.keyBag(),
       }),
@@ -113,6 +116,7 @@ export class Loader implements Loadable {
     return this._metaStore.once(async () =>
       this.ebOpts.storeRuntime.makeMetaStore({
         sthis: this.sthis,
+        gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.meta,
         keybag: await this.keyBag(),
       }),
