@@ -1,11 +1,12 @@
 import { rawConnect } from "@fireproof/cloud";
 import React from "react";
 import { Link, useParams } from "react-router-dom";
-import { fireproof, useFireproof } from "use-fireproof";
+import { useFireproof } from "use-fireproof";
 import DynamicTable from "../../components/DynamicTable";
 import { headersForDocs } from "../../components/dynamicTableHelpers";
 
-const DEFAULT_ENDPOINT = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
+const DEFAULT_ENDPOINT =
+  "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
 const SYNC_DB_NAME = "_fp.sync";
 
 export default function Show() {
@@ -13,22 +14,25 @@ export default function Show() {
   if (!name) {
     throw new Error("Name is required");
   }
-  return <TableView key={name} name={name} endpoint={endpoint || DEFAULT_ENDPOINT} />;
+  return (
+    <TableView key={name} name={name} endpoint={endpoint || DEFAULT_ENDPOINT} />
+  );
 }
 
-function TableView({ name, endpoint }: { name: string, endpoint: string }) {
+function TableView({ name, endpoint }: { name: string; endpoint: string }) {
   const { useLiveQuery, database } = useFireproof(name);
 
   // @ts-expect-error something database type
   const connection = rawConnect(database, name, endpoint);
-  console.log('connection', connection);
+  console.log("connection", connection);
 
   const { useLiveQuery: usePetnameLiveQuery } = useFireproof(SYNC_DB_NAME);
 
-  const myPetnames = usePetnameLiveQuery<{ localName: string }>("remoteName", { key: name });
+  const myPetnames = usePetnameLiveQuery<{ localName: string }>("remoteName", {
+    key: name,
+  });
 
   const petNames = myPetnames.docs.map((doc) => doc.localName);
-
 
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc) => doc);
@@ -71,9 +75,11 @@ function TableView({ name, endpoint }: { name: string, endpoint: string }) {
             {name}
           </Link>
           {petNames.map((petName) => (
-            <span key={petName} className="mx-2">&gt; {petName}</span>
+            <span key={petName} className="mx-2">
+              &gt; {petName}
+            </span>
           ))}
-          <span>All Documents ({docs.length})</span>
+          <span> &gt; All Documents ({docs.length})</span>
         </nav>
         <div className="flex space-x-2">
           <Link
