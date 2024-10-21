@@ -30,6 +30,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {},
+  "peerDependencies": {},
   "dependencies": {
     "@adviser/cement": "from-package-json",
     "multiformats": "from-package-json",
