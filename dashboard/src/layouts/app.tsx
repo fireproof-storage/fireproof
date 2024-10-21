@@ -93,7 +93,7 @@ export default function Layout() {
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <div className="flex flex-col w-[280px] border-r bg-[--muted] overflow-hidden">
-        <div className="flex h-[60px] items-center px-6 flex-shrink-0">
+        <div className="flex h-[60px] items-center px-5 flex-shrink-0">
           <Link
             to="/fp/databases"
             className="flex items-center gap-2 font-semibold"
@@ -103,7 +103,7 @@ export default function Layout() {
               alt="Fireproof Logo"
               className="h-6 w-6"
             />
-            <span>Fireproof Console</span>
+            <span>Fireproof Dashboard</span>
           </Link>
         </div>
         <div className="flex-1 overflow-y-auto">
