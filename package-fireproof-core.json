@@ -30,9 +30,7 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {},
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  },
+  "peerDependencies": {},
   "dependencies": {
     "@adviser/cement": "from-package-json",
     "multiformats": "from-package-json",
@@ -48,7 +46,6 @@
     "ipfs-unixfs-exporter": "from-package-json",
     "memfs": "from-package-json",
     "p-limit": "from-package-json",
-    "react": "from-package-json",
     "p-map": "from-package-json",
     "p-retry": "from-package-json"
   }
