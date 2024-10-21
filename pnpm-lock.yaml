@@ -127,11 +127,11 @@ importers:
         specifier: ^8.8.1
         version: 8.8.1(eslint@9.13.0)(typescript@5.6.3)
       vite:
-        specifier: ^5.4.8
-        version: 5.4.8(@types/node@22.7.7)
+        specifier: ^5.4.9
+        version: 5.4.9(@types/node@22.7.7)
       vite-tsconfig-paths:
         specifier: ^5.0.1
-        version: 5.0.1(typescript@5.6.3)(vite@5.4.8(@types/node@22.7.7))
+        version: 5.0.1(typescript@5.6.3)(vite@5.4.9(@types/node@22.7.7))
       vitest:
         specifier: ^2.0.5
         version: 2.0.5(@types/node@22.7.7)(@vitest/browser@2.0.5)(@vitest/ui@2.0.5)(happy-dom@14.12.3)
@@ -643,10 +643,6 @@ packages:
 
   '@eslint/eslintrc@3.1.0':
     resolution: {integrity: sha512-4Bfj15dVJdoy3RfZmmo86RK1Fwzn6SstsvK9JS+BaVKqC6QQQQyXekNaC+g+LKNgkQ+2VhGAzm6hO40AhMR3zQ==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@eslint/js@9.12.0':
-    resolution: {integrity: sha512-eohesHH8WFRUprDNyEREgqP6beG6htMeUYeCpkEgBCieCMme5r9zFWjzAJp//9S+Kub4rqE+jXe9Cp1a7IYIIA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@eslint/js@9.13.0':
@@ -2931,8 +2927,8 @@ packages:
       vite:
         optional: true
 
-  vite@5.4.8:
-    resolution: {integrity: sha512-FqrItQ4DT1NC4zCUqMB4c4AZORMKIa0m8/URVCZ77OZ/QSNeJ54bU1vrFADbDsuwfIPcgknRkmqakQcgnL4GiQ==}
+  vite@5.4.9:
+    resolution: {integrity: sha512-20OVpJHh0PAM0oSOELa5GaZNWeDjcAvQjGXy2Uyr+Tp+/D2/Hdz6NLgpJLsarPTA2QJ6v8mX2P1ZfbsSKvdMkg==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -3424,8 +3420,6 @@ snapshots:
       strip-json-comments: 3.1.1
     transitivePeerDependencies:
       - supports-color
-
-  '@eslint/js@9.12.0': {}
 
   '@eslint/js@9.13.0': {}
 
@@ -5857,7 +5851,7 @@ snapshots:
       debug: 4.3.6
       pathe: 1.1.2
       tinyrainbow: 1.2.0
-      vite: 5.4.8(@types/node@22.7.7)
+      vite: 5.4.9(@types/node@22.7.7)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -5869,18 +5863,18 @@ snapshots:
       - supports-color
       - terser
 
-  vite-tsconfig-paths@5.0.1(typescript@5.6.3)(vite@5.4.8(@types/node@22.7.7)):
+  vite-tsconfig-paths@5.0.1(typescript@5.6.3)(vite@5.4.9(@types/node@22.7.7)):
     dependencies:
       debug: 4.3.5
       globrex: 0.1.2
       tsconfck: 3.1.0(typescript@5.6.3)
     optionalDependencies:
-      vite: 5.4.8(@types/node@22.7.7)
+      vite: 5.4.9(@types/node@22.7.7)
     transitivePeerDependencies:
       - supports-color
       - typescript
 
-  vite@5.4.8(@types/node@22.7.7):
+  vite@5.4.9(@types/node@22.7.7):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.45
@@ -5907,7 +5901,7 @@ snapshots:
       tinybench: 2.8.0
       tinypool: 1.0.0
       tinyrainbow: 1.2.0
-      vite: 5.4.8(@types/node@22.7.7)
+      vite: 5.4.9(@types/node@22.7.7)
       vite-node: 2.0.5(@types/node@22.7.7)
       why-is-node-running: 2.3.0
     optionalDependencies:
