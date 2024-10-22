@@ -65,10 +65,10 @@ describe("KeyBag indexdb and file", () => {
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(new TextDecoder().decode(data)) as rt.kb.KeyItem;
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(new TextDecoder().decode(data)) as rt.kb.KeyItem;
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
       });
     }
     expect(await kb.toKeyWithFingerPrint(diskBag.key)).toEqual(res);
