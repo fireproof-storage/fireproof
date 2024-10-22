@@ -213,8 +213,7 @@ describe("noop Gateway", function () {
       noLoaderOps: [],
       fileOperations: [],
     });
-    const walEncoder = new TextEncoder();
-    const walTestData = walEncoder.encode(walTestDataString);
+    const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway.put(walUrl.Ok(), walTestData);
     expect(walPutResult.Ok()).toBeFalsy();
   });
@@ -228,12 +227,11 @@ describe("noop Gateway", function () {
       noLoaderOps: [],
       fileOperations: [],
     });
-    const walEncoder = new TextEncoder();
-    const walTestData = walEncoder.encode(walTestDataString);
+    const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway.put(walUrl.Ok(), walTestData);
     const walGetResult = await walGateway.get(walUrl.Ok());
     const okResult = walGetResult.Ok();
-    const decodedResult = new TextDecoder().decode(okResult);
+    const decodedResult = sthis.txt.decode(okResult);
     expect(decodedResult).toEqual(walTestDataString);
   });
 
@@ -246,8 +244,7 @@ describe("noop Gateway", function () {
       noLoaderOps: [],
       fileOperations: [],
     });
-    const walEncoder = new TextEncoder();
-    const walTestData = walEncoder.encode(walTestDataString);
+    const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway.put(walUrl.Ok(), walTestData);
     const walDeleteResult = await walGateway.delete(walUrl.Ok());
     expect(walDeleteResult.isOk()).toBeTruthy();
@@ -359,6 +356,7 @@ describe("Gateway", function () {
   let metaGateway: Gateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -388,7 +386,7 @@ describe("Gateway", function () {
     await metaGateway.start(metaStore.url());
     const metaGetResult = await metaGateway.get(metaUrl.Ok());
     const metaGetResultOk = metaGetResult.Ok();
-    const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
+    const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
     expect(decodedMetaGetResultOk).toContain("parents");
   });
 
