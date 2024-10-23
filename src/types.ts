@@ -31,6 +31,7 @@ export enum PARAM {
   FRAG_OFS = "ofs",
   FRAG_LEN = "len",
   FRAG_HEAD = "headerSize",
+  EXTRACTKEY = "extractKey",
   // FS = "fs",
 }
 
@@ -300,9 +301,3 @@ export interface DocResponse {
 export type UpdateListenerFn<T extends DocTypes> = (docs: DocWithId<T>[]) => Promise<void> | void;
 export type NoUpdateListenerFn = () => Promise<void> | void;
 export type ListenerFn<T extends DocTypes> = UpdateListenerFn<T> | NoUpdateListenerFn;
-
-export interface CRDTEntry {
-  data: string;
-  parents: string[];
-  cid: string;
-}

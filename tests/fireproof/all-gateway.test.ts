@@ -1,9 +1,10 @@
-import { Database, DatabaseFactory, bs } from "@fireproof/core";
+import { Database, DatabaseFactory, PARAM, bs } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
-import { mockSuperThis } from "../helpers.js";
-import { DataStore, MetaStore, WALStore } from "../../src/blockstore/types.js";
+import { mockSuperThis, simpleCID } from "../helpers.js";
+import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
 import { Gateway } from "../../src/blockstore/gateway.js";
+import { FPEnvelopeMeta } from "../../src/blockstore/fp-envelope.js";
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {
@@ -76,10 +77,10 @@ describe("noop Gateway", function () {
 
   it("should have correct store names", async function () {
     // Check that all stores have the correct name
-    expect(carStore.name).toContain("test-gateway");
-    expect(metaStore.name).toContain("test-gateway");
-    expect(fileStore.name).toContain("test-gateway");
-    expect(walStore.name).toContain("test-gateway");
+    expect(carStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
+    expect(metaStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
+    expect(fileStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
+    expect(walStore.url().getParam(PARAM.NAME)).toContain("test-gateway");
   });
 
   it("should have correct store types in URLs", async function () {
@@ -121,23 +122,33 @@ describe("noop Gateway", function () {
   it("should put data in CAR Gateway", async function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
-    const carPutResult = await carGateway.put(carUrl.Ok(), fileContent.block);
+    const carPutResult = await carGateway.put(carUrl.Ok(), {
+      type: "car",
+      payload: fileContent.block,
+    });
     expect(carPutResult.isOk()).toBeTruthy();
   });
 
   it("should get data from CAR Gateway", async function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
-    await carGateway.put(carUrl.Ok(), fileContent.block);
+    await carGateway.put(carUrl.Ok(), {
+      type: "car",
+      payload: fileContent.block,
+    });
     const carGetResult = await carGateway.get(carUrl.Ok());
-    expect(carGetResult.Ok()).toEqual(fileContent.block);
+    expect(carGetResult.Ok().type).toEqual("car");
+    expect(carGetResult.Ok().payload).toEqual(fileContent.block);
     // customExpect(carGetResult.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
   });
 
   it("should delete data from CAR Gateway", async function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
-    await carGateway.put(carUrl.Ok(), fileContent.block);
+    await carGateway.put(carUrl.Ok(), {
+      type: "car",
+      payload: fileContent.block,
+    });
     const carDeleteResult = await carGateway.delete(carUrl.Ok());
     expect(carDeleteResult.isOk()).toBeTruthy();
   });
@@ -171,22 +182,32 @@ describe("noop Gateway", function () {
   it("should put data to File Gateway", async function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
-    const filePutResult = await fileGateway.put(fileUrl.Ok(), fileContent.block);
+    const filePutResult = await fileGateway.put(fileUrl.Ok(), {
+      type: "file",
+      payload: fileContent.block,
+    });
     expect(filePutResult.Ok()).toBeFalsy();
   });
 
   it("should get data from File Gateway", async function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
-    await fileGateway.put(fileUrl.Ok(), fileContent.block);
+    await fileGateway.put(fileUrl.Ok(), {
+      type: "file",
+      payload: fileContent.block,
+    });
     const fileGetResult = await fileGateway.get(fileUrl.Ok());
-    expect(fileGetResult.Ok()).toEqual(fileContent.block);
+    expect(fileGetResult.Ok().type).toEqual("file");
+    expect(fileGetResult.Ok().payload).toEqual(fileContent.block);
   });
 
   it("should delete data from File Gateway", async function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
-    await fileGateway.put(fileUrl.Ok(), fileContent.block);
+    await fileGateway.put(fileUrl.Ok(), {
+      type: "file",
+      payload: fileContent.block,
+    });
     const fileDeleteResult = await fileGateway.delete(fileUrl.Ok());
     expect(fileDeleteResult.isOk()).toBeTruthy();
   });
@@ -208,13 +229,16 @@ describe("noop Gateway", function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
     await walGateway.start(walStore.url());
-    const walTestDataString = JSON.stringify({
-      operations: [],
-      noLoaderOps: [],
-      fileOperations: [],
+    // const walTestDataString = JSON.stringify();
+    // const walTestData = sthis.txt.encode(walTestDataString);
+    const walPutResult = await walGateway.put(walUrl.Ok(), {
+      type: "wal",
+      payload: {
+        operations: [],
+        noLoaderOps: [],
+        fileOperations: [],
+      },
     });
-    const walTestData = sthis.txt.encode(walTestDataString);
-    const walPutResult = await walGateway.put(walUrl.Ok(), walTestData);
     expect(walPutResult.Ok()).toBeFalsy();
   });
 
@@ -222,30 +246,67 @@ describe("noop Gateway", function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
     await walGateway.start(walStore.url());
-    const walTestDataString = JSON.stringify({
-      operations: [],
-      noLoaderOps: [],
-      fileOperations: [],
+    const ref: WALState = {
+      operations: [
+        {
+          cars: [await simpleCID(sthis)],
+        },
+      ],
+      noLoaderOps: [
+        {
+          cars: [await simpleCID(sthis)],
+        },
+      ],
+      fileOperations: [
+        {
+          cid: await simpleCID(sthis),
+          public: false,
+        },
+      ],
+    };
+    // const walTestDataString = JSON.stringify({
+    //   operations: [],
+    //   noLoaderOps: [],
+    //   fileOperations: [],
+    // });
+    // const walTestData = sthis.txt.encode(walTestDataString);
+    await walGateway.put(walUrl.Ok(), {
+      type: "wal",
+      payload: ref,
     });
-    const walTestData = sthis.txt.encode(walTestDataString);
-    await walGateway.put(walUrl.Ok(), walTestData);
     const walGetResult = await walGateway.get(walUrl.Ok());
-    const okResult = walGetResult.Ok();
-    const decodedResult = sthis.txt.decode(okResult);
-    expect(decodedResult).toEqual(walTestDataString);
+    expect(walGetResult.isOk()).toBeTruthy();
+    // const okResult = walGetResult.Ok();
+    // const decodedResult = sthis.txt.decode(okResult);
+    expect(ref).toEqual(walGetResult.Ok().payload);
   });
 
   it("should delete data from WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
     await walGateway.start(walStore.url());
-    const walTestDataString = JSON.stringify({
-      operations: [],
-      noLoaderOps: [],
-      fileOperations: [],
+    const ref: WALState = {
+      operations: [
+        {
+          cars: [await simpleCID(sthis)],
+        },
+      ],
+      noLoaderOps: [
+        {
+          cars: [await simpleCID(sthis)],
+        },
+      ],
+      fileOperations: [
+        {
+          cid: await simpleCID(sthis),
+          public: false,
+        },
+      ],
+    };
+    await walGateway.put(walUrl.Ok(), {
+      type: "wal",
+      payload: ref,
     });
-    const walTestData = sthis.txt.encode(walTestDataString);
-    await walGateway.put(walUrl.Ok(), walTestData);
     const walDeleteResult = await walGateway.delete(walUrl.Ok());
     expect(walDeleteResult.isOk()).toBeTruthy();
   });
@@ -330,9 +391,9 @@ describe("noop Gateway subscribe", function () {
       resolve = r;
     });
     if (metaGateway.subscribe) {
-      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: Uint8Array) => {
-        const decodedData = sthis.txt.decode(data);
-        expect(decodedData).toContain("[]");
+      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: FPEnvelopeMeta) => {
+        // const decodedData = sthis.txt.decode(data);
+        expect(data.payload).toContain("[]");
         didCall = true;
         resolve();
       })) as bs.UnsubscribeResult;
@@ -356,7 +417,7 @@ describe("Gateway", function () {
   let metaGateway: Gateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
-  const sthis = mockSuperThis();
+  // const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -385,9 +446,12 @@ describe("Gateway", function () {
     const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
     await metaGateway.start(metaStore.url());
     const metaGetResult = await metaGateway.get(metaUrl.Ok());
-    const metaGetResultOk = metaGetResult.Ok();
-    const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
-    expect(decodedMetaGetResultOk).toContain("parents");
+    expect(metaGetResult.isOk()).toBeTruthy();
+    const meta = metaGetResult.Ok().payload as bs.DbMetaEvent[];
+    // const metaGetResultOk = metaGetResult.Ok();
+    // const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
+    expect(meta.length).toBe(1);
+    expect(Object.keys(meta[0])).toEqual(["eventCid", "parents", "dbMeta"]);
   });
 
   it("should delete data from Meta Gateway", async function () {

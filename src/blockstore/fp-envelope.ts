@@ -1,116 +1,125 @@
 import { CID } from "multiformats";
-import { encode, decode } from "cborg";
-import { Result } from "@adviser/cement"
+import { DbMetaEvent, WALState } from "./types.js";
+import { Result } from "../utils.js";
 
 export interface FPEnvelope<T> {
-    readonly type: string; // "car" | "file" | "meta" | "wal"
-    readonly payload: T
+  readonly type: string; // "car" | "file" | "meta" | "wal"
+  readonly payload: T;
 }
 
 export interface FPEnvelopeCar extends FPEnvelope<Uint8Array> {
-    readonly type: "car";
+  readonly type: "car";
 }
 
 export interface FPEnvelopeFile extends FPEnvelope<Uint8Array> {
-    readonly type: "file";
+  readonly type: "file";
 }
 
-export interface FPMeta {
-    readonly cid: string;
-    readonly data: Uint8Array;
-    readonly parents: string[];
-}
-
-export interface FPEnvelopeMeta extends FPEnvelope<FPMeta> {
-    readonly type: "meta";
+export interface FPEnvelopeMeta extends FPEnvelope<DbMetaEvent[]> {
+  readonly type: "meta";
 }
 
 export interface FPWALCarsOps {
-    readonly cars: CID[];
+  readonly cars: CID[];
 }
-export interface FPWAL {
-    // fileOperations: any[]; will be added with connector-fixes
-    // noLoaderOps: any[]; will be added with connector-fixes
-    readonly operations: FPWALCarsOps[];
-}
-export interface FPEnvelopeWAL extends FPEnvelope<FPWAL> {
-    readonly type: "wal";
-}
-
-export function WAL2FPMsg(fpwal: FPWAL): Uint8Array {
-    return encode({ type: "wal", payload: JSON.parse(JSON.stringify(fpwal)) } as FPEnvelopeWAL);
+// export interface FPWAL {
+//     // fileOperations: any[]; will be added with connector-fixes
+//     // noLoaderOps: any[]; will be added with connector-fixes
+//     readonly operations: FPWALCarsOps[];
+// }
+export interface FPEnvelopeWAL extends FPEnvelope<WALState> {
+  readonly type: "wal";
 }
 
-export function FPMsg2WAL(fpmsg: Uint8Array): Result<FPWAL> {
-    const renv = FPMsgMatch2Envelope(fpmsg, "wal");
-    if (renv.isErr()) {
-        return Result.Err(renv.Err());
-    }
-    const convertCids = renv.Ok().payload as FPWAL;
-    for (const op of convertCids.operations) {
-        const cars = []
-        for (const strCid of op.cars) {
-            for (const cidVal of Object.values(strCid)) {
-                cars.push(CID.parse(cidVal));
-            }
-        }
-        (op as {cars: CID[]}).cars = cars;
-    }
-    return Result.Ok(renv.Ok().payload as FPWAL);
+// export function WAL2FPMsg(sthis: SuperThis, ws: WALState): Result<FPEnvelopeWAL> {
+//     return Result.Ok({
+//         type: "wal",
+//         payload: ws
+//     })
+// }
+
+// export function FPMsg2WAL(fpmsg: FPEnvelopeWAL): Result<WALState> {
+//     // const renv = FPMsgMatch2Envelope(fpmsg, "wal");
+//     // if (renv.isErr()) {
+//     //     return Result.Err(renv.Err());
+//     // }
+//     if (fpmsg.type !== "wal") {
+//         return Result.Err(`expected type to be wal`);
+//     }
+//     const convertCids = fpmsg.payload as WALState;
+//     for (const op of convertCids.operations) {
+//         const cars = []
+//         for (const strCid of op.cars) {
+//             for (const cidVal of Object.values(strCid)) {
+//                 cars.push(CID.parse(cidVal));
+//             }
+//         }
+//         (op as {cars: CID[]}).cars = cars;
+//     }
+//     return Result.Ok(convertCids);
+// }
+
+// export function Meta2FPMsg(fpmetas: DbMetaEvent[]): Uint8Array {
+//     /*
+//     [
+//         {
+//         "cid":"bafyreibc2rbsszqw5z7xiojra2vgskl3mi7iegf3ynpofm6w6lcxx4r7ha",
+//         "data":"MomRkYXRhoWZkYk1ldGFYU3siY2FycyI6W3siLyI6ImJhZzR5dnFhYmNpcW9peXdlb2Vjd214Z3VmdDV4YmJsMnFxd2c3Z2tmYTV6cG91d2huYWVoN3E1b3o2eTNoMnkifV19Z3BhcmVudHOB2CpYJQABcRIgTXAXVfzn7tghZBnaOrXq0+bmY3kK9f1CCNrGfeA73hk=",
+//         "parents":["bafyreicnoalvl7hh53mcczaz3i5ll2wt43tgg6ik6x6uecg2yz66ao66de"]
+//         }
+//     ]
+//     */
+//     return encode({ type: "meta", payload: fpmetas } as FPEnvelopeMeta);
+// }
+
+// export function FPMsg2Meta(fpmsg: Uint8Array): Result<DbMeta> {
+//     const renv = FPMsgMatch2Envelope(fpmsg, "meta");
+//     if (renv.isErr()) {
+//         return Result.Err(renv.Err());
+//     }
+//     return Result.Ok(renv.Ok().payload as DbMeta);
+// }
+
+export function Car2FPMsg(fpcar: Uint8Array): Result<FPEnvelopeCar> {
+  return Result.Ok({ type: "car", payload: fpcar });
 }
 
-export function Meta2FPMsg(fpmeta: FPMeta): Uint8Array {
-    return encode({ type: "meta", payload: fpmeta } as FPEnvelopeMeta);
+// export function FPMsg2Car(fpmsg: Uint8Array): Result<Uint8Array> {
+//     const renv = FPMsgMatch2Envelope(fpmsg, "car");
+//     if (renv.isErr()) {
+//         return Result.Err(renv.Err());
+//     }
+//     return Result.Ok(renv.Ok().payload as Uint8Array);
+// }
+
+export function File2FPMsg(fpfile: Uint8Array): Result<FPEnvelopeFile> {
+  return Result.Ok({ type: "file", payload: fpfile });
 }
 
-export function FPMsg2Meta(fpmsg: Uint8Array): Result<FPMeta> {
-    const renv = FPMsgMatch2Envelope(fpmsg, "meta");
-    if (renv.isErr()) {
-        return Result.Err(renv.Err());
-    }
-    return Result.Ok(renv.Ok().payload as FPMeta);
-}
+// export function FPMsg2File(fpmsg: Uint8Array): Result<Uint8Array> {
+//     const renv = FPMsgMatch2Envelope(fpmsg, "file");
+//     if (renv.isErr()) {
+//         return Result.Err(renv.Err());
+//     }
+//     return Result.Ok(renv.Ok().payload as Uint8Array);
+// }
 
-export function Car2FPMsg(fpcar: Uint8Array): Uint8Array {
-    return encode({ type: "car", payload: fpcar } as FPEnvelopeCar);
-}
-
-export function FPMsg2Car(fpmsg: Uint8Array): Result<Uint8Array> {
-    const renv = FPMsgMatch2Envelope(fpmsg, "car");
-    if (renv.isErr()) {
-        return Result.Err(renv.Err());
-    }
-    return Result.Ok(renv.Ok().payload as Uint8Array);
-}
-
-export function File2FPMsg(fpfile: Uint8Array): Uint8Array {
-    return encode({ type: "file", payload: fpfile } as FPEnvelopeFile);
-}
-
-export function FPMsg2File(fpmsg: Uint8Array): Result<Uint8Array> {
-    const renv = FPMsgMatch2Envelope(fpmsg, "file");
-    if (renv.isErr()) {
-        return Result.Err(renv.Err());
-    }
-    return Result.Ok(renv.Ok().payload as Uint8Array);
-}
-
-export function FPMsgMatch2Envelope(fpmsg: Uint8Array, ...types: string[]): Result<FPEnvelope<unknown>> {
-    let env: FPEnvelope<unknown>;
-    try {
-        env = decode(fpmsg);
-    } catch (e) {
-        return Result.Err(`failed to decode envelope: ${e}`);
-    }
-    if (typeof env !== "object") {
-        return Result.Err(`expected envelope to be an object`);
-    }
-    if (typeof env.type !== "string") {
-        return Result.Err(`expected type to be a string`);
-    }
-    if (types.length > 0 && !types.includes(env.type)) {
-        return Result.Err(`expected type to be ${types}`);
-    }
-    // need to check if the payload is a valid WAL
-    return Result.Ok(env);
-}
+// export function FPMsgMatch2Envelope(fpmsg: Uint8Array, ...types: string[]): Result<FPEnvelope<unknown>> {
+//     let env: FPEnvelope<unknown>;
+//     try {
+//         env = decode(fpmsg);
+//     } catch (e) {
+//         return Result.Err(`failed to decode envelope: ${e}`);
+//     }
+//     if (typeof env !== "object") {
+//         return Result.Err(`expected envelope to be an object`);
+//     }
+//     if (typeof env.type !== "string") {
+//         return Result.Err(`expected type to be a string`);
+//     }
+//     if (types.length > 0 && !types.includes(env.type)) {
+//         return Result.Err(`expected type to be ${types}`);
+//     }
+//     // need to check if the payload is a valid WAL
+//     return Result.Ok(env);
+// }
