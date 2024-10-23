@@ -434,7 +434,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         async (dbMeta) => {
           await retryableUpload(async () => {
             if (!this.loader) {
-              return
+              return;
             }
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
@@ -459,7 +459,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         async (dbMeta) => {
           await retryableUpload(async () => {
             if (!this.loader) {
-              return
+              return;
             }
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
@@ -484,7 +484,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         async ({ cid: fileCid, public: publicFile }) => {
           await retryableUpload(async () => {
             if (!this.loader) {
-              return
+              return;
             }
             const fileBlock = await (await this.loader.fileStore()).load(fileCid);
             if (!fileBlock) {
@@ -495,7 +495,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
             inplaceFilter(this.walState.fileOperations, (op) => op.cid !== fileCid);
           }, `fileOperation with cid=${fileCid.toString()}`);
         },
-        { concurrency: concurrencyLimit }
+        { concurrency: concurrencyLimit },
       );
 
       // If all uploads succeeded, send the last dbMeta to remoteMetaStore
@@ -503,7 +503,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         const lastOp = operations[operations.length - 1];
         await retryableUpload(async () => {
           if (!this.loader) {
-            return
+            return;
           }
           await this.loader.remoteMetaStore?.save(lastOp);
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);

@@ -10,6 +10,7 @@ import {
   GatewayStartReturn,
   GatewaySubscribeReturn,
 } from "../../src/blockstore/gateway";
+import { FPEnvelope, FPEnvelopeMeta } from "../../src/blockstore";
 
 class TestInterceptor extends bs.PassThroughGateway {
   readonly fn = vitest.fn();
@@ -40,17 +41,17 @@ class TestInterceptor extends bs.PassThroughGateway {
     this.fn("destroy", ret);
     return ret;
   }
-  async put(url: URI, body: Uint8Array): Promise<Result<GatewayPutReturn>> {
-    const ret = await super.put(url, body);
+  async put<T>(url: URI, body: FPEnvelope<T>): Promise<Result<GatewayPutReturn<T>>> {
+    const ret = await super.put<T>(url, body);
     this.fn("put", ret);
     return ret;
   }
-  async get(url: URI): Promise<Result<GatewayGetReturn>> {
-    const ret = await super.get(url);
+  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<Result<GatewayGetReturn<T, S>>> {
+    const ret = await super.get<T, S>(url);
     this.fn("get", ret);
     return ret;
   }
-  async subscribe(url: URI, callback: (meta: Uint8Array) => void): Promise<Result<GatewaySubscribeReturn>> {
+  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>> {
     const ret = await super.subscribe(url, callback);
     this.fn("subscribe", ret);
     return ret;
