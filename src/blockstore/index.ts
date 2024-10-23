@@ -7,6 +7,7 @@ export * from "./fragmentor.js";
 export * from "./fp-envelope.js";
 
 export * from "./register-store-protocol.js";
+export * from "./interceptor-gateway.js";
 
 export { createDbMetaEvent } from "./store.js";
 
