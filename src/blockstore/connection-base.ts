@@ -55,12 +55,13 @@ export abstract class ConnectionBase implements Connection {
     const rgateway = await getStartedGateway(loader.sthis, metaUrl);
     if (rgateway.isErr())
       throw this.logger.Error().Result("err", rgateway).Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
-    const name = metaUrl.toString();
-    const dbName = metaUrl.getParam("name");
-    if (!dbName) throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: dbName is required").AsError();
-
+    // const name = metaUrl.toString();
+    const dbName = metaUrl.getParam(PARAM.NAME);
+    if (!dbName) {
+      throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: dbName is required").AsError();
+    }
     const gateway = rgateway.Ok();
-    const remote = await RemoteMetaStore(loader.sthis, name, metaUrl, {
+    const remote = await RemoteMetaStore(loader.sthis, metaUrl, {
       gateway: gateway.gateway,
       keybag: await loader.keyBag(),
       loader,
@@ -82,9 +83,9 @@ export abstract class ConnectionBase implements Connection {
     const rgateway = await getStartedGateway(loader.sthis, dataUrl);
     if (rgateway.isErr())
       throw this.logger.Error().Result("err", rgateway).Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
-    const name = dataUrl.getParam("name");
+    const name = dataUrl.getParam(PARAM.NAME);
     if (!name) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: name is required").AsError;
-    loader.remoteCarStore = await RemoteDataStore(loader.sthis, name, this.url, {
+    loader.remoteCarStore = await RemoteDataStore(loader.sthis, this.url, {
       gateway: rgateway.Ok().gateway,
       keybag: await loader.keyBag(),
     });

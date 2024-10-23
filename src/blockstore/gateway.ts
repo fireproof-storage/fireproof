@@ -1,11 +1,12 @@
 import { Result, URI } from "@adviser/cement";
 import { NotFoundError } from "../utils.js";
+import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
 
 export interface GatewayOpts {
   readonly gateway: Gateway;
 }
 
-export type GetResult = Result<Uint8Array, NotFoundError | Error>;
+export type GetResult<T extends FPEnvelope<S>, S> = Result<T, NotFoundError | Error>;
 export type VoidResult = Result<void>;
 
 export interface TestGateway {
@@ -22,12 +23,12 @@ export interface Gateway {
   start(baseUrl: URI): Promise<Result<URI>>;
   close(baseUrl: URI): Promise<VoidResult>;
   destroy(baseUrl: URI): Promise<VoidResult>;
-  put(url: URI, body: Uint8Array): Promise<VoidResult>;
+  put<T>(url: URI, body: FPEnvelope<T>): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
-  get(url: URI): Promise<GetResult>;
+  get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>>;
   delete(url: URI): Promise<VoidResult>;
   // be notified of remote meta
-  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<UnsubscribeResult>;
+  subscribe?(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<UnsubscribeResult>;
 }
 
 export interface GatewayReturn<O, T> {

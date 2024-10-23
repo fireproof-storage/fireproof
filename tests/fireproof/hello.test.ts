@@ -4,7 +4,7 @@ import { mockSuperThis } from "../helpers";
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
     const result = fireproof("hello"); // call to your library function
-    expect(result.name()).toBe("hello");
+    expect(result.name).toBe("hello");
   });
 });
 

@@ -22,27 +22,27 @@ function my_app() {
 
 describe("config file gateway", () => {
   const sthis = mockSuperThis();
-  const isMemFS: { fs?: string } = {};
+  // const isMemFS: { fs?: string } = {};
 
   beforeAll(async () => {
     await sthis.start();
-    const url = URI.from(sthis.env.get("FP_STORAGE_URL"));
-    if (url.getParam("fs") === "mem") {
-      isMemFS.fs = "mem";
-    }
+    // const url = URI.from(sthis.env.get("FP_STORAGE_URL"));
+    // if (url.getParam("fs") === "mem") {
+    //   isMemFS.fs = "mem";
+    // }
   });
 
   it("loader", async () => {
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name()).toBe(my_app());
+    expect(db.name).toBe(my_app());
 
     const fileStore = await db.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "data",
         storekey: "@my-app-data@",
@@ -57,7 +57,7 @@ describe("config file gateway", () => {
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "data",
         suffix: ".car",
@@ -72,7 +72,7 @@ describe("config file gateway", () => {
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "meta",
         storekey: "@my-app-meta@",
@@ -86,7 +86,7 @@ describe("config file gateway", () => {
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "wal",
         storekey: "@my-app-wal@",
@@ -102,9 +102,9 @@ describe("config file gateway", () => {
     let baseDir = "./dist/data".replace(/\?.*$/, "").replace(/^file:\/\//, "");
     baseDir = sthis.pathOps.join(baseDir, /* testCfg(sthis, "data").version, */ my_app());
     const base = BuildURI.from("./dist/data");
-    if (isMemFS.fs) {
-      base.setParam("fs", isMemFS.fs);
-    }
+    // if (isMemFS.fs) {
+    //   base.setParam("fs", isMemFS.fs);
+    // }
     const sysfs = await rt.getFileSystem(base.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
@@ -113,13 +113,13 @@ describe("config file gateway", () => {
     const db = fireproof(my_app(), { storeUrls: { base } });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
     await db.put({ name: "my-app" });
-    expect(db.name()).toBe(my_app());
+    expect(db.name).toBe(my_app());
     const carStore = await db.crdt.blockstore.loader?.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "data",
         storekey: "@my-app-data@",
@@ -133,7 +133,7 @@ describe("config file gateway", () => {
       pathname: "./dist/data",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "data",
         storekey: "@my-app-data@",
@@ -147,7 +147,7 @@ describe("config file gateway", () => {
       pathname: "./dist/data",
       protocol: "file:",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         name: "my-app",
         store: "meta",
         storekey: "@my-app-meta@",
@@ -167,9 +167,9 @@ describe("config file gateway", () => {
     baseDir = sthis.pathOps.join(baseDir, my_app());
 
     const base = BuildURI.from(baseDir);
-    if (isMemFS.fs) {
-      base.setParam("fs", isMemFS.fs);
-    }
+    // if (isMemFS.fs) {
+    //   base.setParam("fs", isMemFS.fs);
+    // }
     const sysfs = await rt.getFileSystem(base.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
@@ -179,7 +179,7 @@ describe("config file gateway", () => {
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name()).toBe(my_app());
+    expect(db.name).toBe(my_app());
     const carStore = await db.crdt.blockstore.loader?.carStore();
 
     expect(carStore?.url().asObj()).toEqual({
@@ -187,7 +187,7 @@ describe("config file gateway", () => {
       protocol: "file:",
       style: "path",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         suffix: ".car",
         urlGen: "default",
         store: "data",
@@ -205,7 +205,7 @@ describe("config file gateway", () => {
       protocol: "file:",
       style: "path",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         urlGen: "default",
         store: "data",
         name: my_app(),
@@ -219,7 +219,7 @@ describe("config file gateway", () => {
       protocol: "file:",
       style: "path",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         urlGen: "default",
         store: "meta",
         name: my_app(),
@@ -249,14 +249,14 @@ describe("config file gateway", () => {
 
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name()).toBe(my_app());
+    expect(db.name).toBe(my_app());
     const carStore = await db.crdt.blockstore.loader?.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
       style: "path",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         urlGen: "fromEnv",
         store: "data",
         suffix: ".car",
@@ -273,7 +273,7 @@ describe("config file gateway", () => {
       protocol: "file:",
       style: "path",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         urlGen: "fromEnv",
         store: "data",
         name: my_app(),
@@ -288,7 +288,7 @@ describe("config file gateway", () => {
       protocol: "file:",
       style: "path",
       searchParams: {
-        ...isMemFS,
+        // ...isMemFS,
         urlGen: "fromEnv",
         store: "meta",
         name: my_app(),

@@ -2,9 +2,10 @@ import { Logger, Result, URI } from "@adviser/cement";
 
 import { base58btc } from "multiformats/bases/base58";
 import { encode, decode } from "cborg";
-import { Gateway, GetResult, UnsubscribeResult, VoidResult } from "./gateway.js";
+import { VoidResult } from "./gateway.js";
 import { PARAM, SuperThis } from "../types.js";
-import { ensureSuperLog } from "../utils.js";
+import { ensureLogger } from "../utils.js";
+import { Fragment } from "react";
 
 function getFragSize(url: URI): number {
   const fragSize = url.getParam(PARAM.FRAG_SIZE);
@@ -18,30 +19,34 @@ function getFragSize(url: URI): number {
   return ret;
 }
 
-async function getFrags(url: URI, innerGW: Gateway, headerSize: number, logger: Logger): Promise<Result<Fragment>[]> {
+async function getFrags(url: URI, transport: Transport, headerSize: number, logger: Logger): Promise<Result<FragmentData>[]> {
   const fragSize = getFragSize(url);
+  const frag: Fragment = {
+    fid: new Uint8Array(),
+    ofs: 0,
+    len: 0,
+  };
   if (!fragSize) {
-    const res = await innerGW.get(url);
+    const res = await transport.get(url, frag);
     if (res.isErr()) {
-      return [res as unknown as Result<Fragment>];
+      return [res as Result<FragmentData>];
     }
-    const data = res.unwrap();
+    const fragData = res.unwrap();
     return [
       Result.Ok({
-        fid: new Uint8Array(0),
-        ofs: 0,
-        len: data.length,
-        data,
+        ...frag,
+        len: fragData.data.length,
+        data: fragData.data,
       }),
     ];
   }
-  const firstRaw = await innerGW.get(url.build().setParam("ofs", "0").URI());
+  const firstRaw = await transport.get(url.build().setParam("ofs", "0").URI(), frag);
   if (firstRaw.isErr()) {
-    return [firstRaw as unknown as Result<Fragment>];
+    return [firstRaw as Result<FragmentData>];
   }
-  const firstFragment = decode(firstRaw.unwrap()) as Fragment;
+  const firstFragment = decode(firstRaw.unwrap().data) as FragmentData;
   const blockSize = firstFragment.data.length;
-  const ops: Promise<Result<Fragment>>[] = [Promise.resolve(Result.Ok(firstFragment))];
+  const ops: Promise<Result<FragmentData>>[] = [Promise.resolve(Result.Ok(firstFragment))];
   const fidStr = base58btc.encode(firstFragment.fid);
   const fragUrl = url
     .build()
@@ -51,12 +56,16 @@ async function getFrags(url: URI, innerGW: Gateway, headerSize: number, logger: 
 
   for (let ofs = blockSize; ofs < firstFragment.len; ofs += blockSize) {
     ops.push(
-      (async (furl, ofs): Promise<Result<Fragment>> => {
-        const raw = await innerGW.get(furl);
+      (async (furl, ofs): Promise<Result<FragmentData>> => {
+        const raw = await transport.get(furl, {
+          fid: firstFragment.fid,
+          ofs: ofs,
+          len: firstFragment.len,
+        });
         if (raw.isErr()) {
-          return raw as unknown as Result<Fragment>;
+          return raw as Result<FragmentData>;
         }
-        const fragment = decode(raw.unwrap());
+        const fragment = decode(raw.unwrap().data) as FragmentData;
         if (base58btc.encode(fragment.fid) !== fidStr) {
           return Result.Err(logger.Error().Msg("Fragment fid mismatch").AsError());
         }
@@ -70,31 +79,49 @@ async function getFrags(url: URI, innerGW: Gateway, headerSize: number, logger: 
   return Promise.all(ops);
 }
 
-interface Fragment {
+export interface Fragment {
   readonly fid: Uint8Array;
   readonly ofs: number;
   readonly len: number;
+}
+
+export interface FragmentData extends Fragment {
   readonly data: Uint8Array;
 }
 
-export class FragmentGateway implements Gateway {
+export interface Transport {
+  start(url: URI): Promise<Result<URI>>;
+  put(url: URI, frag: FragmentData): Promise<VoidResult>;
+  get(url: URI, frag: Fragment): Promise<Result<FragmentData>>;
+  delete(url: URI, frag: Fragment): Promise<VoidResult>;
+  close(url: URI): Promise<VoidResult>;
+}
+
+export class Fragmentor {
   readonly sthis: SuperThis;
   readonly logger: Logger;
   readonly fidLength = 4;
 
-  readonly innerGW: Gateway;
+  readonly transport: Transport;
   headerSize = 32;
 
-  constructor(sthis: SuperThis, innerGW: Gateway) {
-    this.sthis = ensureSuperLog(sthis, "FragmentGateway");
-    this.logger = this.sthis.logger;
-    this.innerGW = innerGW;
+  constructor(sthis: SuperThis, transport: Transport) {
+    this.sthis = sthis;
+    this.logger = ensureLogger(sthis, "Fragmentor");
+    this.transport = transport;
   }
 
   slicer(url: URI, body: Uint8Array): Promise<VoidResult>[] {
     const fragSize = getFragSize(url);
     if (!fragSize) {
-      return [this.innerGW.put(url, body)];
+      return [
+        this.transport.put(url, {
+          fid: this.sthis.nextId(this.fidLength).bin,
+          ofs: 0,
+          len: body.length,
+          data: body,
+        }),
+      ];
     }
     const blocksize = fragSize - this.headerSize;
     if (blocksize <= 0) {
@@ -113,26 +140,25 @@ export class FragmentGateway implements Gateway {
       .setParam(PARAM.FRAG_LEN, body.length.toString())
       .setParam(PARAM.FRAG_HEAD, this.headerSize.toString());
     for (let ofs = 0; ofs < body.length; ofs += blocksize) {
-      const block = encode({
+      const frag: FragmentData = {
         fid: fid.bin,
         ofs,
         len: body.length,
         data: body.slice(ofs, ofs + blocksize),
-      } as Fragment);
+      };
+      const block = encode(frag);
       if (block.length > fragSize) {
         throw this.logger.Error().Uint64("block", block.length).Uint64("fragSize", fragSize).Msg("Block size to big").AsError();
       }
-      ops.push(this.innerGW.put(fragUrl.setParam("ofs", ofs.toString()).URI(), block));
+      ops.push(
+        this.transport.put(fragUrl.setParam("ofs", ofs.toString()).URI(), {
+          ...frag,
+          // bit strange contains the header + data
+          data: block,
+        }),
+      );
     }
     return ops;
-  }
-
-  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    return this.innerGW.buildUrl(baseUrl, key);
-  }
-
-  async destroy(iurl: URI): Promise<Result<void>> {
-    return this.innerGW.destroy(iurl);
   }
 
   async start(url: URI): Promise<Result<URI>> {
@@ -143,11 +169,11 @@ export class FragmentGateway implements Gateway {
         len: 16 * 1024 * 1024, // 32bit
         data: new Uint8Array(1024),
       }).length - 1024;
-    return this.innerGW.start(url);
+    return this.transport.start(url);
   }
 
   async close(url: URI): Promise<VoidResult> {
-    return this.innerGW.close(url);
+    return this.transport.close(url);
   }
 
   async put(url: URI, body: Uint8Array): Promise<VoidResult> {
@@ -155,8 +181,8 @@ export class FragmentGateway implements Gateway {
     return Result.Ok(undefined);
   }
 
-  async get(url: URI): Promise<GetResult> {
-    const rfrags = await getFrags(url, this.innerGW, this.headerSize, this.logger);
+  async get(url: URI): Promise<Result<Uint8Array>> {
+    const rfrags = await getFrags(url, this.transport, this.headerSize, this.logger);
     let buffer: Uint8Array | undefined = undefined;
     for (const rfrag of rfrags) {
       if (rfrag.isErr()) {
@@ -169,16 +195,8 @@ export class FragmentGateway implements Gateway {
     return Result.Ok(buffer || new Uint8Array(0));
   }
 
-  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<UnsubscribeResult> {
-    if (this.innerGW.subscribe) {
-      return this.innerGW.subscribe(url, callback);
-    } else {
-      return Result.Err(this.logger.Error().Url(url).Msg("subscribe not supported").AsError());
-    }
-  }
-
   async delete(url: URI): Promise<VoidResult> {
-    const rfrags = await getFrags(url, this.innerGW, this.headerSize, this.logger);
+    const rfrags = await getFrags(url, this.transport, this.headerSize, this.logger);
     for (const rfrag of rfrags) {
       if (rfrag.isErr()) {
         return Result.Err(rfrag.Err());
@@ -197,7 +215,11 @@ export class FragmentGateway implements Gateway {
       } else {
         fragUrl = url;
       }
-      await this.innerGW.delete(fragUrl);
+      await this.transport.delete(fragUrl, {
+        fid: frag.fid,
+        ofs: frag.ofs,
+        len: frag.len,
+      });
     }
     return Result.Ok(undefined);
   }
