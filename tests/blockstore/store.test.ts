@@ -1,6 +1,7 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis, rt } from "@fireproof/core";
+import { bs, NotFoundError, SuperThis, rt, PARAM, Result } from "@fireproof/core";
 import { mockSuperThis, noopUrl } from "../helpers";
+import { fpDeserialize } from "../../src/runtime/gateways/fp-envelope-serialize";
 
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime(sthis);
@@ -33,7 +34,7 @@ describe("DataStore", function () {
   });
 
   it("should have a name", function () {
-    expect(store.name).toEqual("test");
+    expect(store.url().getParam(PARAM.NAME)).toEqual("test");
   });
 
   it("should save a car", async function () {
@@ -109,7 +110,7 @@ describe("MetaStore", function () {
   });
 
   it("should have a name", function () {
-    expect(store.name).toEqual("test");
+    expect(store.url().getParam(PARAM.NAME)).toEqual("test");
   });
 
   it("should save a header", async function () {
@@ -120,8 +121,10 @@ describe("MetaStore", function () {
     };
     await store.save(h);
     const file = await raw.get(store.url(), "main");
-    const [blockMeta] = await store.handleByteHeads(file);
-    const decodedHeader = blockMeta.dbMeta;
+    const blockMeta = (await fpDeserialize(sthis, file, store.url())) as Result<bs.FPEnvelopeMeta>;
+    expect(blockMeta.Ok()).toBeTruthy();
+    expect(blockMeta.Ok().payload.length).toEqual(1);
+    const decodedHeader = blockMeta.Ok().payload[0].dbMeta;
     expect(decodedHeader).toBeTruthy();
     expect(decodedHeader.cars).toBeTruthy();
     expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());
@@ -162,8 +165,12 @@ describe("MetaStore with a saved header", function () {
     const header = JSON.parse(data)[0];
     expect(header).toBeDefined();
     expect(header.parents).toBeDefined();
-    const [blockMeta] = await store.handleByteHeads(bytes);
-    const decodedHeader = blockMeta.dbMeta;
+    // const [blockMeta] = await store.handleByteHeads(bytes);
+
+    const blockMeta = (await fpDeserialize(sthis, bytes, store.url())) as Result<bs.FPEnvelopeMeta>;
+    expect(blockMeta.Ok()).toBeTruthy();
+    expect(blockMeta.Ok().payload.length).toEqual(1);
+    const decodedHeader = blockMeta.Ok().payload[0].dbMeta;
     expect(decodedHeader).toBeDefined();
     expect(decodedHeader.cars).toBeDefined();
     expect(decodedHeader.cars[0].toString()).toEqual(cid.toString());

@@ -1,5 +1,8 @@
 import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector } from "@adviser/cement";
 import { ensureSuperThis, rt, SuperThis, SuperThisOpts, bs, PARAM } from "@fireproof/core";
+import { CID } from "multiformats";
+import { sha256 } from "multiformats/hashes/sha2";
+import * as json from "multiformats/codecs/json";
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -67,4 +70,10 @@ export function simpleBlockOpts(sthis: SuperThis, name?: string) {
       data: url,
     },
   };
+}
+
+export async function simpleCID(sthis: SuperThis) {
+  const bytes = json.encode({ hello: sthis.nextId().str });
+  const hash = await sha256.digest(bytes);
+  return CID.create(1, json.code, hash);
 }

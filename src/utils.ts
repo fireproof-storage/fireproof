@@ -353,6 +353,19 @@ export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array): boolean {
   return true;
 }
 
+export function inplaceFilter<T>(i: T[], pred: (i: T, idx: number) => boolean): T[] {
+  const founds: number[] = [];
+  for (let j = 0; j < i.length; j++) {
+    if (!pred(i[j], j)) {
+      founds.push(j);
+    }
+  }
+  for (let j = founds.length - 1; j >= 0; j--) {
+    i.splice(founds[j], 1);
+  }
+  return i;
+}
+
 export function toSortedArray(set?: Record<string, unknown>): Record<string, unknown>[] {
   if (!set) return [];
   return Object.entries(set)

@@ -5,6 +5,8 @@ import { INDEXDB_VERSION } from "./version.js";
 import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
 import { PARAM, SuperThis } from "../../../types.js";
+import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
+import { fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
@@ -134,7 +136,7 @@ export class IndexDBGateway implements Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get(url: URI): Promise<GetResult> {
+  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
@@ -145,16 +147,17 @@ export class IndexDBGateway implements Gateway {
       if (!bytes) {
         return Result.Err(new NotFoundError(`missing ${key}`));
       }
-      return Result.Ok(bytes as Uint8Array);
+      return fpDeserialize<S>(this.sthis, bytes, url) as Promise<GetResult<T, S>>;
     });
   }
-  async put(url: URI, value: Uint8Array) {
+  async put<T>(url: URI, value: FPEnvelope<T>) {
     return exception2Result(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
+      const bytes = await fpSerialize(this.sthis, value, url);
       const tx = this._db.transaction([store], "readwrite");
-      await tx.objectStore(store).put(value, sanitzeKey(key));
+      await tx.objectStore(store).put(bytes, sanitzeKey(key));
       await tx.done;
     });
   }

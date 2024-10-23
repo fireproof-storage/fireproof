@@ -238,7 +238,7 @@ export interface CommitOpts {
 
 export interface DbMeta {
   readonly cars: CarGroup;
-  key?: string;
+  // key?: string;
 }
 
 // export interface UploadMetaFnParams {
@@ -285,7 +285,7 @@ export interface BaseStore {
   readonly realGateway: Gateway;
   // readonly url: URI
   url(): URI;
-  readonly name: string;
+  // readonly name: string;
   onStarted(fn: () => void): void;
   onClosed(fn: () => void): void;
 
@@ -299,7 +299,7 @@ export interface BaseStore {
 
 export interface DbMetaEvent {
   readonly eventCid: CarClockLink;
-  readonly parents: string[];
+  readonly parents: CarClockHead;
   readonly dbMeta: DbMeta;
 }
 
@@ -309,7 +309,7 @@ export interface MetaStore extends BaseStore {
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
   // onLoad(branch: string, loadHandler: LoadHandler): () => void;
-  handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<DbMetaEvent[]>;
+  // handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<DbMetaEvent[]>;
 }
 
 // export interface RemoteMetaStore extends MetaStore {
@@ -327,9 +327,9 @@ export interface DataStore extends BaseStore {
 }
 
 export interface WALState {
-  operations: DbMeta[];
-  noLoaderOps: DbMeta[];
-  fileOperations: {
+  readonly operations: DbMeta[];
+  readonly noLoaderOps: DbMeta[];
+  readonly fileOperations: {
     readonly cid: AnyLink;
     readonly public: boolean;
   }[];
@@ -415,6 +415,9 @@ export interface Loadable {
   handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
 }
 
-export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>;
+export interface DbMetaBinary {
+  readonly dbMeta: Uint8Array;
+}
+export type DbMetaEventBlock = EventBlock<DbMetaBinary>;
 export type CarClockLink = Link<DbMetaEventBlock, number, number, Version>;
 export type CarClockHead = CarClockLink[];
