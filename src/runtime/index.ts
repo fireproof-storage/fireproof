@@ -11,6 +11,8 @@ export * as mf from "./wait-pr-multiformats/index.js";
 
 export { runtimeFn } from "@adviser/cement";
 
+export * as gw from "./gateways/fp-envelope-serialize.js";
+
 export { FILESTORE_VERSION } from "./gateways/file/version.js";
 export { INDEXDB_VERSION } from "./gateways/indexdb/version.js";
 // export { V0_19SQL_VERSION } from "./store-sql/v0.19/version.js";

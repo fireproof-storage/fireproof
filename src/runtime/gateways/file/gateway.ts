@@ -3,8 +3,9 @@ import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser
 import { ensureLogger, ensureSuperLog, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
 import { getFileName, getFileSystem, getPath } from "./utils.js";
-import { FPEnvelopeCar, FPEnvelopeFile, FPMsg2Car, FPMsgMatch2Envelope } from "../../../blockstore/fp-envelope.js";
+import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
+import { fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 
@@ -76,33 +77,30 @@ export class FileGateway implements Gateway {
     return this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
   }
 
-  async put(url: URI, body: Uint8Array): Promise<Result<void>> {
-    const rbuf = FPMsgMatch2Envelope(body) as Result<FPEnvelopeCar | FPEnvelopeFile>;
-    if (rbuf.isErr()) {
-      return Result.Err(rbuf.Err());
-    }
-    let payload = body
-    if (["car", "file"].includes(rbuf.Ok().type)) {
-      payload = rbuf.Ok().payload
-    }
+  async put<T>(url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
+    // const rbuf = FPMsgMatch2Envelope(body) as Result<FPEnvelopeCar | FPEnvelopeFile>;
+    // if (rbuf.isErr()) {
+    //   return Result.Err(rbuf.Err());
+    // }
+    // let payload = body
+    // if (["car", "file"].includes(rbuf.Ok().type)) {
+    //   payload = rbuf.Ok().payload
+    // }
     return exception2Result(async () => {
       const file = await this.getFilePath(url);
       this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
-      await this.fs.writefile(file, payload);
+
+      await this.fs.writefile(file, await fpSerialize(this.sthis, env, url));
     });
   }
 
-  async get(url: URI): Promise<GetResult> {
+  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
     return exceptionWrapper(async () => {
       const file = this.getFilePath(url);
       try {
         this.logger.Debug().Url(url).Str("file", file).Msg("get");
         const res = await this.fs.readfile(file);
-        this.logger.Debug().Url(url).Str("file", file).Msg("get");
-        if (url.getParam("store") === "data") {
-          return FPMsg2Car(res);
-        }
-        return Result.Ok(new Uint8Array(res));
+        return fpDeserialize(this.sthis, res, url) as Promise<GetResult<T, S>>;
       } catch (e: unknown) {
         if (isNotFoundError(e)) {
           return Result.Err(new NotFoundError(`file not found: ${file}`));

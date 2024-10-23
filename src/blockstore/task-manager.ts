@@ -1,5 +1,5 @@
 import { Logger } from "@adviser/cement";
-import type { CarClockLink, DbMeta } from "./types.js";
+import type { CarClockHead, CarClockLink, DbMeta } from "./types.js";
 import { ensureLogger } from "../utils.js";
 import { SuperThis } from "../types.js";
 
@@ -22,7 +22,7 @@ export class TaskManager {
     this.callback = callback;
   }
 
-  async handleEvent(cid: CarClockLink, parents: string[], dbMeta: DbMeta) {
+  async handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta) {
     for (const parent of parents) {
       this.eventsWeHandled.add(parent.toString());
     }

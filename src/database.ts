@@ -70,7 +70,7 @@ export interface Database<DT extends DocTypes = NonNullable<unknown>> extends Ha
   readonly sthis: SuperThis;
   readonly id: string;
 
-  name(): string;
+  readonly name: string;
 
   onClosed(fn: () => void): void;
 
@@ -150,8 +150,8 @@ export class DatabaseShell<DT extends DocTypes = NonNullable<unknown>> implement
     return this.ref.crdt;
   }
 
-  name(): string {
-    return this.ref.name();
+  get name(): string {
+    return this.ref.name;
   }
   onClosed(fn: () => void): void {
     return this.ref.onClosed(fn);
@@ -225,11 +225,11 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     this._onClosedFns.add(fn);
   }
   async close() {
-    throw this.logger.Error().Str("db", this.name()).Msg(`use shellClose`).AsError();
+    throw this.logger.Error().Str("db", this.name).Msg(`use shellClose`).AsError();
   }
   async shellClose(db: DatabaseShell<DT>) {
     if (!this.shells.has(db)) {
-      throw this.logger.Error().Str("db", this.name()).Msg(`Database Shell mismatch`).AsError();
+      throw this.logger.Error().Str("db", this.name).Msg(`Database Shell mismatch`).AsError();
     }
     this.shells.delete(db);
     if (this.shells.size === 0) {
@@ -277,12 +277,12 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     });
   }
 
-  name(): string {
+  get name(): string {
     return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
   }
 
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
-    if (!id) throw this.logger.Error().Str("db", this.name()).Msg(`Doc id is required`).AsError();
+    if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
 
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("get");
@@ -306,14 +306,14 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
         _id: docId,
       },
     })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name() } as DocResponse;
+    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
   }
 
   async del(id: string): Promise<DocResponse> {
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("del");
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head, name: this.name() } as DocResponse;
+    return { id, clock: result?.head, name: this.name } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
@@ -325,7 +325,7 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
       clock,
     }));
-    return { rows, clock: head, name: this.name() };
+    return { rows, clock: head, name: this.name };
   }
 
   async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
@@ -337,7 +337,7 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
       key,
       value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
     }));
-    return { rows, clock: head, name: this.name() };
+    return { rows, clock: head, name: this.name };
   }
 
   async allDocuments<T extends DocTypes>(): Promise<{

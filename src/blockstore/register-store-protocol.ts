@@ -99,9 +99,9 @@ if (runtimeFn().isBrowser) {
     defaultURI: () => {
       return BuildURI.from("indexdb://").pathname("fp").URI();
     },
-    gateway: async (logger) => {
+    gateway: async (sthis) => {
       const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway.js");
-      return new IndexDBGateway(logger);
+      return new IndexDBGateway(sthis);
     },
     test: async (logger) => {
       const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway.js");
@@ -119,10 +119,10 @@ registerStoreProtocol({
   defaultURI: () => {
     return BuildURI.from("memory://").pathname("ram").URI();
   },
-  gateway: async () => {
-    return new MemoryGateway(memory);
+  gateway: async (sthis) => {
+    return new MemoryGateway(sthis, memory);
   },
-  test: async () => {
-    return new MemoryTestGateway(memory);
+  test: async (sthis) => {
+    return new MemoryTestGateway(sthis, memory);
   },
 });

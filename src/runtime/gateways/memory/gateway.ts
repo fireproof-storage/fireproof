@@ -1,13 +1,17 @@
 import { Result, URI } from "@adviser/cement";
 import { Gateway, GetResult, TestGateway, VoidResult } from "../../../blockstore/gateway.js";
-import { PARAM } from "../../../types.js";
+import { PARAM, SuperThis } from "../../../types.js";
 import { MEMORY_VERSION } from "./version.js";
 import { NotFoundError } from "../../../utils.js";
+import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
+import { fpSerialize, fpDeserialize } from "../fp-envelope-serialize.js";
 
 export class MemoryGateway implements Gateway {
   readonly memorys: Map<string, Uint8Array>;
-  constructor(memorys: Map<string, Uint8Array>) {
+  readonly sthis: SuperThis;
+  constructor(sthis: SuperThis, memorys: Map<string, Uint8Array>) {
     this.memorys = memorys;
+    this.sthis = sthis;
   }
 
   buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
@@ -25,17 +29,17 @@ export class MemoryGateway implements Gateway {
     this.memorys.clear();
     return Promise.resolve(Result.Ok(undefined));
   }
-  put(url: URI, body: Uint8Array): Promise<VoidResult> {
-    this.memorys.set(url.toString(), body);
-    return Promise.resolve(Result.Ok(undefined));
+  async put<T>(url: URI, body: FPEnvelope<T>): Promise<VoidResult> {
+    this.memorys.set(url.toString(), await fpSerialize(this.sthis, body, url));
+    return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
-  get(url: URI): Promise<GetResult> {
+  get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
     const x = this.memorys.get(url.toString());
-    if (x === undefined) {
+    if (!x) {
       return Promise.resolve(Result.Err(new NotFoundError("not found")));
     }
-    return Promise.resolve(Result.Ok(x));
+    return fpDeserialize(this.sthis, x, url) as Promise<GetResult<T, S>>;
   }
   delete(url: URI): Promise<VoidResult> {
     this.memorys.delete(url.toString());
@@ -45,8 +49,10 @@ export class MemoryGateway implements Gateway {
 
 export class MemoryTestGateway implements TestGateway {
   readonly memorys: Map<string, Uint8Array>;
-  constructor(memorys: Map<string, Uint8Array>) {
+  readonly sthis: SuperThis;
+  constructor(sthis: SuperThis, memorys: Map<string, Uint8Array>) {
     this.memorys = memorys;
+    this.sthis = sthis;
   }
   async get(url: URI, key: string): Promise<Uint8Array> {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
