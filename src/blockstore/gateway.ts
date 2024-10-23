@@ -57,17 +57,17 @@ export interface GatewayDestroyOp {
 }
 export type GatewayDestroyReturn = GatewayReturn<GatewayDestroyOp, VoidResult>;
 
-export interface GatewayPutOp {
+export interface GatewayPutOp<T> {
   readonly url: URI;
-  readonly body: Uint8Array;
+  readonly body: FPEnvelope<T>;
 }
 
-export type GatewayPutReturn = GatewayReturn<GatewayPutOp, VoidResult>;
+export type GatewayPutReturn<T> = GatewayReturn<GatewayPutOp<T>, VoidResult>;
 
 export interface GatewayGetOp {
   readonly url: URI;
 }
-export type GatewayGetReturn = GatewayReturn<GatewayGetOp, GetResult>;
+export type GatewayGetReturn<T extends FPEnvelope<S>, S> = GatewayReturn<GatewayGetOp, GetResult<T, S>>;
 
 export interface GatewayDeleteOp {
   readonly url: URI;
@@ -76,7 +76,7 @@ export type GatewayDeleteReturn = GatewayReturn<GatewayDeleteOp, VoidResult>;
 
 export interface GatewaySubscribeOp {
   readonly url: URI;
-  readonly callback: (meta: Uint8Array) => void;
+  readonly callback: (meta: FPEnvelopeMeta) => void;
 }
 
 export type GatewaySubscribeReturn = GatewayReturn<GatewaySubscribeOp, UnsubscribeResult>;
@@ -87,7 +87,7 @@ export interface GatewayInterceptor {
   close(baseUrl: URI): Promise<Result<GatewayCloseReturn>>;
   delete(baseUrl: URI): Promise<Result<GatewayDeleteReturn>>;
   destroy(baseUrl: URI): Promise<Result<GatewayDestroyReturn>>;
-  put(url: URI, body: Uint8Array): Promise<Result<GatewayPutReturn>>;
-  get(url: URI): Promise<Result<GatewayGetReturn>>;
-  subscribe(url: URI, callback: (meta: Uint8Array) => void): Promise<Result<GatewaySubscribeReturn>>;
+  put<T>(url: URI, body: FPEnvelope<T>): Promise<Result<GatewayPutReturn<T>>>;
+  get<T extends FPEnvelope<S>, S>(url: URI): Promise<Result<GatewayGetReturn<T, S>>>;
+  subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>>;
 }
