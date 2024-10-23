@@ -17,6 +17,7 @@ import {
 } from "./gateway.js";
 import { SuperThis } from "../types.js";
 import { ensureSuperLog } from "../utils.js";
+import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
 
 export class PassThroughGateway implements GatewayInterceptor {
   async buildUrl(url: URI, key: string): Promise<Result<GatewayBuildUrlReturn>> {
@@ -39,15 +40,15 @@ export class PassThroughGateway implements GatewayInterceptor {
     const op = { url };
     return Result.Ok({ op });
   }
-  async put(url: URI, body: Uint8Array): Promise<Result<GatewayPutReturn>> {
+  async put<T>(url: URI, body: FPEnvelope<T>): Promise<Result<GatewayPutReturn<T>>> {
     const op = { url, body };
     return Result.Ok({ op });
   }
-  async get(url: URI): Promise<Result<GatewayGetReturn>> {
+  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<Result<GatewayGetReturn<T, S>>> {
     const op = { url };
     return Result.Ok({ op });
   }
-  async subscribe(url: URI, callback: (meta: Uint8Array) => void): Promise<Result<GatewaySubscribeReturn>> {
+  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>> {
     const op = { url, callback };
     return Result.Ok({ op });
   }
@@ -117,8 +118,8 @@ export class InterceptorGateway implements Gateway {
     return this.innerGW.close(ret.op.url);
   }
 
-  async put(url: URI, body: Uint8Array): Promise<VoidResult> {
-    const rret = await this.interceptor.put(url, body);
+  async put<T>(url: URI, fpEnv: FPEnvelope<T>): Promise<VoidResult> {
+    const rret = await this.interceptor.put(url, fpEnv);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -129,8 +130,8 @@ export class InterceptorGateway implements Gateway {
     return this.innerGW.put(ret.op.url, ret.op.body);
   }
 
-  async get(url: URI): Promise<GetResult> {
-    const rret = await this.interceptor.get(url);
+  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
+    const rret = await this.interceptor.get<T, S>(url);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -141,7 +142,7 @@ export class InterceptorGateway implements Gateway {
     return this.innerGW.get(ret.op.url);
   }
 
-  async subscribe(url: URI, callback: (msg: Uint8Array) => void): Promise<UnsubscribeResult> {
+  async subscribe(url: URI, callback: (msg: FPEnvelopeMeta) => void): Promise<UnsubscribeResult> {
     if (!this.innerGW.subscribe) {
       return Result.Err(this.logger.Error().Url(url).Msg("subscribe not supported").AsError());
     }
