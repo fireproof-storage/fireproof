@@ -212,7 +212,8 @@ export interface StoreFactoryItem {
   readonly sthis: SuperThis;
   readonly url: URI;
   readonly gatewayInterceptor?: GatewayInterceptor;
-  readonly keybag: KeyBag;
+  // readonly keybag: KeyBag;
+  readonly loader: Loadable;
 }
 
 export interface StoreRuntime {
@@ -269,12 +270,10 @@ export interface DbMeta {
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
 export interface Connection {
-  readonly loader?: Loadable;
+  // readonly loader?: Loadable;
   readonly loaded: Promise<void>;
-  dashboardUrl?: URI;
-
-  connectMeta_X({ loader }: { loader?: Loadable }): void;
-  connectStorage_X({ loader }: { loader?: Loadable }): void;
+  connectMeta({ loader }: { loader: Loadable }): void;
+  connectStorage({ loader }: { loader: Loadable }): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   // dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;

@@ -82,20 +82,20 @@ export function defaultedBlockstoreRuntime(
   };
 }
 
-export function blockstoreFactory(sthis: SuperThis, opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
-  // if (opts.name) {
-  return new EncryptedBlockstore(sthis, opts);
-  // } else {
-  // return new BaseBlockstore(opts);
-  // }
-}
+// export function blockstoreFactory(sthis: SuperThis, opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
+//   // if (opts.name) {
+//   return new EncryptedBlockstore(sthis, opts);
+//   // } else {
+//   // return new BaseBlockstore(opts);
+//   // }
+// }
 
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions: Set<CarTransaction> = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
   readonly sthis: SuperThis;
 
-  readonly loader?: Loader;
+  readonly loader: Loader;
   // readonly name?: string;
 
   // ready: Promise<void>;
@@ -117,12 +117,10 @@ export class BaseBlockstore implements BlockFetcher {
 
   readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts) {
-    // console.log("BaseBlockstore", ebOpts)
-    this.sthis = ensureSuperThis(ebOpts);
-    this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.sthis = ensureSuperThis(ebOpts);
     this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.logger = this.ebOpts.logger;
+    this.loader = new Loader(this.sthis, ebOpts);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -188,7 +186,6 @@ export class BaseBlockstore implements BlockFetcher {
 
 export class EncryptedBlockstore extends BaseBlockstore {
   // readonly name: string;
-  readonly loader: Loader;
 
   ready(): Promise<void> {
     return this.loader.ready();
@@ -210,7 +207,6 @@ export class EncryptedBlockstore extends BaseBlockstore {
     this.logger = ensureLogger(this.sthis, "EncryptedBlockstore", {
       this: 1,
     });
-    this.loader = new Loader(sthis, ebOpts);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
