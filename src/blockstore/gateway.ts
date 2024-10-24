@@ -6,7 +6,7 @@ export interface GatewayOpts {
   readonly gateway: Gateway;
 }
 
-export type GetResult<T extends FPEnvelope<S>, S> = Result<T, NotFoundError | Error>;
+export type GetResult<S> = Result<FPEnvelope<S>, NotFoundError | Error>;
 export type VoidResult = Result<void>;
 
 export interface TestGateway {
@@ -25,7 +25,7 @@ export interface Gateway {
   destroy(baseUrl: URI): Promise<VoidResult>;
   put<T>(url: URI, body: FPEnvelope<T>): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
-  get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>>;
+  get<S>(url: URI): Promise<GetResult<S>>;
   delete(url: URI): Promise<VoidResult>;
   // be notified of remote meta
   subscribe?(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<UnsubscribeResult>;
@@ -67,7 +67,7 @@ export type GatewayPutReturn<T> = GatewayReturn<GatewayPutOp<T>, VoidResult>;
 export interface GatewayGetOp {
   readonly url: URI;
 }
-export type GatewayGetReturn<T extends FPEnvelope<S>, S> = GatewayReturn<GatewayGetOp, GetResult<T, S>>;
+export type GatewayGetReturn<S> = GatewayReturn<GatewayGetOp, GetResult<S>>;
 
 export interface GatewayDeleteOp {
   readonly url: URI;
@@ -88,6 +88,6 @@ export interface GatewayInterceptor {
   delete(baseUrl: URI): Promise<Result<GatewayDeleteReturn>>;
   destroy(baseUrl: URI): Promise<Result<GatewayDestroyReturn>>;
   put<T>(url: URI, body: FPEnvelope<T>): Promise<Result<GatewayPutReturn<T>>>;
-  get<T extends FPEnvelope<S>, S>(url: URI): Promise<Result<GatewayGetReturn<T, S>>>;
+  get<S>(url: URI): Promise<Result<GatewayGetReturn<S>>>;
   subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>>;
 }
