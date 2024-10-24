@@ -51,7 +51,7 @@ class TestInterceptor extends bs.PassThroughGateway {
     this.fn("get", ret);
     return ret;
   }
-  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>> {
+  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<GatewaySubscribeReturn>> {
     const ret = await super.subscribe(url, callback);
     this.fn("subscribe", ret);
     return ret;
