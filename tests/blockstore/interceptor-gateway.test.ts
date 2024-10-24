@@ -46,8 +46,8 @@ class TestInterceptor extends bs.PassThroughGateway {
     this.fn("put", ret);
     return ret;
   }
-  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<Result<GatewayGetReturn<T, S>>> {
-    const ret = await super.get<T, S>(url);
+  async get<S>(url: URI): Promise<Result<GatewayGetReturn<S>>> {
+    const ret = await super.get<S>(url);
     this.fn("get", ret);
     return ret;
   }
