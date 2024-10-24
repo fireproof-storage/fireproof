@@ -94,13 +94,13 @@ export class FileGateway implements Gateway {
     });
   }
 
-  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
+  async get<S>(url: URI): Promise<GetResult<S>> {
     return exceptionWrapper(async () => {
       const file = this.getFilePath(url);
       try {
         this.logger.Debug().Url(url).Str("file", file).Msg("get");
         const res = await this.fs.readfile(file);
-        return fpDeserialize(this.sthis, res, url) as Promise<GetResult<T, S>>;
+        return fpDeserialize(this.sthis, res, url) as Promise<GetResult<S>>;
       } catch (e: unknown) {
         if (isNotFoundError(e)) {
           return Result.Err(new NotFoundError(`file not found: ${file}`));

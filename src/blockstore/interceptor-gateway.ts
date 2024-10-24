@@ -44,7 +44,7 @@ export class PassThroughGateway implements GatewayInterceptor {
     const op = { url, body };
     return Result.Ok({ op });
   }
-  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<Result<GatewayGetReturn<T, S>>> {
+  async get<S>(url: URI): Promise<Result<GatewayGetReturn<S>>> {
     const op = { url };
     return Result.Ok({ op });
   }
@@ -130,8 +130,8 @@ export class InterceptorGateway implements Gateway {
     return this.innerGW.put(ret.op.url, ret.op.body);
   }
 
-  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
-    const rret = await this.interceptor.get<T, S>(url);
+  async get<S>(url: URI): Promise<GetResult<S>> {
+    const rret = await this.interceptor.get<S>(url);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }

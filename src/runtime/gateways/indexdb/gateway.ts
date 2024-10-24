@@ -136,7 +136,7 @@ export class IndexDBGateway implements Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
+  async get<S>(url: URI): Promise<GetResult<S>> {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
@@ -147,7 +147,7 @@ export class IndexDBGateway implements Gateway {
       if (!bytes) {
         return Result.Err(new NotFoundError(`missing ${key}`));
       }
-      return fpDeserialize<S>(this.sthis, bytes, url) as Promise<GetResult<T, S>>;
+      return fpDeserialize<S>(this.sthis, bytes, url) as Promise<GetResult<S>>;
     });
   }
   async put<T>(url: URI, value: FPEnvelope<T>) {
