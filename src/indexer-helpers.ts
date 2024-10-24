@@ -20,7 +20,7 @@ import {
   DocFragment,
   IndexUpdate,
   QueryOpts,
-  IndexRow,
+  IndexRows,
   DocWithId,
   IndexKeyType,
   IndexKey,
@@ -164,9 +164,7 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
   crdt: CRDT<T>,
   resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K>,
-): Promise<{
-  rows: IndexRow<K, T, R>[];
-}> {
+): Promise<IndexRows<K, T, R>> {
   if (query.descending) {
     resp.result = resp.result.reverse();
   }
@@ -183,6 +181,8 @@ export async function applyQuery<K extends IndexKeyType, T extends DocObject, R 
     );
   }
   return {
+    name: crdt.opts.name,
+    clock: crdt.clock.head,
     rows: resp.result.map(({ key, ...row }) => {
       return {
         key: charwise.decode(key),

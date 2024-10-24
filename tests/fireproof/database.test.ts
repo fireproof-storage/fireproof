@@ -147,7 +147,7 @@ describe("named Database with record", function () {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     expect(rows[0].key).toBe("hello");
-    expect(rows[0].value._id).toBe("hello");
+    expect(rows[0].doc._id).toBe("hello");
   });
   it("should have a key", async function () {
     const { rows } = await db.changes([]);
@@ -191,7 +191,7 @@ describe("named Database with record", function () {
     const { rows: rows3 } = await db.changes([]);
     expect(rows3.length).toBe(numDocs + 1);
     expect(rows3[numDocs].key).toBe(`id-${7}`);
-    expect(rows3[numDocs].value._deleted).toBe(true);
+    expect(rows3[numDocs].doc._deleted).toBe(true);
 
     // test limit
     const { rows: rows4 } = await db.changes([], { limit: 5 });
