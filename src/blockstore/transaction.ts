@@ -10,6 +10,7 @@ import {
   TransactionWrapper,
   BlockstoreOpts,
   BlockstoreRuntime,
+  Loadable,
 } from "./types.js";
 
 import { Loader } from "./loader.js";
@@ -95,7 +96,7 @@ export class BaseBlockstore implements BlockFetcher {
   readonly ebOpts: BlockstoreRuntime;
   readonly sthis: SuperThis;
 
-  readonly loader: Loader;
+  readonly loader: Loadable;
   // readonly name?: string;
 
   // ready: Promise<void>;
@@ -161,7 +162,7 @@ export class BaseBlockstore implements BlockFetcher {
     opts: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
     if (!this.loader) throw this.logger.Error().Msg("loader required to commit").AsError();
-    const cars = await this.loader?.commit<M>(t, done, opts);
+    const cars = await this.loader.commit<M>(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
@@ -255,7 +256,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
     const meta = await compactFn(blockLog);
-    await this.loader?.commit(blockLog.loggedBlocks, meta, {
+    await this.loader.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true,
     });

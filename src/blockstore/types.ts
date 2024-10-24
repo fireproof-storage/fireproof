@@ -9,6 +9,7 @@ import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { Gateway, GatewayInterceptor } from "./gateway.js";
+import { CarReader } from "@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -414,6 +415,17 @@ export interface Loadable {
   carStore(): Promise<DataStore>;
 
   handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
+
+  commit<T = TransactionMeta>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup>;
+  destroy(): Promise<void>;
+  getBlock(cid: AnyLink): Promise<AnyBlock | Falsy>;
+  loadFileCar(cid: AnyLink /*, isPublic = false*/): Promise<CarReader>;
+  loadCar(cid: AnyLink): Promise<CarReader>;
+  commitFiles(
+    t: CarTransaction,
+    done: TransactionMeta /* opts: CommitOpts = { noLoader: false, compact: false } */,
+  ): Promise<CarGroup>;
+  entries(cache?: boolean): AsyncIterableIterator<AnyBlock>;
 }
 
 export interface DbMetaBinary {
