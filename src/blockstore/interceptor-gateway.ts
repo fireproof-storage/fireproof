@@ -18,6 +18,7 @@ import {
 import { SuperThis } from "../types.js";
 import { ensureSuperLog } from "../utils.js";
 import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
+import { Loadable } from "./types.js";
 
 export class PassThroughGateway implements GatewayInterceptor {
   async buildUrl(url: URI, key: string): Promise<Result<GatewayBuildUrlReturn>> {
@@ -70,8 +71,8 @@ export class InterceptorGateway implements Gateway {
     this.interceptor = interceptor || passThrougthGateway;
   }
 
-  async buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    const rret = await this.interceptor.buildUrl(baseUrl, key);
+  async buildUrl(baseUrl: URI, key: string, loader: Loadable): Promise<Result<URI>> {
+    const rret = await this.interceptor.buildUrl(baseUrl, key, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -79,11 +80,11 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.buildUrl(ret.op.url, ret.op.key);
+    return this.innerGW.buildUrl(ret.op.url, ret.op.key, loader);
   }
 
-  async destroy(iurl: URI): Promise<Result<void>> {
-    const rret = await this.interceptor.destroy(iurl);
+  async destroy(iurl: URI, loader: Loadable): Promise<Result<void>> {
+    const rret = await this.interceptor.destroy(iurl, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -91,11 +92,11 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.destroy(ret.op.url);
+    return this.innerGW.destroy(ret.op.url, loader);
   }
 
-  async start(url: URI): Promise<Result<URI>> {
-    const rret = await this.interceptor.start(url);
+  async start(url: URI, loader: Loadable): Promise<Result<URI>> {
+    const rret = await this.interceptor.start(url, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -103,11 +104,11 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.start(ret.op.url);
+    return this.innerGW.start(ret.op.url, loader);
   }
 
-  async close(url: URI): Promise<VoidResult> {
-    const rret = await this.interceptor.start(url);
+  async close(url: URI, loader: Loadable): Promise<VoidResult> {
+    const rret = await this.interceptor.close(url, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -115,11 +116,11 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.close(ret.op.url);
+    return this.innerGW.close(ret.op.url, loader);
   }
 
-  async put<T>(url: URI, fpEnv: FPEnvelope<T>): Promise<VoidResult> {
-    const rret = await this.interceptor.put(url, fpEnv);
+  async put<T>(url: URI, fpEnv: FPEnvelope<T>, loader: Loadable): Promise<VoidResult> {
+    const rret = await this.interceptor.put(url, fpEnv, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -127,11 +128,11 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.put(ret.op.url, ret.op.body);
+    return this.innerGW.put(ret.op.url, ret.op.body, loader);
   }
 
-  async get<S>(url: URI): Promise<GetResult<S>> {
-    const rret = await this.interceptor.get<S>(url);
+  async get<S>(url: URI, loader: Loadable): Promise<GetResult<S>> {
+    const rret = await this.interceptor.get<S>(url, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -139,14 +140,14 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.get(ret.op.url);
+    return this.innerGW.get(ret.op.url, loader);
   }
 
-  async subscribe(url: URI, callback: (msg: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
+  async subscribe(url: URI, callback: (msg: FPEnvelopeMeta) => Promise<void>, loader: Loadable): Promise<UnsubscribeResult> {
     if (!this.innerGW.subscribe) {
       return Result.Err(this.logger.Error().Url(url).Msg("subscribe not supported").AsError());
     }
-    const rret = await this.interceptor.subscribe(url, callback);
+    const rret = await this.interceptor.subscribe(url, callback, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -154,11 +155,11 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.subscribe(ret.op.url, ret.op.callback);
+    return this.innerGW.subscribe(ret.op.url, ret.op.callback, loader);
   }
 
-  async delete(url: URI): Promise<VoidResult> {
-    const rret = await this.interceptor.delete(url);
+  async delete(url: URI, loader: Loadable): Promise<VoidResult> {
+    const rret = await this.interceptor.delete(url, loader);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -166,6 +167,6 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.delete(url);
+    return this.innerGW.delete(url, loader);
   }
 }
