@@ -1,4 +1,4 @@
-import { Index, index, Database, CRDT, IndexRows, DatabaseOpts, toStoreURIRuntime, bs, rt, DatabaseFactory } from "@fireproof/core";
+import { Index, index, Ledger, CRDT, IndexRows, LedgerOpts, toStoreURIRuntime, bs, rt, LedgerFactory } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
 interface TestType {
@@ -7,7 +7,7 @@ interface TestType {
 }
 
 describe("basic Index", () => {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   const sthis = mockSuperThis();
@@ -19,7 +19,7 @@ describe("basic Index", () => {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -95,7 +95,7 @@ describe("basic Index", () => {
 });
 
 describe("Index query with compound key", function () {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<[string, number], TestType>;
   const sthis = mockSuperThis();
   afterEach(async function () {
@@ -106,7 +106,7 @@ describe("Index query with compound key", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
@@ -125,7 +125,7 @@ describe("Index query with compound key", function () {
 });
 
 describe("basic Index with map fun", function () {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
   const sthis = mockSuperThis();
   afterEach(async function () {
@@ -136,7 +136,7 @@ describe("basic Index with map fun", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -155,7 +155,7 @@ describe("basic Index with map fun", function () {
 });
 
 describe("basic Index with map fun with value", function () {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<string, TestType, number>;
   const sthis = mockSuperThis();
   afterEach(async function () {
@@ -164,7 +164,7 @@ describe("basic Index with map fun with value", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -193,7 +193,7 @@ describe("basic Index with map fun with value", function () {
 });
 
 describe("Index query with map and compound key", function () {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<[string, number], TestType>;
   const sthis = mockSuperThis();
   afterEach(async function () {
@@ -204,7 +204,7 @@ describe("Index query with map and compound key", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
@@ -223,7 +223,7 @@ describe("Index query with map and compound key", function () {
 });
 
 describe("basic Index with string fun", function () {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
   const sthis = mockSuperThis();
   afterEach(async function () {
@@ -234,7 +234,7 @@ describe("basic Index with string fun", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
@@ -265,7 +265,7 @@ describe("basic Index upon cold start", function () {
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
   const sthis = mockSuperThis();
-  let dbOpts: DatabaseOpts;
+  let dbOpts: LedgerOpts;
   // result, mapFn;
   afterEach(async function () {
     await crdt.close();
@@ -362,7 +362,7 @@ describe("basic Index upon cold start", function () {
 });
 
 describe("basic Index with no data", function () {
-  let db: Database<TestType>;
+  let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   const sthis = mockSuperThis();
@@ -374,7 +374,7 @@ describe("basic Index with no data", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-indexer");
+    db = LedgerFactory("test-indexer");
     indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;

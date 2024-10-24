@@ -1,27 +1,27 @@
-import { Database, DocTypes } from "@fireproof/core";
+import { Ledger, DocTypes } from "@fireproof/core";
 
 import { ChangesResult, useFireproof, UseChanges } from "./useFireproof";
 
 export interface TLUseChanges {
   <T extends DocTypes>(...args: Parameters<UseChanges>): ChangesResult<T>;
-  database: Database;
+  ledger: Ledger;
 }
 
 function topLevelUseChanges(...args: Parameters<UseChanges>) {
-  const { useChanges, database } = useFireproof();
-  (topLevelUseChanges as TLUseChanges).database = database;
+  const { useChanges, ledger } = useFireproof();
+  (topLevelUseChanges as TLUseChanges).ledger = ledger;
   return useChanges(...args);
 }
 
 /**
  * ## Summary
- * React hook that provides access to all new documents in the database added since the last time the changes was called
+ * React hook that provides access to all new documents in the ledger added since the last time the changes was called
  *
  * ## Usage
  * ```tsx
  * const result = useChanges(prevresult.clock,{limit:10}); // with options
  * const result = useChanges(); // without options
- * const database = useChanges.database; // underlying "useFireproof" database accessor
+ * const ledger = useChanges.ledger; // underlying "useFireproof" ledger accessor
  * ```
  *
  * ## Overview

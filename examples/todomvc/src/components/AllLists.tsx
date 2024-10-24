@@ -41,8 +41,8 @@ const todoItems = ({ title, _id }: ListDoc, i: number) => {
  */
 export function AllLists(): JSX.Element {
   // first data stuff
-  const { ready, database, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue;
-  const { addList } = makeQueryFunctions({ ready, database });
+  const { ready, ledger, addSubscriber } = useContext(FireproofCtx) as FireproofCtxValue;
+  const { addList } = makeQueryFunctions({ ready, ledger });
 
   const revalidator = useRevalidator();
   addSubscriber("AllLists", () => {
@@ -64,7 +64,7 @@ export function AllLists(): JSX.Element {
       <div className="listNav">
         <button
           onClick={async () => {
-            console.log("await database.changesSince()", await database.changesSince());
+            console.log("await ledger.changesSince()", await ledger.changesSince());
           }}
         >
           Choose a list.
@@ -74,7 +74,7 @@ export function AllLists(): JSX.Element {
       <ul className="todo-list">{lists.map(todoItems)}</ul>
       <InputArea onSubmit={addList} placeholder="Create a new list or choose one" />
       <div className="dbInfo">
-        <TimeTravel database={database} />
+        <TimeTravel ledger={ledger} />
         {/* <UploadManager registered={registered} /> */}
       </div>
     </div>
