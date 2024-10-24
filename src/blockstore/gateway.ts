@@ -28,7 +28,7 @@ export interface Gateway {
   get<S>(url: URI): Promise<GetResult<S>>;
   delete(url: URI): Promise<VoidResult>;
   // be notified of remote meta
-  subscribe?(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<UnsubscribeResult>;
+  subscribe?(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult>;
 }
 
 export interface GatewayReturn<O, T> {
@@ -76,7 +76,7 @@ export type GatewayDeleteReturn = GatewayReturn<GatewayDeleteOp, VoidResult>;
 
 export interface GatewaySubscribeOp {
   readonly url: URI;
-  readonly callback: (meta: FPEnvelopeMeta) => void;
+  readonly callback: (meta: FPEnvelopeMeta) => Promise<void>;
 }
 
 export type GatewaySubscribeReturn = GatewayReturn<GatewaySubscribeOp, UnsubscribeResult>;
@@ -89,5 +89,5 @@ export interface GatewayInterceptor {
   destroy(baseUrl: URI): Promise<Result<GatewayDestroyReturn>>;
   put<T>(url: URI, body: FPEnvelope<T>): Promise<Result<GatewayPutReturn<T>>>;
   get<S>(url: URI): Promise<Result<GatewayGetReturn<S>>>;
-  subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>>;
+  subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<GatewaySubscribeReturn>>;
 }

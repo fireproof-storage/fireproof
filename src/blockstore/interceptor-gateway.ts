@@ -48,7 +48,7 @@ export class PassThroughGateway implements GatewayInterceptor {
     const op = { url };
     return Result.Ok({ op });
   }
-  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => void): Promise<Result<GatewaySubscribeReturn>> {
+  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<GatewaySubscribeReturn>> {
     const op = { url, callback };
     return Result.Ok({ op });
   }
@@ -142,7 +142,7 @@ export class InterceptorGateway implements Gateway {
     return this.innerGW.get(ret.op.url);
   }
 
-  async subscribe(url: URI, callback: (msg: FPEnvelopeMeta) => void): Promise<UnsubscribeResult> {
+  async subscribe(url: URI, callback: (msg: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     if (!this.innerGW.subscribe) {
       return Result.Err(this.logger.Error().Url(url).Msg("subscribe not supported").AsError());
     }
