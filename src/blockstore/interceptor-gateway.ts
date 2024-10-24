@@ -104,7 +104,7 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.start(ret.op.url, loader);
+    return await this.innerGW.start(ret.op.url, loader);
   }
 
   async close(url: URI, loader: Loadable): Promise<VoidResult> {
@@ -116,7 +116,7 @@ export class InterceptorGateway implements Gateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.close(ret.op.url, loader);
+    return await this.innerGW.close(ret.op.url, loader);
   }
 
   async put<T>(url: URI, fpEnv: FPEnvelope<T>, loader: Loadable): Promise<VoidResult> {

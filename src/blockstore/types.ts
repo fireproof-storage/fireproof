@@ -270,11 +270,18 @@ export interface DbMeta {
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
+export interface RefLoadable {
+  readonly loader: Loadable;
+}
+export interface RefBlockstore {
+  readonly blockstore: RefLoadable;
+}
+
 export interface Connection {
   // readonly loader?: Loadable;
   readonly loaded: Promise<void>;
-  connectMeta({ loader }: { loader: Loadable }): void;
-  connectStorage({ loader }: { loader: Loadable }): void;
+  connectMeta(ref: RefLoadable | RefBlockstore): void;
+  connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   // dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
