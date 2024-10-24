@@ -2,7 +2,7 @@ import { Logger, URI } from "@adviser/cement";
 
 import { PARAM, throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
-import type { Connection, Loadable } from "./types.js";
+import type { Connection, Loadable, RefBlockstore, RefLoadable } from "./types.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
 import { getStartedGateway } from "./store-factory.js";
 
@@ -14,6 +14,18 @@ import { getStartedGateway } from "./store-factory.js";
 //   readonly name?: string;
 //   // readonly sthis: SuperThis;
 // }
+
+function coerceLoader(ref: RefLoadable | RefBlockstore): Loadable | undefined {
+  const refl = ref as RefLoadable;
+  if (refl.loader) {
+    return refl.loader;
+  }
+  const refb = ref as RefBlockstore;
+  if (refb.blockstore) {
+    return coerceLoader(refb.blockstore);
+  }
+  return undefined;
+}
 
 export abstract class ConnectionBase implements Connection {
   // readonly ready: Promise<unknown>;
@@ -41,13 +53,13 @@ export abstract class ConnectionBase implements Connection {
     await (await throwFalsy(this.loader).WALStore()).process();
   }
 
-  async connect({ loader }: { readonly loader: Loadable }) {
-    if (!loader) throw this.logger.Error().Msg("loader is required").AsError();
-    await this.connectMeta({ loader });
-    await this.connectStorage({ loader });
+  async connect(refl: RefLoadable | RefBlockstore) {
+    await this.connectMeta(refl);
+    await this.connectStorage(refl);
   }
 
-  async connectMeta({ loader }: { loader: Loadable }) {
+  async connectMeta(refl: RefLoadable | RefBlockstore) {
+    const loader = coerceLoader(refl);
     if (!loader) throw this.logger.Error().Msg("connectMeta_X: loader is required").AsError();
     this.loader = loader;
     await this.onConnect();
@@ -75,7 +87,8 @@ export abstract class ConnectionBase implements Connection {
 
   abstract onConnect(): Promise<void>;
 
-  async connectStorage({ loader }: { readonly loader: Loadable }) {
+  async connectStorage(refl: RefLoadable | RefBlockstore) {
+    const loader = coerceLoader(refl);
     if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
     this.loader = loader;
     const dataUrl = this.url.build().defParam(PARAM.STORE, "data").URI();
