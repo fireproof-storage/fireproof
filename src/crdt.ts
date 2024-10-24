@@ -33,7 +33,7 @@ import type {
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
-import { blockstoreFactory } from "./blockstore/transaction.js";
+// import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
 import { DatabaseOpts } from "./database.js";
 
@@ -59,7 +59,7 @@ export class CRDT<T extends DocTypes> {
     this.sthis = sthis;
     this.logger = ensureLogger(sthis, "CRDT");
     this.opts = opts;
-    this.blockstore = blockstoreFactory(sthis, {
+    this.blockstore = new EncryptedBlockstore(sthis, {
       applyMeta: async (meta: TransactionMeta) => {
         const crdtMeta = meta as CRDTMeta;
         if (!crdtMeta.head) throw this.logger.Error().Msg("missing head").AsError();
@@ -78,7 +78,7 @@ export class CRDT<T extends DocTypes> {
       meta: this.opts.meta,
       // threshold: this.opts.threshold,
     });
-    this.indexBlockstore = blockstoreFactory(sthis, {
+    this.indexBlockstore = new EncryptedBlockstore(sthis, {
       // name: opts.name,
       applyMeta: async (meta: TransactionMeta) => {
         const idxCarMeta = meta as IndexTransactionMeta;
