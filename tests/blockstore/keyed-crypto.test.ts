@@ -6,6 +6,7 @@ import * as dagCodec from "@ipld/dag-cbor";
 import { mockSuperThis } from "../helpers";
 
 describe("KeyedCryptoStore", () => {
+  let loader: bs.Loadable;
   let kb: rt.kb.KeyBag;
   // let logger: Logger;
   let baseUrl: URI;
@@ -30,18 +31,19 @@ describe("KeyedCryptoStore", () => {
       baseUrl = bs.getDefaultURI(sthis);
     }
     baseUrl = baseUrl.build().setParam(PARAM.NAME, "test").URI();
-    kb = await rt.kb.getKeyBag(sthis, {
-      // url: kbUrl,
-    });
+    kb = await rt.kb.getKeyBag(sthis, {});
+    loader = {
+      keyBag: async () => kb,
+    } as bs.Loadable;
   });
   it("no crypto", async () => {
     const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, keybag: kb }),
-      strt.makeMetaStore({ sthis, url, keybag: kb }),
-      strt.makeWALStore({ sthis, url, keybag: kb }),
+      strt.makeDataStore({ sthis, url, loader }),
+      strt.makeMetaStore({ sthis, url, loader }),
+      strt.makeWALStore({ sthis, url, loader }),
     ]) {
       const store = await pstore;
       // await store.start();
@@ -56,9 +58,9 @@ describe("KeyedCryptoStore", () => {
   it("create key", async () => {
     const strt = bs.toStoreRuntime(sthis);
     for (const pstore of [
-      strt.makeDataStore({ sthis, url: baseUrl, keybag: kb }),
-      strt.makeMetaStore({ sthis, url: baseUrl, keybag: kb }),
-      strt.makeWALStore({ sthis, url: baseUrl, keybag: kb }),
+      strt.makeDataStore({ sthis, url: baseUrl, loader }),
+      strt.makeMetaStore({ sthis, url: baseUrl, loader }),
+      strt.makeWALStore({ sthis, url: baseUrl, loader }),
     ]) {
       const store = await pstore; // await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
@@ -74,9 +76,9 @@ describe("KeyedCryptoStore", () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "@heute@").URI();
     const strt = bs.toStoreRuntime(sthis);
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, keybag: kb }),
-      strt.makeMetaStore({ sthis, url, keybag: kb }),
-      strt.makeWALStore({ sthis, url, keybag: kb }),
+      strt.makeDataStore({ sthis, url, loader }),
+      strt.makeMetaStore({ sthis, url, loader }),
+      strt.makeWALStore({ sthis, url, loader }),
     ]) {
       const store = await pstore;
       // await store.start();
@@ -99,9 +101,9 @@ describe("KeyedCryptoStore", () => {
     const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, key).URI();
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, keybag: kb }),
-      strt.makeMetaStore({ sthis, url, keybag: kb }),
-      strt.makeWALStore({ sthis, url, keybag: kb }),
+      strt.makeDataStore({ sthis, url, loader }),
+      strt.makeMetaStore({ sthis, url, loader }),
+      strt.makeWALStore({ sthis, url, loader }),
     ]) {
       // for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;

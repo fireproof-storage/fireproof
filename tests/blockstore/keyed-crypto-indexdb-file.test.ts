@@ -2,6 +2,7 @@ import { bs, PARAM, rt } from "@fireproof/core";
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockSuperThis } from "../helpers";
+import { Loadable } from "../../src/blockstore";
 
 describe("KeyBag indexdb and file", () => {
   let url: URI;
@@ -90,7 +91,7 @@ describe("KeyBag indexdb and file", () => {
 });
 
 describe("KeyedCryptoStore", () => {
-  let kb: rt.kb.KeyBag;
+  let loader: Loadable;
   // let logger: Logger;
   let baseUrl: URI;
   const sthis = mockSuperThis();
@@ -106,18 +107,18 @@ describe("KeyedCryptoStore", () => {
       baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", sthis.env.get("FP_STORAGE_URL"));
     }
     baseUrl = baseUrl.build().defParam(PARAM.NAME, "test").URI();
-    kb = await rt.kb.getKeyBag(sthis, {
-      url: kbUrl,
-    });
+    loader = {
+      keyBag: () => rt.kb.getKeyBag(sthis, { url: kbUrl }),
+    } as Loadable;
   });
   it("no crypto", async () => {
     const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, keybag: kb }),
-      strt.makeMetaStore({ sthis, url, keybag: kb }),
-      strt.makeWALStore({ sthis, url, keybag: kb }),
+      strt.makeDataStore({ sthis, url, loader }),
+      strt.makeMetaStore({ sthis, url, loader }),
+      strt.makeWALStore({ sthis, url, loader }),
     ]) {
       const store = await pstore;
       // await store.start();

@@ -23,7 +23,6 @@ import { ensureLogger, inplaceFilter, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
-import { KeyBag } from "../runtime/key-bag.js";
 import { Car2FPMsg, File2FPMsg, FPEnvelopeCar, FPEnvelopeFile, FPEnvelopeMeta, FPEnvelopeWAL } from "./fp-envelope.js";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { EventBlock } from "@web3-storage/pail/clock";
@@ -43,9 +42,9 @@ function guardVersion(url: URI): Result<URI> {
 
 export interface StoreOpts {
   readonly gateway: Gateway;
-  readonly keybag: KeyBag;
+  // readonly keybag: KeyBag;
   readonly gatewayInterceptor?: GatewayInterceptor;
-  readonly loader?: Loadable;
+  readonly loader: Loadable;
 }
 
 export abstract class BaseStoreImpl {
@@ -59,17 +58,20 @@ export abstract class BaseStoreImpl {
   readonly sthis: SuperThis;
   readonly gateway: Gateway;
   readonly realGateway: Gateway;
-  readonly keybag: KeyBag;
-  readonly loader?: Loadable;
+  // readonly keybag: KeyBag;
+  readonly opts: StoreOpts;
+  readonly loader: Loadable;
+  // readonly loader: Loadable;
   constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
     // this.name = name;
     this._url = url;
-    this.keybag = opts.keybag;
+    this.opts = opts;
+    // this.keybag = opts.keybag;
     this.loader = opts.loader;
     this.sthis = sthis;
     const name = this._url.getParam(PARAM.NAME);
     if (!name) {
-      throw logger.Error().Str("url", this._url.toString()).Msg("missing name").AsError();
+      throw logger.Error().Url(this._url).Msg("missing name").AsError();
     }
     this.logger = logger
       .With()
@@ -100,7 +102,7 @@ export abstract class BaseStoreImpl {
   }
 
   async keyedCrypto(): Promise<KeyedCrypto> {
-    return keyedCryptoFactory(this._url, this.keybag, this.sthis);
+    return keyedCryptoFactory(this._url, await this.loader.keyBag(), this.sthis);
   }
 
   async start(): Promise<Result<URI>> {
@@ -113,7 +115,7 @@ export abstract class BaseStoreImpl {
     }
     this._url = res.Ok();
     // add storekey to url
-    const kb = this.keybag;
+    const kb = await this.loader.keyBag();
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
       const idx = this._url.getParam(PARAM.INDEX);
       const storeKeyName = [this.url().getParam(PARAM.NAME)];
@@ -178,7 +180,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
         opts.gateway.subscribe?.(this.url(), async ({ payload: dbMetas }: FPEnvelopeMeta) => {
           this.logger.Debug().Msg("Received message from gateway");
           await Promise.all(
-            dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
+            dbMetas.map((dbMeta) => this.loader.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
           );
           this.updateParentsFromDbMetas(dbMetas);
         });
@@ -218,7 +220,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     }
     const dbMetas = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
     // const dbMetas = await this.handleByteHeads(fpMeta.payload);
-    await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
+    await this.loader.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
     this.updateParentsFromDbMetas(dbMetas);
     return dbMetas.map((m) => m.dbMeta);
   }
@@ -240,8 +242,8 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    // await this.loader?.handleDbMetasFromStore([meta]);
-    // this.loader?.taskManager?.eventsWeHandled.add(event.cid.toString());
+    // await this.loader.handleDbMetasFromStore([meta]);
+    // this.loader.taskManager?.eventsWeHandled.add(event.cid.toString());
     return res;
   }
 
@@ -391,7 +393,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async process() {
     await this.ready();
-    if (!this.loader?.remoteCarStore) return;
+    if (!this.loader.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
       try {
         await this._doProcess();
