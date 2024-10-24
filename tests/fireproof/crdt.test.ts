@@ -1,4 +1,4 @@
-import { CRDT, defaultWriteQueueOpts, LedgerOpts, toStoreURIRuntime } from "@fireproof/core";
+import { CRDT, LedgerOpts, toStoreURIRuntime } from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
@@ -15,7 +15,6 @@ describe("Fresh crdt", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -58,7 +57,6 @@ describe("CRDT with one record", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId()}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -114,7 +112,6 @@ describe("CRDT with a multi-write", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -185,7 +182,6 @@ describe("CRDT with two multi-writes", function () {
   beforeEach(async () => {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId()}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -239,7 +235,6 @@ describe("Compact a named CRDT with writes", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -301,7 +296,6 @@ describe("CRDT with an index", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -353,7 +347,6 @@ describe("Loader with a committed transaction", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, dbname),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -407,7 +400,6 @@ describe("Loader with two committed transactions", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
@@ -463,7 +455,6 @@ describe("Loader with many committed transactions", function () {
   beforeEach(async function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
-      writeQueue: defaultWriteQueueOpts({}),
       keyBag: defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader-many"),
       storeEnDe: bs.ensureStoreEnDeFile({}),

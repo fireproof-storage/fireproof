@@ -1,10 +1,10 @@
-import { Database, DocTypes } from "@fireproof/core";
+import { Ledger, DocTypes } from "@fireproof/core";
 
 import { AllDocsResult, useFireproof, UseAllDocs } from "./useFireproof.js";
 
 export interface TLUseAllDocs {
   <T extends DocTypes>(...args: Parameters<UseAllDocs>): AllDocsResult<T>;
-  database: Database;
+  database: Ledger;
 }
 
 function topLevelUseAllDocs(...args: Parameters<UseAllDocs>) {

@@ -1,21 +1,10 @@
-<<<<<<< HEAD
-import { Database, DatabaseFactory, PARAM, bs } from "@fireproof/core";
+
+import { Ledger, LedgerFactory, PARAM, bs, ensureSuperThis  } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
-<<<<<<< HEAD
-import { mockSuperThis, simpleCID } from "../helpers.js";
-import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
-import { Gateway } from "../../src/blockstore/gateway.js";
-import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope.js";
-=======
 import { mockSuperThis } from "../helpers.js";
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
-=======
-import { Database, bs, ensureSuperThis } from "@fireproof/core";
 import { URI } from "@adviser/cement";
 
-import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
->>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {
@@ -40,7 +29,7 @@ import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im
 // }
 
 describe("noop Gateway", function () {
-  let db: Database;
+  let db: Ledger;
   let carStore: DataStore;
   let metaStore: MetaStore;
   let fileStore: DataStore;
@@ -58,7 +47,7 @@ describe("noop Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = DatabaseFactory("test-gateway-" + sthis.nextId().str, {
+    db = LedgerFactory("test-gateway-" + sthis.nextId().str, {
       logger: sthis.logger,
     });
 
@@ -252,13 +241,9 @@ describe("noop Gateway", function () {
         fileOperations: [],
       },
     });
-<<<<<<< HEAD
-    expect(walPutResult.Ok()).toBeFalsy();
-=======
     const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
     expect(walPutResult?.Ok()).toBeFalsy();
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
   });
 
   it("should get data from WAL Gateway", async function () {
@@ -293,20 +278,12 @@ describe("noop Gateway", function () {
       type: FPEnvelopeType.WAL,
       payload: ref,
     });
-<<<<<<< HEAD
-    const walGetResult = await walGateway.get(walUrl.Ok());
-    expect(walGetResult.isOk()).toBeTruthy();
-    // const okResult = walGetResult.Ok();
-    // const decodedResult = sthis.txt.decode(okResult);
-    expect(ref).toEqual(walGetResult.Ok().payload);
-=======
     const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway?.put(walUrl?.Ok(), walTestData);
     const walGetResult = await walGateway?.get(walUrl?.Ok());
     const okResult = walGetResult?.Ok();
     const decodedResult = sthis.txt.decode(okResult);
     expect(decodedResult).toEqual(walTestDataString);
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
   });
 
   it("should delete data from WAL Gateway", async function () {
@@ -335,15 +312,10 @@ describe("noop Gateway", function () {
       type: FPEnvelopeType.WAL,
       payload: ref,
     });
-<<<<<<< HEAD
-    const walDeleteResult = await walGateway.delete(walUrl.Ok());
-    expect(walDeleteResult.isOk()).toBeTruthy();
-=======
     const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway?.put(walUrl?.Ok(), walTestData);
     const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
     expect(walDeleteResult?.Ok()).toBeFalsy();
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
   });
 
   it("should close WAL Gateway", async function () {
@@ -397,27 +369,20 @@ describe("noop Gateway", function () {
 });
 
 describe("noop Gateway subscribe", function () {
-  let db: Database;
+  let db: Ledger;
 
   let metaStore: MetaStore;
 
-<<<<<<< HEAD
-  let metaGateway: Gateway;
-=======
   let metaGateway: ExtendedGateway;
-<<<<<<< HEAD
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
-  const sthis = mockSuperThis();
-=======
+
   const sthis = ensureSuperThis();
->>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    db = DatabaseFactory("test-gateway-" + sthis.nextId().str);
+    db = LedgerFactory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
     metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
@@ -433,16 +398,6 @@ describe("noop Gateway subscribe", function () {
     const p = new Promise<void>((r) => {
       resolve = r;
     });
-<<<<<<< HEAD
-    if (metaGateway.subscribe) {
-      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: FPEnvelopeMeta) => {
-        // const decodedData = sthis.txt.decode(data);
-        expect(data.payload).toContain("[]");
-        didCall = true;
-        resolve();
-      })) as bs.UnsubscribeResult;
-      expect(metaSubscribeResult.isOk()).toBeTruthy();
-=======
     const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
       const decodedData = sthis.txt.decode(data);
       expect(decodedData).toContain("[]");
@@ -451,7 +406,6 @@ describe("noop Gateway subscribe", function () {
     });
     if (!metaSubscribeResult?.isErr()) {
       expect(metaSubscribeResult?.Ok()).toBeTruthy();
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
       const ok = await db.put({ _id: "key1", hello: "world1" });
       expect(ok).toBeTruthy();
       expect(ok.id).toBe("key1");
@@ -462,7 +416,7 @@ describe("noop Gateway subscribe", function () {
 });
 
 describe("Gateway", function () {
-  let db: Database;
+  let db: Ledger;
   // let carStore: ExtendedStore;
   let metaStore: MetaStore;
   // let fileStore: ExtendedStore;
@@ -471,22 +425,14 @@ describe("Gateway", function () {
   let metaGateway: Gateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
-<<<<<<< HEAD
-<<<<<<< HEAD
-  // const sthis = mockSuperThis();
-=======
   const sthis = mockSuperThis();
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
-=======
-  const sthis = ensureSuperThis();
->>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
   afterEach(async function () {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    db = DatabaseFactory("test-gateway-" + mockSuperThis().nextId().str);
+    db = LedgerFactory("test-gateway-" + mockSuperThis().nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
@@ -505,24 +451,12 @@ describe("Gateway", function () {
   });
 
   it("should get data from Meta Gateway", async function () {
-<<<<<<< HEAD
-    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
-    await metaGateway.start(metaStore.url());
-    const metaGetResult = await metaGateway.get(metaUrl.Ok());
-    expect(metaGetResult.isOk()).toBeTruthy();
-    const meta = metaGetResult.Ok().payload as bs.DbMetaEvent[];
-    // const metaGetResultOk = metaGetResult.Ok();
-    // const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
-    expect(meta.length).toBe(1);
-    expect(Object.keys(meta[0])).toEqual(["eventCid", "parents", "dbMeta"]);
-=======
     const metaUrl = await metaGateway?.buildUrl(metaStore?._url, "main");
     await metaGateway?.start(metaStore?._url);
     const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
     const metaGetResultOk = metaGetResult?.Ok();
     const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
     expect(decodedMetaGetResultOk).toContain("parents");
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
   });
 
   it("should delete data from Meta Gateway", async function () {

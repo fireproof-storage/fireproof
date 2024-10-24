@@ -1,16 +1,30 @@
-import { buildBlobFiles, FileWithCid } from "../helpers.js";
-import { bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles, ensureSuperThis } from "@fireproof/core";
+import { URI } from "@adviser/cement";
+import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
+import {
+  bs,
+  Ledger,
+  DocResponse,
+  DocFileMeta,
+  DocWithId,
+  DocFiles,
+  toStoreURIRuntime,
+  keyConfigOpts,
+  LedgerFactory,
+  LedgerShell,
+} from "@fireproof/core";
+import { fileGatewayFactoryItem } from "../../src/blockstore/register-store-protocol.js";
+import { FILESTORE_VERSION } from "../../src/runtime/index.js";
 
-describe("basic Database", () => {
-  let db: Database;
-  const sthis = ensureSuperThis();
+describe("basic Ledger", () => {
+  let db: Ledger;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async () => {
     await sthis.start();
-    db = DatabaseFactory(undefined, {
+    db = LedgerFactory(undefined, {
       logger: sthis.logger,
     });
   });
@@ -36,19 +50,19 @@ describe("basic Database", () => {
   });
 });
 
-describe("basic Database with record", function () {
+describe("basic Ledger with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: Database;
-  const sthis = ensureSuperThis();
+  let db: LedgerShell;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("factory-name") as DatabaseShell;
+    db = LedgerFactory("factory-name") as LedgerShell;
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
@@ -80,7 +94,7 @@ describe("basic Database with record", function () {
     expect(rows[0].value._id).toBe("hello");
   });
   it("is not persisted", async function () {
-    const db2 = DatabaseFactory("factory-name") as DatabaseShell;
+    const db2 = LedgerFactory("factory-name") as LedgerShell;
     const { rows } = await db2.changes([]);
     expect(rows.length).toBe(1);
     expect(db2.ref).toBe(db.ref);
@@ -90,19 +104,19 @@ describe("basic Database with record", function () {
   });
 });
 
-describe("named Database with record", function () {
+describe("named Ledger with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: Database;
-  const sthis = ensureSuperThis();
+  let db: Ledger;
+  const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-db-name");
+    db = LedgerFactory("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
     const ok = await db.put(doc);
@@ -204,13 +218,13 @@ describe("named Database with record", function () {
   });
 });
 
-// describe('basic Database parallel writes / public', function () {
-//   /** @type {Database} */
+// describe('basic Ledger parallel writes / public', function () {
+//   /** @type {Ledger} */
 //   let db
 //   const writes = []
 //   beforeEach(async function () {
 //     await resetDirectory(dataDir, 'test-parallel-writes')
-//     db = new Database('test-parallel-writes', { public: true })
+//     db = new Ledger('test-parallel-writes', { public: true })
 //     /** @type {Doc} */
 //     for (let i = 0; i < 10; i++) {
 //       const doc = { _id: `id-${i}`, hello: 'world' }
@@ -219,7 +233,7 @@ describe("named Database with record", function () {
 //     await Promise.all(writes)
 //   })
 
-describe("basic Ledger parallel writes / public ordered", () => {
+describe("basic Ledger parallel writes / public", function () {
   let db: Ledger;
   const writes: Promise<DocResponse>[] = [];
   const sthis = ensureSuperThis();
@@ -229,7 +243,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = LedgerFactory("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
+    db = LedgerFactory("test-parallel-writes", { public: true });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -333,8 +347,8 @@ describe("basic Ledger parallel writes / public", () => {
   });
 });
 
-describe("basic Database with subscription", function () {
-  let db: Database;
+describe("basic Ledger with subscription", function () {
+  let db: Ledger;
   let didRun: number;
   let unsubscribe: () => void;
   let lastDoc: DocWithId<NonNullable<unknown>>;
@@ -346,7 +360,7 @@ describe("basic Database with subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("factory-name");
+    db = LedgerFactory("factory-name");
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -379,8 +393,8 @@ describe("basic Database with subscription", function () {
   });
 });
 
-describe("basic Database with no update subscription", function () {
-  let db: Database;
+describe("basic Ledger with no update subscription", function () {
+  let db: Ledger;
   let didRun: number;
   let unsubscribe: () => void;
   const sthis = ensureSuperThis();
@@ -390,7 +404,7 @@ describe("basic Database with no update subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("factory-name");
+    db = LedgerFactory("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
       didRun++;
@@ -416,7 +430,7 @@ describe("basic Database with no update subscription", function () {
 });
 
 describe("database with files input", () => {
-  let db: Database;
+  let db: Ledger;
   let imagefiles: FileWithCid[] = [];
   let result: DocResponse;
   const sthis = ensureSuperThis();
@@ -428,7 +442,7 @@ describe("database with files input", () => {
   beforeEach(async function () {
     await sthis.start();
     imagefiles = await buildBlobFiles();
-    db = DatabaseFactory("fireproof-with-images");
+    db = LedgerFactory("fireproof-with-images");
     const doc = {
       _id: "images-main",
       type: "files",

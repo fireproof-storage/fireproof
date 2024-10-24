@@ -1,6 +1,6 @@
 import type {
   ConfigOpts,
-  Database,
+  Ledger,
   DocFragment,
   DocResponse,
   DocSet,
@@ -55,7 +55,7 @@ export type UseDocumentInitialDocOrFn<T extends DocTypes> = DocSet<T> | (() => D
 export type UseDocument = <T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>) => UseDocumentResult<T>;
 
 export interface UseFireproof {
-  readonly database: Database;
+  readonly database: Ledger;
   /**
    * ## Summary
    *
@@ -170,7 +170,7 @@ export const FireproofCtx = {} as UseFireproof;
  * custom database.
  *
  */
-export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
+export function useFireproof(name: string | Ledger = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
   function useDocument<T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
