@@ -211,7 +211,7 @@ const result = await database().query("age", { range: [40, 52] })
 
 Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics) You can [find a real-world JavaScript app here.](https://github.com/mlc-ai/web-stable-diffusion/pull/52)
 
-## Database Features
+## Ledger Features
 
 The core features of the database are available on any platform in a compact JavaScript package and a foundational cloud storage service.
 

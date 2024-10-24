@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { Database, DocRecord } from "@fireproof/core";
+import { Ledger, DocRecord } from "@fireproof/core";
 
 import { LiveQueryResult, useFireproof, UseLiveQuery } from "./useFireproof";
 
 export interface TLUseLiveQuery {
   <T extends DocTypes>(...args: Parameters<UseLiveQuery>): LiveQueryResult<T>;
-  database: Database;
+  database: Ledger;
 }
 
 function topLevelUseLiveQuery(...args: Parameters<UseLiveQuery>) {

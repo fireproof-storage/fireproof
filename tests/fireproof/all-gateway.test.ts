@@ -1,4 +1,4 @@
-import { Database, DatabaseFactory, PARAM, bs } from "@fireproof/core";
+import { Ledger, LedgerFactory, PARAM, bs } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { mockSuperThis, simpleCID } from "../helpers.js";
@@ -29,7 +29,7 @@ import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope
 // }
 
 describe("noop Gateway", function () {
-  let db: Database;
+  let db: Ledger;
   let carStore: DataStore;
   let metaStore: MetaStore;
   let fileStore: DataStore;
@@ -45,7 +45,7 @@ describe("noop Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = DatabaseFactory("test-gateway-" + sthis.nextId().str, {
+    db = LedgerFactory("test-gateway-" + sthis.nextId().str, {
       logger: sthis.logger,
     });
 
@@ -362,7 +362,7 @@ describe("noop Gateway", function () {
 });
 
 describe("noop Gateway subscribe", function () {
-  let db: Database;
+  let db: Ledger;
 
   let metaStore: MetaStore;
 
@@ -374,7 +374,7 @@ describe("noop Gateway subscribe", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = DatabaseFactory("test-gateway-" + sthis.nextId().str);
+    db = LedgerFactory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
     metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
@@ -408,7 +408,7 @@ describe("noop Gateway subscribe", function () {
 });
 
 describe("Gateway", function () {
-  let db: Database;
+  let db: Ledger;
   // let carStore: ExtendedStore;
   let metaStore: MetaStore;
   // let fileStore: ExtendedStore;
@@ -424,7 +424,7 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = DatabaseFactory("test-gateway-" + mockSuperThis().nextId().str);
+    db = LedgerFactory("test-gateway-" + mockSuperThis().nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");

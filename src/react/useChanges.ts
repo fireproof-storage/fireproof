@@ -1,10 +1,10 @@
-import { Database, DocTypes } from "@fireproof/core";
+import { Ledger, DocTypes } from "@fireproof/core";
 
 import { ChangesResult, useFireproof, UseChanges } from "./useFireproof";
 
 export interface TLUseChanges {
   <T extends DocTypes>(...args: Parameters<UseChanges>): ChangesResult<T>;
-  database: Database;
+  database: Ledger;
 }
 
 function topLevelUseChanges(...args: Parameters<UseChanges>) {
