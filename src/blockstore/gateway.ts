@@ -1,11 +1,13 @@
 import { Result, URI } from "@adviser/cement";
 import { NotFoundError } from "../utils.js";
+import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
+import { Loadable } from "./types.js";
 
 export interface GatewayOpts {
   readonly gateway: Gateway;
 }
 
-export type GetResult = Result<Uint8Array, NotFoundError | Error>;
+export type GetResult<S> = Result<FPEnvelope<S>, NotFoundError | Error>;
 export type VoidResult = Result<void>;
 
 export interface TestGateway {
@@ -17,17 +19,17 @@ export type UnsubscribeResult = Result<() => void>;
 export interface Gateway {
   // all the methods never throw!
   // an error is reported as a Result
-  buildUrl(baseUrl: URI, key: string): Promise<Result<URI>>;
+  buildUrl(baseUrl: URI, key: string, loader?: Loadable): Promise<Result<URI>>;
   // start updates URL --> hate this side effect
-  start(baseUrl: URI): Promise<Result<URI>>;
-  close(baseUrl: URI): Promise<VoidResult>;
-  destroy(baseUrl: URI): Promise<VoidResult>;
-  put(url: URI, body: Uint8Array): Promise<VoidResult>;
+  start(baseUrl: URI, loader?: Loadable): Promise<Result<URI>>;
+  close(baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
+  destroy(baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
+  put<T>(url: URI, body: FPEnvelope<T>, loader?: Loadable): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
-  get(url: URI): Promise<GetResult>;
-  delete(url: URI): Promise<VoidResult>;
+  get<S>(url: URI, loader?: Loadable): Promise<GetResult<S>>;
+  delete(url: URI, loader?: Loadable): Promise<VoidResult>;
   // be notified of remote meta
-  subscribe?(url: URI, callback: (meta: Uint8Array) => void): Promise<UnsubscribeResult>;
+  subscribe?(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>, loader?: Loadable): Promise<UnsubscribeResult>;
 }
 
 export interface GatewayReturn<O, T> {
@@ -56,17 +58,17 @@ export interface GatewayDestroyOp {
 }
 export type GatewayDestroyReturn = GatewayReturn<GatewayDestroyOp, VoidResult>;
 
-export interface GatewayPutOp {
+export interface GatewayPutOp<T> {
   readonly url: URI;
-  readonly body: Uint8Array;
+  readonly body: FPEnvelope<T>;
 }
 
-export type GatewayPutReturn = GatewayReturn<GatewayPutOp, VoidResult>;
+export type GatewayPutReturn<T> = GatewayReturn<GatewayPutOp<T>, VoidResult>;
 
 export interface GatewayGetOp {
   readonly url: URI;
 }
-export type GatewayGetReturn = GatewayReturn<GatewayGetOp, GetResult>;
+export type GatewayGetReturn<S> = GatewayReturn<GatewayGetOp, GetResult<S>>;
 
 export interface GatewayDeleteOp {
   readonly url: URI;
@@ -75,18 +77,18 @@ export type GatewayDeleteReturn = GatewayReturn<GatewayDeleteOp, VoidResult>;
 
 export interface GatewaySubscribeOp {
   readonly url: URI;
-  readonly callback: (meta: Uint8Array) => void;
+  readonly callback: (meta: FPEnvelopeMeta) => Promise<void>;
 }
 
 export type GatewaySubscribeReturn = GatewayReturn<GatewaySubscribeOp, UnsubscribeResult>;
 
 export interface GatewayInterceptor {
-  buildUrl(baseUrl: URI, key: string): Promise<Result<GatewayBuildUrlReturn>>;
-  start(baseUrl: URI): Promise<Result<GatewayStartReturn>>;
-  close(baseUrl: URI): Promise<Result<GatewayCloseReturn>>;
-  delete(baseUrl: URI): Promise<Result<GatewayDeleteReturn>>;
-  destroy(baseUrl: URI): Promise<Result<GatewayDestroyReturn>>;
-  put(url: URI, body: Uint8Array): Promise<Result<GatewayPutReturn>>;
-  get(url: URI): Promise<Result<GatewayGetReturn>>;
-  subscribe(url: URI, callback: (meta: Uint8Array) => void): Promise<Result<GatewaySubscribeReturn>>;
+  buildUrl(baseUrl: URI, key: string, loader: Loadable): Promise<Result<GatewayBuildUrlReturn>>;
+  start(baseUrl: URI, loader: Loadable): Promise<Result<GatewayStartReturn>>;
+  close(baseUrl: URI, loader: Loadable): Promise<Result<GatewayCloseReturn>>;
+  delete(baseUrl: URI, loader: Loadable): Promise<Result<GatewayDeleteReturn>>;
+  destroy(baseUrl: URI, loader: Loadable): Promise<Result<GatewayDestroyReturn>>;
+  put<T>(url: URI, body: FPEnvelope<T>, loader: Loadable): Promise<Result<GatewayPutReturn<T>>>;
+  get<S>(url: URI, loader: Loadable): Promise<Result<GatewayGetReturn<S>>>;
+  subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>, loader: Loadable): Promise<Result<GatewaySubscribeReturn>>;
 }

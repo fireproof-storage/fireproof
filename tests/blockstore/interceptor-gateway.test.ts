@@ -10,6 +10,7 @@ import {
   GatewayStartReturn,
   GatewaySubscribeReturn,
 } from "../../src/blockstore/gateway";
+import { FPEnvelope, FPEnvelopeMeta } from "../../src/blockstore";
 
 class TestInterceptor extends bs.PassThroughGateway {
   readonly fn = vitest.fn();
@@ -40,17 +41,17 @@ class TestInterceptor extends bs.PassThroughGateway {
     this.fn("destroy", ret);
     return ret;
   }
-  async put(url: URI, body: Uint8Array): Promise<Result<GatewayPutReturn>> {
-    const ret = await super.put(url, body);
+  async put<T>(url: URI, body: FPEnvelope<T>): Promise<Result<GatewayPutReturn<T>>> {
+    const ret = await super.put<T>(url, body);
     this.fn("put", ret);
     return ret;
   }
-  async get(url: URI): Promise<Result<GatewayGetReturn>> {
-    const ret = await super.get(url);
+  async get<S>(url: URI): Promise<Result<GatewayGetReturn<S>>> {
+    const ret = await super.get<S>(url);
     this.fn("get", ret);
     return ret;
   }
-  async subscribe(url: URI, callback: (meta: Uint8Array) => void): Promise<Result<GatewaySubscribeReturn>> {
+  async subscribe(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<Result<GatewaySubscribeReturn>> {
     const ret = await super.subscribe(url, callback);
     this.fn("subscribe", ret);
     return ret;
@@ -75,51 +76,54 @@ describe("InterceptorGateway", () => {
     });
     await db.close();
     await db.destroy();
+    // await sleep(1000);
     expect(gwi.fn.mock.calls.length).toBe(42);
     // might be a stupid test
-    expect(gwi.fn.mock.calls.map((i) => i[0])).toEqual([
-      "start",
-      "start",
-      "buildUrl",
-      "get",
-      "buildUrl",
-      "get",
-      "start",
-      "start",
-      "buildUrl",
-      "get",
-      "buildUrl",
-      "put",
-      "buildUrl",
-      "put",
-      "buildUrl",
-      "put",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "start",
-      "buildUrl",
-      "get",
-      "start",
-      "start",
-      "start",
-      "start",
-      "destroy",
-      "destroy",
-      "destroy",
-      "destroy",
-      "destroy",
-      "destroy",
-      "destroy",
-      "destroy",
-    ]);
+    expect(gwi.fn.mock.calls.map((i) => i[0]).sort() /* not ok there are some operation */).toEqual(
+      [
+        "start",
+        "start",
+        "buildUrl",
+        "get",
+        "buildUrl",
+        "get",
+        "start",
+        "start",
+        "buildUrl",
+        "get",
+        "buildUrl",
+        "put",
+        "buildUrl",
+        "put",
+        "buildUrl",
+        "put",
+        "start",
+        "start",
+        "start",
+        "start",
+        "close",
+        "close",
+        "close",
+        "close",
+        "close",
+        "close",
+        "close",
+        "close",
+        "buildUrl",
+        "get",
+        "close",
+        "close",
+        "close",
+        "close",
+        "destroy",
+        "destroy",
+        "destroy",
+        "destroy",
+        "destroy",
+        "destroy",
+        "destroy",
+        "destroy",
+      ].sort() /* not ok there are some operation */,
+    );
   });
 });

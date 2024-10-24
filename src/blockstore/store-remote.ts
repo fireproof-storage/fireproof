@@ -30,12 +30,12 @@ import { SuperThis } from "../types.js";
 //   // just for explaining the concept
 // }
 
-export async function RemoteDataStore(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+export async function RemoteDataStore(sthis: SuperThis, url: URI, opts: StoreOpts) {
   const ds = new DataStoreImpl(sthis, url, opts);
   await ds.start();
   return ds;
 }
-export async function RemoteMetaStore(sthis: SuperThis, name: string, url: URI, opts: StoreOpts) {
+export async function RemoteMetaStore(sthis: SuperThis, url: URI, opts: StoreOpts) {
   const ms = new MetaStoreImpl(sthis, url, opts);
   await ms.start();
   return ms;

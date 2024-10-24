@@ -1,6 +1,4 @@
-import { format, parse, ToString } from "@ipld/dag-json";
-import { Logger, ResolveOnce, Result, URI, exception2Result } from "@adviser/cement";
-
+import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 import type {
   AnyBlock,
   AnyLink,
@@ -10,27 +8,29 @@ import type {
   DbMeta,
   WALStore as WALStore,
   WALState,
-  KeyedCrypto,
-  MetaStore,
   LoadHandler,
-  CarClockHead,
-  CarClockLink,
+  KeyedCrypto,
   Loadable,
+  CarClockHead,
+  DbMetaBinary,
+  CarClockLink,
+  DbMetaEvent,
+  MetaStore,
 } from "./types.js";
 import { Falsy, PARAM, StoreType, SuperThis, throwFalsy } from "../types.js";
 import { Gateway, GatewayInterceptor } from "./gateway.js";
-import { ensureLogger, isNotFoundError } from "../utils.js";
-// import { carLogIncludesGroup } from "./loader.js";
+import { ensureLogger, inplaceFilter, isNotFoundError } from "../utils.js";
+import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
-import { KeyBag } from "../runtime/key-bag.js";
-import { FragmentGateway } from "./fragment-gateway.js";
-import { createDbMetaEventBlock, decodeGatewayMetaBytesToDbMeta, encodeEventsWithParents } from "./meta-key-helper.js";
-
+import { Car2FPMsg, File2FPMsg, FPEnvelopeCar, FPEnvelopeFile, FPEnvelopeMeta, FPEnvelopeWAL } from "./fp-envelope.js";
+import { EventView } from "@web3-storage/pail/clock/api";
+import { EventBlock } from "@web3-storage/pail/clock";
+import { format } from "@ipld/dag-json";
+// import { createDbMetaEventBlock } from "./meta-key-helper.js";
 import pRetry from "p-retry";
 import pMap from "p-map";
-
-import { carLogIncludesGroup } from "./loader.js";
+import { Link } from "multiformats";
 import { InterceptorGateway } from "./interceptor-gateway.js";
 
 function guardVersion(url: URI): Result<URI> {
@@ -42,12 +42,12 @@ function guardVersion(url: URI): Result<URI> {
 
 export interface StoreOpts {
   readonly gateway: Gateway;
+  // readonly keybag: KeyBag;
   readonly gatewayInterceptor?: GatewayInterceptor;
-  readonly keybag: KeyBag;
-  readonly loader?: Loadable;
+  readonly loader: Loadable;
 }
 
-abstract class BaseStoreImpl {
+export abstract class BaseStoreImpl {
   // should be injectable
 
   abstract readonly storeType: StoreType;
@@ -56,29 +56,31 @@ abstract class BaseStoreImpl {
   private _url: URI;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-  readonly gateway: InterceptorGateway;
+  readonly gateway: Gateway;
   readonly realGateway: Gateway;
-  readonly keybag: KeyBag;
-  readonly name: string;
-  readonly loader?: Loadable;
+  // readonly keybag: KeyBag;
+  readonly opts: StoreOpts;
+  readonly loader: Loadable;
+  // readonly loader: Loadable;
   constructor(sthis: SuperThis, url: URI, opts: StoreOpts, logger: Logger) {
     // this.name = name;
     this._url = url;
-    this.keybag = opts.keybag;
+    this.opts = opts;
+    // this.keybag = opts.keybag;
     this.loader = opts.loader;
     this.sthis = sthis;
     const name = this._url.getParam(PARAM.NAME);
     if (!name) {
-      throw logger.Error().Str("url", this._url.toString()).Msg("missing name").AsError();
+      throw logger.Error().Url(this._url).Msg("missing name").AsError();
     }
-    this.name = name;
     this.logger = logger
       .With()
       .Str("this", this.sthis.nextId().str)
       .Ref("url", () => this._url.toString())
+      // .Str("name", name)
       .Logger();
     this.realGateway = opts.gateway;
-    this.gateway = new InterceptorGateway(this.sthis, new FragmentGateway(this.sthis, opts.gateway), opts.gatewayInterceptor);
+    this.gateway = new InterceptorGateway(this.sthis, opts.gateway, opts.gatewayInterceptor);
   }
 
   url(): URI {
@@ -100,23 +102,23 @@ abstract class BaseStoreImpl {
   }
 
   async keyedCrypto(): Promise<KeyedCrypto> {
-    return keyedCryptoFactory(this._url, this.keybag, this.sthis);
+    return keyedCryptoFactory(this._url, await this.loader.keyBag(), this.sthis);
   }
 
   async start(): Promise<Result<URI>> {
     this.logger.Debug().Str("storeType", this.storeType).Msg("starting-gateway-pre");
     this._url = this._url.build().setParam(PARAM.STORE, this.storeType).URI();
-    const res = await this.gateway.start(this._url);
+    const res = await this.gateway.start(this._url, this.loader);
     if (res.isErr()) {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
       return res as Result<URI>;
     }
     this._url = res.Ok();
     // add storekey to url
-    const kb = await this.keybag;
+    const kb = await this.loader.keyBag();
     const skRes = await kb.ensureKeyFromUrl(this._url, () => {
       const idx = this._url.getParam(PARAM.INDEX);
-      const storeKeyName = [this.name];
+      const storeKeyName = [this.url().getParam(PARAM.NAME)];
       if (idx) {
         storeKeyName.push(idx);
       }
@@ -147,6 +149,20 @@ abstract class BaseStoreImpl {
   }
 }
 
+export async function createDbMetaEvent(sthis: SuperThis, dbMeta: DbMeta, parents: CarClockHead): Promise<DbMetaEvent> {
+  const event = await EventBlock.create<DbMetaBinary>(
+    {
+      dbMeta: sthis.txt.encode(format(dbMeta)),
+    },
+    parents as unknown as Link<EventView<DbMetaBinary>, number, number, 1>[],
+  );
+  return {
+    eventCid: event.cid as CarClockLink,
+    dbMeta,
+    parents,
+  };
+}
+
 export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   readonly storeType = "meta";
   readonly subscribers = new Map<string, LoadHandler[]>();
@@ -161,19 +177,22 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     if (/*this.remote && */ opts.gateway.subscribe) {
       this.onStarted(async () => {
         this.logger.Debug().Str("url", this.url().toString()).Msg("Subscribing to the gateway");
-        opts.gateway.subscribe?.(this.url(), async (message: Uint8Array) => {
-          this.logger.Debug().Msg("Received message from gateway");
-          const dbMetas = await decodeGatewayMetaBytesToDbMeta(this.sthis, message);
-          await Promise.all(
-            dbMetas.map((dbMeta) => this.loader?.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
-          );
-          this.updateParentsFromDbMetas(dbMetas);
-        });
+        opts.gateway.subscribe?.(
+          this.url(),
+          async ({ payload: dbMetas }: FPEnvelopeMeta) => {
+            this.logger.Debug().Msg("Received message from gateway");
+            await Promise.all(
+              dbMetas.map((dbMeta) => this.loader.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
+            );
+            this.updateParentsFromDbMetas(dbMetas);
+          },
+          this.loader,
+        );
       });
     }
   }
 
-  private updateParentsFromDbMetas(dbMetas: { eventCid: CarClockLink; parents: string[] }[]) {
+  private updateParentsFromDbMetas(dbMetas: DbMetaEvent[]) {
     const cids = dbMetas.map((m) => m.eventCid);
     const dbMetaParents = dbMetas.flatMap((m) => m.parents);
     const uniqueParentsMap = new Map([...this.parents, ...cids].map((p) => [p.toString(), p]));
@@ -181,25 +200,31 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
     this.parents = Array.from(uniqueParentsMap.values()).filter((p) => !dbMetaParentsSet.has(p.toString()));
   }
 
-  async handleByteHeads(byteHeads: Uint8Array) {
-    return await decodeGatewayMetaBytesToDbMeta(this.sthis, byteHeads);
-  }
+  // async handleByteHeads(byteHeads: Uint8Array) {
+  //   // return await decodeGatewayMetaBytesToDbMeta(this.sthis, byteHeads);
+  //   const rDbMeta = await fpDeserialize(this.sthis, byteHeads, this.url());
+  //   if (rDbMeta.isErr()) {
+  //     throw this.logger.Error().Err(rDbMeta).Msg("error deserializing").AsError();
+  //   }
+  //   return (rDbMeta.Ok() as FPEnvelopeMeta).payload;
+  // }
 
   async load(): Promise<DbMeta[] | Falsy> {
     const branch = "main";
-    const url = await this.gateway.buildUrl(this.url(), branch);
+    const url = await this.gateway.buildUrl(this.url(), branch, this.loader);
     if (url.isErr()) {
       throw this.logger.Error().Result("buildUrl", url).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
-    const bytes = await this.gateway.get(url.Ok());
-    if (bytes.isErr()) {
-      if (isNotFoundError(bytes)) {
+    const rfpEnv = await this.gateway.get(url.Ok(), this.loader);
+    if (rfpEnv.isErr()) {
+      if (isNotFoundError(rfpEnv)) {
         return undefined;
       }
-      throw this.logger.Error().Url(url.Ok()).Result("bytes:", bytes).Msg("gateway get").AsError();
+      throw this.logger.Error().Url(url.Ok()).Err(rfpEnv).Msg("gateway get").AsError();
     }
-    const dbMetas = await this.handleByteHeads(bytes.Ok());
-    await this.loader?.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
+    const dbMetas = (rfpEnv.Ok() as FPEnvelopeMeta).payload;
+    // const dbMetas = await this.handleByteHeads(fpMeta.payload);
+    await this.loader.handleDbMetasFromStore(dbMetas.map((m) => m.dbMeta)); // the old one didn't await
     this.updateParentsFromDbMetas(dbMetas);
     return dbMetas.map((m) => m.dbMeta);
   }
@@ -207,89 +232,113 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
   async save(meta: DbMeta, branch?: string): Promise<Result<void>> {
     branch = branch || "main";
     this.logger.Debug().Str("branch", branch).Any("meta", meta).Msg("saving meta");
-    const event = await createDbMetaEventBlock(this.sthis, meta, this.parents);
-    const bytes = await encodeEventsWithParents(this.sthis, [event], this.parents);
-    const url = await this.gateway.buildUrl(this.url(), branch);
+
+    // const fpMetas = await encodeEventsWithParents(this.sthis, [event], this.parents);
+    const url = await this.gateway.buildUrl(this.url(), branch, this.loader);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("branch", branch).Msg("got error from gateway.buildUrl").AsError();
     }
-    this.parents = [event.cid];
-    const res = await this.gateway.put(url.Ok(), bytes);
+    const dbMetaEvent = await createDbMetaEvent(this.sthis, meta, this.parents);
+    const res = await this.gateway.put(
+      url.Ok(),
+      {
+        type: "meta",
+        payload: [dbMetaEvent],
+      } as FPEnvelopeMeta,
+      this.loader,
+    );
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    // await this.loader?.handleDbMetasFromStore([meta]);
-    // this.loader?.taskManager?.eventsWeHandled.add(event.cid.toString());
+    // await this.loader.handleDbMetasFromStore([meta]);
+    // this.loader.taskManager?.eventsWeHandled.add(event.cid.toString());
     return res;
   }
 
   async close(): Promise<Result<void>> {
-    await this.gateway.close(this.url());
+    await this.gateway.close(this.url(), this.loader);
     this._onClosed.forEach((fn) => fn());
     return Result.Ok(undefined);
   }
   async destroy(): Promise<Result<void>> {
     this.logger.Debug().Msg("destroy");
-    return this.gateway.destroy(this.url());
+    return this.gateway.destroy(this.url(), this.loader);
   }
 }
 
 export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   readonly storeType = "data";
-  // readonly tag: string = "car-base";
 
   constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
-    super(
-      sthis,
-      url,
-      {
-        ...opts,
-      },
-      ensureLogger(sthis, "DataStoreImpl"),
-    );
+    super(sthis, url, { ...opts }, ensureLogger(sthis, "DataStoreImpl"));
   }
 
   async load(cid: AnyLink): Promise<AnyBlock> {
     this.logger.Debug().Any("cid", cid).Msg("loading");
-    const url = await this.gateway.buildUrl(this.url(), cid.toString());
+    const url = await this.gateway.buildUrl(this.url(), cid.toString(), this.loader);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Str("cid", cid.toString()).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.get(url.Ok());
+    const res = await this.gateway.get(url.Ok(), this.loader);
     if (res.isErr()) {
       throw res.Err();
     }
-    return { cid, bytes: res.Ok() };
+    const fpenv = res.Ok() as FPEnvelopeFile | FPEnvelopeCar;
+    switch (fpenv.type) {
+      case "car":
+        return { cid, bytes: fpenv.payload };
+      case "file":
+        return { cid, bytes: fpenv.payload };
+      default:
+        throw this.logger.Error().Msg("unexpected type").AsError();
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async save(car: AnyBlock, opts?: DataSaveOpts): Promise</*AnyLink | */ void> {
     this.logger.Debug().Any("cid", car.cid.toString()).Msg("saving");
-    const url = await this.gateway.buildUrl(this.url(), car.cid.toString());
+    const url = await this.gateway.buildUrl(this.url(), car.cid.toString(), this.loader);
     if (url.isErr()) {
       throw this.logger.Error().Err(url.Err()).Ref("cid", car.cid).Msg("got error from gateway.buildUrl").AsError();
     }
-    const res = await this.gateway.put(url.Ok(), car.bytes);
+    // without URL changes in super-this branch we
+    // can distinguish between car and file
+    let fpMsg: Result<FPEnvelopeCar | FPEnvelopeFile>;
+    switch (url.Ok().getParam(PARAM.STORE)) {
+      case "data":
+        if (url.Ok().getParam(PARAM.SUFFIX)) {
+          fpMsg = Car2FPMsg(car.bytes);
+        } else {
+          fpMsg = File2FPMsg(car.bytes);
+        }
+        break;
+      default:
+        throw this.logger.Error().Str("store", url.Ok().getParam(PARAM.STORE)).Msg("unexpected store").AsError();
+    }
+    if (fpMsg.isErr()) {
+      throw this.logger.Error().Err(fpMsg).Msg("got error from FPMsg2Car").AsError();
+    }
+    const res = await this.gateway.put(url.Ok(), fpMsg.Ok(), this.loader);
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
     return res.Ok();
   }
   async remove(cid: AnyLink): Promise<Result<void>> {
-    const url = await this.gateway.buildUrl(this.url(), cid.toString());
+    const url = await this.gateway.buildUrl(this.url(), cid.toString(), this.loader);
     if (url.isErr()) {
       return url;
     }
-    return this.gateway.delete(url.Ok());
+    return this.gateway.delete(url.Ok(), this.loader);
   }
   async close(): Promise<Result<void>> {
-    await this.gateway.close(this.url());
+    await this.gateway.close(this.url(), this.loader);
     this._onClosed.forEach((fn) => fn());
     return Result.Ok(undefined);
   }
   destroy(): Promise<Result<void>> {
     this.logger.Debug().Msg("destroy");
-    return this.gateway.destroy(this.url());
+    return this.gateway.destroy(this.url(), this.loader);
   }
 }
 
@@ -301,21 +350,15 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   readonly _ready = new ResolveOnce<void>();
 
-  walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
+  readonly walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
   readonly processing: Promise<void> | undefined = undefined;
   readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
 
   constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
     // my.searchParams.set("storekey", 'insecure');
-    super(
-      sthis,
-      url,
-      {
-        ...opts,
-      },
-      ensureLogger(sthis, "WALStoreImpl"),
-    );
+    super(sthis, url, { ...opts }, ensureLogger(sthis, "WALStoreImpl"));
+    // this.loader = loader;
   }
 
   async ready(): Promise<void> {
@@ -324,12 +367,11 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         this.logger.Error().Err(e).Msg("error loading wal");
         return undefined;
       });
-      if (!walState) {
-        this.walState.operations = [];
-        this.walState.fileOperations = [];
-      } else {
-        this.walState.operations = walState.operations || [];
-        this.walState.fileOperations = walState.fileOperations || [];
+      this.walState.operations.splice(0, this.walState.operations.length);
+      this.walState.fileOperations.splice(0, this.walState.fileOperations.length);
+      if (walState) {
+        this.walState.operations.push(...walState.operations);
+        this.walState.fileOperations.push(...walState.fileOperations);
       }
     });
   }
@@ -337,8 +379,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
   async enqueue(dbMeta: DbMeta, opts: CommitOpts) {
     await this.ready();
     if (opts.compact) {
-      this.walState.operations = [];
-      this.walState.noLoaderOps = [dbMeta];
+      this.walState.operations.splice(0, this.walState.operations.length);
+      this.walState.noLoaderOps.splice(0, this.walState.noLoaderOps.length);
+      this.walState.noLoaderOps.push(dbMeta);
     } else if (opts.noLoader) {
       this.walState.noLoaderOps.push(dbMeta);
     } else {
@@ -358,7 +401,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async process() {
     await this.ready();
-    if (!this.loader?.remoteCarStore) return;
+    if (!this.loader.remoteCarStore) return;
     await this.processQueue.enqueue(async () => {
       try {
         await this._doProcess();
@@ -400,7 +443,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         noLoaderOps,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
+            if (!this.loader) {
+              return;
+            }
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
               if (!car) {
@@ -412,7 +457,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
               }
             }
             // Remove from walState after successful upload
-            this.walState.noLoaderOps = this.walState.noLoaderOps.filter((op) => op !== dbMeta);
+            inplaceFilter(this.walState.noLoaderOps, (op) => op !== dbMeta);
           }, `noLoaderOp with dbMeta.cars=${dbMeta.cars.toString()}`);
         },
         { concurrency: concurrencyLimit },
@@ -423,7 +468,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         operations,
         async (dbMeta) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
+            if (!this.loader) {
+              return;
+            }
             for (const cid of dbMeta.cars) {
               const car = await (await this.loader.carStore()).load(cid);
               if (!car) {
@@ -435,7 +482,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
               }
             }
             // Remove from walState after successful upload
-            this.walState.operations = this.walState.operations.filter((op) => op !== dbMeta);
+            inplaceFilter(this.walState.operations, (op) => op !== dbMeta);
           }, `operation with dbMeta.cars=${dbMeta.cars.toString()}`);
         },
         { concurrency: concurrencyLimit },
@@ -446,14 +493,16 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
         fileOperations,
         async ({ cid: fileCid, public: publicFile }) => {
           await retryableUpload(async () => {
-            if (!this.loader) return;
+            if (!this.loader) {
+              return;
+            }
             const fileBlock = await (await this.loader.fileStore()).load(fileCid);
             if (!fileBlock) {
               throw this.logger.Error().Ref("cid", fileCid).Msg("missing file block").AsError();
             }
             await this.loader.remoteFileStore?.save(fileBlock, { public: publicFile });
             // Remove from walState after successful upload
-            this.walState.fileOperations = this.walState.fileOperations.filter((op) => op.cid !== fileCid);
+            inplaceFilter(this.walState.fileOperations, (op) => op.cid !== fileCid);
           }, `fileOperation with cid=${fileCid.toString()}`);
         },
         { concurrency: concurrencyLimit },
@@ -463,7 +512,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
       if (operations.length) {
         const lastOp = operations[operations.length - 1];
         await retryableUpload(async () => {
-          if (!this.loader) return;
+          if (!this.loader) {
+            return;
+          }
           await this.loader.remoteMetaStore?.save(lastOp);
         }, `remoteMetaStore save with dbMeta.cars=${lastOp.cars.toString()}`);
       }
@@ -480,50 +531,55 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async load(): Promise<WALState | Falsy> {
     this.logger.Debug().Msg("loading");
-    const filepath = await this.gateway.buildUrl(this.url(), "main");
+    const filepath = await this.gateway.buildUrl(this.url(), "main", this.loader);
     if (filepath.isErr()) {
       throw this.logger.Error().Err(filepath.Err()).Url(this.url()).Msg("error building url").AsError();
     }
-    const bytes = await this.gateway.get(filepath.Ok());
+    const bytes = (await this.gateway.get(filepath.Ok(), this.loader)) as Result<FPEnvelopeWAL>;
     if (bytes.isErr()) {
       if (isNotFoundError(bytes)) {
         return undefined;
       }
       throw this.logger.Error().Err(bytes.Err()).Msg("error get").AsError();
     }
-    try {
-      return bytes && parse<WALState>(this.sthis.txt.decode(bytes.Ok()));
-      return bytes && parse<WALState>(this.sthis.txt.decode(bytes.Ok()));
-    } catch (e) {
-      throw this.logger.Error().Err(e).Msg("error parse").AsError();
+    if (bytes.Ok().type !== "wal") {
+      throw this.logger.Error().Str("type", bytes.Ok().type).Msg("unexpected type").AsError();
     }
+    return bytes.Ok().payload;
   }
 
   async save(state: WALState) {
-    const filepath = await this.gateway.buildUrl(this.url(), "main");
+    const filepath = await this.gateway.buildUrl(this.url(), "main", this.loader);
     if (filepath.isErr()) {
       throw this.logger.Error().Err(filepath.Err()).Url(this.url()).Msg("error building url").AsError();
     }
-    let encoded: ToString<WALState>;
-    try {
-      encoded = format(state);
-    } catch (e) {
-      throw this.logger.Error().Err(e).Any("state", state).Msg("error format").AsError();
-    }
-    const res = await this.gateway.put(filepath.Ok(), this.sthis.txt.encode(encoded));
+    // let encoded: ToString<WALState>;
+    // try {
+    //   encoded = format(state);
+    // } catch (e) {
+    //   throw this.logger.Error().Err(e).Any("state", state).Msg("error format").AsError();
+    // }
+    const res = await this.gateway.put(
+      filepath.Ok(),
+      {
+        type: "wal",
+        payload: state,
+      } as FPEnvelopeWAL,
+      this.loader,
+    );
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Str("filePath", filepath.Ok().toString()).Msg("error saving").AsError();
     }
   }
 
   async close() {
-    await this.gateway.close(this.url());
+    await this.gateway.close(this.url(), this.loader);
     this._onClosed.forEach((fn) => fn());
     return Result.Ok(undefined);
   }
 
   destroy() {
     this.logger.Debug().Msg("destroy");
-    return this.gateway.destroy(this.url());
+    return this.gateway.destroy(this.url(), this.loader);
   }
 }

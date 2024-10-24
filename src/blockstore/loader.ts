@@ -76,49 +76,53 @@ export class Loader implements Loadable {
   private seenMeta = new Set<string>();
   private writeLimit = pLimit(1);
 
-  readonly _carStore = new ResolveOnce<DataStore>();
+  private readonly _carStore = new ResolveOnce<DataStore>();
   async carStore(): Promise<DataStore> {
     return this._carStore.once(async () =>
       this.ebOpts.storeRuntime.makeDataStore({
         sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.data,
-        keybag: await this.keyBag(),
+        // keybag: await this.keyBag(),
+        loader: this,
       }),
     );
   }
 
-  readonly _fileStore = new ResolveOnce<DataStore>();
+  private readonly _fileStore = new ResolveOnce<DataStore>();
   async fileStore(): Promise<DataStore> {
     return this._fileStore.once(async () =>
       this.ebOpts.storeRuntime.makeDataStore({
         sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.file,
-        keybag: await this.keyBag(),
+        // keybag: await this.keyBag(),
+        loader: this,
       }),
     );
   }
-  readonly _WALStore = new ResolveOnce<WALStore>();
+  private readonly _WALStore = new ResolveOnce<WALStore>();
   async WALStore(): Promise<WALStore> {
     return this._WALStore.once(async () =>
       this.ebOpts.storeRuntime.makeWALStore({
         sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.wal,
-        keybag: await this.keyBag(),
+        // keybag: await this.keyBag(),
+        loader: this,
       }),
     );
   }
 
-  readonly _metaStore = new ResolveOnce<MetaStore>();
+  private readonly _metaStore = new ResolveOnce<MetaStore>();
   async metaStore(): Promise<MetaStore> {
     return this._metaStore.once(async () =>
       this.ebOpts.storeRuntime.makeMetaStore({
         sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.meta,
-        keybag: await this.keyBag(),
+        // keybag: await this.keyBag(),
+        loader: this,
       }),
     );
   }
@@ -127,7 +131,7 @@ export class Loader implements Loadable {
     return getKeyBag(this.sthis, this.ebOpts.keyBag);
   }
 
-  readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
+  private readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
       const metas = await (await this.metaStore()).load();

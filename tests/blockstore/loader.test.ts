@@ -218,7 +218,6 @@ describe("basic Loader with index commits", function () {
   beforeEach(async function () {
     const name = "test-loader-index" + Math.random();
     await sthis.start();
-    await sthis.start();
     // t = new CarTransaction()
     ib = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
     block = await rt.mf.block.encode({
@@ -264,7 +263,7 @@ describe("basic Loader with index commits", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = await ib.loader.loadCar(carCid![0]);
     expect(reader).toBeTruthy();
-    const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, ib.loader.logger);
+    const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
     expect(parsed.cars).toBeTruthy();
     expect(parsed.cars.length).toBe(0);
     expect(parsed.meta).toBeTruthy();

@@ -1,5 +1,5 @@
 import { runtimeFn, URI } from "@adviser/cement";
-import { rt, getStore, ensureSuperLog } from "@fireproof/core";
+import { rt, getStore, ensureSuperLog, inplaceFilter } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 import { UUID } from "uuidv7";
 
@@ -80,6 +80,34 @@ describe("utils", () => {
   it("timeorderednextid is uuidv7", () => {
     const id = sthis.timeOrderedNextId(0xcafebabebeef).str;
     expect(id.slice(0, 15)).toBe("cafebabe-beef-7");
+  });
+
+  it("inplaceFilter empty", () => {
+    const s: string[] = [];
+    expect(inplaceFilter(s, () => false)).toEqual([]);
+    expect(inplaceFilter(s, () => true)).toEqual([]);
+  });
+
+  it("inplaceFilter sized filtered", () => {
+    const s = new Array(100).fill("a").map((a, i) => `${a}${i.toString()}`);
+    expect(inplaceFilter(s, () => false)).toEqual([]);
+  });
+  it("inplaceFilter sized unfiltered", () => {
+    const s = new Array(100).fill("a").map((a, i) => `${a}${i.toString()}`);
+    const ref = [...s];
+    expect(inplaceFilter(s, () => true)).toEqual(ref);
+  });
+
+  it("inplaceFilter sized mod 7", () => {
+    const s = new Array(100).fill("a").map((a, i) => `${a}${i.toString()}`);
+    const ref = [...s];
+    for (let i = 99; i >= 0; i--) {
+      if (!(i % 7)) {
+        ref.splice(i, 1);
+      }
+    }
+    expect(inplaceFilter(s, (_, j) => !!(j % 7))).toEqual(ref);
+    expect(s.length).toBe(85);
   });
 });
 

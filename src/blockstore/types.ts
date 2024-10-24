@@ -9,6 +9,7 @@ import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { Gateway, GatewayInterceptor } from "./gateway.js";
+import { CarReader } from "@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -212,7 +213,8 @@ export interface StoreFactoryItem {
   readonly sthis: SuperThis;
   readonly url: URI;
   readonly gatewayInterceptor?: GatewayInterceptor;
-  readonly keybag: KeyBag;
+  // readonly keybag: KeyBag;
+  readonly loader: Loadable;
 }
 
 export interface StoreRuntime {
@@ -238,7 +240,7 @@ export interface CommitOpts {
 
 export interface DbMeta {
   readonly cars: CarGroup;
-  key?: string;
+  // key?: string;
 }
 
 // export interface UploadMetaFnParams {
@@ -268,11 +270,18 @@ export interface DbMeta {
 
 export type LoadHandler = (dbMetas: DbMeta[]) => Promise<void>;
 
+export interface RefLoadable {
+  readonly loader: Loadable;
+}
+export interface RefBlockstore {
+  readonly blockstore: RefLoadable;
+}
+
 export interface Connection {
-  readonly loader?: Loadable;
+  // readonly loader?: Loadable;
   readonly loaded: Promise<void>;
-  connectMeta_X({ loader }: { loader?: Loadable }): void;
-  connectStorage_X({ loader }: { loader?: Loadable }): void;
+  connectMeta(ref: RefLoadable | RefBlockstore): void;
+  connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
   // dataUpload(bytes: Uint8Array, params: UploadDataFnParams, opts?: { public?: boolean }): Promise<void>;
@@ -285,7 +294,7 @@ export interface BaseStore {
   readonly realGateway: Gateway;
   // readonly url: URI
   url(): URI;
-  readonly name: string;
+  // readonly name: string;
   onStarted(fn: () => void): void;
   onClosed(fn: () => void): void;
 
@@ -299,7 +308,7 @@ export interface BaseStore {
 
 export interface DbMetaEvent {
   readonly eventCid: CarClockLink;
-  readonly parents: string[];
+  readonly parents: CarClockHead;
   readonly dbMeta: DbMeta;
 }
 
@@ -309,7 +318,7 @@ export interface MetaStore extends BaseStore {
   // branch is defaulted to "main"
   save(meta: DbMeta, branch?: string): Promise<Result<void>>;
   // onLoad(branch: string, loadHandler: LoadHandler): () => void;
-  handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<DbMetaEvent[]>;
+  // handleByteHeads(byteHeads: Uint8Array, branch?: string): Promise<DbMetaEvent[]>;
 }
 
 // export interface RemoteMetaStore extends MetaStore {
@@ -327,9 +336,9 @@ export interface DataStore extends BaseStore {
 }
 
 export interface WALState {
-  operations: DbMeta[];
-  noLoaderOps: DbMeta[];
-  fileOperations: {
+  readonly operations: DbMeta[];
+  readonly noLoaderOps: DbMeta[];
+  readonly fileOperations: {
     readonly cid: AnyLink;
     readonly public: boolean;
   }[];
@@ -413,8 +422,22 @@ export interface Loadable {
   carStore(): Promise<DataStore>;
 
   handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
+
+  commit<T = TransactionMeta>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup>;
+  destroy(): Promise<void>;
+  getBlock(cid: AnyLink): Promise<AnyBlock | Falsy>;
+  loadFileCar(cid: AnyLink /*, isPublic = false*/): Promise<CarReader>;
+  loadCar(cid: AnyLink): Promise<CarReader>;
+  commitFiles(
+    t: CarTransaction,
+    done: TransactionMeta /* opts: CommitOpts = { noLoader: false, compact: false } */,
+  ): Promise<CarGroup>;
+  entries(cache?: boolean): AsyncIterableIterator<AnyBlock>;
 }
 
-export type DbMetaEventBlock = EventBlock<{ dbMeta: Uint8Array }>;
+export interface DbMetaBinary {
+  readonly dbMeta: Uint8Array;
+}
+export type DbMetaEventBlock = EventBlock<DbMetaBinary>;
 export type CarClockLink = Link<DbMetaEventBlock, number, number, Version>;
 export type CarClockHead = CarClockLink[];

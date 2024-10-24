@@ -10,6 +10,7 @@ import {
   TransactionWrapper,
   BlockstoreOpts,
   BlockstoreRuntime,
+  Loadable,
 } from "./types.js";
 
 import { Loader } from "./loader.js";
@@ -20,6 +21,11 @@ import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "../utils.js";
 
 export type BlockFetcher = BlockFetcherApi;
+
+export interface CarTransactionOpts {
+  readonly add: boolean;
+  readonly noLoader: boolean;
+}
 
 export interface CarTransactionOpts {
   readonly add: boolean;
@@ -77,20 +83,20 @@ export function defaultedBlockstoreRuntime(
   };
 }
 
-export function blockstoreFactory(sthis: SuperThis, opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
-  // if (opts.name) {
-  return new EncryptedBlockstore(sthis, opts);
-  // } else {
-  // return new BaseBlockstore(opts);
-  // }
-}
+// export function blockstoreFactory(sthis: SuperThis, opts: BlockstoreOpts): BaseBlockstore | EncryptedBlockstore {
+//   // if (opts.name) {
+//   return new EncryptedBlockstore(sthis, opts);
+//   // } else {
+//   // return new BaseBlockstore(opts);
+//   // }
+// }
 
 export class BaseBlockstore implements BlockFetcher {
   readonly transactions: Set<CarTransaction> = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
   readonly sthis: SuperThis;
 
-  readonly loader?: Loader;
+  readonly loader: Loadable;
   // readonly name?: string;
 
   // ready: Promise<void>;
@@ -112,12 +118,10 @@ export class BaseBlockstore implements BlockFetcher {
 
   readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts) {
-    // console.log("BaseBlockstore", ebOpts)
-    this.sthis = ensureSuperThis(ebOpts);
-    this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.sthis = ensureSuperThis(ebOpts);
     this.ebOpts = defaultedBlockstoreRuntime(this.sthis, ebOpts, "BaseBlockstore");
     this.logger = this.ebOpts.logger;
+    this.loader = new Loader(this.sthis, ebOpts);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -158,7 +162,7 @@ export class BaseBlockstore implements BlockFetcher {
     opts: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
     if (!this.loader) throw this.logger.Error().Msg("loader required to commit").AsError();
-    const cars = await this.loader?.commit<M>(t, done, opts);
+    const cars = await this.loader.commit<M>(t, done, opts);
     if (this.ebOpts.autoCompact && this.loader.carLog.length > this.ebOpts.autoCompact) {
       setTimeout(() => void this.compact(), 10);
     }
@@ -183,7 +187,6 @@ export class BaseBlockstore implements BlockFetcher {
 
 export class EncryptedBlockstore extends BaseBlockstore {
   // readonly name: string;
-  readonly loader: Loader;
 
   ready(): Promise<void> {
     return this.loader.ready();
@@ -205,7 +208,6 @@ export class EncryptedBlockstore extends BaseBlockstore {
     this.logger = ensureLogger(this.sthis, "EncryptedBlockstore", {
       this: 1,
     });
-    this.loader = new Loader(sthis, ebOpts);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined> {
@@ -254,7 +256,7 @@ export class EncryptedBlockstore extends BaseBlockstore {
     const blockLog = new CompactionFetcher(this);
     this.compacting = true;
     const meta = await compactFn(blockLog);
-    await this.loader?.commit(blockLog.loggedBlocks, meta, {
+    await this.loader.commit(blockLog.loggedBlocks, meta, {
       compact: true,
       noLoader: true,
     });
