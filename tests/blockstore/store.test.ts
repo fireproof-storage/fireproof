@@ -1,5 +1,5 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis, rt, PARAM, Result } from "@fireproof/core";
+import { bs, NotFoundError, SuperThis, rt, PARAM, Result, DbMeta } from "@fireproof/core";
 import { mockSuperThis, noopUrl } from "../helpers";
 import { fpDeserialize } from "../../src/runtime/gateways/fp-envelope-serialize";
 
@@ -12,7 +12,11 @@ async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFact
   return {
     sthis,
     url: url,
-    keybag: await rt.kb.getKeyBag(sthis),
+    loader: {
+      keyBag: () => rt.kb.getKeyBag(sthis),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      handleDbMetasFromStore: (metas: DbMeta[]): Promise<void> => Promise.resolve(),
+    } as bs.Loader,
   };
 }
 

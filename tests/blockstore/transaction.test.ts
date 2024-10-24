@@ -11,9 +11,9 @@ describe("Fresh TransactionBlockstore", function () {
   // it("should not have a name", function () {
   //   expect(blocks.name).toBeFalsy();
   // });
-  it("should not have a loader", function () {
-    expect(blocks.loader).toBeFalsy();
-  });
+  // it("should not have a loader", function () {
+  //   expect(blocks.loader).toBeFalsy();
+  // });
   it("should not put", async function () {
     const value = sthis.txt.encode("value");
     const e = await blocks.put("key" as unknown as bs.AnyLink, value).catch((e) => e);

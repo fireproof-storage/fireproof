@@ -48,7 +48,7 @@ async function dataStoreFactory(sfi: StoreFactoryItem): Promise<DataStoreImpl> {
   const store = new DataStoreImpl(sfi.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: sfi.gatewayInterceptor,
-    keybag: sfi.keybag,
+    loader: sfi.loader,
   });
   return store;
 }
@@ -76,7 +76,7 @@ async function metaStoreFactory(sfi: StoreFactoryItem): Promise<MetaStoreImpl> {
   const store = new MetaStoreImpl(sfi.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: sfi.gatewayInterceptor,
-    keybag: sfi.keybag,
+    loader: sfi.loader,
   });
   return store;
 }
@@ -104,7 +104,7 @@ async function WALStoreFactory(sfi: StoreFactoryItem): Promise<WALStoreImpl> {
   const store = new WALStoreImpl(sfi.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: sfi.gatewayInterceptor,
-    keybag: sfi.keybag,
+    loader: sfi.loader,
   });
   return store;
 }
