@@ -35,7 +35,7 @@ import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
-import { LedgerOpts } from "./database.js";
+import { LedgerOpts } from "./ledger.js";
 
 export interface HasCRDT<T extends DocTypes> {
   readonly crdt: CRDT<T> | CRDT<NonNullable<unknown>>;
