@@ -354,7 +354,7 @@ describe("Loader with a committed transaction", function () {
     crdt = new CRDT(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
-    loader = blockstore.loader;
+    loader = blockstore.loader as bs.Loader;
     done = await crdt.bulk([{ id: "foo", value: { foo: "bar" } }]);
   });
   // it("should have a name", function () {
@@ -407,7 +407,7 @@ describe("Loader with two committed transactions", function () {
     crdt = new CRDT(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
-    loader = blockstore.loader;
+    loader = blockstore.loader as bs.Loader;
     done1 = await crdt.bulk([{ id: "apple", value: { foo: "bar" } }]);
     done2 = await crdt.bulk([{ id: "orange", value: { foo: "bar" } }]);
   });
@@ -462,7 +462,7 @@ describe("Loader with many committed transactions", function () {
     crdt = new CRDT(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
-    loader = blockstore.loader;
+    loader = blockstore.loader as bs.Loader;
     dones = [];
     for (let i = 0; i < count; i++) {
       const did = await crdt.bulk([{ id: `apple${i}`, value: { foo: "bar" } }]);
