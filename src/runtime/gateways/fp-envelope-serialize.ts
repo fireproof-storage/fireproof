@@ -127,7 +127,31 @@ async function decode2WalState(sthis: SuperThis, raw: Uint8Array): Promise<WALSt
   };
 }
 
-export async function fpDeserialize<S>(sthis: SuperThis, raw: Uint8Array, url: URI): Promise<Result<FPEnvelope<S>>> {
+type ToUInt8 = Uint8Array | Result<Uint8Array> | Promise<Uint8Array> | Promise<Result<Uint8Array>>;
+
+async function coerceIntoUint8(raw: ToUInt8): Promise<Result<Uint8Array>> {
+  if (raw instanceof Uint8Array) {
+    return Result.Ok(raw);
+  }
+  if (Result.Is(raw)) {
+    return raw;
+  }
+  if (typeof raw.then === "function") {
+    try {
+      return coerceIntoUint8(await raw);
+    } catch (e) {
+      return Result.Err(e as Error);
+    }
+  }
+  throw new Error("Not a ToInt8");
+}
+
+export async function fpDeserialize<S>(sthis: SuperThis, intoRaw: ToUInt8, url: URI): Promise<Result<FPEnvelope<S>>> {
+  const rraw = await coerceIntoUint8(intoRaw);
+  if (rraw.isErr()) {
+    return Result.Err(rraw.Err());
+  }
+  const raw = rraw.unwrap();
   switch (url.getParam(PARAM.STORE)) {
     case "data":
       return Result.Ok({
@@ -145,6 +169,6 @@ export async function fpDeserialize<S>(sthis: SuperThis, raw: Uint8Array, url: U
         payload: await decode2DbMetaEvents(sthis, raw),
       } satisfies FPEnvelopeMeta) as Result<FPEnvelope<S>>;
     default:
-      throw sthis.logger.Error().Str("store", url.getParam(PARAM.STORE)).Msg("unsupported store").AsError();
+      return sthis.logger.Error().Str("store", url.getParam(PARAM.STORE)).Msg("unsupported store").ResultError();
   }
 }
