@@ -34,12 +34,12 @@ export class MemoryGateway implements Gateway {
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
-  get<T extends FPEnvelope<S>, S>(url: URI): Promise<GetResult<T, S>> {
+  get<S>(url: URI): Promise<GetResult<S>> {
     const x = this.memorys.get(url.toString());
     if (!x) {
       return Promise.resolve(Result.Err(new NotFoundError("not found")));
     }
-    return fpDeserialize(this.sthis, x, url) as Promise<GetResult<T, S>>;
+    return fpDeserialize(this.sthis, x, url) as Promise<GetResult<S>>;
   }
   delete(url: URI): Promise<VoidResult> {
     this.memorys.delete(url.toString());
