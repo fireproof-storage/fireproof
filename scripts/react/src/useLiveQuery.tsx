@@ -5,25 +5,25 @@ import { LiveQueryResult, useFireproof, UseLiveQuery } from "./useFireproof";
 
 export interface TLUseLiveQuery {
   <T extends DocTypes>(...args: Parameters<UseLiveQuery>): LiveQueryResult<T>;
-  database: Ledger;
+  ledger: Ledger;
 }
 
 function topLevelUseLiveQuery(...args: Parameters<UseLiveQuery>) {
-  const { useLiveQuery, database } = useFireproof();
-  (topLevelUseLiveQuery as TLUseLiveQuery).database = database;
+  const { useLiveQuery, ledger } = useFireproof();
+  (topLevelUseLiveQuery as TLUseLiveQuery).ledger = ledger;
   return useLiveQuery(...args);
 }
 
 /**
  * ## Summary
  * React hook that provides access to live query results, enabling real-time updates in your app. This uses
- * the default database named "useFireproof" under the hood which you can also access via the `database` accessor.
+ * the default ledger named "useFireproof" under the hood which you can also access via the `ledger` accessor.
  *
  * ## Usage
  * ```tsx
  * const results = useLiveQuery("date"); // using string
  * const results = useLiveQuery((doc) => doc.date)); // using map function
- * const database = useLiveQuery.database; // underlying "useFireproof" database accessor
+ * const ledger = useLiveQuery.ledger; // underlying "useFireproof" ledger accessor
  * ```
  *
  * ## Overview

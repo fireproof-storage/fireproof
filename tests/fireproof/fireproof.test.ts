@@ -95,7 +95,7 @@ describe("public API", function () {
     doc = await db.get("test");
     query = await db.query<string, Doc>((doc) => doc.foo);
   });
-  it("should be a database instance", function () {
+  it("should be a ledger instance", function () {
     expect(db).toBeTruthy();
     expect(isLedger(db)).toBeTruthy();
   });
@@ -114,7 +114,7 @@ describe("public API", function () {
   });
 });
 
-describe("basic database", function () {
+describe("basic ledger", function () {
   interface Doc {
     foo: string;
   }
@@ -235,7 +235,7 @@ describe("benchmarking with compaction", function () {
   });
 });
 
-describe("benchmarking a database", function () {
+describe("benchmarking a ledger", function () {
   /** @type {Ledger} */
   let db: Ledger;
   const sthis = mockSuperThis();
@@ -391,7 +391,7 @@ describe("benchmarking a database", function () {
   }, 20000000);
 });
 
-describe("Reopening a database", function () {
+describe("Reopening a ledger", function () {
   interface Doc {
     foo: string;
   }
@@ -493,7 +493,7 @@ describe("Reopening a database", function () {
   }, 200000);
 });
 
-describe("Reopening a database with indexes", function () {
+describe("Reopening a ledger with indexes", function () {
   interface Doc {
     foo: string;
   }
@@ -655,7 +655,7 @@ describe("same workload twice, same CID", function () {
   beforeEach(async function () {
     let ok: DocResponse;
     await sthis.start();
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     dbA = fireproof("test-dual-workload-a", configA);
     for (const doc of docs) {
       ok = await dbA.put(doc);
@@ -664,7 +664,7 @@ describe("same workload twice, same CID", function () {
     }
     headA = dbA.crdt.clock.head.toString();
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     dbB = fireproof("test-dual-workload-b", configB);
     for (const doc of docs) {
       ok = await dbB.put(doc);
@@ -695,7 +695,7 @@ describe("same workload twice, same CID", function () {
 
     expect(logA2.length).toBe(logB2.length);
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     // expect(logA2).toEqual(logB2);
   });
   it("should have same car log after compact", async function () {
@@ -717,7 +717,7 @@ describe("same workload twice, same CID", function () {
 
     expect(cmpLogA2.length).toBe(cmpLogB2.length);
 
-    // todo this fails because the test setup doesn't properly configure both databases to use the same key
+    // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
     // expect(cmpLogA2).toEqual(cmpLogB2);
   });
 });

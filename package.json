@@ -2,7 +2,7 @@
   "name": "@fireproof/monorepo",
   "version": "0.0.0-dev",
   "private": true,
-  "description": "Live database for the web",
+  "description": "Live ledger for the web",
   "type": "module",
   "scripts": {
     "prepublish": "pnpm run build",
@@ -27,7 +27,7 @@
     "lint": "eslint"
   },
   "keywords": [
-    "database",
+    "ledger",
     "JSON",
     "immutable",
     "IPLD",
