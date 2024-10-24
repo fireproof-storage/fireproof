@@ -429,7 +429,7 @@ describe("basic Ledger with no update subscription", function () {
   });
 });
 
-describe("database with files input", () => {
+describe("ledger with files input", () => {
   let db: Ledger;
   let imagefiles: FileWithCid[] = [];
   let result: DocResponse;

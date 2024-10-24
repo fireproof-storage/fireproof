@@ -28,7 +28,7 @@ describe("hello public API", () => {
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
   });
-  it("should have a database", function () {
+  it("should have a ledger", function () {
     expect(db).toBeTruthy();
     expect(isLedger(db)).toBeTruthy();
   });
@@ -47,7 +47,7 @@ describe("hello public API", () => {
   });
 });
 
-describe("Simplified Reopening a database", function () {
+describe("Simplified Reopening a ledger", function () {
   let db: Ledger;
   afterEach(async function () {
     await db.close();
