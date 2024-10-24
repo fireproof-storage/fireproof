@@ -4,24 +4,24 @@ import { AllDocsResult, useFireproof, UseAllDocs } from "./useFireproof";
 
 export interface TLUseAllDocs {
   <T extends DocTypes>(...args: Parameters<UseAllDocs>): AllDocsResult<T>;
-  database: Ledger;
+  ledger: Ledger;
 }
 
 function topLevelUseAllDocs(...args: Parameters<UseAllDocs>) {
-  const { useAllDocs, database } = useFireproof();
-  (topLevelUseAllDocs as TLUseAllDocs).database = database;
+  const { useAllDocs, ledger } = useFireproof();
+  (topLevelUseAllDocs as TLUseAllDocs).ledger = ledger;
   return useAllDocs(...args);
 }
 
 /**
  * ## Summary
- * React hook that provides access to all documents in the database, sorted by `_id`.
+ * React hook that provides access to all documents in the ledger, sorted by `_id`.
  *
  * ## Usage
  * ```tsx
  * const result = useAllDocs({ limit: 10, descending: true }); // with options
  * const result = useAllDocs(); // without options
- * const database = useAllDocs.database; // underlying "useFireproof" database accessor
+ * const ledger = useAllDocs.ledger; // underlying "useFireproof" ledger accessor
  * ```
  *
  * ## Overview

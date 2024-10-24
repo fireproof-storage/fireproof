@@ -218,7 +218,7 @@ export interface StoreRuntime {
   // the factories should produce ready-to-use stores
   // which means they have to call start() on the store
   // to fullfill lifecycle requirements
-  // to release resources, like one database connection
+  // to release resources, like one ledger connection
   // for all stores a refcount on close() should be used
   makeMetaStore(sfi: StoreFactoryItem): Promise<MetaStore>;
   makeDataStore(sfi: StoreFactoryItem): Promise<DataStore>;

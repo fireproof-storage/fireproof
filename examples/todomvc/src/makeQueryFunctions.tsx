@@ -1,4 +1,4 @@
-export function makeQueryFunctions({ ready, database }): {
+export function makeQueryFunctions({ ready, ledger }): {
   fetchAllLists: () => Promise<any>;
   fetchListWithTodos: (_id: any) => Promise<{ list: any; todos: any }>;
   addList: (title: any) => Promise<any>;
@@ -9,15 +9,15 @@ export function makeQueryFunctions({ ready, database }): {
   clearCompleted: (listId: any) => Promise<void>;
 } {
   const fetchAllLists = async () => {
-    const lists = ready && database.allLists ? await database.allLists.query({ range: ["list", "listx"] }) : { rows: [] };
+    const lists = ready && ledger.allLists ? await ledger.allLists.query({ range: ["list", "listx"] }) : { rows: [] };
     return lists.rows.map(({ value }) => value);
   };
 
   const fetchListWithTodos = async (_id) => {
-    if (!ready || !database.todosByList) return Promise.resolve({ list: { title: "", type: "list", _id: "" }, todos: [] });
+    if (!ready || !ledger.todosByList) return Promise.resolve({ list: { title: "", type: "list", _id: "" }, todos: [] });
 
-    const list = await database.get(_id);
-    const todos = await database.todosByList.query({
+    const list = await ledger.get(_id);
+    const todos = await ledger.todosByList.query({
       range: [
         [_id, "0"],
         [_id, "9"],
@@ -27,13 +27,13 @@ export function makeQueryFunctions({ ready, database }): {
   };
 
   const addList = async (title) => {
-    return ready && (await database.put({ title, type: "list" }));
+    return ready && (await ledger.put({ title, type: "list" }));
   };
 
   const addTodo = async (listId, title) => {
     return (
       ready &&
-      (await database.put({
+      (await ledger.put({
         completed: false,
         title,
         listId,
@@ -44,22 +44,22 @@ export function makeQueryFunctions({ ready, database }): {
   };
 
   const toggle = async ({ completed, ...doc }) => {
-    return ready && (await database.put({ completed: !completed, ...doc }));
+    return ready && (await ledger.put({ completed: !completed, ...doc }));
   };
 
   const destroy = async ({ _id }) => {
-    return ready && (await database.del(_id));
+    return ready && (await ledger.del(_id));
   };
 
   const updateTitle = async (doc, title) => {
     doc.title = title;
-    return ready && (await database.put(doc));
+    return ready && (await ledger.put(doc));
   };
 
   const clearCompleted = async (listId) => {
     const result =
       ready &&
-      (await database.todosByList.query({
+      (await ledger.todosByList.query({
         range: [
           [listId, "1"],
           [listId, "x"],
@@ -69,7 +69,7 @@ export function makeQueryFunctions({ ready, database }): {
     const todos = result.rows.map((row) => row.value);
     const todosToDelete = todos.filter((todo) => todo.completed);
     for (const todoToDelete of todosToDelete) {
-      await database.del(todoToDelete._id);
+      await ledger.del(todoToDelete._id);
     }
   };
   return {

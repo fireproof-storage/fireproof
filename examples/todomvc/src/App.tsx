@@ -70,17 +70,17 @@ declare global {
     fireproof: Fireproof;
   }
 }
-const defineIndexes = (database) => {
-  database.allLists = new Index(
-    database,
+const defineIndexes = (ledger) => {
+  ledger.allLists = new Index(
+    ledger,
     function (doc, map) {
       if (doc.type === "list") map(doc.type, doc);
     },
     null,
     { name: "allLists" },
   );
-  database.todosByList = new Index(
-    database,
+  ledger.todosByList = new Index(
+    ledger,
     function (doc, map) {
       if (doc.type === "todo" && doc.listId) {
         map([doc.listId, doc.createdAt], doc);
@@ -89,8 +89,8 @@ const defineIndexes = (database) => {
     null,
     { name: "todosByList" },
   );
-  window.fireproof = database;
-  return database;
+  window.fireproof = ledger;
+  return ledger;
 };
 
 /**
@@ -101,7 +101,7 @@ function App(): JSX.Element {
   console.log("render App");
   const fp = useFireproof("todomvc", defineIndexes, loadFixtures);
   const { fetchListWithTodos, fetchAllLists } = makeQueryFunctions(fp);
-  // const up = useUploader(fp.database) // is required to be in a KeyringProvider
+  // const up = useUploader(fp.ledger) // is required to be in a KeyringProvider
   const listLoader = async ({ params: { listId } }: LoaderFunctionArgs): Promise<ListLoaderData> =>
     await fetchListWithTodos(listId);
   const allListLoader = async ({ params }: LoaderFunctionArgs): Promise<ListDoc[]> => await fetchAllLists();

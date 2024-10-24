@@ -10,10 +10,10 @@ describe("HOOK: useFireproof", () => {
 
   it("renders the hook correctly and checks types", () => {
     renderHook(() => {
-      const { database, useLiveQuery, useDocument } = useFireproof("dbname");
+      const { ledger, useLiveQuery, useDocument } = useFireproof("dbname");
       expect(typeof useLiveQuery).toBe("function");
       expect(typeof useDocument).toBe("function");
-      expect(database?.constructor.name).toMatch(/^Ledger/);
+      expect(ledger?.constructor.name).toMatch(/^Ledger/);
     });
   });
 });
