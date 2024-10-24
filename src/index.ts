@@ -1,4 +1,4 @@
-export * from "./database.js";
+export * from "./ledger.js";
 export * from "./types.js";
 
 export * from "./crdt.js";
