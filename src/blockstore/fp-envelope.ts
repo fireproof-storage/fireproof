@@ -3,7 +3,7 @@ import { DbMetaEvent, WALState } from "./types.js";
 import { Result } from "../utils.js";
 
 export interface FPEnvelope<T> {
-  readonly type: string; // "car" | "file" | "meta" | "wal"
+  readonly type: "car" | "file" | "meta" | "wal"
   readonly payload: T;
 }
 
