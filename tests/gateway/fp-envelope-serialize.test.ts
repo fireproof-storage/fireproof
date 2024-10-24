@@ -1,6 +1,6 @@
 import { rt, bs } from "@fireproof/core";
 import { mockSuperThis, simpleCID } from "../helpers";
-import { BuildURI } from "@adviser/cement";
+import { BuildURI, Result } from "@adviser/cement";
 import { toJSON } from "multiformats/link";
 
 describe("storage-content", () => {
@@ -163,5 +163,54 @@ describe("de-serialize", () => {
     expect(walstate.fileOperations).toEqual(msg.payload.fileOperations);
     expect(walstate.noLoaderOps).toEqual(msg.payload.noLoaderOps);
     expect(walstate.operations).toEqual(msg.payload.operations);
+  });
+
+  it("coerce into fpDeserialize Result", async () => {
+    const raw = new Uint8Array([55, 56, 57]);
+    const res = await rt.gw.fpDeserialize(sthis, Result.Ok(raw), BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    expect(res.isOk()).toBeTruthy();
+    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().payload).toEqual(raw);
+  });
+
+  it("coerce into fpDeserialize Promise", async () => {
+    const raw = new Uint8Array([55, 56, 57]);
+    const res = await rt.gw.fpDeserialize(sthis, Promise.resolve(raw), BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    expect(res.isOk()).toBeTruthy();
+    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().payload).toEqual(raw);
+  });
+
+  it("coerce into fpDeserialize Promise Result", async () => {
+    const raw = new Uint8Array([55, 56, 57]);
+    const res = await rt.gw.fpDeserialize(
+      sthis,
+      Promise.resolve(Result.Ok(raw)),
+      BuildURI.from("http://x.com?store=data&suffix=.car").URI(),
+    );
+    expect(res.isOk()).toBeTruthy();
+    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().payload).toEqual(raw);
+  });
+
+  it("coerce into fpDeserialize Promise Result.Err", async () => {
+    const raw = Promise.resolve(Result.Err<Uint8Array>("error"));
+    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    expect(res.isErr()).toBeTruthy();
+    expect(res.unwrap_err().message).toEqual("error");
+  });
+
+  it("coerce into fpDeserialize Promise.reject", async () => {
+    const raw = Promise.reject(new Error("error"));
+    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    expect(res.isErr()).toBeTruthy();
+    expect(res.unwrap_err().message).toEqual("error");
+  });
+
+  it("coerce into fpDeserialize Result.Err", async () => {
+    const raw = Result.Err<Uint8Array>("error");
+    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    expect(res.isErr()).toBeTruthy();
+    expect(res.unwrap_err().message).toEqual("error");
   });
 });
