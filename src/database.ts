@@ -317,7 +317,7 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
   }
 
   makeDocValue<T extends DocTypes>(key: string, value: any, del?: boolean): DocWithId<T> {
-    return del ? { _id: key, _deleted: true } as DocWithId<T> : { _id: key, ...value } as DocWithId<T>;
+    return del ? ({ _id: key, _deleted: true } as DocWithId<T>) : ({ _id: key, ...value } as DocWithId<T>);
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
