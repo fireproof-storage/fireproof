@@ -1,5 +1,5 @@
 import type { ConfigOpts, DocResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
-import { Database, fireproof } from "@fireproof/core";
+import { Ledger, fireproof } from "@fireproof/core";
 import { deepmerge } from "deepmerge-ts";
 import { Accessor, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
@@ -28,7 +28,7 @@ export type CreateDocument = <T extends DocTypes>(initialDocFn: Accessor<Doc<T>>
 
 export interface CreateFireproof {
   /** The Fireproof database */
-  readonly database: Accessor<Database>;
+  readonly database: Accessor<Ledger>;
   /**
    * ## Summary
    *
@@ -127,7 +127,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
       return response;
     };
 
-    const refreshDoc = async (db: Database, docId = "") => {
+    const refreshDoc = async (db: Ledger, docId = "") => {
       // TODO: Add option for MVCC (Multi-version concurrency control) checks
       // https://use-fireproof.com/docs/database-api/documents/#multi-version-concurrency-control-mvcc-available-in-alpha-coming-soon-in-beta
       const storedDoc = await db.get<T>(docId).catch(initialDocFn);
@@ -165,7 +165,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
       rows: initialRows,
     });
 
-    const refreshRows = async (db: Database) => {
+    const refreshRows = async (db: Ledger) => {
       const res = await db.query<T>(strOrFn, query);
       setResult({ ...res, docs: res.rows.map((r) => r.doc as Doc<T>) });
     };

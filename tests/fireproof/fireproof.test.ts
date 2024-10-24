@@ -4,8 +4,8 @@ import { CID } from "multiformats/cid";
 
 import {
   ConfigOpts,
-  Database,
-  DatabaseFactory,
+  Ledger,
+  LedgerFactory,
   DocResponse,
   DocWithId,
   Index,
@@ -14,7 +14,7 @@ import {
   bs,
   fireproof,
   index,
-  isDatabase,
+  isLedger,
 } from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
@@ -37,7 +37,7 @@ describe("dreamcode", function () {
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let result: IndexRows<string, Doc>;
-  let db: Database;
+  let db: Ledger;
   const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
@@ -76,7 +76,7 @@ describe("public API", function () {
   interface Doc {
     foo: string;
   }
-  let db: Database;
+  let db: Ledger;
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let query: IndexRows<string, Doc>;
@@ -97,7 +97,7 @@ describe("public API", function () {
   });
   it("should be a database instance", function () {
     expect(db).toBeTruthy();
-    expect(isDatabase(db)).toBeTruthy();
+    expect(isLedger(db)).toBeTruthy();
   });
   it("should put", function () {
     expect(ok).toBeTruthy();
@@ -118,7 +118,7 @@ describe("basic database", function () {
   interface Doc {
     foo: string;
   }
-  let db: Database<Doc>;
+  let db: Ledger<Doc>;
   const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
@@ -126,7 +126,7 @@ describe("basic database", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = DatabaseFactory("test-basic");
+    db = LedgerFactory("test-basic");
   });
   it("can put with id", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
@@ -182,7 +182,7 @@ describe("basic database", function () {
 });
 
 describe("benchmarking with compaction", function () {
-  let db: Database;
+  let db: Ledger;
   const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
@@ -191,7 +191,7 @@ describe("benchmarking with compaction", function () {
   beforeEach(async function () {
     // erase the existing test data
     await sthis.start();
-    db = DatabaseFactory("test-benchmark-compaction", { autoCompact: 3 });
+    db = LedgerFactory("test-benchmark-compaction", { autoCompact: 3 });
   });
   it.skip("insert during compaction", async function () {
     const ok = await db.put({ _id: "test", foo: "fast" });
@@ -236,8 +236,8 @@ describe("benchmarking with compaction", function () {
 });
 
 describe("benchmarking a database", function () {
-  /** @type {Database} */
-  let db: Database;
+  /** @type {Ledger} */
+  let db: Ledger;
   const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
@@ -246,8 +246,8 @@ describe("benchmarking a database", function () {
   beforeEach(async function () {
     await sthis.start();
     // erase the existing test data
-    db = DatabaseFactory("test-benchmark", { autoCompact: 100000, public: true });
-    // db = DatabaseFactory(null, {autoCompact: 100000})
+    db = LedgerFactory("test-benchmark", { autoCompact: 100000, public: true });
+    // db = LedgerFactory(null, {autoCompact: 100000})
   });
 
   // run benchmarking tests
@@ -297,7 +297,7 @@ describe("benchmarking a database", function () {
     // equals(allDocsResult2.rows.length, numDocs+1)
 
     // console.time("open new DB");
-    const newDb = DatabaseFactory("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb = LedgerFactory("test-benchmark", { autoCompact: 100000, public: true });
     const doc = await newDb.get<{ foo: string }>("test");
     expect(doc.foo).toBe("fast");
     // console.timeEnd("open new DB");
@@ -339,7 +339,7 @@ describe("benchmarking a database", function () {
     await sleep(100);
 
     // console.time("compacted reopen again");
-    const newDb2 = DatabaseFactory("test-benchmark", { autoCompact: 100000, public: true });
+    const newDb2 = LedgerFactory("test-benchmark", { autoCompact: 100000, public: true });
     const doc21 = await newDb2.get<FooType>("test");
     expect(doc21.foo).toBe("fast");
     const blocks2 = newDb2.crdt.blockstore as bs.EncryptedBlockstore;
@@ -395,7 +395,7 @@ describe("Reopening a database", function () {
   interface Doc {
     foo: string;
   }
-  let db: Database;
+  let db: Ledger;
   const sthis = mockSuperThis();
   afterEach(async function () {
     await db.close();
@@ -405,7 +405,7 @@ describe("Reopening a database", function () {
     // erase the existing test data
     await sthis.start();
 
-    db = DatabaseFactory("test-reopen", { autoCompact: 100000 });
+    db = LedgerFactory("test-reopen", { autoCompact: 100000 });
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
@@ -420,7 +420,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have the same data on reopen", async function () {
-    const db2 = DatabaseFactory("test-reopen");
+    const db2 = LedgerFactory("test-reopen");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
     expect(db2.crdt.clock.head).toBeDefined();
@@ -439,7 +439,7 @@ describe("Reopening a database", function () {
   });
 
   it("should have carlog after reopen", async function () {
-    const db2 = DatabaseFactory("test-reopen");
+    const db2 = LedgerFactory("test-reopen");
     await db2.crdt.ready();
     const blocks = db2.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
@@ -452,7 +452,7 @@ describe("Reopening a database", function () {
   it("faster, should have the same data on reopen after reopen and update", async function () {
     for (let i = 0; i < 4; i++) {
       // console.log('iteration', i)
-      const db = DatabaseFactory("test-reopen");
+      const db = LedgerFactory("test-reopen");
       // assert(db._crdt.xready());
       await db.crdt.ready();
       const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
@@ -471,7 +471,7 @@ describe("Reopening a database", function () {
     for (let i = 0; i < 200; i++) {
       // console.log("iteration", i);
       // console.time("db open");
-      const db = DatabaseFactory("test-reopen", { autoCompact: 1000 }); // try with 10
+      const db = LedgerFactory("test-reopen", { autoCompact: 1000 }); // try with 10
       // assert(db._crdt.ready);
       await db.crdt.ready();
       // console.timeEnd("db open");
@@ -497,7 +497,7 @@ describe("Reopening a database with indexes", function () {
   interface Doc {
     foo: string;
   }
-  let db: Database;
+  let db: Ledger;
   let idx: Index<string, Doc>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
@@ -625,8 +625,8 @@ describe("basic js verify", function () {
 });
 
 describe("same workload twice, same CID", function () {
-  let dbA: Database;
-  let dbB: Database;
+  let dbA: Ledger;
+  let dbB: Ledger;
   let headA: string;
   let headB: string;
 
