@@ -2,7 +2,6 @@ export * from "./types.js";
 
 export * from "./store-factory.js";
 export * from "./gateway.js";
-export * from "./fragmentor.js";
 
 export * from "./fp-envelope.js";
 
