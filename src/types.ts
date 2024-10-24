@@ -209,14 +209,17 @@ export interface IndexUpdateString {
 
 export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends DocFragment> {
   readonly id: string;
-  readonly key: K; // IndexKey<K>;
-  readonly value: R;
+  readonly key: K;
+  readonly value?: R;
   readonly doc?: DocWithId<T>;
 }
 
 export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];
+  readonly clock: ClockHead;
+  readonly name?: string;
 }
+
 export interface CRDTMeta {
   readonly head: ClockHead;
 }
@@ -263,7 +266,9 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
 export interface AllDocsResponse<T extends DocTypes> {
   readonly rows: {
     readonly key: string;
+    /** @deprecated Use 'doc' instead */
     readonly value: DocWithId<T>;
+    readonly doc: DocWithId<T>;
   }[];
   readonly clock: ClockHead;
   readonly name?: string;
@@ -279,7 +284,9 @@ export interface ChangesOptions {
 
 export interface ChangesResponseRow<T extends DocTypes> {
   readonly key: string;
+  /** @deprecated Use 'doc' instead */
   readonly value: DocWithId<T>;
+  readonly doc: DocWithId<T>;
   readonly clock?: ClockLink;
 }
 
@@ -303,4 +310,10 @@ export interface CRDTEntry {
   data: string;
   parents: string[];
   cid: string;
+}
+
+export interface IndexResponse<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
+  readonly rows: IndexRow<K, T, R>[];
+  readonly clock: ClockHead;
+  readonly name?: string;
 }

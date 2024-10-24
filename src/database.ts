@@ -316,15 +316,23 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     return { id, clock: result?.head, name: this.name() } as DocResponse;
   }
 
+  makeDocValue<T extends DocTypes>(key: string, value: any, del?: boolean): DocWithId<T> {
+    return del ? { _id: key, _deleted: true } as DocWithId<T> : { _id: key, ...value } as DocWithId<T>;
+  }
+
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
     await this.ready();
     this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
     const { result, head } = await this.crdt.changes(since, opts);
-    const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-      clock,
-    }));
+    const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => {
+      const doc = this.makeDocValue<T>(key, value, del);
+      return {
+        key,
+        doc,
+        value: doc, // Keep for backwards compatibility
+        clock,
+      };
+    });
     return { rows, clock: head, name: this.name() };
   }
 
@@ -333,17 +341,22 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     void opts;
     this.logger.Debug().Msg("allDocs");
     const { result, head } = await this.crdt.allDocs();
-    const rows = result.map(({ id: key, value, del }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-    }));
+    const rows = result.map(({ id: key, value, del }) => {
+      const doc = this.makeDocValue<T>(key, value, del);
+      return {
+        key,
+        doc,
+        value: doc, // Keep for backwards compatibility
+      };
+    });
     return { rows, clock: head, name: this.name() };
   }
 
   async allDocuments<T extends DocTypes>(): Promise<{
     rows: {
       key: string;
-      value: DocWithId<T>;
+      doc: DocWithId<T>;
+      value: DocWithId<T>; // Keep for backwards compatibility
     }[];
     clock: ClockHead;
   }> {
@@ -383,7 +396,12 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
       typeof field === "string"
         ? index<K, T, R>({ crdt: _crdt }, field)
         : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
-    return await idx.query(opts);
+    const result = await idx.query(opts);
+    return {
+      ...result,
+      clock: this.crdt.clock.head,
+      name: this.name(),
+    };
   }
 
   async compact() {
