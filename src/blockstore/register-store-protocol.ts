@@ -1,8 +1,8 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { SuperThis } from "../types";
-import { Gateway, TestGateway } from "./gateway";
+import { Gateway } from "./gateway";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version";
-import { MemoryGateway, MemoryTestGateway } from "../runtime/gateways/memory/gateway";
+import { MemoryGateway } from "../runtime/gateways/memory/gateway";
 
 export interface GatewayFactoryItem {
   readonly protocol: string;
@@ -13,7 +13,7 @@ export interface GatewayFactoryItem {
   readonly defaultURI: (sthis: SuperThis) => URI;
 
   readonly gateway: (sthis: SuperThis) => Promise<Gateway>;
-  readonly test: (sthis: SuperThis) => Promise<TestGateway>;
+  // readonly test: (sthis: SuperThis, gfi: GatewayFactoryItem) => Promise<TestGateway>;
   // which switches between file and indexdb
   // readonly data: (logger: Logger) => Promise<Gateway>;
   // readonly meta: (logger: Logger) => Promise<Gateway>;
@@ -85,10 +85,6 @@ export function fileGatewayFactoryItem(): GatewayFactoryItem {
       const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
       return new FileGateway(sthis);
     },
-    test: async (sthis) => {
-      const { FileTestStore } = await import("../runtime/gateways/file/gateway.js");
-      return new FileTestStore(sthis);
-    },
   };
 }
 
@@ -102,10 +98,6 @@ if (runtimeFn().isBrowser) {
     gateway: async (sthis) => {
       const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway.js");
       return new IndexDBGateway(sthis);
-    },
-    test: async (logger) => {
-      const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway.js");
-      return new IndexDBTestStore(logger);
     },
   });
 } else {
@@ -121,8 +113,5 @@ registerStoreProtocol({
   },
   gateway: async (sthis) => {
     return new MemoryGateway(sthis, memory);
-  },
-  test: async (sthis) => {
-    return new MemoryTestGateway(sthis, memory);
   },
 });

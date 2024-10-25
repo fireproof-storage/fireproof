@@ -505,9 +505,6 @@ describe("StoreURIRuntime", () => {
       gateway: function (): Promise<bs.Gateway> {
         throw new Error("Function not implemented.");
       },
-      test: function (): Promise<bs.TestGateway> {
-        throw new Error("Function not implemented.");
-      },
     });
   });
   afterEach(() => {
