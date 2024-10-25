@@ -2,21 +2,28 @@ import { CID } from "multiformats";
 import { DbMetaEvent, WALState } from "./types.js";
 import { Result } from "../utils.js";
 
+export enum FPEnvelopeType {
+  CAR = "car",
+  FILE = "file",
+  META = "meta",
+  WAL = "wal",
+}
+
 export interface FPEnvelope<T> {
-  readonly type: "car" | "file" | "meta" | "wal";
+  readonly type: FPEnvelopeType;
   readonly payload: T;
 }
 
 export interface FPEnvelopeCar extends FPEnvelope<Uint8Array> {
-  readonly type: "car";
+  readonly type: FPEnvelopeType.CAR;
 }
 
 export interface FPEnvelopeFile extends FPEnvelope<Uint8Array> {
-  readonly type: "file";
+  readonly type: FPEnvelopeType.FILE;
 }
 
 export interface FPEnvelopeMeta extends FPEnvelope<DbMetaEvent[]> {
-  readonly type: "meta";
+  readonly type: FPEnvelopeType.META;
 }
 
 export interface FPWALCarsOps {
@@ -28,7 +35,7 @@ export interface FPWALCarsOps {
 //     readonly operations: FPWALCarsOps[];
 // }
 export interface FPEnvelopeWAL extends FPEnvelope<WALState> {
-  readonly type: "wal";
+  readonly type: FPEnvelopeType.WAL;
 }
 
 // export function WAL2FPMsg(sthis: SuperThis, ws: WALState): Result<FPEnvelopeWAL> {
@@ -81,7 +88,7 @@ export interface FPEnvelopeWAL extends FPEnvelope<WALState> {
 // }
 
 export function Car2FPMsg(fpcar: Uint8Array): Result<FPEnvelopeCar> {
-  return Result.Ok({ type: "car", payload: fpcar });
+  return Result.Ok({ type: FPEnvelopeType.CAR, payload: fpcar });
 }
 
 // export function FPMsg2Car(fpmsg: Uint8Array): Result<Uint8Array> {
@@ -93,7 +100,7 @@ export function Car2FPMsg(fpcar: Uint8Array): Result<FPEnvelopeCar> {
 // }
 
 export function File2FPMsg(fpfile: Uint8Array): Result<FPEnvelopeFile> {
-  return Result.Ok({ type: "file", payload: fpfile });
+  return Result.Ok({ type: FPEnvelopeType.FILE, payload: fpfile });
 }
 
 // export function FPMsg2File(fpmsg: Uint8Array): Result<Uint8Array> {

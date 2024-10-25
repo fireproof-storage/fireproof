@@ -4,7 +4,7 @@ import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im
 import { mockSuperThis, simpleCID } from "../helpers.js";
 import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
 import { Gateway } from "../../src/blockstore/gateway.js";
-import { FPEnvelopeMeta } from "../../src/blockstore/fp-envelope.js";
+import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope.js";
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {
@@ -123,7 +123,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
     const carPutResult = await carGateway.put(carUrl.Ok(), {
-      type: "car",
+      type: FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
     expect(carPutResult.isOk()).toBeTruthy();
@@ -133,7 +133,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
     await carGateway.put(carUrl.Ok(), {
-      type: "car",
+      type: FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
     const carGetResult = await carGateway.get(carUrl.Ok());
@@ -146,7 +146,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
     await carGateway.put(carUrl.Ok(), {
-      type: "car",
+      type: FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
     const carDeleteResult = await carGateway.delete(carUrl.Ok());
@@ -183,7 +183,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
     const filePutResult = await fileGateway.put(fileUrl.Ok(), {
-      type: "file",
+      type: FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
     expect(filePutResult.Ok()).toBeFalsy();
@@ -193,7 +193,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
     await fileGateway.put(fileUrl.Ok(), {
-      type: "file",
+      type: FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
     const fileGetResult = await fileGateway.get(fileUrl.Ok());
@@ -205,7 +205,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
     await fileGateway.put(fileUrl.Ok(), {
-      type: "file",
+      type: FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
     const fileDeleteResult = await fileGateway.delete(fileUrl.Ok());
@@ -232,7 +232,7 @@ describe("noop Gateway", function () {
     // const walTestDataString = JSON.stringify();
     // const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway.put(walUrl.Ok(), {
-      type: "wal",
+      type: FPEnvelopeType.WAL,
       payload: {
         operations: [],
         noLoaderOps: [],
@@ -271,7 +271,7 @@ describe("noop Gateway", function () {
     // });
     // const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway.put(walUrl.Ok(), {
-      type: "wal",
+      type: FPEnvelopeType.WAL,
       payload: ref,
     });
     const walGetResult = await walGateway.get(walUrl.Ok());
@@ -304,7 +304,7 @@ describe("noop Gateway", function () {
       ],
     };
     await walGateway.put(walUrl.Ok(), {
-      type: "wal",
+      type: FPEnvelopeType.WAL,
       payload: ref,
     });
     const walDeleteResult = await walGateway.delete(walUrl.Ok());

@@ -3,17 +3,17 @@ import { Logger, KeyedResolvOnce, URI, Result } from "@adviser/cement";
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { StoreEnDeFile, StoreFactoryItem, StoreRuntime } from "./types.js";
-import { Gateway, TestGateway } from "./gateway.js";
+import { Gateway } from "./gateway.js";
 import { PARAM, SuperThis } from "../types.js";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
 
 interface GatewayInstances {
   readonly gateway: Gateway;
-  readonly test: TestGateway;
 }
 interface GatewayReady extends GatewayInstances {
   readonly url: URI;
 }
+
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
 const gatewayInstances = new KeyedResolvOnce<GatewayInstances>();
 export async function getStartedGateway(sthis: SuperThis, url: URI): Promise<Result<GatewayReady>> {
@@ -22,10 +22,8 @@ export async function getStartedGateway(sthis: SuperThis, url: URI): Promise<Res
     if (item) {
       const ret = {
         url,
-        ...(await gatewayInstances.get(url.protocol).once(async () => ({
-          gateway: await item.gateway(sthis),
-          test: await item.test(sthis),
-        }))),
+        ...(await gatewayInstances.get(url.protocol).once(async () => ({}))),
+        gateway: await item.gateway(sthis),
       };
       const res = await ret.gateway.start(url);
       if (res.isErr()) {
@@ -107,15 +105,6 @@ async function WALStoreFactory(sfi: StoreFactoryItem): Promise<WALStoreImpl> {
     loader: sfi.loader,
   });
   return store;
-}
-
-export async function testStoreFactory(url: URI, sthis: SuperThis): Promise<TestGateway> {
-  // sthis = ensureSuperLog(sthis, "testStoreFactory");
-  const rgateway = await getStartedGateway(sthis, url);
-  if (!rgateway) {
-    throw sthis.logger.Error().Url(url).Msg("gateway not found").AsError();
-  }
-  return rgateway.Ok().test;
 }
 
 async function ensureStart<T>(store: T & { start: () => Promise<Result<URI>>; logger: Logger }): Promise<T> {
