@@ -1,7 +1,7 @@
 import { FILESTORE_VERSION } from "./version.js";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
-import { ensureLogger, ensureSuperLog, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
-import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
+import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
+import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { getFileName, getFileSystem, getPath } from "./utils.js";
 import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
@@ -22,8 +22,8 @@ export class FileGateway implements Gateway {
   }
 
   constructor(sthis: SuperThis) {
-    this.sthis = ensureSuperLog(sthis, "FileGateway", { this: 1 });
-    this.logger = this.sthis.logger;
+    this.sthis = sthis;
+    this.logger = ensureLogger(sthis, "FileGateway", { this: 1 });
   }
 
   async getVersionFromFile(path: string, logger: Logger): Promise<string> {
@@ -69,7 +69,6 @@ export class FileGateway implements Gateway {
   async close(): Promise<Result<void>> {
     return Result.Ok(undefined);
   }
-  // abstract buildUrl(baseUrl: URL, key: string): Promise<Result<URL>>;
 
   getFilePath(url: URI): string {
     const key = url.getParam(PARAM.KEY);
@@ -78,19 +77,11 @@ export class FileGateway implements Gateway {
   }
 
   async put<T>(url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
-    // const rbuf = FPMsgMatch2Envelope(body) as Result<FPEnvelopeCar | FPEnvelopeFile>;
-    // if (rbuf.isErr()) {
-    //   return Result.Err(rbuf.Err());
-    // }
-    // let payload = body
-    // if (["car", "file"].includes(rbuf.Ok().type)) {
-    //   payload = rbuf.Ok().payload
-    // }
     return exception2Result(async () => {
       const file = await this.getFilePath(url);
       this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
 
-      await this.fs.writefile(file, await fpSerialize(this.sthis, env, url));
+      await this.fs.writefile(file, await fpSerialize(this.sthis, env));
     });
   }
 
@@ -100,7 +91,7 @@ export class FileGateway implements Gateway {
       try {
         this.logger.Debug().Url(url).Str("file", file).Msg("get");
         const res = await this.fs.readfile(file);
-        return fpDeserialize(this.sthis, res, url) as Promise<GetResult<S>>;
+        return fpDeserialize(this.sthis, url, res) as Promise<GetResult<S>>;
       } catch (e: unknown) {
         if (isNotFoundError(e)) {
           return Result.Err(new NotFoundError(`file not found: ${file}`));
@@ -140,45 +131,13 @@ export class FileGateway implements Gateway {
     }
     return Result.Ok(undefined);
   }
-}
 
-// export class FileWALGateway extends FileGateway {
-//   readonly storeType = "wal";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "FileWALGateway"));
-//   }
-// }
-
-// export class FileMetaGateway extends FileGateway {
-//   readonly storeType = "meta";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "FileMetaGateway"));
-//   }
-// }
-
-// export class FileDataGateway extends FileGateway {
-//   readonly storeType = "data";
-//   readonly branches = new Set<string>();
-//   constructor(logger: Logger) {
-//     // console.log("FileDataGateway->", logger);
-//     super(ensureLogger(logger, "FileDataGateway"));
-//   }
-// }
-
-export class FileTestStore implements TestGateway {
-  readonly logger: Logger;
-  readonly sthis: SuperThis;
-  constructor(sthis: SuperThis) {
-    this.logger = ensureLogger(sthis, "FileTestStore");
-    this.sthis = sthis;
-  }
-
-  async get(iurl: URI, key: string) {
+  async getPlain(iurl: URI, key: string) {
     const url = iurl.build().setParam(PARAM.KEY, key).URI();
     const dbFile = this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await (await getFileSystem(url)).readfile(dbFile);
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
-    return buffer;
+    return Result.Ok(buffer);
   }
 }

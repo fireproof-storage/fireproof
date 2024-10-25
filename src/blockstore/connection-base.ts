@@ -60,17 +60,17 @@ export abstract class ConnectionBase implements Connection {
 
   async connectMeta(refl: RefLoadable | RefBlockstore) {
     const loader = coerceLoader(refl);
-    if (!loader) throw this.logger.Error().Msg("connectMeta_X: loader is required").AsError();
+    if (!loader) throw this.logger.Error().Msg("connectMeta: loader is required").AsError();
     this.loader = loader;
     await this.onConnect();
     const metaUrl = this.url.build().defParam(PARAM.STORE, "meta").URI();
     const rgateway = await getStartedGateway(loader.sthis, metaUrl);
     if (rgateway.isErr())
-      throw this.logger.Error().Result("err", rgateway).Url(metaUrl).Msg("connectMeta_X: gateway is required").AsError();
+      throw this.logger.Error().Result("err", rgateway).Url(metaUrl).Msg("connectMeta: gateway is required").AsError();
     // const name = metaUrl.toString();
     const dbName = metaUrl.getParam(PARAM.NAME);
     if (!dbName) {
-      throw this.logger.Error().Url(metaUrl).Msg("connectMeta_X: dbName is required").AsError();
+      throw this.logger.Error().Url(metaUrl).Msg("connectMeta: dbName is required").AsError();
     }
     const gateway = rgateway.Ok();
     const remote = await RemoteMetaStore(loader.sthis, metaUrl, {

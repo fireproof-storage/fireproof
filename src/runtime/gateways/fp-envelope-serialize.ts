@@ -1,4 +1,4 @@
-import { Result, URI } from "@adviser/cement";
+import { exception2Result, Result, URI } from "@adviser/cement";
 import {
   CarClockLink,
   DbMeta,
@@ -8,25 +8,27 @@ import {
   FPEnvelopeCar,
   FPEnvelopeFile,
   FPEnvelopeMeta,
+  FPEnvelopeType,
   FPEnvelopeWAL,
   WALState,
 } from "../../blockstore";
-import { PARAM, SuperThis } from "../../types";
+import { PARAM, PromiseToUInt8, SuperThis } from "../../types";
 import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";
 import { fromJSON } from "multiformats/link";
 import { format, parse } from "@ipld/dag-json";
 import { EventView } from "@web3-storage/pail/src/clock/api";
+import { coercePromiseIntoUint8 } from "../../utils";
 
-interface SerializedMeta {
+export interface SerializedMeta {
   readonly data: string; // base64pad encoded
   readonly parents: string[];
   readonly cid: string;
 }
 
-async function dbMetaEvent2uint8(sthis: SuperThis, dbEvents: Omit<DbMetaEvent, "eventCid">[]): Promise<Uint8Array> {
-  const json: SerializedMeta[] = await Promise.all(
+async function dbMetaEvent2Serialized(sthis: SuperThis, dbEvents: Omit<DbMetaEvent, "eventCid">[]): Promise<SerializedMeta[]> {
+  return await Promise.all(
     dbEvents.map(async (dbEvent) => {
       const event = await EventBlock.create<DbMetaBinary>(
         {
@@ -41,10 +43,9 @@ async function dbMetaEvent2uint8(sthis: SuperThis, dbEvents: Omit<DbMetaEvent, "
       } as SerializedMeta;
     }),
   );
-  return sthis.txt.encode(JSON.stringify(json));
 }
 
-function WALState2uint8(sthis: SuperThis, wal: WALState): Uint8Array {
+function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
   const serializedWAL: SerializedWAL = {
     fileOperations: wal.fileOperations.map((fop) => ({
       cid: fop.cid.toString(),
@@ -57,48 +58,88 @@ function WALState2uint8(sthis: SuperThis, wal: WALState): Uint8Array {
       cars: op.cars.map((i) => i.toString()),
     })),
   };
-  return sthis.txt.encode(JSON.stringify(serializedWAL));
+  return serializedWAL;
 }
 
-export async function fpSerialize<T>(sthis: SuperThis, env: FPEnvelope<T>, url: URI): Promise<Uint8Array> {
-  switch (url.getParam(PARAM.STORE)) {
-    case "data":
-      return (env as FPEnvelopeCar).payload;
-    case "wal":
-      return WALState2uint8(sthis, (env as FPEnvelopeWAL).payload);
-    case "meta":
-      return dbMetaEvent2uint8(sthis, (env as FPEnvelopeMeta).payload);
+export type CAREncodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Uint8Array>;
+export type FILEEncodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Uint8Array>;
+export type METAEncodeEnvelopeBase = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Uint8Array>;
+export type WALEncodeEnvelopeBase = (sthis: SuperThis, payload: SerializedWAL) => Promise<Uint8Array>;
+
+export type CAREncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
+export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
+export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[], base: METAEncodeEnvelopeBase) => Promise<Uint8Array>;
+export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL, base: WALEncodeEnvelopeBase) => Promise<Uint8Array>;
+export interface Encoder {
+  readonly car: CAREncodeEnvelope;
+  readonly file: FILEEncodeEnvelope;
+  readonly meta: METAEncodeEnvelope;
+  readonly wal: WALEncodeEnvelope;
+}
+
+const defaultEncoder: Encoder = {
+  car: async (sthis: SuperThis, payload: Uint8Array) => payload,
+  file: async (sthis: SuperThis, payload: Uint8Array) => payload,
+  meta: async (sthis: SuperThis, payload: SerializedMeta[]) => sthis.txt.encode(JSON.stringify(payload)),
+  wal: async (sthis: SuperThis, payload: SerializedWAL) => sthis.txt.encode(JSON.stringify(payload)),
+};
+
+export async function fpSerialize<T>(sthis: SuperThis, env: FPEnvelope<T>, pencoder?: Partial<Encoder>): Promise<Uint8Array> {
+  const encoder = {
+    ...defaultEncoder,
+    ...pencoder,
+  };
+  switch (env.type) {
+    case FPEnvelopeType.FILE:
+      return encoder.file(sthis, (env as FPEnvelopeFile).payload, defaultEncoder.file as FILEEncodeEnvelopeBase);
+    case FPEnvelopeType.CAR:
+      return encoder.car(sthis, (env as FPEnvelopeCar).payload, defaultEncoder.car as CAREncodeEnvelopeBase);
+    case FPEnvelopeType.WAL:
+      return encoder.wal(
+        sthis,
+        WALState2Serialized(sthis, (env as FPEnvelopeWAL).payload),
+        defaultEncoder.wal as WALEncodeEnvelopeBase,
+      );
+    case FPEnvelopeType.META:
+      return encoder.meta(
+        sthis,
+        await dbMetaEvent2Serialized(sthis, (env as FPEnvelopeMeta).payload),
+        defaultEncoder.meta as METAEncodeEnvelopeBase,
+      );
     default:
-      throw sthis.logger.Error().Str("store", url.getParam(PARAM.STORE)).Msg("unsupported store").AsError();
+      throw sthis.logger.Error().Str("type", env.type).Msg("unsupported store").AsError();
   }
 }
 
-async function decode2DbMetaEvents(sthis: SuperThis, raw: Uint8Array): Promise<DbMetaEvent[]> {
-  const serializedMeta = JSON.parse(sthis.txt.decode(raw)) as SerializedMeta[];
+async function decode2DbMetaEvents(sthis: SuperThis, rserializedMeta: Result<SerializedMeta[]>): Promise<Result<DbMetaEvent[]>> {
+  if (rserializedMeta.isErr()) {
+    return Result.Err(rserializedMeta.Err());
+  }
+  const serializedMeta = rserializedMeta.unwrap();
   if (!Array.isArray(serializedMeta)) {
-    sthis.logger.Debug().Any("metaEntries", serializedMeta).Msg("No data in MetaEntries");
-    return [];
+    return sthis.logger.Debug().Any("metaEntries", serializedMeta).Msg("No data in MetaEntries").ResultError();
   }
   if (!serializedMeta.length) {
-    sthis.logger.Debug().Any("byteHeads", raw).Msg("No MetaEntries found");
-    return [];
+    return sthis.logger.Debug().Msg("No MetaEntries found").ResultError();
   }
-  return Promise.all(
-    serializedMeta.map(async (metaEntry) => {
-      const eventBlock = await decodeEventBlock<DbMetaBinary>(base64pad.decode(metaEntry.data));
-      const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
-      return {
-        eventCid: eventBlock.cid as CarClockLink,
-        parents: metaEntry.parents.map((i: string) => CID.parse(i)),
-        dbMeta,
-      } satisfies DbMetaEvent;
-    }),
+  return Result.Ok(
+    await Promise.all(
+      serializedMeta.map(async (metaEntry) => {
+        const eventBlock = await decodeEventBlock<DbMetaBinary>(base64pad.decode(metaEntry.data));
+        const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
+        return {
+          eventCid: eventBlock.cid as CarClockLink,
+          parents: metaEntry.parents.map((i: string) => CID.parse(i)),
+          dbMeta,
+        } satisfies DbMetaEvent;
+      }),
+    ),
   );
 }
 
 type linkOrCid = { "/": string } | string;
 
-interface SerializedWAL {
+export interface SerializedWAL {
   readonly fileOperations?: { cid: linkOrCid; public: boolean }[];
   readonly noLoaderOps?: { cars: linkOrCid[] }[];
   readonly operations?: { cars: linkOrCid[] }[];
@@ -111,9 +152,12 @@ function toCid(sthis: SuperThis, link: linkOrCid): CID {
   return fromJSON(link);
 }
 
-async function decode2WalState(sthis: SuperThis, raw: Uint8Array): Promise<WALState> {
-  const serializedWAL = JSON.parse(sthis.txt.decode(raw)) as SerializedWAL;
-  return {
+async function decode2WalState(sthis: SuperThis, rserializedWAL: Result<SerializedWAL>): Promise<Result<WALState>> {
+  if (rserializedWAL.isErr()) {
+    return Result.Err(rserializedWAL.Err());
+  }
+  const serializedWAL = rserializedWAL.unwrap();
+  return Result.Ok({
     fileOperations: (serializedWAL.fileOperations || []).map((fop) => ({
       cid: toCid(sthis, fop.cid),
       public: !!fop.public,
@@ -124,50 +168,72 @@ async function decode2WalState(sthis: SuperThis, raw: Uint8Array): Promise<WALSt
     operations: (serializedWAL.operations || []).map((op) => ({
       cars: (op.cars || []).map((i) => toCid(sthis, i)),
     })),
-  };
+  });
+}
+// export type CARDecodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
+// export type FILEDecodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
+// export type WALDecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedWAL) => Promise<Result<SerializedWAL>>;
+// export type METADecodeEnvelopeBase = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Result<SerializedMeta[]>>;
+
+export type CARDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
+export type FILEDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
+export type METADecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedMeta[]>>;
+export type WALDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedWAL>>;
+export interface Decoder {
+  readonly car: CARDecodeEnvelope;
+  readonly file: FILEDecodeEnvelope;
+  readonly meta: METADecodeEnvelope;
+  readonly wal: WALDecodeEnvelope;
 }
 
-type ToUInt8 = Uint8Array | Result<Uint8Array> | Promise<Uint8Array> | Promise<Result<Uint8Array>>;
+const defaultDecoder = {
+  car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
+  file: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
+  meta: async (sthis: SuperThis, payload: Uint8Array) =>
+    exception2Result(() => JSON.parse(sthis.txt.decode(payload)) as SerializedMeta[]),
+  wal: async (sthis: SuperThis, payload: Uint8Array) =>
+    exception2Result(() => JSON.parse(sthis.txt.decode(payload)) as SerializedWAL),
+};
 
-async function coerceIntoUint8(raw: ToUInt8): Promise<Result<Uint8Array>> {
-  if (raw instanceof Uint8Array) {
-    return Result.Ok(raw);
+function makeFPEnvelope<S>(type: FPEnvelopeType, payload: Result<S>): Result<FPEnvelope<S>> {
+  if (payload.isErr()) {
+    return Result.Err(payload.Err());
   }
-  if (Result.Is(raw)) {
-    return raw;
-  }
-  if (typeof raw.then === "function") {
-    try {
-      return coerceIntoUint8(await raw);
-    } catch (e) {
-      return Result.Err(e as Error);
-    }
-  }
-  throw new Error("Not a ToInt8");
+  return Result.Ok({
+    type,
+    payload: payload.unwrap(),
+  });
 }
 
-export async function fpDeserialize<S>(sthis: SuperThis, intoRaw: ToUInt8, url: URI): Promise<Result<FPEnvelope<S>>> {
-  const rraw = await coerceIntoUint8(intoRaw);
+export async function fpDeserialize<S>(
+  sthis: SuperThis,
+  url: URI,
+  intoRaw: PromiseToUInt8,
+  pdecoder?: Partial<Decoder>,
+): Promise<Result<FPEnvelope<S>>> {
+  const rraw = await coercePromiseIntoUint8(intoRaw);
   if (rraw.isErr()) {
     return Result.Err(rraw.Err());
   }
   const raw = rraw.unwrap();
+  const decoder = {
+    ...defaultDecoder,
+    ...pdecoder,
+  };
   switch (url.getParam(PARAM.STORE)) {
     case "data":
-      return Result.Ok({
-        type: url.getParam(PARAM.SUFFIX) ? "car" : "file",
-        payload: raw,
-      } satisfies FPEnvelopeFile | FPEnvelopeCar) as Result<FPEnvelope<S>>;
+      if (url.getParam(PARAM.SUFFIX) === ".car") {
+        return makeFPEnvelope(FPEnvelopeType.CAR, await decoder.car(sthis, raw)) as Result<FPEnvelope<S>>;
+      }
+      return makeFPEnvelope(FPEnvelopeType.FILE, await decoder.file(sthis, raw)) as Result<FPEnvelope<S>>;
     case "wal":
-      return Result.Ok({
-        type: "wal",
-        payload: await decode2WalState(sthis, raw),
-      } satisfies FPEnvelopeWAL) as Result<FPEnvelope<S>>;
+      return makeFPEnvelope(FPEnvelopeType.WAL, await decode2WalState(sthis, await decoder.wal(sthis, raw))) as Result<
+        FPEnvelope<S>
+      >;
     case "meta":
-      return Result.Ok({
-        type: "meta",
-        payload: await decode2DbMetaEvents(sthis, raw),
-      } satisfies FPEnvelopeMeta) as Result<FPEnvelope<S>>;
+      return makeFPEnvelope(FPEnvelopeType.META, await decode2DbMetaEvents(sthis, await decoder.meta(sthis, raw))) as Result<
+        FPEnvelope<S>
+      >;
     default:
       return sthis.logger.Error().Str("store", url.getParam(PARAM.STORE)).Msg("unsupported store").ResultError();
   }
