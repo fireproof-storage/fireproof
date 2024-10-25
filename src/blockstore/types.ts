@@ -280,7 +280,7 @@ export interface RefBlockstore {
 export interface Connection {
   // readonly loader?: Loadable;
   readonly loaded: Promise<void>;
-  connectMeta(ref: RefLoadable | RefBlockstore): void;
+  // connectMeta(ref: RefLoadable | RefBlockstore): void;
   connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;

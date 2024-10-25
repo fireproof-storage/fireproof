@@ -13,7 +13,7 @@ import {
   JSONFormatter,
   YAMLFormatter,
 } from "@adviser/cement";
-import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
+import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types";
 import { base58btc } from "multiformats/bases/base58";
 
 export type { Logger };
@@ -126,7 +126,7 @@ const txtOps = {
   // eslint-disable-next-line no-restricted-globals
   encode: (input: string) => new TextEncoder().encode(input),
   // eslint-disable-next-line no-restricted-globals
-  decode: (input: Uint8Array) => new TextDecoder().decode(input),
+  decode: (input: ToUInt8) => new TextDecoder().decode(coerceIntoUint8(input).Ok()),
 };
 
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
@@ -371,4 +371,31 @@ export function toSortedArray(set?: Record<string, unknown>): Record<string, unk
   return Object.entries(set)
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([k, v]) => ({ [k]: v }));
+}
+
+export function coerceIntoUint8(raw: ToUInt8): Result<Uint8Array> {
+  if (raw instanceof Uint8Array) {
+    return Result.Ok(raw);
+  }
+  if (Result.Is(raw)) {
+    return raw;
+  }
+  return Result.Err("Not a Uint8Array");
+}
+
+export async function coercePromiseIntoUint8(raw: PromiseToUInt8): Promise<Result<Uint8Array>> {
+  if (raw instanceof Uint8Array) {
+    return Result.Ok(raw);
+  }
+  if (Result.Is(raw)) {
+    return raw;
+  }
+  if (typeof raw.then === "function") {
+    try {
+      return coercePromiseIntoUint8(await raw);
+    } catch (e) {
+      return Result.Err(e as Error);
+    }
+  }
+  return Result.Err("Not a Uint8Array");
 }

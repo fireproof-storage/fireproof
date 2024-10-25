@@ -2,22 +2,24 @@ import { rt, bs } from "@fireproof/core";
 import { mockSuperThis, simpleCID } from "../helpers";
 import { BuildURI, Result } from "@adviser/cement";
 import { toJSON } from "multiformats/link";
+import { FPEnvelopeType } from "../../src/blockstore";
+import { SerializedMeta } from "../../src/runtime/gateways/fp-envelope-serialize";
 
 describe("storage-content", () => {
   const sthis = mockSuperThis();
   it("car", async () => {
     const raw = new Uint8Array([55, 56, 57]);
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data&suffix=.car").URI(), Result.Ok(raw));
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.CAR);
     expect(res.unwrap().payload).toEqual(raw);
   });
 
   it("file", async () => {
     const raw = new Uint8Array([55, 56, 57]);
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data").URI(), Result.Ok(raw));
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("file");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.FILE);
     expect(res.unwrap().payload).toEqual(raw);
   });
 
@@ -30,9 +32,9 @@ describe("storage-content", () => {
       },
     ];
     const raw = sthis.txt.encode(JSON.stringify(ref));
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=meta").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), Result.Ok(raw));
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("meta");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.META);
     const dbMetas = res.unwrap().payload as bs.DbMetaEvent[];
     expect(dbMetas.length).toBe(1);
     const dbMeta = dbMetas[0];
@@ -67,9 +69,9 @@ describe("storage-content", () => {
       ],
     };
     const raw = sthis.txt.encode(JSON.stringify(ref));
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=wal").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=wal").URI(), Result.Ok(raw));
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("wal");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.WAL);
     const walstate = res.unwrap().payload as bs.WALState;
     expect(
       walstate.fileOperations.map((i) => ({
@@ -94,25 +96,25 @@ describe("de-serialize", () => {
   const sthis = mockSuperThis();
   it("car", async () => {
     const msg = {
-      type: "car",
+      type: FPEnvelopeType.CAR,
       payload: new Uint8Array([55, 56, 57]),
     } satisfies bs.FPEnvelopeCar;
-    const res = await rt.gw.fpSerialize(sthis, msg, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpSerialize(sthis, msg);
     expect(res).toEqual(msg.payload);
   });
 
   it("file", async () => {
     const msg = {
-      type: "file",
+      type: FPEnvelopeType.FILE,
       payload: new Uint8Array([55, 56, 57]),
     } satisfies bs.FPEnvelopeFile;
-    const res = await rt.gw.fpSerialize(sthis, msg, BuildURI.from("http://x.com?store=data").URI());
+    const res = await rt.gw.fpSerialize(sthis, msg);
     expect(res).toEqual(msg.payload);
   });
 
   it("meta", async () => {
     const msg = {
-      type: "meta",
+      type: FPEnvelopeType.META,
       payload: [
         await bs.createDbMetaEvent(
           sthis,
@@ -123,8 +125,8 @@ describe("de-serialize", () => {
         ),
       ],
     } satisfies bs.FPEnvelopeMeta;
-    const ser = await rt.gw.fpSerialize(sthis, msg, BuildURI.from("http://x.com?store=meta").URI());
-    const res = await rt.gw.fpDeserialize(sthis, ser, BuildURI.from("http://x.com?store=meta").URI());
+    const ser = await rt.gw.fpSerialize(sthis, msg);
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), Result.Ok(ser));
     const dbMetas = res.unwrap().payload as bs.DbMetaEvent[];
     expect(dbMetas.length).toBe(1);
     const dbMeta = dbMetas[0];
@@ -135,7 +137,7 @@ describe("de-serialize", () => {
 
   it("wal", async () => {
     const msg = {
-      type: "wal",
+      type: FPEnvelopeType.WAL,
       payload: {
         fileOperations: [
           {
@@ -155,8 +157,8 @@ describe("de-serialize", () => {
         ],
       },
     } satisfies bs.FPEnvelopeWAL;
-    const ser = await rt.gw.fpSerialize(sthis, msg, BuildURI.from("http://x.com?store=wal").URI());
-    const res = await rt.gw.fpDeserialize(sthis, ser, BuildURI.from("http://x.com?store=wal").URI());
+    const ser = await rt.gw.fpSerialize(sthis, msg);
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=wal").URI(), Result.Ok(ser));
     expect(res.isOk()).toBeTruthy();
     expect(res.unwrap().type).toEqual("wal");
     const walstate = res.unwrap().payload as bs.WALState;
@@ -167,17 +169,17 @@ describe("de-serialize", () => {
 
   it("coerce into fpDeserialize Result", async () => {
     const raw = new Uint8Array([55, 56, 57]);
-    const res = await rt.gw.fpDeserialize(sthis, Result.Ok(raw), BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data&suffix=.car").URI(), Result.Ok(raw));
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.CAR);
     expect(res.unwrap().payload).toEqual(raw);
   });
 
   it("coerce into fpDeserialize Promise", async () => {
     const raw = new Uint8Array([55, 56, 57]);
-    const res = await rt.gw.fpDeserialize(sthis, Promise.resolve(raw), BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data&suffix=.car").URI(), Promise.resolve(raw));
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.CAR);
     expect(res.unwrap().payload).toEqual(raw);
   });
 
@@ -185,32 +187,74 @@ describe("de-serialize", () => {
     const raw = new Uint8Array([55, 56, 57]);
     const res = await rt.gw.fpDeserialize(
       sthis,
-      Promise.resolve(Result.Ok(raw)),
       BuildURI.from("http://x.com?store=data&suffix=.car").URI(),
+      Promise.resolve(Result.Ok(raw)),
     );
     expect(res.isOk()).toBeTruthy();
-    expect(res.unwrap().type).toEqual("car");
+    expect(res.unwrap().type).toEqual(FPEnvelopeType.CAR);
     expect(res.unwrap().payload).toEqual(raw);
   });
 
   it("coerce into fpDeserialize Promise Result.Err", async () => {
     const raw = Promise.resolve(Result.Err<Uint8Array>("error"));
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data&suffix=.car").URI(), raw);
     expect(res.isErr()).toBeTruthy();
     expect(res.unwrap_err().message).toEqual("error");
   });
 
   it("coerce into fpDeserialize Promise.reject", async () => {
     const raw = Promise.reject(new Error("error"));
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data&suffix=.car").URI(), raw);
     expect(res.isErr()).toBeTruthy();
     expect(res.unwrap_err().message).toEqual("error");
   });
 
   it("coerce into fpDeserialize Result.Err", async () => {
     const raw = Result.Err<Uint8Array>("error");
-    const res = await rt.gw.fpDeserialize(sthis, raw, BuildURI.from("http://x.com?store=data&suffix=.car").URI());
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=data&suffix=.car").URI(), raw);
     expect(res.isErr()).toBeTruthy();
     expect(res.unwrap_err().message).toEqual("error");
+  });
+
+  it("attach Key to Meta", async () => {
+    const msg = {
+      type: FPEnvelopeType.META,
+      payload: [
+        await bs.createDbMetaEvent(
+          sthis,
+          {
+            cars: [await simpleCID(sthis)],
+          },
+          [await simpleCID(sthis), await simpleCID(sthis)],
+        ),
+      ],
+    } satisfies bs.FPEnvelopeMeta;
+    const ser = await rt.gw.fpSerialize(sthis, msg, {
+      meta: async (sthis, payload, base) => {
+        const res = await base(
+          sthis,
+          payload.map((i) => ({ ...i, key: "key" })),
+        );
+        return res;
+      },
+    });
+    let key = "";
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), Result.Ok(ser), {
+      meta: async (sthis, payload) => {
+        const json = JSON.parse(sthis.txt.decode(payload));
+        key = json[0].key;
+        return Result.Ok(
+          json.map((i: { key?: string }) => {
+            delete i.key;
+            return i;
+          }) as SerializedMeta[],
+        );
+      },
+    });
+    expect(res.isOk()).toBeTruthy();
+    const meta = res.unwrap() as bs.FPEnvelopeMeta;
+    expect(meta.type).toEqual("meta");
+    expect(Object.keys(meta.payload).includes("key")).toBeFalsy();
+    expect(key).toEqual("key");
   });
 });

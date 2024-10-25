@@ -10,9 +10,9 @@ export interface GatewayOpts {
 export type GetResult<S> = Result<FPEnvelope<S>, NotFoundError | Error>;
 export type VoidResult = Result<void>;
 
-export interface TestGateway {
-  get(url: URI, key: string): Promise<Uint8Array>;
-}
+// export interface TestGateway {
+//   get(url: URI, key: string): Promise<Uint8Array>;
+// }
 
 export type UnsubscribeResult = Result<() => void>;
 
@@ -23,13 +23,19 @@ export interface Gateway {
   // start updates URL --> hate this side effect
   start(baseUrl: URI, loader?: Loadable): Promise<Result<URI>>;
   close(baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
-  destroy(baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
   put<T>(url: URI, body: FPEnvelope<T>, loader?: Loadable): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
   get<S>(url: URI, loader?: Loadable): Promise<GetResult<S>>;
   delete(url: URI, loader?: Loadable): Promise<VoidResult>;
+
   // be notified of remote meta
   subscribe?(url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>, loader?: Loadable): Promise<UnsubscribeResult>;
+
+  // this method is used to get the raw data mostly for testing
+  getPlain(url: URI, key: string, loader?: Loadable): Promise<Result<Uint8Array>>;
+  // this method is used for testing only
+  // to avoid any drama it should only enabled in test mode
+  destroy(baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
 }
 
 export interface GatewayReturn<O, T> {

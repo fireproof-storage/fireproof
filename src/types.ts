@@ -2,7 +2,7 @@ import type { EventLink } from "@web3-storage/pail/clock/api";
 import type { Operation } from "@web3-storage/pail/crdt/api";
 
 import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile, GatewayInterceptor } from "./blockstore/index.js";
-import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";
+import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 import { KeyBagOpts } from "./runtime/key-bag.js";
@@ -85,9 +85,12 @@ export interface PathOps {
   basename(path: string): string;
 }
 
+export type ToUInt8 = Uint8Array | Result<Uint8Array>;
+export type PromiseToUInt8 = ToUInt8 | Promise<Uint8Array> | Promise<Result<Uint8Array>>;
+
 export interface TextEndeCoder {
   encode(input: string): Uint8Array;
-  decode(input: Uint8Array): string;
+  decode(input: ToUInt8): string;
 }
 export interface SuperThisOpts {
   // readonly crypto?: CryptoRuntime;

@@ -22,7 +22,6 @@ async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFact
 
 describe("DataStore", function () {
   let store: bs.DataStore;
-  let raw: bs.TestGateway;
 
   const sthis = mockSuperThis();
   afterEach(async () => {
@@ -34,7 +33,6 @@ describe("DataStore", function () {
     await sthis.start();
     store = await runtime(sthis).makeDataStore(await mockLoader(sthis));
     await store.start();
-    raw = await bs.testStoreFactory(store.url(), sthis);
   });
 
   it("should have a name", function () {
@@ -47,14 +45,13 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const data = await raw.get(store.url(), car.cid.toString());
+    const data = (await store.realGateway.getPlain(store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
 
 describe("DataStore with a saved car", function () {
   let store: bs.DataStore;
-  let raw: bs.TestGateway;
   let car: bs.AnyBlock;
   const sthis = mockSuperThis();
 
@@ -67,8 +64,6 @@ describe("DataStore with a saved car", function () {
     await sthis.start();
     store = await runtime(sthis).makeDataStore(await mockLoader(sthis, "test2"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url(), sthis);
-    raw = await bs.testStoreFactory(store.url(), sthis);
     car = {
       cid: "cid" as unknown as CID,
       bytes: new Uint8Array([55, 56, 57, 80]),
@@ -77,7 +72,7 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const data = await raw.get(store.url(), car.cid.toString());
+    const data = (await store.realGateway.getPlain(store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
@@ -97,7 +92,6 @@ describe("DataStore with a saved car", function () {
 
 describe("MetaStore", function () {
   let store: bs.MetaStore;
-  let raw: bs.TestGateway;
 
   const sthis = mockSuperThis();
 
@@ -110,7 +104,6 @@ describe("MetaStore", function () {
     await sthis.start();
     store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url(), sthis);
   });
 
   it("should have a name", function () {
@@ -124,8 +117,8 @@ describe("MetaStore", function () {
       // key: undefined,
     };
     await store.save(h);
-    const file = await raw.get(store.url(), "main");
-    const blockMeta = (await fpDeserialize(sthis, file, store.url())) as Result<bs.FPEnvelopeMeta>;
+    const file = await store.realGateway.getPlain(store.url(), "main");
+    const blockMeta = (await fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
     const decodedHeader = blockMeta.Ok().payload[0].dbMeta;
@@ -137,7 +130,6 @@ describe("MetaStore", function () {
 
 describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
-  let raw: bs.TestGateway;
   let cid: CID;
   const sthis = mockSuperThis();
   // let onload: bs.DbMeta[];
@@ -151,7 +143,6 @@ describe("MetaStore with a saved header", function () {
     await sthis.start();
     store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test-saved-header"));
     await store.start();
-    raw = await bs.testStoreFactory(store.url(), sthis);
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid] /*, key: undefined */ });
   });
@@ -163,7 +154,7 @@ describe("MetaStore with a saved header", function () {
   // });
 
   it("should have a header", async function () {
-    const bytes = await raw.get(store.url(), "main");
+    const bytes = await store.realGateway.getPlain(store.url(), "main");
     const data = sthis.txt.decode(bytes);
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];
@@ -171,7 +162,7 @@ describe("MetaStore with a saved header", function () {
     expect(header.parents).toBeDefined();
     // const [blockMeta] = await store.handleByteHeads(bytes);
 
-    const blockMeta = (await fpDeserialize(sthis, bytes, store.url())) as Result<bs.FPEnvelopeMeta>;
+    const blockMeta = (await fpDeserialize(sthis, store.url(), bytes)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
     const decodedHeader = blockMeta.Ok().payload[0].dbMeta;

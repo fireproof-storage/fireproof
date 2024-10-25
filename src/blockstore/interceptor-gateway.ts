@@ -169,4 +169,8 @@ export class InterceptorGateway implements Gateway {
     }
     return this.innerGW.delete(url, loader);
   }
+
+  async getPlain(url: URI, key: string, loader?: Loadable): Promise<Result<Uint8Array>> {
+    return this.innerGW.getPlain(url, key, loader);
+  }
 }
