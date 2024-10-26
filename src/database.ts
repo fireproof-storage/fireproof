@@ -52,12 +52,8 @@ export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts
 
 export interface DatabaseOpts {
   readonly name?: string;
-  // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: GatewayInterceptor;
-  // readonly factoryUnreg?: () => void;
-  // readonly persistIndexes?: boolean;
-  // readonly autoCompact?: number;
   readonly storeUrls: StoreURIRuntime;
   readonly storeEnDe: StoreEnDeFile;
   readonly keyBag: KeyBagRuntime;
