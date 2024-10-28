@@ -150,7 +150,7 @@ export class IndexDBGateway implements Gateway {
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
       const bytes = await fpSerialize(this.sthis, value);
       const tx = this._db.transaction([store], "readwrite");
-      await tx.objectStore(store).put(bytes, sanitzeKey(key));
+      await tx.objectStore(store).put(bytes.Ok(), sanitzeKey(key));
       await tx.done;
     });
   }

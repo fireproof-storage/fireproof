@@ -61,15 +61,15 @@ function WALState2Serialized(sthis: SuperThis, wal: WALState): SerializedWAL {
   return serializedWAL;
 }
 
-export type CAREncodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Uint8Array>;
-export type FILEEncodeEnvelopeBase = (sthis: SuperThis, payload: Uint8Array) => Promise<Uint8Array>;
-export type METAEncodeEnvelopeBase = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Uint8Array>;
-export type WALEncodeEnvelopeBase = (sthis: SuperThis, payload: SerializedWAL) => Promise<Uint8Array>;
+export type CAREncodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
+export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
+export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[]) => Promise<Result<Uint8Array>>;
+export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL) => Promise<Result<Uint8Array>>;
 
-export type CAREncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
-export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
-export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[], base: METAEncodeEnvelopeBase) => Promise<Uint8Array>;
-export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL, base: WALEncodeEnvelopeBase) => Promise<Uint8Array>;
+// export type CAREncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
+// export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
+// export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[], base: METAEncodeEnvelopeBase) => Promise<Uint8Array>;
+// export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL, base: WALEncodeEnvelopeBase) => Promise<Uint8Array>;
 export interface Encoder {
   readonly car: CAREncodeEnvelope;
   readonly file: FILEEncodeEnvelope;
@@ -78,34 +78,30 @@ export interface Encoder {
 }
 
 const defaultEncoder: Encoder = {
-  car: async (sthis: SuperThis, payload: Uint8Array) => payload,
-  file: async (sthis: SuperThis, payload: Uint8Array) => payload,
-  meta: async (sthis: SuperThis, payload: SerializedMeta[]) => sthis.txt.encode(JSON.stringify(payload)),
-  wal: async (sthis: SuperThis, payload: SerializedWAL) => sthis.txt.encode(JSON.stringify(payload)),
+  car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
+  file: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
+  meta: async (sthis: SuperThis, payload: SerializedMeta[]) => Result.Ok(sthis.txt.encode(JSON.stringify(payload))),
+  wal: async (sthis: SuperThis, payload: SerializedWAL) => Result.Ok(sthis.txt.encode(JSON.stringify(payload))),
 };
 
-export async function fpSerialize<T>(sthis: SuperThis, env: FPEnvelope<T>, pencoder?: Partial<Encoder>): Promise<Uint8Array> {
+export async function fpSerialize<T>(
+  sthis: SuperThis,
+  env: FPEnvelope<T>,
+  pencoder?: Partial<Encoder>,
+): Promise<Result<Uint8Array>> {
   const encoder = {
     ...defaultEncoder,
     ...pencoder,
   };
   switch (env.type) {
     case FPEnvelopeType.FILE:
-      return encoder.file(sthis, (env as FPEnvelopeFile).payload, defaultEncoder.file as FILEEncodeEnvelopeBase);
+      return encoder.file(sthis, (env as FPEnvelopeFile).payload);
     case FPEnvelopeType.CAR:
-      return encoder.car(sthis, (env as FPEnvelopeCar).payload, defaultEncoder.car as CAREncodeEnvelopeBase);
+      return encoder.car(sthis, (env as FPEnvelopeCar).payload);
     case FPEnvelopeType.WAL:
-      return encoder.wal(
-        sthis,
-        WALState2Serialized(sthis, (env as FPEnvelopeWAL).payload),
-        defaultEncoder.wal as WALEncodeEnvelopeBase,
-      );
+      return encoder.wal(sthis, WALState2Serialized(sthis, (env as FPEnvelopeWAL).payload));
     case FPEnvelopeType.META:
-      return encoder.meta(
-        sthis,
-        await dbMetaEvent2Serialized(sthis, (env as FPEnvelopeMeta).payload),
-        defaultEncoder.meta as METAEncodeEnvelopeBase,
-      );
+      return encoder.meta(sthis, await dbMetaEvent2Serialized(sthis, (env as FPEnvelopeMeta).payload));
     default:
       throw sthis.logger.Error().Str("type", env.type).Msg("unsupported store").AsError();
   }

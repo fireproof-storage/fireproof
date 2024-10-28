@@ -155,7 +155,7 @@ describe("MetaStore with a saved header", function () {
 
   it("should have a header", async function () {
     const bytes = await store.realGateway.getPlain(store.url(), "main");
-    const data = sthis.txt.decode(bytes);
+    const data = sthis.txt.decode(bytes.Ok());
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];
     expect(header).toBeDefined();

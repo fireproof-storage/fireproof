@@ -100,7 +100,7 @@ describe("de-serialize", () => {
       payload: new Uint8Array([55, 56, 57]),
     } satisfies bs.FPEnvelopeCar;
     const res = await rt.gw.fpSerialize(sthis, msg);
-    expect(res).toEqual(msg.payload);
+    expect(res.Ok()).toEqual(msg.payload);
   });
 
   it("file", async () => {
@@ -109,7 +109,7 @@ describe("de-serialize", () => {
       payload: new Uint8Array([55, 56, 57]),
     } satisfies bs.FPEnvelopeFile;
     const res = await rt.gw.fpSerialize(sthis, msg);
-    expect(res).toEqual(msg.payload);
+    expect(res.Ok()).toEqual(msg.payload);
   });
 
   it("meta", async () => {
@@ -126,7 +126,7 @@ describe("de-serialize", () => {
       ],
     } satisfies bs.FPEnvelopeMeta;
     const ser = await rt.gw.fpSerialize(sthis, msg);
-    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), Result.Ok(ser));
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), ser);
     const dbMetas = res.unwrap().payload as bs.DbMetaEvent[];
     expect(dbMetas.length).toBe(1);
     const dbMeta = dbMetas[0];
@@ -158,7 +158,7 @@ describe("de-serialize", () => {
       },
     } satisfies bs.FPEnvelopeWAL;
     const ser = await rt.gw.fpSerialize(sthis, msg);
-    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=wal").URI(), Result.Ok(ser));
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=wal").URI(), ser);
     expect(res.isOk()).toBeTruthy();
     expect(res.unwrap().type).toEqual("wal");
     const walstate = res.unwrap().payload as bs.WALState;
@@ -230,16 +230,12 @@ describe("de-serialize", () => {
       ],
     } satisfies bs.FPEnvelopeMeta;
     const ser = await rt.gw.fpSerialize(sthis, msg, {
-      meta: async (sthis, payload, base) => {
-        const res = await base(
-          sthis,
-          payload.map((i) => ({ ...i, key: "key" })),
-        );
-        return res;
+      meta: async (sthis, payload) => {
+        return Result.Ok(sthis.txt.encode(JSON.stringify(payload.map((i) => ({ ...i, key: "key" })))));
       },
     });
     let key = "";
-    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), Result.Ok(ser), {
+    const res = await rt.gw.fpDeserialize(sthis, BuildURI.from("http://x.com?store=meta").URI(), ser, {
       meta: async (sthis, payload) => {
         const json = JSON.parse(sthis.txt.decode(payload));
         key = json[0].key;
