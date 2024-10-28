@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.34
-        version: 0.2.34(typescript@5.8.3)
+        specifier: ^0.2.35
+        version: 0.2.35(typescript@5.8.3)
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -940,8 +940,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.2.34':
-    resolution: {integrity: sha512-WZQOkEt0gc5MLUH1ARuk6XBvPvS0sacImSiFdhdCKCm/oOkeJow1s/mvzTuikTRiK78NL2YTnZxcwuQarK9KsQ==}
+  '@adviser/cement@0.2.35':
+    resolution: {integrity: sha512-tjYhF0lZLsUuo/fQWZMdOd5fK49o9VYvRb6Oc2/JpUG2NYYJgGflE/0MAy9kqHZw9x222S6s7ZY/uFa+JcecNw==}
     engines: {node: '>=16'}
 
   '@alloc/quick-lru@5.2.0':
@@ -8452,7 +8452,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.2.34(typescript@5.8.3)':
+  '@adviser/cement@0.2.35(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.8.3)
       yaml: 2.5.1
