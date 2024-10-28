@@ -81,7 +81,7 @@ export class FileGateway implements Gateway {
       const file = await this.getFilePath(url);
       this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
 
-      await this.fs.writefile(file, await fpSerialize(this.sthis, env));
+      await this.fs.writefile(file, (await fpSerialize(this.sthis, env)).Ok());
     });
   }
 

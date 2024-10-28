@@ -29,8 +29,8 @@ export class MemoryGateway implements Gateway {
     this.memorys.clear();
     return Promise.resolve(Result.Ok(undefined));
   }
-  async put<T>(url: URI, body: FPEnvelope<T>): Promise<VoidResult> {
-    this.memorys.set(url.toString(), await fpSerialize(this.sthis, body));
+  async put<T>(url: URI, enve: FPEnvelope<T>): Promise<VoidResult> {
+    this.memorys.set(url.toString(), (await fpSerialize(this.sthis, enve)).Ok());
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
