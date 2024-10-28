@@ -1,38 +1,52 @@
 import { rawConnect } from "@fireproof/cloud";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 import DynamicTable from "../../components/DynamicTable";
 import { headersForDocs } from "../../components/dynamicTableHelpers";
+import { truncateDbName } from "../../layouts/app";
 
-const DEFAULT_ENDPOINT =
+export const DEFAULT_ENDPOINT =
   "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
-const SYNC_DB_NAME = "_fp.sync";
+export const SYNC_DB_NAME = "fp_sync";
 
 export default function Show() {
   const { name, endpoint } = useParams();
   if (!name) {
     throw new Error("Name is required");
   }
-  return (
-    <TableView key={name} name={name} endpoint={endpoint || DEFAULT_ENDPOINT} />
-  );
+  return <TableView key={name} name={name} />;
 }
 
-function TableView({ name, endpoint }: { name: string; endpoint: string }) {
+function TableView({ name }: { name: string }) {
   const { useLiveQuery, database } = useFireproof(name);
+  const [showConnectionInfo, setShowConnectionInfo] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const connectionInfoRef = useRef<HTMLDivElement>(null);
 
-  // @ts-expect-error something database type
-  const connection = rawConnect(database, name, endpoint);
-  console.log("connection", connection);
+  const { useLiveQuery: usePetnameLiveQuery, useAllDocs } =
+    useFireproof(SYNC_DB_NAME);
 
-  const { useLiveQuery: usePetnameLiveQuery } = useFireproof(SYNC_DB_NAME);
-
-  const myPetnames = usePetnameLiveQuery<{ localName: string }>("remoteName", {
+  const myPetnames = usePetnameLiveQuery<{
+    localName: string;
+    endpoint: string;
+    remoteName: string;
+  }>("sanitizedRemoteName", {
     key: name,
   });
 
-  const petNames = myPetnames.docs.map((doc) => doc.localName);
+  console.log(myPetnames);
+
+  const petName = myPetnames.docs[0]?.localName || "";
+
+  let connection, remoteName;
+  if (myPetnames.docs.length > 0) {
+    const endpoint = myPetnames.docs[0].endpoint;
+    remoteName = myPetnames.docs[0].remoteName;
+    if (endpoint) {
+      connection = rawConnect(database as any, remoteName, endpoint);
+    }
+  }
 
   const allDocs = useLiveQuery("_id");
   const docs = allDocs.docs.filter((doc) => doc);
@@ -64,6 +78,43 @@ function TableView({ name, endpoint }: { name: string; endpoint: string }) {
     }
   };
 
+  const currentHost = window.location.origin;
+  const currentEndpoint = myPetnames.docs[0]?.endpoint || "";
+  const currentLocalName = myPetnames.docs[0]?.localName || "";
+  const currentRemoteName = myPetnames.docs[0]?.remoteName || "";;
+
+  const connectionUrl = `${currentHost}/fp/databases/connect?endpoint=${encodeURIComponent(
+    currentEndpoint
+  )}&localName=${encodeURIComponent(
+    currentLocalName
+  )}&remoteName=${encodeURIComponent(currentRemoteName)}`;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(connectionUrl).then(
+      () => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000);
+      },
+      (err) => console.error("Could not copy text: ", err)
+    );
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        connectionInfoRef.current &&
+        !connectionInfoRef.current.contains(event.target as Node)
+      ) {
+        setShowConnectionInfo(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="p-6 bg-[--muted]">
       <div className="flex justify-between items-center mb-4">
@@ -72,16 +123,36 @@ function TableView({ name, endpoint }: { name: string; endpoint: string }) {
             to={`/fp/databases/${name}`}
             className="font-medium text-[--foreground] hover:underline"
           >
-            {name}
+            {truncateDbName(name, 20)}
           </Link>
-          {petNames.map((petName) => (
-            <span key={petName} className="mx-2">
-              &gt; {petName}
-            </span>
-          ))}
+          {petName && <span className="mx-2">&gt; {petName}</span>}
           <span> &gt; All Documents ({docs.length})</span>
         </nav>
         <div className="flex space-x-2">
+          {connection && (
+            <div className="relative" ref={connectionInfoRef}>
+              <div
+                onClick={() => setShowConnectionInfo(!showConnectionInfo)}
+                className="cursor-pointer inline-flex items-center justify-center rounded bg-[--background] px-3 py-2 text-sm font-medium text-[--foreground] transition-colors hover:bg-[--background]/80 border border-[--border]"
+              >
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                Connected
+              </div>
+              {showConnectionInfo && (
+                <div className="absolute right-0 mt-2 w-96 bg-[--background] border border-[--border] rounded-md shadow-lg z-10">
+                  <div className="p-4">
+                    <h3 className="font-bold mb-2">Share:</h3>
+                    <button
+                      onClick={copyToClipboard}
+                      className="w-full p-2 bg-[--accent] text-accent-foreground rounded hover:bg-[--accent]/80 transition-colors"
+                    >
+                      {copySuccess ? "Copied!" : "Copy Share Link"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <Link
             to={`/fp/databases/${name}/docs/new`}
             className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80"

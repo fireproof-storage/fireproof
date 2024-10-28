@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Link,
   NavLink,
@@ -8,6 +8,13 @@ import {
   useParams,
 } from "react-router-dom";
 import { fireproof } from "use-fireproof";
+import { SYNC_DB_NAME } from "../pages/databases/show";
+
+const reservedDbNames: string[] = [
+  `fp.${SYNC_DB_NAME}`,
+  "fp.petname_mappings",
+  "fp.fp_sync",
+];
 
 export async function loader() {
   console.log("loading databases");
@@ -20,15 +27,18 @@ async function getIndexedDBNamesWithQueries(): Promise<
 > {
   try {
     const databases = await indexedDB.databases();
-    const fireproofDbs = databases
+    const userDbs = databases
       .filter(
-        (db) => db.name!.startsWith("fp.") && !db.name!.endsWith("_queries")
+        (db) =>
+          db.name!.startsWith("fp.") &&
+          !db.name!.endsWith("_queries") &&
+          !reservedDbNames.includes(db.name!)
       )
       .map((db) => db.name!.substring(3));
 
     const dbsWithQueries = await Promise.all(
-      fireproofDbs.map(async (dbName) => {
-        const queryDbName = `${dbName}_queries`;
+      userDbs.map(async (dbName) => {
+        const queryDbName = `fp_${dbName}_queries`;
         const queryDb = fireproof(queryDbName);
         const allDocs = await queryDb.allDocs({ includeDocs: true });
         const queries = allDocs.rows.map((row) => row.value);
@@ -42,6 +52,11 @@ async function getIndexedDBNamesWithQueries(): Promise<
     console.error("Error fetching IndexedDB names and queries:", error);
     return [];
   }
+}
+
+export function truncateDbName(name: string, maxLength: number) {
+  if (name.length <= maxLength) return name;
+  return `${name.substring(0, maxLength - 3)}...`;
 }
 
 export default function Layout() {
@@ -84,11 +99,6 @@ export default function Layout() {
     { to: "/history", label: "History" },
     { to: "/query", label: "Query" },
   ];
-
-  const truncateDbName = (name: string, maxLength: number) => {
-    if (name.length <= maxLength) return name;
-    return `${name.substring(0, maxLength - 3)}...`;
-  };
 
   return (
     <div className="flex h-screen w-full overflow-hidden">
