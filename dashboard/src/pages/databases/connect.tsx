@@ -1,6 +1,7 @@
 import React from "react";
 import { redirect } from "react-router-dom";
 import { fireproof } from "use-fireproof";
+import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "./show";
 
 export async function loader({ request }) {
   const url = new URL(request.url);
@@ -8,22 +9,36 @@ export async function loader({ request }) {
   if (!localName) {
     throw new Error("Local name is required");
   }
+
   const remoteName = url.searchParams.get("remoteName");
-  const endpoint = url.searchParams.get("endpoint");
-  const petnames = fireproof("petname.mappings");
-  const ok = await petnames.put({
-    remoteName,
-    localName,
-    endpoint,
-    firstConnect: false,
+  const sanitizedRemoteName = remoteName
+    .replace(/^[^a-zA-Z0-9]+/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "_");
+
+  const endpoint = url.searchParams.get("endpoint") || DEFAULT_ENDPOINT;
+
+  const syncDb = fireproof(SYNC_DB_NAME);
+  const result = await syncDb.query((doc) => [doc.localName, doc.remoteName], {
+    keys: [localName, remoteName],
+    includeDocs: true,
   });
-  console.log(ok);
-  if (endpoint) {
-    return redirect(
-      `/fp/databases/${remoteName}?endpoint=${encodeURIComponent(endpoint)}`
-    );
+  if (result.rows.length === 0) {
+    const ok = await syncDb.put({
+      remoteName,
+      sanitizedRemoteName,
+      localName,
+      endpoint,
+      firstConnect: true,
+    });
+    console.log(ok);
+  } else {
+    const doc = result.rows[0].doc;
+    console.log(doc);
+    // TODO: Update the existing document if needed
+    // await syncDb.put({ ...doc, endpoint, lastConnect: new Date() });
   }
-  return redirect(`/fp/databases/${remoteName}`);
+
+  return redirect(`/fp/databases/${sanitizedRemoteName}`);
 }
 
 export default function DatabasesConnect() {
