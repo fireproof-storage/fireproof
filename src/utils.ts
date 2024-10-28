@@ -122,12 +122,11 @@ class pathOpsImpl implements PathOps {
   //   }
 }
 const pathOps = new pathOpsImpl();
-const txtOps = {
+const txtOps = ((txtEncoder, txtDecoder) => ({
+  encode: (input: string) => txtEncoder.encode(input),
+  decode: (input: ToUInt8) => txtDecoder.decode(coerceIntoUint8(input).Ok()),
   // eslint-disable-next-line no-restricted-globals
-  encode: (input: string) => new TextEncoder().encode(input),
-  // eslint-disable-next-line no-restricted-globals
-  decode: (input: ToUInt8) => new TextDecoder().decode(coerceIntoUint8(input).Ok()),
-};
+}))(new TextEncoder(), new TextDecoder());
 
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
   const env = envFactory({
