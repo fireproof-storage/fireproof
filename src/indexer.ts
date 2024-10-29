@@ -203,7 +203,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           return (await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
         }),
       );
-      return { rows: results.flat() };
+      return { rows: results.flat(), clock: this.crdt.clock.head, name: this.crdt.opts.name };
     }
     if (opts.prefix) {
       if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
