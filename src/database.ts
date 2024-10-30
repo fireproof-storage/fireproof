@@ -100,10 +100,7 @@ export function isLedger<T extends DocTypes = NonNullable<unknown>>(db: unknown)
   return db instanceof LedgerImpl || db instanceof LedgerShell;
 }
 
-export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(
-  name: string | undefined,
-  opts?: ConfigOpts,
-): Ledger<T> {
+export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: string | undefined, opts?: ConfigOpts): Ledger<T> {
   const sthis = ensureSuperThis(opts);
   return new LedgerShell<T>(
     ledgers.get(keyConfigOpts(sthis, name, opts)).once((key) => {
