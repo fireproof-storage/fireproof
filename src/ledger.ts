@@ -33,7 +33,7 @@ import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./u
 import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 
-const databases = new KeyedResolvOnce<Database>();
+const ledgers = new KeyedResolvOnce<Ledger>();
 
 export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
   return JSON.stringify(
@@ -233,7 +233,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   }
   async shellClose(db: LedgerShell<DT>) {
     if (!this.shells.has(db)) {
-      throw this.logger.Error().Str("db", this.name).Msg(`Database Shell mismatch`).AsError();
+      throw this.logger.Error().Str("db", this.name).Msg(`LedgerShell mismatch`).AsError();
     }
     this.shells.delete(db);
     if (this.shells.size === 0) {
