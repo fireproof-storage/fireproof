@@ -308,11 +308,13 @@ export interface DbMetaEvent {
 }
 
 export function DbMetaEventEqual(a: DbMetaEvent, b: DbMetaEvent): boolean {
-  return a.eventCid.equals(b.eventCid) &&
+  return (
+    a.eventCid.equals(b.eventCid) &&
     a.parents.length === b.parents.length &&
     a.parents.every((p, i) => p.equals(b.parents[i])) &&
     a.dbMeta.cars.length === b.dbMeta.cars.length &&
-    a.dbMeta.cars.every((c, i) => c.equals(b.dbMeta.cars[i]));
+    a.dbMeta.cars.every((c, i) => c.equals(b.dbMeta.cars[i]))
+  );
 }
 
 export function DbMetaEventsEqual(a: DbMetaEvent[], b: DbMetaEvent[]): boolean {
