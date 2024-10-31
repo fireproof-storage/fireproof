@@ -20,18 +20,14 @@ const external = [
   "node:url",
   "assert",
   "stream",
+  "better-sqlite3",
 ];
 
-/*
-function skipper(suffix: string[], target: string) {
+function skipper(suffix: string, target: string) {
   function intercept(build) {
-    const filter = new RegExp(`(${suffix.join("|")})`);
+    const filter = new RegExp(suffix);
     build.onResolve({ filter }, async (args) => {
-      if (target.startsWith("/")) {
-        return build.resolve(target, { kind: args.kind, resolveDir: `/Users/menabe/Software/fproof/fireproof` });
-      } else {
-        return build.resolve(target, { kind: args.kind, resolveDir: args.resolveDir });
-      }
+      // console.log("skipper", args.path);
       // const external = Boolean(build.initialOptions.external?.includes(args.path));
       // if (external) {
       // return { path: args.path, external };
@@ -39,10 +35,12 @@ function skipper(suffix: string[], target: string) {
       // if (args.resolveDir === '') {
       // return;
       // }
+
+      return build.resolve(target, { kind: args.kind, resolveDir: args.resolveDir });
     });
   }
   return {
-    name: "skipper",
+    name: "esbuild-resolve",
     setup: (build) => {
       // for (const moduleName of Object.keys(options)) {
       intercept(build);
@@ -50,23 +48,24 @@ function skipper(suffix: string[], target: string) {
     },
   };
 }
-*/
 
-// const skipIife = {
-//   // "node-filesystem@skip-iife": "../../../bundle-not-impl.js",
-//   // "mem-filesystem@skip-iife": "../../../bundle-not-impl.js",
-//   // "node:fs/promises": "../../../bundle-not-impl.js",
-//   // "fs/promises": "../../../bundle-not-impl.js",
-//   // "../runtime/store-file.js": "../../bundle-not-impl.js",
-//   // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
-//   // "./mem-filesystem.js": "../../../bundle-not-impl.js",
-//   // "./gateways/file/gateway.js": "../bundle-not-impl.js",
-//   // "./node-sys-container.js": "../bundle-not-impl.js",
-//   // "./key-bag-file.js": "../bundle-not-impl.js",
-// };
+const skipIife = {
+  // "node-filesystem@skip-iife": "../../../bundle-not-impl.js",
+  // "mem-filesystem@skip-iife": "../../../bundle-not-impl.js",
+  // "node:fs/promises": "../../../bundle-not-impl.js",
+  // "fs/promises": "../../../bundle-not-impl.js",
+  // "../runtime/store-file.js": "../../bundle-not-impl.js",
+  // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
+  // "./mem-filesystem.js": "../../../bundle-not-impl.js",
+  // "./gateways/file/gateway.js": "../bundle-not-impl.js",
+  // "./node-sys-container.js": "../bundle-not-impl.js",
+  // "./key-bag-file.js": "../bundle-not-impl.js",
+};
 const skipEsm = {};
 
-const ourMultiformat = {};
+const ourMultiformat = {
+  // "multiformats/block": `${__dirname}/src/runtime/multiformat/block.ts`
+};
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm"], // , "cjs", "iife"],
@@ -105,9 +104,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      // skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
-      // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+      skipper("@skip-iife", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
+        ...skipIife,
         ...ourMultiformat,
       }),
     ],
@@ -182,10 +181,29 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core/react"],
+    format: ["esm", "cjs"],
+    name: "@fireproof/core",
+    entry: ["src/index.ts"],
+    platform: "browser",
+    outDir: "dist/fireproof-core/web",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      skipper("@skip-iife", `${__dirname}/src/bundle-not-impl.js`),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/core'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
     treeshake: true,
-    format: ["esm"], // "cjs"],
-    //    minify: true,
+    minify: true,
     name: "use-fireproof",
     entry: ["src/use-fireproof/index.ts"],
     target: ["esnext"],
@@ -196,8 +214,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      // skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
-      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+      skipper("@skip-iife", `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...skipEsm,
         ...ourMultiformat,

@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { fireproof, PACKAGE_VERSION, rt } from "@fireproof/core";
+import { fireproof, PACKAGE_VERSION, rt } from "@fireproof/core/node";
 
 async function main() {
   // console.log(fireproof);
