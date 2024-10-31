@@ -2,8 +2,8 @@ import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
 
-const nodeInternals = [];
-const webInternals = [];
+const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
+const webInternals = ["./web/gateway-impl.js"];
 
 const external = [
   "path",
@@ -23,9 +23,9 @@ const external = [
   "better-sqlite3",
 ];
 
-function skipper(suffix: string, target: string) {
+function skipper(suffix: string[], target: string) {
   function intercept(build) {
-    const filter = new RegExp(suffix);
+    const filter = new RegExp(`(${suffix.join("|")})`);
     build.onResolve({ filter }, async (args) => {
       // console.log("skipper", args.path);
       // const external = Boolean(build.initialOptions.external?.includes(args.path));
@@ -93,7 +93,8 @@ function packageVersion() {
 const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm"], //, "cjs"],
+    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
+    format: ["iife"],
     name: "@fireproof/core",
     entry: ["src/index.ts"],
     platform: "browser",
@@ -104,7 +105,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@skip-iife", `${__dirname}/src/bundle-not-impl.js`),
+      skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...skipIife,
         ...ourMultiformat,
@@ -142,12 +143,14 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     name: "@fireproof/core/web",
     entry: ["src/runtime/gateways/indexdb/gateway.ts"],
     platform: "browser",
-    outDir: "dist/fireproof-core/web",
+    outDir: "dist/fireproof-core",
+    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
     esbuildPlugins: [
       replace({
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
+      skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
       }),
@@ -182,8 +185,29 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
-    name: "@fireproof/core",
-    entry: ["src/index.ts"],
+    name: "@fireproof/core/node",
+    entry: ["src/runtime/gateways/file/node/mem-filesystem.ts", "src/runtime/gateways/file/node/node-filesystem.ts"],
+    platform: "browser",
+    outDir: "dist/fireproof-core/node",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/core/node'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm", "cjs"],
+    name: "@fireproof/core/web",
+    entry: ["src/runtime/gateways/indexdb/web/gateway-impl.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core/web",
     esbuildPlugins: [
@@ -191,19 +215,20 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@skip-iife", `${__dirname}/src/bundle-not-impl.js`),
+      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...ourMultiformat,
       }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core'",
+      footer: "declare module '@fireproof/core/web'",
     },
   },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
+    external: [...(LIBRARY_BUNDLE_OPTIONS.external || [])],
     treeshake: true,
-    minify: true,
+    //    minify: true,
     name: "use-fireproof",
     entry: ["src/use-fireproof/index.ts"],
     target: ["esnext"],
@@ -214,7 +239,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper("@skip-iife", `${__dirname}/src/bundle-not-impl.js`),
+      skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
+      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...skipEsm,
         ...ourMultiformat,
