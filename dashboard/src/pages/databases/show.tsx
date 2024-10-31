@@ -155,7 +155,7 @@ function TableView({ name }: { name: string }) {
               {showConnectionInfo && (
                 <div className="absolute right-0 mt-2 w-64 bg-[--background] border border-[--border] rounded-md shadow-lg z-10">
                   <div className="p-4">
-                    <h3 className="font-bold mb-2">Share Connection:</h3>
+                    <h3 className="font-bold mb-2">Share Database:</h3>
                     <button
                       onClick={copyToClipboard}
                       className="w-full p-2 bg-[--accent] text-accent-foreground rounded hover:bg-[--accent]/80 transition-colors"
