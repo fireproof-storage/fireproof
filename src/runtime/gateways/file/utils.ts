@@ -8,7 +8,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   switch (name) {
     case "mem":
       {
-        const { MemFileSystem } = await import("./mem-filesystem.js");
+        const { MemFileSystem } = await import("./mem-filesystem@skip-iife.js");
         fs = new MemFileSystem();
       }
       break;
@@ -18,7 +18,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
     //   break;
     // }
     case "node": {
-      const { NodeFileSystem } = await import("./node-filesystem.js");
+      const { NodeFileSystem } = await import("./node-filesystem@skip-iife.js");
       fs = new NodeFileSystem();
       break;
     }

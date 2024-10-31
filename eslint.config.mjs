@@ -17,12 +17,17 @@ const opts = tseslint.config(
       "**/examples/",
       "scripts/",
       "smoke/react/",
+      "src/missingTypes/lib.deno.d.ts",
     ],
   },
   {
     rules: {
       "no-console": ["warn"],
-      //      "@typescript-eslint/explicit-function-return-type": "error",
+    },
+  },
+  {
+    rules: {
+      "no-restricted-globals": ["error", "URL", "TextDecoder", "TextEncoder"],
     },
   },
 );

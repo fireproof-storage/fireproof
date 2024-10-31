@@ -122,7 +122,9 @@ class pathOpsImpl implements PathOps {
 }
 const pathOps = new pathOpsImpl();
 const txtOps = {
+  // eslint-disable-next-line no-restricted-globals
   encode: (input: string) => new TextEncoder().encode(input),
+  // eslint-disable-next-line no-restricted-globals
   decode: (input: Uint8Array) => new TextDecoder().decode(input),
 };
 

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.31
-        version: 0.2.31(typescript@5.6.2)
+        specifier: ^0.2.36
+        version: 0.2.36(typescript@5.6.2)
       '@ipld/car':
         specifier: ^5.3.2
         version: 5.3.2
@@ -95,7 +95,7 @@ importers:
         version: 2.0.5(playwright@1.45.1)(typescript@5.6.2)(vitest@2.0.5)(webdriverio@9.1.2)
       '@vitest/coverage-v8':
         specifier: ^2.0.5
-        version: 2.0.5(vitest@2.0.5(@types/node@22.7.4)(@vitest/browser@2.0.5)(@vitest/ui@2.0.5)(happy-dom@14.12.3))
+        version: 2.0.5(vitest@2.0.5)
       '@vitest/ui':
         specifier: ^2.0.5
         version: 2.0.5(vitest@2.0.5)
@@ -148,8 +148,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.31':
-    resolution: {integrity: sha512-z8UCOqy0FgKtKTub9efBtGNeWn0JghlfUq6Rz7FsTmt/AjR+jPPPZuzVckVkYqNlyKdY+hu+SlfiTockzW+uEw==}
+  '@adviser/cement@0.2.36':
+    resolution: {integrity: sha512-Zhmr4f0/UohFh3O/6H63DoBenYjh72uGZOcEnDZ/VxmBvZelACkCR4g06c8rbZbJTu20f3gRSNnJZbmtdMOFgQ==}
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -3103,7 +3103,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.31(typescript@5.6.2)':
+  '@adviser/cement@0.2.36(typescript@5.6.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.6.2)
       yaml: 2.5.1
@@ -3852,7 +3852,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@vitest/coverage-v8@2.0.5(vitest@2.0.5(@types/node@22.7.4)(@vitest/browser@2.0.5)(@vitest/ui@2.0.5)(happy-dom@14.12.3))':
+  '@vitest/coverage-v8@2.0.5(vitest@2.0.5)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3

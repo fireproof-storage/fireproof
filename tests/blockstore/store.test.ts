@@ -2,8 +2,6 @@ import { CID } from "multiformats";
 import { bs, NotFoundError, SuperThis } from "@fireproof/core";
 import { mockSuperThis } from "../helpers";
 
-const decoder = new TextDecoder("utf-8");
-
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime({}, sthis);
 }
@@ -46,7 +44,7 @@ describe("DataStore", function () {
     };
     await store.save(car);
     const data = await raw.get(store.url(), car.cid.toString());
-    expect(decoder.decode(data)).toEqual(decoder.decode(car.bytes));
+    expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
 
@@ -76,7 +74,7 @@ describe("DataStore with a saved car", function () {
 
   it("should have a car", async function () {
     const data = await raw.get(store.url(), car.cid.toString());
-    expect(decoder.decode(data)).toEqual(decoder.decode(car.bytes));
+    expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
   it("should load a car", async function () {
@@ -153,7 +151,7 @@ describe("MetaStore with a saved header", function () {
 
   it("should have a header", async function () {
     const bytes = await raw.get(store.url(), "main");
-    const data = decoder.decode(bytes);
+    const data = sthis.txt.decode(bytes);
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];
     expect(header).toBeDefined();

@@ -36,7 +36,7 @@ export class FileGateway implements Gateway {
         throw logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
       }
       const v = await this.fs.readfile(vFile);
-      const vStr = new TextDecoder().decode(v);
+      const vStr = this.sthis.txt.decode(v);
       if (vStr !== FILESTORE_VERSION) {
         logger.Warn().Str("file", vFile).Str("from", vStr).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
       }

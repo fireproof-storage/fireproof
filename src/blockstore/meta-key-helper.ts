@@ -11,7 +11,7 @@ import { getKeyBag } from "../runtime/key-bag.js";
 export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
   const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
   if (!crdtEntries.length) {
-    sthis.logger.Debug().Str("byteHeads", new TextDecoder().decode(byteHeads)).Msg("No CRDT entries found");
+    sthis.logger.Debug().Any("byteHeads", byteHeads).Msg("No CRDT entries found");
     return [];
   }
   if (!crdtEntries.map) {
@@ -53,7 +53,7 @@ export async function setCryptoKeyFromGatewayMetaPayload(
       sthis.logger.Debug().Str("dbMeta.key", dbMeta.key).Str("uri", uri.toString()).Msg("Set crypto key from gateway meta payload");
       return Result.Ok(dbMeta);
     }
-    sthis.logger.Debug().Str("data", new TextDecoder().decode(data)).Msg("No crypto in gateway meta payload");
+    sthis.logger.Debug().Any("data", data).Msg("No crypto in gateway meta payload");
     return Result.Ok(undefined);
   } catch (error) {
     sthis.logger.Debug().Err(error).Msg("Failed to set crypto key from gateway meta payload");

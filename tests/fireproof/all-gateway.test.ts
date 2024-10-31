@@ -2,6 +2,7 @@ import { Database, bs } from "@fireproof/core";
 import { URI } from "@adviser/cement";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+import { mockSuperThis } from "../helpers.js";
 
 function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
   try {
@@ -35,6 +36,8 @@ describe("noop Gateway", function () {
   let metaGateway: ExtendedGateway;
   let fileGateway: ExtendedGateway;
   let walGateway: ExtendedGateway;
+
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -218,8 +221,7 @@ describe("noop Gateway", function () {
       noLoaderOps: [],
       fileOperations: [],
     });
-    const walEncoder = new TextEncoder();
-    const walTestData = walEncoder.encode(walTestDataString);
+    const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway?.put(walUrl?.Ok(), walTestData);
     expect(walPutResult?.Ok()).toBeFalsy();
   });
@@ -233,12 +235,11 @@ describe("noop Gateway", function () {
       noLoaderOps: [],
       fileOperations: [],
     });
-    const walEncoder = new TextEncoder();
-    const walTestData = walEncoder.encode(walTestDataString);
+    const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway?.put(walUrl?.Ok(), walTestData);
     const walGetResult = await walGateway?.get(walUrl?.Ok());
     const okResult = walGetResult?.Ok();
-    const decodedResult = new TextDecoder().decode(okResult);
+    const decodedResult = sthis.txt.decode(okResult);
     expect(decodedResult).toEqual(walTestDataString);
   });
 
@@ -251,8 +252,7 @@ describe("noop Gateway", function () {
       noLoaderOps: [],
       fileOperations: [],
     });
-    const walEncoder = new TextEncoder();
-    const walTestData = walEncoder.encode(walTestDataString);
+    const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway?.put(walUrl?.Ok(), walTestData);
     const walDeleteResult = await walGateway?.delete(walUrl?.Ok());
     expect(walDeleteResult?.Ok()).toBeFalsy();
@@ -302,6 +302,7 @@ describe("noop Gateway subscribe", function () {
   let metaStore: ExtendedStore;
 
   let metaGateway: ExtendedGateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -325,7 +326,7 @@ describe("noop Gateway subscribe", function () {
       resolve = r;
     });
     const metaSubscribeResult = await metaGateway?.subscribe?.(metaUrl?.Ok(), async (data: Uint8Array) => {
-      const decodedData = new TextDecoder().decode(data);
+      const decodedData = sthis.txt.decode(data);
       expect(decodedData).toContain("[]");
       didCall = true;
       resolve();
@@ -351,6 +352,7 @@ describe("Gateway", function () {
   let metaGateway: ExtendedGateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
+  const sthis = mockSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -380,7 +382,7 @@ describe("Gateway", function () {
     await metaGateway?.start(metaStore?._url);
     const metaGetResult = await metaGateway?.get(metaUrl?.Ok());
     const metaGetResultOk = metaGetResult?.Ok();
-    const decodedMetaGetResultOk = new TextDecoder().decode(metaGetResultOk);
+    const decodedMetaGetResultOk = sthis.txt.decode(metaGetResultOk);
     expect(decodedMetaGetResultOk).toContain("parents");
   });
 
