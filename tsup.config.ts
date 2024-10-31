@@ -106,6 +106,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
+      skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+      skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
       resolve({
         ...skipIife,
         ...ourMultiformat,
@@ -151,6 +153,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
+      skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+      skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
       resolve({
         ...ourMultiformat,
       }),
