@@ -1,12 +1,10 @@
 import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 
-import { INDEXDB_VERSION } from "./version.js";
-import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
-import { Gateway, GetResult } from "../../../blockstore/gateway.js";
-import { PARAM, SuperThis } from "../../../types.js";
-import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
-import { fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
+import { INDEXDB_VERSION } from "../version.js";
+import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../../utils.js";
+import { Gateway, GetResult, TestGateway } from "../../../../blockstore/gateway.js";
+import { SuperThis } from "../../../../types.js";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
@@ -84,7 +82,7 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexDBGateway implements Gateway {
+export class IndexDBGatewayImpl implements Gateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   constructor(sthis: SuperThis) {

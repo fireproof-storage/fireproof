@@ -31,6 +31,7 @@
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {
       "@fireproof/core": ["./src/index.js"],
+      // "@fireproof/core/node": ["./src/"],
       "use-fireproof": ["./src/react/index.ts"]
       // "multiformats/block": ["src/runtime/multiformats/block.ts"],
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,

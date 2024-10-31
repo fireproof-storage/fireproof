@@ -1,23 +1,12 @@
-import { runtimeFn, URI } from "@adviser/cement";
+import { KeyedResolvOnce, URI } from "@adviser/cement";
 import { getStore } from "../../../utils.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const externalLoaders = new KeyedResolvOnce<SysFileSystem>();
 export async function getFileSystem(url: URI): Promise<SysFileSystem> {
-  // const name = url.getParam(PARAM.FS);
-  // let fs: SysFileSystem;
-  // switch (name) {
-  // case "mem":
-  //   {
-  //     const { MemFileSystem } = await import("./mem-filesystem.js");
-  //     fs = new MemFileSystem();
-  //   }
-  //   break;
-  // case "node":
-  // case "sys":
-  // default: {
+  const name = url.getParam("fs", "node");
   let fs: SysFileSystem;
-<<<<<<< HEAD
+
   if (runtimeFn().isDeno) {
     const { DenoFileSystem } = await import("./deno-filesystem.js");
     fs = new DenoFileSystem();
@@ -26,13 +15,15 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
     fs = new NodeFileSystem();
   } else {
     throw new Error("unsupported runtime");
-=======
+
   switch (name) {
     case "mem":
-      {
-        const { MemFileSystem } = await import("./mem-filesystem@skip-iife.js");
-        fs = new MemFileSystem();
-      }
+      fs = await externalLoaders.get(name).once(async () => {
+        // const memjs = "./node/mem-filesystem.js"
+        // const { MemFileSystem } = await import(/* @vite-ignore */memjs);
+        const { MemFileSystem } = await import("./node/mem-filesystem.js");
+        return new MemFileSystem();
+      });
       break;
     // case 'deno': {
     //   const { DenoFileSystem } = await import("./deno-filesystem.js");
@@ -52,7 +43,14 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
       return getFileSystem(url.build().setParam("fs", "node").URI());
       // }
     }
->>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
+    default:
+      fs = await externalLoaders.get(name).once(async () => {
+        // const nodejs = "./node/node-filesystem.js"
+        // const { NodeFileSystem } = await import(/* @vite-ignore */nodejs);
+        const { NodeFileSystem } = await import("./node/node-filesystem.js");
+        return new NodeFileSystem();
+      });
+
   }
   return fs.start();
 }
@@ -91,16 +89,4 @@ export function getFileName(url: URI, sthis: SuperThis): string {
     default:
       throw sthis.logger.Error().Url(url).Msg(`unsupported store type`).AsError();
   }
-}
-
-export function toArrayBuffer(buffer: Buffer | string): Uint8Array {
-  if (typeof buffer === "string") {
-    buffer = Buffer.from(buffer);
-  }
-  const ab = new ArrayBuffer(buffer.length);
-  const view = new Uint8Array(ab);
-  for (let i = 0; i < buffer.length; ++i) {
-    view[i] = buffer[i];
-  }
-  return view;
 }
