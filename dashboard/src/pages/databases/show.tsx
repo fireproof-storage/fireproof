@@ -1,5 +1,6 @@
 import { rawConnect } from "@fireproof/cloud";
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 import DynamicTable from "../../components/DynamicTable";
@@ -25,6 +26,10 @@ function TableView({ name }: { name: string }) {
   const [showActions, setShowActions] = useState(false);
   const connectionInfoRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const [connectionInfoPosition, setConnectionInfoPosition] = useState({
+    top: 0,
+    left: 0,
+  });
 
   const { useLiveQuery: usePetnameLiveQuery, useAllDocs } =
     useFireproof(SYNC_DB_NAME);
@@ -90,7 +95,8 @@ function TableView({ name }: { name: string }) {
     currentLocalName
   )}&remoteName=${encodeURIComponent(currentRemoteName)}`;
 
-  const copyToClipboard = () => {
+  const copyToClipboard = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from bubbling up
     navigator.clipboard.writeText(connectionUrl).then(
       () => {
         setCopySuccess(true);
@@ -100,8 +106,25 @@ function TableView({ name }: { name: string }) {
     );
   };
 
+  const handleConnectionInfoClick = () => {
+    if (connectionInfoRef.current) {
+      const rect = connectionInfoRef.current.getBoundingClientRect();
+      setConnectionInfoPosition({
+        top: rect.bottom + window.scrollY + 2,
+        left: rect.right + window.scrollX - 256, // 256px is width of the popup
+      });
+    }
+    setShowConnectionInfo(!showConnectionInfo);
+  };
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      // Don't close if clicking inside the popup
+      const popupElement = document.getElementById("connection-info-popup");
+      if (popupElement?.contains(event.target as Node)) {
+        return;
+      }
+
       if (
         connectionInfoRef.current &&
         !connectionInfoRef.current.contains(event.target as Node)
@@ -146,25 +169,34 @@ function TableView({ name }: { name: string }) {
           {connection && (
             <div className="relative" ref={connectionInfoRef}>
               <div
-                onClick={() => setShowConnectionInfo(!showConnectionInfo)}
+                onClick={handleConnectionInfoClick}
                 className="cursor-pointer inline-flex items-center justify-center rounded bg-[--background] px-3 py-2 text-sm font-medium text-[--foreground] transition-colors hover:bg-[--background]/80 border border-[--border] whitespace-nowrap"
               >
                 <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
                 Connected
               </div>
-              {showConnectionInfo && (
-                <div className="absolute right-0 mt-2 w-64 bg-[--background] border border-[--border] rounded-md shadow-lg z-10">
-                  <div className="p-4">
-                    <h3 className="font-bold mb-2">Share Database:</h3>
-                    <button
-                      onClick={copyToClipboard}
-                      className="w-full p-2 bg-[--accent] text-accent-foreground rounded hover:bg-[--accent]/80 transition-colors"
-                    >
-                      {copySuccess ? "Copied!" : "Copy Share Link"}
-                    </button>
-                  </div>
-                </div>
-              )}
+              {showConnectionInfo &&
+                createPortal(
+                  <div
+                    id="connection-info-popup"
+                    className="fixed bg-[--background] border border-[--border] rounded-md shadow-lg z-[9999] w-64"
+                    style={{
+                      top: connectionInfoPosition.top + "px",
+                      left: connectionInfoPosition.left + "px",
+                    }}
+                  >
+                    <div className="p-4">
+                      <h3 className="font-bold mb-2">Share Database:</h3>
+                      <button
+                        onClick={copyToClipboard}
+                        className="w-full p-2 bg-[--accent] text-accent-foreground rounded hover:bg-[--accent]/80 transition-colors"
+                      >
+                        {copySuccess ? "Copied!" : "Copy Share Link"}
+                      </button>
+                    </div>
+                  </div>,
+                  document.body
+                )}
             </div>
           )}
 
