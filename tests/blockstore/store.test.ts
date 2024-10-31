@@ -1,7 +1,6 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis, rt, PARAM, Result, DbMeta } from "@fireproof/core";
-import { mockSuperThis, noopUrl } from "../helpers";
-import { fpDeserialize } from "../../src/runtime/gateways/fp-envelope-serialize";
+import { bs, NotFoundError, SuperThis } from "@fireproof/core";
+import { mockSuperThis } from "../helpers";
 
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime(sthis);
@@ -45,7 +44,7 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const data = (await store.realGateway.getPlain(store.url(), car.cid.toString())).Ok();
+    const data = await raw.get(store.url(), car.cid.toString());
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
@@ -72,7 +71,7 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const data = (await store.realGateway.getPlain(store.url(), car.cid.toString())).Ok();
+    const data = await raw.get(store.url(), car.cid.toString());
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
@@ -154,8 +153,8 @@ describe("MetaStore with a saved header", function () {
   // });
 
   it("should have a header", async function () {
-    const bytes = await store.realGateway.getPlain(store.url(), "main");
-    const data = sthis.txt.decode(bytes.Ok());
+    const bytes = await raw.get(store.url(), "main");
+    const data = sthis.txt.decode(bytes);
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];
     expect(header).toBeDefined();

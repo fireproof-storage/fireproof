@@ -17,6 +17,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   // case "sys":
   // default: {
   let fs: SysFileSystem;
+<<<<<<< HEAD
   if (runtimeFn().isDeno) {
     const { DenoFileSystem } = await import("./deno-filesystem.js");
     fs = new DenoFileSystem();
@@ -25,6 +26,33 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
     fs = new NodeFileSystem();
   } else {
     throw new Error("unsupported runtime");
+=======
+  switch (name) {
+    case "mem":
+      {
+        const { MemFileSystem } = await import("./mem-filesystem@skip-iife.js");
+        fs = new MemFileSystem();
+      }
+      break;
+    // case 'deno': {
+    //   const { DenoFileSystem } = await import("./deno-filesystem.js");
+    //   fs = new DenoFileSystem();
+    //   break;
+    // }
+    case "node": {
+      const { NodeFileSystem } = await import("./node-filesystem@skip-iife.js");
+      fs = new NodeFileSystem();
+      break;
+    }
+    case "sys":
+    default: {
+      // if (runtimeFn().isDeno) {
+      //   return getFileSystem(url.build().setParam("fs", "deno").URI());
+      // } else  {
+      return getFileSystem(url.build().setParam("fs", "node").URI());
+      // }
+    }
+>>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
   }
   return fs.start();
 }

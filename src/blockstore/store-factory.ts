@@ -124,34 +124,26 @@ export function ensureStoreEnDeFile(ende?: Partial<StoreEnDeFile>): StoreEnDeFil
   };
 }
 
-export function toStoreRuntime(sthis: SuperThis, endeOpts: Partial<StoreEnDeFile> = {}): StoreRuntime {
-  // const logger = ensureLogger(sthis, "toStoreRuntime", {});
-  return {
-    makeMetaStore: async (sfi: StoreFactoryItem) => ensureStart(await metaStoreFactory(sfi)),
-    // async (loader: Loadable) => {
-    //   logger
-    //     .Debug()
-    //     .Str("fromOpts", "" + !!endeOpts.func?.makeMetaStore)
-    //     .Msg("makeMetaStore");
-    //   return ensureStart(await (endeOpts.func?.makeMetaStore || metaStoreFactory)(loader), logger);
-    // },
-    makeDataStore: async (sfi: StoreFactoryItem) => ensureStart(await dataStoreFactory(sfi)),
-    // async (loader: Loadable) => {
-    //   logger
-    //     .Debug()
-    //     .Str("fromOpts", "" + !!endeOpts.func?.makeDataStore)
-    //     .Msg("makeDataStore");
-    //   return ensureStart(await (endeOpts.func?.makeDataStore || dataStoreFactory)(loader), logger);
-    // },
-    makeWALStore: async (sfi: StoreFactoryItem) => ensureStart(await WALStoreFactory(sfi)),
-    // async (loader: Loadable) => {
-    //   logger
-    //     .Debug()
-    //     .Str("fromOpts", "" + !!endeOpts.func?.makeWALStore)
-    //     .Msg("makeRemoteWAL");
-    //   return ensureStart(await (endeOpts.func?.makeWALStore || remoteWalFactory)(loader), logger);
-    // },
+registerStoreProtocol({
+  protocol: "file:",
+  gateway: async (sthis) => {
+    const { FileGateway } = await import("../runtime/gateways/file/gateway@skip-iife.js");
+    return new FileGateway(sthis);
+  },
+  test: async (sthis) => {
+    const { FileTestStore } = await import("../runtime/gateways/file/gateway@skip-iife.js");
+    return new FileTestStore(sthis);
+  },
+});
 
-    ...ensureStoreEnDeFile(endeOpts),
-  };
-}
+registerStoreProtocol({
+  protocol: "indexdb:",
+  gateway: async (sthis) => {
+    const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway@skip-esm.js");
+    return new IndexDBGateway(sthis);
+  },
+  test: async (sthis) => {
+    const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway@skip-esm.js");
+    return new IndexDBTestStore(sthis);
+  },
+});
