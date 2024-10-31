@@ -1,6 +1,7 @@
 import { ResolveOnce, Result, URI } from "@adviser/cement";
 import { Gateway, GetResult, TestGateway, VoidResult } from "../../../blockstore/gateway.js";
 import { SuperThis } from "../../../types.js";
+import { gatewayImport } from "./gateway-import-static.js";
 
 const loadExternal = new ResolveOnce<Gateway>();
 export class IndexDBGateway implements Gateway {
@@ -11,9 +12,7 @@ export class IndexDBGateway implements Gateway {
   }
   private getGateway(): Promise<Gateway> {
     return loadExternal.once(() => {
-      // const gwimpl = "./web/gateway-impl.js"
-      // return import(/* @vite-ignore */gwimpl).then(({ IndexDBGatewayImpl }) => new IndexDBGatewayImpl(this.sthis));
-      return import("./web/gateway-impl.js").then(({ IndexDBGatewayImpl }) => new IndexDBGatewayImpl(this.sthis));
+      return gatewayImport().then(({ IndexDBGatewayImpl }) => new IndexDBGatewayImpl(this.sthis));
     });
   }
   buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
@@ -51,9 +50,7 @@ export class IndexDBTestStore implements TestGateway {
   readonly loadExternal = new ResolveOnce<TestGateway>();
   private getGateway(): Promise<TestGateway> {
     return this.loadExternal.once(() => {
-      // const gwimpl = "./web/gateway-impl.js"
-      // return import(gwimpl).then(({ IndexDBTestStore }) => new IndexDBTestStore(this.sthis));
-      return import("./web/gateway-impl.js").then(({ IndexDBTestStore }) => new IndexDBTestStore(this.sthis));
+      return gatewayImport().then(({ IndexDBTestStore }) => new IndexDBTestStore(this.sthis));
     });
   }
 
