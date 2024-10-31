@@ -288,11 +288,11 @@ export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime 
 registerStoreProtocol({
   protocol: "file:",
   gateway: async (sthis) => {
-    const { FileGateway } = await import("../runtime/gateways/file/gateway@skip-iife.js");
+    const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
     return new FileGateway(sthis);
   },
   test: async (sthis) => {
-    const { FileTestStore } = await import("../runtime/gateways/file/gateway@skip-iife.js");
+    const { FileTestStore } = await import("../runtime/gateways/file/gateway.js");
     return new FileTestStore(sthis);
   },
 });
@@ -300,11 +300,11 @@ registerStoreProtocol({
 registerStoreProtocol({
   protocol: "indexdb:",
   gateway: async (sthis) => {
-    const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway@skip-esm.js");
+    const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway.js");
     return new IndexDBGateway(sthis);
   },
   test: async (sthis) => {
-    const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway@skip-esm.js");
+    const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway.js");
     return new IndexDBTestStore(sthis);
   },
 });
