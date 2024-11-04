@@ -95,7 +95,7 @@ importers:
         version: 2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.10(@types/node@22.8.4))(vitest@2.1.2)(webdriverio@9.2.1)
       '@vitest/coverage-v8':
         specifier: ^2.1.2
-        version: 2.1.2(@vitest/browser@2.1.2)(vitest@2.1.2)
+        version: 2.1.2(@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.10(@types/node@22.8.4))(vitest@2.1.2)(webdriverio@9.2.1))(vitest@2.1.2(@types/node@22.8.4)(@vitest/browser@2.1.2)(@vitest/ui@2.1.2)(happy-dom@14.12.3)(msw@2.3.5(typescript@5.6.3)))
       '@vitest/ui':
         specifier: ^2.1.2
         version: 2.1.2(vitest@2.1.2)
@@ -139,8 +139,8 @@ importers:
         specifier: ^9.2.1
         version: 9.2.1
       zx:
-        specifier: ^8.1.9
-        version: 8.1.9
+        specifier: ^8.2.0
+        version: 8.2.0
 
 packages:
 
@@ -3056,8 +3056,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zx@8.1.9:
-    resolution: {integrity: sha512-UHuLHphHmsBYKkAchkSrEN4nzDyagafqC9HUxtc1J7eopaScW6H9dsLJ1lmkAntnLtDTGoM8fa+jrJrXiIfKFA==}
+  zx@8.2.0:
+    resolution: {integrity: sha512-ec7Z1Ki9h4CsKqbMjZ8H7G1PbbZYErscxT314LF66Ljx1YRENisqa5m9IN2VjbYgOKxdv5t0MbVd3Hf+II3e7w==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -3824,7 +3824,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.2(@vitest/browser@2.1.2)(vitest@2.1.2)':
+  '@vitest/coverage-v8@2.1.2(@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.10(@types/node@22.8.4))(vitest@2.1.2)(webdriverio@9.2.1))(vitest@2.1.2(@types/node@22.8.4)(@vitest/browser@2.1.2)(@vitest/ui@2.1.2)(happy-dom@14.12.3)(msw@2.3.5(typescript@5.6.3)))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -5944,7 +5944,7 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.5.2
 
-  zx@8.1.9:
+  zx@8.2.0:
     optionalDependencies:
       '@types/fs-extra': 11.0.4
       '@types/node': 22.8.4
