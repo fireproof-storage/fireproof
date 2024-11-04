@@ -79,7 +79,7 @@
     "@adviser/cement": "^0.2.36",
     "@ipld/car": "^5.3.2",
     "@ipld/dag-cbor": "^9.2.2",
-    "@ipld/dag-json": "^10.2.2",
+    "@ipld/dag-json": "^10.2.3",
     "@ipld/unixfs": "^3.0.0",
     "@web3-storage/pail": "^0.6.0",
     "cborg": "^4.2.6",
