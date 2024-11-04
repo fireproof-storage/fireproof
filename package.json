@@ -78,7 +78,7 @@
   "dependencies": {
     "@adviser/cement": "^0.2.35",
     "@ipld/car": "^5.3.2",
-    "@ipld/dag-cbor": "^9.2.1",
+    "@ipld/dag-cbor": "^9.2.2",
     "@ipld/dag-json": "^10.2.2",
     "@ipld/unixfs": "^3.0.0",
     "@web3-storage/pail": "^0.6.0",
