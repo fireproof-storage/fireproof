@@ -23,6 +23,10 @@ export default defineConfig({
   esbuild: {
     minifyIdentifiers: false,
   },
+  build: {
+    sourcemap: true,
+    target: "esnext",
+  },
   plugins: [
     rollupReplace({
       preventAssignment: true,

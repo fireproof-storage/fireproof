@@ -21,11 +21,13 @@ import Index, { loader as indexLoader } from "./pages/index";
 import DatabasesConnect, {
   loader as connectLoader,
 } from "./pages/databases/connect";
+import Login, { loader as loginLoader } from "./pages/login";
 import "./styles/tailwind.css";
 
 const routes = createRoutesFromElements(
   <Route>
     <Route path="/" element={<Index />} loader={indexLoader} />
+    <Route path="/login" element={<Login />} loader={loginLoader} />
     <Route path="/fp/databases" element={<App />} loader={appLoader}>
       <Route index element={<DatabasesIndex />} />
       <Route path="new" element={<DatabasesNew />} action={newDatabaseAction} />
@@ -53,11 +55,7 @@ const rootElement = import.meta.env.VITE_CHROME_EXTENSION
   : document.getElementById("root");
 
 if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(
-    <React.StrictMode>
-      <RouterProvider router={router} />
-    </React.StrictMode>
-  );
+  ReactDOM.createRoot(rootElement).render(<RouterProvider router={router} />);
 } else {
   console.error("Root element not found");
 }
