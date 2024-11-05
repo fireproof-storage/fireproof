@@ -14,6 +14,12 @@ importers:
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.14)
+      '@workos-inc/authkit-js':
+        specifier: ^0.6.1
+        version: 0.6.1
+      '@workos-inc/authkit-react':
+        specifier: ^0.5.1
+        version: 0.5.1(react@18.3.1)
       highlight.js:
         specifier: ^11.10.0
         version: 11.10.0
@@ -699,6 +705,17 @@ packages:
   '@web3-storage/pail@0.6.0':
     resolution: {integrity: sha512-/lIBu8pR92AEcCqYqjcxc3kUSLLRGQLomUes7PAyoK4lNe4ttm8Wr7WFcrbJmWTBJZmYE6npbYcVio8U+OexpA==}
     hasBin: true
+
+  '@workos-inc/authkit-js@0.5.1':
+    resolution: {integrity: sha512-BOYrBiiINPmbkep+YGTsaJ8PiC8qtVCzZ3uN383TR9dRB/l77hEdO02EezQS5QWgMm02x503hLKdmacwWOwsMg==}
+
+  '@workos-inc/authkit-js@0.6.1':
+    resolution: {integrity: sha512-I35IyBdWQb9LHS8ikT2bt5mZpDZrwGqefMuKVC6+rsmDnBFymFMrzSw3jH7D29BB3mFsZ3gd2kq3RjUI+5MQ2g==}
+
+  '@workos-inc/authkit-react@0.5.1':
+    resolution: {integrity: sha512-pAhZcoRgxt7j4Obu3A5tbTPh1UdK7dH5JiEzqjxiB303SFlojc5XWfbT+M9++jkdblubn7gmDB4GjOHL+jh3Zw==}
+    peerDependencies:
+      react: '>=17'
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -2926,6 +2943,15 @@ snapshots:
     dependencies:
       '@ipld/dag-cbor': 9.2.1
       multiformats: 13.3.0
+
+  '@workos-inc/authkit-js@0.5.1': {}
+
+  '@workos-inc/authkit-js@0.6.1': {}
+
+  '@workos-inc/authkit-react@0.5.1(react@18.3.1)':
+    dependencies:
+      '@workos-inc/authkit-js': 0.5.1
+      react: 18.3.1
 
   acorn-jsx@5.3.2(acorn@8.13.0):
     dependencies:
