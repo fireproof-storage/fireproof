@@ -2,18 +2,18 @@ import type {
   ConfigOpts,
   Database,
   DocResponse,
-  DocFragment,
   DocSet,
   DocTypes,
   DocWithId,
   IndexKeyType,
   IndexRow,
+  Ledger,
   MapFn,
   QueryOpts,
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AllDocsQueryOpts, ClockHead, ChangesOptions } from "../types";
+import { AllDocsQueryOpts, ChangesOptions, ClockHead } from "../types";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
@@ -51,7 +51,7 @@ type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<D
 
 export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
 
-export type UseDocument = <T extends DocTypes>(initialDocFn: () => DocSet<T>) => UseDocumentResult<T>;
+export type UseDocument = <T extends DocTypes>(initialDoc: DocSet<T>) => UseDocumentResult<T>;
 
 export interface UseFireproof {
   readonly database: Database;
@@ -172,13 +172,13 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument<T extends DocTypes>(initialDocFn: () => DocSet<T>): UseDocumentResult<T> {
+  function useDocument<T extends DocTypes>(initialDoc: DocSet<T>): UseDocumentResult<T> {
     // We purposely refetch the docId everytime to check if it has changed
-    const docId = initialDocFn()._id ?? "";
+    const docId = initialDoc._id ?? "";
 
     // We do not want to force consumers to memoize their initial document so we do it for them.
     // We use the stringified generator function to ensure that the memoization is stable across renders.
-    const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
+    // const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
     const [doc, setDoc] = useState(initialDoc);
 
     const refreshDoc = useCallback(async () => {
