@@ -11,11 +11,11 @@ export default function TodoList() {
   const { useDocument, useLiveQuery } = useFireproof("TodoDB");
   const [selectedTodo, setSelectedTodo] = useState<string>("");
   const todos = useLiveQuery<Todo>("date", { limit: 1000, descending: true });
-  const [todo, setTodo, saveTodo] = useDocument<Todo>(() => ({
+  const [todo, setTodo, saveTodo] = useDocument<Todo>({
     text: "",
     date: Date.now(),
     completed: false,
-  }));
+  });
   // console.log("todos", todo, todos.docs.length) //todos.docs.map((t) => t.text));
 
   return (
@@ -79,12 +79,12 @@ interface TodoEditorProps {
 
 function TodoEditor({ id }: TodoEditorProps) {
   const { useDocument } = useFireproof("TodoDB");
-  const [todo, setTodo, saveTodo, deleteTodo] = useDocument<Todo>(() => ({
+  const [todo, setTodo, saveTodo, deleteTodo] = useDocument<Todo>({
     _id: id, // showcase modifying an existing document
     text: "",
     date: Date.now(),
     completed: false,
-  }));
+  });
   // console.log("editing todo", todo);
 
   return (
