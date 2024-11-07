@@ -173,14 +173,7 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument<T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
-    let initialDoc: DocSet<T>;
-    if (typeof initialDocOrFn === "function") {
-      initialDoc = initialDocOrFn();
-    } else {
-      initialDoc = initialDocOrFn;
-    }
-
+  function useDocument<T extends DocTypes>(initialDoc: DocSet<T>): UseDocumentResult<T> {
     // We purposely refetch the docId everytime to check if it has changed
     const docId = initialDoc._id ?? "";
 
