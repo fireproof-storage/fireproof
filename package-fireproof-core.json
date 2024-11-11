@@ -9,6 +9,82 @@
   "types": "./index.d.ts",
   "exports": {
     ".": {
+    "browser": {
+       "production": {
+          "import": "./dist/fp/browser/production/index.import.mjs",
+          "require": "./dist/fp/browser/production/index.require.js",
+          "script": "./dist/fp/browser/production/index.script.js",
+          "types": "./dist/fp/browser/production/index.d.ts"
+       },
+       "development": {
+          "import": "./dist/fp/browser/development/index.import.js",
+          "require": "./dist/fp/browser/development/index.require.js",
+          "script": "./dist/fp/browser/development/index.script.js",
+          "types": "./dist/fp/browser/development/index.d.ts"
+       }
+     },
+    "electron": { 
+       "production": {
+          "import": "./dist/fp/browser/index.import.js",
+          "require": "./dist/fp/browser/index.require.js",
+          "script": "./dist/fp/browser/index.script.js",
+          "types": "./dist/fp/browser/index.d.ts"
+       }
+    },
+    "worker": { 
+       "production": {
+          "import": "./dist/fp/browser/index.import.js",
+          "require": "./dist/fp/browser/index.require.js",
+          "script": "./dist/fp/browser/index.script.js",
+          "types": "./dist/fp/browser/index.d.ts"
+       }
+    },
+    "node": { 
+       "production": {
+          "import": "./dist/fp/node/production/index.import.mjs",
+          "require": "./dist/fp/node/production/index.require.js",
+          "script": "./dist/fp/node/production/index.script.js",
+          "types": "./dist/fp/node/production/index.d.ts"
+       },
+       "development": {
+          "import": "./dist/fp/node/development/index.import.js",
+          "require": "./dist/fp/node/development/index.require.js",
+          "script": "./dist/fp/node/development/index.script.js",
+          "types": "./dist/fp/node/development/index.d.ts"
+       }
+    },
+    "deno": { 
+       "production": {
+          "import": "./dist/fp/deno/production/index.import.mjs",
+          "require": "./dist/fp/deno/production/index.require.js",
+          "script": "./dist/fp/deno/production/index.script.js",
+          "types": "./dist/fp/deno/production/index.d.ts"
+       },
+       "development": {
+          "import": "./dist/fp/deno/development/index.import.js",
+          "require": "./dist/fp/deno/development/index.require.js",
+          "script": "./dist/fp/deno/development/index.script.js",
+          "types": "./dist/fp/deno/development/index.d.ts"
+       }
+    },
+    "react-native": { 
+       "production": {
+          "import": "./dist/fp/browser/index.import.js",
+          "require": "./dist/fp/browser/index.require.js",
+          "script": "./dist/fp/browser/index.script.js",
+          "types": "./dist/fp/browser/index.d.ts"
+       }
+    },
+    "default": { 
+       "production": {
+          "import": "./dist/fp/browser/index.import.js",
+          "require": "./dist/fp/browser/index.require.js",
+          "script": "./dist/fp/browser/index.script.js",
+          "types": "./dist/fp/browser/index.d.ts"
+       }
+    }
+    },
+    "./xyz": {
       "import": "./index.js",
       "require": "./index.cjs",
       "script": "./index.global.js",
