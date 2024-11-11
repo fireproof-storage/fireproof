@@ -65,7 +65,7 @@
     "vite-tsconfig-paths": "^5.0.1",
     "vitest": "^2.1.2",
     "webdriverio": "^9.2.8",
-    "zx": "^8.2.0"
+    "zx": "^8.2.1"
   },
   "repository": {
     "type": "git",
