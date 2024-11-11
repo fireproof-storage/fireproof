@@ -1,6 +1,6 @@
 import { Result, URI } from "@adviser/cement";
 import { NotFoundError } from "../utils.js";
-import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
+import { FPEnvelope, FPEnvelopeMeta } from "../protocols/fp-envelope.js";
 import { Loadable } from "./types.js";
 
 export interface GatewayOpts {

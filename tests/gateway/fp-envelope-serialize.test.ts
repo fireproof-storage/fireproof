@@ -3,7 +3,7 @@ import { mockSuperThis, simpleCID } from "../helpers";
 import { BuildURI, Result } from "@adviser/cement";
 import { toJSON } from "multiformats/link";
 import { FPEnvelopeType } from "../../src/blockstore";
-import { SerializedMeta } from "../../src/runtime/gateways/fp-envelope-serialize";
+import { SerializedMeta } from "../../src/protocols/fp-envelope-serialize";
 
 describe("storage-content", () => {
   const sthis = mockSuperThis();

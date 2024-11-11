@@ -5,8 +5,8 @@ import { INDEXDB_VERSION } from "./version.js";
 import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { PARAM, SuperThis } from "../../../types.js";
-import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
-import { fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
+import { FPEnvelope } from "../../../protocols/fp-envelope.js";
+import { fpDeserialize, fpSerialize } from "../../../protocols/fp-envelope-serialize.js";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();

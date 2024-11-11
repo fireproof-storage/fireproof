@@ -23,7 +23,7 @@ import { ensureLogger, inplaceFilter, isNotFoundError } from "../utils.js";
 import { carLogIncludesGroup } from "./loader.js";
 import { CommitQueue } from "./commit-queue.js";
 import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
-import { Car2FPMsg, File2FPMsg, FPEnvelopeCar, FPEnvelopeFile, FPEnvelopeMeta, FPEnvelopeWAL } from "./fp-envelope.js";
+import { Car2FPMsg, File2FPMsg, FPEnvelopeCar, FPEnvelopeFile, FPEnvelopeMeta, FPEnvelopeWAL } from "../protocols/fp-envelope.js";
 import { EventView } from "@web3-storage/pail/clock/api";
 import { EventBlock } from "@web3-storage/pail/clock";
 import { format } from "@ipld/dag-json";

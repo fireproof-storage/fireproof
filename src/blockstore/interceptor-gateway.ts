@@ -17,7 +17,7 @@ import {
 } from "./gateway.js";
 import { SuperThis } from "../types.js";
 import { ensureSuperLog } from "../utils.js";
-import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
+import { FPEnvelope, FPEnvelopeMeta } from "../protocols/fp-envelope.js";
 import { Loadable } from "./types.js";
 
 export class PassThroughGateway implements GatewayInterceptor {

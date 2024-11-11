@@ -5,21 +5,19 @@ import {
   DbMetaBinary,
   DbMetaEvent,
   FPEnvelope,
-  FPEnvelopeCar,
-  FPEnvelopeFile,
-  FPEnvelopeMeta,
+  FPEnvelopeReq,
   FPEnvelopeType,
-  FPEnvelopeWAL,
+  FPStoreType,
   WALState,
-} from "../../blockstore";
-import { PARAM, PromiseToUInt8, SuperThis } from "../../types";
+} from "../blockstore";
+import { PARAM, PromiseToUInt8, SuperThis } from "../types";
 import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";
 import { fromJSON } from "multiformats/link";
 import { format, parse } from "@ipld/dag-json";
 import { EventView } from "@web3-storage/pail/src/clock/api";
-import { coercePromiseIntoUint8 } from "../../utils";
+import { coercePromiseIntoUint8 } from "../utils";
 
 export interface SerializedMeta {
   readonly data: string; // base64pad encoded
@@ -86,21 +84,21 @@ const defaultEncoder: Encoder = {
 
 export async function fpSerialize<T>(
   sthis: SuperThis,
-  env: FPEnvelope<T>,
+  env: FPEnvelopeReq<T>,
   pencoder?: Partial<Encoder>,
 ): Promise<Result<Uint8Array>> {
   const encoder = {
     ...defaultEncoder,
     ...pencoder,
   };
-  switch (env.type) {
-    case FPEnvelopeType.FILE:
+  switch (env.storeType) {
+    case FPStoreType.FILE:
       return encoder.file(sthis, (env as FPEnvelopeFile).payload);
-    case FPEnvelopeType.CAR:
+    case FPStoreType.CAR:
       return encoder.car(sthis, (env as FPEnvelopeCar).payload);
-    case FPEnvelopeType.WAL:
+    case FPStoreType.WAL:
       return encoder.wal(sthis, WALState2Serialized(sthis, (env as FPEnvelopeWAL).payload));
-    case FPEnvelopeType.META:
+    case FPStoreType.META:
       return encoder.meta(sthis, await dbMetaEvent2Serialized(sthis, (env as FPEnvelopeMeta).payload));
     default:
       throw sthis.logger.Error().Str("type", env.type).Msg("unsupported store").AsError();
