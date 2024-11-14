@@ -1,4 +1,5 @@
-import { exception2Result, Result, URI } from "@adviser/cement";
+import { exception2Result, Logger, Result, URI } from "@adviser/cement";
+import { stream2uint8array } from "@adviser/cement/utils";
 import {
   CarClockLink,
   DbMeta,
@@ -6,7 +7,9 @@ import {
   DbMetaEvent,
   FPEnvelope,
   FPEnvelopeReq,
+  FPEnvelopeTurnaround,
   FPEnvelopeType,
+  FPMIMEFormat,
   FPStoreType,
   WALState,
 } from "../blockstore";
@@ -18,6 +21,8 @@ import { fromJSON } from "multiformats/link";
 import { format, parse } from "@ipld/dag-json";
 import { EventView } from "@web3-storage/pail/src/clock/api";
 import { coercePromiseIntoUint8 } from "../utils";
+import * as CBOR from "cborg";
+import { encode } from "punycode";
 
 export interface SerializedMeta {
   readonly data: string; // base64pad encoded
@@ -231,4 +236,72 @@ export async function fpDeserialize<S>(
     default:
       return sthis.logger.Error().Str("store", url.getParam(PARAM.STORE)).Msg("unsupported store").ResultError();
   }
+}
+
+export type RawBodyType = Uint8Array | ReadableStream<Uint8Array>;
+export type BodyType = RawBodyType | Promise<RawBodyType> | Result<RawBodyType>;
+
+export interface Raw2ObjectEnDeCoder<T> {
+  readonly encoder: (sthis: SuperThis, obj: NonNullable<T>) => Promise<Result<Uint8Array>>;
+  readonly decoder: (sthis: SuperThis, payload: Uint8Array) => Promise<Result<NonNullable<T>>>;
+}
+
+function getEnDeCoder<T>(logger: Logger, encoding: FPMIMEFormat): Raw2ObjectEnDeCoder<T> {
+  switch (encoding) {
+    case FPMIMEFormat.JSON:
+      return {
+        encoder: async (sthis: SuperThis, obj: NonNullable<T>) => Result.Ok(sthis.txt.encode(JSON.stringify(obj))),
+        decoder: async (sthis: SuperThis, payload: Uint8Array) =>
+          exception2Result(() => JSON.parse(sthis.txt.decode(payload))) as Result<NonNullable<T>>,
+      };
+    case FPMIMEFormat.CBOR:
+      return {
+        encoder: async (_sthis: SuperThis, obj: NonNullable<T>) => Result.Ok(CBOR.encode(obj)),
+        decoder: async (_sthis: SuperThis, payload: Uint8Array) => exception2Result(() => CBOR.decode(payload)) as Result<NonNullable<T>>,
+      };
+    default:
+      throw logger.Error().Str("encoding", encoding).Msg("unsupported encoding").AsError();
+  }
+}
+
+
+
+async function coerceUint8array(body: BodyType): Promise<Result<Uint8Array>> {
+  if (Result.Is(body)) {
+    if (body.isErr()) {
+      return Promise.resolve(Result.Err(body.Err()));
+    }
+    return coerceUint8array(body.unwrap());
+  }
+  if (body instanceof Uint8Array) {
+    return Promise.resolve(Result.Ok(body));
+  }
+  if (typeof (body as ReadableStream).getReader === "function") {
+    return coerceUint8array(stream2uint8array(body as ReadableStream<Uint8Array>));
+  }
+  if (typeof (body as Promise<Uint8Array>).then === "function") {
+    return (body as Promise<Uint8Array>).then(coerceUint8array).catch((e) => Result.Err(e));
+  }
+  return Promise.resolve(Result.Err("unsupported body type"));
+}
+
+export async function sendRaw<T extends FPEnvelopeTurnaround<S>, S>(sthis: SuperThis, encoding: FPMIMEFormat, body: T): Promise<Result<Uint8Array>> {
+  const enDeCoder = getEnDeCoder<S>(sthis.logger, encoding);
+  return fpSerialize(sthis, body, enDeCoder.encoder);
+}
+
+export async function receiveRaw(sthis: SuperThis, encoding: FPMIMEFormat, body: BodyType) {
+  const rbody = await coerceUint8array(body);
+  if (rbody.isErr()) {
+    return Result.Err(rbody.Err());
+  }
+  body = rbody.unwrap();
+
+  const rawT = encoder(sthis, body);
+  if (rawT.isErr()) {
+    return Result.Err(rawT.Err());
+  }
+  // return fpDeserialize(sthis, sthis.uri, rawT.unwrap());
+
+  // return fpDeserialize(sthis, url, intoRaw, pdecoder);
 }

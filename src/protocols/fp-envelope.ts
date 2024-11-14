@@ -86,7 +86,7 @@ export interface FPEnvelopeTurnaround<T> extends FPEnvelope<T> {
   readonly tid: string;
   readonly error?: FPError;
   readonly log?: FPLog;
-  readonly meta?: Record<string, string>;
+  readonly annotation?: Record<string, string|string[]>;
 }
 
 export interface FPAuthEnvelope<T> extends FPEnvelopeTurnaround<T> {
@@ -102,12 +102,16 @@ export enum FPMIMEFormat {
 export interface FPEnvelopeOptionReq extends FPEnvelopeTurnaround<Record<string, unknown>> {
   readonly type: FPEnvelopeType.FORMAT_NEG_REQ
   readonly acceptFormat: FPMIMEFormat
+  readonly version?: string // version of client-implementation
+  readonly annotation?: Record<string, string|string[]>
 }
 
 // this message is always responded in JSON format
 export interface FPEnvelopeOptionRes extends FPEnvelopeTurnaround<Record<string, unknown>> {
   readonly type: FPEnvelopeType.FORMAT_NEG_RES
   readonly contentFormat: FPMIMEFormat
+  readonly version: string // version of server-implementation
+  readonly annotation?: Record<string, string|string[]>
 }
 
 // The FPAuthEnvelope is the base for all wireprotocol messages
