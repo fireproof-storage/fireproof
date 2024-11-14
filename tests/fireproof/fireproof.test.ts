@@ -70,6 +70,22 @@ describe("dreamcode", function () {
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe(true);
   });
+  it("should merge with another ledger", async function () {
+    const db2 = fireproof("test-db2");
+    await db2.put({ _id: "test-2", text: "fireproof", dream: false });
+    const doc1NotFound = await db2.get("test-1").catch((e: Error) => e);
+    expect(doc1NotFound.message).toMatch(/Not found/);
+    const doc2NotFound = await db.get("test-2").catch((e: Error) => e);
+    expect(doc2NotFound.message).toMatch(/Not found/);
+    // todo, sync both of them with the same remote
+    // await db2.put({ _id: "test-2", text: "fireproof", dream: false });
+    // const doc1Found = await db2.get("test-1");
+    // expect(doc1Found.text).toBe("fireproof");
+    // expect(doc1Found.dream).toBe(true);
+    // const doc2Found = await db.get("test-2"); 
+    // expect(doc2Found.text).toBe("fireproof");
+    // expect(doc2Found.dream).toBe(false);
+  });
 });
 
 describe("public API", function () {
