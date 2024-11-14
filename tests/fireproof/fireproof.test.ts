@@ -78,13 +78,13 @@ describe("dreamcode", function () {
     const doc2NotFound = await db.get("test-2").catch((e: Error) => e);
     expect(doc2NotFound.message).toMatch(/Not found/);
     // todo, sync both of them with the same remote
-    // await db2.put({ _id: "test-2", text: "fireproof", dream: false });
-    // const doc1Found = await db2.get("test-1");
-    // expect(doc1Found.text).toBe("fireproof");
-    // expect(doc1Found.dream).toBe(true);
-    // const doc2Found = await db.get("test-2"); 
-    // expect(doc2Found.text).toBe("fireproof");
-    // expect(doc2Found.dream).toBe(false);
+    await db2.put({ _id: "test-2", text: "fireproof", dream: false });
+    const doc1Found = await db2.get("test-1");
+    expect(doc1Found.text).toBe("fireproof");
+    expect(doc1Found.dream).toBe(true);
+    const doc2Found = await db.get("test-2"); 
+    expect(doc2Found.text).toBe("fireproof");
+    expect(doc2Found.dream).toBe(false);
   });
 });
 
