@@ -45,7 +45,7 @@ describe("dreamcode", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof("test-db");
+    db = fireproof("test-db", { public: true });
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
     doc = await db.get(ok.id);
     result = await db.query("text", { range: ["a", "z"] });
@@ -71,7 +71,7 @@ describe("dreamcode", function () {
     expect(result.rows[0].key).toBe(true);
   });
   it("should merge with another ledger", async function () {
-    const db2 = fireproof("test-db2");
+    const db2 = fireproof("test-db2", { public: true });
     await db2.put({ _id: "test-2", text: "fireproof", dream: false });
     const doc1NotFound = await db2.get("test-1").catch((e: Error) => e);
     expect(doc1NotFound.message).toMatch(/Not found/);
