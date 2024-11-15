@@ -31,9 +31,8 @@
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
     "paths": {
       "@fireproof/core": ["./src/index.js"],
-      // "@fireproof/core/node": ["./src/"],
-      "use-fireproof": ["./src/react/index.ts"]
-      // "multiformats/block": ["src/runtime/multiformats/block.ts"],
+      "@fireproof/core/react": ["./src/react/index.js"],
+      "use-fireproof": ["./src/use-fireproof/index.js"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,
     // "rootDirs": ["./src", "./src-generated"],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

@@ -204,8 +204,26 @@ export function registerKeyBagProviderFactory(item: KeyBagProviderFactoryItem) {
   });
 }
 
-export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): KeyBagRuntime {
-  kbo = kbo || {};
+export function defaultKeyBagUrl(sthis: SuperThis): URI {
+  let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
+  let url: URI;
+  if (runtimeFn().isBrowser) {
+    url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
+  } else {
+    if (!bagFnameOrUrl) {
+      const home = sthis.env.get("HOME");
+      bagFnameOrUrl = `${home}/.fireproof/keybag`;
+      url = URI.from(`file://${bagFnameOrUrl}`);
+    } else {
+      url = URI.from(bagFnameOrUrl);
+    }
+  }
+  const logger = ensureLogger(sthis, "defaultKeyBagUrl");
+  logger.Debug().Url(url).Msg("from env");
+  return url;
+}
+
+function defaultKeyBagOpts(sthis: SuperThis, kbo: Partial<KeyBagOpts>): KeyBagRuntime {
   if (kbo.keyRuntime) {
     return kbo.keyRuntime;
   }
@@ -215,19 +233,7 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
     url = URI.from(kbo.url);
     logger.Debug().Url(url).Msg("from opts");
   } else {
-    let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
-    if (runtimeFn().isBrowser) {
-      url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
-    } else {
-      if (!bagFnameOrUrl) {
-        const home = sthis.env.get("HOME");
-        bagFnameOrUrl = `${home}/.fireproof/keybag`;
-        url = URI.from(`file://${bagFnameOrUrl}`);
-      } else {
-        url = URI.from(bagFnameOrUrl);
-      }
-    }
-    logger.Debug().Url(url).Msg("from env");
+    url = defaultKeyBagUrl(sthis);
   }
   let keyProviderFactory: () => Promise<KeyBagProvider>;
   switch (url.protocol) {
