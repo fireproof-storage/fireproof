@@ -20,4 +20,4 @@ export {
   useChanges,
 } from "./useChanges.js";
 // why is this there is should be a package system
-export * from "@fireproof/core";
+// export * from "@fireproof/core";

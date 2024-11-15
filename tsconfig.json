@@ -33,7 +33,6 @@
       "@fireproof/core": ["./src/index.js"],
       "@fireproof/core/react": ["./src/react/index.js"],
       "use-fireproof": ["./src/use-fireproof/index.js"]
-      // "multiformats/block": ["src/runtime/multiformats/block.ts"],
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,
     // "rootDirs": ["./src", "./src-generated"],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */

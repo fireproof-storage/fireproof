@@ -11,6 +11,7 @@ async function copyFilesToDist(destDir: string) {
 }
 
 function getVersion() {
+function getVersion() {
   let version = "refs/tags/v0.0.0-smoke";
   if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
     version = process.env.GITHUB_REF;

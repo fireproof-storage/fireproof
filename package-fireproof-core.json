@@ -25,6 +25,12 @@
       "require": "./web/index.cjs",
       "script": "./web/index.global.js",
       "types": "./web/index.d.ts"
+    },
+    "./react": {
+      "import": "./react/index.js",
+      "require": "./react/index.cjs",
+      "script": "./react/index.global.js",
+      "types": "./react/index.d.ts"
     }
   },
   "scripts": {},

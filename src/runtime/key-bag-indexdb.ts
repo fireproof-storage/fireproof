@@ -2,7 +2,7 @@ import { IDBPDatabase, openDB } from "idb";
 import { KeyBagProvider, KeyItem } from "./key-bag.js";
 import { getPath } from "./gateways/file/utils.js";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
-import { SuperThis } from "use-fireproof";
+import type { SuperThis } from "../types.js";
 
 export class KeyBagProviderIndexDB implements KeyBagProvider {
   readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
