@@ -7,7 +7,6 @@ import type {
   DocWithId,
   IndexKeyType,
   IndexRow,
-  Ledger,
   MapFn,
   QueryOpts,
 } from "@fireproof/core";
