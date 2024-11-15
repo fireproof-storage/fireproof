@@ -61,7 +61,7 @@ export interface DbName {
 
 function joinDBName(...names: string[]): string {
   return names
-    .map((i) => i.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_"))
+    .map((i) => i.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9-]+/g, "_"))
     .filter((i) => i.length)
     .join(".");
 }

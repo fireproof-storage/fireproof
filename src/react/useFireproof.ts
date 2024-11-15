@@ -1,5 +1,6 @@
 import type {
   ConfigOpts,
+  Database,
   DocFragment,
   DocResponse,
   DocSet,
@@ -7,7 +8,6 @@ import type {
   DocWithId,
   IndexKeyType,
   IndexRow,
-  Ledger,
   MapFn,
   QueryOpts,
 } from "@fireproof/core";
@@ -191,7 +191,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const refreshDoc = useCallback(async () => {
       // todo add option for mvcc checks
-      const doc = docId ? await ledger.get<T>(docId).catch(() => initialDoc) : initialDoc;
+      const doc = docId ? await database.get<T>(docId).catch(() => initialDoc) : initialDoc;
       setDoc(doc);
     }, [docId]);
 
