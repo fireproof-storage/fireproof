@@ -51,7 +51,7 @@ type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<D
 
 export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
 
-export type UseDocument = <T extends DocTypes>(initialDoc: DocSet<T>) => UseDocumentResult<T>;
+export type UseDocument = <T extends DocTypes>(initialDoc: DocSet<T> | (() => DocSet<T>)) => UseDocumentResult<T>;
 
 export interface UseFireproof {
   readonly database: Database;
@@ -172,7 +172,11 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  function useDocument<T extends DocTypes>(initialDoc: DocSet<T>): UseDocumentResult<T> {
+  function useDocument<T extends DocTypes>(initialDoc: DocSet<T> | (() => DocSet<T>)): UseDocumentResult<T> {
+    if (typeof initialDoc === "function") {
+      initialDoc = initialDoc();
+    }
+
     // We purposely refetch the docId everytime to check if it has changed
     const docId = initialDoc._id ?? "";
 
