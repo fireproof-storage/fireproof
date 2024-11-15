@@ -204,6 +204,44 @@ export function registerKeyBagProviderFactory(item: KeyBagProviderFactoryItem) {
   });
 }
 
+export function defaultKeyBagUrl(sthis: SuperThis): URI {
+  let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
+  let url: URI;
+  if (runtimeFn().isBrowser) {
+    url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
+  } else {
+    if (!bagFnameOrUrl) {
+      const home = sthis.env.get("HOME");
+      bagFnameOrUrl = `${home}/.fireproof/keybag`;
+      url = URI.from(`file://${bagFnameOrUrl}`);
+    } else {
+      url = URI.from(bagFnameOrUrl);
+    }
+  }
+  const logger = ensureLogger(sthis, "defaultKeyBagUrl");
+  logger.Debug().Url(url).Msg("from env");
+  return url;
+}
+
+export function defaultKeyBagUrl(sthis: SuperThis): URI {
+  let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
+  let url: URI;
+  if (runtimeFn().isBrowser) {
+    url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
+  } else {
+    if (!bagFnameOrUrl) {
+      const home = sthis.env.get("HOME");
+      bagFnameOrUrl = `${home}/.fireproof/keybag`;
+      url = URI.from(`file://${bagFnameOrUrl}`);
+    } else {
+      url = URI.from(bagFnameOrUrl);
+    }
+  }
+  const logger = ensureLogger(sthis, "defaultKeyBagUrl");
+  logger.Debug().Url(url).Msg("from env");
+  return url;
+}
+
 export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): KeyBagRuntime {
   kbo = kbo || {};
   if (kbo.keyRuntime) {
@@ -229,28 +267,9 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
     }
     logger.Debug().Url(url).Msg("from env");
   }
-  let keyProviderFactory: () => Promise<KeyBagProvider>;
-  switch (url.protocol) {
-    case "file:":
-      keyProviderFactory = async () => {
-        const { KeyBagProviderFile } = await import("./key-bag-file.js");
-        return new KeyBagProviderFile(url, sthis);
-      };
-      break;
-    case "indexdb:":
-      keyProviderFactory = async () => {
-        const { KeyBagProviderIndexDB } = await import("./key-bag-indexdb.js");
-        return new KeyBagProviderIndexDB(url, sthis);
-      };
-      break;
-    case "memory:":
-      keyProviderFactory = async () => {
-        const { KeyBagProviderMemory } = await import("./key-bag-memory.js");
-        return new KeyBagProviderMemory(url, sthis);
-      };
-      break;
-    default:
-      throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
+  const kitem = keyBagProviderFactories.get(url.protocol);
+  if (!kitem) {
+    throw logger.Error().Url(url).Msg("unsupported protocol").AsError();
   }
 
   if (url.hasParam("masterkey")) {

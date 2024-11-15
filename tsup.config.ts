@@ -107,7 +107,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
       skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
       skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
-      skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
+      // skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
       resolve({
         ...skipIife,
         ...ourMultiformat,
@@ -154,7 +154,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
       skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
       skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
-      skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
+      // skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
       resolve({
         ...ourMultiformat,
       }),
@@ -230,7 +230,29 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    external: [...(LIBRARY_BUNDLE_OPTIONS.external || [])],
+    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core"],
+    format: ["esm", "cjs"],
+    name: "@fireproof/core/react",
+    entry: ["src/react/index.ts"],
+    platform: "browser",
+    outDir: "dist/fireproof-core/react",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/core/web'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core/react"],
     treeshake: true,
     //    minify: true,
     name: "use-fireproof",

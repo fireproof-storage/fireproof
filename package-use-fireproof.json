@@ -30,6 +30,7 @@
   "dependencies": {
     "react": "from-package-json",
     "multiformats": "from-package-json",
+    "@fireproof/core": "from-package-json",
     "@adviser/cement": "from-package-json",
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
@@ -44,7 +45,8 @@
     "@ipld/car": "from-package-json"
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "react": "from-package-json",
+    "@fireproof/core": "from-package-json"
   },
   "devDependencies": {},
   "keywords": ["react", "ledger", "json", "live", "sync"]
