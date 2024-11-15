@@ -25,6 +25,12 @@
       "require": "./web/index.cjs",
       "script": "./web/index.global.js",
       "types": "./web/index.d.ts"
+    },
+    "./react": {
+      "import": "./react/index.js",
+      "require": "./react/index.cjs",
+      "script": "./react/index.global.js",
+      "types": "./react/index.d.ts"
     }
   },
   "scripts": {},
@@ -42,7 +48,9 @@
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
   "devDependencies": {},
-  "peerDependencies": {},
+  "peerDependencies": {
+    "react": "from-package-json"
+  },
   "dependencies": {
     "@adviser/cement": "from-package-json",
     "multiformats": "from-package-json",
