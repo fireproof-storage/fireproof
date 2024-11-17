@@ -25,12 +25,6 @@ export async function loader({ request }) {
     );
   }
 
-  if (authResult.nextUrl) {
-    const redirectURL = authResult.nextUrl;
-    authResult.nextUrl = null;
-    return redirect(redirectURL);
-  }
-
   const databases = await getIndexedDBNamesWithQueries();
   return { databases, user: authResult.user };
 }
@@ -359,7 +353,7 @@ export default function Layout() {
               {user && (
                 <img
                   src={
-                    user.profilePictureUrl ||
+                    user.imageUrl ||
                     "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp"
                   }
                   alt={user.firstName || "User profile"}

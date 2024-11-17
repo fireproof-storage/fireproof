@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^5.34.2",
     "@fireproof/cloud": "^0.19.105",
     "@tailwindcss/container-queries": "^0.1.1",
     "@workos-inc/authkit-js": "^0.6.1",
