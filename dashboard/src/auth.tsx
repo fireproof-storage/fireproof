@@ -1,20 +1,16 @@
-import { createClient } from "@workos-inc/authkit-js";
+import { Clerk } from "@clerk/clerk-js";
 
 let user;
-let nextUrl;
 
-export const authProvider = await createClient(
-  import.meta.env.VITE_WORKOS_CLIENTID,
-  {
-    devMode: false,
-    onRedirectCallback: (params) => {
-      if (params.state) {
-        nextUrl = params.state.next_url;
-      }
+export const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+await clerk.load({
+  appearance: {
+    elements: {
+      footerAction: { display: "none" },
     },
-  }
-);
+  },
+});
 
-user = authProvider.getUser();
+user = clerk.user;
 
-export const authResult = { nextUrl, user };
+export const authResult = { user };

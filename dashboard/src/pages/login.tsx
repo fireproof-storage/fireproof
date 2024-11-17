@@ -1,12 +1,12 @@
 import React from "react";
-import { authProvider } from "../auth";
+import { redirect } from "react-router-dom";
+import { clerk } from "../auth";
 
 export async function loader({ request }) {
   const url = new URL(request.url);
-  await authProvider.signIn({
-    state: { next_url: url.searchParams.get("next_url") },
-  });
-  return null;
+  return redirect(
+    clerk.buildSignInUrl({ redirectUrl: url.searchParams.get("next_url") })
+  );
 }
 
 export default function Login() {
