@@ -4,6 +4,7 @@ let user;
 
 export const clerk = new Clerk(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 await clerk.load({
+  signInUrl: "/login",
   appearance: {
     elements: {
       footerAction: { display: "none" },
