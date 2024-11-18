@@ -57,7 +57,7 @@ importers:
         specifier: ^7.0.2
         version: 7.0.3
       p-retry:
-        specifier: ^6.2.0
+        specifier: ^6.2.1
         version: 6.2.1
       prolly-trees:
         specifier: ^1.0.4
