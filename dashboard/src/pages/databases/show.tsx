@@ -199,21 +199,21 @@ function TableView({ name }: { name: string }) {
               {activeTab === "react" && (
                 <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
                   {`
-import { useFireproof, useDocument } from "use-fireproof";
+import { useFireproof } from "use-fireproof";
 import { connect } from "@fireproof/cloud";
 
 export default function App() {
-  const { database, useLiveQuery } = useFireproof("my_db");
-  connect(database, "my-remote");
+  const { database, useLiveQuery, useDocument } = useFireproof("my_db");
+  connect(database, '${remoteName}');
   const { docs } = useLiveQuery("_id");
 
-  const [newDoc, setNewDoc, saveNewDoc] = useDocument({ input: "" });
+  const [newDoc, setNewDoc, saveNewDoc] = useDocument(() => ({ input: "" }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newDoc.input) {
       await saveNewDoc();
-      setNewDoc({ input: "" }); // Reset for new entry
+      setNewDoc(); // Reset for new entry
     }
   };
 
