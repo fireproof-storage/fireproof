@@ -1,9 +1,10 @@
 export default function DatabaseIndex() {
   return (
     <div className="flex flex-col items-center justify-center h-full">
-      <h2 className="text-2xl font-semibold">Select a database to start</h2>
+      <h2 className="text-2xl font-semibold">Welcome to Fireproof</h2>
       <p className="text-muted-foreground">
-        Choose a database from the left sidebar to get started.
+        The left sidebar lists database you have synced before. To get started writing apps, 
+        try <a href="https://use-fireproof.com/docs/react-tutorial/">the React tutorial</a>.
       </p>
     </div>
   );
