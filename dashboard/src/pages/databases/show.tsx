@@ -24,6 +24,8 @@ function TableView({ name }: { name: string }) {
   const [showConnectionInfo, setShowConnectionInfo] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showQuickstart, setShowQuickstart] = useState(false);
+  const [activeTab, setActiveTab] = useState<"react" | "vanilla">("react");
   const connectionInfoRef = useRef<HTMLDivElement>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
   const [connectionInfoPosition, setConnectionInfoPosition] = useState({
@@ -147,6 +149,104 @@ function TableView({ name }: { name: string }) {
 
   return (
     <div className="p-6 bg-[--muted]">
+      {connection && (
+        <div className="mb-4 bg-[--background] border border-[--border] rounded-md p-4">
+          <div
+            className="flex items-center cursor-pointer"
+            onClick={() => setShowQuickstart(!showQuickstart)}
+          >
+            <h3 className="font-bold text-sm flex-grow">Quickstart</h3>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className={`h-4 w-4 transform transition-transform ${
+                showQuickstart ? "rotate-180" : ""
+              }`}
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          {showQuickstart && (
+            <div className="mt-4">
+              <div className="flex border-b border-[--border] mb-4">
+                <button
+                  className={`px-4 py-2 text-sm font-medium ${
+                    activeTab === "react"
+                      ? "border-b-2 border-[--accent] text-[--accent]"
+                      : "text-[--muted-foreground]"
+                  }`}
+                  onClick={() => setActiveTab("react")}
+                >
+                  React
+                </button>
+                <button
+                  className={`px-4 py-2 text-sm font-medium ${
+                    activeTab === "vanilla"
+                      ? "border-b-2 border-[--accent] text-[--accent]"
+                      : "text-[--muted-foreground]"
+                  }`}
+                  onClick={() => setActiveTab("vanilla")}
+                >
+                  Vanilla JS
+                </button>
+              </div>
+
+              {activeTab === "react" && (
+                <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
+                  {`
+import { useFireproof, useDocument } from "use-fireproof";
+import { connect } from "@fireproof/cloud";
+
+export default function App() {
+  const { database, useLiveQuery } = useFireproof("my_db");
+  connect(database, "my-remote");
+  const { docs } = useLiveQuery("_id");
+
+  const [newDoc, setNewDoc, saveNewDoc] = useDocument({ input: "" });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (newDoc.input) {
+      await saveNewDoc();
+      setNewDoc({ input: "" }); // Reset for new entry
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit}>
+        <input
+          value={newDoc.input}
+          onChange={(e) => setNewDoc({ input: e.target.value })}
+        />
+        <button>Add</button>
+      </form>
+      <ul>
+        {docs.map((doc) => (
+          <li key={doc._id}>{JSON.stringify(doc)}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}`}
+                </pre>
+              )}
+
+              {activeTab === "vanilla" && (
+                <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
+                  {``}
+                </pre>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="@container flex justify-between items-start mb-4 gap-4">
         <nav className="text-base max-[500px]:text-sm text-[--muted-foreground] flex-grow flex items-center flex-wrap">
           <Link
