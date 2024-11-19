@@ -199,23 +199,38 @@ function TableView({ name }: { name: string }) {
               {activeTab === "react" && (
                 <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
                   {`
-import { useFireproof } from 'use-fireproof';
-import { connect } from '@fireproof/cloud';
-import { useEffect } from 'react';
+import { useFireproof, useDocument } from "use-fireproof";
+import { connect } from "@fireproof/cloud";
 
 export default function App() {
-  const { database, useLiveQuery } = useFireproof('my_db');
-  const { docs } = useLiveQuery('_id');
+  const { database, useLiveQuery } = useFireproof("my_db");
+  connect(database, "my-remote");
+  const { docs } = useLiveQuery("_id");
 
-  useEffect(() => {
-    connect(database, 'e3ea13b7-6399-47fa-ba1b-3aa2f0aa4a0e');
-  }, []);
+  const [newDoc, setNewDoc, saveNewDoc] = useDocument({ input: "" });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (newDoc.input) {
+      await saveNewDoc();
+      setNewDoc({ input: "" }); // Reset for new entry
+    }
+  };
 
   return (
     <div>
-      {docs.map((doc) => (
-        <div key={doc._id}>{JSON.stringify(doc)}</div>
-      ))}
+      <form onSubmit={handleSubmit}>
+        <input
+          value={newDoc.input}
+          onChange={(e) => setNewDoc({ input: e.target.value })}
+        />
+        <button>Add</button>
+      </form>
+      <ul>
+        {docs.map((doc) => (
+          <li key={doc._id}>{JSON.stringify(doc)}</li>
+        ))}
+      </ul>
     </div>
   );
 }`}
