@@ -292,7 +292,7 @@ export default function Layout() {
         <header className="flex h-14 items-center gap-4 border-b bg-background px-6 shadow-sm flex-shrink-0">
           <h1 className="flex-1 text-lg font-semibold"></h1>
           <div className="flex items-center gap-4">
-            <a href="https://use-fireproof.com" className="hover:underline">
+            <a href="https://use-fireproof.com/docs/welcome/" className="hover:underline">
               Docs
             </a>
             <a
