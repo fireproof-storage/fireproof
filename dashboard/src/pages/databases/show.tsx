@@ -207,7 +207,7 @@ export default function App() {
   connect(database, '${remoteName}');
   const { docs } = useLiveQuery("_id");
 
-  const [newDoc, setNewDoc, saveNewDoc] = useDocument(() => ({ input: "" }));
+  const [newDoc, setNewDoc, saveNewDoc] = useDocument({ input: "" });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
