@@ -304,3 +304,9 @@ export interface DocResponse {
 export type UpdateListenerFn<T extends DocTypes> = (docs: DocWithId<T>[]) => Promise<void> | void;
 export type NoUpdateListenerFn = () => Promise<void> | void;
 export type ListenerFn<T extends DocTypes> = UpdateListenerFn<T> | NoUpdateListenerFn;
+
+export interface CRDTEntry {
+  readonly data: string;
+  readonly parents: string[];
+  readonly cid: string;
+}
