@@ -12,7 +12,7 @@
   "dependencies": {
     "@clerk/clerk-js": "^5.34.3",
     "@clerk/clerk-react": "^5.16.0",
-    "@fireproof/cloud": "^0.19.112",
+    "@fireproof/cloud": "^0.19.111",
     "@tailwindcss/container-queries": "^0.1.1",
     "@workos-inc/authkit-js": "^0.6.1",
     "@workos-inc/authkit-react": "^0.5.1",
@@ -27,7 +27,7 @@
     "react-router-dom": "^6.28.0",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
-    "use-fireproof": "^0.19.112"
+    "use-fireproof": "^0.19.111"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

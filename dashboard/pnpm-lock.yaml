@@ -15,8 +15,8 @@ importers:
         specifier: ^5.16.0
         version: 5.16.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fireproof/cloud':
-        specifier: ^0.19.112
-        version: 0.19.112(react@18.3.1)
+        specifier: ^0.19.111
+        version: 0.19.111(react@18.3.1)
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.15)
@@ -60,8 +60,8 @@ importers:
         specifier: ^2.3.3
         version: 2.3.3(react@18.3.1)
       use-fireproof:
-        specifier: ^0.19.112
-        version: 0.19.112(@fireproof/core@0.19.112(react@18.3.1))(react@18.3.1)
+        specifier: ^0.19.111
+        version: 0.19.111(react@18.3.1)
     devDependencies:
       '@eslint/js':
         specifier: ^9.15.0
@@ -508,13 +508,13 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/cloud@0.19.112':
-    resolution: {integrity: sha512-BzRkc2Fn0KfKwF+x7f27HicsxXAP9+UnZfY4uZXx1fMmmV4H7QOfLMiyFfJYzn010LbUy5diNu532GzeZrydBQ==}
+  '@fireproof/cloud@0.19.111':
+    resolution: {integrity: sha512-VHHc1nQw2CJUl7o+e2MBtEG/RM2KOK72nYpcu8tOlOlFmIvvWAeK0peZtTIyamqF9aShVSSTMwmS+rst1ziLzg==}
 
-  '@fireproof/core@0.19.112':
-    resolution: {integrity: sha512-vNWyVKhdPS6qt1DhzF6oU9qDMGnN1lQTtQoaYTsIGUS3zebMrI30h0vgU/ERFgibwdcCyHqNHBwfBI500KiZcg==}
+  '@fireproof/core@0.19.111':
+    resolution: {integrity: sha512-LJsXkGpMtDIvabX8YU24x33BV/oL1o6XdDAfbC2TpoRyNZ8pkqohibzHor+LFriMdRLtO2yqPkad2XnKgRZOqw==}
     peerDependencies:
-      react: ^18.3.1
+      react: '>=18.0.0'
 
   '@floating-ui/core@1.6.8':
     resolution: {integrity: sha512-7XJ9cPU+yI2QeLS+FCSlqNFZJq8arvswefkZrYI1yQBbftw6FyrZOxYSh+9S7z7TpeWlRt9zJ5IhM1WIL334jA==}
@@ -1085,6 +1085,9 @@ packages:
   cosmiconfig@7.1.0:
     resolution: {integrity: sha512-AdmX6xUzdNASswsFtmwSt7Vj8po9IuqXm0UXz7QKPuEUmPB4XyjGfaAr2PSuELMwkRMVH1EpIkX5bTZGRB3eCA==}
     engines: {node: '>=10'}
+
+  cross-fetch@4.0.0:
+    resolution: {integrity: sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -1833,6 +1836,15 @@ packages:
   node-addon-api@2.0.2:
     resolution: {integrity: sha512-Ntyt4AIXyaLIuMHF6IOoTakB3K+RWxwtsHNRxllEoA6vPwP9o4866g6YWDLUdnucilZhmkxiHwHr11gAENw+QA==}
 
+  node-fetch@2.7.0:
+    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
+
   node-gyp-build@4.8.3:
     resolution: {integrity: sha512-EMS95CMJzdoSKoIiXo8pxKoL8DYxwIZXYlLmgPb8KUv794abpnLK6ynsCAWNliOjREKruYKdzbh76HHYUHX7nw==}
     hasBin: true
@@ -2013,8 +2025,8 @@ packages:
     resolution: {integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==}
     engines: {node: '>=8'}
 
-  partykit@0.0.111:
-    resolution: {integrity: sha512-pbUzJmulPTqZWgtH++eClnLlddTWS0RPKOAQyexYiSqGEg2/Ff84Ep0qWFqy+53wiz098DPFekRI375Qy2GsZw==}
+  partykit@0.0.110:
+    resolution: {integrity: sha512-lAUeB/b6nZbMr6c789RKlSsGhbMtklNhjJZ0ri4zzaVEqhG2/k+cqTLCYTwHvfSI6eSa7cIF614R7CyMUrSLgA==}
     hasBin: true
 
   partysocket@1.0.2:
@@ -2423,6 +2435,9 @@ packages:
   toggle-selection@1.0.6:
     resolution: {integrity: sha512-BiZS+C1OS8g/q2RRbJmy59xpyghNBqrr6k5L/uKBGRsTfxmu3ffiRnd8mlGPUVayg8pvfi5urfnu8TU7DVOkLQ==}
 
+  tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
   tree-dump@1.0.2:
     resolution: {integrity: sha512-dpev9ABuLWdEubk+cIaI9cHwRNNDjkBBLXTwI4UCUFdQ5xXKqNXoK4FEciw/vxf+NQ7Cb7sGUyeUtORvHIdRXQ==}
     engines: {node: '>=10.0'}
@@ -2502,11 +2517,10 @@ packages:
     peerDependencies:
       react: '>= 16.8.0'
 
-  use-fireproof@0.19.112:
-    resolution: {integrity: sha512-g0H+7Lz4ODHozDGxsuUrqM9PIR3A5DwOqJyChdTfIG3W5LOW+1ZvZzXlH3EWWFa46+0GCugJbeDqsH2DyNEgvw==}
+  use-fireproof@0.19.111:
+    resolution: {integrity: sha512-bmRWaYrtyq0+2ewDj0cLJ8FQL3osUe0j7p89DT2dQ13sji5Td2oTXWgXZVfTPCbC8LF6qW4zXVQ4Cks4SToEaw==}
     peerDependencies:
-      '@fireproof/core': ^0.19.112
-      react: ^18.3.1
+      react: '>=18.0.0'
 
   use-sync-external-store@1.2.2:
     resolution: {integrity: sha512-PElTlVMwpblvbNqQ82d2n6RjStvdSoNe9FG28kNfz3WiXilJm4DdNkEzRhCZuIDwY8U08WVihhGR5iRqAwfDiw==}
@@ -2549,6 +2563,12 @@ packages:
         optional: true
       terser:
         optional: true
+
+  webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
+
+  whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
   which-boxed-primitive@1.0.2:
     resolution: {integrity: sha512-bwZdv0AKLpplFY2KZRX6TvyuN7ojjr7lwkg6ml0roIy9YeuSr7JS372qlNW18UQYzgYK9ziGcerWqZOmEn9VNg==}
@@ -3033,20 +3053,22 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/cloud@0.19.112(react@18.3.1)':
+  '@fireproof/cloud@0.19.111(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.36
-      '@fireproof/core': 0.19.112(react@18.3.1)
-      partykit: 0.0.111
+      '@fireproof/core': 0.19.111(react@18.3.1)
+      cross-fetch: 4.0.0
+      partykit: 0.0.110
       partysocket: 1.0.2
     transitivePeerDependencies:
       - bufferutil
+      - encoding
       - react
       - supports-color
       - typescript
       - utf-8-validate
 
-  '@fireproof/core@0.19.112(react@18.3.1)':
+  '@fireproof/core@0.19.111(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.36
       '@ipld/car': 5.3.3
@@ -3653,6 +3675,12 @@ snapshots:
       parse-json: 5.2.0
       path-type: 4.0.0
       yaml: 1.10.2
+
+  cross-fetch@4.0.0:
+    dependencies:
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
 
   cross-spawn@7.0.6:
     dependencies:
@@ -4495,6 +4523,10 @@ snapshots:
 
   node-addon-api@2.0.2: {}
 
+  node-fetch@2.7.0:
+    dependencies:
+      whatwg-url: 5.0.0
+
   node-gyp-build@4.8.3: {}
 
   node-releases@2.0.18: {}
@@ -4602,7 +4634,7 @@ snapshots:
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
 
-  partykit@0.0.111:
+  partykit@0.0.110:
     dependencies:
       '@cloudflare/workers-types': 4.20240718.0
       clipboardy: 4.0.0
@@ -5074,6 +5106,8 @@ snapshots:
 
   toggle-selection@1.0.6: {}
 
+  tr46@0.0.3: {}
+
   tree-dump@1.0.2(tslib@2.8.1):
     dependencies:
       tslib: 2.8.1
@@ -5164,10 +5198,9 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  use-fireproof@0.19.112(@fireproof/core@0.19.112(react@18.3.1))(react@18.3.1):
+  use-fireproof@0.19.111(react@18.3.1):
     dependencies:
       '@adviser/cement': 0.2.36
-      '@fireproof/core': 0.19.112(react@18.3.1)
       '@ipld/car': 5.3.3
       '@ipld/unixfs': 3.0.0
       '@web3-storage/pail': 0.6.0
@@ -5200,6 +5233,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.7.5
       fsevents: 2.3.3
+
+  webidl-conversions@3.0.1: {}
+
+  whatwg-url@5.0.0:
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
 
   which-boxed-primitive@1.0.2:
     dependencies:
