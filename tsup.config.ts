@@ -105,7 +105,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
+      skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
       skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
       // skipper(["./gateway-import-static.js"], "././gateway-import-dynamic.js"),
       resolve({
