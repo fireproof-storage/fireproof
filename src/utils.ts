@@ -19,7 +19,9 @@ import { base58btc } from "multiformats/bases/base58";
 export type { Logger };
 export { Result };
 
-const globalLogger: Logger = new LoggerImpl();
+function globalLogger(): Logger {
+  return new LoggerImpl();
+}
 
 const registerFP_DEBUG = new ResolveOnce();
 
@@ -134,7 +136,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     presetEnv: osthis?.env?.presetEnv || presetEnv(),
   });
   return new superThis({
-    logger: osthis?.logger || globalLogger,
+    logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),
     ctx: osthis?.ctx || {},
@@ -158,11 +160,13 @@ export function ensureLogger(
   // if (!opts?.logger) {
   //   throw new Error("logger is required");
   // }
-  let logger = globalLogger;
+  let logger: Logger;
   if (IsLogger(sthis)) {
     logger = sthis;
   } else if (sthis && IsLogger(sthis.logger)) {
     logger = sthis.logger;
+  } else {
+    logger = globalLogger();
   }
   const cLogger = logger.With().Module(componentName); //.Str("this", uuidv7());
   const debug: string[] = [];
