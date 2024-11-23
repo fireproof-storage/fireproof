@@ -19,8 +19,9 @@ import { base58btc } from "multiformats/bases/base58";
 export type { Logger };
 export { Result };
 
+const _globalLogger = new ResolveOnce();
 function globalLogger(): Logger {
-  return new LoggerImpl();
+  return _globalLogger.once(() => new LoggerImpl());
 }
 
 const registerFP_DEBUG = new ResolveOnce();
