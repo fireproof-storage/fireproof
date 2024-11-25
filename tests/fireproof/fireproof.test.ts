@@ -16,6 +16,7 @@ import {
   index,
   isLedger,
 } from "@fireproof/core";
+import { NotFoundError } from "ipfs-unixfs-exporter";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -45,7 +46,7 @@ describe("dreamcode", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof("test-db");
+    db = fireproof("test-db", { public: true });
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
     doc = await db.get(ok.id);
     result = await db.query("text", { range: ["a", "z"] });
@@ -69,6 +70,23 @@ describe("dreamcode", function () {
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toBe(1);
     expect(result.rows[0].key).toBe(true);
+  });
+  it("should merge with another ledger", async function () {
+    const db2 = fireproof("test-db2", { public: true });
+    await db2.put<Doc>({ _id: "test-2", text: "fireproof", dream: false });
+    // const doc1NotFound = await db2.get("test-1").catch((e: Error) => e);
+    expect(db2.get("test-1")).rejects.toBeInstanceOf(NotFoundError)
+    // const doc2NotFound = await db.get("test-2").catch((e: Error) => e);
+    expect(db.get("test-2")).rejects.toBeInstanceOf(NotFoundError)
+    // todo, sync both of them with the same remote
+    await db2.put<Doc>({ _id: "test-2", text: "fireproof", dream: false });
+
+    const doc1Found = await db2.get<Doc>("test-1");
+    expect(doc1Found.text).toBe("fireproof");
+    expect(doc1Found.dream).toBe(true);
+    const doc2Found = await db.get<Doc>("test-2");
+    expect(doc2Found.text).toBe("fireproof");
+    expect(doc2Found.dream).toBe(false);
   });
 });
 
