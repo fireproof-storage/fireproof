@@ -82,7 +82,7 @@
     "@ipld/dag-json": "^10.2.3",
     "@ipld/unixfs": "^3.0.0",
     "@web3-storage/pail": "^0.6.0",
-    "cborg": "^4.2.4",
+    "cborg": "^4.2.6",
     "charwise": "^3.0.1",
     "cross-fetch": "^4.0.0",
     "esbuild-plugin-replace": "^1.4.0",
