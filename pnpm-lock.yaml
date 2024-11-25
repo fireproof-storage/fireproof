@@ -18,8 +18,8 @@ importers:
         specifier: ^9.2.1
         version: 9.2.1
       '@ipld/dag-json':
-        specifier: ^10.2.2
-        version: 10.2.2
+        specifier: ^10.2.3
+        version: 10.2.3
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -701,8 +701,8 @@ packages:
     resolution: {integrity: sha512-nyY48yE7r3dnJVlxrdaimrbloh4RokQaNRdI//btfTkcTEZbpmSrbYcBQ4VKTf8ZxXAOUJy4VsRpkJo+y9RTnA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-json@10.2.2':
-    resolution: {integrity: sha512-NnU8HdHKwAoGyrW3S09NMa8aZw0tImLRyR64hoafpLpDpAbA9g1+fb24JsdlugbL4sXUQVwDVA+qK4Ud8V83lA==}
+  '@ipld/dag-json@10.2.3':
+    resolution: {integrity: sha512-itacv1j1hvYgLox2B42Msn70QLzcr0MEo5yGIENuw2SM/lQzq9bmBiMky+kDsIrsqqblKTXcHBZnnmK7D4a6ZQ==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-pb@4.0.8':
@@ -3538,7 +3538,7 @@ snapshots:
       cborg: 4.2.4
       multiformats: 13.3.0
 
-  '@ipld/dag-json@10.2.2':
+  '@ipld/dag-json@10.2.3':
     dependencies:
       cborg: 4.2.4
       multiformats: 13.3.0
@@ -4920,7 +4920,7 @@ snapshots:
   ipfs-unixfs-exporter@13.6.1:
     dependencies:
       '@ipld/dag-cbor': 9.2.1
-      '@ipld/dag-json': 10.2.2
+      '@ipld/dag-json': 10.2.3
       '@ipld/dag-pb': 4.1.2
       '@multiformats/murmur3': 2.1.8
       hamt-sharding: 3.0.6
