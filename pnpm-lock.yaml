@@ -88,8 +88,8 @@ importers:
         specifier: ^18.3.12
         version: 18.3.12
       '@typescript-eslint/typescript-estree':
-        specifier: ^8.8.0
-        version: 8.8.0(typescript@5.6.2)
+        specifier: ^8.15.0
+        version: 8.15.0(typescript@5.6.2)
       '@vitest/browser':
         specifier: ^2.0.5
         version: 2.0.5(playwright@1.45.1)(typescript@5.6.2)(vitest@2.0.5)(webdriverio@9.3.1)
@@ -1137,21 +1137,8 @@ packages:
     resolution: {integrity: sha512-n3Gt8Y/KyJNe0S3yDCD2RVKrHBC4gTUcLTebVBXacPy091E6tNspFLKRXlk3hwT4G55nfr1n2AdFqi/XMxzmPQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@typescript-eslint/types@8.8.0':
-    resolution: {integrity: sha512-QJwc50hRCgBd/k12sTykOJbESe1RrzmX6COk8Y525C9l7oweZ+1lw9JiU56im7Amm8swlz00DRIlxMYLizr2Vw==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
   '@typescript-eslint/typescript-estree@8.15.0':
     resolution: {integrity: sha512-1eMp2JgNec/niZsR7ioFBlsh/Fk0oJbhaqO0jRyQBMgkz7RrFfkqF9lYYmBoGBaSiLnu8TAPQTwoTUiSTUW9dg==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-    peerDependencies:
-      typescript: '*'
-    peerDependenciesMeta:
-      typescript:
-        optional: true
-
-  '@typescript-eslint/typescript-estree@8.8.0':
-    resolution: {integrity: sha512-ZaMJwc/0ckLz5DaAZ+pNLmHv8AMVGtfWxZe/x2JVEkD5LnmhWiQMMcYT7IY7gkdJuzJ9P14fRy28lUrlDSWYdw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       typescript: '*'
@@ -1171,10 +1158,6 @@ packages:
 
   '@typescript-eslint/visitor-keys@8.15.0':
     resolution: {integrity: sha512-h8vYOulWec9LhpwfAdZf2bjr8xIp0KNKnpgqSz0qqYYKAW/QZKw3ktRndbiAtUz4acH4QLQavwZBYCc0wulA/Q==}
-    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@typescript-eslint/visitor-keys@8.8.0':
-    resolution: {integrity: sha512-8mq51Lx6Hpmd7HnA2fcHQo3YgfX1qbccxQOgZcb4tvasu//zXRaA1j5ZRFeCw/VRAdFi4mRM9DnZw0Nu0Q2d1g==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   '@vitest/browser@2.0.5':
@@ -3484,7 +3467,7 @@ snapshots:
   '@eslint/config-array@0.18.0':
     dependencies:
       '@eslint/object-schema': 2.1.4
-      debug: 4.3.6
+      debug: 4.3.7
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -3494,7 +3477,7 @@ snapshots:
   '@eslint/eslintrc@3.1.0':
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.6
+      debug: 4.3.7
       espree: 10.2.0
       globals: 14.0.0
       ignore: 5.3.1
@@ -3960,28 +3943,11 @@ snapshots:
 
   '@typescript-eslint/types@8.15.0': {}
 
-  '@typescript-eslint/types@8.8.0': {}
-
   '@typescript-eslint/typescript-estree@8.15.0(typescript@5.6.2)':
     dependencies:
       '@typescript-eslint/types': 8.15.0
       '@typescript-eslint/visitor-keys': 8.15.0
       debug: 4.3.7
-      fast-glob: 3.3.2
-      is-glob: 4.0.3
-      minimatch: 9.0.4
-      semver: 7.6.3
-      ts-api-utils: 1.3.0(typescript@5.6.2)
-    optionalDependencies:
-      typescript: 5.6.2
-    transitivePeerDependencies:
-      - supports-color
-
-  '@typescript-eslint/typescript-estree@8.8.0(typescript@5.6.2)':
-    dependencies:
-      '@typescript-eslint/types': 8.8.0
-      '@typescript-eslint/visitor-keys': 8.8.0
-      debug: 4.3.6
       fast-glob: 3.3.2
       is-glob: 4.0.3
       minimatch: 9.0.4
@@ -4008,11 +3974,6 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.15.0
       eslint-visitor-keys: 4.2.0
-
-  '@typescript-eslint/visitor-keys@8.8.0':
-    dependencies:
-      '@typescript-eslint/types': 8.8.0
-      eslint-visitor-keys: 3.4.3
 
   '@vitest/browser@2.0.5(playwright@1.45.1)(typescript@5.6.2)(vitest@2.0.5)(webdriverio@9.3.1)':
     dependencies:
@@ -5974,7 +5935,7 @@ snapshots:
   vite-node@2.0.5(@types/node@22.7.4):
     dependencies:
       cac: 6.7.14
-      debug: 4.3.6
+      debug: 4.3.7
       pathe: 1.1.2
       tinyrainbow: 1.2.0
       vite: 5.4.11(@types/node@22.7.4)
