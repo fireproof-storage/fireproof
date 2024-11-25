@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.36
-        version: 0.2.36(typescript@5.6.2)
+        specifier: ^0.2.38
+        version: 0.2.39(typescript@5.6.2)
       '@ipld/car':
         specifier: ^5.3.3
         version: 5.3.3
@@ -18,8 +18,8 @@ importers:
         specifier: ^9.2.1
         version: 9.2.1
       '@ipld/dag-json':
-        specifier: ^10.2.2
-        version: 10.2.2
+        specifier: ^10.2.3
+        version: 10.2.3
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -95,7 +95,7 @@ importers:
         version: 2.0.5(playwright@1.45.1)(typescript@5.6.2)(vitest@2.0.5)(webdriverio@9.1.2)
       '@vitest/coverage-v8':
         specifier: ^2.0.5
-        version: 2.0.5(vitest@2.0.5)
+        version: 2.0.5(vitest@2.0.5(@types/node@22.7.4)(@vitest/browser@2.0.5)(@vitest/ui@2.0.5)(happy-dom@14.12.3))
       '@vitest/ui':
         specifier: ^2.0.5
         version: 2.0.5(vitest@2.0.5)
@@ -148,8 +148,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.36':
-    resolution: {integrity: sha512-Zhmr4f0/UohFh3O/6H63DoBenYjh72uGZOcEnDZ/VxmBvZelACkCR4g06c8rbZbJTu20f3gRSNnJZbmtdMOFgQ==}
+  '@adviser/cement@0.2.39':
+    resolution: {integrity: sha512-hpDyFsg1FTSfBJZymvk/j+K16AUCaBzUyxRPdginRk3s1zXdWmGoRLx7fF7zL0OrqosKxL2P5sMYkSzYJtCtxQ==}
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -697,8 +697,8 @@ packages:
     resolution: {integrity: sha512-nyY48yE7r3dnJVlxrdaimrbloh4RokQaNRdI//btfTkcTEZbpmSrbYcBQ4VKTf8ZxXAOUJy4VsRpkJo+y9RTnA==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
-  '@ipld/dag-json@10.2.2':
-    resolution: {integrity: sha512-NnU8HdHKwAoGyrW3S09NMa8aZw0tImLRyR64hoafpLpDpAbA9g1+fb24JsdlugbL4sXUQVwDVA+qK4Ud8V83lA==}
+  '@ipld/dag-json@10.2.3':
+    resolution: {integrity: sha512-itacv1j1hvYgLox2B42Msn70QLzcr0MEo5yGIENuw2SM/lQzq9bmBiMky+kDsIrsqqblKTXcHBZnnmK7D4a6ZQ==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-pb@4.0.8':
@@ -3103,7 +3103,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.36(typescript@5.6.2)':
+  '@adviser/cement@0.2.39(typescript@5.6.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.6.2)
       yaml: 2.5.1
@@ -3462,7 +3462,7 @@ snapshots:
       cborg: 4.2.4
       multiformats: 13.3.0
 
-  '@ipld/dag-json@10.2.2':
+  '@ipld/dag-json@10.2.3':
     dependencies:
       cborg: 4.2.4
       multiformats: 13.3.0
@@ -3852,7 +3852,7 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@vitest/coverage-v8@2.0.5(vitest@2.0.5)':
+  '@vitest/coverage-v8@2.0.5(vitest@2.0.5(@types/node@22.7.4)(@vitest/browser@2.0.5)(@vitest/ui@2.0.5)(happy-dom@14.12.3))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -4817,7 +4817,7 @@ snapshots:
   ipfs-unixfs-exporter@13.6.1:
     dependencies:
       '@ipld/dag-cbor': 9.2.1
-      '@ipld/dag-json': 10.2.2
+      '@ipld/dag-json': 10.2.3
       '@ipld/dag-pb': 4.1.2
       '@multiformats/murmur3': 2.1.8
       hamt-sharding: 3.0.6
