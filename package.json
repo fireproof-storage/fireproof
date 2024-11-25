@@ -20,9 +20,11 @@
     "smoke:node": "sh smoke/it.sh",
     "smoke:browser": "sh smoke/react/it.sh",
     "clean": "rm -rf node_modules dist",
-    "test": "vitest --run",
+    "test": "vitest --run && pnpm run test:browser",
+    "test:browser": "pnpm run build && playwright test",
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexdb": "vitest --config vitest.browser.config.ts --run",
+    "test-server": "cp -pr ./tests/browser/ ./dist; vite dist",
     "format": "prettier .",
     "lint": "eslint"
   },
@@ -44,6 +46,7 @@
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@playwright/test": "^1.49.0",
     "@testing-library/react": "^16.0.1",
     "@types/node": "^22.9.3",
     "@types/randombytes": "^2.0.3",
