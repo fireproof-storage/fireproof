@@ -21,7 +21,7 @@
     "smoke:browser": "sh smoke/react/it.sh",
     "clean": "rm -rf node_modules dist",
     "test": "vitest --run && pnpm run test:browser",
-    "test:browser": "pnpm run build && playwright test",
+    "test:browser": "playwright test",
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexdb": "vitest --config vitest.browser.config.ts --run",
     "test-server": "cp -pr ./tests/browser/ ./dist; vite dist",
