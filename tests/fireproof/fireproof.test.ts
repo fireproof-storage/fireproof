@@ -514,7 +514,7 @@ describe("Reopening a ledger with indexes", function () {
 
     didMap = false;
 
-    const mapFn = (doc: Doc) => {
+    mapFn = (doc: Doc) => {
       didMap = true;
       return doc.foo;
     };

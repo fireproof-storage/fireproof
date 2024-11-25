@@ -30,7 +30,7 @@ async function encodeCarFile(roots: AnyLink[], t: CarMakeable, codec: BlockEncod
     size += CBW.blockLength({ cid, bytes } as CBW.Block);
   }
   const buffer = new Uint8Array(size);
-  const writer = CBW.createWriter(buffer, { headerSize });
+  const writer = CBW.createWriter(buffer.buffer, { headerSize });
 
   for (const r of roots) {
     writer.addRoot(r as CID<unknown, number, number, 1>);
