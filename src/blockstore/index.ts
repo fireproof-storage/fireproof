@@ -3,7 +3,7 @@ export * from "./types.js";
 export * from "./store-factory.js";
 export * from "./gateway.js";
 
-export * from "./fp-envelope.js";
+export * from "../protocols/fp-envelope.js";
 
 export * from "./register-store-protocol.js";
 export * from "./interceptor-gateway.js";
