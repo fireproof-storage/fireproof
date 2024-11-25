@@ -136,7 +136,7 @@ importers:
         specifier: ^2.1.2
         version: 2.1.9(@types/node@22.15.30)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(terser@5.41.0)
       webdriverio:
-        specifier: ^9.2.14
+        specifier: ^9.3.1
         version: 9.15.0(puppeteer-core@21.11.0(encoding@0.1.13))
       zx:
         specifier: ^8.2.2
@@ -8175,8 +8175,8 @@ packages:
     resolution: {integrity: sha512-JCW5xvhZtL6kjbckdePgVYMOlvWbh22F1VFkIf9pw3prwXI2EHED5Eq/nfDnNfHiqr0AfFKWmIDPziSafrVv4Q==}
     engines: {node: '>=18.20.0'}
 
-  webdriver@9.2.8:
-    resolution: {integrity: sha512-40NtUC1zME9tPHNfZv6ETSE3+aE75qZuKjbVAA0gj02AkO1Nl3yJmf5RLdaLLfIQ2WlrbRP1g8KXlkiiVCmakg==}
+  webdriver@9.3.1:
+    resolution: {integrity: sha512-mvFbt+ixaMdN0lz3rRMlVvvHT/W4W394gDfP9E1UHZFvLxVhxqkvEho3D5OtF2fb+VoaYDdOOGHb+jqBe4X4iQ==}
     engines: {node: '>=18.20.0'}
 
   webdriverio@9.15.0:
@@ -8188,8 +8188,8 @@ packages:
       puppeteer-core:
         optional: true
 
-  webdriverio@9.2.14:
-    resolution: {integrity: sha512-85yEbwN3MwdrGzKZoGkLUf1J5cpfnc7knL4u/Y6XWd0gGwYjv60I5ZPsgSnXzNXAkq2kmtkammf1AM3ihqFM3A==}
+  webdriverio@9.3.1:
+    resolution: {integrity: sha512-WfHKKVxtCMw2TMi90OYmZYqGt2razBaKZtZ8h40qvBQYCwd+TuJ0qCbENA6YQR7XYnPVKuiefZZwumu5NRfo0w==}
     engines: {node: '>=18.20.0'}
     peerDependencies:
       puppeteer-core: '>=22.x || <=24.x'
@@ -10585,7 +10585,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0))(vitest@2.1.2)(webdriverio@9.2.14)':
+  '@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0))(vitest@2.1.2)(webdriverio@9.3.1)':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
@@ -10599,7 +10599,7 @@ snapshots:
       ws: 8.18.2
     optionalDependencies:
       playwright: 1.45.1
-      webdriverio: 9.2.14
+      webdriverio: 9.3.1
     transitivePeerDependencies:
       - '@types/node'
       - bufferutil
@@ -16419,7 +16419,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.15.30
-      '@vitest/browser': 2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0))(vitest@2.1.2)(webdriverio@9.2.14)
+      '@vitest/browser': 2.1.2(@vitest/spy@2.1.2)(playwright@1.45.1)(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0))(vitest@2.1.2)(webdriverio@9.3.1)
       '@vitest/ui': 2.1.2(vitest@2.1.2)
       happy-dom: 14.12.3
       jsdom: 23.2.0
@@ -16524,7 +16524,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriver@9.2.8:
+  webdriver@9.3.1:
     dependencies:
       '@types/node': 20.14.11
       '@types/ws': 8.5.10
@@ -16577,7 +16577,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.2.14:
+  webdriverio@9.3.1:
     dependencies:
       '@types/node': 20.19.0
       '@types/sinonjs__fake-timers': 8.1.5
@@ -16603,7 +16603,7 @@ snapshots:
       rgb2hex: 0.2.5
       serialize-error: 11.0.3
       urlpattern-polyfill: 10.0.0
-      webdriver: 9.2.8
+      webdriver: 9.3.1
     transitivePeerDependencies:
       - bare-buffer
       - bufferutil
