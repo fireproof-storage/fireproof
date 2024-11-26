@@ -35,7 +35,7 @@ interface superThisOpts {
   readonly txt: TextEndeCoder;
 }
 
-class superThis implements SuperThis {
+class SuperThisImpl implements SuperThis {
   readonly logger: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
@@ -80,7 +80,7 @@ class superThis implements SuperThis {
   }
 
   clone(override: Partial<SuperThisOpts>): SuperThis {
-    return new superThis({
+    return new SuperThisImpl({
       logger: override.logger || this.logger,
       env: envFactory(override.env) || this.env,
       crypto: override.crypto || this.crypto,
@@ -136,7 +136,7 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     symbol: osthis?.env?.symbol || "FP_ENV",
     presetEnv: osthis?.env?.presetEnv || presetEnv(),
   });
-  return new superThis({
+  return new SuperThisImpl({
     logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),

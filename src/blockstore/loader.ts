@@ -1,5 +1,11 @@
 import pLimit from "p-limit";
+<<<<<<< HEAD
 import { CarReader } from "@fireproof/vendor/@ipld/car";
+||||||| parent of 8d78cd04 (chore: remove stream warning in wrangler)
+import { CarReader } from "@ipld/car";
+=======
+import { CarReader } from "@ipld/car/reader";
+>>>>>>> 8d78cd04 (chore: remove stream warning in wrangler)
 import { Logger, ResolveOnce } from "@adviser/cement";
 // import { uuidv4 } from "uuidv7";
 
