@@ -6,7 +6,7 @@ import type { Logger } from "@adviser/cement";
 import { CarHeader } from "./types.js";
 // import { decodeRunLength } from "../runtime/keyed-crypto.js";
 // import { base58btc } from "multiformats/bases/base58";
-import { CarReader } from "@ipld/car";
+import { CarReader } from "@ipld/car/reader";
 
 // export async function encodeCarHeader<T>(fp: CarHeader<T>) {
 //   return (await encode({
