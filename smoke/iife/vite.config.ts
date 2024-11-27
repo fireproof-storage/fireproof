@@ -7,8 +7,8 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      provider: "playwright",
-      name: "chromium", // browser name is required
+      provider: "webdriverio",
+      name: "chrome", // browser name is required
     },
     deps: {
       optimizer: {
