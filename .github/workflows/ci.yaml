@@ -24,8 +24,6 @@ jobs:
           version: 9
       - name: install
         run: pnpm install
-      - name: Install Playwright Browsers
-        run: pnpm playwright install --with-deps
       - name: format-check
         run: pnpm run format --check
       - name: lint
