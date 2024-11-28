@@ -92,7 +92,7 @@ importers:
         version: 8.15.0(typescript@5.8.3)
       '@vitest/browser':
         specifier: ^2.1.2
-        version: 2.1.9(@types/node@22.15.30)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))
+        version: 2.1.9(@types/node@22.15.30)(playwright@1.49.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))
       '@vitest/coverage-v8':
         specifier: ^2.1.2
         version: 2.1.9(@vitest/browser@2.1.9)(vitest@2.1.9)
@@ -3491,6 +3491,8 @@ packages:
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
 
+  '@vitest/browser@2.1.2': {}
+
   '@vitest/browser@2.1.9':
     resolution: {integrity: sha512-AHDanTP4Ed6J5R6wRBcWRQ+AxgMnNJxsbaa229nFQz5KOMFZqlW11QkIDoLgCjBOpQ1+c78lTN5jVxO8ME+S4w==}
     peerDependencies:
@@ -5289,6 +5291,11 @@ packages:
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
+  fsevents@2.3.2:
+    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -6797,6 +6804,16 @@ packages:
   pkg-up@3.1.0:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
+
+  playwright-core@1.49.0:
+    resolution: {integrity: sha512-R+3KKTQF3npy5GTiKH/T+kdhoJfJojjHESR1YEWhYuEKRVfVaxH3+4+GvXE5xyCngCxhxnykk0Vlah9v8fs3jA==}
+    engines: {node: '>=18'}
+    hasBin: true
+
+  playwright@1.49.0:
+    resolution: {integrity: sha512-eKpmys0UFDnfNb3vfsf8Vx2LEOtflgRebl0Im2eQQnYMA4Aqd+Zw8bEOB+7ZKvN76901mRnqdsiOGKxzVTbi7A==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   possible-typed-array-names@1.1.0:
     resolution: {integrity: sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==}
@@ -10563,7 +10580,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@2.1.9(@types/node@22.15.30)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))':
+  '@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.9.3))(vitest@2.1.2)(webdriverio@9.3.1)':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
@@ -10576,6 +10593,30 @@ snapshots:
       vitest: 2.1.9(@types/node@22.15.30)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(terser@5.41.0)
       ws: 8.18.2
     optionalDependencies:
+      playwright: 1.49.0
+      webdriverio: 9.3.1
+    transitivePeerDependencies:
+      - '@types/node'
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - vite
+    optional: true
+
+  '@vitest/browser@2.1.9(@types/node@22.15.30)(playwright@1.49.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))':
+    dependencies:
+      '@testing-library/dom': 10.4.0
+      '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
+      '@vitest/mocker': 2.1.9(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))
+      '@vitest/utils': 2.1.9
+      magic-string: 0.30.17
+      msw: 2.9.0(@types/node@22.15.30)(typescript@5.8.3)
+      sirv: 3.0.1
+      tinyrainbow: 1.2.0
+      vitest: 2.1.9(@types/node@22.15.30)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(terser@5.41.0)
+      ws: 8.18.2
+    optionalDependencies:
+      playwright: 1.49.0
       webdriverio: 9.15.0(puppeteer-core@21.11.0(encoding@0.1.13))
     transitivePeerDependencies:
       - '@types/node'
@@ -10615,7 +10656,7 @@ snapshots:
       tinyrainbow: 1.2.0
       vitest: 2.1.9(@types/node@22.15.30)(@vitest/browser@2.1.9)(@vitest/ui@2.1.9)(happy-dom@14.12.3)(jsdom@23.2.0)(msw@2.9.0(@types/node@22.15.30)(typescript@5.8.3))(terser@5.41.0)
     optionalDependencies:
-      '@vitest/browser': 2.1.9(@types/node@22.15.30)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))
+      '@vitest/browser': 2.1.9(@types/node@22.15.30)(playwright@1.49.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))
     transitivePeerDependencies:
       - supports-color
 
@@ -13203,6 +13244,9 @@ snapshots:
 
   fs.realpath@1.0.0: {}
 
+  fsevents@2.3.2:
+    optional: true
+
   fsevents@2.3.3:
     optional: true
 
@@ -14877,6 +14921,16 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
+  playwright-core@1.49.0:
+    optional: true
+
+  playwright@1.49.0:
+    dependencies:
+      playwright-core: 1.49.0
+    optionalDependencies:
+      fsevents: 2.3.2
+    optional: true
+
   possible-typed-array-names@1.1.0: {}
 
   postcss-import@15.1.0(postcss@8.5.4):
@@ -16401,10 +16455,14 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.15.30
+      '@vitest/browser': 2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.9.3))(vitest@2.1.2)(webdriverio@9.3.1)
+      '@vitest/ui': 2.1.2(vitest@2.1.2)
+      happy-dom: 14.12.3
       jsdom: 23.2.0
     transitivePeerDependencies:
       - less
       - lightningcss
+      - msw
       - sass
       - sass-embedded
       - stylus
@@ -16436,7 +16494,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.15.30
-      '@vitest/browser': 2.1.9(@types/node@22.15.30)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))
+      '@vitest/browser': 2.1.9(@types/node@22.15.30)(playwright@1.49.0)(typescript@5.8.3)(vite@5.4.19(@types/node@22.15.30)(terser@5.41.0))(vitest@2.1.9)(webdriverio@9.15.0(puppeteer-core@21.11.0(encoding@0.1.13)))
       '@vitest/ui': 2.1.9(vitest@2.1.9)
       happy-dom: 14.12.3
       jsdom: 23.2.0
