@@ -1,21 +1,19 @@
 import { page } from "@vitest/browser/context";
 import { expect, it, vi } from "vitest";
 
-import "./index.js";
-
 it("iife", async () => {
-  // await page.goto("http://localhost:5173/browser/iife.html");
-  // await page.waitForLoadState("domcontentloaded");
+  await page.goto("index.html");
+  await page.waitForLoadState("domcontentloaded");
 
   // const ready = page.locator("[data-ready]");
   // await ready.waitFor();
 
-  document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
+  // document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
 
-  console.log(document.querySelector("html").innerHTML);
-  console.log(document.readyState);
+  // console.log(document.querySelector("html").innerHTML);
+  // console.log(document.readyState);
 
-  console.log(document.location.href);
+  // console.log(document.location.href);
 
   await vi.waitFor(() => {
     return new Promise((resolve) => {
