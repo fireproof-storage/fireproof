@@ -2,7 +2,12 @@
 set -e
 cd smoke/iife
 smokeDir=$(pwd)
-docker-compose up -d
+if which docker-compose
+then
+  docker-compose up -d
+else
+  docker compose up -d
+fi
 packageDir=../../dist/fireproof-core
 cat <<EOF > $packageDir/.npmrc
 ; .npmrc
