@@ -2,12 +2,14 @@
 set -e
 cd smoke/iife
 smokeDir=$(pwd)
+
 if which docker-compose
 then
-  docker-compose up -d
+  dockerCompose="docker-compose"
 else
-  docker compose up -d
+  dockerCompose="docker compose"
 fi
+$dockerCompose up -d
 packageDir=../../dist/fireproof-core
 
 token=$(curl \
@@ -34,4 +36,4 @@ pnpm install
 pnpm run test
 rm -rf $tmpDir
 cd $smokeDir
-docker-compose down
+$dockerCompose down
