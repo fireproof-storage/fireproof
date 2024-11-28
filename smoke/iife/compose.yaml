@@ -1,8 +1,8 @@
 services:
   registry:
     image: "verdaccio/verdaccio"
-    volumes:
-      - ./verdaccio.config.yaml:/verdaccio/conf/config.yaml
+    #volumes:
+    #  - ./verdaccio.config.yaml:/verdaccio/conf/config.yaml
     ports:
       - "4873:4873"
     # docker run -p 4873:4873 -v $(pwd)/verdaccio.config.yaml:/verdaccio/conf/config.yaml -ti verdaccio/verdaccio

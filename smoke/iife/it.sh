@@ -9,9 +9,18 @@ else
   docker compose up -d
 fi
 packageDir=../../dist/fireproof-core
+
+token=$(curl \
+     --retry 10 --retry-max-time 30 --retry-all-errors \
+     -X PUT \
+     -H "Content-type: application/json" \
+     -d '{ "name": "admin", "password": "admin" }' \
+     'http://localhost:4873/-/user/org.couchdb.user:admin' | jq .token)
+
 cat <<EOF > $packageDir/.npmrc
 ; .npmrc
 enable-pre-post-scripts=true
+//localhost:4873/:_authToken=$token
 @fireproof:registry=http://localhost:4873
 EOF
 (cd $packageDir && pnpm publish --no-git-checks)
