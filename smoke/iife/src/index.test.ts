@@ -1,9 +1,8 @@
 import { page } from "@vitest/browser/context";
 import { expect, it, vi } from "vitest";
 
-
 it("iife", async () => {
-  let script = document.createElement("script");
+  const script = document.createElement("script");
   script.textContent = `
 import { fireproof } from 'http://localhost:4874/@fireproof/core'
 
@@ -17,11 +16,11 @@ async function main() {
   label.setAttribute("data-ready", "");
 }
 main().catch(console.error)
-`
-  script.type="module"
-  document.body.innerHTML=`<label data-testid="label" id="label"></label>`
+`;
+  script.type = "module";
+  document.body.innerHTML = `<label data-testid="label" id="label"></label>`;
   document.body.appendChild(script);
 
-  const el = await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 500_000 });
+  await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 500_000 });
   expect(await page.getByTestId("label").element().innerText).toBe("iife-success");
 });

@@ -74,19 +74,19 @@ uplinks:
 # https://verdaccio.org/docs/protect-your-dependencies/
 # https://verdaccio.org/docs/configuration#packages
 packages:
-  '@fireproof/*':
+  "@fireproof/*":
     access: $anonymous
     publish: $anonymous
     proxy: npmjs
 
-  '@*/*':
+  "@*/*":
     # scoped packages
     access: $all
     publish: $authenticated
     unpublish: $authenticated
     proxy: npmjs
 
-  '**':
+  "**":
     # allow all users (including non-authenticated users) to read and
     # publish all packages
     #
