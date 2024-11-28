@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-cd smoke/iife
+cd smoke/esm
 smokeDir=$(pwd)
 
 if which docker-compose
