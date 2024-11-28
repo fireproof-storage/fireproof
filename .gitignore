@@ -24,3 +24,7 @@ smoke/pnpm-lock.yaml
 smoke/react/package.json
 smoke/react/pnpm-lock.yaml
 **/__screenshots__/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
