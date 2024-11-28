@@ -1,5 +1,5 @@
 {
-  "name": "@fireproof-example/iife",
+  "name": "@fireproof-example/esm",
   "private": true,
   "version": "0.0.0",
   "type": "module",
