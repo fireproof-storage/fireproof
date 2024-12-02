@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.39
-        version: 0.2.39(typescript@5.7.2)
+        specifier: ^0.2.40
+        version: 0.2.40(typescript@5.7.2)
       '@ipld/car':
         specifier: ^5.3.3
         version: 5.3.3
@@ -148,8 +148,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.39':
-    resolution: {integrity: sha512-hpDyFsg1FTSfBJZymvk/j+K16AUCaBzUyxRPdginRk3s1zXdWmGoRLx7fF7zL0OrqosKxL2P5sMYkSzYJtCtxQ==}
+  '@adviser/cement@0.2.40':
+    resolution: {integrity: sha512-AJR27jKVGkbXmyFHdmPWGHiHflSeg1GwkUNEeb6t5Vv8I4uNPAnRs9Xw8TumMIj9OYgsn2QHxFEB6mpyk1xdsA==}
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -3088,7 +3088,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.39(typescript@5.7.2)':
+  '@adviser/cement@0.2.40(typescript@5.7.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.7.2)
       yaml: 2.5.1
