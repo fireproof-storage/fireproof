@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.39
-        version: 0.2.39(typescript@5.7.2)
+        specifier: ^0.2.40
+        version: 0.2.40(typescript@5.7.2)
       '@ipld/car':
         specifier: ^5.3.3
         version: 5.3.3
@@ -95,7 +95,7 @@ importers:
         version: 2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.9.3))(vitest@2.1.2)(webdriverio@9.3.1)
       '@vitest/coverage-v8':
         specifier: ^2.1.2
-        version: 2.1.2(@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.9.3))(vitest@2.1.2)(webdriverio@9.3.1))(vitest@2.1.2(@types/node@22.9.3)(@vitest/browser@2.1.2)(@vitest/ui@2.1.2)(happy-dom@14.12.3)(msw@2.3.5(typescript@5.7.2)))
+        version: 2.1.2(@vitest/browser@2.1.2)(vitest@2.1.2)
       '@vitest/ui':
         specifier: ^2.1.2
         version: 2.1.2(vitest@2.1.2)
@@ -148,8 +148,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.39':
-    resolution: {integrity: sha512-hpDyFsg1FTSfBJZymvk/j+K16AUCaBzUyxRPdginRk3s1zXdWmGoRLx7fF7zL0OrqosKxL2P5sMYkSzYJtCtxQ==}
+  '@adviser/cement@0.2.40':
+    resolution: {integrity: sha512-AJR27jKVGkbXmyFHdmPWGHiHflSeg1GwkUNEeb6t5Vv8I4uNPAnRs9Xw8TumMIj9OYgsn2QHxFEB6mpyk1xdsA==}
     engines: {node: '>=16'}
 
   '@ampproject/remapping@2.3.0':
@@ -3067,7 +3067,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.39(typescript@5.7.2)':
+  '@adviser/cement@0.2.40(typescript@5.7.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.7.2)
       yaml: 2.5.1
@@ -3829,7 +3829,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.2(@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.9.3))(vitest@2.1.2)(webdriverio@9.3.1))(vitest@2.1.2(@types/node@22.9.3)(@vitest/browser@2.1.2)(@vitest/ui@2.1.2)(happy-dom@14.12.3)(msw@2.3.5(typescript@5.7.2)))':
+  '@vitest/coverage-v8@2.1.2(@vitest/browser@2.1.2)(vitest@2.1.2)':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
