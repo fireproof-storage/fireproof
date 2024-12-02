@@ -26,9 +26,6 @@ importers:
       idb:
         specifier: ^8.0.1
         version: 8.0.1
-      memfs:
-        specifier: ^4.15.3
-        version: 4.17.2
       multiformats:
         specifier: ^13.3.1
         version: 13.3.6
@@ -2679,6 +2676,10 @@ packages:
 
   '@jspm/core@2.1.0':
     resolution: {integrity: sha512-3sRl+pkyFY/kLmHl0cgHiFp2xEqErA8N3ECjMs7serSUBmoJ70lBa0PG5t0IM6WJgdZNyyI0R8YFfi5wM8+mzg==}
+
+  '@mswjs/interceptors@0.37.3':
+    resolution: {integrity: sha512-USvgCL/uOGFtVa6SVyRrC8kIAedzRohxIXN5LISlg5C5vLZCn7dgMFVSNhSF9cuBEFrm/O2spDWEZeMnw4ZXYg==}
+    engines: {node: '>=18'}
 
   '@mswjs/interceptors@0.38.7':
     resolution: {integrity: sha512-Jkb27iSn7JPdkqlTqKfhncFfnEZsIJVYxsFbUSWEkxdIPdsyngrhoDBk0/BGD2FQcRH99vlRrkHpNTyKqI+0/w==}
@@ -7701,11 +7702,7 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  thingies@1.21.0:
-    resolution: {integrity: sha512-hsqsJsFMsV+aD4s3CWKk85ep/3I9XzYV/IXaSouJMYIoDlgyi11cBhsqYe9/geRfB0YIikBQg6raRaM+nIMP9g==}
-    engines: {node: '>=10.18'}
-    peerDependencies:
-      tslib: ^2
+  thingies@1.21.0: {}
 
   through@2.3.8:
     resolution: {integrity: sha512-w89qg7PI8wAdvX60bMDP+bFoD5Dvhm9oLheFp5O4a2QF0cSBGsBX4qZmadPMvVqlLJBBci+WqGGOAPvcDeNSVg==}
@@ -9904,6 +9901,16 @@ snapshots:
       tslib: 2.8.1
 
   '@jspm/core@2.1.0': {}
+
+  '@mswjs/interceptors@0.37.3':
+    dependencies:
+      '@open-draft/deferred-promise': 2.2.0
+      '@open-draft/logger': 0.3.0
+      '@open-draft/until': 2.1.0
+      is-node-process: 1.2.0
+      outvariant: 1.4.3
+      strict-event-emitter: 0.5.1
+    optional: true
 
   '@mswjs/interceptors@0.38.7':
     dependencies:
