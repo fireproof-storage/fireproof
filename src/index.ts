@@ -8,6 +8,9 @@ export * from "./indexer.js";
 export * as bs from "./blockstore/index.js";
 export * as blockstore from "./blockstore/index.js";
 
+import { type Connectable } from "./blockstore/index.js";
+export { Connectable };
+
 export * as rt from "./runtime/index.js";
 export * as runtime from "./runtime/index.js";
 

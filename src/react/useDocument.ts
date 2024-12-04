@@ -1,6 +1,6 @@
 import { Database, DocTypes, DocWithId } from "@fireproof/core";
 
-import { UseDocument, UseDocumentResult, useFireproof } from "./useFireproof";
+import { UseDocument, UseDocumentResult, useFireproof } from "./useFireproof.js";
 
 export interface TLUseDocument {
   <T extends DocTypes>(initialDoc: DocWithId<T>): UseDocumentResult<T>;

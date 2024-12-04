@@ -1,6 +1,8 @@
-import { runtimeFn, URI } from "@adviser/cement";
-import { rt, getStore, ensureSuperLog, inplaceFilter } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { URI } from "@adviser/cement";
+import { rt, getStore, ensureSuperLog } from "@fireproof/core";
+import { mockSuperThis } from "../helpers.js";
+
+// only for test
 import { UUID } from "uuidv7";
 
 describe("utils", () => {

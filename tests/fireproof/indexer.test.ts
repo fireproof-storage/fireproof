@@ -1,5 +1,5 @@
-import { Index, index, Database, CRDT, IndexRows, DatabaseOpts, toStoreURIRuntime, bs, rt, DatabaseFactory } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { Index, index, Database, CRDT, IndexRows } from "@fireproof/core";
+import { mockSuperThis } from "../helpers.js";
 
 interface TestType {
   readonly title: string;

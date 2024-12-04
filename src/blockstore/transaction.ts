@@ -1,5 +1,5 @@
-import { MemoryBlockstore } from "@web3-storage/pail/block";
-import { BlockFetcher as BlockFetcherApi } from "@web3-storage/pail/api";
+import { MemoryBlockstore } from "@fireproof/vendor/@web3-storage/pail/block";
+import { BlockFetcher as BlockFetcherApi } from "@fireproof/vendor/@web3-storage/pail/api";
 
 import {
   AnyAnyLink,
