@@ -12,13 +12,15 @@ fi
 $dockerCompose up -d
 packageDir=../../dist/fireproof-core
 
+user="admin$(date +%s)"
 token=$(curl \
      --retry 10 --retry-max-time 30 --retry-all-errors \
      -X PUT \
      -H "Content-type: application/json" \
-     -d '{ "name": "admin", "password": "admin" }' \
-     'http://localhost:4873/-/user/org.couchdb.user:admin' | jq .token)
+     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
+     'http://localhost:4873/-/user/org.couchdb.user:$user' | jq .token)
 
+echo "Token: $user:$token"
 cat <<EOF > $packageDir/.npmrc
 ; .npmrc
 enable-pre-post-scripts=true
