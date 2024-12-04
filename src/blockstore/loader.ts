@@ -29,7 +29,7 @@ import { CommitQueue } from "./commit-queue.js";
 import type { Falsy, SuperThis } from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
-import { decode } from "../runtime/wait-pr-multiformats/block.js";
+import { decode } from "../runtime/wait-pr/multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { TaskManager } from "./task-manager.js";
 

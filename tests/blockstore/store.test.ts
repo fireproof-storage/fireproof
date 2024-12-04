@@ -1,6 +1,6 @@
 import { CID } from "multiformats";
 import { bs, NotFoundError, SuperThis } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime({}, sthis);

@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 import { bs } from "@fireproof/core";
 
 class TraceGateway implements bs.Gateway {

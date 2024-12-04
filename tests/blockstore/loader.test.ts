@@ -4,7 +4,7 @@ import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
 import { MemoryBlockstore } from "@web3-storage/pail/block";
 import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, rt } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();

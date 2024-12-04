@@ -1,4 +1,4 @@
-import { format, parse } from "@ipld/dag-json";
+import { format, parse } from "../runtime/wait-pr/js-dag-json/index.js"
 import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
 import { EventView } from "@web3-storage/pail/clock/api";
 import type { DbMeta, CarClockHead, DbMetaEventBlock, CarClockLink } from "./types.js";
@@ -7,21 +7,29 @@ import { CID, Link } from "multiformats";
 import { base64pad } from "multiformats/bases/base64";
 import { Result, URI } from "@adviser/cement";
 import { getKeyBag } from "../runtime/key-bag.js";
+import { ensureLogger } from "../utils.js";
 
 export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads: Uint8Array) {
   const crdtEntries = JSON.parse(sthis.txt.decode(byteHeads)) as CRDTEntry[];
+  if (!Array.isArray(crdtEntries)) {
+    sthis.logger.Debug().Str("crdtEntries", JSON.stringify(crdtEntries)).Msg("No data in CRDT entries");
+    return [];
+  }
   if (!crdtEntries.length) {
     sthis.logger.Debug().Any("byteHeads", byteHeads).Msg("No CRDT entries found");
     return [];
   }
-  if (!crdtEntries.map) {
-    sthis.logger.Debug().Str("crdtEntries", JSON.stringify(crdtEntries)).Msg("No data in CRDT entries");
-    return [];
-  }
+  const logger = ensureLogger(sthis, "decodeGatewayMetaBytesToDbMeta");
   return Promise.all(
     crdtEntries.map(async (crdtEntry) => {
       const eventBlock = await decodeEventBlock<{ dbMeta: Uint8Array }>(base64pad.decode(crdtEntry.data));
       const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
+      logger.Debug().Any("crdtEntry", {
+        crdtEntry,
+        eventBlock,
+        dbMeta,
+        dbMetaStrings: dbMeta.cars.map((car) => car.toString()),
+      }).Msg("CRDT entry");
       return {
         eventCid: eventBlock.cid as CarClockLink,
         parents: crdtEntry.parents,

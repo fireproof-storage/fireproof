@@ -1,4 +1,4 @@
-import { format, parse, ToString } from "@ipld/dag-json";
+import { format, parse, ToString } from "../runtime/wait-pr/js-dag-json/index.js";
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 import type {
   AnyBlock,

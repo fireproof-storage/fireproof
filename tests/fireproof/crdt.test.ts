@@ -2,7 +2,7 @@ import { CRDT } from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;

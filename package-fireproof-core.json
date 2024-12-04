@@ -49,7 +49,8 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "react": "from-package-json"
+    "react": "from-package-json",
+    "cborg": "from-package-json"
   },
   "dependencies": {
     "@adviser/cement": "from-package-json",

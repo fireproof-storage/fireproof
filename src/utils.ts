@@ -15,7 +15,7 @@ import {
   JSONFormatter,
   YAMLFormatter,
 } from "@adviser/cement";
-import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types";
+import { PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
 
 export type { Logger };
