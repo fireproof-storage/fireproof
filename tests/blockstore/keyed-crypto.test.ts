@@ -2,8 +2,8 @@ import { bs, rt } from "@fireproof/core";
 import { BuildURI, Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as dagCodec from "@ipld/dag-cbor";
-import { MockSuperThis, mockSuperThis } from "../helpers";
+import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
+import { MockSuperThis, mockSuperThis } from "../helpers.js";
 
 describe("KeyBag", () => {
   let url: URI;

@@ -1,6 +1,6 @@
 import { CID } from "multiformats";
 import { bs, SuperThis } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: bs.BaseBlockstore;

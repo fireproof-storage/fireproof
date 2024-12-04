@@ -10,6 +10,7 @@ interface TaskItem {
 }
 
 export class TaskManager {
+  // we need to remove the events after some time
   private readonly eventsWeHandled = new Set<string>();
 
   private queue: TaskItem[] = [];
@@ -37,6 +38,7 @@ export class TaskManager {
     const filteredQueue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     const first = filteredQueue[0];
     if (!first) {
+      this.isProcessing = false;
       return;
     }
     try {

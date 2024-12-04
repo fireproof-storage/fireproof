@@ -1,5 +1,5 @@
-import type { EventLink } from "@web3-storage/pail/clock/api";
-import type { Operation } from "@web3-storage/pail/crdt/api";
+import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
+import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 
 import type { DbMeta, StoreOpts, AnyLink } from "./blockstore/index.js";
 import { EnvFactoryOpts, Env, Logger, CryptoRuntime } from "@adviser/cement";

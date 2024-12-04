@@ -1,7 +1,7 @@
 import { Logger, Result, URI } from "@adviser/cement";
 
 import { base58btc } from "multiformats/bases/base58";
-import { encode, decode } from "cborg";
+import { encode, decode } from "@fireproof/vendor/cborg";
 import { Gateway, GetResult, UnsubscribeResult, VoidResult } from "./gateway.js";
 import { SuperThis } from "../types.js";
 import { ensureSuperLog } from "../utils.js";

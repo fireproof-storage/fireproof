@@ -1,6 +1,6 @@
 import { Database, DocTypes } from "@fireproof/core";
 
-import { ChangesResult, useFireproof, UseChanges } from "./useFireproof";
+import { ChangesResult, useFireproof, UseChanges } from "./useFireproof.js";
 
 export interface TLUseChanges {
   <T extends DocTypes>(...args: Parameters<UseChanges>): ChangesResult<T>;

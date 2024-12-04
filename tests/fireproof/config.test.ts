@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { dataDir, fireproof, rt } from "@fireproof/core";
 import { runtimeFn, URI } from "@adviser/cement";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 
 describe("runtime", () => {
   it("runtime", () => {
