@@ -24,12 +24,15 @@ export async function decodeGatewayMetaBytesToDbMeta(sthis: SuperThis, byteHeads
     crdtEntries.map(async (crdtEntry) => {
       const eventBlock = await decodeEventBlock<{ dbMeta: Uint8Array }>(base64pad.decode(crdtEntry.data));
       const dbMeta = parse<DbMeta>(sthis.txt.decode(eventBlock.value.data.dbMeta));
-      logger.Debug().Any("crdtEntry", {
-        crdtEntry,
-        eventBlock,
-        dbMeta,
-        dbMetaStrings: dbMeta.cars.map((car) => car.toString()),
-      }).Msg("CRDT entry");
+      logger
+        .Debug()
+        .Any("crdtEntry", {
+          crdtEntry,
+          eventBlock,
+          dbMeta,
+          dbMetaStrings: dbMeta.cars.map((car) => car.toString()),
+        })
+        .Msg("CRDT entry");
       return {
         eventCid: eventBlock.cid as CarClockLink,
         parents: crdtEntry.parents,

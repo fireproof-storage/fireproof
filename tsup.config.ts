@@ -1,7 +1,6 @@
 import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
-import { BuildOptions, Format } from "esbuild";
 
 const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
 const webInternals = ["./web/gateway-impl.js"];
@@ -20,16 +19,14 @@ const external = [
   "node:os",
   "node:url",
   "assert",
-  "stream"
+  "stream",
 ];
 
 function skipper(suffix: string[], target: string) {
   function intercept(build) {
     const filter = new RegExp(`(${suffix.join("|")})`);
     build.onResolve({ filter }, async (args) => {
-
-      if (target.startsWith('/')) {
-        console.log("skipper", target, args)
+      if (target.startsWith("/")) {
         return build.resolve(target, { kind: args.kind, resolveDir: `/Users/menabe/Software/fproof/fireproof` });
       } else {
         return build.resolve(target, { kind: args.kind, resolveDir: args.resolveDir });
@@ -53,22 +50,21 @@ function skipper(suffix: string[], target: string) {
   };
 }
 
-const skipIife = {
-  // "node-filesystem@skip-iife": "../../../bundle-not-impl.js",
-  // "mem-filesystem@skip-iife": "../../../bundle-not-impl.js",
-  // "node:fs/promises": "../../../bundle-not-impl.js",
-  // "fs/promises": "../../../bundle-not-impl.js",
-  // "../runtime/store-file.js": "../../bundle-not-impl.js",
-  // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
-  // "./mem-filesystem.js": "../../../bundle-not-impl.js",
-  // "./gateways/file/gateway.js": "../bundle-not-impl.js",
-  // "./node-sys-container.js": "../bundle-not-impl.js",
-  // "./key-bag-file.js": "../bundle-not-impl.js",
-};
+// const skipIife = {
+//   // "node-filesystem@skip-iife": "../../../bundle-not-impl.js",
+//   // "mem-filesystem@skip-iife": "../../../bundle-not-impl.js",
+//   // "node:fs/promises": "../../../bundle-not-impl.js",
+//   // "fs/promises": "../../../bundle-not-impl.js",
+//   // "../runtime/store-file.js": "../../bundle-not-impl.js",
+//   // "../runtime/gateways/file/gateway.js": "../bundle-not-impl.js",
+//   // "./mem-filesystem.js": "../../../bundle-not-impl.js",
+//   // "./gateways/file/gateway.js": "../bundle-not-impl.js",
+//   // "./node-sys-container.js": "../bundle-not-impl.js",
+//   // "./key-bag-file.js": "../bundle-not-impl.js",
+// };
 const skipEsm = {};
 
-const ourMultiformat = {
-};
+const ourMultiformat = {};
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
   format: ["esm", "cjs", "iife"],
