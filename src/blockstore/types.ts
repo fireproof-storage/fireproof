@@ -1,12 +1,12 @@
 import type { CID, Link, Version } from "multiformats";
-import type { BlockCodec } from "../runtime/wait-pr/multiformats/codec-interface.js";
+import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
 import { DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBagOpts } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
-import { EventBlock } from "@web3-storage/pail/clock";
+import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;

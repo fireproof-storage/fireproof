@@ -2,10 +2,10 @@ import { CryptoRuntime, Logger, URI } from "@adviser/cement";
 import { BytesWithIv, CodecOpts, IvAndBytes, IvKeyIdData, KeyedCrypto, KeyWithFingerPrint } from "../blockstore/index.js";
 import { ensureLogger, UInt8ArrayEqual } from "../utils.js";
 import { KeyBag } from "./key-bag.js";
-import type { BlockCodec } from "./wait-pr/multiformats/codec-interface.js";
+import type { BlockCodec } from "./wait-pr-multiformats/codec-interface.js";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as CBOR from "cborg";
+import * as CBOR from "@fireproof/vendor/cborg";
 import { SuperThis } from "../types.js";
 
 interface GenerateIVFn {

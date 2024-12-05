@@ -7,7 +7,7 @@ export * as files from "./files.js";
 export * as kb from "./key-bag.js";
 export * as kc from "./keyed-crypto.js";
 
-export * as mf from "./wait-pr/multiformats/index.js";
+export * as mf from "./wait-pr-multiformats/index.js";
 
 export { runtimeFn } from "@adviser/cement";
 
