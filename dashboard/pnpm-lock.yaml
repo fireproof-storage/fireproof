@@ -20,12 +20,6 @@ importers:
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.16)
-      '@workos-inc/authkit-js':
-        specifier: ^0.6.1
-        version: 0.6.1
-      '@workos-inc/authkit-react':
-        specifier: ^0.5.1
-        version: 0.5.1(react@18.3.1)
       highlight.js:
         specifier: ^11.10.0
         version: 11.10.0
@@ -305,7 +299,7 @@ packages:
     resolution: {integrity: sha512-5mlW1DquU5HaxjLkfkGN1GA/fvVGdyHURRiX/0FHl2cfIfRxSOfmxEH5YS43edp0OldZrZ+dkBKbngxcNCdZvA==}
     peerDependencies:
       '@types/react': '*'
-      react: 18.3.1
+      react: '>=16.8.0'
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -1140,17 +1134,6 @@ packages:
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
       vite: ^4.2.0 || ^5.0.0 || ^6.0.0
-
-  '@workos-inc/authkit-js@0.5.1':
-    resolution: {integrity: sha512-BOYrBiiINPmbkep+YGTsaJ8PiC8qtVCzZ3uN383TR9dRB/l77hEdO02EezQS5QWgMm02x503hLKdmacwWOwsMg==}
-
-  '@workos-inc/authkit-js@0.6.1':
-    resolution: {integrity: sha512-I35IyBdWQb9LHS8ikT2bt5mZpDZrwGqefMuKVC6+rsmDnBFymFMrzSw3jH7D29BB3mFsZ3gd2kq3RjUI+5MQ2g==}
-
-  '@workos-inc/authkit-react@0.5.1':
-    resolution: {integrity: sha512-pAhZcoRgxt7j4Obu3A5tbTPh1UdK7dH5JiEzqjxiB303SFlojc5XWfbT+M9++jkdblubn7gmDB4GjOHL+jh3Zw==}
-    peerDependencies:
-      react: '>=17'
 
   '@zxcvbn-ts/core@3.0.4':
     resolution: {integrity: sha512-aQeiT0F09FuJaAqNrxynlAwZ2mW/1MdXakKWNmGM1Qp/VaY6CnB/GfnMS2T8gB2231Esp1/maCWd8vTG4OuShw==}
@@ -3907,15 +3890,6 @@ snapshots:
       vite: 6.0.3(@types/node@22.10.1)(jiti@2.4.1)(tsx@4.19.2)(yaml@2.6.1)
     transitivePeerDependencies:
       - supports-color
-
-  '@workos-inc/authkit-js@0.5.1': {}
-
-  '@workos-inc/authkit-js@0.6.1': {}
-
-  '@workos-inc/authkit-react@0.5.1(react@18.3.1)':
-    dependencies:
-      '@workos-inc/authkit-js': 0.5.1
-      react: 18.3.1
 
   '@zxcvbn-ts/core@3.0.4':
     dependencies:
