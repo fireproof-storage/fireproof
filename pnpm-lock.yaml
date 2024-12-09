@@ -54,8 +54,8 @@ importers:
         specifier: ^6.1.0
         version: 6.1.0
       p-map:
-        specifier: ^7.0.2
-        version: 7.0.2
+        specifier: ^7.0.3
+        version: 7.0.3
       p-retry:
         specifier: ^6.2.1
         version: 6.2.1
@@ -95,7 +95,7 @@ importers:
         version: 2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.10.1))(vitest@2.1.2)(webdriverio@9.4.1)
       '@vitest/coverage-v8':
         specifier: ^2.1.2
-        version: 2.1.2(@vitest/browser@2.1.2)(vitest@2.1.2)
+        version: 2.1.2(@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.10.1))(vitest@2.1.2)(webdriverio@9.4.1))(vitest@2.1.2(@types/node@22.10.1)(@vitest/browser@2.1.2)(@vitest/ui@2.1.2)(happy-dom@14.12.3)(msw@2.3.5(typescript@5.7.2)))
       '@vitest/ui':
         specifier: ^2.1.2
         version: 2.1.2(vitest@2.1.2)
@@ -2227,8 +2227,8 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
-  p-map@7.0.2:
-    resolution: {integrity: sha512-z4cYYMMdKHzw4O5UkWJImbZynVIo0lSGTXc7bzB1e/rrDqkgGUNysK/o4bTr+0+xKvvLoTyGqYC4Fgljy9qe1Q==}
+  p-map@7.0.3:
+    resolution: {integrity: sha512-VkndIv2fIB99swvQoA65bm+fsmt6UNdGeIB0oxBs+WhAhdh08QA04JXpI7rbB9r08/nkbysKoya9rtDERYOYMA==}
     engines: {node: '>=18'}
 
   p-queue@8.0.1:
@@ -3829,7 +3829,7 @@ snapshots:
       - utf-8-validate
       - vite
 
-  '@vitest/coverage-v8@2.1.2(@vitest/browser@2.1.2)(vitest@2.1.2)':
+  '@vitest/coverage-v8@2.1.2(@vitest/browser@2.1.2(@vitest/spy@2.1.2)(playwright@1.49.0)(typescript@5.7.2)(vite@5.4.11(@types/node@22.10.1))(vitest@2.1.2)(webdriverio@9.4.1))(vitest@2.1.2(@types/node@22.10.1)(@vitest/browser@2.1.2)(@vitest/ui@2.1.2)(happy-dom@14.12.3)(msw@2.3.5(typescript@5.7.2)))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@bcoe/v8-coverage': 0.2.3
@@ -5102,7 +5102,7 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
-  p-map@7.0.2: {}
+  p-map@7.0.3: {}
 
   p-queue@8.0.1:
     dependencies:
