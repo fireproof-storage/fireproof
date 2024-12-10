@@ -1,16 +1,16 @@
-import { bs, rt } from "@fireproof/core";
+import { bs, ensureSuperThis, rt, SuperThis } from "@fireproof/core";
 import { BuildURI, Logger, MockLogger, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
-import { MockSuperThis, mockSuperThis } from "../helpers.js";
 
 describe("KeyBag", () => {
   let url: URI;
-  let sthis: MockSuperThis;
+  let sthis: SuperThis;
+  const mockLogger = MockLogger();
 
   beforeEach(async () => {
-    sthis = mockSuperThis();
+    sthis = ensureSuperThis({ logger: mockLogger.logger });
     await sthis.start();
     if (runtimeFn().isBrowser) {
       url = URI.from("indexdb://fp-keybag");
@@ -54,7 +54,7 @@ describe("KeyBag", () => {
     });
     sthis.env.set("FP_KEYBAG_URL", old);
     await sthis.logger.Flush();
-    expect(sthis.logCollector.Logs()).toEqual([
+    expect(mockLogger.logCollector.Logs()).toEqual([
       {
         level: "warn",
         module: "KeyBag",
@@ -124,7 +124,7 @@ describe("KeyedCryptoStore", () => {
   let kb: rt.kb.KeyBag;
   let logger: Logger;
   let baseUrl: URI;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(async () => {
     await sthis.start();
     logger = MockLogger().logger;
@@ -264,7 +264,7 @@ describe("KeyedCrypto", () => {
   let kb: rt.kb.KeyBag;
   let kycr: bs.KeyedCrypto;
   let keyStr: string;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(async () => {
     let url: URI;
     if (runtimeFn().isBrowser) {

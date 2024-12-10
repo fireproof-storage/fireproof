@@ -1,8 +1,8 @@
-import { mockSuperThis, sleep } from "../helpers.js";
+import { sleep } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 
-import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, fireproof, index } from "@fireproof/core";
+import { Database, DocResponse, DocWithId, Index, IndexRows, MapFn, bs, ensureSuperThis, fireproof, index } from "@fireproof/core";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -25,7 +25,7 @@ describe("dreamcode", function () {
   let doc: DocWithId<Doc>;
   let result: IndexRows<string, Doc>;
   let db: Database;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -67,7 +67,7 @@ describe("public API", function () {
   let ok: DocResponse;
   let doc: DocWithId<Doc>;
   let query: IndexRows<string, Doc>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await db.close();
@@ -106,7 +106,7 @@ describe("basic database", function () {
     foo: string;
   }
   let db: Database<Doc>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -170,7 +170,7 @@ describe("basic database", function () {
 
 describe("benchmarking with compaction", function () {
   let db: Database;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -225,7 +225,7 @@ describe("benchmarking with compaction", function () {
 describe("benchmarking a database", function () {
   /** @type {Database} */
   let db: Database;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -383,7 +383,7 @@ describe("Reopening a database", function () {
     foo: string;
   }
   let db: Database;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -488,7 +488,7 @@ describe("Reopening a database with indexes", function () {
   let idx: Index<string, Doc>;
   let didMap: boolean;
   let mapFn: MapFn<Doc>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -585,7 +585,7 @@ describe("Reopening a database with indexes", function () {
 });
 
 describe("basic js verify", function () {
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeAll(async function () {
     await sthis.start();
   });
@@ -617,7 +617,7 @@ describe("same workload twice, same CID", function () {
   let headA: string;
   let headB: string;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   // let configA: any;
   // let configB: any;
 

@@ -1,6 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { mockSuperThis } from "../helpers.js";
-import { bs } from "@fireproof/core";
+import { bs, ensureSuperThis } from "@fireproof/core";
 
 class TraceGateway implements bs.Gateway {
   readonly buildUrlFn = vitest.fn();
@@ -53,7 +52,7 @@ class TraceGateway implements bs.Gateway {
 }
 
 describe("FragmentGateway", () => {
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   it("passthrough", async () => {
     const innerGW = new TraceGateway();
     const fgw = new bs.FragmentGateway(sthis, innerGW);

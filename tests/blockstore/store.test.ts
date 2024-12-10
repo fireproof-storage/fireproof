@@ -1,6 +1,5 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis } from "@fireproof/core";
-import { mockSuperThis } from "../helpers.js";
+import { bs, ensureSuperThis, NotFoundError, SuperThis } from "@fireproof/core";
 
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime({}, sthis);
@@ -20,7 +19,7 @@ describe("DataStore", function () {
   let store: bs.DataStore;
   let raw: bs.TestGateway;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await store.close();
     await store.destroy();
@@ -53,7 +52,7 @@ describe("DataStore with a saved car", function () {
   let raw: bs.TestGateway;
   let car: bs.AnyBlock;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await store.close();
@@ -95,7 +94,7 @@ describe("MetaStore", function () {
   let store: bs.MetaStore;
   let raw: bs.TestGateway;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await store.close();
@@ -133,7 +132,7 @@ describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
   let raw: bs.TestGateway;
   let cid: CID;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await store.close();

@@ -3,8 +3,7 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
 import { MemoryBlockstore } from "@fireproof/vendor/@web3-storage/pail/block";
-import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, rt } from "@fireproof/core";
-import { mockSuperThis } from "../helpers.js";
+import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();
@@ -51,7 +50,7 @@ describe("basic Loader simple", function () {
   let loader: bs.Loader;
   let block: BlockView;
   let t: bs.CarTransaction;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await loader.close();
@@ -99,7 +98,7 @@ describe("basic Loader with two commits", function () {
   let carCid: bs.CarGroup;
   let carCid0: bs.CarGroup;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await loader.close();
@@ -201,7 +200,7 @@ describe("basic Loader with index commits", function () {
   let indexerResult: IndexTransactionMeta;
   let cid: CID;
   // let indexMap: Map<string, CID>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await ib.close();
