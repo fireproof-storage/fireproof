@@ -3,8 +3,8 @@ import { Gateway, GetResult, VoidResult } from "../../../blockstore/gateway.js";
 import { PARAM, SuperThis } from "../../../types.js";
 import { MEMORY_VERSION } from "./version.js";
 import { NotFoundError } from "../../../utils.js";
-import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
-import { fpSerialize, fpDeserialize } from "../fp-envelope-serialize.js";
+import { FPEnvelope } from "../../../protocols/fp-envelope.js";
+import { fpSerialize, fpDeserialize } from "../../../protocols/fp-envelope-serialize.js";
 
 export class MemoryGateway implements Gateway {
   readonly memorys: Map<string, Uint8Array>;

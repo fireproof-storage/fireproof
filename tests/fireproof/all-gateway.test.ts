@@ -4,7 +4,7 @@ import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im
 import { mockSuperThis, simpleCID } from "../helpers.js";
 import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
 import { Gateway } from "../../src/blockstore/gateway.js";
-import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope.js";
+import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/protocols/fp-envelope.js";
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {

@@ -3,9 +3,9 @@ import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser
 import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { getFileName, getFileSystem, getPath } from "./utils.js";
-import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
+import { FPEnvelope } from "../../../protocols/fp-envelope.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
-import { fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
+import { fpDeserialize, fpSerialize } from "../../../protocols/fp-envelope-serialize.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 
