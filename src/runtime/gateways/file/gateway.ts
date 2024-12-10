@@ -133,29 +133,6 @@ export class FileGateway implements Gateway {
   }
 }
 
-// export class FileWALGateway extends FileGateway {
-//   readonly storeType = "wal";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "FileWALGateway"));
-//   }
-// }
-
-// export class FileMetaGateway extends FileGateway {
-//   readonly storeType = "meta";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "FileMetaGateway"));
-//   }
-// }
-
-// export class FileDataGateway extends FileGateway {
-//   readonly storeType = "data";
-//   readonly branches = new Set<string>();
-//   constructor(logger: Logger) {
-//     // console.log("FileDataGateway->", logger);
-//     super(ensureLogger(logger, "FileDataGateway"));
-//   }
-// }
-
 export class FileTestStore implements TestGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
