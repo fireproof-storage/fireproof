@@ -41,12 +41,18 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly _writeQueue: WriteQueue<DT>;
   readonly blockstore: BaseBlockstore;
 
+  /*
+   * Close the database and release resources
+   */
   async close() {
     await this.ready();
     await this._crdt.close();
     await this.blockstore.close();
   }
 
+  /*
+   * Destroy the database and release all resources
+   */
   async destroy() {
     await this.ready();
     await this._crdt.destroy();
@@ -81,6 +87,12 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     });
   }
 
+  /*
+   * Get a document from the database
+   * @param id - the document id
+   * @returns the document with the _id
+   * @throws NotFoundError if the document is not found
+   */
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
     if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
 
