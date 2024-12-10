@@ -132,8 +132,16 @@ export class FileGateway implements Gateway {
     return Result.Ok(undefined);
   }
 
-  async getPlain(iurl: URI, key: string) {
-    const url = iurl.build().setParam(PARAM.KEY, key).URI();
+export class FileTestStore implements TestGateway {
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  constructor(sthis: SuperThis) {
+    this.logger = ensureLogger(sthis, "FileTestStore");
+    this.sthis = sthis;
+  }
+
+  async get(iurl: URI, key: string) {
+    const url = iurl.build().setParam("key", key).URI();
     const dbFile = this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
     this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await (await getFileSystem(url)).readfile(dbFile);
