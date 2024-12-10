@@ -126,6 +126,12 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     return { id: docId, clock: result?.head, name: this.name } as DocResponse;
   }
 
+  /**
+   * delete a document from the database
+   * @param id Document id
+   * @returns DocResponse with the id and clock
+   */
+
   async del(id: string): Promise<DocResponse> {
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("del");
