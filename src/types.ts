@@ -105,6 +105,7 @@ export interface SuperThisOpts {
 
 export interface SuperThis {
   readonly logger: Logger;
+  readonly loggerCollector?: Logger;
   readonly env: Env;
   readonly pathOps: PathOps;
   readonly ctx: Record<string, unknown>;

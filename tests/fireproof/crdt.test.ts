@@ -1,13 +1,12 @@
-import { CRDT, defaultWriteQueueOpts, LedgerOpts, toStoreURIRuntime } from "@fireproof/core";
+import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime } from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
-import { mockSuperThis } from "../helpers.js";
 import { defaultKeyBagOpts } from "../../src/runtime/key-bag.js";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
@@ -48,7 +47,7 @@ describe("CRDT with one record", function () {
   }
   let crdt: CRDT<Partial<CRDTTestType>>;
   let firstPut: CRDTMeta;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await crdt.close();
@@ -105,7 +104,7 @@ describe("CRDT with a multi-write", function () {
   }
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await crdt.close();
@@ -177,7 +176,7 @@ describe("CRDT with two multi-writes", function () {
   let crdt: CRDT<CRDTTestType>;
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
@@ -231,7 +230,7 @@ describe("CRDT with two multi-writes", function () {
 
 describe("Compact a named CRDT with writes", function () {
   let crdt: CRDT<CRDTTestType>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
@@ -293,7 +292,7 @@ describe("Compact a named CRDT with writes", function () {
 describe("CRDT with an index", function () {
   let crdt: CRDT<CRDTTestType>;
   let idx: Index<number, CRDTTestType>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
@@ -345,7 +344,7 @@ describe("Loader with a committed transaction", function () {
   let crdt: CRDT<CRDTTestType>;
   let done: CRDTMeta;
   const dbname = "test-loader";
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
@@ -399,7 +398,7 @@ describe("Loader with two committed transactions", function () {
   let blockstore: bs.EncryptedBlockstore;
   let done1: CRDTMeta;
   let done2: CRDTMeta;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();
@@ -455,7 +454,7 @@ describe("Loader with many committed transactions", function () {
   let crdt: CRDT<Doc>;
   let dones: CRDTMeta[];
   const count = 10;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
     await crdt.destroy();

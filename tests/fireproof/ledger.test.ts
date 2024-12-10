@@ -55,7 +55,7 @@ describe("basic Ledger with record", function () {
     readonly value: string;
   }
   let db: LedgerShell;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -109,7 +109,7 @@ describe("named Ledger with record", function () {
     readonly value: string;
   }
   let db: Ledger;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -270,7 +270,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
 describe("basic Ledger parallel writes / public", () => {
   let db: Ledger;
   const writes: Promise<DocResponse>[] = [];
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -353,7 +353,7 @@ describe("basic Ledger with subscription", function () {
   let unsubscribe: () => void;
   let lastDoc: DocWithId<NonNullable<unknown>>;
   let waitForSub: Promise<void>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -397,7 +397,7 @@ describe("basic Ledger with no update subscription", function () {
   let db: Ledger;
   let didRun: number;
   let unsubscribe: () => void;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -433,7 +433,7 @@ describe("ledger with files input", () => {
   let db: Ledger;
   let imagefiles: FileWithCid[] = [];
   let result: DocResponse;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await db.close();

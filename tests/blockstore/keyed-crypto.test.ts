@@ -1,16 +1,130 @@
-import { bs, PARAM, rt } from "@fireproof/core";
-import { URI } from "@adviser/cement";
+import { bs, ensureSuperThis, PARAM, rt, SuperThis } from "@fireproof/core";
+import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
-import { mockSuperThis } from "../helpers.js";
+
+describe("KeyBag", () => {
+  let url: URI;
+  let sthis: SuperThis;
+
+  beforeEach(async () => {
+    sthis = ensureSuperThis();
+    await sthis.start();
+    if (runtimeFn().isBrowser) {
+      url = URI.from("indexdb://fp-keybag");
+    } else {
+      url = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
+    }
+  });
+  it("default-path", async () => {
+    const old = sthis.env.get("FP_KEYBAG_URL");
+    sthis.env.delete("FP_KEYBAG_URL");
+    const kb = await rt.kb.getKeyBag(sthis);
+    if (runtimeFn().isBrowser) {
+      expect(kb.rt.url.toString()).toBe(`indexdb://fp-keybag`);
+    } else {
+      expect(kb.rt.url.toString()).toBe(`file://${sthis.env.get("HOME")}/.fireproof/keybag`);
+    }
+    sthis.env.set("FP_KEYBAG_URL", old);
+  });
+  it("from env", async () => {
+    const old = sthis.env.get("FP_KEYBAG_URL");
+    sthis.env.set("FP_KEYBAG_URL", url.toString());
+    const kb = await rt.kb.getKeyBag(sthis);
+    expect(kb.rt.url.toString()).toBe(url.toString());
+    sthis.env.set("FP_KEYBAG_URL", old);
+  });
+
+  it("extract keyMaterial", async () => {
+    const dkb = await rt.kb.getKeyBag(sthis);
+    const old = sthis.env.get("FP_KEYBAG_URL");
+    sthis.env.set("FP_KEYBAG_URL", BuildURI.from(dkb.rt.url).setParam("extractKey", "_deprecated_internal_api").toString());
+    const kb = await rt.kb.getKeyBag(sthis);
+    const key = kb.rt.crypto.randomBytes(kb.rt.keyLength);
+    const keyStr = base58btc.encode(key);
+    const res = await kb.setNamedKey("extract.test", keyStr);
+    expect(res.isOk()).toBeTruthy();
+    const gkb = await kb.getNamedExtractableKey("extract.test", true);
+    expect(gkb.isOk()).toBeTruthy();
+    expect(await gkb.Ok().extract()).toEqual({
+      key,
+      keyStr,
+    });
+    sthis.env.set("FP_KEYBAG_URL", old);
+    await sthis.logger.Flush();
+    expect(sthis.logCollector.Logs()).toEqual([
+      {
+        level: "warn",
+        module: "KeyBag",
+        msg: "extractKey is enabled via _deprecated_internal_api --- handle keys safely!!!",
+      },
+    ]);
+  });
+
+  it("simple add", async () => {
+    const kb = await rt.kb.getKeyBag(sthis, {
+      url: url.toString(),
+      crypto: toCryptoRuntime({
+        randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
+      }),
+    });
+    const name = "setkey" + Math.random();
+    expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
+
+    const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const res = await kb.setNamedKey(name, key);
+    expect(res.isOk()).toBeTruthy();
+    expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
+
+    const name2 = "implicit";
+    const created = await kb.getNamedKey(name2);
+    expect(created.isOk()).toBeTruthy();
+
+    expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
+
+    let diskBag: rt.kb.KeyItem;
+    let diskBag2: rt.kb.KeyItem;
+    const provider = await kb.rt.getBag();
+    if (runtimeFn().isBrowser) {
+      const p = provider as rt.kb.KeyBagProviderIndexDB;
+      diskBag = await p._prepare().then((db) => db.get("bag", name));
+      diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
+    } else {
+      const p = provider as rt.kb.KeyBagProviderFile;
+      const { sysFS } = await p._prepare(name);
+
+      diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
+      });
+      diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
+      });
+    }
+    expect(await kb.toKeyWithFingerPrint(diskBag.key)).toEqual(res);
+    expect(await kb.toKeyWithFingerPrint(diskBag2.key)).toEqual(created);
+    const algo = {
+      name: "AES-GCM",
+      iv: kb.rt.crypto.randomBytes(12),
+      tagLength: 128,
+    };
+    const data = kb.rt.crypto.randomBytes(122);
+    expect(await kb.rt.crypto.encrypt(algo, res.Ok().key, data)).toEqual(await kb.rt.crypto.encrypt(algo, created.Ok().key, data));
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag.key), data)).toEqual(
+      await kb.rt.crypto.encrypt(algo, created.Ok().key, data),
+    );
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag2.key), data)).toEqual(
+      await kb.rt.crypto.encrypt(algo, created.Ok().key, data),
+    );
+  });
+});
 
 describe("KeyedCryptoStore", () => {
   let loader: bs.Loadable;
   let kb: rt.kb.KeyBag;
   // let logger: Logger;
   let baseUrl: URI;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(async () => {
     await sthis.start();
     // logger = MockLogger().logger;
@@ -125,7 +239,7 @@ describe("KeyedCrypto", () => {
   let kb: rt.kb.KeyBag;
   let kycr: bs.KeyedCrypto;
   let keyStr: string;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(async () => {
     // let url: URI;
     // if (runtimeFn().isBrowser) {

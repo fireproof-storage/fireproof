@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { dataDir, fireproof, rt } from "@fireproof/core";
+import { dataDir, ensureSuperThis, fireproof, rt } from "@fireproof/core";
 import { runtimeFn, URI } from "@adviser/cement";
-import { mockSuperThis } from "../helpers.js";
 
 describe("runtime", () => {
   it("runtime", () => {
@@ -28,7 +27,7 @@ describe("fireproof/config", () => {
       version: rt.FILESTORE_VERSION,
     });
   }
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeAll(async () => {
     await sthis.start();
     if (runtimeFn().isNodeIsh) {

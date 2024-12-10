@@ -1,6 +1,6 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis, rt, PARAM, Result, DbMeta } from "@fireproof/core";
-import { mockSuperThis, noopUrl } from "../helpers.js";
+import { bs, NotFoundError, SuperThis, rt, PARAM, Result, DbMeta, ensureSuperThis } from "@fireproof/core";
+import { noopUrl } from "../helpers.js";
 import { fpDeserialize } from "../../src/runtime/gateways/fp-envelope-serialize.js";
 
 function runtime(sthis: SuperThis) {
@@ -23,7 +23,7 @@ async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFact
 describe("DataStore", function () {
   let store: bs.DataStore;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await store.close();
     await store.destroy();
@@ -53,7 +53,8 @@ describe("DataStore", function () {
 describe("DataStore with a saved car", function () {
   let store: bs.DataStore;
   let car: bs.AnyBlock;
-  const sthis = mockSuperThis();
+
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await store.close();
@@ -93,7 +94,7 @@ describe("DataStore with a saved car", function () {
 describe("MetaStore", function () {
   let store: bs.MetaStore;
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await store.close();
@@ -131,8 +132,7 @@ describe("MetaStore", function () {
 describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
   let cid: CID;
-  const sthis = mockSuperThis();
-  // let onload: bs.DbMeta[];
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await store.close();
