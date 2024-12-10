@@ -1,4 +1,4 @@
-import { Database, fireproof } from "use-fireproof";
+import { Database, fireproof } from "@fireproof/core";
 import { mockSuperThis } from "../helpers.js";
 
 interface DBItem {
