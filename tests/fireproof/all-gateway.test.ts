@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Database, DatabaseFactory, PARAM, bs } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
@@ -9,6 +10,12 @@ import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope
 =======
 import { mockSuperThis } from "../helpers.js";
 >>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
+=======
+import { Database, bs, ensureSuperThis } from "@fireproof/core";
+import { URI } from "@adviser/cement";
+
+import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
+>>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {
@@ -44,7 +51,7 @@ describe("noop Gateway", function () {
   let walGateway: Gateway;
   const sthis = mockSuperThis();
 
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -398,8 +405,12 @@ describe("noop Gateway subscribe", function () {
   let metaGateway: Gateway;
 =======
   let metaGateway: ExtendedGateway;
+<<<<<<< HEAD
 >>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
   const sthis = mockSuperThis();
+=======
+  const sthis = ensureSuperThis();
+>>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
   afterEach(async function () {
     await db.close();
@@ -461,10 +472,14 @@ describe("Gateway", function () {
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
 <<<<<<< HEAD
+<<<<<<< HEAD
   // const sthis = mockSuperThis();
 =======
   const sthis = mockSuperThis();
 >>>>>>> c84d4c49 (chore: enable /web build to support @fireproof/core/web in frontend apps)
+=======
+  const sthis = ensureSuperThis();
+>>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
   afterEach(async function () {
     await db.close();

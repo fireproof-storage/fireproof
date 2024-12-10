@@ -1,12 +1,11 @@
 import { URI } from "@adviser/cement";
-import { rt, getStore, ensureSuperLog } from "@fireproof/core";
-import { mockSuperThis } from "../helpers.js";
+import { rt, getStore, ensureSuperLog, ensureSuperThis } from "@fireproof/core";
 
 // only for test
 import { UUID } from "uuidv7";
 
 describe("utils", () => {
-  const sthis = mockSuperThis({});
+  const sthis = ensureSuperThis();
   const logger = ensureSuperLog(sthis, "getfilename");
 
   beforeAll(async () => {

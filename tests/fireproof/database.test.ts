@@ -1,23 +1,9 @@
-import { URI } from "@adviser/cement";
-import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
-import {
-  bs,
-  Database,
-  DocResponse,
-  DocFileMeta,
-  DocWithId,
-  DocFiles,
-  toStoreURIRuntime,
-  keyConfigOpts,
-  DatabaseFactory,
-  DatabaseShell,
-} from "@fireproof/core";
-import { fileGatewayFactoryItem } from "../../src/blockstore/register-store-protocol.js";
-import { FILESTORE_VERSION } from "../../src/runtime/index.js";
+import { buildBlobFiles, FileWithCid } from "../helpers.js";
+import { bs, Database, DocResponse, DocFileMeta, DocWithId, DocFiles, ensureSuperThis } from "@fireproof/core";
 
 describe("basic Database", () => {
   let db: Database;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -54,8 +40,8 @@ describe("basic Database with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: DatabaseShell;
-  const sthis = mockSuperThis();
+  let db: Database;
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -109,7 +95,7 @@ describe("named Database with record", function () {
     readonly value: string;
   }
   let db: Database;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -236,7 +222,7 @@ describe("named Database with record", function () {
 describe("basic Database parallel writes / public", function () {
   let db: Database;
   const writes: Promise<DocResponse>[] = [];
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -316,7 +302,7 @@ describe("basic Database with subscription", function () {
   let unsubscribe: () => void;
   let lastDoc: DocWithId<NonNullable<unknown>>;
   let waitForSub: Promise<void>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -360,7 +346,7 @@ describe("basic Database with no update subscription", function () {
   let db: Database;
   let didRun: number;
   let unsubscribe: () => void;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
@@ -396,7 +382,7 @@ describe("database with files input", () => {
   let db: Database;
   let imagefiles: FileWithCid[] = [];
   let result: DocResponse;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async () => {
     await db.close();

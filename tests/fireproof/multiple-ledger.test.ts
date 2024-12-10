@@ -1,5 +1,4 @@
-import { Database, fireproof } from "@fireproof/core";
-import { mockSuperThis } from "../helpers.js";
+import { Database, ensureSuperThis, fireproof } from "@fireproof/core";
 
 interface DBItem {
   readonly db: Database;
@@ -17,7 +16,7 @@ function shuffle(ina: DBItem[]): DBItem[] {
 
 describe("Multiple Databases", () => {
   const dbs: DBItem[] = [];
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   const rows = 10;
   const concurrentDbs = 7;
   beforeEach(async () => {

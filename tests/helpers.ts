@@ -1,8 +1,15 @@
+<<<<<<< HEAD
 import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector } from "@adviser/cement";
 import { ensureSuperThis, rt, SuperThis, SuperThisOpts, bs, PARAM } from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
+=======
+import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
+import { dataDir, rt, SuperThis } from "@fireproof/core";
+
+export { dataDir };
+>>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
 
 export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,6 +45,7 @@ export function storageURL(sthis: SuperThis): URI {
   return merged;
 }
 
+<<<<<<< HEAD
 export type MockSuperThis = SuperThis & { ctx: { logCollector: LogCollector } };
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
@@ -77,3 +85,18 @@ export async function simpleCID(sthis: SuperThis) {
   const hash = await sha256.digest(bytes);
   return CID.create(1, json.code, hash);
 }
+=======
+// export type MockSuperThis = SuperThis & { logCollector: LogCollector };
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
+//   const mockLog = MockLogger();
+//   const ethis = ensureSuperThis({
+//     logger: mockLog.logger,
+//     ctx: {
+//       logCollector: mockLog.logCollector,
+//     },
+//   }) as MockSuperThis;
+//   ethis.logCollector = mockLog.logCollector;
+//   return ethis;
+// }
+>>>>>>> 332528b3 (chore: remove of the mockSuperThis in favour of the public method)
