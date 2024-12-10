@@ -10,8 +10,8 @@ import {
   rt,
   LedgerFactory,
   defaultWriteQueueOpts,
+  ensureSuperThis,
 } from "@fireproof/core";
-import { mockSuperThis } from "../helpers.js";
 
 interface TestType {
   readonly title: string;
@@ -22,7 +22,7 @@ describe("basic Index", () => {
   let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -109,7 +109,7 @@ describe("basic Index", () => {
 describe("Index query with compound key", function () {
   let db: Ledger<TestType>;
   let indexer: Index<[string, number], TestType>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -139,7 +139,7 @@ describe("Index query with compound key", function () {
 describe("basic Index with map fun", function () {
   let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -169,7 +169,7 @@ describe("basic Index with map fun", function () {
 describe("basic Index with map fun with value", function () {
   let db: Ledger<TestType>;
   let indexer: Index<string, TestType, number>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -207,7 +207,7 @@ describe("basic Index with map fun with value", function () {
 describe("Index query with map and compound key", function () {
   let db: Ledger<TestType>;
   let indexer: Index<[string, number], TestType>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -237,7 +237,7 @@ describe("Index query with map and compound key", function () {
 describe("basic Index with string fun", function () {
   let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();
@@ -276,8 +276,7 @@ describe("basic Index upon cold start", function () {
   let didMap: number;
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
-  const sthis = mockSuperThis();
-  let dbOpts: LedgerOpts;
+  const sthis = ensureSuperThis();
   // result, mapFn;
   afterEach(async function () {
     await crdt.close();
@@ -378,7 +377,7 @@ describe("basic Index with no data", function () {
   let db: Ledger<TestType>;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   afterEach(async function () {
     await db.close();
     await db.destroy();

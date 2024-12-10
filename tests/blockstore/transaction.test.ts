@@ -1,10 +1,10 @@
 import { CID } from "multiformats";
-import { bs, SuperThis } from "@fireproof/core";
-import { mockSuperThis, simpleBlockOpts } from "../helpers.js";
+import { bs, ensureSuperThis, SuperThis } from "@fireproof/core";
+import { simpleBlockOpts } from "../helpers.js";
 
 describe("Fresh TransactionBlockstore", function () {
   let blocks: bs.BaseBlockstore;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(function () {
     blocks = new bs.BaseBlockstore(simpleBlockOpts(sthis));
   });
@@ -33,9 +33,9 @@ describe("Fresh TransactionBlockstore", function () {
 
 describe("TransactionBlockstore with name", function () {
   let blocks: bs.EncryptedBlockstore;
-  const sthis = mockSuperThis();
-  beforeEach(async function () {
-    blocks = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis));
+  const sthis = ensureSuperThis();
+  beforeEach(function () {
+    blocks = new bs.EncryptedBlockstore(sthis, { name: "test" });
   });
   // it("should have a name", function () {
   //   expect(blocks.name).toEqual("test");
@@ -57,7 +57,7 @@ describe("TransactionBlockstore with name", function () {
 describe("A transaction", function () {
   let tblocks: bs.CarTransaction;
   let blocks: bs.EncryptedBlockstore;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(async function () {
     blocks = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, "test"));
     tblocks = new bs.CarTransaction(blocks);
@@ -83,7 +83,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
   let blocks: bs.BaseBlockstore;
   let cid: CID;
   let cid2: CID;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   beforeEach(async function () {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
