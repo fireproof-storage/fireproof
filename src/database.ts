@@ -207,7 +207,7 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
   readonly _writeQueue: WriteQueue<DT>;
   // readonly blockstore: BaseBlockstore;
 
-  /*
+  /**
    * Close the database and release resources
    */
   async close() {
@@ -226,7 +226,7 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     // await this.blockstore.close();
   }
 
-  /*
+  /**
    * Destroy the database and release all resources
    */
   async destroy() {
@@ -266,7 +266,7 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     });
   }
 
-  /*
+  /**
    * Get a document from the database
    * @param id - the document id
    * @returns the document with the _id
@@ -285,6 +285,11 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     return { ...(doc as unknown as DocWithId<T>), _id: id };
   }
 
+  /**
+   * Put a document from the database
+   * @param doc - the document to put
+   * @returns add DocResponse with the id and clock
+   */
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put");
