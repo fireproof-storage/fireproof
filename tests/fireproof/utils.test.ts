@@ -4,7 +4,7 @@ import { mockSuperThis } from "../helpers.js";
 import { UUID } from "uuidv7";
 
 describe("utils", () => {
-  const sthis = mockSuperThis({});
+  const sthis = ensureSuperThis();
   const logger = ensureSuperLog(sthis, "getfilename");
 
   beforeAll(async () => {

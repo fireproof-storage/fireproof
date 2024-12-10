@@ -1,10 +1,7 @@
-import { Ledger, LedgerFactory, PARAM, bs } from "@fireproof/core";
+import { Ledger, LedgerFactory, PARAM, bs, ensureSuperThis } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
-import { mockSuperThis, simpleCID } from "../helpers.js";
-import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
-import { Gateway } from "../../src/blockstore/gateway.js";
-import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope.js";
+import { simpleCID } from "../helpers.js";
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {
@@ -367,7 +364,7 @@ describe("noop Gateway subscribe", function () {
   let metaStore: MetaStore;
 
   let metaGateway: Gateway;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -417,7 +414,7 @@ describe("Gateway", function () {
   let metaGateway: Gateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
-  // const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await db.close();
