@@ -41,7 +41,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
   readonly _writeQueue: WriteQueue<DT>;
   readonly blockstore: BaseBlockstore;
 
-  /*
+  /**
    * Close the database and release resources
    */
   async close() {
@@ -50,7 +50,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     await this.blockstore.close();
   }
 
-  /*
+  /**
    * Destroy the database and release all resources
    */
   async destroy() {
@@ -87,7 +87,7 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     });
   }
 
-  /*
+  /**
    * Get a document from the database
    * @param id - the document id
    * @returns the document with the _id
@@ -106,6 +106,11 @@ export class Database<DT extends DocTypes = NonNullable<unknown>> implements Con
     return { ...(doc as unknown as DocWithId<T>), _id: id };
   }
 
+  /**
+   * Put a document from the database
+   * @param doc - the document to put
+   * @returns add DocResponse with the id and clock
+   */
   async put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
     await this.ready();
     this.logger.Debug().Str("id", doc._id).Msg("put");
