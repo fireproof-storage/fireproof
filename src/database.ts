@@ -207,16 +207,9 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
   readonly _writeQueue: WriteQueue<DT>;
   // readonly blockstore: BaseBlockstore;
 
-  readonly shells: Set<DatabaseShell<DT>> = new Set<DatabaseShell<DT>>();
-
-  addShell(shell: DatabaseShell<DT>) {
-    this.shells.add(shell);
-  }
-
-  readonly _onClosedFns = new Set<() => void>();
-  onClosed(fn: () => void) {
-    this._onClosedFns.add(fn);
-  }
+  /*
+   * Close the database and release resources
+   */
   async close() {
     throw this.logger.Error().Str("db", this.name).Msg(`use shellClose`).AsError();
   }
@@ -233,6 +226,9 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     // await this.blockstore.close();
   }
 
+  /*
+   * Destroy the database and release all resources
+   */
   async destroy() {
     await this.ready();
     await this.crdt.destroy();
@@ -270,10 +266,12 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     });
   }
 
-  get name(): string {
-    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
-  }
-
+  /*
+   * Get a document from the database
+   * @param id - the document id
+   * @returns the document with the _id
+   * @throws NotFoundError if the document is not found
+   */
   async get<T extends DocTypes>(id: string): Promise<DocWithId<T>> {
     if (!id) throw this.logger.Error().Str("db", this.name).Msg(`Doc id is required`).AsError();
 
