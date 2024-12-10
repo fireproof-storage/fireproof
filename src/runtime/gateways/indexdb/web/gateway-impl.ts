@@ -16,7 +16,6 @@ interface IDBConn {
   readonly version: string;
   readonly url: URI;
 }
-const onceIndexDB = new KeyedResolvOnce<IDBConn>();
 
 function sanitzeKey(key: string | string[]): string | string[] {
   if (key.length === 1) {
@@ -25,9 +24,10 @@ function sanitzeKey(key: string | string[]): string | string[] {
   return key;
 }
 
+const onceConn = new KeyedResolvOnce<IDBConn>();
 async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
   const dbName = getIndexDBName(url, sthis);
-  const once = await onceIndexDB.get(dbName.fullDb).once(async () => {
+  const once = await onceConn.get(dbName.fullDb).once(async () => {
     const db = await openDB(dbName.fullDb, 1, {
       upgrade(db) {
         ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
@@ -96,14 +96,14 @@ export class IndexDBGatewayImpl implements Gateway {
     this.logger = ensureLogger(sthis, "IndexDBGateway");
     this.sthis = sthis;
   }
-  _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
+
+  // _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
   async start(baseURL: URI): Promise<Result<URI>> {
     return exception2Result(async () => {
       this.logger.Debug().Url(baseURL).Msg("starting");
       await this.sthis.start();
       const ic = await connectIdb(baseURL, this.sthis);
-      this._db = ic.db;
       this.logger.Debug().Url(ic.url).Msg("started");
       return ic.url;
     });
@@ -116,8 +116,8 @@ export class IndexDBGatewayImpl implements Gateway {
       // return deleteDB(getIndexDBName(this.url).fullDb);
       const type = getStore(baseUrl, this.sthis, joinDBName).name;
       // console.log("IndexDBDataStore:destroy", type);
-      const idb = this._db;
-      const trans = idb.transaction(type, "readwrite");
+      const idb = await connectIdb(baseUrl, this.sthis);
+      const trans = idb.db.transaction(type, "readwrite");
       const object_store = trans.objectStore(type);
       const toDelete = [];
       for (let cursor = await object_store.openCursor(); cursor; cursor = await cursor.continue()) {
@@ -139,7 +139,8 @@ export class IndexDBGatewayImpl implements Gateway {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("getting");
-      const tx = this._db.transaction([store], "readonly");
+      const { db } = await connectIdb(url, this.sthis);
+      const tx = db.transaction([store], "readonly");
       const bytes = await tx.objectStore(store).get(sanitzeKey(key));
       await tx.done;
       if (!bytes) {
@@ -153,7 +154,8 @@ export class IndexDBGatewayImpl implements Gateway {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
-      const tx = this._db.transaction([store], "readwrite");
+      const { db } = await connectIdb(url, this.sthis);
+      const tx = db.transaction([store], "readwrite");
       await tx.objectStore(store).put(value, sanitzeKey(key));
       await tx.done;
     });
@@ -163,7 +165,8 @@ export class IndexDBGatewayImpl implements Gateway {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("deleting");
-      const tx = this._db.transaction([store], "readwrite");
+      const { db } = await connectIdb(url, this.sthis);
+      const tx = db.transaction([store], "readwrite");
       await tx.objectStore(store).delete(sanitzeKey(key));
       await tx.done;
       return Result.Ok(undefined);
