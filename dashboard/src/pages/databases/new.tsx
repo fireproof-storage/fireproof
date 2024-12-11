@@ -1,3 +1,4 @@
+import React from "react";
 import { useForm } from "react-hook-form";
 import { Form, redirect, useSubmit } from "react-router-dom";
 import { fireproof } from "use-fireproof";
@@ -47,7 +48,7 @@ export default function New() {
           </div>
           <button
             type="submit"
-            className="mt-3 inline-flex w-full items-center justify-center rounded bg-[--primary] px-3 py-2 text-sm font-semibold text-[--primary-foreground] shadow-sm hover:bg-[--primary-hover] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--primary] sm:ml-3 sm:mt-0 sm:w-auto"
+            className="mt-3 inline-flex w-full items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-semibold text-accent-foreground shadow-sm hover:bg-[--accent]/80 transition-colors sm:ml-3 sm:mt-0 sm:w-auto"
           >
             Create
           </button>
