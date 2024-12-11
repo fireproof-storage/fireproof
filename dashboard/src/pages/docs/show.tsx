@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 
@@ -74,22 +74,22 @@ export default function Document() {
           className={`${
             needsSave
               ? "bg-[--accent] hover:bg-[--accent]/80 text-accent-foreground"
-              : "bg-[--muted] text-muted-foreground"
-          } font-bold py-2 px-4 rounded`}
+              : "bg-[--accent] hover:bg-[--accent]/80 text-accent-foreground opacity-50"
+          } inline-flex items-center justify-center rounded px-3 py-2 text-sm font-semibold shadow-sm transition-colors`}
         >
           Save
         </button>
         {_id && (
           <button
             onClick={() => deleteDocument(_id)}
-            className="text-white bg-[--destructive] hover:bg-[--destructive]/80 text-destructive-foreground font-bold py-2 px-4 rounded"
+            className="inline-flex items-center justify-center rounded bg-[--destructive] px-3 py-2 text-sm font-semibold text-destructive-foreground shadow-sm hover:bg-[--destructive]/80 transition-colors"
           >
             Delete
           </button>
         )}
         <Link
           to={`/fp/databases/${name}`}
-          className="bg-[--muted] hover:bg-[--muted]/80 text-muted-foreground font-bold py-2 px-4 rounded"
+          className="inline-flex items-center justify-center rounded bg-[--background] border border-[--border] px-3 py-2 text-sm font-semibold text-[--foreground] shadow-sm hover:bg-[--background]/80 transition-colors"
         >
           Cancel
         </Link>
