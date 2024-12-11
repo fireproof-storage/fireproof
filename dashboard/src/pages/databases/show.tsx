@@ -383,7 +383,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div>
         <DynamicTable
           headers={headers}
           th="key"
