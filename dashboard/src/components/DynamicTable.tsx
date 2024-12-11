@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function DynamicTable({
   hrefFn,
@@ -10,29 +10,20 @@ export default function DynamicTable({
   th = "_id",
   link = ["_id"],
 }: any) {
-  const [columnLinks, setColumnLinks] = useState(link);
-
-  function toggleColumnLinks(header: string) {
-    if (columnLinks.includes(header)) {
-      setColumnLinks(columnLinks.filter((h: string) => h !== header));
-    } else {
-      setColumnLinks([...columnLinks, header]);
-    }
-  }
+  const navigate = useNavigate();
 
   return (
-    <div className="relative overflow-x-auto mt-4">
-      <table className="w-full text-sm text-left text-[--muted-foreground]">
-        <thead className="text-xs text-[--foreground] bg-[--muted]">
+    <div className="relative mt-4 overflow-x-scroll">
+      <table className="w-full text-sm text-left text-[--muted-foreground] border-collapse">
+        <thead className="text-xs text-[--foreground] bg-[--muted] relative z-10">
           <tr key={"header" + Math.random()}>
             {headers.map((header: string) => (
               <th
                 key={header}
-                onClick={() => toggleColumnLinks(header)}
                 scope="col"
-                className="px-6 py-3"
+                className="px-6 py-3 border-b-2 border-[--border]"
               >
-                {header}
+                {header === '_id' ? 'document id' : header}
               </th>
             ))}
           </tr>
@@ -41,30 +32,21 @@ export default function DynamicTable({
           {rows.map((fields: any) => (
             <tr
               key={fields._id || JSON.stringify(fields)}
-              className="bg-[--background] border-b border-[--muted]"
+              className="bg-[--background] border-b border-[--border] hover:bg-[--accent]/20 hover:shadow-md relative after:absolute after:inset-0 after:border-t after:border-[--border] after:opacity-0 hover:after:opacity-100 hover:-translate-y-[2px] cursor-pointer transition-all duration-200"
+              onClick={() => navigate(`/fp/databases/${dbName}/docs/${fields._id}`)}
             >
               {headers.map((header: string) =>
                 header === th ? (
                   <th
                     key={header}
                     scope="row"
-                    className="px-6 py-4 font-medium text-[--foreground] whitespace-nowrap"
+                    className="px-6 py-4 font-medium text-inherit whitespace-nowrap"
                   >
-                    <TableCell
-                      hrefFn={hrefFn}
-                      dbName={dbName}
-                      link={columnLinks.includes(header)}
-                      label={fields[header]}
-                    />
+                    {formatTableCellContent(fields[header])}
                   </th>
                 ) : (
                   <td key={header} className="px-6 py-4">
-                    <TableCell
-                      hrefFn={hrefFn}
-                      dbName={dbName}
-                      link={columnLinks.includes(header)}
-                      label={fields[header]}
-                    />
+                    {formatTableCellContent(fields[header])}
                   </td>
                 )
               )}
@@ -74,31 +56,6 @@ export default function DynamicTable({
       </table>
     </div>
   );
-}
-
-function TableCell({
-  label,
-  link = false,
-  dbName,
-  hrefFn,
-}: {
-  label: any;
-  link: boolean;
-  dbName: string;
-  hrefFn: (label: string) => string;
-}) {
-  if (link) {
-    const href = hrefFn
-      ? hrefFn(label)
-      : `/fp/databases/${dbName}/docs/${label}`;
-    return (
-      <Link to={href} className="underline text-[--accent]">
-        {formatTableCellContent(label)}
-      </Link>
-    );
-  } else {
-    return <>{formatTableCellContent(label)}</>;
-  }
 }
 
 function formatTableCellContent(obj: any) {

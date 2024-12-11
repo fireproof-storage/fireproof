@@ -12,7 +12,7 @@
   "dependencies": {
     "@clerk/clerk-js": "^5.40.0",
     "@clerk/clerk-react": "^5.19.0",
-    "@fireproof/cloud": "^0.19.116",
+    "@fireproof/cloud": "^0.19.118",
     "@tailwindcss/container-queries": "^0.1.1",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
@@ -25,7 +25,7 @@
     "react-router-dom": "^7.0.2",
     "react-simple-code-editor": "^0.14.1",
     "use-editable": "^2.3.3",
-    "use-fireproof": "^0.19.116"
+    "use-fireproof": "^0.19.118"
   },
   "devDependencies": {
     "@eslint/js": "^9.16.0",

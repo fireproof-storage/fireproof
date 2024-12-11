@@ -15,8 +15,8 @@ importers:
         specifier: ^5.19.0
         version: 5.19.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@fireproof/cloud':
-        specifier: ^0.19.116
-        version: 0.19.116(react@18.3.1)
+        specifier: ^0.19.118
+        version: 0.19.118(react@18.3.1)
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@3.4.16)
@@ -54,8 +54,8 @@ importers:
         specifier: ^2.3.3
         version: 2.3.3(react@18.3.1)
       use-fireproof:
-        specifier: ^0.19.116
-        version: 0.19.116(@fireproof/core@0.19.116(react@18.3.1))(react@18.3.1)
+        specifier: ^0.19.118
+        version: 0.19.118(@fireproof/core@0.19.118(react@18.3.1))(react@18.3.1)
     devDependencies:
       '@eslint/js':
         specifier: ^9.16.0
@@ -95,7 +95,7 @@ importers:
         version: 8.4.49
       react-scan:
         specifier: ^0.0.37
-        version: 0.0.37(react-dom@18.3.1(react@18.3.1))(react-router-dom@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(rollup@4.28.1)
+        version: 0.0.37(react-dom@18.3.1(react@18.3.1))(react-router-dom@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(rollup@4.28.1)
       tailwindcss:
         specifier: ^3.4.16
         version: 3.4.16
@@ -788,11 +788,11 @@ packages:
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
 
-  '@fireproof/cloud@0.19.116':
-    resolution: {integrity: sha512-qYgke3B+KkMaKV4AdE7jCLPkoOolTqjzdi5XLxmjQFs5qlcQjtbjTKhypx3ipzMWDZRnKKN971eKb00yCWH9Ew==}
+  '@fireproof/cloud@0.19.118':
+    resolution: {integrity: sha512-BC0lYr64AdeldmGZ+lwUN2/E4UQFhaVCGSeACP4dOnCxK3PwN+GpIzb0Cv7anEyM3Alb+zZegbhVBWTbgaPM1g==}
 
-  '@fireproof/core@0.19.116':
-    resolution: {integrity: sha512-QwxOG3Ck+j0uMTSTqg9Uy13dSB5U6QUvaNhQGeetc/BALhxTR82gS0QfnK6A6loc9kqzvKHp599gvl/rVEetVA==}
+  '@fireproof/core@0.19.118':
+    resolution: {integrity: sha512-lyK0Aj7t0acLz9x8i1s12GwBNkOuEeRPg5eS6MhMn5uYTi1p0kWvJHn+pb3hRFG5sP7zmjp5/obeHtTKGDTLGA==}
     peerDependencies:
       react: ^18.3.1
 
@@ -2067,8 +2067,8 @@ packages:
   magic-string@0.30.12:
     resolution: {integrity: sha512-Ea8I3sQMVXr8JhN4z+H/d8zwo+tYDgHE9+5G4Wnrwhs0gaK9fXTKx0Tw5Xwsd/bCPTTZNRAdpyzvoeORe9LYpw==}
 
-  memfs@4.14.1:
-    resolution: {integrity: sha512-Fq5CMEth+2iprLJ5mNizRcWuiwRZYjNkUD0zKk224jZunE9CRacTRDK8QLALbMBlNX2y3nY6lKZbesCwDwacig==}
+  memfs@4.15.0:
+    resolution: {integrity: sha512-q9MmZXd2rRWHS6GU3WEm3HyiXZyyoA1DqdOhEq0lxPBmKb5S7IAOwX0RgUCwJfqjelDCySa5h8ujOy24LqsWcw==}
     engines: {node: '>= 4.0.0'}
 
   merge-stream@2.0.0:
@@ -2851,10 +2851,10 @@ packages:
     peerDependencies:
       react: '>= 16.8.0'
 
-  use-fireproof@0.19.116:
-    resolution: {integrity: sha512-0ckhiPF/QgCO7H/hOmzzAeJ8ngITxOU5fqRSdVLmveRnBA97ZnGzTIAEfmmTHPvMmn2K30aIKfkmV98pS+qpbQ==}
+  use-fireproof@0.19.118:
+    resolution: {integrity: sha512-jwS1PyjhvyDEkB4vtbURc1ZNnugC3w9MWYhaCN7YajUtlm/Vrnn9EMH1cMbjTZIfVDSyVvqDC9CRc3wtR5dUeA==}
     peerDependencies:
-      '@fireproof/core': ^0.19.116
+      '@fireproof/core': ^0.19.118
       react: ^18.3.1
 
   use-sync-external-store@1.4.0:
@@ -3537,10 +3537,10 @@ snapshots:
 
   '@fastify/busboy@2.1.1': {}
 
-  '@fireproof/cloud@0.19.116(react@18.3.1)':
+  '@fireproof/cloud@0.19.118(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.41
-      '@fireproof/core': 0.19.116(react@18.3.1)
+      '@fireproof/core': 0.19.118(react@18.3.1)
       partykit: 0.0.111
       partysocket: 1.0.2
     transitivePeerDependencies:
@@ -3550,14 +3550,14 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@fireproof/core@0.19.116(react@18.3.1)':
+  '@fireproof/core@0.19.118(react@18.3.1)':
     dependencies:
       '@adviser/cement': 0.2.41
       '@fireproof/vendor': 1.0.0
       '@ipld/unixfs': 3.0.0
       charwise: 3.0.1
       idb: 8.0.0
-      memfs: 4.14.1
+      memfs: 4.15.0
       multiformats: 13.3.1
       p-limit: 6.1.0
       p-map: 7.0.3
@@ -4978,7 +4978,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  memfs@4.14.1:
+  memfs@4.15.0:
     dependencies:
       '@jsonjoy.com/json-pack': 1.1.0(tslib@2.8.1)
       '@jsonjoy.com/util': 1.5.0(tslib@2.8.1)
@@ -5330,7 +5330,7 @@ snapshots:
     optionalDependencies:
       react-dom: 18.3.1(react@18.3.1)
 
-  react-scan@0.0.37(react-dom@18.3.1(react@18.3.1))(react-router-dom@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-router@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(rollup@4.28.1):
+  react-scan@0.0.37(react-dom@18.3.1(react@18.3.1))(react-router-dom@7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(rollup@4.28.1):
     dependencies:
       '@babel/core': 7.26.0
       '@babel/generator': 7.26.3
@@ -5351,7 +5351,6 @@ snapshots:
       tsx: 4.19.2
       unplugin: 2.0.0-beta.2
     optionalDependencies:
-      react-router: 7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router-dom: 7.0.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
     transitivePeerDependencies:
       - rollup
@@ -5778,9 +5777,9 @@ snapshots:
     dependencies:
       react: 18.3.1
 
-  use-fireproof@0.19.116(@fireproof/core@0.19.116(react@18.3.1))(react@18.3.1):
+  use-fireproof@0.19.118(@fireproof/core@0.19.118(react@18.3.1))(react@18.3.1):
     dependencies:
-      '@fireproof/core': 0.19.116(react@18.3.1)
+      '@fireproof/core': 0.19.118(react@18.3.1)
       react: 18.3.1
 
   use-sync-external-store@1.4.0(react@18.3.1):
