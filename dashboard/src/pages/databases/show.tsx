@@ -384,14 +384,20 @@ export default function App() {
       </div>
 
       <div>
-        <DynamicTable
-          headers={headers}
-          th="key"
-          link={["_id"]}
-          rows={docs}
-          dbName={name}
-          onDelete={deleteDocument}
-        />
+        {docs.length === 0 ? (
+          <div className="mt-4 text-center text-[--muted-foreground]">
+            No documents found. <Link to={`/fp/databases/${name}/docs/new`} className="font-semibold text-[--accent] hover:underline">Create a new document</Link> to get started.
+          </div>
+        ) : (
+          <DynamicTable
+            headers={headers}
+            th="key"
+            link={["_id"]}
+            rows={docs}
+            dbName={name}
+            onDelete={deleteDocument}
+          />
+        )}
       </div>
     </div>
   );

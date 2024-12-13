@@ -31,9 +31,11 @@ export default function DynamicTable({
         <tbody>
           {rows.map((fields: any) => (
             <tr
-              key={fields._id || JSON.stringify(fields)}
-              className="bg-[--background] border-b border-[--border] hover:bg-[--accent]/20 hover:shadow-md relative after:absolute after:inset-0 after:border-t after:border-[--border] after:opacity-0 hover:after:opacity-100 hover:-translate-y-[2px] cursor-pointer transition-all duration-200"
-              onClick={() => navigate(`/fp/databases/${dbName}/docs/${fields._id}`)}
+              key={fields._id}
+              className="bg-[--background] hover:bg-[--secondary] border-b border-[--border] cursor-pointer"
+              onClick={() => {
+                navigate(`/fp/databases/${dbName}/docs/${fields._id}`);
+              }}
             >
               {headers.map((header: string) =>
                 header === th ? (
