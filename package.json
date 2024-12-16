@@ -44,7 +44,7 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
-    "@eslint/js": "^9.16.0",
+    "@eslint/js": "^9.17.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.1",
     "@types/randombytes": "^2.0.3",
