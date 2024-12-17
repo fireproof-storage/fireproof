@@ -360,6 +360,19 @@ export function isNotFoundError(e: Error | Result<unknown> | unknown): e is NotF
   return false;
 }
 
+/**
+ * Array.fromAsync "polyfill"
+ */
+export async function arrayFromAsyncIterable<T>(it: AsyncIterable<T>) {
+  const arr = [];
+
+  for await (const a of it) {
+    arr.push(a);
+  }
+
+  return arr;
+}
+
 export function UInt8ArrayEqual(a: Uint8Array, b: Uint8Array): boolean {
   if (a.length !== b.length) {
     return false;
