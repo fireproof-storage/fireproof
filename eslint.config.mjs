@@ -31,6 +31,11 @@ const opts = tseslint.config(
       "no-restricted-globals": ["error", "URL", "TextDecoder", "TextEncoder"],
     },
   },
+  {
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", destructuredArrayIgnorePattern: "^_" }],
+    },
+  },
 );
 
 export default opts;
