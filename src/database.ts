@@ -15,7 +15,6 @@ import type {
   DocTypes,
   IndexRows,
   DocFragment,
-  ChangesResponseRow,
   CRDTMeta,
   AllDocsQueryOpts,
   AllDocsResponse,
@@ -24,10 +23,10 @@ import type {
   Ledger,
   Attachable,
   Attached,
+  QueryResponse,
+  InquiryResponse,
 } from "./types.js";
-import { ensureLogger, NotFoundError } from "./utils.js";
-
-import { makeName } from "./utils.js";
+import { ensureLogger, makeName, NotFoundError } from "./utils.js";
 
 export function isDatabase(db: unknown): db is Database {
   return db instanceof DatabaseImpl;
@@ -122,27 +121,24 @@ export class DatabaseImpl implements Database {
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
-    await this.ready();
     this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
-    const { result, head } = await this.ledger.crdt.changes(since, opts);
-    const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-      clock,
-    }));
-    return { rows, clock: head, name: this.name };
+
+    const qry = this.select<IndexKeyType, T>();
+
+    // FIXME: row must have `clock` property
+    const rows = (await qry.toArray({ ...opts, since })).map((row) => ({ key: row.key[1], value: row.doc }));
+
+    return { rows, clock: this.ledger.clock, name: this.name };
   }
 
   async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
-    await this.ready();
-    void opts;
     this.logger.Debug().Msg("allDocs");
-    const { result, head } = await this.ledger.crdt.allDocs();
-    const rows = result.map(({ id: key, value, del }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-    }));
-    return { rows, clock: head, name: this.name };
+
+    // FIXME: Passing opts doesn't actually do anything yet
+    const qry = this.select<IndexKeyType, T>(opts);
+    const rows = (await qry.toArray()).map((row) => ({ key: row.key[1], value: row.doc }));
+
+    return { rows, clock: this.ledger.clock, name: this.name };
   }
 
   async allDocuments<T extends DocTypes>(): Promise<{
@@ -155,20 +151,50 @@ export class DatabaseImpl implements Database {
     return this.allDocs<T>();
   }
 
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
-    return this.ledger.subscribe(listener, updates);
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>): () => void {
+    return this.select<IndexKeyType, T>().subscribe((row) => {
+      listener(row.doc);
+    });
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   async query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
+    field: string | MapFn<T, R>,
     opts: QueryOpts<K> = {},
   ): Promise<IndexRows<K, T, R>> {
-    await this.ready();
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
-    // const _crdt = this.ledger.crdt as unknown as CRDT<T>;
+    const qry = this.select<K, T, R>(field, opts);
+    const arr = await qry.toArray();
+    const rows = arr;
+
+    return { rows };
+  }
+
+  select<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    opts: QueryOpts<K> & { excludeDocs: true },
+  ): InquiryResponse<K, R>;
+  select<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(opts?: QueryOpts<K>): QueryResponse<K, T, R>;
+  select<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
+    opts: QueryOpts<K> & { excludeDocs: true },
+  ): InquiryResponse<K, R>;
+  select<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
+    opts?: QueryOpts<K>,
+  ): QueryResponse<K, T, R>;
+  select<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    a?: string | MapFn<T, R> | QueryOpts<K>,
+    b?: QueryOpts<K>,
+  ): InquiryResponse<K, R> | QueryResponse<K, T, R> {
+    const field = typeof a === "string" || typeof a === "function" ? a : undefined;
+    const opts = b ? b : typeof a === "object" ? a : {};
+
+    if (!field) {
+      return this.ledger.crdt.allDocs<K, T, R>({ waitFor: this.ready() });
+    }
+
     const idx = typeof field === "string" ? index<K, T, R>(this, field) : index<K, T, R>(this, makeName(field.toString()), field);
-    return await idx.query(opts);
+    return idx.query(opts, { waitFor: this.ready() });
   }
 
   async compact() {
