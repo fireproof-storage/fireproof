@@ -97,5 +97,23 @@ describe("query api", () => {
 
       expect(docCount).toBe(AMOUNT_OF_DOCS + 1);
     });
+    it("test `future` method", async () => {
+      const stream = lr.allDocs<DocType>().future();
+      let docCount = 0;
+
+      // NOTE: Test could probably be written in a better way.
+      //       We want to start listening before we add the documents.
+      lr.put({ _id: `doc-${AMOUNT_OF_DOCS + 0}`, name: `doc-${AMOUNT_OF_DOCS + 0}` });
+      lr.put({ _id: `doc-${AMOUNT_OF_DOCS + 1}`, name: `doc-${AMOUNT_OF_DOCS + 1}` });
+
+      for await (const { doc, marker } of stream) {
+        void doc;
+
+        if (marker.kind === "new") docCount++;
+        if (docCount === 2) break;
+      }
+
+      expect(docCount).toBe(2);
+    });
   });
 });
