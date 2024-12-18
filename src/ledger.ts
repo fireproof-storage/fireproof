@@ -5,26 +5,20 @@ import { CRDT, HasCRDT } from "./crdt.js";
 import { index } from "./indexer.js";
 import {
   type DocUpdate,
-  type ClockHead,
   type ConfigOpts,
   type MapFn,
   type QueryOpts,
-  type ChangesOptions,
   type DocSet,
   type DocWithId,
   type IndexKeyType,
-  type ListenerFn,
   type DocResponse,
-  type ChangesResponse,
   type DocTypes,
   type IndexRows,
   type DocFragment,
-  type ChangesResponseRow,
   type CRDTMeta,
-  type AllDocsQueryOpts,
-  type AllDocsResponse,
   type SuperThis,
   PARAM,
+  QueryResponse,
 } from "./types.js";
 import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, getDefaultURI, GatewayInterceptor } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
@@ -74,16 +68,8 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
   get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
   del(id: string): Promise<DocResponse>;
-  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
-  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
-  allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }>;
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+  allDocs<T extends DocTypes>(): QueryResponse<T>;
+  allDocuments<T extends DocTypes>(): QueryResponse<T>;
 
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T>,
@@ -139,7 +125,6 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   get crdt(): CRDT<DT> {
     return this.ref.crdt;
   }
-
   get name(): string {
     return this.ref.name;
   }
@@ -164,23 +149,11 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   del(id: string): Promise<DocResponse> {
     return this.ref.del(id);
   }
-  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>> {
-    return this.ref.changes(since, opts);
+  allDocs<T extends DocTypes>(): QueryResponse<T> {
+    return this.ref.allDocs();
   }
-  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>> {
-    return this.ref.allDocs(opts);
-  }
-  allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }> {
+  allDocuments<T extends DocTypes>(): QueryResponse<T> {
     return this.ref.allDocuments();
-  }
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
-    return this.ref.subscribe(listener, updates);
   }
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T>,
@@ -197,9 +170,6 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   // readonly name: string;
   readonly opts: LedgerOpts;
 
-  _listening = false;
-  readonly _listeners = new Set<ListenerFn<DT>>();
-  readonly _noupdate_listeners = new Set<ListenerFn<DT>>();
   readonly crdt: CRDT<DT>;
   readonly _writeQueue: WriteQueue<DT>;
   // readonly blockstore: BaseBlockstore;
@@ -262,9 +232,6 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
       return await this.crdt.bulk(updates);
     }); //, Infinity)
-    this.crdt.clock.onTock(() => {
-      this._no_update_notify();
-    });
   }
 
   get name(): string {
@@ -306,59 +273,13 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     return { id, clock: result?.head, name: this.name } as DocResponse;
   }
 
-  async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
-    await this.ready();
-    this.logger.Debug().Any("since", since).Any("opts", opts).Msg("changes");
-    const { result, head } = await this.crdt.changes(since, opts);
-    const rows: ChangesResponseRow<T>[] = result.map(({ id: key, value, del, clock }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-      clock,
-    }));
-    return { rows, clock: head, name: this.name };
-  }
-
-  async allDocs<T extends DocTypes>(opts: AllDocsQueryOpts = {}): Promise<AllDocsResponse<T>> {
-    await this.ready();
-    void opts;
+  allDocs<T extends DocTypes>(): QueryResponse<T> {
     this.logger.Debug().Msg("allDocs");
-    const { result, head } = await this.crdt.allDocs();
-    const rows = result.map(({ id: key, value, del }) => ({
-      key,
-      value: (del ? { _id: key, _deleted: true } : { _id: key, ...value }) as DocWithId<T>,
-    }));
-    return { rows, clock: head, name: this.name };
+    return this.crdt.allDocs({ waitFor: this.ready() });
   }
 
-  async allDocuments<T extends DocTypes>(): Promise<{
-    rows: {
-      key: string;
-      value: DocWithId<T>;
-    }[];
-    clock: ClockHead;
-  }> {
+  allDocuments<T extends DocTypes>(): QueryResponse<T> {
     return this.allDocs<T>();
-  }
-
-  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void {
-    this.logger.Debug().Bool("updates", updates).Msg("subscribe");
-    if (updates) {
-      if (!this._listening) {
-        this._listening = true;
-        this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
-          void this._notify(updates);
-        });
-      }
-      this._listeners.add(listener as ListenerFn<NonNullable<unknown>>);
-      return () => {
-        this._listeners.delete(listener as ListenerFn<NonNullable<unknown>>);
-      };
-    } else {
-      this._noupdate_listeners.add(listener as ListenerFn<NonNullable<unknown>>);
-      return () => {
-        this._noupdate_listeners.delete(listener as ListenerFn<NonNullable<unknown>>);
-      };
-    }
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
@@ -379,29 +300,6 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   async compact() {
     await this.ready();
     await this.crdt.compact();
-  }
-
-  async _notify(updates: DocUpdate<NonNullable<unknown>>[]) {
-    await this.ready();
-    if (this._listeners.size) {
-      const docs: DocWithId<NonNullable<unknown>>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
-      for (const listener of this._listeners) {
-        await (async () => await listener(docs as DocWithId<DT>[]))().catch((e: Error) => {
-          this.logger.Error().Err(e).Msg("subscriber error");
-        });
-      }
-    }
-  }
-
-  async _no_update_notify() {
-    await this.ready();
-    if (this._noupdate_listeners.size) {
-      for (const listener of this._noupdate_listeners) {
-        await (async () => await listener([]))().catch((e: Error) => {
-          this.logger.Error().Err(e).Msg("subscriber error");
-        });
-      }
-    }
   }
 }
 

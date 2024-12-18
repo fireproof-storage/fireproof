@@ -86,6 +86,10 @@ export async function applyBulkUpdateToCrdt<T extends DocTypes>(
   return { head: result.head } as CRDTMeta;
 }
 
+export function docUpdateToDocWithId<T extends DocTypes>({ id, del, value }: DocUpdate<T>): DocWithId<T> {
+  return (del ? { _id: id, _deleted: true } : { _id: id, ...value }) as DocWithId<T>;
+}
+
 // this whole thing can get pulled outside of the write queue
 async function writeDocContent<T extends DocTypes>(
   store: StoreRuntime,
