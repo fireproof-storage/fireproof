@@ -195,7 +195,7 @@ export class CRDT<T extends DocTypes> {
       return docs;
     };
 
-    const stream = (opts: { since?: ClockHead } = {}) => {
+    const stream = (opts: { futureOnly: boolean; since?: ClockHead }) => {
       const clock = this.clock;
       const ready = this.ready.bind(this);
 
@@ -204,21 +204,23 @@ export class CRDT<T extends DocTypes> {
           await waitFor;
           await ready();
 
-          const it = currentDocs(opts.since);
+          if (opts.futureOnly === false) {
+            const it = currentDocs(opts.since);
 
-          async function iterate(prevValue: DocUpdate<T>) {
-            const { done, value } = await it.next();
+            async function iterate(prevValue: DocUpdate<T>) {
+              const { done, value } = await it.next();
 
-            controller.enqueue({
-              doc: docUpdateToDocWithId(prevValue),
-              marker: { kind: "preexisting", done: done || false },
-            });
+              controller.enqueue({
+                doc: docUpdateToDocWithId(prevValue),
+                marker: { kind: "preexisting", done: done || false },
+              });
 
-            if (!done) await iterate(value);
+              if (!done) await iterate(value);
+            }
+
+            const { value } = await it.next();
+            if (value) await iterate(value);
           }
-
-          const { value } = await it.next();
-          if (value) await iterate(value);
 
           clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
             updates.forEach((update) => {
@@ -234,11 +236,11 @@ export class CRDT<T extends DocTypes> {
 
     return {
       snapshot,
-      live(opts: { since?: ClockHead } = {}) {
-        return stream(opts);
+      live(opts?: { since?: ClockHead }) {
+        return stream({ futureOnly: false, since: opts?.since });
       },
       future() {
-        return stream();
+        return stream({ futureOnly: true });
       },
     };
   }
