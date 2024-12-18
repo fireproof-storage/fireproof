@@ -16,6 +16,7 @@
  * }
  * it should only possible to call every method once.
  * if you call it twice it should throw an error
+ * -------
  * Keep in mind that the iterator and stream should be able to
  * substitute the changes method. So we need the possibility to
  * pass options to allDocs and or query to change the behavior:
@@ -46,38 +47,55 @@
  *
  */
 
-import { fireproof, Ledger } from '@fireproof/core';
+import { fireproof, Ledger } from "@fireproof/core";
 
-describe('query api', () => {
-    let lr: Ledger
-    beforeEach(async () => {
-        lr = fireproof("name")
-        await Promise.all(Array(10).fill(0).map((_, i) => {
-            lr.put({ id: `doc-${i}`, name: `doc-${i}` })
-        }))
-    })
-    afterEach(async () => {
-        await lr.destroy()
-    })
-    for (const method of [
-        {
-            name: "query",
-            fn: () => lr.query("name")
-        },
-        {
-            name: "allDocs",
-            fn: () => lr.allDocs()
-        }]) {
-        describe(`${method.name} method`, () => {
-            it("double call error", async () => {
-                const q = await method.fn()
-                expect(() => q.rows()).not.toThrowError()
-                expect(async () => method.fn()).toThrowError()
-            })
-            it("test rows method", () => {
-                method.fn().then(r => r.rows()).then((docs) => {
-                })
-            })
-        })
-    }
-})
+interface DocType {
+  _id: string;
+  name: string;
+}
+
+describe("query api", () => {
+  let lr: Ledger;
+
+  const AMOUNT_OF_DOCS = 10;
+
+  beforeEach(async () => {
+    lr = fireproof(Date.now().toString());
+
+    await Promise.all(
+      Array(AMOUNT_OF_DOCS)
+        .fill(0)
+        .map((_, i) => {
+          return lr.put({ _id: `doc-${i}`, name: `doc-${i}` });
+        }),
+    );
+  });
+
+  afterEach(async () => {
+    await lr.destroy();
+  });
+
+  describe("allDocs", () => {
+    it("test `snapshot` method", async () => {
+      const docs = await lr.allDocs().snapshot();
+      expect(docs.length).toBe(AMOUNT_OF_DOCS);
+    });
+    it("test `future` method", async () => {
+      const stream = lr.allDocs<DocType>().future();
+      let docCount = 0;
+
+      for await (const { doc, marker } of stream) {
+        void doc;
+        docCount++;
+
+        if (marker.kind === "preexisting" && marker.done) {
+          await lr.put({ _id: `doc-${AMOUNT_OF_DOCS}`, name: `doc-${AMOUNT_OF_DOCS}` });
+        }
+
+        if (marker.kind === "new") break;
+      }
+
+      expect(docCount).toBe(AMOUNT_OF_DOCS + 1);
+    });
+  });
+});

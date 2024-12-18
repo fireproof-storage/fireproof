@@ -9,20 +9,19 @@ import {
   toStoreRuntime,
 } from "./blockstore/index.js";
 import {
-  clockChangesSince,
   applyBulkUpdateToCrdt,
   getValueFromCrdt,
   readFiles,
-  getAllEntries,
   clockVis,
   getBlock,
   doCompact,
+  docUpdateToDocWithId,
+  getAllEntries,
 } from "./crdt-helpers.js";
 import type {
   DocUpdate,
   CRDTMeta,
   ClockHead,
-  ChangesOptions,
   DocValue,
   IndexKeyType,
   DocWithId,
@@ -30,6 +29,9 @@ import type {
   Falsy,
   SuperThis,
   IndexTransactionMeta,
+  QueryResponse,
+  ListenerFn,
+  QueryStreamMarker,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
@@ -54,6 +56,11 @@ export class CRDT<T extends DocTypes> {
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
+
+  // Subscriptions
+  _listening = false;
+  readonly _listeners = new Set<ListenerFn<T>>();
+  readonly _noupdate_listeners = new Set<ListenerFn<T>>();
 
   constructor(sthis: SuperThis, opts: LedgerOpts) {
     this.sthis = sthis;
@@ -151,13 +158,89 @@ export class CRDT<T extends DocTypes> {
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
-  async allDocs(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
-    await this.ready();
-    const result: DocUpdate<T>[] = [];
-    for await (const entry of getAllEntries<T>(this.blockstore, this.clock.head, this.logger)) {
-      result.push(entry);
-    }
-    return { result, head: this.clock.head };
+  /**
+   * Retrieve the current set of documents.
+   */
+  allDocs<T extends DocTypes>(opts: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
+    const waitFor = opts.waitFor;
+
+    const currentDocs = (since?: ClockHead) => {
+      void since;
+
+      // TODO:
+      // const opts: ChangesOptions = {};
+
+      // TODO:
+      // if (since) {
+      //   return clockChangesSince<T>(this.blockstore, this.clock.head, since || [], opts, this.logger).then((a) => a.result);
+      // }
+
+      const iterator = getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
+      return iterator;
+    };
+
+    const snapshot = async () => {
+      await waitFor;
+      await this.ready();
+      // TODO: Map over async iterable
+      // return currentDocs().map(docUpdateToDocWithId)
+
+      // NOTE:
+      // return Array.fromAsync(currentDocs()).then((a) => a.map(docUpdateToDocWithId));
+
+      const docs: DocWithId<T>[] = [];
+      for await (const update of currentDocs()) {
+        docs.push(docUpdateToDocWithId(update));
+      }
+      return docs;
+    };
+
+    const stream = (opts: { since?: ClockHead } = {}) => {
+      const clock = this.clock;
+      const ready = this.ready.bind(this);
+
+      return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
+        async start(controller) {
+          await waitFor;
+          await ready();
+
+          const it = currentDocs(opts.since);
+
+          async function iterate(prevValue: DocUpdate<T>) {
+            const { done, value } = await it.next();
+
+            controller.enqueue({
+              doc: docUpdateToDocWithId(prevValue),
+              marker: { kind: "preexisting", done: done || false },
+            });
+
+            if (!done) await iterate(value);
+          }
+
+          const { value } = await it.next();
+          if (value) await iterate(value);
+
+          clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+            updates.forEach((update) => {
+              controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
+            });
+          });
+        },
+
+        // NOTE: Ideally we unsubscribe from `onTick` here.
+        // cancel() {}
+      });
+    };
+
+    return {
+      snapshot,
+      live(opts: { since?: ClockHead } = {}) {
+        return stream(opts);
+      },
+      future() {
+        return stream();
+      },
+    };
   }
 
   async vis(): Promise<string> {
@@ -179,17 +262,6 @@ export class CRDT<T extends DocTypes> {
     const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key, this.logger);
     if (result.del) return undefined;
     return result;
-  }
-
-  async changes(
-    since: ClockHead = [],
-    opts: ChangesOptions = {},
-  ): Promise<{
-    result: DocUpdate<T>[];
-    head: ClockHead;
-  }> {
-    await this.ready();
-    return await clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
   }
 
   async compact(): Promise<void> {

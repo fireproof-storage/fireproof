@@ -270,13 +270,12 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
   prefix?: string;
 }
 
-export interface AllDocsResponse<T extends DocTypes> {
-  readonly rows: {
-    readonly key: string;
-    readonly value: DocWithId<T>;
-  }[];
-  readonly clock: ClockHead;
-  readonly name?: string;
+export type QueryStreamMarker = { kind: "preexisting"; done: boolean } | { kind: "new" };
+
+export interface QueryResponse<T extends DocTypes> {
+  snapshot(): Promise<DocWithId<T>[]>;
+  live(opts: { since?: ClockHead }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
+  future(): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
 }
 
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
