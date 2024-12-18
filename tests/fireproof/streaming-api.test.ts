@@ -80,8 +80,8 @@ describe("query api", () => {
       const docs = await lr.allDocs().snapshot();
       expect(docs.length).toBe(AMOUNT_OF_DOCS);
     });
-    it("test `future` method", async () => {
-      const stream = lr.allDocs<DocType>().future();
+    it("test `live` method", async () => {
+      const stream = lr.allDocs<DocType>().live();
       let docCount = 0;
 
       for await (const { doc, marker } of stream) {
