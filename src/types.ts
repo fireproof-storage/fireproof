@@ -274,7 +274,7 @@ export type QueryStreamMarker = { kind: "preexisting"; done: boolean } | { kind:
 
 export interface QueryResponse<T extends DocTypes> {
   snapshot(): Promise<DocWithId<T>[]>;
-  live(opts: { since?: ClockHead }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
+  live(opts?: { since?: ClockHead }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
   future(): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
 }
 
