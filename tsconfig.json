@@ -113,6 +113,19 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*", "tests/**/*"],
+  "exclude": [
+      "babel.config.cjs",
+      "jest.config.js",
+      "dist/",
+      "**/pubdir/",
+      "node_modules/",
+      "**/scripts/",
+      "**/examples/",
+      "scripts/",
+      "coverage/",
+      "smoke/react/",
+      "src/missingTypes/lib.deno.d.ts"
+  ],
   "typeRoots": ["ts-types", "node_modules/@types"],
   "ts-node": {
     "compilerOptions": {
