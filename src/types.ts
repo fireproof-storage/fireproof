@@ -301,6 +301,12 @@ export interface DocResponse {
   readonly name?: string;
 }
 
+export interface BulkResponse {
+  readonly ids: string[];
+  readonly clock: ClockHead;
+  readonly name?: string;
+}
+
 export type UpdateListenerFn<T extends DocTypes> = (docs: DocWithId<T>[]) => Promise<void> | void;
 export type NoUpdateListenerFn = () => Promise<void> | void;
 export type ListenerFn<T extends DocTypes> = UpdateListenerFn<T> | NoUpdateListenerFn;
