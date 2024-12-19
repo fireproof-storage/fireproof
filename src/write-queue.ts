@@ -4,10 +4,12 @@ type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<Met
 
 export interface WriteQueue<T extends DocTypes> {
   push(task: DocUpdate<T>): Promise<MetaType>;
+  bulk(tasks: DocUpdate<T>[]): Promise<MetaType>;
 }
 
 interface WriteQueueItem<T extends DocTypes> {
-  readonly task: DocUpdate<T>;
+  readonly task?: DocUpdate<T>;
+  readonly tasks?: DocUpdate<T>[];
   resolve(result: MetaType): void;
   reject(error: Error): void;
 }
@@ -21,7 +23,7 @@ export function writeQueue<T extends DocTypes>(worker: WorkerFunction<T>, payloa
     isProcessing = true;
 
     const tasksToProcess = queue.splice(0, payload);
-    const updates = tasksToProcess.map((item) => item.task);
+    const updates = tasksToProcess.flatMap((item) => item.task || item.tasks || []);
 
     if (unbounded) {
       // Run all updates in parallel and resolve/reject them individually
@@ -50,6 +52,12 @@ export function writeQueue<T extends DocTypes>(worker: WorkerFunction<T>, payloa
   }
 
   return {
+    bulk(tasks: DocUpdate<T>[]): Promise<MetaType> {
+      return new Promise<MetaType>((resolve, reject) => {
+        queue.push({ tasks, resolve, reject });
+        void process();
+      });
+    },
     push(task: DocUpdate<T>): Promise<MetaType> {
       return new Promise<MetaType>((resolve, reject) => {
         queue.push({ task, resolve, reject });
