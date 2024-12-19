@@ -139,6 +139,15 @@ describe("basic ledger", function () {
     const got = await db.get<Doc>(ok.id);
     expect(got.foo).toBe("bam");
   });
+  it("can bulk an array", async function () {
+    const ok = await db.bulk([{ foo: "cool" }, { foo: "dude" }]);
+    expect(ok).toBeTruthy();
+    expect(ok.ids.length).toBe(2);
+    const got = await db.get<Doc>(ok.ids[0]);
+    expect(got.foo).toBe("cool");
+    const got2 = await db.get<Doc>(ok.ids[1]);
+    expect(got2.foo).toBe("dude");
+  });
   it("can define an index", async function () {
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
