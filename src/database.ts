@@ -15,6 +15,7 @@ import {
   type IndexKeyType,
   type ListenerFn,
   type DocResponse,
+  type BulkResponse,
   type ChangesResponse,
   type DocTypes,
   type IndexRows,
@@ -73,6 +74,7 @@ export interface Database<DT extends DocTypes = NonNullable<unknown>> extends Ha
 
   get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
+  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
   del(id: string): Promise<DocResponse>;
   changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
   allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
@@ -163,6 +165,9 @@ export class DatabaseShell<DT extends DocTypes = NonNullable<unknown>> implement
   }
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
     return this.ref.put(doc);
+  }
+  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
+    return this.ref.bulk(docs);
   }
   del(id: string): Promise<DocResponse> {
     return this.ref.del(id);
@@ -305,11 +310,22 @@ class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Databa
     return { id: docId, clock: result?.head, name: this.name } as DocResponse;
   }
 
-  /**
-   * delete a document from the database
-   * @param id Document id
-   * @returns DocResponse with the id and clock
-   */
+  async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
+    await this.ready();
+
+    const updates = docs.map((doc) => {
+      const id = doc._id || this.sthis.timeOrderedNextId().str;
+      return {
+        id,
+        value: {
+          ...(doc as unknown as DocSet<DT>),
+          _id: id,
+        },
+      };
+    });
+    const result = (await this._writeQueue.bulk(updates)) as CRDTMeta;
+    return { ids: updates.map((u) => u.id), clock: result.head, name: this.name } as BulkResponse;
+  }
 
   async del(id: string): Promise<DocResponse> {
     await this.ready();
