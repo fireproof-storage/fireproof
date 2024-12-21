@@ -1,6 +1,6 @@
 import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
-import { WriteQueue, writeQueue } from "./write-queue.js";
+import { defaultWriteQueueOpts, WriteQueue, writeQueue, WriteQueueParams } from "./write-queue.js";
 import { CRDT, HasCRDT } from "./crdt.js";
 import { index } from "./indexer.js";
 import {
@@ -49,6 +49,8 @@ export interface LedgerOpts {
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: GatewayInterceptor;
+
+  readonly writeQueue: WriteQueueParams;
   // readonly factoryUnreg?: () => void;
   // readonly persistIndexes?: boolean;
   // readonly autoCompact?: number;
@@ -108,6 +110,7 @@ export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: s
         keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
         storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
         gatewayInterceptor: opts?.gatewayInterceptor,
+        writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
         storeEnDe: {
           encodeFile,
           decodeFile,
@@ -230,6 +233,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     if (this.shells.size === 0) {
       await this.ready();
       await this.crdt.close();
+      await this._writeQueue.close();
       this._onClosedFns.forEach((fn) => fn());
     }
     // await this.blockstore.close();
@@ -261,15 +265,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
-    // this.logger.SetDebug("Ledger")
     this.crdt = new CRDT(this.sthis, this.opts);
-    // this.blockstore = this._crdt.blockstore; // for connector compatibility
-    this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
-      return await this.crdt.bulk(updates);
-    }); //, Infinity)
-    this.crdt.clock.onTock(() => {
-      this._no_update_notify();
-    });
+    this._writeQueue = writeQueue(this.sthis, async (updates: DocUpdate<DT>[]) => this.crdt.bulk(updates), this.opts.writeQueue);
+    this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
   get name(): string {
