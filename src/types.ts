@@ -6,6 +6,7 @@ import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cem
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 import { KeyBagOpts } from "./runtime/key-bag.js";
+import { WriteQueueParams } from "./write-queue.js";
 
 export type { DbMeta };
 
@@ -118,6 +119,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly public?: boolean;
   readonly meta?: DbMeta;
   // readonly persistIndexes?: boolean;
+  readonly writeQueue?: Partial<WriteQueueParams>;
   readonly gatewayInterceptor?: GatewayInterceptor;
   readonly autoCompact?: number;
   readonly storeUrls?: StoreUrlsOpts;
