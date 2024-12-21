@@ -1,6 +1,6 @@
 import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
-import { WriteQueue, writeQueue } from "./write-queue.js";
+import { defaultWriteQueueOpts, WriteQueue, writeQueue, WriteQueueParams } from "./write-queue.js";
 import { CRDT, HasCRDT } from "./crdt.js";
 import { index } from "./indexer.js";
 import {
@@ -15,6 +15,7 @@ import {
   type IndexKeyType,
   type ListenerFn,
   type DocResponse,
+  type BulkResponse,
   type ChangesResponse,
   type DocTypes,
   type IndexRows,
@@ -48,6 +49,8 @@ export interface LedgerOpts {
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: GatewayInterceptor;
+
+  readonly writeQueue: WriteQueueParams;
   // readonly factoryUnreg?: () => void;
   // readonly persistIndexes?: boolean;
   // readonly autoCompact?: number;
@@ -73,6 +76,7 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
 
   get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
+  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
   del(id: string): Promise<DocResponse>;
   changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
   allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
@@ -106,6 +110,7 @@ export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: s
         keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
         storeUrls: toStoreURIRuntime(sthis, name, opts?.storeUrls),
         gatewayInterceptor: opts?.gatewayInterceptor,
+        writeQueue: defaultWriteQueueOpts(opts?.writeQueue),
         storeEnDe: {
           encodeFile,
           decodeFile,
@@ -160,6 +165,9 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   }
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse> {
     return this.ref.put(doc);
+  }
+  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
+    return this.ref.bulk(docs);
   }
   del(id: string): Promise<DocResponse> {
     return this.ref.del(id);
@@ -225,6 +233,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     if (this.shells.size === 0) {
       await this.ready();
       await this.crdt.close();
+      await this._writeQueue.close();
       this._onClosedFns.forEach((fn) => fn());
     }
     // await this.blockstore.close();
@@ -256,15 +265,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;
     this.logger = ensureLogger(this.sthis, "Ledger");
-    // this.logger.SetDebug("Ledger")
     this.crdt = new CRDT(this.sthis, this.opts);
-    // this.blockstore = this._crdt.blockstore; // for connector compatibility
-    this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
-      return await this.crdt.bulk(updates);
-    }); //, Infinity)
-    this.crdt.clock.onTock(() => {
-      this._no_update_notify();
-    });
+    this._writeQueue = writeQueue(this.sthis, async (updates: DocUpdate<DT>[]) => this.crdt.bulk(updates), this.opts.writeQueue);
+    this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
   get name(): string {
@@ -297,6 +300,23 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
       },
     })) as CRDTMeta;
     return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+  }
+
+  async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
+    await this.ready();
+
+    const updates = docs.map((doc) => {
+      const id = doc._id || this.sthis.timeOrderedNextId().str;
+      return {
+        id,
+        value: {
+          ...(doc as unknown as DocSet<DT>),
+          _id: id,
+        },
+      };
+    });
+    const result = (await this._writeQueue.bulk(updates)) as CRDTMeta;
+    return { ids: updates.map((u) => u.id), clock: result.head, name: this.name } as BulkResponse;
   }
 
   async del(id: string): Promise<DocResponse> {
