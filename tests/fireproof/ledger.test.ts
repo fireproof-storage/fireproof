@@ -233,7 +233,7 @@ describe("named Ledger with record", function () {
 //     await Promise.all(writes)
 //   })
 
-describe("basic Ledger parallel writes / public", function () {
+describe("basic Ledger parallel writes / public ordered", () => {
   let db: Ledger;
   const writes: Promise<DocResponse>[] = [];
   const sthis = mockSuperThis();
@@ -241,20 +241,54 @@ describe("basic Ledger parallel writes / public", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () => {
     await sthis.start();
-    db = LedgerFactory("test-parallel-writes", { public: true });
+    db = LedgerFactory("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
     }
     await Promise.all(writes);
   });
-  it("should have one head", function () {
+
+  it("should have one head", () => {
     const crdt = db.crdt;
     expect(crdt.clock.head.length).toBe(1);
   });
-  it("should write all", async function () {
+
+  it("has changes ordered", async function () {
+    const { rows, clock } = await db.changes([]);
+    expect(clock[0]).toBe(db.crdt.clock.head[0]);
+    expect(rows.length).toBe(10);
+    for (let i = 0; i < 10; i++) {
+      expect(rows[i].key).toBe("id-" + i);
+      expect(rows[i].clock).toBeTruthy();
+    }
+  });
+});
+
+describe("basic Ledger parallel writes / public", () => {
+  let db: Ledger;
+  const writes: Promise<DocResponse>[] = [];
+  const sthis = mockSuperThis();
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  });
+  beforeEach(async () => {
+    await sthis.start();
+    db = LedgerFactory("test-parallel-writes", { writeQueue: { chunkSize: 32 } });
+    for (let i = 0; i < 10; i++) {
+      const doc = { _id: `id-${i}`, hello: "world" };
+      writes.push(db.put(doc));
+    }
+    await Promise.all(writes);
+  });
+  it("should have one head", () => {
+    const crdt = db.crdt;
+    expect(crdt.clock.head.length).toBe(1);
+  });
+  it("should write all", async () => {
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
       const doc = await db.get<{ hello: string }>(id);
@@ -286,11 +320,12 @@ describe("basic Ledger parallel writes / public", function () {
       expect(e.message).toMatch(/Not found/);
     }
   });
-  it("has changes", async function () {
+  it("has changes not ordered", async function () {
     const { rows, clock } = await db.changes([]);
     expect(clock[0]).toBe(db.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
-    // rows.sort((a, b) => a.key.localeCompare(b.key));
+    rows.sort((a, b) => a.key.localeCompare(b.key));
+    // console.log(rows);
     for (let i = 0; i < 10; i++) {
       expect(rows[i].key).toBe("id-" + i);
       expect(rows[i].clock).toBeTruthy();
