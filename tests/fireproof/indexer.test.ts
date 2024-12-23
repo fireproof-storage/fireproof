@@ -1,4 +1,16 @@
-import { Index, index, Ledger, CRDT, IndexRows, LedgerOpts, toStoreURIRuntime, bs, rt, LedgerFactory } from "@fireproof/core";
+import {
+  Index,
+  index,
+  Ledger,
+  CRDT,
+  IndexRows,
+  LedgerOpts,
+  toStoreURIRuntime,
+  bs,
+  rt,
+  LedgerFactory,
+  defaultWriteQueueOpts,
+} from "@fireproof/core";
 import { mockSuperThis } from "../helpers.js";
 
 interface TestType {
@@ -278,6 +290,7 @@ describe("basic Index upon cold start", function () {
     const logger = sthis.logger.With().Module("IndexerTest").Logger();
     logger.Debug().Msg("enter beforeEach");
     dbOpts = {
+      writeQueue: defaultWriteQueueOpts({}),
       keyBag: rt.kb.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-indexer-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
