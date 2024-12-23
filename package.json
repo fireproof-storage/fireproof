@@ -85,7 +85,7 @@
     "charwise": "^3.0.1",
     "cross-fetch": "^4.1.0",
     "esbuild-plugin-replace": "^1.4.0",
-    "idb": "^8.0.0",
+    "idb": "^8.0.1",
     "memfs": "^4.15.1",
     "multiformats": "^13.3.1",
     "p-limit": "^6.2.0",
