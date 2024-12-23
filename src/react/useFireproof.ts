@@ -13,7 +13,7 @@ import type {
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AllDocsQueryOpts, ChangesOptions, ClockHead } from "../types";
+import { AllDocsQueryOpts, ChangesOptions, ClockHead } from "../types.js";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];

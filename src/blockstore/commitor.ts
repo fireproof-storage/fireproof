@@ -1,5 +1,5 @@
-import { FileTransactionMeta } from "../types";
-import { CarTransaction } from "./transaction";
+import { FileTransactionMeta } from "../types.js";
+import { CarTransaction } from "./transaction.js";
 import {
   AnyBlock,
   AnyLink,
@@ -14,13 +14,13 @@ import {
   toCIDBlock,
   TransactionMeta,
   WALStore,
-} from "./types";
-import * as CBW from "@ipld/car/buffer-writer";
+} from "./types.js";
+import * as CBW from "@fireproof/vendor/@ipld/car/buffer-writer";
 import { CID } from "multiformats";
 import { encode } from "../runtime/wait-pr-multiformats/block.js";
 import { BlockEncoder } from "../runtime/wait-pr-multiformats/codec-interface.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as dagCodec from "@ipld/dag-cbor";
+import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
 
 async function encodeCarFile(roots: AnyLink[], t: CarMakeable, codec: BlockEncoder<number, Uint8Array>): Promise<AnyBlock> {
   let size = 0;

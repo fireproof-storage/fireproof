@@ -13,7 +13,7 @@ import {
   JSONFormatter,
   YAMLFormatter,
 } from "@adviser/cement";
-import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types";
+import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
 
 export type { Logger };

@@ -6,7 +6,7 @@ import { withWidth } from "@ipld/unixfs/file/layout/balanced";
 import type { View } from "@ipld/unixfs";
 import { DocFileMeta } from "../types.js";
 
-import { exporter, ReadableStorage } from "ipfs-unixfs-exporter";
+import { exporter, ReadableStorage } from "@fireproof/vendor/ipfs-unixfs-exporter";
 import { BlobLike, AnyLink, AnyBlock } from "../blockstore/index.js";
 
 const queuingStrategy = UnixFS.withCapacity();

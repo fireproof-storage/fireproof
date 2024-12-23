@@ -6,10 +6,10 @@ import { Logger, Result } from "../utils.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
-import { EventBlock } from "@web3-storage/pail/clock";
+import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { Gateway, GatewayInterceptor } from "./gateway.js";
-import { CarReader } from "@ipld/car";
+import { CarReader } from "@fireproof/vendor/@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];

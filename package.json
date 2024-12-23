@@ -29,6 +29,7 @@
   },
   "keywords": [
     "ledger",
+    "database",
     "JSON",
     "immutable",
     "IPLD",
@@ -78,16 +79,11 @@
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
     "@adviser/cement": "^0.2.44",
-    "@ipld/car": "^5.3.3",
-    "@ipld/dag-cbor": "^9.2.2",
-    "@ipld/dag-json": "^10.2.3",
+    "@fireproof/vendor": "^1.0.0",
     "@ipld/unixfs": "^3.0.0",
-    "@web3-storage/pail": "^0.6.0",
-    "cborg": "^4.2.7",
     "charwise": "^3.0.1",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.1",
-    "ipfs-unixfs-exporter": "^13.6.1",
     "memfs": "^4.15.1",
     "multiformats": "^13.3.1",
     "p-limit": "^6.2.0",
@@ -96,6 +92,7 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
+    "typedoc": "^0.27.5",
     "uuidv7": "^1.0.2"
   },
   "bundle-phobia": {

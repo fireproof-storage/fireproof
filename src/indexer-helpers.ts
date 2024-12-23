@@ -1,7 +1,7 @@
 import type { Block, Link } from "multiformats";
 import { create } from "./runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as codec from "@ipld/dag-cbor";
+import * as codec from "@fireproof/vendor/@ipld/dag-cbor";
 
 // @ts-expect-error "charwise" has no types
 import charwise from "charwise";

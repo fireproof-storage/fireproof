@@ -11,15 +11,15 @@ import {
   FPEnvelopeType,
   FPEnvelopeWAL,
   WALState,
-} from "../../blockstore";
-import { PARAM, PromiseToUInt8, SuperThis } from "../../types";
-import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
+} from "../../blockstore/index.js";
+import { PARAM, PromiseToUInt8, SuperThis } from "../../types.js";
+import { decodeEventBlock, EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";
 import { fromJSON } from "multiformats/link";
-import { format, parse } from "@ipld/dag-json";
-import { EventView } from "@web3-storage/pail/src/clock/api";
-import { coercePromiseIntoUint8 } from "../../utils";
+import { format, parse } from "@fireproof/vendor/@ipld/dag-json";
+import { EventView } from "@fireproof/vendor/@web3-storage/pail/clock/api";
+import { coercePromiseIntoUint8 } from "../../utils.js";
 
 export interface SerializedMeta {
   readonly data: string; // base64pad encoded

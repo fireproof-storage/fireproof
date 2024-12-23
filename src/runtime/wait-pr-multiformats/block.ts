@@ -3,7 +3,7 @@
 // https://github.com/multiformats/js-multiformats/pull/305
 import { bytes as binary, CID, MultihashHasher, BlockView, ByteView, Version, Link } from "multiformats";
 import { Block as mfBlock } from "multiformats/block";
-import { BlockDecoder, BlockEncoder } from "./codec-interface";
+import { BlockDecoder, BlockEncoder } from "./codec-interface.js";
 
 // export type Block<T, C extends number, A extends number, V extends Version> = mfBlock<T, C, A, V>
 

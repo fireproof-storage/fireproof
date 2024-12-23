@@ -1,6 +1,6 @@
 import { BuildURI, CoerceURI, URI } from "@adviser/cement";
 import { fireproof, PARAM, rt, SuperThis } from "@fireproof/core";
-import { mockSuperThis } from "../../helpers";
+import { mockSuperThis } from "../../helpers.js";
 
 function dataDir(sthis: SuperThis, name?: string, base?: CoerceURI): URI {
   if (!base) {

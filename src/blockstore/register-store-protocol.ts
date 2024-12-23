@@ -1,8 +1,8 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
-import { SuperThis } from "../types";
-import { Gateway } from "./gateway";
-import { FILESTORE_VERSION } from "../runtime/gateways/file/version";
-import { MemoryGateway } from "../runtime/gateways/memory/gateway";
+import { SuperThis } from "../types.js";
+import { Gateway } from "./gateway.js";
+import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
+import { MemoryGateway } from "../runtime/gateways/memory/gateway.js";
 
 export interface GatewayFactoryItem {
   readonly protocol: string;

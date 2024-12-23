@@ -1,5 +1,5 @@
 import pLimit from "p-limit";
-import { CarReader } from "@ipld/car";
+import { CarReader } from "@fireproof/vendor/@ipld/car";
 import { Logger, ResolveOnce } from "@adviser/cement";
 // import { uuidv4 } from "uuidv7";
 

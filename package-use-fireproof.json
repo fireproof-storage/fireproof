@@ -29,18 +29,7 @@
   "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.ledger.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
     "react": "from-package-json",
-    "@adviser/cement": "from-package-json",
-    "charwise": "from-package-json",
-    "prolly-trees": "from-package-json",
-    "ipfs-unixfs-exporter": "from-package-json",
-    "idb": "from-package-json",
-    "p-limit": "from-package-json",
-    "p-map": "from-package-json",
-    "p-retry": "from-package-json",
-    "cborg": "from-package-json",
-    "@web3-storage/pail": "from-package-json",
-    "@ipld/unixfs": "from-package-json",
-    "@ipld/car": "from-package-json"
+    "@fireproof/core": "from-package-json"
   },
   "peerDependencies": {
     "react": ">=18.0.0"
