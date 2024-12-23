@@ -14,9 +14,15 @@ npx typedoc --out dist/fireproof-docs/docs  src/database.ts
 
 cd ./dist/fireproof-docs
 git add docs
-if $(git status --porcelain)
+if [ -z $GITHUB_REF ]
 then
-  git commit -am "build from ${GIT} [skip ci]"
-  git push origin docs
+  git status --porcelain
+  if [ $? = 0 ]
+  then
+    git commit -am "build from ${GIT} [skip ci]"
+    git push origin docs
+  fi
+else
+  git status
 fi
 
