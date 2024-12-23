@@ -9,8 +9,8 @@ import {
   GatewayPutReturn,
   GatewayStartReturn,
   GatewaySubscribeReturn,
-} from "../../src/blockstore/gateway";
-import { FPEnvelope, FPEnvelopeMeta } from "../../src/blockstore";
+} from "../../src/blockstore/gateway.js";
+import { FPEnvelope, FPEnvelopeMeta } from "../../src/blockstore/index.js";
 
 class TestInterceptor extends bs.PassThroughGateway {
   readonly fn = vitest.fn();

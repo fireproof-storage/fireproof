@@ -12,13 +12,15 @@ fi
 $dockerCompose up -d
 packageDir=../../dist/fireproof-core
 
+user="admin$(date +%s)"
 token=$(curl \
      --retry 10 --retry-max-time 30 --retry-all-errors \
      -X PUT \
      -H "Content-type: application/json" \
-     -d '{ "name": "admin", "password": "admin" }' \
-     'http://localhost:4873/-/user/org.couchdb.user:admin' | jq .token)
+     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
+     'http://localhost:4873/-/user/org.couchdb.user:$user' | jq .token)
 
+echo "Token: $user:$token"
 cat <<EOF > $packageDir/.npmrc
 ; .npmrc
 enable-pre-post-scripts=true
@@ -30,9 +32,11 @@ EOF
 tmpDir=$(mktemp -d)
 rm -rf node_modules dist pnpm-lock.yaml
 cp -pr * $tmpDir
+cp $packageDir/.npmrc .
 cd $tmpDir
 cp package-template.json package.json
 pnpm install
+pnpm add '@fireproof/core'
 pnpm run test
 rm -rf $tmpDir
 cd $smokeDir

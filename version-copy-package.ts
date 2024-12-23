@@ -10,12 +10,16 @@ async function copyFilesToDist(destDir: string) {
   }
 }
 
-async function patchVersion(packageJson: Record<string, unknown>) {
+function getVersion() {
   let version = "refs/tags/v0.0.0-smoke";
   if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
     version = process.env.GITHUB_REF;
   }
-  version = version.split("/").slice(-1)[0].replace(/^v/, "");
+  return version.split("/").slice(-1)[0].replace(/^v/, "");
+}
+
+async function patchVersion(packageJson: Record<string, unknown>) {
+  const version = getVersion();
   console.log(`Patch version ${version} in package.json`);
   packageJson.version = version;
 }
@@ -32,6 +36,16 @@ async function createDenoJson(destDir: string, packageJson: Record<string, unkno
   }
   const denoJsonFile = path.join(destDir, "deno.json");
   await fs.writeFile(denoJsonFile, JSON.stringify(denoJson, null, 2));
+}
+
+async function transferVersionsFromPackageJson(srcDeps: Record<string, string>, destDeps: Record<string, string>) {
+  for (const dep of Object.keys(destDeps)) {
+    if (!srcDeps[dep]) {
+      console.error(`Dependency ${dep} not found in main package.json`);
+    } else {
+      destDeps[dep] = srcDeps[dep];
+    }
+  }
 }
 
 async function main() {
@@ -51,13 +65,13 @@ async function main() {
   const templateFile = path.basename(buildDest);
   const destPackageJson = JSON.parse(await fs.readFile(templateFile, "utf-8"));
   // copy version from package.json
-  for (const destDeps of Object.keys(destPackageJson.dependencies)) {
-    if (!mainPackageJson.dependencies[destDeps]) {
-      console.error(`Dependency ${destDeps} not found in main package.json`);
-    } else {
-      destPackageJson.dependencies[destDeps] = mainPackageJson.dependencies[destDeps];
-    }
-  }
+  const withCoreVersion = {
+    "@fireproof/core": `^${getVersion()}`,
+    ...mainPackageJson.dependencies,
+  };
+  transferVersionsFromPackageJson(withCoreVersion, destPackageJson.dependencies);
+  transferVersionsFromPackageJson(withCoreVersion, destPackageJson.peerDependencies || {});
+
   patchVersion(destPackageJson);
 
   await createDenoJson(destDir, destPackageJson);

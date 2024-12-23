@@ -1,9 +1,9 @@
 import { rt, bs } from "@fireproof/core";
-import { mockSuperThis, simpleCID } from "../helpers";
+import { mockSuperThis, simpleCID } from "../helpers.js";
 import { BuildURI, Result } from "@adviser/cement";
 import { toJSON } from "multiformats/link";
-import { FPEnvelopeType } from "../../src/blockstore";
-import { SerializedMeta } from "../../src/runtime/gateways/fp-envelope-serialize";
+import { FPEnvelopeType } from "../../src/blockstore/index.js";
+import { SerializedMeta } from "../../src/runtime/gateways/fp-envelope-serialize.js";
 
 describe("storage-content", () => {
   const sthis = mockSuperThis();
