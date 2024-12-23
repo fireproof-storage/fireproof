@@ -11,6 +11,9 @@ importers:
       '@adviser/cement':
         specifier: ^0.2.44
         version: 0.2.44(typescript@5.8.3)
+      '@fireproof/core':
+        specifier: ^0.19.118
+        version: 0.19.118(react@18.3.1)(typescript@5.8.3)
       '@fireproof/vendor':
         specifier: ^1.0.0
         version: 1.2.0
@@ -2489,6 +2492,14 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
+
+  '@fireproof/core@0.19.118':
+    resolution: {integrity: sha512-lyK0Aj7t0acLz9x8i1s12GwBNkOuEeRPg5eS6MhMn5uYTi1p0kWvJHn+pb3hRFG5sP7zmjp5/obeHtTKGDTLGA==}
+    peerDependencies:
+      react: ^18.3.1
+
+  '@fireproof/vendor@1.0.0':
+    resolution: {integrity: sha512-ucN0ICj7xbpbO3NWjAKKjMHkBn4vSRUdKn14LLaA0MILJowty+H4XBB8dCobwKemhW49ha5p520NOLRzJSKsow==}
 
   '@fireproof/vendor@1.2.0':
     resolution: {integrity: sha512-mzKlRs9iNEbuKMEhf+1kqkqs9f7KFFsJKkBl8Cn/8K6GX/FKuhGZMvOMofdYCwoWw6wiNBkPMX3EfFwWKZL1ug==}
@@ -8428,11 +8439,6 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
-  yaml@2.5.1:
-    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
-    engines: {node: '>= 14'}
-    hasBin: true
-
   yaml@2.8.0:
     resolution: {integrity: sha512-4lLa/EcQCB0cJkyts+FpIRx5G/llPxfP6VQU5KByHEhLxY3IJCH0f0Hy1MHI8sClTvsIb8qwRJ6R/ZdlDJ/leQ==}
     engines: {node: '>= 14.6'}
@@ -8500,7 +8506,7 @@ snapshots:
   '@adviser/cement@0.2.44(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.8.3)
-      yaml: 2.5.1
+      yaml: 2.8.0
     transitivePeerDependencies:
       - typescript
 
@@ -9575,6 +9581,41 @@ snapshots:
       levn: 0.4.1
 
   '@fastify/busboy@2.1.1': {}
+
+  '@fireproof/core@0.19.118(react@18.3.1)(typescript@5.8.3)':
+    dependencies:
+      '@adviser/cement': 0.2.44(typescript@5.8.3)
+      '@fireproof/vendor': 1.0.0
+      '@ipld/unixfs': 3.0.0
+      charwise: 3.0.1
+      idb: 8.0.1
+      memfs: 4.17.2
+      multiformats: 13.3.1
+      p-limit: 6.2.0
+      p-map: 7.0.3
+      p-retry: 6.2.1
+      prolly-trees: 1.0.4
+      react: 18.3.1
+    transitivePeerDependencies:
+      - typescript
+
+  '@fireproof/vendor@1.0.0':
+    dependencies:
+      '@ipld/dag-pb': 4.1.5
+      '@multiformats/murmur3': 2.1.8
+      hamt-sharding: 3.0.6
+      interface-blockstore: 5.3.2
+      ipfs-unixfs: 11.2.1
+      it-filter: 3.1.4
+      it-last: 3.0.9
+      it-map: 3.1.4
+      it-parallel: 3.0.13
+      it-pipe: 3.0.1
+      it-pushable: 3.2.3
+      multiformats: 13.3.6
+      p-queue: 8.1.0
+      progress-events: 1.0.1
+      varint: 6.0.0
 
   '@fireproof/vendor@1.2.0':
     dependencies:
@@ -16956,8 +16997,6 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
-
-  yaml@2.5.1: {}
 
   yaml@2.8.0: {}
 
