@@ -5,6 +5,8 @@ export * from "./crdt.js";
 
 export * from "./indexer.js";
 
+export { defaultWriteQueueOpts } from "./write-queue.js";
+
 export * as bs from "./blockstore/index.js";
 export * as blockstore from "./blockstore/index.js";
 
