@@ -30,8 +30,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       memfs:
-        specifier: ^4.15.0
-        version: 4.15.0
+        specifier: ^4.15.1
+        version: 4.15.1
       multiformats:
         specifier: ^13.3.1
         version: 13.3.1
@@ -2083,8 +2083,8 @@ packages:
   mdurl@2.0.0:
     resolution: {integrity: sha512-Lf+9+2r+Tdp5wXDXC4PcIBjTDtq4UKjCPMQhKIuzpJNW0b96kVqSwW0bT7FhRSfmAiFYgP+SCRvdrDozfh0U5w==}
 
-  memfs@4.15.0:
-    resolution: {integrity: sha512-q9MmZXd2rRWHS6GU3WEm3HyiXZyyoA1DqdOhEq0lxPBmKb5S7IAOwX0RgUCwJfqjelDCySa5h8ujOy24LqsWcw==}
+  memfs@4.15.1:
+    resolution: {integrity: sha512-ufCzgFwiVnR6R9cCYuvwznJdhdYXEvFl0hpnM4cCtVaVkHuqBR+6fo2sqt1SSMdp+uiHw9GyPZr3OMM5tqjSmQ==}
     engines: {node: '>= 4.0.0'}
 
   merge2@1.4.1:
@@ -5028,7 +5028,7 @@ snapshots:
 
   mdurl@2.0.0: {}
 
-  memfs@4.15.0:
+  memfs@4.15.1:
     dependencies:
       '@jsonjoy.com/json-pack': 1.0.4(tslib@2.6.2)
       '@jsonjoy.com/util': 1.3.0(tslib@2.6.2)
