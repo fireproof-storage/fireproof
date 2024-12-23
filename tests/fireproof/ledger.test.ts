@@ -284,8 +284,10 @@ describe("basic Ledger parallel writes / public", () => {
     }
     await Promise.all(writes);
   });
-  it("should have one head", () => {
+  it("should resolve to one head", async () => {
     const crdt = db.crdt;
+    expect(crdt.clock.head.length).toBe(9);
+    await db.put({ _id: "id-10", hello: "world" });
     expect(crdt.clock.head.length).toBe(1);
   });
   it("should write all", async () => {
