@@ -57,21 +57,26 @@ class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
       return;
     }
     this.isProcessing = true;
-    this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processing tasks");
-    const tasksToProcess = this.queue.splice(0, this.opts.chunkSize);
-    const updates = tasksToProcess.map((item) => item.tasks).filter((item) => item) as DocUpdate<T>[][];
-    const promises = updates.map(async (update, index) => {
-      try {
-        const result = await this.worker(update);
-        tasksToProcess[index].resolve(result);
-      } catch (error) {
-        tasksToProcess[index].reject(this.logger.Error().Err(error).Msg("Error processing task").AsError());
-      }
-    });
-    await Promise.allSettled(promises);
-    this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processed tasks");
-    this.isProcessing = false;
-    setTimeout(() => this.process(), 0);
+    try {
+      this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processing tasks");
+      const tasksToProcess = this.queue.splice(0, this.opts.chunkSize);
+      const updates = tasksToProcess.map((item) => item.tasks).filter((item) => item) as DocUpdate<T>[][];
+      const promises = updates.map(async (update, index) => {
+        try {
+          const result = await this.worker(update);
+          tasksToProcess[index].resolve(result);
+        } catch (error) {
+          tasksToProcess[index].reject(this.logger.Error().Err(error).Msg("Error processing task").AsError());
+        }
+      });
+      await Promise.allSettled(promises);
+      this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processed tasks");
+    } catch (error) {
+      this.logger.Error().Err(error).Msg("Error processing tasks");
+    } finally {
+      this.isProcessing = false;
+      setTimeout(() => this.process(), 0);
+    }
   }
 
   bulk(tasks: DocUpdate<T>[]): Promise<MetaType> {
