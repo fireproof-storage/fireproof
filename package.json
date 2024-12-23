@@ -83,7 +83,7 @@
     "@fireproof/vendor": "^1.0.0",
     "@ipld/unixfs": "^3.0.0",
     "charwise": "^3.0.1",
-    "cross-fetch": "^4.0.0",
+    "cross-fetch": "^4.1.0",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.0",
     "memfs": "^4.15.1",
