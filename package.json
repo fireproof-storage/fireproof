@@ -85,7 +85,6 @@
     "@web3-storage/pail": "^0.6.0",
     "cborg": "^4.2.7",
     "charwise": "^3.0.1",
-    "cross-fetch": "^4.1.0",
     "esbuild-plugin-replace": "^1.4.0",
     "idb": "^8.0.1",
     "ipfs-unixfs-exporter": "^13.6.1",
