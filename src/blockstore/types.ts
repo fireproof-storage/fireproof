@@ -8,6 +8,8 @@ import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, URI } from "@adviser/cement";
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
+import { Gateway, GatewayInterceptor } from "./gateway.js";
+import { CarReader } from "@fireproof/vendor/@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];

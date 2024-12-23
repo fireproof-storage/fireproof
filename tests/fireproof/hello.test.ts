@@ -1,5 +1,5 @@
-import { fireproof, Database, DocResponse, DocWithId, index, isDatabase } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { fireproof, Ledger, DocResponse, DocWithId, index, isLedger } from "@fireproof/core";
+import { mockSuperThis } from "../helpers.js";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {

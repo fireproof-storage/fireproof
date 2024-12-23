@@ -54,8 +54,8 @@
   "dependencies": {
     "@adviser/cement": "from-package-json",
     "@fireproof/vendor": "from-package-json",
-    "@ipld/unixfs": "from-package-json",
     "multiformats": "from-package-json",
+    "@ipld/unixfs": "from-package-json",
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
     "idb": "from-package-json",

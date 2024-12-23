@@ -3,7 +3,8 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
 import { MemoryBlockstore } from "@fireproof/vendor/@web3-storage/pail/block";
-import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
+import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, rt } from "@fireproof/core";
+import { mockSuperThis, simpleBlockOpts } from "../helpers.js";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   readonly memblock = new MemoryBlockstore();

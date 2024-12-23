@@ -70,7 +70,11 @@ async function main() {
     ...mainPackageJson.dependencies,
   };
   transferVersionsFromPackageJson(withCoreVersion, destPackageJson.dependencies);
+<<<<<<< HEAD
   transferVersionsFromPackageJson(withCoreVersion, destPackageJson.peerDependencies);
+=======
+  transferVersionsFromPackageJson(withCoreVersion, destPackageJson.peerDependencies || {});
+>>>>>>> 685d68a6 (chore: remove cross-fetch add @fireproof/vendor)
 
   patchVersion(destPackageJson);
 

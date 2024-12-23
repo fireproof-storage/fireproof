@@ -32,9 +32,11 @@ EOF
 tmpDir=$(mktemp -d)
 rm -rf node_modules dist pnpm-lock.yaml
 cp -pr * $tmpDir
+cp $packageDir/.npmrc .
 cd $tmpDir
 cp package-template.json package.json
 pnpm install
+pnpm add '@fireproof/core'
 pnpm run test
 rm -rf $tmpDir
 cd $smokeDir
