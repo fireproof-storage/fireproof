@@ -1,8 +1,8 @@
 import { bs, PARAM, rt } from "@fireproof/core";
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
-import { mockSuperThis } from "../helpers";
-import { Loadable } from "../../src/blockstore";
+import { mockSuperThis } from "../helpers.js";
+import { Loadable } from "../../src/blockstore/index.js";
 
 describe("KeyBag indexdb and file", () => {
   let url: URI;

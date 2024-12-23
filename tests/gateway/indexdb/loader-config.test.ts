@@ -1,5 +1,5 @@
 import { fireproof } from "@fireproof/core";
-import { mockSuperThis } from "../../helpers";
+import { mockSuperThis } from "../../helpers.js";
 
 describe("fireproof config indexdb", () => {
   const _my_app = "my-app";

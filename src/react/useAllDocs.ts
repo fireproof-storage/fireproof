@@ -1,6 +1,6 @@
 import { Ledger, DocTypes } from "@fireproof/core";
 
-import { AllDocsResult, useFireproof, UseAllDocs } from "./useFireproof";
+import { AllDocsResult, useFireproof, UseAllDocs } from "./useFireproof.js";
 
 export interface TLUseAllDocs {
   <T extends DocTypes>(...args: Parameters<UseAllDocs>): AllDocsResult<T>;

@@ -1,5 +1,5 @@
 import { Index, index, Ledger, CRDT, IndexRows, LedgerOpts, toStoreURIRuntime, bs, rt, LedgerFactory } from "@fireproof/core";
-import { mockSuperThis } from "../helpers";
+import { mockSuperThis } from "../helpers.js";
 
 interface TestType {
   readonly title: string;
