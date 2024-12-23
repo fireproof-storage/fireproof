@@ -2,8 +2,8 @@ import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
 
-const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
-const webInternals = ["./web/gateway-impl.js"];
+const nodeInternals = [];
+const webInternals = [];
 
 const external = [
   "path",
@@ -22,6 +22,7 @@ const external = [
   "stream",
 ];
 
+/*
 function skipper(suffix: string[], target: string) {
   function intercept(build) {
     const filter = new RegExp(`(${suffix.join("|")})`);
@@ -49,6 +50,7 @@ function skipper(suffix: string[], target: string) {
     },
   };
 }
+*/
 
 // const skipIife = {
 //   // "node-filesystem@skip-iife": "../../../bundle-not-impl.js",
@@ -67,7 +69,7 @@ const skipEsm = {};
 const ourMultiformat = {};
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
-  format: ["esm", "cjs", "iife"],
+  format: ["esm"], // , "cjs", "iife"],
   target: ["esnext", "node18"],
   globalName: "Fireproof",
   external,
@@ -118,7 +120,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   // },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
+    format: ["esm"], //, "cjs"],
     name: "@fireproof/core",
     entry: ["src/index.ts"],
     platform: "browser",
@@ -129,8 +131,8 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
-      skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+      // skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
+      // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
       resolve({
         ...ourMultiformat,
       }),
@@ -139,11 +141,12 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       footer: "declare module '@fireproof/core'",
     },
   },
+  /*
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
+    format: ["esm"], //, "cjs"],
     name: "@fireproof/core/node",
-    entry: ["src/runtime/gateways/file/node/mem-filesystem.ts", "src/runtime/gateways/file/node/node-filesystem.ts"],
+    entry: ["src/runtime/gateways/file/node-filesystem.ts", "src/runtime/gateways/file/deno-filesystem.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core/node",
     esbuildPlugins: [
@@ -162,9 +165,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm", "cjs"],
+    format: ["esm"], //, "cjs"],
     name: "@fireproof/core/web",
-    entry: ["src/runtime/gateways/indexdb/web/gateway-impl.ts"],
+    entry: ["src/runtime/gateways/indexdb/gateway.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core/web",
     esbuildPlugins: [
@@ -180,10 +183,11 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       footer: "declare module '@fireproof/core/web'",
     },
   },
+*/
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core"],
-    format: ["esm", "cjs"],
+    format: ["esm"], // "cjs"],
     name: "@fireproof/core/react",
     entry: ["src/react/index.ts"],
     platform: "browser",
@@ -206,7 +210,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ...LIBRARY_BUNDLE_OPTIONS,
     external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core", "@fireproof/core/react"],
     treeshake: true,
-    format: ["esm", "cjs"],
+    format: ["esm"], // "cjs"],
     //    minify: true,
     name: "use-fireproof",
     entry: ["src/use-fireproof/index.ts"],
@@ -218,7 +222,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
+      // skipper([...nodeInternals], `${__dirname}/src/bundle-not-impl.js`),
       // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
       resolve({
         ...skipEsm,

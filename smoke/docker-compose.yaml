@@ -12,3 +12,19 @@ services:
       NPM_REGISTRY: http://registry:4873/
     ports:
       - "4874:8080"
+#   wait-for-ready:
+#     image: curlimages/curl
+#     command: "sleep 86400"
+#     depends_on:
+#       registry:
+#         condition: service_started
+#       esm-sh:
+#         condition: service_started
+#     healthcheck:
+#       test:
+#         - CMD-SHELL
+#         - "-c"
+#         - "curl http://registry:4873 && curl http://esm-sh:4874"
+#       interval: 5s
+#       retries: 30
+#       timeout: 2s
