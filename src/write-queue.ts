@@ -72,7 +72,7 @@ class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
     await Promise.allSettled(promises);
     this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processed tasks");
     this.isProcessing = false;
-    void this.process();
+    setImmediate(() => this.process());
   }
 
   bulk(tasks: DocUpdate<T>[]): Promise<MetaType> {
