@@ -25,9 +25,8 @@ export interface WriteQueueParams {
 
 export function defaultWriteQueueOpts(opts: Partial<WriteQueueParams> = {}): WriteQueueParams {
   return {
-    // ordered: false,
-    chunkSize: 32,
     ...opts,
+    chunkSize: opts.chunkSize && opts.chunkSize > 0 ? opts.chunkSize : 32,
   };
 }
 
@@ -42,7 +41,7 @@ class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
   constructor(sthis: SuperThis, worker: WorkerFunction<T>, opts: WriteQueueParams) {
     this.logger = ensureLogger(sthis, "WriteQueueImpl");
     this.worker = worker;
-    this.opts = opts;
+    this.opts = defaultWriteQueueOpts(opts);
   }
 
   private waitForEmptyQueue?: Future<void>;
@@ -72,7 +71,7 @@ class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
     await Promise.allSettled(promises);
     this.logger.Debug().Any("opts", this.opts).Len(this.queue).Msg("Processed tasks");
     this.isProcessing = false;
-    setImmediate(() => this.process());
+    setTimeout(() => this.process(), 0);
   }
 
   bulk(tasks: DocUpdate<T>[]): Promise<MetaType> {
@@ -82,10 +81,7 @@ class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
     });
   }
   push(task: DocUpdate<T>): Promise<MetaType> {
-    return new Promise<MetaType>((resolve, reject) => {
-      this.queue.push({ tasks: [task], resolve, reject });
-      this.process();
-    });
+    return this.bulk([task]);
   }
   close(): Promise<void> {
     this.waitForEmptyQueue = new Future();
