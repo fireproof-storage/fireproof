@@ -2,7 +2,8 @@ import { FILESTORE_VERSION } from "./version.js";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
-import { getFileName, getFileSystem, getPath } from "./utils.js";
+import { getFileName, getPath } from "./utils.js";
+import { getFileSystem } from "./get-file-system-static.js";
 import { SuperThis, SysFileSystem } from "../../../types.js";
 
 const versionFiles = new KeyedResolvOnce<string>();

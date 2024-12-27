@@ -2,7 +2,7 @@ import type { PathLike, MakeDirectoryOptions, Stats } from "fs";
 import { fs } from "memfs";
 import { IReaddirOptions } from "memfs/lib/node/types/options.js";
 import { toArrayBuffer } from "./to-array-buffer.js";
-import type { SysFileSystem } from "../../../../types.js";
+import type { SysFileSystem } from "@fireproof/core";
 
 export class MemFileSystem implements SysFileSystem {
   async start(): Promise<SysFileSystem> {
