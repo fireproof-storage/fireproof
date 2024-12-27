@@ -38,7 +38,7 @@ describe("Multiple Databases", () => {
     await Promise.all(
       dbs.map(async (db) => {
         await db.db.close();
-        db.db.destroy();
+        await db.db.destroy();
       }),
     );
     dbs.length = 0;
