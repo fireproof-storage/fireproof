@@ -131,12 +131,21 @@ const txtOps = ((txtEncoder, txtDecoder) => ({
   // eslint-disable-next-line no-restricted-globals
 }))(new TextEncoder(), new TextDecoder());
 
+const _onSuperThis = new Map<string, (sthis: SuperThis) => void>();
+export function onSuperThis(fn: (sthis: SuperThis) => void): () => void {
+  const key = `onSuperThis-${Math.random().toString(36).slice(2)}`;
+  _onSuperThis.set(key, fn);
+  return () => {
+    _onSuperThis.delete(key);
+  };
+}
+
 export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
   const env = envFactory({
     symbol: osthis?.env?.symbol || "FP_ENV",
     presetEnv: osthis?.env?.presetEnv || presetEnv(),
   });
-  return new SuperThisImpl({
+  const ret = new SuperThisImpl({
     logger: osthis?.logger || globalLogger(),
     env,
     crypto: osthis?.crypto || toCryptoRuntime(),
@@ -144,6 +153,8 @@ export function ensureSuperThis(osthis?: Partial<SuperThisOpts>): SuperThis {
     pathOps,
     txt: osthis?.txt || txtOps,
   });
+  _onSuperThis.forEach((fn) => fn(ret));
+  return ret;
 }
 
 // // eslint-disable-next-line @typescript-eslint/no-unused-vars
