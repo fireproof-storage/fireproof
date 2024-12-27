@@ -1,7 +1,7 @@
 import type { PathLike, MakeDirectoryOptions, Stats, ObjectEncodingOptions } from "node:fs";
 import type { mkdir, readdir, rm, copyFile, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { toArrayBuffer } from "./to-array-buffer.js";
-import type { SysFileSystem } from "../../../../types.js";
+import type { SysFileSystem } from "@fireproof/core";
 import { runtimeFn } from "@adviser/cement";
 
 export class NodeFileSystem implements SysFileSystem {

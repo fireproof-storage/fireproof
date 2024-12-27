@@ -3,7 +3,8 @@ import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
 
 const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
-const webInternals = ["./web/gateway-impl.js"];
+// const webInternals = ["./web/gateway-impl.js"];
+const webInternals = [];
 
 const external = [
   "path",
@@ -20,6 +21,11 @@ const external = [
   "node:url",
   "assert",
   "stream",
+  "@fireproof/core",
+  "@fireproof/core/node",
+  "@fireproof/core/mem",
+  "@fireproof/core/web",
+  "@fireproof/core/react",
 ];
 
 function skipper(suffix: string[], target: string) {
@@ -130,7 +136,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         include: /version/,
       }),
       skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
-      skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
+      // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
       resolve({
         ...ourMultiformat,
       }),
