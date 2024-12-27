@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 it("esm.sh", async () => {
   const script = document.createElement("script");
   script.textContent = `
-import { fireproof } from 'http://localhost:4874/@fireproof/core'
+import { fireproof } from 'http://localhost:4874/@fireproof/core?no-dts'
 
 function invariant(cond, message) {
   if (!cond) {

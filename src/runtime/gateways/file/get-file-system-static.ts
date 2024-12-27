@@ -8,7 +8,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   switch (name) {
     case "mem":
       fs = await externalLoaders.get(name).once(async () => {
-        const { MemFileSystem } = await import("./node/mem-filesystem.js");
+        const { MemFileSystem } = await import("@fireproof/core/mem");
         return new MemFileSystem();
       });
       break;
@@ -19,7 +19,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
     // }
     default:
       fs = await externalLoaders.get(name).once(async () => {
-        const { NodeFileSystem } = await import("./node/node-filesystem.js");
+        const { NodeFileSystem } = await import("@fireproof/core/node");
         return new NodeFileSystem();
       });
   }

@@ -5,31 +5,31 @@
   "type": "module",
   "module": "./index.js",
   "main": "./index.cjs",
-  "browser": "./index.global.js",
   "types": "./index.d.ts",
   "exports": {
     ".": {
       "import": "./index.js",
       "require": "./index.cjs",
-      "script": "./index.global.js",
       "types": "./index.d.ts"
     },
     "./node": {
-      "import": "./index.js",
-      "require": "./index.cjs",
-      "script": "./index.global.js",
-      "types": "./index.d.ts"
+      "import": "./node/node-filesystem.js",
+      "require": "./node/node-filesystem.cjs",
+      "types": "./node/node-filesystem.d.ts"
+    },
+    "./mem": {
+      "import": "./node/mem-filesystem.js",
+      "require": "./node/mem-filesystem.cjs",
+      "types": "./node/mem-filesystem.d.ts"
     },
     "./web": {
-      "import": "./web/index.js",
-      "require": "./web/index.cjs",
-      "script": "./web/index.global.js",
-      "types": "./web/index.d.ts"
+      "import": "./web/gateway-impl.js",
+      "require": "./web/gateway-impl.cjs",
+      "types": "./web/gateway-impl.d.ts"
     },
     "./react": {
       "import": "./react/index.js",
       "require": "./react/index.cjs",
-      "script": "./react/index.global.js",
       "types": "./react/index.d.ts"
     }
   },

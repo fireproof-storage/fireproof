@@ -9,6 +9,7 @@ then
 else
   dockerCompose="docker compose"
 fi
+$dockerCompose down || true
 $dockerCompose up -d
 packageDir=../../dist/fireproof-core
 
