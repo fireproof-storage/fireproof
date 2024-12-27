@@ -2,9 +2,9 @@ import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 
 import { INDEXDB_VERSION } from "../version.js";
-import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "../../../../utils.js";
-import { Gateway, GetResult, TestGateway } from "../../../../blockstore/gateway.js";
-import { SuperThis } from "../../../../types.js";
+import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "@fireproof/core";
+import type { bs } from "@fireproof/core";
+import type { SuperThis } from "@fireproof/core";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
@@ -82,7 +82,7 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexDBGatewayImpl implements Gateway {
+export class IndexDBGatewayImpl implements bs.Gateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   constructor(sthis: SuperThis) {
@@ -127,7 +127,7 @@ export class IndexDBGatewayImpl implements Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get<S>(url: URI): Promise<GetResult<S>> {
+  async get(url: URI): Promise<bs.GetResult> {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
@@ -166,7 +166,34 @@ export class IndexDBGatewayImpl implements Gateway {
     });
   }
 
-  async getPlain(url: URI, key: string) {
+// export class IndexDBDataGateway extends IndexDBGateway {
+//   readonly storeType = "data";
+//   constructor(logger: Logger) {
+//     super(ensureLogger(logger, "IndexDBDataGateway"));
+//   }
+// }
+
+// export class IndexDBWalGateway extends IndexDBGateway {
+//   readonly storeType = "wal";
+//   constructor(logger: Logger) {
+//     super(ensureLogger(logger, "IndexDBWalGateway"));
+//   }
+// }
+// export class IndexDBMetaGateway extends IndexDBGateway {
+//   readonly storeType = "meta";
+//   constructor(logger: Logger) {
+//     super(ensureLogger(logger, "IndexDBMetaGateway"));
+//   }
+// }
+
+export class IndexDBTestStore implements bs.TestGateway {
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  constructor(sthis: SuperThis) {
+    this.sthis = sthis;
+    this.logger = ensureLogger(sthis, "IndexDBTestStore", {});
+  }
+  async get(url: URI, key: string) {
     const ic = await connectIdb(url, this.sthis);
     const store = getStore(ic.url, this.sthis, joinDBName).name;
     this.logger.Debug().Str("key", key).Str("store", store).Msg("getting");

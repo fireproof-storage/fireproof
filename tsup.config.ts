@@ -2,7 +2,8 @@ import { defineConfig, Options } from "tsup";
 import resolve from "esbuild-plugin-resolve";
 import { replace } from "esbuild-plugin-replace";
 
-const nodeInternals = [];
+const nodeInternals = ["./node/node-filesystem.js", "./node/mem-filesystem.js"];
+// const webInternals = ["./web/gateway-impl.js"];
 const webInternals = [];
 
 const external = [
@@ -20,6 +21,11 @@ const external = [
   "node:url",
   "assert",
   "stream",
+  "@fireproof/core",
+  "@fireproof/core/node",
+  "@fireproof/core/mem",
+  "@fireproof/core/web",
+  "@fireproof/core/react",
 ];
 
 /*
@@ -131,7 +137,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
         __packageVersion__: packageVersion(),
         include: /version/,
       }),
-      // skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
+      skipper([...nodeInternals, ...webInternals], `${__dirname}/src/bundle-not-impl.js`),
       // skipper(["./get-file-system-static.js"], "./get-file-system-dynamic.js"),
       resolve({
         ...ourMultiformat,
