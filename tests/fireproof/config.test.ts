@@ -7,6 +7,7 @@ describe("runtime", () => {
     const isNode = !!(typeof process === "object" && process.versions?.node);
     expect(runtimeFn()).toEqual({
       isBrowser: !isNode,
+      isCFWorker: false,
       isDeno: false,
       isNodeIsh: isNode,
       isReactNative: false,
