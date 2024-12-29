@@ -19,9 +19,14 @@ packageDir=${projectBase=}/dist/fireproof-core
 
 user="admin$(date +%s)"
 curl --retry 10 --retry-max-time 30 --retry-all-errors http://localhost:4873/
+curl \
+     -X PUT \
+     -H "Content-type: application/json" \
+     -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
+     'http://localhost:4873/-/user/org.couchdb.user:$user'
 
+user="admin$(date +%s)"
 token=$(curl \
-     --retry 10 --retry-max-time 30 --retry-all-errors \
      -X PUT \
      -H "Content-type: application/json" \
      -d "{ \"name\": \"$user\", \"password\": \"admin\" }" \
