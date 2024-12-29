@@ -23,6 +23,7 @@
     "smoke:npm": "bash smoke/npm/it.sh",
     "smoke:react": "bash -x smoke/react/it.sh",
     "clean": "rm -rf node_modules dist",
+    "env": "env",
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
     "test:indexdb": "vitest --config vitest.browser.config.ts --run",
