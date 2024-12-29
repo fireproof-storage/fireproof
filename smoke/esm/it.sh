@@ -15,9 +15,11 @@ PROJECT_BASE=$projectBase
 EOF
 $dockerCompose down || true
 $dockerCompose up -d
-packageDir=../../dist/fireproof-core
+packageDir=${projectBase=}/dist/fireproof-core
 
 user="admin$(date +%s)"
+curl --retry 10 --retry-max-time 30 --retry-all-errors http://localhost:4873/
+
 token=$(curl \
      --retry 10 --retry-max-time 30 --retry-all-errors \
      -X PUT \
@@ -33,8 +35,8 @@ enable-pre-post-scripts=true
 @fireproof:registry=http://localhost:4873
 EOF
 (cd $packageDir &&
-	(pnpm unpublish --force || true) &&
-         pnpm publish --no-git-checks)
+	(npm unpublish --force || true) &&
+         npm publish --no-git-checks)
 
 tmpDir=$(mktemp -d)
 rm -rf node_modules dist pnpm-lock.yaml
