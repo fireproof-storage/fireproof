@@ -13,6 +13,8 @@ fi
 cat > .env <<EOF
 PROJECT_BASE=$projectBase
 EOF
+mkdir -p $projectBase/.esm-cache/vd $projectBase/.esm-cache/esm
+ls -la $projectBase/.esm-cache
 $dockerCompose down || true
 $dockerCompose up -d
 packageDir=${projectBase=}/dist/fireproof-core
