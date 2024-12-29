@@ -171,7 +171,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
     name: "@fireproof/core/node",
-    entry: ["src/runtime/gateways/file/node/mem-filesystem.ts", "src/runtime/gateways/file/node/node-filesystem.ts"],
+    entry: ["src/runtime/gateways/file/node/index.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core/node",
     esbuildPlugins: [
@@ -192,7 +192,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
     name: "@fireproof/core/web",
-    entry: ["src/runtime/gateways/indexdb/web/gateway-impl.ts"],
+    entry: ["src/runtime/gateways/indexdb/web/index.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core/web",
     esbuildPlugins: [
