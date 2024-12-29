@@ -16,7 +16,7 @@
     "build:docs": "bash build-docs.sh",
     "pub:fireproof-core": "cp -pr tests ./dist/fireproof-core; tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
     "pub:use-fireproof": "tsx ./version-copy-package.ts ./dist/use-fireproof/package-use-fireproof.json",
-    "presmoke": "test -n \"$GITHUB_ACTIONS\" && pnpm run build",
+    "presmoke": "test -z \"$GITHUB_ACTIONS\" && pnpm run build",
     "smoke": "pnpm run '/smoke:/'",
     "smoke:esm": "sh smoke/esm/it.sh",
     "smoke:node": "sh smoke/it.sh",
