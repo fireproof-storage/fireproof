@@ -1,7 +1,7 @@
 import { URI } from "@adviser/cement";
-import { isNotFoundError, Logger } from "../utils.js";
-import { KeyBagProvider, KeyItem } from "./key-bag.js";
-import { SuperThis, SysFileSystem } from "../types.js";
+import { isNotFoundError, Logger } from "@fireproof/core";
+import type { rt, SuperThis, SysFileSystem } from "@fireproof/core";
+import { getFileSystem } from "./get-file-system.js";
 
 interface KeyBagCtx {
   readonly dirName: string;
@@ -9,13 +9,12 @@ interface KeyBagCtx {
   readonly fName: string;
 }
 
-export class KeyBagProviderFile implements KeyBagProvider {
+export class KeyBagProviderFile implements rt.kb.KeyBagProvider {
   async _prepare(id: string): Promise<KeyBagCtx> {
     await this.sthis.start();
     let sysFS: SysFileSystem;
     switch (this.url.protocol) {
       case "file:": {
-        const { getFileSystem } = await import("./gateways/file/utils.js");
         sysFS = await getFileSystem(this.url);
         break;
       }
@@ -40,11 +39,11 @@ export class KeyBagProviderFile implements KeyBagProvider {
     this.logger = sthis.logger;
   }
 
-  async get(id: string): Promise<KeyItem | undefined> {
+  async get(id: string): Promise<rt.kb.KeyItem | undefined> {
     const ctx = await this._prepare(id);
     try {
       const p = await ctx.sysFS.readfile(ctx.fName);
-      const ki = JSON.parse(this.sthis.txt.decode(p)) as KeyItem;
+      const ki = JSON.parse(this.sthis.txt.decode(p)) as rt.kb.KeyItem;
       return ki;
     } catch (e) {
       if (isNotFoundError(e)) {
@@ -54,7 +53,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
     }
   }
 
-  async set(id: string, item: KeyItem): Promise<void> {
+  async set(id: string, item: rt.kb.KeyItem): Promise<void> {
     const ctx = await this._prepare(id);
     const p = this.sthis.txt.encode(JSON.stringify(item, null, 2));
     await ctx.sysFS.writefile(ctx.fName, p);

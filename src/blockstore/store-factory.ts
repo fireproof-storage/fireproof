@@ -1,4 +1,4 @@
-import { Logger, KeyedResolvOnce, URI, Result } from "@adviser/cement";
+import { Logger, KeyedResolvOnce, CoerceURI, URI, Result, runtimeFn } from "@adviser/cement";
 
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";

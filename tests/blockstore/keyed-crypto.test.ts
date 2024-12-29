@@ -3,6 +3,8 @@ import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
+import type { KeyBagProviderIndexDB } from "@fireproof/core/web";
+import type { KeyBagProviderFile } from "@fireproof/core/node";
 
 describe("KeyBag", () => {
   let url: URI;
@@ -87,11 +89,11 @@ describe("KeyBag", () => {
     let diskBag2: rt.kb.KeyItem;
     const provider = await kb.rt.getBag();
     if (runtimeFn().isBrowser) {
-      const p = provider as rt.kb.KeyBagProviderIndexDB;
+      const p = provider as KeyBagProviderIndexDB;
       diskBag = await p._prepare().then((db) => db.get("bag", name));
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
-      const p = provider as rt.kb.KeyBagProviderFile;
+      const p = provider as KeyBagProviderFile;
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {

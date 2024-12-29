@@ -89,7 +89,7 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexDBGatewayImpl implements bs.Gateway {
+export class IndexDBGateway implements bs.Gateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   constructor(sthis: SuperThis) {
@@ -194,7 +194,7 @@ export class IndexDBGatewayImpl implements bs.Gateway {
 //   }
 // }
 
-export class IndexDBTestStore implements bs.TestGateway {
+export class IndexDBTestGateway implements bs.TestGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   constructor(sthis: SuperThis) {

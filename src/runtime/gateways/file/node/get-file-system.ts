@@ -1,5 +1,6 @@
 import { KeyedResolvOnce, type URI } from "@adviser/cement";
-import type { SysFileSystem } from "../../../types.js";
+import type { SysFileSystem } from "@fireproof/core";
+import { NodeFileSystem } from "./node-filesystem.js";
 
 const externalLoaders = new KeyedResolvOnce<SysFileSystem>();
 export async function getFileSystem(url: URI): Promise<SysFileSystem> {
@@ -8,7 +9,7 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
   switch (name) {
     case "mem":
       fs = await externalLoaders.get(name).once(async () => {
-        const { MemFileSystem } = await import("@fireproof/core/mem");
+        const { MemFileSystem } = await import("./mem-filesystem.js");
         return new MemFileSystem();
       });
       break;
@@ -19,7 +20,6 @@ export async function getFileSystem(url: URI): Promise<SysFileSystem> {
     // }
     default:
       fs = await externalLoaders.get(name).once(async () => {
-        const { NodeFileSystem } = await import("@fireproof/core/node");
         return new NodeFileSystem();
       });
   }

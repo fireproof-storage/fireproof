@@ -9,26 +9,28 @@
   "exports": {
     ".": {
       "import": "./index.js",
+      "browser": "./index.js",
       "require": "./index.cjs",
       "types": "./index.d.ts"
     },
     "./node": {
-      "import": "./node/node-filesystem.js",
-      "require": "./node/node-filesystem.cjs",
-      "types": "./node/node-filesystem.d.ts"
-    },
-    "./mem": {
-      "import": "./node/mem-filesystem.js",
-      "require": "./node/mem-filesystem.cjs",
-      "types": "./node/mem-filesystem.d.ts"
+      "import": {
+        "browser": "./web/index.js",
+        "default": "./node/index.js"
+      },
+      "browser": "./web/index.js",
+      "require": "./node/index.cjs",
+      "types": "./node/index.d.ts"
     },
     "./web": {
-      "import": "./web/gateway-impl.js",
-      "require": "./web/gateway-impl.cjs",
-      "types": "./web/gateway-impl.d.ts"
+      "import": "./web/index.js",
+      "browser": "./web/index.js",
+      "require": "./web/index.cjs",
+      "types": "./web/index.d.ts"
     },
     "./react": {
       "import": "./react/index.js",
+      "browser": "./react/index.js",
       "require": "./react/index.cjs",
       "types": "./react/index.d.ts"
     }

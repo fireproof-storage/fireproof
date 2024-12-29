@@ -1,5 +1,5 @@
 // export * from "./sys-container.js";
-export * from "./gateways/file/utils.js";
+export * from "./gateways/file/node/utils.js";
 
 // export * as sql from "./store-sql/index.js";
 export * as files from "./files.js";

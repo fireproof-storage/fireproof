@@ -15,9 +15,6 @@ import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
 import { PARAM, SuperThis } from "../types.js";
 
-export type { KeyBagProviderFile } from "./key-bag-file.js";
-export type { KeyBagProviderIndexDB } from "./key-bag-indexdb.js";
-
 export class KeyBag {
   readonly logger: Logger;
   constructor(readonly rt: KeyBagRuntime) {
@@ -182,15 +179,15 @@ const keyBagProviderFactories = new Map<string, KeyBagProviderFactoryItem>(
     {
       protocol: "file:",
       factory: async (url: URI, sthis: SuperThis) => {
-        const { KeyBagProviderFile } = await import("./key-bag-file.js");
-        return new KeyBagProviderFile(url, sthis);
+        const { KeyBagProviderImpl } = await import("@fireproof/core/node");
+        return new KeyBagProviderImpl(url, sthis);
       },
     },
     {
       protocol: "indexdb:",
       factory: async (url: URI, sthis: SuperThis) => {
-        const { KeyBagProviderIndexDB } = await import("./key-bag-indexdb.js");
-        return new KeyBagProviderIndexDB(url, sthis);
+        const { KeyBagProviderImpl } = await import("@fireproof/core/web");
+        return new KeyBagProviderImpl(url, sthis);
       },
     },
   ].map((i) => [i.protocol, i]),
