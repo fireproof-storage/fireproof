@@ -1,8 +1,9 @@
 services:
   registry:
     image: "verdaccio/verdaccio"
-    #volumes:
-    #  - ./verdaccio.config.yaml:/verdaccio/conf/config.yaml
+    volumes:
+      - ${PROJECT_BASE}/dist/esm-cache/vd:/verdaccio/storage
+    #./verdaccio.config.yaml:/verdaccio/conf/config.yaml
     ports:
       - "4873:4873"
     # docker run -p 4873:4873 -v $(pwd)/verdaccio.config.yaml:/verdaccio/conf/config.yaml -ti verdaccio/verdaccio
@@ -10,5 +11,7 @@ services:
     image: "ghcr.io/esm-dev/esm.sh"
     environment:
       NPM_REGISTRY: http://registry:4873/
+    volumes:
+      - ${PROJECT_BASE}/dist/esm-cache/esm:/home/node
     ports:
       - "4874:8080"
