@@ -32,7 +32,9 @@ enable-pre-post-scripts=true
 //localhost:4873/:_authToken=$token
 @fireproof:registry=http://localhost:4873
 EOF
-(cd $packageDir && pnpm unpublish --force ; pnpm publish --no-git-checks)
+(cd $packageDir &&
+	(pnpm unpublish --force || true) &&
+         pnpm publish --no-git-checks)
 
 tmpDir=$(mktemp -d)
 rm -rf node_modules dist pnpm-lock.yaml
