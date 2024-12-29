@@ -1,42 +1,34 @@
-import { FILESTORE_VERSION } from "./version.js";
+import { FILESTORE_VERSION } from "../version.js";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
-import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
-import { Gateway, GetResult, TestGateway } from "../../../blockstore/gateway.js";
+import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError, bs } from "@fireproof/core";
 import { getFileName, getPath } from "./utils.js";
-import { getFileSystem } from "./get-file-system-static.js";
-import { SuperThis, SysFileSystem } from "../../../types.js";
+import type { SuperThis, SysFileSystem } from "@fireproof/core";
+import { getFileSystem } from "./get-file-system.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 
-export class FileGateway implements Gateway {
+export class FileGateway implements bs.Gateway {
   // abstract readonly storeType: StoreType;
   readonly logger: Logger;
   readonly sthis: SuperThis;
-
-  _fs?: SysFileSystem;
-
-  get fs(): SysFileSystem {
-    if (!this._fs) throw this.logger.Error().Msg("fs not initialized").AsError();
-    return this._fs;
-  }
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
     this.logger = sthis.logger;
   }
 
-  async getVersionFromFile(path: string, logger: Logger): Promise<string> {
+  async getVersionFromFile(fs: SysFileSystem, path: string, logger: Logger): Promise<string> {
     return versionFiles.get(path).once(async () => {
-      await this.fs.mkdir(path, { recursive: true });
+      await fs.mkdir(path, { recursive: true });
       const vFile = this.sthis.pathOps.join(path, "version");
-      const vFileStat = await this.fs.stat(vFile).catch(() => undefined);
+      const vFileStat = await fs.stat(vFile).catch(() => undefined);
       if (!vFileStat) {
-        await this.fs.writefile(this.sthis.pathOps.join(path, "version"), FILESTORE_VERSION);
+        await fs.writefile(this.sthis.pathOps.join(path, "version"), FILESTORE_VERSION);
         return FILESTORE_VERSION;
       } else if (!vFileStat.isFile()) {
         throw logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
       }
-      const v = await this.fs.readfile(vFile);
+      const v = await fs.readfile(vFile);
       const vStr = this.sthis.txt.decode(v);
       if (vStr !== FILESTORE_VERSION) {
         logger.Warn().Str("file", vFile).Str("from", vStr).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
@@ -47,17 +39,16 @@ export class FileGateway implements Gateway {
 
   start(baseURL: URI): Promise<Result<URI>> {
     return exception2Result(async () => {
-      this._fs = await getFileSystem(baseURL);
-      await this.fs.start();
+      const fs = await getFileSystem(baseURL);
       const url = baseURL.build();
       url.defParam("version", FILESTORE_VERSION);
       // url.defParam("store", this.storeType);
       const dbUrl = await this.buildUrl(url.URI(), "dummy");
       const dbdirFile = this.getFilePath(dbUrl.Ok());
-      await this.fs.mkdir(this.sthis.pathOps.dirname(dbdirFile), { recursive: true });
+      await fs.mkdir(this.sthis.pathOps.dirname(dbdirFile), { recursive: true });
       const dbroot = this.sthis.pathOps.dirname(dbdirFile);
       this.logger.Debug().Url(url.URI()).Str("dbroot", dbroot).Msg("start");
-      url.setParam("version", await this.getVersionFromFile(dbroot, this.logger));
+      url.setParam("version", await this.getVersionFromFile(fs, dbroot, this.logger));
       return url.URI();
     });
   }
@@ -81,15 +72,15 @@ export class FileGateway implements Gateway {
     return exception2Result(async () => {
       const file = await this.getFilePath(url);
       this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
-      await this.fs.writefile(file, body);
+      await getFileSystem(url).then((fs) => fs.writefile(file, body));
     });
   }
 
-  async get(url: URI): Promise<GetResult> {
+  async get(url: URI): Promise<bs.GetResult> {
     return exceptionWrapper(async () => {
       const file = this.getFilePath(url);
       try {
-        const res = await this.fs.readfile(file);
+        const res = await getFileSystem(url).then((fs) => fs.readfile(file));
         this.logger.Debug().Url(url.asURL()).Str("file", file).Msg("get");
         return Result.Ok(new Uint8Array(res));
       } catch (e: unknown) {
@@ -104,7 +95,7 @@ export class FileGateway implements Gateway {
 
   async delete(url: URI): Promise<Result<void>> {
     return exception2Result(async () => {
-      await this.fs.unlink(this.getFilePath(url));
+      await getFileSystem(url).then((fs) => fs.unlink(this.getFilePath(url)));
     });
   }
 
@@ -112,9 +103,10 @@ export class FileGateway implements Gateway {
     const url = await this.buildUrl(baseURL, "x");
     if (url.isErr()) return url;
     const filepath = this.sthis.pathOps.dirname(this.getFilePath(url.Ok()));
+    const fs = await getFileSystem(baseURL);
     let files: string[] = [];
     try {
-      files = await this.fs.readdir(filepath);
+      files = await fs.readdir(filepath);
     } catch (e: unknown) {
       if (!isNotFoundError(e)) {
         throw this.logger.Error().Err(e).Str("dir", filepath).Msg("destroy:readdir").AsError();
@@ -123,7 +115,7 @@ export class FileGateway implements Gateway {
     for (const file of files) {
       const pathed = this.sthis.pathOps.join(filepath, file);
       try {
-        await this.fs.unlink(pathed);
+        await fs.unlink(pathed);
       } catch (e: unknown) {
         if (!isNotFoundError(e)) {
           throw this.logger.Error().Err(e).Str("file", pathed).Msg("destroy:unlink").AsError();
@@ -134,7 +126,7 @@ export class FileGateway implements Gateway {
   }
 }
 
-export class FileTestStore implements TestGateway {
+export class FileTestGateway implements bs.TestGateway {
   readonly logger: Logger;
   readonly sthis: SuperThis;
   constructor(sthis: SuperThis) {

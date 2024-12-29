@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.3.3
-        version: 0.3.3(typescript@5.7.2)
+        specifier: ^0.3.4
+        version: 0.3.4(typescript@5.7.2)
       '@fireproof/vendor':
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^1.0.4
+        version: 1.0.4
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -133,8 +133,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.3.3':
-    resolution: {integrity: sha512-yCkdozDJsqWF++f8CMTapDo5D/DZ5ssVSU/CRjxVe9pOngi8rWK/OWG8CIVVAQq+ODwWmBfy8OajF5l9wNEWUQ==}
+  '@adviser/cement@0.3.4':
+    resolution: {integrity: sha512-wG0rIHej2uvXGknp0mokM/8reXXtFg9wiWDzuXXmaxzjaae4cVG4og76SeQf9suWb+MiyPsn19B7HX+gFvIs7A==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -792,8 +792,8 @@ packages:
     resolution: {integrity: sha512-2b/g5hRmpbb1o4GnTZax9N9m0FXzz9OV42ZzI4rDDMDuHUqigAiQCEWChBWCY4ztAGVRjoWT19v0yMmc5/L5kA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fireproof/vendor@1.0.3':
-    resolution: {integrity: sha512-Q3axUwxGk4+ku5CF+fI2c0njjR8PJN8DyG7S7ZU4ort/yiIFb1oIVM/vXLbYgXY5URDcjUif4wAxYvq0HsOyEg==}
+  '@fireproof/vendor@1.0.4':
+    resolution: {integrity: sha512-F8yYaYGRNrtYo4KyMzMuKwI5mGieYMkI23KnYkQ3ixKhIu3J6qRGZsuROFjOv2zWjQvtPronvqyxNc9P5km31g==}
 
   '@gerrit0/mini-shiki@1.24.2':
     resolution: {integrity: sha512-kw11jMCKwS5+GMMDy/o7W6C1KwsxgHnPO/RXzNBUw000BzRvUhUSi5zE8D2Qq7/A7bfJysFenEVBHUR7aMSxUQ==}
@@ -3210,7 +3210,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.3.3(typescript@5.7.2)':
+  '@adviser/cement@0.3.4(typescript@5.7.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.7.2)
       yaml: 2.6.1
@@ -3593,7 +3593,7 @@ snapshots:
     dependencies:
       levn: 0.4.1
 
-  '@fireproof/vendor@1.0.3':
+  '@fireproof/vendor@1.0.4':
     dependencies:
       '@ipld/dag-pb': 4.1.2
       '@multiformats/murmur3': 2.1.8

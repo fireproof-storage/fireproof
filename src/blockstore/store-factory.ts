@@ -1,4 +1,4 @@
-import { Logger, KeyedResolvOnce, CoerceURI, URI, Result } from "@adviser/cement";
+import { Logger, KeyedResolvOnce, CoerceURI, URI, Result, runtimeFn } from "@adviser/cement";
 
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { DataStoreImpl, WALStoreImpl, MetaStoreImpl } from "./store.js";
@@ -285,26 +285,30 @@ export function toStoreRuntime(opts: StoreOpts, sthis: SuperThis): StoreRuntime 
   };
 }
 
-registerStoreProtocol({
-  protocol: "file:",
-  gateway: async (sthis) => {
-    const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
-    return new FileGateway(sthis);
-  },
-  test: async (sthis) => {
-    const { FileTestStore } = await import("../runtime/gateways/file/gateway.js");
-    return new FileTestStore(sthis);
-  },
-});
+if (runtimeFn().isNodeIsh || runtimeFn().isDeno) {
+  registerStoreProtocol({
+    protocol: "file:",
+    gateway: async (sthis) => {
+      const { GatewayImpl } = await import("@fireproof/core/node");
+      return new GatewayImpl(sthis);
+    },
+    test: async (sthis) => {
+      const { GatewayTestImpl } = await import("@fireproof/core/node");
+      return new GatewayTestImpl(sthis);
+    },
+  });
+}
 
-registerStoreProtocol({
-  protocol: "indexdb:",
-  gateway: async (sthis) => {
-    const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway.js");
-    return new IndexDBGateway(sthis);
-  },
-  test: async (sthis) => {
-    const { IndexDBTestStore } = await import("../runtime/gateways/indexdb/gateway.js");
-    return new IndexDBTestStore(sthis);
-  },
-});
+if (runtimeFn().isBrowser) {
+  registerStoreProtocol({
+    protocol: "indexdb:",
+    gateway: async (sthis) => {
+      const { GatewayImpl } = await import("@fireproof/core/web");
+      return new GatewayImpl(sthis);
+    },
+    test: async (sthis) => {
+      const { GatewayTestImpl } = await import("@fireproof/core/web");
+      return new GatewayTestImpl(sthis);
+    },
+  });
+}
