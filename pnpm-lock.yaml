@@ -9,14 +9,11 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.44
-        version: 0.2.44(typescript@5.7.2)
-      '@fireproof/core':
-        specifier: ^0.19.118
-        version: 0.19.118(react@18.3.1)(typescript@5.7.2)
+        specifier: ^0.3.4
+        version: 0.3.4(typescript@5.7.2)
       '@fireproof/vendor':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.4
+        version: 1.0.4
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -136,9 +133,9 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.2.44':
-    resolution: {integrity: sha512-IxmNkCSpST2FBeHqhk1RGxcb6pF8FZMSFbPpNUi0Drx3v219gNl5Q1gOQ2TWPqblTvMO942MqSE/QlgEppshgg==}
-    engines: {node: '>=16'}
+  '@adviser/cement@0.3.4':
+    resolution: {integrity: sha512-wG0rIHej2uvXGknp0mokM/8reXXtFg9wiWDzuXXmaxzjaae4cVG4og76SeQf9suWb+MiyPsn19B7HX+gFvIs7A==}
+    engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -799,13 +796,8 @@ packages:
     resolution: {integrity: sha512-2b/g5hRmpbb1o4GnTZax9N9m0FXzz9OV42ZzI4rDDMDuHUqigAiQCEWChBWCY4ztAGVRjoWT19v0yMmc5/L5kA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fireproof/core@0.19.118':
-    resolution: {integrity: sha512-lyK0Aj7t0acLz9x8i1s12GwBNkOuEeRPg5eS6MhMn5uYTi1p0kWvJHn+pb3hRFG5sP7zmjp5/obeHtTKGDTLGA==}
-    peerDependencies:
-      react: ^18.3.1
-
-  '@fireproof/vendor@1.0.0':
-    resolution: {integrity: sha512-ucN0ICj7xbpbO3NWjAKKjMHkBn4vSRUdKn14LLaA0MILJowty+H4XBB8dCobwKemhW49ha5p520NOLRzJSKsow==}
+  '@fireproof/vendor@1.0.4':
+    resolution: {integrity: sha512-F8yYaYGRNrtYo4KyMzMuKwI5mGieYMkI23KnYkQ3ixKhIu3J6qRGZsuROFjOv2zWjQvtPronvqyxNc9P5km31g==}
 
   '@gerrit0/mini-shiki@1.24.4':
     resolution: {integrity: sha512-YEHW1QeAg6UmxEmswiQbOVEg1CW22b1XUD/lNTliOsu0LD0wqoyleFMnmbTp697QE0pcadQiR5cVtbbAPncvpw==}
@@ -3189,11 +3181,6 @@ packages:
     resolution: {integrity: sha512-0pfFzegeDWJHJIAmTLRP2DwHjdF5s7jo9tuztdQxAhINCdvS+3nGINqPd00AphqJR/0LhANUS6/+7SCb98YOfA==}
     engines: {node: '>=10'}
 
-  yaml@2.5.1:
-    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
-    engines: {node: '>= 14'}
-    hasBin: true
-
   yaml@2.6.1:
     resolution: {integrity: sha512-7r0XPzioN/Q9kXBro/XPnA6kznR73DHq+GXh5ON7ZozRO6aMjbmiBuKste2wslTFkC5d1dw0GooOCepZXJ2SAg==}
     engines: {node: '>= 14'}
@@ -3235,10 +3222,10 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.2.44(typescript@5.7.2)':
+  '@adviser/cement@0.3.4(typescript@5.7.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.7.2)
-      yaml: 2.5.1
+      yaml: 2.6.1
     transitivePeerDependencies:
       - typescript
 
@@ -3620,24 +3607,7 @@ snapshots:
     dependencies:
       levn: 0.4.1
 
-  '@fireproof/core@0.19.118(react@18.3.1)(typescript@5.7.2)':
-    dependencies:
-      '@adviser/cement': 0.2.44(typescript@5.7.2)
-      '@fireproof/vendor': 1.0.0
-      '@ipld/unixfs': 3.0.0
-      charwise: 3.0.1
-      idb: 8.0.1
-      memfs: 4.15.1
-      multiformats: 13.3.1
-      p-limit: 6.2.0
-      p-map: 7.0.3
-      p-retry: 6.2.1
-      prolly-trees: 1.0.4
-      react: 18.3.1
-    transitivePeerDependencies:
-      - typescript
-
-  '@fireproof/vendor@1.0.0':
+  '@fireproof/vendor@1.0.4':
     dependencies:
       '@ipld/dag-pb': 4.1.3
       '@multiformats/murmur3': 2.1.8
@@ -6215,8 +6185,6 @@ snapshots:
   ws@8.18.0: {}
 
   y18n@5.0.8: {}
-
-  yaml@2.5.1: {}
 
   yaml@2.6.1: {}
 
