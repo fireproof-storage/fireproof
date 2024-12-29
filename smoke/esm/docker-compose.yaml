@@ -1,8 +1,8 @@
 services:
   registry:
     image: "verdaccio/verdaccio"
-    volumes:
-      - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage
+    # volumes:
+    #   - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage/data
     #./verdaccio.config.yaml:/verdaccio/conf/config.yaml
     ports:
       - "4873:4873"
@@ -11,7 +11,7 @@ services:
     image: "ghcr.io/esm-dev/esm.sh"
     environment:
       NPM_REGISTRY: http://registry:4873/
-    volumes:
-      - ${PROJECT_BASE}/.esm-cache/esm:/home/node
+    # volumes:
+    #   - ${PROJECT_BASE}/.esm-cache/esm:/home/node
     ports:
       - "4874:8080"
