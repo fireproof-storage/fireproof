@@ -2,7 +2,7 @@ services:
   registry:
     image: "verdaccio/verdaccio"
     volumes:
-      - ${PROJECT_BASE}/dist/esm-cache/vd:/verdaccio/storage
+      - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage
     #./verdaccio.config.yaml:/verdaccio/conf/config.yaml
     ports:
       - "4873:4873"
@@ -12,6 +12,6 @@ services:
     environment:
       NPM_REGISTRY: http://registry:4873/
     volumes:
-      - ${PROJECT_BASE}/dist/esm-cache/esm:/home/node
+      - ${PROJECT_BASE}/.esm-cache/esm:/home/node
     ports:
       - "4874:8080"

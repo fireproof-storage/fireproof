@@ -28,7 +28,7 @@ jobs:
         id: smoke-esm-cache
         uses: actions/cache@v4
         with:
-          path: dist/esm-cache
+          path: .esm-cache
           key: smoke-esm-cache
 
       - name: install
