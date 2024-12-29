@@ -16,6 +16,8 @@ jobs:
         with:
           deno-version: v2.x
       - uses: browser-actions/setup-chrome@v1
+        with:
+          install-chromedriver: true
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
