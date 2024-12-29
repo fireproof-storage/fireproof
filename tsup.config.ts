@@ -152,7 +152,11 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm"], //, "cjs"],
     name: "@fireproof/core/node",
+<<<<<<< HEAD
     entry: ["src/runtime/gateways/file/node-filesystem.ts", "src/runtime/gateways/file/deno-filesystem.ts"],
+=======
+    entry: ["src/runtime/gateways/file/node/index.ts"],
+>>>>>>> 79f75384 (chore: improve the warnings in web build)
     platform: "browser",
     outDir: "dist/fireproof-core/node",
     esbuildPlugins: [
@@ -173,7 +177,11 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm"], //, "cjs"],
     name: "@fireproof/core/web",
+<<<<<<< HEAD
     entry: ["src/runtime/gateways/indexdb/gateway.ts"],
+=======
+    entry: ["src/runtime/gateways/indexdb/web/index.ts"],
+>>>>>>> 79f75384 (chore: improve the warnings in web build)
     platform: "browser",
     outDir: "dist/fireproof-core/web",
     esbuildPlugins: [
