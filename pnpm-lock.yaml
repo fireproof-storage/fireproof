@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.2.44
-        version: 0.2.44(typescript@5.8.3)
+        specifier: ^0.3.4
+        version: 0.3.4(typescript@5.8.3)
       '@fireproof/core':
         specifier: ^0.19.121
         version: 0.19.121(react@18.3.1)(typescript@5.8.3)
@@ -927,10 +927,6 @@ importers:
         version: 1.6.1(@types/node@22.15.30)(jsdom@23.2.0)(terser@5.41.0)
 
 packages:
-
-  '@adviser/cement@0.2.44':
-    resolution: {integrity: sha512-IxmNkCSpST2FBeHqhk1RGxcb6pF8FZMSFbPpNUi0Drx3v219gNl5Q1gOQ2TWPqblTvMO942MqSE/QlgEppshgg==}
-    engines: {node: '>=16'}
 
   '@adviser/cement@0.3.4':
     resolution: {integrity: sha512-wG0rIHej2uvXGknp0mokM/8reXXtFg9wiWDzuXXmaxzjaae4cVG4og76SeQf9suWb+MiyPsn19B7HX+gFvIs7A==}
@@ -8560,13 +8556,6 @@ packages:
     hasBin: true
 
 snapshots:
-
-  '@adviser/cement@0.2.44(typescript@5.8.3)':
-    dependencies:
-      ts-essentials: 10.0.2(typescript@5.8.3)
-      yaml: 2.8.0
-    transitivePeerDependencies:
-      - typescript
 
   '@adviser/cement@0.3.4(typescript@5.8.3)':
     dependencies:
