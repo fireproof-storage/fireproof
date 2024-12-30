@@ -12,8 +12,8 @@ importers:
         specifier: ^0.2.44
         version: 0.2.44(typescript@5.7.2)
       '@fireproof/core':
-        specifier: ^0.19.118
-        version: 0.19.118(react@18.3.1)(typescript@5.7.2)
+        specifier: ^0.19.121
+        version: 0.19.121(react@18.3.1)(typescript@5.7.2)
       '@fireproof/vendor':
         specifier: ^1.0.0
         version: 1.0.0
@@ -139,6 +139,10 @@ packages:
   '@adviser/cement@0.2.44':
     resolution: {integrity: sha512-IxmNkCSpST2FBeHqhk1RGxcb6pF8FZMSFbPpNUi0Drx3v219gNl5Q1gOQ2TWPqblTvMO942MqSE/QlgEppshgg==}
     engines: {node: '>=16'}
+
+  '@adviser/cement@0.3.4':
+    resolution: {integrity: sha512-wG0rIHej2uvXGknp0mokM/8reXXtFg9wiWDzuXXmaxzjaae4cVG4og76SeQf9suWb+MiyPsn19B7HX+gFvIs7A==}
+    engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -799,13 +803,16 @@ packages:
     resolution: {integrity: sha512-2b/g5hRmpbb1o4GnTZax9N9m0FXzz9OV42ZzI4rDDMDuHUqigAiQCEWChBWCY4ztAGVRjoWT19v0yMmc5/L5kA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fireproof/core@0.19.118':
-    resolution: {integrity: sha512-lyK0Aj7t0acLz9x8i1s12GwBNkOuEeRPg5eS6MhMn5uYTi1p0kWvJHn+pb3hRFG5sP7zmjp5/obeHtTKGDTLGA==}
+  '@fireproof/core@0.19.121':
+    resolution: {integrity: sha512-HTHM9MXPEvby66h2I4zGT7VqFVpJMzcd3xiGeInzAwwO8mFB5ZQ6ic/i/P+5R6iN0ZNucGMKVOUAh2+XysxmHQ==}
     peerDependencies:
       react: ^18.3.1
 
   '@fireproof/vendor@1.0.0':
     resolution: {integrity: sha512-ucN0ICj7xbpbO3NWjAKKjMHkBn4vSRUdKn14LLaA0MILJowty+H4XBB8dCobwKemhW49ha5p520NOLRzJSKsow==}
+
+  '@fireproof/vendor@1.0.4':
+    resolution: {integrity: sha512-F8yYaYGRNrtYo4KyMzMuKwI5mGieYMkI23KnYkQ3ixKhIu3J6qRGZsuROFjOv2zWjQvtPronvqyxNc9P5km31g==}
 
   '@gerrit0/mini-shiki@1.24.4':
     resolution: {integrity: sha512-YEHW1QeAg6UmxEmswiQbOVEg1CW22b1XUD/lNTliOsu0LD0wqoyleFMnmbTp697QE0pcadQiR5cVtbbAPncvpw==}
@@ -3242,6 +3249,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@adviser/cement@0.3.4(typescript@5.7.2)':
+    dependencies:
+      ts-essentials: 10.0.2(typescript@5.7.2)
+      yaml: 2.6.1
+    transitivePeerDependencies:
+      - typescript
+
   '@ampproject/remapping@2.3.0':
     dependencies:
       '@jridgewell/gen-mapping': 0.3.5
@@ -3620,10 +3634,10 @@ snapshots:
     dependencies:
       levn: 0.4.1
 
-  '@fireproof/core@0.19.118(react@18.3.1)(typescript@5.7.2)':
+  '@fireproof/core@0.19.121(react@18.3.1)(typescript@5.7.2)':
     dependencies:
-      '@adviser/cement': 0.2.44(typescript@5.7.2)
-      '@fireproof/vendor': 1.0.0
+      '@adviser/cement': 0.3.4(typescript@5.7.2)
+      '@fireproof/vendor': 1.0.4
       '@ipld/unixfs': 3.0.0
       charwise: 3.0.1
       idb: 8.0.1
@@ -3638,6 +3652,24 @@ snapshots:
       - typescript
 
   '@fireproof/vendor@1.0.0':
+    dependencies:
+      '@ipld/dag-pb': 4.1.3
+      '@multiformats/murmur3': 2.1.8
+      hamt-sharding: 3.0.6
+      interface-blockstore: 5.3.1
+      ipfs-unixfs: 11.2.0
+      it-filter: 3.1.1
+      it-last: 3.0.6
+      it-map: 3.1.1
+      it-parallel: 3.0.8
+      it-pipe: 3.0.1
+      it-pushable: 3.2.3
+      multiformats: 13.3.1
+      p-queue: 8.0.1
+      progress-events: 1.0.1
+      varint: 6.0.0
+
+  '@fireproof/vendor@1.0.4':
     dependencies:
       '@ipld/dag-pb': 4.1.3
       '@multiformats/murmur3': 2.1.8
