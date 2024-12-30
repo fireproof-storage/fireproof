@@ -54,8 +54,8 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1
       typedoc:
-        specifier: ^0.27.5
-        version: 0.27.5(typescript@5.7.2)
+        specifier: ^0.27.6
+        version: 0.27.6(typescript@5.7.2)
       uuidv7:
         specifier: ^1.0.2
         version: 1.0.2
@@ -2915,8 +2915,8 @@ packages:
     resolution: {integrity: sha512-ojFL7eDMX2NF0xMbDwPZJ8sb7ckqtlAi1GsmgsFXvErT9kFTk1r0DuQKvrCh73M6D4nngeHJmvogF9OluXs7Hw==}
     engines: {node: '>=16'}
 
-  typedoc@0.27.5:
-    resolution: {integrity: sha512-x+fhKJtTg4ozXwKayh/ek4wxZQI/+2hmZUdO2i2NGDBRUflDble70z+ewHod3d4gRpXSO6fnlnjbDTnJk7HlkQ==}
+  typedoc@0.27.6:
+    resolution: {integrity: sha512-oBFRoh2Px6jFx366db0lLlihcalq/JzyCVp7Vaq1yphL/tbgx2e+bkpkCgJPunaPvPwoTOXSwasfklWHm7GfAw==}
     engines: {node: '>= 18'}
     hasBin: true
     peerDependencies:
@@ -4941,7 +4941,7 @@ snapshots:
     dependencies:
       foreground-child: 3.1.1
       jackspeak: 3.4.0
-      minimatch: 9.0.4
+      minimatch: 9.0.5
       minipass: 7.1.2
       package-json-from-dist: 1.0.0
       path-scurry: 1.11.1
@@ -5816,7 +5816,7 @@ snapshots:
     dependencies:
       '@istanbuljs/schema': 0.1.3
       glob: 10.4.2
-      minimatch: 9.0.4
+      minimatch: 9.0.5
 
   text-decoder@1.1.0:
     dependencies:
@@ -5941,7 +5941,7 @@ snapshots:
 
   type-fest@4.30.1: {}
 
-  typedoc@0.27.5(typescript@5.7.2):
+  typedoc@0.27.6(typescript@5.7.2):
     dependencies:
       '@gerrit0/mini-shiki': 1.24.4
       lunr: 2.3.9
