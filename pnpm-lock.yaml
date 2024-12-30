@@ -15,8 +15,8 @@ importers:
         specifier: ^0.19.121
         version: 0.19.121(react@18.3.1)(typescript@5.7.2)
       '@fireproof/vendor':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.4
+        version: 1.0.4
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
@@ -807,9 +807,6 @@ packages:
     resolution: {integrity: sha512-HTHM9MXPEvby66h2I4zGT7VqFVpJMzcd3xiGeInzAwwO8mFB5ZQ6ic/i/P+5R6iN0ZNucGMKVOUAh2+XysxmHQ==}
     peerDependencies:
       react: ^18.3.1
-
-  '@fireproof/vendor@1.0.0':
-    resolution: {integrity: sha512-ucN0ICj7xbpbO3NWjAKKjMHkBn4vSRUdKn14LLaA0MILJowty+H4XBB8dCobwKemhW49ha5p520NOLRzJSKsow==}
 
   '@fireproof/vendor@1.0.4':
     resolution: {integrity: sha512-F8yYaYGRNrtYo4KyMzMuKwI5mGieYMkI23KnYkQ3ixKhIu3J6qRGZsuROFjOv2zWjQvtPronvqyxNc9P5km31g==}
@@ -3650,24 +3647,6 @@ snapshots:
       react: 18.3.1
     transitivePeerDependencies:
       - typescript
-
-  '@fireproof/vendor@1.0.0':
-    dependencies:
-      '@ipld/dag-pb': 4.1.3
-      '@multiformats/murmur3': 2.1.8
-      hamt-sharding: 3.0.6
-      interface-blockstore: 5.3.1
-      ipfs-unixfs: 11.2.0
-      it-filter: 3.1.1
-      it-last: 3.0.6
-      it-map: 3.1.1
-      it-parallel: 3.0.8
-      it-pipe: 3.0.1
-      it-pushable: 3.2.3
-      multiformats: 13.3.1
-      p-queue: 8.0.1
-      progress-events: 1.0.1
-      varint: 6.0.0
 
   '@fireproof/vendor@1.0.4':
     dependencies:
