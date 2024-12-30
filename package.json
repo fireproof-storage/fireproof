@@ -81,7 +81,7 @@
   "dependencies": {
     "@adviser/cement": "^0.2.44",
     "@fireproof/core": "^0.19.121",
-    "@fireproof/vendor": "^1.0.0",
+    "@fireproof/vendor": "^1.0.4",
     "@ipld/unixfs": "^3.0.0",
     "charwise": "^3.0.1",
     "esbuild-plugin-replace": "^1.4.0",

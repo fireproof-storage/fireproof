@@ -15,7 +15,7 @@ importers:
         specifier: ^0.19.121
         version: 0.19.121(react@18.3.1)(typescript@5.8.3)
       '@fireproof/vendor':
-        specifier: ^1.0.0
+        specifier: ^1.0.4
         version: 1.2.0
       '@ipld/unixfs':
         specifier: ^3.0.0
