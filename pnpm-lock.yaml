@@ -11,9 +11,6 @@ importers:
       '@adviser/cement':
         specifier: ^0.3.5
         version: 0.3.5(typescript@5.7.2)
-      '@fireproof/core':
-        specifier: ^0.19.121
-        version: 0.19.121(react@18.3.1)(typescript@5.7.2)
       '@fireproof/vendor':
         specifier: ^1.0.4
         version: 1.0.4
@@ -654,11 +651,6 @@ packages:
   '@eslint/plugin-kit@0.2.3':
     resolution: {integrity: sha512-2b/g5hRmpbb1o4GnTZax9N9m0FXzz9OV42ZzI4rDDMDuHUqigAiQCEWChBWCY4ztAGVRjoWT19v0yMmc5/L5kA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
-
-  '@fireproof/core@0.19.121':
-    resolution: {integrity: sha512-HTHM9MXPEvby66h2I4zGT7VqFVpJMzcd3xiGeInzAwwO8mFB5ZQ6ic/i/P+5R6iN0ZNucGMKVOUAh2+XysxmHQ==}
-    peerDependencies:
-      react: ^18.3.1
 
   '@fireproof/vendor@1.0.4':
     resolution: {integrity: sha512-F8yYaYGRNrtYo4KyMzMuKwI5mGieYMkI23KnYkQ3ixKhIu3J6qRGZsuROFjOv2zWjQvtPronvqyxNc9P5km31g==}
@@ -3389,23 +3381,6 @@ snapshots:
   '@eslint/plugin-kit@0.2.3':
     dependencies:
       levn: 0.4.1
-
-  '@fireproof/core@0.19.121(react@18.3.1)(typescript@5.7.2)':
-    dependencies:
-      '@adviser/cement': 0.3.5(typescript@5.7.2)
-      '@fireproof/vendor': 1.0.4
-      '@ipld/unixfs': 3.0.0
-      charwise: 3.0.1
-      idb: 8.0.1
-      memfs: 4.15.3
-      multiformats: 13.3.1
-      p-limit: 6.2.0
-      p-map: 7.0.3
-      p-retry: 6.2.1
-      prolly-trees: 1.0.4
-      react: 18.3.1
-    transitivePeerDependencies:
-      - typescript
 
   '@fireproof/vendor@1.0.4':
     dependencies:
