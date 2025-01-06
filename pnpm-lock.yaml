@@ -30,7 +30,7 @@ importers:
         specifier: ^8.0.1
         version: 8.0.1
       memfs:
-        specifier: ^4.15.1
+        specifier: ^4.15.3
         version: 4.17.2
       multiformats:
         specifier: ^13.3.1
