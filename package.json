@@ -79,7 +79,7 @@
   },
   "homepage": "https://github.com/fireproof-storage/fireproof#readme",
   "dependencies": {
-    "@adviser/cement": "^0.3.4",
+    "@adviser/cement": "^0.3.5",
     "@fireproof/core": "^0.19.121",
     "@fireproof/vendor": "^1.0.4",
     "@ipld/unixfs": "^3.0.0",
