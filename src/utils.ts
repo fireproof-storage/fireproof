@@ -173,9 +173,7 @@ export function ensureLogger(
   //   throw new Error("logger is required");
   // }
   let logger: Logger;
-  if (IsLogger(sthis)) {
-    logger = sthis;
-  } else if (sthis && IsLogger(sthis.logger)) {
+  if (sthis && IsLogger(sthis.logger)) {
     logger = sthis.logger;
   } else {
     logger = globalLogger();
