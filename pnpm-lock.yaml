@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.3.4
-        version: 0.3.4(typescript@5.8.3)
+        specifier: ^0.3.5
+        version: 0.3.5(typescript@5.8.3)
       '@fireproof/core':
         specifier: ^0.19.121
         version: 0.19.121(react@18.3.1)(typescript@5.8.3)
@@ -928,8 +928,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.3.4':
-    resolution: {integrity: sha512-wG0rIHej2uvXGknp0mokM/8reXXtFg9wiWDzuXXmaxzjaae4cVG4og76SeQf9suWb+MiyPsn19B7HX+gFvIs7A==}
+  '@adviser/cement@0.3.5':
+    resolution: {integrity: sha512-U3BFsID8Fhe5ARmBEXQKw2yPyP1egT2LX8/gNCa8ZCobQjA52RkbEWwL0l8Gs6kDUqay1xhsKbQ9O7cYxLFnSg==}
     engines: {node: '>=20'}
 
   '@alloc/quick-lru@5.2.0':
@@ -8584,7 +8584,7 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.3.4(typescript@5.8.3)':
+  '@adviser/cement@0.3.5(typescript@5.8.3)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.8.3)
       yaml: 2.8.0
@@ -9665,7 +9665,7 @@ snapshots:
 
   '@fireproof/core@0.19.121(react@18.3.1)(typescript@5.8.3)':
     dependencies:
-      '@adviser/cement': 0.3.4(typescript@5.8.3)
+      '@adviser/cement': 0.3.5(typescript@5.8.3)
       '@fireproof/vendor': 1.0.4
       '@ipld/unixfs': 3.0.0
       charwise: 3.0.1
