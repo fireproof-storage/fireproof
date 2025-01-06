@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.3.4
-        version: 0.3.4(typescript@5.7.2)
+        specifier: ^0.3.5
+        version: 0.3.5(typescript@5.7.2)
       '@fireproof/core':
         specifier: ^0.19.121
         version: 0.19.121(react@18.3.1)(typescript@5.7.2)
@@ -136,8 +136,8 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
-  '@adviser/cement@0.3.4':
-    resolution: {integrity: sha512-wG0rIHej2uvXGknp0mokM/8reXXtFg9wiWDzuXXmaxzjaae4cVG4og76SeQf9suWb+MiyPsn19B7HX+gFvIs7A==}
+  '@adviser/cement@0.3.5':
+    resolution: {integrity: sha512-U3BFsID8Fhe5ARmBEXQKw2yPyP1egT2LX8/gNCa8ZCobQjA52RkbEWwL0l8Gs6kDUqay1xhsKbQ9O7cYxLFnSg==}
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -3077,7 +3077,7 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
-  '@adviser/cement@0.3.4(typescript@5.7.2)':
+  '@adviser/cement@0.3.5(typescript@5.7.2)':
     dependencies:
       ts-essentials: 10.0.2(typescript@5.7.2)
       yaml: 2.6.1
@@ -3392,7 +3392,7 @@ snapshots:
 
   '@fireproof/core@0.19.121(react@18.3.1)(typescript@5.7.2)':
     dependencies:
-      '@adviser/cement': 0.3.4(typescript@5.7.2)
+      '@adviser/cement': 0.3.5(typescript@5.7.2)
       '@fireproof/vendor': 1.0.4
       '@ipld/unixfs': 3.0.0
       charwise: 3.0.1
