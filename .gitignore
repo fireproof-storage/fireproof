@@ -1,4 +1,5 @@
 # Files
+**/.esm-cache/**
 .vscode
 .idea
 .DS_Store
