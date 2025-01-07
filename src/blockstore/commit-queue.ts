@@ -3,7 +3,7 @@ import { Future } from "@adviser/cement";
 type QueueFunction<T = void> = () => Promise<T>;
 
 export class CommitQueue<T = void> {
-  readonly queue: QueueFunction<void>[] = [];
+  readonly queue: QueueFunction[] = [];
   processing = false;
 
   readonly _waitIdleItems: Set<Future<void>> = new Set<Future<void>>();
@@ -48,7 +48,9 @@ export class CommitQueue<T = void> {
     if (this.queue.length === 0 && !this.processing) {
       const toResolve = Array.from(this._waitIdleItems);
       this._waitIdleItems.clear();
-      toResolve.map((fn) => fn.resolve());
+      toResolve.map((fn) => {
+        fn.resolve();
+      });
     }
   }
 }

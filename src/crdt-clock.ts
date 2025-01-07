@@ -61,13 +61,19 @@ export class CRDTClock<T extends DocTypes> {
       const changes = await clockChangesSince<T>(throwFalsy(this.blockstore), this.head, prevHead, {}, this.logger);
       internalUpdates = changes.result;
     }
-    this.zoomers.forEach((fn) => fn());
+    this.zoomers.forEach((fn) => {
+      fn();
+    });
     this.notifyWatchers(internalUpdates || []);
   }
 
   notifyWatchers(updates: DocUpdate<T>[]) {
-    this.emptyWatchers.forEach((fn) => fn());
-    this.watchers.forEach((fn) => fn(updates || []));
+    this.emptyWatchers.forEach((fn) => {
+      fn();
+    });
+    this.watchers.forEach((fn) => {
+      fn(updates || []);
+    });
   }
 
   onTick(fn: (updates: DocUpdate<T>[]) => void) {

@@ -10,52 +10,55 @@ import { BlockDecoder, BlockEncoder } from "./codec-interface.js";
 export const Block = mfBlock;
 
 interface DecodeInput<T, Code extends number, Alg extends number> {
-  bytes: ByteView<T>;
-  codec: BlockDecoder<Code, T>;
-  hasher: MultihashHasher<Alg>;
+  readonly bytes: ByteView<T>;
+  readonly codec: BlockDecoder<Code, T>;
+  readonly hasher: MultihashHasher<Alg>;
 }
 
-export async function decode<T, Code extends number, Alg extends number>({
+export async function decode<T, Code extends number, Alg extends number, V extends Version = 1>({
   bytes,
   codec,
   hasher,
-}: DecodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg>> {
-  if (bytes == null) throw new Error('Missing required argument "bytes"');
-  if (codec == null || hasher == null) throw new Error("Missing required argument: codec or hasher");
+}: DecodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg, V>> {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!bytes) throw new Error('Missing required argument "bytes"');
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!codec || !hasher) throw new Error("Missing required argument: codec or hasher");
 
   const value = await Promise.resolve(codec.decode(bytes));
   const hash = await hasher.digest(bytes);
-  const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
+  const cid = CID.create(1 as V, codec.code, hash);
 
-  return new mfBlock({ value, bytes, cid });
+  return new mfBlock<T, Code, Alg, V>({ value, bytes, cid });
 }
 
 interface EncodeInput<T, Code extends number, Alg extends number> {
-  value: T;
-  codec: BlockEncoder<Code, T>;
-  hasher: MultihashHasher<Alg>;
+  readonly value: T;
+  readonly codec: BlockEncoder<Code, T>;
+  readonly hasher: MultihashHasher<Alg>;
 }
 
-export async function encode<T, Code extends number, Alg extends number>({
+export async function encode<T, Code extends number, Alg extends number, V extends Version = 1>({
   value,
   codec,
   hasher,
-}: EncodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg>> {
+}: EncodeInput<T, Code, Alg>): Promise<BlockView<T, Code, Alg, V>> {
   if (typeof value === "undefined") throw new Error('Missing required argument "value"');
-  if (codec == null || hasher == null) throw new Error("Missing required argument: codec or hasher");
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!codec || !hasher) throw new Error("Missing required argument: codec or hasher");
 
   const bytes = await Promise.resolve(codec.encode(value));
   const hash = await hasher.digest(bytes);
-  const cid = CID.create(1, codec.code, hash) as CID<T, Code, Alg, 1>;
+  const cid = CID.create(1 as V, codec.code, hash);
 
-  return new mfBlock({ value, bytes, cid });
+  return new mfBlock<T, Code, Alg, V>({ value, bytes, cid });
 }
 
 interface CreateInput<T, Code extends number, Alg extends number, V extends Version> {
-  bytes: ByteView<T>;
-  cid: Link<T, Code, Alg, V>;
-  hasher: MultihashHasher<Alg>;
-  codec: BlockDecoder<Code, T>;
+  readonly bytes: ByteView<T>;
+  readonly cid: Link<T, Code, Alg, V>;
+  readonly hasher: MultihashHasher<Alg>;
+  readonly codec: BlockDecoder<Code, T>;
 }
 
 export async function create<T, Code extends number, Alg extends number, V extends Version>({
@@ -64,8 +67,10 @@ export async function create<T, Code extends number, Alg extends number, V exten
   hasher,
   codec,
 }: CreateInput<T, Code, Alg, V>): Promise<BlockView<T, Code, Alg, V>> {
-  if (bytes == null) throw new Error('Missing required argument "bytes"');
-  if (hasher == null) throw new Error('Missing required argument "hasher"');
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!bytes) throw new Error('Missing required argument "bytes"');
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  if (!hasher) throw new Error('Missing required argument "hasher"');
   const value = await Promise.resolve(codec.decode(bytes));
   const hash = await hasher.digest(bytes);
   if (!binary.equals(cid.multihash.bytes, hash.bytes)) {
@@ -106,7 +111,7 @@ export async function createUnsafe<T, Code extends number, Alg extends number, V
   value: maybeValue,
   codec,
 }: CreateUnsafeInput<T, Code, Alg, V>): Promise<BlockView<T, Code, Alg, V>> {
-  const value = await Promise.resolve(maybeValue !== undefined ? maybeValue : codec?.decode(bytes));
+  const value = await Promise.resolve(maybeValue ? maybeValue : codec?.decode(bytes));
 
   if (value === undefined) throw new Error('Missing required argument, must either provide "value" or "codec"');
 

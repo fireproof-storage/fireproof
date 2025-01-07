@@ -194,6 +194,6 @@ export class CRDT<T extends DocTypes> {
 
   async compact(): Promise<void> {
     const blocks = this.blockstore as EncryptedBlockstore;
-    return await blocks.compact();
+    await blocks.compact();
   }
 }

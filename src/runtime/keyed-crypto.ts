@@ -42,7 +42,7 @@ const generateIV: Record<string, GenerateIVFn> = {
 
 function getGenerateIVFn(url: URI, opts: Partial<CodecOpts>): GenerateIVFn {
   const ivhash = opts.ivCalc || url.getParam(PARAM.IV_HASH) || "hash";
-  return generateIV[ivhash] || generateIV["hash"];
+  return generateIV[ivhash] || generateIV.hash;
 }
 
 export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
@@ -85,7 +85,7 @@ export class BlockIvKeyIdCodec implements BlockCodec<0x300539, Uint8Array> {
       throw this.ko.logger.Error().Str("fp", fprt).Str("keyId", base58btc.encode(keyId)).Msg("keyId mismatch").AsError();
     }
     const result = await this.ko._decrypt({ iv: iv, bytes: data });
-    if (!this.opts?.noIVVerify && !(await getGenerateIVFn(this.ko.url, this.opts).verify(this.ko, this.ko.crypto, iv, result))) {
+    if (!this.opts.noIVVerify && !(await getGenerateIVFn(this.ko.url, this.opts).verify(this.ko, this.ko.crypto, iv, result))) {
       throw this.ko.logger.Error().Msg("iv missmatch").AsError();
     }
     return result;

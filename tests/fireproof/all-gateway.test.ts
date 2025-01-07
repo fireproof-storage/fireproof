@@ -50,10 +50,10 @@ describe("noop Gateway", function () {
     });
 
     // Extract stores from the loader
-    carStore = (await db.crdt.blockstore.loader?.carStore()) as DataStore;
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
-    fileStore = (await db.crdt.blockstore.loader?.fileStore()) as DataStore;
-    walStore = (await db.crdt.blockstore.loader?.WALStore()) as WALStore;
+    carStore = await db.crdt.blockstore.loader.carStore();
+    metaStore = await db.crdt.blockstore.loader.metaStore();
+    fileStore = await db.crdt.blockstore.loader.fileStore();
+    walStore = await db.crdt.blockstore.loader.WALStore();
 
     // Extract and log gateways
     carGateway = carStore.realGateway;
@@ -377,7 +377,7 @@ describe("noop Gateway subscribe", function () {
     db = LedgerFactory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
+    metaStore = await db.crdt.blockstore.loader.metaStore();
 
     metaGateway = metaStore.realGateway;
   });
@@ -391,12 +391,12 @@ describe("noop Gateway subscribe", function () {
       resolve = r;
     });
     if (metaGateway.subscribe) {
-      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: FPEnvelopeMeta) => {
+      const metaSubscribeResult = await metaGateway.subscribe(metaUrl.Ok(), async (data: FPEnvelopeMeta) => {
         // const decodedData = sthis.txt.decode(data);
         expect(data.payload).toContain("[]");
         didCall = true;
         resolve();
-      })) as bs.UnsubscribeResult;
+      });
       expect(metaSubscribeResult.isOk()).toBeTruthy();
       const ok = await db.put({ _id: "key1", hello: "world1" });
       expect(ok).toBeTruthy();
@@ -431,7 +431,7 @@ describe("Gateway", function () {
 
     // Extract stores from the loader
     // carStore = (await db.blockstore.loader.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
+    metaStore = await db.crdt.blockstore.loader.metaStore();
     // fileStore = (await db.blockstore.loader.fileStore()) as unknown as ExtendedStore;
     // walStore = (await db.blockstore.loader.WALStore()) as unknown as ExtendedStore;
 

@@ -1,7 +1,7 @@
 import { defineWorkspace } from "vitest/config";
 
-import file from "./vitest.file.config.ts";
-import memory from "./vitest.memory.config.ts";
-import indexdb from "./vitest.indexdb.config.ts";
+import file from "./vitest.file.config.js";
+import memory from "./vitest.memory.config.js";
+import indexdb from "./vitest.indexdb.config.js";
 
 export default defineWorkspace([memory, file, indexdb]);

@@ -149,7 +149,7 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
     return this.ref.name;
   }
   onClosed(fn: () => void): void {
-    return this.ref.onClosed(fn);
+    this.ref.onClosed(fn);
   }
   close(): Promise<void> {
     return this.ref.shellClose(this);
@@ -234,7 +234,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
       await this.ready();
       await this.crdt.close();
       await this._writeQueue.close();
-      this._onClosedFns.forEach((fn) => fn());
+      this._onClosedFns.forEach((fn) => {
+        fn();
+      });
     }
     // await this.blockstore.close();
   }
@@ -299,7 +301,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
         _id: docId,
       },
     })) as CRDTMeta;
-    return { id: docId, clock: result?.head, name: this.name } as DocResponse;
+    return { id: docId, clock: result.head, name: this.name } as DocResponse;
   }
 
   async bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse> {
@@ -323,7 +325,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     await this.ready();
     this.logger.Debug().Str("id", id).Msg("del");
     const result = (await this._writeQueue.push({ id: id, del: true })) as CRDTMeta;
-    return { id, clock: result?.head, name: this.name } as DocResponse;
+    return { id, clock: result.head, name: this.name } as DocResponse;
   }
 
   async changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): Promise<ChangesResponse<T>> {
@@ -406,7 +408,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     if (this._listeners.size) {
       const docs: DocWithId<NonNullable<unknown>>[] = updates.map(({ id, value }) => ({ ...value, _id: id }));
       for (const listener of this._listeners) {
-        await (async () => await listener(docs as DocWithId<DT>[]))().catch((e: Error) => {
+        await (async () => {
+          await listener(docs as DocWithId<DT>[]);
+        })().catch((e: Error) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }
@@ -417,7 +421,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     await this.ready();
     if (this._noupdate_listeners.size) {
       for (const listener of this._noupdate_listeners) {
-        await (async () => await listener([]))().catch((e: Error) => {
+        await (async () => {
+          await listener([]);
+        })().catch((e: Error) => {
           this.logger.Error().Err(e).Msg("subscriber error");
         });
       }

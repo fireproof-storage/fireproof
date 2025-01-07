@@ -1,4 +1,4 @@
-function gthis() {
+function gthis(): Record<string | symbol, unknown> {
   return globalThis;
 }
 

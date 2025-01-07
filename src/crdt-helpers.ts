@@ -128,7 +128,7 @@ async function processFileset(
   // let totalSize = 0
   for (const filename in files) {
     if (File === files[filename].constructor) {
-      const file = files[filename] as File;
+      const file = files[filename];
 
       // totalSize += file.size
       const { cid, blocks: fileBlocks } = await store.encodeFile(file);
@@ -148,7 +148,7 @@ async function processFileset(
   if (didPut.length) {
     const car = await dbBlockstore.loader.commitFiles(
       t,
-      { files } as unknown as TransactionMeta /* {
+      { files } as unknown /* {
       public: publicFiles,
     } */,
     );
@@ -241,9 +241,7 @@ export async function clockChangesSince<T extends DocTypes>(
   opts: ChangesOptions,
   logger: Logger,
 ): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
-  const eventsFetcher = (
-    opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(blocks)
-  ) as EventFetcher<Operation>;
+  const eventsFetcher = opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(blocks);
   const keys = new Set<string>();
   const updates = await gatherUpdates<T>(
     blocks,
