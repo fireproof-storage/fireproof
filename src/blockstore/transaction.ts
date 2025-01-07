@@ -66,7 +66,7 @@ export function defaultedBlockstoreRuntime(
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     compact: async (blocks: BlockFetcher) => {
-      return {} as unknown as TransactionMeta;
+      return {} as unknown;
     },
     autoCompact: 100,
     public: false,

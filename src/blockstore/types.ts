@@ -24,7 +24,7 @@ export interface AnyBlock {
 }
 
 export interface CIDBlock {
-  readonly cid: CID<unknown, number, number, Version>;
+  readonly cid: CID;
   readonly bytes: Uint8Array;
 }
 
@@ -357,7 +357,7 @@ export interface WALStore extends BaseStore {
   readonly storeType: "wal";
   ready(): Promise<void>;
   readonly processing?: Promise<void> | undefined;
-  readonly processQueue: CommitQueue<void>;
+  readonly processQueue: CommitQueue;
 
   process(): Promise<void>;
   enqueue(dbMeta: DbMeta, opts: CommitOpts): Promise<void>;

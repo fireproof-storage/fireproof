@@ -13,7 +13,7 @@ describe("HOOK: useFireproof", () => {
       const { ledger, useLiveQuery, useDocument } = useFireproof("dbname");
       expect(typeof useLiveQuery).toBe("function");
       expect(typeof useDocument).toBe("function");
-      expect(ledger?.constructor.name).toMatch(/^Ledger/);
+      expect(ledger.constructor.name).toMatch(/^Ledger/);
     });
   });
 });

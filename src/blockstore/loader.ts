@@ -72,9 +72,9 @@ export class Loader implements Loadable {
   remoteCarStore?: DataStore;
   remoteFileStore?: DataStore;
 
-  private getBlockCache = new Map<string, AnyBlock>();
-  private seenMeta = new Set<string>();
-  private writeLimit = pLimit(1);
+  private readonly getBlockCache = new Map<string, AnyBlock>();
+  private readonly seenMeta = new Set<string>();
+  private readonly writeLimit = pLimit(1);
 
   private readonly _carStore = new ResolveOnce<DataStore>();
   async carStore(): Promise<DataStore> {
@@ -214,7 +214,7 @@ export class Loader implements Loadable {
     carHeader.compact.map((c) => c.toString()).forEach(this.seenCompacted.add, this.seenCompacted);
     await this.getMoreReaders(carHeader.cars.flat());
     this.carLog = [...uniqueCids([meta.cars, ...this.carLog, ...carHeader.cars], this.seenCompacted)];
-    await this.ebOpts.applyMeta?.(carHeader.meta);
+    await this.ebOpts.applyMeta(carHeader.meta);
   }
 
   // protected async ingestKeyFromMeta(meta: DbMeta): Promise<void> {

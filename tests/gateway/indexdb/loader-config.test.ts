@@ -16,8 +16,8 @@ describe("fireproof config indexdb", () => {
     await db.put({ name: "my-app" });
     expect(db.name).toBe(my_app());
 
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
-    expect(fileStore?.url().asObj()).toEqual({
+    const fileStore = await db.crdt.blockstore.loader.fileStore();
+    expect(fileStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
@@ -30,8 +30,8 @@ describe("fireproof config indexdb", () => {
       style: "path",
     });
 
-    const dataStore = await db.crdt.blockstore.loader?.carStore();
-    expect(dataStore?.url().asObj()).toEqual({
+    const dataStore = await db.crdt.blockstore.loader.carStore();
+    expect(dataStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
@@ -44,8 +44,8 @@ describe("fireproof config indexdb", () => {
       },
       style: "path",
     });
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
-    expect(metaStore?.url().asObj()).toEqual({
+    const metaStore = await db.crdt.blockstore.loader.metaStore();
+    expect(metaStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
@@ -57,8 +57,8 @@ describe("fireproof config indexdb", () => {
       },
       style: "path",
     });
-    const WALStore = await db.crdt.blockstore.loader?.WALStore();
-    expect(WALStore?.url().asObj()).toEqual({
+    const WALStore = await db.crdt.blockstore.loader.WALStore();
+    expect(WALStore.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {

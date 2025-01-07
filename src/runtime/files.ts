@@ -57,7 +57,7 @@ function createFileEncoderStream(blob: BlobLike) {
 }
 
 class UnixFSFileBuilder {
-  #file;
+  readonly #file;
   readonly name: string;
   constructor(name: string, file: BlobLike) {
     this.name = name;

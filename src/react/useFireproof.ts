@@ -256,7 +256,7 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
 
     const refreshRows = useCallback(async () => {
       const res = await ledger.query<K, T, R>(mapFn, query);
-      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
+      setResult({ ...res, docs: res.rows.map((r) => r.doc!) });
     }, [mapFnString, queryString]);
 
     useEffect(() => {
@@ -276,7 +276,7 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
 
     const refreshRows = useCallback(async () => {
       const res = await ledger.allDocs<T>(query);
-      setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
+      setResult({ ...res, docs: res.rows.map((r) => r.value) });
     }, [queryString]);
 
     useEffect(() => {
@@ -296,7 +296,7 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
 
     const refreshRows = useCallback(async () => {
       const res = await ledger.changes<T>(since, opts);
-      setResult({ ...res, docs: res.rows.map((r) => r.value as DocWithId<T>) });
+      setResult({ ...res, docs: res.rows.map((r) => r.value) });
     }, [since, queryString]);
 
     useEffect(() => {

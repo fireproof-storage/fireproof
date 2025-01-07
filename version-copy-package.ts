@@ -12,25 +12,25 @@ async function copyFilesToDist(destDir: string) {
 
 function getVersion() {
   let version = "refs/tags/v0.0.0-smoke";
-  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
+  if (process.env.GITHUB_REF?.startsWith("refs/tags/v")) {
     version = process.env.GITHUB_REF;
   }
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
-async function patchVersion(packageJson: Record<string, unknown>) {
+function patchVersion(packageJson: PackageJson) {
   const version = getVersion();
   console.log(`Patch version ${version} in package.json`);
   packageJson.version = version;
 }
 
-async function createDenoJson(destDir: string, packageJson: Record<string, unknown>) {
+async function createDenoJson(destDir: string, packageJson: PackageJson) {
   const denoJson = {
     imports: {
       "@fireproof/core": "./index.js",
-    },
+    } as Record<string, string>,
   };
-  const pdeps = packageJson.dependencies as Record<string, string>;
+  const pdeps = packageJson.dependencies;
   for (const dep of Object.keys(pdeps)) {
     denoJson.imports[dep] = `npm:${dep}@${pdeps[dep]}`;
   }
@@ -38,7 +38,7 @@ async function createDenoJson(destDir: string, packageJson: Record<string, unkno
   await fs.writeFile(denoJsonFile, JSON.stringify(denoJson, null, 2));
 }
 
-async function transferVersionsFromPackageJson(srcDeps: Record<string, string>, destDeps: Record<string, string>) {
+function transferVersionsFromPackageJson(srcDeps: Record<string, string>, destDeps: Record<string, string>) {
   for (const dep of Object.keys(destDeps)) {
     if (!srcDeps[dep]) {
       console.error(`Dependency ${dep} not found in main package.json`);
@@ -46,6 +46,12 @@ async function transferVersionsFromPackageJson(srcDeps: Record<string, string>, 
       destDeps[dep] = srcDeps[dep];
     }
   }
+}
+
+interface PackageJson {
+  version: string;
+  dependencies: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 }
 
 async function main() {
@@ -56,21 +62,22 @@ async function main() {
     process.exit(1);
   }
   const destDir = path.dirname(buildDest);
-  if (!(await fs.stat(destDir)).isDirectory) {
+  const stat = await fs.stat(destDir);
+  if (!stat.isDirectory()) {
     console.error(`Directory ${destDir} does not exist`);
     process.exit(1);
   }
   await copyFilesToDist(destDir);
-  const mainPackageJson = JSON.parse(await fs.readFile("package.json", "utf8"));
+  const mainPackageJson = JSON.parse(await fs.readFile("package.json", "utf8")) as PackageJson;
   const templateFile = path.basename(buildDest);
-  const destPackageJson = JSON.parse(await fs.readFile(templateFile, "utf-8"));
+  const destPackageJson = JSON.parse(await fs.readFile(templateFile, "utf-8")) as PackageJson;
   // copy version from package.json
   const withCoreVersion = {
     "@fireproof/core": `^${getVersion()}`,
     ...mainPackageJson.dependencies,
-  };
+  } as Record<string, string>;
   transferVersionsFromPackageJson(withCoreVersion, destPackageJson.dependencies);
-  transferVersionsFromPackageJson(withCoreVersion, destPackageJson.peerDependencies || {});
+  transferVersionsFromPackageJson(withCoreVersion, destPackageJson.peerDependencies ?? {});
 
   patchVersion(destPackageJson);
 

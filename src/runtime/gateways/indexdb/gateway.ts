@@ -13,7 +13,7 @@ function ensureVersion(url: URI): URI {
 }
 
 interface IDBConn {
-  readonly db: IDBPDatabase<unknown>;
+  readonly db: IDBPDatabase;
   readonly dbName: DbName;
   readonly version: string;
   readonly url: URI;
@@ -40,7 +40,7 @@ async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
       },
     });
     const found = await db.get("version", "version");
-    const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
+    const version = ensureVersion(url).getParam(PARAM.VERSION)!;
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {
@@ -91,7 +91,7 @@ export class IndexDBGateway implements Gateway {
     this.logger = ensureLogger(sthis, "IndexDBGateway");
     this.sthis = sthis;
   }
-  _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
+  _db: IDBPDatabase = {} as IDBPDatabase;
 
   async start(baseURL: URI): Promise<Result<URI>> {
     return exception2Result(async () => {

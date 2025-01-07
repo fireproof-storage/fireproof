@@ -1,9 +1,9 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, Plugin } from "vitest/config";
 
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
+  plugins: [tsconfigPaths() as Plugin],
   test: {
     name: "file",
     exclude: ["tests/react/**", "examples/**", "tests/gateway/indexdb"],

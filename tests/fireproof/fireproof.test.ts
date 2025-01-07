@@ -689,12 +689,12 @@ describe("same workload twice, same CID", function () {
     expect(headA.length).toBeGreaterThan(10);
   });
   it("should have same car log", async function () {
-    const logA = dbA.crdt.blockstore.loader?.carLog;
+    const logA = dbA.crdt.blockstore.loader.carLog;
     expect(logA).toBeTruthy();
     assert(logA);
     expect(logA.length).toBe(docs.length);
 
-    const logB = dbB.crdt.blockstore.loader?.carLog;
+    const logB = dbB.crdt.blockstore.loader.carLog;
     expect(logB).toBeTruthy();
     assert(logB);
     expect(logB.length).toBe(docs.length);
@@ -711,12 +711,12 @@ describe("same workload twice, same CID", function () {
     await dbA.compact();
     await dbB.compact();
 
-    const cmpLogA = dbA.crdt.blockstore.loader?.carLog;
+    const cmpLogA = dbA.crdt.blockstore.loader.carLog;
     expect(cmpLogA).toBeTruthy();
     assert(cmpLogA);
     expect(cmpLogA.length).toBe(1);
 
-    const cmpLogB = dbB.crdt.blockstore.loader?.carLog;
+    const cmpLogB = dbB.crdt.blockstore.loader.carLog;
     expect(cmpLogB).toBeTruthy();
     assert(cmpLogB);
     expect(cmpLogB.length).toBe(1);

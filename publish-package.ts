@@ -3,6 +3,7 @@ import { $ } from "zx";
 import { SemVer } from "semver";
 import fs from "fs";
 import path from "path";
+import * as process from "process";
 
 async function main() {
   $.verbose = true;
@@ -13,17 +14,17 @@ async function main() {
   }
   const tags: string[] = [];
   let refVersion;
-  if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/v")) {
+  if (process.env.GITHUB_REF?.startsWith("refs/tags/v")) {
     refVersion = process.env.GITHUB_REF;
   }
   if (!refVersion) {
-    console.error(`No version found in GITHUB_REF(${process.env.GITHUB_REF}) we will not publish`);
+    console.error(`No version found in GITHUB_REF(${process.env.GITHUB_REF ?? ""}) we will not publish`);
     process.exit(1);
   }
   const version = refVersion.replace(/^.*\/v/, "");
   console.log(`Version: ${version} ${refVersion}`);
   const semVer = new SemVer(version);
-  if (semVer.prerelease.find((i) => i.includes("dev"))) {
+  if (semVer.prerelease.find((i) => i.toString().includes("dev"))) {
     tags.push("dev");
   }
   console.log(`Publishing package: ${packageJsonFile} version ${version} with tags ${tags.join(", ")}`);

@@ -23,7 +23,7 @@ export class NodeFileSystem implements SysFileSystem {
     return this.fs?.mkdir(path, options);
   }
   async readdir(path: PathLike, options?: ObjectEncodingOptions): Promise<string[]> {
-    return this.fs?.readdir(path, options) as Promise<string[]>;
+    return this.fs?.readdir(path, options)!;
   }
   async rm(path: PathLike, options?: MakeDirectoryOptions & { recursive: boolean }): Promise<void> {
     return this.fs?.rm(path, options);

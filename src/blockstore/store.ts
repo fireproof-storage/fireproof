@@ -111,7 +111,7 @@ export abstract class BaseStoreImpl {
     const res = await this.gateway.start(this._url, this.loader);
     if (res.isErr()) {
       this.logger.Error().Result("gw-start", res).Msg("started-gateway");
-      return res as Result<URI>;
+      return res;
     }
     this._url = res.Ok();
     // add storekey to url
@@ -126,7 +126,7 @@ export abstract class BaseStoreImpl {
       return storeKeyName.join(":");
     });
     if (skRes.isErr()) {
-      return skRes as Result<URI>;
+      return skRes;
     }
     this._url = skRes.Ok();
     const version = guardVersion(this._url);
@@ -143,7 +143,9 @@ export abstract class BaseStoreImpl {
         return ready as Result<URI>;
       }
     }
-    this._onStarted.forEach((fn) => fn());
+    this._onStarted.forEach((fn) => {
+      fn();
+    });
     this.logger.Debug().Msg("started");
     return version;
   }
@@ -154,7 +156,7 @@ export async function createDbMetaEvent(sthis: SuperThis, dbMeta: DbMeta, parent
     {
       dbMeta: sthis.txt.encode(format(dbMeta)),
     },
-    parents as unknown as Link<EventView<DbMetaBinary>, number, number, 1>[],
+    parents as unknown as Link<EventView<DbMetaBinary>>[],
   );
   return {
     eventCid: event.cid as CarClockLink,
@@ -182,7 +184,7 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
           async ({ payload: dbMetas }: FPEnvelopeMeta) => {
             this.logger.Debug().Msg("Received message from gateway");
             await Promise.all(
-              dbMetas.map((dbMeta) => this.loader.taskManager?.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
+              dbMetas.map((dbMeta) => this.loader.taskManager.handleEvent(dbMeta.eventCid, dbMeta.parents, dbMeta.dbMeta)),
             );
             this.updateParentsFromDbMetas(dbMetas);
           },
@@ -257,7 +259,9 @@ export class MetaStoreImpl extends BaseStoreImpl implements MetaStore {
 
   async close(): Promise<Result<void>> {
     await this.gateway.close(this.url(), this.loader);
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => {
+      fn();
+    });
     return Result.Ok(undefined);
   }
   async destroy(): Promise<Result<void>> {
@@ -322,7 +326,7 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
     if (res.isErr()) {
       throw this.logger.Error().Err(res.Err()).Msg("got error from gateway.put").AsError();
     }
-    return res.Ok();
+    res.Ok();
   }
   async remove(cid: AnyLink): Promise<Result<void>> {
     const url = await this.gateway.buildUrl(this.url(), cid.toString(), this.loader);
@@ -333,7 +337,9 @@ export class DataStoreImpl extends BaseStoreImpl implements DataStore {
   }
   async close(): Promise<Result<void>> {
     await this.gateway.close(this.url(), this.loader);
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => {
+      fn();
+    });
     return Result.Ok(undefined);
   }
   destroy(): Promise<Result<void>> {
@@ -352,7 +358,7 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   readonly walState: WALState = { operations: [], noLoaderOps: [], fileOperations: [] };
   readonly processing: Promise<void> | undefined = undefined;
-  readonly processQueue: CommitQueue<void> = new CommitQueue<void>();
+  readonly processQueue: CommitQueue = new CommitQueue();
 
   constructor(sthis: SuperThis, url: URI, opts: StoreOpts) {
     // const my = new URL(url.toString());
@@ -574,7 +580,9 @@ export class WALStoreImpl extends BaseStoreImpl implements WALStore {
 
   async close() {
     await this.gateway.close(this.url(), this.loader);
-    this._onClosed.forEach((fn) => fn());
+    this._onClosed.forEach((fn) => {
+      fn();
+    });
     return Result.Ok(undefined);
   }
 

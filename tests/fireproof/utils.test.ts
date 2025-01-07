@@ -113,7 +113,7 @@ describe("utils", () => {
 
 describe("runtime", () => {
   it("runtime", () => {
-    const isNode = !!(typeof process === "object" && process.versions?.node);
+    const isNode = !!(typeof process === "object" && process.versions.node);
     expect(runtimeFn()).toEqual({
       isBrowser: !isNode,
       isCFWorker: false,
