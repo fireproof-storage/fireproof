@@ -30,4 +30,3 @@ export function getFileName(url: URI, sthis: SuperThis): string {
       throw sthis.logger.Error().Url(url).Msg(`unsupported store type`).AsError();
   }
 }
-

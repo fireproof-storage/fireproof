@@ -116,10 +116,6 @@ export class BaseBlockstore implements BlockFetcher {
     // no-op
   }
 
-  async compact(): Promise<void> {
-    // no-op
-  }
-
   readonly logger: Logger;
   constructor(ebOpts: BlockstoreOpts) {
     this.sthis = ensureSuperThis(ebOpts);

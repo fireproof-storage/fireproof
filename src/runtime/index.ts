@@ -1,5 +1,5 @@
 // export * from "./sys-container.js";
-export * from "./gateways/file/node/utils.js";
+export * from "./gateways/file/utils.js";
 
 // export * as sql from "./store-sql/index.js";
 export * as files from "./files.js";
@@ -11,7 +11,7 @@ export * as mf from "./wait-pr-multiformats/index.js";
 
 export { runtimeFn } from "@adviser/cement";
 
-export * as gw from "./gateways/fp-envelope-serialize.js";
+export * as gw from "./gateways/index.js";
 
 export { FILESTORE_VERSION } from "./gateways/file/version.js";
 export { INDEXDB_VERSION } from "./gateways/indexdb/version.js";

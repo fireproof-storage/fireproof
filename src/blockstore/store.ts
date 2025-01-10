@@ -1,4 +1,3 @@
-import { format, parse, ToString } from "@fireproof/vendor/@ipld/dag-json";
 import { exception2Result, Logger, ResolveOnce, Result, URI } from "@adviser/cement";
 import type {
   AnyBlock,

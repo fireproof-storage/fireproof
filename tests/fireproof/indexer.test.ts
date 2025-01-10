@@ -4,13 +4,13 @@ import {
   Ledger,
   CRDT,
   IndexRows,
-  LedgerOpts,
   toStoreURIRuntime,
   bs,
   rt,
   LedgerFactory,
   defaultWriteQueueOpts,
   ensureSuperThis,
+  LedgerOpts,
 } from "@fireproof/core";
 
 interface TestType {
@@ -277,6 +277,7 @@ describe("basic Index upon cold start", function () {
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
   const sthis = ensureSuperThis();
+  let dbOpts : LedgerOpts
   // result, mapFn;
   afterEach(async function () {
     await crdt.close();

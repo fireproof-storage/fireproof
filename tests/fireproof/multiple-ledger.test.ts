@@ -1,7 +1,7 @@
-import { Database, ensureSuperThis, fireproof } from "@fireproof/core";
+import { Ledger, ensureSuperThis, fireproof } from "@fireproof/core";
 
 interface DBItem {
-  readonly db: Database;
+  readonly db: Ledger;
   readonly name: string;
 }
 
