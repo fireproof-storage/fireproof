@@ -70,7 +70,6 @@
     "charwise": "from-package-json",
     "prolly-trees": "from-package-json",
     "idb": "from-package-json",
-    "memfs": "from-package-json",
     "p-limit": "from-package-json",
     "p-map": "from-package-json",
     "p-retry": "from-package-json"
