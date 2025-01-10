@@ -45,7 +45,7 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const data = (await store.realGateway.getPlain(store.url(), car.cid.toString())).Ok();
+    const data = (await store.realGateway.getPlain(sthis, store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
@@ -73,7 +73,7 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const data = (await store.realGateway.getPlain(store.url(), car.cid.toString())).Ok();
+    const data = (await store.realGateway.getPlain(sthis, store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
@@ -118,7 +118,7 @@ describe("MetaStore", function () {
       // key: undefined,
     };
     await store.save(h);
-    const file = await store.realGateway.getPlain(store.url(), "main");
+    const file = await store.realGateway.getPlain(sthis, store.url(), "main");
     const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
@@ -154,7 +154,7 @@ describe("MetaStore with a saved header", function () {
   // });
 
   it("should have a header", async function () {
-    const bytes = await store.realGateway.getPlain(store.url(), "main");
+    const bytes = await store.realGateway.getPlain(sthis, store.url(), "main");
     const data = sthis.txt.decode(bytes.Ok());
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];

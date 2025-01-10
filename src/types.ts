@@ -1,7 +1,7 @@
 import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 
-import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile, GatewayInterceptor } from "./blockstore/index.js";
+import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile, SerdeGatewayInterceptor } from "./blockstore/index.js";
 import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
@@ -122,7 +122,7 @@ export interface ConfigOpts extends Partial<SuperThisOpts> {
   readonly meta?: DbMeta;
   // readonly persistIndexes?: boolean;
   readonly writeQueue?: Partial<WriteQueueParams>;
-  readonly gatewayInterceptor?: GatewayInterceptor;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly autoCompact?: number;
   readonly storeUrls?: StoreUrlsOpts;
   readonly storeEnDe?: StoreEnDeFile;

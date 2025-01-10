@@ -1,47 +1,51 @@
 import { Result, URI } from "@adviser/cement";
-import { bs, fireproof } from "@fireproof/core";
+import { bs, fireproof, SuperThis } from "@fireproof/core";
 
 class TestInterceptor extends bs.PassThroughGateway {
   readonly fn = vitest.fn();
 
-  async buildUrl(baseUrl: URI, key: string): Promise<Result<bs.GatewayBuildUrlReturn>> {
-    const ret = await super.buildUrl(baseUrl, key);
+  async buildUrl(sthis: SuperThis, baseUrl: URI, key: string): Promise<Result<bs.SerdeGatewayBuildUrlReturn>> {
+    const ret = await super.buildUrl(sthis, baseUrl, key);
     this.fn("buildUrl", ret);
     return ret;
   }
 
-  async start(baseUrl: URI): Promise<Result<bs.GatewayStartReturn>> {
-    const ret = await super.start(baseUrl);
+  async start(sthis: SuperThis, baseUrl: URI): Promise<Result<bs.SerdeGatewayStartReturn>> {
+    const ret = await super.start(sthis, baseUrl);
     this.fn("start", ret);
     return ret;
   }
-  async close(baseUrl: URI): Promise<Result<bs.GatewayCloseReturn>> {
-    const ret = await super.close(baseUrl);
+  async close(sthis: SuperThis, baseUrl: URI): Promise<Result<bs.SerdeGatewayCloseReturn>> {
+    const ret = await super.close(sthis, baseUrl);
     this.fn("close", ret);
     return ret;
   }
-  async delete(baseUrl: URI): Promise<Result<bs.GatewayDeleteReturn>> {
-    const ret = await super.delete(baseUrl);
+  async delete(sthis: SuperThis, baseUrl: URI): Promise<Result<bs.SerdeGatewayDeleteReturn>> {
+    const ret = await super.delete(sthis, baseUrl);
     this.fn("delete", ret);
     return ret;
   }
-  async destroy(baseUrl: URI): Promise<Result<bs.GatewayDestroyReturn>> {
-    const ret = await super.destroy(baseUrl);
+  async destroy(sthis: SuperThis, baseUrl: URI): Promise<Result<bs.SerdeGatewayDestroyReturn>> {
+    const ret = await super.destroy(sthis, baseUrl);
     this.fn("destroy", ret);
     return ret;
   }
-  async put<T>(url: URI, body: bs.FPEnvelope<T>): Promise<Result<bs.GatewayPutReturn<T>>> {
-    const ret = await super.put<T>(url, body);
+  async put<T>(sthis: SuperThis, url: URI, body: bs.FPEnvelope<T>): Promise<Result<bs.SerdeGatewayPutReturn<T>>> {
+    const ret = await super.put<T>(sthis, url, body);
     this.fn("put", ret);
     return ret;
   }
-  async get<S>(url: URI): Promise<Result<bs.GatewayGetReturn<S>>> {
-    const ret = await super.get<S>(url);
+  async get<S>(sthis: SuperThis, url: URI): Promise<Result<bs.SerdeGatewayGetReturn<S>>> {
+    const ret = await super.get<S>(sthis, url);
     this.fn("get", ret);
     return ret;
   }
-  async subscribe(url: URI, callback: (meta: bs.FPEnvelopeMeta) => Promise<void>): Promise<Result<bs.GatewaySubscribeReturn>> {
-    const ret = await super.subscribe(url, callback);
+  async subscribe(
+    sthis: SuperThis,
+    url: URI,
+    callback: (meta: bs.FPEnvelopeMeta) => Promise<void>,
+  ): Promise<Result<bs.SerdeGatewaySubscribeReturn>> {
+    const ret = await super.subscribe(sthis, url, callback);
     this.fn("subscribe", ret);
     return ret;
   }
