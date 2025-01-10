@@ -5,7 +5,6 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
 import type { KeyBagProviderIndexDB } from "@fireproof/core/web";
 import { MockSuperThis, mockSuperThis } from "../helpers.js";
-import { K } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 import { getDefaultURI } from "../../src/blockstore/register-store-protocol.js";
 
 describe("KeyBag", () => {

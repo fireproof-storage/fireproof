@@ -277,7 +277,7 @@ describe("basic Index upon cold start", function () {
   let mapFn: (doc: TestType) => string;
   let result: IndexRows<string, TestType>;
   const sthis = ensureSuperThis();
-  let dbOpts : LedgerOpts
+  let dbOpts: LedgerOpts;
   // result, mapFn;
   afterEach(async function () {
     await crdt.close();

@@ -9,5 +9,5 @@ export async function getSysFileSystem(url: URI): Promise<SysFileSystem> {
     const nfs = new NodeFileSystem();
     await nfs.start();
     return nfs;
-  })
+  });
 }

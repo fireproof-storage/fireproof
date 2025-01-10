@@ -124,7 +124,8 @@ if (runtimeFn().isBrowser) {
     protocol: "indexdb:",
     isDefault: true,
     defaultURI: () => {
-      return BuildURI.from("indexdb://").pathname("fireproof")
+      return BuildURI.from("indexdb://")
+        .pathname("fireproof")
         .setParam(PARAM.VERSION, INDEXDB_VERSION)
         .setParam(PARAM.RUNTIME, "browser")
         .URI();
@@ -135,8 +136,6 @@ if (runtimeFn().isBrowser) {
     },
   });
 }
-
-
 
 const memory = new Map<string, Uint8Array>();
 registerStoreProtocol({

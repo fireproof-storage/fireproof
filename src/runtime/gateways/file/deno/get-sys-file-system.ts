@@ -9,5 +9,5 @@ export async function getSysFileSystem(url: URI): Promise<SysFileSystem> {
     const nfs = new DenoFileSystem();
     await nfs.start();
     return nfs;
-  })
+  });
 }
