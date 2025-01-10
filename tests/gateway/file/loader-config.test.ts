@@ -105,7 +105,7 @@ describe("config file gateway", () => {
     // if (isMemFS.fs) {
     //   base.setParam("fs", isMemFS.fs);
     // }
-    const sysfs = await rt.getFileSystem(base.URI());
+    const sysfs = await rt.gw.file.sysFileSystemFactory(base.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
@@ -170,7 +170,7 @@ describe("config file gateway", () => {
     // if (isMemFS.fs) {
     //   base.setParam("fs", isMemFS.fs);
     // }
-    const sysfs = await rt.getFileSystem(base.URI());
+    const sysfs = await rt.gw.file.sysFileSystemFactory(base.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });
@@ -242,7 +242,7 @@ describe("config file gateway", () => {
     let baseDir = dataDir(sthis, my_app()).pathname;
     baseDir = sthis.pathOps.join(baseDir, /* testCfg(sthis, "data").version, */ my_app());
 
-    const sysfs = await rt.getFileSystem(testUrl.URI());
+    const sysfs = await rt.gw.file.sysFileSystemFactory(testUrl.URI());
     await sysfs.rm(baseDir, { recursive: true }).catch(() => {
       /* */
     });

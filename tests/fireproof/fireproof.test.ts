@@ -1,4 +1,4 @@
-import { sleep } from "../helpers.js";
+import { sleep, storageURL } from "../helpers.js";
 import { docs } from "./fireproof.test.fixture.js";
 import { CID } from "multiformats/cid";
 

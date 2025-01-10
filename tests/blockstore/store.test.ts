@@ -1,7 +1,6 @@
 import { CID } from "multiformats";
-import { bs, NotFoundError, SuperThis, rt, PARAM, Result, DbMeta, ensureSuperThis } from "@fireproof/core";
+import { rt, bs, NotFoundError, SuperThis, PARAM, Result, DbMeta, ensureSuperThis } from "@fireproof/core";
 import { noopUrl } from "../helpers.js";
-import { fpDeserialize } from "../../src/runtime/gateways/fp-envelope-serialize.js";
 
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime(sthis);
@@ -119,7 +118,7 @@ describe("MetaStore", function () {
     };
     await store.save(h);
     const file = await store.realGateway.getPlain(store.url(), "main");
-    const blockMeta = (await fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
+    const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
     const decodedHeader = blockMeta.Ok().payload[0].dbMeta;
@@ -162,7 +161,7 @@ describe("MetaStore with a saved header", function () {
     expect(header.parents).toBeDefined();
     // const [blockMeta] = await store.handleByteHeads(bytes);
 
-    const blockMeta = (await fpDeserialize(sthis, store.url(), bytes)) as Result<bs.FPEnvelopeMeta>;
+    const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), bytes)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
     const decodedHeader = blockMeta.Ok().payload[0].dbMeta;

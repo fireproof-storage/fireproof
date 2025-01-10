@@ -27,11 +27,12 @@ import {
   type SuperThis,
   PARAM,
 } from "./types.js";
-import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, getDefaultURI, GatewayInterceptor } from "./blockstore/index.js";
+import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, GatewayInterceptor } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
+import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 

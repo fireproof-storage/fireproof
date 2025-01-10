@@ -38,13 +38,13 @@ export function storageURL(sthis: SuperThis): URI {
   return merged;
 }
 
-export type MockSuperThis = SuperThis & { ctx: { logCollector: LogCollector } };
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type MockSuperThis = SuperThis & { ctx: { readonly logCollector: LogCollector } };
 export function mockSuperThis(sthis?: Partial<SuperThisOpts>): MockSuperThis {
   const mockLog = MockLogger({
     pass: new utils.ConsoleWriterStreamDefaultWriter(new utils.ConsoleWriterStream()),
   });
   return ensureSuperThis({
+    ...sthis,
     logger: mockLog.logger,
     ctx: {
       logCollector: mockLog.logCollector,

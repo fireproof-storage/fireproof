@@ -1,8 +1,11 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
-import { SuperThis } from "../types.js";
+import { PARAM, SuperThis } from "../types.js";
 import { Gateway } from "./gateway.js";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
 import { MemoryGateway } from "../runtime/gateways/memory/gateway.js";
+import { INDEXDB_VERSION } from "../runtime/index.js";
+import { FileGateway } from "../runtime/gateways/file/gateway-impl.js";
+import { sysFileSystemFactory } from "../runtime/gateways/file/sys-file-system-factory.js";
 
 export interface GatewayFactoryItem {
   readonly protocol: string;
@@ -71,21 +74,49 @@ export function getGatewayFactoryItem(protocol: string): GatewayFactoryItem | un
   return storeFactory.get(protocol);
 }
 
-export function fileGatewayFactoryItem(): GatewayFactoryItem {
-  return {
+export function defaultGatewayFactoryItem(): GatewayFactoryItem {
+  const found = Array.from(storeFactory.values()).find((item) => item.isDefault);
+  if (!found) {
+    throw new Error("no default found");
+  }
+  return found;
+}
+
+// export function fileGatewayFactoryItem(): GatewayFactoryItem {
+//   return {
+//     protocol: "file:",
+//     isDefault: true,
+//     defaultURI: (sthis) => {
+//       // might not work on windows
+//       return BuildURI.from("file://")
+//         .pathname(`${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
+//         .URI();
+//     },
+//     gateway: async (sthis) => {
+//       const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
+//       return new FileGateway(sthis);
+//     },
+//   };
+// }
+
+function defaultURI(sthis: SuperThis) {
+  const rt = runtimeFn();
+  return BuildURI.from("file://")
+    .pathname(`${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
+    .setParam(PARAM.VERSION, FILESTORE_VERSION)
+    .setParam(PARAM.RUNTIME, rt.isNodeIsh ? "node" : rt.isDeno ? "deno" : "unknown")
+    .URI();
+}
+
+if (runtimeFn().isNodeIsh || runtimeFn().isDeno) {
+  registerStoreProtocol({
     protocol: "file:",
     isDefault: true,
-    defaultURI: (sthis) => {
-      // might not work on windows
-      return BuildURI.from("file://")
-        .pathname(`${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
-        .URI();
-    },
+    defaultURI,
     gateway: async (sthis) => {
-      const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
-      return new FileGateway(sthis);
+      return new FileGateway(sthis, await sysFileSystemFactory(defaultURI(sthis)));
     },
-  };
+  });
 }
 
 if (runtimeFn().isBrowser) {
@@ -93,16 +124,19 @@ if (runtimeFn().isBrowser) {
     protocol: "indexdb:",
     isDefault: true,
     defaultURI: () => {
-      return BuildURI.from("indexdb://").pathname("fp").URI();
+      return BuildURI.from("indexdb://").pathname("fireproof")
+        .setParam(PARAM.VERSION, INDEXDB_VERSION)
+        .setParam(PARAM.RUNTIME, "browser")
+        .URI();
     },
     gateway: async (sthis) => {
-      const { IndexDBGateway } = await import("../runtime/gateways/indexdb/gateway.js");
-      return new IndexDBGateway(sthis);
+      const { GatewayImpl } = await import("@fireproof/core/web");
+      return new GatewayImpl(sthis);
     },
   });
-} else {
-  registerStoreProtocol(fileGatewayFactoryItem());
 }
+
+
 
 const memory = new Map<string, Uint8Array>();
 registerStoreProtocol({

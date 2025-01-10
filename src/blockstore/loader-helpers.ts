@@ -1,7 +1,6 @@
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
-import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
 import type { Logger } from "@adviser/cement";
 
 import { CarHeader } from "./types.js";

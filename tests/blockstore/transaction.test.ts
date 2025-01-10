@@ -35,7 +35,7 @@ describe("TransactionBlockstore with name", function () {
   let blocks: bs.EncryptedBlockstore;
   const sthis = ensureSuperThis();
   beforeEach(function () {
-    blocks = new bs.EncryptedBlockstore(sthis, { name: "test" });
+    blocks = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis));
   });
   // it("should have a name", function () {
   //   expect(blocks.name).toEqual("test");
