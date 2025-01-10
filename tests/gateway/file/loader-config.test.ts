@@ -189,6 +189,7 @@ describe("config file gateway", () => {
       searchParams: {
         // ...isMemFS,
         suffix: ".car",
+        runtime: "node",
         urlGen: "default",
         store: "data",
         name: my_app(),
@@ -206,6 +207,7 @@ describe("config file gateway", () => {
       style: "path",
       searchParams: {
         // ...isMemFS,
+        runtime: "node",
         urlGen: "default",
         store: "data",
         name: my_app(),
@@ -220,6 +222,7 @@ describe("config file gateway", () => {
       style: "path",
       searchParams: {
         // ...isMemFS,
+        runtime: "node",
         urlGen: "default",
         store: "meta",
         name: my_app(),
@@ -250,7 +253,7 @@ describe("config file gateway", () => {
     const db = fireproof(my_app());
     await db.put({ name: "my-app" });
     expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader?.carStore();
+    const carStore = await db.crdt.blockstore.loader.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -259,6 +262,7 @@ describe("config file gateway", () => {
         // ...isMemFS,
         urlGen: "fromEnv",
         store: "data",
+        // runtime: "node",
         suffix: ".car",
         name: my_app(),
         storekey: `@${my_app()}-data@`,

@@ -16,8 +16,8 @@ import {
 import { PARAM, PathOps, StoreType, SuperThis, SuperThisOpts, TextEndeCoder, PromiseToUInt8, ToUInt8 } from "./types.js";
 import { base58btc } from "multiformats/bases/base58";
 
-export type { Logger };
-export { Result };
+//export type { Logger };
+//export { Result };
 
 const _globalLogger = new ResolveOnce();
 function globalLogger(): Logger {

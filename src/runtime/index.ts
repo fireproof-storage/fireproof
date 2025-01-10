@@ -13,6 +13,8 @@ export { runtimeFn } from "@adviser/cement";
 
 export * as gw from "./gateways/index.js";
 
+export * from "./key-bag.js";
+
 export { FILESTORE_VERSION } from "./gateways/file/version.js";
 export { INDEXDB_VERSION } from "./gateways/indexdb/version.js";
 // export { V0_19SQL_VERSION } from "./store-sql/v0.19/version.js";

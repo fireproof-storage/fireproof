@@ -16,13 +16,14 @@ describe("fireproof config indexdb", () => {
     await db.put({ name: "my-app" });
     expect(db.name).toBe(my_app());
 
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.crdt.blockstore.loader.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
         name: "my-app",
         store: "data",
+        runtime: "browser",
         storekey: "@my-app-data@",
         urlGen: "default",
         version: "v0.19-indexdb",
@@ -30,13 +31,14 @@ describe("fireproof config indexdb", () => {
       style: "path",
     });
 
-    const dataStore = await db.crdt.blockstore.loader?.carStore();
+    const dataStore = await db.crdt.blockstore.loader.carStore();
     expect(dataStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
         name: "my-app",
         store: "data",
+        runtime: "browser",
         storekey: "@my-app-data@",
         suffix: ".car",
         urlGen: "default",
@@ -44,26 +46,28 @@ describe("fireproof config indexdb", () => {
       },
       style: "path",
     });
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.crdt.blockstore.loader.metaStore();
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
         name: "my-app",
         store: "meta",
+        runtime: "browser",
         storekey: "@my-app-meta@",
         urlGen: "default",
         version: "v0.19-indexdb",
       },
       style: "path",
     });
-    const WALStore = await db.crdt.blockstore.loader?.WALStore();
+    const WALStore = await db.crdt.blockstore.loader.WALStore();
     expect(WALStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
       searchParams: {
         name: "my-app",
         store: "wal",
+        runtime: "browser",
         storekey: "@my-app-wal@",
         urlGen: "default",
         version: "v0.19-indexdb",
