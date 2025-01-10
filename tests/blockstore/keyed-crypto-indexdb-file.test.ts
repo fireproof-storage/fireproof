@@ -2,7 +2,6 @@ import { bs, PARAM, rt } from "@fireproof/core";
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockSuperThis } from "../helpers.js";
-import { Loadable } from "../../src/blockstore/index.js";
 import { KeyBagProviderIndexDB } from "@fireproof/core/web";
 
 describe("KeyBag indexdb and file", () => {
@@ -92,7 +91,7 @@ describe("KeyBag indexdb and file", () => {
 });
 
 describe("KeyedCryptoStore", () => {
-  let loader: Loadable;
+  let loader: bs.Loadable;
   // let logger: Logger;
   let baseUrl: URI;
   const sthis = mockSuperThis();
@@ -110,7 +109,7 @@ describe("KeyedCryptoStore", () => {
     baseUrl = baseUrl.build().defParam(PARAM.NAME, "test").URI();
     loader = {
       keyBag: () => rt.kb.getKeyBag(sthis, { url: kbUrl }),
-    } as Loadable;
+    } as bs.Loadable;
   });
   it("no crypto", async () => {
     const strt = bs.toStoreRuntime(sthis);

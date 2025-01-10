@@ -1,6 +1,7 @@
 import { CID } from "multiformats";
-import { rt, bs, NotFoundError, SuperThis, PARAM, Result, DbMeta, ensureSuperThis } from "@fireproof/core";
+import { rt, bs, NotFoundError, SuperThis, PARAM, DbMeta, ensureSuperThis } from "@fireproof/core";
 import { noopUrl } from "../helpers.js";
+import { Result } from "@adviser/cement";
 
 function runtime(sthis: SuperThis) {
   return bs.toStoreRuntime(sthis);

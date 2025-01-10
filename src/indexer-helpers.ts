@@ -30,7 +30,7 @@ import {
 } from "./types.js";
 import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { CRDT } from "./crdt.js";
-import { Logger } from "use-fireproof";
+import { Logger } from "@adviser/cement";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;

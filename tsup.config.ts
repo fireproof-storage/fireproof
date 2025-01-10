@@ -73,7 +73,7 @@ const skipEsm = {};
 const ourMultiformat = {};
 
 const LIBRARY_BUNDLE_OPTIONS: Options = {
-  format: ["esm"], // , "cjs", "iife"],
+  format: ["esm", "cjs", "iife"],
   target: ["esnext", "node18"],
   globalName: "Fireproof",
   external,
@@ -124,9 +124,9 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   // },
   {
     ...LIBRARY_BUNDLE_OPTIONS,
-    format: ["esm"], //, "cjs"],
-    name: "@fireproof/core/web",
-    entry: ["src/runtime/gateways/indexdb/gateway.ts"],
+    format: ["esm", "cjs"],
+    name: "@fireproof/core",
+    entry: ["src/index.ts"],
     platform: "browser",
     outDir: "dist/fireproof-core",
     external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), ...nodeInternals, ...webInternals],
@@ -142,29 +142,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/web'",
-    },
-  },
-  {
-    ...LIBRARY_BUNDLE_OPTIONS,
-    external: [...(LIBRARY_BUNDLE_OPTIONS.external || []), "@fireproof/core"],
-    format: ["esm"], // "cjs"],
-    name: "@fireproof/core/react",
-    entry: ["src/react/index.ts"],
-    platform: "browser",
-    outDir: "dist/fireproof-core/react",
-    esbuildPlugins: [
-      replace({
-        __packageVersion__: packageVersion(),
-        include: /version/,
-      }),
-      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
-      resolve({
-        ...ourMultiformat,
-      }),
-    ],
-    dts: {
-      footer: "declare module '@fireproof/core/web'",
+      footer: "declare module '@fireproof/core'",
     },
   },
   {
@@ -186,6 +164,27 @@ const LIBRARY_BUNDLES: readonly Options[] = [
     ],
     dts: {
       footer: "declare module '@fireproof/core/node'",
+    },
+  },
+  {
+    ...LIBRARY_BUNDLE_OPTIONS,
+    format: ["esm"],
+    name: "@fireproof/core/deno",
+    entry: ["src/runtime/gateways/file/deno/index.ts"],
+    platform: "browser",
+    outDir: "dist/fireproof-core/deno",
+    esbuildPlugins: [
+      replace({
+        __packageVersion__: packageVersion(),
+        include: /version/,
+      }),
+      // skipper('@skip-iife', `${__dirname}/src/bundle-not-impl.js`),
+      resolve({
+        ...ourMultiformat,
+      }),
+    ],
+    dts: {
+      footer: "declare module '@fireproof/core/deno'",
     },
   },
   {
