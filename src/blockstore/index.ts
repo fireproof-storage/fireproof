@@ -1,6 +1,7 @@
 export * from "./types.js";
 
 export * from "./store-factory.js";
+export * from "./serde-gateway.js";
 export * from "./gateway.js";
 
 export * from "./fp-envelope.js";

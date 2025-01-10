@@ -27,7 +27,7 @@ import {
   type SuperThis,
   PARAM,
 } from "./types.js";
-import { DbMeta, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts, GatewayInterceptor } from "./blockstore/index.js";
+import { DbMeta, SerdeGatewayInterceptor, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
@@ -49,7 +49,7 @@ export interface LedgerOpts {
   readonly name?: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
-  readonly gatewayInterceptor?: GatewayInterceptor;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
 
   readonly writeQueue: WriteQueueParams;
   // readonly factoryUnreg?: () => void;

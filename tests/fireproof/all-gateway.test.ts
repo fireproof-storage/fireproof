@@ -35,10 +35,10 @@ describe("noop Gateway", function () {
   let metaStore: bs.MetaStore;
   let fileStore: bs.DataStore;
   let walStore: bs.WALStore;
-  let carGateway: bs.Gateway;
-  let metaGateway: bs.Gateway;
-  let fileGateway: bs.Gateway;
-  let walGateway: bs.Gateway;
+  let carGateway: bs.SerdeGateway;
+  let metaGateway: bs.SerdeGateway;
+  let fileGateway: bs.SerdeGateway;
+  let walGateway: bs.SerdeGateway;
   const sthis = ensureSuperThis();
 
   afterEach(async function () {
@@ -111,19 +111,19 @@ describe("noop Gateway", function () {
 
   it("should build CAR Gateway URL", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const carUrl = await carGateway.buildUrl(carStore.url(), testKey);
+    const carUrl = await carGateway.buildUrl(sthis, carStore.url(), testKey);
     expect(carUrl.Ok().hasParam("key")).toBeTruthy();
   });
 
   it("should start CAR Gateway", async function () {
-    const url = await carGateway.start(carStore.url());
+    const url = await carGateway.start(sthis, carStore.url());
     expect(url.Ok().asObj()).toEqual(carStore.url().asObj());
   });
 
   it("should put data in CAR Gateway", async function () {
-    const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
-    await carGateway.start(carStore.url());
-    const carPutResult = await carGateway.put(carUrl.Ok(), {
+    const carUrl = await carGateway.buildUrl(sthis, carStore.url(), fileContent.cid);
+    await carGateway.start(sthis, carStore.url());
+    const carPutResult = await carGateway.put(sthis, carUrl.Ok(), {
       type: bs.FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
@@ -131,59 +131,59 @@ describe("noop Gateway", function () {
   });
 
   it("should get data from CAR Gateway", async function () {
-    const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
-    await carGateway.start(carStore.url());
-    await carGateway.put(carUrl.Ok(), {
+    const carUrl = await carGateway.buildUrl(sthis, carStore.url(), fileContent.cid);
+    await carGateway.start(sthis, carStore.url());
+    await carGateway.put(sthis, carUrl.Ok(), {
       type: bs.FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
-    const carGetResult = await carGateway.get(carUrl.Ok());
+    const carGetResult = await carGateway.get(sthis, carUrl.Ok());
     expect(carGetResult.Ok().type).toEqual("car");
     expect(carGetResult.Ok().payload).toEqual(fileContent.block);
     // customExpect(carGetResult.Ok(), (v) => expect(v).toEqual(testData), "carGetResult should match testData");
   });
 
   it("should delete data from CAR Gateway", async function () {
-    const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
-    await carGateway.start(carStore.url());
-    await carGateway.put(carUrl.Ok(), {
+    const carUrl = await carGateway.buildUrl(sthis, carStore.url(), fileContent.cid);
+    await carGateway.start(sthis, carStore.url());
+    await carGateway.put(sthis, carUrl.Ok(), {
       type: bs.FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
-    const carDeleteResult = await carGateway.delete(carUrl.Ok());
+    const carDeleteResult = await carGateway.delete(sthis, carUrl.Ok());
     expect(carDeleteResult.isOk()).toBeTruthy();
   });
 
   it("should close CAR Gateway", async function () {
-    await carGateway.close(carStore.url());
+    await carGateway.close(sthis, carStore.url());
   });
   it("should build Meta Gateway URL", async function () {
-    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
+    const metaUrl = await metaGateway.buildUrl(sthis, metaStore.url(), "main");
     expect(metaUrl.Ok()).toBeTruthy();
   });
 
   it("should start Meta Gateway", async function () {
-    await metaGateway.start(metaStore.url());
+    await metaGateway.start(sthis, metaStore.url());
   });
 
   it("should close Meta Gateway", async function () {
-    await metaGateway.start(metaStore.url());
-    await metaGateway.close(metaStore.url());
+    await metaGateway.start(sthis, metaStore.url());
+    await metaGateway.close(sthis, metaStore.url());
   });
 
   it("should build File Gateway URL", async function () {
-    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
+    const fileUrl = await fileGateway.buildUrl(sthis, fileStore.url(), fileContent.cid);
     expect(fileUrl.Ok()).toBeTruthy();
   });
 
   it("should start File Gateway", async function () {
-    await fileGateway.start(fileStore.url());
+    await fileGateway.start(sthis, fileStore.url());
   });
 
   it("should put data to File Gateway", async function () {
-    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
-    await fileGateway.start(fileStore.url());
-    const filePutResult = await fileGateway.put(fileUrl.Ok(), {
+    const fileUrl = await fileGateway.buildUrl(sthis, fileStore.url(), fileContent.cid);
+    await fileGateway.start(sthis, fileStore.url());
+    const filePutResult = await fileGateway.put(sthis, fileUrl.Ok(), {
       type: bs.FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
@@ -191,48 +191,48 @@ describe("noop Gateway", function () {
   });
 
   it("should get data from File Gateway", async function () {
-    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
-    await fileGateway.start(fileStore.url());
-    await fileGateway.put(fileUrl.Ok(), {
+    const fileUrl = await fileGateway.buildUrl(sthis, fileStore.url(), fileContent.cid);
+    await fileGateway.start(sthis, fileStore.url());
+    await fileGateway.put(sthis, fileUrl.Ok(), {
       type: bs.FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
-    const fileGetResult = await fileGateway.get(fileUrl.Ok());
+    const fileGetResult = await fileGateway.get(sthis, fileUrl.Ok());
     expect(fileGetResult.Ok().type).toEqual("file");
     expect(fileGetResult.Ok().payload).toEqual(fileContent.block);
   });
 
   it("should delete data from File Gateway", async function () {
-    const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
-    await fileGateway.start(fileStore.url());
-    await fileGateway.put(fileUrl.Ok(), {
+    const fileUrl = await fileGateway.buildUrl(sthis, fileStore.url(), fileContent.cid);
+    await fileGateway.start(sthis, fileStore.url());
+    await fileGateway.put(sthis, fileUrl.Ok(), {
       type: bs.FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
-    const fileDeleteResult = await fileGateway.delete(fileUrl.Ok());
+    const fileDeleteResult = await fileGateway.delete(sthis, fileUrl.Ok());
     expect(fileDeleteResult.isOk()).toBeTruthy();
   });
 
   it("should close File Gateway", async function () {
-    await fileGateway.close(fileStore.url());
+    await fileGateway.close(sthis, fileStore.url());
   });
   it("should build WAL Gateway URL", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
+    const walUrl = await walGateway.buildUrl(sthis, walStore.url(), testKey);
     expect(walUrl.Ok()).toBeTruthy();
   });
 
   it("should start WAL Gateway", async function () {
-    await walGateway.start(walStore.url());
+    await walGateway.start(sthis, walStore.url());
   });
 
   it("should put data to WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
-    await walGateway.start(walStore.url());
+    const walUrl = await walGateway.buildUrl(sthis, walStore.url(), testKey);
+    await walGateway.start(sthis, walStore.url());
     // const walTestDataString = JSON.stringify();
     // const walTestData = sthis.txt.encode(walTestDataString);
-    const walPutResult = await walGateway.put(walUrl.Ok(), {
+    const walPutResult = await walGateway.put(sthis, walUrl.Ok(), {
       type: bs.FPEnvelopeType.WAL,
       payload: {
         operations: [],
@@ -245,8 +245,8 @@ describe("noop Gateway", function () {
 
   it("should get data from WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
-    await walGateway.start(walStore.url());
+    const walUrl = await walGateway.buildUrl(sthis, walStore.url(), testKey);
+    await walGateway.start(sthis, walStore.url());
     const ref: bs.WALState = {
       operations: [
         {
@@ -271,11 +271,11 @@ describe("noop Gateway", function () {
     //   fileOperations: [],
     // });
     // const walTestData = sthis.txt.encode(walTestDataString);
-    await walGateway.put(walUrl.Ok(), {
+    await walGateway.put(sthis, walUrl.Ok(), {
       type: bs.FPEnvelopeType.WAL,
       payload: ref,
     });
-    const walGetResult = await walGateway.get(walUrl.Ok());
+    const walGetResult = await walGateway.get(sthis, walUrl.Ok());
     expect(walGetResult.isOk()).toBeTruthy();
     // const okResult = walGetResult.Ok();
     // const decodedResult = sthis.txt.decode(okResult);
@@ -284,8 +284,8 @@ describe("noop Gateway", function () {
 
   it("should delete data from WAL Gateway", async function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
-    const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
-    await walGateway.start(walStore.url());
+    const walUrl = await walGateway.buildUrl(sthis, walStore.url(), testKey);
+    await walGateway.start(sthis, walStore.url());
     const ref: bs.WALState = {
       operations: [
         {
@@ -304,17 +304,17 @@ describe("noop Gateway", function () {
         },
       ],
     };
-    await walGateway.put(walUrl.Ok(), {
+    await walGateway.put(sthis, walUrl.Ok(), {
       type: bs.FPEnvelopeType.WAL,
       payload: ref,
     });
-    const walDeleteResult = await walGateway.delete(walUrl.Ok());
+    const walDeleteResult = await walGateway.delete(sthis, walUrl.Ok());
     expect(walDeleteResult.isOk()).toBeTruthy();
   });
 
   it("should close WAL Gateway", async function () {
-    await walGateway.start(walStore.url());
-    await walGateway.close(walStore.url());
+    await walGateway.start(sthis, walStore.url());
+    await walGateway.close(sthis, walStore.url());
   });
 
   // it("should have correct CAR Gateway properties", async function () {
@@ -367,7 +367,7 @@ describe("noop Gateway subscribe", function () {
 
   let metaStore: bs.MetaStore;
 
-  let metaGateway: bs.Gateway;
+  let metaGateway: bs.SerdeGateway;
   const sthis = ensureSuperThis();
 
   afterEach(async function () {
@@ -383,8 +383,8 @@ describe("noop Gateway subscribe", function () {
     metaGateway = metaStore.realGateway;
   });
   it("should subscribe to meta Gateway", async function () {
-    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
-    await metaGateway.start(metaStore.url());
+    const metaUrl = await metaGateway.buildUrl(sthis, metaStore.url(), "main");
+    await metaGateway.start(sthis, metaStore.url());
 
     let resolve: () => void;
     let didCall = false;
@@ -392,7 +392,7 @@ describe("noop Gateway subscribe", function () {
       resolve = r;
     });
     if (metaGateway.subscribe) {
-      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: bs.FPEnvelopeMeta) => {
+      const metaSubscribeResult = (await metaGateway.subscribe(sthis, metaUrl.Ok(), async (data: bs.FPEnvelopeMeta) => {
         // const decodedData = sthis.txt.decode(data);
         expect(data.payload).toContain("[]");
         didCall = true;
@@ -415,7 +415,7 @@ describe("Gateway", function () {
   // let fileStore: ExtendedStore;
   // let walStore: ExtendedStore;
   // let carGateway: ExtendedGateway;
-  let metaGateway: bs.Gateway;
+  let metaGateway: bs.SerdeGateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
   const sthis = ensureSuperThis();
@@ -444,9 +444,9 @@ describe("Gateway", function () {
   });
 
   it("should get data from Meta Gateway", async function () {
-    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
-    await metaGateway.start(metaStore.url());
-    const metaGetResult = await metaGateway.get(metaUrl.Ok());
+    const metaUrl = await metaGateway.buildUrl(sthis, metaStore.url(), "main");
+    await metaGateway.start(sthis, metaStore.url());
+    const metaGetResult = await metaGateway.get(sthis, metaUrl.Ok());
     expect(metaGetResult.isOk()).toBeTruthy();
     const meta = metaGetResult.Ok().payload as bs.DbMetaEvent[];
     // const metaGetResultOk = metaGetResult.Ok();
@@ -456,10 +456,10 @@ describe("Gateway", function () {
   });
 
   it("should delete data from Meta Gateway", async function () {
-    const metaUrl = await metaGateway.buildUrl(metaStore.url(), "main");
-    await metaGateway.start(metaStore.url());
+    const metaUrl = await metaGateway.buildUrl(sthis, metaStore.url(), "main");
+    await metaGateway.start(sthis, metaStore.url());
     // should we be testing .destroy() instead?
-    const metaDeleteResult = await metaGateway.delete(metaUrl.Ok());
+    const metaDeleteResult = await metaGateway.delete(sthis, metaUrl.Ok());
     expect(metaDeleteResult.isOk()).toBeTruthy();
   });
 });

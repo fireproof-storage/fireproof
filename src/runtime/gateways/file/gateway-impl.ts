@@ -1,59 +1,52 @@
 import { FILESTORE_VERSION } from "./version.js";
-import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 import { getFileName, getPath } from "./utils.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
-import { ensureLogger, exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
+import { exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
 import { Gateway, GetResult } from "../../../blockstore/gateway.js";
-import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
-import { fpDeserialize, fpSerialize } from "../fp-envelope-serialize.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 
 export class FileGateway implements Gateway {
   // abstract readonly storeType: StoreType;
-  readonly logger: Logger;
-  readonly sthis: SuperThis;
-
   readonly fs: SysFileSystem;
 
   constructor(sthis: SuperThis, fs: SysFileSystem) {
-    this.sthis = sthis;
-    this.logger = ensureLogger(sthis, "FileGateway", { this: 1 });
     this.fs = fs;
   }
 
-  async getVersionFromFile(path: string, logger: Logger): Promise<string> {
+  async getVersionFromFile(path: string, sthis: SuperThis): Promise<string> {
     return versionFiles.get(path).once(async () => {
       await this.fs.mkdir(path, { recursive: true });
-      const vFile = this.sthis.pathOps.join(path, "version");
+      const vFile = sthis.pathOps.join(path, "version");
       const vFileStat = await this.fs.stat(vFile).catch(() => undefined);
       if (!vFileStat) {
-        await this.fs.writefile(this.sthis.pathOps.join(path, "version"), FILESTORE_VERSION);
+        await this.fs.writefile(sthis.pathOps.join(path, "version"), FILESTORE_VERSION);
         return FILESTORE_VERSION;
       } else if (!vFileStat.isFile()) {
-        throw logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
+        throw sthis.logger.Error().Str("file", vFile).Msg(`version file is a directory`).AsError();
       }
       const v = await this.fs.readfile(vFile);
-      const vStr = this.sthis.txt.decode(v);
+      const vStr = sthis.txt.decode(v);
       if (vStr !== FILESTORE_VERSION) {
-        logger.Warn().Str("file", vFile).Str("from", vStr).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
+        sthis.logger.Warn().Str("file", vFile).Str("from", vStr).Str("expected", FILESTORE_VERSION).Msg(`version mismatch`);
       }
       return vStr;
     });
   }
 
-  start(baseURL: URI): Promise<Result<URI>> {
+  start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
     return exception2Result(async () => {
       await this.fs.start();
       const url = baseURL.build();
       url.defParam(PARAM.VERSION, FILESTORE_VERSION);
       // url.defParam("store", this.storeType);
       const dbUrl = await this.buildUrl(url.URI(), "dummy");
-      const dbdirFile = this.getFilePath(dbUrl.Ok());
-      await this.fs.mkdir(this.sthis.pathOps.dirname(dbdirFile), { recursive: true });
-      const dbroot = this.sthis.pathOps.dirname(dbdirFile);
-      this.logger.Debug().Url(url.URI()).Str("dbroot", dbroot).Msg("start");
-      url.setParam(PARAM.VERSION, await this.getVersionFromFile(dbroot, this.logger));
+      const dbdirFile = this.getFilePath(dbUrl.Ok(), sthis);
+      await this.fs.mkdir(sthis.pathOps.dirname(dbdirFile), { recursive: true });
+      const dbroot = sthis.pathOps.dirname(dbdirFile);
+      sthis.logger.Debug().Url(url.URI()).Str("dbroot", dbroot).Msg("start");
+      url.setParam(PARAM.VERSION, await this.getVersionFromFile(dbroot, sthis));
       return url.URI();
     });
   }
@@ -66,28 +59,36 @@ export class FileGateway implements Gateway {
     return Result.Ok(undefined);
   }
 
-  getFilePath(url: URI): string {
+  getFilePath(url: URI, sthis: SuperThis): string {
     const key = url.getParam(PARAM.KEY);
-    if (!key) throw this.logger.Error().Url(url).Msg(`key not found`).AsError();
-    return this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
+    if (!key) throw sthis.logger.Error().Url(url).Msg(`key not found`).AsError();
+    const urlGen = url.getParam(PARAM.URL_GEN);
+    switch (urlGen) {
+      case "default":
+        return sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
+      case "fromEnv":
+        return sthis.pathOps.join(getPath(url, sthis), key);
+      default:
+        break;
+    }
+    return sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
   }
 
-  async put<T>(url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
+  async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
-      const file = await this.getFilePath(url);
-      this.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
-
-      await this.fs.writefile(file, (await fpSerialize(this.sthis, env)).Ok());
+      const file = await this.getFilePath(url, sthis);
+      sthis.logger.Debug().Str("url", url.toString()).Str("file", file).Msg("put");
+      await this.fs.writefile(file, bytes);
     });
   }
 
-  async get<S>(url: URI): Promise<GetResult<S>> {
+  async get(url: URI, sthis: SuperThis): Promise<GetResult> {
     return exceptionWrapper(async () => {
-      const file = this.getFilePath(url);
+      const file = this.getFilePath(url, sthis);
       try {
-        this.logger.Debug().Url(url).Str("file", file).Msg("get");
+        sthis.logger.Debug().Url(url).Str("file", file).Msg("get");
         const res = await this.fs.readfile(file);
-        return fpDeserialize(this.sthis, url, res) as Promise<GetResult<S>>;
+        return Result.Ok(res);
       } catch (e: unknown) {
         if (isNotFoundError(e)) {
           return Result.Err(new NotFoundError(`file not found: ${file}`));
@@ -97,43 +98,43 @@ export class FileGateway implements Gateway {
     });
   }
 
-  async delete(url: URI): Promise<Result<void>> {
+  async delete(url: URI, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
-      await this.fs.unlink(this.getFilePath(url));
+      await this.fs.unlink(this.getFilePath(url, sthis));
     });
   }
 
-  async destroy(baseURL: URI): Promise<Result<void>> {
+  async destroy(baseURL: URI, sthis: SuperThis): Promise<Result<void>> {
     const url = await this.buildUrl(baseURL, "x");
     if (url.isErr()) return url;
-    const filepath = this.sthis.pathOps.dirname(this.getFilePath(url.Ok()));
+    const filepath = sthis.pathOps.dirname(this.getFilePath(url.Ok(), sthis));
     let files: string[] = [];
     try {
       files = await this.fs.readdir(filepath);
     } catch (e: unknown) {
       if (!isNotFoundError(e)) {
-        throw this.logger.Error().Err(e).Str("dir", filepath).Msg("destroy:readdir").AsError();
+        throw sthis.logger.Error().Err(e).Str("dir", filepath).Msg("destroy:readdir").AsError();
       }
     }
     for (const file of files) {
-      const pathed = this.sthis.pathOps.join(filepath, file);
+      const pathed = sthis.pathOps.join(filepath, file);
       try {
         await this.fs.unlink(pathed);
       } catch (e: unknown) {
         if (!isNotFoundError(e)) {
-          throw this.logger.Error().Err(e).Str("file", pathed).Msg("destroy:unlink").AsError();
+          throw sthis.logger.Error().Err(e).Str("file", pathed).Msg("destroy:unlink").AsError();
         }
       }
     }
     return Result.Ok(undefined);
   }
 
-  async getPlain(iurl: URI, key: string) {
+  async getPlain(iurl: URI, key: string, sthis: SuperThis) {
     const url = iurl.build().setParam(PARAM.KEY, key).URI();
-    const dbFile = this.sthis.pathOps.join(getPath(url, this.sthis), getFileName(url, this.sthis));
-    this.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
+    const dbFile = sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
+    sthis.logger.Debug().Url(url).Str("dbFile", dbFile).Msg("get");
     const buffer = await this.fs.readfile(dbFile);
-    this.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
+    sthis.logger.Debug().Url(url).Str("dbFile", dbFile).Len(buffer).Msg("got");
     return Result.Ok(buffer);
   }
 }
