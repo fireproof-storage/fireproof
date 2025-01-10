@@ -1,21 +1,25 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { PARAM, SuperThis } from "../types.js";
-import { Gateway } from "./gateway.js";
+import { SerdeGateway } from "./serde-gateway.js";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
 import { MemoryGateway } from "../runtime/gateways/memory/gateway.js";
 import { INDEXDB_VERSION } from "../runtime/index.js";
 import { FileGateway } from "../runtime/gateways/file/gateway-impl.js";
 import { sysFileSystemFactory } from "../runtime/gateways/file/sys-file-system-factory.js";
+import { DefSerdeGateway } from "../runtime/gateways/def-serde-gateway.js";
+import { Gateway } from "./gateway.js";
 
-export interface GatewayFactoryItem {
+export interface SerdeGatewayFactoryItem {
   readonly protocol: string;
   // readonly overrideBaseURL?: string; // if this set it overrides the defaultURL
   // readonly overrideRegistration?: boolean; // if this is set, it will override the registration
   readonly isDefault?: boolean;
 
-  readonly defaultURI: (sthis: SuperThis) => URI;
+  defaultURI(sthis: SuperThis): URI;
 
-  readonly gateway: (sthis: SuperThis) => Promise<Gateway>;
+  serdegateway(sthis: SuperThis): Promise<SerdeGateway>;
+
+  // readonly gateway?: (sthis: SuperThis) => Promise<SerdeGateway>;
   // readonly test: (sthis: SuperThis, gfi: GatewayFactoryItem) => Promise<TestGateway>;
   // which switches between file and indexdb
   // readonly data: (logger: Logger) => Promise<Gateway>;
@@ -24,7 +28,7 @@ export interface GatewayFactoryItem {
   // readonly test: (logger: Logger) => Promise<TestStore>;
 }
 
-const storeFactory = new Map<string, GatewayFactoryItem>();
+const storeFactory = new Map<string, SerdeGatewayFactoryItem>();
 
 export function getDefaultURI(sthis: SuperThis, protocol?: string): URI {
   if (protocol) {
@@ -43,61 +47,60 @@ export function getDefaultURI(sthis: SuperThis, protocol?: string): URI {
   return found.defaultURI(sthis);
 }
 
-export function registerStoreProtocol(item: GatewayFactoryItem): () => void {
+export interface SerdeOrGatewayFactoryItem {
+  readonly protocol: string;
+  readonly isDefault?: boolean;
+
+  readonly defaultURI: (sthis: SuperThis) => URI;
+
+  readonly serdegateway?: (sthis: SuperThis) => Promise<SerdeGateway>;
+  readonly gateway?: (sthis: SuperThis) => Promise<Gateway>;
+}
+
+export function registerStoreProtocol(item: SerdeOrGatewayFactoryItem): () => void {
   let protocol = item.protocol;
   if (!protocol.endsWith(":")) {
     protocol += ":";
   }
-  // if (storeFactory.has(protocol)) {
-  //   if (!item.overrideBaseURL && storeFactory.get(protocol) !== item) {
-  //     throw new Error(`we need a logger here`);
-  //     // const logger = ensureLogger(sthis, "registerStoreProtocol", { protocol });
-  //     // logger.Warn().Msg(`protocol ${protocol} already registered`);
-  //     return () => {
-  //       /* no-op */
-  //     };
-  //   }
-  // }
-  // we need to clear the overrideBaseURL if it is set
+  if (!item.serdegateway && !item.gateway) {
+    throw new Error(`registerStoreProtocol needs a gateway or serdegateway`);
+  }
+  let serdegateway: (sthis: SuperThis) => Promise<SerdeGateway>;
+  if (item.gateway) {
+    serdegateway = async (sthis) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const m = await item.gateway!(sthis);
+      return new DefSerdeGateway(m);
+    };
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    serdegateway = item.serdegateway!;
+  }
   if (item.isDefault) {
     Array.from(storeFactory.values()).forEach((items) => {
       (items as { isDefault: boolean }).isDefault = false;
     });
   }
-  storeFactory.set(protocol, item);
+  storeFactory.set(protocol, {
+    ...item,
+    serdegateway,
+  });
   return () => {
     storeFactory.delete(protocol);
   };
 }
 
-export function getGatewayFactoryItem(protocol: string): GatewayFactoryItem | undefined {
+export function getGatewayFactoryItem(protocol: string): SerdeGatewayFactoryItem | undefined {
   return storeFactory.get(protocol);
 }
 
-export function defaultGatewayFactoryItem(): GatewayFactoryItem {
+export function defaultGatewayFactoryItem(): SerdeGatewayFactoryItem {
   const found = Array.from(storeFactory.values()).find((item) => item.isDefault);
   if (!found) {
     throw new Error("no default found");
   }
   return found;
 }
-
-// export function fileGatewayFactoryItem(): GatewayFactoryItem {
-//   return {
-//     protocol: "file:",
-//     isDefault: true,
-//     defaultURI: (sthis) => {
-//       // might not work on windows
-//       return BuildURI.from("file://")
-//         .pathname(`${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`)
-//         .URI();
-//     },
-//     gateway: async (sthis) => {
-//       const { FileGateway } = await import("../runtime/gateways/file/gateway.js");
-//       return new FileGateway(sthis);
-//     },
-//   };
-// }
 
 function defaultURI(sthis: SuperThis) {
   const rt = runtimeFn();
@@ -134,9 +137,9 @@ if (runtimeFn().isBrowser) {
         .setParam(PARAM.RUNTIME, "browser")
         .URI();
     },
-    gateway: async (sthis) => {
+    gateway: async () => {
       const { GatewayImpl } = await import("@fireproof/core/web");
-      return new GatewayImpl(sthis);
+      return new GatewayImpl();
     },
   });
 }

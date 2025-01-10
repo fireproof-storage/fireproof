@@ -7,7 +7,7 @@ import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Logger, Result, URI } from "@adviser/cement";
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
-import { Gateway, GatewayInterceptor } from "./gateway.js";
+import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
 import { CarReader } from "@fireproof/vendor/@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
@@ -206,7 +206,7 @@ export interface StoreURIRuntime {
 export interface StoreFactoryItem {
   readonly sthis: SuperThis;
   readonly url: URI;
-  readonly gatewayInterceptor?: GatewayInterceptor;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   // readonly keybag: KeyBag;
   readonly loader: Loadable;
 }
@@ -285,7 +285,7 @@ export interface Connection {
 
 export interface BaseStore {
   readonly storeType: StoreType;
-  readonly realGateway: Gateway;
+  readonly realGateway: SerdeGateway;
   // readonly url: URI
   url(): URI;
   // readonly name: string;
@@ -376,7 +376,7 @@ export interface StoreRuntimeUrls {
   readonly wal: URI;
 }
 
-export type BlockstoreOpts = Partial<{
+export interface BlockstoreParams {
   readonly logger: Logger;
   readonly applyMeta: (meta: TransactionMeta, snap?: boolean) => Promise<void>;
   readonly compact: CompactFn;
@@ -385,9 +385,14 @@ export type BlockstoreOpts = Partial<{
   readonly public: boolean;
   readonly meta: DbMeta;
   readonly threshold: number;
-  readonly gatewayInterceptor?: GatewayInterceptor;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   readonly storeEnDeFile: Partial<StoreEnDeFile>;
-}> & {
+  readonly keyBag: KeyBagRuntime;
+  readonly storeUrls: StoreURIs;
+  readonly storeRuntime: StoreRuntime;
+}
+
+export type BlockstoreOpts = Partial<BlockstoreParams> & {
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
   readonly storeRuntime: StoreRuntime;
@@ -402,7 +407,7 @@ export interface BlockstoreRuntime {
   readonly storeRuntime: StoreRuntime;
   readonly keyBag: KeyBagRuntime;
   readonly storeUrls: StoreURIs;
-  readonly gatewayInterceptor?: GatewayInterceptor;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   // readonly storeEnDeFile: StoreEnDeFile;
   // readonly public: boolean;
   readonly meta?: DbMeta;

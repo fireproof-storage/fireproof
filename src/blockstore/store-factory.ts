@@ -3,19 +3,19 @@ import { Logger, KeyedResolvOnce, URI, Result } from "@adviser/cement";
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { StoreEnDeFile, StoreFactoryItem, StoreRuntime } from "./types.js";
-import { Gateway } from "./gateway.js";
 import { PARAM, SuperThis } from "../types.js";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
+import { SerdeGateway } from "./serde-gateway.js";
 
-interface GatewayInstances {
-  readonly gateway: Gateway;
+interface SerdeGatewayInstances {
+  readonly gateway: SerdeGateway;
 }
-interface GatewayReady extends GatewayInstances {
+interface GatewayReady extends SerdeGatewayInstances {
   readonly url: URI;
 }
 
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
-const gatewayInstances = new KeyedResolvOnce<GatewayInstances>();
+const gatewayInstances = new KeyedResolvOnce<SerdeGatewayInstances>();
 export async function getStartedGateway(sthis: SuperThis, url: URI): Promise<Result<GatewayReady>> {
   return onceGateway.get(url.toString()).once(async () => {
     const item = getGatewayFactoryItem(url.protocol);
@@ -23,9 +23,9 @@ export async function getStartedGateway(sthis: SuperThis, url: URI): Promise<Res
       const ret = {
         url,
         ...(await gatewayInstances.get(url.protocol).once(async () => ({}))),
-        gateway: await item.gateway(sthis),
+        gateway: await item.serdegateway(sthis),
       };
-      const res = await ret.gateway.start(url);
+      const res = await ret.gateway.start(sthis, url);
       if (res.isErr()) {
         return Result.Err(sthis.logger.Error().Result("start", res).Msg("start failed").AsError());
       }

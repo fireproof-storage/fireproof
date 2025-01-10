@@ -1,10 +1,9 @@
 import { Result, URI } from "@adviser/cement";
-import { Gateway, GetResult, VoidResult } from "../../../blockstore/gateway.js";
+import { Gateway, GetResult } from "../../../blockstore/gateway.js";
 import { PARAM, SuperThis } from "../../../types.js";
 import { MEMORY_VERSION } from "./version.js";
 import { NotFoundError } from "../../../utils.js";
-import { FPEnvelope } from "../../../blockstore/fp-envelope.js";
-import { fpSerialize, fpDeserialize } from "../fp-envelope-serialize.js";
+import { VoidResult } from "../../../blockstore/serde-gateway.js";
 
 export class MemoryGateway implements Gateway {
   readonly memorys: Map<string, Uint8Array>;
@@ -29,17 +28,17 @@ export class MemoryGateway implements Gateway {
     this.memorys.clear();
     return Promise.resolve(Result.Ok(undefined));
   }
-  async put<T>(url: URI, enve: FPEnvelope<T>): Promise<VoidResult> {
-    this.memorys.set(url.toString(), (await fpSerialize(this.sthis, enve)).Ok());
+  async put(url: URI, bytes: Uint8Array): Promise<VoidResult> {
+    this.memorys.set(url.toString(), bytes);
     return Result.Ok(undefined);
   }
   // get could return a NotFoundError if the key is not found
-  get<S>(url: URI): Promise<GetResult<S>> {
+  get(url: URI): Promise<GetResult> {
     const x = this.memorys.get(url.toString());
     if (!x) {
       return Promise.resolve(Result.Err(new NotFoundError("not found")));
     }
-    return fpDeserialize(this.sthis, url, x) as Promise<GetResult<S>>;
+    return Promise.resolve(Result.Ok(x));
   }
   delete(url: URI): Promise<VoidResult> {
     this.memorys.delete(url.toString());

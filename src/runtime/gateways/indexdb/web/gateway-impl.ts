@@ -1,8 +1,8 @@
 import { openDB, IDBPDatabase } from "idb";
-import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
+import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 
 import { INDEXDB_VERSION } from "../version.js";
-import { NotFoundError, PARAM, ensureLogger, exceptionWrapper, getKey, getStore, type SuperThis, bs, rt } from "@fireproof/core";
+import { NotFoundError, PARAM, exceptionWrapper, getKey, getStore, type SuperThis, bs } from "@fireproof/core";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
@@ -81,31 +81,25 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
 }
 
 export class IndexDBGateway implements bs.Gateway {
-  readonly logger: Logger;
-  readonly sthis: SuperThis;
-  constructor(sthis: SuperThis) {
-    this.logger = ensureLogger(sthis, "IndexDBGateway");
-    this.sthis = sthis;
-  }
   _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
-  async start(baseURL: URI): Promise<Result<URI>> {
+  async start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
     return exception2Result(async () => {
-      this.logger.Debug().Url(baseURL).Msg("starting");
-      await this.sthis.start();
-      const ic = await connectIdb(baseURL, this.sthis);
+      await sthis.start();
+      sthis.logger.Debug().Url(baseURL).Msg("starting");
+      const ic = await connectIdb(baseURL, sthis);
       this._db = ic.db;
-      this.logger.Debug().Url(ic.url).Msg("started");
+      sthis.logger.Debug().Url(ic.url).Msg("started");
       return ic.url;
     });
   }
   async close(): Promise<Result<void>> {
     return Result.Ok(undefined);
   }
-  async destroy(baseUrl: URI): Promise<Result<void>> {
+  async destroy(baseUrl: URI, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
       // return deleteDB(getIndexDBName(this.url).fullDb);
-      const type = getStore(baseUrl, this.sthis, joinDBName).name;
+      const type = getStore(baseUrl, sthis, joinDBName).name;
       // console.log("IndexDBDataStore:destroy", type);
       const idb = this._db;
       const trans = idb.transaction(type, "readwrite");
@@ -125,36 +119,35 @@ export class IndexDBGateway implements bs.Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get<S>(url: URI): Promise<bs.GetResult<S>> {
+  async get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
     return exceptionWrapper(async () => {
-      const key = getKey(url, this.logger);
-      const store = getStore(url, this.sthis, joinDBName).name;
-      this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("getting");
+      const key = getKey(url, sthis.logger);
+      const store = getStore(url, sthis, joinDBName).name;
+      sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("getting");
       const tx = this._db.transaction([store], "readonly");
       const bytes = await tx.objectStore(store).get(sanitzeKey(key));
       await tx.done;
       if (!bytes) {
         return Result.Err(new NotFoundError(`missing ${key}`));
       }
-      return rt.gw.fpDeserialize<S>(this.sthis, url, bytes) as Promise<bs.GetResult<S>>;
+      return Promise.resolve(Result.Ok(bytes));
     });
   }
-  async put<T>(url: URI, value: bs.FPEnvelope<T>) {
+  async put(url: URI, bytes: Uint8Array, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
-      const key = getKey(url, this.logger);
-      const store = getStore(url, this.sthis, joinDBName).name;
-      this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
-      const bytes = await rt.gw.fpSerialize(this.sthis, value);
+      const key = getKey(url, sthis.logger);
+      const store = getStore(url, sthis, joinDBName).name;
+      sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
       const tx = this._db.transaction([store], "readwrite");
-      await tx.objectStore(store).put(bytes.Ok(), sanitzeKey(key));
+      await tx.objectStore(store).put(bytes, sanitzeKey(key));
       await tx.done;
     });
   }
-  async delete(url: URI) {
+  async delete(url: URI, sthis: SuperThis) {
     return exception2Result(async () => {
-      const key = getKey(url, this.logger);
-      const store = getStore(url, this.sthis, joinDBName).name;
-      this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("deleting");
+      const key = getKey(url, sthis.logger);
+      const store = getStore(url, sthis, joinDBName).name;
+      sthis.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("deleting");
       const tx = this._db.transaction([store], "readwrite");
       await tx.objectStore(store).delete(sanitzeKey(key));
       await tx.done;
@@ -162,14 +155,14 @@ export class IndexDBGateway implements bs.Gateway {
     });
   }
 
-  async getPlain(url: URI, key: string) {
-    const ic = await connectIdb(url, this.sthis);
-    const store = getStore(ic.url, this.sthis, joinDBName).name;
-    this.logger.Debug().Str("key", key).Str("store", store).Msg("getting");
+  async getPlain(url: URI, key: string, sthis: SuperThis): Promise<Result<Uint8Array>> {
+    const ic = await connectIdb(url, sthis);
+    const store = getStore(ic.url, sthis, joinDBName).name;
+    sthis.logger.Debug().Str("key", key).Str("store", store).Msg("getting");
     let bytes = await ic.db.get(store, sanitzeKey(key));
-    this.logger.Debug().Str("key", key).Str("store", store).Int("len", bytes.length).Msg("got");
+    sthis.logger.Debug().Str("key", key).Str("store", store).Int("len", bytes.length).Msg("got");
     if (typeof bytes === "string") {
-      bytes = this.sthis.txt.encode(bytes);
+      bytes = sthis.txt.encode(bytes);
     }
     return Result.Ok(bytes as Uint8Array);
   }
