@@ -3,7 +3,7 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockSuperThis } from "../helpers.js";
 import { Loadable } from "../../src/blockstore/index.js";
-import { KeyBagProviderIndexDB } from "@fireproof/core/web"
+import { KeyBagProviderIndexDB } from "@fireproof/core/web";
 
 describe("KeyBag indexdb and file", () => {
   let url: URI;

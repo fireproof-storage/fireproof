@@ -1,7 +1,5 @@
 import { Ledger, LedgerFactory, PARAM, bs, ensureSuperThis } from "@fireproof/core";
 
-
-
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
 

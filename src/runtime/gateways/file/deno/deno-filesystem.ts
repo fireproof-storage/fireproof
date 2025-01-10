@@ -1,4 +1,4 @@
-import type { FPStats, SysFileSystem } from "@fireproof/core"
+import type { FPStats, SysFileSystem } from "@fireproof/core";
 
 export class DenoFileSystem implements SysFileSystem {
   fs?: {
