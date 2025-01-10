@@ -17,11 +17,7 @@
     "use-fireproof": "0.0.0-smoke",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.24.0",
-    "use-fireproof": "USE_FIREPROOF"
-  },
-  "peerDependencies": {
-    "@fireproof/core": "FIREPROOF_CORE"
+    "react-router-dom": "^6.24.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
