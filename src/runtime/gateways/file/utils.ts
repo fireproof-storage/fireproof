@@ -9,9 +9,17 @@ export function getPath(url: URI, sthis: SuperThis): string {
   // .replace(/\?.*$/, "");
   const name = url.getParam("name");
   if (name) {
-    const version = url.getParam("version");
-    if (!version) throw sthis.logger.Error().Url(url).Msg(`version not found`).AsError();
-    return sthis.pathOps.join(basePath, version, name);
+    // const urlGen = url.getParam(PARAM.URL_GEN);
+    // switch (urlGen) {
+    //   case "default":
+    //   case "fromEnv":
+    //   default:
+    //     break;
+    // }
+
+    // const version = url.getParam("version");
+    // if (!version) throw sthis.logger.Error().Url(url).Msg(`version not found`).AsError();
+    return sthis.pathOps.join(basePath, name);
   }
   return sthis.pathOps.join(basePath);
 }

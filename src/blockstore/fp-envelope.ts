@@ -1,6 +1,6 @@
 import { CID } from "multiformats";
 import { DbMetaEvent, WALState } from "./types.js";
-import { Result } from "../utils.js";
+import { Result } from "@adviser/cement";
 
 export enum FPEnvelopeType {
   CAR = "car",

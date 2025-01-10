@@ -18,7 +18,7 @@ describe("utils", () => {
   const storeOpts = [
     {
       type: "data",
-      suffix: ".tar",
+      suffix: ".car",
     },
     {
       type: "wal",

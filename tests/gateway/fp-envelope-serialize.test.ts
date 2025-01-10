@@ -2,8 +2,8 @@ import { rt, bs } from "@fireproof/core";
 import { mockSuperThis, simpleCID } from "../helpers.js";
 import { BuildURI, Result } from "@adviser/cement";
 import { toJSON } from "multiformats/link";
-import { FPEnvelopeType } from "../../src/blockstore/index.js";
-import { SerializedMeta } from "../../src/runtime/gateways/fp-envelope-serialize.js";
+
+const FPEnvelopeType = bs.FPEnvelopeType;
 
 describe("storage-content", () => {
   const sthis = mockSuperThis();
@@ -243,7 +243,7 @@ describe("de-serialize", () => {
           json.map((i: { key?: string }) => {
             delete i.key;
             return i;
-          }) as SerializedMeta[],
+          }) as rt.gw.SerializedMeta[],
         );
       },
     });

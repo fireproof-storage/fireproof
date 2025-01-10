@@ -21,7 +21,7 @@ export class KeyBag {
   readonly logger: Logger;
   constructor(readonly rt: KeyBagRuntime) {
     this.logger = ensureLogger(rt.sthis, "KeyBag", {
-      id: rt.id(),
+      // id: rt.id(),
     });
     this.logger.Debug().Msg("KeyBag created");
   }

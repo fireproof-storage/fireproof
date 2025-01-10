@@ -5,7 +5,6 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
 import type { KeyBagProviderIndexDB } from "@fireproof/core/web";
 import { MockSuperThis, mockSuperThis } from "../helpers.js";
-import { getDefaultURI } from "../../src/blockstore/register-store-protocol.js";
 
 describe("KeyBag", () => {
   let url: URI;
@@ -95,6 +94,9 @@ describe("KeyBag", () => {
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
       const p = provider as rt.gw.file.KeyBagProviderFile;
+      if (typeof p._prepare !== "function") {
+        return;
+      }
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
@@ -143,9 +145,9 @@ describe("KeyedCryptoStore", () => {
 
     const envURL = sthis.env.get("FP_KEYBAG_URL");
     if (envURL) {
-      baseUrl = getDefaultURI(sthis, URI.from(envURL).protocol);
+      baseUrl = bs.getDefaultURI(sthis, URI.from(envURL).protocol);
     } else {
-      baseUrl = getDefaultURI(sthis);
+      baseUrl = bs.getDefaultURI(sthis);
     }
     baseUrl = baseUrl.build().setParam(PARAM.NAME, "test").URI();
     kb = await rt.kb.getKeyBag(sthis, {});

@@ -1,8 +1,7 @@
-import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime } from "@fireproof/core";
+import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt } from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
-import { defaultKeyBagOpts } from "../../src/runtime/key-bag.js";
 
 describe("Fresh crdt", function () {
   let crdt: CRDT<{ hello: string } | { points: number }>;
@@ -15,7 +14,7 @@ describe("Fresh crdt", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
@@ -58,8 +57,8 @@ describe("CRDT with one record", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
-      storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId()}`),
+      keyBag: rt.defaultKeyBagOpts(sthis),
+      storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
     crdt = new CRDT(sthis, dbOpts);
@@ -114,7 +113,7 @@ describe("CRDT with a multi-write", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
@@ -185,8 +184,8 @@ describe("CRDT with two multi-writes", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
-      storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId()}`),
+      keyBag: rt.defaultKeyBagOpts(sthis),
+      storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
     crdt = new CRDT(sthis, dbOpts);
@@ -239,7 +238,7 @@ describe("Compact a named CRDT with writes", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
@@ -301,7 +300,7 @@ describe("CRDT with an index", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
@@ -353,7 +352,7 @@ describe("Loader with a committed transaction", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, dbname),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
@@ -407,7 +406,7 @@ describe("Loader with two committed transactions", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
@@ -463,7 +462,7 @@ describe("Loader with many committed transactions", function () {
     await sthis.start();
     const dbOpts: LedgerOpts = {
       writeQueue: defaultWriteQueueOpts({}),
-      keyBag: defaultKeyBagOpts(sthis),
+      keyBag: rt.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-loader-many"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
