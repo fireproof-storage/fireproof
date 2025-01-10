@@ -1,7 +1,8 @@
-import { URI } from "@adviser/cement";
-import { isNotFoundError, Logger } from "@fireproof/core";
-import type { rt, SuperThis, SysFileSystem } from "@fireproof/core";
-import { getFileSystem } from "./get-file-system.js";
+import { Logger, URI } from "@adviser/cement";
+import { SuperThis, SysFileSystem } from "../../../types.js";
+import { KeyBagProvider, KeyItem } from "../../key-bag.js";
+import { isNotFoundError } from "../../../utils.js";
+import { sysFileSystemFactory } from "./sys-file-system-factory.js";
 
 interface KeyBagCtx {
   readonly dirName: string;
@@ -9,18 +10,10 @@ interface KeyBagCtx {
   readonly fName: string;
 }
 
-export class KeyBagProviderFile implements rt.kb.KeyBagProvider {
+export class KeyBagProviderFile implements KeyBagProvider {
   async _prepare(id: string): Promise<KeyBagCtx> {
     await this.sthis.start();
-    let sysFS: SysFileSystem;
-    switch (this.url.protocol) {
-      case "file:": {
-        sysFS = await getFileSystem(this.url);
-        break;
-      }
-      default:
-        throw this.logger.Error().Url(this.url).Msg("unsupported protocol").AsError();
-    }
+    const sysFS = await sysFileSystemFactory(this.url);
     const dirName = this.url.pathname;
     await sysFS.mkdir(dirName, { recursive: true });
     return {
@@ -39,11 +32,11 @@ export class KeyBagProviderFile implements rt.kb.KeyBagProvider {
     this.logger = sthis.logger;
   }
 
-  async get(id: string): Promise<rt.kb.KeyItem | undefined> {
+  async get(id: string): Promise<KeyItem | undefined> {
     const ctx = await this._prepare(id);
     try {
       const p = await ctx.sysFS.readfile(ctx.fName);
-      const ki = JSON.parse(this.sthis.txt.decode(p)) as rt.kb.KeyItem;
+      const ki = JSON.parse(this.sthis.txt.decode(p)) as KeyItem;
       return ki;
     } catch (e) {
       if (isNotFoundError(e)) {
@@ -53,7 +46,7 @@ export class KeyBagProviderFile implements rt.kb.KeyBagProvider {
     }
   }
 
-  async set(id: string, item: rt.kb.KeyItem): Promise<void> {
+  async set(id: string, item: KeyItem): Promise<void> {
     const ctx = await this._prepare(id);
     const p = this.sthis.txt.encode(JSON.stringify(item, null, 2));
     await ctx.sysFS.writefile(ctx.fName, p);

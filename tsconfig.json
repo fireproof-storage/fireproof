@@ -34,6 +34,7 @@
       "@fireproof/core/react": ["./src/react/index.js"],
       "@fireproof/core/web": ["./src/runtime/gateways/indexdb/web/index.js"],
       "@fireproof/core/node": ["./src/runtime/gateways/file/node/index.js"],
+      "@fireproof/core/deno": ["./src/runtime/gateways/file/deno/index.js"],
       "use-fireproof": ["./src/use-fireproof/index.js"]
     } /* Specify a set of entries that re-map imports to additional lookup locations. */,
     // "rootDirs": ["./src", "./src-generated"],                                   /* Allow multiple folders to be treated as one when resolving modules. */

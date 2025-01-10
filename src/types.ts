@@ -25,6 +25,7 @@ export enum PARAM {
   INDEX = "index",
   NAME = "name",
   VERSION = "version",
+  RUNTIME = "runtime", // "node" | "deno" | "browser"
   FRAG_SIZE = "fragSize",
   IV_VERIFY = "ivVerify",
   IV_HASH = "ivHash",

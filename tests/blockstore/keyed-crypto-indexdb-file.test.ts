@@ -3,6 +3,7 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockSuperThis } from "../helpers.js";
 import { Loadable } from "../../src/blockstore/index.js";
+import { KeyBagProviderIndexDB } from "@fireproof/core/web"
 
 describe("KeyBag indexdb and file", () => {
   let url: URI;
@@ -58,11 +59,11 @@ describe("KeyBag indexdb and file", () => {
     let diskBag2: rt.kb.KeyItem;
     const provider = await kb.rt.getBag();
     if (runtimeFn().isBrowser) {
-      const p = provider as rt.kb.KeyBagProviderIndexDB;
+      const p = provider as KeyBagProviderIndexDB;
       diskBag = await p._prepare().then((db) => db.get("bag", name));
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
-      const p = provider as rt.kb.KeyBagProviderFile;
+      const p = provider as rt.gw.file.KeyBagProviderFile;
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {

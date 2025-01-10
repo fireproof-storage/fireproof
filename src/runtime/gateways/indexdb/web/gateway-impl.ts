@@ -2,12 +2,10 @@ import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Logger, Result, URI } from "@adviser/cement";
 
 import { INDEXDB_VERSION } from "../version.js";
-import { ensureLogger, exceptionWrapper, getKey, getStore, NotFoundError } from "@fireproof/core";
-import type { bs } from "@fireproof/core";
-import type { SuperThis } from "@fireproof/core";
+import { NotFoundError, PARAM, ensureLogger, exceptionWrapper, getKey, getStore, type SuperThis, bs, rt } from "@fireproof/core";
 
 function ensureVersion(url: URI): URI {
-  return url.build().defParam("version", INDEXDB_VERSION).URI();
+  return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
 }
 
 interface IDBConn {
@@ -16,6 +14,7 @@ interface IDBConn {
   readonly version: string;
   readonly url: URI;
 }
+const onceIndexDB = new KeyedResolvOnce<IDBConn>();
 
 function sanitzeKey(key: string | string[]): string | string[] {
   if (key.length === 1) {
@@ -24,10 +23,9 @@ function sanitzeKey(key: string | string[]): string | string[] {
   return key;
 }
 
-const onceConn = new KeyedResolvOnce<IDBConn>();
 async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
   const dbName = getIndexDBName(url, sthis);
-  const once = await onceConn.get(dbName.fullDb).once(async () => {
+  const once = await onceIndexDB.get(dbName.fullDb).once(async () => {
     const db = await openDB(dbName.fullDb, 1, {
       upgrade(db) {
         ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
@@ -38,17 +36,17 @@ async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
       },
     });
     const found = await db.get("version", "version");
-    const version = ensureVersion(url).getParam("version") as string;
+    const version = ensureVersion(url).getParam(PARAM.VERSION) as string;
     if (!found) {
       await db.put("version", { version }, "version");
     } else if (found.version !== version) {
-      sthis.logger.Warn().Str("url", url.toString()).Str("version", version).Str("found", found.version).Msg("version mismatch");
+      sthis.logger.Warn().Url(url).Str("version", version).Str("found", found.version).Msg("version mismatch");
     }
     return { db, dbName, version, url };
   });
   return {
     ...once,
-    url: url.build().setParam("version", once.version).URI(),
+    url: url.build().setParam(PARAM.VERSION, once.version).URI(),
   };
 }
 
@@ -66,17 +64,10 @@ function joinDBName(...names: string[]): string {
     .join(".");
 }
 
-// const schemaVersion = new Map<string, number>();
 export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   const url = ensureVersion(iurl);
   const fullDb = url.pathname.replace(/^\/+/, "").replace(/\?.*$/, ""); // cut leading slashes
-  // const type = getStore(url);
-  // const storageVersion = url.searchParams.get("version");
-  // not nice but we need to pass the version to the db name
-  // url.searchParams.set("version", storageVersion);
-  // console.log("getIndexDBName:", url.toString(), { fullDb, type, branch });
-  // const dbName = fullDb.replace(new RegExp(`^fp.${storageVersion}.`), ""); // cut fp prefix
-  const dbName = url.getParam("name");
+  const dbName = url.getParam(PARAM.NAME);
   if (!dbName) throw sthis.logger.Error().Str("url", url.toString()).Msg(`name not found`).AsError();
   const result = joinDBName(fullDb, dbName);
   const objStore = getStore(url, sthis, joinDBName).name;
@@ -96,14 +87,14 @@ export class IndexDBGateway implements bs.Gateway {
     this.logger = ensureLogger(sthis, "IndexDBGateway");
     this.sthis = sthis;
   }
-
-  // _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
+  _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
   async start(baseURL: URI): Promise<Result<URI>> {
     return exception2Result(async () => {
       this.logger.Debug().Url(baseURL).Msg("starting");
       await this.sthis.start();
       const ic = await connectIdb(baseURL, this.sthis);
+      this._db = ic.db;
       this.logger.Debug().Url(ic.url).Msg("started");
       return ic.url;
     });
@@ -116,8 +107,8 @@ export class IndexDBGateway implements bs.Gateway {
       // return deleteDB(getIndexDBName(this.url).fullDb);
       const type = getStore(baseUrl, this.sthis, joinDBName).name;
       // console.log("IndexDBDataStore:destroy", type);
-      const idb = await connectIdb(baseUrl, this.sthis);
-      const trans = idb.db.transaction(type, "readwrite");
+      const idb = this._db;
+      const trans = idb.transaction(type, "readwrite");
       const object_store = trans.objectStore(type);
       const toDelete = [];
       for (let cursor = await object_store.openCursor(); cursor; cursor = await cursor.continue()) {
@@ -131,32 +122,31 @@ export class IndexDBGateway implements bs.Gateway {
   }
 
   buildUrl(baseUrl: URI, key: string): Promise<Result<URI>> {
-    return Promise.resolve(Result.Ok(baseUrl.build().setParam("key", key).URI()));
+    return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get(url: URI): Promise<bs.GetResult> {
+  async get<S>(url: URI): Promise<bs.GetResult<S>> {
     return exceptionWrapper(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("getting");
-      const { db } = await connectIdb(url, this.sthis);
-      const tx = db.transaction([store], "readonly");
+      const tx = this._db.transaction([store], "readonly");
       const bytes = await tx.objectStore(store).get(sanitzeKey(key));
       await tx.done;
       if (!bytes) {
         return Result.Err(new NotFoundError(`missing ${key}`));
       }
-      return Result.Ok(bytes as Uint8Array);
+      return rt.gw.fpDeserialize<S>(this.sthis, url, bytes) as Promise<bs.GetResult<S>>;
     });
   }
-  async put(url: URI, value: Uint8Array) {
+  async put<T>(url: URI, value: bs.FPEnvelope<T>) {
     return exception2Result(async () => {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("putting");
-      const { db } = await connectIdb(url, this.sthis);
-      const tx = db.transaction([store], "readwrite");
-      await tx.objectStore(store).put(value, sanitzeKey(key));
+      const bytes = await rt.gw.fpSerialize(this.sthis, value);
+      const tx = this._db.transaction([store], "readwrite");
+      await tx.objectStore(store).put(bytes.Ok(), sanitzeKey(key));
       await tx.done;
     });
   }
@@ -165,43 +155,14 @@ export class IndexDBGateway implements bs.Gateway {
       const key = getKey(url, this.logger);
       const store = getStore(url, this.sthis, joinDBName).name;
       this.logger.Debug().Url(url).Str("key", key).Str("store", store).Msg("deleting");
-      const { db } = await connectIdb(url, this.sthis);
-      const tx = db.transaction([store], "readwrite");
+      const tx = this._db.transaction([store], "readwrite");
       await tx.objectStore(store).delete(sanitzeKey(key));
       await tx.done;
       return Result.Ok(undefined);
     });
   }
-}
 
-// export class IndexDBDataGateway extends IndexDBGateway {
-//   readonly storeType = "data";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "IndexDBDataGateway"));
-//   }
-// }
-
-// export class IndexDBWalGateway extends IndexDBGateway {
-//   readonly storeType = "wal";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "IndexDBWalGateway"));
-//   }
-// }
-// export class IndexDBMetaGateway extends IndexDBGateway {
-//   readonly storeType = "meta";
-//   constructor(logger: Logger) {
-//     super(ensureLogger(logger, "IndexDBMetaGateway"));
-//   }
-// }
-
-export class IndexDBTestGateway implements bs.TestGateway {
-  readonly logger: Logger;
-  readonly sthis: SuperThis;
-  constructor(sthis: SuperThis) {
-    this.sthis = sthis;
-    this.logger = ensureLogger(sthis, "IndexDBTestStore", {});
-  }
-  async get(url: URI, key: string) {
+  async getPlain(url: URI, key: string) {
     const ic = await connectIdb(url, this.sthis);
     const store = getStore(ic.url, this.sthis, joinDBName).name;
     this.logger.Debug().Str("key", key).Str("store", store).Msg("getting");
@@ -210,6 +171,6 @@ export class IndexDBTestGateway implements bs.TestGateway {
     if (typeof bytes === "string") {
       bytes = this.sthis.txt.encode(bytes);
     }
-    return bytes as Uint8Array;
+    return Result.Ok(bytes as Uint8Array);
   }
 }

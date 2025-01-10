@@ -14,6 +14,8 @@ import { KeyWithFingerExtract, KeyWithFingerPrint } from "../blockstore/types.js
 import { ensureLogger } from "../utils.js";
 import { base58btc } from "multiformats/bases/base58";
 import { PARAM, SuperThis } from "../types.js";
+import { KeyBagProviderFile } from "./gateways/file/key-bag-file.js";
+import { KeyBagProviderMemory } from "./key-bag-memory.js";
 
 export class KeyBag {
   readonly logger: Logger;
@@ -179,8 +181,7 @@ const keyBagProviderFactories = new Map<string, KeyBagProviderFactoryItem>(
     {
       protocol: "file:",
       factory: async (url: URI, sthis: SuperThis) => {
-        const { KeyBagProviderImpl } = await import("@fireproof/core/node");
-        return new KeyBagProviderImpl(url, sthis);
+        return new KeyBagProviderFile(url, sthis);
       },
     },
     {
@@ -188,6 +189,12 @@ const keyBagProviderFactories = new Map<string, KeyBagProviderFactoryItem>(
       factory: async (url: URI, sthis: SuperThis) => {
         const { KeyBagProviderImpl } = await import("@fireproof/core/web");
         return new KeyBagProviderImpl(url, sthis);
+      },
+    },
+    {
+      protocol: "memory:",
+      factory: async (url: URI, sthis: SuperThis) => {
+        return new KeyBagProviderMemory(url, sthis);
       },
     },
   ].map((i) => [i.protocol, i]),
@@ -199,25 +206,6 @@ export function registerKeyBagProviderFactory(item: KeyBagProviderFactoryItem) {
     ...item,
     protocol,
   });
-}
-
-export function defaultKeyBagUrl(sthis: SuperThis): URI {
-  let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
-  let url: URI;
-  if (runtimeFn().isBrowser) {
-    url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
-  } else {
-    if (!bagFnameOrUrl) {
-      const home = sthis.env.get("HOME");
-      bagFnameOrUrl = `${home}/.fireproof/keybag`;
-      url = URI.from(`file://${bagFnameOrUrl}`);
-    } else {
-      url = URI.from(bagFnameOrUrl);
-    }
-  }
-  const logger = ensureLogger(sthis, "defaultKeyBagUrl");
-  logger.Debug().Url(url).Msg("from env");
-  return url;
 }
 
 export function defaultKeyBagUrl(sthis: SuperThis): URI {
@@ -272,13 +260,14 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
   if (url.hasParam("masterkey")) {
     throw logger.Error().Url(url).Msg("masterkey is not supported").AsError();
   }
+
   return {
     url,
     crypto: kbo.crypto || toCryptoRuntime({}),
     sthis,
     logger,
     keyLength: kbo.keyLength || 16,
-    getBag: keyProviderFactory,
+    getBag: () => kitem.factory(url, sthis),
     id: () => {
       return url.toString();
     },

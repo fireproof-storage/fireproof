@@ -22,6 +22,15 @@
       "require": "./node/index.cjs",
       "types": "./node/index.d.ts"
     },
+    "./deno": {
+      "import": {
+        "browser": "./web/index.js",
+        "default": "./deno/index.js"
+      },
+      "browser": "./web/index.js",
+      "require": "./deno/index.cjs",
+      "types": "./deno/index.d.ts"
+    },
     "./web": {
       "import": "./web/index.js",
       "browser": "./web/index.js",

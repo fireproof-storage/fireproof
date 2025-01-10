@@ -1,17 +1,19 @@
-import { bs, ensureSuperThis, PARAM, rt, SuperThis } from "@fireproof/core";
+import { bs, ensureSuperThis, PARAM, rt } from "@fireproof/core";
 import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
 import type { KeyBagProviderIndexDB } from "@fireproof/core/web";
-import type { KeyBagProviderFile } from "@fireproof/core/node";
+import { MockSuperThis, mockSuperThis } from "../helpers.js";
+import { K } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
+import { getDefaultURI } from "../../src/blockstore/register-store-protocol.js";
 
 describe("KeyBag", () => {
   let url: URI;
-  let sthis: SuperThis;
+  let sthis: MockSuperThis;
 
   beforeEach(async () => {
-    sthis = ensureSuperThis();
+    sthis = mockSuperThis();
     await sthis.start();
     if (runtimeFn().isBrowser) {
       url = URI.from("indexdb://fp-keybag");
@@ -55,7 +57,7 @@ describe("KeyBag", () => {
     });
     sthis.env.set("FP_KEYBAG_URL", old);
     await sthis.logger.Flush();
-    expect(sthis.logCollector.Logs()).toEqual([
+    expect(sthis.ctx.logCollector.Logs()).toEqual([
       {
         level: "warn",
         module: "KeyBag",
@@ -93,7 +95,7 @@ describe("KeyBag", () => {
       diskBag = await p._prepare().then((db) => db.get("bag", name));
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
-      const p = provider as KeyBagProviderFile;
+      const p = provider as rt.gw.file.KeyBagProviderFile;
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
@@ -142,9 +144,9 @@ describe("KeyedCryptoStore", () => {
 
     const envURL = sthis.env.get("FP_KEYBAG_URL");
     if (envURL) {
-      baseUrl = bs.getDefaultURI(sthis, URI.from(envURL).protocol);
+      baseUrl = getDefaultURI(sthis, URI.from(envURL).protocol);
     } else {
-      baseUrl = bs.getDefaultURI(sthis);
+      baseUrl = getDefaultURI(sthis);
     }
     baseUrl = baseUrl.build().setParam(PARAM.NAME, "test").URI();
     kb = await rt.kb.getKeyBag(sthis, {});

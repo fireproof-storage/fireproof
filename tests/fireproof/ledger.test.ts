@@ -11,8 +11,8 @@ import {
   keyConfigOpts,
   LedgerFactory,
   LedgerShell,
+  ensureSuperThis,
 } from "@fireproof/core";
-import { fileGatewayFactoryItem } from "../../src/blockstore/register-store-protocol.js";
 import { FILESTORE_VERSION } from "../../src/runtime/index.js";
 
 describe("basic Ledger", () => {
@@ -662,7 +662,7 @@ describe("StoreURIRuntime", () => {
   });
 
   it("check file protocol defaultURI", () => {
-    const gw = fileGatewayFactoryItem();
+    const gw = bs.defaultGatewayFactoryItem();
     expect(gw.defaultURI(sthis).toString()).toBe(
       `file://${sthis.env.get("HOME")}/.fireproof/${FILESTORE_VERSION.replace(/-.*$/, "")}`,
     );

@@ -1,7 +1,13 @@
 import { Ledger, LedgerFactory, PARAM, bs, ensureSuperThis } from "@fireproof/core";
 
+
+
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
+
+// import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
+// import { Gateway } from "../../src/blockstore/gateway.js";
+// import { FPEnvelopeMeta, FPEnvelopeType } from "../../src/blockstore/fp-envelope.js";
 
 // function customExpect(value: unknown, matcher: (val: unknown) => void, message: string): void {
 //   try {
@@ -27,15 +33,15 @@ import { simpleCID } from "../helpers.js";
 
 describe("noop Gateway", function () {
   let db: Ledger;
-  let carStore: DataStore;
-  let metaStore: MetaStore;
-  let fileStore: DataStore;
-  let walStore: WALStore;
-  let carGateway: Gateway;
-  let metaGateway: Gateway;
-  let fileGateway: Gateway;
-  let walGateway: Gateway;
-  const sthis = mockSuperThis();
+  let carStore: bs.DataStore;
+  let metaStore: bs.MetaStore;
+  let fileStore: bs.DataStore;
+  let walStore: bs.WALStore;
+  let carGateway: bs.Gateway;
+  let metaGateway: bs.Gateway;
+  let fileGateway: bs.Gateway;
+  let walGateway: bs.Gateway;
+  const sthis = ensureSuperThis();
 
   afterEach(async function () {
     await db.close();
@@ -47,10 +53,10 @@ describe("noop Gateway", function () {
     });
 
     // Extract stores from the loader
-    carStore = (await db.crdt.blockstore.loader?.carStore()) as DataStore;
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
-    fileStore = (await db.crdt.blockstore.loader?.fileStore()) as DataStore;
-    walStore = (await db.crdt.blockstore.loader?.WALStore()) as WALStore;
+    carStore = (await db.crdt.blockstore.loader?.carStore()) as bs.DataStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
+    fileStore = (await db.crdt.blockstore.loader?.fileStore()) as bs.DataStore;
+    walStore = (await db.crdt.blockstore.loader?.WALStore()) as bs.WALStore;
 
     // Extract and log gateways
     carGateway = carStore.realGateway;
@@ -120,7 +126,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
     const carPutResult = await carGateway.put(carUrl.Ok(), {
-      type: FPEnvelopeType.CAR,
+      type: bs.FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
     expect(carPutResult.isOk()).toBeTruthy();
@@ -130,7 +136,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
     await carGateway.put(carUrl.Ok(), {
-      type: FPEnvelopeType.CAR,
+      type: bs.FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
     const carGetResult = await carGateway.get(carUrl.Ok());
@@ -143,7 +149,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(carStore.url(), fileContent.cid);
     await carGateway.start(carStore.url());
     await carGateway.put(carUrl.Ok(), {
-      type: FPEnvelopeType.CAR,
+      type: bs.FPEnvelopeType.CAR,
       payload: fileContent.block,
     });
     const carDeleteResult = await carGateway.delete(carUrl.Ok());
@@ -180,7 +186,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
     const filePutResult = await fileGateway.put(fileUrl.Ok(), {
-      type: FPEnvelopeType.FILE,
+      type: bs.FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
     expect(filePutResult.Ok()).toBeFalsy();
@@ -190,7 +196,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
     await fileGateway.put(fileUrl.Ok(), {
-      type: FPEnvelopeType.FILE,
+      type: bs.FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
     const fileGetResult = await fileGateway.get(fileUrl.Ok());
@@ -202,7 +208,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(fileStore.url(), fileContent.cid);
     await fileGateway.start(fileStore.url());
     await fileGateway.put(fileUrl.Ok(), {
-      type: FPEnvelopeType.FILE,
+      type: bs.FPEnvelopeType.FILE,
       payload: fileContent.block,
     });
     const fileDeleteResult = await fileGateway.delete(fileUrl.Ok());
@@ -229,7 +235,7 @@ describe("noop Gateway", function () {
     // const walTestDataString = JSON.stringify();
     // const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway.put(walUrl.Ok(), {
-      type: FPEnvelopeType.WAL,
+      type: bs.FPEnvelopeType.WAL,
       payload: {
         operations: [],
         noLoaderOps: [],
@@ -243,7 +249,7 @@ describe("noop Gateway", function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
     await walGateway.start(walStore.url());
-    const ref: WALState = {
+    const ref: bs.WALState = {
       operations: [
         {
           cars: [await simpleCID(sthis)],
@@ -268,7 +274,7 @@ describe("noop Gateway", function () {
     // });
     // const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway.put(walUrl.Ok(), {
-      type: FPEnvelopeType.WAL,
+      type: bs.FPEnvelopeType.WAL,
       payload: ref,
     });
     const walGetResult = await walGateway.get(walUrl.Ok());
@@ -282,7 +288,7 @@ describe("noop Gateway", function () {
     const testKey = "bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i";
     const walUrl = await walGateway.buildUrl(walStore.url(), testKey);
     await walGateway.start(walStore.url());
-    const ref: WALState = {
+    const ref: bs.WALState = {
       operations: [
         {
           cars: [await simpleCID(sthis)],
@@ -301,7 +307,7 @@ describe("noop Gateway", function () {
       ],
     };
     await walGateway.put(walUrl.Ok(), {
-      type: FPEnvelopeType.WAL,
+      type: bs.FPEnvelopeType.WAL,
       payload: ref,
     });
     const walDeleteResult = await walGateway.delete(walUrl.Ok());
@@ -361,9 +367,9 @@ describe("noop Gateway", function () {
 describe("noop Gateway subscribe", function () {
   let db: Ledger;
 
-  let metaStore: MetaStore;
+  let metaStore: bs.MetaStore;
 
-  let metaGateway: Gateway;
+  let metaGateway: bs.Gateway;
   const sthis = ensureSuperThis();
 
   afterEach(async function () {
@@ -374,7 +380,7 @@ describe("noop Gateway subscribe", function () {
     db = LedgerFactory("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
 
     metaGateway = metaStore.realGateway;
   });
@@ -388,7 +394,7 @@ describe("noop Gateway subscribe", function () {
       resolve = r;
     });
     if (metaGateway.subscribe) {
-      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: FPEnvelopeMeta) => {
+      const metaSubscribeResult = (await metaGateway.subscribe(metaUrl.Ok(), async (data: bs.FPEnvelopeMeta) => {
         // const decodedData = sthis.txt.decode(data);
         expect(data.payload).toContain("[]");
         didCall = true;
@@ -407,11 +413,11 @@ describe("noop Gateway subscribe", function () {
 describe("Gateway", function () {
   let db: Ledger;
   // let carStore: ExtendedStore;
-  let metaStore: MetaStore;
+  let metaStore: bs.MetaStore;
   // let fileStore: ExtendedStore;
   // let walStore: ExtendedStore;
   // let carGateway: ExtendedGateway;
-  let metaGateway: Gateway;
+  let metaGateway: bs.Gateway;
   // let fileGateway: ExtendedGateway;
   // let walGateway: ExtendedGateway;
   const sthis = ensureSuperThis();
@@ -421,14 +427,14 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = LedgerFactory("test-gateway-" + mockSuperThis().nextId().str);
+    db = LedgerFactory("test-gateway-" + sthis.nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
     // Extract stores from the loader
     // carStore = (await db.blockstore.loader.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as MetaStore;
+    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
     // fileStore = (await db.blockstore.loader.fileStore()) as unknown as ExtendedStore;
     // walStore = (await db.blockstore.loader.WALStore()) as unknown as ExtendedStore;
 
