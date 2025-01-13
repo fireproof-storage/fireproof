@@ -70,6 +70,7 @@ export function registerStoreProtocol(item: SerdeOrGatewayFactoryItem): () => vo
     serdegateway = async (sthis) => {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const m = await item.gateway!(sthis);
+      // console.log("Gateway Plug in DefSerdeGateway", m);
       return new DefSerdeGateway(m);
     };
   } else {
