@@ -74,7 +74,7 @@ importers:
         version: 8.19.0(typescript@5.7.3)
       '@vitest/browser':
         specifier: ^2.1.8
-        version: 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.1)
+        version: 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.7)
       '@vitest/coverage-v8':
         specifier: ^2.1.8
         version: 2.1.8(@vitest/browser@2.1.8)(vitest@2.1.8)
@@ -121,8 +121,8 @@ importers:
         specifier: ^2.1.8
         version: 2.1.8(@types/node@22.10.5)(@vitest/browser@2.1.8)(@vitest/ui@2.1.8)(happy-dom@14.12.3)(msw@2.6.6(@types/node@22.10.5)(typescript@5.7.3))
       webdriverio:
-        specifier: ^9.5.1
-        version: 9.5.1
+        specifier: ^9.5.7
+        version: 9.5.7
       zx:
         specifier: ^8.3.0
         version: 8.3.0
@@ -2943,12 +2943,12 @@ packages:
     resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
     engines: {node: '>= 8'}
 
-  webdriver@9.5.1:
-    resolution: {integrity: sha512-uVQJtk1fLoi8ITmIo5jVpzUb7KMILPptB7uMKBumQJpVxjehz3xi0RGcnscSBuKhi59wkPJ3I5BOvomxQUG8Vw==}
+  webdriver@9.5.4:
+    resolution: {integrity: sha512-wmuIL8XMLUUjmpXuQTqH1fhvWnh+8PA4TemYbXfLP/U1gdAowgxy3+rWMc+LGHkDOZLBIB4tHcdxkj7xbSOvLQ==}
     engines: {node: '>=18.20.0'}
 
-  webdriverio@9.5.1:
-    resolution: {integrity: sha512-G/YwalPM/wxRdjY28LoZ0jJzldDUuZ2Do1F90THNw3GwSZae9yARs1kHxdpy1aDxBFwrb4BNTMzzL9hpJ0lASw==}
+  webdriverio@9.5.7:
+    resolution: {integrity: sha512-Uvro6y9AvDzlrEzoEM+J/C8/foQVKisvTFXdr+XF63BYsPBKZAhL2cKiHuwwj0FaSVC/VIhd0IVj+oGdkDKs/Q==}
     engines: {node: '>=18.20.0'}
     peerDependencies:
       puppeteer-core: ^22.3.0
@@ -3822,7 +3822,7 @@ snapshots:
       '@typescript-eslint/types': 8.19.0
       eslint-visitor-keys: 4.2.0
 
-  '@vitest/browser@2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.1)':
+  '@vitest/browser@2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.7)':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.5.2(@testing-library/dom@10.4.0)
@@ -3836,7 +3836,7 @@ snapshots:
       ws: 8.18.0
     optionalDependencies:
       playwright: 1.49.0
-      webdriverio: 9.5.1
+      webdriverio: 9.5.7
     transitivePeerDependencies:
       - '@types/node'
       - bufferutil
@@ -3860,7 +3860,7 @@ snapshots:
       tinyrainbow: 1.2.0
       vitest: 2.1.8(@types/node@22.10.5)(@vitest/browser@2.1.8)(@vitest/ui@2.1.8)(happy-dom@14.12.3)(msw@2.6.6(@types/node@22.10.5)(typescript@5.7.3))
     optionalDependencies:
-      '@vitest/browser': 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.1)
+      '@vitest/browser': 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.7)
     transitivePeerDependencies:
       - supports-color
 
@@ -5785,7 +5785,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.10.5
-      '@vitest/browser': 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.1)
+      '@vitest/browser': 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.5.7)
       '@vitest/ui': 2.1.8(vitest@2.1.8)
       happy-dom: 14.12.3
     transitivePeerDependencies:
@@ -5809,7 +5809,7 @@ snapshots:
 
   web-streams-polyfill@3.3.3: {}
 
-  webdriver@9.5.1:
+  webdriver@9.5.4:
     dependencies:
       '@types/node': 20.14.11
       '@types/ws': 8.5.10
@@ -5826,7 +5826,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  webdriverio@9.5.1:
+  webdriverio@9.5.7:
     dependencies:
       '@types/node': 20.14.11
       '@types/sinonjs__fake-timers': 8.1.5
@@ -5854,7 +5854,7 @@ snapshots:
       rgb2hex: 0.2.5
       serialize-error: 11.0.3
       urlpattern-polyfill: 10.0.0
-      webdriver: 9.5.1
+      webdriver: 9.5.4
     transitivePeerDependencies:
       - bufferutil
       - supports-color
