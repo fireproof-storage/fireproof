@@ -62,15 +62,15 @@ export class FileGateway implements Gateway {
   getFilePath(url: URI, sthis: SuperThis): string {
     const key = url.getParam(PARAM.KEY);
     if (!key) throw sthis.logger.Error().Url(url).Msg(`key not found`).AsError();
-    const urlGen = url.getParam(PARAM.URL_GEN);
-    switch (urlGen) {
-      case "default":
-        return sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
-      case "fromEnv":
-        return sthis.pathOps.join(getPath(url, sthis), key);
-      default:
-        break;
-    }
+    // const urlGen = url.getParam(PARAM.URL_GEN);
+    // switch (urlGen) {
+    //   case "default":
+    //     return sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
+    //   case "fromEnv":
+    //     return sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
+    //   default:
+    //     break;
+    // }
     return sthis.pathOps.join(getPath(url, sthis), getFileName(url, sthis));
   }
 
