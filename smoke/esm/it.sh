@@ -55,6 +55,22 @@ rm -rf node_modules dist pnpm-lock.yaml
 cp -pr * $tmpDir
 cd $tmpDir
 cp package-template.json package.json
+cat > setup.js <<EOF
+function gthis() {
+  return globalThis;
+}
+
+function getVersion() {
+  let version = "refs/tags/v0.0.0-smoke";
+  if ("$GITHUB_REF" && "$GITHUB_REF".startsWith("refs/tags/v")) {
+    version = "GITHUB_REF";
+  }
+  return version.split("/").slice(-1)[0].replace(/^v/, "");
+}
+
+gthis()["FP_VERSION"]=getVersion()
+EOF
+
 pnpm install
 pnpm run test
 rm -rf $tmpDir

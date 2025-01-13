@@ -3,9 +3,17 @@ import { expect, it, vi } from "vitest";
 
 it("esm.sh", async () => {
   const script = document.createElement("script");
-  script.textContent = `
-import { fireproof } from 'http://localhost:4874/@fireproof/core?no-dts'
+  console.log("window", window.FP_VERSION);
+  const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
+  console.log("window-res", await res.text());
+  const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
+  console.log("window-imp", fireproof);
 
+  script.textContent = `
+console.log("pre-window-js", window.FP_VERSION)
+import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
+
+console.log("window-js", window.FP_VERSION)
 function invariant(cond, message) {
   if (!cond) {
     throw new Error(message)
