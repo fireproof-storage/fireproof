@@ -6,25 +6,30 @@ services:
     ports:
       - "4873:4873"
     # docker run -p 4873:4873 -v $(pwd)/verdaccio.config.yaml:/verdaccio/conf/config.yaml -ti verdaccio/verdaccio
+    volumes:
+      - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage/data
   esm-sh:
-    image: "ghcr.io/esm-dev/esm.sh"
+    image: "ghcr.io/esm-dev/esm.sh:v135_7"
     environment:
       NPM_REGISTRY: http://registry:4873/
+    volumes:
+      - ${PROJECT_BASE}/.esm-cache/esm:/home/node
     ports:
       - "4874:8080"
-#   wait-for-ready:
-#     image: curlimages/curl
-#     command: "sleep 86400"
-#     depends_on:
-#       registry:
-#         condition: service_started
-#       esm-sh:
-#         condition: service_started
-#     healthcheck:
-#       test:
-#         - CMD-SHELL
-#         - "-c"
-#         - "curl http://registry:4873 && curl http://esm-sh:4874"
-#       interval: 5s
-#       retries: 30
-#       timeout: 2s
+  wait-for-ready:
+    image: curlimages/curl
+    #command: "sleep 86400"
+    entrypoint: ["/bin/sh", "-c", "--", "while true; do curl -f http://registry:4873; curl -f http://esm-sh:8080; sleep 30; done;"]
+    depends_on:
+      registry:
+        condition: service_started
+      esm-sh:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "-c"
+        - "curl -f http://registry:4873 && curl -f http://esm-sh:8080"
+      interval: 5s
+      retries: 30
+      timeout: 2s
