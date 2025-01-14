@@ -103,6 +103,8 @@ describe("Streaming API", () => {
       expect(docCount).toBe(AMOUNT_OF_DOCS + 1);
     });
 
+    it.todo("test `live` method with `since` parameter");
+
     it("test `future` method", async () => {
       const stream = lr.allDocs<DocType>().future();
       let docCount = 0;
