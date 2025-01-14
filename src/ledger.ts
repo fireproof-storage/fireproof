@@ -245,7 +245,6 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
       },
       this.opts.writeQueue,
     );
-    // this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
   get name(): string {

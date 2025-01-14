@@ -26,6 +26,9 @@ importers:
       idb:
         specifier: ^8.0.1
         version: 8.0.1
+      iterator-helpers-polyfill:
+        specifier: ^3.0.1
+        version: 3.0.1
       multiformats:
         specifier: ^13.3.1
         version: 13.3.1
@@ -1900,6 +1903,10 @@ packages:
 
   it-stream-types@2.0.2:
     resolution: {integrity: sha512-Rz/DEZ6Byn/r9+/SBCuJhpPATDF9D+dz5pbgSUyBsCDtza6wtNATrz/jz1gDyNanC3XdLboriHnOC925bZRBww==}
+
+  iterator-helpers-polyfill@3.0.1:
+    resolution: {integrity: sha512-9uSoKErC0+TG7uoXlv5k7rs196/l/VGr9hb9KbptpMhszsSksxJCwetp0p7FvgM3SwxlxgEkvokmeOi02PARlQ==}
+    engines: {chrome: '>=63', firefox: '>=57', node: '>=10.0.0', safari: '>=11'}
 
   jackspeak@3.4.0:
     resolution: {integrity: sha512-JVYhQnN59LVPFCEcVa2C3CrEKYacvjRfqIQl+h8oi91aLYQVWRYbxjPcv1bUiUy/kLmQaANrYfNMCO3kuEDHfw==}
@@ -4767,6 +4774,8 @@ snapshots:
       p-defer: 4.0.1
 
   it-stream-types@2.0.2: {}
+
+  iterator-helpers-polyfill@3.0.1: {}
 
   jackspeak@3.4.0:
     dependencies:

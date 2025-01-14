@@ -175,24 +175,18 @@ export class CRDT<T extends DocTypes> {
       //   return clockChangesSince<T>(this.blockstore, this.clock.head, since || [], opts, this.logger).then((a) => a.result);
       // }
 
-      const iterator = getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
-      return iterator;
+      return getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
     };
 
     const snapshot = async () => {
       await waitFor;
       await this.ready();
-      // TODO: Map over async iterable
-      // return currentDocs().map(docUpdateToDocWithId)
 
-      // NOTE:
-      // return Array.fromAsync(currentDocs()).then((a) => a.map(docUpdateToDocWithId));
-
-      const docs: DocWithId<T>[] = [];
-      for await (const update of currentDocs()) {
-        docs.push(docUpdateToDocWithId(update));
-      }
-      return docs;
+      return await Array.fromAsync(
+        currentDocs().map((doc: DocUpdate<T>) => {
+          return docUpdateToDocWithId(doc);
+        }),
+      );
     };
 
     const stream = (opts: { futureOnly: boolean; since?: ClockHead }) => {
