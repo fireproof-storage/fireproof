@@ -54,7 +54,7 @@ interface DocType {
   name: string;
 }
 
-describe("query api", () => {
+describe("Streaming API", () => {
   let lr: Ledger;
 
   const AMOUNT_OF_DOCS = 10;
@@ -75,11 +75,16 @@ describe("query api", () => {
     await lr.destroy();
   });
 
+  //////////////
+  // ALL DOCS //
+  //////////////
+
   describe("allDocs", () => {
     it("test `snapshot` method", async () => {
       const docs = await lr.allDocs().snapshot();
       expect(docs.length).toBe(AMOUNT_OF_DOCS);
     });
+
     it("test `live` method", async () => {
       const stream = lr.allDocs<DocType>().live();
       let docCount = 0;
@@ -97,6 +102,7 @@ describe("query api", () => {
 
       expect(docCount).toBe(AMOUNT_OF_DOCS + 1);
     });
+
     it("test `future` method", async () => {
       const stream = lr.allDocs<DocType>().future();
       let docCount = 0;
@@ -116,4 +122,12 @@ describe("query api", () => {
       expect(docCount).toBe(2);
     });
   });
+
+  ///////////
+  // QUERY //
+  ///////////
+
+  // describe("query", () => {
+  //   //
+  // });
 });

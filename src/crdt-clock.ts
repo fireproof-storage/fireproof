@@ -72,10 +72,12 @@ export class CRDTClock<T extends DocTypes> {
 
   onTick(fn: (updates: DocUpdate<T>[]) => void) {
     this.watchers.add(fn);
+    return () => this.watchers.delete(fn);
   }
 
   onTock(fn: () => void) {
     this.emptyWatchers.add(fn);
+    return () => this.emptyWatchers.delete(fn);
   }
 
   onZoom(fn: () => void) {

@@ -238,11 +238,13 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     this.logger = ensureLogger(this.sthis, "Ledger");
     this.crdt = new CRDT(this.sthis, this.opts);
     // this.blockstore = this._crdt.blockstore; // for connector compatibility
-    this._writeQueue = writeQueue(async (updates: DocUpdate<DT>[]) => {
-      return await this.crdt.bulk(updates);
-    }); //, Infinity)
-    // TODO: Rebase conflict:
-    // this._writeQueue = writeQueue(this.sthis, async (updates: DocUpdate<DT>[]) => this.crdt.bulk(updates), this.opts.writeQueue);
+    this._writeQueue = writeQueue(
+      this.sthis,
+      async (updates: DocUpdate<DT>[]) => {
+        return await this.crdt.bulk(updates);
+      },
+      this.opts.writeQueue,
+    );
     // this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
