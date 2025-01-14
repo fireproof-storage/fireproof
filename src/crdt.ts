@@ -12,6 +12,7 @@ import {
   applyBulkUpdateToCrdt,
   getValueFromCrdt,
   readFiles,
+  clockChangesSince,
   clockVis,
   getBlock,
   doCompact,
@@ -32,6 +33,7 @@ import type {
   QueryResponse,
   ListenerFn,
   QueryStreamMarker,
+  ChangesOptions,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
@@ -165,15 +167,11 @@ export class CRDT<T extends DocTypes> {
     const waitFor = opts.waitFor;
 
     const currentDocs = (since?: ClockHead) => {
-      void since;
-
-      // TODO:
-      // const opts: ChangesOptions = {};
-
-      // TODO:
-      // if (since) {
-      //   return clockChangesSince<T>(this.blockstore, this.clock.head, since || [], opts, this.logger).then((a) => a.result);
-      // }
+      if (since) {
+        const opts: ChangesOptions = {};
+        const { result } = clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
+        return result;
+      }
 
       return getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
     };
@@ -182,11 +180,20 @@ export class CRDT<T extends DocTypes> {
       await waitFor;
       await this.ready();
 
-      return await Array.fromAsync(
-        currentDocs().map((doc: DocUpdate<T>) => {
-          return docUpdateToDocWithId(doc);
-        }),
-      );
+      async function* currentDocsWithId() {
+        for await (const doc of currentDocs()) {
+          yield docUpdateToDocWithId(doc);
+        }
+      }
+
+      return await Array.fromAsync(currentDocsWithId());
+
+      // TODO: Not sure if this is an improvement on the above generator.
+      // return await Array.fromAsync(
+      //   currentDocs().map((doc: DocUpdate<T>) => {
+      //     return docUpdateToDocWithId(doc);
+      //   }),
+      // );
     };
 
     const stream = (opts: { futureOnly: boolean; since?: ClockHead }) => {

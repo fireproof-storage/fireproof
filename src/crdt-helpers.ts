@@ -238,50 +238,42 @@ class DirtyEventFetcher<T> extends EventFetcher<T> {
   }
 }
 
-export async function clockChangesSince<T extends DocTypes>(
+export function clockChangesSince<T extends DocTypes>(
   blocks: BlockFetcher,
   head: ClockHead,
   since: ClockHead,
   opts: ChangesOptions,
   logger: Logger,
-): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
+): { result: AsyncGenerator<DocUpdate<T>>; head: ClockHead } {
   const eventsFetcher = (
     opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(blocks)
   ) as EventFetcher<Operation>;
   const keys = new Set<string>();
-  const updates = await gatherUpdates<T>(
-    blocks,
-    eventsFetcher,
-    head,
-    since,
-    [],
-    keys,
-    new Set<string>(),
-    opts.limit || Infinity,
-    logger,
-  );
-  return { result: updates.reverse(), head };
+  const result = gatherUpdates<T>(blocks, eventsFetcher, head, since, keys, new Set<string>(), opts.limit || Infinity, logger);
+  return { result, head };
 }
 
-async function gatherUpdates<T extends DocTypes>(
+async function* gatherUpdates<T extends DocTypes>(
   blocks: BlockFetcher,
   eventsFetcher: EventFetcher<Operation>,
   head: ClockHead,
   since: ClockHead,
-  updates: DocUpdate<T>[] = [],
   keys: Set<string>,
   didLinks: Set<string>,
   limit: number,
   logger: Logger,
-): Promise<DocUpdate<T>[]> {
-  if (limit <= 0) return updates;
+): AsyncGenerator<DocUpdate<T>> {
+  if (limit <= 0) return;
+
   // if (Math.random() < 0.001) console.log('gatherUpdates', head.length, since.length, updates.length)
   const sHead = head.map((l) => l.toString());
+
   for (const link of since) {
     if (sHead.includes(link.toString())) {
-      return updates;
+      return;
     }
   }
+
   for (const link of head) {
     if (didLinks.has(link.toString())) continue;
     didLinks.add(link.toString());
@@ -299,16 +291,15 @@ async function gatherUpdates<T extends DocTypes>(
       if (!keys.has(key)) {
         // todo option to see all updates
         const docValue = await getValueFromLink<T>(blocks, value, logger);
-        updates.push({ id: key, value: docValue.doc, del: docValue.del, clock: link });
+        yield { id: key, value: docValue.doc, del: docValue.del, clock: link };
         limit--;
         keys.add(key);
       }
     }
     if (event.parents) {
-      updates = await gatherUpdates(blocks, eventsFetcher, event.parents, since, updates, keys, didLinks, limit, logger);
+      yield* gatherUpdates(blocks, eventsFetcher, event.parents, since, keys, didLinks, limit, logger);
     }
   }
-  return updates;
 }
 
 export async function* getAllEntries<T extends DocTypes>(blocks: BlockFetcher, head: ClockHead, logger: Logger) {
