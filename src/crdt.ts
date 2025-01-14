@@ -199,6 +199,8 @@ export class CRDT<T extends DocTypes> {
       const clock = this.clock;
       const ready = this.ready.bind(this);
 
+      let unsubscribe: undefined | (() => void);
+
       return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
         async start(controller) {
           await waitFor;
@@ -222,15 +224,16 @@ export class CRDT<T extends DocTypes> {
             if (value) await iterate(value);
           }
 
-          clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+          unsubscribe = clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
             updates.forEach((update) => {
               controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
             });
           });
         },
 
-        // NOTE: Ideally we unsubscribe from `onTick` here.
-        // cancel() {}
+        cancel() {
+          unsubscribe?.();
+        },
       });
     };
 
