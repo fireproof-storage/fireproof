@@ -22,7 +22,8 @@ export interface ClerkClaim {
   readonly email: string;
   readonly first: string;
   readonly last: string;
-  readonly nick: string;
+  // github handle
+  readonly name: string;
 }
 
 export interface ClerkVerifyAuth extends VerifiedAuth {
@@ -311,7 +312,7 @@ export class FPApiImpl implements FPApi {
     this.sthis = sthis;
   }
 
-  async authToClerkVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
+  private async authToClerkVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
     const rAuth = await this.tokenApi.verify(req.auth.token);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
