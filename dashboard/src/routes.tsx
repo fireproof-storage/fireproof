@@ -3,24 +3,27 @@ import { createRoutesFromElements, Route } from "react-router-dom";
 
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, createMemoryRouter, RouterProvider } from "react-router-dom";
-import App, { loader as appLoader } from "./layouts/app";
-import DatabasesHistory from "./pages/databases/history";
-import DatabasesIndex from "./pages/databases/index";
-import DatabasesNew, { Action as newDatabaseAction } from "./pages/databases/new";
-import DatabasesQuery from "./pages/databases/query";
-import DatabasesShow from "./pages/databases/show";
-import DocsShow from "./pages/docs/show";
-import Index, { loader as indexLoader } from "./pages/index";
+import { loader as appLoader, AppLayout } from "./layouts/app.tsx";
+import DatabasesHistory from "./pages/databases/history.tsx";
+import DatabasesIndex from "./pages/databases/index.tsx";
+import DatabasesNew, { Action as newDatabaseAction } from "./pages/databases/new.tsx";
+import DatabasesQuery from "./pages/databases/query.tsx";
+import DatabasesShow from "./pages/databases/show.tsx";
+import DocsShow from "./pages/docs/show.tsx";
+import Index, { loader as indexLoader } from "./pages/index.tsx";
 
-import DatabasesConnect, { loader as connectLoader } from "./pages/databases/connect";
-import Login, { loader as loginLoader } from "./pages/login";
+import DatabasesConnect, { loader as connectLoader } from "./pages/databases/connect.tsx";
+import Login, { loader as loginLoader } from "./pages/login.tsx";
 import "./styles/tailwind.css";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { Database } from "./components/Database.tsx";
 
 const routes = createRoutesFromElements(
   <Route>
     <Route path="/" element={<Index />} loader={indexLoader} />
     <Route path="/login" element={<Login />} loader={loginLoader} />
-    <Route path="/fp/databases" element={<App />} loader={appLoader}>
+    <Route path="/fp/cloud" element={<AppLayout />} loader={appLoader} />
+    <Route path="/fp/databases" element={<Database />} loader={appLoader}>
       <Route index element={<DatabasesIndex />} />
       <Route path="new" element={<DatabasesNew />} action={newDatabaseAction} />
       <Route path="connect" element={<DatabasesConnect />} loader={connectLoader} />
@@ -38,8 +41,17 @@ const rootElement = import.meta.env.VITE_CHROME_EXTENSION
   ? document.getElementById("fireproof-overlay")?.shadowRoot?.getElementById("root")
   : document.getElementById("root");
 
+  /*
+    routerPush={(to) => navigate(to)}
+    routerReplace={(to) => navigate(to, { replace: true })}
+    signInFallbackRedirectUrl={nextUrl}
+    */
 if (rootElement) {
-  ReactDOM.createRoot(rootElement).render(<RouterProvider router={router} />);
+  ReactDOM.createRoot(rootElement).render(
+         <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY} >
+              <RouterProvider router={router} />
+          </ClerkProvider>
+);
 } else {
   console.error("Root element not found");
 }

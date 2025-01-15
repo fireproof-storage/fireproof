@@ -8,7 +8,7 @@
 
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiImpl, FPApiToken, ReqEnsureUserRef, ResEnsureUserRef, VerifiedAuth } from "./api";
+import { FPApiImpl, FPApiToken, ReqEnsureUserRef, ResEnsureUserRef, VerifiedAuth } from "./api.js";
 import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';

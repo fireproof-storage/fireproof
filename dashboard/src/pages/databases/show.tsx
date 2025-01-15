@@ -3,9 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
-import DynamicTable from "../../components/DynamicTable";
-import { headersForDocs } from "../../components/dynamicTableHelpers";
-import { truncateDbName } from "../../layouts/app";
+import DynamicTable from "../../components/DynamicTable.tsx";
+import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
+import { truncateDbName } from "../../helpers.ts";
 
 export const DEFAULT_ENDPOINT = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
 export const SYNC_DB_NAME = "fp_sync";
