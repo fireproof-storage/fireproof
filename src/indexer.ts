@@ -246,12 +246,13 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     this.logger.Debug().Msg("enter _updateIndex");
     if (this.initError) throw this.initError;
     if (!this.mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
-    let result: DocUpdate<T>[], head: ClockHead;
+    let result: DocUpdate<T>[];
+    const head = [...this.crdt.clock.head];
     if (!this.indexHead || this.indexHead.length === 0) {
-      ({ result, head } = await this.crdt.allDocs());
-      this.logger.Debug().Msg("enter crdt.allDocs");
+      result = await Array.fromAsync(this.crdt.all<T>());
+      this.logger.Debug().Msg("enter crdt.all");
     } else {
-      ({ result, head } = await this.crdt.changes(this.indexHead));
+      result = await Array.fromAsync(this.crdt.changes<T>(this.indexHead));
       this.logger.Debug().Msg("enter crdt.changes");
     }
     if (result.length === 0) {

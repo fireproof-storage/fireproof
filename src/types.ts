@@ -273,8 +273,11 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
 export type QueryStreamMarker = { readonly kind: "preexisting"; readonly done: boolean } | { readonly kind: "new" };
 
 export interface QueryResponse<T extends DocTypes> {
-  snapshot(opts?: { since?: ClockHead }): AsyncGenerator<DocWithId<T>>;
-  live(opts?: { since?: ClockHead }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
+  snapshot(opts?: { since?: ClockHead; sinceOptions?: ChangesOptions }): AsyncGenerator<DocWithId<T>>;
+  live(opts?: {
+    since?: ClockHead;
+    sinceOptions?: ChangesOptions;
+  }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
   future(): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
 }
 
