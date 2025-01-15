@@ -8,13 +8,7 @@ import Editor from "react-simple-code-editor";
 hljs.registerLanguage("json", json);
 hljs.registerLanguage("javascript", javascript);
 
-function HighlightedCode({
-  code,
-  language,
-}: {
-  code: string;
-  language: string;
-}) {
+function HighlightedCode({ code, language }: { code: string; language: string }) {
   const highlightedCode = hljs.highlight(code, { language }).value;
   return (
     <pre className={`language-${language}`}>
@@ -26,13 +20,7 @@ const codeStyle = {
   fontFamily: '"Fira code", "Fira Mono", monospace',
   fontSize: 14,
 };
-export function CodeHighlight({
-  code,
-  language = "json",
-}: {
-  code: string;
-  language?: string;
-}): JSX.Element {
+export function CodeHighlight({ code, language = "json" }: { code: string; language?: string }): JSX.Element {
   return (
     <div className="p-2" style={codeStyle}>
       <HighlightedCode code={code} language={language} />
@@ -65,7 +53,7 @@ export function EditableCodeHighlight({
       }
       setCode(liveCode);
     },
-    [language, onChange]
+    [language, onChange],
   );
 
   useEffect(() => {
@@ -77,9 +65,7 @@ export function EditableCodeHighlight({
       <Editor
         value={liveCode}
         onValueChange={onEditableChange}
-        highlight={(code) => (
-          <HighlightedCode code={code} language={language} />
-        )}
+        highlight={(code) => <HighlightedCode code={code} language={language} />}
         padding={10}
         style={codeStyle}
         autoFocus

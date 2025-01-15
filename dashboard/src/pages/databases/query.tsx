@@ -17,9 +17,7 @@ export default function Query() {
   `;
 
   const [editorCode, setEditorCode] = useState<string>(emptyMap);
-  const [editorCodeFnString, setEditorCodeFnString] = useState<string>(
-    () => editorCode
-  );
+  const [editorCodeFnString, setEditorCodeFnString] = useState<string>(() => editorCode);
   const [userCodeError, setUserCodeError] = useState<string | null>(null);
 
   function editorChanged({ code }: { code: string }) {
@@ -45,10 +43,7 @@ export default function Query() {
     <div className="p-6 bg-[--muted]">
       <div className="flex justify-between items-center mb-4">
         <nav className="text-lg text-[--muted-foreground]">
-          <Link
-            to={`/fp/databases/${name}`}
-            className="font-medium text-[--foreground] hover:underline"
-          >
+          <Link to={`/fp/databases/${name}`} className="font-medium text-[--foreground] hover:underline">
             {name}
           </Link>
           <span className="mx-2">&gt;</span>
@@ -57,20 +52,13 @@ export default function Query() {
       </div>
 
       <div className="mb-6 p-4 bg-[--accent]/20 rounded-lg border-2 border-[--accent] shadow-md">
-        <h2 className="text-xl font-bold text-[--accent-foreground] mb-2">
-          Query Editor
-        </h2>
+        <h2 className="text-xl font-bold text-[--accent-foreground] mb-2">Query Editor</h2>
         <p className="text-[--muted-foreground]">
-          Enter your map function below. This function will be used to query the
-          database.
+          Enter your map function below. This function will be used to query the database.
         </p>
       </div>
       <>
-        <EditableCodeHighlight
-          onChange={editorChanged}
-          code={editorCode}
-          language="javascript"
-        />
+        <EditableCodeHighlight onChange={editorChanged} code={editorCode} language="javascript" />
         <div className="flow-root p-4">
           <button
             className="float-right rounded-lg py-2 px-4 ml-6 bg-[--accent] text-[--accent-foreground] hover:bg-[--accent]/80"
@@ -105,13 +93,5 @@ function QueryDynamicTable({ mapFn, name }: { mapFn: string; name: string }) {
   console.log(docs);
   const headers = headersForDocs(docs);
 
-  return (
-    <DynamicTable
-      headers={headers}
-      th="key"
-      link={["_id"]}
-      rows={docs}
-      dbName={name}
-    />
-  );
+  return <DynamicTable headers={headers} th="key" link={["_id"]} rows={docs} dbName={name} />;
 }
