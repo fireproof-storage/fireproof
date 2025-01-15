@@ -10,16 +10,18 @@ interface TodoCardProps {
 const priorityColors = {
   high: 'bg-red-100 border-red-200',
   medium: 'bg-yellow-100 border-yellow-200',
-  low: 'bg-green-100 border-green-200'
+  low: 'bg-green-100 border-green-200',
 };
 
 export function TodoCard({ todo }: TodoCardProps) {
   const navigate = useNavigate();
 
   return (
-    <div
+    <button
       onClick={() => navigate(`/edit/${todo._id}`)}
-      className={`p-4 rounded-lg border-2 ${priorityColors[todo.priority]} cursor-pointer hover:shadow-md transition-shadow`}
+      className={`w-full text-left p-4 rounded-lg border-2 ${
+        priorityColors[todo.priority]
+      } hover:shadow-md transition-shadow`}
     >
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-lg font-semibold">{todo.title}</h3>
@@ -30,6 +32,6 @@ export function TodoCard({ todo }: TodoCardProps) {
         )}
       </div>
       <p className="text-gray-600 line-clamp-2">{todo.description}</p>
-    </div>
+    </button>
   );
 }

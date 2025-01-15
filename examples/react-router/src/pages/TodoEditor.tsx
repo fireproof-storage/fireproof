@@ -10,20 +10,28 @@ export function TodoEditor() {
   const { todoId } = useParams();
   const { useDocument } = useFireproof(DATABASE_CONFIG.name);
 
+  if (!todoId) {
+    navigate('/');
+    return null;
+  }
   const emptyWithId = getEmptyTodo(todoId!);
   const [todo, setTodo, storeTodo] = useDocument<TodoStorage>(
     () => emptyWithId
   );
 
   const doUpdate = async (updatedTodo: Partial<TodoStorage>) => {
-    const updated = {
-      ...todo,
-      ...updatedTodo,
-      updatedAt: new Date().toISOString(),
-    };
-    console.log('Updating todo to ', updated);
-    setTodo(updated);
-    await storeTodo(updated);
+    try {
+      const updated = {
+        ...todo,
+        ...updatedTodo,
+        updatedAt: new Date().toISOString(),
+      };
+      console.log('Updating todo to ', updated);
+      setTodo(updated);
+      await storeTodo(updated);
+    } catch (err) {
+      console.error('Failed to save', err);
+    }
   };
 
   const navigateToTodos = () => {
