@@ -166,24 +166,18 @@ export class CRDT<T extends DocTypes> {
   allDocs<T extends DocTypes>(opts: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
     const waitFor = opts.waitFor;
 
-    const currentDocs = (since?: ClockHead) => {
-      if (since) {
-        const opts: ChangesOptions = {};
-        const { result } = clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
-        return result;
-      }
-
-      return getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
+    const currentDocs = (since?: ClockHead, sinceOptions?: ChangesOptions) => {
+      return since ? this.changes<T>(since, sinceOptions) : this.all<T>();
     };
 
-    const snapshot = (opts: { since?: ClockHead } = {}) => {
+    const snapshot = (opts: { since?: ClockHead; sinceOptions?: ChangesOptions } = {}) => {
       const ready = this.ready.bind(this);
 
       async function* currentDocsWithId() {
         await waitFor;
         await ready();
 
-        for await (const doc of currentDocs(opts.since)) {
+        for await (const doc of currentDocs(opts.since, opts.sinceOptions)) {
           yield docUpdateToDocWithId(doc);
         }
       }
@@ -191,7 +185,7 @@ export class CRDT<T extends DocTypes> {
       return currentDocsWithId();
     };
 
-    const stream = (opts: { futureOnly: boolean; since?: ClockHead }) => {
+    const stream = (opts: { futureOnly: boolean; since?: ClockHead; sinceOptions?: ChangesOptions }) => {
       const clock = this.clock;
       const ready = this.ready.bind(this);
 
@@ -204,7 +198,7 @@ export class CRDT<T extends DocTypes> {
           await ready();
 
           if (opts.futureOnly === false) {
-            const it = currentDocs(opts.since);
+            const it = currentDocs(opts.since, opts.sinceOptions);
 
             async function iterate(prevValue: DocUpdate<T>) {
               const { done, value } = await it.next();
@@ -254,6 +248,14 @@ export class CRDT<T extends DocTypes> {
       txt.push(line);
     }
     return txt.join("\n");
+  }
+
+  all<T extends DocTypes>(): AsyncGenerator<DocUpdate<T>> {
+    return getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
+  }
+
+  changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): AsyncGenerator<DocUpdate<T>> {
+    return clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
   }
 
   async getBlock(cidString: string): Promise<Block> {
