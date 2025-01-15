@@ -8,8 +8,7 @@ import { getEmptyTodo } from '../utils/todoUtils';
 
 export function Home() {
   const navigate = useNavigate();
-  const { useLiveQuery } = useFireproof(DATABASE_CONFIG.name);
-  const { database } = useFireproof(DATABASE_CONFIG.name);
+  const { database, useLiveQuery } = useFireproof(DATABASE_CONFIG.name);
   const empty = getEmptyTodo();
 
   const { docs: todos } = useLiveQuery<TodoStorage, [number]>('priority');
