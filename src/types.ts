@@ -273,11 +273,9 @@ export interface AllDocsQueryOpts extends QueryOpts<string> {
 export type QueryStreamMarker = { readonly kind: "preexisting"; readonly done: boolean } | { readonly kind: "new" };
 
 export interface QueryResponse<T extends DocTypes> {
-  snapshot(): Promise<DocWithId<T>[]>;
+  snapshot(opts?: { since?: ClockHead }): AsyncGenerator<DocWithId<T>>;
   live(opts?: { since?: ClockHead }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
   future(): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
-
-  // TODO: clockHead
 }
 
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
