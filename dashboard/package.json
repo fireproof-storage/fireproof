@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest --run",
-    "format": "prettier",
+    "format": "prettier .",
     "drizzle:push": "drizzle-kit push"
   },
   "dependencies": {
