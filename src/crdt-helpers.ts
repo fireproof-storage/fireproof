@@ -244,13 +244,12 @@ export function clockChangesSince<T extends DocTypes>(
   since: ClockHead,
   opts: ChangesOptions,
   logger: Logger,
-): { result: AsyncGenerator<DocUpdate<T>>; head: ClockHead } {
+): AsyncGenerator<DocUpdate<T>> {
   const eventsFetcher = (
     opts.dirty ? new DirtyEventFetcher<Operation>(logger, blocks) : new EventFetcher<Operation>(blocks)
   ) as EventFetcher<Operation>;
   const keys = new Set<string>();
-  const result = gatherUpdates<T>(blocks, eventsFetcher, head, since, keys, new Set<string>(), opts.limit || Infinity, logger);
-  return { result, head };
+  return gatherUpdates<T>(blocks, eventsFetcher, head, since, keys, new Set<string>(), opts.limit || Infinity, logger);
 }
 
 async function* gatherUpdates<T extends DocTypes>(
