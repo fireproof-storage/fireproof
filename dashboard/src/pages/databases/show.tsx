@@ -7,8 +7,7 @@ import DynamicTable from "../../components/DynamicTable";
 import { headersForDocs } from "../../components/dynamicTableHelpers";
 import { truncateDbName } from "../../layouts/app";
 
-export const DEFAULT_ENDPOINT =
-  "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
+export const DEFAULT_ENDPOINT = "fireproof://cloud.fireproof.direct?getBaseUrl=https://storage.fireproof.direct/";
 export const SYNC_DB_NAME = "fp_sync";
 
 export default function Show() {
@@ -33,8 +32,7 @@ function TableView({ name }: { name: string }) {
     left: 0,
   });
 
-  const { useLiveQuery: usePetnameLiveQuery, useAllDocs } =
-    useFireproof(SYNC_DB_NAME);
+  const { useLiveQuery: usePetnameLiveQuery, useAllDocs } = useFireproof(SYNC_DB_NAME);
 
   const myPetnames = usePetnameLiveQuery<{
     localName: string;
@@ -63,9 +61,7 @@ function TableView({ name }: { name: string }) {
   const headers = headersForDocs(docs);
 
   const handleDeleteDatabase = async () => {
-    if (
-      window.confirm(`Are you sure you want to delete the database "${name}"?`)
-    ) {
+    if (window.confirm(`Are you sure you want to delete the database "${name}"?`)) {
       const DBDeleteRequest = window.indexedDB.deleteDatabase(`fp.${name}`);
 
       DBDeleteRequest.onerror = (event) => {
@@ -92,10 +88,8 @@ function TableView({ name }: { name: string }) {
   const currentRemoteName = myPetnames.docs[0]?.remoteName || "";
 
   const connectionUrl = `${currentHost}/fp/databases/connect?endpoint=${encodeURIComponent(
-    currentEndpoint
-  )}&localName=${encodeURIComponent(
-    currentLocalName
-  )}&remoteName=${encodeURIComponent(currentRemoteName)}`;
+    currentEndpoint,
+  )}&localName=${encodeURIComponent(currentLocalName)}&remoteName=${encodeURIComponent(currentRemoteName)}`;
 
   const copyToClipboard = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event from bubbling up
@@ -104,7 +98,7 @@ function TableView({ name }: { name: string }) {
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
       },
-      (err) => console.error("Could not copy text: ", err)
+      (err) => console.error("Could not copy text: ", err),
     );
   };
 
@@ -127,16 +121,10 @@ function TableView({ name }: { name: string }) {
         return;
       }
 
-      if (
-        connectionInfoRef.current &&
-        !connectionInfoRef.current.contains(event.target as Node)
-      ) {
+      if (connectionInfoRef.current && !connectionInfoRef.current.contains(event.target as Node)) {
         setShowConnectionInfo(false);
       }
-      if (
-        actionsRef.current &&
-        !actionsRef.current.contains(event.target as Node)
-      ) {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) {
         setShowActions(false);
       }
     }
@@ -151,16 +139,11 @@ function TableView({ name }: { name: string }) {
     <div className="p-6 bg-[--muted]">
       {connection && (
         <div className="mb-4 bg-[--background] border border-[--border] rounded-md p-4">
-          <div
-            className="flex items-center cursor-pointer"
-            onClick={() => setShowQuickstart(!showQuickstart)}
-          >
+          <div className="flex items-center cursor-pointer" onClick={() => setShowQuickstart(!showQuickstart)}>
             <h3 className="font-bold text-sm flex-grow">Quickstart</h3>
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className={`h-4 w-4 transform transition-transform ${
-                showQuickstart ? "rotate-180" : ""
-              }`}
+              className={`h-4 w-4 transform transition-transform ${showQuickstart ? "rotate-180" : ""}`}
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -176,9 +159,7 @@ function TableView({ name }: { name: string }) {
               <div className="flex border-b border-[--border] mb-4">
                 <button
                   className={`px-4 py-2 text-sm font-medium ${
-                    activeTab === "react"
-                      ? "border-b-2 border-[--accent] text-[--accent]"
-                      : "text-[--muted-foreground]"
+                    activeTab === "react" ? "border-b-2 border-[--accent] text-[--accent]" : "text-[--muted-foreground]"
                   }`}
                   onClick={() => setActiveTab("react")}
                 >
@@ -186,9 +167,7 @@ function TableView({ name }: { name: string }) {
                 </button>
                 <button
                   className={`px-4 py-2 text-sm font-medium ${
-                    activeTab === "vanilla"
-                      ? "border-b-2 border-[--accent] text-[--accent]"
-                      : "text-[--muted-foreground]"
+                    activeTab === "vanilla" ? "border-b-2 border-[--accent] text-[--accent]" : "text-[--muted-foreground]"
                   }`}
                   onClick={() => setActiveTab("vanilla")}
                 >
@@ -237,11 +216,7 @@ export default function App() {
                 </pre>
               )}
 
-              {activeTab === "vanilla" && (
-                <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">
-                  {``}
-                </pre>
-              )}
+              {activeTab === "vanilla" && <pre className="bg-[--muted] p-2 rounded text-xs overflow-x-auto">{``}</pre>}
             </div>
           )}
         </div>
@@ -249,10 +224,7 @@ export default function App() {
 
       <div className="@container flex justify-between items-start mb-4 gap-4">
         <nav className="text-base max-[500px]:text-sm text-[--muted-foreground] flex-grow flex items-center flex-wrap">
-          <Link
-            to={`/fp/databases/${name}`}
-            className="font-medium text-[--foreground] hover:underline truncate max-w-[150px]"
-          >
+          <Link to={`/fp/databases/${name}`} className="font-medium text-[--foreground] hover:underline truncate max-w-[150px]">
             {truncateDbName(name, 12)}
           </Link>
           {petName && (
@@ -295,7 +267,7 @@ export default function App() {
                       </button>
                     </div>
                   </div>,
-                  document.body
+                  document.body,
                 )}
             </div>
           )}
@@ -309,9 +281,7 @@ export default function App() {
               Actions
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={`h-4 w-4 ml-2 transform transition-transform ${
-                  showActions ? "rotate-180" : ""
-                }`}
+                className={`h-4 w-4 ml-2 transform transition-transform ${showActions ? "rotate-180" : ""}`}
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -347,12 +317,7 @@ export default function App() {
               to={`/fp/databases/${name}/docs/new`}
               className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80 whitespace-nowrap"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
@@ -365,12 +330,7 @@ export default function App() {
               onClick={handleDeleteDatabase}
               className="inline-flex items-center justify-center rounded bg-[--destructive] px-3 py-2 text-sm text-destructive-foreground transition-colors hover:bg-[--destructive]/80 whitespace-nowrap"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path
                   fillRule="evenodd"
                   d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
@@ -386,17 +346,14 @@ export default function App() {
       <div>
         {docs.length === 0 ? (
           <div className="mt-4 text-center text-[--muted-foreground]">
-            No documents found. <Link to={`/fp/databases/${name}/docs/new`} className="font-semibold text-[--accent] hover:underline">Create a new document</Link> to get started.
+            No documents found.{" "}
+            <Link to={`/fp/databases/${name}/docs/new`} className="font-semibold text-[--accent] hover:underline">
+              Create a new document
+            </Link>{" "}
+            to get started.
           </div>
         ) : (
-          <DynamicTable
-            headers={headers}
-            th="key"
-            link={["_id"]}
-            rows={docs}
-            dbName={name}
-            onDelete={deleteDocument}
-          />
+          <DynamicTable headers={headers} th="key" link={["_id"]} rows={docs} dbName={name} onDelete={deleteDocument} />
         )}
       </div>
     </div>

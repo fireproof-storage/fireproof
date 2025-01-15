@@ -1,0 +1,40 @@
+name: CI
+on:
+  - push
+  - pull_request
+jobs:
+  quality-checks:
+    name: Testit Runit Buildit
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        #with:
+        #  fetch-tags: true
+        #  fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+          version: 9
+          cache: "pnpm"
+
+      - name: install
+        run: pnpm install
+
+      - name: format-check
+        run: pnpm run format --check
+
+      - name: lint
+        run: pnpm run lint
+
+      - name: build
+        run: pnpm run build
+
+      - name: test
+        run: |
+          pnpm run drizzle:push
+          pnpm run test

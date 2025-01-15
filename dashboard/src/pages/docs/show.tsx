@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 
-import {
-  CodeHighlight,
-  EditableCodeHighlight,
-} from "../../components/CodeHighlight";
+import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight";
 
 export default function Document() {
   const { name } = useParams();
@@ -16,9 +13,7 @@ export default function Document() {
   const { useDocument, database } = useFireproof(name);
 
   const [doc] = useDocument(() => ({ _id: _id! }));
-  const [docToSave, setDocToSave] = useState<string>(
-    JSON.stringify(doc, null, 2)
-  );
+  const [docToSave, setDocToSave] = useState<string>(JSON.stringify(doc, null, 2));
   const [needsSave, setNeedsSave] = useState(false);
 
   async function saveDocument(_id?: string) {
@@ -51,10 +46,7 @@ export default function Document() {
     <div className="p-6 bg-[--muted]">
       <div className="flex justify-between items-center mb-4">
         <nav className="text-lg text-[--muted-foreground]">
-          <Link
-            to={`/fp/databases/${name}`}
-            className="font-medium text-[--foreground] hover:underline"
-          >
+          <Link to={`/fp/databases/${name}`} className="font-medium text-[--foreground] hover:underline">
             {name}
           </Link>
           <span className="mx-2">&gt;</span>
@@ -62,10 +54,7 @@ export default function Document() {
         </nav>
       </div>
       <h3>Editable data fields</h3>
-      <EditableCodeHighlight
-        onChange={editorChanged}
-        code={JSON.stringify(data, null, 2)}
-      />
+      <EditableCodeHighlight onChange={editorChanged} code={JSON.stringify(data, null, 2)} />
       <div className="flex space-x-4 mt-4">
         <button
           onClick={() => {

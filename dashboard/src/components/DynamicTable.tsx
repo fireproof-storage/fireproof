@@ -2,14 +2,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function DynamicTable({
-  hrefFn,
-  dbName,
-  headers,
-  rows,
-  th = "_id",
-  link = ["_id"],
-}: any) {
+export default function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id", link = ["_id"] }: any) {
   const navigate = useNavigate();
 
   return (
@@ -18,12 +11,8 @@ export default function DynamicTable({
         <thead className="text-xs text-[--foreground] bg-[--muted] relative z-10">
           <tr key={"header" + Math.random()}>
             {headers.map((header: string) => (
-              <th
-                key={header}
-                scope="col"
-                className="px-6 py-3 border-b-2 border-[--border]"
-              >
-                {header === '_id' ? 'document id' : header}
+              <th key={header} scope="col" className="px-6 py-3 border-b-2 border-[--border]">
+                {header === "_id" ? "document id" : header}
               </th>
             ))}
           </tr>
@@ -39,18 +28,14 @@ export default function DynamicTable({
             >
               {headers.map((header: string) =>
                 header === th ? (
-                  <th
-                    key={header}
-                    scope="row"
-                    className="px-6 py-4 font-medium text-inherit whitespace-nowrap"
-                  >
+                  <th key={header} scope="row" className="px-6 py-4 font-medium text-inherit whitespace-nowrap">
                     {formatTableCellContent(fields[header])}
                   </th>
                 ) : (
                   <td key={header} className="px-6 py-4">
                     {formatTableCellContent(fields[header])}
                   </td>
-                )
+                ),
               )}
             </tr>
           ))}

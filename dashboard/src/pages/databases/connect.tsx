@@ -11,9 +11,7 @@ export async function loader({ request }) {
   }
 
   const remoteName = url.searchParams.get("remoteName");
-  const sanitizedRemoteName = remoteName
-    .replace(/^[^a-zA-Z0-9]+/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "_");
+  const sanitizedRemoteName = remoteName.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_");
 
   const endpoint = url.searchParams.get("endpoint") || DEFAULT_ENDPOINT;
 

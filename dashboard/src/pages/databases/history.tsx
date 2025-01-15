@@ -30,10 +30,7 @@ export default function ChangesHistory() {
     <div className="p-6 bg-[--muted]">
       <div className="flex justify-between items-center mb-4">
         <nav className="text-lg text-[--muted-foreground]">
-          <Link
-            to={`/fp/databases/${name}`}
-            className="font-medium text-[--foreground] hover:underline"
-          >
+          <Link to={`/fp/databases/${name}`} className="font-medium text-[--foreground] hover:underline">
             {name}
           </Link>
           <span className="mx-2">&gt;</span>

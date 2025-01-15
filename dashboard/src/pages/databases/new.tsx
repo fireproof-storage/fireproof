@@ -25,14 +25,9 @@ export default function New() {
   return (
     <div className="bg-[--muted] shadow sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
-        <h3 className="text-base font-semibold leading-6 text-[--foreground]">
-          New Database Name:
-        </h3>
+        <h3 className="text-base font-semibold leading-6 text-[--foreground]">New Database Name:</h3>
 
-        <Form
-          onSubmit={handleSubmit(onSubmit)}
-          className="mt-5 sm:flex sm:items-center"
-        >
+        <Form onSubmit={handleSubmit(onSubmit)} className="mt-5 sm:flex sm:items-center">
           <div className="w-full sm:max-w-xs">
             <label htmlFor="dbName" className="sr-only">
               Database Name

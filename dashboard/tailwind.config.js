@@ -1,4 +1,5 @@
 import { fontFamily } from "tailwindcss/defaultTheme";
+import * as ContainerQueries from "@tailwindcss/container-queries"
 
 export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
@@ -65,5 +66,5 @@ export default {
       },
     },
   },
-  plugins: [require("@tailwindcss/container-queries")],
+  plugins: [ContainerQueries]
 };
