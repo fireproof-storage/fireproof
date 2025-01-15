@@ -1,5 +1,5 @@
 import { Result } from "@adviser/cement";
-import { tenants, tenantUserRefs, userRefs } from "./db-api-schema";
+import { tenants, tenantUserRefs, userRefs } from "./db-api-schema.js";
 import { SuperThis } from "@fireproof/core";
 import { eq, and, ExtractTablesWithRelations, is } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
@@ -369,6 +369,7 @@ export class FPApiImpl implements FPApi {
       createdAt: new Date(existing.createdAt),
       updatedAt: new Date(existing.updatedAt),
       type: "resEnsureUserRef",
+      maxTenants: existing.maxTenants,
       tenants: await this.listTenantsByUser({
         type: "reqListTenantsByUser",
         auth: req.auth,
