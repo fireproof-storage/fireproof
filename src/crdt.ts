@@ -176,24 +176,19 @@ export class CRDT<T extends DocTypes> {
       return getAllEntries<T>(this.blockstore, this.clock.head, this.logger);
     };
 
-    const snapshot = async () => {
-      await waitFor;
-      await this.ready();
+    const snapshot = (opts: { since?: ClockHead } = {}) => {
+      const ready = this.ready.bind(this);
 
       async function* currentDocsWithId() {
-        for await (const doc of currentDocs()) {
+        await waitFor;
+        await ready();
+
+        for await (const doc of currentDocs(opts.since)) {
           yield docUpdateToDocWithId(doc);
         }
       }
 
-      return await Array.fromAsync(currentDocsWithId());
-
-      // TODO: Not sure if this is an improvement on the above generator.
-      // return await Array.fromAsync(
-      //   currentDocs().map((doc: DocUpdate<T>) => {
-      //     return docUpdateToDocWithId(doc);
-      //   }),
-      // );
+      return currentDocsWithId();
     };
 
     const stream = (opts: { futureOnly: boolean; since?: ClockHead }) => {
@@ -201,6 +196,7 @@ export class CRDT<T extends DocTypes> {
       const ready = this.ready.bind(this);
 
       let unsubscribe: undefined | (() => void);
+      let isClosed = false;
 
       return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
         async start(controller) {
@@ -226,6 +222,7 @@ export class CRDT<T extends DocTypes> {
           }
 
           unsubscribe = clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+            if (isClosed) return;
             updates.forEach((update) => {
               controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
             });
@@ -233,6 +230,7 @@ export class CRDT<T extends DocTypes> {
         },
 
         cancel() {
+          isClosed = true;
           unsubscribe?.();
         },
       });

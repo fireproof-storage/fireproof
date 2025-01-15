@@ -81,7 +81,7 @@ describe("Streaming API", () => {
 
   describe("allDocs", () => {
     it("test `snapshot` method", async () => {
-      const docs = await lr.allDocs().snapshot();
+      const docs = await Array.fromAsync(lr.allDocs().snapshot());
       expect(docs.length).toBe(AMOUNT_OF_DOCS);
     });
 
@@ -89,8 +89,7 @@ describe("Streaming API", () => {
       const stream = lr.allDocs<DocType>().live();
       let docCount = 0;
 
-      for await (const { doc, marker } of stream) {
-        void doc;
+      for await (const { marker } of stream) {
         docCount++;
 
         if (marker.kind === "preexisting" && marker.done) {
@@ -103,7 +102,44 @@ describe("Streaming API", () => {
       expect(docCount).toBe(AMOUNT_OF_DOCS + 1);
     });
 
-    it.todo("test `live` method with `since` parameter");
+    it("test `snapshot` and `live` method with `since` parameter", async () => {
+      const amountOfNewDocs = 5;
+      const since = lr.clock;
+
+      await Promise.all(
+        Array(amountOfNewDocs)
+          .fill(0)
+          .map((_, i) => {
+            return lr.put({ _id: `doc-since-${i}`, name: `doc-since-${i}` });
+          }),
+      );
+
+      const stream = lr.allDocs<DocType>().live({ since });
+      let docCount = 0;
+
+      for await (const { marker } of stream) {
+        docCount++;
+        if (marker.kind === "preexisting" && marker.done) break;
+      }
+
+      expect(docCount).toBe(amountOfNewDocs);
+
+      // Snapshot
+      // NOTE: This also tests the stream cancellation process.
+      const amountOfSnapshotDocs = 3;
+      const sincePt2 = lr.clock;
+
+      await Promise.all(
+        Array(amountOfSnapshotDocs)
+          .fill(0)
+          .map((_, i) => {
+            return lr.put({ _id: `doc-snapshot-${i}`, name: `doc-snapshot-${i}` });
+          }),
+      );
+
+      const docs = await Array.fromAsync(lr.allDocs().snapshot({ since: sincePt2 }));
+      expect(docs.length).toBe(amountOfSnapshotDocs);
+    });
 
     it("test `future` method", async () => {
       const stream = lr.allDocs<DocType>().future();

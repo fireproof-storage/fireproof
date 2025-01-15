@@ -20,6 +20,7 @@ import {
   type SuperThis,
   PARAM,
   QueryResponse,
+  ClockHead,
 } from "./types.js";
 import { DbMeta, SerdeGatewayInterceptor, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
@@ -61,6 +62,7 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
   readonly sthis: SuperThis;
   readonly id: string;
 
+  readonly clock: ClockHead;
   readonly name: string;
 
   onClosed(fn: () => void): void;
@@ -130,6 +132,9 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   }
   get crdt(): CRDT<DT> {
     return this.ref.crdt;
+  }
+  get clock(): ClockHead {
+    return this.ref.clock;
   }
   get name(): string {
     return this.ref.name;
@@ -245,6 +250,10 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
       },
       this.opts.writeQueue,
     );
+  }
+
+  get clock(): ClockHead {
+    return [...this.crdt.clock.head];
   }
 
   get name(): string {

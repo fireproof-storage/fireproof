@@ -1,11 +1,3 @@
-import { installIntoGlobal } from "iterator-helpers-polyfill";
-
-// Polyfill for (async) iterator helpers (eg. map)
-// https://github.com/tc39/proposal-iterator-helpers
-// TODO: Not entirely sure yet we need this, may delete when finishing PR.
-//       See `allDocs().snapshot()` function
-installIntoGlobal();
-
 export * from "./ledger.js";
 export * from "./types.js";
 
