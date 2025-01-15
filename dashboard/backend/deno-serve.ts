@@ -1,4 +1,4 @@
-// deno run --allow-net --allow-read --allow-ffi  --allow-env  backend/deno-serve.ts
+// deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env  backend/deno-serve.ts
 import { createClient } from "@libsql/client/node";
 import { drizzle } from "drizzle-orm/libsql";
 import { FPApiImpl, FPApiToken, VerifiedAuth } from "./api.js";

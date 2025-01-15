@@ -1,6 +1,7 @@
 import { Clerk } from "@clerk/clerk-js";
 import { SignedIn, SignedOut, SignIn, SignInButton, UserButton, useSession } from "@clerk/clerk-react";
 import { useEffect } from "react";
+import { aw } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 // let user;
 
@@ -25,6 +26,16 @@ export function User() {
         return redirect(`/login?next_url=${encodeURIComponent(window.location.href)}`);
       }
     */
+    // db.connect(getFPCloud({
+    //     ledgerId: "ledgerId",
+    //     // clerkSession: session,
+    //     // tokenFactory: async () => {
+    //     // const token = await session.getToken({
+    //     //     template: "with-email",
+    //     // });
+    //     // return token;
+    //     // }
+    // }))
 
   useEffect(() => {
     if (isSignedIn && isLoaded) {
@@ -45,7 +56,11 @@ export function User() {
                     token: token
                 }
             }),
-          }).catch(console.error).then(console.log)
+          }).catch(console.error).then(async (res) => {
+            if (res && res.ok) {
+                console.log(JSON.parse(await res.text()));
+            }
+          })
         });
     }
   }, [session, isLoaded, isSignedIn]);
