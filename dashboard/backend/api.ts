@@ -151,7 +151,7 @@ export interface UserTenant {
   readonly tenantId: string;
   readonly tenantName?: string;
   readonly name?: string;
-  readonly role: "admin" | "member";
+  readonly role: Role,
   readonly default: boolean;
 }
 
@@ -251,12 +251,14 @@ function prepareInsertTenant(req: ReqInsertTenant) {
   // });
 }
 
+type Role = "admin" | "member" | "owner";
+
 interface ReqAddUserToTenant {
   readonly name?: string;
   readonly tenantId: string;
   readonly userRefId: string;
   readonly default?: boolean;
-  readonly role: "admin" | "member";
+  readonly role: Role
 }
 
 interface ResAddUserToTenant {
@@ -264,14 +266,14 @@ interface ResAddUserToTenant {
   readonly tenantId: string;
   readonly userRefId: string;
   readonly default: boolean;
-  readonly role: "admin" | "member";
+  readonly role: Role
 }
 
 function getRole(
   userRefId: string,
   tenant: typeof tenants.$inferSelect,
 ): {
-  role: "admin" | "member";
+  role: Role
   foundRole: boolean;
   adminUserRefIds: string[];
   memberUserRefIds: string[];
@@ -284,7 +286,7 @@ function getRole(
     adminUserRefIds,
     memberUserRefIds,
     foundRole: isAdmin || isMember,
-    role: isAdmin ? "admin" : "member",
+    role: tenant.ownerUserRefId === userRefId ? "owner" : isAdmin ? "admin" : "member",
   };
 }
 

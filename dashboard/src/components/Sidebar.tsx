@@ -1,7 +1,7 @@
 import { JSX, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
-import { FireproofHome } from "./FireProofHome.tsx";
+import { FireproofHome } from "./FireproofHome.tsx";
 //
 
 export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element, title: string }) {

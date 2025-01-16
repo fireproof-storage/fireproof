@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { User } from "./User.tsx";
 import { AppContext } from "../app-context.tsx";
-import { FireproofHome } from "./FireProofHome.tsx";
+import { FireproofHome } from "./FireproofHome.tsx";
 
 export function TopArea({withSidebar}: {withSidebar?: boolean}) {
   const { isSidebarOpen, toggleDarkMode, isDarkMode, } = useContext(AppContext);
