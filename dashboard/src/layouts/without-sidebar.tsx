@@ -6,7 +6,6 @@ import { TopArea } from "../components/TopArea.tsx";
 import { AppContext } from "../app-context.tsx";
 
 export function WithoutSidebar() {
-  const { isDarkMode, toggleDarkMode } = useContext(AppContext);
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <main className="flex-1 overflow-y-auto p-6 md:p-10">

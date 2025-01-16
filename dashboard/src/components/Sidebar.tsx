@@ -4,7 +4,7 @@ import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireProofHome.tsx";
 //
 
-export function Sidebar({ sideBarComponent }: { sideBarComponent: JSX.Element }) {
+export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element, title: string }) {
   const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext);
   return (
     <div
@@ -39,7 +39,7 @@ export function Sidebar({ sideBarComponent }: { sideBarComponent: JSX.Element })
         <nav className="grid gap-4 px-6 py-4 text-sm font-medium">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="font-semibold">Databases</span>
+              <span className="font-semibold">{title}</span>
             </div>
             <Link
               data-id="15"
