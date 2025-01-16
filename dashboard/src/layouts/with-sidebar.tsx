@@ -4,7 +4,6 @@ import { ButtonToggleSidebar } from "../components/ButtonToggleSidebar.tsx";
 import { Sidebar } from "../components/Sidebar.tsx";
 import { TopArea } from "../components/TopArea.tsx";
 import { AppContext } from "../app-context.tsx";
-import { FireproofHome } from "../components/FireProofHome.tsx";
 
 export function WithSidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element, title: string }) {
   const { isSidebarOpen, toggleSidebar } = useContext(AppContext);
