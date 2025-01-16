@@ -1,11 +1,8 @@
-import { SignedOut, SignIn, SignInButton, useSession } from "@clerk/clerk-react";
-import { useContext, useEffect, useState } from "react";
-import { useLoaderData, useNavigate } from "react-router-dom";
+import { createContext, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 import { AppContext } from "../app-context.tsx";
-import { set } from "react-hook-form";
 import { ResListTenantsByUser, UserTenant } from "../../backend/api.ts";
-import { User } from "@clerk/backend";
 import { truncateDbName } from "../helpers.ts";
 import { tenantName, useListTendantsByUser } from "../hooks/tenant.ts";
 
@@ -14,6 +11,20 @@ export async function cloudLoader({ request }: { request: Request }) {
   // const nextUrl = url.searchParams.get("next_url") || "/";
   // return nextUrl;
 }
+
+export interface CloudContextType {
+  getListTenants: () => ResListTenantsByUser;
+}
+export const CloudContext = createContext({
+  getListTenants: (): ResListTenantsByUser => {
+    return {
+      type: "resListTenantsByUser",
+      userRefId: "unk",
+      authUserId: "unk",
+      tenants: [],
+    };
+  },
+});
 
 export function Cloud() {
   // const nextUrl = useLoaderData() as string;
@@ -39,7 +50,12 @@ export function Cloud() {
 
   // console.log("token", isSignedIn, isLoaded, session)
 
-  return <WithSidebar sideBarComponent={<SidebarCloud />} title={"Tenants"} />;
+  const listTendants = useListTendantsByUser();
+  return (
+    <CloudContext.Provider value={{ getListTenants: () => listTendants }}>
+      <WithSidebar sideBarComponent={<SidebarCloud />} title={"Tenants"} />;
+    </CloudContext.Provider>
+  );
   // return (
 
   //     <div className="h-screen w-screen flex items-center justify-center">
@@ -65,7 +81,7 @@ function SidebarCloud() {
   const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext);
   const navigate = useNavigate();
 
-  const listTendants = useListTendantsByUser();
+  const { getListTenants } = useContext(CloudContext);
 
   const navigateToTendant = (tendant: UserTenant) => {
     navigate(`/fp/cloud/${tendant.tenantId}`);
@@ -76,7 +92,7 @@ function SidebarCloud() {
   // }>();
   return (
     <>
-      {listTendants.tenants.map((tenant) => (
+      {getListTenants().tenants.map((tenant) => (
         <div key={tenant.tenantId}>
           <div className="flex items-center justify-between w-full">
             <button
