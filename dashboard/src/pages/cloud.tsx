@@ -2,14 +2,14 @@ import { SignedOut, SignIn, SignInButton, useSession } from "@clerk/clerk-react"
 import { useEffect } from "react";
 import { useLoaderData } from "react-router-dom";
 
-export async function loginLoader({ request }: { request: Request }) {
-  const url = new URL(request.url);
-  const nextUrl = url.searchParams.get("next_url") || "/";
-  return nextUrl;
+export async function cloudLoader({ request }: { request: Request }) {
+  // const url = new URL(request.url);
+  // const nextUrl = url.searchParams.get("next_url") || "/";
+  // return nextUrl;
 }
 
-export function Login() {
-  const nextUrl = useLoaderData() as string;
+export function Cloud() {
+  // const nextUrl = useLoaderData() as string;
   // const navigate = useNavigate();
 
   const { isLoaded, session, isSignedIn } = useSession()

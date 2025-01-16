@@ -1,46 +1,62 @@
-import { NavLink, useLoaderData, useNavigate } from "react-router-dom";
-import { AppContext, AppLayout } from "../layouts/app.tsx";
+import { NavLink, Outlet, useLoaderData, useNavigate } from "react-router-dom";
+import { AppContext } from "../app-context.tsx";
 import { useContext } from "react";
-import { truncateDbName } from "../helpers.ts";
+import { SYNC_DB_NAME, truncateDbName } from "../helpers.ts";
+import { fireproof } from "use-fireproof";
+import { WithSidebar } from "../layouts/with-sidebar.tsx";
 
-export function Database() {
-  const { databases } = useLoaderData<{
-    databases: { name: string; queries: any[] }[];
-  }>();
-  const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext);
+const reservedDbNames: string[] = [`fp.${SYNC_DB_NAME}`, "fp.petname_mappings", "fp.fp_sync"];
 
-  return (
-    <AppLayout
-      sideBarComponent={
-        <SidebarDatabases databases={databases} openMenu={openMenu} toggleMenu={toggleMenu} setIsSidebarOpen={setIsSidebarOpen} />
-      }
-    />
-  );
+export async function databaseLoader(/*{ request }*/) {
+  const databases = await getIndexedDBNamesWithQueries();
+  return { databases };
 }
 
+async function getIndexedDBNamesWithQueries(): Promise<{ name: string; queries: any[] }[]> {
+  try {
+    const databases = await indexedDB.databases();
+    const userDbs = databases
+      .filter((db) => db.name!.startsWith("fp.") && !db.name!.endsWith("_queries") && !reservedDbNames.includes(db.name!))
+      .map((db) => db.name!.substring(3));
+
+    const dbsWithQueries = await Promise.all(
+      userDbs.map(async (dbName) => {
+        const queryDbName = `fp_${dbName}_queries`;
+        const queryDb = fireproof(queryDbName);
+        const allDocs = await queryDb.allDocs({ includeDocs: true });
+        const queries = allDocs.rows.map((row) => row.value);
+
+        return { name: dbName, queries };
+      }),
+    );
+
+    return dbsWithQueries;
+  } catch (error) {
+    console.error("Error fetching IndexedDB names and queries:", error);
+    return [];
+  }
+}
+
+export function Databases() {
+  return <WithSidebar sideBarComponent={<SidebarDatabases />} />;
+}
 
 const navLinks = [
-    { to: "", label: "All Documents" },
-    { to: "/history", label: "History" },
-    { to: "/query", label: "Query" },
-  ];
+  { to: "", label: "All Documents" },
+  { to: "/history", label: "History" },
+  { to: "/query", label: "Query" },
+];
 
-function SidebarDatabases({
-  databases,
-  openMenu,
-  toggleMenu,
-  setIsSidebarOpen,
-}: {
-  databases: { name: string; queries: any[] }[];
-  openMenu: string | null;
-  toggleMenu: (dbName: string) => void;
-  setIsSidebarOpen: (value: boolean) => void;
-}) {
+function SidebarDatabases() {
+  const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext);
   const navigate = useNavigate();
   const navigateToDatabase = (dbName: string) => {
     navigate(`/fp/databases/${dbName}`);
     setIsSidebarOpen(false); // Close sidebar on mobile after navigation
   };
+  const { databases } = useLoaderData<{
+    databases: { name: string; queries: any[] }[];
+  }>();
   return (
     <>
       {databases.map((db) => (

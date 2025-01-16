@@ -158,6 +158,7 @@ export interface UserTenant {
 export interface ResListTenantsByUser {
   readonly type: "resListTenantsByUser";
   readonly userRefId: string;
+  readonly authUserId: string;
   readonly tenants: UserTenant[];
 }
 
@@ -348,14 +349,14 @@ export class FPApiImpl implements FPApi {
         .values(
           prepareInsertTenant({
             tenantId,
-            name: `my-tenant[${auth.params.email ?? auth.params.nick}]`,
+            name: `my-tenant[${auth.params.email ?? auth.params.name}]`,
             ownerUserRefId: userRefId,
           }),
         )
         .run();
       await this.db.transaction(async (db) => {
         await this.addUserToTenant(db, {
-          name: `my-tenant[${auth.params.email ?? auth.params.nick}]`,
+          name: `my-tenant[${auth.params.email ?? auth.params.name}]`,
           tenantId,
           userRefId,
           role: "admin",
@@ -463,6 +464,7 @@ export class FPApiImpl implements FPApi {
     return Result.Ok({
       type: "resListTenantsByUser",
       userRefId: tenantUserRef[0].TenantUserRefs.userRefId,
+      authUserId: auth.userId,
       tenants: tenantUserRef.map((t) => ({
         tenantId: t.TenantUserRefs.tenantId,
         tenantName: toUndef(t.Tenants.name),

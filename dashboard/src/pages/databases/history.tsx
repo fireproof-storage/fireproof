@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { type DocBase, useFireproof } from "use-fireproof";
-import DynamicTable from "../../components/DynamicTable";
-import { headersForDocs } from "../../components/dynamicTableHelpers";
+import DynamicTable from "../../components/DynamicTable.tsx";
+import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 
 export default function ChangesHistory() {
   const { name } = useParams();
