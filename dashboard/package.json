@@ -9,6 +9,8 @@
     "backend:d1": "wrangler dev -c backend/wrangler.toml --port 7370",
     "prebackend:pages": "pnpm run build",
     "backend:pages": "wrangler pages dev ./dist/static --live-reload",
+    "predeploy:cf": "pnpm run build",
+    "deploy:cf": "wrangler pages deploy ./dist/static  --commit-dirty=true",
     "build": "vite build",
     "build:tsc": "tsc",
     "lint": "eslint .",
