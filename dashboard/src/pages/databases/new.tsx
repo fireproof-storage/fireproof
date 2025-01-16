@@ -19,7 +19,7 @@ export default function New() {
       action: ".",
       encType: "application/json",
     });
-  };
+  }
 
   return (
     <div className="bg-[--muted] shadow sm:rounded-lg">

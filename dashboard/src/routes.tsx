@@ -26,7 +26,7 @@ const routes = createRoutesFromElements(
       <Route index element={<Index />} loader={indexLoader} />
       <Route path="/login" element={<Login />} loader={loginLoader} />
     </Route>
-    <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader} >
+    <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}>
       <Route index element={<DatabasesIndex />} />
       <Route path=":tenantId" element={<TenantShow />} />
     </Route>

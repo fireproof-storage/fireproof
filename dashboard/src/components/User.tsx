@@ -26,44 +26,44 @@ export function User() {
         return redirect(`/login?next_url=${encodeURIComponent(window.location.href)}`);
       }
     */
-    // db.connect(getFPCloud({
-    //     ledgerId: "ledgerId",
-    //     // clerkSession: session,
-    //     // tokenFactory: async () => {
-    //     // const token = await session.getToken({
-    //     //     template: "with-email",
-    //     // });
-    //     // return token;
-    //     // }
-    // }))
+  // db.connect(getFPCloud({
+  //     ledgerId: "ledgerId",
+  //     // clerkSession: session,
+  //     // tokenFactory: async () => {
+  //     // const token = await session.getToken({
+  //     //     template: "with-email",
+  //     // });
+  //     // return token;
+  //     // }
+  // }))
 
-//   useEffect(() => {
-//     if (isSignedIn && isLoaded) {
-//       session
-//         .getToken({
-//           template: "with-email",
-//           // leewayInSeconds: 60
-//         })
-//         .then((token) => {
-//           console.log(token);
-//           // setToken(token!)
-//           fetch('http://localhost:7370/', {
-//             method: 'POST',
-//             body: JSON.stringify({
-//                 type: "tbd",
-//                 auth: {
-//                     type: "clerk",
-//                     token: token
-//                 }
-//             }),
-//           }).catch(console.error).then(async (res) => {
-//             if (res && res.ok) {
-//                 console.log(JSON.parse(await res.text()));
-//             }
-//           })
-//         });
-//     }
-//   }, [session, isLoaded, isSignedIn]);
+  //   useEffect(() => {
+  //     if (isSignedIn && isLoaded) {
+  //       session
+  //         .getToken({
+  //           template: "with-email",
+  //           // leewayInSeconds: 60
+  //         })
+  //         .then((token) => {
+  //           console.log(token);
+  //           // setToken(token!)
+  //           fetch('http://localhost:7370/', {
+  //             method: 'POST',
+  //             body: JSON.stringify({
+  //                 type: "tbd",
+  //                 auth: {
+  //                     type: "clerk",
+  //                     token: token
+  //                 }
+  //             }),
+  //           }).catch(console.error).then(async (res) => {
+  //             if (res && res.ok) {
+  //                 console.log(JSON.parse(await res.text()));
+  //             }
+  //           })
+  //         });
+  //     }
+  //   }, [session, isLoaded, isSignedIn]);
 
   //   console.log("User", isLoaded, isSignedIn, session);
   //   if (isLoaded && !isSignedIn) {

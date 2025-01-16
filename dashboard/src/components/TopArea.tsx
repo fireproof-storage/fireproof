@@ -3,14 +3,14 @@ import { User } from "./User.tsx";
 import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireproofHome.tsx";
 
-export function TopArea({withSidebar}: {withSidebar?: boolean}) {
-  const { isSidebarOpen, toggleDarkMode, isDarkMode, } = useContext(AppContext);
+export function TopArea({ withSidebar }: { withSidebar?: boolean }) {
+  const { isSidebarOpen, toggleDarkMode, isDarkMode } = useContext(AppContext);
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <header className="flex h-14 items-center gap-4 border-b bg-background px-6 shadow-sm flex-shrink-0">
         <h1 className="flex-1 text-lg font-semibold"></h1>
         <div className="flex items-center gap-4">
-          {(!withSidebar) && <FireproofHome />}
+          {!withSidebar && <FireproofHome />}
           <a href="https://use-fireproof.com/docs/welcome/" className="hover:underline">
             Docs
           </a>

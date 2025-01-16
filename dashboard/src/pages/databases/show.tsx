@@ -7,8 +7,6 @@ import DynamicTable from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 import { SYNC_DB_NAME, truncateDbName } from "../../helpers.ts";
 
-
-
 export default function Show() {
   const { name, endpoint } = useParams();
   if (!name) {

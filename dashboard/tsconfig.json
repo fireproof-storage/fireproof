@@ -14,7 +14,7 @@
     "target": "ES2020" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     // "lib": ["esnext", "deno.ns"],                                        /* Specify a set of bundled library declaration files that describe the target runtime environment. */
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx",                                /* Specify what JSX code is generated. */
+    "jsx": "react-jsx" /* Specify what JSX code is generated. */,
     // "experimentalDecorators": true,                   /* Enable experimental support for legacy experimental decorators. */
     // "emitDecoratorMetadata": true,                    /* Emit design-type metadata for decorated declarations in source files. */
     // "jsxFactory": "",                                 /* Specify the JSX factory function used when targeting React JSX emit, e.g. 'React.createElement' or 'h'. */
@@ -30,18 +30,17 @@
     // "rootDir": "./src" /* Specify the root folder within your source files. */,
     "moduleResolution": "nodenext" /* Specify how TypeScript looks up a file from a given module specifier. */,
     // "baseUrl": "./",                                  /* Specify the base directory to resolve non-relative module names. */
-    "paths": {
-    } /* Specify a set of entries that re-map imports to additional lookup locations. */,
+    "paths": {} /* Specify a set of entries that re-map imports to additional lookup locations. */,
     // "rootDirs": ["./src", "./src-generated"],                                   /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [],                                  /* Specify multiple folders that act like './node_modules/@types'. */
     "typeRoots": ["backend", "node_modules/@types", "node_modules"],
     "types": [
       "lib.deno.ns.d.ts",
       "vitest/globals"
-    ],                                      /* Specify type package names to be included without being referenced in a source file. */
+    ] /* Specify type package names to be included without being referenced in a source file. */,
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
-    "allowImportingTsExtensions": true,               /* Allow imports to include TypeScript file extensions. Requires '--moduleResolution bundler' and either '--noEmit' or '--emitDeclarationOnly' to be set. */
+    "allowImportingTsExtensions": true /* Allow imports to include TypeScript file extensions. Requires '--moduleResolution bundler' and either '--noEmit' or '--emitDeclarationOnly' to be set. */,
     // "resolvePackageJsonExports": true,                /* Use the package.json 'exports' field when resolving package imports. */
     // "resolvePackageJsonImports": true,                /* Use the package.json 'imports' field when resolving imports. */
     // "customConditions": [],                           /* Conditions to set in addition to the resolver-specific defaults when resolving imports. */
@@ -57,7 +56,7 @@
     /* Emit */
     "declaration": true /* Generate .d.ts files from TypeScript and JavaScript files in your project. */,
     "declarationMap": true /* Create sourcemaps for d.ts files. */,
-    "emitDeclarationOnly": true,                      /* Only output d.ts files and not JavaScript files. */
+    "emitDeclarationOnly": true /* Only output d.ts files and not JavaScript files. */,
     "sourceMap": true /* Create source map files for emitted JavaScript files. */,
     // "inlineSourceMap": true,                          /* Include sourcemap files inside the emitted JavaScript. */
     // "outFile": "./",                                  /* Specify a file that bundles all outputs into one JavaScript file. If 'declaration' is true, also designates a file that bundles all .d.ts output. */
@@ -89,7 +88,7 @@
 
     /* Type Checking */
     "strict": true /* Enable all strict type-checking options. */,
-    "noImplicitAny": true,                            /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+    "noImplicitAny": true /* Enable error reporting for expressions and declarations with an implied 'any' type. */,
     // "strictNullChecks": true,                         /* When type checking, take into account 'null' and 'undefined'. */
     // "strictFunctionTypes": true,                      /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */
     // "strictBindCallApply": true,                      /* Check that the arguments for 'bind', 'call', and 'apply' methods match the original function. */

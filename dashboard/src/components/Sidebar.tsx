@@ -4,7 +4,7 @@ import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireproofHome.tsx";
 //
 
-export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element, title: string }) {
+export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element; title: string }) {
   const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext);
   return (
     <div
@@ -15,7 +15,9 @@ export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Ele
       <div className="flex h-[60px] items-center px-5 flex-shrink-0 justify-between">
         <div className="flex items-center gap-2 font-semibold">
           <FireproofHome />
-          <Link to="" onClick={() => setIsSidebarOpen?.(false)}><span>Fireproof Dashboard</span></Link>
+          <Link to="" onClick={() => setIsSidebarOpen?.(false)}>
+            <span>Fireproof Dashboard</span>
+          </Link>
         </div>
         {/* Close button for mobile */}
         <button onClick={() => setIsSidebarOpen?.(false)} className="md:hidden p-2 rounded-md bg-[--muted] hover:bg-[--muted]/80">

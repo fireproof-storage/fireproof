@@ -5,7 +5,7 @@ import { Sidebar } from "../components/Sidebar.tsx";
 import { TopArea } from "../components/TopArea.tsx";
 import { AppContext } from "../app-context.tsx";
 
-export function WithSidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element, title: string }) {
+export function WithSidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element; title: string }) {
   const { isSidebarOpen, toggleSidebar } = useContext(AppContext);
   return (
     <div className="flex h-screen w-full overflow-hidden">

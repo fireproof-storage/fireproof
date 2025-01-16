@@ -1,7 +1,7 @@
 // import 'dotenv/config';
 // import { drizzle } from 'drizzle-orm/libsql';
 // import { createClient } from '@libsql/client';
-import { blob, int, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
+import { int, sqliteTable, text, primaryKey } from "drizzle-orm/sqlite-core";
 
 export const userRefs = sqliteTable("UserRefs", {
   userRefId: text().primaryKey(),
@@ -10,7 +10,7 @@ export const userRefs = sqliteTable("UserRefs", {
   // name of auth provider
   authProvider: text().notNull(),
   // json/jwt from auth provider
-  params: blob({ mode: "json" }).notNull(),
+  params: text().notNull(),
   // max number of tenants
   maxTenants: int().notNull(),
   // iso date string
@@ -25,8 +25,8 @@ export const tenants = sqliteTable("Tenants", {
   ownerUserRefId: text()
     .notNull()
     .references(() => userRefs.userRefId),
-  adminUserRefIds: blob({ mode: "json" }).notNull(),
-  memberUserRefIds: blob({ mode: "json" }).notNull(),
+  adminUserRefIds: text().notNull(),
+  memberUserRefIds: text().notNull(),
   maxAdminUserRefs: int().notNull(),
   maxMemberUserRefs: int().notNull(),
   createdAt: text().notNull(),

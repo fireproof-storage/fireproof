@@ -16,10 +16,14 @@ export async function loader({ request }: { request: Request }) {
   const endpoint = url.searchParams.get("endpoint") || DEFAULT_ENDPOINT;
 
   const syncDb = fireproof(SYNC_DB_NAME);
-  const result = await syncDb.query<string, {
-    localName: string;
-    remoteName: string;
-  }, [string, string]>((doc) => [doc.localName, doc.remoteName], {
+  const result = await syncDb.query<
+    string,
+    {
+      localName: string;
+      remoteName: string;
+    },
+    [string, string]
+  >((doc) => [doc.localName, doc.remoteName], {
     keys: [localName, remoteName],
     includeDocs: true,
   });

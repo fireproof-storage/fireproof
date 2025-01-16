@@ -5,13 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "backend:deno": "deno run --unstable-sloppy-imports --allow-net --allow-read --allow-ffi  --allow-env  backend/deno-serve.ts",
+    "backend:d1": "wrangler dev -c backend/wrangler.toml --port 7370",
+    "prebackend:pages": "pnpm run build",
+    "backend:pages": "wrangler pages deploy ./dist/static",
     "build": "vite build",
     "build:tsc": "tsc",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest --run",
     "format": "prettier .",
-    "drizzle:push": "drizzle-kit push"
+    "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
+    "drizzle:d1": "drizzle-kit push --config ./drizzle.d1-local.config.ts"
   },
   "dependencies": {
     "@adviser/cement": "^0.3.5",
@@ -40,12 +45,14 @@
     "vitest": "^2.1.8"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
     "@eslint/js": "^9.16.0",
     "@rollup/plugin-replace": "^6.0.1",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^16.4.7",
     "eslint": "^9.16.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "5.1.0",
