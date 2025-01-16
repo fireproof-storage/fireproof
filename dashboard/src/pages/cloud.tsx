@@ -1,4 +1,4 @@
-import { createContext, useContext } from "react";
+import { createContext, Suspense, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 import { AppContext } from "../app-context.tsx";
@@ -91,7 +91,7 @@ function SidebarCloud() {
   //   databases: { name: string; queries: any[] }[];
   // }>();
   return (
-    <>
+    <Suspense fallback={<div>Loading...</div>}>
       {getListTenants().tenants.map((tenant) => (
         <div key={tenant.tenantId}>
           <div className="flex items-center justify-between w-full">
@@ -161,6 +161,6 @@ function SidebarCloud() {
           </div>
         </div>
       ))}
-    </>
+    </Suspense>
   );
 }
