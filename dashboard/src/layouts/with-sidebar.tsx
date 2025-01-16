@@ -6,7 +6,7 @@ import { TopArea } from "../components/TopArea.tsx";
 import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "../components/FireProofHome.tsx";
 
-export function WithSidebar({ sideBarComponent }: { sideBarComponent: JSX.Element }) {
+export function WithSidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element, title: string }) {
   const { isSidebarOpen, toggleSidebar } = useContext(AppContext);
   return (
     <div className="flex h-screen w-full overflow-hidden">
@@ -14,7 +14,7 @@ export function WithSidebar({ sideBarComponent }: { sideBarComponent: JSX.Elemen
       {/* missing FireProofLogo in mobile state */}
       {!isSidebarOpen && <ButtonToggleSidebar toggleSidebar={toggleSidebar} />}
       {/* Sidebar */}
-      <Sidebar sideBarComponent={sideBarComponent} />
+      <Sidebar sideBarComponent={sideBarComponent} title={title} />
       <main className="flex-1 overflow-y-auto p-6 md:p-10">
         <TopArea withSidebar={true} />
         <Outlet />

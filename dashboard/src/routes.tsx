@@ -16,15 +16,19 @@ import { Login, loginLoader } from "./pages/login.tsx";
 import "./styles/tailwind.css";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { Cloud, cloudLoader } from "./pages/cloud.tsx";
-import { AppContext, AppContextProvider } from "./app-context.tsx";
+import { AppContextProvider } from "./app-context.tsx";
 import { WithoutSidebar } from "./layouts/without-sidebar.tsx";
+import { TenantShow } from "./pages/cloud/tenant-show.tsx";
 
 const routes = createRoutesFromElements(
   <Route>
     <Route path="/" element={<WithoutSidebar />}>
-      <Route path="/" element={<Index />} loader={indexLoader} />
+      <Route index element={<Index />} loader={indexLoader} />
       <Route path="/login" element={<Login />} loader={loginLoader} />
-      <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader} />
+    </Route>
+    <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader} >
+      <Route index element={<DatabasesIndex />} />
+      <Route path=":tenantId" element={<TenantShow />} />
     </Route>
     <Route path="/fp/databases" element={<Databases />} loader={databaseLoader}>
       <Route index element={<DatabasesIndex />} />
