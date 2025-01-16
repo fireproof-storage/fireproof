@@ -26,6 +26,8 @@ export default defineConfig({
   build: {
     sourcemap: true,
     target: "esnext",
+    outDir: "./dist/static",
+    emptyOutDir: true, // also necessary
   },
   plugins: [
     rollupReplace({

@@ -1,10 +1,11 @@
 import { Result } from "@adviser/cement";
-import { tenants, tenantUserRefs, userRefs } from "./db-api-schema.js";
 import { SuperThis } from "@fireproof/core";
-import { eq, and, ExtractTablesWithRelations, is } from "drizzle-orm";
-import { LibSQLDatabase } from "drizzle-orm/libsql";
-import { SQLiteTransaction } from "drizzle-orm/sqlite-core";
-import { ResultSet } from "@libsql/client";
+import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import type { SQLiteTransaction } from "drizzle-orm/sqlite-core";
+import type { ResultSet } from "@libsql/client";
+import type { ExtractTablesWithRelations } from "drizzle-orm";
+import { eq, and } from "drizzle-orm/expressions";
+import { tenants, tenantUserRefs, userRefs } from "./db-api-schema.js";
 
 export interface AuthType {
   readonly type: "ucan" | "clerk";
@@ -151,8 +152,16 @@ export interface UserTenant {
   readonly tenantId: string;
   readonly tenantName?: string;
   readonly name?: string;
-  readonly role: Role,
+  readonly role: Role;
   readonly default: boolean;
+}
+
+export interface OwnerTenant extends UserTenant {
+  readonly role: "admin" | "owner";
+  readonly adminUserRefIds: string[];
+  readonly memberUserRefIds: string[];
+  readonly maxAdminUserRefs: number;
+  readonly maxMemberUserRefs: number;
 }
 
 export interface ResListTenantsByUser {
@@ -258,7 +267,7 @@ interface ReqAddUserToTenant {
   readonly tenantId: string;
   readonly userRefId: string;
   readonly default?: boolean;
-  readonly role: Role
+  readonly role: Role;
 }
 
 interface ResAddUserToTenant {
@@ -266,14 +275,14 @@ interface ResAddUserToTenant {
   readonly tenantId: string;
   readonly userRefId: string;
   readonly default: boolean;
-  readonly role: Role
+  readonly role: Role;
 }
 
 function getRole(
   userRefId: string,
   tenant: typeof tenants.$inferSelect,
 ): {
-  role: Role
+  role: Role;
   foundRole: boolean;
   adminUserRefIds: string[];
   memberUserRefIds: string[];
@@ -356,15 +365,15 @@ export class FPApiImpl implements FPApi {
           }),
         )
         .run();
-      await this.db.transaction(async (db) => {
-        await this.addUserToTenant(db, {
-          name: `my-tenant[${auth.params.email ?? auth.params.name}]`,
-          tenantId,
-          userRefId,
-          role: "admin",
-          default: true,
-        });
+      // await this.db.transaction(async (db) => {
+      await this.addUserToTenant(this.db, {
+        name: `my-tenant[${auth.params.email ?? auth.params.name}]`,
+        tenantId,
+        userRefId,
+        role: "admin",
+        default: true,
       });
+      // });
       return this.ensureUserRef(req);
     }
     return Result.Ok({
@@ -381,7 +390,7 @@ export class FPApiImpl implements FPApi {
     });
   }
 
-  private async addUserToTenant(db: SQLTransaction, req: ReqAddUserToTenant): Promise<Result<ResAddUserToTenant>> {
+  private async addUserToTenant(db: LibSQLDatabase, req: ReqAddUserToTenant): Promise<Result<ResAddUserToTenant>> {
     const tenant = await db.select().from(tenants).where(eq(tenants.tenantId, req.tenantId)).get();
     if (!tenant) {
       return Result.Err("tenant not found");
@@ -463,17 +472,37 @@ export class FPApiImpl implements FPApi {
       .innerJoin(userRefs, eq(tenants.ownerUserRefId, userRefs.userRefId))
       .where(eq(userRefs.authUserId, auth.userId))
       .all();
+    console.log(">>>>>", tenantUserRef);
     return Result.Ok({
       type: "resListTenantsByUser",
       userRefId: tenantUserRef[0].TenantUserRefs.userRefId,
       authUserId: auth.userId,
-      tenants: tenantUserRef.map((t) => ({
-        tenantId: t.TenantUserRefs.tenantId,
-        tenantName: toUndef(t.Tenants.name),
-        name: toUndef(t.TenantUserRefs.name),
-        role: getRole(t.UserRefs.userRefId, t.Tenants).role,
-        default: toBoolean(t.TenantUserRefs.default),
-      })),
+      tenants: tenantUserRef.map((t) => {
+        const role = getRole(t.TenantUserRefs.userRefId, t.Tenants).role;
+        switch (role) {
+          case "member":
+            return {
+              tenantId: t.TenantUserRefs.tenantId,
+              tenantName: toUndef(t.Tenants.name),
+              name: toUndef(t.TenantUserRefs.name),
+              role,
+              default: toBoolean(t.TenantUserRefs.default),
+            };
+          case "owner":
+          case "admin":
+            return {
+              tenantId: t.TenantUserRefs.tenantId,
+              tenantName: toUndef(t.Tenants.name),
+              name: toUndef(t.TenantUserRefs.name),
+              role,
+              default: toBoolean(t.TenantUserRefs.default),
+              adminUserRefIds: JSON.parse(t.Tenants.adminUserRefIds as string),
+              memberUserRefIds: JSON.parse(t.Tenants.memberUserRefIds as string),
+              maxAdminUserRefs: t.Tenants.maxAdminUserRefs,
+              maxMemberUserRefs: t.Tenants.maxMemberUserRefs,
+            };
+        }
+      }),
     });
   }
 

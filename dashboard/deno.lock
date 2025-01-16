@@ -4299,6 +4299,7 @@
         "npm:@clerk/backend@^1.22.0",
         "npm:@clerk/clerk-js@^5.40.0",
         "npm:@clerk/clerk-react@^5.19.0",
+        "npm:@cloudflare/workers-types@^4.20250109.0",
         "npm:@eslint/js@^9.16.0",
         "npm:@fireproof/cloud@~0.19.118",
         "npm:@fireproof/core@~0.19.121",

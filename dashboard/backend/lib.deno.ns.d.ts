@@ -95,10 +95,7 @@ interface Performance {
 
   /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
    * associated name (a "measure"). */
-  measure(
-    measureName: string,
-    options?: PerformanceMeasureOptions,
-  ): PerformanceMeasure;
+  measure(measureName: string, options?: PerformanceMeasureOptions): PerformanceMeasure;
 }
 
 /**
@@ -751,10 +748,7 @@ declare namespace Deno {
      * );
      * ```
      */
-    step(
-      name: string,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): Promise<boolean>;
+    step(name: string, fn: (t: TestContext) => void | Promise<void>): Promise<boolean>;
 
     /** Run a sub step of the parent test or step. Returns a promise
      * that resolves to a boolean signifying if the step completed successfully.
@@ -999,11 +993,7 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    (
-      name: string,
-      options: Omit<TestDefinition, "fn" | "name">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    (name: string, options: Omit<TestDefinition, "fn" | "name">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Register a test which will be run when `deno test` is used on the command
      * line and the containing module looks like a test module.
@@ -1038,10 +1028,7 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    (
-      options: Omit<TestDefinition, "fn" | "name">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    (options: Omit<TestDefinition, "fn" | "name">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Register a test which will be run when `deno test` is used on the command
      * line and the containing module looks like a test module.
@@ -1070,10 +1057,7 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    (
-      options: Omit<TestDefinition, "fn">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    (options: Omit<TestDefinition, "fn">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for ignoring a particular test case.
      *
@@ -1107,19 +1091,13 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    ignore(
-      options: Omit<TestDefinition, "fn" | "name" | "ignore">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    ignore(options: Omit<TestDefinition, "fn" | "name" | "ignore">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for ignoring a particular test case.
      *
      * @category Testing
      */
-    ignore(
-      options: Omit<TestDefinition, "fn" | "ignore">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    ignore(options: Omit<TestDefinition, "fn" | "ignore">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for focusing a particular test case.
      *
@@ -1143,29 +1121,19 @@ declare namespace Deno {
      *
      * @category Testing
      */
-    only(
-      name: string,
-      options: Omit<TestDefinition, "fn" | "name" | "only">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    only(name: string, options: Omit<TestDefinition, "fn" | "name" | "only">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for focusing a particular test case.
      *
      * @category Testing
      */
-    only(
-      options: Omit<TestDefinition, "fn" | "name" | "only">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    only(options: Omit<TestDefinition, "fn" | "name" | "only">, fn: (t: TestContext) => void | Promise<void>): void;
 
     /** Shorthand property for focusing a particular test case.
      *
      * @category Testing
      */
-    only(
-      options: Omit<TestDefinition, "fn" | "only">,
-      fn: (t: TestContext) => void | Promise<void>,
-    ): void;
+    only(options: Omit<TestDefinition, "fn" | "only">, fn: (t: TestContext) => void | Promise<void>): void;
   }
 
   /**
@@ -1320,10 +1288,7 @@ declare namespace Deno {
    *
    * @category Testing
    */
-  export function bench(
-    name: string,
-    fn: (b: BenchContext) => void | Promise<void>,
-  ): void;
+  export function bench(name: string, fn: (b: BenchContext) => void | Promise<void>): void;
 
   /**
    * Register a benchmark test which will be run when `deno bench` is used on
@@ -1416,10 +1381,7 @@ declare namespace Deno {
    *
    * @category Testing
    */
-  export function bench(
-    options: Omit<BenchDefinition, "fn">,
-    fn: (b: BenchContext) => void | Promise<void>,
-  ): void;
+  export function bench(options: Omit<BenchDefinition, "fn">, fn: (b: BenchContext) => void | Promise<void>): void;
 
   /**
    * Register a benchmark test which will be run when `deno bench` is used on
@@ -1450,10 +1412,7 @@ declare namespace Deno {
    *
    * @category Testing
    */
-  export function bench(
-    options: Omit<BenchDefinition, "fn" | "name">,
-    fn: (b: BenchContext) => void | Promise<void>,
-  ): void;
+  export function bench(options: Omit<BenchDefinition, "fn" | "name">, fn: (b: BenchContext) => void | Promise<void>): void;
 
   /** Exit the Deno process with optional exit code.
    *
@@ -1695,10 +1654,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function open(
-    path: string | URL,
-    options?: OpenOptions,
-  ): Promise<FsFile>;
+  export function open(path: string | URL, options?: OpenOptions): Promise<FsFile>;
 
   /** Synchronously open a file and return an instance of
    * {@linkcode Deno.FsFile}. The file does not need to previously exist if
@@ -2530,10 +2486,7 @@ declare namespace Deno {
    * @tags allow-write
    * @category File System
    */
-  export function mkdir(
-    path: string | URL,
-    options?: MkdirOptions,
-  ): Promise<void>;
+  export function mkdir(path: string | URL, options?: MkdirOptions): Promise<void>;
 
   /** Synchronously creates a new directory with the specified path.
    *
@@ -2741,11 +2694,7 @@ declare namespace Deno {
    * @param uid user id (UID) of the new owner, or `null` for no change
    * @param gid group id (GID) of the new owner, or `null` for no change
    */
-  export function chown(
-    path: string | URL,
-    uid: number | null,
-    gid: number | null,
-  ): Promise<void>;
+  export function chown(path: string | URL, uid: number | null, gid: number | null): Promise<void>;
 
   /** Synchronously change owner of a regular file or directory.
    *
@@ -2766,11 +2715,7 @@ declare namespace Deno {
    * @param uid user id (UID) of the new owner, or `null` for no change
    * @param gid group id (GID) of the new owner, or `null` for no change
    */
-  export function chownSync(
-    path: string | URL,
-    uid: number | null,
-    gid: number | null,
-  ): void;
+  export function chownSync(path: string | URL, uid: number | null, gid: number | null): void;
 
   /**
    * Options which can be set when using {@linkcode Deno.remove} and
@@ -2799,10 +2744,7 @@ declare namespace Deno {
    * @tags allow-write
    * @category File System
    */
-  export function remove(
-    path: string | URL,
-    options?: RemoveOptions,
-  ): Promise<void>;
+  export function remove(path: string | URL, options?: RemoveOptions): Promise<void>;
 
   /** Synchronously removes the named file or directory.
    *
@@ -2840,10 +2782,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function renameSync(
-    oldpath: string | URL,
-    newpath: string | URL,
-  ): void;
+  export function renameSync(oldpath: string | URL, newpath: string | URL): void;
 
   /** Renames (moves) `oldpath` to `newpath`. Paths may be files or directories.
    * If `newpath` already exists and is not a directory, `rename()` replaces it.
@@ -2865,10 +2804,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function rename(
-    oldpath: string | URL,
-    newpath: string | URL,
-  ): Promise<void>;
+  export function rename(oldpath: string | URL, newpath: string | URL): Promise<void>;
 
   /** Asynchronously reads and returns the entire contents of a file as an UTF-8
    *  decoded string. Reading a directory throws an error.
@@ -2883,10 +2819,7 @@ declare namespace Deno {
    * @tags allow-read
    * @category File System
    */
-  export function readTextFile(
-    path: string | URL,
-    options?: ReadFileOptions,
-  ): Promise<string>;
+  export function readTextFile(path: string | URL, options?: ReadFileOptions): Promise<string>;
 
   /** Synchronously reads and returns the entire contents of a file as an UTF-8
    *  decoded string. Reading a directory throws an error.
@@ -2918,10 +2851,7 @@ declare namespace Deno {
    * @tags allow-read
    * @category File System
    */
-  export function readFile(
-    path: string | URL,
-    options?: ReadFileOptions,
-  ): Promise<Uint8Array>;
+  export function readFile(path: string | URL, options?: ReadFileOptions): Promise<Uint8Array>;
 
   /** Synchronously reads and returns the entire contents of a file as an array
    * of bytes. `TextDecoder` can be used to transform the bytes to string if
@@ -3141,10 +3071,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function copyFile(
-    fromPath: string | URL,
-    toPath: string | URL,
-  ): Promise<void>;
+  export function copyFile(fromPath: string | URL, toPath: string | URL): Promise<void>;
 
   /** Synchronously copies the contents and permissions of one file to another
    * specified path, by default creating a new file if needed, else overwriting.
@@ -3161,10 +3088,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function copyFileSync(
-    fromPath: string | URL,
-    toPath: string | URL,
-  ): void;
+  export function copyFileSync(fromPath: string | URL, toPath: string | URL): void;
 
   /** Resolves to the full path destination of the named symbolic link.
    *
@@ -3337,11 +3261,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function writeFileSync(
-    path: string | URL,
-    data: Uint8Array,
-    options?: WriteFileOptions,
-  ): void;
+  export function writeFileSync(path: string | URL, data: Uint8Array, options?: WriteFileOptions): void;
 
   /** Write string `data` to the given `path`, by default creating a new file if
    * needed, else overwriting.
@@ -3375,11 +3295,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function writeTextFileSync(
-    path: string | URL,
-    data: string,
-    options?: WriteFileOptions,
-  ): void;
+  export function writeTextFileSync(path: string | URL, data: string, options?: WriteFileOptions): void;
 
   /** Truncates (or extends) the specified file, to reach the specified `len`.
    * If `len` is not specified then the entire file contents are truncated.
@@ -3473,14 +3389,7 @@ declare namespace Deno {
    * @category File System */
   export interface FsEvent {
     /** The kind/type of the file system event. */
-    kind:
-      | "any"
-      | "access"
-      | "create"
-      | "modify"
-      | "rename"
-      | "remove"
-      | "other";
+    kind: "any" | "access" | "create" | "modify" | "rename" | "remove" | "other";
     /** An array of paths that are associated with the file system event. */
     paths: string[];
     /** Any additional flags associated with the event. */
@@ -3543,10 +3452,7 @@ declare namespace Deno {
    * @tags allow-read
    * @category File System
    */
-  export function watchFs(
-    paths: string | string[],
-    options?: { recursive: boolean },
-  ): FsWatcher;
+  export function watchFs(paths: string | string[], options?: { recursive: boolean }): FsWatcher;
 
   /** Operating signals which can be listened for or sent to sub-processes. What
    * signals and what their standard behaviors are OS dependent.
@@ -3624,10 +3530,7 @@ declare namespace Deno {
    *
    * @category Runtime
    */
-  export function removeSignalListener(
-    signal: Signal,
-    handler: () => void,
-  ): void;
+  export function removeSignalListener(signal: Signal, handler: () => void): void;
 
   /** Create a child process.
    *
@@ -3946,14 +3849,7 @@ declare namespace Deno {
    *
    * @category Permissions
    */
-  export type PermissionName =
-    | "run"
-    | "read"
-    | "write"
-    | "net"
-    | "env"
-    | "sys"
-    | "ffi";
+  export type PermissionName = "run" | "read" | "write" | "net" | "env" | "sys" | "ffi";
 
   /** The current status of the permission:
    *
@@ -4123,30 +4019,16 @@ declare namespace Deno {
     readonly partial: boolean;
     addEventListener<K extends keyof PermissionStatusEventMap>(
       type: K,
-      listener: (
-        this: PermissionStatus,
-        ev: PermissionStatusEventMap[K],
-      ) => any,
+      listener: (this: PermissionStatus, ev: PermissionStatusEventMap[K]) => any,
       options?: boolean | AddEventListenerOptions,
     ): void;
-    addEventListener(
-      type: string,
-      listener: EventListenerOrEventListenerObject,
-      options?: boolean | AddEventListenerOptions,
-    ): void;
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
     removeEventListener<K extends keyof PermissionStatusEventMap>(
       type: K,
-      listener: (
-        this: PermissionStatus,
-        ev: PermissionStatusEventMap[K],
-      ) => any,
+      listener: (this: PermissionStatus, ev: PermissionStatusEventMap[K]) => any,
       options?: boolean | EventListenerOptions,
     ): void;
-    removeEventListener(
-      type: string,
-      listener: EventListenerOrEventListenerObject,
-      options?: boolean | EventListenerOptions,
-    ): void;
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
   }
 
   /**
@@ -4348,16 +4230,7 @@ declare namespace Deno {
     arch: "x86_64" | "aarch64";
     /** The operating system that the Deno CLI was built for. `"darwin"` is
      * also known as OSX or MacOS. */
-    os:
-      | "darwin"
-      | "linux"
-      | "android"
-      | "windows"
-      | "freebsd"
-      | "netbsd"
-      | "aix"
-      | "solaris"
-      | "illumos";
+    os: "darwin" | "linux" | "android" | "windows" | "freebsd" | "netbsd" | "aix" | "solaris" | "illumos";
     /** The computer vendor that the Deno CLI was built for. */
     vendor: string;
     /** Optional environment flags that were set for this build of Deno CLI. */
@@ -4447,11 +4320,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function symlink(
-    oldpath: string | URL,
-    newpath: string | URL,
-    options?: SymlinkOptions,
-  ): Promise<void>;
+  export function symlink(oldpath: string | URL, newpath: string | URL, options?: SymlinkOptions): Promise<void>;
 
   /**
    * Creates `newpath` as a symbolic link to `oldpath`.
@@ -4468,11 +4337,7 @@ declare namespace Deno {
    * @tags allow-read, allow-write
    * @category File System
    */
-  export function symlinkSync(
-    oldpath: string | URL,
-    newpath: string | URL,
-    options?: SymlinkOptions,
-  ): void;
+  export function symlinkSync(oldpath: string | URL, newpath: string | URL, options?: SymlinkOptions): void;
 
   /**
    * Synchronously changes the access (`atime`) and modification (`mtime`) times
@@ -4488,11 +4353,7 @@ declare namespace Deno {
    * @tags allow-write
    * @category File System
    */
-  export function utimeSync(
-    path: string | URL,
-    atime: number | Date,
-    mtime: number | Date,
-  ): void;
+  export function utimeSync(path: string | URL, atime: number | Date, mtime: number | Date): void;
 
   /**
    * Changes the access (`atime`) and modification (`mtime`) times of a file
@@ -4508,11 +4369,7 @@ declare namespace Deno {
    * @tags allow-write
    * @category File System
    */
-  export function utime(
-    path: string | URL,
-    atime: number | Date,
-    mtime: number | Date,
-  ): Promise<void>;
+  export function utime(path: string | URL, atime: number | Date, mtime: number | Date): Promise<void>;
 
   /** Retrieve the process umask.  If `mask` is provided, sets the process umask.
    * This call always returns what the umask was before the call.
@@ -4599,10 +4456,7 @@ declare namespace Deno {
    *
    * @category WebSockets
    */
-  export function upgradeWebSocket(
-    request: Request,
-    options?: UpgradeWebSocketOptions,
-  ): WebSocketUpgrade;
+  export function upgradeWebSocket(request: Request, options?: UpgradeWebSocketOptions): WebSocketUpgrade;
 
   /** Send a signal to process under given `pid`. The value and meaning of the
    * `signal` to the process is operating system and process dependant.
@@ -4637,19 +4491,7 @@ declare namespace Deno {
    *
    * @category Network
    */
-  export type RecordType =
-    | "A"
-    | "AAAA"
-    | "ANAME"
-    | "CAA"
-    | "CNAME"
-    | "MX"
-    | "NAPTR"
-    | "NS"
-    | "PTR"
-    | "SOA"
-    | "SRV"
-    | "TXT";
+  export type RecordType = "A" | "AAAA" | "ANAME" | "CAA" | "CNAME" | "MX" | "NAPTR" | "NS" | "PTR" | "SOA" | "SRV" | "TXT";
 
   /**
    * Options which can be set when using {@linkcode Deno.resolveDns}.
@@ -4802,11 +4644,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function resolveDns(
-    query: string,
-    recordType: "CAA",
-    options?: ResolveDnsOptions,
-  ): Promise<CaaRecord[]>;
+  export function resolveDns(query: string, recordType: "CAA", options?: ResolveDnsOptions): Promise<CaaRecord[]>;
 
   /**
    * Performs DNS resolution against the given query, returning resolved
@@ -4832,11 +4670,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function resolveDns(
-    query: string,
-    recordType: "MX",
-    options?: ResolveDnsOptions,
-  ): Promise<MxRecord[]>;
+  export function resolveDns(query: string, recordType: "MX", options?: ResolveDnsOptions): Promise<MxRecord[]>;
 
   /**
    * Performs DNS resolution against the given query, returning resolved
@@ -4862,11 +4696,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function resolveDns(
-    query: string,
-    recordType: "NAPTR",
-    options?: ResolveDnsOptions,
-  ): Promise<NaptrRecord[]>;
+  export function resolveDns(query: string, recordType: "NAPTR", options?: ResolveDnsOptions): Promise<NaptrRecord[]>;
 
   /**
    * Performs DNS resolution against the given query, returning resolved
@@ -4892,11 +4722,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function resolveDns(
-    query: string,
-    recordType: "SOA",
-    options?: ResolveDnsOptions,
-  ): Promise<SoaRecord[]>;
+  export function resolveDns(query: string, recordType: "SOA", options?: ResolveDnsOptions): Promise<SoaRecord[]>;
 
   /**
    * Performs DNS resolution against the given query, returning resolved
@@ -4922,11 +4748,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function resolveDns(
-    query: string,
-    recordType: "SRV",
-    options?: ResolveDnsOptions,
-  ): Promise<SrvRecord[]>;
+  export function resolveDns(query: string, recordType: "SRV", options?: ResolveDnsOptions): Promise<SrvRecord[]>;
 
   /**
    * Performs DNS resolution against the given query, returning resolved
@@ -4952,11 +4774,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function resolveDns(
-    query: string,
-    recordType: "TXT",
-    options?: ResolveDnsOptions,
-  ): Promise<string[][]>;
+  export function resolveDns(query: string, recordType: "TXT", options?: ResolveDnsOptions): Promise<string[][]>;
 
   /**
    * Performs DNS resolution against the given query, returning resolved
@@ -4986,15 +4804,7 @@ declare namespace Deno {
     query: string,
     recordType: RecordType,
     options?: ResolveDnsOptions,
-  ): Promise<
-    | string[]
-    | CaaRecord[]
-    | MxRecord[]
-    | NaptrRecord[]
-    | SoaRecord[]
-    | SrvRecord[]
-    | string[][]
-  >;
+  ): Promise<string[] | CaaRecord[] | MxRecord[] | NaptrRecord[] | SoaRecord[] | SrvRecord[] | string[][]>;
 
   /**
    * Make the timer of the given `id` block the event loop from finishing.
@@ -5161,8 +4971,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export interface HttpServer<Addr extends Deno.Addr = Deno.Addr>
-    extends AsyncDisposable {
+  export interface HttpServer<Addr extends Deno.Addr = Deno.Addr> extends AsyncDisposable {
     /** A promise that resolves once server finishes - eg. when aborted using
      * the signal passed to {@linkcode ServeOptions.signal}.
      */
@@ -5198,9 +5007,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export function serve(
-    handler: ServeHandler<Deno.NetAddr>,
-  ): HttpServer<Deno.NetAddr>;
+  export function serve(handler: ServeHandler<Deno.NetAddr>): HttpServer<Deno.NetAddr>;
   /** Serves HTTP requests with the given option bag and handler.
    *
    * You can specify the socket path with `path` option.
@@ -5246,10 +5053,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export function serve(
-    options: ServeUnixOptions,
-    handler: ServeHandler<Deno.UnixAddr>,
-  ): HttpServer<Deno.UnixAddr>;
+  export function serve(options: ServeUnixOptions, handler: ServeHandler<Deno.UnixAddr>): HttpServer<Deno.UnixAddr>;
   /** Serves HTTP requests with the given option bag and handler.
    *
    * You can specify an object with a port and hostname option, which is the
@@ -5334,9 +5138,7 @@ declare namespace Deno {
    *
    * @category HTTP Server
    */
-  export function serve(
-    options: ServeUnixOptions & ServeInit<Deno.UnixAddr>,
-  ): HttpServer<Deno.UnixAddr>;
+  export function serve(options: ServeUnixOptions & ServeInit<Deno.UnixAddr>): HttpServer<Deno.UnixAddr>;
   /** Serves HTTP requests with the given option bag.
    *
    * You can specify an object with a port and hostname option, which is the
@@ -5363,24 +5165,14 @@ declare namespace Deno {
    * @category HTTP Server
    */
   export function serve(
-    options:
-      & (ServeTcpOptions | (ServeTcpOptions & TlsCertifiedKeyPem))
-      & ServeInit<Deno.NetAddr>,
+    options: (ServeTcpOptions | (ServeTcpOptions & TlsCertifiedKeyPem)) & ServeInit<Deno.NetAddr>,
   ): HttpServer<Deno.NetAddr>;
 
   /** All plain number types for interfacing with foreign functions.
    *
    * @category FFI
    */
-  export type NativeNumberType =
-    | "u8"
-    | "i8"
-    | "u16"
-    | "i16"
-    | "u32"
-    | "i32"
-    | "f32"
-    | "f64";
+  export type NativeNumberType = "u8" | "i8" | "u16" | "i16" | "u32" | "i32" | "f32" | "f64";
 
   /** All BigInt number types for interfacing with foreign functions.
    *
@@ -5464,11 +5256,9 @@ declare namespace Deno {
   /**
    * @category FFI
    */
-  export type NativeTypedFunction<T extends UnsafeCallbackDefinition> =
-    & "function"
-    & {
-      [brand]: T;
-    };
+  export type NativeTypedFunction<T extends UnsafeCallbackDefinition> = "function" & {
+    [brand]: T;
+  };
 
   /** All supported types for interfacing with foreign functions.
    *
@@ -5492,51 +5282,75 @@ declare namespace Deno {
    *
    * @category FFI
    */
-  export type ToNativeType<T extends NativeType = NativeType> = T extends
-    NativeStructType ? BufferSource
-    : T extends NativeNumberType ? T extends NativeU8Enum<infer U> ? U
-      : T extends NativeI8Enum<infer U> ? U
-      : T extends NativeU16Enum<infer U> ? U
-      : T extends NativeI16Enum<infer U> ? U
-      : T extends NativeU32Enum<infer U> ? U
-      : T extends NativeI32Enum<infer U> ? U
-      : number
-    : T extends NativeBigIntType ? bigint
-    : T extends NativeBooleanType ? boolean
-    : T extends NativePointerType
-      ? T extends NativeTypedPointer<infer U> ? U | null
-      : PointerValue
-    : T extends NativeFunctionType
-      ? T extends NativeTypedFunction<infer U> ? PointerValue<U> | null
-      : PointerValue
-    : T extends NativeBufferType ? BufferSource | null
-    : never;
+  export type ToNativeType<T extends NativeType = NativeType> = T extends NativeStructType
+    ? BufferSource
+    : T extends NativeNumberType
+      ? T extends NativeU8Enum<infer U>
+        ? U
+        : T extends NativeI8Enum<infer U>
+          ? U
+          : T extends NativeU16Enum<infer U>
+            ? U
+            : T extends NativeI16Enum<infer U>
+              ? U
+              : T extends NativeU32Enum<infer U>
+                ? U
+                : T extends NativeI32Enum<infer U>
+                  ? U
+                  : number
+      : T extends NativeBigIntType
+        ? bigint
+        : T extends NativeBooleanType
+          ? boolean
+          : T extends NativePointerType
+            ? T extends NativeTypedPointer<infer U>
+              ? U | null
+              : PointerValue
+            : T extends NativeFunctionType
+              ? T extends NativeTypedFunction<infer U>
+                ? PointerValue<U> | null
+                : PointerValue
+              : T extends NativeBufferType
+                ? BufferSource | null
+                : never;
 
   /** Type conversion for unsafe callback return types.
    *
    * @category FFI
    */
-  export type ToNativeResultType<
-    T extends NativeResultType = NativeResultType,
-  > = T extends NativeStructType ? BufferSource
-    : T extends NativeNumberType ? T extends NativeU8Enum<infer U> ? U
-      : T extends NativeI8Enum<infer U> ? U
-      : T extends NativeU16Enum<infer U> ? U
-      : T extends NativeI16Enum<infer U> ? U
-      : T extends NativeU32Enum<infer U> ? U
-      : T extends NativeI32Enum<infer U> ? U
-      : number
-    : T extends NativeBigIntType ? bigint
-    : T extends NativeBooleanType ? boolean
-    : T extends NativePointerType
-      ? T extends NativeTypedPointer<infer U> ? U | null
-      : PointerValue
-    : T extends NativeFunctionType
-      ? T extends NativeTypedFunction<infer U> ? PointerObject<U> | null
-      : PointerValue
-    : T extends NativeBufferType ? BufferSource | null
-    : T extends NativeVoidType ? void
-    : never;
+  export type ToNativeResultType<T extends NativeResultType = NativeResultType> = T extends NativeStructType
+    ? BufferSource
+    : T extends NativeNumberType
+      ? T extends NativeU8Enum<infer U>
+        ? U
+        : T extends NativeI8Enum<infer U>
+          ? U
+          : T extends NativeU16Enum<infer U>
+            ? U
+            : T extends NativeI16Enum<infer U>
+              ? U
+              : T extends NativeU32Enum<infer U>
+                ? U
+                : T extends NativeI32Enum<infer U>
+                  ? U
+                  : number
+      : T extends NativeBigIntType
+        ? bigint
+        : T extends NativeBooleanType
+          ? boolean
+          : T extends NativePointerType
+            ? T extends NativeTypedPointer<infer U>
+              ? U | null
+              : PointerValue
+            : T extends NativeFunctionType
+              ? T extends NativeTypedFunction<infer U>
+                ? PointerObject<U> | null
+                : PointerValue
+              : T extends NativeBufferType
+                ? BufferSource | null
+                : T extends NativeVoidType
+                  ? void
+                  : never;
 
   /** A utility type for conversion of parameter types of foreign functions.
    *
@@ -5544,75 +5358,104 @@ declare namespace Deno {
    */
   export type ToNativeParameterTypes<T extends readonly NativeType[]> =
     //
-    [T[number][]] extends [T] ? ToNativeType<T[number]>[]
-      : [readonly T[number][]] extends [T] ? readonly ToNativeType<T[number]>[]
-      : T extends readonly [...NativeType[]] ? {
-          [K in keyof T]: ToNativeType<T[K]>;
-        }
-      : never;
+    [T[number][]] extends [T]
+      ? ToNativeType<T[number]>[]
+      : [readonly T[number][]] extends [T]
+        ? readonly ToNativeType<T[number]>[]
+        : T extends readonly [...NativeType[]]
+          ? {
+              [K in keyof T]: ToNativeType<T[K]>;
+            }
+          : never;
 
   /** Type conversion for foreign symbol return types and unsafe callback
    * parameters.
    *
    * @category FFI
    */
-  export type FromNativeType<T extends NativeType = NativeType> = T extends
-    NativeStructType ? Uint8Array
-    : T extends NativeNumberType ? T extends NativeU8Enum<infer U> ? U
-      : T extends NativeI8Enum<infer U> ? U
-      : T extends NativeU16Enum<infer U> ? U
-      : T extends NativeI16Enum<infer U> ? U
-      : T extends NativeU32Enum<infer U> ? U
-      : T extends NativeI32Enum<infer U> ? U
-      : number
-    : T extends NativeBigIntType ? bigint
-    : T extends NativeBooleanType ? boolean
-    : T extends NativePointerType
-      ? T extends NativeTypedPointer<infer U> ? U | null
-      : PointerValue
-    : T extends NativeBufferType ? PointerValue
-    : T extends NativeFunctionType
-      ? T extends NativeTypedFunction<infer U> ? PointerObject<U> | null
-      : PointerValue
-    : never;
+  export type FromNativeType<T extends NativeType = NativeType> = T extends NativeStructType
+    ? Uint8Array
+    : T extends NativeNumberType
+      ? T extends NativeU8Enum<infer U>
+        ? U
+        : T extends NativeI8Enum<infer U>
+          ? U
+          : T extends NativeU16Enum<infer U>
+            ? U
+            : T extends NativeI16Enum<infer U>
+              ? U
+              : T extends NativeU32Enum<infer U>
+                ? U
+                : T extends NativeI32Enum<infer U>
+                  ? U
+                  : number
+      : T extends NativeBigIntType
+        ? bigint
+        : T extends NativeBooleanType
+          ? boolean
+          : T extends NativePointerType
+            ? T extends NativeTypedPointer<infer U>
+              ? U | null
+              : PointerValue
+            : T extends NativeBufferType
+              ? PointerValue
+              : T extends NativeFunctionType
+                ? T extends NativeTypedFunction<infer U>
+                  ? PointerObject<U> | null
+                  : PointerValue
+                : never;
 
   /** Type conversion for foreign symbol return types.
    *
    * @category FFI
    */
-  export type FromNativeResultType<
-    T extends NativeResultType = NativeResultType,
-  > = T extends NativeStructType ? Uint8Array
-    : T extends NativeNumberType ? T extends NativeU8Enum<infer U> ? U
-      : T extends NativeI8Enum<infer U> ? U
-      : T extends NativeU16Enum<infer U> ? U
-      : T extends NativeI16Enum<infer U> ? U
-      : T extends NativeU32Enum<infer U> ? U
-      : T extends NativeI32Enum<infer U> ? U
-      : number
-    : T extends NativeBigIntType ? bigint
-    : T extends NativeBooleanType ? boolean
-    : T extends NativePointerType
-      ? T extends NativeTypedPointer<infer U> ? U | null
-      : PointerValue
-    : T extends NativeBufferType ? PointerValue
-    : T extends NativeFunctionType
-      ? T extends NativeTypedFunction<infer U> ? PointerObject<U> | null
-      : PointerValue
-    : T extends NativeVoidType ? void
-    : never;
+  export type FromNativeResultType<T extends NativeResultType = NativeResultType> = T extends NativeStructType
+    ? Uint8Array
+    : T extends NativeNumberType
+      ? T extends NativeU8Enum<infer U>
+        ? U
+        : T extends NativeI8Enum<infer U>
+          ? U
+          : T extends NativeU16Enum<infer U>
+            ? U
+            : T extends NativeI16Enum<infer U>
+              ? U
+              : T extends NativeU32Enum<infer U>
+                ? U
+                : T extends NativeI32Enum<infer U>
+                  ? U
+                  : number
+      : T extends NativeBigIntType
+        ? bigint
+        : T extends NativeBooleanType
+          ? boolean
+          : T extends NativePointerType
+            ? T extends NativeTypedPointer<infer U>
+              ? U | null
+              : PointerValue
+            : T extends NativeBufferType
+              ? PointerValue
+              : T extends NativeFunctionType
+                ? T extends NativeTypedFunction<infer U>
+                  ? PointerObject<U> | null
+                  : PointerValue
+                : T extends NativeVoidType
+                  ? void
+                  : never;
 
   /** @category FFI
    */
   export type FromNativeParameterTypes<T extends readonly NativeType[]> =
     //
-    [T[number][]] extends [T] ? FromNativeType<T[number]>[]
+    [T[number][]] extends [T]
+      ? FromNativeType<T[number]>[]
       : [readonly T[number][]] extends [T]
         ? readonly FromNativeType<T[number]>[]
-      : T extends readonly [...NativeType[]] ? {
-          [K in keyof T]: FromNativeType<T[K]>;
-        }
-      : never;
+        : T extends readonly [...NativeType[]]
+          ? {
+              [K in keyof T]: FromNativeType<T[K]>;
+            }
+          : never;
 
   /** The interface for a foreign function as defined by its parameter and result
    * types.
@@ -5668,41 +5511,36 @@ declare namespace Deno {
    *
    * @category FFI
    */
-  export type StaticForeignSymbol<T extends ForeignFunction | ForeignStatic> =
-    T extends ForeignFunction ? FromForeignFunction<T>
-      : T extends ForeignStatic ? FromNativeType<T["type"]>
+  export type StaticForeignSymbol<T extends ForeignFunction | ForeignStatic> = T extends ForeignFunction
+    ? FromForeignFunction<T>
+    : T extends ForeignStatic
+      ? FromNativeType<T["type"]>
       : never;
 
   /**  @category FFI
    */
-  export type FromForeignFunction<T extends ForeignFunction> =
-    T["parameters"] extends readonly [] ? () => StaticForeignSymbolReturnType<T>
-      : (
-        ...args: ToNativeParameterTypes<T["parameters"]>
-      ) => StaticForeignSymbolReturnType<T>;
+  export type FromForeignFunction<T extends ForeignFunction> = T["parameters"] extends readonly []
+    ? () => StaticForeignSymbolReturnType<T>
+    : (...args: ToNativeParameterTypes<T["parameters"]>) => StaticForeignSymbolReturnType<T>;
 
   /** @category FFI
    */
-  export type StaticForeignSymbolReturnType<T extends ForeignFunction> =
-    ConditionalAsync<T["nonblocking"], FromNativeResultType<T["result"]>>;
+  export type StaticForeignSymbolReturnType<T extends ForeignFunction> = ConditionalAsync<
+    T["nonblocking"],
+    FromNativeResultType<T["result"]>
+  >;
 
   /** @category FFI
    */
-  export type ConditionalAsync<
-    IsAsync extends boolean | undefined,
-    T,
-  > = IsAsync extends true ? Promise<T> : T;
+  export type ConditionalAsync<IsAsync extends boolean | undefined, T> = IsAsync extends true ? Promise<T> : T;
 
   /** A utility type that infers a foreign library interface.
    *
    * @category FFI
    */
-  export type StaticForeignLibraryInterface<T extends ForeignLibraryInterface> =
-    {
-      [K in keyof T]: T[K]["optional"] extends true
-        ? StaticForeignSymbol<T[K]> | null
-        : StaticForeignSymbol<T[K]>;
-    };
+  export type StaticForeignLibraryInterface<T extends ForeignLibraryInterface> = {
+    [K in keyof T]: T[K]["optional"] extends true ? StaticForeignSymbol<T[K]> | null : StaticForeignSymbol<T[K]>;
+  };
 
   /** A non-null pointer, represented as an object
    * at runtime. The object's prototype is `null`
@@ -5738,14 +5576,9 @@ declare namespace Deno {
     /** Returns `true` if the two pointers point to the same address. */
     static equals<T = unknown>(a: PointerValue<T>, b: PointerValue<T>): boolean;
     /** Return the direct memory pointer to the typed array in memory. */
-    static of<T = unknown>(
-      value: Deno.UnsafeCallback | BufferSource,
-    ): PointerValue<T>;
+    static of<T = unknown>(value: Deno.UnsafeCallback | BufferSource): PointerValue<T>;
     /** Return a new pointer offset from the original by `offset` bytes. */
-    static offset<T = unknown>(
-      value: PointerObject,
-      offset: number,
-    ): PointerValue<T>;
+    static offset<T = unknown>(value: PointerObject, offset: number): PointerValue<T>;
     /** Get the numeric value of a pointer */
     static value(value: PointerValue): bigint;
   }
@@ -5807,11 +5640,7 @@ declare namespace Deno {
     getArrayBuffer(byteLength: number, offset?: number): ArrayBuffer;
     /** Gets an `ArrayBuffer` of length `byteLength` at the specified byte
      * offset from the specified pointer. */
-    static getArrayBuffer(
-      pointer: PointerObject,
-      byteLength: number,
-      offset?: number,
-    ): ArrayBuffer;
+    static getArrayBuffer(pointer: PointerObject, byteLength: number, offset?: number): ArrayBuffer;
     /** Copies the memory of the pointer into a typed array.
      *
      * Length is determined from the typed array's `byteLength`.
@@ -5823,11 +5652,7 @@ declare namespace Deno {
      * Length is determined from the typed array's `byteLength`.
      *
      * Also takes optional byte offset from the pointer. */
-    static copyInto(
-      pointer: PointerObject,
-      destination: BufferSource,
-      offset?: number,
-    ): void;
+    static copyInto(pointer: PointerObject, destination: BufferSource, offset?: number): void;
   }
 
   /** An unsafe pointer to a function, for calling functions that are not present
@@ -5841,10 +5666,7 @@ declare namespace Deno {
     /** The definition of the function. */
     definition: Fn;
 
-    constructor(
-      pointer: PointerObject<NoInfer<Omit<Fn, "nonblocking">>>,
-      definition: Fn,
-    );
+    constructor(pointer: PointerObject<NoInfer<Omit<Fn, "nonblocking">>>, definition: Fn);
 
     /** Call the foreign function. */
     call: FromForeignFunction<Fn>;
@@ -5871,10 +5693,9 @@ declare namespace Deno {
   export type UnsafeCallbackFunction<
     Parameters extends readonly NativeType[] = readonly NativeType[],
     Result extends NativeResultType = NativeResultType,
-  > = Parameters extends readonly [] ? () => ToNativeResultType<Result>
-    : (
-      ...args: FromNativeParameterTypes<Parameters>
-    ) => ToNativeResultType<Result>;
+  > = Parameters extends readonly []
+    ? () => ToNativeResultType<Result>
+    : (...args: FromNativeParameterTypes<Parameters>) => ToNativeResultType<Result>;
 
   /** An unsafe function pointer for passing JavaScript functions as C function
    * pointers to foreign function calls.
@@ -5897,27 +5718,15 @@ declare namespace Deno {
    *
    * @category FFI
    */
-  export class UnsafeCallback<
-    const Definition extends UnsafeCallbackDefinition =
-      UnsafeCallbackDefinition,
-  > {
-    constructor(
-      definition: Definition,
-      callback: UnsafeCallbackFunction<
-        Definition["parameters"],
-        Definition["result"]
-      >,
-    );
+  export class UnsafeCallback<const Definition extends UnsafeCallbackDefinition = UnsafeCallbackDefinition> {
+    constructor(definition: Definition, callback: UnsafeCallbackFunction<Definition["parameters"], Definition["result"]>);
 
     /** The pointer to the unsafe callback. */
     readonly pointer: PointerObject<Definition>;
     /** The definition of the unsafe callback. */
     readonly definition: Definition;
     /** The callback function. */
-    readonly callback: UnsafeCallbackFunction<
-      Definition["parameters"],
-      Definition["result"]
-    >;
+    readonly callback: UnsafeCallbackFunction<Definition["parameters"], Definition["result"]>;
 
     /**
      * Creates an {@linkcode UnsafeCallback} and calls `ref()` once to allow it to
@@ -5926,14 +5735,9 @@ declare namespace Deno {
      * This also stops Deno's process from exiting while the callback still
      * exists and is not unref'ed.
      */
-    static threadSafe<
-      Definition extends UnsafeCallbackDefinition = UnsafeCallbackDefinition,
-    >(
+    static threadSafe<Definition extends UnsafeCallbackDefinition = UnsafeCallbackDefinition>(
       definition: Definition,
-      callback: UnsafeCallbackFunction<
-        Definition["parameters"],
-        Definition["result"]
-      >,
+      callback: UnsafeCallbackFunction<Definition["parameters"], Definition["result"]>,
     ): UnsafeCallback<Definition>;
 
     /**
@@ -6036,10 +5840,7 @@ declare namespace Deno {
    * @tags allow-ffi
    * @category FFI
    */
-  export function dlopen<const S extends ForeignLibraryInterface>(
-    filename: string | URL,
-    symbols: S,
-  ): DynamicLibrary<S>;
+  export function dlopen<const S extends ForeignLibraryInterface>(filename: string | URL, symbols: S): DynamicLibrary<S>;
 
   /**
    * A custom `HttpClient` for use with {@linkcode fetch} function. This is
@@ -6153,11 +5954,7 @@ declare namespace Deno {
    *
    * @category Fetch
    */
-  export function createHttpClient(
-    options:
-      | CreateHttpClientOptions
-      | (CreateHttpClientOptions & TlsCertifiedKeyPem),
-  ): HttpClient;
+  export function createHttpClient(options: CreateHttpClientOptions | (CreateHttpClientOptions & TlsCertifiedKeyPem)): HttpClient;
 
   export {}; // only export exports
 }
@@ -6290,10 +6087,7 @@ interface URLSearchParams {
    * });
    * ```
    */
-  forEach(
-    callbackfn: (value: string, key: string, parent: this) => void,
-    thisArg?: any,
-  ): void;
+  forEach(callbackfn: (value: string, key: string, parent: this) => void, thisArg?: any): void;
 
   /** Returns an iterator allowing to go through all keys contained
    * in this object.
@@ -6363,9 +6157,7 @@ interface URLSearchParams {
 /** @category URL */
 declare var URLSearchParams: {
   readonly prototype: URLSearchParams;
-  new (
-    init?: Iterable<string[]> | Record<string, string> | string,
-  ): URLSearchParams;
+  new (init?: Iterable<string[]> | Record<string, string> | string): URLSearchParams;
 };
 
 /** The URL interface represents an object providing static methods used for
@@ -6597,11 +6389,7 @@ interface URLPattern {
  */
 declare var URLPattern: {
   readonly prototype: URLPattern;
-  new (
-    input: URLPatternInput,
-    baseURL: string,
-    options?: URLPatternOptions,
-  ): URLPattern;
+  new (input: URLPatternInput, baseURL: string, options?: URLPatternOptions): URLPattern;
   new (input?: URLPatternInput, options?: URLPatternOptions): URLPattern;
 };
 
@@ -6834,9 +6622,7 @@ interface EventListenerObject {
 }
 
 /** @category Events */
-type EventListenerOrEventListenerObject =
-  | EventListener
-  | EventListenerObject;
+type EventListenerOrEventListenerObject = EventListener | EventListenerObject;
 
 /** @category Events */
 interface AddEventListenerOptions extends EventListenerOptions {
@@ -7063,21 +6849,13 @@ interface AbortSignal extends EventTarget {
     listener: (this: AbortSignal, ev: AbortSignalEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof AbortSignalEventMap>(
     type: K,
     listener: (this: AbortSignal, ev: AbortSignalEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 
   /** Throws this AbortSignal's abort reason, if its AbortController has
    * signaled to abort; otherwise, does nothing. */
@@ -7095,12 +6873,12 @@ declare var AbortSignal: {
 
 /** @category File */
 interface FileReaderEventMap {
-  "abort": ProgressEvent<FileReader>;
-  "error": ProgressEvent<FileReader>;
-  "load": ProgressEvent<FileReader>;
-  "loadend": ProgressEvent<FileReader>;
-  "loadstart": ProgressEvent<FileReader>;
-  "progress": ProgressEvent<FileReader>;
+  abort: ProgressEvent<FileReader>;
+  error: ProgressEvent<FileReader>;
+  load: ProgressEvent<FileReader>;
+  loadend: ProgressEvent<FileReader>;
+  loadstart: ProgressEvent<FileReader>;
+  progress: ProgressEvent<FileReader>;
 }
 
 /** Lets web applications asynchronously read the contents of files (or raw data
@@ -7115,14 +6893,9 @@ interface FileReader extends EventTarget {
   onerror: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null;
   onload: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null;
   onloadend: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null;
-  onloadstart:
-    | ((this: FileReader, ev: ProgressEvent<FileReader>) => any)
-    | null;
+  onloadstart: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null;
   onprogress: ((this: FileReader, ev: ProgressEvent<FileReader>) => any) | null;
-  readonly readyState:
-    | typeof FileReader.EMPTY
-    | typeof FileReader.LOADING
-    | typeof FileReader.DONE;
+  readonly readyState: typeof FileReader.EMPTY | typeof FileReader.LOADING | typeof FileReader.DONE;
   readonly result: string | ArrayBuffer | null;
   abort(): void;
   readAsArrayBuffer(blob: Blob): void;
@@ -7138,21 +6911,13 @@ interface FileReader extends EventTarget {
     listener: (this: FileReader, ev: FileReaderEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof FileReaderEventMap>(
     type: K,
     listener: (this: FileReader, ev: FileReaderEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
 /** @category File */
@@ -7232,14 +6997,10 @@ declare var File: {
 };
 
 /** @category Streams */
-type ReadableStreamReader<T> =
-  | ReadableStreamDefaultReader<T>
-  | ReadableStreamBYOBReader;
+type ReadableStreamReader<T> = ReadableStreamDefaultReader<T> | ReadableStreamBYOBReader;
 
 /** @category Streams */
-type ReadableStreamController<T> =
-  | ReadableStreamDefaultController<T>
-  | ReadableByteStreamController;
+type ReadableStreamController<T> = ReadableStreamDefaultController<T> | ReadableByteStreamController;
 
 /** @category Streams */
 interface ReadableStreamGenericReader {
@@ -7260,13 +7021,10 @@ interface ReadableStreamReadValueResult<T> {
 }
 
 /** @category Streams */
-type ReadableStreamReadResult<T> =
-  | ReadableStreamReadValueResult<T>
-  | ReadableStreamReadDoneResult<T>;
+type ReadableStreamReadResult<T> = ReadableStreamReadValueResult<T> | ReadableStreamReadDoneResult<T>;
 
 /** @category Streams */
-interface ReadableStreamDefaultReader<R = any>
-  extends ReadableStreamGenericReader {
+interface ReadableStreamDefaultReader<R = any> extends ReadableStreamGenericReader {
   read(): Promise<ReadableStreamReadResult<R>>;
   releaseLock(): void;
 }
@@ -7284,10 +7042,7 @@ interface ReadableStreamBYOBReaderReadOptions {
 
 /** @category Streams */
 interface ReadableStreamBYOBReader extends ReadableStreamGenericReader {
-  read<T extends ArrayBufferView>(
-    view: T,
-    options?: ReadableStreamBYOBReaderReadOptions,
-  ): Promise<ReadableStreamReadResult<T>>;
+  read<T extends ArrayBufferView>(view: T, options?: ReadableStreamBYOBReaderReadOptions): Promise<ReadableStreamReadResult<T>>;
   releaseLock(): void;
 }
 
@@ -7322,9 +7077,7 @@ interface UnderlyingByteSource {
 /** @category Streams */
 interface UnderlyingDefaultSource<R = any> {
   cancel?: UnderlyingSourceCancelCallback;
-  pull?: (
-    controller: ReadableStreamDefaultController<R>,
-  ) => void | PromiseLike<void>;
+  pull?: (controller: ReadableStreamDefaultController<R>) => void | PromiseLike<void>;
   start?: (controller: ReadableStreamDefaultController<R>) => any;
   type?: undefined;
 }
@@ -7458,39 +7211,20 @@ interface ReadableStream<R = any> {
   getReader(options: { mode: "byob" }): ReadableStreamBYOBReader;
   getReader(): ReadableStreamDefaultReader<R>;
   getReader(options?: ReadableStreamGetReaderOptions): ReadableStreamReader<R>;
-  pipeThrough<T>(
-    transform: ReadableWritablePair<T, R>,
-    options?: StreamPipeOptions,
-  ): ReadableStream<T>;
-  pipeTo(
-    destination: WritableStream<R>,
-    options?: StreamPipeOptions,
-  ): Promise<void>;
+  pipeThrough<T>(transform: ReadableWritablePair<T, R>, options?: StreamPipeOptions): ReadableStream<T>;
+  pipeTo(destination: WritableStream<R>, options?: StreamPipeOptions): Promise<void>;
   tee(): [ReadableStream<R>, ReadableStream<R>];
   values(options?: ReadableStreamIteratorOptions): AsyncIterableIterator<R>;
-  [Symbol.asyncIterator](
-    options?: ReadableStreamIteratorOptions,
-  ): AsyncIterableIterator<R>;
+  [Symbol.asyncIterator](options?: ReadableStreamIteratorOptions): AsyncIterableIterator<R>;
 }
 
 /** @category Streams */
 declare var ReadableStream: {
   readonly prototype: ReadableStream;
-  new (
-    underlyingSource: UnderlyingByteSource,
-    strategy?: { highWaterMark?: number },
-  ): ReadableStream<Uint8Array>;
-  new <R = any>(
-    underlyingSource: UnderlyingDefaultSource<R>,
-    strategy?: QueuingStrategy<R>,
-  ): ReadableStream<R>;
-  new <R = any>(
-    underlyingSource?: UnderlyingSource<R>,
-    strategy?: QueuingStrategy<R>,
-  ): ReadableStream<R>;
-  from<R>(
-    asyncIterable: AsyncIterable<R> | Iterable<R | PromiseLike<R>> & object,
-  ): ReadableStream<R>;
+  new (underlyingSource: UnderlyingByteSource, strategy?: { highWaterMark?: number }): ReadableStream<Uint8Array>;
+  new <R = any>(underlyingSource: UnderlyingDefaultSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
+  new <R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
+  from<R>(asyncIterable: AsyncIterable<R> | (Iterable<R | PromiseLike<R>> & object)): ReadableStream<R>;
 };
 
 /** @category Streams */
@@ -7524,10 +7258,7 @@ interface UnderlyingSinkStartCallback {
 
 /** @category Streams */
 interface UnderlyingSinkWriteCallback<W> {
-  (
-    chunk: W,
-    controller: WritableStreamDefaultController,
-  ): void | PromiseLike<void>;
+  (chunk: W, controller: WritableStreamDefaultController): void | PromiseLike<void>;
 }
 
 /** @category Streams */
@@ -7551,10 +7282,7 @@ interface WritableStream<W = any> {
 /** @category Streams */
 declare var WritableStream: {
   readonly prototype: WritableStream;
-  new <W = any>(
-    underlyingSink?: UnderlyingSink<W>,
-    strategy?: QueuingStrategy<W>,
-  ): WritableStream<W>;
+  new <W = any>(underlyingSink?: UnderlyingSink<W>, strategy?: QueuingStrategy<W>): WritableStream<W>;
 };
 
 /** This Streams API interface represents a controller allowing control of a
@@ -7650,10 +7378,7 @@ interface TransformerStartCallback<O> {
 
 /** @category Streams */
 interface TransformerTransformCallback<I, O> {
-  (
-    chunk: I,
-    controller: TransformStreamDefaultController<O>,
-  ): void | PromiseLike<void>;
+  (chunk: I, controller: TransformStreamDefaultController<O>): void | PromiseLike<void>;
 }
 
 /** @category Streams */
@@ -7749,8 +7474,8 @@ declare var MessageChannel: {
 
 /** @category Messaging */
 interface MessagePortEventMap {
-  "message": MessageEvent;
-  "messageerror": MessageEvent;
+  message: MessageEvent;
+  messageerror: MessageEvent;
 }
 
 /** The MessagePort interface of the Channel Messaging API represents one of the
@@ -7786,21 +7511,13 @@ interface MessagePort extends EventTarget {
     listener: (this: MessagePort, ev: MessagePortEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof MessagePortEventMap>(
     type: K,
     listener: (this: MessagePort, ev: MessagePortEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
 /** The MessagePort interface of the Channel Messaging API represents one of the
@@ -7841,10 +7558,7 @@ declare var MessagePort: {
  *
  * @category Platform
  */
-declare function structuredClone<T = any>(
-  value: T,
-  options?: StructuredSerializeOptions,
-): T;
+declare function structuredClone<T = any>(value: T, options?: StructuredSerializeOptions): T;
 
 /**
  * An API for compressing a stream of data.
@@ -7954,9 +7668,7 @@ declare var DecompressionStream: {
  *
  * @category Platform
  */
-declare function reportError(
-  error: any,
-): void;
+declare function reportError(error: any): void;
 
 /** @category Platform */
 type PredefinedColorSpace = "srgb" | "display-p3";
@@ -7978,12 +7690,7 @@ interface ImageData {
 declare var ImageData: {
   readonly prototype: ImageData;
   new (sw: number, sh: number, settings?: ImageDataSettings): ImageData;
-  new (
-    data: Uint8ClampedArray,
-    sw: number,
-    sh?: number,
-    settings?: ImageDataSettings,
-  ): ImageData;
+  new (data: Uint8ClampedArray, sw: number, sh?: number, settings?: ImageDataSettings): ImageData;
 };
 
 // Copyright 2018-2025 the Deno authors. MIT license.
@@ -7999,10 +7706,7 @@ interface DomIterable<K, V> {
   values(): IterableIterator<V>;
   entries(): IterableIterator<[K, V]>;
   [Symbol.iterator](): IterableIterator<[K, V]>;
-  forEach(
-    callback: (value: V, key: K, parent: this) => void,
-    thisArg?: any,
-  ): void;
+  forEach(callback: (value: V, key: K, parent: this) => void, thisArg?: any): void;
 }
 
 /** @category Fetch */
@@ -8120,13 +7824,7 @@ declare var Headers: {
 /** @category Fetch */
 type RequestInfo = Request | string;
 /** @category Fetch */
-type RequestCache =
-  | "default"
-  | "force-cache"
-  | "no-cache"
-  | "no-store"
-  | "only-if-cached"
-  | "reload";
+type RequestCache = "default" | "force-cache" | "no-cache" | "no-store" | "only-if-cached" | "reload";
 /** @category Fetch */
 type RequestCredentials = "include" | "omit" | "same-origin";
 /** @category Fetch */
@@ -8347,13 +8045,7 @@ interface ResponseInit {
 }
 
 /** @category Fetch */
-type ResponseType =
-  | "basic"
-  | "cors"
-  | "default"
-  | "error"
-  | "opaque"
-  | "opaqueredirect";
+type ResponseType = "basic" | "cors" | "default" | "error" | "opaque" | "opaqueredirect";
 
 /** This Fetch API interface represents the response to a request.
  *
@@ -8395,10 +8087,7 @@ declare var Response: {
  * @tags allow-net, allow-read
  * @category Fetch
  */
-declare function fetch(
-  input: URL | Request | string,
-  init?: RequestInit,
-): Promise<Response>;
+declare function fetch(input: URL | Request | string, init?: RequestInit): Promise<Response>;
 
 /**
  * @category Fetch
@@ -8411,9 +8100,9 @@ interface EventSourceInit {
  * @category Fetch
  */
 interface EventSourceEventMap {
-  "error": Event;
-  "message": MessageEvent;
-  "open": Event;
+  error: Event;
+  message: MessageEvent;
+  open: Event;
 }
 
 /**
@@ -8452,11 +8141,7 @@ interface EventSource extends EventTarget {
     listener: (this: EventSource, event: MessageEvent) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof EventSourceEventMap>(
     type: K,
     listener: (this: EventSource, ev: EventSourceEventMap[K]) => any,
@@ -8467,11 +8152,7 @@ interface EventSource extends EventTarget {
     listener: (this: EventSource, event: MessageEvent) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
 /**
@@ -8538,14 +8219,7 @@ declare class GPUSupportedLimits {
 
 /** @category GPU */
 declare class GPUSupportedFeatures {
-  forEach(
-    callbackfn: (
-      value: GPUFeatureName,
-      value2: GPUFeatureName,
-      set: Set<GPUFeatureName>,
-    ) => void,
-    thisArg?: any,
-  ): void;
+  forEach(callbackfn: (value: GPUFeatureName, value2: GPUFeatureName, set: Set<GPUFeatureName>) => void, thisArg?: any): void;
   has(value: GPUFeatureName): boolean;
   size: number;
   [Symbol.iterator](): IterableIterator<GPUFeatureName>;
@@ -8564,9 +8238,7 @@ declare class GPUAdapterInfo {
 
 /** @category GPU */
 declare class GPU {
-  requestAdapter(
-    options?: GPURequestAdapterOptions,
-  ): Promise<GPUAdapter | null>;
+  requestAdapter(options?: GPURequestAdapterOptions): Promise<GPUAdapter | null>;
   getPreferredCanvasFormat(): GPUTextureFormat;
 }
 
@@ -8641,34 +8313,18 @@ declare class GPUDevice extends EventTarget implements GPUObjectBase {
   createTexture(descriptor: GPUTextureDescriptor): GPUTexture;
   createSampler(descriptor?: GPUSamplerDescriptor): GPUSampler;
 
-  createBindGroupLayout(
-    descriptor: GPUBindGroupLayoutDescriptor,
-  ): GPUBindGroupLayout;
-  createPipelineLayout(
-    descriptor: GPUPipelineLayoutDescriptor,
-  ): GPUPipelineLayout;
+  createBindGroupLayout(descriptor: GPUBindGroupLayoutDescriptor): GPUBindGroupLayout;
+  createPipelineLayout(descriptor: GPUPipelineLayoutDescriptor): GPUPipelineLayout;
   createBindGroup(descriptor: GPUBindGroupDescriptor): GPUBindGroup;
 
   createShaderModule(descriptor: GPUShaderModuleDescriptor): GPUShaderModule;
-  createComputePipeline(
-    descriptor: GPUComputePipelineDescriptor,
-  ): GPUComputePipeline;
-  createRenderPipeline(
-    descriptor: GPURenderPipelineDescriptor,
-  ): GPURenderPipeline;
-  createComputePipelineAsync(
-    descriptor: GPUComputePipelineDescriptor,
-  ): Promise<GPUComputePipeline>;
-  createRenderPipelineAsync(
-    descriptor: GPURenderPipelineDescriptor,
-  ): Promise<GPURenderPipeline>;
+  createComputePipeline(descriptor: GPUComputePipelineDescriptor): GPUComputePipeline;
+  createRenderPipeline(descriptor: GPURenderPipelineDescriptor): GPURenderPipeline;
+  createComputePipelineAsync(descriptor: GPUComputePipelineDescriptor): Promise<GPUComputePipeline>;
+  createRenderPipelineAsync(descriptor: GPURenderPipelineDescriptor): Promise<GPURenderPipeline>;
 
-  createCommandEncoder(
-    descriptor?: GPUCommandEncoderDescriptor,
-  ): GPUCommandEncoder;
-  createRenderBundleEncoder(
-    descriptor: GPURenderBundleEncoderDescriptor,
-  ): GPURenderBundleEncoder;
+  createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): GPUCommandEncoder;
+  createRenderBundleEncoder(descriptor: GPURenderBundleEncoderDescriptor): GPURenderBundleEncoder;
 
   createQuerySet(descriptor: GPUQuerySetDescriptor): GPUQuerySet;
 }
@@ -8681,11 +8337,7 @@ declare class GPUBuffer implements GPUObjectBase {
   readonly usage: GPUFlagsConstant;
   readonly mapState: GPUBufferMapState;
 
-  mapAsync(
-    mode: GPUMapModeFlags,
-    offset?: number,
-    size?: number,
-  ): Promise<undefined>;
+  mapAsync(mode: GPUMapModeFlags, offset?: number, size?: number): Promise<undefined>;
   getMappedRange(offset?: number, size?: number): ArrayBuffer;
   unmap(): undefined;
 
@@ -8791,13 +8443,7 @@ interface GPUTextureViewDescriptor extends GPUObjectDescriptorBase {
 }
 
 /** @category GPU */
-type GPUTextureViewDimension =
-  | "1d"
-  | "2d"
-  | "2d-array"
-  | "cube"
-  | "cube-array"
-  | "3d";
+type GPUTextureViewDimension = "1d" | "2d" | "2d-array" | "cube" | "cube-array" | "3d";
 
 /** @category GPU */
 type GPUTextureAspect = "all" | "stencil-only" | "depth-only";
@@ -8929,15 +8575,7 @@ type GPUFilterMode = "nearest" | "linear";
 type GPUMipmapFilterMode = "nearest" | "linear";
 
 /** @category GPU */
-type GPUCompareFunction =
-  | "never"
-  | "less"
-  | "equal"
-  | "less-equal"
-  | "greater"
-  | "not-equal"
-  | "greater-equal"
-  | "always";
+type GPUCompareFunction = "never" | "less" | "equal" | "less-equal" | "greater" | "not-equal" | "greater-equal" | "always";
 
 /** @category GPU */
 declare class GPUBindGroupLayout implements GPUObjectBase {
@@ -8986,10 +8624,7 @@ interface GPUSamplerBindingLayout {
 }
 
 /** @category GPU */
-type GPUSamplerBindingType =
-  | "filtering"
-  | "non-filtering"
-  | "comparison";
+type GPUSamplerBindingType = "filtering" | "non-filtering" | "comparison";
 
 /** @category GPU */
 interface GPUTextureBindingLayout {
@@ -8999,18 +8634,10 @@ interface GPUTextureBindingLayout {
 }
 
 /** @category GPU */
-type GPUTextureSampleType =
-  | "float"
-  | "unfilterable-float"
-  | "depth"
-  | "sint"
-  | "uint";
+type GPUTextureSampleType = "float" | "unfilterable-float" | "depth" | "sint" | "uint";
 
 /** @category GPU */
-type GPUStorageTextureAccess =
-  | "write-only"
-  | "read-only"
-  | "read-write";
+type GPUStorageTextureAccess = "write-only" | "read-only" | "read-write";
 
 /** @category GPU */
 interface GPUStorageTextureBindingLayout {
@@ -9031,10 +8658,7 @@ interface GPUBindGroupDescriptor extends GPUObjectDescriptorBase {
 }
 
 /** @category GPU */
-type GPUBindingResource =
-  | GPUSampler
-  | GPUTextureView
-  | GPUBufferBinding;
+type GPUBindingResource = GPUSampler | GPUTextureView | GPUBufferBinding;
 
 /** @category GPU */
 interface GPUBindGroupEntry {
@@ -9159,12 +8783,7 @@ interface GPUPrimitiveState {
 }
 
 /** @category GPU */
-type GPUPrimitiveTopology =
-  | "point-list"
-  | "line-list"
-  | "line-strip"
-  | "triangle-list"
-  | "triangle-strip";
+type GPUPrimitiveTopology = "point-list" | "line-list" | "line-strip" | "triangle-list" | "triangle-strip";
 
 /** @category GPU */
 type GPUFrontFace = "ccw" | "cw";
@@ -9207,7 +8826,7 @@ declare class GPUColorWrite {
   static GREEN: 0x2;
   static BLUE: 0x4;
   static ALPHA: 0x8;
-  static ALL: 0xF;
+  static ALL: 0xf;
 }
 
 /** @category GPU */
@@ -9234,12 +8853,7 @@ type GPUBlendFactor =
   | "one-minus-constant";
 
 /** @category GPU */
-type GPUBlendOperation =
-  | "add"
-  | "subtract"
-  | "reverse-subtract"
-  | "min"
-  | "max";
+type GPUBlendOperation = "add" | "subtract" | "reverse-subtract" | "min" | "max";
 
 /** @category GPU */
 interface GPUDepthStencilState {
@@ -9358,9 +8972,7 @@ declare class GPUCommandEncoder implements GPUObjectBase {
   label: string;
 
   beginRenderPass(descriptor: GPURenderPassDescriptor): GPURenderPassEncoder;
-  beginComputePass(
-    descriptor?: GPUComputePassDescriptor,
-  ): GPUComputePassEncoder;
+  beginComputePass(descriptor?: GPUComputePassDescriptor): GPUComputePassEncoder;
 
   copyBufferToBuffer(
     source: GPUBuffer,
@@ -9370,29 +8982,13 @@ declare class GPUCommandEncoder implements GPUObjectBase {
     size: number,
   ): undefined;
 
-  copyBufferToTexture(
-    source: GPUImageCopyBuffer,
-    destination: GPUImageCopyTexture,
-    copySize: GPUExtent3D,
-  ): undefined;
+  copyBufferToTexture(source: GPUImageCopyBuffer, destination: GPUImageCopyTexture, copySize: GPUExtent3D): undefined;
 
-  copyTextureToBuffer(
-    source: GPUImageCopyTexture,
-    destination: GPUImageCopyBuffer,
-    copySize: GPUExtent3D,
-  ): undefined;
+  copyTextureToBuffer(source: GPUImageCopyTexture, destination: GPUImageCopyBuffer, copySize: GPUExtent3D): undefined;
 
-  copyTextureToTexture(
-    source: GPUImageCopyTexture,
-    destination: GPUImageCopyTexture,
-    copySize: GPUExtent3D,
-  ): undefined;
+  copyTextureToTexture(source: GPUImageCopyTexture, destination: GPUImageCopyTexture, copySize: GPUExtent3D): undefined;
 
-  clearBuffer(
-    destination: GPUBuffer,
-    destinationOffset?: number,
-    size?: number,
-  ): undefined;
+  clearBuffer(destination: GPUBuffer, destinationOffset?: number, size?: number): undefined;
 
   pushDebugGroup(groupLabel: string): undefined;
   popDebugGroup(): undefined;
@@ -9429,11 +9025,7 @@ interface GPUImageCopyTexture {
 
 /** @category GPU */
 interface GPUProgrammablePassEncoder {
-  setBindGroup(
-    index: number,
-    bindGroup: GPUBindGroup,
-    dynamicOffsets?: number[],
-  ): undefined;
+  setBindGroup(index: number, bindGroup: GPUBindGroup, dynamicOffsets?: number[]): undefined;
 
   setBindGroup(
     index: number,
@@ -9449,14 +9041,9 @@ interface GPUProgrammablePassEncoder {
 }
 
 /** @category GPU */
-declare class GPUComputePassEncoder
-  implements GPUObjectBase, GPUProgrammablePassEncoder {
+declare class GPUComputePassEncoder implements GPUObjectBase, GPUProgrammablePassEncoder {
   label: string;
-  setBindGroup(
-    index: number,
-    bindGroup: GPUBindGroup,
-    dynamicOffsets?: number[],
-  ): undefined;
+  setBindGroup(index: number, bindGroup: GPUBindGroup, dynamicOffsets?: number[]): undefined;
   setBindGroup(
     index: number,
     bindGroup: GPUBindGroup,
@@ -9469,10 +9056,7 @@ declare class GPUComputePassEncoder
   insertDebugMarker(markerLabel: string): undefined;
   setPipeline(pipeline: GPUComputePipeline): undefined;
   dispatchWorkgroups(x: number, y?: number, z?: number): undefined;
-  dispatchWorkgroupsIndirect(
-    indirectBuffer: GPUBuffer,
-    indirectOffset: number,
-  ): undefined;
+  dispatchWorkgroupsIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
 
   end(): undefined;
 }
@@ -9493,25 +9077,10 @@ interface GPUComputePassDescriptor extends GPUObjectDescriptorBase {
 interface GPURenderEncoderBase {
   setPipeline(pipeline: GPURenderPipeline): undefined;
 
-  setIndexBuffer(
-    buffer: GPUBuffer,
-    indexFormat: GPUIndexFormat,
-    offset?: number,
-    size?: number,
-  ): undefined;
-  setVertexBuffer(
-    slot: number,
-    buffer: GPUBuffer,
-    offset?: number,
-    size?: number,
-  ): undefined;
+  setIndexBuffer(buffer: GPUBuffer, indexFormat: GPUIndexFormat, offset?: number, size?: number): undefined;
+  setVertexBuffer(slot: number, buffer: GPUBuffer, offset?: number, size?: number): undefined;
 
-  draw(
-    vertexCount: number,
-    instanceCount?: number,
-    firstVertex?: number,
-    firstInstance?: number,
-  ): undefined;
+  draw(vertexCount: number, instanceCount?: number, firstVertex?: number, firstInstance?: number): undefined;
   drawIndexed(
     indexCount: number,
     instanceCount?: number,
@@ -9521,21 +9090,13 @@ interface GPURenderEncoderBase {
   ): undefined;
 
   drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
-  drawIndexedIndirect(
-    indirectBuffer: GPUBuffer,
-    indirectOffset: number,
-  ): undefined;
+  drawIndexedIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
 }
 
 /** @category GPU */
-declare class GPURenderPassEncoder
-  implements GPUObjectBase, GPUProgrammablePassEncoder, GPURenderEncoderBase {
+declare class GPURenderPassEncoder implements GPUObjectBase, GPUProgrammablePassEncoder, GPURenderEncoderBase {
   label: string;
-  setBindGroup(
-    index: number,
-    bindGroup: GPUBindGroup,
-    dynamicOffsets?: number[],
-  ): undefined;
+  setBindGroup(index: number, bindGroup: GPUBindGroup, dynamicOffsets?: number[]): undefined;
   setBindGroup(
     index: number,
     bindGroup: GPUBindGroup,
@@ -9547,24 +9108,9 @@ declare class GPURenderPassEncoder
   popDebugGroup(): undefined;
   insertDebugMarker(markerLabel: string): undefined;
   setPipeline(pipeline: GPURenderPipeline): undefined;
-  setIndexBuffer(
-    buffer: GPUBuffer,
-    indexFormat: GPUIndexFormat,
-    offset?: number,
-    size?: number,
-  ): undefined;
-  setVertexBuffer(
-    slot: number,
-    buffer: GPUBuffer,
-    offset?: number,
-    size?: number,
-  ): undefined;
-  draw(
-    vertexCount: number,
-    instanceCount?: number,
-    firstVertex?: number,
-    firstInstance?: number,
-  ): undefined;
+  setIndexBuffer(buffer: GPUBuffer, indexFormat: GPUIndexFormat, offset?: number, size?: number): undefined;
+  setVertexBuffer(slot: number, buffer: GPUBuffer, offset?: number, size?: number): undefined;
+  draw(vertexCount: number, instanceCount?: number, firstVertex?: number, firstInstance?: number): undefined;
   drawIndexed(
     indexCount: number,
     instanceCount?: number,
@@ -9573,26 +9119,11 @@ declare class GPURenderPassEncoder
     firstInstance?: number,
   ): undefined;
   drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
-  drawIndexedIndirect(
-    indirectBuffer: GPUBuffer,
-    indirectOffset: number,
-  ): undefined;
+  drawIndexedIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
 
-  setViewport(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    minDepth: number,
-    maxDepth: number,
-  ): undefined;
+  setViewport(x: number, y: number, width: number, height: number, minDepth: number, maxDepth: number): undefined;
 
-  setScissorRect(
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-  ): undefined;
+  setScissorRect(x: number, y: number, width: number, height: number): undefined;
 
   setBlendConstant(color: GPUColor): undefined;
   setStencilReference(reference: number): undefined;
@@ -9659,15 +9190,9 @@ declare class GPURenderBundle implements GPUObjectBase {
 interface GPURenderBundleDescriptor extends GPUObjectDescriptorBase {}
 
 /** @category GPU */
-declare class GPURenderBundleEncoder
-  implements GPUObjectBase, GPUProgrammablePassEncoder, GPURenderEncoderBase {
+declare class GPURenderBundleEncoder implements GPUObjectBase, GPUProgrammablePassEncoder, GPURenderEncoderBase {
   label: string;
-  draw(
-    vertexCount: number,
-    instanceCount?: number,
-    firstVertex?: number,
-    firstInstance?: number,
-  ): undefined;
+  draw(vertexCount: number, instanceCount?: number, firstVertex?: number, firstInstance?: number): undefined;
   drawIndexed(
     indexCount: number,
     instanceCount?: number,
@@ -9675,19 +9200,12 @@ declare class GPURenderBundleEncoder
     baseVertex?: number,
     firstInstance?: number,
   ): undefined;
-  drawIndexedIndirect(
-    indirectBuffer: GPUBuffer,
-    indirectOffset: number,
-  ): undefined;
+  drawIndexedIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
   drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): undefined;
   insertDebugMarker(markerLabel: string): undefined;
   popDebugGroup(): undefined;
   pushDebugGroup(groupLabel: string): undefined;
-  setBindGroup(
-    index: number,
-    bindGroup: GPUBindGroup,
-    dynamicOffsets?: number[],
-  ): undefined;
+  setBindGroup(index: number, bindGroup: GPUBindGroup, dynamicOffsets?: number[]): undefined;
   setBindGroup(
     index: number,
     bindGroup: GPUBindGroup,
@@ -9695,19 +9213,9 @@ declare class GPURenderBundleEncoder
     dynamicOffsetsDataStart: number,
     dynamicOffsetsDataLength: number,
   ): undefined;
-  setIndexBuffer(
-    buffer: GPUBuffer,
-    indexFormat: GPUIndexFormat,
-    offset?: number,
-    size?: number,
-  ): undefined;
+  setIndexBuffer(buffer: GPUBuffer, indexFormat: GPUIndexFormat, offset?: number, size?: number): undefined;
   setPipeline(pipeline: GPURenderPipeline): undefined;
-  setVertexBuffer(
-    slot: number,
-    buffer: GPUBuffer,
-    offset?: number,
-    size?: number,
-  ): undefined;
+  setVertexBuffer(slot: number, buffer: GPUBuffer, offset?: number, size?: number): undefined;
 
   finish(descriptor?: GPURenderBundleDescriptor): GPURenderBundle;
 }
@@ -9733,20 +9241,9 @@ declare class GPUQueue implements GPUObjectBase {
 
   onSubmittedWorkDone(): Promise<undefined>;
 
-  writeBuffer(
-    buffer: GPUBuffer,
-    bufferOffset: number,
-    data: BufferSource,
-    dataOffset?: number,
-    size?: number,
-  ): undefined;
+  writeBuffer(buffer: GPUBuffer, bufferOffset: number, data: BufferSource, dataOffset?: number, size?: number): undefined;
 
-  writeTexture(
-    destination: GPUImageCopyTexture,
-    data: BufferSource,
-    dataLayout: GPUImageDataLayout,
-    size: GPUExtent3D,
-  ): undefined;
+  writeTexture(destination: GPUImageCopyTexture, data: BufferSource, dataLayout: GPUImageDataLayout, size: GPUExtent3D): undefined;
 }
 
 /** @category GPU */
@@ -9802,10 +9299,7 @@ type GPUErrorFilter = "out-of-memory" | "validation" | "internal";
 
 /** @category GPU */
 declare class GPUUncapturedErrorEvent extends Event {
-  constructor(
-    type: string,
-    gpuUncapturedErrorEventInitDict: GPUUncapturedErrorEventInit,
-  );
+  constructor(type: string, gpuUncapturedErrorEventInitDict: GPUUncapturedErrorEventInit);
 
   readonly error: GPUError;
 }
@@ -9969,21 +9463,13 @@ interface WebSocket extends EventTarget {
     listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof WebSocketEventMap>(
     type: K,
     listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
 /** @category WebSockets */
@@ -10131,10 +9617,7 @@ interface ImageBitmapOptions {
  *
  * @category Canvas
  */
-declare function createImageBitmap(
-  image: ImageBitmapSource,
-  options?: ImageBitmapOptions,
-): Promise<ImageBitmap>;
+declare function createImageBitmap(image: ImageBitmapSource, options?: ImageBitmapOptions): Promise<ImageBitmap>;
 /**
  * Create a new {@linkcode ImageBitmap} object from a given source, cropping
  * to the specified rectangle.
@@ -10218,15 +9701,7 @@ type HashAlgorithmIdentifier = AlgorithmIdentifier;
 /** @category Crypto */
 type KeyType = "private" | "public" | "secret";
 /** @category Crypto */
-type KeyUsage =
-  | "decrypt"
-  | "deriveBits"
-  | "deriveKey"
-  | "encrypt"
-  | "sign"
-  | "unwrapKey"
-  | "verify"
-  | "wrapKey";
+type KeyUsage = "decrypt" | "deriveBits" | "deriveKey" | "encrypt" | "sign" | "unwrapKey" | "verify" | "wrapKey";
 /** @category Crypto */
 type KeyFormat = "jwk" | "pkcs8" | "raw" | "spki";
 /** @category Crypto */
@@ -10435,100 +9910,51 @@ interface SubtleCrypto {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKeyPair>;
-  generateKey(
-    algorithm: AesKeyGenParams | HmacKeyGenParams,
-    extractable: boolean,
-    keyUsages: KeyUsage[],
-  ): Promise<CryptoKey>;
-  generateKey(
-    algorithm: AlgorithmIdentifier,
-    extractable: boolean,
-    keyUsages: KeyUsage[],
-  ): Promise<CryptoKeyPair | CryptoKey>;
+  generateKey(algorithm: AesKeyGenParams | HmacKeyGenParams, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKey>;
+  generateKey(algorithm: AlgorithmIdentifier, extractable: boolean, keyUsages: KeyUsage[]): Promise<CryptoKeyPair | CryptoKey>;
   importKey(
     format: "jwk",
     keyData: JsonWebKey,
-    algorithm:
-      | AlgorithmIdentifier
-      | HmacImportParams
-      | RsaHashedImportParams
-      | EcKeyImportParams,
+    algorithm: AlgorithmIdentifier | HmacImportParams | RsaHashedImportParams | EcKeyImportParams,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
   importKey(
     format: Exclude<KeyFormat, "jwk">,
     keyData: BufferSource,
-    algorithm:
-      | AlgorithmIdentifier
-      | HmacImportParams
-      | RsaHashedImportParams
-      | EcKeyImportParams,
+    algorithm: AlgorithmIdentifier | HmacImportParams | RsaHashedImportParams | EcKeyImportParams,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
   exportKey(format: "jwk", key: CryptoKey): Promise<JsonWebKey>;
-  exportKey(
-    format: Exclude<KeyFormat, "jwk">,
-    key: CryptoKey,
-  ): Promise<ArrayBuffer>;
-  sign(
-    algorithm: AlgorithmIdentifier | RsaPssParams | EcdsaParams,
-    key: CryptoKey,
-    data: BufferSource,
-  ): Promise<ArrayBuffer>;
+  exportKey(format: Exclude<KeyFormat, "jwk">, key: CryptoKey): Promise<ArrayBuffer>;
+  sign(algorithm: AlgorithmIdentifier | RsaPssParams | EcdsaParams, key: CryptoKey, data: BufferSource): Promise<ArrayBuffer>;
   verify(
     algorithm: AlgorithmIdentifier | RsaPssParams | EcdsaParams,
     key: CryptoKey,
     signature: BufferSource,
     data: BufferSource,
   ): Promise<boolean>;
-  digest(
-    algorithm: AlgorithmIdentifier,
-    data: BufferSource,
-  ): Promise<ArrayBuffer>;
+  digest(algorithm: AlgorithmIdentifier, data: BufferSource): Promise<ArrayBuffer>;
   encrypt(
-    algorithm:
-      | AlgorithmIdentifier
-      | RsaOaepParams
-      | AesCbcParams
-      | AesGcmParams
-      | AesCtrParams,
+    algorithm: AlgorithmIdentifier | RsaOaepParams | AesCbcParams | AesGcmParams | AesCtrParams,
     key: CryptoKey,
     data: BufferSource,
   ): Promise<ArrayBuffer>;
   decrypt(
-    algorithm:
-      | AlgorithmIdentifier
-      | RsaOaepParams
-      | AesCbcParams
-      | AesGcmParams
-      | AesCtrParams,
+    algorithm: AlgorithmIdentifier | RsaOaepParams | AesCbcParams | AesGcmParams | AesCtrParams,
     key: CryptoKey,
     data: BufferSource,
   ): Promise<ArrayBuffer>;
   deriveBits(
-    algorithm:
-      | AlgorithmIdentifier
-      | HkdfParams
-      | Pbkdf2Params
-      | EcdhKeyDeriveParams,
+    algorithm: AlgorithmIdentifier | HkdfParams | Pbkdf2Params | EcdhKeyDeriveParams,
     baseKey: CryptoKey,
     length: number,
   ): Promise<ArrayBuffer>;
   deriveKey(
-    algorithm:
-      | AlgorithmIdentifier
-      | HkdfParams
-      | Pbkdf2Params
-      | EcdhKeyDeriveParams,
+    algorithm: AlgorithmIdentifier | HkdfParams | Pbkdf2Params | EcdhKeyDeriveParams,
     baseKey: CryptoKey,
-    derivedKeyType:
-      | AlgorithmIdentifier
-      | AesDerivedKeyParams
-      | HmacImportParams
-      | HkdfParams
-      | Pbkdf2Params,
+    derivedKeyType: AlgorithmIdentifier | AesDerivedKeyParams | HmacImportParams | HkdfParams | Pbkdf2Params,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
@@ -10536,26 +9962,14 @@ interface SubtleCrypto {
     format: KeyFormat,
     key: CryptoKey,
     wrappingKey: CryptoKey,
-    wrapAlgorithm:
-      | AlgorithmIdentifier
-      | RsaOaepParams
-      | AesCbcParams
-      | AesCtrParams,
+    wrapAlgorithm: AlgorithmIdentifier | RsaOaepParams | AesCbcParams | AesCtrParams,
   ): Promise<ArrayBuffer>;
   unwrapKey(
     format: KeyFormat,
     wrappedKey: BufferSource,
     unwrappingKey: CryptoKey,
-    unwrapAlgorithm:
-      | AlgorithmIdentifier
-      | RsaOaepParams
-      | AesCbcParams
-      | AesCtrParams,
-    unwrappedKeyAlgorithm:
-      | AlgorithmIdentifier
-      | HmacImportParams
-      | RsaHashedImportParams
-      | EcKeyImportParams,
+    unwrapAlgorithm: AlgorithmIdentifier | RsaOaepParams | AesCbcParams | AesCtrParams,
+    unwrappedKeyAlgorithm: AlgorithmIdentifier | HmacImportParams | RsaHashedImportParams | EcKeyImportParams,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey>;
@@ -10605,8 +10019,8 @@ declare var Crypto: {
  * @experimental
  */
 interface BroadcastChannelEventMap {
-  "message": MessageEvent;
-  "messageerror": MessageEvent;
+  message: MessageEvent;
+  messageerror: MessageEvent;
 }
 
 /**
@@ -10635,21 +10049,13 @@ interface BroadcastChannel extends EventTarget {
     listener: (this: BroadcastChannel, ev: BroadcastChannelEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof BroadcastChannelEventMap>(
     type: K,
     listener: (this: BroadcastChannel, ev: BroadcastChannelEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
 /**
@@ -10688,8 +10094,7 @@ declare namespace Deno {
    *
    * @category Network
    */
-  export interface Listener<T extends Conn = Conn, A extends Addr = Addr>
-    extends AsyncIterable<T>, Disposable {
+  export interface Listener<T extends Conn = Conn, A extends Addr = Addr> extends AsyncIterable<T>, Disposable {
     /** Waits for and resolves to the next connection to the `Listener`. */
     accept(): Promise<T>;
     /** Close closes the listener. Any pending accept promises will be rejected
@@ -10839,8 +10244,7 @@ declare namespace Deno {
   }
 
   /** @category Network */
-  export interface TcpListenOptions extends ListenOptions {
-  }
+  export interface TcpListenOptions extends ListenOptions {}
 
   /** Listen announces on the local transport address.
    *
@@ -10856,9 +10260,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function listen(
-    options: TcpListenOptions & { transport?: "tcp" },
-  ): TcpListener;
+  export function listen(options: TcpListenOptions & { transport?: "tcp" }): TcpListener;
 
   /** Options which can be set when opening a Unix listener via
    * {@linkcode Deno.listen} or {@linkcode Deno.listenDatagram}.
@@ -10882,9 +10284,7 @@ declare namespace Deno {
    * @category Network
    */
   // deno-lint-ignore adjacent-overload-signatures
-  export function listen(
-    options: UnixListenOptions & { transport: "unix" },
-  ): UnixListener;
+  export function listen(options: UnixListenOptions & { transport: "unix" }): UnixListener;
 
   /**
    * Provides certified key material from strings. The key material is provided in
@@ -10939,9 +10339,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function listenTls(
-    options: ListenTlsOptions & TlsCertifiedKeyPem,
-  ): TlsListener;
+  export function listenTls(options: ListenTlsOptions & TlsCertifiedKeyPem): TlsListener;
 
   /** @category Network */
   export interface ConnectOptions {
@@ -11060,9 +10458,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function connectTls(
-    options: ConnectTlsOptions | (ConnectTlsOptions & TlsCertifiedKeyPem),
-  ): Promise<TlsConn>;
+  export function connectTls(options: ConnectTlsOptions | (ConnectTlsOptions & TlsCertifiedKeyPem)): Promise<TlsConn>;
 
   /** @category Network */
   export interface StartTlsOptions {
@@ -11108,10 +10504,7 @@ declare namespace Deno {
    * @tags allow-net
    * @category Network
    */
-  export function startTls(
-    conn: TcpConn,
-    options?: StartTlsOptions,
-  ): Promise<TlsConn>;
+  export function startTls(conn: TcpConn, options?: StartTlsOptions): Promise<TlsConn>;
 
   /**
    * **UNSTABLE**: New API, yet to be vetted.
@@ -11172,8 +10565,7 @@ declare namespace Deno {
    * @experimental
    * @category Network
    */
-  export interface ConnectQuicOptions<ZRTT extends boolean>
-    extends QuicTransportOptions {
+  export interface ConnectQuicOptions<ZRTT extends boolean> extends QuicTransportOptions {
     /** The port to connect to. */
     port: number;
     /** A literal IP address or host name that can be resolved to an IP address. */
@@ -11245,8 +10637,7 @@ declare namespace Deno {
    * @experimental
    * @category Network
    */
-  export interface QuicAcceptOptions<ZRTT extends boolean>
-    extends QuicServerTransportOptions {
+  export interface QuicAcceptOptions<ZRTT extends boolean> extends QuicServerTransportOptions {
     /** Application-Layer Protocol Negotiation (ALPN) protocols to announce to
      * the client. QUIC requires the use of ALPN.
      */
@@ -11377,9 +10768,7 @@ declare namespace Deno {
     /**
      * Accept this incoming connection.
      */
-    accept<ZRTT extends boolean>(
-      options?: QuicAcceptOptions<ZRTT>,
-    ): ZRTT extends true ? QuicConn : Promise<QuicConn>;
+    accept<ZRTT extends boolean>(options?: QuicAcceptOptions<ZRTT>): ZRTT extends true ? QuicConn : Promise<QuicConn>;
 
     /**
      * Refuse this incoming connection.
@@ -11403,13 +10792,9 @@ declare namespace Deno {
      * with errors. */
     close(info?: QuicCloseInfo): void;
     /** Opens and returns a bidirectional stream. */
-    createBidirectionalStream(
-      options?: QuicSendStreamOptions,
-    ): Promise<QuicBidirectionalStream>;
+    createBidirectionalStream(options?: QuicSendStreamOptions): Promise<QuicBidirectionalStream>;
     /** Opens and returns a unidirectional stream. */
-    createUnidirectionalStream(
-      options?: QuicSendStreamOptions,
-    ): Promise<QuicSendStream>;
+    createUnidirectionalStream(options?: QuicSendStreamOptions): Promise<QuicSendStream>;
     /** Send a datagram. The provided data cannot be larger than
      * `maxDatagramSize`. */
     sendDatagram(data: Uint8Array): Promise<void>;
@@ -11435,9 +10820,7 @@ declare namespace Deno {
     /** Returns a promise that resolves when the connection is closed. */
     readonly closed: Promise<QuicCloseInfo>;
     /** A stream of bidirectional streams opened by the peer. */
-    readonly incomingBidirectionalStreams: ReadableStream<
-      QuicBidirectionalStream
-    >;
+    readonly incomingBidirectionalStreams: ReadableStream<QuicBidirectionalStream>;
     /** A stream of unidirectional streams opened by the peer. */
     readonly incomingUnidirectionalStreams: ReadableStream<QuicReceiveStream>;
     /** Returns the datagram stream for sending and receiving datagrams. */
@@ -11512,7 +10895,7 @@ declare namespace Deno {
    */
   export function connectQuic<ZRTT extends boolean>(
     options: ConnectQuicOptions<ZRTT>,
-  ): ZRTT extends true ? (QuicConn | Promise<QuicConn>) : Promise<QuicConn>;
+  ): ZRTT extends true ? QuicConn | Promise<QuicConn> : Promise<QuicConn>;
 
   export {}; // only export exports
 }
@@ -11646,10 +11029,7 @@ declare namespace WebAssembly {
      * Given a `Module` and string, returns a copy of the contents of all custom sections in the
      * module with the given string name.
      */
-    static customSections(
-      moduleObject: Module,
-      sectionName: string,
-    ): ArrayBuffer[];
+    static customSections(moduleObject: Module, sectionName: string): ArrayBuffer[];
 
     /** Given a `Module`, returns an array containing descriptions of all the declared exports. */
     static exports(moduleObject: Module): ModuleExportDescriptor[];
@@ -11805,9 +11185,7 @@ declare namespace WebAssembly {
    *
    * @category Wasm
    */
-  export function compileStreaming(
-    source: Response | Promise<Response>,
-  ): Promise<Module>;
+  export function compileStreaming(source: Response | Promise<Response>): Promise<Module>;
 
   /**
    * The WebAssembly.instantiate() function allows you to compile and instantiate
@@ -11822,10 +11200,7 @@ declare namespace WebAssembly {
    *
    * @category Wasm
    */
-  export function instantiate(
-    bytes: BufferSource,
-    importObject?: Imports,
-  ): Promise<WebAssemblyInstantiatedSource>;
+  export function instantiate(bytes: BufferSource, importObject?: Imports): Promise<WebAssemblyInstantiatedSource>;
 
   /**
    * The WebAssembly.instantiate() function allows you to compile and instantiate
@@ -11839,10 +11214,7 @@ declare namespace WebAssembly {
    *
    * @category Wasm
    */
-  export function instantiate(
-    moduleObject: Module,
-    importObject?: Imports,
-  ): Promise<Instance>;
+  export function instantiate(moduleObject: Module, importObject?: Imports): Promise<Instance>;
 
   /**
    * The `WebAssembly.instantiateStreaming()` function compiles and instantiates a
@@ -12019,21 +11391,18 @@ interface PromiseRejectionEvent extends Event {
 /** @category Events */
 declare var PromiseRejectionEvent: {
   readonly prototype: PromiseRejectionEvent;
-  new (
-    type: string,
-    eventInitDict?: PromiseRejectionEventInit,
-  ): PromiseRejectionEvent;
+  new (type: string, eventInitDict?: PromiseRejectionEventInit): PromiseRejectionEvent;
 };
 
 /** @category Workers */
 interface AbstractWorkerEventMap {
-  "error": ErrorEvent;
+  error: ErrorEvent;
 }
 
 /** @category Workers */
 interface WorkerEventMap extends AbstractWorkerEventMap {
-  "message": MessageEvent;
-  "messageerror": MessageEvent;
+  message: MessageEvent;
+  messageerror: MessageEvent;
 }
 
 /** @category Workers */
@@ -12054,21 +11423,13 @@ interface Worker extends EventTarget {
     listener: (this: Worker, ev: WorkerEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof WorkerEventMap>(
     type: K,
     listener: (this: Worker, ev: WorkerEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
   terminate(): void;
 }
 
@@ -12101,17 +11462,10 @@ interface Performance extends EventTarget {
 
   /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
    * associated name (a "measure"). */
-  measure(
-    measureName: string,
-    options?: PerformanceMeasureOptions,
-  ): PerformanceMeasure;
+  measure(measureName: string, options?: PerformanceMeasureOptions): PerformanceMeasure;
   /** Stores the `DOMHighResTimeStamp` duration between two marks along with the
    * associated name (a "measure"). */
-  measure(
-    measureName: string,
-    startMark?: string,
-    endMark?: string,
-  ): PerformanceMeasure;
+  measure(measureName: string, startMark?: string, endMark?: string): PerformanceMeasure;
 
   /** Returns a current time from Deno's start in fractional milliseconds.
    *
@@ -12268,10 +11622,7 @@ interface ErrorConstructor {
  * @tags allow-net, allow-read
  * @category Fetch
  */
-declare function fetch(
-  input: Request | URL | string,
-  init?: RequestInit & { client: Deno.HttpClient },
-): Promise<Response>;
+declare function fetch(input: Request | URL | string, init?: RequestInit & { client: Deno.HttpClient }): Promise<Response>;
 
 // Copyright 2018-2025 the Deno authors. MIT license.
 
@@ -12310,10 +11661,7 @@ interface Cache {
    * 1. You cannot match cache objects using by relative paths.
    * 2. You cannot pass options like `ignoreVary`, `ignoreMethod`, `ignoreSearch`.
    */
-  match(
-    request: RequestInfo | URL,
-    options?: CacheQueryOptions,
-  ): Promise<Response | undefined>;
+  match(request: RequestInfo | URL, options?: CacheQueryOptions): Promise<Response | undefined>;
   /**
    * Delete cache object matching the provided request.
    *
@@ -12321,10 +11669,7 @@ interface Cache {
    * 1. You cannot delete cache objects using by relative paths.
    * 2. You cannot pass options like `ignoreVary`, `ignoreMethod`, `ignoreSearch`.
    */
-  delete(
-    request: RequestInfo | URL,
-    options?: CacheQueryOptions,
-  ): Promise<boolean>;
+  delete(request: RequestInfo | URL, options?: CacheQueryOptions): Promise<boolean>;
 }
 
 /** @category Cache */
@@ -12357,9 +11702,9 @@ interface CacheQueryOptions {
 
 /** @category Platform */
 interface WindowEventMap {
-  "error": ErrorEvent;
-  "unhandledrejection": PromiseRejectionEvent;
-  "rejectionhandled": PromiseRejectionEvent;
+  error: ErrorEvent;
+  unhandledrejection: PromiseRejectionEvent;
+  rejectionhandled: PromiseRejectionEvent;
 }
 
 /** @category Platform */
@@ -12370,12 +11715,8 @@ interface Window extends EventTarget {
   onload: ((this: Window, ev: Event) => any) | null;
   onbeforeunload: ((this: Window, ev: Event) => any) | null;
   onunload: ((this: Window, ev: Event) => any) | null;
-  onunhandledrejection:
-    | ((this: Window, ev: PromiseRejectionEvent) => any)
-    | null;
-  onrejectionhandled:
-    | ((this: Window, ev: PromiseRejectionEvent) => any)
-    | null;
+  onunhandledrejection: ((this: Window, ev: PromiseRejectionEvent) => any) | null;
+  onrejectionhandled: ((this: Window, ev: PromiseRejectionEvent) => any) | null;
   close: () => void;
   readonly closed: boolean;
   alert: (message?: string) => void;
@@ -12393,30 +11734,16 @@ interface Window extends EventTarget {
 
   addEventListener<K extends keyof WindowEventMap>(
     type: K,
-    listener: (
-      this: Window,
-      ev: WindowEventMap[K],
-    ) => any,
+    listener: (this: Window, ev: WindowEventMap[K]) => any,
     options?: boolean | AddEventListenerOptions,
   ): void;
-  addEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | AddEventListenerOptions,
-  ): void;
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions): void;
   removeEventListener<K extends keyof WindowEventMap>(
     type: K,
-    listener: (
-      this: Window,
-      ev: WindowEventMap[K],
-    ) => any,
+    listener: (this: Window, ev: WindowEventMap[K]) => any,
     options?: boolean | EventListenerOptions,
   ): void;
-  removeEventListener(
-    type: string,
-    listener: EventListenerOrEventListenerObject,
-    options?: boolean | EventListenerOptions,
-  ): void;
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject, options?: boolean | EventListenerOptions): void;
 }
 
 /** @category Platform */
@@ -12464,9 +11791,7 @@ declare var onbeforeunload: ((this: Window, ev: Event) => any) | null;
 /** @category Events */
 declare var onunload: ((this: Window, ev: Event) => any) | null;
 /** @category Events */
-declare var onunhandledrejection:
-  | ((this: Window, ev: PromiseRejectionEvent) => any)
-  | null;
+declare var onunhandledrejection: ((this: Window, ev: PromiseRejectionEvent) => any) | null;
 /** @category Storage */
 declare var localStorage: Storage;
 /** @category Storage */
@@ -12545,9 +11870,7 @@ declare function prompt(message?: string, defaultValue?: string): string | null;
  *
  * @category Events
  */
-declare function addEventListener<
-  K extends keyof WindowEventMap,
->(
+declare function addEventListener<K extends keyof WindowEventMap>(
   type: K,
   listener: (this: Window, ev: WindowEventMap[K]) => any,
   options?: boolean | AddEventListenerOptions,
@@ -12569,9 +11892,7 @@ declare function addEventListener(
  *
  * @category Events
  */
-declare function removeEventListener<
-  K extends keyof WindowEventMap,
->(
+declare function removeEventListener<K extends keyof WindowEventMap>(
   type: K,
   listener: (this: Window, ev: WindowEventMap[K]) => any,
   options?: boolean | EventListenerOptions,
@@ -12703,15 +12024,13 @@ declare namespace Deno {
    * @experimental
    */
   export class UnsafeWindowSurface {
-    constructor(
-      options: {
-        system: "cocoa" | "win32" | "x11" | "wayland";
-        windowHandle: Deno.PointerValue<unknown>;
-        displayHandle: Deno.PointerValue<unknown>;
-        width: number;
-        height: number;
-      },
-    );
+    constructor(options: {
+      system: "cocoa" | "win32" | "x11" | "wayland";
+      windowHandle: Deno.PointerValue<unknown>;
+      displayHandle: Deno.PointerValue<unknown>;
+      width: number;
+      height: number;
+    });
     getContext(context: "webgpu"): GPUCanvasContext;
     present(): void;
   }
@@ -12755,16 +12074,10 @@ declare namespace Deno {
    */
   export interface DatagramConn extends AsyncIterable<[Uint8Array, Addr]> {
     /** Joins an IPv4 multicast group. */
-    joinMulticastV4(
-      address: string,
-      networkInterface: string,
-    ): Promise<MulticastV4Membership>;
+    joinMulticastV4(address: string, networkInterface: string): Promise<MulticastV4Membership>;
 
     /** Joins an IPv6 multicast group. */
-    joinMulticastV6(
-      address: string,
-      networkInterface: number,
-    ): Promise<MulticastV6Membership>;
+    joinMulticastV6(address: string, networkInterface: number): Promise<MulticastV6Membership>;
 
     /** Waits for and resolves to the next message to the instance.
      *
@@ -12846,9 +12159,7 @@ declare namespace Deno {
    * @category Network
    * @experimental
    */
-  export function listenDatagram(
-    options: UdpListenOptions & { transport: "udp" },
-  ): DatagramConn;
+  export function listenDatagram(options: UdpListenOptions & { transport: "udp" }): DatagramConn;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -12867,9 +12178,7 @@ declare namespace Deno {
    * @category Network
    * @experimental
    */
-  export function listenDatagram(
-    options: UnixListenOptions & { transport: "unixpacket" },
-  ): DatagramConn;
+  export function listenDatagram(options: UnixListenOptions & { transport: "unixpacket" }): DatagramConn;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -12897,11 +12206,14 @@ declare namespace Deno {
    * @category Cloud
    * @experimental
    */
-  export type CronScheduleExpression = number | { exact: number | number[] } | {
-    start?: number;
-    end?: number;
-    every?: number;
-  };
+  export type CronScheduleExpression =
+    | number
+    | { exact: number | number[] }
+    | {
+        start?: number;
+        end?: number;
+        every?: number;
+      };
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -12942,11 +12254,7 @@ declare namespace Deno {
    * @category Cloud
    * @experimental
    */
-  export function cron(
-    name: string,
-    schedule: string | CronSchedule,
-    handler: () => Promise<void> | void,
-  ): Promise<void>;
+  export function cron(name: string, schedule: string | CronSchedule, handler: () => Promise<void> | void): Promise<void>;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -13037,13 +12345,7 @@ declare namespace Deno {
    * @category Cloud
    * @experimental
    */
-  export type KvKeyPart =
-    | Uint8Array
-    | string
-    | number
-    | bigint
-    | boolean
-    | symbol;
+  export type KvKeyPart = Uint8Array | string | number | bigint | boolean | symbol;
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -13109,15 +12411,13 @@ declare namespace Deno {
    * @category Cloud
    * @experimental
    */
-  export type KvMutation =
-    & { key: KvKey }
-    & (
-      | { type: "set"; value: unknown; expireIn?: number }
-      | { type: "delete" }
-      | { type: "sum"; value: KvU64 }
-      | { type: "max"; value: KvU64 }
-      | { type: "min"; value: KvU64 }
-    );
+  export type KvMutation = { key: KvKey } & (
+    | { type: "set"; value: unknown; expireIn?: number }
+    | { type: "delete" }
+    | { type: "sum"; value: KvU64 }
+    | { type: "max"; value: KvU64 }
+    | { type: "min"; value: KvU64 }
+  );
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -13169,11 +12469,13 @@ declare namespace Deno {
    * @category Cloud
    * @experimental
    */
-  export type KvEntryMaybe<T> = KvEntry<T> | {
-    key: KvKey;
-    value: null;
-    versionstamp: null;
-  };
+  export type KvEntryMaybe<T> =
+    | KvEntry<T>
+    | {
+        key: KvKey;
+        value: null;
+        versionstamp: null;
+      };
 
   /** **UNSTABLE**: New API, yet to be vetted.
    *
@@ -13440,10 +12742,7 @@ declare namespace Deno {
      * information on consistency levels, see the documentation for
      * {@linkcode Deno.KvConsistencyLevel}.
      */
-    get<T = unknown>(
-      key: KvKey,
-      options?: { consistency?: KvConsistencyLevel },
-    ): Promise<KvEntryMaybe<T>>;
+    get<T = unknown>(key: KvKey, options?: { consistency?: KvConsistencyLevel }): Promise<KvEntryMaybe<T>>;
 
     /**
      * Retrieve multiple values and versionstamps from the database in the form
@@ -13489,11 +12788,7 @@ declare namespace Deno {
      * key may still be visible for some additional time. If the `expireIn`
      * option is not specified, the key will not expire.
      */
-    set(
-      key: KvKey,
-      value: unknown,
-      options?: { expireIn?: number },
-    ): Promise<KvCommitResult>;
+    set(key: KvKey, value: unknown, options?: { expireIn?: number }): Promise<KvCommitResult>;
 
     /**
      * Delete the value for the given key from the database. If no value exists
@@ -13545,10 +12840,7 @@ declare namespace Deno {
      * list operation. See the documentation for {@linkcode Deno.KvListOptions}
      * for more information.
      */
-    list<T = unknown>(
-      selector: KvListSelector,
-      options?: KvListOptions,
-    ): KvListIterator<T>;
+    list<T = unknown>(selector: KvListSelector, options?: KvListOptions): KvListIterator<T>;
 
     /**
      * Add a value into the database queue to be delivered to the queue
@@ -13785,10 +13077,7 @@ declare namespace Deno {
      * @category Jupyter
      * @experimental
      */
-    export function display(
-      obj: unknown,
-      options?: DisplayOptions,
-    ): Promise<void>;
+    export function display(obj: unknown, options?: DisplayOptions): Promise<void>;
 
     /**
      * Show Markdown in Jupyter frontends with a tagged template function.
@@ -13813,10 +13102,7 @@ declare namespace Deno {
      * @category Jupyter
      * @experimental
      */
-    export function md(
-      strings: TemplateStringsArray,
-      ...values: unknown[]
-    ): Displayable;
+    export function md(strings: TemplateStringsArray, ...values: unknown[]): Displayable;
 
     /**
      * Show HTML in Jupyter frontends with a tagged template function.
@@ -13833,10 +13119,7 @@ declare namespace Deno {
      * @category Jupyter
      * @experimental
      */
-    export function html(
-      strings: TemplateStringsArray,
-      ...values: unknown[]
-    ): Displayable;
+    export function html(strings: TemplateStringsArray, ...values: unknown[]): Displayable;
 
     /**
      * SVG Tagged Template Function.
@@ -13852,10 +13135,7 @@ declare namespace Deno {
      * @category Jupyter
      * @experimental
      */
-    export function svg(
-      strings: TemplateStringsArray,
-      ...values: unknown[]
-    ): Displayable;
+    export function svg(strings: TemplateStringsArray, ...values: unknown[]): Displayable;
 
     /**
      * Display a JPG or PNG image.
@@ -14288,9 +13568,7 @@ declare namespace Temporal {
    * @category Temporal
    * @experimental
    */
-  export type ZonedDateTimeAssignmentOptions = Partial<
-    AssignmentOptions & ToInstantOptions & OffsetDisambiguationOptions
-  >;
+  export type ZonedDateTimeAssignmentOptions = Partial<AssignmentOptions & ToInstantOptions & OffsetDisambiguationOptions>;
 
   /**
    * Options for arithmetic operations like `add()` and `subtract()`
@@ -14319,13 +13597,7 @@ declare namespace Temporal {
    * @category Temporal
    * @experimental
    */
-  export type TimeUnit =
-    | "hour"
-    | "minute"
-    | "second"
-    | "millisecond"
-    | "microsecond"
-    | "nanosecond";
+  export type TimeUnit = "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond";
   /**
    * @category Temporal
    * @experimental
@@ -14377,9 +13649,7 @@ declare namespace Temporal {
    */
   export type ToStringPrecisionOptions = {
     fractionalSecondDigits?: "auto" | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-    smallestUnit?: SmallestUnit<
-      "minute" | "second" | "millisecond" | "microsecond" | "nanosecond"
-    >;
+    smallestUnit?: SmallestUnit<"minute" | "second" | "millisecond" | "microsecond" | "nanosecond">;
 
     /**
      * Controls how rounding is performed:
@@ -14410,9 +13680,7 @@ declare namespace Temporal {
    * @category Temporal
    * @experimental
    */
-  export type CalendarTypeToStringOptions = Partial<
-    ToStringPrecisionOptions & ShowCalendarOption
-  >;
+  export type CalendarTypeToStringOptions = Partial<ToStringPrecisionOptions & ShowCalendarOption>;
 
   /**
    * @category Temporal
@@ -14508,37 +13776,37 @@ declare namespace Temporal {
   export type RoundTo<T extends DateTimeUnit> =
     | SmallestUnit<T>
     | {
-      /**
-       * The unit to round to. For example, to round to the nearest minute,
-       * use `smallestUnit: 'minute'`. This option is required. Note that the
-       * same-named property is optional when passed to `until` or `since`
-       * methods, because those methods do no rounding by default.
-       */
-      smallestUnit: SmallestUnit<T>;
+        /**
+         * The unit to round to. For example, to round to the nearest minute,
+         * use `smallestUnit: 'minute'`. This option is required. Note that the
+         * same-named property is optional when passed to `until` or `since`
+         * methods, because those methods do no rounding by default.
+         */
+        smallestUnit: SmallestUnit<T>;
 
-      /**
-       * Allows rounding to an integer number of units. For example, to round to
-       * increments of a half hour, use `{ smallestUnit: 'minute',
-       * roundingIncrement: 30 }`.
-       */
-      roundingIncrement?: number;
+        /**
+         * Allows rounding to an integer number of units. For example, to round to
+         * increments of a half hour, use `{ smallestUnit: 'minute',
+         * roundingIncrement: 30 }`.
+         */
+        roundingIncrement?: number;
 
-      /**
-       * Controls how rounding is performed:
-       * - `halfExpand`: Round to the nearest of the values allowed by
-       *   `roundingIncrement` and `smallestUnit`. When there is a tie, round up.
-       *   This mode is the default.
-       * - `ceil`: Always round up, towards the end of time.
-       * - `trunc`: Always round down, towards the beginning of time.
-       * - `floor`: Also round down, towards the beginning of time. This mode acts
-       *   the same as `trunc`, but it's included for consistency with
-       *   `Temporal.Duration.round()` where negative values are allowed and
-       *   `trunc` rounds towards zero, unlike `floor` which rounds towards
-       *   negative infinity which is usually unexpected. For this reason, `trunc`
-       *   is recommended for most use cases.
-       */
-      roundingMode?: RoundingMode;
-    };
+        /**
+         * Controls how rounding is performed:
+         * - `halfExpand`: Round to the nearest of the values allowed by
+         *   `roundingIncrement` and `smallestUnit`. When there is a tie, round up.
+         *   This mode is the default.
+         * - `ceil`: Always round up, towards the end of time.
+         * - `trunc`: Always round down, towards the beginning of time.
+         * - `floor`: Also round down, towards the beginning of time. This mode acts
+         *   the same as `trunc`, but it's included for consistency with
+         *   `Temporal.Duration.round()` where negative values are allowed and
+         *   `trunc` rounds towards zero, unlike `floor` which rounds towards
+         *   negative infinity which is usually unexpected. For this reason, `trunc`
+         *   is recommended for most use cases.
+         */
+        roundingMode?: RoundingMode;
+      };
 
   /**
    * The `round` method of the `Temporal.Duration` accepts one required
@@ -14553,70 +13821,68 @@ declare namespace Temporal {
    */
   export type DurationRoundTo =
     | SmallestUnit<DateTimeUnit>
-    | (
-      & (
+    | ((
         | {
-          /**
-           * The unit to round to. For example, to round to the nearest
-           * minute, use `smallestUnit: 'minute'`. This property is normally
-           * required, but is optional if `largestUnit` is provided and not
-           * undefined.
-           */
-          smallestUnit: SmallestUnit<DateTimeUnit>;
+            /**
+             * The unit to round to. For example, to round to the nearest
+             * minute, use `smallestUnit: 'minute'`. This property is normally
+             * required, but is optional if `largestUnit` is provided and not
+             * undefined.
+             */
+            smallestUnit: SmallestUnit<DateTimeUnit>;
 
-          /**
-           * The largest unit to allow in the resulting `Temporal.Duration`
-           * object.
-           *
-           * Larger units will be "balanced" into smaller units. For example,
-           * if `largestUnit` is `'minute'` then a two-hour duration will be
-           * output as a 120-minute duration.
-           *
-           * Valid values include `'year'`, `'month'`, `'week'`, `'day'`,
-           * `'hour'`, `'minute'`, `'second'`, `'millisecond'`,
-           * `'microsecond'`, `'nanosecond'` and `'auto'`.
-           *
-           * The default is `'auto'`, which means "the largest nonzero unit in
-           * the input duration". This default prevents expanding durations to
-           * larger units unless the caller opts into this behavior.
-           *
-           * If `smallestUnit` is larger, then `smallestUnit` will be used as
-           * `largestUnit`, superseding a caller-supplied or default value.
-           */
-          largestUnit?: LargestUnit<DateTimeUnit>;
-        }
+            /**
+             * The largest unit to allow in the resulting `Temporal.Duration`
+             * object.
+             *
+             * Larger units will be "balanced" into smaller units. For example,
+             * if `largestUnit` is `'minute'` then a two-hour duration will be
+             * output as a 120-minute duration.
+             *
+             * Valid values include `'year'`, `'month'`, `'week'`, `'day'`,
+             * `'hour'`, `'minute'`, `'second'`, `'millisecond'`,
+             * `'microsecond'`, `'nanosecond'` and `'auto'`.
+             *
+             * The default is `'auto'`, which means "the largest nonzero unit in
+             * the input duration". This default prevents expanding durations to
+             * larger units unless the caller opts into this behavior.
+             *
+             * If `smallestUnit` is larger, then `smallestUnit` will be used as
+             * `largestUnit`, superseding a caller-supplied or default value.
+             */
+            largestUnit?: LargestUnit<DateTimeUnit>;
+          }
         | {
-          /**
-           * The unit to round to. For example, to round to the nearest
-           * minute, use `smallestUnit: 'minute'`. This property is normally
-           * required, but is optional if `largestUnit` is provided and not
-           * undefined.
-           */
-          smallestUnit?: SmallestUnit<DateTimeUnit>;
+            /**
+             * The unit to round to. For example, to round to the nearest
+             * minute, use `smallestUnit: 'minute'`. This property is normally
+             * required, but is optional if `largestUnit` is provided and not
+             * undefined.
+             */
+            smallestUnit?: SmallestUnit<DateTimeUnit>;
 
-          /**
-           * The largest unit to allow in the resulting `Temporal.Duration`
-           * object.
-           *
-           * Larger units will be "balanced" into smaller units. For example,
-           * if `largestUnit` is `'minute'` then a two-hour duration will be
-           * output as a 120-minute duration.
-           *
-           * Valid values include `'year'`, `'month'`, `'week'`, `'day'`,
-           * `'hour'`, `'minute'`, `'second'`, `'millisecond'`,
-           * `'microsecond'`, `'nanosecond'` and `'auto'`.
-           *
-           * The default is `'auto'`, which means "the largest nonzero unit in
-           * the input duration". This default prevents expanding durations to
-           * larger units unless the caller opts into this behavior.
-           *
-           * If `smallestUnit` is larger, then `smallestUnit` will be used as
-           * `largestUnit`, superseding a caller-supplied or default value.
-           */
-          largestUnit: LargestUnit<DateTimeUnit>;
-        }
-      )
-      & {
+            /**
+             * The largest unit to allow in the resulting `Temporal.Duration`
+             * object.
+             *
+             * Larger units will be "balanced" into smaller units. For example,
+             * if `largestUnit` is `'minute'` then a two-hour duration will be
+             * output as a 120-minute duration.
+             *
+             * Valid values include `'year'`, `'month'`, `'week'`, `'day'`,
+             * `'hour'`, `'minute'`, `'second'`, `'millisecond'`,
+             * `'microsecond'`, `'nanosecond'` and `'auto'`.
+             *
+             * The default is `'auto'`, which means "the largest nonzero unit in
+             * the input duration". This default prevents expanding durations to
+             * larger units unless the caller opts into this behavior.
+             *
+             * If `smallestUnit` is larger, then `smallestUnit` will be used as
+             * `largestUnit`, superseding a caller-supplied or default value.
+             */
+            largestUnit: LargestUnit<DateTimeUnit>;
+          }
+      ) & {
         /**
          * Allows rounding to an integer number of units. For example, to round
          * to increments of a half hour, use `{ smallestUnit: 'minute',
@@ -14667,14 +13933,8 @@ declare namespace Temporal {
          * time zone transitions and all days will be assumed to be 24 hours
          * long.
          */
-        relativeTo?:
-          | Temporal.PlainDateTime
-          | Temporal.ZonedDateTime
-          | PlainDateTimeLike
-          | ZonedDateTimeLike
-          | string;
-      }
-    );
+        relativeTo?: Temporal.PlainDateTime | Temporal.ZonedDateTime | PlainDateTimeLike | ZonedDateTimeLike | string;
+      });
 
   /**
    * Options to control behavior of `Duration.prototype.total()`
@@ -14685,40 +13945,35 @@ declare namespace Temporal {
   export type DurationTotalOf =
     | TotalUnit<DateTimeUnit>
     | {
-      /**
-       * The unit to convert the duration to. This option is required.
-       */
-      unit: TotalUnit<DateTimeUnit>;
+        /**
+         * The unit to convert the duration to. This option is required.
+         */
+        unit: TotalUnit<DateTimeUnit>;
 
-      /**
-       * The starting point to use when variable-length units (years, months,
-       * weeks depending on the calendar) are involved. This option is required if
-       * any of the following are true:
-       * - `unit` is `'week'` or larger units
-       * - `this` has a nonzero value for `weeks` or larger units
-       *
-       * This value must be either a `Temporal.PlainDateTime`, a
-       * `Temporal.ZonedDateTime`, or a string or object value that can be passed
-       * to `from()` of those types. Examples:
-       * - `'2020-01-01T00:00-08:00[America/Los_Angeles]'`
-       * - `'2020-01-01'`
-       * - `Temporal.PlainDate.from('2020-01-01')`
-       *
-       * `Temporal.ZonedDateTime` will be tried first because it's more
-       * specific, with `Temporal.PlainDateTime` as a fallback.
-       *
-       * If the value resolves to a `Temporal.ZonedDateTime`, then operation will
-       * adjust for DST and other time zone transitions. Otherwise (including if
-       * this option is omitted), then the operation will ignore time zone
-       * transitions and all days will be assumed to be 24 hours long.
-       */
-      relativeTo?:
-        | Temporal.ZonedDateTime
-        | Temporal.PlainDateTime
-        | ZonedDateTimeLike
-        | PlainDateTimeLike
-        | string;
-    };
+        /**
+         * The starting point to use when variable-length units (years, months,
+         * weeks depending on the calendar) are involved. This option is required if
+         * any of the following are true:
+         * - `unit` is `'week'` or larger units
+         * - `this` has a nonzero value for `weeks` or larger units
+         *
+         * This value must be either a `Temporal.PlainDateTime`, a
+         * `Temporal.ZonedDateTime`, or a string or object value that can be passed
+         * to `from()` of those types. Examples:
+         * - `'2020-01-01T00:00-08:00[America/Los_Angeles]'`
+         * - `'2020-01-01'`
+         * - `Temporal.PlainDate.from('2020-01-01')`
+         *
+         * `Temporal.ZonedDateTime` will be tried first because it's more
+         * specific, with `Temporal.PlainDateTime` as a fallback.
+         *
+         * If the value resolves to a `Temporal.ZonedDateTime`, then operation will
+         * adjust for DST and other time zone transitions. Otherwise (including if
+         * this option is omitted), then the operation will ignore time zone
+         * transitions and all days will be assumed to be 24 hours long.
+         */
+        relativeTo?: Temporal.ZonedDateTime | Temporal.PlainDateTime | ZonedDateTimeLike | PlainDateTimeLike | string;
+      };
 
   /**
    * Options to control behavior of `Duration.compare()`
@@ -14747,12 +14002,7 @@ declare namespace Temporal {
      * this option is omitted), then the operation will ignore time zone
      * transitions and all days will be assumed to be 24 hours long.
      */
-    relativeTo?:
-      | Temporal.ZonedDateTime
-      | Temporal.PlainDateTime
-      | ZonedDateTimeLike
-      | PlainDateTimeLike
-      | string;
+    relativeTo?: Temporal.ZonedDateTime | Temporal.PlainDateTime | ZonedDateTimeLike | PlainDateTimeLike | string;
   }
 
   /**
@@ -14761,9 +14011,12 @@ declare namespace Temporal {
    * @category Temporal
    * @experimental
    */
-  export type TransitionDirection = "next" | "previous" | {
-    direction: "next" | "previous";
-  };
+  export type TransitionDirection =
+    | "next"
+    | "previous"
+    | {
+        direction: "next" | "previous";
+      };
 
   /**
    * @category Temporal
@@ -14792,9 +14045,7 @@ declare namespace Temporal {
    * @experimental
    */
   export class Duration {
-    static from(
-      item: Temporal.Duration | DurationLike | string,
-    ): Temporal.Duration;
+    static from(item: Temporal.Duration | DurationLike | string): Temporal.Duration;
     static compare(
       one: Temporal.Duration | DurationLike | string,
       two: Temporal.Duration | DurationLike | string,
@@ -14827,20 +14078,11 @@ declare namespace Temporal {
     negated(): Temporal.Duration;
     abs(): Temporal.Duration;
     with(durationLike: DurationLike): Temporal.Duration;
-    add(
-      other: Temporal.Duration | DurationLike | string,
-      options?: DurationArithmeticOptions,
-    ): Temporal.Duration;
-    subtract(
-      other: Temporal.Duration | DurationLike | string,
-      options?: DurationArithmeticOptions,
-    ): Temporal.Duration;
+    add(other: Temporal.Duration | DurationLike | string, options?: DurationArithmeticOptions): Temporal.Duration;
+    subtract(other: Temporal.Duration | DurationLike | string, options?: DurationArithmeticOptions): Temporal.Duration;
     round(roundTo: DurationRoundTo): Temporal.Duration;
     total(totalOf: DurationTotalOf): number;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: ToStringPrecisionOptions): string;
     valueOf(): never;
@@ -14868,67 +14110,26 @@ declare namespace Temporal {
     static fromEpochMilliseconds(epochMilliseconds: number): Temporal.Instant;
     static fromEpochNanoseconds(epochNanoseconds: bigint): Temporal.Instant;
     static from(item: Temporal.Instant | string): Temporal.Instant;
-    static compare(
-      one: Temporal.Instant | string,
-      two: Temporal.Instant | string,
-    ): ComparisonResult;
+    static compare(one: Temporal.Instant | string, two: Temporal.Instant | string): ComparisonResult;
     constructor(epochNanoseconds: bigint);
     readonly epochMilliseconds: number;
     readonly epochNanoseconds: bigint;
     equals(other: Temporal.Instant | string): boolean;
-    add(
-      durationLike:
-        | Omit<
-          Temporal.Duration | DurationLike,
-          "years" | "months" | "weeks" | "days"
-        >
-        | string,
-    ): Temporal.Instant;
+    add(durationLike: Omit<Temporal.Duration | DurationLike, "years" | "months" | "weeks" | "days"> | string): Temporal.Instant;
     subtract(
-      durationLike:
-        | Omit<
-          Temporal.Duration | DurationLike,
-          "years" | "months" | "weeks" | "days"
-        >
-        | string,
+      durationLike: Omit<Temporal.Duration | DurationLike, "years" | "months" | "weeks" | "days"> | string,
     ): Temporal.Instant;
     until(
       other: Temporal.Instant | string,
-      options?: DifferenceOptions<
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
+      options?: DifferenceOptions<"hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">,
     ): Temporal.Duration;
     since(
       other: Temporal.Instant | string,
-      options?: DifferenceOptions<
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
+      options?: DifferenceOptions<"hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">,
     ): Temporal.Duration;
-    round(
-      roundTo: RoundTo<
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
-    ): Temporal.Instant;
+    round(roundTo: RoundTo<"hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">): Temporal.Instant;
     toZonedDateTimeISO(tzLike: TimeZoneLike): Temporal.ZonedDateTime;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: InstantToStringOptions): string;
     valueOf(): never;
@@ -14941,13 +14142,7 @@ declare namespace Temporal {
    * @category Temporal
    * @experimental
    */
-  export type CalendarLike =
-    | string
-    | ZonedDateTime
-    | PlainDateTime
-    | PlainDate
-    | PlainYearMonth
-    | PlainMonthDay;
+  export type CalendarLike = string | ZonedDateTime | PlainDateTime | PlainDate | PlainYearMonth | PlainMonthDay;
 
   /**
    * @category Temporal
@@ -14976,20 +14171,12 @@ declare namespace Temporal {
    * @experimental
    */
   export class PlainDate {
-    static from(
-      item: Temporal.PlainDate | PlainDateLike | string,
-      options?: AssignmentOptions,
-    ): Temporal.PlainDate;
+    static from(item: Temporal.PlainDate | PlainDateLike | string, options?: AssignmentOptions): Temporal.PlainDate;
     static compare(
       one: Temporal.PlainDate | PlainDateLike | string,
       two: Temporal.PlainDate | PlainDateLike | string,
     ): ComparisonResult;
-    constructor(
-      isoYear: number,
-      isoMonth: number,
-      isoDay: number,
-      calendar?: string,
-    );
+    constructor(isoYear: number, isoMonth: number, isoDay: number, calendar?: string);
     readonly era: string | undefined;
     readonly eraYear: number | undefined;
     readonly year: number;
@@ -15007,19 +14194,10 @@ declare namespace Temporal {
     readonly monthsInYear: number;
     readonly inLeapYear: boolean;
     equals(other: Temporal.PlainDate | PlainDateLike | string): boolean;
-    with(
-      dateLike: PlainDateLike,
-      options?: AssignmentOptions,
-    ): Temporal.PlainDate;
+    with(dateLike: PlainDateLike, options?: AssignmentOptions): Temporal.PlainDate;
     withCalendar(calendar: CalendarLike): Temporal.PlainDate;
-    add(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainDate;
-    subtract(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainDate;
+    add(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainDate;
+    subtract(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainDate;
     until(
       other: Temporal.PlainDate | PlainDateLike | string,
       options?: DifferenceOptions<"year" | "month" | "week" | "day">,
@@ -15028,23 +14206,18 @@ declare namespace Temporal {
       other: Temporal.PlainDate | PlainDateLike | string,
       options?: DifferenceOptions<"year" | "month" | "week" | "day">,
     ): Temporal.Duration;
-    toPlainDateTime(
-      temporalTime?: Temporal.PlainTime | PlainTimeLike | string,
-    ): Temporal.PlainDateTime;
+    toPlainDateTime(temporalTime?: Temporal.PlainTime | PlainTimeLike | string): Temporal.PlainDateTime;
     toZonedDateTime(
       timeZoneAndTime:
         | string
         | {
-          timeZone: TimeZoneLike;
-          plainTime?: Temporal.PlainTime | PlainTimeLike | string;
-        },
+            timeZone: TimeZoneLike;
+            plainTime?: Temporal.PlainTime | PlainTimeLike | string;
+          },
     ): Temporal.ZonedDateTime;
     toPlainYearMonth(): Temporal.PlainYearMonth;
     toPlainMonthDay(): Temporal.PlainMonthDay;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: ShowCalendarOption): string;
     valueOf(): never;
@@ -15085,10 +14258,7 @@ declare namespace Temporal {
    * @experimental
    */
   export class PlainDateTime {
-    static from(
-      item: Temporal.PlainDateTime | PlainDateTimeLike | string,
-      options?: AssignmentOptions,
-    ): Temporal.PlainDateTime;
+    static from(item: Temporal.PlainDateTime | PlainDateTimeLike | string, options?: AssignmentOptions): Temporal.PlainDateTime;
     static compare(
       one: Temporal.PlainDateTime | PlainDateTimeLike | string,
       two: Temporal.PlainDateTime | PlainDateTimeLike | string,
@@ -15128,73 +14298,30 @@ declare namespace Temporal {
     readonly monthsInYear: number;
     readonly inLeapYear: boolean;
     equals(other: Temporal.PlainDateTime | PlainDateTimeLike | string): boolean;
-    with(
-      dateTimeLike: PlainDateTimeLike,
-      options?: AssignmentOptions,
-    ): Temporal.PlainDateTime;
-    withPlainTime(
-      timeLike?: Temporal.PlainTime | PlainTimeLike | string,
-    ): Temporal.PlainDateTime;
+    with(dateTimeLike: PlainDateTimeLike, options?: AssignmentOptions): Temporal.PlainDateTime;
+    withPlainTime(timeLike?: Temporal.PlainTime | PlainTimeLike | string): Temporal.PlainDateTime;
     withCalendar(calendar: CalendarLike): Temporal.PlainDateTime;
-    add(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainDateTime;
-    subtract(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainDateTime;
+    add(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainDateTime;
+    subtract(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainDateTime;
     until(
       other: Temporal.PlainDateTime | PlainDateTimeLike | string,
       options?: DifferenceOptions<
-        | "year"
-        | "month"
-        | "week"
-        | "day"
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
+        "year" | "month" | "week" | "day" | "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond"
       >,
     ): Temporal.Duration;
     since(
       other: Temporal.PlainDateTime | PlainDateTimeLike | string,
       options?: DifferenceOptions<
-        | "year"
-        | "month"
-        | "week"
-        | "day"
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
+        "year" | "month" | "week" | "day" | "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond"
       >,
     ): Temporal.Duration;
     round(
-      roundTo: RoundTo<
-        | "day"
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
+      roundTo: RoundTo<"day" | "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">,
     ): Temporal.PlainDateTime;
-    toZonedDateTime(
-      tzLike: TimeZoneLike,
-      options?: ToInstantOptions,
-    ): Temporal.ZonedDateTime;
+    toZonedDateTime(tzLike: TimeZoneLike, options?: ToInstantOptions): Temporal.ZonedDateTime;
     toPlainDate(): Temporal.PlainDate;
     toPlainTime(): Temporal.PlainTime;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: CalendarTypeToStringOptions): string;
     valueOf(): never;
@@ -15226,29 +14353,15 @@ declare namespace Temporal {
    * @experimental
    */
   export class PlainMonthDay {
-    static from(
-      item: Temporal.PlainMonthDay | PlainMonthDayLike | string,
-      options?: AssignmentOptions,
-    ): Temporal.PlainMonthDay;
-    constructor(
-      isoMonth: number,
-      isoDay: number,
-      calendar?: string,
-      referenceISOYear?: number,
-    );
+    static from(item: Temporal.PlainMonthDay | PlainMonthDayLike | string, options?: AssignmentOptions): Temporal.PlainMonthDay;
+    constructor(isoMonth: number, isoDay: number, calendar?: string, referenceISOYear?: number);
     readonly monthCode: string;
     readonly day: number;
     readonly calendarId: string;
     equals(other: Temporal.PlainMonthDay | PlainMonthDayLike | string): boolean;
-    with(
-      monthDayLike: PlainMonthDayLike,
-      options?: AssignmentOptions,
-    ): Temporal.PlainMonthDay;
+    with(monthDayLike: PlainMonthDayLike, options?: AssignmentOptions): Temporal.PlainMonthDay;
     toPlainDate(year: { year: number }): Temporal.PlainDate;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: ShowCalendarOption): string;
     valueOf(): never;
@@ -15287,22 +14400,12 @@ declare namespace Temporal {
    * @experimental
    */
   export class PlainTime {
-    static from(
-      item: Temporal.PlainTime | PlainTimeLike | string,
-      options?: AssignmentOptions,
-    ): Temporal.PlainTime;
+    static from(item: Temporal.PlainTime | PlainTimeLike | string, options?: AssignmentOptions): Temporal.PlainTime;
     static compare(
       one: Temporal.PlainTime | PlainTimeLike | string,
       two: Temporal.PlainTime | PlainTimeLike | string,
     ): ComparisonResult;
-    constructor(
-      hour?: number,
-      minute?: number,
-      second?: number,
-      millisecond?: number,
-      microsecond?: number,
-      nanosecond?: number,
-    );
+    constructor(hour?: number, minute?: number, second?: number, millisecond?: number, microsecond?: number, nanosecond?: number);
     readonly hour: number;
     readonly minute: number;
     readonly second: number;
@@ -15310,54 +14413,19 @@ declare namespace Temporal {
     readonly microsecond: number;
     readonly nanosecond: number;
     equals(other: Temporal.PlainTime | PlainTimeLike | string): boolean;
-    with(
-      timeLike: Temporal.PlainTime | PlainTimeLike,
-      options?: AssignmentOptions,
-    ): Temporal.PlainTime;
-    add(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainTime;
-    subtract(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainTime;
+    with(timeLike: Temporal.PlainTime | PlainTimeLike, options?: AssignmentOptions): Temporal.PlainTime;
+    add(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainTime;
+    subtract(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainTime;
     until(
       other: Temporal.PlainTime | PlainTimeLike | string,
-      options?: DifferenceOptions<
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
+      options?: DifferenceOptions<"hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">,
     ): Temporal.Duration;
     since(
       other: Temporal.PlainTime | PlainTimeLike | string,
-      options?: DifferenceOptions<
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
+      options?: DifferenceOptions<"hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">,
     ): Temporal.Duration;
-    round(
-      roundTo: RoundTo<
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
-    ): Temporal.PlainTime;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    round(roundTo: RoundTo<"hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">): Temporal.PlainTime;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: ToStringPrecisionOptions): string;
     valueOf(): never;
@@ -15396,20 +14464,12 @@ declare namespace Temporal {
    * @experimental
    */
   export class PlainYearMonth {
-    static from(
-      item: Temporal.PlainYearMonth | PlainYearMonthLike | string,
-      options?: AssignmentOptions,
-    ): Temporal.PlainYearMonth;
+    static from(item: Temporal.PlainYearMonth | PlainYearMonthLike | string, options?: AssignmentOptions): Temporal.PlainYearMonth;
     static compare(
       one: Temporal.PlainYearMonth | PlainYearMonthLike | string,
       two: Temporal.PlainYearMonth | PlainYearMonthLike | string,
     ): ComparisonResult;
-    constructor(
-      isoYear: number,
-      isoMonth: number,
-      calendar?: string,
-      referenceISODay?: number,
-    );
+    constructor(isoYear: number, isoMonth: number, calendar?: string, referenceISODay?: number);
     readonly era: string | undefined;
     readonly eraYear: number | undefined;
     readonly year: number;
@@ -15420,21 +14480,10 @@ declare namespace Temporal {
     readonly daysInYear: number;
     readonly monthsInYear: number;
     readonly inLeapYear: boolean;
-    equals(
-      other: Temporal.PlainYearMonth | PlainYearMonthLike | string,
-    ): boolean;
-    with(
-      yearMonthLike: PlainYearMonthLike,
-      options?: AssignmentOptions,
-    ): Temporal.PlainYearMonth;
-    add(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainYearMonth;
-    subtract(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.PlainYearMonth;
+    equals(other: Temporal.PlainYearMonth | PlainYearMonthLike | string): boolean;
+    with(yearMonthLike: PlainYearMonthLike, options?: AssignmentOptions): Temporal.PlainYearMonth;
+    add(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainYearMonth;
+    subtract(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.PlainYearMonth;
     until(
       other: Temporal.PlainYearMonth | PlainYearMonthLike | string,
       options?: DifferenceOptions<"year" | "month">,
@@ -15444,10 +14493,7 @@ declare namespace Temporal {
       options?: DifferenceOptions<"year" | "month">,
     ): Temporal.Duration;
     toPlainDate(day: { day: number }): Temporal.PlainDate;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: ShowCalendarOption): string;
     valueOf(): never;
@@ -15481,10 +14527,7 @@ declare namespace Temporal {
    * @experimental
    */
   export class ZonedDateTime {
-    static from(
-      item: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
-      options?: ZonedDateTimeAssignmentOptions,
-    ): ZonedDateTime;
+    static from(item: Temporal.ZonedDateTime | ZonedDateTimeLike | string, options?: ZonedDateTimeAssignmentOptions): ZonedDateTime;
     static compare(
       one: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
       two: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
@@ -15519,76 +14562,34 @@ declare namespace Temporal {
     readonly epochMilliseconds: number;
     readonly epochNanoseconds: bigint;
     equals(other: Temporal.ZonedDateTime | ZonedDateTimeLike | string): boolean;
-    with(
-      zonedDateTimeLike: ZonedDateTimeLike,
-      options?: ZonedDateTimeAssignmentOptions,
-    ): Temporal.ZonedDateTime;
-    withPlainTime(
-      timeLike?: Temporal.PlainTime | PlainTimeLike | string,
-    ): Temporal.ZonedDateTime;
+    with(zonedDateTimeLike: ZonedDateTimeLike, options?: ZonedDateTimeAssignmentOptions): Temporal.ZonedDateTime;
+    withPlainTime(timeLike?: Temporal.PlainTime | PlainTimeLike | string): Temporal.ZonedDateTime;
     withCalendar(calendar: CalendarLike): Temporal.ZonedDateTime;
     withTimeZone(timeZone: TimeZoneLike): Temporal.ZonedDateTime;
-    add(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.ZonedDateTime;
-    subtract(
-      durationLike: Temporal.Duration | DurationLike | string,
-      options?: ArithmeticOptions,
-    ): Temporal.ZonedDateTime;
+    add(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.ZonedDateTime;
+    subtract(durationLike: Temporal.Duration | DurationLike | string, options?: ArithmeticOptions): Temporal.ZonedDateTime;
     until(
       other: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
       options?: Temporal.DifferenceOptions<
-        | "year"
-        | "month"
-        | "week"
-        | "day"
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
+        "year" | "month" | "week" | "day" | "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond"
       >,
     ): Temporal.Duration;
     since(
       other: Temporal.ZonedDateTime | ZonedDateTimeLike | string,
       options?: Temporal.DifferenceOptions<
-        | "year"
-        | "month"
-        | "week"
-        | "day"
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
+        "year" | "month" | "week" | "day" | "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond"
       >,
     ): Temporal.Duration;
     round(
-      roundTo: RoundTo<
-        | "day"
-        | "hour"
-        | "minute"
-        | "second"
-        | "millisecond"
-        | "microsecond"
-        | "nanosecond"
-      >,
+      roundTo: RoundTo<"day" | "hour" | "minute" | "second" | "millisecond" | "microsecond" | "nanosecond">,
     ): Temporal.ZonedDateTime;
     startOfDay(): Temporal.ZonedDateTime;
-    getTimeZoneTransition(
-      direction: TransitionDirection,
-    ): Temporal.ZonedDateTime | null;
+    getTimeZoneTransition(direction: TransitionDirection): Temporal.ZonedDateTime | null;
     toInstant(): Temporal.Instant;
     toPlainDateTime(): Temporal.PlainDateTime;
     toPlainDate(): Temporal.PlainDate;
     toPlainTime(): Temporal.PlainTime;
-    toLocaleString(
-      locales?: string | string[],
-      options?: Intl.DateTimeFormatOptions,
-    ): string;
+    toLocaleString(locales?: string | string[], options?: Intl.DateTimeFormatOptions): string;
     toJSON(): string;
     toString(options?: ZonedDateTimeToStringOptions): string;
     valueOf(): never;
@@ -15734,9 +14735,7 @@ declare namespace Intl {
      *
      * @param date The date to format.
      */
-    formatToParts(
-      date?: Formattable | number,
-    ): globalThis.Intl.DateTimeFormatPart[];
+    formatToParts(date?: Formattable | number): globalThis.Intl.DateTimeFormatPart[];
 
     /**
      * Format a date range in the most concise way based on the locale and
@@ -15757,14 +14756,8 @@ declare namespace Intl {
      * @param endDate The start date of the range to format. Must be the same
      * type as `startRange`.
      */
-    formatRangeToParts<T extends Formattable>(
-      startDate: T,
-      endDate: T,
-    ): DateTimeFormatRangePart[];
-    formatRangeToParts(
-      startDate: Date | number,
-      endDate: Date | number,
-    ): DateTimeFormatRangePart[];
+    formatRangeToParts<T extends Formattable>(startDate: T, endDate: T): DateTimeFormatRangePart[];
+    formatRangeToParts(startDate: Date | number, endDate: Date | number): DateTimeFormatRangePart[];
   }
 
   /**
@@ -15826,10 +14819,7 @@ interface Float16Array {
    * @param thisArg An object to which the this keyword can refer in the predicate function.
    * If thisArg is omitted, undefined is used as the this value.
    */
-  every(
-    predicate: (value: number, index: number, array: Float16Array) => unknown,
-    thisArg?: any,
-  ): boolean;
+  every(predicate: (value: number, index: number, array: Float16Array) => unknown, thisArg?: any): boolean;
 
   /**
    * Changes all array elements from `start` to `end` index to a static `value` and returns the modified array
@@ -15848,10 +14838,7 @@ interface Float16Array {
    * @param thisArg An object to which the this keyword can refer in the predicate function.
    * If thisArg is omitted, undefined is used as the this value.
    */
-  filter(
-    predicate: (value: number, index: number, array: Float16Array) => any,
-    thisArg?: any,
-  ): Float16Array;
+  filter(predicate: (value: number, index: number, array: Float16Array) => any, thisArg?: any): Float16Array;
 
   /**
    * Returns the value of the first element in the array where predicate is true, and undefined
@@ -15862,10 +14849,7 @@ interface Float16Array {
    * @param thisArg If provided, it will be used as the this value for each invocation of
    * predicate. If it is not provided, undefined is used instead.
    */
-  find(
-    predicate: (value: number, index: number, obj: Float16Array) => boolean,
-    thisArg?: any,
-  ): number | undefined;
+  find(predicate: (value: number, index: number, obj: Float16Array) => boolean, thisArg?: any): number | undefined;
 
   /**
    * Returns the index of the first element in the array where predicate is true, and -1
@@ -15876,10 +14860,7 @@ interface Float16Array {
    * @param thisArg If provided, it will be used as the this value for each invocation of
    * predicate. If it is not provided, undefined is used instead.
    */
-  findIndex(
-    predicate: (value: number, index: number, obj: Float16Array) => boolean,
-    thisArg?: any,
-  ): number;
+  findIndex(predicate: (value: number, index: number, obj: Float16Array) => boolean, thisArg?: any): number;
 
   /**
    * Performs the specified action for each element in an array.
@@ -15888,10 +14869,7 @@ interface Float16Array {
    * @param thisArg  An object to which the this keyword can refer in the callbackfn function.
    * If thisArg is omitted, undefined is used as the this value.
    */
-  forEach(
-    callbackfn: (value: number, index: number, array: Float16Array) => void,
-    thisArg?: any,
-  ): void;
+  forEach(callbackfn: (value: number, index: number, array: Float16Array) => void, thisArg?: any): void;
 
   /**
    * Returns the index of the first occurrence of a value in an array.
@@ -15929,10 +14907,7 @@ interface Float16Array {
    * @param thisArg An object to which the this keyword can refer in the callbackfn function.
    * If thisArg is omitted, undefined is used as the this value.
    */
-  map(
-    callbackfn: (value: number, index: number, array: Float16Array) => number,
-    thisArg?: any,
-  ): Float16Array;
+  map(callbackfn: (value: number, index: number, array: Float16Array) => number, thisArg?: any): Float16Array;
 
   /**
    * Calls the specified callback function for all the elements in an array. The return value of
@@ -15944,21 +14919,9 @@ interface Float16Array {
    * the accumulation. The first call to the callbackfn function provides this value as an argument
    * instead of an array value.
    */
+  reduce(callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Float16Array) => number): number;
   reduce(
-    callbackfn: (
-      previousValue: number,
-      currentValue: number,
-      currentIndex: number,
-      array: Float16Array,
-    ) => number,
-  ): number;
-  reduce(
-    callbackfn: (
-      previousValue: number,
-      currentValue: number,
-      currentIndex: number,
-      array: Float16Array,
-    ) => number,
+    callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Float16Array) => number,
     initialValue: number,
   ): number;
 
@@ -15973,12 +14936,7 @@ interface Float16Array {
    * instead of an array value.
    */
   reduce<U>(
-    callbackfn: (
-      previousValue: U,
-      currentValue: number,
-      currentIndex: number,
-      array: Float16Array,
-    ) => U,
+    callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Float16Array) => U,
     initialValue: U,
   ): U;
 
@@ -15993,20 +14951,10 @@ interface Float16Array {
    * argument instead of an array value.
    */
   reduceRight(
-    callbackfn: (
-      previousValue: number,
-      currentValue: number,
-      currentIndex: number,
-      array: Float16Array,
-    ) => number,
+    callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Float16Array) => number,
   ): number;
   reduceRight(
-    callbackfn: (
-      previousValue: number,
-      currentValue: number,
-      currentIndex: number,
-      array: Float16Array,
-    ) => number,
+    callbackfn: (previousValue: number, currentValue: number, currentIndex: number, array: Float16Array) => number,
     initialValue: number,
   ): number;
 
@@ -16021,12 +14969,7 @@ interface Float16Array {
    * instead of an array value.
    */
   reduceRight<U>(
-    callbackfn: (
-      previousValue: U,
-      currentValue: number,
-      currentIndex: number,
-      array: Float16Array,
-    ) => U,
+    callbackfn: (previousValue: U, currentValue: number, currentIndex: number, array: Float16Array) => U,
     initialValue: U,
   ): U;
 
@@ -16057,10 +15000,7 @@ interface Float16Array {
    * @param thisArg An object to which the this keyword can refer in the predicate function.
    * If thisArg is omitted, undefined is used as the this value.
    */
-  some(
-    predicate: (value: number, index: number, array: Float16Array) => unknown,
-    thisArg?: any,
-  ): boolean;
+  some(predicate: (value: number, index: number, array: Float16Array) => unknown, thisArg?: any): boolean;
 
   /**
    * Sorts an array.
@@ -16105,11 +15045,7 @@ interface Float16ArrayConstructor {
   readonly prototype: Float16Array;
   new (length: number): Float16Array;
   new (array: ArrayLike<number> | ArrayBufferLike): Float16Array;
-  new (
-    buffer: ArrayBufferLike,
-    byteOffset?: number,
-    length?: number,
-  ): Float16Array;
+  new (buffer: ArrayBufferLike, byteOffset?: number, length?: number): Float16Array;
 
   /**
    * The size in bytes of each element in the array.
@@ -16134,11 +15070,7 @@ interface Float16ArrayConstructor {
    * @param mapfn A mapping function to call on every element of the array.
    * @param thisArg Value of 'this' used to invoke the mapfn.
    */
-  from<T>(
-    arrayLike: ArrayLike<T>,
-    mapfn: (v: T, k: number) => number,
-    thisArg?: any,
-  ): Float16Array;
+  from<T>(arrayLike: ArrayLike<T>, mapfn: (v: T, k: number) => number, thisArg?: any): Float16Array;
 }
 /**
  * @category Platform
@@ -16179,11 +15111,7 @@ interface Float16Constructor {
    * @param mapfn A mapping function to call on every element of the array.
    * @param thisArg Value of 'this' used to invoke the mapfn.
    */
-  from(
-    arrayLike: Iterable<number>,
-    mapfn?: (v: number, k: number) => number,
-    thisArg?: any,
-  ): Float16Array;
+  from(arrayLike: Iterable<number>, mapfn?: (v: number, k: number) => number, thisArg?: any): Float16Array;
 }
 
 /**
@@ -16242,21 +15170,10 @@ interface Float16Array {
    * predicate. If it is not provided, undefined is used instead.
    */
   findLast<S extends number>(
-    predicate: (
-      value: number,
-      index: number,
-      array: Float16Array,
-    ) => value is S,
+    predicate: (value: number, index: number, array: Float16Array) => value is S,
     thisArg?: any,
   ): S | undefined;
-  findLast(
-    predicate: (
-      value: number,
-      index: number,
-      array: Float16Array,
-    ) => unknown,
-    thisArg?: any,
-  ): number | undefined;
+  findLast(predicate: (value: number, index: number, array: Float16Array) => unknown, thisArg?: any): number | undefined;
 
   /**
    * Returns the index of the last element in the array where predicate is true, and -1
@@ -16267,14 +15184,7 @@ interface Float16Array {
    * @param thisArg If provided, it will be used as the this value for each invocation of
    * predicate. If it is not provided, undefined is used instead.
    */
-  findLastIndex(
-    predicate: (
-      value: number,
-      index: number,
-      array: Float16Array,
-    ) => unknown,
-    thisArg?: any,
-  ): number;
+  findLastIndex(predicate: (value: number, index: number, array: Float16Array) => unknown, thisArg?: any): number;
 
   /**
    * Copies the array and returns the copy with the elements in reverse order.

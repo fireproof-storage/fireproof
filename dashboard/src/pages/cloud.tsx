@@ -19,8 +19,6 @@ export function Cloud() {
   // const nextUrl = useLoaderData() as string;
   // const navigate = useNavigate();
 
-
-
   // const [token, setToken] = useState('');
 
   // useEffect(() => {
@@ -63,12 +61,11 @@ export function Cloud() {
   // );
 }
 
-
 function SidebarCloud() {
   const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext);
   const navigate = useNavigate();
 
-  const listTendants = useListTendantsByUser()
+  const listTendants = useListTendantsByUser();
 
   const navigateToTendant = (tendant: UserTenant) => {
     navigate(`/fp/cloud/${tendant.tenantId}`);

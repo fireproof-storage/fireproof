@@ -1,29 +1,34 @@
-import { useEffect, useState } from 'react';
-import './App.css'
+import { useEffect, useState } from "react";
+import "./App.css";
 
 import { SignedIn, SignedOut, SignInButton, UserButton, useSession } from "@clerk/clerk-react";
+import { API_URL } from "../src/helpers.ts";
 
 export default function App() {
-  const { isLoaded, session, isSignedIn } = useSession()
+  const { isLoaded, session, isSignedIn } = useSession();
 
-  const [token, setToken] = useState('');
+  const [token, setToken] = useState("");
 
   useEffect(() => {
     if (isSignedIn && isLoaded) {
-      session.getToken({
-        template: "with-email",
-        // leewayInSeconds: 60
-      }).then((token) => {
-        setToken(token!)
-        fetch('http://localhost:3000/api/verify', {
-          method: 'POST',
-          body: JSON.stringify(token),
-        }).catch(console.error).then(console.log)
-      })
+      session
+        .getToken({
+          template: "with-email",
+          // leewayInSeconds: 60
+        })
+        .then((token) => {
+          setToken(token!);
+          fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify(token),
+          })
+            .catch(console.error)
+            .then(console.log);
+        });
     }
-  }, [session, isLoaded, isSignedIn])
+  }, [session, isLoaded, isSignedIn]);
 
-  console.log(session)
+  console.log(session);
   return (
     <header>
       <SignedOut>
@@ -40,7 +45,7 @@ export default function App() {
         </div>
       )}
     </header>
-  )
+  );
 }
 
 // export default App

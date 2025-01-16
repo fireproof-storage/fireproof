@@ -1,0 +1,145 @@
+name = "fireproof-auth"
+main = "cf-serve.ts"
+compatibility_date = "2024-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+# assets = { directory = "../dist/static", binding = "ASSETS", html_handling = "force-trailing-slash", not_found_handling = "404-page" }
+# upload_source_maps = true
+
+# [durable_objects]
+# bindings = [
+#   { name = "FP_DO", class_name = "FPDurableObject"},
+# ]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "test-auth-db"
+database_id = "ccb4a6c9-a1da-4a3a-9895-86d6eb3ffd26"
+
+#[durable_objects]
+#bindings = [
+#  # { name = "FP_DO", class_name = "FPDurableObject", script_name = "cf-dobj-abstract-sql" }
+#  { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+#  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+#]
+#
+#[[migrations]]
+#tag = "v1" # Should be unique for each entry
+#new_sqlite_classes = ["FPBackendDurableObject"]
+#
+#[observability]
+#enabled = true
+#head_sampling_rate = 1
+#
+#
+#[env.test.vars]
+#VERSION = "FP-MSG-1.0"
+#STORAGE_URL = "http://localhost:9000/testbucket"
+#ACCESS_KEY_ID = "minioadmin"
+#SECRET_ACCESS_KEY = "minioadmin"
+#FP_DEBUG = "FPMetaGroups"
+##FP_FORMAT = "yaml"
+## TEST_DATE = "20241121T225359Z"
+#FP_PROTOCOL = "http"
+#CF_BACKEND_MODE = "DURABLE_OBJECT"
+#
+## [env.test.services]
+## bindings = [
+##   { binding = "FP_DO", service = "FP_DO" }
+## ]
+#
+#[[env.test.d1_databases]]
+#binding = "FP_BACKEND_D1"
+#database_name = "test-meta-merge"
+#database_id = "b8b452ed-b1d9-478f-b56c-c5e4545f157a"
+#
+#[[env.test.migrations]]
+#tag = "v1" # Should be unique for each entry
+#new_sqlite_classes = ["FPBackendDurableObject"]
+#
+#[env.test.durable_objects]
+#bindings = [
+#  { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+#  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+#]
+#
+#
+#[env.test-reqRes-D1.vars]
+#VERSION = "FP-MSG-1.0"
+#STORAGE_URL = "http://localhost:9000/testbucket"
+#ACCESS_KEY_ID = "minioadmin"
+#SECRET_ACCESS_KEY = "minioadmin"
+#FP_DEBUG = "FPMetaGroups"
+##FP_FORMAT = "yaml"
+## TEST_DATE = "20241121T225359Z"
+#FP_PROTOCOL = "http"
+#
+#[[env.test-reqRes-D1.d1_databases]]
+#binding = "FP_BACKEND_D1"
+#database_name = "test-meta-merge"
+#database_id = "b8b452ed-b1d9-478f-b56c-c5e4545f157a"
+#
+#[env.test-reqRes-D1.durable_objects]
+#bindings = [
+#  { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+#  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+#]
+#
+#[env.test-reqRes-DO.vars]
+#VERSION = "FP-MSG-1.0"
+#STORAGE_URL = "http://localhost:9000/testbucket"
+#ACCESS_KEY_ID = "minioadmin"
+#SECRET_ACCESS_KEY = "minioadmin"
+#FP_DEBUG = "FPMetaGroups"
+##FP_FORMAT = "yaml"
+## TEST_DATE = "20241121T225359Z"
+#FP_PROTOCOL = "http"
+#CF_BACKEND_MODE = "DURABLE_OBJECT"
+#
+#[env.test-reqRes-DO.durable_objects]
+#bindings = [
+#  { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+#  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+#]
+#
+#[env.test-stream-D1.vars]
+#VERSION = "FP-MSG-1.0"
+#STORAGE_URL = "http://localhost:9000/testbucket"
+#ACCESS_KEY_ID = "minioadmin"
+#SECRET_ACCESS_KEY = "minioadmin"
+#FP_DEBUG = "FPMetaGroups"
+##FP_FORMAT = "yaml"
+## TEST_DATE = "20241121T225359Z"
+#FP_PROTOCOL = "ws"
+#
+#
+#[env.test-stream-D1.durable_objects]
+#bindings = [
+#  { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+#  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+#]
+#
+#[[env.test-stream-D1.d1_databases]]
+#binding = "FP_BACKEND_D1"
+#database_name = "test-meta-merge"
+#database_id = "b8b452ed-b1d9-478f-b56c-c5e4545f157a"
+#
+#
+#[env.test-stream-DO.vars]
+#VERSION = "FP-MSG-1.0"
+#STORAGE_URL = "http://localhost:9000/testbucket"
+#ACCESS_KEY_ID = "minioadmin"
+#SECRET_ACCESS_KEY = "minioadmin"
+#FP_DEBUG = "FPMetaGroups"
+##FP_FORMAT = "yaml"
+## TEST_DATE = "20241121T225359Z"
+#FP_PROTOCOL = "ws"
+#CF_BACKEND_MODE = "DURABLE_OBJECT"
+#
+#[env.test-stream-DO.durable_objects]
+#bindings = [
+#  { name = "FP_BACKEND_DO", class_name = "FPBackendDurableObject" },
+#  { name = "FP_WS_ROOM", class_name = "FPRoomDurableObject" }
+#]
+#
+#

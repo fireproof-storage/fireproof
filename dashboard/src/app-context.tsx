@@ -28,7 +28,7 @@ export const AppContext = createContext<AppContextType>({
   toggleSidebar: () => {},
 });
 
-export function AppContextProvider({ children }: { children: React.ReactNode}) {
+export function AppContextProvider({ children }: { children: React.ReactNode }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   // const navigate = useNavigate();

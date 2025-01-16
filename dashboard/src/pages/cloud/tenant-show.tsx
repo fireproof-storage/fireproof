@@ -1,11 +1,9 @@
 import { useParams } from "react-router-dom";
 import { tenantName, useListTendantsByUser } from "../../hooks/tenant.ts";
 
-
-
 export function TenantShow() {
   const { tenantId } = useParams();
-  const list = useListTendantsByUser()
+  const list = useListTendantsByUser();
   const tenant = list.tenants.find((t) => t.tenantId === tenantId);
   if (!tenant) {
     return <>Tenant not{tenantId} found</>;
@@ -19,5 +17,5 @@ export function TenantShow() {
       <p>{list.authUserId}</p>
       <p>{list.userRefId}</p>
     </div>
-  )
+  );
 }
