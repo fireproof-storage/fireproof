@@ -1,10 +1,11 @@
-import hljs from "highlight.js";
+import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import json from "highlight.js/lib/languages/json";
 
 import "highlight.js/styles/stackoverflow-light.css";
 import { useCallback, useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
+
 hljs.registerLanguage("json", json);
 hljs.registerLanguage("javascript", javascript);
 
