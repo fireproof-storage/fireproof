@@ -8,7 +8,7 @@
 
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiImpl, FPApiToken, ReqEnsureUserRef, ResEnsureUserRef, VerifiedAuth } from "./api.js";
+import { FPApiImpl, FPApiToken, OwnerTenant, ReqEnsureUserRef, ResEnsureUserRef, VerifiedAuth } from "./api.js";
 import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -124,11 +124,17 @@ describe("db-api", () => {
         auth: d.reqs.auth,
       });
       const res = rRes.Ok();
+      const ownerTenant = d.ress.tenants[0] as OwnerTenant;
       expect(res).toEqual({
+        authUserId: d.ress.authUserId,
         tenants: [
           {
+            adminUserRefIds: ownerTenant.adminUserRefIds,
+            memberUserRefIds: ownerTenant.memberUserRefIds,
+            maxAdminUserRefs: 5,
+            maxMemberUserRefs: 5,
             default: true,
-            role: "admin",
+            role: "owner",
             tenantId: d.ress.tenants[0].tenantId,
             name: d.ress.tenants[0].name,
             tenantName: d.ress.tenants[0].tenantName,
