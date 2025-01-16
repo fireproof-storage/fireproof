@@ -1,29 +1,32 @@
-import * as React from "react";
 import { createRoutesFromElements, Route } from "react-router-dom";
 
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, createMemoryRouter, RouterProvider } from "react-router-dom";
-import { loader as appLoader, AppLayout } from "./layouts/app.tsx";
 import DatabasesHistory from "./pages/databases/history.tsx";
 import DatabasesIndex from "./pages/databases/index.tsx";
 import DatabasesNew, { Action as newDatabaseAction } from "./pages/databases/new.tsx";
 import DatabasesQuery from "./pages/databases/query.tsx";
 import DatabasesShow from "./pages/databases/show.tsx";
+import { Databases, databaseLoader } from "./pages/databases.tsx";
 import DocsShow from "./pages/docs/show.tsx";
-import Index, { loader as indexLoader } from "./pages/index.tsx";
+import { Index, indexLoader } from "./pages/index.tsx";
 
 import DatabasesConnect, { loader as connectLoader } from "./pages/databases/connect.tsx";
-import Login, { loader as loginLoader } from "./pages/login.tsx";
+import { Login, loginLoader } from "./pages/login.tsx";
 import "./styles/tailwind.css";
 import { ClerkProvider } from "@clerk/clerk-react";
-import { Database } from "./components/Database.tsx";
+import { Cloud, cloudLoader } from "./pages/cloud.tsx";
+import { AppContext, AppContextProvider } from "./app-context.tsx";
+import { WithoutSidebar } from "./layouts/without-sidebar.tsx";
 
 const routes = createRoutesFromElements(
   <Route>
-    <Route path="/" element={<Index />} loader={indexLoader} />
-    <Route path="/login" element={<Login />} loader={loginLoader} />
-    <Route path="/fp/cloud" element={<AppLayout />} loader={appLoader} />
-    <Route path="/fp/databases" element={<Database />} loader={appLoader}>
+    <Route path="/" element={<WithoutSidebar />}>
+      <Route path="/" element={<Index />} loader={indexLoader} />
+      <Route path="/login" element={<Login />} loader={loginLoader} />
+      <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader} />
+    </Route>
+    <Route path="/fp/databases" element={<Databases />} loader={databaseLoader}>
       <Route index element={<DatabasesIndex />} />
       <Route path="new" element={<DatabasesNew />} action={newDatabaseAction} />
       <Route path="connect" element={<DatabasesConnect />} loader={connectLoader} />
@@ -41,17 +44,20 @@ const rootElement = import.meta.env.VITE_CHROME_EXTENSION
   ? document.getElementById("fireproof-overlay")?.shadowRoot?.getElementById("root")
   : document.getElementById("root");
 
-  /*
+/*
     routerPush={(to) => navigate(to)}
     routerReplace={(to) => navigate(to, { replace: true })}
     signInFallbackRedirectUrl={nextUrl}
     */
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
-         <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY} >
-              <RouterProvider router={router} />
-          </ClerkProvider>
-);
+    <AppContextProvider>
+      <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+        <RouterProvider router={router} />
+      </ClerkProvider>
+      ,
+    </AppContextProvider>,
+  );
 } else {
   console.error("Root element not found");
 }

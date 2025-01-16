@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { MapFn, useFireproof } from "use-fireproof";
-import { EditableCodeHighlight } from "../../components/CodeHighlight";
-import DynamicTable from "../../components/DynamicTable";
-import { headersForDocs } from "../../components/dynamicTableHelpers";
+import { EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
+import DynamicTable from "../../components/DynamicTable.tsx";
+import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 
 type AnyMapFn = MapFn<object>;
 
@@ -11,10 +11,7 @@ export default function Query() {
   const { name } = useParams();
   if (!name) throw new Error("No database name provided");
 
-  const emptyMap = `(doc, emit) => {
-    emit(doc._id, doc) 
-}
-  `;
+  const emptyMap = `(doc, emit) => { emit(doc._id, doc) }`;
 
   const [editorCode, setEditorCode] = useState<string>(emptyMap);
   const [editorCodeFnString, setEditorCodeFnString] = useState<string>(() => editorCode);
@@ -31,7 +28,7 @@ export default function Query() {
       setEditorCodeFnString(editorCode);
       setUserCodeError(null);
     } catch (error) {
-      setUserCodeError(error.message);
+      setUserCodeError((error as Error).message);
     }
   }
 

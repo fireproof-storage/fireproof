@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 
-import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight";
+import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
 
 export default function Document() {
   const { name } = useParams();

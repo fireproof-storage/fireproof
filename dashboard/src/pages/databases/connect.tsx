@@ -1,9 +1,9 @@
 import React from "react";
 import { redirect } from "react-router-dom";
 import { fireproof } from "use-fireproof";
-import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "./show";
+import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "../../helpers.ts";
 
-export async function loader({ request }) {
+export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const localName = url.searchParams.get("localName");
   if (!localName) {
@@ -11,12 +11,15 @@ export async function loader({ request }) {
   }
 
   const remoteName = url.searchParams.get("remoteName");
-  const sanitizedRemoteName = remoteName.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_");
+  const sanitizedRemoteName = remoteName?.replace(/^[^a-zA-Z0-9]+/g, "").replace(/[^a-zA-Z0-9]+/g, "_");
 
   const endpoint = url.searchParams.get("endpoint") || DEFAULT_ENDPOINT;
 
   const syncDb = fireproof(SYNC_DB_NAME);
-  const result = await syncDb.query((doc) => [doc.localName, doc.remoteName], {
+  const result = await syncDb.query<string, {
+    localName: string;
+    remoteName: string;
+  }, [string, string]>((doc) => [doc.localName, doc.remoteName], {
     keys: [localName, remoteName],
     includeDocs: true,
   });

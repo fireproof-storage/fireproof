@@ -1,9 +1,8 @@
-import React from "react";
 import { useForm } from "react-hook-form";
-import { Form, redirect, useSubmit } from "react-router-dom";
+import { Form, redirect, SubmitTarget, useSubmit } from "react-router-dom";
 import { fireproof } from "use-fireproof";
 
-export async function Action({ request }) {
+export async function Action({ request }: { request: Request }) {
   const dbName = (await request.json()).dbName;
   const database = fireproof(dbName);
   await database.blockstore.loader?.ready();
@@ -14,7 +13,7 @@ export default function New() {
   const submit = useSubmit();
   const { register, handleSubmit } = useForm();
 
-  const onSubmit = (data) => {
+  function onSubmit(data: SubmitTarget) {
     submit(data, {
       method: "post",
       action: ".",
