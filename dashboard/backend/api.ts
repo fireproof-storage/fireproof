@@ -472,7 +472,7 @@ export class FPApiImpl implements FPApi {
       .innerJoin(userRefs, eq(tenants.ownerUserRefId, userRefs.userRefId))
       .where(eq(userRefs.authUserId, auth.userId))
       .all();
-    console.log(">>>>>", tenantUserRef);
+    // console.log(">>>>>", tenantUserRef);
     return Result.Ok({
       type: "resListTenantsByUser",
       userRefId: tenantUserRef[0].TenantUserRefs.userRefId,
