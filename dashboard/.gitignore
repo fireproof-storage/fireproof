@@ -1,6 +1,8 @@
 node_modules
 **/.wrangler/**
 
+stats.html
+
 /.cache
 /build
 /public/build
