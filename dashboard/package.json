@@ -16,7 +16,8 @@
     "test": "vitest --run",
     "format": "prettier .",
     "drizzle:libsql": "drizzle-kit push --config ./drizzle.libsql.config.ts",
-    "drizzle:d1": "drizzle-kit push --config ./drizzle.d1-local.config.ts"
+    "drizzle:d1-backend": "drizzle-kit push --config ./drizzle.d1-local-backend.config.ts",
+    "drizzle:d1-pages": "drizzle-kit push --config ./drizzle.d1-local-pages.config.ts"
   },
   "dependencies": {
     "@adviser/cement": "^0.3.5",

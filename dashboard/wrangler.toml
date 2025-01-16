@@ -1,0 +1,11 @@
+name = "dashboard-dev"
+compatibility_date = "2024-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = "./dist/static"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "test-auth-db"
+database_id = "ccb4a6c9-a1da-4a3a-9895-86d6eb3ffd26"
+
