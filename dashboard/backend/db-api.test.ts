@@ -8,7 +8,17 @@
 
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiImpl, FPApiToken, OwnerTenant, ReqEnsureUserRef, ResEnsureUserRef, VerifiedAuth } from "./api.js";
+import {
+  AuthType,
+  FPApiImpl,
+  FPApiToken,
+  OwnerTenant,
+  queryEmail,
+  queryNick,
+  ReqEnsureUserRef,
+  ResEnsureUserRef,
+  VerifiedAuth,
+} from "./api.js";
 import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
 // // import { eq } from 'drizzle-orm'
 // // import { drizzle } from 'drizzle-orm/libsql';
@@ -47,6 +57,7 @@ class TestApiToken implements FPApiToken {
           email: `test${id}@test.de`,
           first: `first${id}`,
           last: `last${id}`,
+          name: `nick${id}`,
           nick: `nick${id}`,
         },
       }),
@@ -91,6 +102,9 @@ describe("db-api", () => {
         authUserId: `userId-${d.reqs.auth.token}`,
         createdAt: res.createdAt,
         maxTenants: 5,
+        maxInvites: 10,
+        queryEmail: queryEmail(res.params.email),
+        queryNick: queryNick(res.params.nick),
         params: res.params,
         // "params": "{"email":"testuserId-test-0-zGy3ufenE@test.de","first":"firstuserId-test-0-zGy3ufenE","last":"lastuserId-test-0-zGy3ufenE","nick":"nickuserId-test-0-zGy3ufenE"}",
         tenants: res.tenants,
@@ -109,6 +123,9 @@ describe("db-api", () => {
         authUserId: `userId-${d.auth.token}`,
         createdAt: res.createdAt,
         maxTenants: 5,
+        maxInvites: 10,
+        queryEmail: queryEmail(res.params.email),
+        queryNick: queryNick(res.params.nick),
         params: res.params,
         tenants: res.tenants,
         type: "resEnsureUserRef",
@@ -145,4 +162,128 @@ describe("db-api", () => {
       });
     }
   });
+
+  it("invite non existing user to a tenant", async () => {
+    const auth: AuthType = {
+      token: `test-${sthis.nextId().str}`,
+      type: "clerk",
+    };
+    const resinsert = await fpApi.inviteUser({
+      type: "reqInviteUser",
+      auth,
+      query: {
+        byEmail: `test@${sthis.nextId().str}.de`,
+      },
+      target: {
+        tenant: {
+          id: data[0].ress.tenants[0].tenantId,
+          role: "admin",
+        },
+      },
+    });
+    const resupdate = await fpApi.inviteUser({
+      type: "reqInviteUser",
+      auth,
+      inviteId: resinsert.Ok().invite.inviteId,
+      incSendEmailCount: true,
+      query: {
+        byEmail: `test@${sthis.nextId().str}.de`,
+        byNick: `nick${sthis.nextId().str}`,
+      },
+      target: {
+        tenant: {
+          id: data[0].ress.tenants[0].tenantId,
+          role: "member",
+        },
+      },
+    });
+
+    expect(resupdate).toEqual({});
+  });
+
+  it("invite non existing user to a ledger", async () => {});
+
+  it("try find a existing user", async () => {
+    const res = await fpApi.findUserRef({
+      type: "reqFindUserRef",
+      auth: {
+        token: "test-0",
+        type: "clerk",
+      },
+      query: {
+        byEmail: "exact@email.com",
+        byNick: "exactnick",
+        andProvider: "fp",
+      },
+    });
+    expect(res.Ok()).toEqual({
+      type: "resFindUserRef",
+      query: {
+        andProvider: "fp",
+        byEmail: "exact@email.com",
+        byNick: "exactnick",
+      },
+      results: [],
+    });
+  });
+
+  it("find a per email", async () => {
+    const query = {
+      byEmail: data[0].ress.params.email,
+    };
+    const res = await fpApi.findUserRef({
+      type: "reqFindUserRef",
+      auth: {
+        token: "test-0",
+        type: "clerk",
+      },
+      query,
+    });
+    expect(res.Ok()).toEqual({
+      type: "resFindUserRef",
+      query,
+      results: [
+        {
+          authProvider: "Clerk",
+          createdAt: data[0].ress.createdAt,
+          email: data[0].ress.queryEmail,
+          nick: data[0].ress.queryNick,
+          provider: data[0].ress.authProvider,
+          updatedAt: data[0].ress.updatedAt,
+          userRefId: data[0].ress.userRefId,
+        },
+      ],
+    });
+  });
+
+  it("find a per nick", async () => {
+    const query = {
+      byNick: data[0].ress.queryNick,
+    };
+    const res = await fpApi.findUserRef({
+      type: "reqFindUserRef",
+      auth: {
+        token: "test-0",
+        type: "clerk",
+      },
+      query,
+    });
+    expect(res.Ok()).toEqual({
+      type: "resFindUserRef",
+      query,
+      results: [
+        {
+          authProvider: "Clerk",
+          createdAt: data[0].ress.createdAt,
+          email: data[0].ress.queryEmail,
+          nick: data[0].ress.queryNick,
+          provider: data[0].ress.authProvider,
+          updatedAt: data[0].ress.updatedAt,
+          userRefId: data[0].ress.userRefId,
+        },
+      ],
+    });
+  });
+
+  it("assign to tenant existing user", async () => {});
 });
