@@ -5,7 +5,9 @@ import type { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 import type { ResultSet } from "@libsql/client";
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import { eq, and } from "drizzle-orm/expressions";
-import { tenants, tenantUserRefs, userRefs } from "./db-api-schema.js";
+import { tenants, tenantUserRefRoles, tenantUserRefs, userRefs } from "./db-api-schema.js";
+import { a } from "vitest/dist/chunks/suite.B2jumIFP.js";
+import { au } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 export interface AuthType {
   readonly type: "ucan" | "clerk";
@@ -24,7 +26,7 @@ export interface ClerkClaim {
   readonly first: string;
   readonly last: string;
   // github handle
-  readonly name: string;
+  readonly nick: string;
 }
 
 export interface ClerkVerifyAuth extends VerifiedAuth {
@@ -60,6 +62,8 @@ export interface ResEnsureUserRef {
   readonly userRefId: string;
   readonly createdAt: Date;
   readonly updatedAt: Date;
+  readonly queryEmail?: string;
+  readonly queryNick?: string;
   readonly params: ClerkClaim;
   readonly authUserId: string;
   readonly authProvider: string;
@@ -171,10 +175,123 @@ export interface ResListTenantsByUser {
   readonly tenants: UserTenant[];
 }
 
+export interface QueryUserRef {
+  readonly byEmail?: string; // exact email
+  readonly byNick?: string; // exact nick
+  readonly andProvider?: "github" | "google" | "fp";
+}
+
+export interface ReqFindUserRef {
+  readonly type: "reqFindUserRef";
+  readonly auth: AuthType;
+  readonly query: QueryUserRef;
+}
+
+export interface QueryResultUserRef {
+  readonly userRefId: string;
+  readonly authProvider: string;
+  readonly email?: string;
+  readonly nick?: string;
+  readonly provider: "github" | "google" | "fp";
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+export interface ResFindUserRef {
+  readonly type: "resFindUserRef";
+  // readonly userRefId: string;
+  // readonly authUserId: string;
+  readonly query: QueryUserRef;
+  readonly results: QueryResultUserRef[];
+}
+
+export interface ReqInviteUser {
+  readonly type: "reqInviteUser";
+  readonly auth: AuthType;
+  readonly query: QueryUserRef;
+  readonly inviterTenantId?: string;
+  // to update
+  readonly inviteId?: string;
+  readonly incSendEmailCount?: boolean;
+  readonly target: {
+    readonly tenant?: {
+      readonly id: string;
+      readonly role: "admin" | "member";
+    };
+    readonly ledger?: {
+      readonly id: string;
+      readonly role: "admin" | "member";
+      readonly right: "read" | "write";
+    };
+  };
+}
+
+export interface Invite {
+  readonly inviteId: string;
+  readonly sendEmailCount: number;
+  readonly inviterUserRefId: string;
+  readonly target: {
+    readonly tenant?: {
+      readonly id: string;
+      readonly role: "admin" | "member";
+    };
+    readonly ledger?: {
+      readonly id: string;
+      readonly role: "admin" | "member";
+      readonly right: "read" | "write";
+    };
+  };
+  readonly expiresAfter: Date;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+export interface ResInviteUser {
+  readonly type: "resInviteUser";
+  readonly invite: Invite;
+}
+
+export interface ReqRemoveInvite {
+  readonly type: "reqRemoveInvite";
+  readonly auth: AuthType;
+  readonly inviteId: string;
+}
+
+export interface ResRemoveInvite {
+  readonly type: "resRemoveInvite";
+  readonly inviteId: string;
+}
+
+export interface ReqListInvites {
+  readonly type: "reqListInvites";
+  readonly auth: AuthType;
+  // if set all invites for the given tenants are listed
+  // if not set all invites for the userRef are listed
+  readonly tenantIds: string[];
+}
+
+export interface ResListInvites {
+  readonly type: "resListInvites";
+  readonly invites: [
+    {
+      readonly tenantId: string;
+      readonly invites: Invite[];
+    },
+  ];
+}
+
 export interface FPApi {
   ensureUserRef(req: ReqEnsureUserRef): Promise<Result<ResEnsureUserRef>>;
 
   listTenantsByUser(req: ReqListTenantsByUser): Promise<Result<ResListTenantsByUser>>;
+
+  findUserRef(req: ReqFindUserRef): Promise<Result<ResFindUserRef>>;
+
+  // creates / update invite
+  inviteUser(req: ReqInviteUser): Promise<Result<ResInviteUser>>;
+  listInvites(req: ReqListInvites): Promise<Result<ResListInvites>>;
+  removeInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>>;
+
   // attachUserToTenant(req: ReqAttachUserToTenant): Promise<ResAttachUserToTenant>
 
   // listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant>
@@ -224,6 +341,8 @@ function prepareInsertUserRef(req: ReqInsertUserRef) {
     userRefId: req.userRefId,
     authUserId: req.auth.userId,
     authProvider: req.auth.provider,
+    queryEmail: queryEmail(req.auth.params.email),
+    queryNick: queryNick(req.auth.params.nick),
     maxTenants: req.maxTenants ?? 5,
     params: JSON.stringify(req.auth.params),
     createdAt: (req.createdAt ?? now).toISOString(),
@@ -238,8 +357,8 @@ function prepareInsertTenant(req: ReqInsertTenant) {
     tenantId: req.tenantId,
     name: req.name,
     ownerUserRefId: req.ownerUserRefId,
-    adminUserRefIds: JSON.stringify(req.adminUserRefIds ?? []),
-    memberUserRefIds: JSON.stringify(req.adminUserRefIds ?? []),
+    // adminUserRefIds: JSON.stringify(req.adminUserRefIds ?? []),
+    // memberUserRefIds: JSON.stringify(req.adminUserRefIds ?? []),
     maxAdminUserRefs: req.maxAdminUserRefs ?? 5,
     maxMemberUserRefs: req.maxMemberUserRefs ?? 5,
     createdAt: (req.createdAt ?? now).toISOString(),
@@ -276,27 +395,6 @@ interface ResAddUserToTenant {
   readonly userRefId: string;
   readonly default: boolean;
   readonly role: Role;
-}
-
-function getRole(
-  userRefId: string,
-  tenant: typeof tenants.$inferSelect,
-): {
-  role: Role;
-  foundRole: boolean;
-  adminUserRefIds: string[];
-  memberUserRefIds: string[];
-} {
-  const adminUserRefIds = JSON.parse(tenant.adminUserRefIds as string);
-  const memberUserRefIds = JSON.parse(tenant.memberUserRefIds as string);
-  const isAdmin = adminUserRefIds.includes(userRefId);
-  const isMember = memberUserRefIds.includes(userRefId);
-  return {
-    adminUserRefIds,
-    memberUserRefIds,
-    foundRole: isAdmin || isMember,
-    role: tenant.ownerUserRefId === userRefId ? "owner" : isAdmin ? "admin" : "member",
-  };
 }
 
 function toUndef(v: string | null | undefined): string | undefined {
@@ -360,14 +458,14 @@ export class FPApiImpl implements FPApi {
         .values(
           prepareInsertTenant({
             tenantId,
-            name: `my-tenant[${auth.params.email ?? auth.params.name}]`,
+            name: `my-tenant[${auth.params.email ?? auth.params.nick}]`,
             ownerUserRefId: userRefId,
           }),
         )
         .run();
       // await this.db.transaction(async (db) => {
       await this.addUserToTenant(this.db, {
-        name: `my-tenant[${auth.params.email ?? auth.params.name}]`,
+        name: `my-tenant[${auth.params.email ?? auth.params.nick}]`,
         tenantId,
         userRefId,
         role: "admin",
@@ -378,6 +476,8 @@ export class FPApiImpl implements FPApi {
     }
     return Result.Ok({
       ...existing,
+      queryEmail: toUndef(existing.queryEmail),
+      queryNick: toUndef(existing.queryNick),
       params: JSON.parse(existing.params as string),
       createdAt: new Date(existing.createdAt),
       updatedAt: new Date(existing.updatedAt),
@@ -395,7 +495,7 @@ export class FPApiImpl implements FPApi {
     if (!tenant) {
       return Result.Err("tenant not found");
     }
-    const role = getRole(req.userRefId, tenant);
+    const role = await this.getRole(req.userRefId, tenant);
     if (role.foundRole) {
       const tenantUserRef = await db
         .select()
@@ -432,14 +532,20 @@ export class FPApiImpl implements FPApi {
     }
     const now = new Date().toISOString();
     await db
-      .update(tenants)
-      .set({
-        adminUserRefIds: JSON.stringify(role.adminUserRefIds),
-        memberUserRefIds: JSON.stringify(role.memberUserRefIds),
-        updatedAt: now,
+      .insert(tenantUserRefRoles)
+      .values({
+        tenantId: req.tenantId,
+        userRefId: req.userRefId,
+        role: req.role,
+        createdAt: now,
       })
-      .where(eq(tenants.tenantId, tenant.tenantId))
-      .run();
+      .onConflictDoUpdate({
+        target: [tenantUserRefRoles.tenantId, tenantUserRefRoles.userRefId],
+        set: {
+          role: role.role,
+          createdAt: now,
+        },
+      });
     await db.insert(tenantUserRefs).values({
       tenantId: tenant.tenantId,
       userRefId: req.userRefId,
@@ -475,95 +581,216 @@ export class FPApiImpl implements FPApi {
     // console.log(">>>>>", tenantUserRef);
     return Result.Ok({
       type: "resListTenantsByUser",
-      userRefId: tenantUserRef[0].TenantUserRefs.userRefId,
+      userRefId: tenantUserRef[0].UserRefs.userRefId,
       authUserId: auth.userId,
-      tenants: tenantUserRef.map((t) => {
-        const role = getRole(t.TenantUserRefs.userRefId, t.Tenants).role;
-        switch (role) {
-          case "member":
-            return {
-              tenantId: t.TenantUserRefs.tenantId,
-              tenantName: toUndef(t.Tenants.name),
-              name: toUndef(t.TenantUserRefs.name),
-              role,
-              default: toBoolean(t.TenantUserRefs.default),
-            };
-          case "owner":
-          case "admin":
-            return {
-              tenantId: t.TenantUserRefs.tenantId,
-              tenantName: toUndef(t.Tenants.name),
-              name: toUndef(t.TenantUserRefs.name),
-              role,
-              default: toBoolean(t.TenantUserRefs.default),
-              adminUserRefIds: JSON.parse(t.Tenants.adminUserRefIds as string),
-              memberUserRefIds: JSON.parse(t.Tenants.memberUserRefIds as string),
-              maxAdminUserRefs: t.Tenants.maxAdminUserRefs,
-              maxMemberUserRefs: t.Tenants.maxMemberUserRefs,
-            };
-        }
-      }),
+      tenants: await Promise.all(
+        tenantUserRef.map(async (t) => {
+          const role = await this.getRole(t.TenantUserRefs.userRefId, t.Tenants);
+          switch (role.role) {
+            case "member":
+              return {
+                tenantId: t.TenantUserRefs.tenantId,
+                tenantName: toUndef(t.Tenants.name),
+                name: toUndef(t.TenantUserRefs.name),
+                role: role.role,
+                default: toBoolean(t.TenantUserRefs.default),
+              };
+            case "owner":
+            case "admin":
+              return {
+                tenantId: t.TenantUserRefs.tenantId,
+                tenantName: toUndef(t.Tenants.name),
+                name: toUndef(t.TenantUserRefs.name),
+                role: role.role,
+                default: toBoolean(t.TenantUserRefs.default),
+                adminUserRefIds: role.adminUserRefIds,
+                memberUserRefIds: role.memberUserRefIds,
+                maxAdminUserRefs: t.Tenants.maxAdminUserRefs,
+                maxMemberUserRefs: t.Tenants.maxMemberUserRefs,
+              };
+          }
+        }),
+      ),
     });
   }
 
-  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // async attachUserToTenant(req: ReqAttachUserToTenant): Promise<Result<ResAttachUserToTenant>> {
-  //     const maxTenants = await this.db.select({
-  //         maxTenants: userRefs.maxTenants
-  //     }).from(userRefs).where(eq(userRefs.userRefId, req.userRefId)).get() ?? { maxTenants: 5 }
+  private async getRole(
+    userRefId: string,
+    tenant: typeof tenants.$inferSelect,
+  ): Promise<{
+    role: Role;
+    foundRole: boolean;
+    adminUserRefIds: string[];
+    memberUserRefIds: string[];
+  }> {
+    const rows = await this.db.select().from(tenantUserRefRoles).where(eq(tenantUserRefRoles.tenantId, tenant.tenantId)).all();
+    const { adminUserRefIds, memberUserRefIds } = rows.reduce(
+      (acc, row) => {
+        switch (row.role) {
+          case "admin":
+            acc.adminUserRefIds.push(row.userRefId);
+            break;
+          case "member":
+            acc.memberUserRefIds.push(row.userRefId);
+            break;
+        }
+        return acc;
+      },
+      {
+        adminUserRefIds: [] as string[],
+        memberUserRefIds: [] as string[],
+      },
+    );
+    const isAdmin = adminUserRefIds.includes(userRefId);
+    const isMember = memberUserRefIds.includes(userRefId);
+    return {
+      adminUserRefIds,
+      memberUserRefIds,
+      foundRole: isAdmin || isMember,
+      role: tenant.ownerUserRefId === userRefId ? "owner" : isAdmin ? "admin" : "member",
+    };
+  }
 
-  //     const tendantCount = await this.db.$count(tenantUserRefs,
-  //         and(
-  //             eq(tenants.ownerUserRefId, req.userRefId),
-  //             ne(tenantUserRefs.active, 0)
-  //         ))
+  async findUserRef(req: ReqFindUserRef): Promise<Result<ResFindUserRef>> {
+    const rAuth = await this.authToClerkVerifyAuth(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    let where: ReturnType<typeof and>;
+    const byEmail = queryEmail(req.query.byEmail);
+    const byNick = queryNick(req.query.byNick);
+    if (byEmail && byNick && req.query.andProvider) {
+      where = and(
+        eq(userRefs.queryEmail, byEmail),
+        eq(userRefs.queryNick, byNick),
+        eq(userRefs.authProvider, req.query.andProvider),
+      );
+    } else if (byEmail && byNick) {
+      where = and(eq(userRefs.queryEmail, byEmail), eq(userRefs.queryNick, byNick));
+    } else if (byEmail && req.query.andProvider) {
+      where = and(eq(userRefs.queryEmail, byEmail), eq(userRefs.authProvider, req.query.andProvider));
+    } else if (byNick && req.query.andProvider) {
+      where = and(eq(userRefs.queryNick, byNick), eq(userRefs.authProvider, req.query.andProvider));
+    } else if (byEmail) {
+      where = eq(userRefs.queryEmail, byEmail);
+    } else if (byNick) {
+      where = eq(userRefs.queryNick, byNick);
+    }
+    if (!where) {
+      return Result.Err("invalid query");
+    }
+    const rows = await this.db.select().from(userRefs).where(where).all();
+    return Result.Ok({
+      type: "resFindUserRef",
+      query: req.query,
+      results: rows.map(
+        (row) =>
+          ({
+            userRefId: row.userRefId,
+            authProvider: row.authProvider,
+            email: row.queryEmail as string,
+            nick: row.queryNick as string,
+            provider: row.authProvider,
+            createdAt: new Date(row.createdAt),
+            updatedAt: new Date(row.updatedAt),
+          }) as QueryResultUserRef,
+      ),
+    });
+  }
 
-  //     if (tendantCount >= maxTenants.maxTenants) {
-  //         return Result.Err(`max tenants reached:${maxTenants.maxTenants}`)
-  //     }
+  async inviteUser(req: ReqInviteUser): Promise<Result<ResInviteUser>> {
+    throw new Error("Method not implemented.");
+  }
 
-  //     const now = new Date().toISOString();
-  //     const values = {
-  //         userRefId: req.userRefId,
-  //         tenantId: req.tenantId,
-  //         name: req.name,
-  //         active: 1,
-  //         createdAt: now,
-  //         updatedAt: now
-  //     }
-  //     const rRes = await this.db
-  //         .insert(tenantUserRefs)
-  //         .values(values)
-  //         .onConflictDoNothing()
-  //         .returning()
-  //         .run()
-  //     const res = rRes.toJSON()[0]
-  //     return Result.Ok({
-  //         type: 'resAttachUserToTenant',
-  //         name: req.name,
-  //         tenant: {
-  //             tenantId: res.
-  //                 name: req.name,
-  //             ownerUserRefId: req.userRefId,
-  //             adminUserRefIds: [],
-  //             memberUserRefIds: [],
-  //             maxAdminUserRefs: 5,
-  //             maxMemberUserRefs: 5,
-  //             createdAt: new Date(),
-  //             updatedAt: new Date()
-  //         },
-  //         userRefId: req.userRefId,
-  //         role: req.role
-  //     })
+  async listInvites(req: ReqListInvites): Promise<Result<ResListInvites>> {
+    throw new Error("Method not implemented.");
+  }
 
-  //     // throw new Error("Method not implemented.");
-  // }
-  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // async listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant> {
-  //     throw new Error("Method not implemented.");
-  // }
-  // // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // async attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger> {
-  //     throw new Error("Method not implemented.");
-  // }
+  async removeInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>> {
+    throw new Error("Method not implemented.");
+  }
 }
+
+export function queryNick(nick?: string): string | undefined {
+  if (!nick) {
+    return undefined;
+  }
+  nick = nick.trim().toLowerCase();
+  return nick === "" ? undefined : nick;
+}
+
+export function queryEmail(email?: string): string | undefined {
+  if (!email) {
+    return undefined;
+  }
+  const splitEmail = email
+    .trim()
+    .toLowerCase()
+    .match(/^([^@]+)@([^@]+)$/);
+  if (!splitEmail) {
+    return undefined;
+  }
+  return splitEmail[1].replace(/[^a-z0-9]/g, "") + "@" + splitEmail[2];
+}
+
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// async attachUserToTenant(req: ReqAttachUserToTenant): Promise<Result<ResAttachUserToTenant>> {
+//     const maxTenants = await this.db.select({
+//         maxTenants: userRefs.maxTenants
+//     }).from(userRefs).where(eq(userRefs.userRefId, req.userRefId)).get() ?? { maxTenants: 5 }
+
+//     const tendantCount = await this.db.$count(tenantUserRefs,
+//         and(
+//             eq(tenants.ownerUserRefId, req.userRefId),
+//             ne(tenantUserRefs.active, 0)
+//         ))
+
+//     if (tendantCount >= maxTenants.maxTenants) {
+//         return Result.Err(`max tenants reached:${maxTenants.maxTenants}`)
+//     }
+
+//     const now = new Date().toISOString();
+//     const values = {
+//         userRefId: req.userRefId,
+//         tenantId: req.tenantId,
+//         name: req.name,
+//         active: 1,
+//         createdAt: now,
+//         updatedAt: now
+//     }
+//     const rRes = await this.db
+//         .insert(tenantUserRefs)
+//         .values(values)
+//         .onConflictDoNothing()
+//         .returning()
+//         .run()
+//     const res = rRes.toJSON()[0]
+//     return Result.Ok({
+//         type: 'resAttachUserToTenant',
+//         name: req.name,
+//         tenant: {
+//             tenantId: res.
+//                 name: req.name,
+//             ownerUserRefId: req.userRefId,
+//             adminUserRefIds: [],
+//             memberUserRefIds: [],
+//             maxAdminUserRefs: 5,
+//             maxMemberUserRefs: 5,
+//             createdAt: new Date(),
+//             updatedAt: new Date()
+//         },
+//         userRefId: req.userRefId,
+//         role: req.role
+//     })
+
+//     // throw new Error("Method not implemented.");
+// }
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// async listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant> {
+//     throw new Error("Method not implemented.");
+// }
+// // eslint-disable-next-line @typescript-eslint/no-unused-vars
+// async attachUserToLedger(req: ReqAttachUserToLedger): Promise<ResAttachUserToLedger> {
+//     throw new Error("Method not implemented.");
+// }
