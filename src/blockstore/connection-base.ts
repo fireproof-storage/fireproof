@@ -115,9 +115,9 @@ export abstract class ConnectionBase implements Connection {
   //   //   await this.compact()
   //   // }
   //   const currents = await this.loader?.metaStore?.load()
-  //   if (!currents) throw new Error("Can't sync empty ledger: save data first")
+  //   if (!currents) throw new Error("Can't sync empty database: save data first")
   //   if (currents.length > 1)
-  //     throw new Error("Can't sync ledger with split heads: make an update first")
+  //     throw new Error("Can't sync database with split heads: make an update first")
   //   const current = currents[0]
   //   const params = {
   //     car: current.car.toString()

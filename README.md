@@ -1,4 +1,4 @@
-# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) realtime ledger
+# <img src="https://fireproof.storage/static/img/flame.svg" alt="Fireproof logo" width="25"> [Fireproof](https://fireproof.storage) realtime database
 
 <p align="right">
   <img src="https://img.shields.io/bundlephobia/minzip/%40fireproof%2Fcore" alt="Package size">
@@ -9,11 +9,11 @@
 
 ### No setup: write features first, access your data anywhere
 
-Add collaboration to any app with Fireproof. Access data from JavaScript servers and edge functions. Use live queries to update your UI automatically when the ledger changes. [Connect realtime sync](https://www.npmjs.com/package/@fireproof/connect) and those changes will sync between browsers and backend functions. Apps built this way are multi-player by default.
+Add collaboration to any app with Fireproof. Access data from JavaScript servers and edge functions. Use live queries to update your UI automatically when the database changes. [Connect realtime sync](https://www.npmjs.com/package/@fireproof/connect) and those changes will sync between browsers and backend functions. Apps built this way are multi-player by default.
 
 ### JavaScript quick start
 
-The document ledger API will feel familiar. Queries use dynamic indexes, and the ledger can refresh your UI, as seen in the `db.subscribe` call below, as well as the React liveQuery hook.
+The document database API will feel familiar. Queries use dynamic indexes, and the database can refresh your UI, as seen in the `db.subscribe` call below, as well as the React liveQuery hook.
 
 ```js
 import { fireproof } from "@fireproof/core";
@@ -32,7 +32,7 @@ beyonceDoc.hitSingles += 1;
 await db.put(beyonceDoc);
 ```
 
-Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/ledger-api/basics)
+Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/docs/database-api/basics)
 
 ### Live data hooks for React
 
@@ -50,7 +50,7 @@ Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tuto
 
 ## Why choose Fireproof
 
-Compared to other embedded ledgers, Fireproof:
+Compared to other embedded databases, Fireproof:
 
 - is network aware, encrypted, and multi-writer safe
 - is designed for real-time collaboration with CRDTs
@@ -59,7 +59,7 @@ Compared to other embedded ledgers, Fireproof:
 
 Deliver interactive experiences without waiting on the backend. Fireproof runs in any cloud, browser, or edge environment, so your application can access data anywhere.
 
-[Get the latest roadmap updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the ledger [architecture](https://use-fireproof.com/docs/architecture).
+[Get the latest roadmap updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the database [architecture](https://use-fireproof.com/docs/architecture).
 
 ### Use cases
 
@@ -83,7 +83,7 @@ Get started with the React hooks:
 npm install use-fireproof
 ```
 
-or install the ledger in any JavaScript environment:
+or install the database in any JavaScript environment:
 
 ```sh
 npm install @fireproof/core
@@ -95,7 +95,7 @@ The default build is optimized for browsers, to load the node build add `/node`:
 import { fireproof } from "@fireproof/core/node";
 ```
 
-Add the ledger to any web page via HTML script tag (global is `Fireproof`):
+Add the database to any web page via HTML script tag (global is `Fireproof`):
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/@fireproof/core/dist/browser/fireproof.global.js"></script>
@@ -165,7 +165,7 @@ pnpm run build:doc
 
 ## Thanks 🙏
 
-Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into ledger development via Apache CouchDB, one of the original document ledgers. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
+Fireproof is a synthesis of work done by people in the web community over the years. I couldn't even begin to name all the folks who made pivotal contributions. Without npm, React, and VS Code all this would have taken so much longer. Thanks to everyone who supported me getting into database development via Apache CouchDB, one of the original document databases. The distinguishing work on immutable data-structures comes from the years of consideration [IPFS](https://ipfs.tech), [IPLD](https://ipld.io), and the [Filecoin APIs](https://docs.filecoin.io) have enjoyed.
 
 Thanks to Alan Shaw and Mikeal Rogers without whom this project would have never got started. The core Merkle hash-tree clock is based on [Alan's Pail](https://github.com/alanshaw/pail), and you can see the repository history goes all the way back to work begun as a branch of that repo. Mikeal wrote [the prolly trees implementation](https://github.com/mikeal/prolly-trees).
 

@@ -1,7 +1,7 @@
 {
   "name": "use-fireproof",
   "version": "must-set",
-  "description": "Fireproof live ledger, JavaScript API and React hooks",
+  "description": "Fireproof live database, JavaScript API and React hooks",
   "type": "module",
   "module": "./index.js",
   "main": "./index.cjs",
@@ -26,7 +26,7 @@
   "scripts": {},
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
-  "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.ledger.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
+  "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.database.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
     "react": "from-package-json",
     "@fireproof/core": "from-package-json"
@@ -36,5 +36,5 @@
     "@fireproof/core": "from-package-json"
   },
   "devDependencies": {},
-  "keywords": ["react", "ledger", "json", "live", "sync"]
+  "keywords": ["react", "database", "json", "live", "sync"]
 }

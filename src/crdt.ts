@@ -35,14 +35,14 @@ import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
-import { LedgerOpts } from "./ledger.js";
+import { DatabaseOpts } from "./database.js";
 
 export interface HasCRDT<T extends DocTypes> {
   readonly crdt: CRDT<T> | CRDT<NonNullable<unknown>>;
 }
 
 export class CRDT<T extends DocTypes> {
-  readonly opts: LedgerOpts;
+  readonly opts: DatabaseOpts;
 
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
@@ -55,7 +55,7 @@ export class CRDT<T extends DocTypes> {
   readonly logger: Logger;
   readonly sthis: SuperThis;
 
-  constructor(sthis: SuperThis, opts: LedgerOpts) {
+  constructor(sthis: SuperThis, opts: DatabaseOpts) {
     this.sthis = sthis;
     this.logger = ensureLogger(sthis, "CRDT");
     this.opts = opts;

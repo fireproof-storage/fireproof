@@ -10,7 +10,7 @@ cp .git/config ./dist/fireproof-docs/.git/
   git rm -rf docs
 )
 mkdir -p dist/fireproof-docs/docs
-npx typedoc --out dist/fireproof-docs/docs  src/ledger.ts
+npx typedoc --out dist/fireproof-docs/docs  src/database.ts
 
 cd ./dist/fireproof-docs
 git add docs

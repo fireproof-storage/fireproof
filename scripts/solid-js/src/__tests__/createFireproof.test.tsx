@@ -13,7 +13,7 @@ const sleepHalfSecond = (ms = 500) => new Promise((resolve) => setTimeout(resolv
 describe("HOOK: createFireproof", () => {
   test("can perform all expected actions", async () => {
     await createRoot(async (dispose) => {
-      const { ledger, createDocument, createLiveQuery } = createFireproof("TestDB");
+      const { database, createDocument, createLiveQuery } = createFireproof("TestDB");
       const [doc, setDoc, saveDoc] = createDocument<TestDoc>(() => ({ text: "", completed: false }));
       const query = createLiveQuery("_id");
       await sleepHalfSecond(); // wait for the initial createDocument effect to finish
@@ -24,12 +24,12 @@ describe("HOOK: createFireproof", () => {
       // 2. Can update the document
       setDoc({ text: "hello", completed: true });
       expect(doc()).toEqual({ text: "hello", completed: true });
-      expect((await ledger().allDocs()).rows).toEqual([]);
+      expect((await database().allDocs()).rows).toEqual([]);
       expect(query().docs).toEqual([]);
 
-      // 3. Can save the document to the ledger
+      // 3. Can save the document to the database
       const { id } = await saveDoc();
-      expect(await ledger().get<TestDoc>(id)).toEqual({ _id: id, text: "hello", completed: true });
+      expect(await database().get<TestDoc>(id)).toEqual({ _id: id, text: "hello", completed: true });
       expect(doc()).toEqual({ _id: id, text: "hello", completed: true });
 
       await sleepHalfSecond();
@@ -44,7 +44,7 @@ describe("HOOK: createFireproof", () => {
       // 4. Can locally update the same document (retaining _id info post first save)
       setDoc({ text: "world", completed: false });
       expect(doc()).toEqual({ _id: id, text: "world", completed: false });
-      expect(await ledger().get<TestDoc>(id)).toEqual({ _id: id, text: "hello", completed: true });
+      expect(await database().get<TestDoc>(id)).toEqual({ _id: id, text: "hello", completed: true });
       expect(query().docs).toEqual([
         {
           _id: id,
@@ -55,7 +55,7 @@ describe("HOOK: createFireproof", () => {
 
       // 5. Can update the stored document
       await saveDoc();
-      expect(await ledger().get<TestDoc>(id)).toEqual({ _id: id, text: "world", completed: false });
+      expect(await database().get<TestDoc>(id)).toEqual({ _id: id, text: "world", completed: false });
       expect(doc()).toEqual({ _id: id, text: "world", completed: false });
 
       await sleepHalfSecond();
@@ -78,7 +78,7 @@ describe("HOOK: createFireproof", () => {
       // 8. Can save the new document
       const { id: id2 } = await saveDoc();
       expect(doc()).toEqual({ _id: id2, text: "foo", completed: true });
-      expect(await ledger().get<TestDoc>(id2)).toEqual({ _id: id2, text: "foo", completed: true });
+      expect(await database().get<TestDoc>(id2)).toEqual({ _id: id2, text: "foo", completed: true });
 
       await sleepHalfSecond();
       expect(query().docs).toEqual([
@@ -94,18 +94,18 @@ describe("HOOK: createFireproof", () => {
         },
       ]);
 
-      // Test cleanup to not keep data in the ledger across tests
-      await ledger().del(id);
-      await ledger().del(id2);
+      // Test cleanup to not keep data in the database across tests
+      await database().del(id);
+      await database().del(id2);
 
       expect(
-        await ledger()
+        await database()
           .get(id)
           .catch(() => null)
       ).toBeNull();
 
       expect(
-        await ledger()
+        await database()
           .get(id2)
           .catch(() => null)
       ).toBeNull();
