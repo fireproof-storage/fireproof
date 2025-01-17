@@ -8,7 +8,7 @@ function mulberry32(a: number) {
 }
 const rand = mulberry32(1); // determinstic fixtures
 
-export default async function loadFixtures(ledger: {
+export default async function loadFixtures(database: {
   put: (arg0: any) => any;
   allLists: { query: (opts) => Promise<any> };
   todosByList: { query: (opts) => Promise<any> };
@@ -29,9 +29,9 @@ export default async function loadFixtures(ledger: {
   ];
   let ok: { id: any };
   for (let j = 0; j < 3; j++) {
-    ok = await ledger.put({ title: listTitles[j], type: "list", _id: nextId("" + j) });
+    ok = await database.put({ title: listTitles[j], type: "list", _id: nextId("" + j) });
     for (let i = 0; i < todoTitles[j].length; i++) {
-      await ledger.put({
+      await database.put({
         _id: nextId(),
         title: todoTitles[j][i],
         listId: ok.id,
@@ -41,5 +41,5 @@ export default async function loadFixtures(ledger: {
       });
     }
   }
-  await ledger.allLists.query({ range: [0, 1] });
+  await database.allLists.query({ range: [0, 1] });
 }

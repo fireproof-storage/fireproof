@@ -1,5 +1,5 @@
 "use client";
-import { Ledger, fireproof } from "@fireproof/core";
+import { Database, fireproof } from "@fireproof/core";
 import { connect } from "@fireproof/ucan";
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -12,7 +12,7 @@ interface AuthFormValues {
 
 export default function Home() {
   const [email, setEmail] = useLocalStorageState<string>("example-email");
-  const [db] = useState<Ledger>(fireproof("example"));
+  const [db] = useState<Database>(fireproof("example"));
   const [connection] = useState(connect.ucan(db, "example-sync"));
   const { register, handleSubmit } = useForm<AuthFormValues>();
   const { data: docs, mutate: mutateTestThings } = useSWR("test things", async () => db.query("test"), {

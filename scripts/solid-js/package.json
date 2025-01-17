@@ -1,7 +1,7 @@
 {
   "name": "@fireproof/solid-js",
   "version": "0.18.0",
-  "description": "The official SolidJS adapter for Fireproof. Light up your data with an embedded live ledger for your SolidJS web app.",
+  "description": "The official SolidJS adapter for Fireproof. Light up your data with an embedded live database for your SolidJS web app.",
   "type": "module",
   "module": "./dist/server.js",
   "main": "./dist/server.js",
@@ -97,7 +97,7 @@
   },
   "keywords": [
     "solid",
-    "ledger",
+    "database",
     "json",
     "live",
     "sync"

@@ -156,7 +156,7 @@
           e.preventDefault();
           e.target.disabled = true;
           const input = document.querySelector("#join");
-          const { ledger: newDb, connection: newConn } = await cx.joinShared(input.value);
+          const { database: newDb, connection: newConn } = await cx.joinShared(input.value);
           setupDb(null, newDb, newConn);
         };
 

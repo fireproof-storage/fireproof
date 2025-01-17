@@ -1,4 +1,4 @@
-import type { ConfigOpts, Ledger, DocResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
+import type { ConfigOpts, Database, DocResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -27,12 +27,12 @@ export type UseDocumentResult<T extends DocTypes> = [Doc<T>, UpdateDocFn<T>, Sto
 export type UseDocument = <T extends DocTypes>(initialDocFn: () => Doc<T>) => UseDocumentResult<T>;
 
 export interface UseFireproof {
-  readonly ledger: Ledger;
+  readonly database: Database;
   /**
    * ## Summary
    *
-   * React hook that provides the ability to create/update/save new Fireproof documents into your custom Fireproof ledger.
-   * The creation occurs when you do not pass in an `_id` as part of your initial document -- the ledger will assign a new
+   * React hook that provides the ability to create/update/save new Fireproof documents into your custom Fireproof database.
+   * The creation occurs when you do not pass in an `_id` as part of your initial document -- the database will assign a new
    * one when you call the provided `save` handler. The hook also provides generics support so you can inline your custom type into
    * the invocation to receive type-safety and auto-complete support in your IDE.
    *
@@ -89,28 +89,28 @@ export const FireproofCtx = {} as UseFireproof;
  *
  * ## Summary
  *
- * React hook to create a custom-named Fireproof ledger and provides the utility hooks to query against it.
+ * React hook to create a custom-named Fireproof database and provides the utility hooks to query against it.
  *
  * ## Usage
  * ```tsx
- * const { ledger, useLiveQuery, useDocument } = useFireproof("dbname");
- * const { ledger, useLiveQuery, useDocument } = useFireproof("dbname", { ...options });
+ * const { database, useLiveQuery, useDocument } = useFireproof("dbname");
+ * const { database, useLiveQuery, useDocument } = useFireproof("dbname", { ...options });
  * ```
  *
  * ## Overview
  *
- * TL;DR: Only use this hook if you need to configure a ledger name other than the default `useFireproof`.
+ * TL;DR: Only use this hook if you need to configure a database name other than the default `useFireproof`.
  *
  * For most applications, using the `useLiveQuery` or `useDocument` hooks exported from `use-fireproof` should
- * suffice for the majority of use-cases. Under the hood, they act against a ledger named `useFireproof` instantiated with
- * default configurations. However, if you need to do a custom ledger setup or configure a ledger name more to your liking
+ * suffice for the majority of use-cases. Under the hood, they act against a database named `useFireproof` instantiated with
+ * default configurations. However, if you need to do a custom database setup or configure a database name more to your liking
  * than the default `useFireproof`, then use `useFireproof` as it exists for that purpose. It will provide you with the
- * custom ledger accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
- * custom ledger.
+ * custom database accessor and *lexically scoped* versions of `useLiveQuery` and `useDocument` that act against said
+ * custom database.
  *
  */
-export function useFireproof(name: string | Ledger = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  const ledger = typeof name === "string" ? fireproof(name, config) : name;
+export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
+  const database = typeof name === "string" ? fireproof(name, config) : name;
 
   function useDocument<T extends DocTypes>(initialDocFn: () => Doc<T>): UseDocumentResult<T> {
     // We purposely refetch the docId everytime to check if it has changed
@@ -124,13 +124,13 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
 
     const refreshDoc = useCallback(async () => {
       // todo add option for mvcc checks
-      setDoc(await ledger.get<T>(docId).catch(() => initialDocFn()));
+      setDoc(await database.get<T>(docId).catch(() => initialDocFn()));
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [docId]);
 
     const saveDoc: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        const res = await ledger.put(existingDoc ?? doc);
+        const res = await database.put(existingDoc ?? doc);
 
         // If the document was created, then we need to update the local state with the new `_id`
         if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
@@ -150,7 +150,7 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
 
     useEffect(() => {
       if (!docId) return;
-      const unsubscribe = ledger.subscribe((changes) => {
+      const unsubscribe = database.subscribe((changes) => {
         if (changes.find((c) => c._id === docId)) {
           void refreshDoc(); // todo use change.value
         }
@@ -182,13 +182,13 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
     const refreshRows = useCallback(async () => {
-      const res = await ledger.query<T>(mapFn, query);
+      const res = await database.query<T>(mapFn, query);
       setResult({ ...res, docs: res.rows.map((r) => r.doc as Doc<T>) });
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mapFnString, queryString]);
 
     useEffect(() => {
-      const unsubscribe = ledger.subscribe(refreshRows);
+      const unsubscribe = database.subscribe(refreshRows);
 
       return () => {
         unsubscribe();
@@ -202,5 +202,5 @@ export function useFireproof(name: string | Ledger = "useFireproof", config: Con
     return result;
   }
 
-  return { ledger, useLiveQuery, useDocument };
+  return { database, useLiveQuery, useDocument };
 }

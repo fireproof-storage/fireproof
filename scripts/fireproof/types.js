@@ -4,7 +4,7 @@ import path from "path";
 
 // Get the entry points from your build settings
 
-// const entryPoints = ['ledger', 'index', 'types']// createBuildSettings({}).map(config => path.basename(config.entryPoints[0], '.ts'))
+// const entryPoints = ['database', 'index', 'types']// createBuildSettings({}).map(config => path.basename(config.entryPoints[0], '.ts'))
 
 function generateIndexFile() {
   const typesDir = path.resolve("dist/types");
