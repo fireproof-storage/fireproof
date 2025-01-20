@@ -10,6 +10,6 @@ reviews:
   collapse_walkthrough: false
   auto_review:
     enabled: true
-    drafts: true
+    drafts: false
 chat:
   auto_reply: true
