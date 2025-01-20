@@ -54,7 +54,7 @@ class TestInterceptor extends bs.PassThroughGateway {
 describe("InterceptorGateway", () => {
   it("passthrough", async () => {
     const gwi = new TestInterceptor();
-    const db = fireproof("interceptor-gateway", {
+    const db = fireproof.DB("interceptor-gateway", {
       gatewayInterceptor: gwi,
     });
     expect(

@@ -45,7 +45,7 @@ describe("dreamcode", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof("test-db");
+    db = fireproof.DB("test-db");
     ok = await db.put({ _id: "test-1", text: "fireproof", dream: true });
     doc = await db.get(ok.id);
     result = await db.query("text", { range: ["a", "z"] });
@@ -89,7 +89,7 @@ describe("public API", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof("test-api");
+    db = fireproof.DB("test-api");
     // index = index(db, 'test-index', (doc) => doc.foo)
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
@@ -516,7 +516,7 @@ describe("Reopening a ledger with indexes", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof("test-reopen-idx");
+    db = fireproof.DB("test-reopen-idx");
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok.id).toBe("test");
 
@@ -561,7 +561,7 @@ describe("Reopening a ledger with indexes", function () {
   });
 
   it("should have the same data on reopen", async function () {
-    const db2 = fireproof("test-reopen-idx");
+    const db2 = fireproof.DB("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
     expect(db2.ledger.crdt.clock.head).toBeTruthy();
@@ -576,7 +576,7 @@ describe("Reopening a ledger with indexes", function () {
     expect(r0.rows.length).toBe(1);
     expect(r0.rows[0].key).toBe("bar");
 
-    const db2 = fireproof("test-reopen-idx");
+    const db2 = fireproof.DB("test-reopen-idx");
     const doc = await db2.get<FooType>("test");
     expect(doc.foo).toBe("bar");
     expect(db2.ledger.crdt.clock.head).toBeTruthy();
@@ -611,7 +611,7 @@ describe("basic js verify", function () {
     await sthis.start();
   });
   it("should include cids in arrays", async function () {
-    const db = fireproof("test-verify");
+    const db = fireproof.DB("test-verify");
     const ok = await db.put({ _id: "test", foo: ["bar", "bam"] });
     expect(ok.id).toBe("test");
     const ok2 = await db.put({ _id: "test2", foo: ["bar", "bam"] });
@@ -664,7 +664,7 @@ describe("same workload twice, same CID", function () {
     let ok: DocResponse;
     await sthis.start();
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
-    dbA = fireproof("test-dual-workload-a", configA);
+    dbA = fireproof.DB("test-dual-workload-a", configA);
     for (const doc of docs) {
       ok = await dbA.put(doc);
       expect(ok).toBeTruthy();
@@ -673,7 +673,7 @@ describe("same workload twice, same CID", function () {
     headA = dbA.ledger.crdt.clock.head.toString();
 
     // todo this fails because the test setup doesn't properly configure both ledgers to use the same key
-    dbB = fireproof("test-dual-workload-b", configB);
+    dbB = fireproof.DB("test-dual-workload-b", configB);
     for (const doc of docs) {
       ok = await dbB.put(doc);
       expect(ok).toBeTruthy();
