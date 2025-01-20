@@ -60,7 +60,10 @@
     "@vitest/ui": "^2.1.8",
     "esbuild": "^0.24.2",
     "esbuild-plugin-resolve": "^2.0.0",
+    "esbuild-plugin-replace": "^1.4.0",
+    "eslint-plugin-import": "^2.31.0",
     "eslint": "^9.18.0",
+    "eslint-import-resolver-typescript": "^3.7.0",
     "prettier": "^3.4.2",
     "semver": "^7.7.1",
     "tsup": "^8.3.6",
@@ -68,6 +71,7 @@
     "typedoc": "^0.27.7",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.23.0",
+    "uuidv7": "^1.0.2",
     "vite": "^6.0.7",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.8",
@@ -95,9 +99,7 @@
     "p-retry": "^6.2.1",
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
-    "react": "^18.3.1",
-    "typedoc": "^0.27.7",
-    "uuidv7": "^1.0.2"
+    "react": "^18.3.1"
   },
   "bundle-phobia": {
     "max-size": "390kB",

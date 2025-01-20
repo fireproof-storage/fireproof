@@ -1,14 +1,8 @@
 import { ensureLogger } from "./utils.js";
-import { DocTypes, MetaType, DocUpdate, SuperThis } from "./types.js";
+import { DocTypes, MetaType, DocUpdate, SuperThis, WriteQueue } from "./types.js";
 import { Future, Logger } from "@adviser/cement";
 
 type WorkerFunction<T extends DocTypes> = (tasks: DocUpdate<T>[]) => Promise<MetaType>;
-
-export interface WriteQueue<T extends DocTypes> {
-  push(task: DocUpdate<T>): Promise<MetaType>;
-  bulk(tasks: DocUpdate<T>[]): Promise<MetaType>;
-  close(): Promise<void>;
-}
 
 interface WriteQueueItem<T extends DocTypes> {
   // readonly task?: DocUpdate<T>;
@@ -30,7 +24,7 @@ export function defaultWriteQueueOpts(opts: Partial<WriteQueueParams> = {}): Wri
   };
 }
 
-class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
+class WriteQueueImpl<T extends DocUpdate<T>> implements WriteQueue<T> {
   private readonly opts: WriteQueueParams;
 
   private readonly queue: WriteQueueItem<T>[] = [];
@@ -95,6 +89,10 @@ class WriteQueueImpl<T extends DocTypes> implements WriteQueue<T> {
   }
 }
 
-export function writeQueue<T extends DocTypes>(sthis: SuperThis, worker: WorkerFunction<T>, opts: WriteQueueParams): WriteQueue<T> {
+export function writeQueue<T extends DocUpdate<T>>(
+  sthis: SuperThis,
+  worker: WorkerFunction<T>,
+  opts: WriteQueueParams,
+): WriteQueue<T> {
   return new WriteQueueImpl<T>(sthis, worker, opts);
 }

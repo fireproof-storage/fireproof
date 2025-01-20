@@ -27,9 +27,10 @@ import {
   DocTypes,
   DocObject,
   IndexUpdateString,
+  CarTransaction,
+  CRDT,
 } from "./types.js";
-import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
-import { CRDT } from "./crdt.js";
+import { BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { Logger } from "@adviser/cement";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
@@ -161,7 +162,7 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
 }
 
 export async function applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
-  crdt: CRDT<T>,
+  crdt: CRDT,
   resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K>,
 ): Promise<{
