@@ -10,10 +10,3 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 20
-
-#  - package-ecosystem: "npm" # See documentation for possible values
-#    directory: "/" # Location of package manifests
-#    schedule:
-#      interval: "weekly"
-#    open-pull-requests-limit: 20
-#    target-branch: "series_0.19"
