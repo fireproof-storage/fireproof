@@ -22,12 +22,12 @@ import type {
   Falsy,
   SuperThis,
   IndexTransactionMeta,
-  DocTypes,
+  LedgerOpts,
+  BaseBlockstore,
   CRDT,
   CRDTClock,
-  BaseBlockstore,
   CarTransaction,
-  LedgerOpts,
+  DocTypes,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
