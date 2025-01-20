@@ -1,10 +1,10 @@
-import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt } from "@fireproof/core";
+import { CRDT, defaultWriteQueueOpts, ensureSuperThis, LedgerOpts, toStoreURIRuntime, rt, CRDTImpl } from "@fireproof/core";
 import { bs } from "@fireproof/core";
 import { CRDTMeta, DocValue } from "@fireproof/core";
 import { Index, index } from "@fireproof/core";
 
 describe("Fresh crdt", function () {
-  let crdt: CRDT<{ hello: string } | { points: number }>;
+  let crdt: CRDT;
   const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
@@ -18,7 +18,7 @@ describe("Fresh crdt", function () {
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
   });
   it("should have an empty head", async function () {
     const head = crdt.clock.head;
@@ -44,7 +44,7 @@ describe("CRDT with one record", function () {
     readonly hello: string;
     readonly nice: string;
   }
-  let crdt: CRDT<Partial<CRDTTestType>>;
+  let crdt: CRDT;
   let firstPut: CRDTMeta;
   const sthis = ensureSuperThis();
 
@@ -61,7 +61,7 @@ describe("CRDT with one record", function () {
       storeUrls: toStoreURIRuntime(sthis, `test@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
   });
   it("should have a one-element head", async function () {
@@ -90,7 +90,7 @@ describe("CRDT with one record", function () {
     expect(got).toBeFalsy();
   });
   it("should offer changes", async function () {
-    const { result } = await crdt.changes([]);
+    const { result } = await crdt.changes<Partial<CRDTTestType>>([]);
     expect(result.length).toBe(1);
     expect(result[0].id).toBe("hello");
     expect(result[0].value?.hello).toBe("world");
@@ -101,7 +101,7 @@ describe("CRDT with a multi-write", function () {
   interface CRDTTestType {
     readonly points: number;
   }
-  let crdt: CRDT<CRDTTestType>;
+  let crdt: CRDT;
   let firstPut: CRDTMeta;
   const sthis = ensureSuperThis();
 
@@ -117,7 +117,7 @@ describe("CRDT with a multi-write", function () {
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -145,7 +145,7 @@ describe("CRDT with a multi-write", function () {
     expect(got.doc.points).toBe(10);
   });
   it("should offer changes", async function () {
-    const { result } = await crdt.changes([]);
+    const { result } = await crdt.changes<CRDTTestType>([]);
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
     expect(result[0].value?.points).toBe(11);
@@ -158,7 +158,7 @@ describe("CRDT with a multi-write", function () {
       { id: "jack", value: { points: 10 } },
     ]);
     expect(secondPut.head).toBeTruthy();
-    const { result: r2, head: h2 } = await crdt.changes();
+    const { result: r2, head: h2 } = await crdt.changes<CRDTTestType>();
     expect(r2.length).toBe(4);
     const { result: r3 } = await crdt.changes(firstPut.head);
     expect(r3.length).toBe(2);
@@ -171,8 +171,7 @@ interface CRDTTestType {
   readonly points: number;
 }
 describe("CRDT with two multi-writes", function () {
-  /** @type {CRDT} */
-  let crdt: CRDT<CRDTTestType>;
+  let crdt: CRDT;
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
   const sthis = ensureSuperThis();
@@ -188,7 +187,7 @@ describe("CRDT with two multi-writes", function () {
       storeUrls: toStoreURIRuntime(sthis, `test-multiple-writes@${sthis.nextId().str}`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -217,7 +216,7 @@ describe("CRDT with two multi-writes", function () {
     }
   });
   it("should offer changes", async function () {
-    const { result } = await crdt.changes();
+    const { result } = await crdt.changes<CRDTTestType>();
     expect(result.length).toBe(4);
     expect(result[0].id).toBe("ace");
     expect(result[0].value?.points).toBe(11);
@@ -228,7 +227,7 @@ describe("CRDT with two multi-writes", function () {
 });
 
 describe("Compact a named CRDT with writes", function () {
-  let crdt: CRDT<CRDTTestType>;
+  let crdt: CRDT;
   const sthis = ensureSuperThis();
   afterEach(async function () {
     await crdt.close();
@@ -242,7 +241,7 @@ describe("Compact a named CRDT with writes", function () {
       storeUrls: toStoreURIRuntime(sthis, `named-crdt-compaction`),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     for (let i = 0; i < 10; i++) {
       const bulk = [
         { id: "ace", value: { points: 11 } },
@@ -289,7 +288,7 @@ describe("Compact a named CRDT with writes", function () {
 });
 
 describe("CRDT with an index", function () {
-  let crdt: CRDT<CRDTTestType>;
+  let crdt: CRDT;
   let idx: Index<number, CRDTTestType>;
   const sthis = ensureSuperThis();
   afterEach(async function () {
@@ -304,12 +303,12 @@ describe("CRDT with an index", function () {
       storeUrls: toStoreURIRuntime(sthis, "test-crdt-cold"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT<CRDTTestType>(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<number, CRDTTestType>({ crdt: crdt }, "points");
+    idx = await index<number, CRDTTestType>(crdt, "points");
   });
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });
@@ -318,7 +317,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("should register the index", async function () {
-    const rIdx = await index<number, CRDTTestType>({ crdt: crdt }, "points");
+    const rIdx = await index<number, CRDTTestType>(crdt, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
     const got = await rIdx.query({ range: [9, 12] });
@@ -327,7 +326,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("creating a different index with same name should not work", async function () {
-    const e = await index({ crdt: crdt }, "points", (doc) => doc._id)
+    const e = await index(crdt, "points", (doc) => doc._id)
       .query()
       .catch((err) => err);
     expect(e.message).toMatch(/cannot apply/);
@@ -335,12 +334,9 @@ describe("CRDT with an index", function () {
 });
 
 describe("Loader with a committed transaction", function () {
-  interface CRDTTestType {
-    readonly foo: string;
-  }
   let loader: bs.Loader;
   let blockstore: bs.EncryptedBlockstore;
-  let crdt: CRDT<CRDTTestType>;
+  let crdt: CRDT;
   let done: CRDTMeta;
   const dbname = "test-loader";
   const sthis = ensureSuperThis();
@@ -356,7 +352,7 @@ describe("Loader with a committed transaction", function () {
       storeUrls: toStoreURIRuntime(sthis, dbname),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
     loader = blockstore.loader as bs.Loader;
@@ -389,11 +385,8 @@ describe("Loader with a committed transaction", function () {
 });
 
 describe("Loader with two committed transactions", function () {
-  interface CRDTTestType {
-    readonly foo: string;
-  }
   let loader: bs.Loader;
-  let crdt: CRDT<CRDTTestType>;
+  let crdt: CRDT;
   let blockstore: bs.EncryptedBlockstore;
   let done1: CRDTMeta;
   let done2: CRDTMeta;
@@ -410,7 +403,7 @@ describe("Loader with two committed transactions", function () {
       storeUrls: toStoreURIRuntime(sthis, "test-loader"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
     loader = blockstore.loader as bs.Loader;
@@ -445,12 +438,9 @@ describe("Loader with two committed transactions", function () {
 });
 
 describe("Loader with many committed transactions", function () {
-  interface Doc {
-    foo: string;
-  }
   let loader: bs.Loader;
   let blockstore: bs.EncryptedBlockstore;
-  let crdt: CRDT<Doc>;
+  let crdt: CRDT;
   let dones: CRDTMeta[];
   const count = 10;
   const sthis = ensureSuperThis();
@@ -466,7 +456,7 @@ describe("Loader with many committed transactions", function () {
       storeUrls: toStoreURIRuntime(sthis, "test-loader-many"),
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
-    crdt = new CRDT(sthis, dbOpts);
+    crdt = new CRDTImpl(sthis, dbOpts);
     blockstore = crdt.blockstore as bs.EncryptedBlockstore;
     expect(blockstore.loader).toBeTruthy();
     loader = blockstore.loader as bs.Loader;

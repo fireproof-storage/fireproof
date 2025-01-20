@@ -1,4 +1,5 @@
 export * from "./ledger.js";
+export * from "./database.js";
 export * from "./types.js";
 
 export * from "./crdt.js";

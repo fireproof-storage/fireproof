@@ -1,7 +1,7 @@
 import type { CID, Link, Version } from "multiformats";
 import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
-import { DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
-import { BlockFetcher, CarTransaction } from "./transaction.js";
+import { CarTransaction, DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
+import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Logger, Result, URI } from "@adviser/cement";
@@ -69,7 +69,7 @@ export interface AnyDecodedBlock {
 }
 
 export interface CarMakeable {
-  entries(): Iterable<AnyBlock>;
+  entries(): AsyncIterable<AnyBlock>;
   get(cid: AnyLink): Promise<AnyBlock | undefined>;
 }
 

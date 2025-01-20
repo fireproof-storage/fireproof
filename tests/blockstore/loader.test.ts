@@ -3,7 +3,7 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
 import { MemoryBlockstore } from "@fireproof/vendor/@web3-storage/pail/block";
-import { CRDTMeta, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
+import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
 
 class MyMemoryBlockStore extends bs.EncryptedBlockstore {
@@ -23,7 +23,7 @@ class MyMemoryBlockStore extends bs.EncryptedBlockstore {
   close(): Promise<void> {
     return this.loader.close();
   }
-  readonly transactions = new Set<bs.CarTransaction>();
+  readonly transactions = new Set<CarTransaction>();
   // readonly lastTxMeta?: TransactionMeta;
   readonly compacting: boolean = false;
 
@@ -51,7 +51,7 @@ class MyMemoryBlockStore extends bs.EncryptedBlockstore {
 describe("basic Loader simple", function () {
   let loader: bs.Loader;
   let block: BlockView;
-  let t: bs.CarTransaction;
+  let t: CarTransaction;
   const sthis = ensureSuperThis();
 
   afterEach(async function () {
@@ -63,7 +63,7 @@ describe("basic Loader simple", function () {
     const testDbName = "test-loader-commit";
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
-    t = new bs.CarTransaction(mockM as bs.EncryptedBlockstore);
+    t = new bs.CarTransactionImpl(mockM as bs.EncryptedBlockstore);
     loader = new bs.Loader(sthis, {
       ...simpleBlockOpts(sthis, testDbName),
       public: true,
@@ -99,7 +99,7 @@ describe("basic Loader with two commits", function () {
   let block2: BlockView;
   let block3: BlockView;
   let block4: BlockView;
-  let t: bs.CarTransaction;
+  let t: CarTransaction;
   let carCid: bs.CarGroup;
   let carCid0: bs.CarGroup;
 
@@ -113,7 +113,7 @@ describe("basic Loader with two commits", function () {
   beforeEach(async () => {
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
-    t = new bs.CarTransaction(mockM);
+    t = new bs.CarTransactionImpl(mockM);
     loader = new bs.Loader(sthis, {
       ...simpleBlockOpts(sthis, "test-loader-two-commit"),
       public: true,

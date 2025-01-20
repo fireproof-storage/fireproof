@@ -1,7 +1,7 @@
 import { Result, URI } from "@adviser/cement";
-import { NotFoundError } from "../utils.js";
-import { UnsubscribeResult, VoidResult } from "./serde-gateway.js";
-import { SuperThis } from "@fireproof/core";
+import type { NotFoundError } from "../utils.js";
+import type { UnsubscribeResult, VoidResult } from "./serde-gateway.js";
+import type { SuperThis } from "../types.js";
 
 export interface GatewayOpts {
   readonly gateway: Gateway;

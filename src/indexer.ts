@@ -12,10 +12,16 @@ import {
   type DocTypes,
   type IndexUpdateString,
   throwFalsy,
-  IndexTransactionMeta,
-  SuperThis,
+  type IndexTransactionMeta,
+  type SuperThis,
+  type BaseBlockstore,
+  type CRDT,
+  type HasCRDT,
+  type HasLogger,
+  type HasSuperThis,
+  type RefLedger,
 } from "./types.js";
-import { BaseBlockstore } from "./blockstore/index.js";
+// import { BaseBlockstore } from "./blockstore/index.js";
 
 import {
   bulkIndex,
@@ -30,26 +36,31 @@ import {
   IndexDocString,
   CompareKey,
 } from "./indexer-helpers.js";
-import { CRDT, HasCRDT } from "./crdt.js";
 import { ensureLogger } from "./utils.js";
 import { Logger } from "@adviser/cement";
 
+function refLedger(u: HasCRDT | RefLedger): u is RefLedger {
+  return !!(u as RefLedger).ledger;
+}
+
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
-  refDb: HasCRDT<T>,
+  refDb: HasLogger & HasSuperThis & (HasCRDT | RefLedger),
   name: string,
   mapFn?: MapFn<T>,
   meta?: IdxMeta,
 ): Index<K, T, R> {
-  if (mapFn && meta) throw refDb.crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
-  if (mapFn && mapFn.constructor.name !== "Function") throw refDb.crdt.logger.Error().Msg("mapFn must be a function").AsError();
-  if (refDb.crdt.indexers.has(name)) {
-    const idx = refDb.crdt.indexers.get(name) as unknown as Index<K, T>;
+  const crdt = refLedger(refDb) ? refDb.ledger.crdt : refDb.crdt;
+
+  if (mapFn && meta) throw refDb.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
+  if (mapFn && mapFn.constructor.name !== "Function") throw refDb.logger.Error().Msg("mapFn must be a function").AsError();
+  if (crdt.indexers.has(name)) {
+    const idx = crdt.indexers.get(name) as unknown as Index<K, T>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<K, T>(refDb.crdt.sthis, refDb.crdt, name, mapFn, meta);
-    refDb.crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
+    const idx = new Index<K, T>(refDb.sthis, crdt, name, mapFn, meta);
+    crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
   }
-  return refDb.crdt.indexers.get(name) as unknown as Index<K, T, R>;
+  return crdt.indexers.get(name) as unknown as Index<K, T, R>;
 }
 
 // interface ByIdIndexIten<K extends IndexKeyType> {
@@ -59,7 +70,7 @@ export function index<K extends IndexKeyType = string, T extends DocTypes = NonN
 
 export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T> {
   readonly blockstore: BaseBlockstore;
-  readonly crdt: CRDT<T>;
+  readonly crdt: CRDT;
   readonly name: string;
   mapFn?: MapFn<T>;
   mapFnString = "";
@@ -88,10 +99,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   readonly logger: Logger;
 
-  constructor(sthis: SuperThis, crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  constructor(sthis: SuperThis, crdt: CRDT, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
     this.logger = ensureLogger(sthis, "Index");
     this.blockstore = crdt.indexBlockstore;
-    this.crdt = crdt as CRDT<T>;
+    this.crdt = crdt as CRDT;
     this.applyMapFn(name, mapFn, meta);
     this.name = name;
     if (!(this.mapFnString || this.initError)) throw this.logger.Error().Msg("missing mapFnString").AsError();
@@ -248,10 +259,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     if (!this.mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
     let result: DocUpdate<T>[], head: ClockHead;
     if (!this.indexHead || this.indexHead.length === 0) {
-      ({ result, head } = await this.crdt.allDocs());
+      ({ result, head } = await this.crdt.allDocs<T>());
       this.logger.Debug().Msg("enter crdt.allDocs");
     } else {
-      ({ result, head } = await this.crdt.changes(this.indexHead));
+      ({ result, head } = await this.crdt.changes<T>(this.indexHead));
       this.logger.Debug().Msg("enter crdt.changes");
     }
     if (result.length === 0) {

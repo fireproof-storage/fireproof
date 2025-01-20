@@ -3,11 +3,11 @@ import { expect, it, vi } from "vitest";
 
 it("esm.sh", async () => {
   const script = document.createElement("script");
-  console.log("window", window.FP_VERSION);
-  const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
-  console.log("window-res", await res.text());
-  const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
-  console.log("window-imp", fireproof);
+  // // console.log("window", window.FP_VERSION);
+  // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
+  // // console.log("window-res", await res.text());
+  // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
+  // // console.log("window-imp", fireproof);
 
   script.textContent = `
 console.log("pre-window-js", window.FP_VERSION)
@@ -51,5 +51,5 @@ main().catch(console.error)
   document.body.appendChild(script);
 
   await vi.waitUntil(() => document.querySelector("[data-ready]"), { timeout: 500_000 });
-  expect(await page.getByTestId("label").element().innerText).toBe("9 - esm-success");
+  expect(await page.getByTestId("label").element().innerHTML).toBe("9 - esm-success");
 });

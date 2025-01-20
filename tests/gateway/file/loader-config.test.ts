@@ -33,11 +33,11 @@ describe("config file gateway", () => {
   });
 
   it("loader", async () => {
-    const db = fireproof(my_app());
+    const db = fireproof.DB(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.ledger.name).toBe(my_app());
 
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -52,7 +52,7 @@ describe("config file gateway", () => {
       style: "path",
     });
 
-    const dataStore = await db.crdt.blockstore.loader?.carStore();
+    const dataStore = await db.ledger.crdt.blockstore.loader?.carStore();
     expect(dataStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -67,7 +67,7 @@ describe("config file gateway", () => {
       },
       style: "path",
     });
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader?.metaStore();
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -81,7 +81,7 @@ describe("config file gateway", () => {
       },
       style: "path",
     });
-    const WALStore = await db.crdt.blockstore.loader?.WALStore();
+    const WALStore = await db.ledger.crdt.blockstore.loader?.WALStore();
     expect(WALStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -110,11 +110,11 @@ describe("config file gateway", () => {
       /* */
     });
 
-    const db = fireproof(my_app(), { storeUrls: { base } });
+    const db = fireproof.DB(my_app(), { storeUrls: { base } });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader?.carStore();
+    expect(db.ledger.name).toBe(my_app());
+    const carStore = await db.ledger.crdt.blockstore.loader?.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
@@ -128,7 +128,7 @@ describe("config file gateway", () => {
       },
       style: "path",
     });
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
@@ -142,7 +142,7 @@ describe("config file gateway", () => {
       style: "path",
     });
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "data"))).isDirectory()).toBeTruthy();
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader?.metaStore();
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "./dist/data",
       protocol: "file:",
@@ -177,10 +177,10 @@ describe("config file gateway", () => {
 
     expect(baseDir).toMatch(new RegExp(`/\\.fireproof/${rt.FILESTORE_VERSION.replace(/-file/, "")}/${my_app()}`));
 
-    const db = fireproof(my_app());
+    const db = fireproof.DB(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader?.carStore();
+    expect(db.ledger.name).toBe(my_app());
+    const carStore = await db.ledger.crdt.blockstore.loader?.carStore();
 
     expect(carStore?.url().asObj()).toEqual({
       pathname: `${sthis.env.get("HOME")}/.fireproof/v0.19`,
@@ -200,7 +200,7 @@ describe("config file gateway", () => {
 
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "data"))).isDirectory()).toBeTruthy();
 
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: `${sthis.env.get("HOME")}/.fireproof/v0.19`,
       protocol: "file:",
@@ -215,7 +215,7 @@ describe("config file gateway", () => {
         version: rt.FILESTORE_VERSION,
       },
     });
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader?.metaStore();
     expect(metaStore?.url().asObj()).toEqual({
       pathname: `${sthis.env.get("HOME")}/.fireproof/v0.19`,
       protocol: "file:",
@@ -250,10 +250,10 @@ describe("config file gateway", () => {
       /* */
     });
 
-    const db = fireproof(my_app());
+    const db = fireproof.DB(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
-    const carStore = await db.crdt.blockstore.loader.carStore();
+    expect(db.ledger.name).toBe(my_app());
+    const carStore = await db.ledger.crdt.blockstore.loader.carStore();
     expect(carStore?.url().asObj()).toEqual({
       pathname: "./dist/fp-dir-file",
       protocol: "file:",
@@ -271,7 +271,7 @@ describe("config file gateway", () => {
     });
 
     expect((await sysfs.stat(sthis.pathOps.join(baseDir, "data"))).isDirectory()).toBeTruthy();
-    const fileStore = await db.crdt.blockstore.loader?.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader?.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: `./dist/fp-dir-file`,
       protocol: "file:",
@@ -286,7 +286,7 @@ describe("config file gateway", () => {
       },
     });
 
-    const metaStore = await db.crdt.blockstore.loader?.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader?.metaStore();
     expect(metaStore?.url().asObj()).toEqual({
       pathname: `./dist/fp-dir-file`,
       protocol: "file:",

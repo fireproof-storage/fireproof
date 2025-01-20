@@ -1,7 +1,7 @@
-import { Ledger, ensureSuperThis, fireproof } from "@fireproof/core";
+import { Database, ensureSuperThis, fireproof } from "@fireproof/core";
 
 interface DBItem {
-  readonly db: Ledger;
+  readonly db: Database;
   readonly name: string;
 }
 
@@ -26,7 +26,7 @@ describe("Multiple Databases", () => {
         .fill(0)
         .map(async (_, i) => {
           const name = `db-${group}-${i}`;
-          const db = fireproof(name);
+          const db = fireproof.DB(name);
           dbs.push({ db, name });
           for (let i = 0; i < rows; i++) {
             await db.put({ _id: `${name}-${i}`, hello: "world" });

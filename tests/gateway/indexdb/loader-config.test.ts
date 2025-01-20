@@ -12,11 +12,11 @@ describe("fireproof config indexdb", () => {
   });
 
   it("indexdb-loader", async () => {
-    const db = fireproof(my_app());
+    const db = fireproof.DB(my_app());
     await db.put({ name: "my-app" });
-    expect(db.name).toBe(my_app());
+    expect(db.ledger.name).toBe(my_app());
 
-    const fileStore = await db.crdt.blockstore.loader.fileStore();
+    const fileStore = await db.ledger.crdt.blockstore.loader.fileStore();
     expect(fileStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
@@ -31,7 +31,7 @@ describe("fireproof config indexdb", () => {
       style: "path",
     });
 
-    const dataStore = await db.crdt.blockstore.loader.carStore();
+    const dataStore = await db.ledger.crdt.blockstore.loader.carStore();
     expect(dataStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
@@ -46,7 +46,7 @@ describe("fireproof config indexdb", () => {
       },
       style: "path",
     });
-    const metaStore = await db.crdt.blockstore.loader.metaStore();
+    const metaStore = await db.ledger.crdt.blockstore.loader.metaStore();
     expect(metaStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
@@ -60,7 +60,7 @@ describe("fireproof config indexdb", () => {
       },
       style: "path",
     });
-    const WALStore = await db.crdt.blockstore.loader.WALStore();
+    const WALStore = await db.ledger.crdt.blockstore.loader.WALStore();
     expect(WALStore?.url().asObj()).toEqual({
       pathname: "fp",
       protocol: "indexdb:",
