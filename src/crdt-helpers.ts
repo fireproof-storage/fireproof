@@ -8,12 +8,10 @@ import { EventFetcher, vis } from "@fireproof/vendor/@web3-storage/pail/clock";
 import * as Batch from "@fireproof/vendor/@web3-storage/pail/crdt/batch";
 import {
   type EncryptedBlockstore,
-  CarTransaction,
   BlockFetcher,
   TransactionMeta,
   AnyLink,
   StoreRuntime,
-  BaseBlockstore,
   CompactFetcher,
 } from "./blockstore/index.js";
 import {
@@ -29,9 +27,12 @@ import {
   type DocWithId,
   type DocTypes,
   throwFalsy,
+  CarTransaction,
+  BaseBlockstore,
 } from "./types.js";
 import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
+import { CarTransactionImpl } from "./blockstore/transaction.js";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function time(tag: string) {
@@ -121,9 +122,9 @@ async function processFileset(
   blocks: CarTransaction,
   files: DocFiles /*, publicFiles = false */,
 ) {
-  const dbBlockstore = blocks.parent as EncryptedBlockstore;
+  const dbBlockstore = blocks.parent as unknown as EncryptedBlockstore;
   if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, ledger name is required").AsError();
-  const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
+  const t = new CarTransactionImpl(dbBlockstore); // maybe this should move to encrypted-blockstore
   const didPut = [];
   // let totalSize = 0
   for (const filename in files) {

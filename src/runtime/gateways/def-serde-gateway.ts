@@ -1,9 +1,9 @@
 import { Result, URI } from "@adviser/cement";
-import { Gateway } from "../../blockstore/gateway.js";
-import { FPEnvelope } from "../../blockstore/fp-envelope.js";
+import type { Gateway } from "../../blockstore/gateway.js";
+import type { FPEnvelope } from "../../blockstore/fp-envelope.js";
 import { fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
-import { SerdeGateway, SerdeGetResult } from "../../blockstore/serde-gateway.js";
-import { SuperThis } from "../../types.js";
+import type { SerdeGateway, SerdeGetResult } from "../../blockstore/serde-gateway.js";
+import type { SuperThis } from "../../types.js";
 
 export class DefSerdeGateway implements SerdeGateway {
   // abstract readonly storeType: StoreType;

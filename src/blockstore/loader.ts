@@ -25,9 +25,9 @@ import {
 
 import { parseCarFile } from "./loader-helpers.js";
 
-import { CarTransaction, defaultedBlockstoreRuntime } from "./transaction.js";
+import { defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import type { Falsy, SuperThis } from "../types.js";
+import type { CarTransaction, Falsy, SuperThis } from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
