@@ -1,5 +1,5 @@
 import { Result, URI } from "@adviser/cement";
-import { bs, fireproof, SuperThis } from "@fireproof/core";
+import { bs, fireproofDB, SuperThis } from "@fireproof/core";
 
 class TestInterceptor extends bs.PassThroughGateway {
   readonly fn = vitest.fn();
@@ -54,7 +54,7 @@ class TestInterceptor extends bs.PassThroughGateway {
 describe("InterceptorGateway", () => {
   it("passthrough", async () => {
     const gwi = new TestInterceptor();
-    const db = fireproof("interceptor-gateway", {
+    const db = fireproofDB("interceptor-gateway", {
       gatewayInterceptor: gwi,
     });
     expect(

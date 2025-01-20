@@ -35,10 +35,22 @@ import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
-import { LedgerOpts } from "./ledger.js";
+import { Ledger, LedgerOpts } from "./ledger.js";
 
 export interface HasCRDT<T extends DocTypes> {
   readonly crdt: CRDT<T> | CRDT<NonNullable<unknown>>;
+}
+
+export interface RefLedger {
+  readonly ledger: Ledger;
+}
+
+export interface HasLogger {
+  readonly logger: Logger;
+}
+
+export interface HasSuperThis {
+  readonly sthis: SuperThis;
 }
 
 export class CRDT<T extends DocTypes> {
@@ -54,9 +66,12 @@ export class CRDT<T extends DocTypes> {
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
+  // self reference to fullfill HasCRDT
+  readonly crdt: CRDT<T>;
 
   constructor(sthis: SuperThis, opts: LedgerOpts) {
     this.sthis = sthis;
+    this.crdt = this;
     this.logger = ensureLogger(sthis, "CRDT");
     this.opts = opts;
     this.blockstore = new EncryptedBlockstore(sthis, {
@@ -84,7 +99,7 @@ export class CRDT<T extends DocTypes> {
         const idxCarMeta = meta as IndexTransactionMeta;
         if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index({ crdt: this }, name, undefined, idx);
+          index(this, name, undefined, idx);
         }
       },
       gatewayInterceptor: opts.gatewayInterceptor,

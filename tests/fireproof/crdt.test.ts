@@ -309,7 +309,7 @@ describe("CRDT with an index", function () {
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
     ]);
-    idx = await index<number, CRDTTestType>({ crdt: crdt }, "points");
+    idx = await index<number, CRDTTestType>(crdt, "points");
   });
   it("should query the data", async function () {
     const got = await idx.query({ range: [9, 12] });
@@ -318,7 +318,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("should register the index", async function () {
-    const rIdx = await index<number, CRDTTestType>({ crdt: crdt }, "points");
+    const rIdx = await index<number, CRDTTestType>(crdt, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
     const got = await rIdx.query({ range: [9, 12] });
@@ -327,7 +327,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].key).toBe(10);
   });
   it("creating a different index with same name should not work", async function () {
-    const e = await index({ crdt: crdt }, "points", (doc) => doc._id)
+    const e = await index(crdt, "points", (doc) => doc._id)
       .query()
       .catch((err) => err);
     expect(e.message).toMatch(/cannot apply/);

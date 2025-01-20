@@ -1,7 +1,6 @@
 import {
   Index,
   index,
-  Ledger,
   CRDT,
   IndexRows,
   toStoreURIRuntime,
@@ -11,6 +10,7 @@ import {
   defaultWriteQueueOpts,
   ensureSuperThis,
   LedgerOpts,
+  Database,
 } from "@fireproof/core";
 
 interface TestType {
@@ -19,7 +19,7 @@ interface TestType {
 }
 
 describe("basic Index", () => {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   const sthis = ensureSuperThis();
@@ -31,18 +31,18 @@ describe("basic Index", () => {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
+    db = LedgerFactory("test-indexer").asDB();
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc) => {
+    indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
     });
     await indexer.ready();
   });
   it("should have properties", function () {
-    expect(indexer.crdt).toBe(db.crdt);
+    expect(indexer.crdt).toBe(db.ledger.crdt);
     // expect(indexer.crdt.name).toBe("test-indexer");
     expect(indexer.name).toBe("hello");
     expect(indexer.mapFn).toBeTruthy();
@@ -107,7 +107,7 @@ describe("basic Index", () => {
 });
 
 describe("Index query with compound key", function () {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<[string, number], TestType>;
   const sthis = ensureSuperThis();
   afterEach(async function () {
@@ -118,12 +118,12 @@ describe("Index query with compound key", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
+    db = LedgerFactory("test-indexer").asDB();
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
     await db.put({ title: "bazillas", score: 3 });
-    indexer = new Index<[string, number], TestType>(sthis, db.crdt, "hello", (doc) => {
+    indexer = new Index<[string, number], TestType>(sthis, db.ledger.crdt, "hello", (doc) => {
       return [doc.title, doc.score];
     });
     await indexer.ready();
@@ -137,7 +137,7 @@ describe("Index query with compound key", function () {
 });
 
 describe("basic Index with map fun", function () {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<string, TestType>;
   const sthis = ensureSuperThis();
   afterEach(async function () {
@@ -148,11 +148,11 @@ describe("basic Index with map fun", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
+    db = LedgerFactory("test-indexer").asDB();
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc, map) => {
+    indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "hello", (doc, map) => {
       map(doc.title);
     });
     await indexer.ready();
@@ -167,7 +167,7 @@ describe("basic Index with map fun", function () {
 });
 
 describe("basic Index with map fun with value", function () {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<string, TestType, number>;
   const sthis = ensureSuperThis();
   afterEach(async function () {
@@ -176,11 +176,11 @@ describe("basic Index with map fun with value", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
+    db = LedgerFactory("test-indexer").asDB();
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index<string, TestType, number>(sthis, db.crdt, "hello", (doc, map) => {
+    indexer = new Index<string, TestType, number>(sthis, db.ledger.crdt, "hello", (doc, map) => {
       map(doc.title, doc.title.length);
     });
   });
@@ -205,7 +205,7 @@ describe("basic Index with map fun with value", function () {
 });
 
 describe("Index query with map and compound key", function () {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<[string, number], TestType>;
   const sthis = ensureSuperThis();
   afterEach(async function () {
@@ -216,12 +216,12 @@ describe("Index query with map and compound key", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
+    db = LedgerFactory("test-indexer").asDB();
     await db.put({ title: "amazing", score: 1 });
     await db.put({ title: "creative", score: 2 });
     await db.put({ title: "creative", score: 20 });
     await db.put({ title: "bazillas", score: 3 });
-    indexer = new Index<[string, number], TestType>(sthis, db.crdt, "hello", (doc, emit) => {
+    indexer = new Index<[string, number], TestType>(sthis, db.ledger.crdt, "hello", (doc, emit) => {
       emit([doc.title, doc.score]);
     });
     await indexer.ready();
@@ -235,7 +235,7 @@ describe("Index query with map and compound key", function () {
 });
 
 describe("basic Index with string fun", function () {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<string, TestType>;
   const sthis = ensureSuperThis();
   afterEach(async function () {
@@ -246,11 +246,11 @@ describe("basic Index with string fun", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
+    db = LedgerFactory("test-indexer").asDB();
     await db.put({ title: "amazing" });
     await db.put({ title: "creative" });
     await db.put({ title: "bazillas" });
-    indexer = new Index(sthis, db.crdt, "title");
+    indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "title");
     await indexer.ready();
   });
   it("should get results", async function () {
@@ -307,7 +307,7 @@ describe("basic Index upon cold start", function () {
       didMap++;
       return doc.title;
     };
-    indexer = await index<string, TestType>({ crdt: crdt }, "hello", mapFn);
+    indexer = await index<string, TestType>(crdt, "hello", mapFn);
     logger.Debug().Msg("post index beforeEach");
     await indexer.ready();
     logger.Debug().Msg("post indexer.ready beforeEach");
@@ -332,7 +332,7 @@ describe("basic Index upon cold start", function () {
     const { result, head } = await crdt2.changes();
     expect(result).toBeTruthy();
     await crdt2.ready();
-    const indexer2 = await index<string, TestType>({ crdt: crdt2 }, "hello", mapFn);
+    const indexer2 = await index<string, TestType>(crdt2, "hello", mapFn);
     await indexer2.ready();
     const result2 = await indexer2.query();
     expect(indexer2.indexHead).toEqual(head);
@@ -343,7 +343,7 @@ describe("basic Index upon cold start", function () {
   it.skip("should not rerun the map function on seen changes", async function () {
     didMap = 0;
     const crdt2 = new CRDT<TestType>(sthis, dbOpts);
-    const indexer2 = await index({ crdt: crdt2 }, "hello", mapFn);
+    const indexer2 = await index(crdt2, "hello", mapFn);
     const { result, head } = await crdt2.changes([]);
     expect(result.length).toEqual(3);
     expect(head.length).toEqual(1);
@@ -368,14 +368,14 @@ describe("basic Index upon cold start", function () {
   });
   it("should ignore meta when map function definiton changes", async function () {
     const crdt2 = new CRDT<TestType>(sthis, dbOpts);
-    const result = await index<string, TestType>({ crdt: crdt2 }, "hello", (doc) => doc.title.split("").reverse().join("")).query();
+    const result = await index<string, TestType>(crdt2, "hello", (doc) => doc.title.split("").reverse().join("")).query();
     expect(result.rows.length).toEqual(3);
     expect(result.rows[0].key).toEqual("evitaerc"); // creative
   });
 });
 
 describe("basic Index with no data", function () {
-  let db: Ledger<TestType>;
+  let db: Database;
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   const sthis = ensureSuperThis();
@@ -387,15 +387,15 @@ describe("basic Index with no data", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-indexer");
-    indexer = new Index<string, TestType>(sthis, db.crdt, "hello", (doc) => {
+    db = LedgerFactory("test-indexer").asDB();
+    indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "hello", (doc) => {
       didMap = true;
       return doc.title;
     });
     await indexer.ready();
   });
   it("should have properties", function () {
-    expect(indexer.crdt).toEqual(db.crdt);
+    expect(indexer.crdt).toEqual(db.ledger.crdt);
     expect(indexer.name).toEqual("hello");
     expect(indexer.mapFn).toBeTruthy();
   });
