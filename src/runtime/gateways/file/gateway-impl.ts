@@ -3,7 +3,7 @@ import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement"
 import { getFileName, getPath } from "./utils.js";
 import { PARAM, SuperThis, SysFileSystem } from "../../../types.js";
 import { exceptionWrapper, isNotFoundError, NotFoundError } from "../../../utils.js";
-import { Gateway, GetResult } from "../../../blockstore/gateway.js";
+import type { Gateway, GetResult } from "../../../blockstore/gateway.js";
 
 const versionFiles = new KeyedResolvOnce<string>();
 

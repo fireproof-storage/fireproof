@@ -14,28 +14,24 @@ import {
 } from "./types.js";
 
 import { Loader } from "./loader.js";
-import type { CID, Block, Version } from "multiformats";
-import { falsyToUndef, SuperThis } from "../types.js";
+import type { CID, Block, Version, UnknownLink } from "multiformats";
+import { BaseBlockstore, CarTransaction, falsyToUndef, SuperThis } from "../types.js";
 import { ensureStoreEnDeFile, toStoreRuntime } from "./store-factory.js";
 import { Logger, toCryptoRuntime } from "@adviser/cement";
 import { ensureLogger, ensureSuperThis } from "../utils.js";
 
 export type BlockFetcher = BlockFetcherApi;
-
 export interface CarTransactionOpts {
   readonly add: boolean;
   readonly noLoader: boolean;
 }
 
-export interface CarTransactionOpts {
-  readonly add: boolean;
-  readonly noLoader: boolean;
-}
-
-export class CarTransaction extends MemoryBlockstore implements CarMakeable {
+export class CarTransactionImpl implements CarMakeable, CarTransaction {
   readonly parent: BaseBlockstore;
+  readonly #memblock = new MemoryBlockstore();
+
   constructor(parent: BaseBlockstore, opts: CarTransactionOpts = { add: true, noLoader: false }) {
-    super();
+    // super();
     if (opts.add) {
       parent.transactions.add(this);
     }
@@ -47,7 +43,21 @@ export class CarTransaction extends MemoryBlockstore implements CarMakeable {
   }
 
   async superGet(cid: AnyLink): Promise<AnyBlock | undefined> {
-    return super.get(cid);
+    return this.#memblock.get(cid);
+  }
+
+  async put(cid: AnyLink, block: Uint8Array): Promise<void> {
+    await this.#memblock.put(cid, block);
+  }
+
+  putSync(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void {
+    this.#memblock.putSync(cid, bytes);
+  }
+
+  async *entries(): AsyncIterableIterator<AnyBlock> {
+    for await (const blk of this.#memblock.entries()) {
+      yield blk;
+    }
   }
 }
 
@@ -91,7 +101,7 @@ export function defaultedBlockstoreRuntime(
 //   // }
 // }
 
-export class BaseBlockstore implements BlockFetcher {
+export class BaseBlockstoreImpl implements BlockFetcher {
   readonly transactions: Set<CarTransaction> = new Set<CarTransaction>();
   readonly ebOpts: BlockstoreRuntime;
   readonly sthis: SuperThis;
@@ -144,7 +154,7 @@ export class BaseBlockstore implements BlockFetcher {
     _opts?: CarTransactionOpts,
   ): Promise<TransactionWrapper<M>> {
     this.logger.Debug().Msg("enter transaction");
-    const t = new CarTransaction(this, _opts);
+    const t = new CarTransactionImpl(this, _opts);
     this.logger.Debug().Msg("post CarTransaction");
     const done: M = await fn(t);
     this.logger.Debug().Msg("post fn");
@@ -153,7 +163,7 @@ export class BaseBlockstore implements BlockFetcher {
   }
 
   openTransaction(opts: CarTransactionOpts = { add: true, noLoader: false }): CarTransaction {
-    return new CarTransaction(this, opts);
+    return new CarTransactionImpl(this, opts);
   }
 
   async commitTransaction<M extends TransactionMeta>(
@@ -185,7 +195,7 @@ export class BaseBlockstore implements BlockFetcher {
   }
 }
 
-export class EncryptedBlockstore extends BaseBlockstore {
+export class EncryptedBlockstore extends BaseBlockstoreImpl {
   // readonly name: string;
 
   ready(): Promise<void> {
@@ -300,7 +310,7 @@ export class CompactionFetcher implements BlockFetcher {
   constructor(blocks: EncryptedBlockstore) {
     this.blockstore = blocks;
     // this.loader = blocks.loader
-    this.loggedBlocks = new CarTransaction(blocks);
+    this.loggedBlocks = new CarTransactionImpl(blocks);
   }
 
   async get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined> {
