@@ -2,20 +2,20 @@ import { URI } from "@adviser/cement";
 import { buildBlobFiles, FileWithCid, mockSuperThis } from "../helpers.js";
 import {
   bs,
-  Ledger,
   DocResponse,
   DocFileMeta,
   DocWithId,
   DocFiles,
   toStoreURIRuntime,
   keyConfigOpts,
-  LedgerFactory,
-  LedgerShell,
   ensureSuperThis,
+  Database,
+  fireproof,
+  LedgerShell,
 } from "@fireproof/core";
 
 describe("basic Ledger", () => {
-  let db: Ledger;
+  let db: Database;
   const sthis = mockSuperThis();
   afterEach(async () => {
     await db.close();
@@ -23,7 +23,7 @@ describe("basic Ledger", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = LedgerFactory(undefined, {
+    db = fireproof.DB(undefined as unknown as string, {
       logger: sthis.logger,
     });
   });
@@ -53,7 +53,7 @@ describe("basic Ledger with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: LedgerShell;
+  let db: Database;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -61,7 +61,7 @@ describe("basic Ledger with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("factory-name") as LedgerShell;
+    db = fireproof.DB("factory-name");
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
@@ -93,10 +93,11 @@ describe("basic Ledger with record", function () {
     expect(rows[0].value._id).toBe("hello");
   });
   it("is not persisted", async function () {
-    const db2 = LedgerFactory("factory-name") as LedgerShell;
+    const db2 = fireproof.DB("factory-name");
     const { rows } = await db2.changes([]);
     expect(rows.length).toBe(1);
-    expect(db2.ref).toBe(db.ref);
+    // assert((db.ledger.ref === db2.ledger.ref, "should be the same ledger");
+    expect((db.ledger as LedgerShell).ref).toBe((db2.ledger as LedgerShell).ref);
     const doc = await db2.get<Doc>("hello").catch((e) => e);
     expect(doc.value).toBe("world");
     await db2.close();
@@ -107,7 +108,7 @@ describe("named Ledger with record", function () {
   interface Doc {
     readonly value: string;
   }
-  let db: Ledger;
+  let db: Database;
   const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
@@ -115,7 +116,7 @@ describe("named Ledger with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("test-db-name");
+    db = fireproof.DB("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
     const ok = await db.put(doc);
@@ -192,7 +193,7 @@ describe("named Ledger with record", function () {
   it("should have a key", async function () {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
-    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     await loader.ready();
@@ -274,7 +275,7 @@ describe("named Ledger with record", function () {
 //   })
 
 describe("basic Ledger parallel writes / public ordered", () => {
-  let db: Ledger;
+  let db: Database;
   const writes: Promise<DocResponse>[] = [];
   const sthis = mockSuperThis();
   afterEach(async () => {
@@ -283,7 +284,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = LedgerFactory("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
+    db = fireproof.DB("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -292,13 +293,13 @@ describe("basic Ledger parallel writes / public ordered", () => {
   });
 
   it("should have one head", () => {
-    const crdt = db.crdt;
+    const crdt = db.ledger.crdt;
     expect(crdt.clock.head.length).toBe(1);
   });
 
   it("has changes ordered", async function () {
     const { rows, clock } = await db.changes([]);
-    expect(clock[0]).toBe(db.crdt.clock.head[0]);
+    expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
     for (let i = 0; i < 10; i++) {
       expect(rows[i].key).toBe("id-" + i);
@@ -308,7 +309,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
 });
 
 describe("basic Ledger parallel writes / public", () => {
-  let db: Ledger;
+  let db: Database;
   const writes: Promise<DocResponse>[] = [];
   const sthis = ensureSuperThis();
   afterEach(async () => {
@@ -317,7 +318,7 @@ describe("basic Ledger parallel writes / public", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = LedgerFactory("test-parallel-writes", { writeQueue: { chunkSize: 32 } });
+    db = fireproof.DB("test-parallel-writes", { writeQueue: { chunkSize: 32 } });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -325,7 +326,7 @@ describe("basic Ledger parallel writes / public", () => {
     await Promise.all(writes);
   });
   it("should resolve to one head", async () => {
-    const crdt = db.crdt;
+    const crdt = db.ledger.crdt;
     expect(crdt.clock.head.length).toBe(9);
     await db.put({ _id: "id-10", hello: "world" });
     expect(crdt.clock.head.length).toBe(1);
@@ -364,7 +365,7 @@ describe("basic Ledger parallel writes / public", () => {
   });
   it("has changes not ordered", async function () {
     const { rows, clock } = await db.changes([]);
-    expect(clock[0]).toBe(db.crdt.clock.head[0]);
+    expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
     rows.sort((a, b) => a.key.localeCompare(b.key));
     // console.log(rows);
@@ -378,7 +379,7 @@ describe("basic Ledger parallel writes / public", () => {
     expect(rows.length).toBe(10);
     // expect(db.opts.public).toBeTruthy();
     // expect(db._crdt.opts.public).toBeTruthy();
-    const blocks = db.crdt.blockstore as bs.EncryptedBlockstore;
+    const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
     const loader = blocks.loader;
     expect(loader).toBeTruthy();
     await loader.ready();
@@ -388,7 +389,7 @@ describe("basic Ledger parallel writes / public", () => {
 });
 
 describe("basic Ledger with subscription", function () {
-  let db: Ledger;
+  let db: Database;
   let didRun: number;
   let unsubscribe: () => void;
   let lastDoc: DocWithId<NonNullable<unknown>>;
@@ -400,7 +401,7 @@ describe("basic Ledger with subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = LedgerFactory("factory-name");
+    db = fireproof.DB("factory-name");
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -434,17 +435,16 @@ describe("basic Ledger with subscription", function () {
 });
 
 describe("basic Ledger with no update subscription", function () {
-  let db: Ledger;
+  let db: Database;
   let didRun: number;
   let unsubscribe: () => void;
-  const sthis = ensureSuperThis();
+  // const sthis = ensureSuperThis();
   afterEach(async () => {
     await db.close();
     await db.destroy();
   });
   beforeEach(async function () {
-    await sthis.start();
-    db = LedgerFactory("factory-name");
+    db = fireproof.DB("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
       didRun++;
@@ -470,7 +470,7 @@ describe("basic Ledger with no update subscription", function () {
 });
 
 describe("ledger with files input", () => {
-  let db: Ledger;
+  let db: Database;
   let imagefiles: FileWithCid[] = [];
   let result: DocResponse;
   const sthis = ensureSuperThis();
@@ -482,7 +482,7 @@ describe("ledger with files input", () => {
   beforeEach(async function () {
     await sthis.start();
     imagefiles = await buildBlobFiles();
-    db = LedgerFactory("fireproof-with-images");
+    db = fireproof.DB("fireproof-with-images");
     const doc = {
       _id: "images-main",
       type: "files",
@@ -573,6 +573,7 @@ describe("StoreURIRuntime", () => {
     await sthis.start();
     safeEnv = sthis.env.get("FP_STORAGE_URL");
     sthis.env.set("FP_STORAGE_URL", "my://bla/storage");
+    // console.log(">>>>>>>>>>", bs, bs.registerStoreProtocol)
     unreg = bs.registerStoreProtocol({
       protocol: "murks",
       isDefault: true,

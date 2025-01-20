@@ -1,4 +1,4 @@
-import { Ledger, LedgerFactory, PARAM, bs, ensureSuperThis } from "@fireproof/core";
+import { Database, Ledger, LedgerFactory, PARAM, bs, ensureSuperThis, fireproof } from "@fireproof/core";
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
@@ -363,7 +363,7 @@ describe("noop Gateway", function () {
 });
 
 describe("noop Gateway subscribe", function () {
-  let db: Ledger;
+  let db: Database;
 
   let metaStore: bs.MetaStore;
 
@@ -375,10 +375,10 @@ describe("noop Gateway subscribe", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = LedgerFactory("test-gateway-" + sthis.nextId().str);
+    db = fireproof.DB("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
+    metaStore = (await db.ledger.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
 
     metaGateway = metaStore.realGateway;
   });
@@ -409,7 +409,7 @@ describe("noop Gateway subscribe", function () {
 });
 
 describe("Gateway", function () {
-  let db: Ledger;
+  let db: Database;
   // let carStore: ExtendedStore;
   let metaStore: bs.MetaStore;
   // let fileStore: ExtendedStore;
@@ -425,14 +425,14 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = LedgerFactory("test-gateway-" + sthis.nextId().str);
+    db = fireproof.DB("test-gateway-" + sthis.nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
 
     // Extract stores from the loader
     // carStore = (await db.blockstore.loader.carStore()) as unknown as ExtendedStore;
-    metaStore = (await db.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
+    metaStore = (await db.ledger.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
     // fileStore = (await db.blockstore.loader.fileStore()) as unknown as ExtendedStore;
     // walStore = (await db.blockstore.loader.WALStore()) as unknown as ExtendedStore;
 

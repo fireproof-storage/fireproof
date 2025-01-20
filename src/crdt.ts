@@ -1,13 +1,6 @@
-import { Block } from "multiformats";
+import type { Block } from "multiformats";
 import { Logger, ResolveOnce } from "@adviser/cement";
-import {
-  EncryptedBlockstore,
-  type TransactionMeta,
-  type CarTransaction,
-  BaseBlockstore,
-  CompactFetcher,
-  toStoreRuntime,
-} from "./blockstore/index.js";
+import { EncryptedBlockstore, type TransactionMeta, CompactFetcher, toStoreRuntime } from "./blockstore/index.js";
 import {
   clockChangesSince,
   applyBulkUpdateToCrdt,
@@ -27,37 +20,37 @@ import type {
   DocValue,
   IndexKeyType,
   DocWithId,
-  DocTypes,
   Falsy,
   SuperThis,
   IndexTransactionMeta,
+  DocTypes,
+  CRDT,
+  CRDTClock,
+  BaseBlockstore,
+  CarTransaction,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
-import { CRDTClock } from "./crdt-clock.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
-import { LedgerOpts } from "./ledger.js";
+import type { LedgerOpts } from "./ledger.js";
+import { CRDTClockImpl } from "./crdt-clock.js";
 
-export interface HasCRDT<T extends DocTypes> {
-  readonly crdt: CRDT<T> | CRDT<NonNullable<unknown>>;
-}
-
-export class CRDT<T extends DocTypes> {
+export class CRDTImpl implements CRDT {
   readonly opts: LedgerOpts;
 
   readonly blockstore: BaseBlockstore;
   readonly indexBlockstore: BaseBlockstore;
-  readonly indexers: Map<string, Index<IndexKeyType, NonNullable<unknown>>> = new Map<
-    string,
-    Index<IndexKeyType, NonNullable<unknown>>
-  >();
-  readonly clock: CRDTClock<T>;
+  readonly indexers = new Map<string, Index<IndexKeyType, NonNullable<unknown>>>();
+  readonly clock: CRDTClock;
 
   readonly logger: Logger;
   readonly sthis: SuperThis;
+  // self reference to fullfill HasCRDT
+  readonly crdt: CRDT;
 
   constructor(sthis: SuperThis, opts: LedgerOpts) {
     this.sthis = sthis;
+    this.crdt = this;
     this.logger = ensureLogger(sthis, "CRDT");
     this.opts = opts;
     this.blockstore = new EncryptedBlockstore(sthis, {
@@ -85,7 +78,7 @@ export class CRDT<T extends DocTypes> {
         const idxCarMeta = meta as IndexTransactionMeta;
         if (!idxCarMeta.indexes) throw this.logger.Error().Msg("missing indexes").AsError();
         for (const [name, idx] of Object.entries(idxCarMeta.indexes)) {
-          index({ crdt: this }, name, undefined, idx);
+          index(this, name, undefined, idx);
         }
       },
       gatewayInterceptor: opts.gatewayInterceptor,
@@ -94,7 +87,7 @@ export class CRDT<T extends DocTypes> {
       keyBag: this.opts.keyBag,
       // public: this.opts.public,
     });
-    this.clock = new CRDTClock<T>(this.blockstore);
+    this.clock = new CRDTClockImpl(this.blockstore);
     this.clock.onZoom(() => {
       for (const idx of this.indexers.values()) {
         idx._resetIndex();
@@ -102,7 +95,7 @@ export class CRDT<T extends DocTypes> {
     });
   }
 
-  async bulk(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
+  async bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta> {
     await this.ready();
     const prevHead = [...this.clock.head];
     updates = updates.map((dupdate: DocUpdate<T>) => ({
@@ -111,7 +104,7 @@ export class CRDT<T extends DocTypes> {
     }));
 
     const done = await this.blockstore.transaction<CRDTMeta>(async (blocks: CarTransaction): Promise<CRDTMeta> => {
-      const { head } = await applyBulkUpdateToCrdt<T>(
+      const { head } = await applyBulkUpdateToCrdt<DocTypes>(
         this.blockstore.ebOpts.storeRuntime,
         blocks,
         this.clock.head,
@@ -120,7 +113,7 @@ export class CRDT<T extends DocTypes> {
       );
       updates = updates.map((dupdate: DocUpdate<T>) => {
         // if (!dupdate.value) throw new Error("missing value");
-        readFiles(this.blockstore, { doc: dupdate.value as DocWithId<T> });
+        readFiles(this.blockstore, { doc: dupdate.value as DocWithId<DocTypes> });
         return dupdate;
       });
       return { head };
@@ -156,11 +149,11 @@ export class CRDT<T extends DocTypes> {
 
   // if (snap) await this.clock.applyHead(crdtMeta.head, this.clock.head)
 
-  async allDocs(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
+  async allDocs<T extends DocTypes>(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }> {
     await this.ready();
     const result: DocUpdate<T>[] = [];
-    for await (const entry of getAllEntries<T>(this.blockstore, this.clock.head, this.logger)) {
-      result.push(entry);
+    for await (const entry of getAllEntries<DocTypes>(this.blockstore, this.clock.head, this.logger)) {
+      result.push(entry as DocUpdate<T>);
     }
     return { result, head: this.clock.head };
   }
@@ -179,14 +172,14 @@ export class CRDT<T extends DocTypes> {
     return await getBlock(this.blockstore, cidString);
   }
 
-  async get(key: string): Promise<DocValue<T> | Falsy> {
+  async get(key: string): Promise<DocValue<DocTypes> | Falsy> {
     await this.ready();
-    const result = await getValueFromCrdt<T>(this.blockstore, this.clock.head, key, this.logger);
+    const result = await getValueFromCrdt<DocTypes>(this.blockstore, this.clock.head, key, this.logger);
     if (result.del) return undefined;
     return result;
   }
 
-  async changes(
+  async changes<T extends DocTypes>(
     since: ClockHead = [],
     opts: ChangesOptions = {},
   ): Promise<{
