@@ -1,13 +1,14 @@
 import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { PARAM, SuperThis } from "../types.js";
-import { SerdeGateway } from "./serde-gateway.js";
+import type { SerdeGateway } from "./serde-gateway.js";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
-import { MemoryGateway } from "../runtime/gateways/memory/gateway.js";
-import { INDEXDB_VERSION } from "../runtime/index.js";
+import { INDEXDB_VERSION } from "../runtime/gateways/indexdb/version.js";
+import type { Gateway } from "./gateway.js";
+
 import { FileGateway } from "../runtime/gateways/file/gateway-impl.js";
+import { MemoryGateway } from "../runtime/gateways/memory/gateway.js";
 import { sysFileSystemFactory } from "../runtime/gateways/file/sys-file-system-factory.js";
 import { DefSerdeGateway } from "../runtime/gateways/def-serde-gateway.js";
-import { Gateway } from "./gateway.js";
 
 export interface SerdeGatewayFactoryItem {
   readonly protocol: string;

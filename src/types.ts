@@ -1,12 +1,26 @@
 import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
+import type { Block, UnknownLink, Version } from "multiformats";
 
-import type { DbMeta, AnyLink, StoreUrlsOpts, StoreEnDeFile, SerdeGatewayInterceptor } from "./blockstore/index.js";
+import type {
+  CarTransactionOpts,
+  DbMeta,
+  AnyLink,
+  StoreUrlsOpts,
+  StoreEnDeFile,
+  SerdeGatewayInterceptor,
+  Loadable,
+  AnyBlock,
+  TransactionMeta,
+  TransactionWrapper,
+  BlockstoreRuntime,
+} from "./blockstore/index.js";
 import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
 import { KeyBagOpts } from "./runtime/key-bag.js";
 import { WriteQueueParams } from "./write-queue.js";
+import { Index } from "./indexer.js";
 
 export type { DbMeta };
 
@@ -319,4 +333,196 @@ export interface CRDTEntry {
   readonly data: string;
   readonly parents: string[];
   readonly cid: string;
+}
+
+export type VoidFn = () => void;
+export type UnReg = () => void;
+export interface CRDTClock {
+  readonly head: ClockHead;
+  onTock(fn: VoidFn): UnReg;
+  onTick(fn: (updates: DocUpdate<DocTypes>[]) => void): UnReg;
+  applyHead(newHead: ClockHead, prevHead: ClockHead, updates?: DocUpdate<DocTypes>[]): Promise<void>;
+  onZoom(fn: VoidFn): UnReg;
+  close(): Promise<void>;
+  ready(): Promise<void>;
+}
+
+export interface CarTransaction {
+  readonly parent: BaseBlockstore;
+  get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined>;
+
+  superGet(cid: AnyLink): Promise<AnyBlock | undefined>;
+
+  putSync(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): void;
+
+  put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;
+
+  entries(): AsyncIterableIterator<AnyBlock>;
+}
+
+export interface BaseBlockstore {
+  readonly transactions: Set<CarTransaction>;
+  readonly sthis: SuperThis;
+  readonly loader: Loadable;
+  readonly ebOpts: BlockstoreRuntime;
+  ready(): Promise<void>;
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+  compact(): Promise<void>;
+  readonly logger: Logger;
+
+  get<T, C extends number, A extends number, V extends Version>(cid: AnyLink): Promise<Block<T, C, A, V> | undefined>;
+  put(cid: UnknownLink, bytes: Uint8Array<ArrayBufferLike>): Promise<void>;
+
+  transaction<M extends TransactionMeta>(
+    fn: (t: CarTransaction) => Promise<M>,
+    _opts?: CarTransactionOpts,
+  ): Promise<TransactionWrapper<M>>;
+
+  // get<T, C extends number, A extends number, V extends Version>(cid: AnyAnyLink): Promise<Block<T, C, A, V> | undefined>
+  // transaction<M extends TransactionMeta>(
+  //   fn: (t: CarTransaction) => Promise<M>,
+  //   _opts?: CarTransactionOpts,
+  // ): Promise<TransactionWrapper<M>>
+
+  openTransaction(opts: CarTransactionOpts /* = { add: true, noLoader: false }*/): CarTransaction;
+
+  commitTransaction<M extends TransactionMeta>(
+    t: CarTransaction,
+    done: M,
+    opts: CarTransactionOpts,
+  ): Promise<TransactionWrapper<M>>;
+  entries(): AsyncIterableIterator<AnyBlock>;
+}
+
+export interface CRDT extends ReadyCloseDestroy, HasLogger, HasSuperThis, HasCRDT {
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  // self reference to fullfill HasCRDT
+  readonly crdt: CRDT;
+  readonly clock: CRDTClock;
+
+  readonly blockstore: BaseBlockstore;
+  readonly indexBlockstore: BaseBlockstore;
+  readonly indexers: Map<string, Index<IndexKeyType, DocTypes>>;
+
+  bulk<T extends DocTypes>(updates: DocUpdate<T>[]): Promise<CRDTMeta>;
+  ready(): Promise<void>;
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+  allDocs<T extends DocTypes>(): Promise<{ result: DocUpdate<T>[]; head: ClockHead }>;
+  vis(): Promise<string>;
+  getBlock(cidString: string): Promise<Block>;
+  get(key: string): Promise<DocValue<DocTypes> | Falsy>;
+  // defaults by impl
+  changes<T extends DocTypes>(
+    since?: ClockHead,
+    opts?: ChangesOptions,
+  ): Promise<{
+    result: DocUpdate<T>[];
+    head: ClockHead;
+  }>;
+  compact(): Promise<void>;
+}
+
+export interface HasCRDT {
+  readonly crdt: CRDT;
+}
+
+export interface RefLedger {
+  readonly ledger: Ledger;
+}
+
+export interface HasLogger {
+  readonly logger: Logger;
+}
+
+export interface HasSuperThis {
+  readonly sthis: SuperThis;
+}
+
+export interface ReadyCloseDestroy {
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+  ready(): Promise<void>;
+}
+
+export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
+  // readonly name: string;
+  readonly ledger: Ledger;
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  readonly id: string;
+  readonly name: string;
+
+  onClosed(fn: () => void): void;
+
+  get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
+  put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
+  bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
+  del(id: string): Promise<DocResponse>;
+  changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
+  allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
+  allDocuments<T extends DocTypes>(): Promise<{
+    rows: {
+      key: string;
+      value: DocWithId<T>;
+    }[];
+    clock: ClockHead;
+  }>;
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): Promise<IndexRows<K, T, R>>;
+  compact(): Promise<void>;
+}
+
+export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocTypes> {
+  push(task: T): Promise<MetaType>;
+  bulk(tasks: T[]): Promise<MetaType>;
+  close(): Promise<void>;
+}
+
+export interface Ledger extends HasCRDT {
+  // readonly name: string;
+  readonly writeQueue: WriteQueue<DocUpdate<DocTypes>>;
+
+  readonly logger: Logger;
+  readonly sthis: SuperThis;
+  readonly id: string;
+
+  readonly name: string;
+
+  onClosed(fn: () => void): () => void;
+
+  close(): Promise<void>;
+  destroy(): Promise<void>;
+  ready(): Promise<void>;
+
+  subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+
+  // asDB(): Database;
+
+  // get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
+  // put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
+  // bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
+  // del(id: string): Promise<DocResponse>;
+  // changes<T extends DocTypes>(since?: ClockHead, opts?: ChangesOptions): Promise<ChangesResponse<T>>;
+  // allDocs<T extends DocTypes>(opts?: AllDocsQueryOpts): Promise<AllDocsResponse<T>>;
+  // allDocuments<T extends DocTypes>(): Promise<{
+  //   rows: {
+  //     key: string;
+  //     value: DocWithId<T>;
+  //   }[];
+  //   clock: ClockHead;
+  // }>;
+  // subscribe<T extends DocTypes>(listener: ListenerFn<T>, updates?: boolean): () => void;
+
+  // query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+  //   field: string | MapFn<T>,
+  //   opts?: QueryOpts<K>,
+  // ): Promise<IndexRows<K, T, R>>;
+  // compact(): Promise<void>;
 }

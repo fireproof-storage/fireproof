@@ -412,3 +412,21 @@ export async function coercePromiseIntoUint8(raw: PromiseToUInt8): Promise<Resul
   }
   return Result.Err("Not a Uint8Array");
 }
+
+export function makeName(fnString: string) {
+  const regex = /\(([^,()]+,\s*[^,()]+|\[[^\]]+\],\s*[^,()]+)\)/g;
+  let found: RegExpExecArray | null = null;
+  const matches = Array.from(fnString.matchAll(regex), (match) => match[1].trim());
+  if (matches.length === 0) {
+    found = /=>\s*{?\s*([^{}]+)\s*}?/.exec(fnString);
+    if (found && found[1].includes("return")) {
+      found = null;
+    }
+  }
+  if (!found) {
+    return fnString;
+  } else {
+    // it's a consise arrow function, match everything after the arrow
+    return found[1];
+  }
+}

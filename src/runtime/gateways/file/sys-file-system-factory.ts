@@ -1,5 +1,5 @@
 import { runtimeFn, URI } from "@adviser/cement";
-import { SysFileSystem } from "../../../types.js";
+import type { SysFileSystem } from "../../../types.js";
 
 export function sysFileSystemFactory(uri: URI): Promise<SysFileSystem> {
   const rt = runtimeFn();

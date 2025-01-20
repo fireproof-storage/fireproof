@@ -1,17 +1,13 @@
 import { exception2Result, Result, URI } from "@adviser/cement";
+import type { CarClockLink, DbMeta, DbMetaBinary, DbMetaEvent, WALState } from "../../blockstore/index.js";
 import {
-  CarClockLink,
-  DbMeta,
-  DbMetaBinary,
-  DbMetaEvent,
   FPEnvelope,
   FPEnvelopeCar,
   FPEnvelopeFile,
   FPEnvelopeMeta,
   FPEnvelopeType,
   FPEnvelopeWAL,
-  WALState,
-} from "../../blockstore/index.js";
+} from "../../blockstore/fp-envelope.js";
 import { PARAM, PromiseToUInt8, SuperThis } from "../../types.js";
 import { decodeEventBlock, EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
