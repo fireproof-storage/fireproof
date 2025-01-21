@@ -487,6 +487,7 @@ describe("db-api", () => {
         name: "new name",
       },
     });
+    expect(rUpdate.isOk()).toBeTruthy();
     const tenantWithNew = await fpApi.listTenantsByUser({
       type: "reqListTenantsByUser",
       auth: data[0].reqs.auth,
@@ -503,7 +504,7 @@ describe("db-api", () => {
       role: "owner",
       tenant: myWith[0].tenant,
       tenantId: tenant.Ok().tenant.tenantId,
-      tenantName: tenant.Ok().tenant.name,
+      tenantName: "new name",
     });
     const rDelete = await fpApi.deleteTenant({
       type: "reqDeleteTenant",
@@ -516,6 +517,18 @@ describe("db-api", () => {
       auth: data[0].reqs.auth,
     });
     expect(tenantWithoutNew.Ok().tenants.filter((i) => i.tenantId === tenant.Ok().tenant.tenantId).length).toBe(0);
+
+    const tickets = await fpApi.listInvites({
+      type: "reqListInvites",
+      auth: data[0].reqs.auth,
+      tenantIds: [tenant.Ok().tenant.tenantId],
+    });
+    expect(
+      tickets
+        .Ok()
+        .tickets.filter((i) => i.tenantId === rUpdate.Ok().tenant.tenantId)
+        .map((i) => i.invites.filter((i) => i.inviteId === invite.Ok().invite.inviteId)),
+    ).toEqual([]);
   });
 
   it("listInvites with a user with all tenants", async () => {});
@@ -562,7 +575,7 @@ describe("db-api", () => {
     }
     await Promise.all(
       data.slice(3).map(async (d, didx) => {
-        return fpApi.removeInvite({ type: "reqRemoveInvite", auth: d.reqs.auth, inviteId: invites[didx].inviteId });
+        return fpApi.deleteInvite({ type: "reqRemoveInvite", auth: d.reqs.auth, inviteId: invites[didx].inviteId });
       }),
     );
     for (let didx = 0; didx < data.length - 3; ++didx) {

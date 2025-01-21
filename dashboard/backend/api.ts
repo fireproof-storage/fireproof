@@ -335,7 +335,7 @@ export interface FPApi {
   // creates / update invite
   inviteUser(req: ReqInviteUser): Promise<Result<ResInviteUser>>;
   listInvites(req: ReqListInvites): Promise<Result<ResListInvites>>;
-  removeInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>>;
+  deleteInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>>;
 
   // listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant>
 
@@ -745,7 +745,6 @@ export class FPApiImpl implements FPApi {
       return Result.Err("tenant not found");
     }
     const invite = sqlToInvite(res.InviteTickets);
-
     const val = await this.addUserToTenant(this.db, {
       name: req.name,
       tenantId: res.Tenants.tenantId,
@@ -753,6 +752,7 @@ export class FPApiImpl implements FPApi {
       default: false,
       role: invite.invitedParams.tenant?.role ?? "member",
     });
+    await this._deleteInvite(invite.inviteId);
     return Result.Ok({
       type: "resConnectUserToTenant",
       name: val.Ok().name ?? res.Tenants.name,
@@ -976,7 +976,7 @@ export class FPApiImpl implements FPApi {
     });
   }
 
-  async removeInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>> {
+  async deleteInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>> {
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
@@ -985,11 +985,16 @@ export class FPApiImpl implements FPApi {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    await this.db.delete(inviteTickets).where(eq(inviteTickets.inviteId, req.inviteId)).run();
+    await this._deleteInvite(req.inviteId);
     return Result.Ok({
       type: "resRemoveInvite",
       inviteId: req.inviteId,
     });
+  }
+
+  private async _deleteInvite(inviteId: string): Promise<Result<void>> {
+    await this.db.delete(inviteTickets).where(eq(inviteTickets.inviteId, inviteId)).run();
+    return Result.Ok(undefined);
   }
 
   // async ensureTenant(req: ReqEnsureTenant): Promise<Result<ResEnsureTenant>> {
@@ -1098,7 +1103,7 @@ export class FPApiImpl implements FPApi {
     if (!prev) {
       return Result.Err("tenant not found");
     }
-    if (await this.isOwnerOrAdminOfTenant(auth.user.userId, req.tenant.tenantId)) {
+    if (!(await this.isOwnerOrAdminOfTenant(auth.user.userId, req.tenant.tenantId))) {
       return Result.Err("not owner of tenant");
     }
     const now = new Date().toISOString();
