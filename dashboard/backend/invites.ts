@@ -1,4 +1,3 @@
-
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
 import { AuthType, users } from "./users.ts";
 import { tenants } from "./tenants.ts";
@@ -6,40 +5,48 @@ import { ledgers } from "./ledgers.ts";
 import { AuthProvider, Queryable, queryEmail, queryNick, QueryUser, toUndef } from "./sql-helper.ts";
 import { SuperThis } from "@fireproof/core";
 
-export const inviteTickets = sqliteTable("InviteTickets", {
-  inviteId: text().primaryKey(),
+export const inviteTickets = sqliteTable(
+  "InviteTickets",
+  {
+    inviteId: text().primaryKey(),
 
-  inviterUserRefId: text().notNull().references(() => users.userId),
-  inviterTenantId: text().notNull().references(() => tenants.tenantId),
+    inviterUserRefId: text()
+      .notNull()
+      .references(() => users.userId),
+    inviterTenantId: text()
+      .notNull()
+      .references(() => tenants.tenantId),
 
-  // directed Invite
-  invitedUserId: text().references(() => users.userId),
+    // directed Invite
+    invitedUserId: text().references(() => users.userId),
 
-  // bind on login Invite
-  queryProvider: text(),
-  // email key for QueryUser -> tolower - remove + and .
-  queryEmail: text(),
-  // nick key for QueryUser -> tolower
-  queryNick: text(),
+    // bind on login Invite
+    queryProvider: text(),
+    // email key for QueryUser -> tolower - remove + and .
+    queryEmail: text(),
+    // nick key for QueryUser -> tolower
+    queryNick: text(),
 
-  sendEmailCount: int().notNull(),
+    sendEmailCount: int().notNull(),
 
-  // invite to tenant
-  invitedTenantId: text().references(() => tenants.tenantId),
-  // invite to ledger
-  invitedLedgerId: text().references(() => ledgers.ledgerId),
+    // invite to tenant
+    invitedTenantId: text().references(() => tenants.tenantId),
+    // invite to ledger
+    invitedLedgerId: text().references(() => ledgers.ledgerId),
 
-  // depending on target a JSON with e.g. the role and right
-  invitedParams: text().notNull(),
+    // depending on target a JSON with e.g. the role and right
+    invitedParams: text().notNull(),
 
-  expiresAfter: text().notNull(),
-  createdAt: text().notNull(),
-  updatedAt: text().notNull(),
-}, (table) => [
-  index("invitesEmail").on(table.queryEmail),
-  index("invitesNick").on(table.queryNick),
-  index("invitesExpiresAfter").on(table.expiresAfter),
-]);
+    expiresAfter: text().notNull(),
+    createdAt: text().notNull(),
+    updatedAt: text().notNull(),
+  },
+  (table) => [
+    index("invitesEmail").on(table.queryEmail),
+    index("invitesNick").on(table.queryNick),
+    index("invitesExpiresAfter").on(table.expiresAfter),
+  ],
+);
 
 export interface InvitedParams {
   readonly tenant?: {
@@ -52,7 +59,6 @@ export interface InvitedParams {
     readonly right: "read" | "write";
   };
 }
-
 
 export interface InviteTicket extends Queryable {
   readonly inviteId: string;
@@ -76,7 +82,6 @@ export interface InviteTicket extends Queryable {
   readonly updatedAt: Date;
 }
 
-
 export function sqlToInvite(sql: typeof inviteTickets.$inferSelect): InviteTicket {
   return {
     inviteId: sql.inviteId,
@@ -89,7 +94,6 @@ export function sqlToInvite(sql: typeof inviteTickets.$inferSelect): InviteTicke
     queryProvider: toUndef(sql.queryProvider) as AuthProvider,
     queryEmail: toUndef(sql.queryEmail),
     queryNick: toUndef(sql.queryNick),
-
 
     invitedTenantId: toUndef(sql.invitedTenantId),
     invitedLedgerId: toUndef(sql.invitedLedgerId),
@@ -111,13 +115,13 @@ export interface InviteTicketParams {
 }
 
 export interface PrepareInviteTicketParams {
-  readonly sthis: SuperThis,
-  readonly userId: string,
-  readonly tenantId: string,
-  readonly ledgerId?: string,
-  readonly expiresAfter?: Date
-  readonly now?: Date
-  readonly invitedTicketParams: InviteTicketParams
+  readonly sthis: SuperThis;
+  readonly userId: string;
+  readonly tenantId: string;
+  readonly ledgerId?: string;
+  readonly expiresAfter?: Date;
+  readonly now?: Date;
+  readonly invitedTicketParams: InviteTicketParams;
 }
 
 export function prepareInviteTicket({
@@ -127,8 +131,8 @@ export function prepareInviteTicket({
   ledgerId,
   now,
   expiresAfter,
-  invitedTicketParams: ivp
-}: PrepareInviteTicketParams): (typeof inviteTickets.$inferInsert) {
+  invitedTicketParams: ivp,
+}: PrepareInviteTicketParams): typeof inviteTickets.$inferInsert {
   const nowDate = new Date();
   const nowStr = (now ?? nowDate).toISOString();
   const expiresAfterStr = (expiresAfter ?? new Date(nowDate.getTime() + 1000 * 60 * 60 * 24 * 7)).toISOString();
@@ -147,14 +151,13 @@ export function prepareInviteTicket({
       throw new Error("ledgerId is required");
     }
     params = JSON.stringify({
-      role: ivp.invitedParams.ledger.role,
-      right: ivp.invitedParams.ledger.right,
+      ledger: ivp.invitedParams.ledger,
     });
   } else if (ivp.invitedParams.tenant) {
     // target = "tenant";
     tenantIdFlag = tenantId;
     params = JSON.stringify({
-      role: ivp.invitedParams.tenant.role,
+      tenant: ivp.invitedParams.tenant,
     });
   }
   return {
@@ -171,6 +174,6 @@ export function prepareInviteTicket({
     invitedParams: params,
     expiresAfter: expiresAfterStr,
     createdAt: nowStr,
-    updatedAt: nowStr
+    updatedAt: nowStr,
   };
 }

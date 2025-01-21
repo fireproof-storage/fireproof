@@ -5,7 +5,18 @@ import type { SQLiteTransaction } from "drizzle-orm/sqlite-core";
 import type { ResultSet } from "@libsql/client";
 import { type ExtractTablesWithRelations } from "drizzle-orm";
 import { eq, and, inArray, gt, lt } from "drizzle-orm/expressions";
-import { AuthType, UserStatus as UserStatus, User, VerifiedAuth, ClerkVerifyAuth, getUser, isUserNotFound, upsetUserByProvider, UserNotFoundError, queryUser } from "./users.ts";
+import {
+  AuthType,
+  UserStatus as UserStatus,
+  User,
+  VerifiedAuth,
+  ClerkVerifyAuth,
+  getUser,
+  isUserNotFound,
+  upsetUserByProvider,
+  UserNotFoundError,
+  queryUser,
+} from "./users.ts";
 import { Tenant, tenants, prepareInsertTenant, tenantUserRefs, tenantUserRefRoles } from "./tenants.ts";
 import { InviteTicket, inviteTickets, sqlToInvite, prepareInviteTicket, InvitedParams } from "./invites.ts";
 import { queryCondition, queryEmail, queryNick, QueryUser, toBoolean, toUndef } from "./sql-helper.ts";
@@ -14,8 +25,6 @@ export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
   readonly auth: AuthType;
 }
-
-
 
 // export interface TenantUserRef {
 //     readonly userRefId: string;
@@ -26,7 +35,7 @@ export interface ReqEnsureUser {
 
 export interface ResEnsureUser {
   readonly type: "resEnsureUser";
-  readonly user: User,
+  readonly user: User;
   readonly tenants: UserTenant[];
 }
 
@@ -124,8 +133,8 @@ export interface UserTenant {
   readonly name?: string;
   readonly role: Role;
   readonly default: boolean;
-  readonly ref: UserTenantCommon
-  readonly tenant: UserTenantCommon
+  readonly ref: UserTenantCommon;
+  readonly tenant: UserTenantCommon;
 }
 
 export interface OwnerTenant extends UserTenant {
@@ -144,7 +153,6 @@ export interface ResListTenantsByUser {
 }
 
 // export type AuthProvider = "github" | "google" | "fp";
-
 
 export interface ReqFindUserRef {
   readonly type: "reqFindUserRef";
@@ -189,11 +197,10 @@ export interface QueryInviteTicket {
 
   // readonly invitedTenantId?: string;
   // readonly invitedLedgerId?: string;
-  readonly invitedParams: InvitedParams;
+  readonly invitedParams?: InvitedParams;
   // readonly expiresAfter: Date;
   // readonly createdAt: Date;
   // readonly updatedAt: Date;
-
 }
 
 export interface ReqInviteUser {
@@ -202,12 +209,10 @@ export interface ReqInviteUser {
   readonly ticket: QueryInviteTicket; // InviteTicket & { readonly incSendEmailCount?: boolean }
 }
 
-
 export interface ResInviteUser {
   readonly type: "resInviteUser";
   readonly invite: InviteTicket;
 }
-
 
 export interface ReqRemoveInvite {
   readonly type: "reqRemoveInvite";
@@ -230,7 +235,7 @@ export interface ReqListInvites {
 
 export interface ResListInvites {
   readonly type: "resListInvites";
-  readonly invites: {
+  readonly tickets: {
     readonly tenantId: string;
     readonly invites: InviteTicket[];
   }[];
@@ -309,7 +314,6 @@ interface ResAddUserToTenant {
   readonly role: Role;
 }
 
-
 type SQLTransaction = SQLiteTransaction<
   "async",
   ResultSet,
@@ -325,7 +329,6 @@ interface ActiveUserRef<T extends AuthType = ClerkVerifyAuth> {
   readonly verifiedAuth: T;
   readonly user?: User;
 }
-
 
 export class FPApiImpl implements FPApi {
   readonly db: LibSQLDatabase;
@@ -355,19 +358,19 @@ export class FPApiImpl implements FPApi {
       return Result.Err(rAuth.Err());
     }
     const auth = rAuth.Ok();
-    const rExisting = await getUser(this.db, auth.userId)
+    const rExisting = await getUser(this.db, auth.userId);
     if (rExisting.isErr()) {
       if (isUserNotFound(rExisting)) {
         return Result.Ok({
-          verifiedAuth: auth
-        })
+          verifiedAuth: auth,
+        });
       }
       return Result.Err(rExisting.Err());
     }
     return Result.Ok({
       verifiedAuth: auth,
-      user: rExisting.Ok()
-    })
+      user: rExisting.Ok(),
+    });
   }
 
   async ensureUserRef(req: ReqEnsureUser): Promise<Result<ResEnsureUser>> {
@@ -379,25 +382,29 @@ export class FPApiImpl implements FPApi {
     if (!user) {
       const auth = activeUserRef.Ok().verifiedAuth;
       const userId = this.sthis.nextId(12).str;
-      const now = new Date()
-      await upsetUserByProvider(this.db, {
-        userId,
-        maxTenants: 10,
-        status: "active",
-        statusReason: "just created",
-        byProviders: [
-          {
-            providerUserId: auth.userId,
-            queryProvider: auth.params.nick ? "github" : "google",
-            queryEmail: queryEmail(auth.params.email),
-            cleanEmail: auth.params.email,
-            queryNick: queryNick(auth.params.nick),
-            cleanNick: auth.params.nick,
-            params: auth.params,
-            used: now,
-          },
-        ],
-      }, now);
+      const now = new Date();
+      await upsetUserByProvider(
+        this.db,
+        {
+          userId,
+          maxTenants: 10,
+          status: "active",
+          statusReason: "just created",
+          byProviders: [
+            {
+              providerUserId: auth.userId,
+              queryProvider: auth.params.nick ? "github" : "google",
+              queryEmail: queryEmail(auth.params.email),
+              cleanEmail: auth.params.email,
+              queryNick: queryNick(auth.params.nick),
+              cleanNick: auth.params.nick,
+              params: auth.params,
+              used: now,
+            },
+          ],
+        },
+        now,
+      );
 
       // await this.db
       //   .insert(users)
@@ -521,17 +528,12 @@ export class FPApiImpl implements FPApi {
     }
     const aur = rAUR.Ok();
     if (!aur.user) {
-      return Result.Err(new UserNotFoundError())
+      return Result.Err(new UserNotFoundError());
     }
     const tenantUserRef = await this.db
       .select()
       .from(tenantUserRefs)
-      .innerJoin(tenants,
-        and(
-          eq(tenantUserRefs.tenantId, tenants.tenantId),
-          eq(tenantUserRefs.userRefId, tenants.ownerUserRefId)
-        )
-      )
+      .innerJoin(tenants, and(eq(tenantUserRefs.tenantId, tenants.tenantId), eq(tenantUserRefs.userRefId, tenants.ownerUserRefId)))
       .where(eq(tenantUserRefs.userRefId, aur.user.userId))
       .all();
     // console.log(">>>>>", tenantUserRef);
@@ -554,8 +556,8 @@ export class FPApiImpl implements FPApi {
               statusReason: t.Tenants.statusReason,
               createdAt: new Date(t.Tenants.createdAt),
               updatedAt: new Date(t.Tenants.updatedAt),
-            }
-          }
+            },
+          };
           const role = await this.getRole(t.TenantUserRefs.userRefId, t.Tenants);
           switch (role.role) {
             case "member":
@@ -637,7 +639,7 @@ export class FPApiImpl implements FPApi {
     return Result.Ok({
       type: "resFindUserRef",
       query: req.query,
-      results: rRows.Ok()
+      results: rRows.Ok(),
       // .map(
       //   (row) =>
       //     ({
@@ -666,105 +668,127 @@ export class FPApiImpl implements FPApi {
     if (findUser.isErr()) {
       return Result.Err(findUser.Err());
     }
-    if (findUser.Ok().length !== 0) {
-      return Result.Err("user exists found");
+    if (req.ticket.query.existingUserId && findUser.Ok().length !== 1) {
+      return Result.Err("existingUserId not found");
+    }
+    if (req.ticket.query.existingUserId === auth.user.userId) {
+      return Result.Err("cannot invite self");
     }
     // check if owner or admin of tenant
-    const ownerRole = await this.db.select().from(tenants).where(
-      and(
-        eq(tenants.ownerUserRefId, auth.user.userId),
-        eq(tenants.tenantId, req.ticket.inviterTenantId)
-      )
-    ).all()
-    const adminRole = await this.db.select()
+    const ownerRole = await this.db
+      .select()
+      .from(tenants)
+      .where(and(eq(tenants.ownerUserRefId, auth.user.userId), eq(tenants.tenantId, req.ticket.inviterTenantId)))
+      .all();
+    const adminRole = await this.db
+      .select()
       .from(tenantUserRefRoles)
       .where(
         and(
           eq(tenantUserRefRoles.userRefId, auth.user.userId),
           eq(tenantUserRefRoles.tenantId, req.ticket.inviterTenantId),
-          eq(tenantUserRefRoles.role, "admin")
-        )
-      ).all()
+          eq(tenantUserRefRoles.role, "admin"),
+        ),
+      )
+      .all();
     if (!(ownerRole.length || adminRole.length)) {
       return Result.Err("not owner or admin of tenant");
     }
-    let sqlTicket: typeof inviteTickets.$inferSelect[];
+    let sqlTicket: (typeof inviteTickets.$inferSelect)[];
     if (!req.ticket.inviteId) {
       // check maxInvites
-      const allowed = await this.db.select().from(tenants).where(
-        and(
-          eq(tenants.tenantId, req.ticket.inviterTenantId),
-          gt(tenants.maxInvites, this.db.$count(inviteTickets, eq(inviteTickets.inviterTenantId, req.ticket.inviterTenantId)))
+      const allowed = await this.db
+        .select()
+        .from(tenants)
+        .where(
+          and(
+            eq(tenants.tenantId, req.ticket.inviterTenantId),
+            gt(tenants.maxInvites, this.db.$count(inviteTickets, eq(inviteTickets.inviterTenantId, req.ticket.inviterTenantId))),
+          ),
         )
-      ).get()
+        .get();
       if (!allowed) {
         return Result.Err("max invites reached");
       }
       const is = await this.findInvite({
         query: req.ticket.query,
-        tenantId: req.ticket.inviterTenantId
-      })
+        tenantId: req.ticket.inviterTenantId,
+      });
       if (is.length) {
         return Result.Err("invite already exists");
       }
-      sqlTicket = await this.db.insert(inviteTickets).values(prepareInviteTicket({
-        sthis: this.sthis,
-        userId: auth.user.userId,
-        tenantId: req.ticket.inviterTenantId,
-        invitedTicketParams: req.ticket
-      })).returning()
+      sqlTicket = await this.db
+        .insert(inviteTickets)
+        .values(
+          prepareInviteTicket({
+            sthis: this.sthis,
+            userId: auth.user.userId,
+            tenantId: req.ticket.inviterTenantId,
+            invitedTicketParams: {
+              invitedParams: req.ticket.invitedParams ?? {},
+              ...req.ticket,
+            },
+          }),
+        )
+        .returning();
     } else {
       const invitex = await this.findInvite({
         inviteId: req.ticket.inviteId,
-        tenantId: req.ticket.inviterTenantId
-      })
+        tenantId: req.ticket.inviterTenantId,
+      });
       if (invitex.length !== 1) {
         return Result.Err("invite not found");
       }
       const invite = invitex[0];
-      sqlTicket = await this.db.update(inviteTickets).set({
-        sendEmailCount: req.ticket.incSendEmailCount ? invite.sendEmailCount + 1 : invite.sendEmailCount,
-        updatedAt: (new Date()).toISOString(),
-      }).where(
-        and(
-          eq(inviteTickets.inviteId, req.ticket.inviteId),
-          eq(inviteTickets.inviterTenantId, req.ticket.inviterTenantId),
-        )
-      ).returning()
+      const toInsert = prepareInviteTicket({
+        sthis: this.sthis,
+        userId: auth.user.userId,
+        tenantId: req.ticket.inviterTenantId,
+        invitedTicketParams: {
+          invitedParams: req.ticket.invitedParams ?? {},
+          ...req.ticket,
+        },
+      });
+      sqlTicket = await this.db
+        .update(inviteTickets)
+        .set({
+          sendEmailCount: req.ticket.incSendEmailCount ? invite.sendEmailCount + 1 : invite.sendEmailCount,
+          invitedParams: toInsert.invitedParams,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(and(eq(inviteTickets.inviteId, req.ticket.inviteId), eq(inviteTickets.inviterTenantId, req.ticket.inviterTenantId)))
+        .returning();
     }
     return Result.Ok({
       type: "resInviteUser",
-      invite: sqlToInvite(sqlTicket[0])
+      invite: sqlToInvite(sqlTicket[0]),
     });
   }
 
-
-  private async findInvite(req: {
-    query?: QueryUser,
-    inviteId?: string,
-    tenantId: string,
-    now?: Date
-  }): Promise<InviteTicket[]> {
+  private async findInvite(req: { query?: QueryUser; inviteId?: string; tenantId: string; now?: Date }): Promise<InviteTicket[]> {
     let condition = and(
       eq(inviteTickets.inviterTenantId, req.tenantId),
       gt(inviteTickets.expiresAfter, (req.now ?? new Date()).toISOString()),
-    )
-    if (!(req.inviteId && req.query)) {
+    );
+    if (!(req.inviteId || req.query)) {
       throw new Error("inviteId or query is required");
     }
     if (req.inviteId) {
-      condition = and(eq(inviteTickets.inviteId, req.inviteId), condition)
+      condition = and(eq(inviteTickets.inviteId, req.inviteId), condition);
     }
     if (req.query) {
-      condition = and(queryCondition(req.query, {
-        ...inviteTickets,
-        userId: inviteTickets.invitedUserId
-      }), condition)
+      condition = and(
+        queryCondition(req.query, {
+          ...inviteTickets,
+          userId: inviteTickets.invitedUserId,
+        }),
+        condition,
+      );
     }
     const rows = await this.db.select().from(inviteTickets).where(condition).all();
     // housekeeping
-    await this.db.delete(inviteTickets).where(lt(inviteTickets.expiresAfter, (new Date()).toISOString())).run();
-    return rows.map(row => sqlToInvite(row));
+    await this.db.delete(inviteTickets).where(lt(inviteTickets.expiresAfter, new Date().toISOString())).run();
+    return rows.map((row) => sqlToInvite(row));
   }
   /**
    *
@@ -779,49 +803,75 @@ export class FPApiImpl implements FPApi {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    let rows: typeof inviteTickets.$inferSelect[];
-    const ownerTenants = await this.db.select()
+    let rows: (typeof inviteTickets.$inferSelect)[];
+    const ownerTenants = await this.db
+      .select()
       .from(tenants)
       .where(eq(tenants.ownerUserRefId, auth.user.userId))
       .all()
       .then((rows) => rows.map((row) => row.tenantId));
     // get admin in tenant for this user
-    let where = and(
-      eq(tenantUserRefRoles.userRefId, auth.user.userId),
-      eq(tenantUserRefRoles.role, "admin")
-    )
+    let condition = and(eq(tenantUserRefRoles.userRefId, auth.user.userId), eq(tenantUserRefRoles.role, "admin"));
     if (req.tenantIds.length) {
       // filter by tenantIds if set
-      where = and(inArray(tenantUserRefRoles.tenantId, req.tenantIds), where)
+      condition = and(inArray(tenantUserRefRoles.tenantId, req.tenantIds), condition);
     }
-    const adminTenants = await this.db.select().from(tenantUserRefRoles).where(where).all().then((rows) => rows.map((row) => row.tenantId));
-    rows = await this.db.select().from(inviteTickets).where(inArray(inviteTickets.inviterTenantId, [...ownerTenants, ...adminTenants])).all()
+    const adminTenants = await this.db
+      .select()
+      .from(tenantUserRefRoles)
+      .where(condition)
+      .all()
+      .then((rows) => rows.map((row) => row.tenantId));
+    rows = await this.db
+      .select()
+      .from(inviteTickets)
+      .where(
+        and(
+          inArray(inviteTickets.inviterTenantId, [...ownerTenants, ...adminTenants]),
+          // inArray(inviteTickets.inv, req.tenantIds)
+        ),
+      )
+      .all();
     // }
     return Result.Ok({
       type: "resListInvites",
-      invites: Array.from(rows.reduce((acc, row) => {
-        if (!row.inviterTenantId) {
-          throw new Error("inviterTenantId is required");
-        }
-        const invites = acc.get(row.inviterTenantId) ?? []
-        invites.push(sqlToInvite(row))
-        acc.set(row.inviterTenantId, invites)
-        return acc
-      }, new Map<string, InviteTicket[]>()).entries()).map(([tenantId, invites]) => ({
-        tenantId,
-        invites
-      }))
+      tickets: Array.from(
+        rows
+          .reduce((acc, row) => {
+            if (!row.inviterTenantId) {
+              throw new Error("inviterTenantId is required");
+            }
+            const invites = acc.get(row.inviterTenantId) ?? [];
+            invites.push(sqlToInvite(row));
+            acc.set(row.inviterTenantId, invites);
+            return acc;
+          }, new Map<string, InviteTicket[]>())
+          .entries(),
+      )
+        .map(([tenantId, invites]) => ({
+          tenantId,
+          invites,
+        }))
+        .filter((x) => x.invites.length),
     });
-
-
   }
 
   async removeInvite(req: ReqRemoveInvite): Promise<Result<ResRemoveInvite>> {
-    throw new Error("Method not implemented.");
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    await this.db.delete(inviteTickets).where(eq(inviteTickets.inviteId, req.inviteId)).run();
+    return Result.Ok({
+      type: "resRemoveInvite",
+      inviteId: req.inviteId,
+    });
   }
 }
-
-
 
 // // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // async attachUserToTenant(req: ReqAttachUserToTenant): Promise<Result<ResAttachUserToTenant>> {
