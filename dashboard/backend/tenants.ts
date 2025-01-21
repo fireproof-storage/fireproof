@@ -2,76 +2,80 @@ import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-co
 import { users } from "./users.ts";
 
 export const tenants = sqliteTable("Tenants", {
-    tenantId: text().primaryKey(),
-    name: text(),
-    ownerUserRefId: text()
-        .notNull()
-        .references(() => users.userId),
-    maxAdminUserRefs: int().notNull().default(5),
-    maxMemberUserRefs: int().notNull().default(5),
-    maxInvites: int().notNull().default(10),
-    status: text().notNull().default("active"),
-    statusReason: text().notNull().default("just created"),
-    createdAt: text().notNull(),
-    updatedAt: text().notNull(),
+  tenantId: text().primaryKey(),
+  name: text(),
+  ownerUserRefId: text()
+    .notNull()
+    .references(() => users.userId),
+  maxAdminUserRefs: int().notNull().default(5),
+  maxMemberUserRefs: int().notNull().default(5),
+  maxInvites: int().notNull().default(10),
+  status: text().notNull().default("active"),
+  statusReason: text().notNull().default("just created"),
+  createdAt: text().notNull(),
+  updatedAt: text().notNull(),
 });
 
-export const tenantUserRefRoles = sqliteTable("TenantUserRefRoles", {
+export const tenantUserRefRoles = sqliteTable(
+  "TenantUserRefRoles",
+  {
     tenantId: text()
-        .notNull()
-        .references(() => tenants.tenantId),
+      .notNull()
+      .references(() => tenants.tenantId),
     userRefId: text()
-        .notNull()
-        .references(() => users.userId),
+      .notNull()
+      .references(() => users.userId),
     role: text().notNull(), // "admin" | "member"
     createdAt: text().notNull(),
-}, (table) => [
+  },
+  (table) => [
     primaryKey({ columns: [table.tenantId, table.userRefId] }),
     index("turrUserRefIdx").on(table.userRefId), // to enable delete by userRefId
-]);
+  ],
+);
 
-export const tenantUserRefs = sqliteTable("TenantUserRefs", {
+export const tenantUserRefs = sqliteTable(
+  "TenantUserRefs",
+  {
     userRefId: text()
-        .notNull()
-        .references(() => users.userId),
+      .notNull()
+      .references(() => users.userId),
     tenantId: text()
-        .notNull()
-        .references(() => tenants.tenantId),
+      .notNull()
+      .references(() => tenants.tenantId),
     name: text(),
     status: text().notNull().default("active"),
     statusReason: text().notNull().default("just created"),
     default: int().notNull(),
     createdAt: text().notNull(),
     updatedAt: text().notNull(),
-}, (table) => [
-    primaryKey({ columns: [table.userRefId, table.tenantId] })
-]);
-
-
+  },
+  (table) => [primaryKey({ columns: [table.userRefId, table.tenantId] })],
+);
 
 export interface Tenant {
-    readonly tenantId: string;
-    readonly name: string;
-    readonly ownerUserRefId: string;
-    readonly adminUserRefIds: string[];
-    readonly memberUserRefIds: string[];
-    readonly maxAdminUserRefs: number;
-    readonly maxMemberUserRefs: number;
-    readonly createdAt: Date;
-    readonly updatedAt: Date;
+  readonly tenantId: string;
+  readonly name: string;
+  readonly ownerUserRefId: string;
+  readonly adminUserRefIds: string[];
+  readonly memberUserRefIds: string[];
+  readonly maxAdminUserRefs: number;
+  readonly maxMemberUserRefs: number;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
 }
 
 interface InsertTenantParam {
-    readonly tenantId: string;
-    readonly name?: string;
-    readonly ownerUserRefId: string;
-    readonly adminUserRefIds?: string[];
-    readonly memberUserRefIds?: string[];
-    readonly maxAdminUserRefs?: number;
-    readonly maxMemberUserRefs?: number;
-    readonly createdAt?: Date;
-    readonly updatedAt?: Date;
-  }
+  readonly tenantId: string;
+  readonly name?: string;
+  readonly ownerUserRefId: string;
+  readonly adminUserRefIds?: string[];
+  readonly memberUserRefIds?: string[];
+  readonly maxAdminUserRefs?: number;
+  readonly maxMemberUserRefs?: number;
+  readonly createdAt?: Date;
+  readonly updatedAt?: Date;
+}
 
 export function prepareInsertTenant(req: InsertTenantParam) {
   const now = new Date();

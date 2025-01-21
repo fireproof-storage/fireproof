@@ -18,7 +18,6 @@ export interface Queryable {
   readonly queryNick?: string;
 }
 
-
 export interface QueryUser {
   readonly existingUserId?: string;
   readonly byEmail?: string; // exact email
@@ -35,13 +34,15 @@ export function queryable2QueryUser(queryable: Queryable): QueryUser {
   };
 }
 
-
-export function queryCondition(query: QueryUser, table: {
-  readonly userId: SQLiteColumn
-  readonly queryEmail: SQLiteColumn
-  readonly queryNick: SQLiteColumn
-  readonly queryProvider: SQLiteColumn
-}) {
+export function queryCondition(
+  query: QueryUser,
+  table: {
+    readonly userId: SQLiteColumn;
+    readonly queryEmail: SQLiteColumn;
+    readonly queryNick: SQLiteColumn;
+    readonly queryProvider: SQLiteColumn;
+  },
+) {
   if (query.existingUserId) {
     return eq(table.userId, query.existingUserId);
   }
@@ -50,11 +51,7 @@ export function queryCondition(query: QueryUser, table: {
   const byNick = queryNick(query.byNick);
   let where: ReturnType<typeof and>;
   if (byEmail && byNick && query.andProvider) {
-    where = and(
-      eq(table.queryEmail, byEmail),
-      eq(table.queryNick, byNick),
-      eq(table.queryProvider, query.andProvider),
-    );
+    where = and(eq(table.queryEmail, byEmail), eq(table.queryNick, byNick), eq(table.queryProvider, query.andProvider));
   } else if (byEmail && byNick) {
     where = and(eq(table.queryEmail, byEmail), eq(table.queryNick, byNick));
   } else if (byEmail && query.andProvider) {
@@ -82,11 +79,11 @@ export function queryEmail(email?: string): string | undefined {
     return undefined;
   }
   email = email.trim().toLowerCase();
-  const splitEmail = email.match(/([^@]+)@(.*)$/)
+  const splitEmail = email.match(/([^@]+)@(.*)$/);
   if (!splitEmail) {
-    return undefined
+    return undefined;
   }
-  const splitPlus = splitEmail[1].match(/(.*)\+[^\+]*$/)
+  const splitPlus = splitEmail[1].match(/(.*)\+[^\+]*$/);
   if (!splitPlus) {
     return splitEmail[1].replace(/[^a-z0-9]/g, "") + "@" + splitEmail[2];
   }

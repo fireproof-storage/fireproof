@@ -66,6 +66,6 @@ export default {
       },
     },
   },
-  // plugins: [ContainerQueries],
+  // eslint-disable-next-line no-undef
   plugins: [require("@tailwindcss/container-queries")],
 };
