@@ -86,7 +86,7 @@ describe("db-api", () => {
         })),
     );
     for (const d of data) {
-      const rRes = await fpApi.ensureUserRef(d.reqs!);
+      const rRes = await fpApi.ensureUser(d.reqs!);
       const res = rRes.Ok();
       d.ress = res;
       expect(res).toEqual({
@@ -133,7 +133,7 @@ describe("db-api", () => {
   });
   it("check ensureUserRef", async () => {
     for (const d of data.map((d) => d.reqs)) {
-      const rRes = await fpApi.ensureUserRef(d);
+      const rRes = await fpApi.ensureUser(d);
       const res = rRes.Ok();
       expect(res).toEqual({
         type: "resEnsureUser",
@@ -315,6 +315,7 @@ describe("db-api", () => {
         },
       },
     });
+    expect(resinsert.isOk()).toBeTruthy();
     const resupdate = await fpApi.inviteUser({
       type: "reqInviteUser",
       auth,
@@ -334,7 +335,6 @@ describe("db-api", () => {
         },
       },
     });
-
     expect(resinsert.Ok().invite.createdAt.getTime()).toBeLessThan(resupdate.Ok().invite.expiresAfter.getTime());
     expect(resupdate.Ok()).toEqual({
       invite: {
@@ -364,7 +364,7 @@ describe("db-api", () => {
   it("invite non existing user to a ledger", async () => {});
 
   it("try find a existing user", async () => {
-    const res = await fpApi.findUserRef({
+    const res = await fpApi.findUser({
       type: "reqFindUserRef",
       auth: data[0].reqs.auth,
       query: {
@@ -388,7 +388,7 @@ describe("db-api", () => {
     const query = {
       existingUserId: data[0].ress.user.userId,
     } satisfies QueryUser;
-    const res = await fpApi.findUserRef({
+    const res = await fpApi.findUser({
       type: "reqFindUserRef",
       auth: data[0].reqs.auth,
       query,
@@ -404,7 +404,7 @@ describe("db-api", () => {
     const query = {
       byEmail: data[0].ress.user.byProviders[0].cleanEmail,
     };
-    const res = await fpApi.findUserRef({
+    const res = await fpApi.findUser({
       type: "reqFindUserRef",
       auth: data[0].reqs.auth,
       query,
@@ -420,7 +420,7 @@ describe("db-api", () => {
     const query = {
       byNick: data[0].ress.user.byProviders[0].cleanNick,
     };
-    const res = await fpApi.findUserRef({
+    const res = await fpApi.findUser({
       type: "reqFindUserRef",
       auth: data[0].reqs.auth,
       query,
@@ -430,6 +430,92 @@ describe("db-api", () => {
       query,
       results: [data[0].ress.user],
     });
+  });
+
+  it("CRUD tenant", async () => {
+    const tenant = await fpApi.createTenant({
+      type: "reqCreateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        ownerUserRefId: data[0].ress.user.userId,
+      },
+    });
+    const invite = await fpApi.inviteUser({
+      type: "reqInviteUser",
+      auth: data[0].reqs.auth,
+      ticket: {
+        inviterTenantId: tenant.Ok().tenant.tenantId,
+        query: {
+          existingUserId: data[1].ress.user.userId,
+        },
+        invitedParams: {
+          tenant: {
+            // id: data[0].ress.tenants[0].tenantId,
+            role: "member",
+          },
+        },
+      },
+    });
+    const resCuT = await fpApi.connectUserToTenant({
+      type: "reqConnectUserToTenant",
+      auth: data[0].reqs.auth,
+      name: "my-connect-tenant",
+      tenantId: tenant.Ok().tenant.tenantId,
+      inviteId: invite.Ok().invite.inviteId,
+    });
+    expect(resCuT.isOk()).toBeTruthy();
+    expect(tenant.Ok()).toEqual({
+      tenant: {
+        createdAt: tenant.Ok().tenant.createdAt,
+        maxAdminUserRefs: 5,
+        maxInvites: 10,
+        maxMemberUserRefs: 5,
+        name: tenant.Ok().tenant.name,
+        ownerUserRefId: data[0].ress.user.userId,
+        status: "active",
+        statusReason: "just created",
+        tenantId: tenant.Ok().tenant.tenantId,
+        updatedAt: tenant.Ok().tenant.updatedAt,
+      },
+      type: "resCreateTenant",
+    });
+    const rUpdate = await fpApi.updateTenant({
+      type: "reqUpdateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        tenantId: tenant.Ok().tenant.tenantId,
+        name: "new name",
+      },
+    });
+    const tenantWithNew = await fpApi.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: data[0].reqs.auth,
+    });
+    const myWith = tenantWithNew.Ok().tenants.filter((i) => i.tenantId === tenant.Ok().tenant.tenantId);
+    expect(myWith[0]).toEqual({
+      adminUserRefIds: [],
+      default: false,
+      maxAdminUserRefs: 5,
+      maxMemberUserRefs: 5,
+      memberUserRefIds: [data[0].ress.user.userId],
+      name: "my-connect-tenant",
+      ref: myWith[0].ref,
+      role: "owner",
+      tenant: myWith[0].tenant,
+      tenantId: tenant.Ok().tenant.tenantId,
+      tenantName: tenant.Ok().tenant.name,
+    });
+    const rDelete = await fpApi.deleteTenant({
+      type: "reqDeleteTenant",
+      auth: data[0].reqs.auth,
+      tenantId: tenant.Ok().tenant.tenantId,
+    });
+    expect(rDelete.isOk()).toBeTruthy();
+    const tenantWithoutNew = await fpApi.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: data[0].reqs.auth,
+    });
+    expect(tenantWithoutNew.Ok().tenants.filter((i) => i.tenantId === tenant.Ok().tenant.tenantId).length).toBe(0);
   });
 
   it("listInvites with a user with all tenants", async () => {});

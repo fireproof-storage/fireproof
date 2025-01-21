@@ -67,7 +67,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
     console.log(jso);
     const auth = jso.auth;
     {
-      const rRes = await fpApi.ensureUserRef({
+      const rRes = await fpApi.ensureUser({
         type: "reqEnsureUserRef",
         auth,
       });
