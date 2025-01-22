@@ -4,7 +4,7 @@ import { useFireproof } from "use-fireproof";
 
 import { CodeHighlight, EditableCodeHighlight } from "../../components/CodeHighlight.tsx";
 
-export default function Document() {
+export function DocsShow() {
   const { name } = useParams();
   const navigate = useNavigate();
   let { id: _id } = useParams();

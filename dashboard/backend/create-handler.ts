@@ -1,7 +1,8 @@
 import { verifyToken } from "@clerk/backend";
 import { SuperThis, Result, ensureSuperThis } from "use-fireproof";
-import { FPApiToken, VerifiedAuth, FPApiImpl } from "./api.ts";
+import { FPApiToken, FPApiSQL, FPAPIMsg } from "./api.ts";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
+import { VerifiedAuth } from "./users.ts";
 
 const CORS = {
   "Content-Type": "application/json",
@@ -57,7 +58,7 @@ class ClerkApiToken implements FPApiToken {
 
 export function createHandler<T extends LibSQLDatabase>(db: T) {
   const sthis = ensureSuperThis();
-  const fpApi = new FPApiImpl(sthis, db, new ClerkApiToken(sthis));
+  const fpApi = new FPApiSQL(sthis, db, new ClerkApiToken(sthis));
   return async (req: Request): Promise<Response> => {
     const out = {} as {
       ensureUserRef: unknown;
@@ -65,27 +66,55 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
     };
     const jso = await req.json();
     console.log(jso);
-    const auth = jso.auth;
-    {
-      const rRes = await fpApi.ensureUser({
-        type: "reqEnsureUserRef",
-        auth,
-      });
-      if (rRes.isErr()) {
-        return new Response(rRes.Err().message, { status: 400, headers: CORS });
-      }
-      out.ensureUserRef = rRes.Ok();
+    let res: Promise<Result<unknown>>;
+    switch (true) {
+      case FPAPIMsg.isDeleteTenant(jso):
+        res = fpApi.deleteTenant(jso);
+        break;
+      case FPAPIMsg.isUpdateTenant(jso):
+        res = fpApi.updateTenant(jso);
+        break;
+      case FPAPIMsg.isCreateTenant(jso):
+        res = fpApi.createTenant(jso);
+        break;
+      case FPAPIMsg.isDeleteInvite(jso):
+        res = fpApi.deleteInvite(jso);
+        break;
+      case FPAPIMsg.isListInvites(jso):
+        res = fpApi.listInvites(jso);
+        break;
+      case FPAPIMsg.isInviteUser(jso):
+        res = fpApi.inviteUser(jso);
+        break;
+      case FPAPIMsg.isFindUser(jso):
+        res = fpApi.findUser(jso);
+        break;
+      case FPAPIMsg.isConnectUserToTenant(jso):
+        res = fpApi.connectUserToTenant(jso);
+        break;
+      case FPAPIMsg.isEnsureUser(jso):
+        res = fpApi.ensureUser(jso);
+        break;
+      case FPAPIMsg.isListTenantsByUser(jso):
+        res = fpApi.listTenantsByUser(jso);
+        break;
+      case FPAPIMsg.isUpdateUserTenant(jso):
+        res = fpApi.updateUserTenant(jso);
+        break;
+      default:
+        return new Response("Invalid request", { status: 400, headers: CORS });
     }
-    {
-      const rRes = await fpApi.listTenantsByUser({
-        type: "reqListTenantsByUser",
-        auth,
-      });
-      if (rRes.isErr()) {
-        return new Response(rRes.Err().message, { status: 400, headers: CORS });
-      }
-      out.listTenantsByUser = rRes.Ok();
+    const rRes = await res;
+    console.log("Response", rRes);
+    if (rRes.isErr()) {
+      return new Response(
+        JSON.stringify({
+          type: "error",
+          message: rRes.Err().message,
+        }),
+        { status: 500, headers: CORS },
+      );
     }
-    return new Response(JSON.stringify(out), { status: 200, headers: CORS });
+    return new Response(JSON.stringify(rRes.Ok()), { status: 200, headers: CORS });
   };
 }

@@ -4,7 +4,7 @@ import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireproofHome.tsx";
 
 export function TopArea({ withSidebar }: { withSidebar?: boolean }) {
-  const { isSidebarOpen, toggleDarkMode, isDarkMode } = useContext(AppContext);
+  const { isSidebarOpen, toggleDarkMode, isDarkMode } = useContext(AppContext).sideBar;
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <header className="flex h-14 items-center gap-4 border-b bg-background px-6 shadow-sm flex-shrink-0">

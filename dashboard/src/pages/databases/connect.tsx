@@ -3,7 +3,7 @@ import { redirect } from "react-router-dom";
 import { fireproof } from "use-fireproof";
 import { DEFAULT_ENDPOINT, SYNC_DB_NAME } from "../../helpers.ts";
 
-export async function loader({ request }: { request: Request }) {
+export async function connectDatabasesLoader({ request }: { request: Request }) {
   const url = new URL(request.url);
   const localName = url.searchParams.get("localName");
   if (!localName) {
@@ -46,6 +46,6 @@ export async function loader({ request }: { request: Request }) {
   return redirect(`/fp/databases/${sanitizedRemoteName}`);
 }
 
-export default function DatabasesConnect() {
+export function DatabasesConnect() {
   return <></>;
 }

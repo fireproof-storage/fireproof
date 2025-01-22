@@ -1,10 +1,10 @@
-import { Suspense, createContext, useContext } from "react";
+import { Suspense, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { ResListTenantsByUser, UserTenant } from "../../backend/api.ts";
-import { AppContext } from "../app-context.tsx";
-import { truncateDbName } from "../helpers.ts";
-import { tenantName, useListTendantsByUser } from "../hooks/tenant.ts";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
+import { AppContext } from "../app-context.tsx";
+import { UserTenant } from "../../backend/api.ts";
+import { truncateDbName } from "../helpers.ts";
+import { tenantName, } from "../hooks/tenant.ts";
 
 export async function cloudLoader({ request }: { request: Request }) {
   // const url = new URL(request.url);
@@ -12,21 +12,14 @@ export async function cloudLoader({ request }: { request: Request }) {
   // return nextUrl;
 }
 
-export interface CloudContextType {
-  getListTenants: () => ResListTenantsByUser;
-}
-export const CloudContext = createContext({
-  getListTenants: (): ResListTenantsByUser => {
-    return {
-      type: "resListTenantsByUser",
-      userRefId: "unk",
-      authUserId: "unk",
-      tenants: [],
-    };
-  },
-});
-
 export function Cloud() {
+  useContext(AppContext).cloud.updateContext();
+  return (
+    // <CloudContext.Provider value={cloudContextImpl.injectSession(useSession())}>
+    <WithSidebar sideBarComponent={<SidebarCloud />} title="Cloud" newUrl="/fp/cloud/new" />
+    // </CloudContext.Provider>
+  );
+
   // const nextUrl = useLoaderData() as string;
   // const navigate = useNavigate();
 
@@ -49,50 +42,26 @@ export function Cloud() {
   // }, [session, isLoaded, isSignedIn])
 
   // console.log("token", isSignedIn, isLoaded, session)
-
-  const listTendants = useListTendantsByUser();
-  return (
-    <CloudContext.Provider value={{ getListTenants: () => listTendants }}>
-      <WithSidebar sideBarComponent={<SidebarCloud />} title={"Tenants"} />;
-    </CloudContext.Provider>
-  );
-  // return (
-
-  //     <div className="h-screen w-screen flex items-center justify-center">
-  //       <div className="flex flex-col items-center gap-4">
-  //         <SignedOut>
-  //           <SignInButton />
-  //         </SignedOut>
-  //         {!isSignedIn &&
-  //         <SignIn
-  //           appearance={{
-  //             elements: {
-  //               headerSubtitle: { display: "none" },
-  //               footer: { display: "none" },
-  //             },
-  //           }}
-  //         />}
-  //       </div>
-  //     </div>
-  // );
 }
 
 function SidebarCloud() {
-  const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext);
+  const { cloud, sideBar } = useContext(AppContext);
+  const { openMenu, toggleMenu, setIsSidebarOpen } = sideBar;
   const navigate = useNavigate();
 
-  const { getListTenants } = useContext(CloudContext);
 
   const navigateToTendant = (tendant: UserTenant) => {
-    navigate(`/fp/cloud/tenants/${tendant.tenantId}`);
+    navigate(`/fp/cloud/${tendant.tenantId}`);
     setIsSidebarOpen(false); // Close sidebar on mobile after navigation
-  };
+  }
+
+  const { val: listTenants } = cloud.useListTenantsByUser("sidebar");
   // const { databases } = useLoaderData<{
   //   databases: { name: string; queries: any[] }[];
   // }>();
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      {getListTenants().tenants.map((tenant) => (
+      {listTenants.tenants.map((tenant) => (
         <div key={tenant.tenantId}>
           <div className="flex items-center justify-between w-full">
             <button

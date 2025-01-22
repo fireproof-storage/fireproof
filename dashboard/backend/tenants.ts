@@ -1,14 +1,14 @@
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { users } from "./users.ts";
+import { sqlUsers } from "./users.ts";
 
-export const tenants = sqliteTable("Tenants", {
+export const sqlTenants = sqliteTable("Tenants", {
   tenantId: text().primaryKey(),
   name: text().notNull(),
-  ownerUserRefId: text()
+  ownerUserId: text()
     .notNull()
-    .references(() => users.userId),
-  maxAdminUserRefs: int().notNull().default(5),
-  maxMemberUserRefs: int().notNull().default(5),
+    .references(() => sqlUsers.userId),
+  maxAdminUsers: int().notNull().default(5),
+  maxMemberUsers: int().notNull().default(5),
   maxInvites: int().notNull().default(10),
   status: text().notNull().default("active"),
   statusReason: text().notNull().default("just created"),
@@ -16,33 +16,33 @@ export const tenants = sqliteTable("Tenants", {
   updatedAt: text().notNull(),
 });
 
-export const tenantUserRefRoles = sqliteTable(
-  "TenantUserRefRoles",
+export const sqlTenantUserRoles = sqliteTable(
+  "TenantUserRoles",
   {
     tenantId: text()
       .notNull()
-      .references(() => tenants.tenantId),
-    userRefId: text()
+      .references(() => sqlTenants.tenantId),
+    userId: text()
       .notNull()
-      .references(() => users.userId),
+      .references(() => sqlUsers.userId),
     role: text().notNull(), // "admin" | "member"
     createdAt: text().notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.tenantId, table.userRefId] }),
-    index("turrUserRefIdx").on(table.userRefId), // to enable delete by userRefId
+    primaryKey({ columns: [table.tenantId, table.userId] }),
+    index("turUserIdx").on(table.userId), // to enable delete by userRefId
   ],
 );
 
-export const tenantUserRefs = sqliteTable(
-  "TenantUserRefs",
+export const sqlTenantUsers = sqliteTable(
+  "TenantUsers",
   {
-    userRefId: text()
+    userId: text()
       .notNull()
-      .references(() => users.userId),
+      .references(() => sqlUsers.userId),
     tenantId: text()
       .notNull()
-      .references(() => tenants.tenantId),
+      .references(() => sqlTenants.tenantId),
     name: text(),
     status: text().notNull().default("active"),
     statusReason: text().notNull().default("just created"),
@@ -50,17 +50,17 @@ export const tenantUserRefs = sqliteTable(
     createdAt: text().notNull(),
     updatedAt: text().notNull(),
   },
-  (table) => [primaryKey({ columns: [table.userRefId, table.tenantId] })],
+  (table) => [primaryKey({ columns: [table.userId, table.tenantId] })],
 );
 
 export interface Tenant {
   readonly tenantId: string;
   readonly name: string;
-  readonly ownerUserRefId: string;
-  readonly adminUserRefIds: string[];
-  readonly memberUserRefIds: string[];
-  readonly maxAdminUserRefs: number;
-  readonly maxMemberUserRefs: number;
+  readonly ownerUserId: string;
+  readonly adminUserIds: string[];
+  readonly memberUserIds: string[];
+  readonly maxAdminUsers: number;
+  readonly maxMemberUsers: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }

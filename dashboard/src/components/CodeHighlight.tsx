@@ -3,7 +3,7 @@ import javascript from "highlight.js/lib/languages/javascript";
 import json from "highlight.js/lib/languages/json";
 
 import "highlight.js/styles/stackoverflow-light.css";
-import { useCallback, useEffect, useState } from "react";
+import { JSX, useCallback, useEffect, useState } from "react";
 import Editor from "react-simple-code-editor";
 
 hljs.registerLanguage("json", json);

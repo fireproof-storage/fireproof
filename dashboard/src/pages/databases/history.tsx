@@ -4,7 +4,7 @@ import { type DocBase, useFireproof } from "use-fireproof";
 import DynamicTable from "../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 
-export default function ChangesHistory() {
+export function DatabasesHistory() {
   const { name } = useParams();
   const { database } = useFireproof(name);
 

@@ -3,9 +3,8 @@ import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-co
 import { AuthProvider, Queryable, queryCondition, QueryUser, toUndef } from "./sql-helper.ts";
 import { LibSQLDatabase } from "drizzle-orm/libsql";
 import { eq, and, inArray } from "drizzle-orm/expressions";
-import { get } from "react-hook-form";
 
-export const users = sqliteTable("Users", {
+export const sqlUsers = sqliteTable("Users", {
   userId: text().primaryKey(),
   // max number of tenants
   maxTenants: int().notNull().default(5),
@@ -19,12 +18,12 @@ export const users = sqliteTable("Users", {
   updatedAt: text().notNull(),
 });
 
-export const userRefByProviders = sqliteTable(
+export const sqlUserByProviders = sqliteTable(
   "UserByProviders",
   {
     userId: text()
       .notNull()
-      .references(() => users.userId),
+      .references(() => sqlUsers.userId),
     // userId from auth provider
     providerUserId: text().notNull().unique(),
     // name of auth provider
@@ -103,7 +102,7 @@ export interface UserByProvider extends Queryable {
 }
 
 export async function queryUser(db: LibSQLDatabase, req: QueryUser): Promise<Result<User[]>> {
-  const condition = queryCondition(req, userRefByProviders);
+  const condition = queryCondition(req, sqlUserByProviders);
   if (!condition) {
     return Result.Err("invalid query");
   }
@@ -113,15 +112,15 @@ export async function queryUser(db: LibSQLDatabase, req: QueryUser): Promise<Res
 export async function getUsers(db: LibSQLDatabase, condition: ReturnType<typeof and>[]) {
   const rows = await db
     .select()
-    .from(userRefByProviders)
-    .innerJoin(users, eq(users.userId, userRefByProviders.userId))
+    .from(sqlUserByProviders)
+    .innerJoin(sqlUsers, eq(sqlUsers.userId, sqlUserByProviders.userId))
     .where(and(...condition))
     .all();
   return Result.Ok(sqlToUser(rows));
 }
 
 export async function getUser(db: LibSQLDatabase, authUserId: string): Promise<Result<User>> {
-  const rRows = await getUsers(db, [inArray(users.status, ["active"]), eq(userRefByProviders.providerUserId, authUserId)]);
+  const rRows = await getUsers(db, [inArray(sqlUsers.status, ["active"]), eq(sqlUserByProviders.providerUserId, authUserId)]);
   if (rRows.isErr()) {
     return Result.Err(rRows.Err());
   }
@@ -133,8 +132,8 @@ export async function getUser(db: LibSQLDatabase, authUserId: string): Promise<R
 
 function sqlToUser(
   sql: {
-    Users: typeof users.$inferSelect;
-    UserByProviders: typeof userRefByProviders.$inferSelect;
+    Users: typeof sqlUsers.$inferSelect;
+    UserByProviders: typeof sqlUserByProviders.$inferSelect;
   }[],
 ): User[] {
   const map = new Map<string, User>();
@@ -172,10 +171,10 @@ function sqlToUser(
 
 function upsetUsers(db: LibSQLDatabase, req: UserWithoutDate, now = new Date()) {
   return db
-    .insert(users)
+    .insert(sqlUsers)
     .values(prepareInsertUsers(req, now))
     .onConflictDoUpdate({
-      target: [users.userId],
+      target: [sqlUsers.userId],
       set: {
         maxTenants: req.maxTenants,
         status: req.status,
@@ -202,7 +201,7 @@ export async function upsetUserByProvider(db: LibSQLDatabase, req: UserWithoutDa
   await upsetUsers(db, req, now);
   for (const byProvider of req.byProviders) {
     await db
-      .insert(userRefByProviders)
+      .insert(sqlUserByProviders)
       .values({
         userId: req.userId,
         providerUserId: byProvider.providerUserId,
@@ -217,7 +216,7 @@ export async function upsetUserByProvider(db: LibSQLDatabase, req: UserWithoutDa
         updatedAt: now.toISOString(),
       })
       .onConflictDoUpdate({
-        target: [userRefByProviders.userId, userRefByProviders.providerUserId],
+        target: [sqlUserByProviders.userId, sqlUserByProviders.providerUserId],
         set: {
           queryProvider: byProvider.queryProvider,
           queryEmail: byProvider.queryEmail,
@@ -233,8 +232,8 @@ export async function upsetUserByProvider(db: LibSQLDatabase, req: UserWithoutDa
   }
 }
 
-function prepareInsertUsers(req: UserWithoutDate, now = new Date()): typeof users.$inferInsert {
-  const user: typeof users.$inferInsert = {
+function prepareInsertUsers(req: UserWithoutDate, now = new Date()): typeof sqlUsers.$inferInsert {
+  const user: typeof sqlUsers.$inferInsert = {
     userId: req.userId,
     maxTenants: req.maxTenants,
     status: req.status,
