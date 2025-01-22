@@ -20,7 +20,6 @@ import {
   DocFragment,
   IndexUpdate,
   QueryOpts,
-  IndexRow,
   DocWithId,
   IndexKeyType,
   IndexKey,
@@ -160,36 +159,27 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }
 
-export async function applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
+export async function* applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
   crdt: CRDT<T>,
   resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K>,
-): Promise<{
-  rows: IndexRow<K, T, R>[];
-}> {
-  if (query.descending) {
-    resp.result = resp.result.reverse();
+): AsyncGenerator<DocWithId<T>> {
+  async function* _apply() {
+    let result = [...resp.result];
+
+    if (query.descending) result = result.reverse();
+    if (query.limit) result = result.slice(0, query.limit);
+
+    for (const row of result) {
+      yield crdt.get(row.id).then((val) => {
+        return val ? ({ ...val.doc, _id: row.id } as DocWithId<T>) : undefined;
+      });
+    }
   }
-  if (query.limit) {
-    resp.result = resp.result.slice(0, query.limit);
+
+  for await (const q of _apply()) {
+    if (q) yield q;
   }
-  if (query.includeDocs) {
-    resp.result = await Promise.all(
-      resp.result.map(async (row) => {
-        const val = await crdt.get(row.id);
-        const doc = val ? ({ ...val.doc, _id: row.id } as DocWithId<T>) : undefined;
-        return { ...row, doc };
-      }),
-    );
-  }
-  return {
-    rows: resp.result.map(({ key, ...row }) => {
-      return {
-        key: charwise.decode(key),
-        ...row,
-      };
-    }),
-  };
 }
 
 export function encodeRange(range: [IndexKeyType, IndexKeyType]): [string, string] {

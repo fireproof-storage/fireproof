@@ -165,7 +165,13 @@ describe("Streaming API", () => {
   // QUERY //
   ///////////
 
-  // describe("query", () => {
-  //   //
-  // });
+  describe("query", () => {
+    // ALL
+    describe("all", () => {
+      it("test `snapshot` method", async () => {
+        const docs = await Array.fromAsync(lr.query("name").snapshot());
+        expect(docs.length).toBe(AMOUNT_OF_DOCS);
+      });
+    });
+  });
 });

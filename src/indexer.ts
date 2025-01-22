@@ -8,12 +8,15 @@ import {
   type DocFragment,
   type IdxMetaMap,
   type IndexKeyType,
-  type IndexRows,
   type DocTypes,
   type IndexUpdateString,
   throwFalsy,
   IndexTransactionMeta,
   SuperThis,
+  QueryResponse,
+  ChangesOptions,
+  QueryStreamMarker,
+  DocWithId,
 } from "./types.js";
 import { BaseBlockstore } from "./blockstore/index.js";
 
@@ -33,6 +36,7 @@ import {
 import { CRDT, HasCRDT } from "./crdt.js";
 import { ensureLogger } from "./utils.js";
 import { Logger } from "@adviser/cement";
+import { docUpdateToDocWithId } from "./crdt-helpers.js";
 
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
   refDb: HasCRDT<T>,
@@ -175,57 +179,123 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
   }
 
-  async query(opts: QueryOpts<K> = {}): Promise<IndexRows<K, T, R>> {
-    this.logger.Debug().Msg("enter query");
-    await this.ready();
-    // this._resetIndex();
-    this.logger.Debug().Msg("post ready query");
-    await this._updateIndex();
-    this.logger.Debug().Msg("post _updateIndex query");
-    await this._hydrateIndex();
-    this.logger.Debug().Msg("post _hydrateIndex query");
-    if (!this.byKey.root) {
-      return await applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
-    }
-    if (this.includeDocsDefault && opts.includeDocs === undefined) opts.includeDocs = true;
-    if (opts.range) {
-      const eRange = encodeRange(opts.range);
-      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
-    }
-    if (opts.key) {
-      const encodedKey = encodeKey(opts.key);
-      return await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
-    }
-    if (Array.isArray(opts.keys)) {
-      const results = await Promise.all(
-        opts.keys.map(async (key: DocFragment) => {
-          const encodedKey = encodeKey(key);
-          return (await applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts)).rows;
-        }),
+  query(opts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
+    const query = async (since?: ClockHead, sinceOptions?: ChangesOptions) => {
+      // TODO:
+      void since;
+      void sinceOptions;
+
+      if (!this.byKey.root) {
+        return applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
+      }
+      if (opts.range) {
+        const eRange = encodeRange(opts.range);
+        return applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
+      }
+      if (opts.key) {
+        const encodedKey = encodeKey(opts.key);
+        return applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
+      }
+      if (opts.prefix) {
+        if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
+        // prefix should be always an array
+        const start = [...opts.prefix, NaN];
+        const end = [...opts.prefix, Infinity];
+        const encodedR = encodeRange([start, end]);
+        return applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
+      }
+      const all = await this.byKey.root.getAllEntries(); // funky return type
+      return applyQuery<K, T, R>(
+        this.crdt,
+        {
+          // @ts-expect-error getAllEntries returns a different type than range
+          result: all.result.map(({ key: [k, id], value }) => ({
+            key: k,
+            id,
+            value,
+          })),
+        },
+        opts,
       );
-      return { rows: results.flat() };
-    }
-    if (opts.prefix) {
-      if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
-      // prefix should be always an array
-      const start = [...opts.prefix, NaN];
-      const end = [...opts.prefix, Infinity];
-      const encodedR = encodeRange([start, end]);
-      return await applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
-    }
-    const all = await this.byKey.root.getAllEntries(); // funky return type
-    return await applyQuery<K, T, R>(
-      this.crdt,
-      {
-        // @ts-expect-error getAllEntries returns a different type than range
-        result: all.result.map(({ key: [k, id], value }) => ({
-          key: k,
-          id,
-          value,
-        })),
+    };
+
+    const snapshot = (opts: { since?: ClockHead; sinceOptions?: ChangesOptions } = {}) => {
+      const ready = this.ready.bind(this);
+      const updateIndex = this._updateIndex.bind(this);
+      const hydrateIndex = this._hydrateIndex.bind(this);
+
+      async function* docsWithId() {
+        await waitFor;
+        await ready();
+        await updateIndex();
+        await hydrateIndex();
+
+        for await (const doc of await query(opts.since, opts.sinceOptions)) {
+          if (doc) yield doc;
+        }
+      }
+
+      return docsWithId();
+    };
+
+    const stream = (opts: { futureOnly: boolean; since?: ClockHead; sinceOptions?: ChangesOptions }) => {
+      const clock = this.crdt.clock;
+      const ready = this.ready.bind(this);
+      const updateIndex = this._updateIndex.bind(this);
+      const hydrateIndex = this._hydrateIndex.bind(this);
+
+      let unsubscribe: undefined | (() => void);
+      let isClosed = false;
+
+      return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
+        async start(controller) {
+          await waitFor;
+          await ready();
+          await updateIndex();
+          await hydrateIndex();
+
+          if (opts.futureOnly === false) {
+            const it = await query(opts.since, opts.sinceOptions);
+
+            async function iterate(prevValue: DocWithId<T>) {
+              const { done, value } = await it.next();
+
+              controller.enqueue({
+                doc: prevValue,
+                marker: { kind: "preexisting", done: done || false },
+              });
+
+              if (!done) await iterate(value);
+            }
+
+            const { value } = await it.next();
+            if (value) await iterate(value);
+          }
+
+          unsubscribe = clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+            if (isClosed) return;
+            updates.forEach((update) => {
+              controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
+            });
+          });
+        },
+
+        cancel() {
+          isClosed = true;
+          unsubscribe?.();
+        },
+      });
+    };
+
+    return {
+      snapshot,
+      live(opts?: { since?: ClockHead }) {
+        return stream({ futureOnly: false, since: opts?.since });
       },
-      opts,
-    );
+      future() {
+        return stream({ futureOnly: true });
+      },
+    };
   }
 
   _resetIndex() {
