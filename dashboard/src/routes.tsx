@@ -1,24 +1,27 @@
-import { createRoutesFromElements, Route } from "react-router-dom";
+import { Route, createRoutesFromElements } from "react-router-dom";
 
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, createMemoryRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider, createBrowserRouter, createMemoryRouter } from "react-router-dom";
+import { Databases, databaseLoader } from "./pages/databases.tsx";
 import DatabasesHistory from "./pages/databases/history.tsx";
 import DatabasesIndex from "./pages/databases/index.tsx";
 import DatabasesNew, { Action as newDatabaseAction } from "./pages/databases/new.tsx";
 import DatabasesQuery from "./pages/databases/query.tsx";
 import DatabasesShow from "./pages/databases/show.tsx";
-import { Databases, databaseLoader } from "./pages/databases.tsx";
 import DocsShow from "./pages/docs/show.tsx";
 import { Index, indexLoader } from "./pages/index.tsx";
 
-import DatabasesConnect, { loader as connectLoader } from "./pages/databases/connect.tsx";
-import { Login, loginLoader } from "./pages/login.tsx";
-import "./styles/tailwind.css";
 import { ClerkProvider } from "@clerk/clerk-react";
-import { Cloud, cloudLoader } from "./pages/cloud.tsx";
 import { AppContextProvider } from "./app-context.tsx";
 import { WithoutSidebar } from "./layouts/without-sidebar.tsx";
-import { TenantShow } from "./pages/cloud/tenant-show.tsx";
+import { Cloud, cloudLoader } from "./pages/cloud.tsx";
+import DatabasesConnect, { loader as connectLoader } from "./pages/databases/connect.tsx";
+import { Login, loginLoader } from "./pages/login.tsx";
+
+import { TenantNew } from "./pages/cloud/tenants/new.tsx";
+import { TenantShow } from "./pages/cloud/tenants/show.tsx";
+
+import "./styles/tailwind.css";
 
 const routes = createRoutesFromElements(
   <Route>
@@ -28,7 +31,8 @@ const routes = createRoutesFromElements(
     </Route>
     <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}>
       <Route index element={<DatabasesIndex />} />
-      <Route path=":tenantId" element={<TenantShow />} />
+      <Route path="tenants/:tenantId" element={<TenantShow />} />
+      <Route path="tenants/new" element={<TenantNew />} />
     </Route>
     <Route path="/fp/databases" element={<Databases />} loader={databaseLoader}>
       <Route index element={<DatabasesIndex />} />

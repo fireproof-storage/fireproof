@@ -1,10 +1,10 @@
-import { createContext, Suspense, useContext } from "react";
+import { Suspense, createContext, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { WithSidebar } from "../layouts/with-sidebar.tsx";
-import { AppContext } from "../app-context.tsx";
 import { ResListTenantsByUser, UserTenant } from "../../backend/api.ts";
+import { AppContext } from "../app-context.tsx";
 import { truncateDbName } from "../helpers.ts";
 import { tenantName, useListTendantsByUser } from "../hooks/tenant.ts";
+import { WithSidebar } from "../layouts/with-sidebar.tsx";
 
 export async function cloudLoader({ request }: { request: Request }) {
   // const url = new URL(request.url);
@@ -84,7 +84,7 @@ function SidebarCloud() {
   const { getListTenants } = useContext(CloudContext);
 
   const navigateToTendant = (tendant: UserTenant) => {
-    navigate(`/fp/cloud/${tendant.tenantId}`);
+    navigate(`/fp/cloud/tenants/${tendant.tenantId}`);
     setIsSidebarOpen(false); // Close sidebar on mobile after navigation
   };
   // const { databases } = useLoaderData<{
