@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
-import { tenantName, useListTendantsByUser } from "../../hooks/tenant.ts";
+import { tenantName, useListTendantsByUser } from "../../../hooks/tenant.ts";
 import { useContext } from "react";
-import { CloudContext } from "../cloud.tsx";
+import { CloudContext } from "../../cloud.tsx";
 
 export function TenantShow() {
   const { tenantId } = useParams();
