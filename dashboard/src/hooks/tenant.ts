@@ -1,5 +1,5 @@
 import { useSession } from "@clerk/clerk-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ResListTenantsByUser, UserTenant } from "../../backend/api.ts";
 import { API_URL } from "../helpers.ts";
 
@@ -46,5 +46,8 @@ export function useListTendantsByUser() {
 }
 
 export function tenantName(tenant: UserTenant) {
+  if (tenant.default) {
+    return 'Default';
+  }
   return tenant.name || tenant.tenantName || tenant.tenantId;
 }
