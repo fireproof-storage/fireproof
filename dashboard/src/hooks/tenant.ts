@@ -47,7 +47,7 @@ export function useListTendantsByUser() {
 
 export function tenantName(tenant: UserTenant) {
   if (tenant.default) {
-    return 'Default';
+    return "Default";
   }
   return tenant.name || tenant.tenantName || tenant.tenantId;
 }
