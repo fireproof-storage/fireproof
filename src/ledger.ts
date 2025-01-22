@@ -14,7 +14,6 @@ import {
   type DocResponse,
   type BulkResponse,
   type DocTypes,
-  type IndexRows,
   type DocFragment,
   type CRDTMeta,
   type SuperThis,
@@ -78,10 +77,7 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
   allDocs<T extends DocTypes>(): QueryResponse<T>;
   allDocuments<T extends DocTypes>(): QueryResponse<T>;
 
-  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
-    opts?: QueryOpts<K>,
-  ): Promise<IndexRows<K, T, R>>;
+  query<K extends IndexKeyType, T extends DocTypes>(field: string | MapFn<T>, opts?: QueryOpts<K>): QueryResponse<T>;
   compact(): Promise<void>;
 }
 
@@ -169,10 +165,7 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   allDocuments<T extends DocTypes>(): QueryResponse<T> {
     return this.ref.allDocuments();
   }
-  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
-    opts?: QueryOpts<K>,
-  ): Promise<IndexRows<K, T, R>> {
+  query<K extends IndexKeyType, T extends DocTypes>(field: string | MapFn<T>, opts?: QueryOpts<K>): QueryResponse<T> {
     return this.ref.query(field, opts);
   }
   compact(): Promise<void> {
@@ -322,18 +315,17 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
-  async query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T>,
     opts: QueryOpts<K> = {},
-  ): Promise<IndexRows<K, T, R>> {
-    await this.ready();
+  ): QueryResponse<T> {
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     const _crdt = this.crdt as unknown as CRDT<T>;
     const idx =
       typeof field === "string"
         ? index<K, T, R>({ crdt: _crdt }, field)
         : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
-    return await idx.query(opts);
+    return idx.query(opts, { waitFor: this.ready() });
   }
 
   async compact() {

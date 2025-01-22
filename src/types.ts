@@ -227,6 +227,7 @@ export interface IndexRow<K extends IndexKeyType, T extends DocObject, R extends
 export interface IndexRows<K extends IndexKeyType, T extends DocObject, R extends DocFragment = T> {
   readonly rows: IndexRow<K, T, R>[];
 }
+
 export interface CRDTMeta {
   readonly head: ClockHead;
 }
@@ -257,17 +258,10 @@ export interface IdxMetaMap {
 export interface QueryOpts<K extends IndexKeyType> {
   readonly descending?: boolean;
   readonly limit?: number;
-  includeDocs?: boolean;
   readonly range?: [IndexKeyType, IndexKeyType];
   readonly key?: DocFragment;
   readonly keys?: DocFragment[];
   prefix?: IndexKeyType;
-}
-
-export interface AllDocsQueryOpts extends QueryOpts<string> {
-  readonly key?: string;
-  readonly keys?: string[];
-  prefix?: string;
 }
 
 export type QueryStreamMarker = { readonly kind: "preexisting"; readonly done: boolean } | { readonly kind: "new" };
