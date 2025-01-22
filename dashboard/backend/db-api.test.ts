@@ -8,7 +8,7 @@
 
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiImpl, FPApiToken, OwnerTenant, ReqEnsureUser, ResEnsureUser } from "./api.js";
+import { FPApiSQL, FPApiToken, OwnerTenant, ReqEnsureUser, ResEnsureUser } from "./api.js";
 import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
 import { AuthType, VerifiedAuth } from "./users.ts";
 import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
@@ -61,7 +61,7 @@ describe("db-api", () => {
   // let db: BetterSQLite3Database
   let db: LibSQLDatabase;
   const sthis = ensureSuperThis();
-  let fpApi: FPApiImpl;
+  let fpApi: FPApiSQL;
   const data = [] as {
     reqs: ReqEnsureUser;
     ress: ResEnsureUser;
@@ -69,7 +69,7 @@ describe("db-api", () => {
   beforeAll(async () => {
     const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
     db = drizzle(client);
-    fpApi = new FPApiImpl(sthis, db, new TestApiToken(sthis));
+    fpApi = new FPApiSQL(sthis, db, new TestApiToken(sthis));
 
     data.push(
       ...Array(10)
@@ -115,23 +115,21 @@ describe("db-api", () => {
         },
         tenants: [
           {
-            adminUserRefIds: [res.user.userId],
+            adminUserIds: [res.user.userId],
             default: true,
-            maxAdminUserRefs: 5,
-            maxMemberUserRefs: 5,
-            memberUserRefIds: [],
-            name: res.tenants[0].name,
+            maxAdminUsers: 5,
+            maxMemberUsers: 5,
+            memberUserIds: [],
             role: "owner",
             tenantId: res.tenants[0].tenantId,
-            tenantName: res.tenants[0].tenantName,
-            ref: res.tenants[0].ref,
+            user: res.tenants[0].user,
             tenant: res.tenants[0].tenant,
           },
         ],
       });
     }
   });
-  it("check ensureUserRef", async () => {
+  it("check ensureUser", async () => {
     for (const d of data.map((d) => d.reqs)) {
       const rRes = await fpApi.ensureUser(d);
       const res = rRes.Ok();
@@ -161,16 +159,14 @@ describe("db-api", () => {
         },
         tenants: [
           {
-            adminUserRefIds: [res.user.userId],
+            adminUserIds: [res.user.userId],
             default: true,
-            maxAdminUserRefs: 5,
-            maxMemberUserRefs: 5,
-            memberUserRefIds: [],
-            name: res.tenants[0].name,
+            maxAdminUsers: 5,
+            maxMemberUsers: 5,
+            memberUserIds: [],
             role: "owner",
             tenantId: res.tenants[0].tenantId,
-            tenantName: res.tenants[0].tenantName,
-            ref: res.tenants[0].ref,
+            user: res.tenants[0].user,
             tenant: res.tenants[0].tenant,
           },
         ],
@@ -189,21 +185,19 @@ describe("db-api", () => {
         authUserId: d.ress.user.byProviders[0].providerUserId,
         tenants: [
           {
-            ref: d.ress.tenants[0].ref,
+            user: d.ress.tenants[0].user,
             tenant: d.ress.tenants[0].tenant,
-            adminUserRefIds: ownerTenant.adminUserRefIds,
-            memberUserRefIds: ownerTenant.memberUserRefIds,
-            maxAdminUserRefs: 5,
-            maxMemberUserRefs: 5,
+            adminUserIds: ownerTenant.adminUserIds,
+            memberUserIds: ownerTenant.memberUserIds,
+            maxAdminUsers: 5,
+            maxMemberUsers: 5,
             default: true,
             role: "owner",
             tenantId: d.ress.tenants[0].tenantId,
-            name: d.ress.tenants[0].name,
-            tenantName: d.ress.tenants[0].tenantName,
           },
         ],
         type: "resListTenantsByUser",
-        userRefId: d.ress.user.userId,
+        userId: d.ress.user.userId,
       });
     }
   });
@@ -284,7 +278,7 @@ describe("db-api", () => {
         },
         invitedTenantId: data[0].ress.tenants[0].tenantId,
         inviterTenantId: data[0].ress.tenants[0].tenantId,
-        inviterUserRefId: data[0].ress.user.userId,
+        inviterUserId: data[0].ress.user.userId,
         queryEmail: undefined,
         queryNick: undefined,
         queryProvider: undefined,
@@ -349,7 +343,7 @@ describe("db-api", () => {
         },
         invitedTenantId: data[0].ress.tenants[0].tenantId,
         inviterTenantId: data[0].ress.tenants[0].tenantId,
-        inviterUserRefId: data[0].ress.user.userId,
+        inviterUserId: data[0].ress.user.userId,
         queryEmail: queryEmail(key),
         queryNick: undefined,
         queryProvider: undefined,
@@ -365,7 +359,7 @@ describe("db-api", () => {
 
   it("try find a existing user", async () => {
     const res = await fpApi.findUser({
-      type: "reqFindUserRef",
+      type: "reqFindUser",
       auth: data[0].reqs.auth,
       query: {
         byEmail: "exact@email.com",
@@ -374,7 +368,7 @@ describe("db-api", () => {
       },
     });
     expect(res.Ok()).toEqual({
-      type: "resFindUserRef",
+      type: "resFindUser",
       query: {
         andProvider: "fp",
         byEmail: "exact@email.com",
@@ -389,12 +383,12 @@ describe("db-api", () => {
       existingUserId: data[0].ress.user.userId,
     } satisfies QueryUser;
     const res = await fpApi.findUser({
-      type: "reqFindUserRef",
+      type: "reqFindUser",
       auth: data[0].reqs.auth,
       query,
     });
     expect(res.Ok()).toEqual({
-      type: "resFindUserRef",
+      type: "resFindUser",
       query,
       results: [data[0].ress.user],
     });
@@ -405,12 +399,12 @@ describe("db-api", () => {
       byEmail: data[0].ress.user.byProviders[0].cleanEmail,
     };
     const res = await fpApi.findUser({
-      type: "reqFindUserRef",
+      type: "reqFindUser",
       auth: data[0].reqs.auth,
       query,
     });
     expect(res.Ok()).toEqual({
-      type: "resFindUserRef",
+      type: "resFindUser",
       query,
       results: [data[0].ress.user],
     });
@@ -421,12 +415,12 @@ describe("db-api", () => {
       byNick: data[0].ress.user.byProviders[0].cleanNick,
     };
     const res = await fpApi.findUser({
-      type: "reqFindUserRef",
+      type: "reqFindUser",
       auth: data[0].reqs.auth,
       query,
     });
     expect(res.Ok()).toEqual({
-      type: "resFindUserRef",
+      type: "resFindUser",
       query,
       results: [data[0].ress.user],
     });
@@ -437,8 +431,53 @@ describe("db-api", () => {
       type: "reqCreateTenant",
       auth: data[0].reqs.auth,
       tenant: {
-        ownerUserRefId: data[0].ress.user.userId,
+        // ownerUserId: data[0].ress.user.userId,
       },
+    });
+    expect(tenant.Ok()).toEqual({
+      tenant: {
+        createdAt: tenant.Ok().tenant.createdAt,
+        maxAdminUsers: 5,
+        maxInvites: 10,
+        maxMemberUsers: 5,
+        name: tenant.Ok().tenant.name,
+        ownerUserId: data[0].ress.user.userId,
+        status: "active",
+        statusReason: "just created",
+        tenantId: tenant.Ok().tenant.tenantId,
+        updatedAt: tenant.Ok().tenant.updatedAt,
+      },
+      type: "resCreateTenant",
+    });
+    const rUpdate = await fpApi.updateTenant({
+      type: "reqUpdateTenant",
+      auth: data[0].reqs.auth,
+      tenant: {
+        tenantId: tenant.Ok().tenant.tenantId,
+        name: "new name",
+      },
+    });
+    expect(rUpdate.isOk()).toBeTruthy();
+
+    const listOwnersTenant = await fpApi.listTenantsByUser({
+      type: "reqListTenantsByUser",
+      auth: data[0].reqs.auth,
+    });
+    const myOwnersTenant = listOwnersTenant.Ok().tenants.filter((i) => i.tenantId === tenant.Ok().tenant.tenantId);
+    expect(myOwnersTenant.length).toEqual(1);
+    expect(myOwnersTenant[0]).toEqual({
+      adminUserIds: [data[0].ress.user.userId],
+      default: false,
+      maxAdminUsers: 5,
+      maxMemberUsers: 5,
+      memberUserIds: [],
+      user: myOwnersTenant[0].user,
+      role: "owner",
+      tenant: {
+        ...myOwnersTenant[0].tenant,
+        name: "new name",
+      },
+      tenantId: tenant.Ok().tenant.tenantId,
     });
     const invite = await fpApi.inviteUser({
       type: "reqInviteUser",
@@ -458,54 +497,34 @@ describe("db-api", () => {
     });
     const resCuT = await fpApi.connectUserToTenant({
       type: "reqConnectUserToTenant",
-      auth: data[0].reqs.auth,
+      auth: data[1].reqs.auth,
       name: "my-connect-tenant",
       tenantId: tenant.Ok().tenant.tenantId,
       inviteId: invite.Ok().invite.inviteId,
     });
     expect(resCuT.isOk()).toBeTruthy();
-    expect(tenant.Ok()).toEqual({
-      tenant: {
-        createdAt: tenant.Ok().tenant.createdAt,
-        maxAdminUserRefs: 5,
-        maxInvites: 10,
-        maxMemberUserRefs: 5,
-        name: tenant.Ok().tenant.name,
-        ownerUserRefId: data[0].ress.user.userId,
-        status: "active",
-        statusReason: "just created",
-        tenantId: tenant.Ok().tenant.tenantId,
-        updatedAt: tenant.Ok().tenant.updatedAt,
-      },
-      type: "resCreateTenant",
-    });
-    const rUpdate = await fpApi.updateTenant({
-      type: "reqUpdateTenant",
-      auth: data[0].reqs.auth,
-      tenant: {
-        tenantId: tenant.Ok().tenant.tenantId,
-        name: "new name",
-      },
-    });
-    expect(rUpdate.isOk()).toBeTruthy();
+
     const tenantWithNew = await fpApi.listTenantsByUser({
       type: "reqListTenantsByUser",
-      auth: data[0].reqs.auth,
+      auth: data[1].reqs.auth,
     });
     const myWith = tenantWithNew.Ok().tenants.filter((i) => i.tenantId === tenant.Ok().tenant.tenantId);
-    expect(myWith[0]).toEqual({
-      adminUserRefIds: [],
-      default: false,
-      maxAdminUserRefs: 5,
-      maxMemberUserRefs: 5,
-      memberUserRefIds: [data[0].ress.user.userId],
-      name: "my-connect-tenant",
-      ref: myWith[0].ref,
-      role: "owner",
-      tenant: myWith[0].tenant,
-      tenantId: tenant.Ok().tenant.tenantId,
-      tenantName: "new name",
-    });
+    expect(myWith).toEqual([
+      {
+        default: false,
+        user: {
+          ...myWith[0].user,
+          name: "my-connect-tenant",
+        },
+
+        role: "member",
+        tenant: {
+          ...myWith[0].tenant,
+          name: "new name",
+        },
+        tenantId: tenant.Ok().tenant.tenantId,
+      },
+    ]);
     const rDelete = await fpApi.deleteTenant({
       type: "reqDeleteTenant",
       auth: data[0].reqs.auth,
@@ -575,7 +594,7 @@ describe("db-api", () => {
     }
     await Promise.all(
       data.slice(3).map(async (d, didx) => {
-        return fpApi.deleteInvite({ type: "reqRemoveInvite", auth: d.reqs.auth, inviteId: invites[didx].inviteId });
+        return fpApi.deleteInvite({ type: "reqDeleteInvite", auth: d.reqs.auth, inviteId: invites[didx].inviteId });
       }),
     );
     for (let didx = 0; didx < data.length - 3; ++didx) {

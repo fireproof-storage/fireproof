@@ -1,24 +1,24 @@
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { AuthType, users } from "./users.ts";
-import { tenants } from "./tenants.ts";
-import { ledgers } from "./ledgers.ts";
+import { sqlUsers } from "./users.ts";
+import { sqlTenants } from "./tenants.ts";
+import { sqlLedgers } from "./ledgers.ts";
 import { AuthProvider, Queryable, queryEmail, queryNick, QueryUser, toUndef } from "./sql-helper.ts";
 import { SuperThis } from "@fireproof/core";
 
-export const inviteTickets = sqliteTable(
+export const sqlInviteTickets = sqliteTable(
   "InviteTickets",
   {
     inviteId: text().primaryKey(),
 
-    inviterUserRefId: text()
+    inviterUserId: text()
       .notNull()
-      .references(() => users.userId),
+      .references(() => sqlUsers.userId),
     inviterTenantId: text()
       .notNull()
-      .references(() => tenants.tenantId),
+      .references(() => sqlTenants.tenantId),
 
     // directed Invite
-    invitedUserId: text().references(() => users.userId),
+    invitedUserId: text().references(() => sqlUsers.userId),
 
     // bind on login Invite
     queryProvider: text(),
@@ -30,9 +30,9 @@ export const inviteTickets = sqliteTable(
     sendEmailCount: int().notNull(),
 
     // invite to tenant
-    invitedTenantId: text().references(() => tenants.tenantId),
+    invitedTenantId: text().references(() => sqlTenants.tenantId),
     // invite to ledger
-    invitedLedgerId: text().references(() => ledgers.ledgerId),
+    invitedLedgerId: text().references(() => sqlLedgers.ledgerId),
 
     // depending on target a JSON with e.g. the role and right
     invitedParams: text().notNull(),
@@ -63,7 +63,7 @@ export interface InvitedParams {
 export interface InviteTicket extends Queryable {
   readonly inviteId: string;
   readonly sendEmailCount: number;
-  readonly inviterUserRefId: string;
+  readonly inviterUserId: string;
   readonly inviterTenantId: string;
 
   // readonly invitedUserId?: string;
@@ -82,11 +82,11 @@ export interface InviteTicket extends Queryable {
   readonly updatedAt: Date;
 }
 
-export function sqlToInvite(sql: typeof inviteTickets.$inferSelect): InviteTicket {
+export function sqlToInvite(sql: typeof sqlInviteTickets.$inferSelect): InviteTicket {
   return {
     inviteId: sql.inviteId,
     sendEmailCount: sql.sendEmailCount,
-    inviterUserRefId: sql.inviterUserRefId,
+    inviterUserId: sql.inviterUserId,
     inviterTenantId: sql.inviterTenantId,
 
     userID: toUndef(sql.invitedUserId),
@@ -126,13 +126,13 @@ export interface PrepareInviteTicketParams {
 
 export function prepareInviteTicket({
   sthis,
-  userId: userRefId,
+  userId,
   tenantId,
   ledgerId,
   now,
   expiresAfter,
   invitedTicketParams: ivp,
-}: PrepareInviteTicketParams): typeof inviteTickets.$inferInsert {
+}: PrepareInviteTicketParams): typeof sqlInviteTickets.$inferInsert {
   const nowDate = new Date();
   const nowStr = (now ?? nowDate).toISOString();
   const expiresAfterStr = (expiresAfter ?? new Date(nowDate.getTime() + 1000 * 60 * 60 * 24 * 7)).toISOString();
@@ -162,7 +162,7 @@ export function prepareInviteTicket({
   }
   return {
     inviteId: ivp.inviteId ?? sthis.nextId(12).str,
-    inviterUserRefId: userRefId,
+    inviterUserId: userId,
     inviterTenantId: tenantId,
     queryEmail: queryEmail(ivp.query.byEmail),
     queryNick: queryNick(ivp.query.byNick),

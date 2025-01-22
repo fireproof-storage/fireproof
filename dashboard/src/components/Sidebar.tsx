@@ -4,8 +4,8 @@ import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireproofHome.tsx";
 //
 
-export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Element; title: string }) {
-  const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext);
+export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent: JSX.Element; newUrl: string; title: string }) {
+  const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext).sideBar;
   return (
     <div
       className={`fixed md:static inset-0 z-40 w-[280px] transform transition-transform duration-300 ease-in-out ${
@@ -46,7 +46,7 @@ export function Sidebar({ sideBarComponent, title }: { sideBarComponent: JSX.Ele
             <Link
               data-id="15"
               className="inline-flex h-8 items-center justify-center rounded bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
-              to="/fp/databases/new"
+              to={newUrl}
               onClick={() => setIsSidebarOpen?.(false)}
             >
               <svg

@@ -7,7 +7,7 @@ import { headersForDocs } from "../../components/dynamicTableHelpers.ts";
 
 type AnyMapFn = MapFn<object>;
 
-export default function Query() {
+export function DatabasesQuery() {
   const { name } = useParams();
   if (!name) throw new Error("No database name provided");
 

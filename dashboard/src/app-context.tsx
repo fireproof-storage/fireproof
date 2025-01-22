@@ -1,31 +1,41 @@
 import { createContext, JSX, useEffect, useState } from "react";
-import { Outlet, useParams } from "react-router-dom";
-import { ButtonToggleSidebar } from "./components/ButtonToggleSidebar.tsx";
-import { Sidebar } from "./components/Sidebar.tsx";
-import { TopArea } from "./components/TopArea.tsx";
+import { useParams } from "react-router-dom";
+import { CloudContext } from "./cloud-context.ts";
+import { ensureSuperThis, SuperThis } from "use-fireproof";
 
 export interface AppContextType {
-  openMenu: string | null;
-  setOpenMenu: (dbName: string | null) => void;
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (value: boolean) => void;
-  isDarkMode: boolean;
-  setIsDarkMode: (value: boolean) => void;
-  toggleMenu: (dbName: string) => void;
-  toggleDarkMode: () => void;
-  toggleSidebar: () => void;
+  sthis: SuperThis;
+  cloud: CloudContext;
+  sideBar: {
+    openMenu: string | null;
+    setOpenMenu: (dbName: string | null) => void;
+    isSidebarOpen: boolean;
+    setIsSidebarOpen: (value: boolean) => void;
+    isDarkMode: boolean;
+    setIsDarkMode: (value: boolean) => void;
+    toggleMenu: (dbName: string) => void;
+    toggleDarkMode: () => void;
+    toggleSidebar: () => void;
+  };
 }
 
+const sthis = ensureSuperThis();
+const cloudContext = new CloudContext();
+
 export const AppContext = createContext<AppContextType>({
-  openMenu: null,
-  setOpenMenu: () => {},
-  isSidebarOpen: false,
-  setIsSidebarOpen: () => {},
-  isDarkMode: false,
-  setIsDarkMode: () => {},
-  toggleMenu: () => {},
-  toggleDarkMode: () => {},
-  toggleSidebar: () => {},
+  sthis,
+  cloud: cloudContext,
+  sideBar: {
+    openMenu: null,
+    setOpenMenu: () => {},
+    isSidebarOpen: false,
+    setIsSidebarOpen: () => {},
+    isDarkMode: false,
+    setIsDarkMode: () => {},
+    toggleMenu: () => {},
+    toggleDarkMode: () => {},
+    toggleSidebar: () => {},
+  },
 });
 
 export function AppContextProvider({ children }: { children: React.ReactNode }) {
@@ -67,15 +77,19 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
     <AppContext.Provider
       value={
         {
-          openMenu,
-          setOpenMenu,
-          isSidebarOpen,
-          setIsSidebarOpen,
-          isDarkMode,
-          setIsDarkMode,
-          toggleMenu,
-          toggleDarkMode,
-          toggleSidebar,
+          sthis,
+          cloud: cloudContext,
+          sideBar: {
+            openMenu,
+            setOpenMenu,
+            isSidebarOpen,
+            setIsSidebarOpen,
+            isDarkMode,
+            setIsDarkMode,
+            toggleMenu,
+            toggleDarkMode,
+            toggleSidebar,
+          },
         } satisfies AppContextType
       }
     >

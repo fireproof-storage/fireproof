@@ -1,23 +1,23 @@
 import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { tenants } from "./tenants.ts";
-import { users } from "./users.ts";
+import { sqlTenants } from "./tenants.ts";
+import { sqlUsers } from "./users.ts";
 
-export const ledgers = sqliteTable("Ledgers", {
+export const sqlLedgers = sqliteTable("Ledgers", {
   ledgerId: text().primaryKey(),
   tenantId: text()
     .notNull()
-    .references(() => tenants.tenantId),
+    .references(() => sqlTenants.tenantId),
   name: text().notNull(),
   maxShares: int().notNull().default(5),
   createdAt: text().notNull(),
   updatedAt: text().notNull(),
 });
 
-export const ledgerUserRefRoles = sqliteTable(
-  "LedgerUserRefs",
+export const sqlLedgerUserRoles = sqliteTable(
+  "LedgerUserRoles",
   {
-    ledgerId: text().references(() => ledgers.ledgerId),
-    userRefId: text().references(() => users.userId),
+    ledgerId: text().references(() => sqlLedgers.ledgerId),
+    userRefId: text().references(() => sqlUsers.userId),
     role: text().notNull(), // "admin" | "member"
     right: text().notNull(), // "read" | "write"
     createdAt: text().notNull(),

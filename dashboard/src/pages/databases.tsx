@@ -38,7 +38,7 @@ async function getIndexedDBNamesWithQueries(): Promise<{ name: string; queries: 
 }
 
 export function Databases() {
-  return <WithSidebar sideBarComponent={<SidebarDatabases />} title="Ledgers" />;
+  return <WithSidebar sideBarComponent={<SidebarDatabases />} title="Databases" newUrl="/fp/databases/new" />;
 }
 
 const navLinks = [
@@ -48,7 +48,7 @@ const navLinks = [
 ];
 
 function SidebarDatabases() {
-  const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext);
+  const { openMenu, toggleMenu, setIsSidebarOpen } = useContext(AppContext).sideBar;
   const navigate = useNavigate();
   const navigateToDatabase = (dbName: string) => {
     navigate(`/fp/databases/${dbName}`);

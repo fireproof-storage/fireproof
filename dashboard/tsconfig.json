@@ -36,7 +36,8 @@
     "typeRoots": ["backend", "node_modules/@types", "node_modules"],
     "types": [
       "lib.deno.ns.d.ts",
-      "vitest/globals"
+      "vitest/globals",
+      "vite/client"
     ] /* Specify type package names to be included without being referenced in a source file. */,
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
