@@ -122,7 +122,7 @@ async function processFileset(
   files: DocFiles /*, publicFiles = false */,
 ) {
   const dbBlockstore = blocks.parent as EncryptedBlockstore;
-  if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, ledger name is required").AsError();
+  if (!dbBlockstore.loader) throw logger.Error().Msg("Missing loader, database name is required").AsError();
   const t = new CarTransaction(dbBlockstore); // maybe this should move to encrypted-blockstore
   const didPut = [];
   // let totalSize = 0
@@ -166,7 +166,7 @@ export async function getValueFromCrdt<T extends DocTypes>(
   key: string,
   logger: Logger,
 ): Promise<DocValue<T>> {
-  if (!head.length) throw logger.Debug().Msg("Getting from an empty ledger").AsError();
+  if (!head.length) throw logger.Debug().Msg("Getting from an empty database").AsError();
   const link = await get(blocks, head, key);
   if (!link) throw logger.Error().Str("key", key).Msg(`Missing key`).AsError();
   return await getValueFromLink(blocks, link, logger);

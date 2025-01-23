@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import TodoList from "./Todo.js";
 
 import { expect, describe, it } from "vitest";
-import { Ledger, fireproof } from "use-fireproof";
+import { Database, fireproof } from "use-fireproof";
 
 describe("<TodoList />", () => {
-  let fp: Ledger;
+  let fp: Database;
   afterEach(async () => {
     console.log("ae-pre-destroy");
     await fp.destroy();

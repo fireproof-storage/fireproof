@@ -1,8 +1,8 @@
 const shortLink = (l: string) => `${String(l).slice(0, 4)}..${String(l).slice(-4)}`;
 const clockLog = new Set<string>();
 
-export const TimeTravel = ({ ledger }) => {
-  ledger.clock && ledger.clock.length && clockLog.add(ledger.clock.toString());
+export const TimeTravel = ({ database }) => {
+  database.clock && database.clock.length && clockLog.add(database.clock.toString());
   const diplayClocklog = Array.from(clockLog).reverse();
   return (
     <div className="timeTravel">
@@ -11,7 +11,7 @@ export const TimeTravel = ({ ledger }) => {
       {/* <InputArea
             onSubmit={
               async (tex: string) => {
-                await ledger.setClock(tex.split(','))
+                await database.setClock(tex.split(','))
               }
             }
             placeholder='Copy a CID from below to rollback in time.'
@@ -26,7 +26,7 @@ export const TimeTravel = ({ ledger }) => {
           <li key={entry}>
             <button
               onClick={async () => {
-                // await Fireproof.zoom(ledger, [entry])
+                // await Fireproof.zoom(database, [entry])
                 console.log("todo zoom", entry);
               }}
             >

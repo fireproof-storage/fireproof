@@ -1,7 +1,7 @@
 {
   "name": "@fireproof/core",
   "version": "must-set",
-  "description": "Live ledger for the web.",
+  "description": "Live database for the web.",
   "type": "module",
   "module": "./index.js",
   "main": "./index.cjs",
@@ -45,7 +45,7 @@
     }
   },
   "scripts": {},
-  "keywords": ["ledger", "JSON", "document", "IPLD", "CID", "IPFS"],
+  "keywords": ["database", "JSON", "document", "IPLD", "CID", "IPFS"],
   "contributors": ["J Chris Anderson", "Alan Shaw", "Travis Vachon", "Mikeal Rogers", "Meno Abels"],
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",

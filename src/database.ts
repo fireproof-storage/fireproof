@@ -34,7 +34,7 @@ import { decodeFile, encodeFile } from "./runtime/files.js";
 import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 
-const ledgers = new KeyedResolvOnce<Ledger>();
+const databases = new KeyedResolvOnce<Database>();
 
 export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
   return JSON.stringify(
@@ -45,7 +45,7 @@ export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts
   );
 }
 
-export interface LedgerOpts {
+export interface DatabaseOpts {
   readonly name?: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
@@ -61,7 +61,7 @@ export interface LedgerOpts {
   // readonly threshold?: number;
 }
 
-export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasCRDT<DT> {
+export interface Database<DT extends DocTypes = NonNullable<unknown>> extends HasCRDT<DT> {
   // readonly name: string;
   readonly logger: Logger;
   readonly sthis: SuperThis;
@@ -97,15 +97,15 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
   compact(): Promise<void>;
 }
 
-export function isLedger<T extends DocTypes = NonNullable<unknown>>(db: unknown): db is Ledger<T> {
-  return db instanceof LedgerImpl || db instanceof LedgerShell;
+export function isDatabase<T extends DocTypes = NonNullable<unknown>>(db: unknown): db is Database<T> {
+  return db instanceof DatabaseImpl || db instanceof DatabaseShell;
 }
 
-export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: string | undefined, opts?: ConfigOpts): Ledger<T> {
+export function DatabaseFactory<T extends DocTypes = NonNullable<unknown>>(name: string | undefined, opts?: ConfigOpts): Database<T> {
   const sthis = ensureSuperThis(opts);
-  return new LedgerShell<T>(
-    ledgers.get(keyConfigOpts(sthis, name, opts)).once((key) => {
-      const db = new LedgerImpl<T>(sthis, {
+  return new DatabaseShell<T>(
+    databases.get(keyConfigOpts(sthis, name, opts)).once((key) => {
+      const db = new DatabaseImpl<T>(sthis, {
         name,
         meta: opts?.meta,
         keyBag: defaultKeyBagOpts(sthis, opts?.keyBag),
@@ -119,16 +119,16 @@ export function LedgerFactory<T extends DocTypes = NonNullable<unknown>>(name: s
         },
       });
       db.onClosed(() => {
-        ledgers.unget(key);
+        databases.unget(key);
       });
       return db;
     }),
   );
 }
 
-export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements Ledger<DT> {
-  readonly ref: LedgerImpl<DT>;
-  constructor(ref: LedgerImpl<DT>) {
+export class DatabaseShell<DT extends DocTypes = NonNullable<unknown>> implements Database<DT> {
+  readonly ref: DatabaseImpl<DT>;
+  constructor(ref: DatabaseImpl<DT>) {
     this.ref = ref;
     ref.addShell(this);
   }
@@ -202,9 +202,9 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   }
 }
 
-class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<DT> {
+class DatabaseImpl<DT extends DocTypes = NonNullable<unknown>> implements Database<DT> {
   // readonly name: string;
-  readonly opts: LedgerOpts;
+  readonly opts: DatabaseOpts;
 
   _listening = false;
   readonly _listeners = new Set<ListenerFn<DT>>();
@@ -213,9 +213,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   readonly _writeQueue: WriteQueue<DT>;
   // readonly blockstore: BaseBlockstore;
 
-  readonly shells: Set<LedgerShell<DT>> = new Set<LedgerShell<DT>>();
+  readonly shells: Set<DatabaseShell<DT>> = new Set<DatabaseShell<DT>>();
 
-  addShell(shell: LedgerShell<DT>) {
+  addShell(shell: DatabaseShell<DT>) {
     this.shells.add(shell);
   }
 
@@ -226,9 +226,9 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   async close() {
     throw this.logger.Error().Str("db", this.name).Msg(`use shellClose`).AsError();
   }
-  async shellClose(db: LedgerShell<DT>) {
+  async shellClose(db: DatabaseShell<DT>) {
     if (!this.shells.has(db)) {
-      throw this.logger.Error().Str("db", this.name).Msg(`LedgerShell mismatch`).AsError();
+      throw this.logger.Error().Str("db", this.name).Msg(`DatabaseShell mismatch`).AsError();
     }
     this.shells.delete(db);
     if (this.shells.size === 0) {
@@ -260,12 +260,12 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   readonly sthis: SuperThis;
   readonly id: string;
 
-  constructor(sthis: SuperThis, opts: LedgerOpts) {
+  constructor(sthis: SuperThis, opts: DatabaseOpts) {
     this.opts = opts; // || this.opts;
     // this.name = opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
     this.sthis = sthis;
     this.id = sthis.timeOrderedNextId().str;
-    this.logger = ensureLogger(this.sthis, "Ledger");
+    this.logger = ensureLogger(this.sthis, "Database");
     this.crdt = new CRDT(this.sthis, this.opts);
     this._writeQueue = writeQueue(this.sthis, async (updates: DocUpdate<DT>[]) => this.crdt.bulk(updates), this.opts.writeQueue);
     this.crdt.clock.onTock(() => this._no_update_notify());
@@ -441,7 +441,7 @@ function defaultURI(
   if (!ret.hasParam(PARAM.NAME)) {
     const name = sthis.pathOps.basename(ret.URI().pathname);
     if (!name) {
-      throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
+      throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Database name is required").AsError();
     }
     ret.setParam(PARAM.NAME, name);
   }
@@ -497,8 +497,8 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
   };
 }
 
-export function fireproof(name: string, opts?: ConfigOpts): Ledger {
-  return LedgerFactory(name, opts);
+export function fireproof(name: string, opts?: ConfigOpts): Database {
+  return DatabaseFactory(name, opts);
 }
 
 function makeName(fnString: string) {

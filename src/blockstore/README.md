@@ -82,7 +82,7 @@ In shared storage situations, just because compaction has removed references to 
 
 ## Encryption
 
-Encrypted Blockstore uses symmetric keys, and each blockstore generates its own key. This means that files are opaque to storage providers, but the key is broadcast on the metadata channel, so it's up to you how secure you want to make it. [Read about the encryption model in the Fireproof docs here](https://use-fireproof.com/docs/ledger-api/encryption). The blockstore was extracted from Fireproof, so for the first releases you'll want to read the Fireproof docs for more information.
+Encrypted Blockstore uses symmetric keys, and each blockstore generates its own key. This means that files are opaque to storage providers, but the key is broadcast on the metadata channel, so it's up to you how secure you want to make it. [Read about the encryption model in the Fireproof docs here](https://use-fireproof.com/docs/database-api/encryption). The blockstore was extracted from Fireproof, so for the first releases you'll want to read the Fireproof docs for more information.
 
 ## Connectors
 

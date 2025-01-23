@@ -16,15 +16,15 @@ const sleep = async (t: number) => new Promise((resolve) => setTimeout(resolve, 
 
 export function List(): JSX.Element {
   // first data stuff
-  const { ledger } = useFireproof();
+  const { database } = useFireproof();
   const { addTodo, toggle, destroy, clearCompleted, updateTitle } = makeQueryFunctions({
     ready: true,
-    ledger,
+    database,
   });
   const { list, todos } = useLoaderData() as ListLoaderData;
   const [editing, setEditing] = useState("");
   const revalidator = useRevalidator();
-  ledger.subscribe(async () => {
+  database.subscribe(async () => {
     revalidator.revalidate();
   });
 
@@ -80,7 +80,7 @@ export function List(): JSX.Element {
         nowShowing={nowShowing}
       />
       <div className="dbInfo">
-        <TimeTravel ledger={ledger} />
+        <TimeTravel database={database} />
         {/* <UploadManager registered={registered} /> */}
       </div>
     </div>

@@ -8,14 +8,14 @@ import { Fireproof } from "use-fireproof";
 // import { useFireproof } from 'use-fireproof'
 // console.log(Fireproof, useFireproof)
 
-const ledger = Fireproof.storage("tomato-park");
+const database = Fireproof.storage("tomato-park");
 
-window.fireproof = ledger;
+window.fireproof = database;
 
 const App = () => {
   //   console.log('App')
-  //   const { ledger, useLiveQuery, useDocument } = useFireproof()
-  //   console.log('ledger', ledger)
+  //   const { database, useLiveQuery, useDocument } = useFireproof()
+  //   console.log('database', database)
 
   const [items, setItems] = useState([]);
 
@@ -23,13 +23,13 @@ const App = () => {
 
   useEffect(() => {
     const onChange = async () => {
-      const docs = await ledger.allDocuments();
+      const docs = await database.allDocuments();
       //   console.log('docs', docs)
       setItems(docs.rows);
     };
     onChange();
-    return ledger.subscribe(onChange);
-  }, [ledger]);
+    return database.subscribe(onChange);
+  }, [database]);
 
   //   const items = useLiveQuery('type', { key: 'todo' }).docs
   //   const [doc, setDoc, saveDoc] = useDocument({ message: 'new todo', type: 'todo' })
@@ -42,7 +42,7 @@ const App = () => {
         <button
           onClick={(e) => {
             e.preventDefault();
-            ledger.put({ message, type: "todo" });
+            database.put({ message, type: "todo" });
             setMessage("");
           }}
         >

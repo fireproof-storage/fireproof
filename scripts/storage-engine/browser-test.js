@@ -23,7 +23,7 @@ void (async () => {
 
   await page.goto(url);
 
-  // Wait for some time to ensure the ledger operation is complete
+  // Wait for some time to ensure the database operation is complete
   // await page.waitForTimeout(1000)
 
   // Click the button to run onButtonClick

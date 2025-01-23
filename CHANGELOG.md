@@ -14,7 +14,7 @@ What are the breaking changes in the 0.20 series?
 - We rename from Database to Ledger with no functional changes.
 - a new memory implementation is replacing the memfs implementation.
   The prev use was to add to file:// the parameter fs=memfs now just use
-  memory:// works for Ledger as KeyBags.
+  memory:// works for Database as KeyBags.
 - The opts parameter of fireproof changed so that it's now possible
   to specify a every persitence like data/file/meta/wal or index-data/index-file/index-meta/index-wal a own URL. In the internals we also
   prevents the multiple instanciation of Gateways and Stores with results
