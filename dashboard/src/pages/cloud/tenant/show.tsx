@@ -2,11 +2,13 @@ import { Form, Link, SubmitTarget, useNavigate, useParams } from "react-router-d
 import { tenantName } from "../../../hooks/tenant.ts";
 import { useContext, useState } from "react";
 import { AppContext } from "../../../app-context.tsx";
-import { set, useForm } from "react-hook-form";
-import { CloudContext } from "../../../cloud-context.ts";
-import { InUpdateTenantParams, ReqUpdateUserTenant, ResFindUser, UserTenant } from "../../../../backend/api.ts";
-import { User } from "@clerk/backend";
+import { useForm } from "react-hook-form";
+import { CloudContext, WithoutTypeAndAuth } from "../../../cloud-context.ts";
+import { InUpdateTenantParams, ReqInviteUser, ReqUpdateUserTenant, ResFindUser, UserTenant } from "../../../../backend/api.ts";
+import { User } from "../../../../backend/users.ts";
 import { Plus } from "../../../components/Plus.tsx";
+import { queryEmail, QueryUser } from "../../../../backend/sql-helper.ts";
+import { Minus } from "../../../components/Minus.tsx";
 
 function onSubmitTenant(cloud: CloudContext, tenantId: string, refresh: () => void) {
   return async (data: SubmitTarget) => {
@@ -111,6 +113,9 @@ function onSubmitUserTenant(cloud: CloudContext, tenantId: string, refresh: () =
 function isAdmin(ut: UserTenant) {
   return ut.role === "admin" || ut.role === "owner";
 }
+
+const reEmail =
+  /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
 export function CloudTenantShow() {
   const { tenantId } = useParams();
@@ -253,8 +258,34 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
   if (!isAdmin(tenant)) {
     return <> </>;
   }
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+
+  if (queryResult.results.length === 0 && reEmail.test(queryValue)) {
+    // add external invite
+    const now = new Date();
+    queryResult.results.push({
+      userId: "external-user",
+      maxTenants: 0,
+      status: "invited",
+      statusReason: "external invite",
+      createdAt: now,
+      updatedAt: now,
+      byProviders: [
+        {
+          providerUserId: "to-be-determined",
+          cleanEmail: queryValue,
+          queryEmail: queryEmail(queryValue),
+          queryProvider: "invite-per-email",
+          params: {
+            email: queryValue,
+            first: "to-be-determined",
+            last: "to-be-determined",
+          },
+          used: now,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ],
+    });
   }
 
   async function queryExistingUserOrNick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -271,17 +302,82 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
     }
     setQueryResult(res.Ok());
   }
+
+  function addInvite(tenant: UserTenant, user: User) {
+    return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+      let query: QueryUser;
+      if (user.byProviders[0]?.queryProvider === "invite-per-email") {
+        query = {
+          byEmail: user.byProviders[0].cleanEmail,
+        };
+      } else {
+        query = {
+          existingUserId: user.userId,
+        };
+      }
+      cloud.api
+        .inviteUser({
+          ticket: {
+            inviterTenantId: tenant.tenantId,
+            query,
+          },
+        })
+        .then((res) => {
+          if (res.isErr()) {
+            console.error(res.Err());
+            return;
+          }
+          console.log("addInvite", tenant, user);
+          setQueryValue("");
+          setQueryResult({
+            type: "resFindUser",
+            query: {},
+            results: [],
+          });
+          listInvites.refresh();
+        });
+    };
+  }
+
+  function delInvite(inviteId: string) {
+    return (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.preventDefault();
+      cloud.api.deleteInvite({ inviteId }).then((res) => {
+        if (res.isErr()) {
+          console.error(res.Err());
+          return;
+        }
+        console.log("delInvite", inviteId);
+        listInvites.refresh();
+      });
+    };
+  }
+
   return (
     <>
       <h2>Invites</h2>
       <ul>
-        {listInvites.val.tickets.map((invite, i) => (
-          <li key={i}>
-            <pre>{JSON.stringify(invite, null, 2)}</pre>
+        {listInvites.val.get(tenant.tenantId).tickets.map((ticket, i) => (
+          <li key={ticket.tenantId}>
+            <ul>
+              {ticket.invites.map((invite, j) => (
+                <li key={invite.inviteId} style={{ display: "flex", alignItems: "center" }}>
+                  <button onClick={delInvite(invite.inviteId)}>
+                    <Minus />
+                  </button>
+                  <pre>{JSON.stringify(invite, null, 2)}</pre>
+                </li>
+              ))}
+            </ul>
           </li>
         ))}
       </ul>
-      <form onSubmit={handleSubmit}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+        }}
+      >
         <label>query existing user</label>
         <input
           className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent transition duration-200 ease-in-out"
@@ -302,15 +398,11 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
           .map((user, i) => (
             <li key={i} style={{ display: "flex", alignItems: "center" }}>
               {/* <pre>{JSON.stringify(user, null, 2)}</pre> */}
-              {user.byProviders[0].queryProvider}
-              <img src={user.byProviders[0].params.image_url} width={64} />
-              <form>
-                <input type="hidden" name="userId" value={user.userId} />
-                <input type="hidden" name="tenantId" value={tenant.tenantId} />
-                <button type="submit">
-                  <Plus />
-                </button>
-              </form>
+              {user.byProviders[0].queryProvider}[{user.byProviders[0].cleanEmail}]
+              {user.byProviders[0].params.image_url && <img src={user.byProviders[0].params.image_url} width={64} />}
+              <button type="submit" onClick={addInvite(tenant, user)}>
+                <Plus />
+              </button>
             </li>
           ))}
       </ul>

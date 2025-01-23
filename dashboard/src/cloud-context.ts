@@ -29,7 +29,7 @@ import {
 } from "../backend/api.ts";
 import { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
-import { use, useContext, useEffect, useState } from "react";
+import { use, useContext, useEffect, useMemo, useState } from "react";
 import { set } from "react-hook-form";
 import { AppContext } from "./app-context.tsx";
 import { int } from "drizzle-orm/mysql-core";
@@ -43,7 +43,7 @@ interface WithType<T extends TypeString> {
   type: T["type"];
 }
 
-type WithoutTypeAndAuth<T> = Omit<T, "type" | "auth">;
+export type WithoutTypeAndAuth<T> = Omit<T, "type" | "auth">;
 
 const emptyListTenantsByUser: ResListTenantsByUser = {
   type: "resListTenantsByUser",
@@ -58,11 +58,15 @@ const emptyListInvites: ResListInvites = {
 };
 
 export class InviteStateItem {
-  readonly invites = new Map<string, ResListInvites>();
+  readonly invites: Map<string, ResListInvites>;
+
+  constructor(inv?: InviteStateItem) {
+    this.invites = inv ? inv.invites : new Map<string, ResListInvites>();
+  }
 
   add(tenantId: string, list: ResListInvites) {
     this.invites.set(tenantId, list);
-    return this;
+    return new InviteStateItem(this);
   }
   get(tenantId: string): ResListInvites {
     let item = this.invites.get(tenantId);
@@ -99,9 +103,18 @@ export class CloudContext {
       val: new Date().toISOString(),
       set: (value: string) => {},
     },
+
     listInvitesByTenant: {
       val: new InviteStateItem(),
-      set: (value: InviteStateItem) => {},
+      set: (value: InviteStateItem): void => {
+        throw new Error("Not implemented");
+      },
+    },
+    refreshListInvitesByTenant: {
+      val: new Date().toISOString(),
+      set: (value: string): void => {
+        throw new Error("Not implemented");
+      },
     },
     ensureUser: {
       val: emptyEnsureUser,
@@ -111,19 +124,20 @@ export class CloudContext {
 
   initContext() {
     console.log("initContext");
-    // const v = useState(this.sharedState.val);
-    // this.sharedState.set = v[1];
-    // this.sharedState.val = v[0];
+
     const [val, set] = useState(emptyListTenantsByUser);
     this.sharedState.listTenantsByUser.val = val;
     this.sharedState.listTenantsByUser.set = set;
-    const [refresh, setRefresh] = useState("initial");
-    this.sharedState.refreshListTenantsByUser.val = refresh;
-    this.sharedState.refreshListTenantsByUser.set = setRefresh;
+    const [refreshListTenants, setRefreshListTenants] = useState("initial");
+    this.sharedState.refreshListTenantsByUser.val = refreshListTenants;
+    this.sharedState.refreshListTenantsByUser.set = setRefreshListTenants;
 
     const [invites, setInvites] = useState(new InviteStateItem());
     this.sharedState.listInvitesByTenant.val = invites;
     this.sharedState.listInvitesByTenant.set = setInvites;
+    const [refreshListInvitesByTenant, setRefreshListInvitesByTenant] = useState("initial");
+    this.sharedState.refreshListInvitesByTenant.val = refreshListInvitesByTenant;
+    this.sharedState.refreshListInvitesByTenant.set = setRefreshListInvitesByTenant;
 
     const [ensureUser, setEnsureUser] = useState(emptyEnsureUser);
     this.sharedState.ensureUser.val = ensureUser;
@@ -158,7 +172,7 @@ export class CloudContext {
   // }
 
   useEnsureUser(): ResEnsureUser {
-    useEffect(() => {
+    useMemo(() => {
       this.api.ensureUser({}).then((rRes) => {
         if (rRes.isOk()) {
           console.log("ensureUser", rRes.Ok());
@@ -174,19 +188,22 @@ export class CloudContext {
     throw new Error("Not implemented");
   }
 
-  useListInvitesByTenant(tenantId: string): { val: ResListInvites; refresh: (tenantId: string) => void } {
+  useListInvitesByTenant(tenantId: string): { val: InviteStateItem; refresh: () => void } {
     const { cloud } = useContext(AppContext);
     const activeUser = this.useEnsureUser();
+    console.log("useListInvitesByTenant", tenantId);
     useEffect(() => {
       if (activeUser.user.status !== "active") {
         return;
       }
+      console.log("useListInvitesByTenant", tenantId);
       this.api
         .listInvites({
           tenantIds: [tenantId],
         })
         .then((rRes) => {
           if (rRes.isOk()) {
+            console.log("update listInvitesByTenant", tenantId, rRes.Ok());
             cloud.sharedState.listInvitesByTenant.set(cloud.sharedState.listInvitesByTenant.val.add(tenantId, rRes.Ok()));
           }
         })
@@ -196,13 +213,15 @@ export class CloudContext {
       this.api.session?.isLoaded,
       this.api.session?.isSignedIn,
       cloud.sharedState.refreshListTenantsByUser.val,
+      cloud.sharedState.refreshListInvitesByTenant.val,
       activeUser.user.status,
       tenantId,
     ]);
     return {
-      val: cloud.sharedState.listInvitesByTenant.val.get(tenantId),
-      refresh: (tenantId) => {
-        throw new Error("Not implemented");
+      val: cloud.sharedState.listInvitesByTenant.val,
+      refresh: () => {
+        console.log("refreshListInvitesByTenant", tenantId);
+        cloud.sharedState.refreshListInvitesByTenant.set(new Date().toISOString());
       },
     };
   }
@@ -211,14 +230,7 @@ export class CloudContext {
     // const [sharedRefresh, setSharedRefresh] = useState("initial");
     const { cloud } = useContext(AppContext);
     const activeUser = this.useEnsureUser();
-
-    // const updateSharedValue = () => {
-    //   console.log("updateSharedValue");
-    //   setSharedRefresh(new Date().toISOString());
-    // };
-    // console.log("useListTenantsByUser", id, cloud.sharedState.listTenantsByUser.val);
-
-    console.log("useListTenantsByUser", activeUser.user.status);
+    // console.log("useListTenantsByUser", activeUser.user.status);
     useEffect(() => {
       if (activeUser.user.status !== "active") {
         return;
