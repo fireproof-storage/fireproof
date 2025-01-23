@@ -101,7 +101,10 @@ export function isDatabase<T extends DocTypes = NonNullable<unknown>>(db: unknow
   return db instanceof DatabaseImpl || db instanceof DatabaseShell;
 }
 
-export function DatabaseFactory<T extends DocTypes = NonNullable<unknown>>(name: string | undefined, opts?: ConfigOpts): Database<T> {
+export function DatabaseFactory<T extends DocTypes = NonNullable<unknown>>(
+  name: string | undefined,
+  opts?: ConfigOpts,
+): Database<T> {
   const sthis = ensureSuperThis(opts);
   return new DatabaseShell<T>(
     databases.get(keyConfigOpts(sthis, name, opts)).once((key) => {
