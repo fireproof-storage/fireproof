@@ -357,6 +357,57 @@ describe("db-api", () => {
 
   it("invite non existing user to a ledger", async () => {});
 
+  it("try find an user by string(email)", async () => {
+    const res = await fpApi.findUser({
+      type: "reqFindUser",
+      auth: data[0].reqs.auth,
+      query: {
+        byString: data[0].ress.user.byProviders[0].cleanEmail,
+      },
+    });
+    expect(res.Ok()).toEqual({
+      type: "resFindUser",
+      query: {
+        byString: data[0].ress.user.byProviders[0].cleanEmail,
+      },
+      results: [data[0].ress.user],
+    });
+  });
+
+  it("try find an user by string(nick)", async () => {
+    const res = await fpApi.findUser({
+      type: "reqFindUser",
+      auth: data[0].reqs.auth,
+      query: {
+        byString: data[0].ress.user.byProviders[0].cleanNick,
+      },
+    });
+    expect(res.Ok()).toEqual({
+      type: "resFindUser",
+      query: {
+        byString: data[0].ress.user.byProviders[0].cleanNick,
+      },
+      results: [data[0].ress.user],
+    });
+  });
+
+  it("try find an user by string(userId)", async () => {
+    const res = await fpApi.findUser({
+      type: "reqFindUser",
+      auth: data[0].reqs.auth,
+      query: {
+        byString: data[0].ress.user.userId,
+      },
+    });
+    expect(res.Ok()).toEqual({
+      type: "resFindUser",
+      query: {
+        byString: data[0].ress.user.userId,
+      },
+      results: [data[0].ress.user],
+    });
+  });
+
   it("try find a existing user", async () => {
     const res = await fpApi.findUser({
       type: "reqFindUser",

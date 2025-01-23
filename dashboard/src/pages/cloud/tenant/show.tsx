@@ -1,10 +1,12 @@
-import { Form, Link, SubmitTarget, useParams } from "react-router-dom";
+import { Form, Link, SubmitTarget, useNavigate, useParams } from "react-router-dom";
 import { tenantName } from "../../../hooks/tenant.ts";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { AppContext } from "../../../app-context.tsx";
-import { useForm } from "react-hook-form";
+import { set, useForm } from "react-hook-form";
 import { CloudContext } from "../../../cloud-context.ts";
-import { InUpdateTenantParams, ReqUpdateUserTenant } from "../../../../backend/api.ts";
+import { InUpdateTenantParams, ReqUpdateUserTenant, ResFindUser, UserTenant } from "../../../../backend/api.ts";
+import { User } from "@clerk/backend";
+import { Plus } from "../../../components/Plus.tsx";
 
 function onSubmitTenant(cloud: CloudContext, tenantId: string, refresh: () => void) {
   return async (data: SubmitTarget) => {
@@ -68,23 +70,68 @@ function onSubmitUserTenant(cloud: CloudContext, tenantId: string, refresh: () =
   // });
 }
 
+// function ComponentA({ state }: { state: CloudContext["sharedState"] }) {
+//   // const [sharedValue, updateSharedValue] = useSharedState({ a: 0, b: [] });
+
+//   const handleClick = () => {
+//     state.set({ a: state.val.a + 1, b: [...state.val.b,  1,2] });
+//   };
+
+//   return (
+//     <div>
+//       <h1>Component A: </h1>
+//       <pre>{JSON.stringify(state.val)}</pre>
+//       <button onClick={handleClick}>Increment</button>
+//       <ul>
+//       {state.val.b.map((v, i) => <li key={i}>{v}</li>)}
+//       </ul>
+//     </div>
+//   );
+// }
+
+// function ComponentB({ state }: { state: CloudContext["sharedState"] }) {
+//   // const [sharedValue, updateSharedValue] = useSharedState({ a: 0, b: []}); // Only need to read the value
+
+//   const handleClick = () => {
+//     state.set({ a: state.val.a + 1, b: [...state.val.b,  3,4] });
+//   };
+
+//   return (
+//     <div>
+//       <h1>Component B: </h1>
+//       <pre>{JSON.stringify(state.val)}</pre>
+//       <button onClick={handleClick}>Increment</button>
+//       <ul>
+//       {state.val.b.map((v,i) => <li key={i}>{v}</li>)}
+//       </ul>
+//     </div>
+//   );
+// }
+
+function isAdmin(ut: UserTenant) {
+  return ut.role === "admin" || ut.role === "owner";
+}
+
 export function CloudTenantShow() {
   const { tenantId } = useParams();
   const { cloud } = useContext(AppContext);
-  const { val: listTenants, refresh } = cloud.useListTenantsByUser("tenantShow");
-  console.log("CloudTenantShow - listTenants", listTenants);
+  const { val: listTenants, refresh } = cloud.useListTenantsByUser();
   const tenants = listTenants.tenants.filter((t) => t.tenantId === tenantId);
   const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
   const tenant = tenants[0];
+
+  // const listLedgers = cloud.useListLedgersByTenant(tenantId);
+
   if (!tenant) {
-    return <div>Not found: {tenantId}</div>;
+    navigate("/fp/cloud");
+    return <div>Not found</div>;
   }
   return (
     <div>
       <h1>{tenantName(tenant)}</h1>
 
       <p>
-        {tenant.tenantId}
         <Link
           data-id="15"
           className="inline-flex h-8 items-center justify-center rounded bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
@@ -107,6 +154,7 @@ export function CloudTenantShow() {
             {/* <path d="M12 5v14"></path> */}
           </svg>
         </Link>
+        {tenant.tenantId}
       </p>
 
       <div className="bg-[--muted] shadow sm:rounded-lg">
@@ -184,8 +232,88 @@ export function CloudTenantShow() {
 
       <pre>{JSON.stringify(tenant, null, 2)}</pre>
 
+      <Invites tenant={tenant} userId={listTenants.userId} />
+
       <p>{listTenants.authUserId}</p>
       <p>{listTenants.userId}</p>
     </div>
+  );
+}
+
+function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
+  const cloud = useContext(AppContext).cloud;
+  const listInvites = cloud.useListInvitesByTenant(tenant.tenantId);
+  const [queryResult, setQueryResult] = useState({
+    type: "resFindUser",
+    query: {},
+    results: [],
+  } as ResFindUser);
+  const { register } = useForm();
+  const [queryValue, setQueryValue] = useState("");
+  if (!isAdmin(tenant)) {
+    return <> </>;
+  }
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+  }
+
+  async function queryExistingUserOrNick(e: React.ChangeEvent<HTMLInputElement>) {
+    // e.preventDefault();
+    setQueryValue(e.target.value);
+    const res = await cloud.api.findUser({
+      query: {
+        byString: e.target.value,
+      },
+    });
+    if (res.isErr()) {
+      console.error(res.Err());
+      return;
+    }
+    setQueryResult(res.Ok());
+  }
+  return (
+    <>
+      <h2>Invites</h2>
+      <ul>
+        {listInvites.val.tickets.map((invite, i) => (
+          <li key={i}>
+            <pre>{JSON.stringify(invite, null, 2)}</pre>
+          </li>
+        ))}
+      </ul>
+      <form onSubmit={handleSubmit}>
+        <label>query existing user</label>
+        <input
+          className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent transition duration-200 ease-in-out"
+          type="text"
+          id="EmailOrNick"
+          placeholder="search Email or Nick or Existing User ID"
+          value={queryValue}
+          {...register("EmailOrNick", {
+            onChange: queryExistingUserOrNick,
+          })}
+        />
+
+        {/* <button type="submit"><Plus /></button> */}
+      </form>
+      <ul>
+        {queryResult.results
+          .filter((i) => i.userId !== userId)
+          .map((user, i) => (
+            <li key={i} style={{ display: "flex", alignItems: "center" }}>
+              {/* <pre>{JSON.stringify(user, null, 2)}</pre> */}
+              {user.byProviders[0].queryProvider}
+              <img src={user.byProviders[0].params.image_url} width={64} />
+              <form>
+                <input type="hidden" name="userId" value={user.userId} />
+                <input type="hidden" name="tenantId" value={tenant.tenantId} />
+                <button type="submit">
+                  <Plus />
+                </button>
+              </form>
+            </li>
+          ))}
+      </ul>
+    </>
   );
 }

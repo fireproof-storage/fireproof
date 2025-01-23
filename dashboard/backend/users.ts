@@ -71,7 +71,9 @@ export interface ClerkClaim {
   readonly first: string;
   readonly last: string;
   // github handle
-  readonly nick: string;
+  readonly nick?: string;
+  readonly name?: string;
+  readonly image_url?: string;
 }
 
 export interface ClerkVerifyAuth extends VerifiedAuth {

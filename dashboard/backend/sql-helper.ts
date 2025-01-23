@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm/expressions";
+import { and, eq, isNull, or } from "drizzle-orm/expressions";
 import { SQLiteColumn } from "drizzle-orm/sqlite-core";
 
 export function toUndef(v: string | null | undefined): string | undefined {
@@ -19,6 +19,7 @@ export interface Queryable {
 }
 
 export interface QueryUser {
+  readonly byString?: string; // could be email or nick or exact userId
   readonly existingUserId?: string;
   readonly byEmail?: string; // exact email
   readonly byNick?: string; // exact nick
@@ -47,9 +48,24 @@ export function queryCondition(
     return eq(table.userId, query.existingUserId);
   }
 
+  const str = query.byString?.trim();
+  if (str) {
+    const byEmail = queryEmail(str);
+    const byNick = queryNick(str);
+    const conditions = [] as ReturnType<typeof or>[];
+    if (byEmail) {
+      conditions.push(eq(table.queryEmail, byEmail));
+    }
+    if (byNick) {
+      conditions.push(eq(table.queryNick, byNick));
+    }
+    conditions.push(eq(table.userId, str));
+    return or(...conditions);
+  }
+
   const byEmail = queryEmail(query.byEmail);
   const byNick = queryNick(query.byNick);
-  let where: ReturnType<typeof and>;
+  let where: ReturnType<typeof and> = eq(table.userId, Math.random() + "");
   if (byEmail && byNick && query.andProvider) {
     where = and(eq(table.queryEmail, byEmail), eq(table.queryNick, byNick), eq(table.queryProvider, query.andProvider));
   } else if (byEmail && byNick) {

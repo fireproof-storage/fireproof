@@ -4,7 +4,7 @@ import { WithSidebar } from "../layouts/with-sidebar.tsx";
 import { AppContext } from "../app-context.tsx";
 import { UserTenant } from "../../backend/api.ts";
 import { truncateDbName } from "../helpers.ts";
-import { tenantName, } from "../hooks/tenant.ts";
+import { tenantName } from "../hooks/tenant.ts";
 
 export async function cloudLoader({ request }: { request: Request }) {
   // const url = new URL(request.url);
@@ -49,13 +49,12 @@ function SidebarCloud() {
   const { openMenu, toggleMenu, setIsSidebarOpen } = sideBar;
   const navigate = useNavigate();
 
-
   const navigateToTendant = (tendant: UserTenant) => {
     navigate(`/fp/cloud/${tendant.tenantId}`);
     setIsSidebarOpen(false); // Close sidebar on mobile after navigation
-  }
+  };
 
-  const { val: listTenants } = cloud.useListTenantsByUser("sidebar");
+  const { val: listTenants } = cloud.useListTenantsByUser();
   // const { databases } = useLoaderData<{
   //   databases: { name: string; queries: any[] }[];
   // }>();

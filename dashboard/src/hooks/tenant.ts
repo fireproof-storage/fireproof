@@ -46,9 +46,8 @@ import { API_URL } from "../helpers.ts";
 // }
 
 export function tenantName(tenant: UserTenant) {
-  if (tenant.default) {
-    return "Default";
-  }
-  return tenant.name || tenant.tenantName || tenant.tenantId;
+  // if (tenant.default) {
+  //   return "Default";
+  // }
   return tenant.user.name || tenant.tenant.name || tenant.tenantId;
 }

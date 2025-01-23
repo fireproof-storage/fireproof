@@ -16,6 +16,7 @@ import {
   UserNotFoundError,
   queryUser,
   VerifiedAuth,
+  ClerkClaim,
 } from "./users.ts";
 import { Tenant, sqlTenants, sqlTenantUsers, sqlTenantUserRoles } from "./tenants.ts";
 import { InviteTicket, sqlInviteTickets, sqlToInvite, prepareInviteTicket, InvitedParams } from "./invites.ts";
@@ -492,7 +493,14 @@ type ActiveUserWithUserId<T extends AuthType = ClerkVerifyAuth> = Omit<ActiveUse
 };
 
 function nameFromAuth(name: string | undefined, auth: ActiveUserWithUserId): string {
-  return name ?? `my-tenant[${auth.verifiedAuth.params.email ?? auth.verifiedAuth.params.nick ?? auth.verifiedAuth.userId}]`;
+  return (
+    name ??
+    `my-tenant[${auth.verifiedAuth.params.email ?? nickFromClarkClaim(auth.verifiedAuth.params) ?? auth.verifiedAuth.userId}]`
+  );
+}
+
+function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
+  return auth.nick ?? auth.name;
 }
 
 export class FPApiSQL implements FPApiInterface {
@@ -558,11 +566,11 @@ export class FPApiSQL implements FPApiInterface {
           byProviders: [
             {
               providerUserId: auth.userId,
-              queryProvider: auth.params.nick ? "github" : "google",
+              queryProvider: nickFromClarkClaim(auth.params) ? "github" : "google",
               queryEmail: queryEmail(auth.params.email),
               cleanEmail: auth.params.email,
-              queryNick: queryNick(auth.params.nick),
-              cleanNick: auth.params.nick,
+              queryNick: queryNick(nickFromClarkClaim(auth.params)),
+              cleanNick: nickFromClarkClaim(auth.params),
               params: auth.params,
               used: now,
             },
