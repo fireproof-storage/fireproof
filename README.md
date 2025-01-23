@@ -39,11 +39,12 @@ Jump to the docs site [for JavaScript API basics.](https://use-fireproof.com/doc
 Fireproof [React hooks for live data](https://use-fireproof.com/docs/category/react-hooks) avoid boilerplate and make building collaborative apps a breeze.
 
 ```js
-import { useLiveQuery, useDocument } from 'use-fireproof'
+import { useFireproof } from 'use-fireproof'
 
 function App() {
+  const { useLiveQuery, useDocument } = useFireproof("my-db-name")
   const completedTodos = useLiveQuery('completed', { limit: 10 })
-  const [newTodo, setNewTodoData, saveNewTodo] = useDocument({type: 'todo', text: '', completed: false, created: Date.now() })
+  const [newTodo, setNewTodo, saveNewTodo] = useDocument(() => ({type: 'todo', text: '', completed: false, created: Date.now() }))
 ```
 
 Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
