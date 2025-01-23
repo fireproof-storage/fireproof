@@ -9,7 +9,7 @@ export function toBoolean(v: number): boolean {
   return !!v;
 }
 
-export type AuthProvider = "github" | "google" | "fp";
+export type AuthProvider = "github" | "google" | "fp" | "invite-per-email";
 
 export interface Queryable {
   readonly userId?: string;

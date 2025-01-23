@@ -137,6 +137,21 @@ export function prepareInviteTicket({
   const nowStr = (now ?? nowDate).toISOString();
   const expiresAfterStr = (expiresAfter ?? new Date(nowDate.getTime() + 1000 * 60 * 60 * 24 * 7)).toISOString();
 
+  if (ledgerId && !tenantId) {
+    throw new Error("tenantId is required");
+  }
+  if (ledgerId) {
+    (ivp.invitedParams as { ledger: InvitedParams["ledger"] }).ledger = {
+      role: "member",
+      right: "read",
+      ...ivp.invitedParams.ledger,
+    };
+  } else {
+    (ivp.invitedParams as { tenant: InvitedParams["tenant"] }).tenant = {
+      role: "member",
+      ...ivp.invitedParams.tenant,
+    };
+  }
   if ((ivp.invitedParams.ledger && ivp.invitedParams.tenant) || (!ivp.invitedParams.ledger && !ivp.invitedParams.tenant)) {
     throw new Error("only one target allowed");
   }

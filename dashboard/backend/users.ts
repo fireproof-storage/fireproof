@@ -52,7 +52,7 @@ export const sqlUserByProviders = sqliteTable(
   ],
 );
 
-export type UserStatus = "active" | "inactive" | "banned";
+export type UserStatus = "active" | "inactive" | "banned" | "invited";
 
 export interface AuthType {
   readonly type: "ucan" | "clerk";
