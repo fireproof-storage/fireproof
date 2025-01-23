@@ -3,7 +3,7 @@ import { Link, redirect } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 
 export async function indexLoader(/*{ request }*/) {
-  return redirect(`/fp/cloud`);
+  // return redirect(`/fp/cloud`);
 }
 
 export function Index() {

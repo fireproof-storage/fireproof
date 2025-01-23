@@ -73,6 +73,8 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  cloudContext.initContext();
+
   return (
     <AppContext.Provider
       value={

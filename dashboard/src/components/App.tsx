@@ -26,8 +26,9 @@ export function App() {
         <Route index element={<Index />} loader={indexLoader} />
         <Route path="/login" element={<Login />} loader={loginLoader} />
       </Route>
-      <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader(ctx)}>
+      <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader}>
         <Route index element={<CloudIndex />} />
+        {/* <Route path=":tenantId/invite/new" element={<CloudInviteNew />} /> */}
         <Route path=":tenantId/delete" element={<CloudTenantDelete />} />
         <Route path=":tenantId" element={<CloudTenantShow />} />
         <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />

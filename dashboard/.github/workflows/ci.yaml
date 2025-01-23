@@ -36,5 +36,5 @@ jobs:
 
       - name: test
         run: |
-          pnpm run drizzle:push
+          pnpm run drizzle:libsql
           pnpm run test

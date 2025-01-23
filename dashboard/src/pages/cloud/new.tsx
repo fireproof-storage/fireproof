@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
-import { Form, redirect, SubmitTarget, useSubmit } from "react-router-dom";
-import { AppContextType } from "../../app-context.tsx";
+import { Form, redirect, SubmitTarget, useNavigate, useSubmit } from "react-router-dom";
+import { AppContext, AppContextType } from "../../app-context.tsx";
+import { useContext } from "react";
 
 export function newCloudAction(ctx: AppContextType) {
   return async ({ request }: { request: Request }) => {
@@ -14,16 +15,33 @@ export function newCloudAction(ctx: AppContextType) {
     if (rTenant.isErr()) {
       return new Response(rTenant.Err().message, { status: 400 });
     }
-    // ctx.cloud.refreshListTenantsByUser.set()
+    // const { refresh } = ctx.cloud.useListTenantsByUser();
+    // refresh();
     return redirect(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
   };
 }
 
 export function CloudNew() {
-  const submit = useSubmit();
+  // const submit = useSubmit();
   const { register, handleSubmit } = useForm();
 
-  function onSubmit(data: SubmitTarget) {
+  const ctx = useContext(AppContext);
+  const { refresh } = ctx.cloud.useListTenantsByUser();
+
+  // const navigate = useNavigate();
+  const submit = useSubmit();
+
+  async function onSubmit(data: SubmitTarget) {
+    // const my = data as { tenantName: string };
+    // const rTenant = await ctx.cloud.api.createTenant({
+    //   tenant: {
+    //     name: my.tenantName,
+    //   },
+    // });
+    // refresh();
+    // await navigate(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
+    // console.log("created", rTenant);
+    // return redirect(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
     submit(data, {
       method: "post",
       action: ".",
