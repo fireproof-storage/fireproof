@@ -42,7 +42,7 @@ Fireproof [React hooks for live data](https://use-fireproof.com/docs/category/re
 import { useFireproof } from 'use-fireproof'
 
 function App() {
-  const { useLiveQuery, useDocument } = useFireproof()
+  const { useLiveQuery, useDocument } = useFireproof("my-db-name")
   const completedTodos = useLiveQuery('completed', { limit: 10 })
   const [newTodo, setNewTodo, saveNewTodo] = useDocument(() => ({type: 'todo', text: '', completed: false, created: Date.now() }))
 ```
