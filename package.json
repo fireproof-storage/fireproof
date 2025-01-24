@@ -16,7 +16,7 @@
     "build:docs": "bash build-docs.sh",
     "pub:fireproof-core": "cp -pr tests ./dist/fireproof-core; tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
     "pub:use-fireproof": "tsx ./version-copy-package.ts ./dist/use-fireproof/package-use-fireproof.json",
-    "presmoke": "pnpm run build; pnpm run presmoke:publish",
+    "presmoke": "if [ \"$FP_CI\" != 'fp_ci' ] ; then pnpm run build; fi; pnpm run presmoke:publish",
     "presmoke:publish": "bash -x smoke/publish-local-registry.sh",
     "smoke": "pnpm run '/^smoke:/'",
     "smoke:esm": "sh smoke/esm/it.sh",
