@@ -58,7 +58,7 @@ do
   smokeDir=$projectRoot/dist/smoke/$(basename $packageDir)
   rm -rf $smokeDir
   mkdir -p $smokeDir
-  cp -pr $packageDir/ $smokeDir/
+  rsync -axH $packageDir/ $smokeDir/
   cp $projectRoot/dist/npmrc-smoke $smokeDir/.npmrc
   (cd $smokeDir &&
      pnpm version $(cat $projectRoot/dist/fp-version) --no-git-tag-version &&
