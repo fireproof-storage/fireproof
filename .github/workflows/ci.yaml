@@ -31,6 +31,10 @@ jobs:
           path: .esm-cache
           key: smoke-esm-cache
 
+      - name: cache-kaputt
+        id: cache-kaputt
+        run: rm -rf .esm-cache
+
       - name: install
         run: pnpm install
       - name: format-check
