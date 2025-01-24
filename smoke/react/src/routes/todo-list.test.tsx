@@ -14,7 +14,7 @@ describe("<TodoList />", () => {
   });
   beforeEach(async () => {
     console.log("be-pre-create");
-    fp = fireproof("TodoDB");
+    fp = fireproof.DB("TodoDB");
     const all = await fp.allDocs();
     for (const doc of all.rows) {
       await fp.del(doc.key);
