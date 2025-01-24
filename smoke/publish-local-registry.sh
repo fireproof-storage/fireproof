@@ -26,9 +26,6 @@ $dockerCompose up -d --wait
 
 mkdir -p $projectRoot/dist
 
-$dockerCmd logs -f smoke-esm-sh-1 &
-#sleep 5
-
 user="admin$(date +%s)"
 token=$(curl \
      --retry 10 --retry-max-time 30 --retry-all-errors \
