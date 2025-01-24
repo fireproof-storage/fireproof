@@ -2,6 +2,10 @@ name: CI
 on:
   - push
   - pull_request
+
+env:
+  FP_CI: "fp_ci"
+
 jobs:
   build-test-smoke:
     name: Quality Checks
