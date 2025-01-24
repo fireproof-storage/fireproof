@@ -27,7 +27,6 @@ $dockerCompose up -d --wait
 mkdir -p $projectRoot/dist
 
 docker logs -f smoke-esm-sh-1 &
-curl -L http://localhost:4874/@fireproof/core &
 #sleep 5
 
 user="admin$(date +%s)"
@@ -52,6 +51,7 @@ unset npm_config_registry
 FP_VERSION=0.0.0-smoke-$(git rev-parse --short HEAD)-$(date +%s)
 echo $FP_VERSION > $projectRoot/dist/fp-version
 
+
 #env | grep -v npm_
 for packageDir in $projectRoot/dist/use-fireproof $projectRoot/dist/fireproof-core
 do
@@ -60,9 +60,10 @@ do
   cp -pr $packageDir/ $smokeDir/
 	cp $projectRoot/dist/npmrc-smoke $smokeDir/.npmrc
 	(cd $smokeDir &&
-         pnpm version $(cat $projectRoot/dist/fp-version) &&
+         pnpm version $(cat $projectRoot/dist/fp-version) --no-git-tag-version &&
          cat .npmrc &&
          pnpm publish --registry=http://localhost:4873 --no-git-checks)
 done
 
+curl -L "http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version) &
 

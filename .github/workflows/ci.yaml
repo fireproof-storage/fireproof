@@ -5,7 +5,7 @@ on:
 env:
   FP_CI: "fp_ci"
 jobs:
-  quality-checks:
+  build-test-smoke:
     name: Quality Checks
     runs-on: ubuntu-24.04
     steps:
