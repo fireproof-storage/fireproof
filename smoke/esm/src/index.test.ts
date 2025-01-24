@@ -3,7 +3,8 @@ import { expect, it, vi } from "vitest";
 
 it("esm.sh", async () => {
   const script = document.createElement("script");
-  // // console.log("window", window.FP_VERSION);
+  // eslint-disable-next-line no-console
+  console.log("FP_VERSION", (window as unknown as { FP_VERSION: string }).FP_VERSION);
   // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
   // // console.log("window-res", await res.text());
   // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
