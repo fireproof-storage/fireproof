@@ -37,7 +37,7 @@ jobs:
         id: cache-kaputt
         run: |
           chmod -R ogu+wx .esm-cache
-          find .esm-cache/esm/.esmd/npm -ls  
+          find .esm-cache/esm/.esmd/npm -ls
 
       - name: install
         run: pnpm install
