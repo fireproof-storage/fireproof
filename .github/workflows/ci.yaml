@@ -34,7 +34,8 @@ jobs:
           key: smoke-esm-cache
 
       - name: cache-kaputt
-        run: chmod -R 777 .esm-cache
+        id: cache-kaputt
+        run: rm -rf .esm-cache/*
 
       - name: install
         run: pnpm install
