@@ -20,7 +20,7 @@ function invariant(cond, message) {
   }
 }
 async function action(run) {
-  const db = fireproof("esm-test");
+  const db = fireproof.DB("esm-test");
   const ok = await db.put({ sort: Math.random(), test: "esm-success" });
 
   const beforeAll = await db.allDocs()

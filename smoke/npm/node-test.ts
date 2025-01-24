@@ -4,7 +4,7 @@ import { fireproof, PACKAGE_VERSION, rt } from "@fireproof/core";
 async function main() {
   // console.log(fireproof);
 
-  const db = fireproof("test-node");
+  const db = fireproof.DB("test-node");
 
   // const ok =
   await db.put({ _id: "test", hello: "world" });
