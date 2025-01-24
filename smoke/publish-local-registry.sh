@@ -48,7 +48,7 @@ EOF
 
 unset npm_config_registry
 
-FP_VERSION=0.0.0-smoke-$(git rev-parse --short HEAD)-$(date +%s)
+FP_VERSION=$(node $projectRoot/smoke/get-fp-version.js)
 echo $FP_VERSION > $projectRoot/dist/fp-version
 
 
