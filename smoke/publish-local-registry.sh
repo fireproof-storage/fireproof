@@ -63,9 +63,8 @@ do
   (cd $smokeDir &&
      pnpm version $(cat $projectRoot/dist/fp-version) --no-git-tag-version &&
      cat .npmrc &&
-     pwd && find . -type d -print &&
      pnpm publish --registry=http://localhost:4873 --no-git-checks)
 done
 
-curl -L "http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version)" &
+curl -L "http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version)" > /dev/null &
 
