@@ -61,7 +61,7 @@ function gthis() {
 }
 
 function getVersion() {
-  let version = "refs/tags/v0.0.0-smoke";
+  let version = "refs/tags/v$(cat $projectBase/dist/fp-version)";
   if ("$GITHUB_REF" && "$GITHUB_REF".startsWith("refs/tags/v")) {
     version = "GITHUB_REF";
   }
