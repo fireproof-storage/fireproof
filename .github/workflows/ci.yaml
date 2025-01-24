@@ -3,7 +3,7 @@ on:
   - push
   - pull_request
 jobs:
-  quality-checks:
+  build-test-smoke:
     name: Quality Checks
     runs-on: ubuntu-24.04
     steps:
