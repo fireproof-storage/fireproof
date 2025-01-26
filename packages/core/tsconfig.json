@@ -1,0 +1,38 @@
+{
+    "extends": "../../tsconfig.shared.json",
+    "compilerOptions": {
+        //"strict": true,
+        //// project options
+        //"outDir": "dist",
+        //"allowJs": true,
+        //"checkJs": true,
+        //"target": "ES2022",
+        //"module": "ES2022",
+        //"lib": ["ES2023", "ES2023.Array", "DOM", "DOM.Iterable", "WebWorker"],
+        //"noEmit": false,
+        //"noEmitOnError": true,
+        //"emitDeclarationOnly": false,
+        //"declaration": true,
+        //"declarationMap": true,
+        //"incremental": true,
+        //"composite": true,
+        //"isolatedModules": true,
+        //"removeComments": false,
+        //"sourceMap": true,
+        //// module resolution
+        //"esModuleInterop": true,
+        //"moduleResolution": "node",
+        //// advanced
+        //"forceConsistentCasingInFileNames": true,
+        //"skipLibCheck": true,
+        //"stripInternal": true,
+        //"resolveJsonModule": true,
+        //"paths": {
+        //  "@_local_fireproof/core/web": ["./src/runtime/gateways/indexdb/web/index.js"]
+        //}
+    }
+    //"include": [
+    //    "src",
+    //    "test"
+    //]
+}

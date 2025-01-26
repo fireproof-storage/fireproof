@@ -1,12 +1,8 @@
 {
   "name": "use-fireproof",
-  "version": "must-set",
+  "version": "0.20",
   "description": "Fireproof live ledger, JavaScript API and React hooks",
   "type": "module",
-  "module": "./index.js",
-  "main": "./index.cjs",
-  "browser": "./index.global.js",
-  "types": "./index.d.ts",
   "homepage": "https://use-fireproof.com",
   "repository": {
     "type": "git",
@@ -15,26 +11,45 @@
   "bugs": {
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./index.cjs",
-      "script": "./index.global.js",
-      "types": "./index.d.ts"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "rm -rf dist",
+    "check-format": "prettier src tests --config ../../.prettierrc --check",
+    "check-lint": "eslint src tests",
+    "lint": "npm run check-format && npm run check-lint",
+    "test": "vitest --run"
+  },
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
   "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.ledger.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
   "dependencies": {
-    "react": "from-package-json",
-    "@fireproof/core": "from-package-json"
+    "@fireproof/core": "workspace:../core",
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "^19.0.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.3"
   },
   "peerDependencies": {
-    "react": "from-package-json",
-    "@fireproof/core": "from-package-json"
+    "react-dom": "^19.0.0"
   },
-  "devDependencies": {},
-  "keywords": ["react", "ledger", "json", "live", "sync"]
+  "keywords": [
+    "react",
+    "ledger",
+    "json",
+    "live",
+    "sync"
+  ]
 }

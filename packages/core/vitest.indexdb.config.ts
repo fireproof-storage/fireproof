@@ -1,18 +1,17 @@
-import { defineConfig } from "vite";
-
-import tsconfigPaths from "vite-tsconfig-paths";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [tsconfigPaths()],
   test: {
     name: "indexdb",
-    exclude: ["examples/**", "tests/gateway/file"],
+    exclude: ["tests/gateway/file"],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     browser: {
       enabled: true,
       headless: true,
       provider: "webdriverio",
-      name: process.env.FP_BROWSER || "chrome", // browser name is required
+      instances: [{
+        browser: process.env.FP_BROWSER || "chrome"
+      }]
     },
     globals: true,
     setupFiles: "./setup.indexdb.ts",

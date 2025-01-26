@@ -1,0 +1,91 @@
+{
+  "name": "@fireproof/core",
+  "version": "0.20",
+  "description": "Live ledger for the web.",
+  "type": "module",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/src/index.js"
+    },
+    "./web": {
+      "types": "./dist/src/runtime/gateways/indexdb/web/index.d.ts",
+      "import": "./dist/src/runtime/gateways/indexdb/web/index.js"
+    },
+    "./node": {
+      "types": "./dist/src/runtime/gateways/file/node/index.d.ts",
+      "import": "./dist/src/runtime/gateways/file/node/index.js"
+    },
+    "./deno": {
+      "types": "./dist/src/runtime/gateways/file/deno/index.d.ts",
+      "import": "./dist/src/runtime/gateways/file/deno/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "clean": "rm -rf dist",
+    "check-format": "prettier src tests --config ../../.prettierrc --check",
+    "check-lint": "eslint src tests",
+    "format": "prettier . --check",
+    "lint": "npm run check-format && npm run check-lint",
+    "test": "vitest --run",
+    "test:file": "vitest --config ./vitest.file.config.ts --run",
+    "test:indexdb": "vitest --config ./vitest.indexdb.config.ts --run",
+    "test:memory": "vitest --config ./vitest.memory.config.ts --run"
+  },
+  "keywords": [
+    "ledger",
+    "JSON",
+    "document",
+    "IPLD",
+    "CID",
+    "IPFS"
+  ],
+  "contributors": [
+    "J Chris Anderson",
+    "Alan Shaw",
+    "Travis Vachon",
+    "Mikeal Rogers",
+    "Meno Abels"
+  ],
+  "author": "J Chris Anderson",
+  "license": "Apache-2.0 OR MIT",
+  "homepage": "https://use-fireproof.com",
+  "gptdoc": "import { fireproof } from 'use-fireproof; const db = fireproof('app-db-name'); const ok = await db.put({ anyField: ['any','json'] }); const doc = await db.get(ok.id); await db.del(doc._id); useEffect(()=> db.subscribe(updateReactStateAsyncFn), []); const result = await db.query('anyField', {range : ['a', 'z']}); result.rows.map(({ key }) => key);",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fireproof-storage/fireproof.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fireproof-storage/fireproof/issues"
+  },
+  "dependencies": {
+    "@ipld/car": "^5.4.0",
+    "@ipld/dag-cbor": "^9.2.2",
+    "@ipld/dag-json": "^10.2.3",
+    "@ipld/unixfs": "^3.0.0",
+    "@web3-storage/pail": "^0.6.0",
+    "cborg": "^4.2.7",
+    "charwise": "^3.0.1",
+    "idb": "^8.0.1",
+    "ipfs-unixfs-exporter": "^13.6.1",
+    "multiformats": "^13.3.1",
+    "p-limit": "^6.2.0",
+    "p-map": "^7.0.3",
+    "p-retry": "^6.2.1",
+    "prolly-trees": "^1.0.4",
+    "uuidv7": "^1.0.2"
+  },
+  "devDependencies": {
+    "@adviser/cement": "^0.3.5",
+    "@types/node": "^22.10.6",
+    "@vitest/browser": "^3.0.3",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.19.1",
+    "vitest": "^3.0.3",
+    "webdriverio": "^9.7.1"
+  }
+}
