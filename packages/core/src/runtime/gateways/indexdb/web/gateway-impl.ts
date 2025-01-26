@@ -2,7 +2,9 @@ import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 
 import { INDEXDB_VERSION } from "../version.js";
-import { NotFoundError, PARAM, exceptionWrapper, getKey, getStore, type SuperThis, bs } from "@fireproof/core";
+import { PARAM, type SuperThis } from "../../../../types.js";
+import { NotFoundError, exceptionWrapper, getKey, getStore } from "../../../../utils.js";
+import type { Gateway, GetResult } from "../../../../blockstore/gateway.js";
 
 function ensureVersion(url: URI): URI {
   return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
@@ -80,7 +82,7 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexDBGateway implements bs.Gateway {
+export class IndexDBGateway implements Gateway {
   _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
   async start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
@@ -119,7 +121,7 @@ export class IndexDBGateway implements bs.Gateway {
     return Promise.resolve(Result.Ok(baseUrl.build().setParam(PARAM.KEY, key).URI()));
   }
 
-  async get(url: URI, sthis: SuperThis): Promise<bs.GetResult> {
+  async get(url: URI, sthis: SuperThis): Promise<GetResult> {
     return exceptionWrapper(async () => {
       const key = getKey(url, sthis.logger);
       const store = getStore(url, sthis, joinDBName).name;

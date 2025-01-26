@@ -1,6 +1,6 @@
 import type { URI } from "@adviser/cement";
-import { getStore } from "@fireproof/core";
-import type { SuperThis } from "@fireproof/core";
+import { getStore } from "../../../utils.js";
+import type { SuperThis } from "../../../types.js";
 
 export function getPath(url: URI, sthis: SuperThis): string {
   const basePath = url.pathname;

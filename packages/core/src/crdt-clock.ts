@@ -1,5 +1,5 @@
-import { advance } from "@fireproof/vendor/@web3-storage/pail/clock";
-import { root } from "@fireproof/vendor/@web3-storage/pail/crdt";
+import { advance } from "@web3-storage/pail/clock";
+import { root } from "@web3-storage/pail/crdt";
 import { Logger, ResolveOnce } from "@adviser/cement";
 
 import { clockChangesSince } from "./crdt-helpers.js";

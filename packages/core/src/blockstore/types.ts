@@ -5,10 +5,10 @@ import { BlockFetcher, CarTransaction } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Logger, Result, URI } from "@adviser/cement";
-import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
+import { EventBlock } from "@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { CarReader } from "@fireproof/vendor/@ipld/car";
+import { CarReader } from "@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];

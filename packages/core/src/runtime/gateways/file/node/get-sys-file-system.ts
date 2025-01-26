@@ -1,4 +1,4 @@
-import type { SysFileSystem } from "@fireproof/core";
+import type { SysFileSystem } from "../../../../types.js";
 import { NodeFileSystem } from "./node-filesystem.js";
 import { ResolveOnce, URI } from "@adviser/cement";
 
