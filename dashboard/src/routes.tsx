@@ -4,10 +4,13 @@ import "./styles/tailwind.css";
 import { ClerkProvider } from "@clerk/clerk-react";
 import { AppContextProvider } from "./app-context.tsx";
 import { App } from "./components/App.tsx";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const rootElement = import.meta.env.VITE_CHROME_EXTENSION
   ? document.getElementById("fireproof-overlay")?.shadowRoot?.getElementById("root")
   : document.getElementById("root");
+
+const queryClient = new QueryClient();
 
 /*
     routerPush={(to) => navigate(to)}
@@ -16,11 +19,13 @@ const rootElement = import.meta.env.VITE_CHROME_EXTENSION
     */
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
-    <AppContextProvider>
-      <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
-        <App />
-      </ClerkProvider>
-    </AppContextProvider>,
+    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+      <QueryClientProvider client={queryClient}>
+        <AppContextProvider>
+          <App />
+        </AppContextProvider>
+      </QueryClientProvider>
+    </ClerkProvider>,
   );
 } else {
   console.error("Root element not found");

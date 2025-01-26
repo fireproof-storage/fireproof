@@ -43,7 +43,7 @@ class ClerkApiToken implements FPApiToken {
     if (!t) {
       return Result.Err("Invalid token");
     }
-    console.log(t);
+    // console.log(t);
     return Result.Ok({
       type: "clerk",
       token,
@@ -65,7 +65,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
       listTenantsByUser: unknown;
     };
     const jso = await req.json();
-    console.log(jso);
+    // console.log(jso);
     let res: Promise<Result<unknown>>;
     switch (true) {
       case FPAPIMsg.isDeleteTenant(jso):
@@ -105,7 +105,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
         return new Response("Invalid request", { status: 400, headers: CORS });
     }
     const rRes = await res;
-    console.log("Response", rRes);
+    // console.log("Response", rRes);
     if (rRes.isErr()) {
       return new Response(
         JSON.stringify({

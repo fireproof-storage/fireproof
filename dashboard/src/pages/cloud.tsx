@@ -13,7 +13,7 @@ export async function cloudLoader({ request }: { request: Request }) {
 }
 
 export function Cloud() {
-  useContext(AppContext).cloud.updateContext();
+  // useContext(AppContext).cloud.updateContext();
   return (
     // <CloudContext.Provider value={cloudContextImpl.injectSession(useSession())}>
     <WithSidebar sideBarComponent={<SidebarCloud />} title="Cloud" newUrl="/fp/cloud/new" />
@@ -54,13 +54,22 @@ function SidebarCloud() {
     setIsSidebarOpen(false); // Close sidebar on mobile after navigation
   };
 
-  const { val: listTenants } = cloud.useListTenantsByUser();
+  const listTenants = cloud.getListTenantsByUser();
+  if (listTenants.isLoading) {
+    return <div>loading</div>;
+  }
+  if (listTenants.isError) {
+    return <div>{listTenants.error}</div>;
+  }
+  if (!listTenants.data) {
+    return <div>not found</div>;
+  }
   // const { databases } = useLoaderData<{
   //   databases: { name: string; queries: any[] }[];
   // }>();
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      {listTenants.tenants.map((tenant) => (
+      {listTenants.data.tenants.map((tenant) => (
         <div key={tenant.tenantId}>
           <div className="flex items-center justify-between w-full">
             <button
