@@ -21,6 +21,7 @@ import {
 import { Tenant, sqlTenants, sqlTenantUsers, sqlTenantUserRoles } from "./tenants.ts";
 import { InviteTicket, sqlInviteTickets, sqlToInvite, prepareInviteTicket, InvitedParams } from "./invites.ts";
 import { queryCondition, queryEmail, queryNick, QueryUser, toBoolean, toUndef } from "./sql-helper.ts";
+import { LedgerUser, sqlLedgers, sqlLedgerUserRoles, sqlToLedgers } from "./ledgers.ts";
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
@@ -155,27 +156,16 @@ export interface ResConnectUserToTenant {
   readonly role: "admin" | "member";
 }
 
-export interface ReqListLedgerByTenant {
-  readonly type: "reqListLedgerByTenant";
+export interface ReqListLedgersByUser {
+  readonly type: "reqListLedgersByUser";
   readonly auth: AuthType;
-  readonly tenantId: string;
+  readonly tenantIds?: string[];
 }
 
-export interface Ledger {
-  readonly ledgerId: string;
-  readonly tenantId: string;
-  readonly name: string;
-  readonly ownerRefId: string;
-  readonly readRefIds: string[];
-  readonly writeRefIds: string[];
-  readonly createdAt: Date;
-}
-
-export interface ResListLedgerByTenant {
-  readonly type: "resListLedgerByTenant";
-  readonly tenantId: string;
+export interface ResListLedgersByUser {
+  readonly type: "resListLedgersByUser";
   readonly userId: string;
-  readonly ledgers: Ledger[];
+  readonly ledgers: LedgerUser[];
 }
 
 export interface ReqAttachUserToLedger {
@@ -339,6 +329,55 @@ export interface ResUpdateUserTenant {
   readonly name?: string;
 }
 
+export interface CreateLedger {
+  readonly tenantId: string;
+  readonly name: string;
+}
+
+export interface ReqCreateLedger {
+  readonly type: "reqCreateLedger";
+  readonly auth: AuthType;
+  readonly ledger: CreateLedger;
+}
+
+export interface ResCreateLedger {
+  readonly type: "resCreateLedger";
+  readonly ledger: LedgerUser;
+}
+
+export interface UpdateLedger {
+  readonly ledgerId: string;
+  readonly tenantId: string;
+  readonly right?: "read" | "write";
+  readonly role?: "admin" | "member";
+  readonly name?: string;
+  readonly default?: boolean;
+}
+
+export interface ReqUpdateLedger {
+  readonly type: "reqUpdateLedger";
+  readonly auth: AuthType;
+  readonly ledger: UpdateLedger;
+}
+export interface ResUpdateLedger {
+  readonly type: "resUpdateLedger";
+  readonly ledger: LedgerUser;
+}
+
+export interface DeleteLedger {
+  readonly ledgerId: string;
+  readonly tenantId: string;
+}
+
+export interface ReqDeleteLedger {
+  readonly type: "reqDeleteLedger";
+  readonly auth: AuthType;
+  readonly ledger: DeleteLedger;
+}
+export interface ResDeleteLedger {
+  readonly type: "resDeleteLedger";
+}
+
 export interface FPApiInterface {
   ensureUser(req: ReqEnsureUser): Promise<Result<ResEnsureUser>>;
   findUser(req: ReqFindUser): Promise<Result<ResFindUser>>;
@@ -355,6 +394,11 @@ export interface FPApiInterface {
   inviteUser(req: ReqInviteUser): Promise<Result<ResInviteUser>>;
   listInvites(req: ReqListInvites): Promise<Result<ResListInvites>>;
   deleteInvite(req: ReqDeleteInvite): Promise<Result<ResDeleteInvite>>;
+
+  createLedger(req: ReqCreateLedger): Promise<Result<ResCreateLedger>>;
+  listLedgersByUser(req: ReqListLedgersByUser): Promise<Result<ResListLedgersByUser>>;
+  updateLedger(req: ReqUpdateLedger): Promise<Result<ResUpdateLedger>>;
+  deleteLedger(req: ReqDeleteLedger): Promise<Result<ResDeleteLedger>>;
 
   // listLedgersByTenant(req: ReqListLedgerByTenant): Promise<ResListLedgerByTenant>
 
@@ -997,6 +1041,7 @@ export class FPApiSQL implements FPApiInterface {
    * @description list invites for a user if user is owner of tenant or admin of tenant
    */
   async listInvites(req: ReqListInvites): Promise<Result<ResListInvites>> {
+    // console.log(`xxxxx`)
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
@@ -1024,12 +1069,17 @@ export class FPApiSQL implements FPApiInterface {
       .where(condition)
       .all()
       .then((rows) => rows.map((row) => row.tenantId));
+    const setTenants = new Set(req.tenantIds);
+    const filterAdminTenants = Array.from(new Set([...ownerTenants, ...adminTenants, ...req.tenantIds])).filter((x) => {
+      return setTenants.size ? setTenants.has(x) : true;
+    });
+    // console.log(">>>>", filterAdminTenants);
     rows = await this.db
       .select()
       .from(sqlInviteTickets)
       .where(
         and(
-          inArray(sqlInviteTickets.inviterTenantId, [...ownerTenants, ...adminTenants]),
+          inArray(sqlInviteTickets.invitedTenantId, filterAdminTenants),
           // inArray(inviteTickets.inv, req.tenantIds)
         ),
       )
@@ -1145,61 +1195,6 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  // async ensureTenant(req: ReqEnsureTenant): Promise<Result<ResEnsureTenant>> {
-  //   const rAuth = await this.activeUser(req);
-  //   if (rAuth.isErr()) {
-  //     return Result.Err(rAuth.Err());
-  //   }
-  //   const auth = rAuth.Ok();
-  //   if (!auth.user) {
-  //     return Result.Err(new UserNotFoundError());
-  //   }
-  //   if (req.tenant.tenantId) {
-  //     this.db.update(tenants).set({
-  //     }).where(eq(tenants.tenantId, req.tenant.tenantId)).run();
-  //   } else {
-  //     const sqlTenant = this.insertTenantWithOwner({
-  //       auth: auth as ActiveUserWithUserId<ClerkVerifyAuth>,
-  //       name: req.tenant.name
-  //     });
-  //   }
-  // }
-  // private async insertTenantWithOwner(req: {
-  //   auth: ActiveUserWithUserId<ClerkVerifyAuth>;
-  //   param?: {
-  //     name?: string;
-  //     default?: boolean;
-  //   }
-  // }): Promise<Result<typeof tenants.$inferSelect>> {
-  //   req.param = req.param ?? {};
-  //   if (!req.auth.user) {
-  //     return Result.Err(new UserNotFoundError());
-  //   }
-  //   function name(name: string | undefined, auth: Omit<ActiveUser<ClerkVerifyAuth>, "user">): string {
-  //     return name ?? `my-tenant[${auth.verifiedAuth.params.email ?? auth.verifiedAuth.params.nick}]`
-  //   }
-  //   const tenantId = this.sthis.nextId(12).str;
-  //   const tenant = await this.db
-  //     .insert(tenants)
-  //     .values(
-  //       prepareInsertTenant({
-  //         tenantId,
-  //         name: name(req.param.name, req.auth),
-  //         ownerUserId: req.auth.user.userId,
-  //       }),
-  //     )
-  //     .returning();
-  //   // await this.db.transaction(async (db) => {
-  //   const res = await this.addUserToTenant(this.db, {
-  //     name: name(req.param.name, req.auth),
-  //     tenantId,
-  //     userId: req.auth.user.userId,
-  //     role: "admin",
-  //     default: !!req.param.default
-  //   });
-  //   return Result.Ok(tenant[0])
-  // }
-
   async createTenant(req: ReqCreateTenant): Promise<Result<ResCreateTenant>> {
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
@@ -1287,17 +1282,6 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  // private async attachUserToTenant(req: ReqAttachUserToTenant): Promise<Result<ResAttachUserToTenant>> {
-  //   const rAuth = await this.activeUser(req);
-  //   if (rAuth.isErr()) {
-  //     return Result.Err(rAuth.Err());
-  //   }
-  //   const auth = rAuth.Ok();
-  //   if (!auth.user) {
-  //     return Result.Err(new UserNotFoundError());
-  //   }
-  // }
-
   async deleteTenant(req: ReqDeleteTenant): Promise<Result<ResDeleteTenant>> {
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
@@ -1336,6 +1320,209 @@ export class FPApiSQL implements FPApiInterface {
       )
       .all();
     return !!(ownerRole.length || adminRole.length);
+  }
+
+  private async isOwnerOrAdminOfLedger(userId: string, ledgerId: string): Promise<boolean> {
+    const ownerRole = await this.db
+      .select()
+      .from(sqlLedgers)
+      .where(and(eq(sqlLedgers.ownerId, userId), eq(sqlLedgers.ledgerId, ledgerId)))
+      .all();
+    const adminRole = await this.db
+      .select()
+      .from(sqlLedgerUserRoles)
+      .innerJoin(sqlLedgers, and(eq(sqlLedgers.ledgerId, sqlLedgerUserRoles.ledgerId)))
+      .where(and(eq(sqlLedgerUserRoles.userId, userId), eq(sqlLedgerUserRoles.ledgerId, ledgerId)))
+      .all();
+    if (adminRole.length && adminRole[0].LedgerUserRoles.role === "member") {
+      return this.isOwnerOrAdminOfTenant(userId, adminRole[0].Ledgers.tenantId);
+    }
+    return !!(ownerRole.length || adminRole.length);
+  }
+
+  async createLedger(req: ReqCreateLedger): Promise<Result<ResCreateLedger>> {
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    // check if owner or admin of tenant
+    if (!(await this.isOwnerOrAdminOfTenant(auth.user.userId, req.ledger.tenantId))) {
+      return Result.Err("not owner or admin of tenant");
+    }
+    const ledgerId = this.sthis.nextId(12).str;
+    const now = new Date().toISOString();
+    const ledger = await this.db
+      .insert(sqlLedgers)
+      .values({
+        ledgerId,
+        tenantId: req.ledger.tenantId,
+        ownerId: auth.user.userId,
+        name: req.ledger.name,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+    const roles = await this.db
+      .insert(sqlLedgerUserRoles)
+      .values({
+        ledgerId: ledgerId,
+        userId: auth.user.userId,
+        role: "admin",
+        name: req.ledger.name,
+        default: 0,
+        right: "write",
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
+
+    return Result.Ok({
+      type: "resCreateLedger",
+      ledger: sqlToLedgers([{ Ledgers: ledger[0], LedgerUserRoles: roles[0] }])[0],
+    });
+  }
+  async updateLedger(req: ReqUpdateLedger): Promise<Result<ResUpdateLedger>> {
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    const now = new Date().toISOString();
+    // check if owner or admin of tenant
+    if (!(await this.isOwnerOrAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
+      if (req.ledger.name) {
+        await this.db
+          .update(sqlLedgerUserRoles)
+          .set({
+            name: req.ledger.name,
+            updatedAt: now,
+          })
+          .where(and(eq(sqlLedgerUserRoles.userId, auth.user.userId), eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId)))
+          .run();
+      }
+      const rows = await this.db
+        .select()
+        .from(sqlLedgers)
+        .innerJoin(sqlLedgerUserRoles, and(eq(sqlLedgers.ledgerId, sqlLedgerUserRoles.ledgerId)))
+        .where(
+          and(
+            eq(sqlLedgerUserRoles.userId, auth.user.userId),
+            eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId),
+            ne(sqlLedgerUserRoles.role, "admin"),
+          ),
+        )
+        .all();
+      return Result.Ok({
+        type: "resUpdateLedger",
+        ledger: sqlToLedgers(rows)[0],
+      });
+    }
+    const role = {
+      updatedAt: now,
+    } as {
+      readonly updatedAt: string;
+      default?: number;
+      name?: string;
+      role?: Role;
+      right?: "read" | "write";
+    };
+    if (typeof req.ledger.default === "boolean") {
+      role.default = req.ledger.default ? 1 : 0;
+      if (req.ledger.default) {
+        // switch default
+        await this.db
+          .update(sqlLedgerUserRoles)
+          .set({
+            default: 0,
+            updatedAt: now,
+          })
+          .where(and(eq(sqlLedgerUserRoles.userId, auth.user.userId), ne(sqlLedgerUserRoles.default, 0)))
+          .run();
+      }
+    }
+    const ledger = {
+      name: req.ledger.name,
+      updatedAt: now,
+    };
+    if (req.ledger.name) {
+      role.name = req.ledger.name;
+      ledger.name = req.ledger.name;
+    }
+    if (req.ledger.right) {
+      role.right = req.ledger.right;
+    }
+    if (req.ledger.role) {
+      role.role = req.ledger.role;
+    }
+    const roles = await this.db
+      .update(sqlLedgerUserRoles)
+      .set(role)
+      .where(eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId))
+      .returning();
+    const ledgers = await this.db.update(sqlLedgers).set(ledger).where(eq(sqlLedgers.ledgerId, req.ledger.ledgerId)).returning();
+    return Result.Ok({
+      type: "resUpdateLedger",
+      ledger: sqlToLedgers([
+        {
+          Ledgers: ledgers[0],
+          LedgerUserRoles: roles[0],
+        },
+      ])[0],
+    });
+  }
+  async deleteLedger(req: ReqDeleteLedger): Promise<Result<ResDeleteLedger>> {
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    const now = new Date().toISOString();
+    // check if owner or admin of tenant
+    if (!(await this.isOwnerOrAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
+      return Result.Err("not owner or admin of tenant");
+    }
+    await this.db.delete(sqlLedgerUserRoles).where(eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId)).run();
+    await this.db.delete(sqlLedgers).where(eq(sqlLedgers.ledgerId, req.ledger.ledgerId)).run();
+    return Result.Ok({
+      type: "resDeleteLedger",
+      ledgerId: req.ledger.ledgerId,
+    });
+  }
+  async listLedgersByUser(req: ReqListLedgersByUser): Promise<Result<ResListLedgersByUser>> {
+    const rAuth = await this.activeUser(req);
+    if (rAuth.isErr()) {
+      return Result.Err(rAuth.Err());
+    }
+    const auth = rAuth.Ok();
+    if (!auth.user) {
+      return Result.Err(new UserNotFoundError());
+    }
+    const now = new Date().toISOString();
+    let condition = and(eq(sqlLedgerUserRoles.userId, auth.user.userId));
+    if (req.tenantIds && req.tenantIds.length) {
+      condition = and(condition, inArray(sqlLedgers.tenantId, req.tenantIds));
+    }
+    const rows = await this.db
+      .select()
+      .from(sqlLedgers)
+      .innerJoin(sqlLedgerUserRoles, and(eq(sqlLedgers.ledgerId, sqlLedgerUserRoles.ledgerId)))
+      .where(condition)
+      .all();
+    return Result.Ok({
+      type: "resListLedgersByUser",
+      userId: auth.user.userId,
+      ledgers: sqlToLedgers(rows),
+    });
   }
 }
 

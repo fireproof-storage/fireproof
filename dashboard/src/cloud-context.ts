@@ -1,6 +1,5 @@
-import { exception2Result } from "@adviser/cement";
+import { exception2Result, Result } from "@adviser/cement";
 import { useSession } from "@clerk/clerk-react";
-import { Result } from "use-fireproof";
 import {
   ResEnsureUser,
   ReqEnsureUser,
@@ -25,15 +24,19 @@ import {
   UserTenant,
   ReqUpdateUserTenant,
   ResUpdateUserTenant,
-  ResListLedgerByTenant,
+  ReqCreateLedger,
+  ReqDeleteLedger,
+  ReqUpdateLedger,
+  ResCreateLedger,
+  ResDeleteLedger,
+  ResUpdateLedger,
+  ReqListLedgersByUser,
+  ResListLedgersByUser,
 } from "../backend/api.ts";
 import { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
-import { use, useContext, useEffect, useMemo, useState } from "react";
-import { set } from "react-hook-form";
-import { AppContext } from "./app-context.tsx";
-import { int } from "drizzle-orm/mysql-core";
-import { ac } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
+import { InviteTicket } from "../backend/invites.ts";
+import { useQuery } from "@tanstack/react-query";
 
 interface TypeString {
   type: string;
@@ -57,239 +60,97 @@ const emptyListInvites: ResListInvites = {
   tickets: [],
 };
 
-export class InviteStateItem {
-  readonly invites: Map<string, ResListInvites>;
-
-  constructor(inv?: InviteStateItem) {
-    this.invites = inv ? inv.invites : new Map<string, ResListInvites>();
-  }
-
-  add(tenantId: string, list: ResListInvites) {
-    this.invites.set(tenantId, list);
-    return new InviteStateItem(this);
-  }
-  get(tenantId: string): ResListInvites {
-    let item = this.invites.get(tenantId);
-    if (!item) {
-      item = emptyListInvites;
-      this.add(tenantId, item);
-    }
-    return item;
-  }
+export interface InviteItem {
+  tenantId: string;
+  invites: InviteTicket[];
 }
 
-const emptyEnsureUser: ResEnsureUser = {
-  type: "resEnsureUser",
-  user: {
-    userId: "unk",
-    maxTenants: 0,
-    status: "inactive",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    byProviders: [],
-  },
-  tenants: [],
-};
+function wrapResultToPromise<T>(pro: Promise<Result<T>>) {
+  return async (): Promise<T> => {
+    const res = await pro;
+    if (res.isOk()) {
+      return Promise.resolve(res.Ok());
+    }
+    return Promise.reject(res.Err());
+  };
+}
 
 export class CloudContext {
-  readonly api = new CloudApi();
+  readonly api: CloudApi;
 
-  sharedState = {
-    listTenantsByUser: {
-      val: emptyListTenantsByUser,
-      set: (value: ResListTenantsByUser) => {},
-    },
-    refreshListTenantsByUser: {
-      val: new Date().toISOString(),
-      set: (value: string) => {},
-    },
+  constructor() {
+    this.api = new CloudApi(this);
+  }
 
-    listInvitesByTenant: {
-      val: new InviteStateItem(),
-      set: (value: InviteStateItem): void => {
-        throw new Error("Not implemented");
-      },
-    },
-    refreshListInvitesByTenant: {
-      val: new Date().toISOString(),
-      set: (value: string): void => {
-        throw new Error("Not implemented");
-      },
-    },
-    ensureUser: {
-      val: emptyEnsureUser,
-      set: (value: ResEnsureUser) => {},
-    },
-  };
+  private _session?: ReturnType<typeof useSession>;
+
+  getToken() {
+    return this._session!.session!.getToken({ template: "with-email" });
+  }
+
+  sessionReady(condition: boolean) {
+    return this._session?.isLoaded && this._session?.isSignedIn && condition;
+  }
+
+  activeApi(condition: boolean = true) {
+    return this.sessionReady(this._ensureUser.data?.user.status === "active" && condition);
+  }
 
   initContext() {
     console.log("initContext");
 
-    const [val, set] = useState(emptyListTenantsByUser);
-    this.sharedState.listTenantsByUser.val = val;
-    this.sharedState.listTenantsByUser.set = set;
-    const [refreshListTenants, setRefreshListTenants] = useState("initial");
-    this.sharedState.refreshListTenantsByUser.val = refreshListTenants;
-    this.sharedState.refreshListTenantsByUser.set = setRefreshListTenants;
+    this._session = useSession();
 
-    const [invites, setInvites] = useState(new InviteStateItem());
-    this.sharedState.listInvitesByTenant.val = invites;
-    this.sharedState.listInvitesByTenant.set = setInvites;
-    const [refreshListInvitesByTenant, setRefreshListInvitesByTenant] = useState("initial");
-    this.sharedState.refreshListInvitesByTenant.val = refreshListInvitesByTenant;
-    this.sharedState.refreshListInvitesByTenant.set = setRefreshListInvitesByTenant;
-
-    const [ensureUser, setEnsureUser] = useState(emptyEnsureUser);
-    this.sharedState.ensureUser.val = ensureUser;
-    this.sharedState.ensureUser.set = setEnsureUser;
+    this._ensureUser = useQuery({
+      queryKey: ["ensureUser"],
+      queryFn: wrapResultToPromise(this.api.ensureUser({})),
+      enabled: this.sessionReady(true),
+    });
   }
 
-  updateContext() {
-    this.api.injectSession(useSession());
-    // const [listTenants, set] = useState(emptyListTenantsByUser);
+  _ensureUser!: ReturnType<typeof useQuery<ResEnsureUser, []>>;
+  // _listTenantsByUser!: ReturnType<typeof useRequest<ResListTenantsByUser, []>>
+  _tenantsForInvites = new Set<string>();
 
-    // this.refreshListTenantsByUser.listTenants = listTenants;
-    // this.refreshListTenantsByUser.set = set
-    // const [ refresh, setRefresh ] = useState("initial");
-    // this.refreshListTenantsByUser.refreshTrigger.val = refresh;
-    // this.refreshListTenantsByUser.refreshTrigger.set = setRefresh;
-  }
-
-  // refreshListTenantsByUser = {
-  //     listTenants: emptyListTenantsByUser,
-  //     set: function(value: ResListTenantsByUser)  {
-  //         this.listTenants = value;
-  //     },
-  //     refreshTrigger: {
-  //         val: new Date().toISOString(),
-  //         set: function(date: string) {
-  //             this.val = date
-  //         }
-  //     },
-  //     refresh: function() {
-  //         this.refreshTrigger.set(new Date().toISOString());
-  //     },
-  // }
-
-  useEnsureUser(): ResEnsureUser {
-    useMemo(() => {
-      this.api.ensureUser({}).then((rRes) => {
-        if (rRes.isOk()) {
-          console.log("ensureUser", rRes.Ok());
-          this.sharedState.ensureUser.set(rRes.Ok());
-        }
-      });
-    }, [this.api.session?.isLoaded, this.api.session?.isSignedIn]);
-    return this.sharedState.ensureUser.val;
-  }
-
-  useListLedgersByTenant(tenantId: string): { val: ResListInvites; refresh: (tenantId: string) => void } {
-    // const { cloud } = useContext(AppContext);
-    throw new Error("Not implemented");
-  }
-
-  useListInvitesByTenant(tenantId: string): { val: InviteStateItem; refresh: () => void } {
-    const { cloud } = useContext(AppContext);
-    const activeUser = this.useEnsureUser();
-    console.log("useListInvitesByTenant", tenantId);
-    useEffect(() => {
-      if (activeUser.user.status !== "active") {
-        return;
-      }
-      console.log("useListInvitesByTenant", tenantId);
-      this.api
-        .listInvites({
-          tenantIds: [tenantId],
-        })
-        .then((rRes) => {
-          if (rRes.isOk()) {
-            console.log("update listInvitesByTenant", tenantId, rRes.Ok());
-            cloud.sharedState.listInvitesByTenant.set(cloud.sharedState.listInvitesByTenant.val.add(tenantId, rRes.Ok()));
-          }
-        })
-        .catch(console.error);
-    }, [
-      this,
-      this.api.session?.isLoaded,
-      this.api.session?.isSignedIn,
-      cloud.sharedState.refreshListTenantsByUser.val,
-      cloud.sharedState.refreshListInvitesByTenant.val,
-      activeUser.user.status,
-      tenantId,
-    ]);
-    return {
-      val: cloud.sharedState.listInvitesByTenant.val,
-      refresh: () => {
-        console.log("refreshListInvitesByTenant", tenantId);
-        cloud.sharedState.refreshListInvitesByTenant.set(new Date().toISOString());
+  getListInvitesByTenant(tenantId: string): ReturnType<typeof useQuery<ResListInvites>> {
+    const listInvites = useQuery({
+      queryKey: ["listInvitesTenants", this._ensureUser.data?.user.userId],
+      queryFn: async () => {
+        const res = await wrapResultToPromise(
+          this.api.listInvites({
+            tenantIds: Array.from(this._tenantsForInvites),
+          }),
+        )();
+        console.log("listInvites-tenants", this._tenantsForInvites, res);
+        return res;
       },
-    };
+      enabled: this.activeApi(this._tenantsForInvites.size > 0),
+    });
+    if (!this._tenantsForInvites.has(tenantId)) {
+      this._tenantsForInvites.add(tenantId);
+      listInvites.refetch();
+    }
+    return listInvites;
   }
 
-  useListTenantsByUser(): { val: ResListTenantsByUser; refresh: () => void } {
-    // const [sharedRefresh, setSharedRefresh] = useState("initial");
-    const { cloud } = useContext(AppContext);
-    const activeUser = this.useEnsureUser();
-    // console.log("useListTenantsByUser", activeUser.user.status);
-    useEffect(() => {
-      if (activeUser.user.status !== "active") {
-        return;
-      }
-      // console.log("useTenants", cloudContext.api.session?.isLoaded, cloudContext.api.session?.isSignedIn);
-      // console.log("useTenants-effect");
-      this.api
-        .listTenantsByUser({})
-        .then((rRes) => {
-          if (rRes.isOk()) {
-            // console.log("update listTenants", id, rRes.Ok());
-            // const my = sharedValue as (Omit<ResListTenantsByUser, "userId"|"authUserId"> & { userId: string, authUserId: string });
-            // my.userId = rRes.Ok().userId;
-            // my.authUserId = rRes.Ok().authUserId;
-            // sharedValue.tenants.splice(0, sharedValue.tenants.length, ...rRes.Ok().tenants);
-            cloud.sharedState.listTenantsByUser.set(rRes.Ok());
-            // this.refreshListTenantsByUser.set(rRes.Ok());
-          }
-        })
-        .catch(console.error);
-    }, [
-      this,
-      this.api.session?.isLoaded,
-      this.api.session?.isSignedIn,
-      cloud.sharedState.refreshListTenantsByUser.val,
-      activeUser.user.status,
-    ]);
-    return {
-      val: cloud.sharedState.listTenantsByUser.val,
-      refresh: () => cloud.sharedState.refreshListTenantsByUser.set(new Date().toISOString()),
-    };
+  getListTenantsByUser(): ReturnType<typeof useQuery<ResListTenantsByUser>> {
+    return useQuery({
+      queryKey: ["listTenandsByUser", this._ensureUser.data?.user.userId],
+      queryFn: () => {
+        console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
+        return wrapResultToPromise(this.api.listTenantsByUser({}))();
+      },
+      enabled: this.activeApi(),
+    });
   }
 }
 
-// export function useListTenants() {
-//     const { cloudContext } = useContext(AppContext);
-//     const [listTenants, setListTenants] = useState({
-//         type: "resListTenantsByUser",
-//         userId: "unk",
-//         authUserId: "unk",
-//         tenants: [] as UserTenant[]
-//     } satisfies ResListTenantsByUser);
-//     useEffect(() => {
-//         // console.log("useTenants", cloudContext.api.session?.isLoaded, cloudContext.api.session?.isSignedIn);
-//         cloudContext.api.listTenantsByUser({})
-//             .then((rRes) => {
-//                 if (rRes.isOk()) {
-//                     setListTenants(rRes.Ok());
-//                 }
-//             })
-//             .catch(console.error);
-//     }, [cloudContext, cloudContext.api.session?.isLoaded, cloudContext.api.session?.isSignedIn]);
-//     return { listTenants };
-// }
-
 class CloudApi {
+  constructor(private cloud: CloudContext) {}
+
   private async getAuth() {
     return exception2Result(() => {
-      return this.session!.session!.getToken({ template: "with-email" }).then((token) => {
+      return this.cloud.getToken().then((token) => {
         return {
           type: "clerk",
           token: token!,
@@ -325,10 +186,7 @@ class CloudApi {
   }
 
   async ensureUser(req: WithoutTypeAndAuth<ReqEnsureUser>): Promise<Result<ResEnsureUser>> {
-    if (this.isActive()) {
-      return this.request<ReqEnsureUser, ResEnsureUser>({ ...req, type: "reqEnsureUser" });
-    }
-    return Result.Ok(emptyEnsureUser);
+    return this.request<ReqEnsureUser, ResEnsureUser>({ ...req, type: "reqEnsureUser" });
   }
   findUser(req: WithoutTypeAndAuth<ReqFindUser>): Promise<Result<ResFindUser>> {
     return this.request<ReqFindUser, ResFindUser>({ ...req, type: "reqFindUser" });
@@ -346,19 +204,13 @@ class CloudApi {
     return this.request<ReqConnectUserToTenant, ResConnectUserToTenant>({ ...req, type: "reqConnectUserToTenant" });
   }
   listTenantsByUser(req: WithoutTypeAndAuth<ReqListTenantsByUser>): Promise<Result<ResListTenantsByUser>> {
-    if (this.isActive()) {
-      return this.request<ReqListTenantsByUser, ResListTenantsByUser>({ ...req, type: "reqListTenantsByUser" });
-    }
-    return Promise.resolve(Result.Ok(emptyListTenantsByUser));
+    return this.request<ReqListTenantsByUser, ResListTenantsByUser>({ ...req, type: "reqListTenantsByUser" });
   }
   inviteUser(req: WithoutTypeAndAuth<ReqInviteUser>): Promise<Result<ResInviteUser>> {
     return this.request<ReqInviteUser, ResInviteUser>({ ...req, type: "reqInviteUser" });
   }
   listInvites(req: WithoutTypeAndAuth<ReqListInvites>): Promise<Result<ResListInvites>> {
-    if (this.isActive()) {
-      return this.request<ReqListInvites, ResListInvites>({ ...req, type: "reqListInvites" });
-    }
-    return Promise.resolve(Result.Ok(emptyListInvites));
+    return this.request<ReqListInvites, ResListInvites>({ ...req, type: "reqListInvites" });
   }
   deleteInvite(req: WithoutTypeAndAuth<ReqDeleteInvite>): Promise<Result<ResDeleteInvite>> {
     return this.request<ReqDeleteInvite, ResDeleteInvite>({ ...req, type: "reqDeleteInvite" });
@@ -366,13 +218,16 @@ class CloudApi {
   updateUserTenant(req: WithoutTypeAndAuth<ReqUpdateUserTenant>): Promise<Result<ResUpdateUserTenant>> {
     return this.request<ReqUpdateUserTenant, ResUpdateUserTenant>({ ...req, type: "reqUpdateUserTenant" });
   }
-  isActive(): boolean {
-    return !!(this.session?.isSignedIn && this.session?.isLoaded);
+  createLedger(req: WithoutTypeAndAuth<ReqCreateLedger>): Promise<Result<ResCreateLedger>> {
+    return this.request<ReqCreateLedger, ResCreateLedger>({ ...req, type: "reqCreateLedger" });
   }
-  session?: ReturnType<typeof useSession>;
-  injectSession(session: ReturnType<typeof useSession>) {
-    // console.log("injectSession", session);
-    this.session = session ?? undefined;
-    return this;
+  updateLedger(req: WithoutTypeAndAuth<ReqUpdateLedger>): Promise<Result<ResUpdateLedger>> {
+    return this.request<ReqUpdateLedger, ResUpdateLedger>({ ...req, type: "reqUpdateLedger" });
+  }
+  deleteLedger(req: WithoutTypeAndAuth<ReqDeleteLedger>): Promise<Result<ResDeleteLedger>> {
+    return this.request<ReqDeleteLedger, ResDeleteLedger>({ ...req, type: "reqDeleteLedger" });
+  }
+  listLedgersByTenant(req: WithoutTypeAndAuth<ReqListLedgersByUser>): Promise<Result<ResListLedgersByUser>> {
+    return this.request<ReqListLedgersByUser, ResListLedgersByUser>({ ...req, type: "reqListLedgersByUser" });
   }
 }

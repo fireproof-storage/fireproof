@@ -120,16 +120,22 @@ const reEmail =
 export function CloudTenantShow() {
   const { tenantId } = useParams();
   const { cloud } = useContext(AppContext);
-  const { val: listTenants, refresh } = cloud.useListTenantsByUser();
-  const tenants = listTenants.tenants.filter((t) => t.tenantId === tenantId);
+  const listTenants = cloud.getListTenantsByUser();
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
-  const tenant = tenants[0];
 
   // const listLedgers = cloud.useListLedgersByTenant(tenantId);
-
+  if (listTenants.isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (!listTenants.data) {
+    // navigate("/fp/cloud");
+    return <div>Not found</div>;
+  }
+  const tenants = listTenants.data.tenants.filter((t) => t.tenantId === tenantId);
+  const tenant = tenants?.[0];
   if (!tenant) {
-    navigate("/fp/cloud");
+    // navigate("/fp/cloud");
     return <div>Not found</div>;
   }
   return (
@@ -166,7 +172,10 @@ export function CloudTenantShow() {
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-base font-semibold leading-6 text-[--foreground]">New Tenant Name:</h3>
 
-          <Form onSubmit={handleSubmit(onSubmitTenant(cloud, tenant.tenantId, refresh))} className="mt-5 sm:flex sm:items-center">
+          <Form
+            onSubmit={handleSubmit(onSubmitTenant(cloud, tenant.tenantId, listTenants.refetch))}
+            className="mt-5 sm:flex sm:items-center"
+          >
             <div className="w-full sm:max-w-xs">
               <label htmlFor="name">Tenant Name [{tenant.tenant.name}]</label>
               <input
@@ -195,7 +204,7 @@ export function CloudTenantShow() {
           </Form>
 
           <Form
-            onSubmit={handleSubmit(onSubmitUserTenant(cloud, tenant.tenantId, refresh))}
+            onSubmit={handleSubmit(onSubmitUserTenant(cloud, tenant.tenantId, listTenants.refetch))}
             className="mt-5 sm:flex sm:items-center"
           >
             <div className="w-full sm:max-w-xs">
@@ -220,7 +229,7 @@ export function CloudTenantShow() {
                 id="userId"
                 {...register("userId", { required: true })}
                 type="hidden"
-                value={listTenants.userId}
+                value={listTenants.data?.userId}
                 autoFocus
                 className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent transition duration-200 ease-in-out"
               />
@@ -237,17 +246,18 @@ export function CloudTenantShow() {
 
       <pre>{JSON.stringify(tenant, null, 2)}</pre>
 
-      <Invites tenant={tenant} userId={listTenants.userId} />
+      <Invites tenant={tenant} userId={listTenants.data.userId} />
 
-      <p>{listTenants.authUserId}</p>
-      <p>{listTenants.userId}</p>
+      <p>{listTenants.data.authUserId}</p>
+      <p>{listTenants.data.userId}</p>
     </div>
   );
 }
 
 function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
   const cloud = useContext(AppContext).cloud;
-  const listInvites = cloud.useListInvitesByTenant(tenant.tenantId);
+  const inviteList = cloud.getListInvitesByTenant(tenant.tenantId);
+
   const [queryResult, setQueryResult] = useState({
     type: "resFindUser",
     query: {},
@@ -255,8 +265,23 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
   } as ResFindUser);
   const { register } = useForm();
   const [queryValue, setQueryValue] = useState("");
+
   if (!isAdmin(tenant)) {
     return <> </>;
+  }
+  if (inviteList.isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (inviteList.isError) {
+    return <div>{inviteList.error.message}</div>;
+  }
+
+  let inviteItem = inviteList.data?.tickets.find((i) => i.tenantId === tenant.tenantId);
+  if (!inviteItem) {
+    inviteItem = {
+      tenantId: tenant.tenantId,
+      invites: [],
+    };
   }
 
   if (queryResult.results.length === 0 && reEmail.test(queryValue)) {
@@ -335,7 +360,7 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
             query: {},
             results: [],
           });
-          listInvites.refresh();
+          inviteList.refetch();
         });
     };
   }
@@ -349,7 +374,7 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
           return;
         }
         console.log("delInvite", inviteId);
-        listInvites.refresh();
+        inviteList.refetch();
       });
     };
   }
@@ -358,20 +383,18 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
     <>
       <h2>Invites</h2>
       <ul>
-        {listInvites.val.get(tenant.tenantId).tickets.map((ticket, i) => (
-          <li key={ticket.tenantId}>
-            <ul>
-              {ticket.invites.map((invite, j) => (
-                <li key={invite.inviteId} style={{ display: "flex", alignItems: "center" }}>
-                  <button onClick={delInvite(invite.inviteId)}>
-                    <Minus />
-                  </button>
-                  <pre>{JSON.stringify(invite, null, 2)}</pre>
-                </li>
-              ))}
-            </ul>
-          </li>
-        ))}
+        <li key={inviteItem.tenantId}>
+          <ul>
+            {inviteItem.invites.map((invite, j) => (
+              <li key={invite.inviteId} style={{ display: "flex", alignItems: "center" }}>
+                <button onClick={delInvite(invite.inviteId)}>
+                  <Minus />
+                </button>
+                <pre>{JSON.stringify(invite, null, 2)}</pre>
+              </li>
+            ))}
+          </ul>
+        </li>
       </ul>
       <form
         onSubmit={(e) => {
@@ -389,15 +412,12 @@ function Invites({ tenant, userId }: { tenant: UserTenant; userId: string }) {
             onChange: queryExistingUserOrNick,
           })}
         />
-
-        {/* <button type="submit"><Plus /></button> */}
       </form>
       <ul>
         {queryResult.results
           .filter((i) => i.userId !== userId)
           .map((user, i) => (
             <li key={i} style={{ display: "flex", alignItems: "center" }}>
-              {/* <pre>{JSON.stringify(user, null, 2)}</pre> */}
               {user.byProviders[0].queryProvider}[{user.byProviders[0].cleanEmail}]
               {user.byProviders[0].params.image_url && <img src={user.byProviders[0].params.image_url} width={64} />}
               <button type="submit" onClick={addInvite(tenant, user)}>

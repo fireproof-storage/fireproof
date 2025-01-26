@@ -631,7 +631,8 @@ describe("db-api", () => {
       const res = await fpApi.listInvites({
         type: "reqListInvites",
         auth: d.reqs.auth,
-        tenantIds: data.slice(3).map((i) => i.ress.tenants[0].tenantId),
+        tenantIds: [data.slice(3)[didx].ress.tenants[0].tenantId],
+        // .map((i) => i.ress.tenants[0].tenantId),
       });
       expect(res.Ok()).toEqual({
         type: "resListInvites",
@@ -660,6 +661,96 @@ describe("db-api", () => {
         tickets: [],
       });
     }
+  });
+
+  it("CRUD an ledger", async () => {
+    const createLedger = await fpApi.createLedger({
+      type: "reqCreateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        tenantId: data[0].ress.tenants[0].tenantId,
+        name: `ledger[${data[0].ress.tenants[0].tenantId}]`,
+      },
+    });
+    expect(createLedger.Ok()).toEqual({
+      ledger: {
+        createdAt: createLedger.Ok().ledger.createdAt,
+        ledgerId: createLedger.Ok().ledger.ledgerId,
+        maxShares: 5,
+        name: `ledger[${data[0].ress.tenants[0].tenantId}]`,
+        ownerId: data[0].ress.user.userId,
+        rights: [
+          {
+            createdAt: createLedger.Ok().ledger.rights[0].createdAt,
+            default: false,
+            name: `ledger[${data[0].ress.tenants[0].tenantId}]`,
+            right: "write",
+            role: "admin",
+            updatedAt: createLedger.Ok().ledger.rights[0].updatedAt,
+            userId: data[0].ress.user.userId,
+          },
+        ],
+        tenantId: data[0].ress.tenants[0].tenantId,
+        updatedAt: createLedger.Ok().ledger.updatedAt,
+      },
+      type: "resCreateLedger",
+    });
+    const rUpdate = await fpApi.updateLedger({
+      type: "reqUpdateLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        name: "new name",
+        right: "read",
+        role: "member",
+        default: true,
+        ledgerId: createLedger.Ok().ledger.ledgerId,
+        tenantId: data[0].ress.tenants[0].tenantId,
+      },
+    });
+    expect(rUpdate.isOk()).toBeTruthy();
+
+    const listOwnersLedger = await fpApi.listLedgersByUser({
+      type: "reqListLedgersByUser",
+      auth: data[0].reqs.auth,
+    });
+    const myOwnersLedger = listOwnersLedger.Ok().ledgers.filter((i) => i.ledgerId === createLedger.Ok().ledger.ledgerId);
+    expect(myOwnersLedger.length).toEqual(1);
+    expect(myOwnersLedger[0]).toEqual({
+      createdAt: createLedger.Ok().ledger.createdAt,
+      ledgerId: createLedger.Ok().ledger.ledgerId,
+      maxShares: 5,
+      name: "new name",
+      ownerId: data[0].ress.user.userId,
+      rights: [
+        {
+          createdAt: createLedger.Ok().ledger.rights[0].createdAt,
+          default: true,
+          name: "new name",
+          right: "read",
+          role: "member",
+          updatedAt: rUpdate.Ok().ledger.updatedAt,
+          userId: data[0].ress.user.userId,
+        },
+      ],
+      tenantId: data[0].ress.tenants[0].tenantId,
+      updatedAt: rUpdate.Ok().ledger.updatedAt,
+    });
+
+    const rDelete = await fpApi.deleteLedger({
+      type: "reqDeleteLedger",
+      auth: data[0].reqs.auth,
+      ledger: {
+        ledgerId: createLedger.Ok().ledger.ledgerId,
+        tenantId: data[0].ress.tenants[0].tenantId,
+      },
+    });
+
+    const afterListOwnersLedger = await fpApi.listLedgersByUser({
+      type: "reqListLedgersByUser",
+      auth: data[0].reqs.auth,
+    });
+    const myAfterDelete = afterListOwnersLedger.Ok().ledgers.filter((i) => i.ledgerId === createLedger.Ok().ledger.ledgerId);
+    expect(myAfterDelete.length).toEqual(0);
   });
 });
 

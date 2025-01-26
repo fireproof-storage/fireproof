@@ -26,27 +26,25 @@ export function CloudNew() {
   const { register, handleSubmit } = useForm();
 
   const ctx = useContext(AppContext);
-  const { refresh } = ctx.cloud.useListTenantsByUser();
+  const { refetch } = ctx.cloud.getListTenantsByUser();
 
-  // const navigate = useNavigate();
-  const submit = useSubmit();
+  const navigate = useNavigate();
+  // const submit = useSubmit();
 
   async function onSubmit(data: SubmitTarget) {
-    // const my = data as { tenantName: string };
-    // const rTenant = await ctx.cloud.api.createTenant({
-    //   tenant: {
-    //     name: my.tenantName,
-    //   },
-    // });
-    // refresh();
-    // await navigate(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
-    // console.log("created", rTenant);
-    // return redirect(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
-    submit(data, {
-      method: "post",
-      action: ".",
-      encType: "application/json",
+    console.log("data", data);
+    const { tenantName } = data as { tenantName: string }; // (await request.json()).tenantName;
+    const rTenant = await ctx.cloud.api.createTenant({
+      tenant: {
+        name: tenantName,
+      },
     });
+    console.log("created", rTenant);
+    if (rTenant.isErr()) {
+      return new Response(rTenant.Err().message, { status: 400 });
+    }
+    refetch();
+    navigate(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
   }
 
   return (

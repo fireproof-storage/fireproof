@@ -16,7 +16,6 @@
     "npm:@vitejs/plugin-react@^4.3.4": "4.3.4_vite@6.0.7_@babel+core@7.26.0",
     "npm:autoprefixer@^10.4.20": "10.4.20_postcss@8.5.1",
     "npm:drizzle-kit@~0.30.1": "0.30.1_esbuild@0.19.12",
-    "npm:drizzle-orm@~0.38.3": "0.38.3_@libsql+client@0.14.0_@types+pg@8.11.10_@types+react@19.0.7_pg@8.13.1_react@18.3.1",
     "npm:eslint-plugin-react-hooks@5.1.0": "5.1.0_eslint@9.18.0",
     "npm:eslint-plugin-react-refresh@~0.4.16": "0.4.18_eslint@9.18.0",
     "npm:eslint-plugin-react@^7.37.2": "7.37.4_eslint@9.18.0",
@@ -25,10 +24,8 @@
     "npm:highlight.js@^11.10.0": "11.11.1",
     "npm:i@~0.3.7": "0.3.7",
     "npm:partysocket@^1.0.2": "1.0.3",
-    "npm:pg@^8.13.1": "8.13.1",
     "npm:postcss@^8.4.49": "8.5.1",
     "npm:prettier@^3.4.2": "3.4.2",
-    "npm:prism-react-renderer@^2.4.0": "2.4.1_react@18.3.1",
     "npm:react-dom@^18.3.1": "18.3.1_react@18.3.1",
     "npm:react-hook-form@^7.53.2": "7.54.2_react@18.3.1",
     "npm:react-router-dom@^7.0.2": "7.1.1_react@18.3.1_react-dom@18.3.1__react@18.3.1",
@@ -288,7 +285,7 @@
       "integrity": "sha512-74c040CRnGhfRjr3ArnkAgud86erIqdkPHNt5HR1k9u97uTIZCJww9eGYT67Qf7gHPpGS/xW8Be1D4dvRm63FA==",
       "dependencies": [
         "buffer@6.0.3",
-        "clsx@1.2.1",
+        "clsx",
         "eventemitter3",
         "keccak",
         "preact",
@@ -1195,11 +1192,8 @@
       "dependencies": [
         "@types/node",
         "pg-protocol",
-        "pg-types@4.0.2"
+        "pg-types"
       ]
-    },
-    "@types/prismjs@1.26.5": {
-      "integrity": "sha512-AUZTa7hQ2KY5L7AmtSiqxlhWxb4ina0yd8hNbl4TWuqnv/pFP0nDMb3YrfSBf4hJVGLh2YEIBfKaBW/9UEl6IQ=="
     },
     "@types/react-dom@19.0.3_@types+react@19.0.7": {
       "integrity": "sha512-0Knk+HJiMP/qOZgMyNFamlIjw9OFCsyC2ZbigmEEyXXixgre6IQpm/4V+r3qH4GC1JPvRJKInw+on2rV6YZLeA==",
@@ -1617,9 +1611,6 @@
     "clsx@1.2.1": {
       "integrity": "sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg=="
     },
-    "clsx@2.1.1": {
-      "integrity": "sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA=="
-    },
     "color-convert@2.0.1": {
       "integrity": "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==",
       "dependencies": [
@@ -1769,16 +1760,6 @@
         "@esbuild-kit/esm-loader",
         "esbuild@0.19.12",
         "esbuild-register"
-      ]
-    },
-    "drizzle-orm@0.38.3_@libsql+client@0.14.0_@types+pg@8.11.10_@types+react@19.0.7_pg@8.13.1_react@18.3.1": {
-      "integrity": "sha512-w41Y+PquMpSff/QDRGdItG0/aWca+/J3Sda9PPGkTxBtjWQvgU1jxlFBXdjog5tYvTu58uvi3PwR1NuCx0KeZg==",
-      "dependencies": [
-        "@libsql/client",
-        "@types/pg",
-        "@types/react",
-        "pg",
-        "react"
       ]
     },
     "dunder-proto@1.0.1": {
@@ -3192,64 +3173,25 @@
     "pathval@2.0.0": {
       "integrity": "sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA=="
     },
-    "pg-cloudflare@1.1.1": {
-      "integrity": "sha512-xWPagP/4B6BgFO+EKz3JONXv3YDgvkbVrGw2mTo3D6tVDQRh1e7cqVGvyR3BE+eQgAvx1XhW/iEASj4/jCWl3Q=="
-    },
-    "pg-connection-string@2.7.0": {
-      "integrity": "sha512-PI2W9mv53rXJQEOb8xNR8lH7Hr+EKa6oJa38zsK0S/ky2er16ios1wLKhZyxzD7jUReiWokc9WK5nxSnC7W1TA=="
-    },
     "pg-int8@1.0.1": {
       "integrity": "sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw=="
     },
     "pg-numeric@1.0.2": {
       "integrity": "sha512-BM/Thnrw5jm2kKLE5uJkXqqExRUY/toLHda65XgFTBTFYZyopbKjBe29Ii3RbkvlsMoFwD+tHeGaCjjv0gHlyw=="
     },
-    "pg-pool@3.7.0_pg@8.13.1": {
-      "integrity": "sha512-ZOBQForurqh4zZWjrgSwwAtzJ7QiRX0ovFkZr2klsen3Nm0aoh33Ls0fzfv3imeH/nw/O27cjdz5kzYJfeGp/g==",
-      "dependencies": [
-        "pg"
-      ]
-    },
     "pg-protocol@1.7.0": {
       "integrity": "sha512-hTK/mE36i8fDDhgDFjy6xNOG+LCorxLG3WO17tku+ij6sVHXh1jQUJ8hYAnRhNla4QVD2H8er/FOjc/+EgC6yQ=="
-    },
-    "pg-types@2.2.0": {
-      "integrity": "sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==",
-      "dependencies": [
-        "pg-int8",
-        "postgres-array@2.0.0",
-        "postgres-bytea@1.0.0",
-        "postgres-date@1.0.7",
-        "postgres-interval@1.2.0"
-      ]
     },
     "pg-types@4.0.2": {
       "integrity": "sha512-cRL3JpS3lKMGsKaWndugWQoLOCoP+Cic8oseVcbr0qhPzYD5DWXK+RZ9LY9wxRf7RQia4SCwQlXk0q6FCPrVng==",
       "dependencies": [
         "pg-int8",
         "pg-numeric",
-        "postgres-array@3.0.2",
-        "postgres-bytea@3.0.0",
-        "postgres-date@2.1.0",
-        "postgres-interval@3.0.0",
+        "postgres-array",
+        "postgres-bytea",
+        "postgres-date",
+        "postgres-interval",
         "postgres-range"
-      ]
-    },
-    "pg@8.13.1": {
-      "integrity": "sha512-OUir1A0rPNZlX//c7ksiu7crsGZTKSOXJPgtNiHGIlC9H0lO+NC6ZDYksSgBYY/thSWhnSRBv8w1lieNNGATNQ==",
-      "dependencies": [
-        "pg-cloudflare",
-        "pg-connection-string",
-        "pg-pool",
-        "pg-protocol",
-        "pg-types@2.2.0",
-        "pgpass"
-      ]
-    },
-    "pgpass@1.0.5": {
-      "integrity": "sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==",
-      "dependencies": [
-        "split2"
       ]
     },
     "picocolors@1.1.1": {
@@ -3319,14 +3261,8 @@
         "source-map-js"
       ]
     },
-    "postgres-array@2.0.0": {
-      "integrity": "sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA=="
-    },
     "postgres-array@3.0.2": {
       "integrity": "sha512-6faShkdFugNQCLwucjPcY5ARoW1SlbnrZjmGl0IrrqewpvxvhSLHimCVzqeuULCbG0fQv7Dtk1yDbG3xv7Veog=="
-    },
-    "postgres-bytea@1.0.0": {
-      "integrity": "sha512-xy3pmLuQqRBZBXDULy7KbaitYqLcmxigw14Q5sj8QBVLqEwXfeybIKVWiqAXTlcvdvb0+xkOtDbfQMOf4lST1w=="
     },
     "postgres-bytea@3.0.0": {
       "integrity": "sha512-CNd4jim9RFPkObHSjVHlVrxoVQXz7quwNFpz7RY1okNNme49+sVyiTvTRobiLV548Hx/hb1BG+iE7h9493WzFw==",
@@ -3334,17 +3270,8 @@
         "obuf"
       ]
     },
-    "postgres-date@1.0.7": {
-      "integrity": "sha512-suDmjLVQg78nMK2UZ454hAG+OAW+HQPZ6n++TNDUX+L0+uUlLywnoxJKDou51Zm+zTCjrCl0Nq6J9C5hP9vK/Q=="
-    },
     "postgres-date@2.1.0": {
       "integrity": "sha512-K7Juri8gtgXVcDfZttFKVmhglp7epKb1K4pgrkLxehjqkrgPhfG6OO8LHLkfaqkbpjNRnra018XwAr1yQFWGcA=="
-    },
-    "postgres-interval@1.2.0": {
-      "integrity": "sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==",
-      "dependencies": [
-        "xtend"
-      ]
     },
     "postgres-interval@3.0.0": {
       "integrity": "sha512-BSNDnbyZCXSxgA+1f5UU2GmwhoI0aU5yMxRGO8CdFEcY2BQF9xm/7MqKnYoM1nJDk8nONNWDk9WeSmePFhQdlw=="
@@ -3363,14 +3290,6 @@
     },
     "printable-characters@1.0.42": {
       "integrity": "sha512-dKp+C4iXWK4vVYZmYSd0KBH5F/h1HoZRsbJ82AVKRO3PEo8L4lBS/vLwhVtpwwuYcoIsVY+1JYKR268yn480uQ=="
-    },
-    "prism-react-renderer@2.4.1_react@18.3.1": {
-      "integrity": "sha512-ey8Ls/+Di31eqzUxC46h8MksNuGx/n0AAC8uKpwFau4RPDYLuE3EXTp8N8G2vX2N7UC/+IXeNUnlWBGGcAG+Ig==",
-      "dependencies": [
-        "@types/prismjs",
-        "clsx@2.1.1",
-        "react"
-      ]
     },
     "progress-events@1.0.1": {
       "integrity": "sha512-MOzLIwhpt64KIVN64h1MwdKWiyKFNc/S6BoYKPIVUHFg0/eIEyBulhWCgn678v/4c0ri3FdGuzXymNCv02MUIw=="
@@ -3739,9 +3658,6 @@
     },
     "sparse-array@1.3.2": {
       "integrity": "sha512-ZT711fePGn3+kQyLuv1fpd3rNSkNF8vd5Kv2D+qnOANeyKs3fx6bUMGWRPvgTTcYV64QMqZKZwcuaQSP3AZ0tg=="
-    },
-    "split2@4.2.0": {
-      "integrity": "sha512-UcjcJOWknrNkF6PLX83qcHM6KHgVKNkV62Y8a5uYDVv9ydGQVwAHMKqHdJje1VTWpljG0WYpCDhrCdAOYH4TWg=="
     },
     "stackback@0.0.2": {
       "integrity": "sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw=="
@@ -4259,9 +4175,6 @@
     "ws@8.18.0": {
       "integrity": "sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw=="
     },
-    "xtend@4.0.2": {
-      "integrity": "sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ=="
-    },
     "yallist@3.1.1": {
       "integrity": "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="
     },
@@ -4306,6 +4219,7 @@
         "npm:@libsql/client@0.14",
         "npm:@rollup/plugin-replace@^6.0.1",
         "npm:@tailwindcss/container-queries@~0.1.1",
+        "npm:@tanstack/react-query@^5.64.2",
         "npm:@types/pg@^8.11.10",
         "npm:@types/react-dom@^19.0.1",
         "npm:@types/react@^19.0.1",
@@ -4322,10 +4236,8 @@
         "npm:highlight.js@^11.10.0",
         "npm:i@~0.3.7",
         "npm:partysocket@^1.0.2",
-        "npm:pg@^8.13.1",
         "npm:postcss@^8.4.49",
         "npm:prettier@^3.4.2",
-        "npm:prism-react-renderer@^2.4.0",
         "npm:react-dom@^18.3.1",
         "npm:react-hook-form@^7.53.2",
         "npm:react-router-dom@^7.0.2",
