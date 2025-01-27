@@ -26,7 +26,7 @@ $dockerCompose up -d --wait
 
 mkdir -p $projectRoot/dist
 
-docker logs -f smoke-esm-sh-1 &
+$dockerCmd logs -f smoke-esm-sh-1 &
 #sleep 5
 
 user="admin$(date +%s)"
