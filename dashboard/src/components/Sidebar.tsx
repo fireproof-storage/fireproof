@@ -2,9 +2,14 @@ import { JSX, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireproofHome.tsx";
+import { TenantSelector } from "./TenantSelector";
 //
 
-export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent: JSX.Element; newUrl: string; title: string }) {
+export function Sidebar({ sideBarComponent, title, newUrl }: { 
+  sideBarComponent: JSX.Element; 
+  title?: string; 
+  newUrl?: string; 
+}) {
   const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext).sideBar;
   return (
     <div
@@ -37,36 +42,39 @@ export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent:
           </svg>
         </button>
       </div>
+      <TenantSelector />
       <div className="flex-1 overflow-y-auto">
         <nav className="grid gap-4 px-6 py-4 text-sm font-medium">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">{title}</span>
+          {title && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{title}</span>
+              </div>
+              {newUrl && (
+                <Link
+                  className="inline-flex h-8 items-center justify-center rounded bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
+                  to={newUrl}
+                  onClick={() => setIsSidebarOpen?.(false)}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-4 w-4"
+                  >
+                    <path d="M5 12h14"></path>
+                    <path d="M12 5v14"></path>
+                  </svg>
+                </Link>
+              )}
             </div>
-            <Link
-              data-id="15"
-              className="inline-flex h-8 items-center justify-center rounded bg-[--accent] px-3 text-accent-foreground transition-colors hover:bg-[--accent]/80"
-              to={newUrl}
-              onClick={() => setIsSidebarOpen?.(false)}
-            >
-              <svg
-                data-id="3"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-4 w-4"
-              >
-                <path d="M5 12h14"></path>
-                <path d="M12 5v14"></path>
-              </svg>
-            </Link>
-          </div>
+          )}
           <div className="grid gap-2">{sideBarComponent}</div>
         </nav>
       </div>

@@ -1,7 +1,7 @@
-import { useForm } from "react-hook-form";
-import { Form, redirect, SubmitTarget, useNavigate, useSubmit } from "react-router-dom";
-import { AppContext, AppContextType } from "../../app-context.tsx";
 import { useContext } from "react";
+import { useForm } from "react-hook-form";
+import { Form, SubmitTarget, redirect, useNavigate } from "react-router-dom";
+import { AppContext, AppContextType } from "../../../app-context.tsx";
 
 export function newCloudAction(ctx: AppContextType) {
   return async ({ request }: { request: Request }) => {
@@ -17,7 +17,7 @@ export function newCloudAction(ctx: AppContextType) {
     }
     // const { refresh } = ctx.cloud.useListTenantsByUser();
     // refresh();
-    return redirect(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
+    return redirect(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}`);
   };
 }
 
@@ -44,7 +44,7 @@ export function CloudNew() {
       return new Response(rTenant.Err().message, { status: 400 });
     }
     refetch();
-    navigate(`/fp/cloud/${rTenant.Ok().tenant.tenantId}`);
+    navigate(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}`);
   }
 
   return (
@@ -66,12 +66,21 @@ export function CloudNew() {
               className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent transition duration-200 ease-in-out"
             />
           </div>
-          <button
-            type="submit"
-            className="mt-3 inline-flex w-full items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-semibold text-accent-foreground shadow-sm hover:bg-[--accent]/80 transition-colors sm:ml-3 sm:mt-0 sm:w-auto"
-          >
-            Create
-          </button>
+          <div className="mt-3 sm:ml-3 sm:mt-0 flex gap-2">
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-semibold text-accent-foreground shadow-sm hover:bg-[--accent]/80 transition-colors"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="inline-flex items-center justify-center rounded bg-[--muted-foreground] px-3 py-2 text-sm font-semibold text-[--background] shadow-sm hover:bg-[--muted-foreground]/80 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </Form>
       </div>
     </div>
