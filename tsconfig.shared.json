@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "declarationMap": true,
+    "isolatedModules": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "outDir": "${configDir}/dist",
+    "removeComments": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2021"
+  },
+  "include": [
+    "${configDir}/src",
+    "${configDir}/test"
+  ]
+}

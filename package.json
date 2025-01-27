@@ -5,31 +5,13 @@
   "description": "Live ledger for the web",
   "type": "module",
   "scripts": {
-    "prepublish": "pnpm run build",
-    "publish": "pnpm run '/publish:/'",
-    "publish:fireproof-core": "tsx ./publish-package.ts ./dist/fireproof-core/package.json",
-    "publish:use-fireproof": "tsx ./publish-package.ts ./dist/use-fireproof/package.json",
-    "prebuild": "rm -rf dist",
-    "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
-    "build:tsc": "tsc",
-    "build:tsup": "tsup",
-    "build:docs": "bash build-docs.sh",
-    "pub:fireproof-core": "cp -pr tests ./dist/fireproof-core; tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
-    "pub:use-fireproof": "tsx ./version-copy-package.ts ./dist/use-fireproof/package-use-fireproof.json",
-    "presmoke": "pnpm run build; pnpm run presmoke:publish",
-    "presmoke:publish": "bash -x smoke/publish-local-registry.sh",
-    "smoke": "pnpm run '/^smoke:/'",
-    "smoke:esm": "sh smoke/esm/it.sh",
-    "smoke:node": "sh smoke/npm/it.sh",
-    "smoke:react": "sh smoke/react/it.sh",
-    "clean": "rm -rf node_modules dist",
-    "env": "env",
-    "test": "vitest --run",
-    "test:file": "vitest --config vitest.file.config.ts --run",
-    "test:indexdb": "vitest --config vitest.browser.config.ts --run",
-    "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
-    "format": "prettier .",
-    "lint": "eslint"
+    "build": "tsc --build",
+    "check-format": "pnpm --recursive check-format",
+    "check-lint": "pnpm --recursive check-lint",
+    "clean": "pnpm --recursive clean",
+    "format": "pnpm --recursive format",
+    "lint": "pnpm --recursive lint",
+    "test": "pnpm --recursive test"
   },
   "keywords": [
     "ledger",
@@ -49,30 +31,7 @@
   ],
   "license": "Apache-2.0 OR MIT",
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
-    "@testing-library/react": "^16.1.0",
-    "@types/node": "^22.10.5",
-    "@types/randombytes": "^2.0.3",
-    "@types/react": "^18.3.12",
-    "@typescript-eslint/typescript-estree": "^8.20.0",
-    "@vitest/browser": "^2.1.8",
-    "@vitest/coverage-v8": "^2.1.8",
-    "@vitest/ui": "^2.1.8",
-    "esbuild": "^0.24.2",
-    "esbuild-plugin-resolve": "^2.0.0",
-    "eslint": "^9.18.0",
-    "prettier": "^3.4.2",
-    "semver": "^7.6.3",
-    "tsup": "^8.3.5",
-    "tsx": "^4.19.2",
-    "typedoc": "^0.27.6",
-    "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0",
-    "vite": "^6.0.7",
-    "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^2.1.8",
-    "webdriverio": "^9.5.7",
-    "zx": "^8.3.0"
+    "typescript": "^5.7.3"
   },
   "repository": {
     "type": "git",
@@ -81,27 +40,5 @@
   "bugs": {
     "url": "https://github.com/fireproof-storage/fireproof/issues"
   },
-  "homepage": "https://github.com/fireproof-storage/fireproof#readme",
-  "dependencies": {
-    "@adviser/cement": "^0.3.5",
-    "@fireproof/vendor": "^1.0.4",
-    "@ipld/unixfs": "^3.0.0",
-    "charwise": "^3.0.1",
-    "esbuild-plugin-replace": "^1.4.0",
-    "idb": "^8.0.1",
-    "multiformats": "^13.3.1",
-    "p-limit": "^6.2.0",
-    "p-map": "^7.0.3",
-    "p-retry": "^6.2.1",
-    "prolly-trees": "^1.0.4",
-    "randombytes": "^2.1.0",
-    "react": "^18.3.1",
-    "typedoc": "^0.27.6",
-    "uuidv7": "^1.0.2"
-  },
-  "bundle-phobia": {
-    "max-size": "390kB",
-    "max-gzip-size": "110kB",
-    "max-overall-size": "1MB"
-  }
+  "homepage": "https://github.com/fireproof-storage/fireproof#readme"
 }
