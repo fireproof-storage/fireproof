@@ -143,8 +143,34 @@ export class CloudContext {
       enabled: this.activeApi(),
     });
   }
-}
 
+  getListLedgersByTenant(tenantId: string): ReturnType<typeof useQuery<ResListLedgers>> {
+    return useQuery({
+      queryKey: ["listLedgersByTenant", tenantId, this._ensureUser.data?.user.userId],
+      queryFn: () => {
+        console.log("useListLedgersByTenant", tenantId);
+        return Promise.resolve({
+          ledgers: [
+            {
+              ledgerId: "ledger-1",
+              name: "Sample Ledger 1",
+              tenantId: tenantId,
+              createdAt: new Date().toISOString()
+            },
+            {
+              ledgerId: "ledger-2", 
+              name: "Sample Ledger 2",
+              tenantId: tenantId,
+              createdAt: new Date().toISOString()
+            }
+          ]
+        });
+      },
+      enabled: this.activeApi(),
+    });
+  }
+
+}
 class CloudApi {
   constructor(private cloud: CloudContext) {}
 
