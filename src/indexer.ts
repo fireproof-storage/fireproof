@@ -251,10 +251,11 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         async start(controller) {
           await waitFor;
           await ready();
-          await updateIndex();
-          await hydrateIndex();
 
           if (opts.futureOnly === false) {
+            await updateIndex();
+            await hydrateIndex();
+
             const it = await query(opts.since, opts.sinceOptions);
 
             async function iterate(prevValue: DocWithId<T>) {
@@ -274,7 +275,10 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
           unsubscribe = clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
             if (isClosed) return;
-            updates.forEach((update) => {
+            updates.forEach(async (update) => {
+              await updateIndex();
+              await hydrateIndex();
+
               controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
             });
           });

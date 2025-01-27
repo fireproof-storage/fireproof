@@ -47,7 +47,7 @@
  *
  */
 
-import { fireproof, Ledger } from "@fireproof/core";
+import { ClockHead, DocBase, DocWithId, fireproof, Ledger, QueryStreamMarker } from "@fireproof/core";
 
 interface DocType {
   _id: string;
@@ -75,89 +75,119 @@ describe("Streaming API", () => {
     await lr.destroy();
   });
 
+  ////////
+  // 🛠️ //
+  ////////
+
+  type Snapshot<T extends DocBase> = AsyncGenerator<DocWithId<T>>;
+  type Stream<T extends DocBase> = ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
+
+  async function testSnapshot<T extends DocBase>(snapshot: Snapshot<T>, amountOfDocs: number) {
+    const docs = await Array.fromAsync(snapshot);
+    expect(docs.length).toBe(amountOfDocs);
+  }
+
+  async function testLive<T extends DocBase>(stream: Stream<T>, amountOfDocs: number) {
+    let docCount = 0;
+
+    for await (const { marker } of stream) {
+      docCount++;
+
+      if (marker.kind === "preexisting" && marker.done) {
+        await lr.put({ _id: `doc-${amountOfDocs}`, name: `doc-${amountOfDocs}` });
+      }
+
+      if (marker.kind === "new") break;
+    }
+
+    expect(docCount).toBe(amountOfDocs + 1);
+  }
+
+  async function testSince<T extends DocBase>({
+    snapshotCreator,
+    streamCreator,
+  }: {
+    snapshotCreator: (since: ClockHead) => Snapshot<T>;
+    streamCreator: (since: ClockHead) => Stream<T>;
+  }) {
+    const amountOfNewDocs = Math.floor(Math.random() * (10 - 1) + 1);
+    const since = lr.clock;
+
+    await Promise.all(
+      Array(amountOfNewDocs)
+        .fill(0)
+        .map((_, i) => {
+          return lr.put({ _id: `doc-since-${i}`, name: `doc-since-${i}` });
+        }),
+    );
+
+    const stream = streamCreator(since);
+    let docCount = 0;
+
+    for await (const { marker } of stream) {
+      docCount++;
+      if (marker.kind === "preexisting" && marker.done) break;
+    }
+
+    expect(docCount).toBe(amountOfNewDocs);
+
+    // Snapshot
+    // NOTE: This also tests the stream cancellation process.
+    const amountOfSnapshotDocs = 3;
+    const sincePt2 = lr.clock;
+
+    await Promise.all(
+      Array(amountOfSnapshotDocs)
+        .fill(0)
+        .map((_, i) => {
+          return lr.put({ _id: `doc-snapshot-${i}`, name: `doc-snapshot-${i}` });
+        }),
+    );
+
+    const docs = await Array.fromAsync(snapshotCreator(sincePt2));
+    expect(docs.length).toBe(amountOfSnapshotDocs);
+  }
+
+  async function testFuture<T extends DocBase>(stream: Stream<T>, amountOfDocs: number) {
+    let docCount = 0;
+
+    await lr.put({ _id: `doc-${amountOfDocs + 0}`, name: `doc-${amountOfDocs + 0}` });
+    await lr.put({ _id: `doc-${amountOfDocs + 1}`, name: `doc-${amountOfDocs + 1}` });
+    await lr.put({ _id: `doc-${amountOfDocs + 2}`, name: `doc-${amountOfDocs + 2}` });
+
+    for await (const { marker } of stream) {
+      if (marker.kind === "new") docCount++;
+      if (docCount === 3) break;
+    }
+
+    expect(docCount).toBe(3);
+  }
+
   //////////////
   // ALL DOCS //
   //////////////
 
   describe("allDocs", () => {
     it("test `snapshot` method", async () => {
-      const docs = await Array.fromAsync(lr.allDocs().snapshot());
-      expect(docs.length).toBe(AMOUNT_OF_DOCS);
+      const snapshot = lr.allDocs().snapshot();
+      await testSnapshot(snapshot, AMOUNT_OF_DOCS);
     });
 
     it("test `live` method", async () => {
       const stream = lr.allDocs<DocType>().live();
-      let docCount = 0;
-
-      for await (const { marker } of stream) {
-        docCount++;
-
-        if (marker.kind === "preexisting" && marker.done) {
-          await lr.put({ _id: `doc-${AMOUNT_OF_DOCS}`, name: `doc-${AMOUNT_OF_DOCS}` });
-        }
-
-        if (marker.kind === "new") break;
-      }
-
-      expect(docCount).toBe(AMOUNT_OF_DOCS + 1);
+      await testLive(stream, AMOUNT_OF_DOCS);
     });
 
     it("test `snapshot` and `live` method with `since` parameter", async () => {
-      const amountOfNewDocs = 5;
-      const since = lr.clock;
-
-      await Promise.all(
-        Array(amountOfNewDocs)
-          .fill(0)
-          .map((_, i) => {
-            return lr.put({ _id: `doc-since-${i}`, name: `doc-since-${i}` });
-          }),
-      );
-
-      const stream = lr.allDocs<DocType>().live({ since });
-      let docCount = 0;
-
-      for await (const { marker } of stream) {
-        docCount++;
-        if (marker.kind === "preexisting" && marker.done) break;
-      }
-
-      expect(docCount).toBe(amountOfNewDocs);
-
-      // Snapshot
-      // NOTE: This also tests the stream cancellation process.
-      const amountOfSnapshotDocs = 3;
-      const sincePt2 = lr.clock;
-
-      await Promise.all(
-        Array(amountOfSnapshotDocs)
-          .fill(0)
-          .map((_, i) => {
-            return lr.put({ _id: `doc-snapshot-${i}`, name: `doc-snapshot-${i}` });
-          }),
-      );
-
-      const docs = await Array.fromAsync(lr.allDocs().snapshot({ since: sincePt2 }));
-      expect(docs.length).toBe(amountOfSnapshotDocs);
+      await testSince({
+        snapshotCreator: (since) => lr.allDocs().snapshot({ since }),
+        streamCreator: (since) => lr.allDocs().live({ since }),
+      });
     });
 
     it("test `future` method", async () => {
       const stream = lr.allDocs<DocType>().future();
-      let docCount = 0;
-
-      // NOTE: Test could probably be written in a better way.
-      //       We want to start listening before we add the documents.
-      lr.put({ _id: `doc-${AMOUNT_OF_DOCS + 0}`, name: `doc-${AMOUNT_OF_DOCS + 0}` });
-      lr.put({ _id: `doc-${AMOUNT_OF_DOCS + 1}`, name: `doc-${AMOUNT_OF_DOCS + 1}` });
-
-      for await (const { doc, marker } of stream) {
-        void doc;
-
-        if (marker.kind === "new") docCount++;
-        if (docCount === 2) break;
-      }
-
-      expect(docCount).toBe(2);
+      await testFuture(stream, AMOUNT_OF_DOCS);
     });
   });
 
@@ -169,8 +199,56 @@ describe("Streaming API", () => {
     // ALL
     describe("all", () => {
       it("test `snapshot` method", async () => {
-        const docs = await Array.fromAsync(lr.query("name").snapshot());
-        expect(docs.length).toBe(AMOUNT_OF_DOCS);
+        const snapshot = lr.query("name").snapshot();
+        await testSnapshot(snapshot, AMOUNT_OF_DOCS);
+      });
+
+      it("test `live` method", async () => {
+        const stream = lr.query("name").live();
+        await testLive(stream, AMOUNT_OF_DOCS);
+      });
+
+      // TODO:
+      // it("test `snapshot` and `live` method with `since` parameter", async () => {
+      //   await testSince({
+      //     snapshotCreator: (since) => lr.query("name").snapshot({ since }),
+      //     streamCreator: (since) => lr.query("name").live({ since }),
+      //   });
+      // });
+
+      it("test `future` method", async () => {
+        const stream = lr.query("name").future();
+        await testFuture(stream, AMOUNT_OF_DOCS);
+      });
+    });
+
+    // ADDITIONAL
+    describe("additional items", () => {
+      const AMOUNT_OF_ADDITIONAL_DOCS = 5;
+
+      beforeEach(async () => {
+        await Promise.all(
+          Array(AMOUNT_OF_ADDITIONAL_DOCS)
+            .fill(0)
+            .map((_, i) => {
+              return lr.put({ _id: `doc-add-${i}`, additional: `doc-add-${i}` });
+            }),
+        );
+      });
+
+      it("test `snapshot` method", async () => {
+        const snapshot = lr.query("additional").snapshot();
+        await testSnapshot(snapshot, AMOUNT_OF_ADDITIONAL_DOCS);
+      });
+
+      it("test `live` method", async () => {
+        const stream = lr.query("additional").live();
+        await testLive(stream, AMOUNT_OF_ADDITIONAL_DOCS);
+      });
+
+      it("test `future` method", async () => {
+        const stream = lr.query("additional").future();
+        await testFuture(stream, AMOUNT_OF_ADDITIONAL_DOCS);
       });
     });
   });
