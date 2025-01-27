@@ -13,7 +13,7 @@
     "build": "pnpm run '/build:/' && pnpm run '/pub:/'",
     "build:tsc": "tsc",
     "build:tsup": "tsup",
-    "build:docs": "bash build-docs.sh",
+    "build:docs": "if [ \"$FP_CI\" = 'fp_ci' ] ; then bash build-docs.sh; fi",
     "pub:fireproof-core": "cp -pr tests ./dist/fireproof-core; tsx ./version-copy-package.ts ./dist/fireproof-core/package-fireproof-core.json",
     "pub:use-fireproof": "tsx ./version-copy-package.ts ./dist/use-fireproof/package-use-fireproof.json",
     "presmoke": "if [ \"$FP_CI\" != 'fp_ci' ] ; then pnpm run build; fi; pnpm run presmoke:publish",
