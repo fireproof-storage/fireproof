@@ -5,7 +5,10 @@ progName=$0
 projectRoot=$(pwd)
 cd $(dirname $progName)
 
-if which docker-compose
+if which podman
+then
+  dockerCompose="podman compose"
+elif which docker-compose
 then
   dockerCompose="docker-compose"
 else

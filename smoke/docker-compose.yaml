@@ -28,7 +28,6 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - "-c"
         - "curl -f http://registry:4873 && curl -f http://esm-sh:8080"
       interval: 5s
       retries: 30
