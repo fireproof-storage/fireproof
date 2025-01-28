@@ -58,7 +58,7 @@ Compared to other embedded ledgers, Fireproof:
 - offers cryptographic causal integrity for all operations
 - is built for the web, with a small package size and no wasm
 
-Deliver interactive experiences without waiting on the backend. Fireproof runs in any cloud, browser, or edge environment, so your application can access data anywhere.
+Deliver interactive experiences without waiting on the backend. Fireproof runs in any cloud, browser, or edge environment, so your application can access tamperproof data anywhere.
 
 [Get the latest roadmap updates on our blog](https://fireproof.storage/blog/) or join our [Discord](https://discord.gg/cCryrNHePH) to collaborate. Read the docs to learn more about the ledger [architecture](https://use-fireproof.com/docs/architecture).
 
