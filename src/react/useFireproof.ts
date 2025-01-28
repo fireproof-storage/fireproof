@@ -171,7 +171,7 @@ export const FireproofCtx = {} as UseFireproof;
  *
  */
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
-  const database = typeof name === "string" ? fireproof.DB(name, config) : name;
+  const database = typeof name === "string" ? fireproof(name, config) : name;
 
   function useDocument<T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
     let initialDoc: DocSet<T>;

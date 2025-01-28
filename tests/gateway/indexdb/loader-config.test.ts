@@ -12,7 +12,7 @@ describe("fireproof config indexdb", () => {
   });
 
   it("indexdb-loader", async () => {
-    const db = fireproof.DB(my_app());
+    const db = fireproof(my_app());
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
 

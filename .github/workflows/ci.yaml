@@ -25,7 +25,7 @@ jobs:
         name: Install pnpm
         with:
           run_install: false
-          version: 9.15.2
+          version: 9
           cache: "pnpm"
 
       - name: smoke-esm-cache
@@ -53,7 +53,6 @@ jobs:
       - name: test
         run: pnpm run test
       - name: smoke
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
         run: pnpm run smoke
       - name: publish
         if: startsWith(github.ref, 'refs/tags/v')
@@ -68,4 +67,4 @@ jobs:
           git tag -v $(git describe --tags --abbrev=0)
           # should only run if a tag is set
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
-          pnpm run publish
+          pnpm run fppublish
