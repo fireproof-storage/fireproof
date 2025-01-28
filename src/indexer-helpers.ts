@@ -26,10 +26,13 @@ import {
   DocTypes,
   DocObject,
   IndexUpdateString,
+  ClockHead,
+  ChangesOptions,
 } from "./types.js";
 import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { CRDT } from "./crdt.js";
 import { Logger } from "@adviser/cement";
+import { clockChangesSince } from "./crdt-helpers.js";
 
 export class IndexTree<K extends IndexKeyType, R extends DocFragment> {
   cid?: AnyLink;
@@ -160,12 +163,27 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
 }
 
 export async function* applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
-  crdt: CRDT<T>,
+  { crdt, logger }: { crdt: CRDT<T>; logger: Logger },
   resp: { result: ProllyIndexRow<K, R>[] },
-  query: QueryOpts<K>,
+  query: QueryOpts<K> & { since?: ClockHead; sinceOptions?: ChangesOptions },
 ): AsyncGenerator<DocWithId<T>> {
   async function* _apply() {
     let result = [...resp.result];
+
+    if (query.since) {
+      const gen = clockChangesSince(crdt.blockstore, crdt.clock.head, query.since, query.sinceOptions || {}, logger);
+      const ids = await Array.fromAsync(gen)
+        .then((arr) => arr.map((a) => a.id))
+        .then((arr) => new Set(arr));
+      result = result.reduce((acc: ProllyIndexRow<K, R>[], row) => {
+        if (ids.has(row.id)) {
+          ids.delete(row.id);
+          return [...acc, row];
+        }
+
+        return acc;
+      }, []);
+    }
 
     if (query.descending) result = result.reverse();
     if (query.limit) result = result.slice(0, query.limit);

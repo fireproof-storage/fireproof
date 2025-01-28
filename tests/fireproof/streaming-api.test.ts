@@ -117,7 +117,7 @@ describe("Streaming API", () => {
       Array(amountOfNewDocs)
         .fill(0)
         .map((_, i) => {
-          return lr.put({ _id: `doc-since-${i}`, name: `doc-since-${i}` });
+          return lr.put({ _id: `doc-since-${i}`, since: `doc-since-${i}` });
         }),
     );
 
@@ -133,14 +133,14 @@ describe("Streaming API", () => {
 
     // Snapshot
     // NOTE: This also tests the stream cancellation process.
-    const amountOfSnapshotDocs = 3;
+    const amountOfSnapshotDocs = Math.floor(Math.random() * (10 - 1) + 1);
     const sincePt2 = lr.clock;
 
     await Promise.all(
       Array(amountOfSnapshotDocs)
         .fill(0)
         .map((_, i) => {
-          return lr.put({ _id: `doc-snapshot-${i}`, name: `doc-snapshot-${i}` });
+          return lr.put({ _id: `doc-snapshot-${i}`, since: `doc-snapshot-${i}` });
         }),
     );
 
@@ -208,13 +208,12 @@ describe("Streaming API", () => {
         await testLive(stream, AMOUNT_OF_DOCS);
       });
 
-      // TODO:
-      // it("test `snapshot` and `live` method with `since` parameter", async () => {
-      //   await testSince({
-      //     snapshotCreator: (since) => lr.query("name").snapshot({ since }),
-      //     streamCreator: (since) => lr.query("name").live({ since }),
-      //   });
-      // });
+      it("test `snapshot` and `live` method with `since` parameter", async () => {
+        await testSince({
+          snapshotCreator: (since) => lr.query("since").snapshot({ since }),
+          streamCreator: (since) => lr.query("since").live({ since }),
+        });
+      });
 
       it("test `future` method", async () => {
         const stream = lr.query("name").future();
@@ -244,6 +243,13 @@ describe("Streaming API", () => {
       it("test `live` method", async () => {
         const stream = lr.query("additional").live();
         await testLive(stream, AMOUNT_OF_ADDITIONAL_DOCS);
+      });
+
+      it("test `snapshot` and `live` method with `since` parameter", async () => {
+        await testSince({
+          snapshotCreator: (since) => lr.query("since").snapshot({ since }),
+          streamCreator: (since) => lr.query("since").live({ since }),
+        });
       });
 
       it("test `future` method", async () => {
