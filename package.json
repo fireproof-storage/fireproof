@@ -64,6 +64,7 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint": "^9.18.0",
     "eslint-import-resolver-typescript": "^3.7.0",
+    "eslint-plugin-import": "^2.31.0",
     "prettier": "^3.4.2",
     "semver": "^7.7.1",
     "tsup": "^8.3.6",
