@@ -12,12 +12,12 @@ import {
   applyBulkUpdateToCrdt,
   getValueFromCrdt,
   readFiles,
-  clockChangesSince,
   clockVis,
   getBlock,
   doCompact,
   docUpdateToDocWithId,
   getAllEntries,
+  clockUpdatesSince,
 } from "./crdt-helpers.js";
 import type {
   DocUpdate,
@@ -255,7 +255,7 @@ export class CRDT<T extends DocTypes> {
   }
 
   changes<T extends DocTypes>(since: ClockHead = [], opts: ChangesOptions = {}): AsyncGenerator<DocUpdate<T>> {
-    return clockChangesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
+    return clockUpdatesSince<T>(this.blockstore, this.clock.head, since, opts, this.logger);
   }
 
   async getBlock(cidString: string): Promise<Block> {

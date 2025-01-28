@@ -181,32 +181,36 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   query(opts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
     const query = async (since?: ClockHead, sinceOptions?: ChangesOptions) => {
-      // TODO:
-      void since;
-      void sinceOptions;
+      const deps = { crdt: this.crdt, logger: this.logger };
+      const qry = { ...opts, since, sinceOptions };
 
       if (!this.byKey.root) {
-        return applyQuery<K, T, R>(this.crdt, { result: [] }, opts);
+        return applyQuery<K, T, R>(deps, { result: [] }, qry);
       }
-      if (opts.range) {
-        const eRange = encodeRange(opts.range);
-        return applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), opts);
+
+      if (qry.range) {
+        const eRange = encodeRange(qry.range);
+        return applyQuery<K, T, R>(deps, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), qry);
       }
-      if (opts.key) {
-        const encodedKey = encodeKey(opts.key);
-        return applyQuery<K, T, R>(this.crdt, await throwFalsy(this.byKey.root).get(encodedKey), opts);
+
+      if (qry.key) {
+        const encodedKey = encodeKey(qry.key);
+        return applyQuery<K, T, R>(deps, await throwFalsy(this.byKey.root).get(encodedKey), qry);
       }
-      if (opts.prefix) {
-        if (!Array.isArray(opts.prefix)) opts.prefix = [opts.prefix];
+
+      if (qry.prefix) {
+        if (!Array.isArray(qry.prefix)) qry.prefix = [qry.prefix];
         // prefix should be always an array
-        const start = [...opts.prefix, NaN];
-        const end = [...opts.prefix, Infinity];
+        const start = [...qry.prefix, NaN];
+        const end = [...qry.prefix, Infinity];
         const encodedR = encodeRange([start, end]);
-        return applyQuery<K, T, R>(this.crdt, await this.byKey.root.range(...encodedR), opts);
+        return applyQuery<K, T, R>(deps, await this.byKey.root.range(...encodedR), qry);
       }
+
       const all = await this.byKey.root.getAllEntries(); // funky return type
+
       return applyQuery<K, T, R>(
-        this.crdt,
+        deps,
         {
           // @ts-expect-error getAllEntries returns a different type than range
           result: all.result.map(({ key: [k, id], value }) => ({
@@ -215,7 +219,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
             value,
           })),
         },
-        opts,
+        qry,
       );
     };
 
