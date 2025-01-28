@@ -5,7 +5,7 @@ progName=$0
 projectRoot=$(pwd)
 cd $(dirname $progName)
 
-if $(which podman) -a "FP_CI" != "fp_ci"
+if [ $(which podman) -a "FP_CI" != "fp_ci" ]
 then
   dockerCompose="podman compose"
 elif which docker-compose
@@ -62,7 +62,9 @@ do
   cp $projectRoot/dist/npmrc-smoke $smokeDir/.npmrc
   (cd $smokeDir &&
      pnpm version $(cat $projectRoot/dist/fp-version) --no-git-tag-version &&
+     node $projectRoot/smoke/patch-fp-version.js package.json $(cat $projectRoot/dist/fp-version)
      cat .npmrc &&
+     cat package.json &&
      pnpm publish --registry=http://localhost:4873 --no-git-checks)
 done
 
