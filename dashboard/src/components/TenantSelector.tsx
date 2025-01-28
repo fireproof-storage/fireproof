@@ -26,6 +26,10 @@ export function TenantSelector() {
         <select 
           className="w-full p-2 bg-[--background] text-[--foreground] border border-[--border] rounded-md"
           onChange={(e) => {
+            if (e.target.value === 'new') {
+              navigate('/fp/cloud/tenants/new');
+              return;
+            }
             const selectedTenant = listTenants.tenants.find(t => t.tenantId === e.target.value);
             if (selectedTenant) {
               navigate(`/fp/cloud/tenants/${selectedTenant.tenantId}`);
@@ -38,29 +42,8 @@ export function TenantSelector() {
               {tenantName(tenant)}
             </option>
           ))}
+          <option value="new">➕ New Tenant</option>
         </select>
-        <button
-          onClick={() => navigate('/fp/cloud/tenants/new')}
-          className="w-full p-2 bg-[--accent] text-[--accent-foreground] rounded-md hover:bg-[--accent]/80"
-          title="Create New Tenant"
-        >
-          <div className="flex items-center justify-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            <span>New Tenant</span>
-          </div>
-        </button>
       </div>
     </div>
   );
