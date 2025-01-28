@@ -375,7 +375,7 @@ describe("noop Gateway subscribe", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = fireproof.DB("test-gateway-" + sthis.nextId().str);
+    db = fireproof("test-gateway-" + sthis.nextId().str);
 
     // Extract stores from the loader
     metaStore = (await db.ledger.crdt.blockstore.loader?.metaStore()) as bs.MetaStore;
@@ -425,7 +425,7 @@ describe("Gateway", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = fireproof.DB("test-gateway-" + sthis.nextId().str);
+    db = fireproof("test-gateway-" + sthis.nextId().str);
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");

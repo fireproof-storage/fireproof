@@ -23,7 +23,7 @@ describe("basic Ledger", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = fireproof.DB(undefined as unknown as string, {
+    db = fireproof(undefined as unknown as string, {
       logger: sthis.logger,
     });
   });
@@ -61,7 +61,7 @@ describe("basic Ledger with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof.DB("factory-name");
+    db = fireproof("factory-name");
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
@@ -93,7 +93,7 @@ describe("basic Ledger with record", function () {
     expect(rows[0].value._id).toBe("hello");
   });
   it("is not persisted", async function () {
-    const db2 = fireproof.DB("factory-name");
+    const db2 = fireproof("factory-name");
     const { rows } = await db2.changes([]);
     expect(rows.length).toBe(1);
     // assert((db.ledger.ref === db2.ledger.ref, "should be the same ledger");
@@ -116,7 +116,7 @@ describe("named Ledger with record", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof.DB("test-db-name");
+    db = fireproof("test-db-name");
     /** @type {Doc} */
     const doc = { _id: "hello", value: "world" };
     const ok = await db.put(doc);
@@ -284,7 +284,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = fireproof.DB("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
+    db = fireproof("test-parallel-writes-ordered", { writeQueue: { chunkSize: 1 } });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -318,7 +318,7 @@ describe("basic Ledger parallel writes / public", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = fireproof.DB("test-parallel-writes", { writeQueue: { chunkSize: 32 } });
+    db = fireproof("test-parallel-writes", { writeQueue: { chunkSize: 32 } });
     for (let i = 0; i < 10; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
       writes.push(db.put(doc));
@@ -401,7 +401,7 @@ describe("basic Ledger with subscription", function () {
   });
   beforeEach(async function () {
     await sthis.start();
-    db = fireproof.DB("factory-name");
+    db = fireproof("factory-name");
     didRun = 0;
     waitForSub = new Promise((resolve) => {
       unsubscribe = db.subscribe((docs) => {
@@ -444,7 +444,7 @@ describe("basic Ledger with no update subscription", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = fireproof.DB("factory-name");
+    db = fireproof("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
       didRun++;
@@ -482,7 +482,7 @@ describe("ledger with files input", () => {
   beforeEach(async function () {
     await sthis.start();
     imagefiles = await buildBlobFiles();
-    db = fireproof.DB("fireproof-with-images");
+    db = fireproof("fireproof-with-images");
     const doc = {
       _id: "images-main",
       type: "files",
