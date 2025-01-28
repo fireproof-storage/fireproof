@@ -327,13 +327,6 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
   };
 }
 
-class Fireproof {
-  Ledger(name: string, opts?: ConfigOpts): Ledger {
-    return LedgerFactory(name, opts);
-  }
-  DB(name: string, opts?: ConfigOpts): Database {
-    return new DatabaseImpl(this.Ledger(name, opts));
-  }
+export function fireproof(name: string, opts?: ConfigOpts): Database {
+  return new DatabaseImpl(LedgerFactory(name, opts));
 }
-
-export const fireproof = new Fireproof();

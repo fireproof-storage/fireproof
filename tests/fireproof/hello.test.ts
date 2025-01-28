@@ -3,7 +3,7 @@ import { mockSuperThis } from "../helpers.js";
 
 describe("Hello World Test", function () {
   it("should pass the hello world test", function () {
-    const result = fireproof.DB("hello"); // call to your library function
+    const result = fireproof("hello"); // call to your library function
     expect(result.name).toBe("hello");
   });
 });
@@ -23,7 +23,7 @@ describe("hello public API", () => {
   });
   beforeEach(async () => {
     await sthis.start();
-    db = fireproof.DB("test-public-api");
+    db = fireproof("test-public-api");
     index<string, TestDoc>(db, "test-index", (doc) => doc.foo);
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
@@ -41,7 +41,7 @@ describe("hello public API", () => {
   });
   it("should get when you open it again", async () => {
     await db.close();
-    db = fireproof.DB("test-public-api");
+    db = fireproof("test-public-api");
     doc = await db.get("test");
     expect(doc.foo).toBe("bar");
   });
@@ -54,7 +54,7 @@ describe("Simplified Reopening a ledger", function () {
     await db.destroy();
   });
   beforeEach(async function () {
-    db = fireproof.DB("test-reopen-simple");
+    db = fireproof("test-reopen-simple");
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
@@ -66,7 +66,7 @@ describe("Simplified Reopening a ledger", function () {
   });
 
   it("should have the same data on reopen", async function () {
-    const db2 = fireproof.DB("test-reopen-simple");
+    const db2 = fireproof("test-reopen-simple");
     const doc = await db2.get<{ foo: string }>("test");
     expect(doc.foo).toBe("bar");
     await db2.close();

@@ -111,6 +111,9 @@ importers:
       typescript-eslint:
         specifier: ^8.21.0
         version: 8.21.0(eslint@9.18.0)(typescript@5.7.3)
+      uuidv7:
+        specifier: ^1.0.2
+        version: 1.0.2
       vite:
         specifier: ^6.0.7
         version: 6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1)
@@ -3378,6 +3381,10 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  uuidv7@1.0.2:
+    resolution: {integrity: sha512-8JQkH4ooXnm1JCIhqTMbtmdnYEn6oKukBxHn1Ic9878jMkL7daTI7anTExfY18VRCX7tcdn5quzvCb6EWrR8PA==}
+    hasBin: true
 
   varint@6.0.0:
     resolution: {integrity: sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg==}
@@ -7035,6 +7042,8 @@ snapshots:
   userhome@1.0.1: {}
 
   util-deprecate@1.0.2: {}
+
+  uuidv7@1.0.2: {}
 
   varint@6.0.0: {}
 
