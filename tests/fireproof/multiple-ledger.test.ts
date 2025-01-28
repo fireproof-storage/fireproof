@@ -26,7 +26,7 @@ describe("Multiple Databases", () => {
         .fill(0)
         .map(async (_, i) => {
           const name = `db-${group}-${i}`;
-          const db = fireproof.DB(name);
+          const db = fireproof(name);
           dbs.push({ db, name });
           for (let i = 0; i < rows; i++) {
             await db.put({ _id: `${name}-${i}`, hello: "world" });

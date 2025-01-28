@@ -33,7 +33,7 @@ describe("config file gateway", () => {
   });
 
   it("loader", async () => {
-    const db = fireproof.DB(my_app());
+    const db = fireproof(my_app());
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
 
@@ -110,7 +110,7 @@ describe("config file gateway", () => {
       /* */
     });
 
-    const db = fireproof.DB(my_app(), { storeUrls: { base } });
+    const db = fireproof(my_app(), { storeUrls: { base } });
     // console.log(`>>>>>>>>>>>>>>>file-path`)
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
@@ -177,7 +177,7 @@ describe("config file gateway", () => {
 
     expect(baseDir).toMatch(new RegExp(`/\\.fireproof/${rt.FILESTORE_VERSION.replace(/-file/, "")}/${my_app()}`));
 
-    const db = fireproof.DB(my_app());
+    const db = fireproof(my_app());
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
     const carStore = await db.ledger.crdt.blockstore.loader?.carStore();
@@ -250,7 +250,7 @@ describe("config file gateway", () => {
       /* */
     });
 
-    const db = fireproof.DB(my_app());
+    const db = fireproof(my_app());
     await db.put({ name: "my-app" });
     expect(db.ledger.name).toBe(my_app());
     const carStore = await db.ledger.crdt.blockstore.loader.carStore();
