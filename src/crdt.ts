@@ -185,8 +185,17 @@ export class CRDT<T extends DocTypes> {
       return currentDocsWithId();
     };
 
+    const subscribe = (callback: (doc: DocWithId<T>) => void) => {
+      const unsubscribe = this.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+        updates.forEach((update) => {
+          callback(docUpdateToDocWithId(update as DocUpdate<T>));
+        });
+      });
+
+      return unsubscribe;
+    };
+
     const stream = (opts: { futureOnly: boolean; since?: ClockHead; sinceOptions?: ChangesOptions }) => {
-      const clock = this.clock;
       const ready = this.ready.bind(this);
 
       let unsubscribe: undefined | (() => void);
@@ -215,11 +224,9 @@ export class CRDT<T extends DocTypes> {
             if (value) await iterate(value);
           }
 
-          unsubscribe = clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+          unsubscribe = subscribe((doc) => {
             if (isClosed) return;
-            updates.forEach((update) => {
-              controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
-            });
+            controller.enqueue({ doc, marker: { kind: "new" } });
           });
         },
 
@@ -238,6 +245,7 @@ export class CRDT<T extends DocTypes> {
       future() {
         return stream({ futureOnly: true });
       },
+      subscribe,
     };
   }
 

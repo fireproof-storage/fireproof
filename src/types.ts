@@ -273,6 +273,8 @@ export interface QueryResponse<T extends DocTypes> {
     sinceOptions?: ChangesOptions;
   }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
   future(): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
+  /** Convenience function to consume a future stream. */
+  subscribe(callback: (doc: DocWithId<T>) => void): () => void;
 }
 
 type EmitFn = (k: IndexKeyType, v?: DocFragment) => void;
