@@ -30,7 +30,7 @@ export interface SerdeGateway {
   delete(sthis: SuperThis, url: URI, loader?: Loadable): Promise<VoidResult>;
 
   // be notified of remote meta
-  subscribe?(
+  subscribe(
     sthis: SuperThis,
     url: URI,
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
