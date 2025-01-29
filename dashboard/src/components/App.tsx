@@ -20,6 +20,7 @@ import { DatabasesShow } from "../pages/databases/show.tsx";
 import { DocsShow } from "../pages/docs/show.tsx";
 import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
+import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -38,7 +39,7 @@ export function App() {
             <Route path="admin" element={<CloudTenantAdmin />} />
             <Route path="ledgers" element={<CloudTenantLedgers />}>
               <Route index element={<CloudTenantLedgersIndex />} />
-              {/* <Route path=":ledgerId" element={<CloudTenantLedgersShow />} /> */}
+              <Route path=":ledgerId" element={<CloudTenantLedgersShow />} />
             </Route>
             <Route path="members" element={<CloudTenantMembers />} />
           </Route>
