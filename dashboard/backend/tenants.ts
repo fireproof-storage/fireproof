@@ -10,29 +10,28 @@ export const sqlTenants = sqliteTable("Tenants", {
   maxAdminUsers: int().notNull().default(5),
   maxMemberUsers: int().notNull().default(5),
   maxInvites: int().notNull().default(10),
+  maxLedgers: int().notNull().default(5),
   status: text().notNull().default("active"),
   statusReason: text().notNull().default("just created"),
   createdAt: text().notNull(),
   updatedAt: text().notNull(),
 });
 
-export const sqlTenantUserRoles = sqliteTable(
-  "TenantUserRoles",
-  {
-    tenantId: text()
-      .notNull()
-      .references(() => sqlTenants.tenantId),
-    userId: text()
-      .notNull()
-      .references(() => sqlUsers.userId),
-    role: text().notNull(), // "admin" | "member"
-    createdAt: text().notNull(),
-  },
-  (table) => [
-    primaryKey({ columns: [table.tenantId, table.userId] }),
-    index("turUserIdx").on(table.userId), // to enable delete by userRefId
-  ],
-);
+// export const sqlTenantUserRoles = sqliteTable(
+//   "TenantUserRoles",
+//   {
+//     tenantId: text()
+//       .notNull()
+//       .references(() => sqlTenants.tenantId),
+//     userId: text()
+//       .notNull()
+//       .references(() => sqlUsers.userId),
+//   },
+//   (table) => [
+//     primaryKey({ columns: [table.tenantId, table.userId] }),
+//     index("turUserIdx").on(table.userId), // to enable delete by userRefId
+//   ],
+// );
 
 export const sqlTenantUsers = sqliteTable(
   "TenantUsers",
@@ -44,9 +43,10 @@ export const sqlTenantUsers = sqliteTable(
       .notNull()
       .references(() => sqlTenants.tenantId),
     name: text(),
+    role: text().notNull(), // "admin" | "member"
     status: text().notNull().default("active"),
     statusReason: text().notNull().default("just created"),
-    default: int().notNull(),
+    default: int().notNull(), // order for the user
     createdAt: text().notNull(),
     updatedAt: text().notNull(),
   },
@@ -61,6 +61,7 @@ export interface Tenant {
   readonly memberUserIds: string[];
   readonly maxAdminUsers: number;
   readonly maxMemberUsers: number;
+  readonly maxLedgers: number;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }

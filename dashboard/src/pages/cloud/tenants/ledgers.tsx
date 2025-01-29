@@ -8,15 +8,15 @@ export function CloudTenantLedgers() {
   //   const { val: listTenants } = cloud.useListTenantsByUser();
   const ledgerList = cloud.getListLedgersByTenant(tenantId!);
   const navigate = useNavigate();
-  
-//    const tenant = listTenants.tenants.find(t => t.tenantId === tenantId);
 
-//   if (!tenant) {
-//     navigate("/fp/cloud");
-//     return null;
-//   }
+  //    const tenant = listTenants.tenants.find(t => t.tenantId === tenantId);
 
-if (ledgerList.isLoading) {
+  //   if (!tenant) {
+  //     navigate("/fp/cloud");
+  //     return null;
+  //   }
+
+  if (ledgerList.isLoading) {
     return <div>Loading...</div>;
   }
   if (!ledgerList.data) {

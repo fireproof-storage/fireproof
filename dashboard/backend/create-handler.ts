@@ -1,5 +1,5 @@
 import { verifyToken } from "@clerk/backend";
-import { SuperThis, Result, ensureSuperThis } from "use-fireproof";
+import { SuperThis, Result, ensureSuperThis, ensureLogger } from "use-fireproof";
 import { FPApiToken, FPApiSQL, FPAPIMsg } from "./api.ts";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
 import { VerifiedAuth } from "./users.ts";
@@ -58,6 +58,7 @@ class ClerkApiToken implements FPApiToken {
 
 export function createHandler<T extends LibSQLDatabase>(db: T) {
   const sthis = ensureSuperThis();
+  const logger = ensureLogger(sthis, "createHandler");
   const fpApi = new FPApiSQL(sthis, db, new ClerkApiToken(sthis));
   return async (req: Request): Promise<Response> => {
     const out = {} as {
@@ -89,7 +90,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
       case FPAPIMsg.isFindUser(jso):
         res = fpApi.findUser(jso);
         break;
-      case FPAPIMsg.isConnectUserToTenant(jso):
+      case FPAPIMsg.isRedeemInvite(jso):
         res = fpApi.connectUserToTenant(jso);
         break;
       case FPAPIMsg.isEnsureUser(jso):
@@ -101,20 +102,52 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
       case FPAPIMsg.isUpdateUserTenant(jso):
         res = fpApi.updateUserTenant(jso);
         break;
+      case FPAPIMsg.isListLedgersByUser(jso):
+        res = fpApi.listLedgersByUser(jso);
+        break;
+
+      case FPAPIMsg.isCreateLedger(jso):
+        res = fpApi.createLedger(jso);
+        break;
+
+      case FPAPIMsg.isUpdateLedger(jso):
+        res = fpApi.updateLedger(jso);
+        break;
+
+      case FPAPIMsg.isDeleteLedger(jso):
+        res = fpApi.deleteLedger(jso);
+        break;
+
       default:
         return new Response("Invalid request", { status: 400, headers: CORS });
     }
-    const rRes = await res;
-    // console.log("Response", rRes);
-    if (rRes.isErr()) {
+    try {
+      const rRes = await res;
+      // console.log("Response", rRes);
+      if (rRes.isErr()) {
+        logger.Error().Any({ request: jso.type }).Err(rRes).Msg("Result-Error");
+        return new Response(
+          JSON.stringify({
+            type: "error",
+            message: rRes.Err().message,
+          }),
+          { status: 500, headers: CORS },
+        );
+      }
+      logger
+        .Info()
+        .Any({ request: jso.type, response: (rRes.Ok() as { type: string }).type })
+        .Msg("Success");
+      return new Response(JSON.stringify(rRes.Ok()), { status: 200, headers: CORS });
+    } catch (e) {
+      logger.Error().Any({ request: jso.type }).Err(e).Msg("Error");
       return new Response(
         JSON.stringify({
           type: "error",
-          message: rRes.Err().message,
+          message: (e as Error).message,
         }),
         { status: 500, headers: CORS },
       );
     }
-    return new Response(JSON.stringify(rRes.Ok()), { status: 200, headers: CORS });
   };
 }

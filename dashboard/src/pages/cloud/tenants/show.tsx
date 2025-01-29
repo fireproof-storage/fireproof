@@ -12,7 +12,7 @@ export function CloudTenantShow() {
   const { tenantId } = useParams();
   const { cloud } = useContext(AppContext);
   const listTenants = cloud.getListTenantsByUser();
-  
+
   if (listTenants.isLoading) {
     return <div>Loading...</div>;
   }
@@ -29,7 +29,7 @@ export function CloudTenantShow() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold text-[--foreground] mb-6">{tenantName(tenant)}</h1>
-      
+
       <div className="space-y-6">
         <div className="bg-[--muted] shadow sm:rounded-lg p-6">
           <h2 className="text-lg font-semibold text-[--foreground] mb-4">Onboarding - Quickstart</h2>

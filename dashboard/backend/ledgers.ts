@@ -1,7 +1,6 @@
 import { int, sqliteTable, text, primaryKey, index, unique } from "drizzle-orm/sqlite-core";
 import { sqlTenants } from "./tenants.ts";
 import { sqlUsers } from "./users.ts";
-import { ne } from "drizzle-orm";
 import { toUndef } from "./sql-helper.ts";
 
 export const sqlLedgers = sqliteTable(
@@ -15,6 +14,8 @@ export const sqlLedgers = sqliteTable(
       .notNull()
       .references(() => sqlUsers.userId),
     name: text().notNull(),
+    status: text().notNull().default("active"),
+    statusReason: text().notNull().default("just created"),
     maxShares: int().notNull().default(5),
     createdAt: text().notNull(),
     updatedAt: text().notNull(),
@@ -38,7 +39,7 @@ export interface LedgerUser {
   readonly name: string;
   readonly ownerId: string;
   readonly maxShares: number;
-  readonly rights: LedgerUserRight[];
+  readonly users: LedgerUserRight[];
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
@@ -46,12 +47,12 @@ export interface LedgerUser {
 export function sqlToLedgers(
   rows: {
     Ledgers: typeof sqlLedgers.$inferSelect;
-    LedgerUserRoles: typeof sqlLedgerUserRoles.$inferSelect;
+    LedgerUsers: typeof sqlLedgerUsers.$inferSelect;
   }[],
 ): LedgerUser[] {
   return Array.from(
     rows
-      .reduce((acc, { Ledgers: l, LedgerUserRoles: lur }) => {
+      .reduce((acc, { Ledgers: l, LedgerUsers: lur }) => {
         let ledger = acc.get(l.ledgerId);
         if (!ledger) {
           ledger = {
@@ -60,13 +61,13 @@ export function sqlToLedgers(
             name: l.name,
             ownerId: l.ownerId,
             maxShares: l.maxShares,
-            rights: [],
+            users: [],
             createdAt: new Date(l.createdAt),
             updatedAt: new Date(l.updatedAt),
           };
           acc.set(l.ledgerId, ledger);
         }
-        ledger.rights.push({
+        ledger.users.push({
           userId: lur.userId,
           role: lur.role as "admin" | "member",
           right: lur.right as "read" | "write",
@@ -81,8 +82,8 @@ export function sqlToLedgers(
   );
 }
 
-export const sqlLedgerUserRoles = sqliteTable(
-  "LedgerUserRoles",
+export const sqlLedgerUsers = sqliteTable(
+  "LedgerUsers",
   {
     ledgerId: text()
       .notNull()
@@ -93,12 +94,14 @@ export const sqlLedgerUserRoles = sqliteTable(
     role: text().notNull(), // "admin" | "member"
     right: text().notNull(), // "read" | "write"
     default: int().notNull(),
+    status: text().notNull().default("active"),
+    statusReason: text().notNull().default("just created"),
     name: text(),
     createdAt: text().notNull(),
     updatedAt: text().notNull(),
   },
   (table) => [
     primaryKey({ columns: [table.ledgerId, table.userId, table.role] }),
-    index("lurrUserRefIdx").on(table.userId), // to enable delete by userRefId
+    index("luUserIdx").on(table.userId), // to enable delete by userRefId
   ],
 );

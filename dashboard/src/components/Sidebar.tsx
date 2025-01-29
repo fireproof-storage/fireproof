@@ -5,11 +5,7 @@ import { FireproofHome } from "./FireproofHome.tsx";
 import { TenantSelector } from "./TenantSelector";
 //
 
-export function Sidebar({ sideBarComponent, title, newUrl }: { 
-  sideBarComponent: JSX.Element; 
-  title?: string; 
-  newUrl?: string; 
-}) {
+export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent: JSX.Element; title?: string; newUrl?: string }) {
   const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext).sideBar;
   return (
     <div

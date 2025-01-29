@@ -1,9 +1,12 @@
-import { int, sqliteTable, text, primaryKey, index } from "drizzle-orm/sqlite-core";
-import { sqlUsers } from "./users.ts";
+import { stripper } from "@adviser/cement/utils";
+import { int, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { queryUser, sqlUsers } from "./users.ts";
 import { sqlTenants } from "./tenants.ts";
 import { sqlLedgers } from "./ledgers.ts";
-import { AuthProvider, Queryable, queryEmail, queryNick, QueryUser, toUndef } from "./sql-helper.ts";
+import { AuthProvider, queryEmail, queryNick, QueryUser, toUndef } from "./sql-helper.ts";
 import { SuperThis } from "@fireproof/core";
+
+export type InviteTicketStatus = "pending" | "accepted" | "rejected" | "expired";
 
 export const sqlInviteTickets = sqliteTable(
   "InviteTickets",
@@ -13,11 +16,15 @@ export const sqlInviteTickets = sqliteTable(
     inviterUserId: text()
       .notNull()
       .references(() => sqlUsers.userId),
-    inviterTenantId: text()
-      .notNull()
-      .references(() => sqlTenants.tenantId),
+    // inviterTenantId: text()
+    //   .notNull()
+    //   .references(() => sqlTenants.tenantId),
 
-    // directed Invite
+    status: text().notNull(), // pending | accepted | rejected | expired
+    statusReason: text().notNull().default("just invited"),
+    // pending | accepted | rejected | expired
+
+    // set if accepted
     invitedUserId: text().references(() => sqlUsers.userId),
 
     // bind on login Invite
@@ -33,7 +40,6 @@ export const sqlInviteTickets = sqliteTable(
     invitedTenantId: text().references(() => sqlTenants.tenantId),
     // invite to ledger
     invitedLedgerId: text().references(() => sqlLedgers.ledgerId),
-
     // depending on target a JSON with e.g. the role and right
     invitedParams: text().notNull(),
 
@@ -48,68 +54,83 @@ export const sqlInviteTickets = sqliteTable(
   ],
 );
 
-export interface InvitedParams {
+export interface SqlInvitedParams {
   readonly tenant?: {
-    // readonly id: string;
     readonly role: "admin" | "member";
   };
   readonly ledger?: {
-    // readonly id: string;
     readonly role: "admin" | "member";
     readonly right: "read" | "write";
   };
 }
 
-export interface InviteTicket extends Queryable {
+export interface InvitedParams {
+  readonly tenant?: SqlInvitedParams["tenant"] & { readonly id: string };
+  readonly ledger?: SqlInvitedParams["ledger"] & { readonly id: string };
+}
+
+export interface InviteTicket {
   readonly inviteId: string;
   readonly sendEmailCount: number;
   readonly inviterUserId: string;
-  readonly inviterTenantId: string;
 
-  // readonly invitedUserId?: string;
-  readonly userID?: string;
+  readonly query: QueryUser;
+  // readonly userID?: string;
+  // readonly queryProvider?: AuthProvider;
+  // readonly queryEmail?: string;
+  // readonly queryNick?: string;
 
-  readonly queryProvider?: AuthProvider;
-  readonly queryEmail?: string;
-  readonly queryNick?: string;
-
-  readonly invitedTenantId?: string;
-  readonly invitedLedgerId?: string;
-
+  readonly status: InviteTicketStatus;
+  readonly statusReason: string;
+  readonly invitedUserId?: string;
   readonly invitedParams: InvitedParams;
+
   readonly expiresAfter: Date;
   readonly createdAt: Date;
   readonly updatedAt: Date;
 }
 
-export function sqlToInvite(sql: typeof sqlInviteTickets.$inferSelect): InviteTicket {
-  return {
-    inviteId: sql.inviteId,
-    sendEmailCount: sql.sendEmailCount,
-    inviterUserId: sql.inviterUserId,
-    inviterTenantId: sql.inviterTenantId,
-
-    userID: toUndef(sql.invitedUserId),
-
-    queryProvider: toUndef(sql.queryProvider) as AuthProvider,
-    queryEmail: toUndef(sql.queryEmail),
-    queryNick: toUndef(sql.queryNick),
-
-    invitedTenantId: toUndef(sql.invitedTenantId),
-    invitedLedgerId: toUndef(sql.invitedLedgerId),
-    invitedParams: JSON.parse(sql.invitedParams) ?? {},
-    expiresAfter: new Date(sql.expiresAfter),
-    createdAt: new Date(sql.createdAt),
-    updatedAt: new Date(sql.updatedAt),
-  };
+export function sqlToInviteTickets(sqls: (typeof sqlInviteTickets.$inferSelect)[]): InviteTicket[] {
+  return sqls.map((sql) => {
+    const ivp = JSON.parse(sql.invitedParams) ?? ({} as SqlInvitedParams);
+    if (ivp.tenant) {
+      ivp.tenant = { ...ivp.tenant, id: sql.invitedTenantId };
+    }
+    if (ivp.ledger) {
+      ivp.ledger = { ...ivp.ledger, id: sql.invitedLedgerId };
+    }
+    const objInvitedUserId: { invitedUserId?: string } = {};
+    if (sql.invitedUserId) {
+      objInvitedUserId.invitedUserId = sql.invitedUserId;
+    }
+    return {
+      inviteId: sql.inviteId,
+      sendEmailCount: sql.sendEmailCount,
+      inviterUserId: sql.inviterUserId,
+      ...objInvitedUserId,
+      query: {
+        existingUserId: toUndef(sql.invitedUserId),
+        byEmail: toUndef(sql.queryEmail),
+        byNick: toUndef(sql.queryNick),
+        andProvider: toUndef(sql.queryProvider) as AuthProvider,
+      },
+      invitedParams: ivp,
+      status: sql.status as InviteTicketStatus,
+      statusReason: sql.statusReason,
+      expiresAfter: new Date(sql.expiresAfter),
+      createdAt: new Date(sql.createdAt),
+      updatedAt: new Date(sql.updatedAt),
+    };
+  });
 }
 
 export interface InviteTicketParams {
   // readonly auth: AuthType;
-  readonly inviterTenantId: string;
   readonly query: QueryUser;
   // to update
   readonly inviteId?: string;
+  readonly status: InviteTicketStatus;
+  readonly invitedUserId?: string; // must set if status is not pending
   readonly incSendEmailCount?: boolean;
   readonly invitedParams: InvitedParams;
 }
@@ -117,76 +138,62 @@ export interface InviteTicketParams {
 export interface PrepareInviteTicketParams {
   readonly sthis: SuperThis;
   readonly userId: string;
-  readonly tenantId: string;
-  readonly ledgerId?: string;
+  readonly invitedTicketParams: InviteTicketParams;
   readonly expiresAfter?: Date;
   readonly now?: Date;
-  readonly invitedTicketParams: InviteTicketParams;
 }
 
 export function prepareInviteTicket({
   sthis,
   userId,
-  tenantId,
-  ledgerId,
+  invitedTicketParams: { inviteId, status, query, invitedParams: ivp, invitedUserId },
   now,
   expiresAfter,
-  invitedTicketParams: ivp,
 }: PrepareInviteTicketParams): typeof sqlInviteTickets.$inferInsert {
   const nowDate = new Date();
   const nowStr = (now ?? nowDate).toISOString();
   const expiresAfterStr = (expiresAfter ?? new Date(nowDate.getTime() + 1000 * 60 * 60 * 24 * 7)).toISOString();
 
-  if (ledgerId && !tenantId) {
-    throw new Error("tenantId is required");
+  if ((ivp.ledger && ivp.tenant) || (!ivp.ledger && !ivp.tenant)) {
+    throw new Error("only one target ledger or tenant allowed");
   }
-  if (ledgerId) {
-    (ivp.invitedParams as { ledger: InvitedParams["ledger"] }).ledger = {
-      role: "member",
-      right: "read",
-      ...ivp.invitedParams.ledger,
-    };
-  } else {
-    (ivp.invitedParams as { tenant: InvitedParams["tenant"] }).tenant = {
-      role: "member",
-      ...ivp.invitedParams.tenant,
-    };
+  let sqlLedgerId: string | undefined = undefined;
+  let sqlTenantId: string | undefined = undefined;
+  let sqlInvitedParams: SqlInvitedParams | undefined = undefined;
+  if (ivp.ledger) {
+    sqlLedgerId = ivp.ledger.id;
+    sqlInvitedParams = { ledger: stripper("id", ivp.ledger) as SqlInvitedParams["ledger"] };
   }
-  if ((ivp.invitedParams.ledger && ivp.invitedParams.tenant) || (!ivp.invitedParams.ledger && !ivp.invitedParams.tenant)) {
-    throw new Error("only one target allowed");
+  if (ivp.tenant) {
+    sqlTenantId = ivp.tenant.id;
+    sqlInvitedParams = { tenant: stripper("id", ivp.tenant) as SqlInvitedParams["tenant"] };
   }
   // let target: "tenant" | "ledger" = "tenant";
-  let params: string = "";
-  let ledgerIdFlag: string | undefined = undefined;
-  let tenantIdFlag: string | undefined = undefined;
-  if (ivp.invitedParams.ledger) {
-    // target = "ledger";
-    ledgerIdFlag = ledgerId;
-    if (!ledgerId) {
-      throw new Error("ledgerId is required");
+  const objInvitedUserId: { invitedUserId?: string } = {};
+  if (status !== "pending") {
+    if (invitedUserId) {
+      objInvitedUserId.invitedUserId = invitedUserId;
+    } else {
+      throw new Error("invitedUserId required if status is not pending");
     }
-    params = JSON.stringify({
-      ledger: ivp.invitedParams.ledger,
-    });
-  } else if (ivp.invitedParams.tenant) {
-    // target = "tenant";
-    tenantIdFlag = tenantId;
-    params = JSON.stringify({
-      tenant: ivp.invitedParams.tenant,
-    });
+  } else {
+    if (query.existingUserId) {
+      objInvitedUserId.invitedUserId = query.existingUserId;
+    }
   }
   return {
-    inviteId: ivp.inviteId ?? sthis.nextId(12).str,
+    inviteId: inviteId ?? sthis.nextId(12).str,
     inviterUserId: userId,
-    inviterTenantId: tenantId,
-    queryEmail: queryEmail(ivp.query.byEmail),
-    queryNick: queryNick(ivp.query.byNick),
-    queryProvider: ivp.query.andProvider,
-    invitedUserId: ivp.query.existingUserId,
+    status: status || "pending",
+    // inviterTenantId: tenantId,
+    queryEmail: queryEmail(query.byEmail),
+    queryNick: queryNick(query.byNick),
+    queryProvider: query.andProvider,
+    ...objInvitedUserId,
     sendEmailCount: 0,
-    invitedTenantId: tenantIdFlag,
-    invitedLedgerId: ledgerIdFlag,
-    invitedParams: params,
+    invitedTenantId: sqlTenantId,
+    invitedLedgerId: sqlLedgerId,
+    invitedParams: JSON.stringify(sqlInvitedParams),
     expiresAfter: expiresAfterStr,
     createdAt: nowStr,
     updatedAt: nowStr,

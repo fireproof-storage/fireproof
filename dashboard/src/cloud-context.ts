@@ -11,8 +11,8 @@ import {
   ResUpdateTenant,
   ReqDeleteTenant,
   ResDeleteTenant,
-  ReqConnectUserToTenant,
-  ResConnectUserToTenant,
+  ReqRedeemInvite,
+  ResRedeemInvite,
   ReqListTenantsByUser,
   ResListTenantsByUser,
   ReqInviteUser,
@@ -111,7 +111,6 @@ export class CloudContext {
   _ensureUser!: ReturnType<typeof useQuery<ResEnsureUser, []>>;
   // _listTenantsByUser!: ReturnType<typeof useRequest<ResListTenantsByUser, []>>
   _tenantsForInvites = new Set<string>();
-
   getListInvitesByTenant(tenantId: string): ReturnType<typeof useQuery<ResListInvites>> {
     const listInvites = useQuery({
       queryKey: ["listInvitesTenants", this._ensureUser.data?.user.userId],
@@ -131,6 +130,20 @@ export class CloudContext {
       listInvites.refetch();
     }
     return listInvites;
+  }
+
+  _tenantIdForLedgers = new Set<string>();
+  getListLedgersByUser(tenantId: string): ReturnType<typeof useQuery<ResListLedgersByUser>> {
+    const listLedgers = useQuery({
+      queryKey: ["listLedgersByUser", this._ensureUser.data?.user.userId],
+      queryFn: wrapResultToPromise(this.api.listLedgersByUser({ tenantIds: Array.from(this._tenantIdForLedgers) })),
+      enabled: this.activeApi(this._tenantsForInvites.size > 0),
+    });
+    if (!this._tenantIdForLedgers.has(tenantId)) {
+      this._tenantIdForLedgers.add(tenantId);
+      listLedgers.refetch();
+    }
+    return listLedgers;
   }
 
   getListTenantsByUser(): ReturnType<typeof useQuery<ResListTenantsByUser>> {
@@ -155,21 +168,20 @@ export class CloudContext {
               ledgerId: "ledger-1",
               name: "Sample Ledger 1",
               tenantId: tenantId,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
             },
             {
-              ledgerId: "ledger-2", 
+              ledgerId: "ledger-2",
               name: "Sample Ledger 2",
               tenantId: tenantId,
-              createdAt: new Date().toISOString()
-            }
-          ]
+              createdAt: new Date().toISOString(),
+            },
+          ],
         });
       },
       enabled: this.activeApi(),
     });
   }
-
 }
 class CloudApi {
   constructor(private cloud: CloudContext) {}
@@ -208,7 +220,8 @@ class CloudApi {
       // console.log("jso", jso);
       return Result.Ok(jso);
     }
-    return Result.Err(`HTTP: ${res.status} ${res.statusText}`);
+    const body = await res.text();
+    return Result.Err(`HTTP: ${res.status} ${res.statusText}: ${body}`);
   }
 
   async ensureUser(req: WithoutTypeAndAuth<ReqEnsureUser>): Promise<Result<ResEnsureUser>> {
@@ -226,8 +239,8 @@ class CloudApi {
   deleteTenant(req: WithoutTypeAndAuth<ReqDeleteTenant>): Promise<Result<ResDeleteTenant>> {
     return this.request<ReqDeleteTenant, ResDeleteTenant>({ ...req, type: "reqDeleteTenant" });
   }
-  connectUserToTenant(req: WithoutTypeAndAuth<ReqConnectUserToTenant>): Promise<Result<ResConnectUserToTenant>> {
-    return this.request<ReqConnectUserToTenant, ResConnectUserToTenant>({ ...req, type: "reqConnectUserToTenant" });
+  connectUserToTenant(req: WithoutTypeAndAuth<ReqRedeemInvite>): Promise<Result<ResRedeemInvite>> {
+    return this.request<ReqRedeemInvite, ResRedeemInvite>({ ...req, type: "reqRedeemInvite" });
   }
   listTenantsByUser(req: WithoutTypeAndAuth<ReqListTenantsByUser>): Promise<Result<ResListTenantsByUser>> {
     return this.request<ReqListTenantsByUser, ResListTenantsByUser>({ ...req, type: "reqListTenantsByUser" });
@@ -253,7 +266,7 @@ class CloudApi {
   deleteLedger(req: WithoutTypeAndAuth<ReqDeleteLedger>): Promise<Result<ResDeleteLedger>> {
     return this.request<ReqDeleteLedger, ResDeleteLedger>({ ...req, type: "reqDeleteLedger" });
   }
-  listLedgersByTenant(req: WithoutTypeAndAuth<ReqListLedgersByUser>): Promise<Result<ResListLedgersByUser>> {
+  listLedgersByUser(req: WithoutTypeAndAuth<ReqListLedgersByUser>): Promise<Result<ResListLedgersByUser>> {
     return this.request<ReqListLedgersByUser, ResListLedgersByUser>({ ...req, type: "reqListLedgersByUser" });
   }
 }
