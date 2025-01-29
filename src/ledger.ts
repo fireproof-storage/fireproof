@@ -22,6 +22,7 @@ import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
+import { Context } from "./context.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
@@ -83,11 +84,16 @@ export class LedgerShell implements Ledger {
   readonly ref: LedgerImpl;
   readonly writeQueue: WriteQueue<DocUpdate<DocTypes>>;
   readonly name: string;
+
   constructor(ref: LedgerImpl) {
     this.ref = ref;
     this.writeQueue = ref.writeQueue;
     this.name = ref.name;
     ref.addShell(this);
+  }
+
+  get context(): Context {
+    return this.ref.context;
   }
 
   get id(): string {
@@ -137,6 +143,8 @@ class LedgerImpl implements Ledger {
   // readonly blockstore: BaseBlockstore;
 
   readonly shells: Set<LedgerShell> = new Set<LedgerShell>();
+
+  readonly context = new Context();
 
   get name(): string {
     return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";

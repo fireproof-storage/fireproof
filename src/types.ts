@@ -21,6 +21,7 @@ import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cem
 import { KeyBagOpts } from "./runtime/key-bag.js";
 import { WriteQueueParams } from "./write-queue.js";
 import { Index } from "./indexer.js";
+import { Context } from "./context.js";
 
 export type { DbMeta };
 
@@ -494,6 +495,8 @@ export interface Ledger extends HasCRDT {
   readonly id: string;
 
   readonly name: string;
+
+  readonly context: Context;
 
   onClosed(fn: () => void): () => void;
 
