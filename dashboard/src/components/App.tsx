@@ -7,6 +7,8 @@ import CloudIndex from "../pages/cloud/index.tsx";
 import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
 import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
 import { CloudTenantLedgers, CloudTenantLedgersIndex } from "../pages/cloud/tenants/ledgers.tsx";
+import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.tsx";
+import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
 import { CloudTenantMembers } from "../pages/cloud/tenants/members.tsx";
 import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.tsx";
 import { CloudTenantShow } from "../pages/cloud/tenants/show.tsx";
@@ -20,7 +22,6 @@ import { DatabasesShow } from "../pages/databases/show.tsx";
 import { DocsShow } from "../pages/docs/show.tsx";
 import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
-import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -39,6 +40,7 @@ export function App() {
             <Route path="admin" element={<CloudTenantAdmin />} />
             <Route path="ledgers" element={<CloudTenantLedgers />}>
               <Route index element={<CloudTenantLedgersIndex />} />
+              <Route path="new" element={<CloudTenantLedgersNew />} />
               <Route path=":ledgerId" element={<CloudTenantLedgersShow />} />
             </Route>
             <Route path="members" element={<CloudTenantMembers />} />
