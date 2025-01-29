@@ -11,7 +11,7 @@ export function TenantSelector() {
   const listTenants = cloud.getListTenantsByUser().data;
 
   useEffect(() => {
-    const isIndexPage = location.pathname === '/fp/cloud';
+    const isIndexPage = location.pathname === "/fp/cloud";
     if (listTenants?.tenants?.length && isIndexPage) {
       const defaultTenant = listTenants.tenants[0];
       navigate(`/fp/cloud/tenants/${defaultTenant.tenantId}`);
@@ -23,14 +23,14 @@ export function TenantSelector() {
   return (
     <div className="p-4 border-b border-[--border]">
       <div className="flex flex-col gap-2">
-        <select 
+        <select
           className="w-full p-2 bg-[--background] text-[--foreground] border border-[--border] rounded-md"
           onChange={(e) => {
-            if (e.target.value === 'new') {
-              navigate('/fp/cloud/tenants/new');
+            if (e.target.value === "new") {
+              navigate("/fp/cloud/tenants/new");
               return;
             }
-            const selectedTenant = listTenants.tenants.find(t => t.tenantId === e.target.value);
+            const selectedTenant = listTenants.tenants.find((t) => t.tenantId === e.target.value);
             if (selectedTenant) {
               navigate(`/fp/cloud/tenants/${selectedTenant.tenantId}`);
             }
@@ -47,4 +47,4 @@ export function TenantSelector() {
       </div>
     </div>
   );
-} 
+}

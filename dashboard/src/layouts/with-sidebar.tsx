@@ -16,7 +16,7 @@ export function WithSidebar({ sideBarComponent, title, newUrl }: { sideBarCompon
       <Sidebar sideBarComponent={sideBarComponent} title={title} newUrl={newUrl} />
       <main className="flex-1 overflow-y-auto">
         <TopArea withSidebar={true} />
-          <Outlet />
+        <Outlet />
       </main>
     </div>
   );

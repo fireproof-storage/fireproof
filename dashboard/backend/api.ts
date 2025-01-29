@@ -1,10 +1,7 @@
 import { Result } from "@adviser/cement";
 import { SuperThis } from "@fireproof/core";
 import type { LibSQLDatabase } from "drizzle-orm/libsql";
-import type { SQLiteTransaction } from "drizzle-orm/sqlite-core";
-import type { ResultSet } from "@libsql/client";
-import { type ExtractTablesWithRelations } from "drizzle-orm";
-import { eq, and, inArray, gt, lt, ne } from "drizzle-orm/expressions";
+import { eq, and, inArray, gt, lt, ne, or } from "drizzle-orm/expressions";
 import {
   AuthType,
   UserStatus as UserStatus,
@@ -18,15 +15,35 @@ import {
   VerifiedAuth,
   ClerkClaim,
 } from "./users.ts";
-import { Tenant, sqlTenants, sqlTenantUsers, sqlTenantUserRoles } from "./tenants.ts";
-import { InviteTicket, sqlInviteTickets, sqlToInvite, prepareInviteTicket, InvitedParams } from "./invites.ts";
+import { Tenant, sqlTenants, sqlTenantUsers } from "./tenants.ts";
+import { InviteTicket, sqlInviteTickets, prepareInviteTicket, InvitedParams, sqlToInviteTickets } from "./invites.ts";
 import { queryCondition, queryEmail, queryNick, QueryUser, toBoolean, toUndef } from "./sql-helper.ts";
-import { LedgerUser, sqlLedgers, sqlLedgerUserRoles, sqlToLedgers } from "./ledgers.ts";
+import { LedgerUser, sqlLedgers, sqlLedgerUsers, sqlToLedgers } from "./ledgers.ts";
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
   readonly auth: AuthType;
 }
+
+interface RoleBase {
+  readonly tenantId?: string;
+  readonly ledgerId?: string;
+  readonly userId: string;
+  readonly role: Role;
+  readonly adminUserIds: string[];
+  readonly memberUserIds: string[];
+}
+
+interface TenantRole extends RoleBase {
+  readonly tenantId: string;
+}
+
+interface LedgerRole extends RoleBase {
+  readonly ledgerId: string;
+  readonly right: "read" | "write";
+}
+
+type RoleType = TenantRole | LedgerRole;
 
 // export interface TenantUser {
 //     readonly userId: string;
@@ -76,6 +93,7 @@ export interface OutTenantParams {
   readonly maxAdminUsers: number;
   readonly maxMemberUsers: number;
   readonly maxInvites: number;
+  readonly maxLedgers: number;
   readonly status: UserStatus;
   readonly statusReason: string;
   readonly createdAt: Date;
@@ -89,6 +107,7 @@ function sqlToOutTenantParams(sql: typeof sqlTenants.$inferSelect): OutTenantPar
     ownerUserId: sql.ownerUserId,
     maxAdminUsers: sql.maxAdminUsers,
     maxMemberUsers: sql.maxMemberUsers,
+    maxLedgers: sql.maxLedgers,
     maxInvites: sql.maxInvites,
     status: sql.status as UserStatus,
     statusReason: sql.statusReason,
@@ -140,20 +159,15 @@ export interface ResEnsureTenant {
   readonly tenant: Tenant;
 }
 
-export interface ReqConnectUserToTenant {
-  readonly type: "reqConnectUserToTenant";
+export interface ReqRedeemInvite {
+  readonly type: "reqRedeemInvite";
   readonly auth: AuthType;
-  readonly name: string;
-  readonly tenantId: string;
-  readonly inviteId: string;
+  // readonly query: QueryUser;
 }
 
-export interface ResConnectUserToTenant {
-  readonly type: "resConnectUserToTenant";
-  readonly name: string;
-  readonly tenant: OutTenantParams;
-  readonly userId: string;
-  readonly role: "admin" | "member";
+export interface ResRedeemInvite {
+  readonly type: "resRedeemInvite";
+  readonly invites?: InviteTicket[];
 }
 
 export interface ReqListLedgersByUser {
@@ -206,8 +220,8 @@ export interface UserTenant {
   readonly tenant: UserTenantCommon;
 }
 
-export interface OwnerTenant extends UserTenant {
-  readonly role: "admin" | "owner";
+export interface AdminTenant extends UserTenant {
+  readonly role: "admin"; // | "owner";
   readonly adminUserIds: string[];
   readonly memberUserIds: string[];
   readonly maxAdminUsers: number;
@@ -250,26 +264,13 @@ export interface ResFindUser {
 export interface QueryInviteTicket {
   readonly incSendEmailCount?: boolean;
 
-  // readonly inviterUserId: string;
-  readonly inviterTenantId: string;
-
   // indicate update or insert
   readonly inviteId?: string;
-
   readonly query: QueryUser;
-  // // readonly invitedUserId?: string;
-  // readonly userID?: string;
-
-  // readonly queryProvider?: AuthProvider;
-  // readonly queryEmail?: string;
-  // readonly queryNick?: string;
 
   // readonly invitedTenantId?: string;
   // readonly invitedLedgerId?: string;
-  readonly invitedParams?: InvitedParams;
-  // readonly expiresAfter: Date;
-  // readonly createdAt: Date;
-  // readonly updatedAt: Date;
+  readonly invitedParams: InvitedParams;
 }
 
 export interface ReqInviteUser {
@@ -299,15 +300,13 @@ export interface ReqListInvites {
   readonly auth: AuthType;
   // if set all invites for the given tenants are listed
   // if not set all invites for the user are listed
-  readonly tenantIds: string[];
+  readonly tenantIds?: string[];
+  readonly ledgerIds?: string[];
 }
 
 export interface ResListInvites {
   readonly type: "resListInvites";
-  readonly tickets: {
-    readonly tenantId: string;
-    readonly invites: InviteTicket[];
-  }[];
+  readonly tickets: InviteTicket[];
 }
 
 export interface ReqUpdateUserTenant {
@@ -386,7 +385,8 @@ export interface FPApiInterface {
   updateTenant(req: ReqUpdateTenant): Promise<Result<ResUpdateTenant>>;
   deleteTenant(req: ReqDeleteTenant): Promise<Result<ResDeleteTenant>>;
 
-  connectUserToTenant(req: ReqConnectUserToTenant): Promise<Result<ResConnectUserToTenant>>;
+  redeemInvite(req: ReqRedeemInvite): Promise<Result<ResRedeemInvite>>;
+
   listTenantsByUser(req: ReqListTenantsByUser): Promise<Result<ResListTenantsByUser>>;
   updateUserTenant(req: ReqUpdateUserTenant): Promise<Result<ResUpdateUserTenant>>;
 
@@ -413,7 +413,7 @@ interface FPApiMsgInterface {
   isListInvites(jso: unknown): jso is ReqListInvites;
   isInviteUser(jso: unknown): jso is ReqInviteUser;
   isFindUser(jso: unknown): jso is ReqFindUser;
-  isConnectUserToTenant(jso: unknown): jso is ReqConnectUserToTenant;
+  isRedeemInvite(jso: unknown): jso is ReqRedeemInvite;
   isEnsureUser(jso: unknown): jso is ReqEnsureUser;
   isListTenantsByUser(jso: unknown): jso is ReqListTenantsByUser;
   isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant;
@@ -441,10 +441,9 @@ class FAPIMsgImpl implements FPApiMsgInterface {
   isFindUser(jso: unknown): jso is ReqFindUser {
     return (jso as ReqFindUser).type === "reqFindUser";
   }
-  isConnectUserToTenant(jso: unknown): jso is ReqConnectUserToTenant {
-    return (jso as ReqConnectUserToTenant).type === "reqConnectUserToTenant";
+  isRedeemInvite(jso: unknown): jso is ReqRedeemInvite {
+    return (jso as ReqRedeemInvite).type === "reqRedeemInvite";
   }
-
   isEnsureUser(jso: unknown): jso is ReqEnsureUser {
     return (jso as ReqEnsureUser).type === "reqEnsureUser";
   }
@@ -454,6 +453,19 @@ class FAPIMsgImpl implements FPApiMsgInterface {
   }
   isUpdateUserTenant(jso: unknown): jso is ReqUpdateUserTenant {
     return (jso as ReqUpdateUserTenant).type === "reqUpdateUserTenant";
+  }
+  isListLedgersByUser(jso: unknown): jso is ReqListLedgersByUser {
+    return (jso as ReqListLedgersByUser).type === "reqListLedgersByUser";
+  }
+
+  isCreateLedger(jso: unknown): jso is ReqCreateLedger {
+    return (jso as ReqCreateLedger).type === "reqCreateLedger";
+  }
+  isUpdateLedger(jso: unknown): jso is ReqUpdateLedger {
+    return (jso as ReqUpdateLedger).type === "reqUpdateLedger";
+  }
+  isDeleteLedger(jso: unknown): jso is ReqDeleteLedger {
+    return (jso as ReqDeleteLedger).type === "reqDeleteLedger";
   }
 }
 
@@ -495,30 +507,46 @@ interface ReqInsertTenant {
 //   readonly updatedAt?: Date;
 // }
 
-type Role = "admin" | "member" | "owner";
+type Role = "admin" | "member"; // | "owner";
 
-interface ReqAddUserToTenant {
-  readonly name?: string;
+interface AddUserToTenant {
+  readonly userName?: string;
+  readonly tenantName?: string;
   readonly tenantId: string;
   readonly userId: string;
   readonly default?: boolean;
   readonly role: Role;
+  readonly status?: UserStatus;
+  readonly statusReason?: string;
 }
 
-interface ResAddUserToTenant {
-  readonly name?: string;
+interface AddUserToLedger {
+  readonly userName?: string;
+  readonly ledgerName?: string;
+  readonly ledgerId: string;
   readonly tenantId: string;
   readonly userId: string;
-  readonly default: boolean;
+  readonly default?: boolean;
+  readonly status?: UserStatus;
+  readonly statusReason?: string;
   readonly role: Role;
+  readonly right: "read" | "write";
 }
 
-type SQLTransaction = SQLiteTransaction<
-  "async",
-  ResultSet,
-  Record<string, never>,
-  ExtractTablesWithRelations<Record<string, never>>
->;
+// interface ResAddUserToTenant {
+//   readonly name?: string;
+//   readonly tenantId: string;
+//   readonly userId: string;
+//   readonly default: boolean;
+//   readonly role: Role;
+// }
+
+// type SQLTransaction = SQLiteTransaction<
+//   "async",
+//   ResultSet,
+//   Record<string, never>,
+//   ExtractTablesWithRelations<Record<string, never>>
+// >;
 
 interface WithAuth {
   readonly auth: AuthType;
@@ -635,7 +663,7 @@ export class FPApiSQL implements FPApiInterface {
         maxMemberUsers: 5,
       });
       const res = await this.addUserToTenant(this.db, {
-        name: nameFromAuth(undefined, authWithUserId),
+        userName: nameFromAuth(undefined, authWithUserId),
         tenantId: rTenant.Ok().tenantId,
         userId: userId,
         role: "admin",
@@ -655,62 +683,50 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  private async addUserToTenant(db: LibSQLDatabase, req: ReqAddUserToTenant): Promise<Result<ResAddUserToTenant>> {
-    const tenant = await db.select().from(sqlTenants).where(eq(sqlTenants.tenantId, req.tenantId)).get();
+  private async addUserToTenant(db: LibSQLDatabase, req: Omit<AddUserToTenant, "tenantName">): Promise<Result<AddUserToTenant>> {
+    const tenant = await db
+      .select()
+      .from(sqlTenants)
+      .where(and(eq(sqlTenants.tenantId, req.tenantId), eq(sqlTenants.status, "active")))
+      .get();
     if (!tenant) {
       return Result.Err("tenant not found");
     }
-    const role = await this.getRole(req.userId, tenant);
-    if (role.foundRole) {
+    const roles = await this.getRoles(req.userId, [tenant], []);
+    if (roles.length > 1) {
+      return Result.Err("multiple roles found");
+    }
+    if (roles.length && roles[0].role) {
       const tenantUser = await db
         .select()
         .from(sqlTenantUsers)
-        .where(and(eq(sqlTenantUsers.tenantId, req.tenantId), eq(sqlTenantUsers.userId, req.userId)))
+        .where(
+          and(
+            eq(sqlTenantUsers.tenantId, req.tenantId),
+            eq(sqlTenantUsers.userId, req.userId),
+            eq(sqlTenantUsers.status, "active"),
+          ),
+        )
         .get();
       if (!tenantUser) {
         return Result.Err("ref not found");
       }
       return Result.Ok({
-        name: toUndef(tenantUser.name),
+        userName: toUndef(tenantUser.name),
+        tenantName: toUndef(tenant.name),
         tenantId: req.tenantId,
         userId: req.userId,
         default: !!tenantUser.default,
-        role: role.role,
+        role: tenantUser.role as Role,
+        status: tenantUser.status as UserStatus,
+        statusReason: tenantUser.statusReason,
       });
     }
-    switch (req.role) {
-      case "admin":
-        if (role.adminUserIds.length + 1 >= tenant.maxAdminUsers) {
-          return Result.Err("max admins reached");
-        }
-        role.adminUserIds.push(req.userId);
-        role.role = "admin";
-        break;
-      case "member":
-      default:
-        if (role.memberUserIds.length + 1 >= tenant.maxMemberUsers) {
-          return Result.Err("max members reached");
-        }
-        role.memberUserIds.push(req.userId);
-        role.role = "member";
-        break;
+    const rCheck = await this.checkMaxRoles(tenant, req.role);
+    if (rCheck.isErr()) {
+      return Result.Err(rCheck.Err());
     }
     const now = new Date().toISOString();
-    await db
-      .insert(sqlTenantUserRoles)
-      .values({
-        tenantId: req.tenantId,
-        userId: req.userId,
-        role: req.role,
-        createdAt: now,
-      })
-      .onConflictDoUpdate({
-        target: [sqlTenantUserRoles.tenantId, sqlTenantUserRoles.userId],
-        set: {
-          role: role.role,
-          createdAt: now,
-        },
-      });
     if (req.default) {
       await db
         .update(sqlTenantUsers)
@@ -718,24 +734,151 @@ export class FPApiSQL implements FPApiInterface {
           default: 0,
           updatedAt: now,
         })
-        .where(and(eq(sqlTenantUsers.tenantId, req.tenantId), eq(sqlTenantUsers.userId, req.userId), ne(sqlTenantUsers.default, 0)))
+        .where(and(eq(sqlTenantUsers.userId, req.userId), ne(sqlTenantUsers.default, 0)))
         .run();
     }
-    await db.insert(sqlTenantUsers).values({
-      tenantId: tenant.tenantId,
-      userId: req.userId,
-      name: req.name,
-      default: req.default ? 1 : 0,
-      createdAt: now,
-      updatedAt: now,
-    });
+    const ret = (
+      await db
+        .insert(sqlTenantUsers)
+        .values({
+          tenantId: tenant.tenantId,
+          userId: req.userId,
+          name: req.userName,
+          role: req.role,
+          default: req.default ? 1 : 0,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
+    )[0];
     return Result.Ok({
-      name: req.name,
+      userName: toUndef(ret.name),
+      tenantName: tenant.name,
       tenantId: tenant.tenantId,
+      userId: ret.userId,
+      default: ret.default ? true : false,
+      status: ret.status as UserStatus,
+      statusReason: ret.statusReason,
+      role: ret.role as Role,
+    });
+  }
+
+  private async checkMaxRoles(sqlTenant: typeof sqlTenants.$inferSelect, reqRole: string): Promise<Result<void>> {
+    const tenantUsers = await this.db
+      .select()
+      .from(sqlTenantUsers)
+      .where(and(eq(sqlTenantUsers.tenantId, sqlTenant.tenantId), eq(sqlTenantUsers.status, "active")))
+      .all();
+    const ledgerUsers = await this.db
+      .select()
+      .from(sqlLedgers)
+      .innerJoin(sqlLedgerUsers, and(eq(sqlLedgerUsers.ledgerId, sqlLedgers.ledgerId), eq(sqlLedgerUsers.status, "active")))
+      .where(eq(sqlLedgers.tenantId, sqlTenant.tenantId))
+      .all();
+    const adminUsers = new Set([
+      ...tenantUsers.filter((tu) => tu.role === "admin"),
+      ...ledgerUsers.filter((lu) => lu.LedgerUsers.role === "admin"),
+    ]);
+    const memberUsers = Array.from(
+      new Set([...tenantUsers.filter((tu) => tu.role !== "admin"), ...ledgerUsers.filter((lu) => lu.LedgerUsers.role !== "admin")]),
+    ).filter((u) => !adminUsers.has(u));
+    if (reqRole === "admin") {
+      if (adminUsers.size + 1 >= sqlTenant.maxAdminUsers) {
+        return Result.Err("max admins reached");
+      }
+    }
+    if (reqRole !== "admin") {
+      if (memberUsers.length + 1 >= sqlTenant.maxMemberUsers) {
+        return Result.Err("max members reached");
+      }
+    }
+    return Result.Ok(undefined);
+  }
+
+  private async addUserToLedger(db: LibSQLDatabase, req: AddUserToLedger): Promise<Result<AddUserToLedger>> {
+    const ledger = await db
+      .select()
+      .from(sqlLedgers)
+      .innerJoin(sqlTenants, and(eq(sqlLedgers.tenantId, sqlTenants.tenantId)))
+      .where(and(eq(sqlLedgers.ledgerId, req.ledgerId), eq(sqlLedgers.status, "active")))
+      .get();
+    if (!ledger) {
+      return Result.Err("ledger not found");
+    }
+    const roles = await this.getRoles(req.userId, [], [ledger.Ledgers]);
+    if (roles.length > 1) {
+      return Result.Err("multiple roles found");
+    }
+    if (roles.length && roles[0].role) {
+      const ledgerUser = await db
+        .select()
+        .from(sqlLedgerUsers)
+        .innerJoin(sqlLedgers, and(eq(sqlLedgerUsers.ledgerId, sqlLedgers.ledgerId)))
+        .where(
+          and(
+            eq(sqlLedgerUsers.ledgerId, req.ledgerId),
+            eq(sqlLedgerUsers.userId, req.userId),
+            eq(sqlLedgerUsers.status, "active"),
+          ),
+        )
+        .get();
+      if (!ledgerUser) {
+        return Result.Err("ref not found");
+      }
+      return Result.Ok({
+        ledgerName: toUndef(ledgerUser.Ledgers.name),
+        userName: toUndef(ledgerUser.LedgerUsers.name),
+        ledgerId: ledgerUser.Ledgers.ledgerId,
+        tenantId: ledgerUser.Ledgers.tenantId,
+        userId: req.userId,
+        default: !!ledgerUser.LedgerUsers.default,
+        status: ledgerUser.LedgerUsers.status as UserStatus,
+        statusReason: ledgerUser.LedgerUsers.statusReason,
+        role: ledgerUser.LedgerUsers.role as Role,
+        right: ledgerUser.LedgerUsers.right as "read" | "write",
+      });
+    }
+    const rCheck = await this.checkMaxRoles(ledger.Tenants, req.role);
+    if (rCheck.isErr()) {
+      return Result.Err(rCheck.Err());
+    }
+    const now = new Date().toISOString();
+    if (req.default) {
+      await db
+        .update(sqlLedgerUsers)
+        .set({
+          default: 0,
+          updatedAt: now,
+        })
+        .where(and(eq(sqlLedgerUsers.userId, req.userId), ne(sqlLedgerUsers.default, 0)))
+        .run();
+    }
+    const ret = (
+      await db
+        .insert(sqlLedgerUsers)
+        .values({
+          ledgerId: ledger.Ledgers.ledgerId,
+          userId: req.userId,
+          name: req.userName,
+          role: req.role,
+          right: req.right,
+          default: req.default ? 1 : 0,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning()
+    )[0];
+    return Result.Ok({
+      ledgerName: ledger.Ledgers.name,
+      userName: req.userName,
+      ledgerId: ledger.Ledgers.ledgerId,
+      tenantId: ledger.Ledgers.tenantId,
+      status: ret.status as UserStatus,
+      statusReason: ret.statusReason,
       userId: req.userId,
       default: req.default ?? false,
-      active: true,
-      role: role.role,
+      role: ret.role as Role,
+      right: ret.right as "read" | "write",
     });
   }
 
@@ -760,89 +903,209 @@ export class FPApiSQL implements FPApiInterface {
       type: "resListTenantsByUser",
       userId: aur.user.userId,
       authUserId: aur.verifiedAuth.userId,
-      tenants: await Promise.all(
-        tenantUsers.map(async (t) => {
-          const common = {
-            user: {
-              name: toUndef(t.TenantUsers.name),
-              status: t.TenantUsers.status as UserStatus,
-              statusReason: t.TenantUsers.statusReason,
-              createdAt: new Date(t.TenantUsers.createdAt),
-              updatedAt: new Date(t.TenantUsers.updatedAt),
-            },
-            tenant: {
-              name: toUndef(t.Tenants.name),
-              status: t.Tenants.status as UserStatus,
-              statusReason: t.Tenants.statusReason,
-              createdAt: new Date(t.Tenants.createdAt),
-              updatedAt: new Date(t.Tenants.updatedAt),
-            },
-          };
-          const role = await this.getRole(t.TenantUsers.userId, t.Tenants);
-          switch (role.role) {
-            case "member":
-              return {
-                ...common,
-                tenantId: t.TenantUsers.tenantId,
-                role: role.role,
-                default: toBoolean(t.TenantUsers.default),
-              };
-            case "owner":
-            case "admin":
-              return {
-                ...common,
-                tenantId: t.TenantUsers.tenantId,
-                role: role.role,
-                default: toBoolean(t.TenantUsers.default),
-                adminUserIds: role.adminUserIds,
-                memberUserIds: role.memberUserIds,
-                maxAdminUsers: t.Tenants.maxAdminUsers,
-                maxMemberUsers: t.Tenants.maxMemberUsers,
-              };
-          }
-        }),
-      ),
+      tenants: (
+        await Promise.all(
+          tenantUsers.map(async (t) => {
+            const common = {
+              user: {
+                name: toUndef(t.TenantUsers.name),
+                status: t.TenantUsers.status as UserStatus,
+                statusReason: t.TenantUsers.statusReason,
+                createdAt: new Date(t.TenantUsers.createdAt),
+                updatedAt: new Date(t.TenantUsers.updatedAt),
+              },
+              tenant: {
+                name: toUndef(t.Tenants.name),
+                status: t.Tenants.status as UserStatus,
+                statusReason: t.Tenants.statusReason,
+                createdAt: new Date(t.Tenants.createdAt),
+                updatedAt: new Date(t.Tenants.updatedAt),
+              },
+            };
+            const roles = await this.getRoles(t.TenantUsers.userId, [t.Tenants], []);
+            if (roles.length > 1) {
+              throw new Error("multiple roles found");
+            }
+            if (!roles.length) {
+              return undefined;
+            }
+            switch (roles[0].role) {
+              case "member":
+                return {
+                  ...common,
+                  tenantId: t.TenantUsers.tenantId,
+                  role: roles[0].role,
+                  default: toBoolean(t.TenantUsers.default),
+                };
+              // case "owner":
+              case "admin":
+                return {
+                  ...common,
+                  tenantId: t.TenantUsers.tenantId,
+                  role: roles[0].role,
+                  default: toBoolean(t.TenantUsers.default),
+                  adminUserIds: roles[0].adminUserIds,
+                  memberUserIds: roles[0].memberUserIds,
+                  maxAdminUsers: t.Tenants.maxAdminUsers,
+                  maxMemberUsers: t.Tenants.maxMemberUsers,
+                };
+              default:
+                throw new Error("invalid role");
+            }
+          }),
+        )
+      ).filter((t) => !!t),
     });
   }
 
-  private async getRole(
+  private async getRoles(
     userId: string,
-    tenant: typeof sqlTenants.$inferSelect,
-  ): Promise<{
-    role: Role;
-    foundRole: boolean;
-    adminUserIds: string[];
-    memberUserIds: string[];
-  }> {
-    const rows = await this.db.select().from(sqlTenantUserRoles).where(eq(sqlTenantUserRoles.tenantId, tenant.tenantId)).all();
-    const { adminUserIds, memberUserIds } = rows.reduce(
-      (acc, row) => {
-        switch (row.role) {
-          case "admin":
-            acc.adminUserIds.push(row.userId);
-            break;
-          case "member":
-            acc.memberUserIds.push(row.userId);
-            break;
+    tenants: (typeof sqlTenants.$inferSelect)[],
+    ledgers: (typeof sqlLedgers.$inferSelect)[],
+  ): Promise<RoleType[]> {
+    if (!tenants.length && !ledgers.length) {
+      throw new Error("tenant or ledger required");
+    }
+    // if (tenants && !tenants.length) {
+    //   throw new Error("tenant not found");
+    // }
+    // if (ledgers && !ledgers.length) {
+    //   throw new Error("ledger not found");
+    // }
+
+    // let myLedgerUsers: {
+    //   Ledgers: typeof sqlLedgers.$inferSelect
+    //   LedgerUsers: typeof sqlLedgerUsers.$inferSelect
+    // }[] | undefined;
+    let ledgerUsersFilter = new Map<
+      string,
+      {
+        ledger: typeof sqlLedgers.$inferSelect;
+        users: (typeof sqlLedgerUsers.$inferSelect)[];
+        my?: typeof sqlLedgerUsers.$inferSelect;
+      }
+    >();
+    if (ledgers.length) {
+      const ledgerUsers = await this.db
+        .select()
+        .from(sqlLedgerUsers)
+        .innerJoin(sqlLedgers, eq(sqlLedgerUsers.ledgerId, sqlLedgers.ledgerId))
+        .where(
+          and(
+            inArray(
+              sqlLedgerUsers.ledgerId,
+              this.db
+                .select({ ledgerId: sqlLedgerUsers.ledgerId })
+                .from(sqlLedgerUsers)
+                .where(
+                  and(
+                    inArray(
+                      sqlLedgerUsers.ledgerId,
+                      ledgers.map((l) => l.ledgerId),
+                    ),
+                    eq(sqlLedgerUsers.userId, userId),
+                  ),
+                ),
+            ),
+            eq(sqlLedgerUsers.status, "active"),
+          ),
+        )
+        .all();
+      const myLedgerUsers = ledgerUsers.filter((lu) => lu.LedgerUsers.userId === userId);
+      if (!myLedgerUsers.length) {
+        // throw new Error("user is not attached to ledger");
+        return [];
+      }
+      ledgerUsersFilter = ledgerUsers.reduce((acc, lu) => {
+        let item = acc.get(lu.Ledgers.ledgerId);
+        if (!item) {
+          item = {
+            ledger: lu.Ledgers,
+            users: [],
+          };
+          acc.set(lu.Ledgers.ledgerId, item);
         }
+        if (lu.LedgerUsers.userId === userId) {
+          item.my = lu.LedgerUsers;
+        }
+        item.users.push(lu.LedgerUsers);
+        return acc;
+      }, ledgerUsersFilter);
+      // remove other users if you are not admin
+      Array.from(ledgerUsersFilter.values()).forEach((item) => {
+        item.users = item.users.filter((u) => item.my!.role === "admin" || (item.my!.role !== "admin" && u.userId === userId));
+      });
+    }
+    const tenantIds = ledgers.length
+      ? Array.from(ledgerUsersFilter.values()).map((lu) => lu.ledger.tenantId)
+      : (tenants?.map((t) => t.tenantId) ?? []);
+
+    const q = this.db
+      .select()
+      .from(sqlTenantUsers)
+      .where(
+        and(
+          inArray(
+            sqlTenantUsers.tenantId,
+            this.db
+              .select({ tenantId: sqlTenantUsers.tenantId })
+              .from(sqlTenantUsers)
+              .where(and(inArray(sqlTenantUsers.tenantId, tenantIds), eq(sqlTenantUsers.userId, userId))),
+          ),
+          eq(sqlTenantUsers.status, "active"),
+        ),
+      );
+
+    let tenantUsers = await q.all();
+    // console.log(">>>>>>", tenantUsers.toString());
+    const tenantUserFilter = tenantUsers.reduce(
+      (acc, lu) => {
+        let item = acc.get(lu.tenantId);
+        if (!item) {
+          item = {
+            users: [],
+          };
+          acc.set(lu.tenantId, item);
+        }
+        if (lu.userId === userId) {
+          item.my = lu;
+        }
+        item.users.push(lu);
         return acc;
       },
-      {
-        adminUserIds: [] as string[],
-        memberUserIds: [] as string[],
-      },
+      new Map<
+        string,
+        {
+          users: (typeof sqlTenantUsers.$inferSelect)[];
+          my?: typeof sqlTenantUsers.$inferSelect;
+        }
+      >(),
     );
-    const isAdmin = adminUserIds.includes(userId);
-    const isMember = memberUserIds.includes(userId);
-    return {
-      adminUserIds: adminUserIds,
-      memberUserIds: memberUserIds,
-      foundRole: isAdmin || isMember,
-      role: tenant.ownerUserId === userId ? "owner" : isAdmin ? "admin" : "member",
-    };
+    // remove other users if you are not admin
+    Array.from(tenantUserFilter.values()).forEach((item) => {
+      item.users = item.users.filter((u) => item.my!.role === "admin" || (item.my!.role !== "admin" && u.userId === userId));
+    });
+
+    return [
+      ...Array.from(tenantUserFilter.values()).map((item) => ({
+        userId: userId,
+        tenantId: item.users[0].tenantId,
+        role: item.my!.role as Role,
+        adminUserIds: item.users.filter((u) => u.role === "admin").map((u) => u.userId),
+        memberUserIds: item.users.filter((u) => u.role !== "admin").map((u) => u.userId),
+      })),
+      ...Array.from(ledgerUsersFilter.values()).map((item) => ({
+        userId: userId,
+        ledgerId: item.ledger.ledgerId,
+        role: item.my!.role as Role,
+        right: item.my!.right as "read" | "write",
+        adminUserIds: item.users.filter((u) => u.role === "admin").map((u) => u.userId),
+        memberUserIds: item.users.filter((u) => u.role !== "admin").map((u) => u.userId),
+      })),
+    ];
   }
 
-  async connectUserToTenant(req: ReqConnectUserToTenant): Promise<Result<ResConnectUserToTenant>> {
+  async redeemInvite(req: ReqRedeemInvite): Promise<Result<ResRedeemInvite>> {
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
@@ -851,35 +1114,112 @@ export class FPApiSQL implements FPApiInterface {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    const res = await this.db
-      .select()
-      .from(sqlTenants)
-      .innerJoin(
-        sqlInviteTickets,
-        and(eq(sqlTenants.tenantId, sqlInviteTickets.inviterTenantId), eq(sqlInviteTickets.invitedTenantId, req.tenantId)),
-      )
-      .where(eq(sqlTenants.tenantId, req.tenantId))
-      .get();
-
-    if (!res) {
-      return Result.Err("tenant not found");
-    }
-    const invite = sqlToInvite(res.InviteTickets);
-    const val = await this.addUserToTenant(this.db, {
-      name: req.name,
-      tenantId: res.Tenants.tenantId,
-      userId: auth.user.userId,
-      default: false,
-      role: invite.invitedParams.tenant?.role ?? "member",
-    });
-    await this._deleteInvite(invite.inviteId);
     return Result.Ok({
-      type: "resConnectUserToTenant",
-      name: val.Ok().name ?? res.Tenants.name,
-      tenant: sqlToOutTenantParams(res.Tenants),
-      userId: auth.user.userId,
-      role: invite.invitedParams.tenant?.role ?? "member",
+      type: "resRedeemInvite",
+      invites: sqlToInviteTickets(
+        await Promise.all(
+          (
+            await this.findInvite({
+              query: {
+                byString: auth.verifiedAuth.params.email,
+                byNick: auth.verifiedAuth.params.nick,
+                existingUserId: auth.user.userId,
+                // TODO
+                // andProvider: auth.verifiedAuth.provider,
+              },
+            })
+          )
+            .filter((i) => i.status === "pending")
+            .map(async (invite) => {
+              if (invite.invitedParams.tenant) {
+                const tenant = await this.db
+                  .select()
+                  .from(sqlTenants)
+                  .where(and(eq(sqlTenants.tenantId, invite.invitedParams.tenant.id), eq(sqlTenants.status, "active")))
+                  .get();
+                if (!tenant) {
+                  throw new Error("tenant not found");
+                }
+                await this.addUserToTenant(this.db, {
+                  userName: `invited from [${tenant.name}]`,
+                  tenantId: tenant.tenantId,
+                  userId: auth.user!.userId,
+                  role: invite.invitedParams.tenant.role,
+                });
+              }
+              if (invite.invitedParams.ledger) {
+                const ledger = await this.db
+                  .select()
+                  .from(sqlLedgers)
+                  .where(and(eq(sqlLedgers.ledgerId, invite.invitedParams.ledger.id), eq(sqlLedgers.status, "active")))
+                  .get();
+                if (!ledger) {
+                  throw new Error("ledger not found");
+                }
+                await this.addUserToLedger(this.db, {
+                  userName: `invited-${ledger.name}`,
+                  ledgerId: ledger.ledgerId,
+                  tenantId: ledger.tenantId,
+                  userId: auth.user!.userId,
+                  role: invite.invitedParams.ledger.role,
+                  right: invite.invitedParams.ledger.right,
+                });
+              }
+              return (
+                await this.db
+                  .update(sqlInviteTickets)
+                  .set({
+                    invitedUserId: auth.user!.userId,
+                    status: "accepted",
+                    statusReason: `accepted: ${auth.user!.userId}`,
+                    updatedAt: new Date().toISOString(),
+                  })
+                  .where(eq(sqlInviteTickets.inviteId, invite.inviteId))
+                  .returning()
+              )[0];
+            }),
+        ),
+      ),
     });
+
+    // const invite = await this.db.select().from(sqlInviteTickets).where(eq(sqlInviteTickets.inviteId, req.inviteId)).get();
+    // if (!invite) {
+    //   return Result.Err("invite not found");
+    // }
+    // if ((invite.invitedLedgerId && invite.invitedTenantId) ||
+    //      !(invite.invitedLedgerId  invite.invitedTenantId)) {
+    // if (invite.invitedTenantId) {
+    //   const res = await this.db
+    //     .select()
+    //     .from(sqlTenants)
+    //     .innerJoin(
+    //       sqlInviteTickets,
+    //       and(eq(sqlTenants.tenantId, sqlInviteTickets.invitedTenantId), eq(sqlInviteTickets.invitedTenantId, req.tenantId)),
+    //     )
+    //     .where(eq(sqlTenants.tenantId, req.tenantId))
+    //     .get();
+
+    //   if (!res) {
+    //     return Result.Err("tenant not found");
+    //   }
+    // }
+
+    // // const invite = sqlToInvite(res.InviteTickets);
+    // const val = await this.addUserToTenant(this.db, {
+    //   name: req.name,
+    //   tenantId: res.Tenants.tenantId,
+    //   userId: auth.user.userId,
+    //   default: false,
+    //   role: invite.invitedParams.tenant?.role ?? "member",
+    // });
+    // await this._deleteInvite(invite.inviteId);
+    // return Result.Ok({
+    //   type: "resConnectUserToTenant",
+    //   name: val.Ok().name ?? res.Tenants.name,
+    //   tenant: sqlToOutTenantParams(res.Tenants),
+    //   userId: auth.user.userId,
+    //   role: invite.invitedParams.tenant?.role ?? "member",
+    // });
   }
 
   async findUser(req: ReqFindUser): Promise<Result<ResFindUser>> {
@@ -911,6 +1251,127 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
+  private async createInviteTicket(
+    userId: string,
+    tenantId: string,
+    ledgerId: string | undefined,
+    req: ReqInviteUser,
+  ): Promise<Result<InviteTicket>> {
+    // check maxInvites
+    const allowed = await this.db
+      .select()
+      .from(sqlTenants)
+      .where(
+        and(
+          eq(sqlTenants.tenantId, tenantId),
+          gt(sqlTenants.maxInvites, this.db.$count(sqlInviteTickets, eq(sqlInviteTickets.invitedTenantId, tenantId))),
+        ),
+      )
+      .get();
+    if (!allowed) {
+      return Result.Err("max invites reached");
+    }
+
+    const found = await this.findInvite({ query: req.ticket.query, tenantId, ledgerId });
+    if (found.length) {
+      return Result.Err("invite already exists");
+    }
+
+    let ivp: InvitedParams = {};
+    if (req.ticket.invitedParams?.ledger) {
+      ivp = {
+        ledger: {
+          id: req.ticket.invitedParams?.ledger.id,
+          role: req.ticket.invitedParams?.ledger.role ?? "member",
+          right: req.ticket.invitedParams?.ledger.right ?? "read",
+        },
+      };
+    }
+    if (req.ticket.invitedParams?.tenant) {
+      ivp = {
+        tenant: {
+          id: req.ticket.invitedParams?.tenant.id,
+          role: req.ticket.invitedParams?.tenant.role ?? "member",
+        },
+      };
+    }
+
+    return Result.Ok(
+      sqlToInviteTickets(
+        await this.db
+          .insert(sqlInviteTickets)
+          .values(
+            prepareInviteTicket({
+              sthis: this.sthis,
+              userId,
+              invitedTicketParams: {
+                query: req.ticket.query,
+                status: "pending",
+                invitedParams: ivp,
+              },
+            }),
+          )
+          .returning(),
+      )[0],
+    );
+  }
+
+  private async updateInviteTicket(
+    userId: string,
+    tenantId: string,
+    ledgerId: string | undefined,
+    req: ReqInviteUser,
+  ): Promise<Result<InviteTicket>> {
+    const found = await this.findInvite({ inviteId: req.ticket.inviteId });
+    if (!found.length) {
+      return Result.Err("invite not found");
+    }
+    const invite = found[0];
+    if (invite.status !== "pending") {
+      return Result.Err("invite not pending");
+    }
+    let ivp: InvitedParams = {};
+    if (req.ticket.invitedParams?.ledger) {
+      ivp = {
+        ledger: {
+          ...invite.invitedParams.ledger,
+          ...req.ticket.invitedParams.ledger,
+        },
+      };
+    }
+    if (req.ticket.invitedParams?.tenant) {
+      ivp = {
+        tenant: {
+          ...invite.invitedParams.tenant,
+          ...req.ticket.invitedParams.tenant,
+        },
+      };
+    }
+    const toInsert = prepareInviteTicket({
+      sthis: this.sthis,
+      userId: userId,
+      invitedTicketParams: {
+        query: req.ticket.query,
+        status: "pending",
+        invitedParams: ivp,
+      },
+    });
+    // might be update query
+    return Result.Ok(
+      sqlToInviteTickets(
+        await this.db
+          .update(sqlInviteTickets)
+          .set({
+            sendEmailCount: req.ticket.incSendEmailCount ? invite.sendEmailCount + 1 : invite.sendEmailCount,
+            invitedParams: toInsert.invitedParams,
+            updatedAt: new Date().toISOString(),
+          })
+          .where(eq(sqlInviteTickets.inviteId, invite.inviteId))
+          .returning(),
+      )[0],
+    );
+  }
+
   async inviteUser(req: ReqInviteUser): Promise<Result<ResInviteUser>> {
     const rAuth = await this.activeUser(req);
     if (rAuth.isErr()) {
@@ -930,93 +1391,92 @@ export class FPApiSQL implements FPApiInterface {
     if (req.ticket.query.existingUserId === auth.user.userId) {
       return Result.Err("cannot invite self");
     }
-    let sqlTicket: (typeof sqlInviteTickets.$inferSelect)[];
-    if (!req.ticket.inviteId) {
-      // check maxInvites
-      const allowed = await this.db
+
+    if (
+      req.ticket.invitedParams?.ledger &&
+      req.ticket.invitedParams?.tenant &&
+      !req.ticket.invitedParams?.ledger &&
+      !req.ticket.invitedParams?.tenant
+    ) {
+      return Result.Err("either ledger or tenant must be set");
+    }
+    let tenantId: string | undefined;
+    let ledgerId: string | undefined;
+    if (req.ticket.invitedParams?.ledger) {
+      const ledger = await this.db
+        .select()
+        .from(sqlLedgers)
+        .where(eq(sqlLedgers.ledgerId, req.ticket.invitedParams.ledger.id))
+        .get();
+      if (!ledger) {
+        return Result.Err("ledger not found");
+      }
+      ledgerId = ledger.ledgerId;
+      tenantId = ledger.tenantId;
+    }
+    if (req.ticket.invitedParams?.tenant) {
+      const tenant = await this.db
         .select()
         .from(sqlTenants)
-        .where(
-          and(
-            eq(sqlTenants.tenantId, req.ticket.inviterTenantId),
-            gt(
-              sqlTenants.maxInvites,
-              this.db.$count(sqlInviteTickets, eq(sqlInviteTickets.inviterTenantId, req.ticket.inviterTenantId)),
-            ),
-          ),
-        )
+        .where(eq(sqlTenants.tenantId, req.ticket.invitedParams.tenant.id))
         .get();
-      if (!allowed) {
-        return Result.Err("max invites reached");
+      if (!tenant) {
+        return Result.Err("tenant not found");
       }
-      const is = await this.findInvite({
-        query: req.ticket.query,
-        tenantId: req.ticket.inviterTenantId,
-      });
-      if (is.length) {
-        return Result.Err("invite already exists");
+      tenantId = tenant.tenantId;
+    }
+    if (!tenantId) {
+      return Result.Err("tenant not found");
+    }
+
+    let inviteTicket: InviteTicket;
+    if (!req.ticket.inviteId) {
+      const rInviteTicket = await this.createInviteTicket(auth.user.userId, tenantId, ledgerId, req);
+      if (rInviteTicket.isErr()) {
+        return Result.Err(rInviteTicket.Err());
       }
-      sqlTicket = await this.db
-        .insert(sqlInviteTickets)
-        .values(
-          prepareInviteTicket({
-            sthis: this.sthis,
-            userId: auth.user.userId,
-            tenantId: req.ticket.inviterTenantId,
-            invitedTicketParams: {
-              invitedParams: req.ticket.invitedParams ?? {},
-              ...req.ticket,
-            },
-          }),
-        )
-        .returning();
+      inviteTicket = rInviteTicket.Ok();
     } else {
-      // check if owner or admin of tenant
-      if (!(await this.isOwnerOrAdminOfTenant(auth.user.userId, req.ticket.inviterTenantId))) {
-        return Result.Err("not owner or admin of tenant");
+      const rInviteTicket = await this.updateInviteTicket(auth.user.userId, tenantId, ledgerId, req);
+      if (rInviteTicket.isErr()) {
+        return Result.Err(rInviteTicket.Err());
       }
-      const invitex = await this.findInvite({
-        inviteId: req.ticket.inviteId,
-        tenantId: req.ticket.inviterTenantId,
-      });
-      if (invitex.length !== 1) {
-        return Result.Err("invite not found");
-      }
-      const invite = invitex[0];
-      const toInsert = prepareInviteTicket({
-        sthis: this.sthis,
-        userId: auth.user.userId,
-        tenantId: req.ticket.inviterTenantId,
-        invitedTicketParams: {
-          invitedParams: req.ticket.invitedParams ?? {},
-          ...req.ticket,
-        },
-      });
-      sqlTicket = await this.db
-        .update(sqlInviteTickets)
-        .set({
-          sendEmailCount: req.ticket.incSendEmailCount ? invite.sendEmailCount + 1 : invite.sendEmailCount,
-          invitedParams: toInsert.invitedParams,
-          updatedAt: new Date().toISOString(),
-        })
-        .where(
-          and(eq(sqlInviteTickets.inviteId, req.ticket.inviteId), eq(sqlInviteTickets.inviterTenantId, req.ticket.inviterTenantId)),
-        )
-        .returning();
+      inviteTicket = rInviteTicket.Ok();
     }
     return Result.Ok({
       type: "resInviteUser",
-      invite: sqlToInvite(sqlTicket[0]),
+      invite: inviteTicket,
     });
   }
 
-  private async findInvite(req: { query?: QueryUser; inviteId?: string; tenantId: string; now?: Date }): Promise<InviteTicket[]> {
-    let condition = and(
-      eq(sqlInviteTickets.inviterTenantId, req.tenantId),
-      gt(sqlInviteTickets.expiresAfter, (req.now ?? new Date()).toISOString()),
-    );
+  private async findInvite(req: {
+    query?: QueryUser;
+    inviteId?: string;
+    tenantId?: string;
+    ledgerId?: string;
+    // now?: Date
+  }): Promise<InviteTicket[]> {
     if (!(req.inviteId || req.query)) {
       throw new Error("inviteId or query is required");
+    }
+    if (req.tenantId && req.ledgerId) {
+      throw new Error("invite only possible to ledger or tenant");
+    }
+    // housekeeping
+    await this.db
+      .update(sqlInviteTickets)
+      .set({ status: "expired" })
+      .where(and(eq(sqlInviteTickets.status, "pending"), lt(sqlInviteTickets.expiresAfter, new Date().toISOString())))
+      .run();
+    let condition = and();
+    // eq(sqlInviteTickets.status, "pending"),
+    // gt(sqlInviteTickets.expiresAfter, (req.now ?? new Date()).toISOString()),
+
+    if (req.tenantId) {
+      condition = and(eq(sqlInviteTickets.invitedTenantId, req.tenantId), condition);
+    }
+    if (req.ledgerId) {
+      condition = and(eq(sqlInviteTickets.invitedLedgerId, req.ledgerId), condition);
     }
     if (req.inviteId) {
       condition = and(eq(sqlInviteTickets.inviteId, req.inviteId), condition);
@@ -1031,9 +1491,7 @@ export class FPApiSQL implements FPApiInterface {
       );
     }
     const rows = await this.db.select().from(sqlInviteTickets).where(condition).all();
-    // housekeeping
-    await this.db.delete(sqlInviteTickets).where(lt(sqlInviteTickets.expiresAfter, new Date().toISOString())).run();
-    return rows.map((row) => sqlToInvite(row));
+    return sqlToInviteTickets(rows);
   }
 
   /**
@@ -1050,62 +1508,139 @@ export class FPApiSQL implements FPApiInterface {
     if (!auth.user) {
       return Result.Err(new UserNotFoundError());
     }
-    let rows: (typeof sqlInviteTickets.$inferSelect)[];
-    const ownerTenants = await this.db
-      .select()
-      .from(sqlTenants)
-      .where(eq(sqlTenants.ownerUserId, auth.user.userId))
-      .all()
-      .then((rows) => rows.map((row) => row.tenantId));
-    // get admin in tenant for this user
-    let condition = and(eq(sqlTenantUserRoles.userId, auth.user.userId), eq(sqlTenantUserRoles.role, "admin"));
-    if (req.tenantIds.length) {
-      // filter by tenantIds if set
-      condition = and(inArray(sqlTenantUserRoles.tenantId, req.tenantIds), condition);
+    let tenantCond = and(eq(sqlTenantUsers.userId, auth.user.userId), eq(sqlTenantUsers.status, "active"));
+    if (req.tenantIds?.length) {
+      tenantCond = and(inArray(sqlTenantUsers.tenantId, req.tenantIds), tenantCond);
     }
-    const adminTenants = await this.db
+    const tenants = await this.db
       .select()
-      .from(sqlTenantUserRoles)
-      .where(condition)
-      .all()
-      .then((rows) => rows.map((row) => row.tenantId));
-    const setTenants = new Set(req.tenantIds);
-    const filterAdminTenants = Array.from(new Set([...ownerTenants, ...adminTenants, ...req.tenantIds])).filter((x) => {
-      return setTenants.size ? setTenants.has(x) : true;
-    });
-    // console.log(">>>>", filterAdminTenants);
-    rows = await this.db
+      .from(sqlTenantUsers)
+      .innerJoin(sqlTenants, and(eq(sqlTenants.tenantId, sqlTenantUsers.tenantId), eq(sqlTenants.status, "active")))
+      .where(tenantCond)
+      .all();
+
+    let ledgerCond = and(eq(sqlLedgerUsers.userId, auth.user.userId), eq(sqlLedgerUsers.status, "active"));
+    if (req.ledgerIds?.length) {
+      ledgerCond = and(inArray(sqlLedgerUsers.ledgerId, req.ledgerIds), ledgerCond);
+    }
+    const ledgers = await this.db
+      .select()
+      .from(sqlLedgerUsers)
+      .innerJoin(sqlLedgers, and(eq(sqlLedgers.ledgerId, sqlLedgerUsers.ledgerId), eq(sqlLedgers.status, "active")))
+      .where(ledgerCond)
+      .all();
+
+    if (!tenants.length && !ledgers.length) {
+      return Result.Ok({
+        type: "resListInvites",
+        tickets: [],
+      });
+    }
+
+    const roles = await this.getRoles(
+      auth.user.userId,
+      tenants.map((i) => i.Tenants),
+      ledgers.map((i) => i.Ledgers),
+    );
+    // list invites from all tenants where i'm owner or admin
+    const invites = await this.db
       .select()
       .from(sqlInviteTickets)
       .where(
-        and(
-          inArray(sqlInviteTickets.invitedTenantId, filterAdminTenants),
-          // inArray(inviteTickets.inv, req.tenantIds)
+        or(
+          inArray(
+            sqlInviteTickets.invitedTenantId,
+            roles.filter((i) => i.role === "admin" && i.tenantId).map((i) => i.tenantId!),
+          ),
+          inArray(
+            sqlInviteTickets.invitedLedgerId,
+            roles.filter((i) => i.role === "admin" && i.ledgerId).map((i) => i.ledgerId!),
+          ),
         ),
-      )
-      .all();
-    // }
+      );
     return Result.Ok({
       type: "resListInvites",
-      tickets: Array.from(
-        rows
-          .reduce((acc, row) => {
-            if (!row.inviterTenantId) {
-              throw new Error("inviterTenantId is required");
-            }
-            const invites = acc.get(row.inviterTenantId) ?? [];
-            invites.push(sqlToInvite(row));
-            acc.set(row.inviterTenantId, invites);
-            return acc;
-          }, new Map<string, InviteTicket[]>())
-          .entries(),
-      )
-        .map(([tenantId, invites]) => ({
-          tenantId,
-          invites,
-        }))
-        .filter((x) => x.invites.length),
+      tickets: sqlToInviteTickets(invites),
     });
+
+    // list invites from all ledgers where i'm owner or admin
+
+    // this.db.select()
+    //   .from(sqlTenants)
+    //   .innerJoin(sqlTenantUsers, and(
+    //       eq(sqlTenantUsers.userId, auth.user.userId),
+    //       eq(sqlTenants.tenantId, sqlTenantUsers.tenantId),
+    //     ))
+    //   .innerJoin(sqlTenantUserRoles, and(
+    //     eq(sqlTenantUsers.userId, auth.user.userId),
+    //     eq(sqlTenants.tenantId, sqlTenantUsers.tenantId)
+    //   ))
+    //   .where(
+    //     eq(sqlTenants.ownerUserId, auth.user.userId)
+    // ).all();
+
+    // this.db.select().from(sqlInviteTickets)
+    //   .where(
+    //     eq(sqlInviteTickets.inviterUserId, auth.user.userId)
+    //   )
+    //   .all();
+
+    // let rows: (typeof sqlInviteTickets.$inferSelect)[];
+    // const ownerTenants = await this.db
+    //   .select()
+    //   .from(sqlTenants)
+    //   .where(eq(sqlTenants.ownerUserId, auth.user.userId))
+    //   .all()
+    //   .then((rows) => rows.map((row) => row.tenantId));
+    // // get admin in tenant for this user
+    // let condition = and(eq(sqlTenantUserRoles.userId, auth.user.userId), eq(sqlTenantUserRoles.role, "admin"));
+    // if (req.tenantIds.length) {
+    //   // filter by tenantIds if set
+    //   condition = and(inArray(sqlTenantUserRoles.tenantId, req.tenantIds), condition);
+    // }
+    // const adminTenants = await this.db
+    //   .select()
+    //   .from(sqlTenantUserRoles)
+    //   .where(condition)
+    //   .all()
+    //   .then((rows) => rows.map((row) => row.tenantId));
+    // const setTenants = new Set(req.tenantIds);
+    // const filterAdminTenants = Array.from(new Set([...ownerTenants, ...adminTenants, ...req.tenantIds])).filter((x) => {
+    //   return setTenants.size ? setTenants.has(x) : true;
+    // });
+    // // console.log(">>>>", filterAdminTenants);
+    // rows = await this.db
+    //   .select()
+    //   .from(sqlInviteTickets)
+    //   .where(
+    //     and(
+    //       inArray(sqlInviteTickets.invitedTenantId, filterAdminTenants),
+    //       // inArray(inviteTickets.inv, req.tenantIds)
+    //     ),
+    //   )
+    //   .all();
+    // // }
+    // return Result.Ok({
+    //   type: "resListInvites",
+    //   tickets: Array.from(
+    //     rows
+    //       .reduce((acc, row) => {
+    //         if (!row.inviterTenantId) {
+    //           throw new Error("inviterTenantId is required");
+    //         }
+    //         const invites = acc.get(row.inviterTenantId) ?? [];
+    //         invites.push(sqlToInvite(row));
+    //         acc.set(row.inviterTenantId, invites);
+    //         return acc;
+    //       }, new Map<string, InviteTicket[]>())
+    //       .entries(),
+    //   )
+    //     .map(([tenantId, invites]) => ({
+    //       tenantId,
+    //       invites,
+    //     }))
+    //     .filter((x) => x.invites.length),
+    // });
   }
 
   async deleteInvite(req: ReqDeleteInvite): Promise<Result<ResDeleteInvite>> {
@@ -1139,13 +1674,13 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     const userId = req.userId ?? auth.user.userId;
-    if (req.role && (await this.isOwnerOrAdminOfTenant(userId, req.tenantId))) {
+    if (req.role && (await this.isAdminOfTenant(userId, req.tenantId))) {
       await this.db
-        .update(sqlTenantUserRoles)
+        .update(sqlTenantUsers)
         .set({
           role: req.role,
         })
-        .where(and(eq(sqlTenantUserRoles.userId, userId), eq(sqlTenantUserRoles.tenantId, req.tenantId)))
+        .where(and(eq(sqlTenantUsers.userId, userId), eq(sqlTenantUsers.tenantId, req.tenantId)))
         .run();
     }
     if (req.default) {
@@ -1177,8 +1712,8 @@ export class FPApiSQL implements FPApiInterface {
       .select()
       .from(sqlTenantUsers)
       .innerJoin(
-        sqlTenantUserRoles,
-        and(eq(sqlTenantUsers.userId, sqlTenantUserRoles.userId), eq(sqlTenantUsers.tenantId, sqlTenantUserRoles.tenantId)),
+        sqlTenantUsers,
+        and(eq(sqlTenantUsers.userId, sqlTenantUsers.userId), eq(sqlTenantUsers.tenantId, sqlTenantUsers.tenantId)),
       )
       .where(and(eq(sqlTenantUsers.userId, userId), eq(sqlTenantUsers.tenantId, req.tenantId)))
       .get();
@@ -1189,7 +1724,7 @@ export class FPApiSQL implements FPApiInterface {
       type: "resUpdateUserTenant",
       tenantId: ret.TenantUsers.tenantId,
       userId: ret.TenantUsers.userId,
-      role: ret.TenantUserRoles.role as Role,
+      role: ret.TenantUsers.role as Role,
       default: !!ret.TenantUsers.default,
       name: toUndef(ret.TenantUsers.name),
     });
@@ -1213,7 +1748,7 @@ export class FPApiSQL implements FPApiInterface {
     }
     const tenant = rTenant.Ok();
     await this.addUserToTenant(this.db, {
-      name: nameFromAuth(req.tenant.name, auth as ActiveUserWithUserId),
+      userName: nameFromAuth(req.tenant.name, auth as ActiveUserWithUserId),
       tenantId: tenant.tenantId,
       userId: auth.user.userId,
       role: "admin",
@@ -1261,7 +1796,7 @@ export class FPApiSQL implements FPApiInterface {
     if (!prev) {
       return Result.Err("tenant not found");
     }
-    if (!(await this.isOwnerOrAdminOfTenant(auth.user.userId, req.tenant.tenantId))) {
+    if (!(await this.isAdminOfTenant(auth.user.userId, req.tenant.tenantId))) {
       return Result.Err("not owner of tenant");
     }
     const now = new Date().toISOString();
@@ -1292,12 +1827,11 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     // check if owner or admin of tenant
-    if (!(await this.isOwnerOrAdminOfTenant(auth.user.userId, req.tenantId))) {
+    if (!(await this.isAdminOfTenant(auth.user.userId, req.tenantId))) {
       return Result.Err("not owner or admin of tenant");
     }
     // TODO remove ledgers
     await this.db.delete(sqlInviteTickets).where(eq(sqlInviteTickets.invitedTenantId, req.tenantId)).run();
-    await this.db.delete(sqlTenantUserRoles).where(eq(sqlTenantUserRoles.tenantId, req.tenantId)).run();
     await this.db.delete(sqlTenantUsers).where(eq(sqlTenantUsers.tenantId, req.tenantId)).run();
     await this.db.delete(sqlTenants).where(eq(sqlTenants.tenantId, req.tenantId)).run();
     return Result.Ok({
@@ -1306,38 +1840,33 @@ export class FPApiSQL implements FPApiInterface {
     });
   }
 
-  private async isOwnerOrAdminOfTenant(userId: string, tenantId: string): Promise<boolean> {
-    const ownerRole = await this.db
-      .select()
-      .from(sqlTenants)
-      .where(and(eq(sqlTenants.ownerUserId, userId), eq(sqlTenants.tenantId, tenantId)))
-      .all();
+  private async isAdminOfTenant(userId: string, tenantId: string): Promise<boolean> {
     const adminRole = await this.db
       .select()
-      .from(sqlTenantUserRoles)
+      .from(sqlTenantUsers)
       .where(
-        and(eq(sqlTenantUserRoles.userId, userId), eq(sqlTenantUserRoles.tenantId, tenantId), eq(sqlTenantUserRoles.role, "admin")),
+        and(
+          eq(sqlTenantUsers.userId, userId),
+          eq(sqlTenantUsers.tenantId, tenantId),
+          eq(sqlTenantUsers.role, "admin"),
+          eq(sqlTenantUsers.status, "active"),
+        ),
       )
-      .all();
-    return !!(ownerRole.length || adminRole.length);
+      .get();
+    return !!adminRole;
   }
 
-  private async isOwnerOrAdminOfLedger(userId: string, ledgerId: string): Promise<boolean> {
-    const ownerRole = await this.db
-      .select()
-      .from(sqlLedgers)
-      .where(and(eq(sqlLedgers.ownerId, userId), eq(sqlLedgers.ledgerId, ledgerId)))
-      .all();
+  private async isAdminOfLedger(userId: string, ledgerId: string): Promise<boolean> {
     const adminRole = await this.db
       .select()
-      .from(sqlLedgerUserRoles)
-      .innerJoin(sqlLedgers, and(eq(sqlLedgers.ledgerId, sqlLedgerUserRoles.ledgerId)))
-      .where(and(eq(sqlLedgerUserRoles.userId, userId), eq(sqlLedgerUserRoles.ledgerId, ledgerId)))
-      .all();
-    if (adminRole.length && adminRole[0].LedgerUserRoles.role === "member") {
-      return this.isOwnerOrAdminOfTenant(userId, adminRole[0].Ledgers.tenantId);
+      .from(sqlLedgerUsers)
+      .innerJoin(sqlLedgers, and(eq(sqlLedgers.ledgerId, sqlLedgerUsers.ledgerId)))
+      .where(and(eq(sqlLedgerUsers.userId, userId), eq(sqlLedgerUsers.ledgerId, ledgerId)))
+      .get();
+    if (adminRole?.LedgerUsers.role === "member") {
+      return this.isAdminOfTenant(userId, adminRole.Ledgers.tenantId);
     }
-    return !!(ownerRole.length || adminRole.length);
+    return adminRole?.LedgerUsers.role === "admin";
   }
 
   async createLedger(req: ReqCreateLedger): Promise<Result<ResCreateLedger>> {
@@ -1350,9 +1879,24 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     // check if owner or admin of tenant
-    if (!(await this.isOwnerOrAdminOfTenant(auth.user.userId, req.ledger.tenantId))) {
+    if (!(await this.isAdminOfTenant(auth.user.userId, req.ledger.tenantId))) {
       return Result.Err("not owner or admin of tenant");
     }
+
+    const allowed = await this.db
+      .select()
+      .from(sqlTenants)
+      .where(
+        and(
+          eq(sqlTenants.tenantId, req.ledger.tenantId),
+          gt(sqlTenants.maxLedgers, this.db.$count(sqlLedgers, eq(sqlLedgers.tenantId, req.ledger.tenantId))),
+        ),
+      )
+      .get();
+    if (!allowed) {
+      return Result.Err("max ledgers per tenant reached");
+    }
+
     const ledgerId = this.sthis.nextId(12).str;
     const now = new Date().toISOString();
     const ledger = await this.db
@@ -1367,7 +1911,7 @@ export class FPApiSQL implements FPApiInterface {
       })
       .returning();
     const roles = await this.db
-      .insert(sqlLedgerUserRoles)
+      .insert(sqlLedgerUsers)
       .values({
         ledgerId: ledgerId,
         userId: auth.user.userId,
@@ -1382,7 +1926,7 @@ export class FPApiSQL implements FPApiInterface {
 
     return Result.Ok({
       type: "resCreateLedger",
-      ledger: sqlToLedgers([{ Ledgers: ledger[0], LedgerUserRoles: roles[0] }])[0],
+      ledger: sqlToLedgers([{ Ledgers: ledger[0], LedgerUsers: roles[0] }])[0],
     });
   }
   async updateLedger(req: ReqUpdateLedger): Promise<Result<ResUpdateLedger>> {
@@ -1396,26 +1940,26 @@ export class FPApiSQL implements FPApiInterface {
     }
     const now = new Date().toISOString();
     // check if owner or admin of tenant
-    if (!(await this.isOwnerOrAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
+    if (!(await this.isAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
       if (req.ledger.name) {
         await this.db
-          .update(sqlLedgerUserRoles)
+          .update(sqlLedgerUsers)
           .set({
             name: req.ledger.name,
             updatedAt: now,
           })
-          .where(and(eq(sqlLedgerUserRoles.userId, auth.user.userId), eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId)))
+          .where(and(eq(sqlLedgerUsers.userId, auth.user.userId), eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId)))
           .run();
       }
       const rows = await this.db
         .select()
         .from(sqlLedgers)
-        .innerJoin(sqlLedgerUserRoles, and(eq(sqlLedgers.ledgerId, sqlLedgerUserRoles.ledgerId)))
+        .innerJoin(sqlLedgerUsers, and(eq(sqlLedgers.ledgerId, sqlLedgerUsers.ledgerId)))
         .where(
           and(
-            eq(sqlLedgerUserRoles.userId, auth.user.userId),
-            eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId),
-            ne(sqlLedgerUserRoles.role, "admin"),
+            eq(sqlLedgerUsers.userId, auth.user.userId),
+            eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId),
+            ne(sqlLedgerUsers.role, "admin"),
           ),
         )
         .all();
@@ -1438,12 +1982,12 @@ export class FPApiSQL implements FPApiInterface {
       if (req.ledger.default) {
         // switch default
         await this.db
-          .update(sqlLedgerUserRoles)
+          .update(sqlLedgerUsers)
           .set({
             default: 0,
             updatedAt: now,
           })
-          .where(and(eq(sqlLedgerUserRoles.userId, auth.user.userId), ne(sqlLedgerUserRoles.default, 0)))
+          .where(and(eq(sqlLedgerUsers.userId, auth.user.userId), ne(sqlLedgerUsers.default, 0)))
           .run();
       }
     }
@@ -1462,9 +2006,9 @@ export class FPApiSQL implements FPApiInterface {
       role.role = req.ledger.role;
     }
     const roles = await this.db
-      .update(sqlLedgerUserRoles)
+      .update(sqlLedgerUsers)
       .set(role)
-      .where(eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId))
+      .where(eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId))
       .returning();
     const ledgers = await this.db.update(sqlLedgers).set(ledger).where(eq(sqlLedgers.ledgerId, req.ledger.ledgerId)).returning();
     return Result.Ok({
@@ -1472,7 +2016,7 @@ export class FPApiSQL implements FPApiInterface {
       ledger: sqlToLedgers([
         {
           Ledgers: ledgers[0],
-          LedgerUserRoles: roles[0],
+          LedgerUsers: roles[0],
         },
       ])[0],
     });
@@ -1488,10 +2032,10 @@ export class FPApiSQL implements FPApiInterface {
     }
     const now = new Date().toISOString();
     // check if owner or admin of tenant
-    if (!(await this.isOwnerOrAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
+    if (!(await this.isAdminOfLedger(auth.user.userId, req.ledger.ledgerId))) {
       return Result.Err("not owner or admin of tenant");
     }
-    await this.db.delete(sqlLedgerUserRoles).where(eq(sqlLedgerUserRoles.ledgerId, req.ledger.ledgerId)).run();
+    await this.db.delete(sqlLedgerUsers).where(eq(sqlLedgerUsers.ledgerId, req.ledger.ledgerId)).run();
     await this.db.delete(sqlLedgers).where(eq(sqlLedgers.ledgerId, req.ledger.ledgerId)).run();
     return Result.Ok({
       type: "resDeleteLedger",
@@ -1508,14 +2052,14 @@ export class FPApiSQL implements FPApiInterface {
       return Result.Err(new UserNotFoundError());
     }
     const now = new Date().toISOString();
-    let condition = and(eq(sqlLedgerUserRoles.userId, auth.user.userId));
+    let condition = and(eq(sqlLedgerUsers.userId, auth.user.userId));
     if (req.tenantIds && req.tenantIds.length) {
       condition = and(condition, inArray(sqlLedgers.tenantId, req.tenantIds));
     }
     const rows = await this.db
       .select()
       .from(sqlLedgers)
-      .innerJoin(sqlLedgerUserRoles, and(eq(sqlLedgers.ledgerId, sqlLedgerUserRoles.ledgerId)))
+      .innerJoin(sqlLedgerUsers, and(eq(sqlLedgers.ledgerId, sqlLedgerUsers.ledgerId)))
       .where(condition)
       .all();
     return Result.Ok({

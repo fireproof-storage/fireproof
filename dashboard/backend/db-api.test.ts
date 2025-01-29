@@ -8,7 +8,7 @@
 
 import { createClient } from "@libsql/client/node";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
-import { FPApiSQL, FPApiToken, OwnerTenant, ReqEnsureUser, ResEnsureUser } from "./api.js";
+import { FPApiSQL, FPApiToken, AdminTenant, ReqEnsureUser, ResEnsureUser } from "./api.js";
 import { ensureSuperThis, Result, SuperThis } from "@fireproof/core";
 import { AuthType, VerifiedAuth } from "./users.ts";
 import { queryEmail, queryNick, QueryUser } from "./sql-helper.ts";
@@ -89,6 +89,7 @@ describe("db-api", () => {
       const rRes = await fpApi.ensureUser(d.reqs!);
       const res = rRes.Ok();
       d.ress = res;
+      // console.log("res", res);
       expect(res).toEqual({
         type: "resEnsureUser",
         user: {
@@ -120,7 +121,7 @@ describe("db-api", () => {
             maxAdminUsers: 5,
             maxMemberUsers: 5,
             memberUserIds: [],
-            role: "owner",
+            role: "admin",
             tenantId: res.tenants[0].tenantId,
             user: res.tenants[0].user,
             tenant: res.tenants[0].tenant,
@@ -164,7 +165,7 @@ describe("db-api", () => {
             maxAdminUsers: 5,
             maxMemberUsers: 5,
             memberUserIds: [],
-            role: "owner",
+            role: "admin",
             tenantId: res.tenants[0].tenantId,
             user: res.tenants[0].user,
             tenant: res.tenants[0].tenant,
@@ -180,7 +181,7 @@ describe("db-api", () => {
         auth: d.reqs.auth,
       });
       const res = rRes.Ok();
-      const ownerTenant = d.ress.tenants[0] as OwnerTenant;
+      const ownerTenant = d.ress.tenants[0] as AdminTenant;
       expect(res).toEqual({
         authUserId: d.ress.user.byProviders[0].providerUserId,
         tenants: [
@@ -192,7 +193,7 @@ describe("db-api", () => {
             maxAdminUsers: 5,
             maxMemberUsers: 5,
             default: true,
-            role: "owner",
+            role: "admin",
             tenantId: d.ress.tenants[0].tenantId,
           },
         ],
@@ -209,13 +210,13 @@ describe("db-api", () => {
       type: "reqInviteUser",
       auth,
       ticket: {
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
+        // inviterTenantId: data[0].ress.tenants[0].tenantId,
         query: {
           existingUserId: data[0].ress.user.userId,
         },
         invitedParams: {
           tenant: {
-            // id: data[0].ress.tenants[0].tenantId,
+            id: data[0].ress.tenants[0].tenantId,
             role: "admin",
           },
         },
@@ -231,13 +232,12 @@ describe("db-api", () => {
       type: "reqInviteUser",
       auth,
       ticket: {
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
         query: {
           existingUserId: "not-existing",
         },
         invitedParams: {
           tenant: {
-            // id: data[0].ress.tenants[0].tenantId,
+            id: data[0].ress.tenants[0].tenantId,
             role: "admin",
           },
         },
@@ -253,13 +253,12 @@ describe("db-api", () => {
       type: "reqInviteUser",
       auth,
       ticket: {
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
         query: {
           existingUserId: data[1].ress.user.userId,
         },
         invitedParams: {
           tenant: {
-            // id: data[0].ress.tenants[0].tenantId,
+            id: data[0].ress.tenants[0].tenantId,
             role: "member",
           },
         },
@@ -270,21 +269,27 @@ describe("db-api", () => {
         createdAt: resinsert.Ok().invite.createdAt,
         expiresAfter: resinsert.Ok().invite.expiresAfter,
         inviteId: resinsert.Ok().invite.inviteId,
-        invitedLedgerId: undefined,
+        // invitedLedgerId: undefined,
         invitedParams: {
           tenant: {
+            id: data[0].ress.tenants[0].tenantId,
             role: "member",
           },
         },
-        invitedTenantId: data[0].ress.tenants[0].tenantId,
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
+        // inviterTenantId: data[0].ress.tenants[0].tenantId,
+        invitedUserId: data[1].ress.user.userId,
         inviterUserId: data[0].ress.user.userId,
-        queryEmail: undefined,
-        queryNick: undefined,
-        queryProvider: undefined,
+        query: {
+          andProvider: undefined,
+          byEmail: undefined,
+          byNick: undefined,
+          existingUserId: data[1].ress.user.userId,
+        },
+        status: "pending",
+        statusReason: "just invited",
         sendEmailCount: 0,
         updatedAt: resinsert.Ok().invite.updatedAt,
-        userID: data[1].ress.user.userId,
+        // userID: data[1].ress.user.userId,
       },
       type: "resInviteUser",
     });
@@ -297,13 +302,12 @@ describe("db-api", () => {
       type: "reqInviteUser",
       auth,
       ticket: {
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
         query: {
           byEmail: key,
         },
         invitedParams: {
           tenant: {
-            // id: data[0].ress.tenants[0].tenantId,
+            id: data[0].ress.tenants[0].tenantId,
             role: "admin",
           },
         },
@@ -315,7 +319,6 @@ describe("db-api", () => {
       auth,
       ticket: {
         inviteId: resinsert.Ok().invite.inviteId,
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
         incSendEmailCount: true,
         query: {
           // to be ignored
@@ -324,6 +327,7 @@ describe("db-api", () => {
         },
         invitedParams: {
           tenant: {
+            id: data[0].ress.tenants[0].tenantId,
             role: "member",
           },
         },
@@ -335,19 +339,25 @@ describe("db-api", () => {
         createdAt: resinsert.Ok().invite.createdAt,
         expiresAfter: resinsert.Ok().invite.expiresAfter,
         inviteId: resinsert.Ok().invite.inviteId,
-        invitedLedgerId: undefined,
+        // invitedLedgerId: undefined,
         invitedParams: {
+          ledger: undefined,
           tenant: {
+            id: data[0].ress.tenants[0].tenantId,
             role: "member",
           },
         },
-        invitedTenantId: data[0].ress.tenants[0].tenantId,
-        inviterTenantId: data[0].ress.tenants[0].tenantId,
+        // inviterTenantId: data[0].ress.tenants[0].tenantId,
         inviterUserId: data[0].ress.user.userId,
-        queryEmail: queryEmail(key),
-        queryNick: undefined,
-        queryProvider: undefined,
+        query: {
+          andProvider: undefined,
+          byEmail: queryEmail(key),
+          byNick: undefined,
+          existingUserId: undefined,
+        },
         sendEmailCount: 1,
+        status: "pending",
+        statusReason: "just invited",
         updatedAt: resupdate.Ok().invite.updatedAt,
         userID: undefined,
       },
@@ -490,6 +500,7 @@ describe("db-api", () => {
         createdAt: tenant.Ok().tenant.createdAt,
         maxAdminUsers: 5,
         maxInvites: 10,
+        maxLedgers: 5,
         maxMemberUsers: 5,
         name: tenant.Ok().tenant.name,
         ownerUserId: data[0].ress.user.userId,
@@ -523,7 +534,7 @@ describe("db-api", () => {
       maxMemberUsers: 5,
       memberUserIds: [],
       user: myOwnersTenant[0].user,
-      role: "owner",
+      role: "admin",
       tenant: {
         ...myOwnersTenant[0].tenant,
         name: "new name",
@@ -534,26 +545,83 @@ describe("db-api", () => {
       type: "reqInviteUser",
       auth: data[0].reqs.auth,
       ticket: {
-        inviterTenantId: tenant.Ok().tenant.tenantId,
         query: {
           existingUserId: data[1].ress.user.userId,
         },
         invitedParams: {
           tenant: {
-            // id: data[0].ress.tenants[0].tenantId,
+            id: tenant.Ok().tenant.tenantId,
             role: "member",
           },
         },
       },
     });
-    const resCuT = await fpApi.connectUserToTenant({
-      type: "reqConnectUserToTenant",
+    const rRedeem = await fpApi.redeemInvite({
+      type: "reqRedeemInvite",
       auth: data[1].reqs.auth,
-      name: "my-connect-tenant",
-      tenantId: tenant.Ok().tenant.tenantId,
-      inviteId: invite.Ok().invite.inviteId,
     });
-    expect(resCuT.isOk()).toBeTruthy();
+    expect(rRedeem.isOk()).toBeTruthy();
+    const rRedeemedInvites = rRedeem.Ok().invites?.find((i) => i.inviteId === invite.Ok().invite.inviteId)!;
+    expect(rRedeemedInvites).toEqual({
+      createdAt: rRedeemedInvites.createdAt,
+      expiresAfter: rRedeemedInvites.expiresAfter,
+      inviteId: rRedeemedInvites.inviteId,
+      invitedParams: {
+        tenant: {
+          id: rRedeemedInvites.invitedParams.tenant?.id,
+          role: "member",
+        },
+      },
+      invitedUserId: data[1].ress.user.userId,
+      inviterUserId: rRedeemedInvites.inviterUserId,
+      query: {
+        andProvider: undefined,
+        byEmail: undefined,
+        byNick: undefined,
+        existingUserId: rRedeemedInvites.query.existingUserId,
+      },
+      sendEmailCount: 0,
+      status: "accepted",
+      statusReason: rRedeemedInvites.statusReason,
+      updatedAt: rRedeemedInvites.updatedAt,
+    });
+
+    const listInvites = await fpApi.listInvites({
+      type: "reqListInvites",
+      auth: data[0].reqs.auth,
+      tenantIds: [tenant.Ok().tenant.tenantId],
+    });
+
+    expect(
+      listInvites.Ok().tickets.filter((i) => i.inviteId === rRedeemedInvites.inviteId),
+
+      // .tickets.filter((i) => i.invitedParams.tenant?.id === rUpdate.Ok().tenant.tenantId)
+      // .filter((i) => i.inviteId === invite.Ok().invite.inviteId),
+    ).toEqual([
+      {
+        createdAt: rRedeemedInvites.createdAt,
+        expiresAfter: rRedeemedInvites.expiresAfter,
+        inviteId: rRedeemedInvites.inviteId,
+        invitedParams: {
+          tenant: {
+            id: rRedeemedInvites.invitedParams.tenant?.id,
+            role: "member",
+          },
+        },
+        invitedUserId: rRedeemedInvites.invitedUserId,
+        inviterUserId: rRedeemedInvites.inviterUserId,
+        query: {
+          andProvider: undefined,
+          byEmail: undefined,
+          byNick: undefined,
+          existingUserId: rRedeemedInvites.query.existingUserId,
+        },
+        sendEmailCount: 0,
+        status: "accepted",
+        statusReason: rRedeemedInvites.statusReason,
+        updatedAt: rRedeemedInvites.updatedAt,
+      },
+    ]);
 
     const tenantWithNew = await fpApi.listTenantsByUser({
       type: "reqListTenantsByUser",
@@ -565,7 +633,7 @@ describe("db-api", () => {
         default: false,
         user: {
           ...myWith[0].user,
-          name: "my-connect-tenant",
+          name: "invited from [new name]",
         },
 
         role: "member",
@@ -596,8 +664,8 @@ describe("db-api", () => {
     expect(
       tickets
         .Ok()
-        .tickets.filter((i) => i.tenantId === rUpdate.Ok().tenant.tenantId)
-        .map((i) => i.invites.filter((i) => i.inviteId === invite.Ok().invite.inviteId)),
+        .tickets.filter((i) => i.invitedParams.tenant?.id === rUpdate.Ok().tenant.tenantId)
+        .map((i) => i.inviteId === invite.Ok().invite.inviteId),
     ).toEqual([]);
   });
 
@@ -611,13 +679,12 @@ describe("db-api", () => {
             type: "reqInviteUser",
             auth: d.reqs.auth,
             ticket: {
-              inviterTenantId: d.ress.tenants[0].tenantId,
               query: {
                 existingUserId: data[0].ress.user.userId,
               },
               invitedParams: {
                 tenant: {
-                  // id: data[0].ress.tenants[0].tenantId,
+                  id: d.ress.tenants[0].tenantId,
                   role: "member",
                 },
               },
@@ -636,12 +703,7 @@ describe("db-api", () => {
       });
       expect(res.Ok()).toEqual({
         type: "resListInvites",
-        tickets: [
-          {
-            invites: [invites[didx]],
-            tenantId: d.ress.tenants[0].tenantId,
-          },
-        ],
+        tickets: [invites[didx]],
       });
     }
     await Promise.all(
@@ -679,14 +741,14 @@ describe("db-api", () => {
         maxShares: 5,
         name: `ledger[${data[0].ress.tenants[0].tenantId}]`,
         ownerId: data[0].ress.user.userId,
-        rights: [
+        users: [
           {
-            createdAt: createLedger.Ok().ledger.rights[0].createdAt,
+            createdAt: createLedger.Ok().ledger.users[0].createdAt,
             default: false,
             name: `ledger[${data[0].ress.tenants[0].tenantId}]`,
             right: "write",
             role: "admin",
-            updatedAt: createLedger.Ok().ledger.rights[0].updatedAt,
+            updatedAt: createLedger.Ok().ledger.users[0].updatedAt,
             userId: data[0].ress.user.userId,
           },
         ],
@@ -721,9 +783,9 @@ describe("db-api", () => {
       maxShares: 5,
       name: "new name",
       ownerId: data[0].ress.user.userId,
-      rights: [
+      users: [
         {
-          createdAt: createLedger.Ok().ledger.rights[0].createdAt,
+          createdAt: createLedger.Ok().ledger.users[0].createdAt,
           default: true,
           name: "new name",
           right: "read",

@@ -12,13 +12,14 @@ function isAdmin(ut: UserTenant) {
   return ut.role === "admin" || ut.role === "owner";
 }
 
-const reEmail = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
+const reEmail =
+  /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
 export function CloudTenantMembers() {
   const { tenantId } = useParams();
   const { cloud } = useContext(AppContext);
   const listTenants = cloud.getListTenantsByUser();
-  
+
   if (listTenants.isLoading) {
     return <div>Loading...</div>;
   }
@@ -28,7 +29,7 @@ export function CloudTenantMembers() {
   }
 
   const tenant = listTenants.data.tenants.find((t) => t.tenantId === tenantId);
-  
+
   if (!tenant) {
     return <div>Not found</div>;
   }
@@ -54,7 +55,7 @@ export function CloudTenantMembers() {
 }
 
 function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string }) {
-  const {cloud} = useContext(AppContext);
+  const { cloud } = useContext(AppContext);
   const [queryResult, setQueryResult] = useState<ResFindUser>({
     type: "resFindUser",
     query: {},
@@ -140,8 +141,8 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
                     <li key={user.userId} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {user.byProviders[0].params.image_url && (
-                          <img 
-                            src={user.byProviders[0].params.image_url} 
+                          <img
+                            src={user.byProviders[0].params.image_url}
                             className="w-8 h-8 rounded-full"
                             alt={user.byProviders[0].cleanEmail}
                           />
@@ -150,11 +151,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
                           {user.byProviders[0].queryProvider}[{user.byProviders[0].cleanEmail}]
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={addInvite(tenant, user)}
-                        className="p-1 hover:bg-[--accent]/10 rounded"
-                      >
+                      <button type="button" onClick={addInvite(tenant, user)} className="p-1 hover:bg-[--accent]/10 rounded">
                         <Plus />
                       </button>
                     </li>
@@ -169,7 +166,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
 }
 
 function CurrentInvites({ tenant }: { tenant: UserTenant }) {
-  const { cloud }  = useContext(AppContext);
+  const { cloud } = useContext(AppContext);
   const listInvites = cloud.getListInvitesByTenant(tenant.tenantId);
 
   if (listInvites.isLoading) {
@@ -179,7 +176,7 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
     return <div>Not found</div>;
   }
 
- function delInvite(inviteId: string) {
+  function delInvite(inviteId: string) {
     return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       e.preventDefault();
       const res = await cloud.api.deleteInvite({ inviteId });
@@ -219,4 +216,4 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
       )}
     </div>
   );
-} 
+}

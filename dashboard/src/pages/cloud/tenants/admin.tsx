@@ -6,14 +6,13 @@ import { AppContext } from "../../../app-context";
 import { tenantName } from "../../../hooks/tenant";
 
 export function CloudTenantAdmin() {
-    const { tenantId } = useParams();
-    const { cloud } = useContext(AppContext);
-    const listTenants = cloud.getListTenantsByUser();
-    
-    const { register, handleSubmit } = useForm();
-    const navigate = useNavigate();
+  const { tenantId } = useParams();
+  const { cloud } = useContext(AppContext);
+  const listTenants = cloud.getListTenantsByUser();
 
-  
+  const { register, handleSubmit } = useForm();
+  const navigate = useNavigate();
+
   if (listTenants.isLoading) {
     return <div>Loading...</div>;
   }
@@ -29,7 +28,7 @@ export function CloudTenantAdmin() {
 
   const onSubmitTenant = async (data: any) => {
     if (!data) return;
-    
+
     const tenant = {
       ...(data as unknown as InUpdateTenantParams),
       name: (data as { tenantName: string }).tenantName,
@@ -70,11 +69,7 @@ export function CloudTenantAdmin() {
                     type="text"
                     className="flex-1 py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent"
                   />
-                  <input
-                    type="hidden"
-                    {...register("tenantId", { required: true })}
-                    value={tenant.tenantId}
-                  />
+                  <input type="hidden" {...register("tenantId", { required: true })} value={tenant.tenantId} />
                   <button
                     type="submit"
                     className="px-4 py-2 bg-[--accent] text-[--accent-foreground] rounded hover:bg-[--accent]/80"
@@ -109,4 +104,4 @@ export function CloudTenantAdmin() {
       </div>
     </div>
   );
-} 
+}
