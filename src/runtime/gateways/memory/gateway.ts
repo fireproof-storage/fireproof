@@ -28,6 +28,7 @@ export class MemoryGateway implements Gateway {
     this.memorys.clear();
     return Promise.resolve(Result.Ok(undefined));
   }
+
   async put(url: URI, bytes: Uint8Array): Promise<VoidResult> {
     this.memorys.set(url.toString(), bytes);
     return Result.Ok(undefined);
