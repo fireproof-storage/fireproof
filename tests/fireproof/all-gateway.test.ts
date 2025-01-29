@@ -2,6 +2,7 @@ import { Database, Ledger, LedgerFactory, PARAM, bs, ensureSuperThis, fireproof 
 
 import { fileContent } from "./cars/bafkreidxwt2nhvbl4fnqfw3ctlt6zbrir4kqwmjo5im6rf4q5si27kgo2i.js";
 import { simpleCID } from "../helpers.js";
+import { Future } from "@adviser/cement";
 
 // import { DataStore, MetaStore, WALState, WALStore } from "../../src/blockstore/types.js";
 // import { Gateway } from "../../src/blockstore/gateway.js";
@@ -386,25 +387,21 @@ describe("noop Gateway subscribe", function () {
     const metaUrl = await metaGateway.buildUrl(sthis, metaStore.url(), "main");
     await metaGateway.start(sthis, metaStore.url());
 
-    let resolve: () => void;
     let didCall = false;
-    const p = new Promise<void>((r) => {
-      resolve = r;
-    });
-    if (metaGateway.subscribe) {
-      const metaSubscribeResult = (await metaGateway.subscribe(sthis, metaUrl.Ok(), async (data: bs.FPEnvelopeMeta) => {
-        // const decodedData = sthis.txt.decode(data);
-        expect(data.payload).toContain("[]");
-        didCall = true;
-        resolve();
-      })) as bs.UnsubscribeResult;
-      expect(metaSubscribeResult.isOk()).toBeTruthy();
-      const ok = await db.put({ _id: "key1", hello: "world1" });
-      expect(ok).toBeTruthy();
-      expect(ok.id).toBe("key1");
-      await p;
-      expect(didCall).toBeTruthy();
-    }
+    const p = new Future<void>();
+
+    const metaSubscribeResult = (await metaGateway.subscribe(sthis, metaUrl.Ok(), async (data: bs.FPEnvelopeMeta) => {
+      // const decodedData = sthis.txt.decode(data);
+      expect(Array.isArray(data.payload)).toBeTruthy();
+      didCall = true;
+      p.resolve();
+    })) as bs.UnsubscribeResult;
+    expect(metaSubscribeResult.isOk()).toBeTruthy();
+    const ok = await db.put({ _id: "key1", hello: "world1" });
+    expect(ok).toBeTruthy();
+    expect(ok.id).toBe("key1");
+    await p.asPromise();
+    expect(didCall).toBeTruthy();
   });
 });
 
