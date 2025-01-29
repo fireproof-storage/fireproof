@@ -242,8 +242,17 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       return docsWithId();
     };
 
+    const subscribe = (callback: (doc: DocWithId<T>) => void) => {
+      const unsubscribe = this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+        updates.forEach((update) => {
+          callback(docUpdateToDocWithId(update as DocUpdate<T>));
+        });
+      });
+
+      return unsubscribe;
+    };
+
     const stream = (opts: { futureOnly: boolean; since?: ClockHead; sinceOptions?: ChangesOptions }) => {
-      const clock = this.crdt.clock;
       const ready = this.ready.bind(this);
       const updateIndex = this._updateIndex.bind(this);
       const hydrateIndex = this._hydrateIndex.bind(this);
@@ -277,14 +286,12 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
             if (value) await iterate(value);
           }
 
-          unsubscribe = clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+          unsubscribe = subscribe(async (doc) => {
             if (isClosed) return;
-            updates.forEach(async (update) => {
-              await updateIndex();
-              await hydrateIndex();
+            await updateIndex();
+            await hydrateIndex();
 
-              controller.enqueue({ doc: docUpdateToDocWithId(update as DocUpdate<T>), marker: { kind: "new" } });
-            });
+            controller.enqueue({ doc, marker: { kind: "new" } });
           });
         },
 
@@ -297,6 +304,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
     return {
       snapshot,
+      subscribe,
       live(opts?: { since?: ClockHead }) {
         return stream({ futureOnly: false, since: opts?.since });
       },
