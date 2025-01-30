@@ -80,7 +80,7 @@ export class Loader implements Loadable {
   async carStore(): Promise<DataStore> {
     return this._carStore.once(async () =>
       this.ebOpts.storeRuntime.makeDataStore({
-        sthis: this.sthis,
+        // sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.data,
         // keybag: await this.keyBag(),
@@ -93,7 +93,7 @@ export class Loader implements Loadable {
   async fileStore(): Promise<DataStore> {
     return this._fileStore.once(async () =>
       this.ebOpts.storeRuntime.makeDataStore({
-        sthis: this.sthis,
+        // sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.file,
         // keybag: await this.keyBag(),
@@ -105,7 +105,7 @@ export class Loader implements Loadable {
   async WALStore(): Promise<WALStore> {
     return this._WALStore.once(async () =>
       this.ebOpts.storeRuntime.makeWALStore({
-        sthis: this.sthis,
+        // sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.wal,
         // keybag: await this.keyBag(),
@@ -118,7 +118,7 @@ export class Loader implements Loadable {
   async metaStore(): Promise<MetaStore> {
     return this._metaStore.once(async () =>
       this.ebOpts.storeRuntime.makeMetaStore({
-        sthis: this.sthis,
+        // sthis: this.sthis,
         gatewayInterceptor: this.ebOpts.gatewayInterceptor,
         url: this.ebOpts.storeUrls.meta,
         // keybag: await this.keyBag(),
