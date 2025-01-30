@@ -1,7 +1,7 @@
 import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 
-import { INDEXDB_VERSION } from "../version.js";
+import { INDEXDB_VERSION } from "../indexdb-version.js";
 import { NotFoundError, PARAM, exceptionWrapper, getKey, getStore, type SuperThis, bs } from "@fireproof/core";
 
 function ensureVersion(url: URI): URI {
