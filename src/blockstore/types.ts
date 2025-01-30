@@ -205,7 +205,7 @@ export interface StoreURIRuntime {
 }
 
 export interface StoreFactoryItem {
-  readonly sthis: SuperThis;
+  // readonly sthis: SuperThis;
   readonly url: URI;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
   // readonly keybag: KeyBag;

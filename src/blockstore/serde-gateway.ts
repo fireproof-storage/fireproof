@@ -1,8 +1,8 @@
 import { Result, URI } from "@adviser/cement";
 import { NotFoundError } from "../utils.js";
 import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
-import { Loadable } from "./types.js";
-import { SuperThis } from "../types.js";
+import { type Loadable } from "./types.js";
+import { FPDecoder, type FPEncoder } from "../runtime/gateways/fp-envelope-serialize.js";
 
 export interface SerdeGatewayOpts {
   readonly gateway: SerdeGateway;
@@ -17,31 +17,32 @@ export type VoidResult = Result<void>;
 
 export type UnsubscribeResult = Result<() => void>;
 
+export interface SerdeGatewayCtx {
+  readonly loader: Loadable;
+  readonly encoder?: Partial<FPEncoder>;
+  readonly decoder?: Partial<FPDecoder>;
+}
+
 export interface SerdeGateway {
   // all the methods never throw!
   // an error is reported as a Result
-  buildUrl(sthis: SuperThis, baseUrl: URI, key: string, loader?: Loadable): Promise<Result<URI>>;
+  buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>>;
   // start updates URL --> hate this side effect
-  start(sthis: SuperThis, baseUrl: URI, loader?: Loadable): Promise<Result<URI>>;
-  close(sthis: SuperThis, baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
-  put<T>(sthis: SuperThis, url: URI, body: FPEnvelope<T>, loader?: Loadable): Promise<VoidResult>;
+  start(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<URI>>;
+  close(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<VoidResult>;
+  put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<VoidResult>;
   // get could return a NotFoundError if the key is not found
-  get<S>(sthis: SuperThis, url: URI, loader?: Loadable): Promise<SerdeGetResult<S>>;
-  delete(sthis: SuperThis, url: URI, loader?: Loadable): Promise<VoidResult>;
+  get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<SerdeGetResult<S>>;
+  delete(ctx: SerdeGatewayCtx, url: URI): Promise<VoidResult>;
 
   // be notified of remote meta
-  subscribe(
-    sthis: SuperThis,
-    url: URI,
-    callback: (meta: FPEnvelopeMeta) => Promise<void>,
-    loader?: Loadable,
-  ): Promise<UnsubscribeResult>;
+  subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (meta: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult>;
 
   // this method is used to get the raw data mostly for testing
-  getPlain(sthis: SuperThis, url: URI, key: string, loader?: Loadable): Promise<Result<Uint8Array>>;
+  getPlain(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<Uint8Array>>;
   // this method is used for testing only
   // to avoid any drama it should only enabled in test mode
-  destroy(sthis: SuperThis, baseUrl: URI, loader?: Loadable): Promise<VoidResult>;
+  destroy(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<VoidResult>;
 }
 
 export interface SerdeGatewayReturn<O, T> {
@@ -95,17 +96,16 @@ export interface SerdeGatewaySubscribeOp {
 export type SerdeGatewaySubscribeReturn = SerdeGatewayReturn<SerdeGatewaySubscribeOp, UnsubscribeResult>;
 
 export interface SerdeGatewayInterceptor {
-  buildUrl(sthis: SuperThis, baseUrl: URI, key: string, loader: Loadable): Promise<Result<SerdeGatewayBuildUrlReturn>>;
-  start(sthis: SuperThis, baseUrl: URI, loader: Loadable): Promise<Result<SerdeGatewayStartReturn>>;
-  close(sthis: SuperThis, baseUrl: URI, loader: Loadable): Promise<Result<SerdeGatewayCloseReturn>>;
-  delete(sthis: SuperThis, baseUrl: URI, loader: Loadable): Promise<Result<SerdeGatewayDeleteReturn>>;
-  destroy(sthis: SuperThis, baseUrl: URI, loader: Loadable): Promise<Result<SerdeGatewayDestroyReturn>>;
-  put<T>(sthis: SuperThis, url: URI, body: FPEnvelope<T>, loader: Loadable): Promise<Result<SerdeGatewayPutReturn<T>>>;
-  get<S>(sthis: SuperThis, url: URI, loader: Loadable): Promise<Result<SerdeGatewayGetReturn<S>>>;
+  buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<SerdeGatewayBuildUrlReturn>>;
+  start(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<SerdeGatewayStartReturn>>;
+  close(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<SerdeGatewayCloseReturn>>;
+  delete(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<SerdeGatewayDeleteReturn>>;
+  destroy(ctx: SerdeGatewayCtx, baseUrl: URI): Promise<Result<SerdeGatewayDestroyReturn>>;
+  put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<SerdeGatewayPutReturn<T>>>;
+  get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayGetReturn<S>>>;
   subscribe(
-    sthis: SuperThis,
+    ctx: SerdeGatewayCtx,
     url: URI,
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
-    loader: Loadable,
   ): Promise<Result<SerdeGatewaySubscribeReturn>>;
 }

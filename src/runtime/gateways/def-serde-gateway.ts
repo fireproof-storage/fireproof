@@ -2,9 +2,8 @@ import { Result, URI } from "@adviser/cement";
 import type { Gateway } from "../../blockstore/gateway.js";
 import { FPEnvelopeType, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
 import { fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
-import type { SerdeGateway, SerdeGetResult } from "../../blockstore/serde-gateway.js";
-import type { SuperThis } from "../../types.js";
-import { DbMetaEvent, Loadable } from "../../blockstore/types.js";
+import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult } from "../../blockstore/serde-gateway.js";
+import type { DbMetaEvent } from "../../blockstore/types.js";
 
 export class DefSerdeGateway implements SerdeGateway {
   // abstract readonly storeType: StoreType;
@@ -14,26 +13,22 @@ export class DefSerdeGateway implements SerdeGateway {
     this.gw = gw;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  start(sthis: SuperThis, baseURL: URI, loader?: Loadable): Promise<Result<URI>> {
+  start({ loader: { sthis } }: SerdeGatewayCtx, baseURL: URI): Promise<Result<URI>> {
     return this.gw.start(baseURL, sthis);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async buildUrl(sthis: SuperThis, baseUrl: URI, key: string, loader?: Loadable): Promise<Result<URI>> {
+  async buildUrl({ loader: { sthis } }: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
     return this.gw.buildUrl(baseUrl, key, sthis);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async close(sthis: SuperThis, uri: URI, loader?: Loadable): Promise<Result<void>> {
+  async close({ loader: { sthis } }: SerdeGatewayCtx, uri: URI): Promise<Result<void>> {
     return this.gw.close(uri, sthis);
   }
 
   private subscribeFn = new Map<string, (meta: FPEnvelopeMeta) => Promise<void>>();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async put<T>(sthis: SuperThis, url: URI, env: FPEnvelope<T>, loader?: Loadable): Promise<Result<void>> {
-    const rUint8 = await fpSerialize(sthis, env);
+  async put<T>({ loader: { sthis }, encoder }: SerdeGatewayCtx, url: URI, env: FPEnvelope<T>): Promise<Result<void>> {
+    const rUint8 = await fpSerialize(sthis, env, encoder);
     if (rUint8.isErr()) return rUint8;
     const ret = this.gw.put(url, rUint8.Ok(), sthis);
 
@@ -46,19 +41,16 @@ export class DefSerdeGateway implements SerdeGateway {
     return ret;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async get<S>(sthis: SuperThis, url: URI, loader?: Loadable): Promise<SerdeGetResult<S>> {
+  async get<S>({ loader: { sthis }, decoder }: SerdeGatewayCtx, url: URI): Promise<SerdeGetResult<S>> {
     const res = await this.gw.get(url, sthis);
     if (res.isErr()) return Result.Err(res.Err());
-    return fpDeserialize(sthis, url, res) as Promise<SerdeGetResult<S>>;
+    return fpDeserialize(sthis, url, res, decoder) as Promise<SerdeGetResult<S>>;
   }
 
   async subscribe(
-    sthis: SuperThis,
+    { loader: { sthis }, decoder }: SerdeGatewayCtx,
     url: URI,
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    loader?: Loadable,
   ): Promise<Result<() => void>> {
     if (!this.gw.subscribe) {
       // memory leak possible
@@ -70,7 +62,7 @@ export class DefSerdeGateway implements SerdeGateway {
     const unreg = await this.gw.subscribe(
       url,
       (raw: Uint8Array) => {
-        fpDeserialize<DbMetaEvent[]>(sthis, url, Result.Ok(raw)).then((res) => {
+        fpDeserialize<DbMetaEvent[]>(sthis, url, Result.Ok(raw), decoder).then((res) => {
           if (res.isErr()) return;
           callback(res.Ok() as FPEnvelopeMeta);
         });
@@ -80,18 +72,15 @@ export class DefSerdeGateway implements SerdeGateway {
     return unreg;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async delete(sthis: SuperThis, url: URI, loader?: Loadable): Promise<Result<void>> {
+  async delete({ loader: { sthis } }: SerdeGatewayCtx, url: URI): Promise<Result<void>> {
     return this.gw.delete(url, sthis);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async destroy(sthis: SuperThis, baseURL: URI, loader?: Loadable): Promise<Result<void>> {
+  async destroy({ loader: { sthis } }: SerdeGatewayCtx, baseURL: URI): Promise<Result<void>> {
     return this.gw.destroy(baseURL, sthis);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getPlain(sthis: SuperThis, iurl: URI, key: string, loader?: Loadable) {
+  async getPlain({ loader: { sthis } }: SerdeGatewayCtx, iurl: URI, key: string) {
     return this.gw.getPlain(iurl, key, sthis);
   }
 }

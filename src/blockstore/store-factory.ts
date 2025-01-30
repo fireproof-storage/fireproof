@@ -5,7 +5,7 @@ import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
 import { StoreEnDeFile, StoreFactoryItem, StoreRuntime } from "./types.js";
 import { PARAM, SuperThis } from "../types.js";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
-import { SerdeGateway } from "./serde-gateway.js";
+import { SerdeGateway, SerdeGatewayCtx } from "./serde-gateway.js";
 
 interface SerdeGatewayInstances {
   readonly gateway: SerdeGateway;
@@ -16,34 +16,34 @@ interface GatewayReady extends SerdeGatewayInstances {
 
 const onceGateway = new KeyedResolvOnce<GatewayReady>();
 const gatewayInstances = new KeyedResolvOnce<SerdeGatewayInstances>();
-export async function getStartedGateway(sthis: SuperThis, url: URI): Promise<Result<GatewayReady>> {
+export async function getStartedGateway(ctx: SerdeGatewayCtx, url: URI): Promise<Result<GatewayReady>> {
   return onceGateway.get(url.toString()).once(async () => {
     const item = getGatewayFactoryItem(url.protocol);
     if (item) {
       const ret = {
         url,
         ...(await gatewayInstances.get(url.protocol).once(async () => ({}))),
-        gateway: await item.serdegateway(sthis),
+        gateway: await item.serdegateway(ctx.loader.sthis),
       };
-      const res = await ret.gateway.start(sthis, url);
+      const res = await ret.gateway.start(ctx, url);
       if (res.isErr()) {
-        return Result.Err(sthis.logger.Error().Result("start", res).Msg("start failed").AsError());
+        return Result.Err(ctx.loader.sthis.logger.Error().Result("start", res).Msg("start failed").AsError());
       }
       ret.url = res.Ok();
       return Result.Ok(ret);
     }
-    return Result.Err(sthis.logger.Warn().Url(url).Msg("unsupported protocol").AsError());
+    return Result.Err(ctx.loader.sthis.logger.Warn().Url(url).Msg("unsupported protocol").AsError());
   });
 }
 
 async function dataStoreFactory(sfi: StoreFactoryItem): Promise<DataStoreImpl> {
   const storeUrl = sfi.url.build().setParam(PARAM.STORE, "data").URI();
-  const rgateway = await getStartedGateway(sfi.sthis, storeUrl);
+  const rgateway = await getStartedGateway(sfi, storeUrl);
   if (rgateway.isErr()) {
-    throw sfi.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
+    throw sfi.loader.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new DataStoreImpl(sfi.sthis, gateway.url, {
+  const store = new DataStoreImpl(sfi.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: sfi.gatewayInterceptor,
     loader: sfi.loader,
@@ -66,12 +66,12 @@ async function dataStoreFactory(sfi: StoreFactoryItem): Promise<DataStoreImpl> {
 // const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
 async function metaStoreFactory(sfi: StoreFactoryItem): Promise<MetaStoreImpl> {
   const storeUrl = sfi.url.build().setParam(PARAM.STORE, "meta").URI();
-  const rgateway = await getStartedGateway(sfi.sthis, storeUrl);
+  const rgateway = await getStartedGateway(sfi, storeUrl);
   if (rgateway.isErr()) {
-    throw sfi.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
+    throw sfi.loader.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new MetaStoreImpl(sfi.sthis, gateway.url, {
+  const store = new MetaStoreImpl(sfi.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: sfi.gatewayInterceptor,
     loader: sfi.loader,
@@ -94,12 +94,12 @@ async function metaStoreFactory(sfi: StoreFactoryItem): Promise<MetaStoreImpl> {
 // const onceRemoteWalFactory = new KeyedResolvOnce<WALStoreImpl>();
 async function WALStoreFactory(sfi: StoreFactoryItem): Promise<WALStoreImpl> {
   const storeUrl = sfi.url.build().setParam(PARAM.STORE, "wal").URI();
-  const rgateway = await getStartedGateway(sfi.sthis, storeUrl);
+  const rgateway = await getStartedGateway(sfi, storeUrl);
   if (rgateway.isErr()) {
-    throw sfi.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
+    throw sfi.loader.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new WALStoreImpl(sfi.sthis, gateway.url, {
+  const store = new WALStoreImpl(sfi.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
     gatewayInterceptor: sfi.gatewayInterceptor,
     loader: sfi.loader,

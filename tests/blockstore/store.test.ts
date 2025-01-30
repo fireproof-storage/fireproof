@@ -10,9 +10,10 @@ function runtime(sthis: SuperThis) {
 async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFactoryItem> {
   const url = noopUrl(name);
   return {
-    sthis,
+    // sthis,
     url: url,
     loader: {
+      sthis,
       keyBag: () => rt.kb.getKeyBag(sthis),
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       handleDbMetasFromStore: (metas: DbMeta[]): Promise<void> => Promise.resolve(),
@@ -22,8 +23,9 @@ async function mockLoader(sthis: SuperThis, name?: string): Promise<bs.StoreFact
 
 describe("DataStore", function () {
   let store: bs.DataStore;
-
   const sthis = ensureSuperThis();
+  let loader: bs.StoreFactoryItem;
+
   afterEach(async () => {
     await store.close();
     await store.destroy();
@@ -31,7 +33,8 @@ describe("DataStore", function () {
 
   beforeEach(async () => {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(await mockLoader(sthis));
+    loader = await mockLoader(sthis);
+    store = await runtime(sthis).makeDataStore(loader);
     await store.start();
   });
 
@@ -45,7 +48,7 @@ describe("DataStore", function () {
       bytes: new Uint8Array([55, 56, 57]),
     };
     await store.save(car);
-    const data = (await store.realGateway.getPlain(sthis, store.url(), car.cid.toString())).Ok();
+    const data = (await store.realGateway.getPlain(loader, store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 });
@@ -53,6 +56,7 @@ describe("DataStore", function () {
 describe("DataStore with a saved car", function () {
   let store: bs.DataStore;
   let car: bs.AnyBlock;
+  let loader: bs.StoreFactoryItem;
 
   const sthis = ensureSuperThis();
 
@@ -63,7 +67,8 @@ describe("DataStore with a saved car", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeDataStore(await mockLoader(sthis, "test2"));
+    loader = await mockLoader(sthis, "test2");
+    store = await runtime(sthis).makeDataStore(loader);
     await store.start();
     car = {
       cid: "cid" as unknown as CID,
@@ -73,7 +78,7 @@ describe("DataStore with a saved car", function () {
   });
 
   it("should have a car", async function () {
-    const data = (await store.realGateway.getPlain(sthis, store.url(), car.cid.toString())).Ok();
+    const data = (await store.realGateway.getPlain(loader, store.url(), car.cid.toString())).Ok();
     expect(sthis.txt.decode(data)).toEqual(sthis.txt.decode(car.bytes));
   });
 
@@ -93,8 +98,8 @@ describe("DataStore with a saved car", function () {
 
 describe("MetaStore", function () {
   let store: bs.MetaStore;
-
   const sthis = ensureSuperThis();
+  let loader: bs.StoreFactoryItem;
 
   afterEach(async () => {
     await store.close();
@@ -103,7 +108,8 @@ describe("MetaStore", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test"));
+    loader = await mockLoader(sthis, "test");
+    store = await runtime(sthis).makeMetaStore(loader);
     await store.start();
   });
 
@@ -118,7 +124,7 @@ describe("MetaStore", function () {
       // key: undefined,
     };
     await store.save(h);
-    const file = await store.realGateway.getPlain(sthis, store.url(), "main");
+    const file = await store.realGateway.getPlain(loader, store.url(), "main");
     const blockMeta = (await rt.gw.fpDeserialize(sthis, store.url(), file)) as Result<bs.FPEnvelopeMeta>;
     expect(blockMeta.Ok()).toBeTruthy();
     expect(blockMeta.Ok().payload.length).toEqual(1);
@@ -133,6 +139,7 @@ describe("MetaStore with a saved header", function () {
   let store: bs.MetaStore;
   let cid: CID;
   const sthis = ensureSuperThis();
+  let loader: bs.StoreFactoryItem;
 
   afterEach(async () => {
     await store.close();
@@ -141,7 +148,8 @@ describe("MetaStore with a saved header", function () {
 
   beforeEach(async function () {
     await sthis.start();
-    store = await runtime(sthis).makeMetaStore(await mockLoader(sthis, "test-saved-header"));
+    loader = await mockLoader(sthis, "test-saved-header");
+    store = await runtime(sthis).makeMetaStore(loader);
     await store.start();
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     await store.save({ cars: [cid] /*, key: undefined */ });
@@ -154,7 +162,7 @@ describe("MetaStore with a saved header", function () {
   // });
 
   it("should have a header", async function () {
-    const bytes = await store.realGateway.getPlain(sthis, store.url(), "main");
+    const bytes = await store.realGateway.getPlain(loader, store.url(), "main");
     const data = sthis.txt.decode(bytes.Ok());
     expect(data).toMatch(/parents/);
     const header = JSON.parse(data)[0];

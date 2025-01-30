@@ -1,8 +1,9 @@
 import { Result, URI } from "@adviser/cement";
-import {
+import type {
   SerdeGateway,
   SerdeGatewayBuildUrlReturn,
   SerdeGatewayCloseReturn,
+  SerdeGatewayCtx,
   SerdeGatewayDeleteReturn,
   SerdeGatewayDestroyReturn,
   SerdeGatewayGetReturn,
@@ -14,41 +15,40 @@ import {
   UnsubscribeResult,
   VoidResult,
 } from "./serde-gateway.js";
-import { SuperThis } from "../types.js";
+import type { SuperThis } from "../types.js";
 import { FPEnvelope, FPEnvelopeMeta } from "./fp-envelope.js";
-import { Loadable } from "./types.js";
 
 export class PassThroughGateway implements SerdeGatewayInterceptor {
-  async buildUrl(sthis: SuperThis, url: URI, key: string): Promise<Result<SerdeGatewayBuildUrlReturn>> {
+  async buildUrl(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<SerdeGatewayBuildUrlReturn>> {
     const op = { url, key };
     return Result.Ok({ op });
   }
-  async start(sthis: SuperThis, url: URI): Promise<Result<SerdeGatewayStartReturn>> {
+  async start(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayStartReturn>> {
     const op = { url };
     return Result.Ok({ op });
   }
-  async close(sthis: SuperThis, url: URI): Promise<Result<SerdeGatewayCloseReturn>> {
+  async close(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayCloseReturn>> {
     const op = { url };
     return Result.Ok({ op });
   }
-  async delete(sthis: SuperThis, url: URI): Promise<Result<SerdeGatewayDeleteReturn>> {
+  async delete(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayDeleteReturn>> {
     const op = { url };
     return Result.Ok({ op });
   }
-  async destroy(sthis: SuperThis, url: URI): Promise<Result<SerdeGatewayDestroyReturn>> {
+  async destroy(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayDestroyReturn>> {
     const op = { url };
     return Result.Ok({ op });
   }
-  async put<T>(sthis: SuperThis, url: URI, body: FPEnvelope<T>): Promise<Result<SerdeGatewayPutReturn<T>>> {
+  async put<T>(ctx: SerdeGatewayCtx, url: URI, body: FPEnvelope<T>): Promise<Result<SerdeGatewayPutReturn<T>>> {
     const op = { url, body };
     return Result.Ok({ op });
   }
-  async get<S>(sthis: SuperThis, url: URI): Promise<Result<SerdeGatewayGetReturn<S>>> {
+  async get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<Result<SerdeGatewayGetReturn<S>>> {
     const op = { url };
     return Result.Ok({ op });
   }
   async subscribe(
-    sthis: SuperThis,
+    ctx: SerdeGatewayCtx,
     url: URI,
     callback: (meta: FPEnvelopeMeta) => Promise<void>,
   ): Promise<Result<SerdeGatewaySubscribeReturn>> {
@@ -68,8 +68,8 @@ export class InterceptorGateway implements SerdeGateway {
     this.interceptor = interceptor || passThrougthGateway;
   }
 
-  async buildUrl(sthis: SuperThis, baseUrl: URI, key: string, loader: Loadable): Promise<Result<URI>> {
-    const rret = await this.interceptor.buildUrl(sthis, baseUrl, key, loader);
+  async buildUrl(ctx: SerdeGatewayCtx, baseUrl: URI, key: string): Promise<Result<URI>> {
+    const rret = await this.interceptor.buildUrl(ctx, baseUrl, key);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -77,11 +77,11 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.buildUrl(sthis, ret.op.url, ret.op.key, loader);
+    return this.innerGW.buildUrl(ctx, ret.op.url, ret.op.key);
   }
 
-  async destroy(sthis: SuperThis, iurl: URI, loader: Loadable): Promise<Result<void>> {
-    const rret = await this.interceptor.destroy(sthis, iurl, loader);
+  async destroy(ctx: SerdeGatewayCtx, iurl: URI): Promise<Result<void>> {
+    const rret = await this.interceptor.destroy(ctx, iurl);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -89,11 +89,11 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.destroy(sthis, ret.op.url, loader);
+    return this.innerGW.destroy(ctx, ret.op.url);
   }
 
-  async start(sthis: SuperThis, url: URI, loader: Loadable): Promise<Result<URI>> {
-    const rret = await this.interceptor.start(sthis, url, loader);
+  async start(ctx: SerdeGatewayCtx, url: URI): Promise<Result<URI>> {
+    const rret = await this.interceptor.start(ctx, url);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -101,11 +101,11 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return await this.innerGW.start(sthis, ret.op.url, loader);
+    return await this.innerGW.start(ctx, ret.op.url);
   }
 
-  async close(sthis: SuperThis, url: URI, loader: Loadable): Promise<VoidResult> {
-    const rret = await this.interceptor.close(sthis, url, loader);
+  async close(ctx: SerdeGatewayCtx, url: URI): Promise<VoidResult> {
+    const rret = await this.interceptor.close(ctx, url);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -113,11 +113,11 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return await this.innerGW.close(sthis, ret.op.url, loader);
+    return await this.innerGW.close(ctx, ret.op.url);
   }
 
-  async put<T>(sthis: SuperThis, url: URI, fpEnv: FPEnvelope<T>, loader: Loadable): Promise<VoidResult> {
-    const rret = await this.interceptor.put(sthis, url, fpEnv, loader);
+  async put<T>(ctx: SerdeGatewayCtx, url: URI, fpEnv: FPEnvelope<T>): Promise<VoidResult> {
+    const rret = await this.interceptor.put(ctx, url, fpEnv);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -125,11 +125,11 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.put(sthis, ret.op.url, ret.op.body, loader);
+    return this.innerGW.put(ctx, ret.op.url, ret.op.body);
   }
 
-  async get<S>(sthis: SuperThis, url: URI, loader: Loadable): Promise<SerdeGetResult<S>> {
-    const rret = await this.interceptor.get<S>(sthis, url, loader);
+  async get<S>(ctx: SerdeGatewayCtx, url: URI): Promise<SerdeGetResult<S>> {
+    const rret = await this.interceptor.get<S>(ctx, url);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -137,19 +137,14 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.get(sthis, ret.op.url, loader);
+    return this.innerGW.get(ctx, ret.op.url);
   }
 
-  async subscribe(
-    sthis: SuperThis,
-    url: URI,
-    callback: (msg: FPEnvelopeMeta) => Promise<void>,
-    loader: Loadable,
-  ): Promise<UnsubscribeResult> {
+  async subscribe(ctx: SerdeGatewayCtx, url: URI, callback: (msg: FPEnvelopeMeta) => Promise<void>): Promise<UnsubscribeResult> {
     if (!this.innerGW.subscribe) {
-      return Result.Err(sthis.logger.Error().Url(url).Msg("subscribe not supported").AsError());
+      return Result.Err(ctx.loader.sthis.logger.Error().Url(url).Msg("subscribe not supported").AsError());
     }
-    const rret = await this.interceptor.subscribe(sthis, url, callback, loader);
+    const rret = await this.interceptor.subscribe(ctx, url, callback);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -157,11 +152,11 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.subscribe(sthis, ret.op.url, ret.op.callback, loader);
+    return this.innerGW.subscribe(ctx, ret.op.url, ret.op.callback);
   }
 
-  async delete(sthis: SuperThis, url: URI, loader: Loadable): Promise<VoidResult> {
-    const rret = await this.interceptor.delete(sthis, url, loader);
+  async delete(ctx: SerdeGatewayCtx, url: URI): Promise<VoidResult> {
+    const rret = await this.interceptor.delete(ctx, url);
     if (rret.isErr()) {
       return Result.Err(rret.Err());
     }
@@ -169,10 +164,10 @@ export class InterceptorGateway implements SerdeGateway {
     if (ret.stop && ret.value) {
       return ret.value;
     }
-    return this.innerGW.delete(sthis, url, loader);
+    return this.innerGW.delete(ctx, url);
   }
 
-  async getPlain(sthis: SuperThis, url: URI, key: string, loader?: Loadable): Promise<Result<Uint8Array>> {
-    return this.innerGW.getPlain(sthis, url, key, loader);
+  async getPlain(ctx: SerdeGatewayCtx, url: URI, key: string): Promise<Result<Uint8Array>> {
+    return this.innerGW.getPlain(ctx, url, key);
   }
 }

@@ -69,14 +69,14 @@ export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL) => Pr
 // export type FILEEncodeEnvelope = (sthis: SuperThis, payload: Uint8Array, base: CAREncodeEnvelopeBase) => Promise<Uint8Array>;
 // export type METAEncodeEnvelope = (sthis: SuperThis, payload: SerializedMeta[], base: METAEncodeEnvelopeBase) => Promise<Uint8Array>;
 // export type WALEncodeEnvelope = (sthis: SuperThis, payload: SerializedWAL, base: WALEncodeEnvelopeBase) => Promise<Uint8Array>;
-export interface Encoder {
+export interface FPEncoder {
   readonly car: CAREncodeEnvelope;
   readonly file: FILEEncodeEnvelope;
   readonly meta: METAEncodeEnvelope;
   readonly wal: WALEncodeEnvelope;
 }
 
-const defaultEncoder: Encoder = {
+const defaultEncoder: FPEncoder = {
   car: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
   file: async (sthis: SuperThis, payload: Uint8Array) => Result.Ok(payload),
   meta: async (sthis: SuperThis, payload: SerializedMeta[]) => Result.Ok(sthis.txt.encode(JSON.stringify(payload))),
@@ -86,7 +86,7 @@ const defaultEncoder: Encoder = {
 export async function fpSerialize<T>(
   sthis: SuperThis,
   env: FPEnvelope<T>,
-  pencoder?: Partial<Encoder>,
+  pencoder?: Partial<FPEncoder>,
 ): Promise<Result<Uint8Array>> {
   const encoder = {
     ...defaultEncoder,
@@ -177,7 +177,7 @@ export type CARDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promi
 export type FILEDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<Uint8Array>>;
 export type METADecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedMeta[]>>;
 export type WALDecodeEnvelope = (sthis: SuperThis, payload: Uint8Array) => Promise<Result<SerializedWAL>>;
-export interface Decoder {
+export interface FPDecoder {
   readonly car: CARDecodeEnvelope;
   readonly file: FILEDecodeEnvelope;
   readonly meta: METADecodeEnvelope;
@@ -207,7 +207,7 @@ export async function fpDeserialize<S>(
   sthis: SuperThis,
   url: URI,
   intoRaw: PromiseToUInt8,
-  pdecoder?: Partial<Decoder>,
+  pdecoder?: Partial<FPDecoder>,
 ): Promise<Result<FPEnvelope<S>>> {
   const rraw = await coercePromiseIntoUint8(intoRaw);
   if (rraw.isErr()) {
