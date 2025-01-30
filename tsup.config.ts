@@ -24,7 +24,7 @@ const external = [
   "@fireproof/core",
   "@fireproof/core/node",
   "@fireproof/core/mem",
-  "@fireproof/core/web",
+  "@fireproof/core/indexdb",
   "@fireproof/core/react",
 ];
 
@@ -190,10 +190,10 @@ const LIBRARY_BUNDLES: readonly Options[] = [
   {
     ...LIBRARY_BUNDLE_OPTIONS,
     format: ["esm", "cjs"],
-    name: "@fireproof/core/web",
-    entry: ["src/runtime/gateways/indexdb/web/index.ts"],
+    name: "@fireproof/core/indexdb",
+    entry: ["src/runtime/gateways/indexdb/index.ts"],
     platform: "browser",
-    outDir: "dist/fireproof-core/web",
+    outDir: "dist/fireproof-core/indexdb",
     esbuildPlugins: [
       replace({
         __packageVersion__: packageVersion(),
@@ -204,7 +204,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/web'",
+      footer: "declare module '@fireproof/core/indexdb'",
     },
   },
   {
@@ -226,7 +226,7 @@ const LIBRARY_BUNDLES: readonly Options[] = [
       }),
     ],
     dts: {
-      footer: "declare module '@fireproof/core/web'",
+      footer: "declare module '@fireproof/core/indexdb'",
     },
   },
   {
