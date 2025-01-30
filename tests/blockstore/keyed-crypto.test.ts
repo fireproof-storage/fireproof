@@ -89,7 +89,7 @@ describe("KeyBag", () => {
 
     let diskBag: rt.kb.KeyItem;
     let diskBag2: rt.kb.KeyItem;
-    const provider = await kb.rt.getBag();
+    const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexDB;
       diskBag = await p._prepare().then((db) => db.get("bag", name));

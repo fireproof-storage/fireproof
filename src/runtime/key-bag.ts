@@ -89,7 +89,7 @@ export class KeyBag {
       name,
       key: key,
     };
-    const bag = await this.rt.getBag();
+    const bag = await this.rt.getBagProvider();
     this.logger.Debug().Str("name", name).Msg("setNamedKey");
     // there should be a version that throws if key exists
     await bag.set(name, item);
@@ -117,7 +117,7 @@ export class KeyBag {
   async getNamedKey(name: string, failIfNotFound = false): Promise<Result<KeyWithFingerPrint>> {
     const id = this.rt.sthis.nextId(4).str;
     return this._seq.add(async () => {
-      const bag = await this.rt.getBag();
+      const bag = await this.rt.getBagProvider();
       const named = await bag.get(name);
       if (named) {
         const fpr = await this.toKeyWithFingerPrint(named.key);
@@ -163,7 +163,7 @@ export interface KeyBagRuntime {
   readonly sthis: SuperThis;
   readonly keyLength: number;
   // readonly key?: FPCryptoKey;
-  getBag(): Promise<KeyBagProvider>;
+  getBagProvider(): Promise<KeyBagProvider>;
   id(): string;
 }
 
@@ -267,7 +267,7 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
     sthis,
     logger,
     keyLength: kbo.keyLength || 16,
-    getBag: () => kitem.factory(url, sthis),
+    getBagProvider: () => kitem.factory(url, sthis),
     id: () => {
       return url.toString();
     },
