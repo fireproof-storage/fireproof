@@ -2,7 +2,7 @@ import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { PARAM, SuperThis } from "../types.js";
 import type { SerdeGateway } from "./serde-gateway.js";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
-import { INDEXDB_VERSION } from "../runtime/gateways/indexdb/version.js";
+import { INDEXDB_VERSION } from "../runtime/gateways/indexdb-version.js";
 import type { Gateway } from "./gateway.js";
 
 import { FileGateway } from "../runtime/gateways/file/gateway-impl.js";
@@ -140,7 +140,7 @@ if (runtimeFn().isBrowser) {
         .URI();
     },
     gateway: async () => {
-      const { GatewayImpl } = await import("@fireproof/core/web");
+      const { GatewayImpl } = await import("@fireproof/core/indexdb");
       return new GatewayImpl();
     },
   });

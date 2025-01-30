@@ -15,27 +15,27 @@
     },
     "./node": {
       "import": {
-        "browser": "./web/index.js",
+        "browser": "./indexdb/index.js",
         "default": "./node/index.js"
       },
-      "browser": "./web/index.js",
+      "browser": "./indexdb/index.js",
       "require": "./node/index.cjs",
       "types": "./node/index.d.ts"
     },
     "./deno": {
       "import": {
-        "browser": "./web/index.js",
+        "browser": "./indexdb/index.js",
         "default": "./deno/index.js"
       },
-      "browser": "./web/index.js",
+      "browser": "./indexdb/index.js",
       "require": "./deno/index.cjs",
       "types": "./deno/index.d.ts"
     },
-    "./web": {
-      "import": "./web/index.js",
-      "browser": "./web/index.js",
-      "require": "./web/index.cjs",
-      "types": "./web/index.d.ts"
+    "./indexdb": {
+      "import": "./indexdb/index.js",
+      "browser": "./indexdb/index.js",
+      "require": "./indexdb/index.cjs",
+      "types": "./indexdb/index.d.ts"
     },
     "./react": {
       "import": "./react/index.js",
