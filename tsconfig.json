@@ -32,7 +32,7 @@
     "paths": {
       "@fireproof/core": ["./src/index.js"],
       "@fireproof/core/react": ["./src/react/index.js"],
-      "@fireproof/core/indexdb": ["./src/runtime/gateways/indexdb/index.js"],
+      "@fireproof/core/indexeddb": ["./src/runtime/gateways/indexeddb/index.js"],
       "@fireproof/core/node": ["./src/runtime/gateways/file/node/index.js"],
       "@fireproof/core/deno": ["./src/runtime/gateways/file/deno/index.js"],
       "use-fireproof": ["./src/use-fireproof/index.js"]
