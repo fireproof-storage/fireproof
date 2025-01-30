@@ -185,9 +185,9 @@ const keyBagProviderFactories = new Map<string, KeyBagProviderFactoryItem>(
       },
     },
     {
-      protocol: "indexdb:",
+      protocol: "indexeddb:",
       factory: async (url: URI, sthis: SuperThis) => {
-        const { KeyBagProviderImpl } = await import("@fireproof/core/indexdb");
+        const { KeyBagProviderImpl } = await import("@fireproof/core/indexeddb");
         return new KeyBagProviderImpl(url, sthis);
       },
     },
@@ -212,7 +212,7 @@ export function defaultKeyBagUrl(sthis: SuperThis): URI {
   let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
   let url: URI;
   if (runtimeFn().isBrowser) {
-    url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
+    url = URI.from(bagFnameOrUrl || "indexeddb://fp-keybag");
   } else {
     if (!bagFnameOrUrl) {
       const home = sthis.env.get("HOME");
@@ -240,7 +240,7 @@ export function defaultKeyBagOpts(sthis: SuperThis, kbo?: Partial<KeyBagOpts>): 
   } else {
     let bagFnameOrUrl = sthis.env.get("FP_KEYBAG_URL");
     if (runtimeFn().isBrowser) {
-      url = URI.from(bagFnameOrUrl || "indexdb://fp-keybag");
+      url = URI.from(bagFnameOrUrl || "indexeddb://fp-keybag");
     } else {
       if (!bagFnameOrUrl) {
         const home = sthis.env.get("HOME");

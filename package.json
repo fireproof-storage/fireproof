@@ -25,7 +25,7 @@
     "env": "env",
     "test": "vitest --run",
     "test:file": "vitest --config vitest.file.config.ts --run",
-    "test:indexdb": "vitest --config vitest.browser.config.ts --run",
+    "test:browser": "vitest --config vitest.browser.config.ts --run",
     "test:deno": "deno run --quiet --allow-net --allow-write --allow-run  --allow-sys --allow-ffi  --allow-read --allow-env  ./node_modules/vitest/vitest.mjs --run --project file",
     "format": "prettier .",
     "lint": "eslint"

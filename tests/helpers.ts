@@ -31,7 +31,7 @@ export function storageURL(sthis: SuperThis): URI {
   const old = sthis.env.get("FP_STORAGE_URL");
   let merged: URI;
   if (runtimeFn().isBrowser) {
-    merged = URI.merge(`indexdb://fp`, old, "indexdb:");
+    merged = URI.merge(`indexeddb://fp`, old, "indexeddb:");
   } else {
     merged = URI.merge(`./dist/env`, old);
   }

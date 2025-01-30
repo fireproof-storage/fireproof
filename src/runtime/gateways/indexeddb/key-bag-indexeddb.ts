@@ -2,7 +2,7 @@ import { IDBPDatabase, openDB } from "idb";
 import { Logger, ResolveOnce, URI } from "@adviser/cement";
 import { type SuperThis, rt } from "@fireproof/core";
 
-export class KeyBagProviderIndexDB implements rt.kb.KeyBagProvider {
+export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
   readonly _db: ResolveOnce<IDBPDatabase<unknown>> = new ResolveOnce<IDBPDatabase<unknown>>();
 
   readonly dbName: string;
