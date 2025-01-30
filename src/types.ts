@@ -267,11 +267,8 @@ export interface QueryOpts<K extends IndexKeyType> {
 export type QueryStreamMarker = { readonly kind: "preexisting"; readonly done: boolean } | { readonly kind: "new" };
 
 export interface QueryResponse<T extends DocTypes> {
-  snapshot(opts?: { since?: ClockHead; sinceOptions?: ChangesOptions }): AsyncGenerator<DocWithId<T>>;
-  live(opts?: {
-    since?: ClockHead;
-    sinceOptions?: ChangesOptions;
-  }): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
+  snapshot(opts?: { since?: ClockHead } & ChangesOptions): AsyncGenerator<DocWithId<T>>;
+  live(opts?: { since?: ClockHead } & ChangesOptions): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
   future(): ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>;
   /** Convenience function to consume a future stream. */
   subscribe(callback: (doc: DocWithId<T>) => void): () => void;
