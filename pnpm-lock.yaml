@@ -93,9 +93,6 @@ importers:
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
-      esbuild-plugin-resolve:
-        specifier: ^2.0.0
-        version: 2.0.0
       eslint:
         specifier: ^9.18.0
         version: 9.18.0
@@ -1650,9 +1647,6 @@ packages:
 
   esbuild-plugin-replace@1.4.0:
     resolution: {integrity: sha512-lP3ZAyzyRa5JXoOd59lJbRKNObtK8pJ/RO7o6vdjwLi71GfbL32NR22ZuS7/cLZkr10/L1lutoLma8E4DLngYg==}
-
-  esbuild-plugin-resolve@2.0.0:
-    resolution: {integrity: sha512-eJy9B8yDW5X/J48eWtR1uVmv+DKfHvYYnrrcqQoe/nUkVHVOTZlJnSevkYyGOz6hI90t036Y5QIPDrGzmppxfg==}
 
   esbuild@0.23.1:
     resolution: {integrity: sha512-VVNz/9Sa0bs5SELtn3f7qhJCDPCF5oMEl5cO9/SSinpE9hbPVvxbd572HH5AKiP7WD8INO53GgfDDhRjkylHEg==}
@@ -4991,8 +4985,6 @@ snapshots:
   esbuild-plugin-replace@1.4.0:
     dependencies:
       magic-string: 0.25.9
-
-  esbuild-plugin-resolve@2.0.0: {}
 
   esbuild@0.23.1:
     optionalDependencies:
