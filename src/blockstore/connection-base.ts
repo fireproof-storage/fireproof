@@ -79,7 +79,7 @@ export abstract class ConnectionBase implements Connection {
     this.loader = loader;
     await this.onConnect();
     const metaUrl = this.url.build().defParam(PARAM.STORE, "meta").URI();
-    const rgateway = await getStartedGateway(loader.sthis, metaUrl);
+    const rgateway = await getStartedGateway({ loader }, metaUrl);
     if (rgateway.isErr())
       throw this.logger.Error().Result("err", rgateway).Url(metaUrl).Msg("connectMeta: gateway is required").AsError();
     // const name = metaUrl.toString();
@@ -120,7 +120,7 @@ export abstract class ConnectionBase implements Connection {
     if (!loader) throw this.logger.Error().Msg("connectStorage: loader is required").AsError();
     this.loader = loader;
     const dataUrl = this.url.build().defParam(PARAM.STORE, "data").URI();
-    const rgateway = await getStartedGateway(loader.sthis, dataUrl);
+    const rgateway = await getStartedGateway({ loader }, dataUrl);
     if (rgateway.isErr())
       throw this.logger.Error().Result("err", rgateway).Url(dataUrl).Msg("connectStorage: gateway is required").AsError();
     const name = dataUrl.getParam(PARAM.NAME);
