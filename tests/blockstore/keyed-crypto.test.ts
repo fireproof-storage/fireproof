@@ -152,6 +152,7 @@ describe("KeyedCryptoStore", () => {
     baseUrl = baseUrl.build().setParam(PARAM.NAME, "test").URI();
     kb = await rt.kb.getKeyBag(sthis, {});
     loader = {
+      sthis,
       keyBag: async () => kb,
     } as bs.Loadable;
   });
@@ -160,9 +161,9 @@ describe("KeyedCryptoStore", () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, loader }),
-      strt.makeMetaStore({ sthis, url, loader }),
-      strt.makeWALStore({ sthis, url, loader }),
+      strt.makeDataStore({ url, loader }),
+      strt.makeMetaStore({ url, loader }),
+      strt.makeWALStore({ url, loader }),
     ]) {
       const store = await pstore;
       // await store.start();
@@ -177,9 +178,9 @@ describe("KeyedCryptoStore", () => {
   it("create key", async () => {
     const strt = bs.toStoreRuntime(sthis);
     for (const pstore of [
-      strt.makeDataStore({ sthis, url: baseUrl, loader }),
-      strt.makeMetaStore({ sthis, url: baseUrl, loader }),
-      strt.makeWALStore({ sthis, url: baseUrl, loader }),
+      strt.makeDataStore({ url: baseUrl, loader }),
+      strt.makeMetaStore({ url: baseUrl, loader }),
+      strt.makeWALStore({ url: baseUrl, loader }),
     ]) {
       const store = await pstore; // await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
@@ -195,9 +196,9 @@ describe("KeyedCryptoStore", () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "@heute@").URI();
     const strt = bs.toStoreRuntime(sthis);
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, loader }),
-      strt.makeMetaStore({ sthis, url, loader }),
-      strt.makeWALStore({ sthis, url, loader }),
+      strt.makeDataStore({ url, loader }),
+      strt.makeMetaStore({ url, loader }),
+      strt.makeWALStore({ url, loader }),
     ]) {
       const store = await pstore;
       // await store.start();
@@ -220,9 +221,9 @@ describe("KeyedCryptoStore", () => {
     const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, key).URI();
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, loader }),
-      strt.makeMetaStore({ sthis, url, loader }),
-      strt.makeWALStore({ sthis, url, loader }),
+      strt.makeDataStore({ url, loader }),
+      strt.makeMetaStore({ url, loader }),
+      strt.makeWALStore({ url, loader }),
     ]) {
       // for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
