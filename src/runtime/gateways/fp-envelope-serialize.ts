@@ -23,7 +23,10 @@ export interface SerializedMeta {
   readonly cid: string;
 }
 
-async function dbMetaEvent2Serialized(sthis: SuperThis, dbEvents: Omit<DbMetaEvent, "eventCid">[]): Promise<SerializedMeta[]> {
+export async function dbMetaEvent2Serialized(
+  sthis: SuperThis,
+  dbEvents: Omit<DbMetaEvent, "eventCid">[],
+): Promise<SerializedMeta[]> {
   return await Promise.all(
     dbEvents.map(async (dbEvent) => {
       const event = await EventBlock.create<DbMetaBinary>(
@@ -36,7 +39,7 @@ async function dbMetaEvent2Serialized(sthis: SuperThis, dbEvents: Omit<DbMetaEve
         cid: event.cid.toString(),
         parents: dbEvent.parents.map((i) => i.toString()),
         data: base64pad.encode(event.bytes),
-      } as SerializedMeta;
+      } satisfies SerializedMeta;
     }),
   );
 }
@@ -103,7 +106,10 @@ export async function fpSerialize<T>(
   }
 }
 
-async function decode2DbMetaEvents(sthis: SuperThis, rserializedMeta: Result<SerializedMeta[]>): Promise<Result<DbMetaEvent[]>> {
+export async function decode2DbMetaEvents(
+  sthis: SuperThis,
+  rserializedMeta: Result<SerializedMeta[]>,
+): Promise<Result<DbMetaEvent[]>> {
   if (rserializedMeta.isErr()) {
     return Result.Err(rserializedMeta.Err());
   }
