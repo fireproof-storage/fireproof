@@ -1,6 +1,7 @@
 import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import type { Block, UnknownLink, Version } from "multiformats";
+import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
 
 import type {
   CarTransactionOpts,
@@ -14,14 +15,14 @@ import type {
   TransactionMeta,
   TransactionWrapper,
   BlockstoreRuntime,
+  StoreURIRuntime,
 } from "./blockstore/index.js";
-import { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
-import { KeyBagOpts } from "./runtime/key-bag.js";
-import { WriteQueueParams } from "./write-queue.js";
-import { Index } from "./indexer.js";
-import { Context } from "./context.js";
+import type { KeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
+import type { WriteQueueParams } from "./write-queue.js";
+import type { Index } from "./indexer.js";
+import type { Context } from "./context.js";
 
 export type { DbMeta };
 
@@ -486,7 +487,24 @@ export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocType
   close(): Promise<void>;
 }
 
+export interface LedgerOpts {
+  readonly name?: string;
+  // readonly public?: boolean;
+  readonly meta?: DbMeta;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+
+  readonly writeQueue: WriteQueueParams;
+  // readonly factoryUnreg?: () => void;
+  // readonly persistIndexes?: boolean;
+  // readonly autoCompact?: number;
+  readonly storeUrls: StoreURIRuntime;
+  readonly storeEnDe: StoreEnDeFile;
+  readonly keyBag: KeyBagRuntime;
+  // readonly threshold?: number;
+}
+
 export interface Ledger extends HasCRDT {
+  readonly opts: LedgerOpts;
   // readonly name: string;
   readonly writeQueue: WriteQueue<DocUpdate<DocTypes>>;
 

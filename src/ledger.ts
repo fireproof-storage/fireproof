@@ -1,6 +1,6 @@
 import { BuildURI, CoerceURI, KeyedResolvOnce, Logger, ResolveOnce, URI } from "@adviser/cement";
 
-import { defaultWriteQueueOpts, writeQueue, WriteQueueParams } from "./write-queue.js";
+import { defaultWriteQueueOpts, writeQueue } from "./write-queue.js";
 import type {
   DocUpdate,
   ConfigOpts,
@@ -12,13 +12,14 @@ import type {
   Ledger,
   WriteQueue,
   CRDT,
+  LedgerOpts,
 } from "./types.js";
 import { PARAM } from "./types.js";
-import { DbMeta, SerdeGatewayInterceptor, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
+import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, toSortedArray } from "./utils.js";
 
 import { decodeFile, encodeFile } from "./runtime/files.js";
-import { defaultKeyBagOpts, KeyBagRuntime } from "./runtime/key-bag.js";
+import { defaultKeyBagOpts } from "./runtime/key-bag.js";
 import { getDefaultURI } from "./blockstore/register-store-protocol.js";
 import { DatabaseImpl } from "./database.js";
 import { CRDTImpl } from "./crdt.js";
@@ -33,22 +34,6 @@ export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts
       stores: toSortedArray(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, name, opts?.storeUrls)))),
     }),
   );
-}
-
-export interface LedgerOpts {
-  readonly name?: string;
-  // readonly public?: boolean;
-  readonly meta?: DbMeta;
-  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
-
-  readonly writeQueue: WriteQueueParams;
-  // readonly factoryUnreg?: () => void;
-  // readonly persistIndexes?: boolean;
-  // readonly autoCompact?: number;
-  readonly storeUrls: StoreURIRuntime;
-  readonly storeEnDe: StoreEnDeFile;
-  readonly keyBag: KeyBagRuntime;
-  // readonly threshold?: number;
 }
 
 export function isLedger(db: unknown): db is Ledger {
@@ -90,6 +75,10 @@ export class LedgerShell implements Ledger {
     this.writeQueue = ref.writeQueue;
     this.name = ref.name;
     ref.addShell(this);
+  }
+
+  get opts(): LedgerOpts {
+    return this.ref.opts;
   }
 
   get context(): Context {
@@ -147,7 +136,7 @@ class LedgerImpl implements Ledger {
   readonly context = new Context();
 
   get name(): string {
-    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) || "default";
+    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) ?? "default";
   }
 
   addShell(shell: LedgerShell) {
