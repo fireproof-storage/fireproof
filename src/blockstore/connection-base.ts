@@ -1,10 +1,11 @@
-import { Logger, URI } from "@adviser/cement";
+import { exception2Result, Future, Logger, URI } from "@adviser/cement";
 
 import { PARAM, throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
 import type { Connection, Loadable, RefBlockstore, RefLoadable } from "./types.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
 import { getStartedGateway } from "./store-factory.js";
+import { Context } from "../context.js";
 
 // export interface Connectable {
 //   // readonly blockstore: {
@@ -33,7 +34,9 @@ export abstract class ConnectionBase implements Connection {
   // readonly eventBlocks = new MemoryBlockstore();
   private loader?: Loadable;
   taskManager?: TaskManager;
-  loaded: Promise<void> = Promise.resolve();
+  // loaded: Promise<void> = Promise.resolve();
+
+  readonly context = new Context();
 
   readonly url: URI;
 
@@ -46,6 +49,18 @@ export abstract class ConnectionBase implements Connection {
   constructor(url: URI, logger: Logger) {
     this.logger = logger;
     this.url = url;
+  }
+
+  private readonly _loaded = new Set<Future<void>>();
+  private _metaIsLoading = false;
+  loaded(): Future<void> {
+    const f = new Future<void>();
+    if (!this._metaIsLoading) {
+      f.resolve();
+    } else {
+      this._loaded.add(f);
+    }
+    return f;
   }
 
   async refresh() {
@@ -78,9 +93,22 @@ export abstract class ConnectionBase implements Connection {
       loader,
     });
     this.loader.remoteMetaStore = remote;
-    this.loaded = this.loader.ready().then(async () => {
+
+    this._metaIsLoading = true;
+    this.loader.ready().then(async () => {
       return remote.load().then(async () => {
-        return (await throwFalsy(this.loader).WALStore()).process();
+        const res = await exception2Result(async () => {
+          return await (await throwFalsy(this.loader).WALStore()).process();
+        });
+        this._metaIsLoading = false;
+        for (const f of this._loaded) {
+          if (res.isErr()) {
+            f.reject(res.Err());
+          } else {
+            f.resolve();
+          }
+        }
+        this._loaded.clear();
       });
     });
   }
@@ -89,19 +117,20 @@ export abstract class ConnectionBase implements Connection {
 
   async connectStorage(refl: RefLoadable | RefBlockstore) {
     const loader = coerceLoader(refl);
-    if (!loader) throw this.logger.Error().Msg("connectStorage_X: loader is required").AsError();
+    if (!loader) throw this.logger.Error().Msg("connectStorage: loader is required").AsError();
     this.loader = loader;
     const dataUrl = this.url.build().defParam(PARAM.STORE, "data").URI();
     const rgateway = await getStartedGateway(loader.sthis, dataUrl);
     if (rgateway.isErr())
-      throw this.logger.Error().Result("err", rgateway).Url(dataUrl).Msg("connectStorage_X: gateway is required").AsError();
+      throw this.logger.Error().Result("err", rgateway).Url(dataUrl).Msg("connectStorage: gateway is required").AsError();
     const name = dataUrl.getParam(PARAM.NAME);
-    if (!name) throw this.logger.Error().Url(dataUrl).Msg("connectStorage_X: name is required").AsError;
+    if (!name) throw this.logger.Error().Url(dataUrl).Msg("connectStorage: name is required").AsError;
     loader.remoteCarStore = await RemoteDataStore(loader.sthis, this.url, {
       gateway: rgateway.Ok().gateway,
       loader,
     });
-    // @jchris why we have a differention between remoteCarStore and remoteFileStore? -- file store is for on-demand attachment loading
+    // @jchris why we have a differention between remoteCarStore and remoteFileStore?
+    // file store is for on-demand attachment loading
     // for now we don't have any difference but in superthis car store and
     // file store could have different urls/gateways
     loader.remoteFileStore = loader.remoteCarStore;
