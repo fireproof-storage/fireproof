@@ -4,11 +4,12 @@ import { CarTransaction, DocFileMeta, Falsy, StoreType, SuperThis } from "../typ
 import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
-import { CoerceURI, CryptoRuntime, CTCryptoKey, Logger, Result, URI } from "@adviser/cement";
+import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } from "@adviser/cement";
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
 import { CarReader } from "@fireproof/vendor/@ipld/car";
+import { Context } from "../context.js";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];
@@ -273,8 +274,11 @@ export interface RefBlockstore {
 
 export interface Connection {
   // readonly loader?: Loadable;
-  readonly loaded: Promise<void>;
   // connectMeta(ref: RefLoadable | RefBlockstore): void;
+
+  // this indicates if a store is completely loaded from a peer
+  loaded(): Future<void>;
+  readonly context: Context;
   connectStorage(ref: RefLoadable | RefBlockstore): void;
 
   // metaUpload(bytes: Uint8Array, params: UploadMetaFnParams): Promise<Uint8Array[] | Falsy>;
