@@ -1,11 +1,11 @@
 import { openDB, IDBPDatabase } from "idb";
 import { exception2Result, KeyedResolvOnce, Result, URI } from "@adviser/cement";
 
-import { INDEXDB_VERSION } from "../indexdb-version.js";
+import { INDEXEDDB_VERSION } from "../indexeddb-version.js";
 import { NotFoundError, PARAM, exceptionWrapper, getKey, getStore, type SuperThis, bs } from "@fireproof/core";
 
 function ensureVersion(url: URI): URI {
-  return url.build().defParam(PARAM.VERSION, INDEXDB_VERSION).URI();
+  return url.build().defParam(PARAM.VERSION, INDEXEDDB_VERSION).URI();
 }
 
 interface IDBConn {
@@ -14,7 +14,7 @@ interface IDBConn {
   readonly version: string;
   readonly url: URI;
 }
-const onceIndexDB = new KeyedResolvOnce<IDBConn>();
+const onceIndexedDB = new KeyedResolvOnce<IDBConn>();
 
 function sanitzeKey(key: string | string[]): string | string[] {
   if (key.length === 1) {
@@ -24,8 +24,8 @@ function sanitzeKey(key: string | string[]): string | string[] {
 }
 
 async function connectIdb(url: URI, sthis: SuperThis): Promise<IDBConn> {
-  const dbName = getIndexDBName(url, sthis);
-  const once = await onceIndexDB.get(dbName.fullDb).once(async () => {
+  const dbName = getIndexedDBName(url, sthis);
+  const once = await onceIndexedDB.get(dbName.fullDb).once(async () => {
     const db = await openDB(dbName.fullDb, 1, {
       upgrade(db) {
         ["version", "data", "wal", "meta", "idx.data", "idx.wal", "idx.meta"].map((store) => {
@@ -64,7 +64,7 @@ function joinDBName(...names: string[]): string {
     .join(".");
 }
 
-export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
+export function getIndexedDBName(iurl: URI, sthis: SuperThis): DbName {
   const url = ensureVersion(iurl);
   const fullDb = url.pathname.replace(/^\/+/, "").replace(/\?.*$/, ""); // cut leading slashes
   const dbName = url.getParam(PARAM.NAME);
@@ -80,7 +80,7 @@ export function getIndexDBName(iurl: URI, sthis: SuperThis): DbName {
   };
 }
 
-export class IndexDBGateway implements bs.Gateway {
+export class IndexedDBGateway implements bs.Gateway {
   _db: IDBPDatabase<unknown> = {} as IDBPDatabase<unknown>;
 
   async start(baseURL: URI, sthis: SuperThis): Promise<Result<URI>> {
@@ -98,9 +98,9 @@ export class IndexDBGateway implements bs.Gateway {
   }
   async destroy(baseUrl: URI, sthis: SuperThis): Promise<Result<void>> {
     return exception2Result(async () => {
-      // return deleteDB(getIndexDBName(this.url).fullDb);
+      // return deleteDB(getIndexedDBName(this.url).fullDb);
       const type = getStore(baseUrl, sthis, joinDBName).name;
-      // console.log("IndexDBDataStore:destroy", type);
+      // console.log("IndexedDBDataStore:destroy", type);
       const idb = this._db;
       const trans = idb.transaction(type, "readwrite");
       const object_store = trans.objectStore(type);
