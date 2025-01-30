@@ -3,7 +3,7 @@ import { BuildURI, runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
-import type { KeyBagProviderIndexDB } from "@fireproof/core/indexdb";
+import type { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
 import { MockSuperThis, mockSuperThis } from "../helpers.js";
 
 describe("KeyBag", () => {
@@ -14,7 +14,7 @@ describe("KeyBag", () => {
     sthis = mockSuperThis();
     await sthis.start();
     if (runtimeFn().isBrowser) {
-      url = URI.from("indexdb://fp-keybag");
+      url = URI.from("indexeddb://fp-keybag");
     } else {
       url = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
     }
@@ -24,7 +24,7 @@ describe("KeyBag", () => {
     sthis.env.delete("FP_KEYBAG_URL");
     const kb = await rt.kb.getKeyBag(sthis);
     if (runtimeFn().isBrowser) {
-      expect(kb.rt.url.toString()).toBe(`indexdb://fp-keybag`);
+      expect(kb.rt.url.toString()).toBe(`indexeddb://fp-keybag`);
     } else {
       expect(kb.rt.url.toString()).toBe(`file://${sthis.env.get("HOME")}/.fireproof/keybag`);
     }
@@ -89,7 +89,7 @@ describe("KeyBag", () => {
     let diskBag2: rt.kb.KeyItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
-      const p = provider as KeyBagProviderIndexDB;
+      const p = provider as KeyBagProviderIndexedDB;
       diskBag = await p._prepare().then((db) => db.get("bag", name));
       diskBag2 = await p._prepare().then((db) => db.get("bag", name2));
     } else {
@@ -135,8 +135,8 @@ describe("KeyedCryptoStore", () => {
     // logger = MockLogger().logger;
     // let kbUrl: URI;
     // if (runtimeFn().isBrowser) {
-    //   kbUrl = URI.from("indexdb://fp-keybag");
-    //   baseUrl = URI.from("indexdb://fp-keyed-crypto-store");
+    //   kbUrl = URI.from("indexeddb://fp-keybag");
+    //   baseUrl = URI.from("indexeddb://fp-keyed-crypto-store");
     // } else {
     //   kbUrl = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
     //   baseUrl = URI.merge("file://./dist/tests/keyed-crypto-store", sthis.env.get("FP_STORAGE_URL"));
@@ -249,7 +249,7 @@ describe("KeyedCrypto", () => {
   beforeEach(async () => {
     // let url: URI;
     // if (runtimeFn().isBrowser) {
-    //   url = URI.from("indexdb://fp-keybag");
+    //   url = URI.from("indexeddb://fp-keybag");
     // } else {
     //   url = URI.merge(`file://./dist/tests/key.bag`, sthis.env.get("FP_KEYBAG_URL"));
     // }

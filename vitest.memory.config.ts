@@ -11,9 +11,9 @@ export default defineConfig({
       "**/smoke/**",
       "**/scripts/**",
       "**/examples/**",
-      "tests/gateway/indexdb",
+      "tests/gateway/indexeddb",
       "tests/gateway/file",
-      "tests/blockstore/keyed-crypto-indexdb-file.test.ts",
+      "tests/blockstore/keyed-crypto-indexeddb-file.test.ts",
     ],
     include: ["tests/**/*test.?(c|m)[jt]s?(x)"],
     coverage: {
