@@ -1,4 +1,4 @@
-import { bs, PARAM, rt } from "@fireproof/core";
+import { bs, ensureSuperThis, PARAM, rt } from "@fireproof/core";
 import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockSuperThis } from "../helpers.js";
@@ -94,7 +94,7 @@ describe("KeyedCryptoStore", () => {
   let loader: bs.Loadable;
   // let logger: Logger;
   let baseUrl: URI;
-  const sthis = mockSuperThis();
+  const sthis = ensureSuperThis();
   beforeEach(async () => {
     await sthis.start();
     // logger = MockLogger().logger;
@@ -108,6 +108,7 @@ describe("KeyedCryptoStore", () => {
     }
     baseUrl = baseUrl.build().defParam(PARAM.NAME, "test").URI();
     loader = {
+      sthis,
       keyBag: () => rt.kb.getKeyBag(sthis, { url: kbUrl }),
     } as bs.Loadable;
   });
@@ -116,9 +117,9 @@ describe("KeyedCryptoStore", () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
     for (const pstore of [
-      strt.makeDataStore({ sthis, url, loader }),
-      strt.makeMetaStore({ sthis, url, loader }),
-      strt.makeWALStore({ sthis, url, loader }),
+      strt.makeDataStore({ url, loader }),
+      strt.makeMetaStore({ url, loader }),
+      strt.makeWALStore({ url, loader }),
     ]) {
       const store = await pstore;
       // await store.start();
