@@ -223,7 +223,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       );
     };
 
-    const snapshot = (opts: { since?: ClockHead; sinceOptions?: ChangesOptions } = {}) => {
+    const snapshot = (opts: { since?: ClockHead } & ChangesOptions = {}) => {
       const ready = this.ready.bind(this);
       const updateIndex = this._updateIndex.bind(this);
       const hydrateIndex = this._hydrateIndex.bind(this);
@@ -234,7 +234,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         await updateIndex();
         await hydrateIndex();
 
-        for await (const doc of await query(opts.since, opts.sinceOptions)) {
+        for await (const doc of await query(opts.since, opts)) {
           if (doc) yield doc;
         }
       }
@@ -252,7 +252,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       return unsubscribe;
     };
 
-    const stream = (opts: { futureOnly: boolean; since?: ClockHead; sinceOptions?: ChangesOptions }) => {
+    const stream = (opts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions) => {
       const ready = this.ready.bind(this);
       const updateIndex = this._updateIndex.bind(this);
       const hydrateIndex = this._hydrateIndex.bind(this);
@@ -269,7 +269,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
             await updateIndex();
             await hydrateIndex();
 
-            const it = await query(opts.since, opts.sinceOptions);
+            const it = await query(opts.since, opts);
 
             async function iterate(prevValue: DocWithId<T>) {
               const { done, value } = await it.next();

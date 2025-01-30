@@ -170,14 +170,14 @@ export class CRDT<T extends DocTypes> {
       return since ? this.changes<T>(since, sinceOptions) : this.all<T>();
     };
 
-    const snapshot = (opts: { since?: ClockHead; sinceOptions?: ChangesOptions } = {}) => {
+    const snapshot = (opts: { since?: ClockHead } & ChangesOptions = {}) => {
       const ready = this.ready.bind(this);
 
       async function* currentDocsWithId() {
         await waitFor;
         await ready();
 
-        for await (const doc of currentDocs(opts.since, opts.sinceOptions)) {
+        for await (const doc of currentDocs(opts.since, opts)) {
           yield docUpdateToDocWithId(doc);
         }
       }
@@ -195,7 +195,7 @@ export class CRDT<T extends DocTypes> {
       return unsubscribe;
     };
 
-    const stream = (opts: { futureOnly: boolean; since?: ClockHead; sinceOptions?: ChangesOptions }) => {
+    const stream = (opts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions) => {
       const ready = this.ready.bind(this);
 
       let unsubscribe: undefined | (() => void);
@@ -207,7 +207,7 @@ export class CRDT<T extends DocTypes> {
           await ready();
 
           if (opts.futureOnly === false) {
-            const it = currentDocs(opts.since, opts.sinceOptions);
+            const it = currentDocs(opts.since, opts);
 
             async function iterate(prevValue: DocUpdate<T>) {
               const { done, value } = await it.next();
@@ -239,8 +239,8 @@ export class CRDT<T extends DocTypes> {
 
     return {
       snapshot,
-      live(opts?: { since?: ClockHead }) {
-        return stream({ futureOnly: false, since: opts?.since });
+      live(opts?: { since?: ClockHead } & ChangesOptions) {
+        return stream({ ...opts, futureOnly: false });
       },
       future() {
         return stream({ futureOnly: true });
