@@ -187,7 +187,7 @@ const keyBagProviderFactories = new Map<string, KeyBagProviderFactoryItem>(
     {
       protocol: "indexdb:",
       factory: async (url: URI, sthis: SuperThis) => {
-        const { KeyBagProviderImpl } = await import("@fireproof/core/web");
+        const { KeyBagProviderImpl } = await import("@fireproof/core/indexdb");
         return new KeyBagProviderImpl(url, sthis);
       },
     },

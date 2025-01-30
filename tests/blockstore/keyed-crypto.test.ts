@@ -4,6 +4,8 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import type { KeyBagProviderIndexDB } from "@fireproof/core/web";
+import * as dagCodec from "@fireproof/vendor/@ipld/dag-cbor";
+import type { KeyBagProviderIndexDB } from "@fireproof/core/indexdb";
 import { MockSuperThis, mockSuperThis } from "../helpers.js";
 
 describe("KeyBag", () => {
