@@ -27,11 +27,11 @@ import type {
   CRDTClock,
   BaseBlockstore,
   CarTransaction,
+  LedgerOpts,
 } from "./types.js";
 import { index, type Index } from "./indexer.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
 import { ensureLogger } from "./utils.js";
-import type { LedgerOpts } from "./ledger.js";
 import { CRDTClockImpl } from "./crdt-clock.js";
 
 export class CRDTImpl implements CRDT {
