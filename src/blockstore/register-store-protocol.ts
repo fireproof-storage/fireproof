@@ -2,7 +2,7 @@ import { BuildURI, runtimeFn, URI } from "@adviser/cement";
 import { PARAM, SuperThis } from "../types.js";
 import type { SerdeGateway } from "./serde-gateway.js";
 import { FILESTORE_VERSION } from "../runtime/gateways/file/version.js";
-import { INDEXDB_VERSION } from "../runtime/gateways/indexdb-version.js";
+import { INDEXEDDB_VERSION } from "../runtime/gateways/indexeddb-version.js";
 import type { Gateway } from "./gateway.js";
 
 import { FileGateway } from "../runtime/gateways/file/gateway-impl.js";
@@ -22,7 +22,7 @@ export interface SerdeGatewayFactoryItem {
 
   // readonly gateway?: (sthis: SuperThis) => Promise<SerdeGateway>;
   // readonly test: (sthis: SuperThis, gfi: GatewayFactoryItem) => Promise<TestGateway>;
-  // which switches between file and indexdb
+  // which switches between file and indexeddb
   // readonly data: (logger: Logger) => Promise<Gateway>;
   // readonly meta: (logger: Logger) => Promise<Gateway>;
   // readonly wal: (logger: Logger) => Promise<Gateway>;
@@ -130,17 +130,17 @@ if (runtimeFn().isNodeIsh || runtimeFn().isDeno) {
 
 if (runtimeFn().isBrowser) {
   registerStoreProtocol({
-    protocol: "indexdb:",
+    protocol: "indexeddb:",
     isDefault: true,
     defaultURI: () => {
-      return BuildURI.from("indexdb://")
+      return BuildURI.from("indexeddb://")
         .pathname("fp")
-        .setParam(PARAM.VERSION, INDEXDB_VERSION)
+        .setParam(PARAM.VERSION, INDEXEDDB_VERSION)
         .setParam(PARAM.RUNTIME, "browser")
         .URI();
     },
     gateway: async () => {
-      const { GatewayImpl } = await import("@fireproof/core/indexdb");
+      const { GatewayImpl } = await import("@fireproof/core/indexeddb");
       return new GatewayImpl();
     },
   });
