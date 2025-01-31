@@ -2,7 +2,8 @@ import { useContext } from "react";
 import { useParams } from "react-router-dom";
 import { UserTenant } from "../../../../backend/api.ts";
 import { AppContext } from "../../../app-context.tsx";
-import { tenantName } from "../../../hooks/tenant.ts";
+import { tenantName } from "../../../helpers.ts";
+import { CodeHighlight } from "../../../components/CodeHighlight.tsx";
 
 function isAdmin(ut: UserTenant) {
   return ut.role === "admin";
@@ -33,19 +34,22 @@ export function CloudTenantShow() {
       <div className="space-y-6">
         <div className="bg-[--muted] shadow sm:rounded-lg p-6">
           <h2 className="text-lg font-semibold text-[--foreground] mb-4">Onboarding - Quickstart</h2>
-          <p className="text-[--muted-foreground]">
+          <div className="text-[--muted-foreground]">
             To connect your database to Fireproof Cloud, use this code:
-            <pre className="bg-[--background] p-4 rounded-md my-4 overflow-x-auto">
+            <div className="bg-[--background] p-4 rounded-md my-4 overflow-x-auto">
+              <CodeHighlight code={`await connect(db, "${tenant.tenantId}", "my-ledger-id", "token");`} />
+            </div>
+            {/* <pre className="bg-[--background] p-4 rounded-md my-4 overflow-x-auto">
               <code className="text-sm text-[--foreground]">
                 {`await connect(db, "${tenant.tenantId}", "my-ledger-id", "token");`}
               </code>
-            </pre>
+            </pre> */}
             To learn more about using Fireproof Cloud, check out our{" "}
             <a href="https://use-fireproof.com/docs/getting-started" className="text-[--accent] hover:underline">
               documentation
             </a>
             .
-          </p>
+          </div>
         </div>
 
         <div className="bg-[--muted] shadow sm:rounded-lg p-6">

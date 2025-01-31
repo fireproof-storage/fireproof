@@ -1,9 +1,10 @@
 import { useContext } from "react";
 import { useForm } from "react-hook-form";
-import { Form, Link, useNavigate, useParams } from "react-router-dom";
+import { Form, Link, useParams } from "react-router-dom";
 import { InUpdateTenantParams } from "../../../../backend/api.js";
 import { AppContext } from "../../../app-context.js";
-import { tenantName } from "../../../hooks/tenant.js";
+import { tenantName } from "../../../helpers.ts";
+// import { tenantName } from "../../../hooks/tenant.js";
 
 export function CloudTenantAdmin() {
   const { tenantId } = useParams();

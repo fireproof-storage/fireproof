@@ -1,6 +1,6 @@
 import { Result, exception2Result } from "@adviser/cement";
 import { useSession } from "@clerk/clerk-react";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryObserverResult, RefetchOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   ReqCreateLedger,
   ReqCreateTenant,
@@ -65,13 +65,15 @@ export interface InviteItem {
   invites: InviteTicket[];
 }
 
-function wrapResultToPromise<T>(pro: Promise<Result<T>>) {
+function wrapResultToPromise<T>(pro: () => Promise<Result<T>>) {
   return async (): Promise<T> => {
-    const res = await pro;
+    console.log("wrapResultToPromise-pre", pro);
+    const res = await pro();
+    console.log("wrapResultToPromise-post", pro);
     if (res.isOk()) {
-      return Promise.resolve(res.Ok());
+      return res.Ok();
     }
-    return Promise.reject(res.Err());
+    throw res.Err();
   };
 }
 
@@ -83,18 +85,22 @@ export class CloudContext {
   }
 
   private _session?: ReturnType<typeof useSession>;
-  private _queryClient?: QueryClient;
+  // private _queryClient?: QueryClient;
 
   getToken() {
     return this._session?.session?.getToken({ template: "with-email" });
   }
 
   sessionReady(condition: boolean) {
-    return this._session?.isLoaded && this._session?.isSignedIn && condition;
+    const ret = this._session?.isLoaded && this._session?.isSignedIn && condition;
+    console.log("sessionReady", ret);
+    return ret;
   }
 
   activeApi(condition = true) {
-    return this.sessionReady(this._ensureUser.data?.user.status === "active" && condition);
+    const x = this.sessionReady(this._ensureUser.data?.user.status === "active" && condition);
+    console.log("activeApi", x);
+    return x;
   }
 
   initContext() {
@@ -104,11 +110,11 @@ export class CloudContext {
 
     this._ensureUser = useQuery({
       queryKey: ["ensureUser"],
-      queryFn: wrapResultToPromise(this.api.ensureUser({})),
+      queryFn: wrapResultToPromise(() => this.api.ensureUser({})),
       enabled: this.sessionReady(true),
     });
 
-    this._queryClient = useQueryClient();
+    // this._queryClient = useQueryClient();
   }
 
   _ensureUser!: ReturnType<typeof useQuery<ResEnsureUser, []>>;
@@ -117,35 +123,46 @@ export class CloudContext {
   getListInvitesByTenant(tenantId: string): ReturnType<typeof useQuery<ResListInvites>> {
     const listInvites = useQuery({
       queryKey: ["listInvitesTenants", this._ensureUser.data?.user.userId],
-      queryFn: async () => {
-        const res = await wrapResultToPromise(
-          this.api.listInvites({
-            tenantIds: Array.from(this._tenantsForInvites),
-          }),
-        )();
-        console.log("listInvites-tenants", this._tenantsForInvites, res);
-        return res;
-      },
+      queryFn: wrapResultToPromise(() =>
+        this.api.listInvites({
+          tenantIds: Array.from(this._tenantsForInvites),
+        }),
+      ),
       enabled: this.activeApi(this._tenantsForInvites.size > 0),
     });
     if (!this._tenantsForInvites.has(tenantId)) {
       this._tenantsForInvites.add(tenantId);
-      listInvites.refetch();
+      this.activeApi(this._tenantsForInvites.size > 0) && listInvites.refetch();
     }
     return listInvites;
   }
 
   _tenantIdForLedgers = new Set<string>();
-  getListLedgersByUser(tenantId: string): ReturnType<typeof useQuery<ResListLedgersByUser>> {
+
+  addTenantToListLedgerByUser(tenantId: string | undefined, action?: () => void) {
+    if (tenantId && !this._tenantIdForLedgers.has(tenantId)) {
+      this._tenantIdForLedgers.add(tenantId);
+      console.log("addTenantToListLedgerByUser", tenantId, action);
+      action?.();
+    }
+  }
+
+  getListLedgersByUser(tenantId?: string): ReturnType<typeof useQuery<ResListLedgersByUser>> {
     const listLedgers = useQuery({
       queryKey: ["listLedgersByUser", this._ensureUser.data?.user.userId],
-      queryFn: wrapResultToPromise(this.api.listLedgersByUser({ tenantIds: Array.from(this._tenantIdForLedgers) })),
+      queryFn: wrapResultToPromise(() => this.api.listLedgersByUser({ tenantIds: Array.from(this._tenantIdForLedgers) })),
       enabled: this.activeApi(this._tenantsForInvites.size > 0),
     });
-    if (!this._tenantIdForLedgers.has(tenantId)) {
-      this._tenantIdForLedgers.add(tenantId);
+
+    this.addTenantToListLedgerByUser(tenantId, () => {
       listLedgers.refetch();
-    }
+    });
+    // listLedgers.refetch = (() => {
+    //   if (this.activeApi(this._tenantsForInvites.size > 0)) {
+    //     return listLedgers.refetch();
+    //   }
+    //   return Promise.resolve()
+    // }) as ReturnType<typeof useQuery<ResListLedgersByUser>>["refetch"];
     return listLedgers;
   }
 
@@ -154,7 +171,7 @@ export class CloudContext {
       queryKey: ["listTenandsByUser", this._ensureUser.data?.user.userId],
       queryFn: () => {
         console.log("useListTenantsByUser", this._ensureUser.data?.user.userId);
-        return wrapResultToPromise(this.api.listTenantsByUser({}))();
+        return wrapResultToPromise(() => this.api.listTenantsByUser({}))();
       },
       enabled: this.activeApi(),
     });
@@ -168,11 +185,24 @@ export class CloudContext {
   //   });
   // }
 
+  createTenantMutation() {
+    const listTenantsByUser = this.getListTenantsByUser();
+    return useMutation({
+      mutationFn: ({ name }: { name: string }) => {
+        return wrapResultToPromise(() => this.api.createTenant({ tenant: { name } }))();
+      },
+      onSuccess: async (data, variables, context) => {
+        console.log("onSuccess", data, variables, context);
+        listTenantsByUser.refetch();
+      },
+    });
+  }
+
   createLedgerMutation() {
-    // const listLedgers = this.getListLedgersByUser()
+    const listLedgers = this.getListLedgersByUser();
     return useMutation({
       mutationFn: ({ name, tenantId }: { name: string; tenantId: string }) => {
-        return wrapResultToPromise(
+        return wrapResultToPromise(() =>
           this.api.createLedger({
             ledger: {
               name,
@@ -182,7 +212,12 @@ export class CloudContext {
         )();
       },
       onSuccess: async (data, variables, context) => {
-        this.getListLedgersByUser(variables.tenantId);
+        console.log("onSuccess", data, variables, context);
+        this.addTenantToListLedgerByUser(variables.tenantId, () => {
+          console.log("refetch");
+          listLedgers.refetch();
+        });
+        listLedgers.refetch();
         // this._queryClient?.setQueryData(["listLedgersByTenant", variables.tenantId,  this._ensureUser.data?.user.userId], (old: ResListLedgersByUser) => {
         //   console.log("old", old);
         //   return {
@@ -240,7 +275,7 @@ class CloudApi {
     return Result.Err(`HTTP: ${res.status} ${res.statusText}: ${body}`);
   }
 
-  async ensureUser(req: WithoutTypeAndAuth<ReqEnsureUser>): Promise<Result<ResEnsureUser>> {
+  ensureUser(req: WithoutTypeAndAuth<ReqEnsureUser>): Promise<Result<ResEnsureUser>> {
     return this.request<ReqEnsureUser, ResEnsureUser>({ ...req, type: "reqEnsureUser" });
   }
   findUser(req: WithoutTypeAndAuth<ReqFindUser>): Promise<Result<ResFindUser>> {

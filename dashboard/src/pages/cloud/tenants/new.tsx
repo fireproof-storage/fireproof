@@ -26,25 +26,17 @@ export function CloudNew() {
   const { register, handleSubmit } = useForm();
 
   const ctx = useContext(AppContext);
-  const { refetch } = ctx.cloud.getListTenantsByUser();
+  // const { refetch } = ctx.cloud.getListTenantsByUser();
 
   const navigate = useNavigate();
   // const submit = useSubmit();
 
+  const createTenant = ctx.cloud.createTenantMutation();
+
   async function onSubmit(data: SubmitTarget) {
-    console.log("data", data);
     const { tenantName } = data as { tenantName: string }; // (await request.json()).tenantName;
-    const rTenant = await ctx.cloud.api.createTenant({
-      tenant: {
-        name: tenantName,
-      },
-    });
-    console.log("created", rTenant);
-    if (rTenant.isErr()) {
-      return new Response(rTenant.Err().message, { status: 400 });
-    }
-    refetch();
-    navigate(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}`);
+    const rTenant = await createTenant.mutateAsync({ name: tenantName });
+    navigate(`/fp/cloud/tenants/${rTenant.tenant.tenantId}`);
   }
 
   return (

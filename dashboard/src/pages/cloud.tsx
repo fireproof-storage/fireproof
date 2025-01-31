@@ -13,10 +13,8 @@ function SidebarCloud() {
   const { sideBar, cloud } = useContext(AppContext);
   const { setIsSidebarOpen } = sideBar;
   const { tenantId } = useParams();
-
-  if (!tenantId) return null;
-
   const ledgerList = cloud.getListLedgersByUser(tenantId);
+
   if (ledgerList.isLoading) {
     return <div>Loading...</div>;
   }
@@ -65,12 +63,14 @@ function SidebarCloud() {
 
       {/* Ledger List */}
       <div className="pl-4 mt-2">
-        {ledgerList.data.ledgers.map((ledger) => (
-          <NavLink
-            key={ledger.ledgerId}
-            to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledger.ledgerId}`}
-            onClick={() => setIsSidebarOpen(false)}
-            className={({ isActive }) => `
+        {ledgerList.data.ledgers
+          .filter((i) => i.tenantId === tenantId)
+          .map((ledger) => (
+            <NavLink
+              key={ledger.ledgerId}
+              to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledger.ledgerId}`}
+              onClick={() => setIsSidebarOpen(false)}
+              className={({ isActive }) => `
               flex items-center rounded-md px-3 py-1.5 text-sm transition-colors
               ${
                 isActive
@@ -78,10 +78,10 @@ function SidebarCloud() {
                   : "text-[--muted-foreground] hover:bg-[--accent] hover:text-[--foreground]"
               }
             `}
-          >
-            {ledger.name}
-          </NavLink>
-        ))}
+            >
+              {ledger.name}
+            </NavLink>
+          ))}
       </div>
     </div>
   );

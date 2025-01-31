@@ -1,7 +1,7 @@
 import { useContext, useEffect } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
-import { tenantName } from "../hooks/tenant.ts";
+import { tenantName } from "../helpers.ts";
 
 export function TenantSelector() {
   const { cloud } = useContext(AppContext);

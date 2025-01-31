@@ -30,7 +30,7 @@
     "@fireproof/core": "^0.19.121",
     "@libsql/client": "^0.14.0",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@tanstack/react-query": "^5.66.0",
+    "@tanstack/react-query": "5.66.0",
     "drizzle-orm": "^0.38.3",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
