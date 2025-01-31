@@ -23,7 +23,7 @@ async function fetchWithRetries(url: string, retries: number): Promise<Response>
   throw new Error(`Failed to fetch ${url} after ${retries} retries`);
 }
 
-export function useUploader(ledger: Fireproof) {
+export function useUploader(database: Fireproof) {
   const [{ agent, space }, { getProofs, loadAgent }] = useKeyring();
   const registered = Boolean(space?.registered());
   const [uploaderReady, setUploaderReady] = useState(false);
@@ -31,7 +31,7 @@ export function useUploader(ledger: Fireproof) {
 
   useEffect(() => {
     if (!remoteBlockReaderReady) {
-      ledger.setRemoteBlockReader(async (cid: any) => {
+      database.setRemoteBlockReader(async (cid: any) => {
         const response = await fetchWithRetries(`https://${cid}.ipfs.w3s.link/`, 2);
         const buffer = await response.arrayBuffer();
         return new Uint8Array(buffer);
@@ -48,7 +48,7 @@ export function useUploader(ledger: Fireproof) {
         with: delegz.with,
         proofs: await getProofs([delegz]),
       };
-      ledger.setCarUploader(async (carCid: any, carBytes: Uint8Array) => {
+      database.setCarUploader(async (carCid: any, carBytes: Uint8Array) => {
         await uploadCarBytes(conf, carCid, carBytes);
       });
       setUploaderReady(true);
