@@ -13,6 +13,7 @@ function SidebarCloud() {
   const { sideBar, cloud } = useContext(AppContext);
   const { setIsSidebarOpen } = sideBar;
   const { tenantId } = useParams();
+  console.log("tenantId", tenantId);
   const ledgerList = cloud.getListLedgersByUser(tenantId);
 
   if (ledgerList.isLoading) {

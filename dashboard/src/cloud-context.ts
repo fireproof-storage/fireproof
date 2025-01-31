@@ -37,6 +37,7 @@ import type {
 import type { InviteTicket } from "../backend/invites.ts";
 import type { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
+import { useEffect } from "react";
 
 interface TypeString {
   type: string;
@@ -67,9 +68,9 @@ export interface InviteItem {
 
 function wrapResultToPromise<T>(pro: () => Promise<Result<T>>) {
   return async (): Promise<T> => {
-    console.log("wrapResultToPromise-pre", pro);
+    // console.log("wrapResultToPromise-pre", pro);
     const res = await pro();
-    console.log("wrapResultToPromise-post", pro);
+    // console.log("wrapResultToPromise-post", pro);
     if (res.isOk()) {
       return res.Ok();
     }
@@ -93,13 +94,13 @@ export class CloudContext {
 
   sessionReady(condition: boolean) {
     const ret = this._session?.isLoaded && this._session?.isSignedIn && condition;
-    console.log("sessionReady", ret);
+    // console.log("sessionReady", ret);
     return ret;
   }
 
   activeApi(condition = true) {
     const x = this.sessionReady(this._ensureUser.data?.user.status === "active" && condition);
-    console.log("activeApi", x);
+    // console.log("activeApi", x);
     return x;
   }
 
@@ -113,6 +114,7 @@ export class CloudContext {
       queryFn: wrapResultToPromise(() => this.api.ensureUser({})),
       enabled: this.sessionReady(true),
     });
+    // this._tenantIdForLedgers.clear();
 
     // this._queryClient = useQueryClient();
   }
@@ -148,21 +150,17 @@ export class CloudContext {
   }
 
   getListLedgersByUser(tenantId?: string): ReturnType<typeof useQuery<ResListLedgersByUser>> {
+    // this.activeApi(this._tenantIdForLedgers.size > 0) && console.log("active getListLedgersByUser", tenantId);
     const listLedgers = useQuery({
       queryKey: ["listLedgersByUser", this._ensureUser.data?.user.userId],
       queryFn: wrapResultToPromise(() => this.api.listLedgersByUser({ tenantIds: Array.from(this._tenantIdForLedgers) })),
-      enabled: this.activeApi(this._tenantsForInvites.size > 0),
+      enabled: this.activeApi(this._tenantIdForLedgers.size > 0),
     });
 
     this.addTenantToListLedgerByUser(tenantId, () => {
-      listLedgers.refetch();
+      console.log("ledger - refetch", tenantId, this.activeApi(this._tenantIdForLedgers.size > 0));
+      this.activeApi(this._tenantIdForLedgers.size > 0) && listLedgers.refetch();
     });
-    // listLedgers.refetch = (() => {
-    //   if (this.activeApi(this._tenantsForInvites.size > 0)) {
-    //     return listLedgers.refetch();
-    //   }
-    //   return Promise.resolve()
-    // }) as ReturnType<typeof useQuery<ResListLedgersByUser>>["refetch"];
     return listLedgers;
   }
 
