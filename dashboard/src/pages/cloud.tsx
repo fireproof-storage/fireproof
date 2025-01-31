@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { NavLink, useParams } from "react-router-dom";
+import { NavLink, useParams, useLocation } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
@@ -13,6 +13,7 @@ function SidebarCloud() {
   const { sideBar, cloud } = useContext(AppContext);
   const { setIsSidebarOpen } = sideBar;
   const { tenantId } = useParams();
+  const location = useLocation();
   console.log("tenantId", tenantId);
   const ledgerList = cloud.getListLedgersByUser(tenantId);
 
@@ -22,6 +23,11 @@ function SidebarCloud() {
   if (!ledgerList.data) {
     // navigate("/fp/cloud");
     return <div>Not found</div>;
+  }
+
+  function isHomeActive(path: string) {
+    const regex = new RegExp(`/fp/cloud/tenants/${tenantId}/(overview|members|admin)?$`);
+    return regex.test(location.pathname) || path === location.pathname;
   }
 
   const navItems = [
@@ -37,12 +43,12 @@ function SidebarCloud() {
         <div key={item.path} className="flex items-center justify-between">
           <NavLink
             to={item.path}
-            end
             onClick={() => setIsSidebarOpen(false)}
+            end={item.label !== "Home"}
             className={({ isActive }) => `
               flex items-center rounded-md px-3 py-2 text-sm transition-colors flex-1
               ${
-                isActive
+                (item.label === "Home" ? isHomeActive(item.path) : isActive)
                   ? "active bg-[--accent] text-[--foreground] font-medium"
                   : "text-[--muted-foreground] hover:bg-[--accent] hover:text-[--foreground]"
               }

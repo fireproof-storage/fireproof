@@ -1,5 +1,12 @@
 import { useContext } from "react";
-import { Route, RouterProvider, createBrowserRouter, createMemoryRouter, createRoutesFromElements } from "react-router-dom";
+import {
+  Navigate,
+  Route,
+  RouterProvider,
+  createBrowserRouter,
+  createMemoryRouter,
+  createRoutesFromElements,
+} from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { WithoutSidebar } from "../layouts/without-sidebar.tsx";
 import { Cloud } from "../pages/cloud.tsx";
@@ -11,6 +18,7 @@ import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.tsx";
 import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
 import { CloudTenantMembers } from "../pages/cloud/tenants/members.tsx";
 import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.tsx";
+import { CloudTenantOverview } from "../pages/cloud/tenants/overview.tsx";
 import { CloudTenantShow } from "../pages/cloud/tenants/show.tsx";
 import { Databases, databaseLoader } from "../pages/databases.tsx";
 import { DatabasesConnect, connectDatabasesLoader } from "../pages/databases/connect.tsx";
@@ -35,15 +43,18 @@ export function App() {
         <Route index element={<CloudIndex />} />
         <Route path="tenants">
           <Route path=":tenantId">
-            <Route index element={<CloudTenantShow />} />
+            <Route element={<CloudTenantShow />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<CloudTenantOverview />} />
+              <Route path="members" element={<CloudTenantMembers />} />
+              <Route path="admin" element={<CloudTenantAdmin />} />
+            </Route>
             <Route path="delete" element={<CloudTenantDelete />} />
-            <Route path="admin" element={<CloudTenantAdmin />} />
             <Route path="ledgers" element={<CloudTenantLedgers />}>
               <Route index element={<CloudTenantLedgersIndex />} />
               <Route path="new" element={<CloudTenantLedgersNew />} />
               <Route path=":ledgerId" element={<CloudTenantLedgersShow />} />
             </Route>
-            <Route path="members" element={<CloudTenantMembers />} />
           </Route>
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
         </Route>
