@@ -1,42 +1,42 @@
-import { exception2Result, Result } from "@adviser/cement";
+import { Result, exception2Result } from "@adviser/cement";
 import { useSession } from "@clerk/clerk-react";
-import {
-  ResEnsureUser,
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type {
+  ReqCreateLedger,
+  ReqCreateTenant,
+  ReqDeleteInvite,
+  ReqDeleteLedger,
+  ReqDeleteTenant,
   ReqEnsureUser,
   ReqFindUser,
-  ResFindUser,
-  ReqCreateTenant,
-  ResCreateTenant,
-  ReqUpdateTenant,
-  ResUpdateTenant,
-  ReqDeleteTenant,
-  ResDeleteTenant,
-  ReqRedeemInvite,
-  ResRedeemInvite,
-  ReqListTenantsByUser,
-  ResListTenantsByUser,
   ReqInviteUser,
-  ResInviteUser,
   ReqListInvites,
-  ResListInvites,
-  ReqDeleteInvite,
-  ResDeleteInvite,
-  UserTenant,
-  ReqUpdateUserTenant,
-  ResUpdateUserTenant,
-  ReqCreateLedger,
-  ReqDeleteLedger,
-  ReqUpdateLedger,
-  ResCreateLedger,
-  ResDeleteLedger,
-  ResUpdateLedger,
   ReqListLedgersByUser,
+  ReqListTenantsByUser,
+  ReqRedeemInvite,
+  ReqUpdateLedger,
+  ReqUpdateTenant,
+  ReqUpdateUserTenant,
+  ResCreateLedger,
+  ResCreateTenant,
+  ResDeleteInvite,
+  ResDeleteLedger,
+  ResDeleteTenant,
+  ResEnsureUser,
+  ResFindUser,
+  ResInviteUser,
+  ResListInvites,
   ResListLedgersByUser,
+  ResListTenantsByUser,
+  ResRedeemInvite,
+  ResUpdateLedger,
+  ResUpdateTenant,
+  ResUpdateUserTenant,
+  UserTenant,
 } from "../backend/api.ts";
-import { AuthType } from "../backend/users.ts";
+import type { InviteTicket } from "../backend/invites.ts";
+import type { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
-import { InviteTicket } from "../backend/invites.ts";
-import { useQuery } from "@tanstack/react-query";
 
 interface TypeString {
   type: string;
@@ -83,16 +83,17 @@ export class CloudContext {
   }
 
   private _session?: ReturnType<typeof useSession>;
+  private _queryClient?: QueryClient;
 
   getToken() {
-    return this._session!.session!.getToken({ template: "with-email" });
+    return this._session?.session?.getToken({ template: "with-email" });
   }
 
   sessionReady(condition: boolean) {
     return this._session?.isLoaded && this._session?.isSignedIn && condition;
   }
 
-  activeApi(condition: boolean = true) {
+  activeApi(condition = true) {
     return this.sessionReady(this._ensureUser.data?.user.status === "active" && condition);
   }
 
@@ -106,6 +107,8 @@ export class CloudContext {
       queryFn: wrapResultToPromise(this.api.ensureUser({})),
       enabled: this.sessionReady(true),
     });
+
+    this._queryClient = useQueryClient();
   }
 
   _ensureUser!: ReturnType<typeof useQuery<ResEnsureUser, []>>;
@@ -164,16 +167,42 @@ export class CloudContext {
       enabled: this.activeApi(),
     });
   }
+
+  createLedgerMutation() {
+    return useMutation({
+      mutationFn: ({ name, tenantId }: { name: string; tenantId: string }) => {
+        return wrapResultToPromise(
+          this.api.createLedger({
+            ledger: {
+              name,
+              tenantId
+            }
+          })
+        )();
+      },
+      onSuccess: async (data, variables, context) => {
+        this._queryClient?.setQueryData(["listLedgersByTenant", variables.tenantId,  this._ensureUser.data?.user.userId], (old: ResListLedgersByUser) => {
+          console.log("old", old);
+          return {
+            ...old,
+            ledgers: [...old.ledgers, data.ledger],
+          };
+        });
+      },
+    });
+  }
 }
+
 class CloudApi {
   constructor(private cloud: CloudContext) {}
 
   private async getAuth() {
     return exception2Result(() => {
       return this.cloud.getToken().then((token) => {
+        if (!token) throw new Error("No token available");
         return {
           type: "clerk",
-          token: token!,
+          token,
         } as AuthType;
       });
     });

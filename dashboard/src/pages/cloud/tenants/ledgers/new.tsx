@@ -8,26 +8,21 @@ export function CloudTenantLedgersNew() {
   const { cloud } = useContext(AppContext);
   const navigate = useNavigate();
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const createLedger = cloud.createLedgerMutation();
 
   const onSubmit = async (data: { name: string }) => {
     if (!tenantId) return;
 
-    const res = await cloud.api.createLedger({
-      ledger: {
-        tenantId,
+    try {
+      const resp = await createLedger.mutateAsync({
         name: data.name,
-      }
-    });
-    
-    console.log(res);
-
-    if (res.isErr()) {
-      console.error(res.Erssr());
-      return;
+        tenantId
+      });
+      
+      navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${resp.ledger.ledgerId}`);
+    } catch (error) {
+      console.error('Failed to create ledger:', error);
     }
-
-    const resp = res.Ok();
-    navigate(`/fp/cloud/tenants/${tenantId}/ledgers/${resp.ledger.ledgerId}`);
   };
 
   return (
@@ -49,6 +44,8 @@ export function CloudTenantLedgersNew() {
               })}
               className="w-full py-2 px-3 bg-[--background] border border-[--border] rounded text-sm font-medium text-[--foreground] placeholder-[--muted-foreground] focus:outline-none focus:ring-1 focus:ring-[--ring] focus:border-transparent"
               placeholder="Enter ledger name"
+              disabled={createLedger.isPending}
+              autoFocus
             />
             {errors.name && (
               <p className="mt-1 text-sm text-[--destructive]">{errors.name.message as string}</p>
@@ -60,14 +57,16 @@ export function CloudTenantLedgersNew() {
               type="button"
               onClick={() => navigate(`/fp/cloud/tenants/${tenantId}/ledgers`)}
               className="px-4 py-2 bg-[--muted] text-[--muted-foreground] rounded hover:bg-[--muted]/80"
+              disabled={createLedger.isPending}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-[--accent] text-[--accent-foreground] rounded hover:bg-[--accent]/80"
+              disabled={createLedger.isPending}
             >
-              Create Ledger
+              {createLedger.isPending ? 'Creating...' : 'Create Ledger'}
             </button>
           </div>
         </form>
