@@ -1,9 +1,9 @@
 import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form, Link, useNavigate, useParams } from "react-router-dom";
-import { InUpdateTenantParams } from "../../../../backend/api";
-import { AppContext } from "../../../app-context";
-import { tenantName } from "../../../hooks/tenant";
+import { InUpdateTenantParams } from "../../../../backend/api.js";
+import { AppContext } from "../../../app-context.js";
+import { tenantName } from "../../../hooks/tenant.js";
 
 export function CloudTenantAdmin() {
   const { tenantId } = useParams();
@@ -11,7 +11,7 @@ export function CloudTenantAdmin() {
   const listTenants = cloud.getListTenantsByUser();
 
   const { register, handleSubmit } = useForm();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   if (listTenants.isLoading) {
     return <div>Loading...</div>;
@@ -38,13 +38,13 @@ export function CloudTenantAdmin() {
       console.error("tenantId mismatch", tenantId, tenant.tenantId);
       return;
     }
-
+    // TODO: Make a mutation
     const res = await cloud.api.updateTenant({ tenant });
     if (res.isErr()) {
       console.error(res.Err());
       return;
     }
-    refresh();
+    listTenants.refetch();
   };
 
   return (

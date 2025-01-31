@@ -16,7 +16,7 @@ function SidebarCloud() {
 
   if (!tenantId) return null;
 
-  const ledgerList = cloud.getListLedgersByTenant(tenantId);
+  const ledgerList = cloud.getListLedgersByUser(tenantId);
   if (ledgerList.isLoading) {
     return <div>Loading...</div>;
   }

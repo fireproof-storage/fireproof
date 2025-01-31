@@ -4224,6 +4224,7 @@
         "npm:@types/react-dom@^19.0.1",
         "npm:@types/react@^19.0.1",
         "npm:@vitejs/plugin-react@^4.3.4",
+        "npm:appwrite@17",
         "npm:autoprefixer@^10.4.20",
         "npm:dotenv@^16.4.7",
         "npm:drizzle-kit@~0.30.1",

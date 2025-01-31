@@ -2,7 +2,7 @@ import { JSX, useContext } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { FireproofHome } from "./FireproofHome.tsx";
-import { TenantSelector } from "./TenantSelector";
+import { TenantSelector } from "./TenantSelector.tsx";
 //
 
 export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent: JSX.Element; title?: string; newUrl?: string }) {

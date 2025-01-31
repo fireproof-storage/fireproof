@@ -91,7 +91,7 @@ export function createHandler<T extends LibSQLDatabase>(db: T) {
         res = fpApi.findUser(jso);
         break;
       case FPAPIMsg.isRedeemInvite(jso):
-        res = fpApi.connectUserToTenant(jso);
+        res = fpApi.redeemInvite(jso);
         break;
       case FPAPIMsg.isEnsureUser(jso):
         res = fpApi.ensureUser(jso);

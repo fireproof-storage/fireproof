@@ -160,45 +160,50 @@ export class CloudContext {
     });
   }
 
-  getListLedgersByTenant(tenantId: string): ReturnType<typeof useQuery<ResListLedgers>> {
-    return useQuery({
-      queryKey: ["listLedgersByTenant", tenantId, this._ensureUser.data?.user.userId],
-      queryFn: wrapResultToPromise(this.api.listLedgersByUser({ tenantIds: [tenantId] })),
-      enabled: this.activeApi(),
-    });
-  }
+  // getListLedgersByTenant(tenantId: string): ReturnType<typeof useQuery<ResListLedgers>> {
+  //   return useQuery({
+  //     queryKey: ["listLedgersByTenant", tenantId, this._ensureUser.data?.user.userId],
+  //     queryFn: wrapResultToPromise(this.api.listLedgersByUser({ tenantIds: [tenantId] })),
+  //     enabled: this.activeApi(),
+  //   });
+  // }
 
   createLedgerMutation() {
+    // const listLedgers = this.getListLedgersByUser()
     return useMutation({
       mutationFn: ({ name, tenantId }: { name: string; tenantId: string }) => {
         return wrapResultToPromise(
           this.api.createLedger({
             ledger: {
               name,
-              tenantId
-            }
-          })
+              tenantId,
+            },
+          }),
         )();
       },
       onSuccess: async (data, variables, context) => {
-        this._queryClient?.setQueryData(["listLedgersByTenant", variables.tenantId,  this._ensureUser.data?.user.userId], (old: ResListLedgersByUser) => {
-          console.log("old", old);
-          return {
-            ...old,
-            ledgers: [...old.ledgers, data.ledger],
-          };
-        });
+        this.getListLedgersByUser(variables.tenantId);
+        // this._queryClient?.setQueryData(["listLedgersByTenant", variables.tenantId,  this._ensureUser.data?.user.userId], (old: ResListLedgersByUser) => {
+        //   console.log("old", old);
+        //   return {
+        //     ...old,
+        //     ledgers: [...old.ledgers, data.ledger],
+        //   };
+        // });
       },
     });
   }
 }
 
 class CloudApi {
-  constructor(private cloud: CloudContext) {}
+  private readonly cloud: CloudContext;
+  constructor(cloud: CloudContext) {
+    this.cloud = cloud;
+  }
 
   private async getAuth() {
     return exception2Result(() => {
-      return this.cloud.getToken().then((token) => {
+      return this.cloud.getToken()?.then((token) => {
         if (!token) throw new Error("No token available");
         return {
           type: "clerk",
