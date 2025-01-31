@@ -1,5 +1,5 @@
 import type { ConfigOpts, DocResponse, Doc, DocRecord, IndexRow, MapFn, QueryOpts } from "@fireproof/core";
-import { Ledger, fireproof } from "@fireproof/core";
+import { Database, fireproof } from "@fireproof/core";
 import { deepmerge } from "deepmerge-ts";
 import { Accessor, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 
@@ -27,13 +27,13 @@ export type CreateDocumentResult<T extends DocTypes> = [Accessor<Doc<T>>, Update
 export type CreateDocument = <T extends DocTypes>(initialDocFn: Accessor<Doc<T>>) => CreateDocumentResult<T>;
 
 export interface CreateFireproof {
-  /** The Fireproof ledger */
-  readonly ledger: Accessor<Ledger>;
+  /** The Fireproof database */
+  readonly database: Accessor<Database>;
   /**
    * ## Summary
    *
-   * Creates a new Fireproof document into your custom-named Fireproof ledger. The creation occurs when you do not
-   * pass in an `_id` as part of your initial document -- the ledger will assign a new one when you call the provided
+   * Creates a new Fireproof document into your custom-named Fireproof database. The creation occurs when you do not
+   * pass in an `_id` as part of your initial document -- the database will assign a new one when you call the provided
    * `save` handler. The hook also provides generics support so you can inline your custom type into the invocation to
    * receive type-safety and auto-complete support in your IDE.
    *
@@ -85,27 +85,27 @@ export interface CreateFireproof {
  *
  * ## Summary
  *
- * Create a Fireproof ledger and the utility hooks to work against it. If no name is
+ * Create a Fireproof database and the utility hooks to work against it. If no name is
  * provided, then it will default to `FireproofDB`.
  *
  * ## Usage
  * ```tsx
- * const { ledger, createLiveQuery, createDocument } = createFireproof();
- * const { ledger, createLiveQuery, createDocument } = createFireproof("AwesomeDB");
- * const { ledger, createLiveQuery, createDocument } = createFireproof("AwesomeDB", { ...options });
+ * const { database, createLiveQuery, createDocument } = createFireproof();
+ * const { database, createLiveQuery, createDocument } = createFireproof("AwesomeDB");
+ * const { database, createLiveQuery, createDocument } = createFireproof("AwesomeDB", { ...options });
  *
- * // As global ledgers -- can put these in a file and import them where you need them
+ * // As global databases -- can put these in a file and import them where you need them
  * export const FireproofDB = createFireproof();
  * export const AwesomeDB = createFireproof("AwesomeDB");
  * ```
  *
  */
 export function createFireproof(dbName?: string, config: ConfigOpts = {}): CreateFireproof {
-  // The ledger connection is cached, so subsequent calls to fireproof with the same name will
-  // return the same ledger object. This makes it safe to invoke the getter function many times
+  // The database connection is cached, so subsequent calls to fireproof with the same name will
+  // return the same database object. This makes it safe to invoke the getter function many times
   // without needing to wrap it with createMemo. An added perk of not needing createMemo is this
   // allows use of this hook at the global scope without needing to wrap it with createRoot from SolidJS.
-  const ledger = () => fireproof(dbName || "FireproofDB", config);
+  const database = () => fireproof(dbName || "FireproofDB", config);
 
   function createDocument<T extends DocTypes>(initialDocFn: Accessor<Doc<T>>): CreateDocumentResult<T> {
     const [doc, setDoc] = createSignal(initialDocFn());
@@ -122,14 +122,14 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
     };
 
     const saveDoc: StoreDocFn<T> = async (existingDoc) => {
-      const response = await ledger().put(existingDoc ?? doc());
+      const response = await database().put(existingDoc ?? doc());
       if (!existingDoc && !doc()._id) setDoc((d) => ({ ...d, _id: response.id }));
       return response;
     };
 
-    const refreshDoc = async (db: Ledger, docId = "") => {
+    const refreshDoc = async (db: Database, docId = "") => {
       // TODO: Add option for MVCC (Multi-version concurrency control) checks
-      // https://use-fireproof.com/docs/ledger-api/documents/#multi-version-concurrency-control-mvcc-available-in-alpha-coming-soon-in-beta
+      // https://use-fireproof.com/docs/database-api/documents/#multi-version-concurrency-control-mvcc-available-in-alpha-coming-soon-in-beta
       const storedDoc = await db.get<T>(docId).catch(initialDocFn);
       setDoc(() => storedDoc);
     };
@@ -138,7 +138,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
       const subscriptionId = docId();
       if (!subscriptionId) return;
 
-      const db = ledger();
+      const db = database();
 
       const unsubscribe = db.subscribe(async (updatedDocs) => {
         if (updatedDocs.find((c) => c._id === subscriptionId)) {
@@ -152,7 +152,7 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
     });
 
     createEffect(() => {
-      void refreshDoc(ledger(), initialDocFn()._id);
+      void refreshDoc(database(), initialDocFn()._id);
     });
 
     return [doc, updateDoc, saveDoc];
@@ -165,13 +165,13 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
       rows: initialRows,
     });
 
-    const refreshRows = async (db: Ledger) => {
+    const refreshRows = async (db: Database) => {
       const res = await db.query<T>(strOrFn, query);
       setResult({ ...res, docs: res.rows.map((r) => r.doc as Doc<T>) });
     };
 
     createEffect(() => {
-      const db = ledger();
+      const db = database();
 
       void refreshRows(db);
 
@@ -187,5 +187,5 @@ export function createFireproof(dbName?: string, config: ConfigOpts = {}): Creat
     return result;
   }
 
-  return { ledger, createDocument, createLiveQuery };
+  return { database, createDocument, createLiveQuery };
 }

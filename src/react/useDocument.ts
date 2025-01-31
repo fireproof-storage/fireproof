@@ -1,15 +1,15 @@
-import { Ledger, DocTypes, DocWithId } from "@fireproof/core";
+import { Database, DocTypes, DocWithId } from "@fireproof/core";
 
 import { UseDocument, UseDocumentResult, useFireproof } from "./useFireproof.js";
 
 export interface TLUseDocument {
   <T extends DocTypes>(initialDoc: DocWithId<T>): UseDocumentResult<T>;
-  ledger: Ledger;
+  database: Database;
 }
 
 function topLevelUseDocument(...args: Parameters<UseDocument>) {
-  const { useDocument, ledger } = useFireproof();
-  (topLevelUseDocument as TLUseDocument).ledger = ledger;
+  const { useDocument, database } = useFireproof();
+  (topLevelUseDocument as TLUseDocument).database = database;
   return useDocument(...args);
 }
 
@@ -17,9 +17,9 @@ function topLevelUseDocument(...args: Parameters<UseDocument>) {
  * ## Summary
  *
  * React hook that provides the ability to create new Fireproof documents. The creation occurs when
- * you do not pass in an `_id` as part of your initial document -- the ledger will assign a new one when
- * you call the provided `save` handler This uses the default ledger named `useFireproof` under the hood which you can also
- * access via the `ledger` accessor.
+ * you do not pass in an `_id` as part of your initial document -- the database will assign a new one when
+ * you call the provided `save` handler This uses the default database named `useFireproof` under the hood which you can also
+ * access via the `database` accessor.
  *
  * ## Usage
  *
@@ -37,7 +37,7 @@ function topLevelUseDocument(...args: Parameters<UseDocument>) {
  *   startedAt: Date.now()
  * }))
  *
- * const ledger = useDocument.ledger; // underlying "useFireproof" ledger accessor
+ * const database = useDocument.database; // underlying "useFireproof" database accessor
  * ```
  *
  * ## Overview

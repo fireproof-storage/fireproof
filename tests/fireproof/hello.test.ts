@@ -1,4 +1,4 @@
-import { fireproof, Ledger, DocResponse, DocWithId, index, isLedger } from "@fireproof/core";
+import { fireproof, Database, DocResponse, DocWithId, index, isDatabase } from "@fireproof/core";
 import { mockSuperThis } from "../helpers.js";
 
 describe("Hello World Test", function () {
@@ -12,7 +12,7 @@ describe("hello public API", () => {
   interface TestDoc {
     foo: string;
   }
-  let db: Ledger;
+  let db: Database;
   let ok: DocResponse;
   let doc: DocWithId<TestDoc>;
   // let idx: Index<string, TestDoc>;
@@ -28,9 +28,9 @@ describe("hello public API", () => {
     ok = await db.put({ _id: "test", foo: "bar" });
     doc = await db.get("test");
   });
-  it("should have a ledger", function () {
+  it("should have a database", function () {
     expect(db).toBeTruthy();
-    expect(isLedger(db)).toBeTruthy();
+    expect(isDatabase(db)).toBeTruthy();
   });
   it("should put", function () {
     expect(ok).toBeTruthy();
@@ -47,8 +47,8 @@ describe("hello public API", () => {
   });
 });
 
-describe("Simplified Reopening a ledger", function () {
-  let db: Ledger;
+describe("Simplified Reopening a database", function () {
+  let db: Database;
   afterEach(async function () {
     await db.close();
     await db.destroy();
