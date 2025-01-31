@@ -30,8 +30,7 @@
     "@fireproof/core": "^0.19.121",
     "@libsql/client": "^0.14.0",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@tanstack/react-query": "^5.65.1",
-    "@tanstack/react-query-devtools": "4",
+    "@tanstack/react-query": "^5.66.0",
     "drizzle-orm": "^0.38.3",
     "highlight.js": "^11.10.0",
     "i": "^0.3.7",
@@ -46,6 +45,7 @@
     "vitest": "^2.1.8"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "4",
     "@cloudflare/workers-types": "^4.20250109.0",
     "@eslint/js": "^9.16.0",
     "@rollup/plugin-replace": "^6.0.1",

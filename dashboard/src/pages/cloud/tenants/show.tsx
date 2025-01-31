@@ -5,7 +5,7 @@ import { AppContext } from "../../../app-context.tsx";
 import { tenantName } from "../../../hooks/tenant.ts";
 
 function isAdmin(ut: UserTenant) {
-  return ut.role === "admin" || ut.role === "owner";
+  return ut.role === "admin";
 }
 
 export function CloudTenantShow() {

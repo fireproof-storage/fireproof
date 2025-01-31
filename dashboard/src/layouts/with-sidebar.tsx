@@ -5,7 +5,15 @@ import { ButtonToggleSidebar } from "../components/ButtonToggleSidebar.tsx";
 import { Sidebar } from "../components/Sidebar.tsx";
 import { TopArea } from "../components/TopArea.tsx";
 
-export function WithSidebar({ sideBarComponent, title, newUrl }: { sideBarComponent: JSX.Element; title: string; newUrl: string }) {
+export function WithSidebar({
+  sideBarComponent,
+  title,
+  newUrl,
+}: {
+  sideBarComponent: JSX.Element;
+  title?: string;
+  newUrl?: string;
+}) {
   const { isSidebarOpen, toggleSidebar } = useContext(AppContext).sideBar;
   return (
     <div className="flex h-screen w-full overflow-hidden">

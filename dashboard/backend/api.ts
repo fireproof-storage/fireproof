@@ -220,6 +220,10 @@ export interface UserTenant {
   readonly tenant: UserTenantCommon;
 }
 
+export function isAdmin(ut: UserTenant) {
+  return ut.role === "admin";
+}
+
 export interface AdminTenant extends UserTenant {
   readonly role: "admin"; // | "owner";
   readonly adminUserIds: string[];

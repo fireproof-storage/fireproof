@@ -1,16 +1,12 @@
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useParams } from "react-router-dom";
-import { ResFindUser, UserTenant } from "../../../../backend/api";
-import { QueryUser } from "../../../../backend/sql-helper";
-import { User } from "../../../../backend/users";
-import { AppContext } from "../../../app-context";
-import { Minus } from "../../../components/Minus";
-import { Plus } from "../../../components/Plus";
-
-function isAdmin(ut: UserTenant) {
-  return ut.role === "admin" || ut.role === "owner";
-}
+import { ResFindUser, UserTenant, isAdmin } from "../../../../backend/api.js";
+import { QueryUser } from "../../../../backend/sql-helper.js";
+import { User } from "../../../../backend/users.js";
+import { AppContext } from "../../../app-context.js";
+import { Minus } from "../../../components/Minus.js";
+import { Plus } from "../../../components/Plus.js";
 
 const reEmail =
   /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
@@ -47,7 +43,7 @@ export function CloudTenantMembers() {
     <div className="p-6">
       <h1 className="text-2xl font-bold text-[--foreground] mb-6">Members</h1>
       <div className="space-y-6">
-        <InviteMembers tenant={tenant} userId={listTenants.userId} />
+        <InviteMembers tenant={tenant} userId={listTenants.data.userId} />
         <CurrentInvites tenant={tenant} />
       </div>
     </div>
@@ -93,7 +89,12 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
       }
       const res = await cloud.api.inviteUser({
         ticket: {
-          inviterTenantId: tenant.tenantId,
+          invitedParams: {
+            tenant: {
+              id: tenant.tenantId,
+              role: "admin",
+            },
+          },
           query,
         },
       });
@@ -184,7 +185,7 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
         console.error(res.Err());
         return;
       }
-      listInvites.refresh();
+      listInvites.refetch();
     };
   }
 
@@ -196,19 +197,17 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
       ) : (
         <ul className="space-y-4">
           {listInvites.data.tickets.map((ticket) => (
-            <li key={ticket.tenantId}>
+            <li key={ticket.invitedParams.tenant?.id}>
               <ul className="space-y-2">
-                {ticket.invites.map((invite) => (
-                  <li key={invite.inviteId} className="flex items-center justify-between bg-[--background] p-3 rounded-md">
-                    <pre className="text-sm text-[--foreground]">{JSON.stringify(invite, null, 2)}</pre>
-                    <button
-                      onClick={delInvite(invite.inviteId)}
-                      className="p-1 hover:bg-[--destructive]/10 rounded text-[--destructive]"
-                    >
-                      <Minus />
-                    </button>
-                  </li>
-                ))}
+                <li key={ticket.inviteId} className="flex items-center justify-between bg-[--background] p-3 rounded-md">
+                  <pre className="text-sm text-[--foreground]">{JSON.stringify(ticket, null, 2)}</pre>
+                  <button
+                    onClick={delInvite(ticket.inviteId)}
+                    className="p-1 hover:bg-[--destructive]/10 rounded text-[--destructive]"
+                  >
+                    <Minus />
+                  </button>
+                </li>
               </ul>
             </li>
           ))}
