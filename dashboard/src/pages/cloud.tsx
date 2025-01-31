@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { NavLink, useParams, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useParams } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
@@ -17,9 +17,10 @@ function SidebarCloud() {
   console.log("tenantId", tenantId);
   const ledgerList = cloud.getListLedgersByUser(tenantId);
 
-  if (ledgerList.isLoading) {
+  if (ledgerList.isPending) {
     return <div>Loading...</div>;
   }
+  
   if (!ledgerList.data) {
     // navigate("/fp/cloud");
     return <div>Not found</div>;

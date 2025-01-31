@@ -14,7 +14,7 @@ export function CloudTenantAdmin() {
   const { register, handleSubmit } = useForm();
   // const navigate = useNavigate();
 
-  if (listTenants.isLoading) {
+  if (listTenants.isPending) {
     return <div>Loading...</div>;
   }
   if (!listTenants.data) {

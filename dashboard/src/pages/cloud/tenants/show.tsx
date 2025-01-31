@@ -20,7 +20,7 @@ export function CloudTenantShow() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  if (listTenants.isLoading) {
+  if (listTenants.isPending) {
     return <div>Loading...</div>;
   }
   if (!listTenants.data) {
