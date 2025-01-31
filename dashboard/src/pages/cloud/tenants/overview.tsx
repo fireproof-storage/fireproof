@@ -7,7 +7,7 @@ export function CloudTenantOverview() {
   const { cloud } = useContext(AppContext);
   const listTenants = cloud.getListTenantsByUser();
 
-  if (listTenants.isLoading) {
+  if (listTenants.isPending) {
     return <div>Loading...</div>;
   }
 

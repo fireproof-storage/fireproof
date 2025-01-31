@@ -16,7 +16,7 @@ export function CloudTenantMembers() {
   const { cloud } = useContext(AppContext);
   const listTenants = cloud.getListTenantsByUser();
 
-  if (listTenants.isLoading) {
+  if (listTenants.isPending) {
     return <div>Loading...</div>;
   }
   if (!listTenants.data) {
@@ -170,7 +170,7 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
   const { cloud } = useContext(AppContext);
   const listInvites = cloud.getListInvitesByTenant(tenant.tenantId);
 
-  if (listInvites.isLoading) {
+  if (listInvites.isPending) {
     return <div>Loading...</div>;
   }
   if (!listInvites.data) {
