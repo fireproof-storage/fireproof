@@ -14,7 +14,7 @@ export function TenantSelector() {
     const isIndexPage = location.pathname === "/fp/cloud";
     if (listTenants?.tenants?.length && isIndexPage) {
       const defaultTenant = listTenants.tenants[0];
-      navigate(`/fp/cloud/tenants/${defaultTenant.tenantId}`);
+      navigate(`/fp/cloud/tenants/${defaultTenant.tenantId}/overview`);
     }
   }, [listTenants?.tenants, navigate, location.pathname]);
 
@@ -32,7 +32,7 @@ export function TenantSelector() {
             }
             const selectedTenant = listTenants.tenants.find((t) => t.tenantId === e.target.value);
             if (selectedTenant) {
-              navigate(`/fp/cloud/tenants/${selectedTenant.tenantId}`);
+              navigate(`/fp/cloud/tenants/${selectedTenant.tenantId}/overview`);
             }
           }}
           value={tenantId || listTenants.tenants[0]?.tenantId}

@@ -17,7 +17,7 @@ export function newCloudAction(ctx: AppContextType) {
     }
     // const { refresh } = ctx.cloud.useListTenantsByUser();
     // refresh();
-    return redirect(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}`);
+    return redirect(`/fp/cloud/tenants/${rTenant.Ok().tenant.tenantId}/overview`);
   };
 }
 
@@ -36,7 +36,7 @@ export function CloudNew() {
   async function onSubmit(data: SubmitTarget) {
     const { tenantName } = data as { tenantName: string }; // (await request.json()).tenantName;
     const rTenant = await createTenant.mutateAsync({ name: tenantName });
-    navigate(`/fp/cloud/tenants/${rTenant.tenant.tenantId}`);
+    navigate(`/fp/cloud/tenants/${rTenant.tenant.tenantId}/overview`);
   }
 
   return (

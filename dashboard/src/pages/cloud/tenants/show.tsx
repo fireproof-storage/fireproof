@@ -1,24 +1,29 @@
 import { useContext } from "react";
-import { useParams } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { UserTenant } from "../../../../backend/api.ts";
 import { AppContext } from "../../../app-context.tsx";
-import { tenantName } from "../../../helpers.ts";
-import { CodeHighlight } from "../../../components/CodeHighlight.tsx";
 
 function isAdmin(ut: UserTenant) {
   return ut.role === "admin";
+}
+
+export async function clientLoader() {
+  return {
+    redirect: "overview",
+  };
 }
 
 export function CloudTenantShow() {
   const { tenantId } = useParams();
   const { cloud } = useContext(AppContext);
   const listTenants = cloud.getListTenantsByUser();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   if (listTenants.isLoading) {
     return <div>Loading...</div>;
   }
   if (!listTenants.data) {
-    // navigate("/fp/cloud");
     return <div>Not found</div>;
   }
 
@@ -27,41 +32,38 @@ export function CloudTenantShow() {
     return <div>Not found</div>;
   }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold text-[--foreground] mb-6">{tenantName(tenant)}</h1>
+  const tabs = [
+    { id: "overview", label: "Overview" },
+    { id: "members", label: "Members" },
+    { id: "admin", label: "Settings" },
+  ];
 
-      <div className="space-y-6">
-        <div className="bg-[--muted] shadow sm:rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[--foreground] mb-4">Onboarding - Quickstart</h2>
-          <div className="text-[--muted-foreground]">
-            To connect your database to Fireproof Cloud, use this code:
-            <div className="bg-[--background] p-4 rounded-md my-4 overflow-x-auto">
-              <CodeHighlight code={`await connect(db, "${tenant.tenantId}", "my-ledger-id", "token");`} />
-            </div>
-            {/* <pre className="bg-[--background] p-4 rounded-md my-4 overflow-x-auto">
-              <code className="text-sm text-[--foreground]">
-                {`await connect(db, "${tenant.tenantId}", "my-ledger-id", "token");`}
-              </code>
-            </pre> */}
-            To learn more about using Fireproof Cloud, check out our{" "}
-            <a href="https://use-fireproof.com/docs/getting-started" className="text-[--accent] hover:underline">
-              documentation
-            </a>
-            .
-          </div>
+  return (
+    <div className="flex h-full">
+      <div className="flex-1 overflow-auto">
+        <div className="border-b border-[--border]">
+          <nav className="flex" aria-label="Tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => navigate(tab.id)}
+                className={`
+                  px-4 py-2 text-sm font-medium border-b-2
+                  ${
+                    location.pathname.endsWith(tab.id)
+                      ? "border-[--accent] text-[--accent]"
+                      : "border-transparent text-[--muted-foreground] hover:text-[--foreground] hover:border-[--border]"
+                  }
+                `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
 
-        <div className="bg-[--muted] shadow sm:rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-[--foreground] mb-4">Tenant Details</h2>
-          <div className="space-y-2">
-            <p className="text-[--muted-foreground]">
-              <span className="font-medium">Tenant ID:</span> {tenant.tenantId}
-            </p>
-            <p className="text-[--muted-foreground]">
-              <span className="font-medium">Your Role:</span> {tenant.role}
-            </p>
-          </div>
+        <div className="p-6">
+          <Outlet />
         </div>
       </div>
     </div>
