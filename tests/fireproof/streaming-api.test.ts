@@ -52,6 +52,10 @@ describe("Streaming API", () => {
     }
 
     expect(docCount).toBe(amountOfDocs + 1);
+
+    // Test that the stream has been closed automatically by `for await`
+    const r = stream.getReader();
+    expect(r.closed).resolves.toBe(undefined);
   }
 
   async function testSince<T extends DocBase>({
@@ -81,6 +85,10 @@ describe("Streaming API", () => {
     }
 
     expect(docCount).toBe(amountOfNewDocs);
+
+    // Test that the stream has been closed automatically by `for await`
+    const r = stream.getReader();
+    expect(r.closed).resolves.toBe(undefined);
 
     // Snapshot
     // NOTE: This also tests the stream cancellation process.
