@@ -26,6 +26,9 @@ importers:
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
+      '@web3-storage/pail':
+        specifier: ^0.6.0
+        version: 0.6.0
       cborg:
         specifier: ^4.2.8
         version: 4.2.8
@@ -1145,6 +1148,10 @@ packages:
   '@wdio/utils@9.9.0':
     resolution: {integrity: sha512-CgPE/fh4SLTZmQZO99/B/swrQ8uwaavlVfeUtxQ5iZ5rTpXKx+V4ScCSuU0qX5Kwm9e1ZG6ALuzDTo8zQ1gJ4w==}
     engines: {node: '>=18.20.0'}
+
+  '@web3-storage/pail@0.6.0':
+    resolution: {integrity: sha512-/lIBu8pR92AEcCqYqjcxc3kUSLLRGQLomUes7PAyoK4lNe4ttm8Wr7WFcrbJmWTBJZmYE6npbYcVio8U+OexpA==}
+    hasBin: true
 
   '@zip.js/zip.js@2.7.57':
     resolution: {integrity: sha512-BtonQ1/jDnGiMed6OkV6rZYW78gLmLswkHOzyMrMb+CAR7CZO8phOHO6c2qw6qb1g1betN7kwEHhhZk30dv+NA==}
@@ -4412,6 +4419,11 @@ snapshots:
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
+
+  '@web3-storage/pail@0.6.0':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.2
+      multiformats: 13.3.2
 
   '@zip.js/zip.js@2.7.57': {}
 
