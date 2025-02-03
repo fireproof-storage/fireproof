@@ -19,6 +19,7 @@ import { Tenant, sqlTenants, sqlTenantUsers } from "./tenants.ts";
 import { InviteTicket, sqlInviteTickets, prepareInviteTicket, InvitedParams, sqlToInviteTickets } from "./invites.ts";
 import { queryCondition, queryEmail, queryNick, QueryUser, toBoolean, toUndef } from "./sql-helper.ts";
 import { LedgerUser, sqlLedgers, sqlLedgerUsers, sqlToLedgers } from "./ledgers.ts";
+import { jwtVerify } from "jose";
 
 export interface ReqEnsureUser {
   readonly type: "reqEnsureUser";
@@ -581,28 +582,32 @@ function nickFromClarkClaim(auth: ClerkClaim): string | undefined {
 
 export class FPApiSQL implements FPApiInterface {
   readonly db: LibSQLDatabase;
-  readonly tokenApi: FPApiToken;
+  readonly tokenApi: Record<string, FPApiToken>;
   readonly sthis: SuperThis;
-  constructor(sthis: SuperThis, db: LibSQLDatabase, token: FPApiToken) {
+  constructor(sthis: SuperThis, db: LibSQLDatabase, token: Record<string, FPApiToken>) {
     this.db = db;
     this.tokenApi = token;
     this.sthis = sthis;
   }
 
-  private async _authToClerkVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
-    const rAuth = await this.tokenApi.verify(req.auth.token);
+  private async _authVerifyAuth(req: { readonly auth: AuthType }): Promise<Result<ClerkVerifyAuth>> {
+    const tokenApi = this.tokenApi[req.auth.type];
+    if (!tokenApi) {
+      return Result.Err(`invalid auth type:[${req.auth.type}]`);
+    }
+    const rAuth = await tokenApi.verify(req.auth.token);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
     }
-    if (rAuth.Ok().type !== "clerk") {
-      return Result.Err("invalid auth type");
-    }
+    // if (rAuth.Ok().type !== "clerk") {
+    //   return Result.Err("invalid auth type");
+    // }
     const auth = rAuth.Ok() as ClerkVerifyAuth;
     return Result.Ok(auth);
   }
 
   private async activeUser(req: WithAuth, status: UserStatus[] = ["active"]): Promise<Result<ActiveUser>> {
-    const rAuth = await this._authToClerkVerifyAuth(req);
+    const rAuth = await this._authVerifyAuth(req);
     if (rAuth.isErr()) {
       return Result.Err(rAuth.Err());
     }

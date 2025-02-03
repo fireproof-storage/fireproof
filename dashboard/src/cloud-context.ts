@@ -36,6 +36,7 @@ import type {
 } from "../backend/api.ts";
 import { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
+import { createAuthClient } from "better-auth/react";
 
 interface TypeString {
   type: string;
@@ -76,23 +77,69 @@ function wrapResultToPromise<T>(pro: () => Promise<Result<T>>) {
   };
 }
 
+const _betterAuthClient = createAuthClient({
+  baseURL: API_URL,
+});
+
+interface TokenType {
+  readonly type: "clerk" | "better";
+  readonly token: string;
+}
+
 export class CloudContext {
   readonly api: CloudApi;
+  readonly betterAuthClient: ReturnType<typeof createAuthClient>;
 
   constructor() {
+    this.betterAuthClient = _betterAuthClient;
     this.api = new CloudApi(this);
   }
 
-  private _session?: ReturnType<typeof useSession>;
+  private _clerkSession?: ReturnType<typeof useSession>;
+  private _betterAuthSession?: ReturnType<typeof _betterAuthClient.useSession>;
   // private _queryClient?: QueryClient;
 
-  getToken() {
-    return this._session?.session?.getToken({ template: "with-email" });
+  readonly betterToken = {
+    expires: -1,
+    token: undefined,
+  } as {
+    expires: number;
+    token?: string;
+  };
+  async getToken(): Promise<TokenType | undefined> {
+    console.log("getToken", this._betterAuthSession?.data);
+    if (this._betterAuthSession?.data) {
+      if (this.betterToken.expires < Date.now()) {
+        const res = (await this.betterAuthClient.$fetch("/token")) as {
+          data: {
+            token: string;
+          };
+        };
+        this.betterToken.token = res.data.token;
+        console.log("betterToken", this.betterToken.token);
+        // jwt.verify(this.betterToken.token
+        // this.betterToken.expires = Date.now() + this._betterAuthSession.data.expiresIn;
+      }
+      if (!this.betterToken.token) {
+        return undefined;
+      }
+      return {
+        type: "better",
+        token: this.betterToken.token,
+      };
+    }
+    const token = await this._clerkSession?.session?.getToken({ template: "with-email" });
+    return token
+      ? {
+          type: "clerk",
+          token,
+        }
+      : undefined;
   }
 
   sessionReady(condition: boolean) {
-    const ret = this._session?.isLoaded && this._session?.isSignedIn && condition;
-    // console.log("sessionReady", ret);
+    const ret = ((this._clerkSession?.isLoaded && this._clerkSession?.isSignedIn) || !!this._betterAuthSession?.data) && condition;
+    console.log("sessionReady", ret);
     return ret;
   }
 
@@ -105,7 +152,8 @@ export class CloudContext {
   initContext() {
     console.log("initContext");
 
-    this._session = useSession();
+    this._clerkSession = useSession();
+    this._betterAuthSession = _betterAuthClient.useSession();
 
     this._ensureUser = useQuery({
       queryKey: ["ensureUser"],
@@ -245,10 +293,7 @@ class CloudApi {
     return exception2Result(() => {
       return this.cloud.getToken()?.then((token) => {
         if (!token) throw new Error("No token available");
-        return {
-          type: "clerk",
-          token,
-        } as AuthType;
+        return token as AuthType;
       });
     });
   }

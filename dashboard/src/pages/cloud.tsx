@@ -20,7 +20,7 @@ function SidebarCloud() {
   if (ledgerList.isPending) {
     return <div>Loading...</div>;
   }
-  
+
   if (!ledgerList.data) {
     // navigate("/fp/cloud");
     return <div>Not found</div>;
