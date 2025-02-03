@@ -33,7 +33,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       idb:
-        specifier: ^8.0.1
+        specifier: ^8.0.2
         version: 8.0.2
       ipfs-unixfs-exporter:
         specifier: ^13.6.1
