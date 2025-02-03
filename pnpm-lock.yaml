@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
-        specifier: ^0.3.5
-        version: 0.3.5(typescript@5.8.3)
+        specifier: ^0.3.8
+        version: 0.3.8(typescript@5.8.3)
       '@fireproof/vendor':
         specifier: ^1.0.4
         version: 1.2.0
@@ -922,8 +922,8 @@ importers:
 
 packages:
 
-  '@adviser/cement@0.3.5':
-    resolution: {integrity: sha512-U3BFsID8Fhe5ARmBEXQKw2yPyP1egT2LX8/gNCa8ZCobQjA52RkbEWwL0l8Gs6kDUqay1xhsKbQ9O7cYxLFnSg==}
+  '@adviser/cement@0.3.8':
+    resolution: {integrity: sha512-ztcIc/rJQXsUeIY/3rKyqla/ZrIuB8bYwjKEt75pf42hjMEyOGpfFElk1eMABkr53t4lAYz2lWI8W034MNvQJw==}
     engines: {node: '>=20'}
 
   '@alloc/quick-lru@5.2.0':
@@ -7817,8 +7817,8 @@ packages:
     peerDependencies:
       typescript: '>=4.8.4'
 
-  ts-essentials@10.0.2:
-    resolution: {integrity: sha512-Xwag0TULqriaugXqVdDiGZ5wuZpqABZlpwQ2Ho4GDyiu/R2Xjkp/9+zcFxL7uzeLl/QCPrflnvpVYyS3ouT7Zw==}
+  ts-essentials@10.0.4:
+    resolution: {integrity: sha512-lwYdz28+S4nicm+jFi6V58LaAIpxzhg9rLdgNC1VsdP/xiFBseGhF1M/shwCk6zMmwahBZdXcl34LVHrEang3A==}
     peerDependencies:
       typescript: '>=4.5.0'
     peerDependenciesMeta:
@@ -8494,6 +8494,11 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  yaml@2.7.0:
+    resolution: {integrity: sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==}
+    engines: {node: '>= 14'}
+    hasBin: true
+
   yaml@2.8.0:
     resolution: {integrity: sha512-4lLa/EcQCB0cJkyts+FpIRx5G/llPxfP6VQU5KByHEhLxY3IJCH0f0Hy1MHI8sClTvsIb8qwRJ6R/ZdlDJ/leQ==}
     engines: {node: '>= 14.6'}
@@ -8558,10 +8563,10 @@ packages:
 
 snapshots:
 
-  '@adviser/cement@0.3.5(typescript@5.8.3)':
+  '@adviser/cement@0.3.8(typescript@5.8.3)':
     dependencies:
-      ts-essentials: 10.0.2(typescript@5.8.3)
-      yaml: 2.8.0
+      ts-essentials: 10.0.4(typescript@5.8.3)
+      yaml: 2.7.0
     transitivePeerDependencies:
       - typescript
 
@@ -10728,7 +10733,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@vitest/browser@2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.7.2)':
+  '@vitest/browser@2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.7.0))(vitest@2.1.8)(webdriverio@9.7.2)':
     dependencies:
       '@testing-library/dom': 10.4.0
       '@testing-library/user-event': 14.6.1(@testing-library/dom@10.4.0)
@@ -16247,7 +16252,7 @@ snapshots:
     dependencies:
       typescript: 5.8.3
 
-  ts-essentials@10.0.2(typescript@5.8.3):
+  ts-essentials@10.0.4(typescript@5.8.3):
     optionalDependencies:
       typescript: 5.8.3
 
@@ -16704,7 +16709,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.15.30
-      '@vitest/browser': 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.6.1))(vitest@2.1.8)(webdriverio@9.7.2)
+      '@vitest/browser': 2.1.8(@types/node@22.10.5)(playwright@1.49.0)(typescript@5.7.3)(vite@6.0.7(@types/node@22.10.5)(tsx@4.19.2)(yaml@2.7.0))(vitest@2.1.8)(webdriverio@9.7.2)
       '@vitest/ui': 2.1.8(vitest@2.1.8)
       happy-dom: 14.12.3
       jsdom: 23.2.0
@@ -17162,6 +17167,8 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
+
+  yaml@2.7.0: {}
 
   yaml@2.8.0: {}
 
