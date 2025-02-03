@@ -4,10 +4,28 @@ import { createClient } from "@libsql/client/node";
 // import Database from "better-sqlite3";
 import { LibsqlDialect } from "@libsql/kysely-libsql";
 
+function socialProviders() {
+  if (!process.env.GITHUB_CLIENT_ID || !process.env.GITHUB_CLIENT_SECRET) {
+    return {};
+  }
+  return {
+    github: {
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    },
+  };
+}
+
 export const auth = betterAuth({
+  // database: {
+  //   db: createClient({ url: `file://${process.cwd()}/dist/sqlite.db` }),
+  //   type: "sqlite" // or "mysql", "postgres" or "mssql"
+  // },
+
   database: new LibsqlDialect({
     client: createClient({ url: `file://${process.cwd()}/dist/sqlite.db` }),
   }),
+
   // database: "./dist/sqlite.db",
   // dialect: "mysql",
   // host: "localhost",
@@ -37,10 +55,5 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  socialProviders: {
-    github: {
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    },
-  },
+  socialProviders: socialProviders(),
 });
