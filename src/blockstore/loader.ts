@@ -442,7 +442,7 @@ export class Loader implements Loadable {
     let activeStore: BaseStore = local;
     try {
       //loadedCar now is an array of AnyBlocks
-      this.logger.Debug().Str("cid", cidsString).Msg("loading car");
+      this.logger.Debug().Any("cid", cidsString).Msg("loading car");
       loadedCar = await local.load(cid);
       this.logger.Debug().Bool("loadedCar", loadedCar).Msg("loaded");
     } catch (e) {
