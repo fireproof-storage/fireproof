@@ -88,7 +88,7 @@
     "@ipld/unixfs": "^3.0.0",
     "charwise": "^3.0.1",
     "esbuild-plugin-replace": "^1.4.0",
-    "idb": "^8.0.1",
+    "idb": "^8.0.2",
     "multiformats": "^13.3.1",
     "p-limit": "^6.2.0",
     "p-map": "^7.0.3",
