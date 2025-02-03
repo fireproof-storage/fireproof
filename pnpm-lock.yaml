@@ -11,6 +11,9 @@ importers:
       '@adviser/cement':
         specifier: ^0.3.8
         version: 0.3.8(typescript@5.7.3)
+      '@fireproof/vendor':
+        specifier: ^1.1.0-dev
+        version: 1.1.0-dev
       '@ipld/car':
         specifier: ^5.4.0
         version: 5.4.0
@@ -23,9 +26,6 @@ importers:
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
-      '@web3-storage/pail':
-        specifier: ^0.6.0
-        version: 0.6.0
       cborg:
         specifier: ^4.2.8
         version: 4.2.8
@@ -538,6 +538,9 @@ packages:
   '@eslint/plugin-kit@0.2.5':
     resolution: {integrity: sha512-lB05FkqEdUg2AA0xEbUz0SnkXT1LcCTa438W4IWTUh4hdOnVbQyOJ81OrDXsJk/LSiJHubgGEFoR5EHq1NsH1A==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fireproof/vendor@1.1.0-dev':
+    resolution: {integrity: sha512-Ouc/ZlJNmlJ+rQ00Ayebbqp+YrHbwtO3lD/UI8QFg1xOS99k78QGXkf4bps+1+ie7ADKrkYB7t75MEpJtZIRpQ==}
 
   '@gerrit0/mini-shiki@1.24.4':
     resolution: {integrity: sha512-YEHW1QeAg6UmxEmswiQbOVEg1CW22b1XUD/lNTliOsu0LD0wqoyleFMnmbTp697QE0pcadQiR5cVtbbAPncvpw==}
@@ -1130,10 +1133,6 @@ packages:
   '@wdio/utils@9.6.4':
     resolution: {integrity: sha512-FMI/F5ju0h0HKC4RRQKW/H9So2cgtK6dd0JCmVdBzQ+/LMluEzlZmQva14HYmNd2t2ZmejYRqAJPV3aAsMAMZA==}
     engines: {node: '>=18.20.0'}
-
-  '@web3-storage/pail@0.6.0':
-    resolution: {integrity: sha512-/lIBu8pR92AEcCqYqjcxc3kUSLLRGQLomUes7PAyoK4lNe4ttm8Wr7WFcrbJmWTBJZmYE6npbYcVio8U+OexpA==}
-    hasBin: true
 
   '@zip.js/zip.js@2.7.54':
     resolution: {integrity: sha512-qMrJVg2hoEsZJjMJez9yI2+nZlBUxgYzGV3mqcb2B/6T1ihXp0fWBDYlVHlHquuorgNUQP5a8qSmX6HF5rFJNg==}
@@ -3742,6 +3741,11 @@ snapshots:
       '@eslint/core': 0.10.0
       levn: 0.4.1
 
+  '@fireproof/vendor@1.1.0-dev':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.2
+      multiformats: 13.3.1
+
   '@gerrit0/mini-shiki@1.24.4':
     dependencies:
       '@shikijs/engine-oniguruma': 1.24.4
@@ -4374,11 +4378,6 @@ snapshots:
     transitivePeerDependencies:
       - bare-buffer
       - supports-color
-
-  '@web3-storage/pail@0.6.0':
-    dependencies:
-      '@ipld/dag-cbor': 9.2.2
-      multiformats: 13.3.1
 
   '@zip.js/zip.js@2.7.54': {}
 
