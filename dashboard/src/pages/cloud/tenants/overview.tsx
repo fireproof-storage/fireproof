@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { useParams } from "react-router-dom";
-import { AppContext } from "../../../app-context";
+import { AppContext } from "../../../app-context.js";
 
 export function CloudTenantOverview() {
   const { tenantId } = useParams();

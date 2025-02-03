@@ -69,7 +69,7 @@ describe("db-api", () => {
   beforeAll(async () => {
     const client = createClient({ url: `file://${process.cwd()}/dist/sqlite.db` });
     db = drizzle(client);
-    fpApi = new FPApiSQL(sthis, db, new TestApiToken(sthis));
+    fpApi = new FPApiSQL(sthis, db, { clerk: new TestApiToken(sthis) });
 
     data.push(
       ...Array(10)

@@ -37,6 +37,7 @@ import type {
 import { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
 import { createAuthClient } from "better-auth/react";
+import { InviteTicket } from "../backend/invites.ts";
 
 interface TypeString {
   type: string;
