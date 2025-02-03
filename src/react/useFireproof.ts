@@ -178,7 +178,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
     } else {
-      initialDoc = initialDocOrFn ?? { } as T;
+      initialDoc = initialDocOrFn ?? ({} as T);
     }
 
     // We purposely refetch the docId everytime to check if it has changed
