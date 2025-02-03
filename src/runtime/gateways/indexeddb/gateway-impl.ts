@@ -128,7 +128,7 @@ export class IndexedDBGateway implements bs.Gateway {
       const bytes = await tx.objectStore(store).get(sanitzeKey(key));
       await tx.done;
       if (!bytes) {
-        return Result.Err(new NotFoundError(`missing ${key}`));
+        return Result.Err(new NotFoundError(`missing ${key} ${url.toString()}`));
       }
       return Promise.resolve(Result.Ok(bytes));
     });

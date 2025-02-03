@@ -5,13 +5,17 @@ it("esm.sh", async () => {
   const script = document.createElement("script");
   // eslint-disable-next-line no-console
   console.log("FP_VERSION", (window as unknown as { FP_VERSION: string }).FP_VERSION);
+  // eslint-disable-next-line no-console
+  console.log("FP_DEBUG", (window as unknown as { FP_DEBUG: string }).FP_DEBUG);
+  // eslint-disable-next-line no-console
+  console.log("FP_STACK", (window as unknown as { FP_STACK: string }).FP_STACK);
   // const res = await fetch(`http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
   // // console.log("window-res", await res.text());
   // const { fireproof } = await import(/* @vite-ignore */ `http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts`);
   // // console.log("window-imp", fireproof);
 
   script.textContent = `
-console.log("pre-window-js", window.FP_VERSION)
+//console.log("pre-window-js", window.FP_VERSION)
 import { fireproof } from 'http://localhost:4874/@fireproof/core@${window.FP_VERSION}?no-dts'
 
 console.log("window-js", window.FP_VERSION)
@@ -20,7 +24,7 @@ function invariant(cond, message) {
     throw new Error(message)
   }
 }
-async function action(run) {
+async function action(label, run) {
   const db = fireproof("esm-test");
   const ok = await db.put({ sort: Math.random(), test: "esm-success" });
 
@@ -34,14 +38,14 @@ async function action(run) {
   )
 
   const res = await db.get(ok.id)
-  const label = document.querySelector('label')
   label.innerHTML = [run,res.test].join(' - ')
   await db.close()
 }
 
 async function main() {
+  const label = document.querySelector('label')
   for (let i = 0; i < 10; i++) {
-    await action(i)
+    await action(label, i)
   }
   label.setAttribute("data-ready", "");
 }
