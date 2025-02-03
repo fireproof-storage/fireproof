@@ -121,8 +121,8 @@ importers:
         specifier: ^9.7.2
         version: 9.7.2
       zx:
-        specifier: ^8.3.0
-        version: 8.3.0
+        specifier: ^8.3.2
+        version: 8.3.2
 
 packages:
 
@@ -3154,8 +3154,8 @@ packages:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
 
-  zx@8.3.0:
-    resolution: {integrity: sha512-L8mY3yfJwo3a8ZDD6f9jZzAcRWJZYcV8GauZmBxLB/aSTwaMzMIEVpPp2Kyx+7yF0gdvuxKnMxAZRft9UCawiw==}
+  zx@8.3.2:
+    resolution: {integrity: sha512-qjTunv1NClO05jDaUjrNZfpqC9yvNCchge/bzOcQevsh1aM5qE3TG6MY24kuQKlOWx+7vNuhqO2wa9nQCIGvZA==}
     engines: {node: '>= 12.17.0'}
     hasBin: true
 
@@ -6150,7 +6150,7 @@ snapshots:
       compress-commons: 6.0.2
       readable-stream: 4.7.0
 
-  zx@8.3.0:
+  zx@8.3.2:
     optionalDependencies:
       '@types/fs-extra': 11.0.4
       '@types/node': 22.10.5
