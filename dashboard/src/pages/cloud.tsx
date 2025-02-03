@@ -32,10 +32,10 @@ function SidebarCloud() {
   }
 
   const navItems = [
-    { label: "Home", path: `/fp/cloud/tenants/${tenantId}` },
-    { label: "Ledgers", path: `/fp/cloud/tenants/${tenantId}/ledgers` },
-    // { label: "Members", path: `/fp/cloud/tenants/${tenantId}/members` },
-    // { label: "Admin", path: `/fp/cloud/tenants/${tenantId}/admin` },
+    { id: "home", label: "Overview", path: `/fp/cloud/tenants/${tenantId}` },
+    { id: "ledgers", label: "Ledgers", path: `/fp/cloud/tenants/${tenantId}/ledgers` },
+    // { id: "members", label: "Members", path: `/fp/cloud/tenants/${tenantId}/members` },
+    // { id: "admin", label: "Admin", path: `/fp/cloud/tenants/${tenantId}/admin` },
   ];
 
   return (
@@ -45,11 +45,11 @@ function SidebarCloud() {
           <NavLink
             to={item.path}
             onClick={() => setIsSidebarOpen(false)}
-            end={item.label !== "Home"}
+            end={item.id !== "home"}
             className={({ isActive }) => `
               flex items-center rounded-md px-3 py-2 text-sm transition-colors flex-1
               ${
-                (item.label === "Home" ? isHomeActive(item.path) : isActive)
+                (item.id === "home" ? isHomeActive(item.path) : isActive)
                   ? "active bg-[--accent] text-[--foreground] font-medium"
                   : "text-[--muted-foreground] hover:bg-[--accent] hover:text-[--foreground]"
               }
@@ -57,7 +57,7 @@ function SidebarCloud() {
           >
             {item.label}
           </NavLink>
-          {item.label === "Ledgers" && (
+          {item.id === "ledgers" && (
             <NavLink
               to={`/fp/cloud/tenants/${tenantId}/ledgers/new`}
               className="p-1 hover:bg-[--accent]/10 rounded mr-2"

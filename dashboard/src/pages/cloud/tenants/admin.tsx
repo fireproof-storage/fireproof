@@ -1,24 +1,26 @@
 import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form, Link, useParams } from "react-router-dom";
-import { InUpdateTenantParams } from "../../../../backend/api.js";
 import { AppContext } from "../../../app-context.js";
 import { tenantName } from "../../../helpers.ts";
-// import { tenantName } from "../../../hooks/tenant.js";
+
+type TenantFormData = {
+  tenantName: string;
+  tenantId: string;
+};
 
 export function CloudTenantAdmin() {
   const { tenantId } = useParams();
   const { cloud } = useContext(AppContext);
   const listTenants = cloud.getListTenantsByUser();
+  const updateTenantMutation = cloud.updateTenantMutation();
 
-  const { register, handleSubmit } = useForm();
-  // const navigate = useNavigate();
+  const { register, handleSubmit } = useForm<TenantFormData>();
 
   if (listTenants.isPending) {
     return <div>Loading...</div>;
   }
   if (!listTenants.data) {
-    // navigate("/fp/cloud");
     return <div>Not found</div>;
   }
 
@@ -27,25 +29,11 @@ export function CloudTenantAdmin() {
     return <div>Not found</div>;
   }
 
-  const onSubmitTenant = async (data: any) => {
-    if (!data) return;
-
-    const tenant = {
-      ...(data as unknown as InUpdateTenantParams),
-      name: (data as { tenantName: string }).tenantName,
-    } as unknown as InUpdateTenantParams;
-
-    if (tenantId !== tenant.tenantId) {
-      console.error("tenantId mismatch", tenantId, tenant.tenantId);
-      return;
-    }
-    // TODO: Make a mutation
-    const res = await cloud.api.updateTenant({ tenant });
-    if (res.isErr()) {
-      console.error(res.Err());
-      return;
-    }
-    listTenants.refetch();
+  const onSubmitTenant = (data: TenantFormData) => {
+    updateTenantMutation.mutate({
+      tenantId: data.tenantId,
+      name: data.tenantName,
+    });
   };
 
   return (

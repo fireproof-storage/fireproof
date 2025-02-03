@@ -34,10 +34,8 @@ import type {
   ResUpdateUserTenant,
   UserTenant,
 } from "../backend/api.ts";
-import type { InviteTicket } from "../backend/invites.ts";
-import type { AuthType } from "../backend/users.ts";
+import { AuthType } from "../backend/users.ts";
 import { API_URL } from "./helpers.ts";
-import { useEffect } from "react";
 
 interface TypeString {
   type: string;
@@ -216,13 +214,22 @@ export class CloudContext {
           listLedgers.refetch();
         });
         listLedgers.refetch();
-        // this._queryClient?.setQueryData(["listLedgersByTenant", variables.tenantId,  this._ensureUser.data?.user.userId], (old: ResListLedgersByUser) => {
-        //   console.log("old", old);
-        //   return {
-        //     ...old,
-        //     ledgers: [...old.ledgers, data.ledger],
-        //   };
-        // });
+      },
+    });
+  }
+
+  updateTenantMutation() {
+    const listTenants = this.getListTenantsByUser();
+    return useMutation({
+      mutationFn: ({ tenantId, name }: { tenantId: string; name: string }) => {
+        return wrapResultToPromise(() =>
+          this.api.updateTenant({
+            tenant: { tenantId, name },
+          }),
+        )();
+      },
+      onSuccess: () => {
+        listTenants.refetch();
       },
     });
   }
