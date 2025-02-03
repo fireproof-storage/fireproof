@@ -64,10 +64,12 @@
     "react": ">=18.0.0!"
   },
   "dependencies": {
+    "@adviser/cement": "from-package-json",
+    "@fireproof/vendor": "from-package-json",
     "@ipld/car": "from-package-json",
     "@ipld/dag-cbor": "from-package-json",
     "@ipld/dag-json": "from-package-json",
-    "@fireproof/vendor": "from-package-json",
+    "@web3-storage/pail": "from-package-json",
     "cborg": "from-package-json",
     "ipfs-unixfs-exporter": "from-package-json",
     "multiformats": "from-package-json",
