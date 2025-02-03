@@ -9,7 +9,7 @@ import {
   FPEnvelopeWAL,
 } from "../../blockstore/fp-envelope.js";
 import { PARAM, PromiseToUInt8, SuperThis } from "../../types.js";
-import { decodeEventBlock, EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
+import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";
 import { fromJSON } from "multiformats/link";

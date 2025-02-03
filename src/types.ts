@@ -1,5 +1,5 @@
-import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
-import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
+import type { EventLink } from "@web3-storage/pail/clock/api";
+import type { Operation } from "@web3-storage/pail/crdt/api";
 import type { Block, UnknownLink, Version } from "multiformats";
 import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
 
