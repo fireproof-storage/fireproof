@@ -68,6 +68,8 @@ function getVersion() {
   return version.split("/").slice(-1)[0].replace(/^v/, "");
 }
 
+gthis()["FP_STACK"]="stack"
+gthis()["FP_DEBUG"]="*"
 gthis()["FP_VERSION"]=getVersion()
 EOF
 

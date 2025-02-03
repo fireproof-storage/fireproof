@@ -21,7 +21,7 @@ ls -la $projectRoot/.esm-cache
 
 
 export PROJECT_BASE=$projectRoot
-$dockerCompose down || exit 0
+# $dockerCompose down || exit 0
 $dockerCompose up -d --wait
 
 mkdir -p $projectRoot/dist
