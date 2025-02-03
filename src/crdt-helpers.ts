@@ -30,7 +30,7 @@ import {
   CarTransaction,
   BaseBlockstore,
 } from "./types.js";
-import { Result } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
+import { Result } from "@web3-storage/pail/crdt/api";
 import { Logger } from "@adviser/cement";
 import { CarTransactionImpl } from "./blockstore/transaction.js";
 

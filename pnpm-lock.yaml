@@ -26,6 +26,9 @@ importers:
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
+      '@web3-storage/pail':
+        specifier: ^0.6.0
+        version: 0.6.0
       cborg:
         specifier: ^4.2.8
         version: 4.2.11
@@ -3665,6 +3668,10 @@ packages:
 
   '@web3-storage/pail@0.5.0':
     resolution: {integrity: sha512-BUuunK6ZQQfNvECB2st0G7/rd0Vfsn6jFg01tfMLEsitFJWI9J503ixKJ8jWpoNW/3juJ32HQpo8ar3pmgG5uA==}
+    hasBin: true
+
+  '@web3-storage/pail@0.6.0':
+    resolution: {integrity: sha512-/lIBu8pR92AEcCqYqjcxc3kUSLLRGQLomUes7PAyoK4lNe4ttm8Wr7WFcrbJmWTBJZmYE6npbYcVio8U+OexpA==}
     hasBin: true
 
   '@web3-storage/pail@0.6.2':
@@ -11084,6 +11091,11 @@ snapshots:
       cli-color: 2.0.4
       multiformats: 12.1.3
       sade: 1.8.1
+
+  '@web3-storage/pail@0.6.0':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.4
+      multiformats: 13.3.2
 
   '@web3-storage/pail@0.6.2':
     dependencies:
