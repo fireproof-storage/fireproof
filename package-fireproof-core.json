@@ -60,7 +60,7 @@
   },
   "devDependencies": {},
   "peerDependencies": {
-    "react": "^18.0.0"
+    "react": "^18.0.0!"
   },
   "dependencies": {
     "@ipld/car": "from-package-json",
