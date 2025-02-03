@@ -30,6 +30,7 @@ import { DatabasesShow } from "../pages/databases/show.tsx";
 import { DocsShow } from "../pages/docs/show.tsx";
 import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
+import { Better } from "../pages/better.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -58,6 +59,7 @@ export function App() {
           </Route>
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
         </Route>
+        <Route path="better" element={<Better />} />
       </Route>
       <Route path="/fp/databases" element={<Databases />} loader={databaseLoader}>
         <Route index element={<DatabasesIndex />} />

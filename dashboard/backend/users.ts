@@ -55,12 +55,12 @@ export const sqlUserByProviders = sqliteTable(
 export type UserStatus = "active" | "inactive" | "banned" | "invited";
 
 export interface AuthType {
-  readonly type: "ucan" | "clerk";
+  readonly type: "ucan" | "clerk" | "better";
   readonly token: string;
 }
 
 export interface VerifiedAuth {
-  readonly type: "clerk";
+  readonly type: "clerk" | "better";
   readonly token: string;
   readonly userId: string;
   readonly provider: string;
