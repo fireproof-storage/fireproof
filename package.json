@@ -92,6 +92,7 @@
     "@ipld/dag-cbor": "^9.2.2",
     "@ipld/dag-json": "^10.2.3",
     "@ipld/unixfs": "^3.0.0",
+    "@web3-storage/pail": "^0.6.0",
     "cborg": "^4.2.8",
     "ipfs-unixfs-exporter": "^13.6.1",
     "@web3-storage/pail": "^0.6.0",

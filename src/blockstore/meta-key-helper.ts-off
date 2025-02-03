@@ -1,6 +1,6 @@
 import { format, parse } from "@ipld/dag-json";
-import { EventBlock, decodeEventBlock } from "@web3-storage/pail/clock";
-import { EventView } from "@web3-storage/pail/clock/api";
+import { EventBlock, decodeEventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
+import { EventView } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import type { DbMeta, CarClockHead, DbMetaEventBlock, CarClockLink } from "./types.js";
 import { SuperThis, CRDTEntry } from "../types.js";
 import { CID, Link } from "multiformats";

@@ -2,7 +2,7 @@ import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
-import { MemoryBlockstore } from "@web3-storage/pail/block";
+import { MemoryBlockstore } from "@fireproof/vendor/@web3-storage/pail/block";
 import { CRDTMeta, CarTransaction, IndexTransactionMeta, SuperThis, bs, ensureSuperThis, rt } from "@fireproof/core";
 import { simpleBlockOpts } from "../helpers.js";
 
