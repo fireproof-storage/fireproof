@@ -9,12 +9,12 @@ import {
   FPEnvelopeWAL,
 } from "../../blockstore/fp-envelope.js";
 import { PARAM, PromiseToUInt8, SuperThis } from "../../types.js";
-import { decodeEventBlock, EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
+import { decodeEventBlock, EventBlock } from "@web3-storage/pail/clock";
 import { base64pad } from "multiformats/bases/base64";
 import { CID, Link } from "multiformats";
 import { fromJSON } from "multiformats/link";
-import { format, parse } from "@fireproof/vendor/@ipld/dag-json";
-import { EventView } from "@fireproof/vendor/@web3-storage/pail/clock/api";
+import { format, parse } from "@ipld/dag-json";
+import { EventView } from "@web3-storage/pail/clock/api";
 import { coercePromiseIntoUint8 } from "../../utils.js";
 
 export interface SerializedMeta {

@@ -9,14 +9,40 @@ importers:
   .:
     dependencies:
       '@adviser/cement':
+<<<<<<< HEAD
         specifier: ^0.3.13
         version: 0.3.13(typescript@5.7.3)
       '@fireproof/vendor':
         specifier: ^1.0.4
         version: 1.0.4
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+        specifier: ^0.3.5
+        version: 0.3.5(typescript@5.7.3)
+      '@fireproof/vendor':
+        specifier: ^1.0.4
+        version: 1.0.4
+=======
+        specifier: ^0.3.8
+        version: 0.3.8(typescript@5.7.3)
+      '@ipld/car':
+        specifier: ^5.4.0
+        version: 5.4.0
+      '@ipld/dag-cbor':
+        specifier: ^9.2.2
+        version: 9.2.2
+      '@ipld/dag-json':
+        specifier: ^10.2.3
+        version: 10.2.3
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
       '@ipld/unixfs':
         specifier: ^3.0.0
         version: 3.0.0
+      '@web3-storage/pail':
+        specifier: ^0.6.0
+        version: 0.6.0
+      cborg:
+        specifier: ^4.2.8
+        version: 4.2.8
       charwise:
         specifier: ^3.0.1
         version: 3.0.1
@@ -24,8 +50,19 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       idb:
+<<<<<<< HEAD
         specifier: ^8.0.2
         version: 8.0.2
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+        specifier: ^8.0.1
+        version: 8.0.1
+=======
+        specifier: ^8.0.1
+        version: 8.0.1
+      ipfs-unixfs-exporter:
+        specifier: ^13.6.1
+        version: 13.6.1
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
       multiformats:
         specifier: ^13.3.1
         version: 13.3.1
@@ -136,8 +173,16 @@ packages:
     resolution: {integrity: sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==}
     engines: {node: '>=0.10.0'}
 
+<<<<<<< HEAD
   '@adviser/cement@0.3.13':
     resolution: {integrity: sha512-yPdtuC8zl1ODVI0QQJiLiIy2gfq026IK3c9NvpZgBzXFJh2Gj+clz0WLmQboR5p0uG0lrYRAKt57L+YlXB09HQ==}
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+  '@adviser/cement@0.3.5':
+    resolution: {integrity: sha512-U3BFsID8Fhe5ARmBEXQKw2yPyP1egT2LX8/gNCa8ZCobQjA52RkbEWwL0l8Gs6kDUqay1xhsKbQ9O7cYxLFnSg==}
+=======
+  '@adviser/cement@0.3.8':
+    resolution: {integrity: sha512-ztcIc/rJQXsUeIY/3rKyqla/ZrIuB8bYwjKEt75pf42hjMEyOGpfFElk1eMABkr53t4lAYz2lWI8W034MNvQJw==}
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
     engines: {node: '>=20'}
 
   '@ampproject/remapping@2.3.0':
@@ -523,9 +568,6 @@ packages:
     resolution: {integrity: sha512-lB05FkqEdUg2AA0xEbUz0SnkXT1LcCTa438W4IWTUh4hdOnVbQyOJ81OrDXsJk/LSiJHubgGEFoR5EHq1NsH1A==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fireproof/vendor@1.0.4':
-    resolution: {integrity: sha512-F8yYaYGRNrtYo4KyMzMuKwI5mGieYMkI23KnYkQ3ixKhIu3J6qRGZsuROFjOv2zWjQvtPronvqyxNc9P5km31g==}
-
   '@gerrit0/mini-shiki@1.24.4':
     resolution: {integrity: sha512-YEHW1QeAg6UmxEmswiQbOVEg1CW22b1XUD/lNTliOsu0LD0wqoyleFMnmbTp697QE0pcadQiR5cVtbbAPncvpw==}
 
@@ -568,6 +610,18 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
+
+  '@ipld/car@5.4.0':
+    resolution: {integrity: sha512-FiGxOhTUh3fn/kkA+YvNYQjA/T8T5DcKG0NZwAi3aXrizN1qm99HzdYTccEwcX/rUCtI8wTUCKDNPBLUb7pBIQ==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+
+  '@ipld/dag-cbor@9.2.2':
+    resolution: {integrity: sha512-uIEOuruCqKTP50OBWwgz4Js2+LhiBQaxc57cnP71f45b1mHEAo1OCR1Zn/TbvSW/mV1x+JqhacIktkKyaYqhCw==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+
+  '@ipld/dag-json@10.2.3':
+    resolution: {integrity: sha512-itacv1j1hvYgLox2B42Msn70QLzcr0MEo5yGIENuw2SM/lQzq9bmBiMky+kDsIrsqqblKTXcHBZnnmK7D4a6ZQ==}
+    engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   '@ipld/dag-pb@4.0.8':
     resolution: {integrity: sha512-693AqMY2jvhe+w4jSwjnDrbhxIu39gm1H4f6/KD5gG+6VFMM6EXV7vq85BvEf8CRsnA0+auWfA29/S8gbWI0Ew==}
@@ -1126,8 +1180,20 @@ packages:
     resolution: {integrity: sha512-gScYudyuq/aOmiPTz7vTvEhWtmiUMdrrzkOSQqGCQk0AMy7WpAzKM19NESPe9iPTN96i11jLJnpLOXwm2j+6LQ==}
     engines: {node: '>=18.20.0'}
 
+<<<<<<< HEAD
   '@zip.js/zip.js@2.7.57':
     resolution: {integrity: sha512-BtonQ1/jDnGiMed6OkV6rZYW78gLmLswkHOzyMrMb+CAR7CZO8phOHO6c2qw6qb1g1betN7kwEHhhZk30dv+NA==}
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+  '@zip.js/zip.js@2.7.54':
+    resolution: {integrity: sha512-qMrJVg2hoEsZJjMJez9yI2+nZlBUxgYzGV3mqcb2B/6T1ihXp0fWBDYlVHlHquuorgNUQP5a8qSmX6HF5rFJNg==}
+=======
+  '@web3-storage/pail@0.6.0':
+    resolution: {integrity: sha512-/lIBu8pR92AEcCqYqjcxc3kUSLLRGQLomUes7PAyoK4lNe4ttm8Wr7WFcrbJmWTBJZmYE6npbYcVio8U+OexpA==}
+    hasBin: true
+
+  '@zip.js/zip.js@2.7.54':
+    resolution: {integrity: sha512-qMrJVg2hoEsZJjMJez9yI2+nZlBUxgYzGV3mqcb2B/6T1ihXp0fWBDYlVHlHquuorgNUQP5a8qSmX6HF5rFJNg==}
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=16.5.0'}
 
   abort-controller@3.0.0:
@@ -1342,6 +1408,10 @@ packages:
   callsites@3.1.0:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
+
+  cborg@4.2.8:
+    resolution: {integrity: sha512-z9M+TZCWQbf89Gl8ulpYThM9fqmkjBDdMiq+wS72OAK2zqDaXNquoAWFDrAKHQAukVtPspmadB9chuFC0ut7ew==}
+    hasBin: true
 
   chai@5.1.2:
     resolution: {integrity: sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==}
@@ -2045,6 +2115,9 @@ packages:
   ip-address@9.0.5:
     resolution: {integrity: sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==}
     engines: {node: '>= 12'}
+
+  ipfs-unixfs-exporter@13.6.1:
+    resolution: {integrity: sha512-pYPI4oBTWao2//sFzAL0pURyojn79q/u5BuK6L5/nVbVUQVw6DcVP5uB1ySdWlTM2H+0Zlhp9+OL9aJBRIICpg==}
 
   ipfs-unixfs@11.2.0:
     resolution: {integrity: sha512-J8FN1qM5nfrDo8sQKQwfj0+brTg1uBfZK2vY9hxci33lcl3BFrsELS9+1+4q/8tO1ASKfxZO8W3Pi2O4sVX2Lg==}
@@ -3478,7 +3551,13 @@ snapshots:
 
   '@aashutoshrathi/word-wrap@1.2.6': {}
 
+<<<<<<< HEAD
   '@adviser/cement@0.3.13(typescript@5.7.3)':
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+  '@adviser/cement@0.3.5(typescript@5.7.3)':
+=======
+  '@adviser/cement@0.3.8(typescript@5.7.3)':
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
     dependencies:
       ts-essentials: 10.0.4(typescript@5.7.3)
       yaml: 2.7.0
@@ -3730,6 +3809,7 @@ snapshots:
       '@eslint/core': 0.10.0
       levn: 0.4.1
 
+<<<<<<< HEAD
   '@fireproof/vendor@1.0.4':
     dependencies:
       '@ipld/dag-pb': 4.1.3
@@ -3748,6 +3828,27 @@ snapshots:
       progress-events: 1.0.1
       varint: 6.0.0
 
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+  '@fireproof/vendor@1.0.4':
+    dependencies:
+      '@ipld/dag-pb': 4.1.3
+      '@multiformats/murmur3': 2.1.8
+      hamt-sharding: 3.0.6
+      interface-blockstore: 5.3.1
+      ipfs-unixfs: 11.2.0
+      it-filter: 3.1.1
+      it-last: 3.0.6
+      it-map: 3.1.1
+      it-parallel: 3.0.8
+      it-pipe: 3.0.1
+      it-pushable: 3.2.3
+      multiformats: 13.3.1
+      p-queue: 8.0.1
+      progress-events: 1.0.1
+      varint: 6.0.0
+
+=======
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
   '@gerrit0/mini-shiki@1.24.4':
     dependencies:
       '@shikijs/engine-oniguruma': 1.24.4
@@ -3792,6 +3893,23 @@ snapshots:
   '@inquirer/type@3.0.1(@types/node@22.10.5)':
     dependencies:
       '@types/node': 22.10.5
+
+  '@ipld/car@5.4.0':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.2
+      cborg: 4.2.8
+      multiformats: 13.3.1
+      varint: 6.0.0
+
+  '@ipld/dag-cbor@9.2.2':
+    dependencies:
+      cborg: 4.2.8
+      multiformats: 13.3.1
+
+  '@ipld/dag-json@10.2.3':
+    dependencies:
+      cborg: 4.2.8
+      multiformats: 13.3.1
 
   '@ipld/dag-pb@4.0.8':
     dependencies:
@@ -4387,7 +4505,18 @@ snapshots:
       - bare-buffer
       - supports-color
 
+<<<<<<< HEAD
   '@zip.js/zip.js@2.7.57': {}
+||||||| parent of 1dcca4e8 (chore: remove vendor for now)
+  '@zip.js/zip.js@2.7.54': {}
+=======
+  '@web3-storage/pail@0.6.0':
+    dependencies:
+      '@ipld/dag-cbor': 9.2.2
+      multiformats: 13.3.1
+
+  '@zip.js/zip.js@2.7.54': {}
+>>>>>>> 1dcca4e8 (chore: remove vendor for now)
 
   abort-controller@3.0.0:
     dependencies:
@@ -4618,6 +4747,8 @@ snapshots:
       get-intrinsic: 1.2.7
 
   callsites@3.1.0: {}
+
+  cborg@4.2.8: {}
 
   chai@5.1.2:
     dependencies:
@@ -5477,6 +5608,25 @@ snapshots:
     dependencies:
       jsbn: 1.1.0
       sprintf-js: 1.1.3
+
+  ipfs-unixfs-exporter@13.6.1:
+    dependencies:
+      '@ipld/dag-cbor': 9.2.2
+      '@ipld/dag-json': 10.2.3
+      '@ipld/dag-pb': 4.1.3
+      '@multiformats/murmur3': 2.1.8
+      hamt-sharding: 3.0.6
+      interface-blockstore: 5.3.1
+      ipfs-unixfs: 11.2.0
+      it-filter: 3.1.1
+      it-last: 3.0.6
+      it-map: 3.1.1
+      it-parallel: 3.0.8
+      it-pipe: 3.0.1
+      it-pushable: 3.2.3
+      multiformats: 13.3.1
+      p-queue: 8.1.0
+      progress-events: 1.0.1
 
   ipfs-unixfs@11.2.0:
     dependencies:
