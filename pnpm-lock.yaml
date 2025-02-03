@@ -139,10 +139,10 @@ importers:
         specifier: ^3.0.4
         version: 3.0.4(@types/node@22.10.5)(@vitest/browser@3.0.4)(@vitest/ui@3.0.4)(happy-dom@14.12.3)(msw@2.7.0(@types/node@22.10.5)(typescript@5.7.3))(tsx@4.19.2)(yaml@2.7.0)
       webdriverio:
-        specifier: ^9.7.1
+        specifier: ^9.7.2
         version: 9.7.2
       zx:
-        specifier: ^8.3.0
+        specifier: ^8.3.2
         version: 8.3.2
 
 packages:
