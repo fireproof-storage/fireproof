@@ -32,6 +32,7 @@
   },
   "peerDependencies": {
     "react": ">=18.0.0!"
+    "@fireproof/core": "from-package-json"
   },
   "devDependencies": {},
   "keywords": ["react", "ledger", "json", "live", "sync"]
