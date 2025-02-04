@@ -163,90 +163,99 @@ export class CRDT<T extends DocTypes> {
   /**
    * Retrieve the current set of documents.
    */
-  allDocs<T extends DocTypes>(opts: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
-    const waitFor = opts.waitFor;
+  allDocs<T extends DocTypes>({ waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
+    const stream = this.#stream.bind(this);
 
-    const currentDocs = (since?: ClockHead, sinceOptions?: ChangesOptions) => {
-      return since ? this.changes<T>(since, sinceOptions) : this.all<T>();
+    return {
+      snapshot: (sinceOpts) => this.#snapshot<T>(sinceOpts, { waitFor }),
+      subscribe: (callback) => this.#subscribe<T>(callback),
+      live(opts?: { since?: ClockHead } & ChangesOptions) {
+        return stream<T>({ ...opts, futureOnly: false }, { waitFor });
+      },
+      future() {
+        return stream<T>({ futureOnly: true }, { waitFor });
+      },
     };
+  }
 
-    const snapshot = (opts: { since?: ClockHead } & ChangesOptions = {}) => {
-      const ready = this.ready.bind(this);
+  #currentDocs<T extends DocTypes>(since?: ClockHead, sinceOptions?: ChangesOptions) {
+    return since ? this.changes<T>(since, sinceOptions) : this.all<T>();
+  }
 
-      async function* currentDocsWithId() {
+  #snapshot<T extends DocTypes>(
+    opts: { since?: ClockHead } & ChangesOptions = {},
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ): AsyncGenerator<DocWithId<T>> {
+    const currentDocs = this.#currentDocs.bind(this);
+    const ready = this.ready.bind(this);
+
+    async function* currentDocsWithId() {
+      await waitFor;
+      await ready();
+
+      for await (const doc of currentDocs<T>(opts.since, opts)) {
+        yield docUpdateToDocWithId(doc);
+      }
+    }
+
+    return currentDocsWithId();
+  }
+
+  #subscribe<T extends DocTypes>(callback: (doc: DocWithId<T>) => void) {
+    const unsubscribe = this.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+      updates.forEach((update) => {
+        callback(docUpdateToDocWithId(update as DocUpdate<T>));
+      });
+    });
+
+    return unsubscribe;
+  }
+
+  #stream<T extends DocTypes>(
+    opts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions,
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ) {
+    const currentDocs = this.#currentDocs.bind(this);
+    const ready = this.ready.bind(this);
+    const subscribe = this.#subscribe.bind(this);
+
+    let unsubscribe: undefined | (() => void);
+    let isClosed = false;
+
+    return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
+      async start(controller) {
         await waitFor;
         await ready();
 
-        for await (const doc of currentDocs(opts.since, opts)) {
-          yield docUpdateToDocWithId(doc);
-        }
-      }
+        if (opts.futureOnly === false) {
+          const it = currentDocs<T>(opts.since, opts);
 
-      return currentDocsWithId();
-    };
+          async function iterate(prevValue: DocUpdate<T>) {
+            const { done, value } = await it.next();
 
-    const subscribe = (callback: (doc: DocWithId<T>) => void) => {
-      const unsubscribe = this.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
-        updates.forEach((update) => {
-          callback(docUpdateToDocWithId(update as DocUpdate<T>));
-        });
-      });
+            controller.enqueue({
+              doc: docUpdateToDocWithId(prevValue),
+              marker: { kind: "preexisting", done: done || false },
+            });
 
-      return unsubscribe;
-    };
-
-    const stream = (opts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions) => {
-      const ready = this.ready.bind(this);
-
-      let unsubscribe: undefined | (() => void);
-      let isClosed = false;
-
-      return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
-        async start(controller) {
-          await waitFor;
-          await ready();
-
-          if (opts.futureOnly === false) {
-            const it = currentDocs(opts.since, opts);
-
-            async function iterate(prevValue: DocUpdate<T>) {
-              const { done, value } = await it.next();
-
-              controller.enqueue({
-                doc: docUpdateToDocWithId(prevValue),
-                marker: { kind: "preexisting", done: done || false },
-              });
-
-              if (!done) await iterate(value);
-            }
-
-            const { value } = await it.next();
-            if (value) await iterate(value);
+            if (!done) await iterate(value);
           }
 
-          unsubscribe = subscribe((doc) => {
-            if (isClosed) return;
-            controller.enqueue({ doc, marker: { kind: "new" } });
-          });
-        },
+          const { value } = await it.next();
+          if (value) await iterate(value);
+        }
 
-        cancel() {
-          isClosed = true;
-          unsubscribe?.();
-        },
-      });
-    };
+        unsubscribe = subscribe<T>((doc) => {
+          if (isClosed) return;
+          controller.enqueue({ doc, marker: { kind: "new" } });
+        });
+      },
 
-    return {
-      snapshot,
-      live(opts?: { since?: ClockHead } & ChangesOptions) {
-        return stream({ ...opts, futureOnly: false });
+      cancel() {
+        isClosed = true;
+        unsubscribe?.();
       },
-      future() {
-        return stream({ futureOnly: true });
-      },
-      subscribe,
-    };
+    });
   }
 
   async vis(): Promise<string> {

@@ -179,139 +179,151 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
   }
 
-  query(opts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
-    const query = async (since?: ClockHead, sinceOptions?: ChangesOptions) => {
-      const deps = { crdt: this.crdt, logger: this.logger };
-      const qry = { ...opts, since, sinceOptions };
-
-      if (!this.byKey.root) {
-        return applyQuery<K, T, R>(deps, { result: [] }, qry);
-      }
-
-      if (qry.range) {
-        const eRange = encodeRange(qry.range);
-        return applyQuery<K, T, R>(deps, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), qry);
-      }
-
-      if (qry.key) {
-        const encodedKey = encodeKey(qry.key);
-        return applyQuery<K, T, R>(deps, await throwFalsy(this.byKey.root).get(encodedKey), qry);
-      }
-
-      if (qry.prefix) {
-        if (!Array.isArray(qry.prefix)) qry.prefix = [qry.prefix];
-        // prefix should be always an array
-        const start = [...qry.prefix, NaN];
-        const end = [...qry.prefix, Infinity];
-        const encodedR = encodeRange([start, end]);
-        return applyQuery<K, T, R>(deps, await this.byKey.root.range(...encodedR), qry);
-      }
-
-      const all = await this.byKey.root.getAllEntries(); // funky return type
-
-      return applyQuery<K, T, R>(
-        deps,
-        {
-          // @ts-expect-error getAllEntries returns a different type than range
-          result: all.result.map(({ key: [k, id], value }) => ({
-            key: k,
-            id,
-            value,
-          })),
-        },
-        qry,
-      );
-    };
-
-    const snapshot = (opts: { since?: ClockHead } & ChangesOptions = {}) => {
-      const ready = this.ready.bind(this);
-      const updateIndex = this._updateIndex.bind(this);
-      const hydrateIndex = this._hydrateIndex.bind(this);
-
-      async function* docsWithId() {
-        await waitFor;
-        await ready();
-        await updateIndex();
-        await hydrateIndex();
-
-        for await (const doc of await query(opts.since, opts)) {
-          if (doc) yield doc;
-        }
-      }
-
-      return docsWithId();
-    };
-
-    const subscribe = (callback: (doc: DocWithId<T>) => void) => {
-      const unsubscribe = this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
-        updates.forEach((update) => {
-          callback(docUpdateToDocWithId(update as DocUpdate<T>));
-        });
-      });
-
-      return unsubscribe;
-    };
-
-    const stream = (opts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions) => {
-      const ready = this.ready.bind(this);
-      const updateIndex = this._updateIndex.bind(this);
-      const hydrateIndex = this._hydrateIndex.bind(this);
-
-      let unsubscribe: undefined | (() => void);
-      let isClosed = false;
-
-      return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
-        async start(controller) {
-          await waitFor;
-          await ready();
-
-          if (opts.futureOnly === false) {
-            await updateIndex();
-            await hydrateIndex();
-
-            const it = await query(opts.since, opts);
-
-            async function iterate(prevValue: DocWithId<T>) {
-              const { done, value } = await it.next();
-
-              controller.enqueue({
-                doc: prevValue,
-                marker: { kind: "preexisting", done: done || false },
-              });
-
-              if (!done) await iterate(value);
-            }
-
-            const { value } = await it.next();
-            if (value) await iterate(value);
-          }
-
-          unsubscribe = subscribe(async (doc) => {
-            if (isClosed) return;
-            await updateIndex();
-            await hydrateIndex();
-
-            controller.enqueue({ doc, marker: { kind: "new" } });
-          });
-        },
-
-        cancel() {
-          isClosed = true;
-          unsubscribe?.();
-        },
-      });
-    };
+  query(qryOpts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
+    const stream = this.#stream.bind(this);
 
     return {
-      snapshot,
-      subscribe,
+      snapshot: (sinceOpts) => this.#snapshot(qryOpts, sinceOpts, { waitFor }),
+      subscribe: (callback) => this.#subscribe(callback),
       live(opts?: { since?: ClockHead }) {
-        return stream({ futureOnly: false, since: opts?.since });
+        return stream(qryOpts, { futureOnly: false, since: opts?.since }, { waitFor });
       },
       future() {
-        return stream({ futureOnly: true });
+        return stream(qryOpts, { futureOnly: true }, { waitFor });
       },
     };
+  }
+
+  async #query(queryOptions: QueryOpts<K> = {}, sinceOptions: { since?: ClockHead } & ChangesOptions = {}) {
+    const deps = { crdt: this.crdt, logger: this.logger };
+    const qry = { ...queryOptions, since: sinceOptions.since, sinceOptions };
+
+    if (!this.byKey.root) {
+      return applyQuery<K, T, R>(deps, { result: [] }, qry);
+    }
+
+    if (qry.range) {
+      const eRange = encodeRange(qry.range);
+      return applyQuery<K, T, R>(deps, await throwFalsy(this.byKey.root).range(eRange[0], eRange[1]), qry);
+    }
+
+    if (qry.key) {
+      const encodedKey = encodeKey(qry.key);
+      return applyQuery<K, T, R>(deps, await throwFalsy(this.byKey.root).get(encodedKey), qry);
+    }
+
+    if (qry.prefix) {
+      if (!Array.isArray(qry.prefix)) qry.prefix = [qry.prefix];
+      // prefix should be always an array
+      const start = [...qry.prefix, NaN];
+      const end = [...qry.prefix, Infinity];
+      const encodedR = encodeRange([start, end]);
+      return applyQuery<K, T, R>(deps, await this.byKey.root.range(...encodedR), qry);
+    }
+
+    const all = await this.byKey.root.getAllEntries(); // funky return type
+
+    return applyQuery<K, T, R>(
+      deps,
+      {
+        // @ts-expect-error getAllEntries returns a different type than range
+        result: all.result.map(({ key: [k, id], value }) => ({
+          key: k,
+          id,
+          value,
+        })),
+      },
+      qry,
+    );
+  }
+
+  #snapshot(
+    qryOpts: QueryOpts<K> = {},
+    sinceOpts: { since?: ClockHead } & ChangesOptions = {},
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ) {
+    const generator = async () => {
+      await waitFor;
+      await this.ready();
+      await this._updateIndex();
+      await this._hydrateIndex();
+
+      return await this.#query(qryOpts, sinceOpts);
+    };
+
+    async function* docsWithId() {
+      for await (const doc of await generator()) {
+        if (doc) yield doc;
+      }
+    }
+
+    return docsWithId();
+  }
+
+  #subscribe(callback: (doc: DocWithId<T>) => void) {
+    const unsubscribe = this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
+      updates.forEach((update) => {
+        callback(docUpdateToDocWithId(update as DocUpdate<T>));
+      });
+    });
+
+    return unsubscribe;
+  }
+
+  #stream(
+    qryOpts: QueryOpts<K> = {},
+    sinceOpts: { futureOnly: boolean; since?: ClockHead } & ChangesOptions,
+    { waitFor }: { waitFor?: Promise<unknown> } = {},
+  ) {
+    const hydrateIndex = this._hydrateIndex.bind(this);
+    const query = this.#query.bind(this);
+    const ready = this.ready.bind(this);
+    const subscribe = this.#subscribe.bind(this);
+    const updateIndex = this._updateIndex.bind(this);
+
+    let unsubscribe: undefined | (() => void);
+    let isClosed = false;
+
+    return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
+      async start(controller) {
+        await waitFor;
+        await ready();
+
+        if (sinceOpts.futureOnly === false) {
+          await updateIndex();
+          await hydrateIndex();
+
+          const it = await query(qryOpts, sinceOpts);
+
+          async function iterate(prevValue: DocWithId<T>) {
+            const { done, value } = await it.next();
+
+            controller.enqueue({
+              doc: prevValue,
+              marker: { kind: "preexisting", done: done || false },
+            });
+
+            if (!done) await iterate(value);
+          }
+
+          const { value } = await it.next();
+          if (value) await iterate(value);
+        }
+
+        unsubscribe = subscribe(async (doc) => {
+          if (isClosed) return;
+          await updateIndex();
+          await hydrateIndex();
+
+          controller.enqueue({ doc, marker: { kind: "new" } });
+        });
+      },
+
+      cancel() {
+        isClosed = true;
+        unsubscribe?.();
+      },
+    });
   }
 
   _resetIndex() {
