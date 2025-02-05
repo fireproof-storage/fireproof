@@ -3,14 +3,14 @@ import { useParams } from "react-router-dom";
 
 export function CloudTenantLedgersShow() {
   const { ledgerId } = useParams();
-  const [activeTab, setActiveTab] = useState("quickstart");
+  const [activeTab, setActiveTab] = useState("documents");
 
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-auto">
         <div className="border-b border-[--border]">
           <nav className="flex" aria-label="Tabs">
-            <button
+            {/* <button
               type="button"
               onClick={() => setActiveTab("quickstart")}
               className={`px-4 py-2 text-sm font-medium border-b-2 ${
@@ -20,7 +20,7 @@ export function CloudTenantLedgersShow() {
               }`}
             >
               Quickstart
-            </button>
+            </button> */}
             <button
               type="button"
               onClick={() => setActiveTab("documents")}
