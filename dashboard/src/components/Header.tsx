@@ -8,7 +8,7 @@ export default function Header({ isDarkMode, setIsDarkMode }) {
   }, [isDarkMode]);
 
   const toggleDarkMode = () => {
-    setIsDarkMode(isDarkMode => !isDarkMode);
+    setIsDarkMode((isDarkMode) => !isDarkMode);
   };
 
   return (
@@ -39,10 +39,7 @@ export default function Header({ isDarkMode, setIsDarkMode }) {
         >
           Community
         </a>
-        <button
-          onClick={toggleDarkMode}
-          className="p-2 rounded-full bg-fp-dec-00 text-fp-p hover:opacity-60"
-        >
+        <button onClick={toggleDarkMode} className="p-2 rounded-full bg-fp-dec-00 text-fp-p hover:opacity-60">
           {isDarkMode ? (
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -82,7 +79,7 @@ export default function Header({ isDarkMode, setIsDarkMode }) {
           )}
         </button>
         <div className="flex items-center gap-2">
-            <User />
+          <User />
         </div>
       </div>
     </header>

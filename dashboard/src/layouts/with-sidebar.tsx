@@ -23,11 +23,11 @@ export function WithSidebar({
       {/* Sidebar */}
       <Sidebar sideBarComponent={sideBarComponent} title={title} newUrl={newUrl} />
       <div className="flex flex-col flex-1 overflow-hidden">
-          <Header isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
-          <main className="flex-1 overflow-y-auto p-main">
-            <Outlet />
-          </main>
-        </div>
+        <Header isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+        <main className="flex-1 overflow-y-auto p-main">
+          <Outlet />
+        </main>
       </div>
-  )
+    </div>
+  );
 }
