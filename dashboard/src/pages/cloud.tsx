@@ -30,7 +30,7 @@ function SidebarCloud() {
   }
 
   const navItems = [
-    { id: "home", label: "Overview", path: `/fp/cloud/tenants/${tenantId}` },
+    { id: "home", label: "Home", path: `/fp/cloud/tenants/${tenantId}` },
     { id: "ledgers", label: "Ledgers", path: `/fp/cloud/tenants/${tenantId}/ledgers` },
     // { id: "members", label: "Members", path: `/fp/cloud/tenants/${tenantId}/members` },
     // { id: "admin", label: "Admin", path: `/fp/cloud/tenants/${tenantId}/admin` },
@@ -45,7 +45,7 @@ function SidebarCloud() {
             onClick={() => setIsSidebarOpen(false)}
             end={item.id !== "home"}
             className={({ isActive }) => `
-              flex items-center rounded-md px-3 py-2 text-sm transition-colors flex-1
+              flex items-center rounded-md px-2 py-2 text-sm transition-colors flex-1  text-fp-dec-03
               ${
                 (item.id === "home" ? isHomeActive(item.path) : isActive)
                   ? "text-fp-p text-14-bold bg-fp-bg-01"

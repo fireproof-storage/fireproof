@@ -49,7 +49,6 @@ export function CloudTenantLedgersShow() {
         <div className="p-6">
           {activeTab === "quickstart" && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Quickstart Guide</h2>
               <p className="text-[--muted-foreground]">
                 Connect to ledger <code className="text-[--foreground]">{ledgerId}</code>
               </p>
@@ -57,13 +56,11 @@ export function CloudTenantLedgersShow() {
           )}
           {activeTab === "documents" && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Documents</h2>
               <p className="text-[--muted-foreground]">Manage your ledger documents here.</p>
             </div>
           )}
           {activeTab === "sharing" && (
             <div>
-              <h2 className="text-xl font-semibold mb-4">Sharing Settings</h2>
               <p className="text-[--muted-foreground]">Control who has access to your ledger.</p>
             </div>
           )}

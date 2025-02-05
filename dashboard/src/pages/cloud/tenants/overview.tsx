@@ -23,7 +23,6 @@ export function CloudTenantOverview() {
 
   return (
     <div className="space-y-6 p-6">
-      <h1 className="text-2xl font-bold text-[--foreground] mb-6">Overview</h1>
 
       <div className="bg-[--muted] shadow sm:rounded-lg p-6">
         <h2 className="text-lg font-semibold text-[--foreground] mb-4">Onboarding - Quickstart</h2>
