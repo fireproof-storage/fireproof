@@ -25,7 +25,9 @@ export function WithSidebar({
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
         <main className="flex-1 overflow-y-auto p-main">
-          <Outlet />
+          <div className="p-card bg-fp-bg-01 text-fp-p rounded-fp-l">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>
