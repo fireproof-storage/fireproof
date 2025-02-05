@@ -161,7 +161,7 @@ deno run --config node_modules/@fireproof/core/deno.json --allow-read --allow-wr
 Caution it will be pushed directly
 
 ```shell
-pnpm run build:doc
+pnpm run build:docs
 ```
 
 ## Thanks 🙏
