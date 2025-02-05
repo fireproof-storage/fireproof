@@ -1,71 +1,41 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
+import { TabNavigation } from "../../../../components/TabNavigation.tsx";
 
 export function CloudTenantLedgersShow() {
   const { ledgerId } = useParams();
-  const [activeTab, setActiveTab] = useState("documents");
+
+  const tabs = [
+    { id: "documents", label: "Documents" },
+    { id: "sharing", label: "Sharing" },
+  ];
 
   return (
     <div className="flex h-full">
       <div className="flex-1 overflow-auto">
-        <div className="border-b border-[--border]">
-          <nav className="flex" aria-label="Tabs">
-            {/* <button
-              type="button"
-              onClick={() => setActiveTab("quickstart")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                activeTab === "quickstart"
-                  ? "border-[--accent] text-[--accent]"
-                  : "border-transparent text-[--muted-foreground] hover:text-[--foreground] hover:border-[--border]"
-              }`}
-            >
-              Quickstart
-            </button> */}
-            <button
-              type="button"
-              onClick={() => setActiveTab("documents")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                activeTab === "documents"
-                  ? "border-[--accent] text-[--accent]"
-                  : "border-transparent text-[--muted-foreground] hover:text-[--foreground] hover:border-[--border]"
-              }`}
-            >
-              Documents
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("sharing")}
-              className={`px-4 py-2 text-sm font-medium border-b-2 ${
-                activeTab === "sharing"
-                  ? "border-[--accent] text-[--accent]"
-                  : "border-transparent text-[--muted-foreground] hover:text-[--foreground] hover:border-[--border]"
-              }`}
-            >
-              Sharing
-            </button>
-          </nav>
-        </div>
-
+        <TabNavigation tabs={tabs} />
         <div className="p-6">
-          {activeTab === "quickstart" && (
-            <div>
-              <p className="text-[--muted-foreground]">
-                Connect to ledger <code className="text-[--foreground]">{ledgerId}</code>
-              </p>
-            </div>
-          )}
-          {activeTab === "documents" && (
-            <div>
-              <p className="text-[--muted-foreground]">Manage your ledger documents here.</p>
-            </div>
-          )}
-          {activeTab === "sharing" && (
-            <div>
-              <p className="text-[--muted-foreground]">Control who has access to your ledger.</p>
-            </div>
-          )}
+          <Outlet />
         </div>
       </div>
+    </div>
+  );
+}
+
+// Move these to their own route components
+export function LedgerDocumentsTab() {
+  const { ledgerId } = useParams();
+  return (
+    <div>
+      <p className="text-[--muted-foreground]">Manage documents for ledger {ledgerId} here.</p>
+    </div>
+  );
+}
+
+export function LedgerSharingTab() {
+  const { ledgerId } = useParams();
+  return (
+    <div>
+      <p className="text-[--muted-foreground]">Control who has access to your ledger.</p>
     </div>
   );
 }
