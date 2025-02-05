@@ -1,54 +1,63 @@
 import { fontFamily } from "tailwindcss/defaultTheme";
-// import * as ContainerQueries from "@tailwindcss/container-queries";
 
 export default {
   content: ["./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       fontFamily: {
-        heading: ["var(--font-heading)", ...fontFamily.sans],
-        body: ["var(--font-body)", ...fontFamily.mono],
+        main: ["var(--font-family-main)", "Inter", "sans-serif"],
+        body: ["var(--font-family-body)", "Inter", "sans-serif"],
+        mono: ["var(--font-family-mono)", "monospace"],
+      },
+      fontSize: {
+        xxl: "34px",
+        xl: "20px",
+        l: "16px",
+        m: "14px",
+        s: "13px",
+        xs: "11px",
+      },
+      lineHeight: {
+        xxl: "42px",
+        xl: "25px",
+        l: "24px",
+        m: "22px",
+        s: "17px",
+        xs: "14px",
+      },
+      letterSpacing: {
+        tighter: "-0.04em",
+        tight: "-0.02em",
+        wide: "0.02em",
+      },
+      fontWeight: {
+        medium: 500,
+        semibold: 600,
+        bold: 700,
       },
       colors: {
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
-        },
-        secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
-        },
-        destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
-        },
-        muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
-        },
-        accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
-        },
-        popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
-        },
-        card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
-        },
+        "fp-p": "var(--fp-color-primary)",
+        "fp-s": "var(--fp-color-secondary)",
+        "fp-a-00": "var(--fp-color-accent-00)",
+        "fp-a-01": "var(--fp-color-accent-01)",
+        "fp-a-02": "var(--fp-color-accent-02)",
+        "fp-a-03": "var(--fp-color-accent-03)",
+        "fp-dec-00": "var(--fp-color-decorative-00)",
+        "fp-dec-01": "var(--fp-color-decorative-01)",
+        "fp-dec-02": "var(--fp-color-decorative-02)",
+        "fp-bg-00": "var(--fp-color-background-00)",
+        "fp-bg-01": "var(--fp-color-background-01)",
+        "fp-bg-02": "var(--fp-color-background-02)",
+        "fp-red": "var(--fp-color-red)",
+        "fp-green": "var(--fp-color-green)",
+      },
+      padding: {
+        main: '20px',
+        card: '28px',
       },
       borderRadius: {
-        xl: `calc(var(--radius) + 4px)`,
-        lg: `var(--radius)`,
-        md: `calc(var(--radius) - 2px)`,
-        sm: `calc(var(--radius) - 4px)`,
+        "fp-s": "4px",
+        "fp-l": "20px",
       },
       keyframes: {
         "accordion-down": {
@@ -66,6 +75,5 @@ export default {
       },
     },
   },
-  // eslint-disable-next-line no-undef
   plugins: [require("@tailwindcss/container-queries")],
 };
