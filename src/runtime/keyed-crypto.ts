@@ -171,6 +171,7 @@ class noCrypto implements CryptoAction {
     this.logger = ensureLogger(sthis, "noCrypto");
     this.crypto = cyrt;
     this.key = {
+      id: sthis.nextId().str,
       name: "noCrypto",
       get: () => {
         throw this.logger.Error().Msg("noCrypto.get not implemented").AsError();
