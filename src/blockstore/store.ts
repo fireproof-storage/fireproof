@@ -9,7 +9,7 @@ import type {
   WALStore as WALStore,
   WALState,
   LoadHandler,
-  KeyedCrypto,
+  CryptoAction,
   Loadable,
   CarClockHead,
   DbMetaBinary,
@@ -101,7 +101,7 @@ export abstract class BaseStoreImpl {
     return;
   }
 
-  async keyedCrypto(): Promise<KeyedCrypto> {
+  async keyedCrypto(): Promise<CryptoAction> {
     return keyedCryptoFactory(this._url, await this.loader.keyBag(), this.sthis);
   }
 

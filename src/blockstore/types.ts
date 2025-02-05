@@ -3,7 +3,7 @@ import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface
 import { CarTransaction, DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import { KeyBag, KeyBagRuntime } from "../runtime/key-bag.js";
+import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
 import { CoerceURI, CryptoRuntime, CTCryptoKey, Future, Logger, Result, URI } from "@adviser/cement";
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
@@ -48,13 +48,15 @@ export interface IvKeyIdData {
   readonly data: Uint8Array;
 }
 
-export interface IvAndBytes {
+export interface IvAndKeyAndBytes {
   readonly bytes: Uint8Array;
+  readonly key: CTCryptoKey;
   readonly iv: Uint8Array;
 }
 
-export interface BytesWithIv {
+export interface BytesAndKeyWithIv {
   readonly bytes: Uint8Array;
+  readonly key: CTCryptoKey;
   readonly iv?: Uint8Array;
 }
 
@@ -110,7 +112,7 @@ export type TransactionMeta = unknown;
 // an implementation of this Interface contains the keymaterial
 // so that the fp-core can use the decrypt and encrypt without knowing the key
 export interface EncryptedBlock {
-  readonly value: IvAndBytes;
+  readonly value: IvAndKeyAndBytes;
 }
 
 export interface KeyMaterial {
@@ -121,28 +123,43 @@ export interface KeyMaterial {
 export interface KeyWithFingerPrint {
   readonly fingerPrint: string;
   readonly key: CTCryptoKey;
-}
-
-export interface KeyWithFingerExtract extends KeyWithFingerPrint {
   extract(): Promise<KeyMaterial>;
 }
+
+// export interface KeyWithFingerExtract extends KeyWithFingerPrint {
+// }
 
 export interface CodecOpts {
   readonly ivCalc: "random" | "hash";
   readonly noIVVerify: boolean;
 }
-export interface KeyedCrypto {
+
+export interface KeyUpsertResult {
+  readonly modified: boolean;
+  readonly kfp: KeyWithFingerPrint;
+}
+
+export interface KeysByFingerprint {
+  readonly name: string;
+  get(fingerPrint?: Uint8Array | string): Promise<KeyWithFingerPrint | undefined>;
+  upsert(key: string | Uint8Array, def: boolean): Promise<Result<KeyUpsertResult>>;
+  asKeysItem(): Promise<KeysItem>;
+}
+
+export interface CryptoAction {
   readonly ivLength: number; // in bytes only 12 and 16 are allowed
   readonly logger: Logger;
   readonly crypto: CryptoRuntime;
   readonly url: URI;
+  readonly key: KeysByFingerprint;
   // readonly codec: BlockCodec<number, IvAndBytes>;
   // readonly isEncrypting: boolean;
-  fingerPrint(): Promise<string>;
+  // keyByFingerPrint(id: Uint8Array | string): Promise<Result<KeyWithFingerPrint>>;
+  // fingerPrint(): Promise<string>;
   algo(iv?: Uint8Array): { name: string; iv: Uint8Array; tagLength: number };
   codec(iv?: Uint8Array, codecOpts?: Partial<CodecOpts>): BlockCodec<number, Uint8Array>;
-  _decrypt(data: IvAndBytes): Promise<Uint8Array>;
-  _encrypt(data: BytesWithIv): Promise<Uint8Array>;
+  _decrypt(data: IvAndKeyAndBytes): Promise<Uint8Array>;
+  _encrypt(data: BytesAndKeyWithIv): Promise<Uint8Array>;
   // encode(data: Uint8Array): Promise<Uint8Array>;
   // decode(bytes: Uint8Array | ArrayBuffer): Promise<Uint8Array>;
 }
@@ -296,7 +313,7 @@ export interface BaseStore {
   onStarted(fn: () => void): void;
   onClosed(fn: () => void): void;
 
-  keyedCrypto(): Promise<KeyedCrypto>;
+  keyedCrypto(): Promise<CryptoAction>;
 
   close(): Promise<Result<void>>;
   destroy(): Promise<Result<void>>;

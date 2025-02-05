@@ -1,6 +1,6 @@
 import { Logger, URI } from "@adviser/cement";
 import { SuperThis, SysFileSystem } from "../../../types.js";
-import { KeyBagProvider, KeyItem } from "../../key-bag.js";
+import { KeyBagProvider, KeysItem, V1StorageKeyItem } from "../../key-bag.js";
 import { isNotFoundError } from "../../../utils.js";
 import { sysFileSystemFactory } from "./sys-file-system-factory.js";
 
@@ -32,11 +32,11 @@ export class KeyBagProviderFile implements KeyBagProvider {
     this.logger = sthis.logger;
   }
 
-  async get(id: string): Promise<KeyItem | undefined> {
+  async get(id: string): Promise<V1StorageKeyItem | KeysItem | undefined> {
     const ctx = await this._prepare(id);
     try {
       const p = await ctx.sysFS.readfile(ctx.fName);
-      const ki = JSON.parse(this.sthis.txt.decode(p)) as KeyItem;
+      const ki = JSON.parse(this.sthis.txt.decode(p));
       return ki;
     } catch (e) {
       if (isNotFoundError(e)) {
@@ -46,8 +46,8 @@ export class KeyBagProviderFile implements KeyBagProvider {
     }
   }
 
-  async set(id: string, item: KeyItem): Promise<void> {
-    const ctx = await this._prepare(id);
+  async set(item: KeysItem): Promise<void> {
+    const ctx = await this._prepare(item.name);
     const p = this.sthis.txt.encode(JSON.stringify(item, null, 2));
     await ctx.sysFS.writefile(ctx.fName, p);
   }

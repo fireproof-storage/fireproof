@@ -2,12 +2,30 @@ import { CID } from "multiformats";
 import { DbMetaEvent, WALState } from "./types.js";
 import { Result } from "@adviser/cement";
 
-export enum FPEnvelopeType {
-  CAR = "car",
-  FILE = "file",
-  META = "meta",
-  WAL = "wal",
-}
+export const FPEnvelopeTypes = {
+  CAR: "car",
+  FILE: "file",
+  META: "meta",
+  WAL: "wal",
+} as const;
+
+// const Colors = {
+//   Red: "red",
+//   Green: "green",
+//   Blue: "blue",
+// } as const; // Important: The "as const" assertion is crucial for type safety
+
+// type Color = typeof Colors[keyof typeof Colors]; // Extracts the string literal types
+// let myColor: Color = Colors.Red;
+
+export type FPEnvelopeType = (typeof FPEnvelopeTypes)[keyof typeof FPEnvelopeTypes];
+
+// export enum FPEnvelopeType {
+//   CAR = "car",
+//   FILE = "file",
+//   META = "meta",
+//   WAL = "wal",
+// }
 
 export interface FPEnvelope<T> {
   readonly type: FPEnvelopeType;
@@ -15,15 +33,15 @@ export interface FPEnvelope<T> {
 }
 
 export interface FPEnvelopeCar extends FPEnvelope<Uint8Array> {
-  readonly type: FPEnvelopeType.CAR;
+  readonly type: typeof FPEnvelopeTypes.CAR;
 }
 
 export interface FPEnvelopeFile extends FPEnvelope<Uint8Array> {
-  readonly type: FPEnvelopeType.FILE;
+  readonly type: typeof FPEnvelopeTypes.FILE;
 }
 
 export interface FPEnvelopeMeta extends FPEnvelope<DbMetaEvent[]> {
-  readonly type: FPEnvelopeType.META;
+  readonly type: typeof FPEnvelopeTypes.META;
 }
 
 export interface FPWALCarsOps {
@@ -35,7 +53,7 @@ export interface FPWALCarsOps {
 //     readonly operations: FPWALCarsOps[];
 // }
 export interface FPEnvelopeWAL extends FPEnvelope<WALState> {
-  readonly type: FPEnvelopeType.WAL;
+  readonly type: typeof FPEnvelopeTypes.WAL;
 }
 
 // export function WAL2FPMsg(sthis: SuperThis, ws: WALState): Result<FPEnvelopeWAL> {
@@ -88,7 +106,7 @@ export interface FPEnvelopeWAL extends FPEnvelope<WALState> {
 // }
 
 export function Car2FPMsg(fpcar: Uint8Array): Result<FPEnvelopeCar> {
-  return Result.Ok({ type: FPEnvelopeType.CAR, payload: fpcar });
+  return Result.Ok({ type: FPEnvelopeTypes.CAR, payload: fpcar });
 }
 
 // export function FPMsg2Car(fpmsg: Uint8Array): Result<Uint8Array> {
@@ -100,7 +118,7 @@ export function Car2FPMsg(fpcar: Uint8Array): Result<FPEnvelopeCar> {
 // }
 
 export function File2FPMsg(fpfile: Uint8Array): Result<FPEnvelopeFile> {
-  return Result.Ok({ type: FPEnvelopeType.FILE, payload: fpfile });
+  return Result.Ok({ type: FPEnvelopeTypes.FILE, payload: fpfile });
 }
 
 // export function FPMsg2File(fpmsg: Uint8Array): Result<Uint8Array> {
