@@ -127,7 +127,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(ctx, carStore.url(), fileContent.cid);
     await carGateway.start(ctx, carStore.url());
     const carPutResult = await carGateway.put(ctx, carUrl.Ok(), {
-      type: bs.FPEnvelopeType.CAR,
+      type: bs.FPEnvelopeTypes.CAR,
       payload: fileContent.block,
     });
     expect(carPutResult.isOk()).toBeTruthy();
@@ -137,7 +137,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(ctx, carStore.url(), fileContent.cid);
     await carGateway.start(ctx, carStore.url());
     await carGateway.put(ctx, carUrl.Ok(), {
-      type: bs.FPEnvelopeType.CAR,
+      type: bs.FPEnvelopeTypes.CAR,
       payload: fileContent.block,
     });
     const carGetResult = await carGateway.get(ctx, carUrl.Ok());
@@ -150,7 +150,7 @@ describe("noop Gateway", function () {
     const carUrl = await carGateway.buildUrl(ctx, carStore.url(), fileContent.cid);
     await carGateway.start(ctx, carStore.url());
     await carGateway.put(ctx, carUrl.Ok(), {
-      type: bs.FPEnvelopeType.CAR,
+      type: bs.FPEnvelopeTypes.CAR,
       payload: fileContent.block,
     });
     const carDeleteResult = await carGateway.delete(ctx, carUrl.Ok());
@@ -187,7 +187,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(ctx, fileStore.url(), fileContent.cid);
     await fileGateway.start(ctx, fileStore.url());
     const filePutResult = await fileGateway.put(ctx, fileUrl.Ok(), {
-      type: bs.FPEnvelopeType.FILE,
+      type: bs.FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
     expect(filePutResult.Ok()).toBeFalsy();
@@ -197,7 +197,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(ctx, fileStore.url(), fileContent.cid);
     await fileGateway.start(ctx, fileStore.url());
     await fileGateway.put(ctx, fileUrl.Ok(), {
-      type: bs.FPEnvelopeType.FILE,
+      type: bs.FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
     const fileGetResult = await fileGateway.get(ctx, fileUrl.Ok());
@@ -209,7 +209,7 @@ describe("noop Gateway", function () {
     const fileUrl = await fileGateway.buildUrl(ctx, fileStore.url(), fileContent.cid);
     await fileGateway.start(ctx, fileStore.url());
     await fileGateway.put(ctx, fileUrl.Ok(), {
-      type: bs.FPEnvelopeType.FILE,
+      type: bs.FPEnvelopeTypes.FILE,
       payload: fileContent.block,
     });
     const fileDeleteResult = await fileGateway.delete(ctx, fileUrl.Ok());
@@ -236,7 +236,7 @@ describe("noop Gateway", function () {
     // const walTestDataString = JSON.stringify();
     // const walTestData = sthis.txt.encode(walTestDataString);
     const walPutResult = await walGateway.put(ctx, walUrl.Ok(), {
-      type: bs.FPEnvelopeType.WAL,
+      type: bs.FPEnvelopeTypes.WAL,
       payload: {
         operations: [],
         noLoaderOps: [],
@@ -275,7 +275,7 @@ describe("noop Gateway", function () {
     // });
     // const walTestData = sthis.txt.encode(walTestDataString);
     await walGateway.put(ctx, walUrl.Ok(), {
-      type: bs.FPEnvelopeType.WAL,
+      type: bs.FPEnvelopeTypes.WAL,
       payload: ref,
     });
     const walGetResult = await walGateway.get(ctx, walUrl.Ok());
@@ -308,7 +308,7 @@ describe("noop Gateway", function () {
       ],
     };
     await walGateway.put(ctx, walUrl.Ok(), {
-      type: bs.FPEnvelopeType.WAL,
+      type: bs.FPEnvelopeTypes.WAL,
       payload: ref,
     });
     const walDeleteResult = await walGateway.delete(ctx, walUrl.Ok());
@@ -394,12 +394,16 @@ describe("noop Gateway subscribe", function () {
     let didCall = false;
     const p = new Future<void>();
 
-    const metaSubscribeResult = (await metaGateway.subscribe(ctx, metaUrl.Ok(), async (data: bs.FPEnvelopeMeta) => {
-      // const decodedData = sthis.txt.decode(data);
-      expect(Array.isArray(data.payload)).toBeTruthy();
-      didCall = true;
-      p.resolve();
-    })) as bs.UnsubscribeResult;
+    const metaSubscribeResult = (await metaGateway.subscribe(
+      ctx,
+      metaUrl.Ok().build().setParam(PARAM.SELF_REFLECT, "x").URI(),
+      async (data: bs.FPEnvelopeMeta) => {
+        // const decodedData = sthis.txt.decode(data);
+        expect(Array.isArray(data.payload)).toBeTruthy();
+        didCall = true;
+        p.resolve();
+      },
+    )) as bs.UnsubscribeResult;
     expect(metaSubscribeResult.isOk()).toBeTruthy();
     const ok = await db.put({ _id: "key1", hello: "world1" });
     expect(ok).toBeTruthy();
