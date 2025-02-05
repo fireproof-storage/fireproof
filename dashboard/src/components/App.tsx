@@ -9,13 +9,14 @@ import {
 } from "react-router-dom";
 import { AppContext } from "../app-context.tsx";
 import { WithoutSidebar } from "../layouts/without-sidebar.tsx";
+import { Better } from "../pages/better.tsx";
 import { Cloud } from "../pages/cloud.tsx";
 import CloudIndex from "../pages/cloud/index.tsx";
 import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
 import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
 import { CloudTenantLedgers, CloudTenantLedgersIndex } from "../pages/cloud/tenants/ledgers.tsx";
 import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.tsx";
-import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
+import { CloudTenantLedgersShow, LedgerDocumentsTab, LedgerSharingTab } from "../pages/cloud/tenants/ledgers/show.tsx";
 import { CloudTenantMembers } from "../pages/cloud/tenants/members.tsx";
 import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.tsx";
 import { CloudTenantOverview } from "../pages/cloud/tenants/overview.tsx";
@@ -30,7 +31,6 @@ import { DatabasesShow } from "../pages/databases/show.tsx";
 import { DocsShow } from "../pages/docs/show.tsx";
 import { Index, indexLoader } from "../pages/index.tsx";
 import { Login, loginLoader } from "../pages/login.tsx";
-import { Better } from "../pages/better.tsx";
 
 export function App() {
   const ctx = useContext(AppContext);
@@ -54,7 +54,11 @@ export function App() {
             <Route path="ledgers" element={<CloudTenantLedgers />}>
               <Route index element={<CloudTenantLedgersIndex />} />
               <Route path="new" element={<CloudTenantLedgersNew />} />
-              <Route path=":ledgerId" element={<CloudTenantLedgersShow />} />
+              <Route path=":ledgerId" element={<CloudTenantLedgersShow />}>
+                <Route index element={<Navigate to="documents" replace />} />
+                <Route path="documents" element={<LedgerDocumentsTab />} />
+                <Route path="sharing" element={<LedgerSharingTab />} />
+              </Route>
             </Route>
           </Route>
           <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
