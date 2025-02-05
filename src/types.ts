@@ -32,26 +32,28 @@ export function isFalsy(value: unknown): value is Falsy {
   return value === false && value === null && value === undefined;
 }
 
-export enum PARAM {
-  SUFFIX = "suffix",
-  URL_GEN = "urlGen", // "urlGen" | "default"
-  STORE_KEY = "storekey",
-  STORE = "store",
-  KEY = "key",
-  INDEX = "index",
-  NAME = "name",
-  VERSION = "version",
-  RUNTIME = "runtime", // "node" | "deno" | "browser"
-  FRAG_SIZE = "fragSize",
-  IV_VERIFY = "ivVerify",
-  IV_HASH = "ivHash",
-  FRAG_FID = "fid",
-  FRAG_OFS = "ofs",
-  FRAG_LEN = "len",
-  FRAG_HEAD = "headerSize",
-  EXTRACTKEY = "extractKey",
+export const PARAM = {
+  SUFFIX: "suffix",
+  URL_GEN: "urlGen", // "urlGen" | "default"
+  STORE_KEY: "storekey",
+  STORE: "store",
+  KEY: "key",
+  INDEX: "index",
+  NAME: "name",
+  VERSION: "version",
+  RUNTIME: "runtime", // "node" | "deno" | "browser"
+  FRAG_SIZE: "fragSize",
+  IV_VERIFY: "ivVerify",
+  IV_HASH: "ivHash",
+  FRAG_FID: "fid",
+  FRAG_OFS: "ofs",
+  FRAG_LEN: "len",
+  FRAG_HEAD: "headerSize",
+  EXTRACTKEY: "extractKey",
+  SELF_REFLECT: "selfReflect", // if no subscribe in Gateway see your own META updates
   // FS = "fs",
-}
+};
+export type PARAMS = (typeof PARAM)[keyof typeof PARAM];
 
 export function throwFalsy<T>(value: T | Falsy): T {
   if (isFalsy(value)) {

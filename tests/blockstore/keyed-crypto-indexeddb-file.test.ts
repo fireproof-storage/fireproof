@@ -3,6 +3,7 @@ import { runtimeFn, toCryptoRuntime, URI } from "@adviser/cement";
 import { base58btc } from "multiformats/bases/base58";
 import { mockSuperThis } from "../helpers.js";
 import { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
+import { toKeyWithFingerPrint } from "../../src/runtime/key-bag.js";
 
 describe("KeyBag indexeddb and file", () => {
   let url: URI;
@@ -44,18 +45,18 @@ describe("KeyBag indexeddb and file", () => {
     expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
 
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-    const res = await kb.setNamedKey(name, key);
+    const res = await kb.getNamedKey(name, false, key);
     expect(res.isOk()).toBeTruthy();
     expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
 
-    const name2 = "implicit";
+    const name2 = "implicit" + Math.random();
     const created = await kb.getNamedKey(name2);
     expect(created.isOk()).toBeTruthy();
 
     expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
 
-    let diskBag: rt.kb.KeyItem;
-    let diskBag2: rt.kb.KeyItem;
+    let diskBag: rt.kb.KeysItem;
+    let diskBag2: rt.kb.KeysItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
@@ -66,26 +67,32 @@ describe("KeyBag indexeddb and file", () => {
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
       });
     }
-    expect(await kb.toKeyWithFingerPrint(diskBag.key)).toEqual(res);
-    expect(await kb.toKeyWithFingerPrint(diskBag2.key)).toEqual(created);
+    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
+      (await res.Ok().get())?.fingerPrint,
+    );
+    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
+      (await created.Ok().get())?.fingerPrint,
+    );
     const algo = {
       name: "AES-GCM",
       iv: kb.rt.crypto.randomBytes(12),
       tagLength: 128,
     };
     const data = kb.rt.crypto.randomBytes(122);
-    expect(await kb.rt.crypto.encrypt(algo, res.Ok().key, data)).toEqual(await kb.rt.crypto.encrypt(algo, created.Ok().key, data));
-    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag.key), data)).toEqual(
-      await kb.rt.crypto.encrypt(algo, created.Ok().key, data),
+    const rkc = (await res.Ok().get()) as bs.KeyWithFingerPrint;
+    const ckc = (await created.Ok().get()) as bs.KeyWithFingerPrint;
+    expect(await kb.rt.crypto.encrypt(algo, rkc.key, data)).toEqual(await kb.rt.crypto.encrypt(algo, ckc.key, data));
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.keys)[0].key), data)).toEqual(
+      await kb.rt.crypto.encrypt(algo, ckc.key, data),
     );
-    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag2.key), data)).toEqual(
-      await kb.rt.crypto.encrypt(algo, created.Ok().key, data),
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag2.keys)[0].key), data)).toEqual(
+      await kb.rt.crypto.encrypt(algo, ckc.key, data),
     );
   });
 });
