@@ -24,7 +24,7 @@ export function TenantSelector() {
     <div className="p-4">
       <div className="flex flex-col gap-2">
         <select
-          className="w-full py-1.5  bg-fp-bg-00 border border-fp-dec-00 rounded-fp-s text-14 text-fp-p placeholder-fp-dec-01 focus:placeholder-transparent focus:outline-none focus:ring-1 focus:ring-fp-dec-01 focus:border-transparent"
+          className="w-full px-4 py-1.5  bg-fp-bg-00 border border-fp-dec-00 rounded-fp-s text-14 text-fp-p placeholder-fp-dec-01 focus:placeholder-transparent focus:outline-none focus:ring-1 focus:ring-fp-dec-01 focus:border-transparent"
           onChange={(e) => {
             if (e.target.value === "new") {
               navigate("/fp/cloud/tenants/new");
@@ -38,7 +38,7 @@ export function TenantSelector() {
           value={tenantId || listTenants.tenants[0]?.tenantId}
         >
           {listTenants.tenants.map((tenant) => (
-            <option key={tenant.tenantId} value={tenant.tenantId}>
+            <option className="px-4" key={tenant.tenantId} value={tenant.tenantId}>
               {tenantName(tenant)}
             </option>
           ))}
