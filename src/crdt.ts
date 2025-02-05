@@ -38,7 +38,7 @@ import type {
 import { index, type Index } from "./indexer.js";
 import { CRDTClock } from "./crdt-clock.js";
 // import { blockstoreFactory } from "./blockstore/transaction.js";
-import { ensureLogger } from "./utils.js";
+import { arrayFromAsyncIterable, ensureLogger } from "./utils.js";
 import { LedgerOpts } from "./ledger.js";
 
 export interface HasCRDT<T extends DocTypes> {
@@ -169,7 +169,7 @@ export class CRDT<T extends DocTypes> {
     return {
       snapshot: (sinceOpts) => this.#snapshot<T>(sinceOpts, { waitFor }),
       subscribe: (callback) => this.#subscribe<T>(callback),
-      toArray: (sinceOpts) => Array.fromAsync(this.#snapshot<T>(sinceOpts, { waitFor })),
+      toArray: (sinceOpts) => arrayFromAsyncIterable(this.#snapshot<T>(sinceOpts, { waitFor })),
 
       live(opts?: { since?: ClockHead } & ChangesOptions) {
         return stream<T>({ ...opts, futureOnly: false }, { waitFor });

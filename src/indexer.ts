@@ -34,7 +34,7 @@ import {
   CompareKey,
 } from "./indexer-helpers.js";
 import { CRDT, HasCRDT } from "./crdt.js";
-import { ensureLogger } from "./utils.js";
+import { arrayFromAsyncIterable, ensureLogger } from "./utils.js";
 import { Logger } from "@adviser/cement";
 import { docUpdateToDocWithId } from "./crdt-helpers.js";
 
@@ -185,7 +185,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     return {
       snapshot: (sinceOpts) => this.#snapshot(qryOpts, sinceOpts, { waitFor }),
       subscribe: (callback) => this.#subscribe(callback),
-      toArray: (sinceOpts) => Array.fromAsync(this.#snapshot(qryOpts, sinceOpts, { waitFor })),
+      toArray: (sinceOpts) => arrayFromAsyncIterable(this.#snapshot(qryOpts, sinceOpts, { waitFor })),
 
       live(opts?: { since?: ClockHead }) {
         return stream(qryOpts, { futureOnly: false, since: opts?.since }, { waitFor });
