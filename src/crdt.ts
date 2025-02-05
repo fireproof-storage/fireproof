@@ -169,6 +169,8 @@ export class CRDT<T extends DocTypes> {
     return {
       snapshot: (sinceOpts) => this.#snapshot<T>(sinceOpts, { waitFor }),
       subscribe: (callback) => this.#subscribe<T>(callback),
+      toArray: (sinceOpts) => Array.fromAsync(this.#snapshot<T>(sinceOpts, { waitFor })),
+
       live(opts?: { since?: ClockHead } & ChangesOptions) {
         return stream<T>({ ...opts, futureOnly: false }, { waitFor });
       },
