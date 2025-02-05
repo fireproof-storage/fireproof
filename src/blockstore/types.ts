@@ -140,9 +140,10 @@ export interface KeyUpsertResult {
 }
 
 export interface KeysByFingerprint {
+  readonly id: string;
   readonly name: string;
   get(fingerPrint?: Uint8Array | string): Promise<KeyWithFingerPrint | undefined>;
-  upsert(key: string | Uint8Array, def: boolean): Promise<Result<KeyUpsertResult>>;
+  upsert(key: string | Uint8Array, def?: boolean): Promise<Result<KeyUpsertResult>>;
   asKeysItem(): Promise<KeysItem>;
 }
 

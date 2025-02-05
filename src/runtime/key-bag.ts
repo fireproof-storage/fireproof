@@ -85,6 +85,7 @@ export class keysByFingerprint implements KeysByFingerprint {
   readonly keys: Record<string, keyWithFingerPrint> = {};
   readonly keybag: KeyBag;
   readonly name: string;
+  readonly id: string;
 
   static async from(keyBag: KeyBag, named: KeysItem): Promise<KeysByFingerprint> {
     const kbf = new keysByFingerprint(keyBag, named.name);
@@ -114,29 +115,30 @@ export class keysByFingerprint implements KeysByFingerprint {
   constructor(keyBag: KeyBag, name: string) {
     this.keybag = keyBag;
     this.name = name;
+    this.id = keyBag.rt.sthis.nextId(4).str;
   }
 
   async get(fingerPrint?: Uint8Array | string): Promise<KeyWithFingerPrint | undefined> {
     if (fingerPrint instanceof Uint8Array) {
       fingerPrint = base58btc.encode(fingerPrint);
+    } else {
+      fingerPrint = fingerPrint || "*";
     }
-    if (fingerPrint) {
-      return this.keys[fingerPrint];
+    const found = this.keys[fingerPrint];
+    if (found) {
+      return found;
     }
-    const def = this.keys["*"];
-    if (!def) {
-      throw this.keybag.logger.Error().Msg("KeyBag: keysByFingerprint: no default").AsError();
-    }
-    return def;
+    throw this.keybag.logger.Error().Msg("KeyBag: keysByFingerprint: no default").AsError();
   }
 
-  async upsert(materialStrOrUint8: string | Uint8Array, def: boolean, keyBagAction = true): Promise<Result<KeyUpsertResult>> {
+  async upsert(materialStrOrUint8: string | Uint8Array, def?: boolean, keyBagAction = true): Promise<Result<KeyUpsertResult>> {
+    def = !!def;
     const rKfp = await toKeyWithFingerPrint(this.keybag, materialStrOrUint8);
     if (rKfp.isErr()) {
       return Result.Err(rKfp);
     }
     const kfp = rKfp.Ok();
-    const found = this.keys[kfp.fingerPrint];
+    let found = this.keys[kfp.fingerPrint];
     if (found) {
       if (found.default === def) {
         return Result.Ok({
@@ -144,23 +146,24 @@ export class keysByFingerprint implements KeysByFingerprint {
           kfp: found,
         });
       }
+    } else {
+      found = new keyWithFingerPrint(kfp, materialStrOrUint8, def);
     }
     if (def) {
       for (const i of Object.values(this.keys)) {
         (i as { default: boolean }).default = false;
       }
     }
-    const out = new keyWithFingerPrint(kfp, materialStrOrUint8, def);
-    this.keys[kfp.fingerPrint] = out;
+    this.keys[kfp.fingerPrint] = found;
     if (def) {
-      this.keys["*"] = out;
+      this.keys["*"] = found;
     }
     if (keyBagAction) {
       this.keybag._upsertNamedKey(this);
     }
     return Result.Ok({
       modified: keyBagAction && true,
-      kfp: out,
+      kfp: found,
     });
   }
 
@@ -305,6 +308,7 @@ export class KeyBag {
     return this._seq.add(async () => {
       const rKbf = await this._getNamedKey(ksi.name, true);
       if (rKbf.isErr()) {
+        this.logger.Error().Err(rKbf).Str("name", ksi.name).Msg("_upsertNamedKey: getNamedKey failed");
         // we updated the cache
         this._namedKeyCache.unget(ksi.name);
       }
