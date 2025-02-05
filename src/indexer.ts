@@ -185,6 +185,8 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     return {
       snapshot: (sinceOpts) => this.#snapshot(qryOpts, sinceOpts, { waitFor }),
       subscribe: (callback) => this.#subscribe(callback),
+      toArray: (sinceOpts) => Array.fromAsync(this.#snapshot(qryOpts, sinceOpts, { waitFor })),
+
       live(opts?: { since?: ClockHead }) {
         return stream(qryOpts, { futureOnly: false, since: opts?.since }, { waitFor });
       },

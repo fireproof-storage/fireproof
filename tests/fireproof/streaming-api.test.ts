@@ -134,6 +134,11 @@ describe("Streaming API", () => {
     expect((doc as DocType).name).toBe("doc-extra");
   }
 
+  async function testToArray<T extends DocBase>(queryResponse: QueryResponse<T>, amountOfDocs: number) {
+    const arr = await queryResponse.toArray();
+    expect(arr.length).toBe(amountOfDocs);
+  }
+
   //////////////
   // ALL DOCS //
   //////////////
@@ -163,6 +168,10 @@ describe("Streaming API", () => {
 
     it("test `subscribe` method", async () => {
       await testSubscribe(lr.allDocs<DocType>());
+    });
+
+    it("test `toArray` method", async () => {
+      await testToArray(lr.allDocs<DocType>(), AMOUNT_OF_DOCS);
     });
   });
 
@@ -197,6 +206,10 @@ describe("Streaming API", () => {
 
       it("test `subscribe` method", async () => {
         await testSubscribe(lr.query<string, DocType>("name"));
+      });
+
+      it("test `toArray` method", async () => {
+        await testToArray(lr.query<string, DocType>("name"), AMOUNT_OF_DOCS);
       });
     });
 
@@ -238,6 +251,10 @@ describe("Streaming API", () => {
 
       it("test `subscribe` method", async () => {
         await testSubscribe(lr.query<string, DocType>("name"));
+      });
+
+      it("test `toArray` method", async () => {
+        await testToArray(lr.query<string, DocType>("additional"), AMOUNT_OF_ADDITIONAL_DOCS);
       });
     });
   });
