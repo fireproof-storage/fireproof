@@ -1,9 +1,10 @@
 import { Result, URI } from "@adviser/cement";
 import type { Gateway } from "../../blockstore/gateway.js";
-import { FPEnvelopeType, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
+import { FPEnvelopeTypes, type FPEnvelope, type FPEnvelopeMeta } from "../../blockstore/fp-envelope.js";
 import { fpDeserialize, fpSerialize } from "./fp-envelope-serialize.js";
 import type { SerdeGateway, SerdeGatewayCtx, SerdeGetResult } from "../../blockstore/serde-gateway.js";
 import type { DbMetaEvent } from "../../blockstore/types.js";
+import { PARAM } from "../../types.js";
 
 export class DefSerdeGateway implements SerdeGateway {
   // abstract readonly storeType: StoreType;
@@ -32,10 +33,11 @@ export class DefSerdeGateway implements SerdeGateway {
     if (rUint8.isErr()) return rUint8;
     const ret = this.gw.put(url, rUint8.Ok(), sthis);
 
-    if (env.type === FPEnvelopeType.META) {
-      if (this.subscribeFn.has(url.toString())) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.subscribeFn.get(url.toString())!(rUint8.Ok());
+    if (env.type === FPEnvelopeTypes.META) {
+      const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
+      const subFn = this.subscribeFn.get(urlWithoutKey);
+      if (subFn) {
+        await subFn(rUint8.Ok());
       }
     }
     return ret;
@@ -62,8 +64,14 @@ export class DefSerdeGateway implements SerdeGateway {
       });
     }
     if (!this.gw.subscribe) {
+      if (!url.hasParam(PARAM.SELF_REFLECT)) {
+        return Result.Ok(() => {
+          /* noop */
+        });
+      }
       // memory leak possible
-      this.subscribeFn.set(url.toString(), rawCallback);
+      const urlWithoutKey = url.build().delParam(PARAM.KEY).delParam(PARAM.SELF_REFLECT).toString();
+      this.subscribeFn.set(urlWithoutKey, rawCallback);
       return Result.Ok(() => {
         this.subscribeFn.delete(url.toString());
       });

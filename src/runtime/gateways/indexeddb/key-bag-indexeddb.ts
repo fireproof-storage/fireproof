@@ -31,7 +31,7 @@ export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
     });
   }
 
-  async get(id: string): Promise<rt.kb.KeyItem | undefined> {
+  async get(id: string): Promise<rt.kb.KeysItem | rt.kb.V1StorageKeyItem | undefined> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readonly");
     const keyItem = await tx.objectStore("bag").get(id);
@@ -42,10 +42,10 @@ export class KeyBagProviderIndexedDB implements rt.kb.KeyBagProvider {
     return keyItem;
   }
 
-  async set(id: string, item: rt.kb.KeyItem): Promise<void> {
+  async set(item: rt.kb.KeysItem): Promise<void> {
     const db = await this._prepare();
     const tx = db.transaction(["bag"], "readwrite");
-    await tx.objectStore("bag").put(item, id);
+    await tx.objectStore("bag").put(item, item.name);
     await tx.done;
   }
 }
