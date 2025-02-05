@@ -33,20 +33,20 @@
 /* VARIABLES */
 
 :root {
-  --fp-color-primary: rgba(44,44,44,1);
-  --fp-color-secondary: rgba(44,44,44,1);
-  --fp-color-accent-00: rgba(249,161,0,1);
-  --fp-color-accent-01: rgba(245,135,9,1);
-  --fp-color-accent-02: rgba(241,108,18,1);
-  --fp-color-accent-03: rgba(238,82,28,1);
-  --fp-color-decorative-00:rgba(236,234,234,1);
-  --fp-color-decorative-01: rgba(224,222,222,1);
-  --fp-color-decorative-02: rgba(44,44,44,0.4);
-  --fp-color-background-00: rgba(255,255,255,1);
-  --fp-color-background-01: rgba(245,245,245,1);
-  --fp-color-background-02: rgba(240,240,240,1);
-  --fp-color-red: rgba(200,32,32,1);
-  --fp-color-green: rgba(47,160,94,1);
+  --fp-color-primary: rgba(44, 44, 44, 1);
+  --fp-color-secondary: rgba(44, 44, 44, 1);
+  --fp-color-accent-00: rgba(249, 161, 0, 1);
+  --fp-color-accent-01: rgba(245, 135, 9, 1);
+  --fp-color-accent-02: rgba(241, 108, 18, 1);
+  --fp-color-accent-03: rgba(238, 82, 28, 1);
+  --fp-color-decorative-00: rgba(236, 234, 234, 1);
+  --fp-color-decorative-01: rgba(224, 222, 222, 1);
+  --fp-color-decorative-02: rgba(44, 44, 44, 0.4);
+  --fp-color-background-00: rgba(255, 255, 255, 1);
+  --fp-color-background-01: rgba(245, 245, 245, 1);
+  --fp-color-background-02: rgba(240, 240, 240, 1);
+  --fp-color-red: rgba(200, 32, 32, 1);
+  --fp-color-green: rgba(47, 160, 94, 1);
 
   --font-family-main: "Geist";
   --font-family-body: "Inter Tight";
@@ -54,20 +54,20 @@
 }
 
 .dark {
-  --fp-color-primary: rgba(255,255,255,1);
-  --fp-color-secondary: rgba(255, 255, 255,0.6);
-  --fp-color-accent-00: rgba(255,170,15,1);
-  --fp-color-accent-01: rgba(255,143,15,1);
-  --fp-color-accent-02: rgba(255,113,25,1);
-  --fp-color-accent-03: rgba(255,87,29,1);
-  --fp-color-decorative-00: rgba(48,47,48,1);
-  --fp-color-decorative-01: rgba(65,65,65,1);
-  --fp-color-decorative-02: rgba(255,255,255,0.3);
-  --fp-color-background-00: rgba(23,22,22,1);
-  --fp-color-background-01: rgb(32,31,32,1);
-  --fp-color-background-02: rgb(32,31,32,1);
-  --fp-color-red: rgba(247,75,75,1);
-  --fp-color-green: rgba(40,208,111,1);
+  --fp-color-primary: rgba(255, 255, 255, 1);
+  --fp-color-secondary: rgba(255, 255, 255, 0.6);
+  --fp-color-accent-00: rgba(255, 170, 15, 1);
+  --fp-color-accent-01: rgba(255, 143, 15, 1);
+  --fp-color-accent-02: rgba(255, 113, 25, 1);
+  --fp-color-accent-03: rgba(255, 87, 29, 1);
+  --fp-color-decorative-00: rgba(48, 47, 48, 1);
+  --fp-color-decorative-01: rgba(65, 65, 65, 1);
+  --fp-color-decorative-02: rgba(255, 255, 255, 0.3);
+  --fp-color-background-00: rgba(23, 22, 22, 1);
+  --fp-color-background-01: rgb(32, 31, 32, 1);
+  --fp-color-background-02: rgb(32, 31, 32, 1);
+  --fp-color-red: rgba(247, 75, 75, 1);
+  --fp-color-green: rgba(40, 208, 111, 1);
 }
 
 /* TEXT STYLES */
@@ -128,7 +128,8 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-code, pre {
+code,
+pre {
   font-family: "Geist Mono", monospace;
 }
 
