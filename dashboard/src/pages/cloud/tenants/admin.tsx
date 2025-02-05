@@ -38,8 +38,6 @@ export function CloudTenantAdmin() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-[--foreground] mb-6">Tenant Administration</h1>
-
       <div className="space-y-6">
         {/* Tenant Name Update */}
         <div className="bg-[--muted] shadow sm:rounded-lg">
