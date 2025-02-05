@@ -52,8 +52,8 @@ export default {
         "fp-green": "var(--fp-color-green)",
       },
       padding: {
-        main: '20px',
-        card: '28px',
+        main: "20px",
+        card: "28px",
       },
       borderRadius: {
         "fp-s": "4px",
