@@ -77,9 +77,6 @@ describe("KeyBag", () => {
   it("simple add", async () => {
     const kb = await rt.kb.getKeyBag(sthis, {
       url: url.toString(),
-      crypto: toCryptoRuntime({
-        randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
-      }),
     });
     const name = "setkey" + Math.random();
     expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
@@ -141,7 +138,45 @@ describe("KeyBag", () => {
     );
   });
 
-  it("default key and multiple fingerprints", async () => {
+  it("default key", async () => {
+    const kb = await rt.kb.getKeyBag(sthis, {
+      url: url.build().setParam("extractKey", "_deprecated_internal_api"),
+    });
+    const name = "default-key" + Math.random();
+    const rMyKey = await kb.getNamedKey(name);
+
+    for (let i = 0; i < 10; ++i) {
+      expect(await kb.getNamedKey(name).then((i) => i.Ok().id)).toEqual(rMyKey.Ok().id);
+    }
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(1);
+
+    const myKey = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    expect(myKey.fingerPrint).toMatch(/^z/);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await rMyKey.Ok().upsert((await myKey.extract())!.key);
+    const myKey1 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    expect(myKey.fingerPrint).toEqual(myKey1.fingerPrint);
+
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(1);
+
+    const rMyKey1 = await kb.getNamedKey(name);
+    expect(rMyKey1.Ok()).toEqual(rMyKey.Ok());
+    const res1 = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    expect(res1.isOk()).toBeTruthy();
+
+    const myKey2 = (await rMyKey1.Ok().get()) as KeyWithFingerPrint;
+    expect(myKey.fingerPrint).toEqual(myKey2.fingerPrint);
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(2);
+
+    const res = await rMyKey1.Ok().upsert(kb.rt.crypto.randomBytes(kb.rt.keyLength), true);
+    expect(res.isOk()).toBeTruthy();
+    const myKey3 = (await rMyKey.Ok().get()) as KeyWithFingerPrint;
+    expect(Object.keys((await kb.getNamedKey(name).then((i) => i.Ok().asKeysItem())).keys).length).toBe(3);
+
+    expect(myKey.fingerPrint).not.toEqual(myKey3.fingerPrint);
+  });
+
+  it("default and multiple fingerprints", async () => {
     const kb = await rt.kb.getKeyBag(sthis, {
       url: url.toString(),
       crypto: toCryptoRuntime({
