@@ -2,82 +2,147 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    --background: hsl(36 39% 88%);
-    --foreground: hsl(36 45% 15%);
-    --primary: hsl(36 45% 70%);
-    --primary-foreground: hsl(36 45% 11%);
-    --secondary: hsl(40 35% 77%);
-    --secondary-foreground: hsl(36 45% 25%);
-    --accent: hsl(36 64% 57%);
-    --accent-foreground: hsl(36 72% 17%);
-    --destructive: hsl(0, 83%, 45%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --muted: hsl(36 33% 75%);
-    --muted-foreground: hsl(36 45% 25%);
-    --card: hsl(36 46% 82%);
-    --card-foreground: hsl(36 45% 20%);
-    --popover: hsl(0 0% 100%);
-    --popover-foreground: hsl(240 10% 3.9%);
-    --border: hsl(36 45% 60%);
-    --input: hsl(36 45% 60%);
-    --ring: hsl(36 45% 30%);
-    --radius: 0rem;
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/GeistVF.woff2") format("woff2-variations");
+  font-weight: 600 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  src: url("/fonts/InterTight-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Inter Tight";
+  src: url("/fonts/InterTight-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* VARIABLES */
+
+:root {
+  --fp-color-primary: rgba(44,44,44,1);
+  --fp-color-secondary: rgba(44,44,44,1);
+  --fp-color-accent-00: rgba(249,161,0,1);
+  --fp-color-accent-01: rgba(245,135,9,1);
+  --fp-color-accent-02: rgba(241,108,18,1);
+  --fp-color-accent-03: rgba(238,82,28,1);
+  --fp-color-decorative-00:rgba(236,234,234,1);
+  --fp-color-decorative-01: rgba(224,222,222,1);
+  --fp-color-decorative-02: rgba(44,44,44,0.4);
+  --fp-color-background-00: rgba(255,255,255,1);
+  --fp-color-background-01: rgba(245,245,245,1);
+  --fp-color-background-02: rgba(240,240,240,1);
+  --fp-color-red: rgba(200,32,32,1);
+  --fp-color-green: rgba(47,160,94,1);
+
+  --font-family-main: "Geist";
+  --font-family-body: "Inter Tight";
+  --font-family-mono: "Geist Mono";
+}
+
+.dark {
+  --fp-color-primary: rgba(255,255,255,1);
+  --fp-color-secondary: rgba(255, 255, 255,0.6);
+  --fp-color-accent-00: rgba(255,170,15,1);
+  --fp-color-accent-01: rgba(255,143,15,1);
+  --fp-color-accent-02: rgba(255,113,25,1);
+  --fp-color-accent-03: rgba(255,87,29,1);
+  --fp-color-decorative-00: rgba(48,47,48,1);
+  --fp-color-decorative-01: rgba(65,65,65,1);
+  --fp-color-decorative-02: rgba(255,255,255,0.3);
+  --fp-color-background-00: rgba(23,22,22,1);
+  --fp-color-background-01: rgb(32,31,32,1);
+  --fp-color-background-02: rgb(32,31,32,1);
+  --fp-color-red: rgba(247,75,75,1);
+  --fp-color-green: rgba(40,208,111,1);
+}
+
+/* TEXT STYLES */
+
+@layer utilities {
+  .text-34 {
+    @apply text-xxl leading-xxl font-main font-bold tracking-tighter;
   }
 
-  .dark {
-    --background: rgb(15 23 42);
-    --foreground: hsl(210 40% 98%);
-    --primary: hsl(210 40% 30%);
-    --primary-foreground: hsl(210 40% 98%);
-    --secondary: hsl(210 35% 23%);
-    --secondary-foreground: hsl(210 40% 90%);
-    --accent: hsl(210 64% 43%);
-    --accent-foreground: hsl(210 72% 95%);
-    --destructive: hsl(0, 63%, 55%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --muted: hsl(210 33% 25%);
-    --muted-foreground: hsl(210 40% 75%);
-    --card: hsl(210 46% 18%);
-    --card-foreground: hsl(210 40% 90%);
-    --popover: hsl(210 40% 10%);
-    --popover-foreground: hsl(210 40% 98%);
-    --border: hsl(210 40% 40%);
-    --input: hsl(210 40% 40%);
-    --ring: hsl(210 40% 70%);
+  .text-20 {
+    @apply text-xl leading-xl font-main font-semibold tracking-tight;
+  }
+
+  .text-16 {
+    @apply text-l leading-l font-body font-medium tracking-wide;
+  }
+
+  .text-14-heading {
+    @apply text-m leading-l font-main font-semibold tracking-tight;
+  }
+
+  .text-14 {
+    @apply text-m leading-m font-body font-medium tracking-wide;
+  }
+
+  .text-14-bold {
+    @apply text-m leading-m font-body font-bold tracking-wide;
+  }
+
+  .text-11 {
+    @apply text-xs leading-xs font-main font-semibold tracking-wide uppercase;
+  }
+
+  .text-code {
+    @apply text-s leading-s font-mono font-medium tracking-wide;
   }
 }
 
-@layer base {
-  /* * {
-    @apply border-border;
-  } */
+/* GLOBAL */
 
-  body {
-    @apply bg-[--background] text-[--foreground];
-  }
+:root {
+  background-color: var(--fp-color-background-00);
+}
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    /* @apply font-heading; */
-  }
+/* temporary hack to fix dark highlight.js theme */
+.dark .language-json code,
+.dark .language-javascript code {
+  filter: brightness(2.5) contrast(0.6);
+}
+body {
+  font-family: var(--font-family-body), "Inter", sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  font-size: 14px;
+  color: var(--fp-color-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+code, pre {
+  font-family: "Geist Mono", monospace;
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 0px;
+  height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: var(--muted);
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 5px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-hover);
+  background: var(--fp-color-decorative-01);
+  border-radius: 3px;
+  cursor: grab;
 }

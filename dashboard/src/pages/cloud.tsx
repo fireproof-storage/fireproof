@@ -5,7 +5,6 @@ import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 
 export function Cloud() {
-  // useContext(AppContext).cloud.updateContext();
   return <WithSidebar sideBarComponent={<SidebarCloud />} />;
 }
 
@@ -22,7 +21,6 @@ function SidebarCloud() {
   }
 
   if (!ledgerList.data) {
-    // navigate("/fp/cloud");
     return <div>Not found</div>;
   }
 
@@ -50,7 +48,7 @@ function SidebarCloud() {
               flex items-center rounded-md px-3 py-2 text-sm transition-colors flex-1
               ${
                 (item.id === "home" ? isHomeActive(item.path) : isActive)
-                  ? "active bg-[--accent] text-[--foreground] font-medium"
+                  ? "text-fp-p text-14-bold bg-fp-bg-01"
                   : "text-[--muted-foreground] hover:bg-[--accent] hover:text-[--foreground]"
               }
             `}
@@ -70,7 +68,7 @@ function SidebarCloud() {
       ))}
 
       {/* Ledger List */}
-      <div className="pl-4 mt-2">
+      <div className="grid gap-1">
         {ledgerList.data.ledgers
           .filter((i) => i.tenantId === tenantId)
           .map((ledger) => (
@@ -78,14 +76,11 @@ function SidebarCloud() {
               key={ledger.ledgerId}
               to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledger.ledgerId}`}
               onClick={() => setIsSidebarOpen(false)}
-              className={({ isActive }) => `
-              flex items-center rounded-md px-3 py-1.5 text-sm transition-colors
-              ${
-                isActive
-                  ? "bg-[--accent] text-[--foreground] font-medium"
-                  : "text-[--muted-foreground] hover:bg-[--accent] hover:text-[--foreground]"
+              className={({ isActive }) =>
+                `mb-[4px] block rounded-fp-s pr-[8px] pl-main py-[8px] text-14 hover:bg-fp-bg-01 hover:text-fp-p ${
+                  isActive ? "text-fp-p text-14-bold bg-fp-bg-01" : "text-fp-s"
+                }`
               }
-            `}
             >
               {ledger.name}
             </NavLink>
