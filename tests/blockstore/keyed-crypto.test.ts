@@ -5,6 +5,8 @@ import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import type { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
 import { MockSuperThis, mockSuperThis } from "../helpers.js";
+import { KeyWithFingerPrint } from "../../src/blockstore/types.js";
+import { toKeyWithFingerPrint } from "../../src/runtime/key-bag.js";
 
 describe("KeyBag", () => {
   let url: URI;
@@ -45,11 +47,19 @@ describe("KeyBag", () => {
     const kb = await rt.kb.getKeyBag(sthis);
     const key = kb.rt.crypto.randomBytes(kb.rt.keyLength);
     const keyStr = base58btc.encode(key);
-    const res = await kb.setNamedKey("extract.test", keyStr);
+    const keyName = "extract.test" + Math.random();
+    const res = await kb.getNamedKey(keyName, false, keyStr);
     expect(res.isOk()).toBeTruthy();
-    const gkb = await kb.getNamedExtractableKey("extract.test", true);
+    const gkb = await kb.getNamedKey(keyName, true);
     expect(gkb.isOk()).toBeTruthy();
-    expect(await gkb.Ok().extract()).toEqual({
+
+    expect(
+      await gkb
+        .Ok()
+        .get()
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        .then((i) => i!.extract()),
+    ).toEqual({
       key,
       keyStr,
     });
@@ -75,18 +85,18 @@ describe("KeyBag", () => {
     expect((await kb.getNamedKey(name, true)).isErr()).toBeTruthy();
 
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-    const res = await kb.setNamedKey(name, key);
+    const res = await kb.getNamedKey(name, false, key);
     expect(res.isOk()).toBeTruthy();
     expect((await kb.getNamedKey(name, true)).Ok()).toEqual(res.Ok());
 
-    const name2 = "implicit";
+    const name2 = "implicit" + Math.random();
     const created = await kb.getNamedKey(name2);
     expect(created.isOk()).toBeTruthy();
 
     expect((await kb.getNamedKey(name2)).Ok()).toEqual(created.Ok());
 
-    let diskBag: rt.kb.KeyItem;
-    let diskBag2: rt.kb.KeyItem;
+    let diskBag: rt.kb.KeysItem;
+    let diskBag2: rt.kb.KeysItem;
     const provider = await kb.rt.getBagProvider();
     if (runtimeFn().isBrowser) {
       const p = provider as KeyBagProviderIndexedDB;
@@ -100,27 +110,87 @@ describe("KeyBag", () => {
       const { sysFS } = await p._prepare(name);
 
       diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
       });
       diskBag2 = await sysFS.readfile((await p._prepare(name2)).fName).then((data) => {
-        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeyItem;
+        return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
       });
     }
-    expect(await kb.toKeyWithFingerPrint(diskBag.key)).toEqual(res);
-    expect(await kb.toKeyWithFingerPrint(diskBag2.key)).toEqual(created);
+    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag.keys)[0].key)).Ok().fingerPrint).toEqual(
+      (await res.Ok().get())?.fingerPrint,
+    );
+    expect((await toKeyWithFingerPrint(kb, Object.values(diskBag2.keys)[0].key)).Ok().fingerPrint).toEqual(
+      (await created.Ok().get())?.fingerPrint,
+    );
     const algo = {
       name: "AES-GCM",
       iv: kb.rt.crypto.randomBytes(12),
       tagLength: 128,
     };
     const data = kb.rt.crypto.randomBytes(122);
-    expect(await kb.rt.crypto.encrypt(algo, res.Ok().key, data)).toEqual(await kb.rt.crypto.encrypt(algo, created.Ok().key, data));
-    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag.key), data)).toEqual(
-      await kb.rt.crypto.encrypt(algo, created.Ok().key, data),
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    expect(await kb.rt.crypto.encrypt(algo, (await res.Ok().get())!.key, data))
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      .toEqual(await kb.rt.crypto.encrypt(algo, (await created.Ok().get())!.key, data));
+    const kf = (await created.Ok().get()) as KeyWithFingerPrint;
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag.keys)[0].key), data)).toEqual(
+      await kb.rt.crypto.encrypt(algo, kf.key, data),
     );
-    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(diskBag2.key), data)).toEqual(
-      await kb.rt.crypto.encrypt(algo, created.Ok().key, data),
+    expect(await kb.rt.crypto.encrypt(algo, await kb.subtleKey(Object.values(diskBag2.keys)[0].key), data)).toEqual(
+      await kb.rt.crypto.encrypt(algo, kf.key, data),
     );
+  });
+
+  it("default key and multiple fingerprints", async () => {
+    const kb = await rt.kb.getKeyBag(sthis, {
+      url: url.toString(),
+      crypto: toCryptoRuntime({
+        randomBytes: (size) => new Uint8Array(size).map((_, i) => i),
+      }),
+    });
+    const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+    const name = "default-key" + Math.random();
+    const fpr = (await toKeyWithFingerPrint(kb, key)).Ok().fingerPrint;
+    const rMyKey = await kb.getNamedKey(name, false, key);
+    expect(rMyKey.isOk()).toBeTruthy();
+    const myKey = rMyKey.Ok();
+
+    const rUpsert1 = await myKey.upsert(key, true);
+    expect(rUpsert1.Ok().modified).toBeFalsy();
+
+    expect((await myKey.get())?.fingerPrint).toEqual(fpr);
+    expect((await myKey.get(fpr))?.fingerPrint).toEqual(fpr);
+
+    const keys = [{ key, fpr }];
+    for (let i = 0; i < 10; ++i) {
+      const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
+      const fpr = (await toKeyWithFingerPrint(kb, key)).Ok().fingerPrint;
+      keys.push({ key, fpr });
+      const rUpsert = await myKey.upsert(key, true);
+      expect(rUpsert.Ok().modified).toBeTruthy();
+      for (const { fpr } of keys) {
+        expect((await myKey.get(fpr))?.fingerPrint).toEqual(fpr);
+      }
+      expect((await myKey.get())?.fingerPrint).toEqual(fpr);
+    }
+    await kb.flush();
+    const provider = await kb.rt.getBagProvider();
+    let diskBag: rt.kb.KeysItem;
+    if (!("_prepare" in provider)) {
+      diskBag = (await provider.get(name)) as rt.kb.KeysItem;
+    } else {
+      if (runtimeFn().isBrowser) {
+        const p = provider as KeyBagProviderIndexedDB;
+        diskBag = await p._prepare().then((db) => db.get("bag", name));
+      } else {
+        const p = provider as rt.gw.file.KeyBagProviderFile;
+        const { sysFS } = await p._prepare(name);
+        diskBag = await sysFS.readfile((await p._prepare(name)).fName).then((data) => {
+          return JSON.parse(sthis.txt.decode(data)) as rt.kb.KeysItem;
+        });
+      }
+    }
+    expect(Object.values(diskBag.keys).length).toEqual(keys.length);
   });
 });
 
@@ -184,7 +254,7 @@ describe("KeyedCryptoStore", () => {
     ]) {
       const store = await pstore; // await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
-      expect(kc.constructor.name).toBe("keyedCrypto");
+      expect(kc.constructor.name).toBe("cryptoAction");
       // expect(kc.isEncrypting).toBe(true);
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(`@test:${store.url().getParam(PARAM.STORE)}@`);
     }
@@ -192,7 +262,7 @@ describe("KeyedCryptoStore", () => {
 
   it("key ref keybag", async () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-    const genKey = await kb.setNamedKey("@heute@", key);
+    const genKey = await kb.getNamedKey("@heute@", false, key);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "@heute@").URI();
     const strt = bs.toStoreRuntime(sthis);
     for (const pstore of [
@@ -204,13 +274,14 @@ describe("KeyedCryptoStore", () => {
       // await store.start();
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(`@heute@`);
       const kc = await store.keyedCrypto();
-      expect(kc.constructor.name).toBe("keyedCrypto");
+      expect(kc.constructor.name).toBe("cryptoAction");
       const testData = kb.rt.crypto.randomBytes(1024);
       const iv = kb.rt.crypto.randomBytes(12);
-      const blk = await kc._encrypt({ bytes: testData, iv });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const blk = await kc._encrypt({ bytes: testData, key: (await kc.key.get())!.key, iv });
       expect(blk).not.toEqual(testData);
-      const fpkey = genKey.Ok();
-      expect(fpkey.fingerPrint).toEqual(await kc.fingerPrint());
+      const fpkey = (await genKey.Ok().get()) as KeyWithFingerPrint;
+      expect(fpkey.fingerPrint).toEqual(fpkey.fingerPrint);
       const dec = new Uint8Array(await kc.crypto.decrypt(kc.algo(iv), fpkey.key, blk));
       expect(dec).toEqual(testData);
     }
@@ -230,12 +301,13 @@ describe("KeyedCryptoStore", () => {
       // await store.start();
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(key);
       const kc = await store.keyedCrypto();
-      expect(kc.constructor.name).toBe("keyedCrypto");
+      expect(kc.constructor.name).toBe("cryptoAction");
       const testData = kb.rt.crypto.randomBytes(1024);
       const iv = kb.rt.crypto.randomBytes(12);
-      const blk = await kc._encrypt({ bytes: testData, iv });
+      const ks = (await kc.key.get()) as KeyWithFingerPrint;
+      const blk = await kc._encrypt({ bytes: testData, key: ks.key, iv });
       expect(blk).not.toEqual(testData);
-      const dec = await kc._decrypt({ bytes: blk, iv });
+      const dec = await kc._decrypt({ bytes: blk, key: ks.key, iv });
       expect(dec).toEqual(testData);
     }
   });
@@ -243,7 +315,7 @@ describe("KeyedCryptoStore", () => {
 
 describe("KeyedCrypto", () => {
   let kb: rt.kb.KeyBag;
-  let kycr: bs.KeyedCrypto;
+  let kycr: bs.CryptoAction;
   let keyStr: string;
   const sthis = ensureSuperThis();
   beforeEach(async () => {
@@ -266,7 +338,8 @@ describe("KeyedCrypto", () => {
     const blk = (await codec.encode(testData)) as Uint8Array;
     const myDec = await rt.mf.block.decode<bs.IvKeyIdData, number, number>({ bytes: blk, hasher, codec: dagCodec });
     expect(myDec.value.iv).toEqual(iv);
-    expect(base58btc.encode(myDec.value.keyId)).toEqual(await kycr.fingerPrint());
+    const kc = (await kycr.key.get()) as KeyWithFingerPrint;
+    expect(base58btc.encode(myDec.value.keyId)).toEqual(kc.fingerPrint);
     const dec = await codec.decode(blk);
     expect(dec).toEqual(testData);
   });
