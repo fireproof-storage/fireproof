@@ -15,6 +15,7 @@ import {
   fireproof,
   Database,
   isDatabase,
+  PARAM,
 } from "@fireproof/core";
 import { getDefaultURI } from "../../src/blockstore/register-store-protocol.js";
 import { URI } from "@adviser/cement";
@@ -142,6 +143,14 @@ describe("database fullconfig", () => {
         // wal: `${base}/wal?taste=${taste}`,
       },
     });
+
+    const carStore = await db.ledger.crdt.blockstore.loader?.carStore();
+    expect(carStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
+    const metaStore = await db.ledger.crdt.blockstore.loader?.metaStore();
+    expect(metaStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
+    const walStore = await db.ledger.crdt.blockstore.loader?.WALStore();
+    expect(walStore.url().getParam(PARAM.NAME)).toBe("my-funky-name");
+
     expect(db).toBeTruthy();
     expect(db.name).toBe("my-funky-name");
     await db.put({ _id: "test", foo: "bar" });
