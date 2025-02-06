@@ -1,6 +1,9 @@
 import { Outlet, useParams } from "react-router-dom";
 import { TabNavigation } from "../../../../components/TabNavigation.tsx";
 
+/**
+ * Main component for displaying ledger details with tabbed navigation
+ */
 export function CloudTenantLedgersShow() {
   const { ledgerId } = useParams();
 
@@ -17,25 +20,6 @@ export function CloudTenantLedgersShow() {
           <Outlet />
         </div>
       </div>
-    </div>
-  );
-}
-
-// Move these to their own route components
-export function LedgerDocumentsTab() {
-  const { ledgerId } = useParams();
-  return (
-    <div>
-      <p className="text-[--muted-foreground]">Manage documents for ledger {ledgerId} here.</p>
-    </div>
-  );
-}
-
-export function LedgerSharingTab() {
-  const { ledgerId } = useParams();
-  return (
-    <div>
-      <p className="text-[--muted-foreground]">Control who has access to your ledger.</p>
     </div>
   );
 }
