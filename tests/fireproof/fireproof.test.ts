@@ -17,7 +17,6 @@ import {
   isDatabase,
   PARAM,
 } from "@fireproof/core";
-import { getDefaultURI } from "../../src/blockstore/register-store-protocol.js";
 import { URI } from "@adviser/cement";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
@@ -125,7 +124,7 @@ describe("database fullconfig", () => {
     if (url) {
       protocol = URI.from(url).protocol;
     }
-    const base = getDefaultURI(sthis, protocol);
+    const base = bs.getDefaultURI(sthis, protocol);
     const db = fireproof("my-funky-name", {
       storeUrls: {
         base: base,
