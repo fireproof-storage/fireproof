@@ -42,7 +42,7 @@ export class KeyBagProviderFile implements KeyBagProvider {
       if (isNotFoundError(e)) {
         return undefined;
       }
-      throw this.logger.Error().Err(e).Str("file", ctx.dirName).Msg("read bag failed").AsError();
+      throw this.logger.Error().Err(e).Any("file", ctx).Msg("read bag failed").AsError();
     }
   }
 

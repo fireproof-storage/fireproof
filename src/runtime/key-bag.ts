@@ -128,7 +128,12 @@ export class keysByFingerprint implements KeysByFingerprint {
     if (found) {
       return found;
     }
-    throw this.keybag.logger.Error().Msg("KeyBag: keysByFingerprint: no default").AsError();
+    throw this.keybag.logger
+      .Error()
+      .Str("fpr", fingerPrint)
+      .Any("fprs", Object.keys(this.keys))
+      .Msg("keysByFingerprint: not found")
+      .AsError();
   }
 
   async upsert(materialStrOrUint8: string | Uint8Array, def?: boolean, keyBagAction = true): Promise<Result<KeyUpsertResult>> {
@@ -235,7 +240,7 @@ export class KeyBag {
       const keyName = `@${keyFactory()}@`;
       const ret = await this.getNamedKey(keyName);
       if (ret.isErr()) {
-        return ret as unknown as Result<URI>;
+        return Result.Err(ret);
       }
       const urb = url.build().setParam(PARAM.STORE_KEY, keyName);
       return Result.Ok(urb.URI());
@@ -243,7 +248,7 @@ export class KeyBag {
     if (storeKey.startsWith("@") && storeKey.endsWith("@")) {
       const ret = await this.getNamedKey(storeKey);
       if (ret.isErr()) {
-        return ret as unknown as Result<URI>;
+        return Result.Err(ret);
       }
     }
     return Result.Ok(url);
