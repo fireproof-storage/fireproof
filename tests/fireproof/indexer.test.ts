@@ -291,6 +291,7 @@ describe("basic Index upon cold start", function () {
     const logger = sthis.logger.With().Module("IndexerTest").Logger();
     logger.Debug().Msg("enter beforeEach");
     dbOpts = {
+      name: "test-indexer-cold",
       writeQueue: defaultWriteQueueOpts({}),
       keyBag: rt.kb.defaultKeyBagOpts(sthis),
       storeUrls: toStoreURIRuntime(sthis, "test-indexer-cold"),
