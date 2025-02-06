@@ -565,19 +565,19 @@ describe("StoreURIRuntime", () => {
     });
     // keyConfigOpts(sthis: SuperThis, name: string, opts?: ConfigOpts): string {
   });
-  it("no name toStoreURIRuntime", () => {
-    expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis)))).toEqual({
+  it("no name toStoreURIRuntime(not more)", () => {
+    expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "gogo")))).toEqual({
       data: {
-        data: "my://bla/storage?name=storage&store=data&storekey=%40storage-data%40&suffix=.car&urlGen=fromEnv",
-        file: "my://bla/storage?name=storage&store=data&storekey=%40storage-data%40&urlGen=fromEnv",
-        meta: "my://bla/storage?name=storage&store=meta&storekey=%40storage-meta%40&urlGen=fromEnv",
-        wal: "my://bla/storage?name=storage&store=wal&storekey=%40storage-wal%40&urlGen=fromEnv",
+        data: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&urlGen=fromEnv",
+        meta: "my://bla/storage?name=gogo&store=meta&storekey=%40gogo-meta%40&urlGen=fromEnv",
+        wal: "my://bla/storage?name=gogo&store=wal&storekey=%40gogo-wal%40&urlGen=fromEnv",
       },
       idx: {
-        data: "my://bla/storage?index=idx&name=storage&store=data&storekey=%40storage-data-idx%40&suffix=.car&urlGen=fromEnv",
-        file: "my://bla/storage?index=idx&name=storage&store=data&storekey=%40storage-data-idx%40&urlGen=fromEnv",
-        meta: "my://bla/storage?index=idx&name=storage&store=meta&storekey=%40storage-meta-idx%40&urlGen=fromEnv",
-        wal: "my://bla/storage?index=idx&name=storage&store=wal&storekey=%40storage-wal-idx%40&urlGen=fromEnv",
+        data: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&suffix=.car&urlGen=fromEnv",
+        file: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&urlGen=fromEnv",
+        meta: "my://bla/storage?index=idx&name=gogo&store=meta&storekey=%40gogo-meta-idx%40&urlGen=fromEnv",
+        wal: "my://bla/storage?index=idx&name=gogo&store=wal&storekey=%40gogo-wal-idx%40&urlGen=fromEnv",
       },
     });
   });
@@ -603,13 +603,13 @@ describe("StoreURIRuntime", () => {
       data: {
         data: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40&suffix=.car",
         file: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40",
-        meta: "my://storage-meta?name=storage-meta&store=meta&storekey=%40storage-meta-meta%40",
+        meta: "my://storage-meta?name=xxx&store=meta&storekey=%40xxx-meta%40",
         wal: "my://storage-base?name=xxx&store=wal&storekey=%40xxx-wal%40",
       },
       idx: {
         data: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40&suffix=.car",
         file: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40",
-        meta: "my://storage-idx-meta?index=idx&name=storage-idx-meta&store=meta&storekey=%40storage-idx-meta-meta-idx%40",
+        meta: "my://storage-idx-meta?index=idx&name=xxx&store=meta&storekey=%40xxx-meta-idx%40",
         wal: "my://storage-base?index=idx&name=xxx&store=wal&storekey=%40xxx-wal-idx%40",
       },
     });
