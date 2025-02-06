@@ -40,7 +40,7 @@ export function isLedger(db: unknown): db is Ledger {
   return db instanceof LedgerImpl || db instanceof LedgerShell;
 }
 
-export function LedgerFactory(name: string | undefined, opts?: ConfigOpts): Ledger {
+export function LedgerFactory(name: string, opts?: ConfigOpts): Ledger {
   const sthis = ensureSuperThis(opts);
   return new LedgerShell(
     ledgers.get(keyConfigOpts(sthis, name, opts)).once((key) => {
@@ -136,7 +136,8 @@ class LedgerImpl implements Ledger {
   readonly context = new Context();
 
   get name(): string {
-    return this.opts.storeUrls.data.data.getParam(PARAM.NAME) ?? "default";
+    return this.opts.name;
+    // this.opts.storeUrls.data.data.getParam(PARAM.NAME) ?? "default";
   }
 
   addShell(shell: LedgerShell) {
