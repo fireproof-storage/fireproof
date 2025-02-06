@@ -490,7 +490,7 @@ export interface WriteQueue<T extends DocUpdate<S>, S extends DocTypes = DocType
 }
 
 export interface LedgerOpts {
-  readonly name?: string;
+  readonly name: string;
   // readonly public?: boolean;
   readonly meta?: DbMeta;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;

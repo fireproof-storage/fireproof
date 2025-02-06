@@ -16,6 +16,8 @@ import {
   Database,
   isDatabase,
 } from "@fireproof/core";
+import { getDefaultURI } from "../../src/blockstore/register-store-protocol.js";
+import { URI } from "@adviser/cement";
 
 export function carLogIncludesGroup(list: bs.AnyLink[], cid: CID) {
   return list.some((c) => c.equals(cid));
@@ -111,6 +113,39 @@ describe("public API", function () {
     expect(query.rows).toBeTruthy();
     expect(query.rows.length).toBe(1);
     expect(query.rows[0].key).toBe("bar");
+  });
+});
+
+describe("database fullconfig", () => {
+  const sthis = ensureSuperThis();
+  it("have the right name", async () => {
+    let protocol: string | undefined;
+    const url = sthis.env.get("FP_STORAGE_URL");
+    if (url) {
+      protocol = URI.from(url).protocol;
+    }
+    const base = getDefaultURI(sthis, protocol);
+    const db = fireproof("my-funky-name", {
+      storeUrls: {
+        base: base,
+        // meta: `${base}/meta?taste=${taste}`,
+        data: {
+          meta: base.build().pathname("dist/full/meta"),
+          data: base.build().pathname("dist/full/data"),
+          wal: base.build().pathname("dist/full/wal"),
+        },
+        idx: {
+          meta: base.build().pathname("dist/full/idx-meta"),
+          data: base.build().pathname("dist/full/idx-data"),
+          wal: base.build().pathname("dist/full/idx-wal"),
+        },
+        // wal: `${base}/wal?taste=${taste}`,
+      },
+    });
+    expect(db).toBeTruthy();
+    expect(db.name).toBe("my-funky-name");
+    await db.put({ _id: "test", foo: "bar" });
+    expect(db.name).toBe("my-funky-name");
   });
 });
 
