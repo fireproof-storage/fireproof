@@ -125,6 +125,7 @@ export abstract class BaseStoreImpl {
       storeKeyName.push(this.storeType);
       return storeKeyName.join(":");
     });
+
     if (skRes.isErr()) {
       return skRes as Result<URI>;
     }
