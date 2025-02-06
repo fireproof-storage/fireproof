@@ -15,8 +15,11 @@ import CloudIndex from "../pages/cloud/index.tsx";
 import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
 import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
 import { CloudTenantLedgers, CloudTenantLedgersIndex } from "../pages/cloud/tenants/ledgers.tsx";
+import { LedgerDocuments } from "../pages/cloud/tenants/ledgers/documents.tsx";
+import { NewLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/new.tsx";
 import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.tsx";
-import { CloudTenantLedgersShow, LedgerDocumentsTab, LedgerSharingTab } from "../pages/cloud/tenants/ledgers/show.tsx";
+import { LedgerSharing } from "../pages/cloud/tenants/ledgers/sharing.tsx";
+import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
 import { CloudTenantMembers } from "../pages/cloud/tenants/members.tsx";
 import { CloudNew, newCloudAction } from "../pages/cloud/tenants/new.tsx";
 import { CloudTenantOverview } from "../pages/cloud/tenants/overview.tsx";
@@ -56,8 +59,11 @@ export function App() {
               <Route path="new" element={<CloudTenantLedgersNew />} />
               <Route path=":ledgerId" element={<CloudTenantLedgersShow />}>
                 <Route index element={<Navigate to="documents" replace />} />
-                <Route path="documents" element={<LedgerDocumentsTab />} />
-                <Route path="sharing" element={<LedgerSharingTab />} />
+                <Route path="documents">
+                  <Route index element={<LedgerDocuments />} />
+                  <Route path="new" element={<NewLedgerDocument />} />
+                </Route>
+                <Route path="sharing" element={<LedgerSharing />} />
               </Route>
             </Route>
           </Route>
