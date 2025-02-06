@@ -19,7 +19,7 @@ export function LedgerDocuments() {
   const { useLiveQuery, database } = useFireproof(ledgerId || "");
   // Connect to Fireproof Cloud
   if (database && ledgerId && tenantId) {
-    rawConnect(database, `${tenantId}/${ledgerId}`, DEFAULT_ENDPOINT);
+    rawConnect(database, `${tenantId}-${ledgerId}`, DEFAULT_ENDPOINT);
   }
 
   const allDocs = useLiveQuery("_id");
