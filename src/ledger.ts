@@ -27,7 +27,7 @@ import { Context } from "./context.js";
 
 const ledgers = new KeyedResolvOnce<Ledger>();
 
-export function keyConfigOpts(sthis: SuperThis, name?: string, opts?: ConfigOpts): string {
+export function keyConfigOpts(sthis: SuperThis, name: string, opts?: ConfigOpts): string {
   return JSON.stringify(
     toSortedArray({
       name,
@@ -256,6 +256,7 @@ class LedgerImpl implements Ledger {
 
 function defaultURI(
   sthis: SuperThis,
+  name: string,
   curi: CoerceURI | undefined,
   uri: URI,
   store: "data" | "meta" | "wal",
@@ -265,13 +266,13 @@ function defaultURI(
   }>,
 ): URI {
   ctx = ctx || {};
-  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store);
+  const ret = (curi ? URI.from(curi) : uri).build().setParam(PARAM.STORE, store).defParam(PARAM.NAME, name);
   if (!ret.hasParam(PARAM.NAME)) {
-    const name = sthis.pathOps.basename(ret.URI().pathname);
-    if (!name) {
-      throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
-    }
-    ret.setParam(PARAM.NAME, name);
+    // const name = sthis.pathOps.basename(ret.URI().pathname);
+    // if (!name) {
+    throw sthis.logger.Error().Url(ret).Any("ctx", ctx).Msg("Ledger name is required").AsError();
+    // }
+    // ret.setParam(PARAM.NAME, name);
   }
   if (ctx.idx) {
     ret.defParam(PARAM.INDEX, "idx");
@@ -289,7 +290,7 @@ function defaultURI(
   return ret.URI();
 }
 
-export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
+export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreUrlsOpts): StoreURIRuntime {
   sopts = sopts || {};
   if (!sopts.base) {
     const fp_env = sthis.env.get("FP_STORAGE_URL");
@@ -299,11 +300,9 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
       sopts = { ...sopts, base: getDefaultURI(sthis).build().setParam(PARAM.URL_GEN, "default") };
     }
   }
-  const bbase = BuildURI.from(sopts.base);
-  if (name) {
-    bbase.setParam(PARAM.NAME, name);
-  }
-  const base = bbase.URI();
+  const base = URI.from(sopts.base);
+  // bbase.setParam(PARAM.NAME, name);
+  // const base = bbase.URI();
   // readonly public?: boolean;
   // readonly meta?: DbMeta;
   // readonly persistIndexes?: boolean;
@@ -311,16 +310,16 @@ export function toStoreURIRuntime(sthis: SuperThis, name?: string, sopts?: Store
   // readonly threshold?: number;
   return {
     idx: {
-      data: defaultURI(sthis, sopts.idx?.data, base, "data", { idx: true }),
-      file: defaultURI(sthis, sopts.idx?.data, base, "data", { file: true, idx: true }),
-      meta: defaultURI(sthis, sopts.idx?.meta, base, "meta", { idx: true }),
-      wal: defaultURI(sthis, sopts.idx?.wal, base, "wal", { idx: true }),
+      data: defaultURI(sthis, name, sopts.idx?.data, base, "data", { idx: true }),
+      file: defaultURI(sthis, name, sopts.idx?.data, base, "data", { file: true, idx: true }),
+      meta: defaultURI(sthis, name, sopts.idx?.meta, base, "meta", { idx: true }),
+      wal: defaultURI(sthis, name, sopts.idx?.wal, base, "wal", { idx: true }),
     },
     data: {
-      data: defaultURI(sthis, sopts.data?.data, base, "data"),
-      file: defaultURI(sthis, sopts.data?.data, base, "data", { file: true }),
-      meta: defaultURI(sthis, sopts.data?.meta, base, "meta"),
-      wal: defaultURI(sthis, sopts.data?.wal, base, "wal"),
+      data: defaultURI(sthis, name, sopts.data?.data, base, "data"),
+      file: defaultURI(sthis, name, sopts.data?.data, base, "data", { file: true }),
+      meta: defaultURI(sthis, name, sopts.data?.meta, base, "meta"),
+      wal: defaultURI(sthis, name, sopts.data?.wal, base, "wal"),
     },
   };
 }
