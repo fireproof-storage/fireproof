@@ -18,8 +18,7 @@ function topLevelUseDocument(...args: Parameters<UseDocument>) {
  *
  * React hook that provides the ability to create and manage Fireproof documents. The creation occurs when
  * you do not pass in an `_id` as part of your initial document -- the database will assign a new one when
- * you call the provided `save` handler. Uses the default database named `useFireproof` under the hood which you can
- * access via the `database` accessor.
+ * you call the provided `save` handler.
  *
  * ## Usage
  *
