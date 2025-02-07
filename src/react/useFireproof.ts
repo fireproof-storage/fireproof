@@ -49,7 +49,19 @@ type StoreDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<Do
 
 type DeleteDocFn<T extends DocTypes> = (existingDoc?: DocWithId<T>) => Promise<DocResponse>;
 
-export type UseDocumentResult<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
+type UseDocumentResultTuple<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>, StoreDocFn<T>, DeleteDocFn<T>];
+
+interface UseDocumentResultObject<T extends DocTypes> {
+  doc: DocWithId<T>;
+  update: (newDoc: Partial<T>) => void;
+  replace: (newDoc: T) => void;
+  saveDoc: StoreDocFn<T>;
+  deleteDoc: DeleteDocFn<T>;
+  updateDoc: UpdateDocFn<T>;
+  reset: () => void;
+}
+
+export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
 
 export type UseDocumentInitialDocOrFn<T extends DocTypes> = DocSet<T> | (() => DocSet<T>);
 export type UseDocument = <T extends DocTypes>(initialDocOrFn: UseDocumentInitialDocOrFn<T>) => UseDocumentResult<T>;
@@ -217,12 +229,28 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       [docId, initialDoc],
     );
 
-    const updateDoc: UpdateDocFn<T> = useCallback(
-      (newDoc, opts = { replace: false, reset: false }) => {
-        if (!newDoc) return void (opts.reset ? setDoc(initialDoc) : refreshDoc());
-        setDoc((d) => (opts.replace ? (newDoc as DocWithId<T>) : { ...d, ...newDoc }));
+    // New granular update methods
+    const update = useCallback((newDoc: Partial<T>) => {
+      setDoc((prev) => ({ ...prev, ...newDoc }));
+    }, []);
+
+    const replace = useCallback((newDoc: T) => {
+      setDoc(newDoc);
+    }, []);
+
+    const reset = useCallback(() => {
+      setDoc(initialDoc);
+    }, [initialDoc]);
+
+    // Legacy-compatible updateDoc
+    const updateDoc = useCallback(
+      (newDoc?: DocSet<T>, opts = { replace: false, reset: false }) => {
+        if (!newDoc) {
+          return opts.reset ? reset() : refreshDoc();
+        }
+        return opts.replace ? replace(newDoc as T) : update(newDoc);
       },
-      [refreshDoc, initialDoc],
+      [refreshDoc, reset, replace, update],
     );
 
     useEffect(() => {
@@ -238,7 +266,28 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       void refreshDoc();
     }, [refreshDoc]);
 
-    return [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc];
+    // Primary Object API with both new and legacy methods
+    const apiObject = {
+      doc: { _id: docId, ...doc } as DocWithId<T>,
+      update,
+      replace,
+      saveDoc,
+      deleteDoc,
+      updateDoc,
+      reset,
+    };
+
+    // Make the object properly iterable
+    const tuple = [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc, reset];
+    Object.assign(apiObject, tuple);
+    Object.defineProperty(apiObject, Symbol.iterator, {
+      enumerable: false,
+      value: function* () {
+        yield* tuple;
+      },
+    });
+
+    return apiObject as UseDocumentResult<T>;
   }
 
   function useLiveQuery<T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
