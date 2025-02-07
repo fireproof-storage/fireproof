@@ -250,7 +250,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
         }
         return opts.replace ? replace(newDoc as T) : update(newDoc);
       },
-      [refreshDoc, reset, replace, update]
+      [refreshDoc, reset, replace, update],
     );
 
     useEffect(() => {
@@ -267,14 +267,14 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, [refreshDoc]);
 
     // Primary Object API with both new and legacy methods
-    const apiObject = { 
-      doc: { _id: docId, ...doc } as DocWithId<T>, 
-      update, 
-      replace, 
-      saveDoc, 
-      deleteDoc, 
-      updateDoc, 
-      reset 
+    const apiObject = {
+      doc: { _id: docId, ...doc } as DocWithId<T>,
+      update,
+      replace,
+      saveDoc,
+      deleteDoc,
+      updateDoc,
+      reset,
     };
 
     // Legacy Tuple API
