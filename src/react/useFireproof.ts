@@ -79,18 +79,22 @@ export interface UseFireproof {
    * ## Usage
    *
    * ```tsx
-   * const [todo, setTodo, saveTodo] = useDocument<Todo>({
+   * const todo = useDocument<Todo>({
    *   text: '',
    *   date: Date.now(),
    *   completed: false
    * })
+   * // Access via object properties
+   * todo.doc // The current document
+   * todo.merge({ completed: true }) // Update specific fields
+   * todo.replace({ text: 'new', date: Date.now(), completed: false }) // Replace entire doc
+   * todo.save() // Save changes
+   * todo.remove() // Delete document
+   * todo.reset() // Reset to initial state
+   * todo.refresh() // Refresh from database
    *
-   * const [doc, setDoc, saveDoc] = useDocument<Customer>({
-   *   _id: `${props.customerId}-profile`, // you can imagine `customerId` as a prop passed in
-   *   name: "",
-   *   company: "",
-   *   startedAt: Date.now()
-   * })
+   * // Or use tuple destructuring for legacy compatibility
+   * const [doc, updateDoc, saveDoc, removeDoc] = todo
    * ```
    *
    * ## Overview
@@ -142,7 +146,6 @@ export interface UseFireproof {
    * ```tsx
    * const result = useChanges(prevresult.clock,{limit:10}); // with options
    * const result = useChanges(); // without options
-   * const database = useChanges.database; // underlying "useFireproof" database accessor
    * ```
    *
    * ## Overview
