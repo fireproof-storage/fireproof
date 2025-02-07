@@ -311,7 +311,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const refreshRows = useCallback(async () => {
       const res = await database.query<K, T, R>(mapFn, query);
-      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>) });
+      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>).filter((r): r is DocWithId<T> => !!r) });
     }, [mapFnString, queryString]);
 
     useEffect(() => {
