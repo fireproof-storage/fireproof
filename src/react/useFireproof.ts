@@ -284,7 +284,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       enumerable: false,
       value: function* () {
         yield* tuple;
-      }
+      },
     });
 
     return apiObject as UseDocumentResult<T>;

@@ -39,7 +39,7 @@ function topLevelUseDocument(...args: Parameters<UseDocument>) {
  * ```
  *
  * ## API
- * 
+ *
  * - `doc`: The current document state
  * - `update(newDoc)`: Merge new properties into the document
  * - `replace(newDoc)`: Replace the entire document
