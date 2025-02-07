@@ -53,12 +53,12 @@ type UseDocumentResultTuple<T extends DocTypes> = [DocWithId<T>, UpdateDocFn<T>,
 
 interface UseDocumentResultObject<T extends DocTypes> {
   doc: DocWithId<T>;
-  update: (newDoc: Partial<T>) => void;
+  merge: (newDoc: Partial<T>) => void;
   replace: (newDoc: T) => void;
-  saveDoc: StoreDocFn<T>;
-  deleteDoc: DeleteDocFn<T>;
-  updateDoc: UpdateDocFn<T>;
   reset: () => void;
+  refresh: () => void;
+  save: StoreDocFn<T>;
+  remove: DeleteDocFn<T>;
 }
 
 export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
@@ -79,18 +79,22 @@ export interface UseFireproof {
    * ## Usage
    *
    * ```tsx
-   * const [todo, setTodo, saveTodo] = useDocument<Todo>({
+   * const todo = useDocument<Todo>({
    *   text: '',
    *   date: Date.now(),
    *   completed: false
    * })
+   * // Access via object properties
+   * todo.doc // The current document
+   * todo.merge({ completed: true }) // Update specific fields
+   * todo.replace({ text: 'new', date: Date.now(), completed: false }) // Replace entire doc
+   * todo.save() // Save changes
+   * todo.remove() // Delete document
+   * todo.reset() // Reset to initial state
+   * todo.refresh() // Refresh from database
    *
-   * const [doc, setDoc, saveDoc] = useDocument<Customer>({
-   *   _id: `${props.customerId}-profile`, // you can imagine `customerId` as a prop passed in
-   *   name: "",
-   *   company: "",
-   *   startedAt: Date.now()
-   * })
+   * // Or use tuple destructuring for legacy compatibility
+   * const [doc, updateDoc, saveDoc, removeDoc] = todo
    * ```
    *
    * ## Overview
@@ -142,7 +146,6 @@ export interface UseFireproof {
    * ```tsx
    * const result = useChanges(prevresult.clock,{limit:10}); // with options
    * const result = useChanges(); // without options
-   * const database = useChanges.database; // underlying "useFireproof" database accessor
    * ```
    *
    * ## Overview
@@ -207,7 +210,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       setDoc(doc);
     }, [docId]);
 
-    const saveDoc: StoreDocFn<T> = useCallback(
+    const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
         const res = await database.put(existingDoc ?? doc);
         // If the document was created, then we need to update the local state with the new `_id`
@@ -217,7 +220,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       [doc],
     );
 
-    const deleteDoc: DeleteDocFn<T> = useCallback(
+    const remove: DeleteDocFn<T> = useCallback(
       async (existingDoc) => {
         const id = existingDoc?._id ?? docId;
         const doc = await database.get<T>(id).catch(() => undefined);
@@ -230,7 +233,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     );
 
     // New granular update methods
-    const update = useCallback((newDoc: Partial<T>) => {
+    const merge = useCallback((newDoc: Partial<T>) => {
       setDoc((prev) => ({ ...prev, ...newDoc }));
     }, []);
 
@@ -248,9 +251,9 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
         if (!newDoc) {
           return opts.reset ? reset() : refreshDoc();
         }
-        return opts.replace ? replace(newDoc as T) : update(newDoc);
+        return opts.replace ? replace(newDoc as T) : merge(newDoc);
       },
-      [refreshDoc, reset, replace, update],
+      [refreshDoc, reset, replace, merge],
     );
 
     useEffect(() => {
@@ -266,19 +269,21 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       void refreshDoc();
     }, [refreshDoc]);
 
+    const refresh = useCallback(() => void refreshDoc(), [refreshDoc]);
+
     // Primary Object API with both new and legacy methods
     const apiObject = {
       doc: { _id: docId, ...doc } as DocWithId<T>,
-      update,
+      merge,
       replace,
-      saveDoc,
-      deleteDoc,
-      updateDoc,
       reset,
+      refresh,
+      save,
+      remove,
     };
 
     // Make the object properly iterable
-    const tuple = [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc, reset];
+    const tuple = [{ _id: docId, ...doc }, updateDoc, save, remove, reset, refresh];
     Object.assign(apiObject, tuple);
     Object.defineProperty(apiObject, Symbol.iterator, {
       enumerable: false,
