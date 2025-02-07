@@ -79,11 +79,19 @@ export function Better() {
       <label htmlFor="email">Email</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       {/* <input type="file" onChange={(e) => setImage(e.target.files?.[0])} /> */}
-      <button type="button" onClick={signUp}>Sign Up</button>
+      <button type="button" onClick={signUp}>
+        Sign Up
+      </button>
 
-      <button type="button" onClick={signIn}>Sign In</button>
+      <button type="button" onClick={signIn}>
+        Sign In
+      </button>
 
-      {session.data && <button type="button" onClick={signOut}>Sign Out</button>}
+      {session.data && (
+        <button type="button" onClick={signOut}>
+          Sign Out
+        </button>
+      )}
     </div>
   );
 }

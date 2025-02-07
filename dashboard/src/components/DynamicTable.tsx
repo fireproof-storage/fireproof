@@ -41,8 +41,8 @@ export default function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id"
         </thead>
         <tbody className="bg-fp-bg-00 border border-fp-dec-00 text-14">
           {rows.map((fields) => (
-            <tr 
-              key={fields._id} 
+            <tr
+              key={fields._id}
               onClick={() => handleRowClick(fields)}
               className="hover:bg-fp-bg-02 border-b border-fp-dec-00 cursor-pointer"
             >
