@@ -17,6 +17,7 @@ import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
 import { CloudTenantLedgers, CloudTenantLedgersIndex } from "../pages/cloud/tenants/ledgers.tsx";
 import { LedgerDocuments } from "../pages/cloud/tenants/ledgers/documents.tsx";
 import { NewLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/new.tsx";
+import { ShowLedgerDocument } from "../pages/cloud/tenants/ledgers/documents/show.tsx";
 import { CloudTenantLedgersNew } from "../pages/cloud/tenants/ledgers/new.tsx";
 import { LedgerSharing } from "../pages/cloud/tenants/ledgers/sharing.tsx";
 import { CloudTenantLedgersShow } from "../pages/cloud/tenants/ledgers/show.tsx";
@@ -62,6 +63,7 @@ export function App() {
                 <Route path="documents">
                   <Route index element={<LedgerDocuments />} />
                   <Route path="new" element={<NewLedgerDocument />} />
+                  <Route path=":documentId" element={<ShowLedgerDocument />} />
                 </Route>
                 <Route path="sharing" element={<LedgerSharing />} />
               </Route>

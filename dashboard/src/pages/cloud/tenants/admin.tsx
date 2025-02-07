@@ -29,12 +29,12 @@ export function CloudTenantAdmin() {
     return <div>Not found</div>;
   }
 
-  const onSubmitTenant = (data: TenantFormData) => {
+  function onSubmitTenant(data: TenantFormData) {
     updateTenantMutation.mutate({
       tenantId: data.tenantId,
       name: data.tenantName,
     });
-  };
+  }
 
   return (
     <div className="p-6">

@@ -22,7 +22,7 @@ export function Better() {
   const session = ctx.cloud.betterAuthClient.useSession();
   console.log("session", session);
 
-  const signUp = async () => {
+  async function signUp() {
     const { data, error } = await authClient.signUp.email(
       {
         email,
@@ -42,9 +42,9 @@ export function Better() {
         },
       },
     );
-  };
+  }
 
-  const signIn = async () => {
+  async function signIn() {
     const { data, error } = await authClient.signIn.email({
       email,
       password,
@@ -63,12 +63,12 @@ export function Better() {
     //     },
     //   });
     console.log("SignIn", token);
-  };
+  }
 
-  const signOut = async () => {
+  async function signOut() {
     const { data, error } = await authClient.signOut();
     console.log("SignOut", data, error);
-  };
+  }
 
   return (
     <div>
@@ -79,11 +79,11 @@ export function Better() {
       <label htmlFor="email">Email</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       {/* <input type="file" onChange={(e) => setImage(e.target.files?.[0])} /> */}
-      <button onClick={signUp}>Sign Up</button>
+      <button type="button" onClick={signUp}>Sign Up</button>
 
-      <button onClick={signIn}>Sign In</button>
+      <button type="button" onClick={signIn}>Sign In</button>
 
-      {session.data && <button onClick={signOut}>Sign Out</button>}
+      {session.data && <button type="button" onClick={signOut}>Sign Out</button>}
     </div>
   );
 }

@@ -17,8 +17,15 @@ export function TabNavigation({ tabs, className = "" }: TabNavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Dirty Helper function to check if a tab is active
+  // TODO: Make this better
+  function isTabActive(tabId: string) {
+    const pathParts = location.pathname.split("/");
+    return pathParts.includes(tabId);
+  }
+
   return (
-    <div className={`flex border-b border-fp-dec-00 text-fp-p text-14 ${className}`}>
+    <div className={`mx-6 flex border-b border-fp-dec-00 text-fp-p text-14 ${className}`}>
       <nav className="flex" aria-label="Tabs">
         {tabs.map((tab) => (
           <button
@@ -27,7 +34,7 @@ export function TabNavigation({ tabs, className = "" }: TabNavigationProps) {
             onClick={() => navigate(tab.id)}
             className={`
               px-4 py-2 border-b-2 select-none hover:border-fp-a-03
-              ${location.pathname.endsWith(tab.id) ? "border-fp-a-03 text-fp-a-03" : "border-transparent"}
+              ${isTabActive(tab.id) ? "border-fp-a-03 text-fp-a-03" : "border-transparent"}
             `}
           >
             {tab.label}
