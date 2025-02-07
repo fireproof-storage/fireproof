@@ -222,14 +222,15 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const remove: DeleteDocFn<T> = useCallback(
       async (existingDoc) => {
-        const id = existingDoc?._id ?? docId;
-        const doc = await database.get<T>(id).catch(() => undefined);
-        if (!doc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
+        const id = existingDoc?._id ?? doc._id;
+        if (!id) throw database.logger.Error().Msg(`Document must have an _id to be removed`).AsError();
+        const gotDoc = await database.get<T>(id).catch(() => undefined);
+        if (!gotDoc) throw database.logger.Error().Str("id", id).Msg(`Document not found`).AsError();
         const res = await database.del(id);
         setDoc(initialDoc);
         return res;
       },
-      [docId, initialDoc],
+      [doc, initialDoc],
     );
 
     // New granular update methods
@@ -257,13 +258,13 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     );
 
     useEffect(() => {
-      if (!docId) return;
+      if (!doc._id) return;
       return database.subscribe((changes) => {
-        if (changes.find((c) => c._id === docId)) {
-          void refreshDoc(); // todo use change.value
+        if (changes.find((c) => c._id === doc._id)) {
+          void refreshDoc();
         }
       });
-    }, [docId, refreshDoc]);
+    }, [doc._id, refreshDoc]);
 
     useEffect(() => {
       void refreshDoc();
