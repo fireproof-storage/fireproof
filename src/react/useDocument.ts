@@ -16,29 +16,35 @@ function topLevelUseDocument(...args: Parameters<UseDocument>) {
 /**
  * ## Summary
  *
- * React hook that provides the ability to create new Fireproof documents. The creation occurs when
+ * React hook that provides the ability to create and manage Fireproof documents. The creation occurs when
  * you do not pass in an `_id` as part of your initial document -- the database will assign a new one when
- * you call the provided `save` handler This uses the default database named `useFireproof` under the hood which you can also
- * access via the `database` accessor.
+ * you call the provided `save` handler.
  *
  * ## Usage
  *
  * ```tsx
- * const [todo, setTodo, saveTodo] = useDocument(() => ({
+ * const { doc, update, save } = useDocument(() => ({
  *   text: '',
  *   date: Date.now(),
  *   completed: false
  * }))
  *
- * const [doc, setDoc, saveDoc] = useDocument(() => ({
- *   _id: `${props.customerId}-profile`, // you can imagine `customerId` as a prop passed in
+ * const { doc, update, save } = useDocument(() => ({
+ *   _id: `${props.customerId}-profile`,
  *   name: "",
  *   company: "",
  *   startedAt: Date.now()
  * }))
- *
- * const database = useDocument.database; // underlying "useFireproof" database accessor
  * ```
+ *
+ * ## API
+ *
+ * - `doc`: The current document state
+ * - `update(newDoc)`: Merge new properties into the document
+ * - `replace(newDoc)`: Replace the entire document
+ * - `save(newDoc?)`: Save changes to the managed document, optionally pass in a new document to save
+ * - `remove()`: Delete the document
+ * - `reset()`: Reset to initial state
  *
  * ## Overview
  * Changes made via remote sync peers, or other members of your cloud replica group will appear automatically
