@@ -277,8 +277,15 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       reset,
     };
 
-    // Legacy Tuple API
-    Object.assign(apiObject, [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc, reset]);
+    // Make the object properly iterable
+    const tuple = [{ _id: docId, ...doc }, updateDoc, saveDoc, deleteDoc, reset];
+    Object.assign(apiObject, tuple);
+    Object.defineProperty(apiObject, Symbol.iterator, {
+      enumerable: false,
+      value: function* () {
+        yield* tuple;
+      }
+    });
 
     return apiObject as UseDocumentResult<T>;
   }
