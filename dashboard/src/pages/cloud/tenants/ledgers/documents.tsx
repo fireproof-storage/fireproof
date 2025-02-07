@@ -26,7 +26,7 @@ export function LedgerDocuments() {
   const docs = allDocs.docs.filter((doc): doc is Document => doc !== null);
   const headers = headersForDocs(docs);
 
-  const handleDeleteDocument = async (docId: string) => {
+  async function handleDeleteDocument(docId: string) {
     if (!database || !window.confirm("Are you sure you want to delete this document?")) {
       return;
     }
@@ -35,7 +35,7 @@ export function LedgerDocuments() {
     } catch (error) {
       console.error("Failed to delete document:", error);
     }
-  };
+  }
 
   return (
     <div>
@@ -77,7 +77,14 @@ export function LedgerDocuments() {
             to get started.
           </div>
         ) : (
-          <DynamicTable headers={headers} th="key" link={["_id"]} rows={docs} dbName={ledgerId} onDelete={handleDeleteDocument} />
+          <DynamicTable
+            headers={headers}
+            th="key"
+            link={["_id"]}
+            rows={docs}
+            hrefFn={(id) => `/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents/${id}`}
+            onDelete={handleDeleteDocument}
+          />
         )}
       </div>
     </div>

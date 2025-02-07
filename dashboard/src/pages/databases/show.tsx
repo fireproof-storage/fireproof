@@ -57,7 +57,7 @@ function TableView({ name }: { name: string }) {
 
   const headers = headersForDocs(docs);
 
-  const handleDeleteDatabase = async () => {
+  async function handleDeleteDatabase() {
     if (window.confirm(`Are you sure you want to delete the database "${name}"?`)) {
       const DBDeleteRequest = window.indexedDB.deleteDatabase(`fp.${name}`);
 
@@ -71,13 +71,13 @@ function TableView({ name }: { name: string }) {
       };
       window.location.href = "/";
     }
-  };
+  }
 
-  const deleteDocument = async (docId: string) => {
+  async function deleteDocument(docId: string) {
     if (window.confirm(`Are you sure you want to delete this document?`)) {
       await database.del(docId);
     }
-  };
+  }
 
   const currentHost = window.location.origin;
   const currentEndpoint = myPetnames.docs[0]?.endpoint || "";
@@ -88,7 +88,7 @@ function TableView({ name }: { name: string }) {
     currentEndpoint,
   )}&localName=${encodeURIComponent(currentLocalName)}&remoteName=${encodeURIComponent(currentRemoteName)}`;
 
-  const copyToClipboard = (e: React.MouseEvent) => {
+  function copyToClipboard(e: React.MouseEvent) {
     e.stopPropagation(); // Prevent event from bubbling up
     navigator.clipboard.writeText(connectionUrl).then(
       () => {
@@ -97,9 +97,9 @@ function TableView({ name }: { name: string }) {
       },
       (err) => console.error("Could not copy text: ", err),
     );
-  };
+  }
 
-  const handleConnectionInfoClick = () => {
+  function handleConnectionInfoClick() {
     if (connectionInfoRef.current) {
       const rect = connectionInfoRef.current.getBoundingClientRect();
       setConnectionInfoPosition({
@@ -108,7 +108,7 @@ function TableView({ name }: { name: string }) {
       });
     }
     setShowConnectionInfo(!showConnectionInfo);
-  };
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

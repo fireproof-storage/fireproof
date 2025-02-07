@@ -1,42 +1,56 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id", link = ["_id"] }: any) {
+interface TableRow {
+  _id: string;
+  [key: string]: unknown;
+}
+
+interface TableProps {
+  hrefFn?: (id: string) => string;
+  dbName?: string;
+  headers: string[];
+  rows: TableRow[];
+  th?: string;
+  link?: string[];
+  onDelete?: (id: string) => Promise<void>;
+}
+
+export default function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id", link = ["_id"] }: TableProps) {
   const navigate = useNavigate();
 
+  function handleRowClick(fields: TableRow) {
+    if (hrefFn) {
+      navigate(hrefFn(fields._id));
+    } else if (dbName) {
+      navigate(`/fp/databases/${dbName}/docs/${fields._id}`);
+    }
+  }
+
   return (
-    <div className="relative mt-4 overflow-x-scroll">
-      <table className="w-full text-sm text-left text-[--muted-foreground] border-collapse">
-        <thead className="text-xs text-[--foreground] bg-[--muted] relative z-10">
-          <tr key={"header" + Math.random()}>
+    <div className="relative mt-[40px] overflow-x-scroll">
+      <table className="w-full text-left text-fp-p border-collapse">
+        <thead className="relative z-10">
+          <tr key={`header-${headers.join("-")}`}>
             {headers.map((header: string) => (
-              <th key={header} scope="col" className="px-6 py-3 border-b-2 border-[--border]">
+              <th key={header} scope="col" className="px-[15px] py-[8px] text-11 text-fp-dec-02">
                 {header === "_id" ? "document id" : header}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody>
-          {rows.map((fields: any) => (
-            <tr
-              key={fields._id}
-              className="bg-[--background] hover:bg-[--secondary] border-b border-[--border] cursor-pointer"
-              onClick={() => {
-                navigate(`/fp/databases/${dbName}/docs/${fields._id}`);
-              }}
+        <tbody className="bg-fp-bg-00 border border-fp-dec-00 text-14">
+          {rows.map((fields) => (
+            <tr 
+              key={fields._id} 
+              onClick={() => handleRowClick(fields)}
+              className="hover:bg-fp-bg-02 border-b border-fp-dec-00 cursor-pointer"
             >
-              {headers.map((header: string) =>
-                header === th ? (
-                  <th key={header} scope="row" className="px-6 py-4 font-medium text-inherit whitespace-nowrap">
-                    {formatTableCellContent(fields[header])}
-                  </th>
-                ) : (
-                  <td key={header} className="px-6 py-4">
-                    {formatTableCellContent(fields[header])}
-                  </td>
-                ),
-              )}
+              {headers.map((header: string) => (
+                <td key={header} className={`px-[15px] py-[12px] ${header === th ? "font-semibold whitespace-nowrap" : ""}`}>
+                  {formatTableCellContent(fields[header])}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
@@ -45,7 +59,7 @@ export default function DynamicTable({ hrefFn, dbName, headers, rows, th = "_id"
   );
 }
 
-function formatTableCellContent(obj: any) {
+function formatTableCellContent(obj: unknown): string {
   if (typeof obj === "string") return obj;
   return JSON.stringify(obj);
 }

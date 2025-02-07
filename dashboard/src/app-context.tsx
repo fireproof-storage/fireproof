@@ -1,7 +1,8 @@
-import { createContext, JSX, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import type { SuperThis } from "use-fireproof";
+import { ensureSuperThis } from "use-fireproof";
 import { CloudContext } from "./cloud-context.ts";
-import { ensureSuperThis, SuperThis } from "use-fireproof";
 
 export interface AppContextType {
   sthis: SuperThis;
@@ -61,17 +62,17 @@ export function AppContextProvider({ children }: { children: React.ReactNode }) 
     localStorage.setItem("darkMode", isDarkMode.toString());
   }, [isDarkMode]);
 
-  const toggleMenu = (dbName: string) => {
+  function toggleMenu(dbName: string) {
     setOpenMenu(openMenu === dbName ? null : dbName);
-  };
+  }
 
-  const toggleDarkMode = () => {
+  function toggleDarkMode() {
     setIsDarkMode(!isDarkMode);
-  };
+  }
 
-  const toggleSidebar = () => {
+  function toggleSidebar() {
     setIsSidebarOpen(!isSidebarOpen);
-  };
+  }
 
   cloudContext.initContext();
 
