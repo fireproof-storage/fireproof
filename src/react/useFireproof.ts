@@ -266,19 +266,21 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       void refreshDoc();
     }, [refreshDoc]);
 
+    const refresh = useCallback(() => void refreshDoc(), [refreshDoc]);
+
     // Primary Object API with both new and legacy methods
     const apiObject = {
       doc: { _id: docId, ...doc } as DocWithId<T>,
       merge,
       replace,
       reset,
-      refresh: () => void refreshDoc(),
+      refresh,
       save,
       remove,
     };
 
     // Make the object properly iterable
-    const tuple = [{ _id: docId, ...doc }, updateDoc, save, remove, reset];
+    const tuple = [{ _id: docId, ...doc }, updateDoc, save, remove, reset, refresh];
     Object.assign(apiObject, tuple);
     Object.defineProperty(apiObject, Symbol.iterator, {
       enumerable: false,
