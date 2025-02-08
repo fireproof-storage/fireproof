@@ -171,6 +171,15 @@ export interface UseFireproof {
  */
 export const FireproofCtx = {} as UseFireproof;
 
+function deepClone<T>(value: T): T {
+  if (typeof structuredClone !== "undefined") {
+    return structuredClone(value);
+  } else {
+    // Fallback if structuredClone is not available (older browsers, older Node versions, etc.)
+    return JSON.parse(JSON.stringify(value));
+  }
+}
+
 /**
  *
  * ## Summary
@@ -208,10 +217,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }
 
     // Store the original initial doc without _id for resets
-    const originalInitialDoc = useMemo(() => 
-      JSON.parse(JSON.stringify({ ...initialDoc })), 
-      []
-    );
+    const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
     // We purposely refetch the docId everytime to check if it has changed
     const docId = initialDoc._id ?? "";
