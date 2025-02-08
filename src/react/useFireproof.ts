@@ -199,12 +199,16 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
   function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
+    // Get fresh initialDoc value
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
     } else {
       initialDoc = initialDocOrFn ?? ({} as T);
     }
+
+    // Store the original initial doc without _id for resets
+    const originalInitialDoc = useMemo(() => ({ ...initialDoc }), []);
 
     // We purposely refetch the docId everytime to check if it has changed
     const docId = initialDoc._id ?? "";
@@ -253,8 +257,9 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, []);
 
     const reset = useCallback(() => {
-      setDoc(initialDoc);
-    }, [initialDoc]);
+      // Use originalInitialDoc without _id when resetting
+      setDoc(originalInitialDoc);
+    }, [originalInitialDoc]);
 
     // Legacy-compatible updateDoc
     const updateDoc = useCallback(
