@@ -226,7 +226,6 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     // We use the stringified generator function to ensure that the memoization is stable across renders.
     // const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
     const [doc, setDoc] = useState(initialDoc);
-    const [pendingResetDuringSave, setPendingResetDuringSave] = useState(false);
 
     const refreshDoc = useCallback(async () => {
       // todo add option for mvcc checks
@@ -236,16 +235,13 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        setPendingResetDuringSave(false); // Clear at start of new save
         const res = await database.put(existingDoc ?? doc);
-        // Only update _id if no reset happened during save
-        if (!pendingResetDuringSave && (doc._id === res.id || (!doc._id && !existingDoc))) {
+        if (doc._id === res.id || (!doc._id && !existingDoc)) {
           setDoc((d) => ({ ...d, _id: res.id }));
         }
-        setPendingResetDuringSave(false); // Clear after handling response
         return res;
       },
-      [doc, pendingResetDuringSave],
+      [doc],
     );
 
     const remove: DeleteDocFn<T> = useCallback(
@@ -263,7 +259,6 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // New granular update methods
     const merge = useCallback((newDoc: Partial<T>) => {
-      setPendingResetDuringSave(false); // Clear pending state on new merge
       setDoc((prev) => ({ ...prev, ...newDoc }));
     }, []);
 
@@ -272,7 +267,6 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, []);
 
     const reset = useCallback(() => {
-      setPendingResetDuringSave(true);
       // Use originalInitialDoc and explicitly set _id to undefined
       setDoc({ ...originalInitialDoc, _id: undefined });
     }, [originalInitialDoc]);
