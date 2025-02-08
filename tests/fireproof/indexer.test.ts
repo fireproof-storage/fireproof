@@ -267,8 +267,6 @@ describe("basic Index with string fun", function () {
   });
 });
 
-
-
 describe("basic Index with string fun and numeric keys", function () {
   let db: Database;
   let indexer: Index<string, TestType>;

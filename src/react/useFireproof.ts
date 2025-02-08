@@ -296,7 +296,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // Primary Object API with both new and legacy methods
     const apiObject = {
-      doc: ({ ...doc } as DocWithId<T>),
+      doc: { ...doc } as DocWithId<T>,
       merge,
       replace,
       reset,

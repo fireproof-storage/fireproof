@@ -344,7 +344,6 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
   });
 });
 
-
 describe("HOOK: useFireproof useDocument with existing document handles external updates", () => {
   const dbName = "useDocumentWithExternalUpdates";
   let db: Database,
