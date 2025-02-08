@@ -219,9 +219,6 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     // Store the original initial doc without _id for resets
     const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
-    // We purposely refetch the docId everytime to check if it has changed
-    const docId = initialDoc._id ?? "";
-
     // We do not want to force consumers to memoize their initial document so we do it for them.
     // We use the stringified generator function to ensure that the memoization is stable across renders.
     // const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
@@ -299,7 +296,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // Primary Object API with both new and legacy methods
     const apiObject = {
-      doc: docId ? { _id: docId, ...doc } : ({ ...doc } as DocWithId<T>),
+      doc: ({ ...doc } as DocWithId<T>),
       merge,
       replace,
       reset,
@@ -309,7 +306,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     };
 
     // Make the object properly iterable
-    const tuple = [docId ? { _id: docId, ...doc } : { ...doc }, updateDoc, save, remove, reset, refresh];
+    const tuple = [{ ...doc }, updateDoc, save, remove, reset, refresh];
     Object.assign(apiObject, tuple);
     Object.defineProperty(apiObject, Symbol.iterator, {
       enumerable: false,
