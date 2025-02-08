@@ -21,9 +21,10 @@ describe("HOOK: useFireproof", () => {
 
 describe("HOOK: useFireproof useLiveQuery has results", () => {
   const dbName = "dbnameuseFP";
-  let db: Database, query: LiveQueryResult<{ foo: string }, string>,
-    database: ReturnType<typeof useFireproof>['database'],
-    useLiveQuery: ReturnType<typeof useFireproof>['useLiveQuery']
+  let db: Database,
+    query: LiveQueryResult<{ foo: string }, string>,
+    database: ReturnType<typeof useFireproof>["database"],
+    useLiveQuery: ReturnType<typeof useFireproof>["useLiveQuery"];
 
   beforeEach(async () => {
     db = fireproof(dbName);
@@ -35,7 +36,7 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
       const result = useFireproof(dbName);
       database = result.database;
       useLiveQuery = result.useLiveQuery;
-      query = useLiveQuery<{ foo: string }>('foo');
+      query = useLiveQuery<{ foo: string }>("foo");
     });
   });
 
@@ -65,29 +66,26 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
 });
 
 describe("HOOK: useFireproof useDocument has results", () => {
-  const dbName = "dbnameuseFP";
-  let db: Database, docResult: UseDocumentResult<{ input: string }>,
-    database: ReturnType<typeof useFireproof>['database'],
-    useDocument: ReturnType<typeof useFireproof>['useDocument'];
+  const dbName = "useDocumentHasResults";
+  let db: Database,
+    docResult: UseDocumentResult<{ input: string }>,
+    database: ReturnType<typeof useFireproof>["database"],
+    useDocument: ReturnType<typeof useFireproof>["useDocument"];
 
   beforeEach(async () => {
     db = fireproof(dbName);
-
 
     renderHook(() => {
       const result = useFireproof(dbName);
       database = result.database;
       useDocument = result.useDocument;
-      docResult = useDocument<{ input: string }>({ input: "", });
+      docResult = useDocument<{ input: string }>({ input: "" });
     });
   });
 
-  it("should have setup data", async () => {
-    const allDocs = await db.allDocs<{ foo: string }>();
-    expect(allDocs.rows.length).toBe(3);
-    expect(allDocs.rows[0].value.foo).toBe("aha");
-    expect(allDocs.rows[1].value.foo).toBe("bar");
-    expect(allDocs.rows[2].value.foo).toBe("caz");
+  it("should have empty setup data", async () => {
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(0);
   });
 
   it("queries correctly", async () => {
@@ -99,15 +97,29 @@ describe("HOOK: useFireproof useDocument has results", () => {
 
   it("handles mutations correctly", async () => {
     docResult.merge({ input: "new" });
-    await waitFor(
-      () => {
-        expect(docResult.doc.input).toBe("new");
-        expect(docResult.doc._id).toBeUndefined();
-      }
-    );
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("new");
+      expect(docResult.doc._id).toBeUndefined();
+    });
   });
 
   it("handles save correctly", async () => {
+    docResult.merge({ input: "first" });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("first");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    renderHook(() => {
+      docResult.save();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeDefined();
+    });
+  });
+
+  it("handles reset after save", async () => {
     docResult.merge({ input: "new" });
     await waitFor(() => {
       expect(docResult.doc.input).toBe("new");
@@ -121,6 +133,34 @@ describe("HOOK: useFireproof useDocument has results", () => {
     await waitFor(() => {
       expect(docResult.doc._id).toBeDefined();
     });
+
+    renderHook(() => {
+      docResult.reset();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    renderHook(() => {
+      docResult.merge({ input: "fresh" });
+    });
+
+    renderHook(() => {
+      docResult.save();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("fresh");
+      expect(docResult.doc._id).toBeDefined();
+    });
+
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(3);
+    expect(allDocs.rows[0].value.input).toBe("first");
+    expect(allDocs.rows[1].value.input).toBe("new");
+    expect(allDocs.rows[2].value.input).toBe("fresh");
   });
 
   afterEach(async () => {
@@ -131,12 +171,13 @@ describe("HOOK: useFireproof useDocument has results", () => {
   });
 });
 
-
 describe("HOOK: useFireproof useDocument with existing document has results", () => {
   const dbName = "useDocumentWithExistingDoc";
-  let db: Database, docResult: UseDocumentResult<{ input: string }>, id: string,
-    database: ReturnType<typeof useFireproof>['database'],
-    useDocument: ReturnType<typeof useFireproof>['useDocument'];
+  let db: Database,
+    docResult: UseDocumentResult<{ input: string }>,
+    id: string,
+    database: ReturnType<typeof useFireproof>["database"],
+    useDocument: ReturnType<typeof useFireproof>["useDocument"];
 
   beforeEach(async () => {
     db = fireproof(dbName);
@@ -147,7 +188,7 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
       const result = useFireproof(dbName);
       database = result.database;
       useDocument = result.useDocument;
-      docResult = useDocument<{ input: string }>({ _id: id } as { _id: string, input: string });
+      docResult = useDocument<{ input: string }>({ _id: id } as { _id: string; input: string });
     });
   });
 
