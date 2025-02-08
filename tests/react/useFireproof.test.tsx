@@ -344,6 +344,70 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
   });
 });
 
+
+describe("HOOK: useFireproof useDocument with existing document handles external updates", () => {
+  const dbName = "useDocumentWithExternalUpdates";
+  let db: Database,
+    docResult: UseDocumentResult<{ input: string }>,
+    id: string,
+    database: ReturnType<typeof useFireproof>["database"],
+    useDocument: ReturnType<typeof useFireproof>["useDocument"];
+
+  beforeEach(async () => {
+    db = fireproof(dbName);
+    const res = await db.put({ input: "initial" });
+    id = res.id;
+
+    renderHook(() => {
+      const result = useFireproof(dbName);
+      database = result.database;
+      useDocument = result.useDocument;
+      docResult = useDocument<{ input: string }>({ _id: id } as { _id: string; input: string });
+    });
+  });
+
+  it("should have setup data", async () => {
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(1);
+    expect(allDocs.rows[0].value.input).toBe("initial");
+    expect(allDocs.rows[0].key).toBe(id);
+  });
+
+  it("queries correctly", async () => {
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("initial");
+      expect(docResult.doc._id).toBe(id);
+    });
+  });
+
+  it("handles mutations correctly", async () => {
+    // First verify initial state
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("initial");
+      expect(docResult.doc._id).toBe(id);
+    });
+
+    // Run merge in hook context
+    renderHook(() => {
+      // docResult.merge({ input: "new" });
+      db.put({ _id: id, input: "external" });
+    });
+
+    // Then verify the mutation took effect
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("external");
+      expect(docResult.doc._id).toBe(id);
+    });
+  });
+
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+    await database.close();
+    await database.destroy();
+  });
+});
+
 describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
   const dbName = "bugTestDocReset";
   let db: Database,
