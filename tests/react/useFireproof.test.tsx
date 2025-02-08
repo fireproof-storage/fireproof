@@ -436,24 +436,33 @@ describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
     // Save
     renderHook(() => {
       docResult.save();
-    });
-    await waitFor(() => {
-      expect(docResult.doc._id).toBeDefined();
-    });
-
-    // Confirm it's actually in the DB
-    const allDocs = await db.allDocs<{ input: string }>();
-    expect(allDocs.rows.length).toBe(1);
-    expect(allDocs.rows[0].value.input).toBe("temp data");
-
-    // Reset
-    renderHook(() => {
       docResult.reset();
     });
+
     await waitFor(() => {
       expect(docResult.doc._id).toBeUndefined();
       expect(docResult.doc.input).toBe("");
     });
+
+    renderHook(() => {
+      docResult.merge({ input: "new temp data" });
+    });
+
+    renderHook(() => {
+      docResult.save();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeDefined();
+      expect(docResult.doc.input).toBe("new temp data");
+    });
+
+    // Confirm it's actually in the DB
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(2);
+    const docInputs = allDocs.rows.map((row) => row.value.input);
+    expect(docInputs).toContain("temp data");
+    expect(docInputs).toContain("new temp data");
   });
 
   afterEach(async () => {

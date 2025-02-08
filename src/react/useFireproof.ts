@@ -264,8 +264,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, []);
 
     const reset = useCallback(() => {
-      // Use originalInitialDoc and explicitly set _id to undefined
-      setDoc({ ...originalInitialDoc, _id: undefined });
+      setDoc({ ...originalInitialDoc });
     }, [originalInitialDoc]);
 
     // Legacy-compatible updateDoc
