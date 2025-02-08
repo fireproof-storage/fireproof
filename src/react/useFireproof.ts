@@ -18,10 +18,15 @@ import type { AllDocsQueryOpts, ChangesOptions, ClockHead } from "@fireproof/cor
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
   readonly rows: IndexRow<K, T, R>[];
+  /** @internal */
   readonly length: number;
+  /** @internal */
   map<U>(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U): U[];
+  /** @internal */
   filter(predicate: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean): DocWithId<T>[];
+  /** @internal */
   forEach(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void): void;
+  /** @internal */
   [Symbol.iterator](): Iterator<DocWithId<T>>;
 }
 
