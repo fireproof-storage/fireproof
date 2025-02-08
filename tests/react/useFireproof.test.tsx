@@ -21,7 +21,7 @@ describe("HOOK: useFireproof", () => {
 
 describe("HOOK: useFireproof useLiveQuery has results", () => {
   const dbName = "dbnameuseFP";
-  let db: Database, query: LiveQueryResult<{ foo: string }>,
+  let db: Database, query: LiveQueryResult<{ foo: string }, string>,
     database: ReturnType<typeof useFireproof>['database'],
     useLiveQuery: ReturnType<typeof useFireproof>['useLiveQuery']
 
@@ -50,9 +50,9 @@ describe("HOOK: useFireproof useLiveQuery has results", () => {
   it("queries correctly", async () => {
     await waitFor(() => {
       expect(query.rows.length).toBe(3);
-      expect(query.rows[0].doc.foo).toBe("aha");
-      expect(query.rows[1].doc.foo).toBe("bar");
-      expect(query.rows[2].doc.foo).toBe("caz");
+      expect(query.rows[0].doc?.foo).toBe("aha");
+      expect(query.rows[1].doc?.foo).toBe("bar");
+      expect(query.rows[2].doc?.foo).toBe("caz");
     });
   });
 
@@ -103,9 +103,24 @@ describe("HOOK: useFireproof useDocument has results", () => {
       () => {
         expect(docResult.doc.input).toBe("new");
         expect(docResult.doc._id).toBeUndefined();
-      },
-      { interval: 50, timeout: 1000 }
+      }
     );
+  });
+
+  it("handles save correctly", async () => {
+    docResult.merge({ input: "new" });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("new");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    renderHook(() => {
+      docResult.save();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeDefined();
+    });
   });
 
   afterEach(async () => {
@@ -163,11 +178,10 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
     });
 
     // Then verify the mutation took effect
-    await waitFor(
-      () => {
-        expect(docResult.doc.input).toBe("new");
-        expect(docResult.doc._id).toBe(id);
-      });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("new");
+      expect(docResult.doc._id).toBe(id);
+    });
   });
 
   afterEach(async () => {
