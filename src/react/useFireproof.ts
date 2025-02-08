@@ -18,6 +18,11 @@ import type { AllDocsQueryOpts, ChangesOptions, ClockHead } from "@fireproof/cor
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
   readonly docs: DocWithId<T>[];
   readonly rows: IndexRow<K, T, R>[];
+  readonly length: number;
+  map<U>(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => U): U[];
+  filter(predicate: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => boolean): DocWithId<T>[];
+  forEach(callbackfn: (value: DocWithId<T>, index: number, array: DocWithId<T>[]) => void): void;
+  [Symbol.iterator](): Iterator<DocWithId<T>>;
 }
 
 export type UseLiveQuery = <T extends DocTypes, K extends IndexKeyType = string, R extends DocFragment = T>(
@@ -301,17 +306,34 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     query = {},
     initialRows: IndexRow<K, T, R>[] = [],
   ): LiveQueryResult<T, K, R> {
-    const [result, setResult] = useState<LiveQueryResult<T, K, R>>(() => ({
-      rows: initialRows,
-      docs: initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r),
-    }));
+    const [result, setResult] = useState<LiveQueryResult<T, K, R>>(() => {
+      const docs = initialRows.map((r) => r.doc).filter((r): r is DocWithId<T> => !!r);
+      return {
+        rows: initialRows,
+        docs,
+        length: docs.length,
+        map: (fn) => docs.map(fn),
+        filter: (fn) => docs.filter(fn),
+        forEach: (fn) => docs.forEach(fn),
+        [Symbol.iterator]: () => docs[Symbol.iterator](),
+      };
+    });
 
     const queryString = useMemo(() => JSON.stringify(query), [query]);
     const mapFnString = useMemo(() => mapFn.toString(), [mapFn]);
 
     const refreshRows = useCallback(async () => {
       const res = await database.query<K, T, R>(mapFn, query);
-      setResult({ ...res, docs: res.rows.map((r) => r.doc as DocWithId<T>).filter((r): r is DocWithId<T> => !!r) });
+      const docs = res.rows.map((r) => r.doc as DocWithId<T>).filter((r): r is DocWithId<T> => !!r);
+      setResult({
+        ...res,
+        docs,
+        length: docs.length,
+        map: (fn) => docs.map(fn),
+        filter: (fn) => docs.filter(fn),
+        forEach: (fn) => docs.forEach(fn),
+        [Symbol.iterator]: () => docs[Symbol.iterator](),
+      });
     }, [mapFnString, queryString]);
 
     useEffect(() => {
