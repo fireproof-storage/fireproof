@@ -134,6 +134,9 @@ describe("HOOK: useFireproof useDocument has results", () => {
       expect(docResult.doc._id).toBeDefined();
     });
 
+    const doc1 = await db.get<{ input: string }>(docResult.doc._id);
+    expect(doc1.input).toBe("new");
+
     renderHook(() => {
       docResult.reset();
     });
@@ -155,6 +158,11 @@ describe("HOOK: useFireproof useDocument has results", () => {
       expect(docResult.doc.input).toBe("fresh");
       expect(docResult.doc._id).toBeDefined();
     });
+
+    const doc2 = await db.get<{ input: string }>(docResult.doc._id);
+    expect(doc2.input).toBe("fresh");
+    expect(doc2._id).toBe(docResult.doc._id);
+    expect(doc1._id).not.toBe(doc2._id);
 
     const allDocs = await db.allDocs<{ input: string }>();
     expect(allDocs.rows.length).toBe(3);
