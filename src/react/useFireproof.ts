@@ -288,7 +288,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
         if (changes.find((c) => c._id === doc._id)) {
           void refreshDoc();
         }
-      });
+      }, true);
     }, [doc._id, refreshDoc]);
 
     useEffect(() => {

@@ -343,3 +343,60 @@ describe("HOOK: useFireproof useDocument with existing document has results", ()
     await database.destroy();
   });
 });
+
+describe("HOOK: useFireproof bug fix: once the ID is set, it can reset", () => {
+  const dbName = "bugTestDocReset";
+  let db: Database,
+    docResult: UseDocumentResult<{ input: string }>,
+    database: ReturnType<typeof useFireproof>["database"],
+    useDocument: ReturnType<typeof useFireproof>["useDocument"];
+
+  beforeEach(async () => {
+    db = fireproof(dbName);
+
+    renderHook(() => {
+      const result = useFireproof(dbName);
+      database = result.database;
+      useDocument = result.useDocument;
+      docResult = useDocument<{ input: string }>({ input: "" });
+    });
+  });
+
+  it("ensures save() then reset() yields an ephemeral doc (blank _id)", async () => {
+    // Merge some changes
+    docResult.merge({ input: "temp data" });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("temp data");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    // Save
+    renderHook(() => {
+      docResult.save();
+    });
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeDefined();
+    });
+
+    // Confirm it's actually in the DB
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(1);
+    expect(allDocs.rows[0].value.input).toBe("temp data");
+
+    // Reset
+    renderHook(() => {
+      docResult.reset();
+    });
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeUndefined();
+      expect(docResult.doc.input).toBe("");
+    });
+  });
+
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+    await database.close();
+    await database.destroy();
+  });
+});
