@@ -233,7 +233,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
         const res = await database.put(existingDoc ?? doc);
-        if (doc._id === res.id || (!doc._id && !existingDoc)) {
+        if (!doc._id && !existingDoc) {
           setDoc((d) => ({ ...d, _id: res.id }));
         }
         return res;
