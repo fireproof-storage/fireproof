@@ -227,8 +227,10 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
         const res = await database.put(existingDoc ?? doc);
-        // If the document was created, then we need to update the local state with the new `_id`
-        if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
+        // Only update _id if it matches what we expect (not reset)
+        if (doc._id === res.id || (!doc._id && !existingDoc)) {
+          setDoc((d) => ({ ...d, _id: res.id }));
+        }
         return res;
       },
       [doc],
@@ -257,8 +259,8 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     }, []);
 
     const reset = useCallback(() => {
-      // Use originalInitialDoc without _id when resetting
-      setDoc(originalInitialDoc);
+      // Use originalInitialDoc and explicitly set _id to undefined
+      setDoc({ ...originalInitialDoc, _id: undefined });
     }, [originalInitialDoc]);
 
     // Legacy-compatible updateDoc

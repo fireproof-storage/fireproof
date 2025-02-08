@@ -179,6 +179,109 @@ describe("HOOK: useFireproof useDocument has results", () => {
   });
 });
 
+describe("HOOK: useFireproof useDocument has results reset sync", () => {
+  const dbName = "useDocumentHasResultsSync";
+  let db: Database,
+    docResult: UseDocumentResult<{ input: string }>,
+    database: ReturnType<typeof useFireproof>["database"],
+    useDocument: ReturnType<typeof useFireproof>["useDocument"];
+
+  beforeEach(async () => {
+    db = fireproof(dbName);
+
+    renderHook(() => {
+      const result = useFireproof(dbName);
+      database = result.database;
+      useDocument = result.useDocument;
+      docResult = useDocument<{ input: string }>({ input: "" });
+    });
+  });
+
+  it("should have empty setup data", async () => {
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(0);
+  });
+
+  it("queries correctly", async () => {
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+  });
+
+  it("handles mutations correctly", async () => {
+    docResult.merge({ input: "new" });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("new");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+  });
+
+  it("handles save correctly", async () => {
+    docResult.merge({ input: "first" });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("first");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    renderHook(() => {
+      docResult.save();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeDefined();
+    });
+  });
+
+  it("handles reset after save", async () => {
+    docResult.merge({ input: "new" });
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("new");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    renderHook(() => {
+      docResult.save();
+      docResult.reset();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("");
+      expect(docResult.doc._id).toBeUndefined();
+    });
+
+    renderHook(() => {
+      docResult.merge({ input: "fresh" });
+    });
+
+    renderHook(() => {
+      docResult.save();
+    });
+
+    await waitFor(() => {
+      expect(docResult.doc.input).toBe("fresh");
+      expect(docResult.doc._id).toBeDefined();
+    });
+
+    const doc2 = await db.get<{ input: string }>(docResult.doc._id);
+    expect(doc2.input).toBe("fresh");
+    expect(doc2._id).toBe(docResult.doc._id);
+
+    const allDocs = await db.allDocs<{ input: string }>();
+    expect(allDocs.rows.length).toBe(3);
+    expect(allDocs.rows[0].value.input).toBe("first");
+    expect(allDocs.rows[1].value.input).toBe("new");
+    expect(allDocs.rows[2].value.input).toBe("fresh");
+  });
+
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+    await database.close();
+    await database.destroy();
+  });
+});
+
 describe("HOOK: useFireproof useDocument with existing document has results", () => {
   const dbName = "useDocumentWithExistingDoc";
   let db: Database,
