@@ -289,7 +289,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // Primary Object API with both new and legacy methods
     const apiObject = {
-      doc: { _id: docId, ...doc } as DocWithId<T>,
+      doc: docId ? { _id: docId, ...doc } : ({ ...doc } as DocWithId<T>),
       merge,
       replace,
       reset,
@@ -299,7 +299,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     };
 
     // Make the object properly iterable
-    const tuple = [{ _id: docId, ...doc }, updateDoc, save, remove, reset, refresh];
+    const tuple = [docId ? { _id: docId, ...doc } : { ...doc }, updateDoc, save, remove, reset, refresh];
     Object.assign(apiObject, tuple);
     Object.defineProperty(apiObject, Symbol.iterator, {
       enumerable: false,
