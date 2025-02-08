@@ -7,18 +7,19 @@ env:
 jobs:
   quality-checks:
     name: Quality Checks
-    runs-on: ubuntu-24.04
+    #runs-on: ubuntu-24.04
+    runs-on: blacksmith-4vcpu-ubuntu-2204
     steps:
       - uses: actions/checkout@v4
-        #with:
-        #  fetch-tags: true
-        #  fetch-depth: 1
-      - uses: actions/setup-node@v4
+      - uses: useblacksmith/setup-node@v5
         with:
           node-version: 20
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          install-chromedriver: true
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
