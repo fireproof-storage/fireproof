@@ -267,6 +267,39 @@ describe("basic Index with string fun", function () {
   });
 });
 
+describe("basic Index with string fun and numeric keys", function () {
+  let db: Database;
+  let indexer: Index<string, TestType>;
+  const sthis = ensureSuperThis();
+  afterEach(async function () {
+    await db.close();
+    await db.destroy();
+    // await indexer.close();
+    // await indexer.destroy();
+  });
+  beforeEach(async function () {
+    await sthis.start();
+    db = fireproof("test-indexer");
+    await db.put({ points: 0 });
+    await db.put({ points: 1 });
+    await db.put({ points: 2 });
+    await db.put({ points: 3 });
+    indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "points");
+    await indexer.ready();
+  });
+  it("should get results", async function () {
+    const result = await indexer.query();
+    expect(result).toBeTruthy();
+    expect(result.rows).toBeTruthy();
+    expect(result.rows.length).toBe(4);
+  });
+  it("should include docs", async function () {
+    const { rows } = await indexer.query();
+    expect(rows.length).toBeTruthy();
+    expect(rows[0].doc).toBeTruthy();
+  });
+});
+
 describe("basic Index upon cold start", function () {
   interface TestType {
     title: string;
