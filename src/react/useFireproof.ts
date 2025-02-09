@@ -12,7 +12,7 @@ import type {
   Database,
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { AllDocsQueryOpts, ChangesOptions, ClockHead } from "@fireproof/core";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
@@ -171,6 +171,15 @@ export interface UseFireproof {
  */
 export const FireproofCtx = {} as UseFireproof;
 
+function deepClone<T>(value: T): T {
+  if (typeof structuredClone !== "undefined") {
+    return structuredClone(value);
+  } else {
+    // Fallback if structuredClone is not available (older browsers, older Node versions, etc.)
+    return JSON.parse(JSON.stringify(value));
+  }
+}
+
 /**
  *
  * ## Summary
@@ -198,8 +207,9 @@ export const FireproofCtx = {} as UseFireproof;
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
+  const updateHappenedRef = useRef(false);
+
   function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
-    // Get fresh initialDoc value
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
@@ -207,28 +217,25 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       initialDoc = initialDocOrFn ?? ({} as T);
     }
 
-    // Store the original initial doc without _id for resets
-    const originalInitialDoc = useMemo(() => ({ ...initialDoc }), []);
+    const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
-    // We purposely refetch the docId everytime to check if it has changed
-    const docId = initialDoc._id ?? "";
-
-    // We do not want to force consumers to memoize their initial document so we do it for them.
-    // We use the stringified generator function to ensure that the memoization is stable across renders.
-    // const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
     const [doc, setDoc] = useState(initialDoc);
 
     const refreshDoc = useCallback(async () => {
-      // todo add option for mvcc checks
-      const doc = docId ? await database.get<T>(docId).catch(() => initialDoc) : initialDoc;
-      setDoc(doc);
-    }, [docId]);
+      const gotDoc = doc._id ? await database.get<T>(doc._id).catch(() => initialDoc) : initialDoc;
+      setDoc(gotDoc);
+    }, [doc._id]);
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        const res = await database.put(existingDoc ?? doc);
-        // If the document was created, then we need to update the local state with the new `_id`
-        if (!existingDoc && !doc._id) setDoc((d) => ({ ...d, _id: res.id }));
+        updateHappenedRef.current = false;
+        const toSave = existingDoc ?? doc;
+        const res = await database.put(toSave);
+
+        if (!updateHappenedRef.current && !doc._id && !existingDoc) {
+          setDoc((d) => ({ ...d, _id: res.id }));
+        }
+
         return res;
       },
       [doc],
@@ -249,16 +256,18 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // New granular update methods
     const merge = useCallback((newDoc: Partial<T>) => {
+      updateHappenedRef.current = true;
       setDoc((prev) => ({ ...prev, ...newDoc }));
     }, []);
 
     const replace = useCallback((newDoc: T) => {
+      updateHappenedRef.current = true;
       setDoc(newDoc);
     }, []);
 
     const reset = useCallback(() => {
-      // Use originalInitialDoc without _id when resetting
-      setDoc(originalInitialDoc);
+      updateHappenedRef.current = true;
+      setDoc({ ...originalInitialDoc });
     }, [originalInitialDoc]);
 
     // Legacy-compatible updateDoc
@@ -275,10 +284,13 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     useEffect(() => {
       if (!doc._id) return;
       return database.subscribe((changes) => {
+        if (updateHappenedRef.current) {
+          return;
+        }
         if (changes.find((c) => c._id === doc._id)) {
           void refreshDoc();
         }
-      });
+      }, true);
     }, [doc._id, refreshDoc]);
 
     useEffect(() => {
@@ -289,7 +301,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // Primary Object API with both new and legacy methods
     const apiObject = {
-      doc: docId ? { _id: docId, ...doc } : ({ ...doc } as DocWithId<T>),
+      doc: { ...doc } as DocWithId<T>,
       merge,
       replace,
       reset,
@@ -299,7 +311,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     };
 
     // Make the object properly iterable
-    const tuple = [docId ? { _id: docId, ...doc } : { ...doc }, updateDoc, save, remove, reset, refresh];
+    const tuple = [{ ...doc }, updateDoc, save, remove, reset, refresh];
     Object.assign(apiObject, tuple);
     Object.defineProperty(apiObject, Symbol.iterator, {
       enumerable: false,
