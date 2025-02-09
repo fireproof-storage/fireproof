@@ -89,7 +89,7 @@ export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyTyp
         value: v || null,
       });
     });
-    if (!mapCalled && mapReturn) {
+    if (!mapCalled && typeof mapReturn !== "undefined") {
       indexEntries.push({
         key: [charwise.encode(mapReturn) as K, key],
         value: null,
