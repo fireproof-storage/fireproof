@@ -496,7 +496,7 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
     docResult.reset();
 
     // Let the async subscription produce a new doc in case the doc is reloaded with an _id
-    await new Promise((resolve) => setTimeout(resolve, 500)); 
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // If the reset worked, doc._id should STILL be undefined.
     // If the subscription wins, doc._id will be defined => test fails.

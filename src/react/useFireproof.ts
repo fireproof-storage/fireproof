@@ -12,7 +12,7 @@ import type {
   Database,
 } from "@fireproof/core";
 import { fireproof } from "@fireproof/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { AllDocsQueryOpts, ChangesOptions, ClockHead } from "@fireproof/core";
 
 export interface LiveQueryResult<T extends DocTypes, K extends IndexKeyType, R extends DocFragment = T> {
@@ -207,6 +207,9 @@ function deepClone<T>(value: T): T {
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
+  // Tracks whether we've done a local update (merge, replace, or reset)
+  const updateHappenedRef = useRef(false);
+
   function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
     // Get fresh initialDoc value
     let initialDoc: DocSet<T>;
@@ -232,10 +235,18 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        const res = await database.put(existingDoc ?? doc);
-        if (!doc._id && !existingDoc) {
+        // This signals "I'm applying local changes to DB, so let's go back to 'synced' mode"
+        updateHappenedRef.current = false;
+
+        const toSave = existingDoc ?? doc;
+        const res = await database.put(toSave);
+
+        // If updateHappenedRef is *still* false after the save,
+        // you can set _id or do any other "subscription-friendly" steps
+        if (!updateHappenedRef.current && !doc._id && !existingDoc) {
           setDoc((d) => ({ ...d, _id: res.id }));
         }
+
         return res;
       },
       [doc],
@@ -256,14 +267,17 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     // New granular update methods
     const merge = useCallback((newDoc: Partial<T>) => {
+      updateHappenedRef.current = true;
       setDoc((prev) => ({ ...prev, ...newDoc }));
     }, []);
 
     const replace = useCallback((newDoc: T) => {
+      updateHappenedRef.current = true;
       setDoc(newDoc);
     }, []);
 
     const reset = useCallback(() => {
+      updateHappenedRef.current = true;
       setDoc({ ...originalInitialDoc });
     }, [originalInitialDoc]);
 
@@ -281,6 +295,9 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     useEffect(() => {
       if (!doc._id) return;
       return database.subscribe((changes) => {
+        if (updateHappenedRef.current) {
+          return;
+        }
         if (changes.find((c) => c._id === doc._id)) {
           void refreshDoc();
         }
