@@ -7,9 +7,11 @@
   </a>
 </p>
 
-### No setup: write features first, access your data anywhere
+### Build first, sync later: perfect for AI-generated apps and rapid prototypes
 
-Add collaboration to any app with Fireproof. Access data from JavaScript servers and edge functions. Use live queries to update your UI automatically when the ledger changes. [Connect realtime sync](https://www.npmjs.com/package/@fireproof/connect) and those changes will sync between browsers and backend functions. Apps built this way are multi-player by default.
+Fireproof is an embedded document ledger that lets you build full-stack apps in a single file. This makes it ideal for AI code generation and rapid prototyping - just write your features and access your data anywhere. 
+
+[Point AI coders to these docs.](https://use-fireproof.com/llms-full.txt)
 
 ### JavaScript quick start
 
@@ -44,7 +46,7 @@ import { useFireproof } from 'use-fireproof'
 function App() {
   const { useLiveQuery, useDocument } = useFireproof("my-db-name")
   const completedTodos = useLiveQuery('completed', { limit: 10 })
-  const [newTodo, setNewTodo, saveNewTodo] = useDocument(() => ({type: 'todo', text: '', completed: false, created: Date.now() }))
+  const { doc, merge, save } = useDocument(() => ({type: 'todo', text: '', completed: false, created: Date.now() }))
 ```
 
 Read the [step-by-step React tutorial](https://use-fireproof.com/docs/react-tutorial) to get started.
