@@ -207,11 +207,9 @@ function deepClone<T>(value: T): T {
 export function useFireproof(name: string | Database = "useFireproof", config: ConfigOpts = {}): UseFireproof {
   const database = typeof name === "string" ? fireproof(name, config) : name;
 
-  // Tracks whether we've done a local update (merge, replace, or reset)
   const updateHappenedRef = useRef(false);
 
   function useDocument<T extends DocTypes>(initialDocOrFn?: UseDocumentInitialDocOrFn<T>): UseDocumentResult<T> {
-    // Get fresh initialDoc value
     let initialDoc: DocSet<T>;
     if (typeof initialDocOrFn === "function") {
       initialDoc = initialDocOrFn();
@@ -219,30 +217,21 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       initialDoc = initialDocOrFn ?? ({} as T);
     }
 
-    // Store the original initial doc without _id for resets
     const originalInitialDoc = useMemo(() => deepClone({ ...initialDoc }), []);
 
-    // We do not want to force consumers to memoize their initial document so we do it for them.
-    // We use the stringified generator function to ensure that the memoization is stable across renders.
-    // const initialDoc = useMemo(initialDocFn, [initialDocFn.toString()]);
     const [doc, setDoc] = useState(initialDoc);
 
     const refreshDoc = useCallback(async () => {
-      // todo add option for mvcc checks
       const gotDoc = doc._id ? await database.get<T>(doc._id).catch(() => initialDoc) : initialDoc;
       setDoc(gotDoc);
     }, [doc._id]);
 
     const save: StoreDocFn<T> = useCallback(
       async (existingDoc) => {
-        // This signals "I'm applying local changes to DB, so let's go back to 'synced' mode"
         updateHappenedRef.current = false;
-
         const toSave = existingDoc ?? doc;
         const res = await database.put(toSave);
 
-        // If updateHappenedRef is *still* false after the save,
-        // you can set _id or do any other "subscription-friendly" steps
         if (!updateHappenedRef.current && !doc._id && !existingDoc) {
           setDoc((d) => ({ ...d, _id: res.id }));
         }
