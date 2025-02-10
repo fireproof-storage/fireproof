@@ -26,7 +26,7 @@ import { keyedCryptoFactory } from "../runtime/keyed-crypto.js";
 import { Car2FPMsg, File2FPMsg, FPEnvelopeCar, FPEnvelopeFile, FPEnvelopeMeta, FPEnvelopeWAL } from "./fp-envelope.js";
 import { EventView } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
-import { format } from "@fireproof/vendor/@ipld/dag-json";
+import { format } from "@ipld/dag-json";
 // import { createDbMetaEventBlock } from "./meta-key-helper.js";
 import pRetry from "p-retry";
 import pMap from "p-map";

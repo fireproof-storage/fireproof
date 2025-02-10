@@ -9,7 +9,7 @@ services:
     volumes:
       - ${PROJECT_BASE}/.esm-cache/vd:/verdaccio/storage/data
   esm-sh:
-    image: "ghcr.io/esm-dev/esm.sh:v135_7"
+    image: "ghcr.io/esm-dev/esm.sh:latest"
     environment:
       NPM_REGISTRY: http://registry:4873/
     volumes:

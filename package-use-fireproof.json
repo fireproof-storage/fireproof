@@ -26,14 +26,12 @@
   "scripts": {},
   "author": "J Chris Anderson",
   "license": "Apache-2.0 OR MIT",
-  "gptdoc": "Fireproof/React/Usage: import { useLiveQuery, useDocument } from 'use-fireproof'; function App() { const result = useLiveQuery(doc => doc.word, { limit: 10 }); const [{ count }, setDoc, saveDoc] = useDocument({_id: 'count', count: 0}); return (<><p>{count} changes</p><input type='text' onChange={() => saveDoc({count: count + 1})} onSubmit={e => useLiveQuery.ledger.put({word: e.target.value})} /><ul>{result.map(row => (<li key={row.id}>{row.key}</li>))}</ul></>)}",
+  "gptdoc": "Fireproof/React/Usage: import { useFireproof } from 'use-fireproof'; function WordCounterApp() { const { useLiveQuery, useDocument } = useFireproof('my-word-app'); const { doc: wordInput, merge: updateWordInput, save: saveWordInput, reset: clearWordInput } = useDocument({ word: '', timestamp: Date.now() }); const recentWords = useLiveQuery('timestamp', { descending: true, limit: 10 }); const { doc: { totalSubmitted }, merge: updateTotalSubmitted, save: saveTotalSubmitted } = useDocument({ _id: 'word-counter', totalSubmitted: 0 }); const handleWordSubmission = (e) => { e.preventDefault(); updateTotalSubmitted({ totalSubmitted: totalSubmitted + 1 }); saveTotalSubmitted(); saveWordInput(); clearWordInput();}; return (<><p>{totalSubmitted} words submitted</p><form onSubmit={handleWordSubmission}><input type='text' value={wordInput.word} onChange={e => updateWordInput({ word: e.target.value })} placeholder='Enter a word' /></form><ul>{recentWords.docs.map(entry => (<li key={entry._id}>{entry.word}</li>))} </ul></>) } export default WordCounterApp;",
   "dependencies": {
-    "react": "from-package-json",
     "@fireproof/core": "from-package-json"
   },
   "peerDependencies": {
-    "react": "from-package-json",
-    "@fireproof/core": "from-package-json"
+    "react": ">=18.0.0!"
   },
   "devDependencies": {},
   "keywords": ["react", "ledger", "json", "live", "sync"]

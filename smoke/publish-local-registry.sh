@@ -5,7 +5,7 @@ progName=$0
 projectRoot=$(pwd)
 cd $(dirname $progName)
 
-if $(which podman) -a "FP_CI" != "fp_ci"
+if [ $(which podman) -a "$FP_CI" != "fp_ci" ]
 then
   dockerCompose="podman compose"
 elif which docker-compose
@@ -21,12 +21,10 @@ ls -la $projectRoot/.esm-cache
 
 
 export PROJECT_BASE=$projectRoot
-$dockerCompose down || exit 0
+# $dockerCompose down || exit 0
 $dockerCompose up -d --wait
 
-docker logs -f smoke-esm-sh-1 &
-curl -L http://localhost:4874/@fireproof/core &
-#sleep 5
+mkdir -p $projectRoot/dist
 
 user="admin$(date +%s)"
 token=$(curl \
@@ -46,14 +44,26 @@ registry=http://localhost:4873/
 EOF
 
 unset npm_config_registry
+
+FP_VERSION=$(node $projectRoot/smoke/get-fp-version.js)
+echo $FP_VERSION > $projectRoot/dist/fp-version
+
+
 #env | grep -v npm_
-for packageDir in $projectRoot/dist/use-fireproof $projectRoot/dist/fireproof-core 
+for packageDir in $projectRoot/dist/use-fireproof $projectRoot/dist/fireproof-core
 do
-	cp $projectRoot/dist/npmrc-smoke $packageDir/.npmrc
-	(cd $packageDir && 
-         cat .npmrc && 
-	 (npm unpublish --force || true) &&
-         pnpm publish --registry=http://localhost:4873 --no-git-checks)
+  smokeDir=$projectRoot/dist/smoke/$(basename $packageDir)
+  rm -rf $smokeDir
+  mkdir -p $smokeDir
+  rsync -axH $packageDir/ $smokeDir/
+  cp $projectRoot/dist/npmrc-smoke $smokeDir/.npmrc
+  (cd $smokeDir &&
+     pnpm version $(cat $projectRoot/dist/fp-version) --no-git-tag-version &&
+     node $projectRoot/smoke/patch-fp-version.js package.json $(cat $projectRoot/dist/fp-version)
+     cat .npmrc &&
+     cat package.json &&
+     pnpm publish --registry=http://localhost:4873 --no-git-checks)
 done
 
+curl -L "http://localhost:4874/@fireproof/core@$(cat $projectRoot/dist/fp-version)" > /dev/null &
 

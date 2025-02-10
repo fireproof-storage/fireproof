@@ -8,7 +8,7 @@ import { CoerceURI, CryptoRuntime, CTCryptoKey, Logger, Result, URI } from "@adv
 import { EventBlock } from "@fireproof/vendor/@web3-storage/pail/clock";
 import { TaskManager } from "./task-manager.js";
 import { SerdeGateway, SerdeGatewayInterceptor } from "./serde-gateway.js";
-import { CarReader } from "@fireproof/vendor/@ipld/car";
+import { CarReader } from "@ipld/car";
 
 export type AnyLink = Link<unknown, number, number, Version>;
 export type CarGroup = AnyLink[];

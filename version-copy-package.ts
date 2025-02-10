@@ -40,6 +40,10 @@ async function createDenoJson(destDir: string, packageJson: Record<string, unkno
 
 async function transferVersionsFromPackageJson(srcDeps: Record<string, string>, destDeps: Record<string, string>) {
   for (const dep of Object.keys(destDeps)) {
+    if (destDeps[dep].endsWith("!")) {
+      destDeps[dep] = destDeps[dep].replace(/!$/, "");
+      continue;
+    }
     if (!srcDeps[dep]) {
       console.error(`Dependency ${dep} not found in main package.json`);
     } else {
