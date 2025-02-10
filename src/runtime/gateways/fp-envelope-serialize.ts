@@ -118,9 +118,9 @@ export async function decode2DbMetaEvents(
   if (!Array.isArray(serializedMeta)) {
     return sthis.logger.Debug().Any("metaEntries", serializedMeta).Msg("No data in MetaEntries").ResultError();
   }
-  if (!serializedMeta.length) {
-    return sthis.logger.Debug().Msg("No MetaEntries found").ResultError();
-  }
+  // if (!serializedMeta.length) {
+  //   return sthis.logger.Debug().Msg("No MetaEntries found").ResultError();
+  // }
   return Result.Ok(
     await Promise.all(
       serializedMeta.map(async (metaEntry) => {

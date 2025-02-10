@@ -22,6 +22,8 @@ import type {
   SuperThis,
   Database,
   Ledger,
+  Attachable,
+  Attached,
 } from "./types.js";
 import { ensureLogger, NotFoundError } from "./utils.js";
 
@@ -57,6 +59,10 @@ export class DatabaseImpl implements Database {
     this.ledger = ledger;
     this.id = ledger.id;
     this.logger = ensureLogger(this.sthis, "Database");
+  }
+
+  attach(a: Attachable): Promise<Attached> {
+    return this.ledger.attach(a);
   }
 
   get name() {
