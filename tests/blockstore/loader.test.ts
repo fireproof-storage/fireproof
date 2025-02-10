@@ -1,4 +1,4 @@
-import * as codec from "@fireproof/vendor/@ipld/dag-cbor";
+import * as codec from "@ipld/dag-cbor";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { BlockView } from "multiformats";
 import { CID } from "multiformats/cid";
