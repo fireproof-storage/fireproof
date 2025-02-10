@@ -1,6 +1,6 @@
 import type { CID, Link, Version } from "multiformats";
 import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
-import { CarTransaction, DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
+import { Attachable, Attached, CarTransaction, DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
@@ -437,14 +437,29 @@ export interface BlockstoreRuntime {
   readonly threshold: number;
 }
 
+export interface AttachedRemotes {
+  fileStore(): Promise<DataStore>;
+  carStore(): Promise<DataStore>;
+  metaStore(): Promise<MetaStore>;
+
+  attach(attached: Attachable): Promise<Attached>;
+  detach(): Promise<void>;
+}
+
 export interface Loadable {
   // readonly name: string; // = "";
   readonly sthis: SuperThis;
   readonly ebOpts: BlockstoreRuntime;
   carLog: CarLog;
-  remoteMetaStore?: MetaStore;
-  remoteFileStore?: DataStore;
-  remoteCarStore?: DataStore;
+
+  // xremoteMetaStore?: MetaStore;
+  // xremoteFileStore?: DataStore;
+  // xremoteCarStore?: DataStore;
+
+  readonly attachedRemotes: AttachedRemotes;
+
+  attach(attached: Attachable): Promise<Attached>;
+
   readonly taskManager: TaskManager;
 
   ready(): Promise<void>;
