@@ -48,7 +48,7 @@ importers:
         specifier: ^18.3.1
         version: 18.3.1
       typedoc:
-        specifier: ^0.27.6
+        specifier: ^0.27.7
         version: 0.27.9(typescript@5.8.3)
       uuidv7:
         specifier: ^1.0.2
