@@ -1,7 +1,7 @@
 import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import type { Block, UnknownLink, Version } from "multiformats";
-import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result } from "@adviser/cement";
+import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, URI, CoerceURI } from "@adviser/cement";
 
 import type {
   CarTransactionOpts,
@@ -16,6 +16,8 @@ import type {
   TransactionWrapper,
   BlockstoreRuntime,
   StoreURIRuntime,
+  DataStore,
+  MetaStore,
 } from "./blockstore/index.js";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
@@ -451,6 +453,43 @@ export interface ReadyCloseDestroy {
   ready(): Promise<void>;
 }
 
+/**
+ * @description used by an attachable do define the urls of the attached gateways
+ */
+export interface GatewayUrlsParam {
+  readonly carUrl: CoerceURI;
+  readonly filesUrl: CoerceURI;
+  readonly metaUrl: CoerceURI;
+}
+
+export interface GatewayUrls {
+  readonly carUrl: URI;
+  readonly filesUrl: URI;
+  readonly metaUrl: URI;
+}
+
+export interface Attachable {
+  readonly name: string;
+  /**
+   * @description prepare allows the Attable to register the gateways and
+   * then return the urls of the gateways
+   */
+  prepare(): Promise<GatewayUrlsParam>;
+}
+
+export interface Attached {
+  readonly gatewayUrls: GatewayUrls;
+
+  readonly stores: {
+    readonly car: DataStore;
+    readonly file: DataStore;
+    readonly meta: MetaStore;
+  };
+
+  detach(): Promise<void>;
+  status(): "attached" | "loading" | "loaded" | "error" | "detached" | "syncing" | "idle";
+}
+
 export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   // readonly name: string;
   readonly ledger: Ledger;
@@ -460,6 +499,8 @@ export interface Database extends ReadyCloseDestroy, HasLogger, HasSuperThis {
   readonly name: string;
 
   onClosed(fn: () => void): void;
+
+  attach(a: Attachable): Promise<Attached>;
 
   get<T extends DocTypes>(id: string): Promise<DocWithId<T>>;
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
@@ -519,6 +560,8 @@ export interface Ledger extends HasCRDT {
   readonly context: Context;
 
   onClosed(fn: () => void): () => void;
+
+  attach(a: Attachable): Promise<Attached>;
 
   close(): Promise<void>;
   destroy(): Promise<void>;
