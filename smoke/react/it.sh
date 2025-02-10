@@ -18,9 +18,12 @@ cp package-template.json package.json
 #cat package.json
 #env | sort > $projectRoot/dist/smoke.react.env
 unset npm_config_registry
-pnpm install
+# pnpm install
+npm install use-fireproof@$(cat $projectRoot/dist/fp-version)
+npm why react
+cat package.json
 # pnpm install -f "file://$smokeDir/../../dist/fireproof-core/fireproof-core-*.tgz"
 # pnpm install -f "file://$smokeDir/../../dist/use-fireproof/use-fireproof-*.tgz"
 # pnpm run test > /dev/null 2>&1 || true
-pnpm run test
+npm run test
 rm -rf $tmpDir
