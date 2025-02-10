@@ -65,7 +65,7 @@
     "semver": "^7.7.1",
     "tsup": "^8.3.6",
     "tsx": "^4.19.2",
-    "typedoc": "^0.27.6",
+    "typedoc": "^0.27.7",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.22.0",
     "vite": "^6.0.7",
@@ -96,7 +96,7 @@
     "prolly-trees": "^1.0.4",
     "randombytes": "^2.1.0",
     "react": "^18.3.1",
-    "typedoc": "^0.27.6",
+    "typedoc": "^0.27.7",
     "uuidv7": "^1.0.2"
   },
   "bundle-phobia": {
