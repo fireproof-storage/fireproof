@@ -1,7 +1,7 @@
 import { encode, decode, Block } from "./runtime/wait-pr-multiformats/block.js";
 import { parse } from "multiformats/link";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
-import * as codec from "@fireproof/vendor/@ipld/dag-cbor";
+import * as codec from "@ipld/dag-cbor";
 import { put, get, entries, root } from "@fireproof/vendor/@web3-storage/pail/crdt";
 import { EventBlockView, EventLink, Operation, PutOperation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import { EventFetcher, vis } from "@fireproof/vendor/@web3-storage/pail/clock";
