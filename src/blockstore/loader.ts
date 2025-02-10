@@ -21,18 +21,20 @@ import {
   type Loadable,
   BlockstoreRuntime,
   BlockstoreOpts,
+  AttachedRemotes,
 } from "./types.js";
 
 import { parseCarFile } from "./loader-helpers.js";
 
 import { defaultedBlockstoreRuntime } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
-import type { CarTransaction, Falsy, SuperThis } from "../types.js";
+import type { Attachable, Attached, CarTransaction, Falsy, SuperThis } from "../types.js";
 import { getKeyBag, KeyBag } from "../runtime/key-bag.js";
 import { commit, commitFiles, CommitParams } from "./commitor.js";
 import { decode } from "../runtime/wait-pr-multiformats/block.js";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import { TaskManager } from "./task-manager.js";
+import { AttachedRemotesImpl } from "./attachable-store.js";
 
 export function carLogIncludesGroup(list: CarLog, cids: CarGroup) {
   return list.some((arr: CarGroup) => {
@@ -68,9 +70,15 @@ export class Loader implements Loadable {
   carLog: CarLog = [];
   // key?: string;
   // keyId?: string;
-  remoteMetaStore?: MetaStore;
-  remoteCarStore?: DataStore;
-  remoteFileStore?: DataStore;
+  // remoteMetaStore?: MetaStore;
+  // remoteCarStore?: DataStore;
+  // remoteFileStore?: DataStore;
+
+  readonly attachedRemotes: AttachedRemotes;
+
+  attach(attached: Attachable): Promise<Attached> {
+    return this.attachedRemotes.attach(attached);
+  }
 
   private getBlockCache = new Map<string, AnyBlock>();
   private seenMeta = new Set<string>();
@@ -134,7 +142,7 @@ export class Loader implements Loadable {
   private readonly onceReady: ResolveOnce<void> = new ResolveOnce<void>();
   async ready(): Promise<void> {
     return this.onceReady.once(async () => {
-      const metas = await (await this.metaStore()).load();
+      const metas = await this.metaStore().then((i) => i.load());
       if (this.ebOpts.meta) {
         await this.handleDbMetasFromStore([this.ebOpts.meta]);
       } else if (metas) {
@@ -145,6 +153,7 @@ export class Loader implements Loadable {
 
   async close() {
     await this.commitQueue.waitIdle();
+    await this.attachedRemotes.detach();
     const toClose = await Promise.all([this.carStore(), this.metaStore(), this.fileStore(), this.WALStore()]);
     await Promise.all(toClose.map((store) => store.close()));
   }
@@ -171,6 +180,7 @@ export class Loader implements Loadable {
     this.taskManager = new TaskManager(sthis, async (dbMeta: DbMeta) => {
       await this.handleDbMetasFromStore([dbMeta]);
     });
+    this.attachedRemotes = new AttachedRemotesImpl(this);
   }
 
   // async snapToCar(carCid: AnyLink | string) {
@@ -251,7 +261,7 @@ export class Loader implements Loadable {
   }
 
   async loadFileCar(cid: AnyLink /*, isPublic = false*/): Promise<CarReader> {
-    return await this.storesLoadCar(cid, await this.fileStore(), this.remoteFileStore);
+    return await this.storesLoadCar(cid, await this.fileStore(), await this.attachedRemotes.fileStore());
   }
 
   async commit<T = TransactionMeta>(
@@ -314,7 +324,7 @@ export class Loader implements Loadable {
     } as unknown as DbMeta);
     for (const cids of carHeader.compact) {
       for (const cid of cids) {
-        await (await this.carStore()).remove(cid);
+        await this.carStore().then((i) => i.remove(cid));
       }
     }
   }
@@ -432,7 +442,7 @@ export class Loader implements Loadable {
     if (!this.carStore) {
       throw this.logger.Error().Msg("car store not initialized").AsError();
     }
-    const loaded = await this.storesLoadCar(cid, await this.carStore(), this.remoteCarStore);
+    const loaded = await this.storesLoadCar(cid, await this.carStore(), await this.attachedRemotes.carStore());
     return loaded;
   }
 

@@ -13,6 +13,8 @@ import type {
   WriteQueue,
   CRDT,
   LedgerOpts,
+  Attachable,
+  Attached,
 } from "./types.js";
 import { PARAM } from "./types.js";
 import { StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
@@ -75,6 +77,10 @@ export class LedgerShell implements Ledger {
     this.writeQueue = ref.writeQueue;
     this.name = ref.name;
     ref.addShell(this);
+  }
+
+  attach(a: Attachable): Promise<Attached> {
+    return this.ref.attach(a);
   }
 
   get opts(): LedgerOpts {
@@ -202,6 +208,11 @@ class LedgerImpl implements Ledger {
       this.opts.writeQueue,
     );
     this.crdt.clock.onTock(() => this._no_update_notify());
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  attach(a: Attachable): Promise<Attached> {
+    return this.crdt.blockstore.loader.attach(a);
   }
 
   // readonly _asDb = new ResolveOnce<Database>();

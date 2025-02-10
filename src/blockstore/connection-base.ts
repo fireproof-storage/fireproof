@@ -1,11 +1,12 @@
-import { exception2Result, Future, Logger, URI } from "@adviser/cement";
+import { CoerceURI, exception2Result, Future, Logger, URI } from "@adviser/cement";
 
-import { PARAM, throwFalsy } from "../types.js";
+import { PARAM, SuperThis, throwFalsy } from "../types.js";
 import { TaskManager } from "./task-manager.js";
-import type { Connection, Loadable, RefBlockstore, RefLoadable } from "./types.js";
+import type { Connection, DataStore, Loadable, MetaStore, RefBlockstore, RefLoadable, StoreFactoryItem } from "./types.js";
 import { RemoteDataStore, RemoteMetaStore } from "./store-remote.js";
-import { getStartedGateway } from "./store-factory.js";
+import { getStartedGateway, toStoreRuntime } from "./store-factory.js";
 import { Context } from "../context.js";
+import { ensureLogger } from "../utils.js";
 
 // export interface Connectable {
 //   // readonly blockstore: {
@@ -51,6 +52,8 @@ export abstract class ConnectionBase implements Connection {
     this.url = url;
   }
 
+  abstract onConnect(): Promise<void>;
+
   private readonly _loaded = new Set<Future<void>>();
   private _metaIsLoading = false;
   loaded(): Future<void> {
@@ -64,8 +67,10 @@ export abstract class ConnectionBase implements Connection {
   }
 
   async refresh() {
-    await throwFalsy(throwFalsy(this.loader).remoteMetaStore).load();
-    await (await throwFalsy(this.loader).WALStore()).process();
+    await this.loader?.attachedRemotes.metaStore().then((i) => i.load());
+    await throwFalsy(this.loader)
+      .WALStore()
+      .then((i) => i.process());
   }
 
   async connect(refl: RefLoadable | RefBlockstore) {
@@ -92,13 +97,15 @@ export abstract class ConnectionBase implements Connection {
       gateway: gateway.gateway,
       loader,
     });
-    this.loader.remoteMetaStore = remote;
+    this.loader.xremoteMetaStore = remote;
 
     this._metaIsLoading = true;
     this.loader.ready().then(async () => {
       return remote.load().then(async () => {
         const res = await exception2Result(async () => {
-          return await (await throwFalsy(this.loader).WALStore()).process();
+          return throwFalsy(this.loader)
+            .WALStore()
+            .then((i) => i.process());
         });
         this._metaIsLoading = false;
         for (const f of this._loaded) {
@@ -113,8 +120,6 @@ export abstract class ConnectionBase implements Connection {
     });
   }
 
-  abstract onConnect(): Promise<void>;
-
   async connectStorage(refl: RefLoadable | RefBlockstore) {
     const loader = coerceLoader(refl);
     if (!loader) throw this.logger.Error().Msg("connectStorage: loader is required").AsError();
@@ -125,7 +130,7 @@ export abstract class ConnectionBase implements Connection {
       throw this.logger.Error().Result("err", rgateway).Url(dataUrl).Msg("connectStorage: gateway is required").AsError();
     const name = dataUrl.getParam(PARAM.NAME);
     if (!name) throw this.logger.Error().Url(dataUrl).Msg("connectStorage: name is required").AsError;
-    loader.remoteCarStore = await RemoteDataStore(loader.sthis, this.url, {
+    loader.xremoteCarStore = await RemoteDataStore(loader.sthis, this.url, {
       gateway: rgateway.Ok().gateway,
       loader,
     });
@@ -133,41 +138,72 @@ export abstract class ConnectionBase implements Connection {
     // file store is for on-demand attachment loading
     // for now we don't have any difference but in superthis car store and
     // file store could have different urls/gateways
-    loader.remoteFileStore = loader.remoteCarStore;
+    loader.xremoteFileStore = loader.xremoteCarStore;
   }
+}
 
-  // move this stuff to connect
-  // async getDashboardURL(compact = true) {
-  //   const baseUrl = 'https://dashboard.fireproof.storage/'
-  //   if (!this.loader?.remoteCarStore) return new URL('/howto', baseUrl)
-  //   // if (compact) {
-  //   //   await this.compact()
-  //   // }
-  //   const currents = await this.loader?.metaStore?.load()
-  //   if (!currents) throw new Error("Can't sync empty ledger: save data first")
-  //   if (currents.length > 1)
-  //     throw new Error("Can't sync ledger with split heads: make an update first")
-  //   const current = currents[0]
-  //   const params = {
-  //     car: current.car.toString()
-  //   }
-  //   if (current.key) {
-  //     // @ts-ignore
-  //     params.key = current.key.toString()
-  //   }
-  //   // @ts-ignore
-  //   if (this.name) {
-  //     // @ts-ignore
-  //     params.name = this.name
-  //   }
-  //   const url = new URL('/import#' + new URLSearchParams(params).toString(), baseUrl)
-  //   console.log('Import to dashboard: ' + url.toString())
-  //   return url
-  // }
+export class ConnectionFromStore extends ConnectionBase {
+  stores?: {
+    readonly data: DataStore;
+    readonly meta: MetaStore;
+  } = undefined;
 
-  // openDashboard() {
-  //   void this.getDashboardURL().then(url => {
-  //     if (url) window.open(url.toString(), '_blank')
-  //   })
-  // }
+  // readonly urlData: URI;
+  // readonly urlMeta: URI;
+
+  readonly sthis: SuperThis;
+  constructor(sthis: SuperThis, url: URI) {
+    const logger = ensureLogger(sthis, "ConnectionFromStore", {
+      url: () => url.toString(),
+      this: 1,
+      log: 1,
+    });
+    super(url, logger);
+    this.sthis = sthis;
+    // this.urlData = url;
+    // this.urlMeta = url;
+  }
+  async onConnect(): Promise<void> {
+    this.logger.Debug().Msg("onConnect-start");
+    // const stores = {
+    //   base: this.url,
+    //   // data: this.urlData,
+    //   // meta: this.urlMeta,
+    // };
+    const rName = this.url.getParamResult("name");
+    if (rName.isErr()) {
+      throw this.logger.Error().Err(rName).Msg("missing Parameter").AsError();
+    }
+    const storeRuntime = toStoreRuntime(this.sthis);
+    const loader: StoreFactoryItem = {
+      url: this.url,
+      loader: {
+        ebOpts: {
+          logger: this.logger,
+          storeUrls: {
+            data: this.url,
+            meta: this.url,
+            file: this.url,
+            wal: this.url,
+          },
+          // store: { stores },
+          storeRuntime,
+        } as Loadable["ebOpts"],
+        sthis: this.sthis,
+      } as Loadable,
+    };
+
+    this.stores = {
+      data: await storeRuntime.makeDataStore(loader),
+      meta: await storeRuntime.makeMetaStore(loader),
+    };
+    // await this.stores.data.start();
+    // await this.stores.meta.start();
+    this.logger.Debug().Msg("onConnect-done");
+    return;
+  }
+}
+
+export function connectionFactory(sthis: SuperThis, iurl: CoerceURI): ConnectionBase {
+  return new ConnectionFromStore(sthis, URI.from(iurl));
 }
