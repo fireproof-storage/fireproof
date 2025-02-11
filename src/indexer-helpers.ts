@@ -20,14 +20,13 @@ import {
   DocFragment,
   IndexUpdate,
   QueryOpts,
-  DocWithId,
   IndexKeyType,
   IndexKey,
   DocTypes,
-  DocObject,
   IndexUpdateString,
   ClockHead,
   ChangesOptions,
+  IndexRow,
 } from "./types.js";
 import { CarTransaction, BlockFetcher, AnyLink, AnyBlock } from "./blockstore/index.js";
 import { CRDT } from "./crdt.js";
@@ -64,9 +63,9 @@ export const byKeyOpts: StaticProllyOptions<CompareKey> = { cache, chunker: bf(3
 
 export const byIdOpts: StaticProllyOptions<unknown> = { cache, chunker: bf(30), codec, hasher, compare: simpleCompare };
 
-export interface IndexDoc<K extends IndexKeyType> {
+export interface IndexDoc<K extends IndexKeyType, R extends DocFragment> {
   readonly key: IndexKey<K>;
-  readonly value: DocFragment;
+  readonly value: R;
 }
 
 export interface IndexDocString {
@@ -74,26 +73,26 @@ export interface IndexDocString {
   readonly value: DocFragment;
 }
 
-export function indexEntriesForChanges<T extends DocTypes, K extends IndexKeyType>(
+export function indexEntriesForChanges<K extends IndexKeyType, T extends DocTypes, R extends DocFragment>(
   changes: DocUpdate<T>[],
-  mapFn: MapFn<T>,
-): IndexDoc<K>[] {
-  const indexEntries: IndexDoc<K>[] = [];
+  mapFn: MapFn<T, R>,
+): IndexDoc<K, R>[] {
+  const indexEntries: IndexDoc<K, R>[] = [];
   changes.forEach(({ id: key, value, del }) => {
     if (del || !value) return;
     let mapCalled = false;
-    const mapReturn = mapFn({ ...(value as DocWithId<T>), _id: key }, (k: IndexKeyType, v?: DocFragment) => {
+    const mapReturn = mapFn({ ...value, _id: key }, (k: IndexKeyType, v?: R) => {
       mapCalled = true;
       if (typeof k === "undefined") return;
       indexEntries.push({
         key: [charwise.encode(k) as K, key],
-        value: v || null,
+        value: (v || null) as R,
       });
     });
     if (!mapCalled && mapReturn) {
       indexEntries.push({
         key: [charwise.encode(mapReturn) as K, key],
-        value: null,
+        value: null as R,
       });
     }
   });
@@ -162,11 +161,11 @@ export async function loadIndex<K extends IndexKeyType, T extends DocFragment, C
   return (await DbIndex.load({ cid, get: makeProllyGetBlock(tblocks), ...opts })) as ProllyNode<K, T>;
 }
 
-export async function* applyQuery<K extends IndexKeyType, T extends DocObject, R extends DocFragment>(
+export async function* applyQuery<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
   { crdt, logger }: { crdt: CRDT<T>; logger: Logger },
   resp: { result: ProllyIndexRow<K, R>[] },
   query: QueryOpts<K> & { since?: ClockHead; sinceOptions?: ChangesOptions },
-): AsyncGenerator<DocWithId<T>> {
+): AsyncGenerator<IndexRow<K, T, R>> {
   async function* _apply() {
     let result = [...resp.result];
 
@@ -188,10 +187,18 @@ export async function* applyQuery<K extends IndexKeyType, T extends DocObject, R
     if (query.descending) result = result.reverse();
     if (query.limit) result = result.slice(0, query.limit);
 
-    for (const row of result) {
-      yield crdt.get(row.id).then((val) => {
-        return val ? ({ ...val.doc, _id: row.id } as DocWithId<T>) : undefined;
-      });
+    if (query.excludeDocs) {
+      for (const res of result) {
+        yield res;
+      }
+    } else {
+      for (const res of result) {
+        yield crdt.get(res.id).then((val) => {
+          if (!val) return undefined;
+          const row: IndexRow<K, T, R> = { ...res, doc: val.doc };
+          return row;
+        });
+      }
     }
   }
 
