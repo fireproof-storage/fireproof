@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import { AppContext } from "../app-context.tsx";
+import { Button } from "../components/Button.tsx";
 
 export async function betterLoader({ request }: { request: Request }) {
   // const url = new URL(request.url);
@@ -79,18 +80,18 @@ export function Better() {
       <label htmlFor="email">Email</label>
       <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       {/* <input type="file" onChange={(e) => setImage(e.target.files?.[0])} /> */}
-      <button type="button" onClick={signUp}>
+      <Button variation="primary" onClick={signUp}>
         Sign Up
-      </button>
+      </Button>
 
-      <button type="button" onClick={signIn}>
+      <Button variation="secondary" onClick={signIn}>
         Sign In
-      </button>
+      </Button>
 
       {session.data && (
-        <button type="button" onClick={signOut}>
+        <Button variation="destructive" onClick={signOut}>
           Sign Out
-        </button>
+        </Button>
       )}
     </div>
   );

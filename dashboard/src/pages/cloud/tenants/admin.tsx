@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { useForm } from "react-hook-form";
 import { Form, Link, useParams } from "react-router-dom";
 import { AppContext } from "../../../app-context.js";
+import { Button } from "../../../components/Button.tsx";
 import { tenantName } from "../../../helpers.ts";
 
 type TenantFormData = {
@@ -79,12 +80,9 @@ export function CloudTenantAdmin() {
                   Once you delete a tenant, there is no going back. Please be certain.
                 </p>
               </div>
-              <Link
-                to={`/fp/cloud/tenants/${tenant.tenantId}/delete`}
-                className="px-4 py-2 bg-[--destructive] text-[--destructive-foreground] rounded hover:bg-[--destructive]/90"
-              >
+              <Button variation="destructive" tag={Link} to={`/fp/cloud/tenants/${tenant.tenantId}/delete`}>
                 Delete Tenant
-              </Link>
+              </Button>
             </div>
           </div>
         </div>

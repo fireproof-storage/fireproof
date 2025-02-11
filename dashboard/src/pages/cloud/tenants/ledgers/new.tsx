@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { FieldValues, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { AppContext } from "../../../../app-context.js";
+import { Button } from "../../../../components/Button.tsx";
 
 export function CloudTenantLedgersNew() {
   const { tenantId } = useParams();
@@ -54,21 +55,16 @@ export function CloudTenantLedgersNew() {
           </div>
 
           <div className="flex justify-end gap-3">
-            <button
-              type="button"
+            <Button
+              variation="secondary"
               onClick={() => navigate(`/fp/cloud/tenants/${tenantId}/ledgers`)}
-              className="px-4 py-2 bg-[--muted] text-[--muted-foreground] rounded hover:bg-[--muted]/80"
               disabled={createLedger.isPending}
             >
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[--accent] text-[--accent-foreground] rounded hover:bg-[--accent]/80"
-              disabled={createLedger.isPending}
-            >
+            </Button>
+            <Button variation="primary" type="submit" disabled={createLedger.isPending}>
               {createLedger.isPending ? "Creating..." : "Create Ledger"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
