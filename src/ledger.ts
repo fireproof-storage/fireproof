@@ -74,10 +74,13 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
   put<T extends DocTypes>(doc: DocSet<T>): Promise<DocResponse>;
   bulk<T extends DocTypes>(docs: DocSet<T>[]): Promise<BulkResponse>;
   del(id: string): Promise<DocResponse>;
-  allDocs<T extends DocTypes>(): QueryResponse<T>;
-  allDocuments<T extends DocTypes>(): QueryResponse<T>;
+  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R>;
+  allDocuments<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R>;
 
-  query<K extends IndexKeyType, T extends DocTypes>(field: string | MapFn<T>, opts?: QueryOpts<K>): QueryResponse<T>;
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): QueryResponse<K, T, R>;
   compact(): Promise<void>;
 }
 
@@ -159,13 +162,16 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   del(id: string): Promise<DocResponse> {
     return this.ref.del(id);
   }
-  allDocs<T extends DocTypes>(): QueryResponse<T> {
+  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R> {
     return this.ref.allDocs();
   }
-  allDocuments<T extends DocTypes>(): QueryResponse<T> {
+  allDocuments<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R> {
     return this.ref.allDocuments();
   }
-  query<K extends IndexKeyType, T extends DocTypes>(field: string | MapFn<T>, opts?: QueryOpts<K>): QueryResponse<T> {
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T>,
+    opts?: QueryOpts<K>,
+  ): QueryResponse<K, T, R> {
     return this.ref.query(field, opts);
   }
   compact(): Promise<void> {
@@ -305,27 +311,27 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
     return { id, clock: result?.head, name: this.name } as DocResponse;
   }
 
-  allDocs<T extends DocTypes>(): QueryResponse<T> {
+  allDocs<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R> {
     this.logger.Debug().Msg("allDocs");
-    return this.crdt.allDocs({ waitFor: this.ready() });
+    return this.crdt.allDocs<T>({ waitFor: this.ready() });
   }
 
-  allDocuments<T extends DocTypes>(): QueryResponse<T> {
-    return this.allDocs<T>();
+  allDocuments<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R> {
+    return this.allDocs<K, T, R>();
   }
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T>,
     opts: QueryOpts<K> = {},
-  ): QueryResponse<T> {
+  ): QueryResponse<K, T, R> {
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     const _crdt = this.crdt as unknown as CRDT<T>;
     const idx =
       typeof field === "string"
         ? index<K, T, R>({ crdt: _crdt }, field)
         : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
-    return idx.query(opts, { waitFor: this.ready() });
+    return idx.query<K, T, R>(opts, { waitFor: this.ready() });
   }
 
   async compact() {

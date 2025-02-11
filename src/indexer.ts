@@ -15,8 +15,10 @@ import {
   SuperThis,
   QueryResponse,
   ChangesOptions,
-  QueryStreamMarker,
-  DocWithId,
+  IndexRow,
+  InquiryResponse,
+  DocumentRow,
+  Row,
 } from "./types.js";
 import { BaseBlockstore } from "./blockstore/index.js";
 
@@ -41,16 +43,16 @@ import { docUpdateToDocWithId } from "./crdt-helpers.js";
 export function index<K extends IndexKeyType = string, T extends DocTypes = NonNullable<unknown>, R extends DocFragment = T>(
   refDb: HasCRDT<T>,
   name: string,
-  mapFn?: MapFn<T>,
+  mapFn?: MapFn<T, R>,
   meta?: IdxMeta,
 ): Index<K, T, R> {
   if (mapFn && meta) throw refDb.crdt.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
   if (mapFn && mapFn.constructor.name !== "Function") throw refDb.crdt.logger.Error().Msg("mapFn must be a function").AsError();
   if (refDb.crdt.indexers.has(name)) {
-    const idx = refDb.crdt.indexers.get(name) as unknown as Index<K, T>;
+    const idx = refDb.crdt.indexers.get(name) as unknown as Index<K, T, R>;
     idx.applyMapFn(name, mapFn, meta);
   } else {
-    const idx = new Index<K, T>(refDb.crdt.sthis, refDb.crdt, name, mapFn, meta);
+    const idx = new Index<K, T, R>(refDb.crdt.sthis, refDb.crdt, name, mapFn, meta);
     refDb.crdt.indexers.set(name, idx as unknown as Index<K, NonNullable<unknown>, NonNullable<unknown>>);
   }
   return refDb.crdt.indexers.get(name) as unknown as Index<K, T, R>;
@@ -65,7 +67,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   readonly blockstore: BaseBlockstore;
   readonly crdt: CRDT<T>;
   readonly name: string;
-  mapFn?: MapFn<T>;
+  mapFn?: MapFn<T, R>;
   mapFnString = "";
   byKey: IndexTree<K, R> = new IndexTree<K, R>();
   byId: IndexTree<K, R> = new IndexTree<K, R>();
@@ -92,7 +94,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
   readonly logger: Logger;
 
-  constructor(sthis: SuperThis, crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  constructor(sthis: SuperThis, crdt: CRDT<T> | CRDT<NonNullable<unknown>>, name: string, mapFn?: MapFn<T, R>, meta?: IdxMeta) {
     this.logger = ensureLogger(sthis, "Index");
     this.blockstore = crdt.indexBlockstore;
     this.crdt = crdt as CRDT<T>;
@@ -112,7 +114,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     //   })
   }
 
-  applyMapFn(name: string, mapFn?: MapFn<T>, meta?: IdxMeta) {
+  applyMapFn(name: string, mapFn?: MapFn<T, R>, meta?: IdxMeta) {
     if (mapFn && meta) throw this.logger.Error().Msg("cannot provide both mapFn and meta").AsError();
     if (this.name && this.name !== name) throw this.logger.Error().Msg("cannot change name").AsError();
     // this.name = name;
@@ -153,7 +155,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
         } else {
           // application code is creating an index
           if (!mapFn) {
-            mapFn = ((doc) => (doc as unknown as Record<string, unknown>)[name] ?? undefined) as MapFn<T>;
+            mapFn = ((doc) => (doc as unknown as Record<string, unknown>)[name] ?? undefined) as MapFn<T, R>;
           }
           if (this.mapFnString) {
             // we already loaded from a header
@@ -179,12 +181,13 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     }
   }
 
-  query(qryOpts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<T> {
+  query(qryOpts: QueryOpts<K> & { excludeDocs: true }, intlOpts: { waitFor?: Promise<unknown> }): InquiryResponse<K, R>;
+  query(qryOpts: QueryOpts<K> = {}, { waitFor }: { waitFor?: Promise<unknown> } = {}): QueryResponse<K, T, R> {
     const stream = this.#stream.bind(this);
 
     return {
       snapshot: (sinceOpts) => this.#snapshot(qryOpts, sinceOpts, { waitFor }),
-      subscribe: (callback) => this.#subscribe(callback),
+      subscribe: (callback) => this.#subscribe(qryOpts, callback),
       toArray: (sinceOpts) => arrayFromAsyncIterable(this.#snapshot(qryOpts, sinceOpts, { waitFor })),
 
       live(opts?: { since?: ClockHead }) {
@@ -240,10 +243,20 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
   }
 
   #snapshot(
+    qryOpts: QueryOpts<K> & { excludeDocs: true },
+    sinceOpts: ({ since?: ClockHead } & ChangesOptions) | undefined,
+    waitOpts: { waitFor?: Promise<unknown> },
+  ): AsyncGenerator<Row<K, R>>;
+  #snapshot(
+    qryOpts: QueryOpts<K>,
+    sinceOpts: ({ since?: ClockHead } & ChangesOptions) | undefined,
+    waitOpts: { waitFor?: Promise<unknown> },
+  ): AsyncGenerator<DocumentRow<K, T, R>>;
+  #snapshot(
     qryOpts: QueryOpts<K> = {},
     sinceOpts: { since?: ClockHead } & ChangesOptions = {},
     { waitFor }: { waitFor?: Promise<unknown> } = {},
-  ) {
+  ): AsyncGenerator<Row<K, R> | DocumentRow<K, T, R>> {
     const generator = async () => {
       await waitFor;
       await this.ready();
@@ -253,19 +266,54 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       return await this.#query(qryOpts, sinceOpts);
     };
 
-    async function* docsWithId() {
-      for await (const doc of await generator()) {
-        if (doc) yield doc;
+    async function* rows(): AsyncGenerator<Row<K, R> | DocumentRow<K, T, R>> {
+      for await (const row of await generator()) {
+        if (!row) continue;
+
+        if (qryOpts.excludeDocs && !row.doc) {
+          const a: Row<K, R> = row;
+          yield a;
+        } else if (!qryOpts.excludeDocs && row.doc) {
+          const b = row as DocumentRow<K, T, R>;
+          yield b;
+        }
       }
     }
 
-    return docsWithId();
+    return rows();
   }
 
-  #subscribe(callback: (doc: DocWithId<T>) => void) {
-    const unsubscribe = this.crdt.clock.onTick((updates: DocUpdate<NonNullable<unknown>>[]) => {
-      updates.forEach((update) => {
-        callback(docUpdateToDocWithId(update as DocUpdate<T>));
+  #subscribe(qryOpts: { excludeDocs: true }, callback: (row: Row<K, R>) => void): () => void;
+  #subscribe(
+    qryOpts: { excludeDocs: false } | { excludeDocs?: boolean },
+    callback: (row: DocumentRow<K, T, R>) => void,
+  ): () => void;
+  #subscribe(
+    { excludeDocs }: { excludeDocs: true } | { excludeDocs: false } | { excludeDocs?: boolean } = {},
+    callback: ((row: Row<K, R>) => void) | ((row: DocumentRow<K, T, R>) => void),
+  ): () => void {
+    // NOTE: Despite using onTick or onTock, it always loads the document (update).
+    const unsubscribe = this.crdt.clock.onTick(async (updates: DocUpdate<T>[]) => {
+      await this._updateIndex();
+      await this._hydrateIndex();
+
+      const mapFn = this.mapFn?.bind(this);
+      if (!mapFn) throw this.logger.Error().Msg("No map function defined").AsError();
+
+      updates.forEach(async (update) => {
+        const indexEntries = indexEntriesForChanges<K, T, R>([update], mapFn);
+        const indexEntry = indexEntries[0];
+        if (!indexEntry) return;
+
+        if (excludeDocs === true) {
+          // NOTE: Don't know why the type overloading is not doing its thing here
+          // (callback as (row: Row<K, R>) => void)(row);
+        } else if (!excludeDocs) {
+          const doc = docUpdateToDocWithId(update);
+          const docRow: DocumentRow<K, T, R> = { ...indexEntry, id: update.id, doc };
+
+          callback(docRow);
+        }
       });
     });
 
@@ -286,7 +334,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
     let unsubscribe: undefined | (() => void);
     let isClosed = false;
 
-    return new ReadableStream<{ doc: DocWithId<T>; marker: QueryStreamMarker }>({
+    return new ReadableStream({
       async start(controller) {
         await waitFor;
         await ready();
@@ -297,11 +345,11 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
 
           const it = await query(qryOpts, sinceOpts);
 
-          async function iterate(prevValue: DocWithId<T>) {
+          async function iterate(prevValue: IndexRow<K, T, R>) {
             const { done, value } = await it.next();
 
             controller.enqueue({
-              doc: prevValue,
+              row: prevValue,
               marker: { kind: "preexisting", done: done || false },
             });
 
@@ -312,12 +360,9 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
           if (value) await iterate(value);
         }
 
-        unsubscribe = subscribe(async (doc) => {
+        unsubscribe = subscribe(qryOpts, async (row) => {
           if (isClosed) return;
-          await updateIndex();
-          await hydrateIndex();
-
-          controller.enqueue({ doc, marker: { kind: "new" } });
+          controller.enqueue({ row, marker: { kind: "new" } });
         });
       },
 
@@ -367,7 +412,7 @@ export class Index<K extends IndexKeyType, T extends DocTypes, R extends DocFrag
       staleKeyIndexEntries = oldChangeEntries.map((key) => ({ key, del: true }));
       removeIdIndexEntries = oldChangeEntries.map((key) => ({ key: key[1], del: true }));
     }
-    const indexEntries = indexEntriesForChanges<T, K>(result, this.mapFn); // use a getter to translate from string
+    const indexEntries = indexEntriesForChanges<K, T, R>(result, this.mapFn); // use a getter to translate from string
     const byIdIndexEntries: IndexDocString[] = indexEntries.map(({ key }) => ({
       key: key[1],
       value: key,
