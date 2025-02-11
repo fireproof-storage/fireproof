@@ -3,6 +3,7 @@ import { useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useFireproof } from "use-fireproof";
 import { AppContext } from "../../../../app-context.tsx";
+import { Button } from "../../../../components/Button.tsx";
 import DynamicTable from "../../../../components/DynamicTable.tsx";
 import { headersForDocs } from "../../../../components/dynamicTableHelpers.ts";
 import { DEFAULT_ENDPOINT } from "../../../../helpers.ts";
@@ -42,25 +43,22 @@ export function LedgerDocuments() {
       <div className="@container flex justify-between items-start mb-4 gap-4">
         <div className="flex-grow" />
         <div className="flex gap-2 items-center">
-          <Link
-            to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents/new`}
-            className="inline-flex items-center justify-center rounded bg-[--accent] px-3 py-2 text-sm font-medium text-accent-foreground transition-colors hover:bg-[--accent]/80 whitespace-nowrap"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            New Document
-          </Link>
+        <Button
+                variation="primary"
+                tag={Link}
+                to={`/fp/cloud/tenants/${tenantId}/ledgers/${ledgerId}/documents/new`}
+              >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M9 3.5C9 2.94772 8.55228 2.5 8 2.5C7.44772 2.5 7 2.94772 7 3.5V7H3.5C2.94772 7 2.5 7.44772 2.5 8C2.5 8.55228 2.94772 9 3.5 9H7V12.5C7 13.0523 7.44772 13.5 8 13.5C8.55228 13.5 9 13.0523 9 12.5V9H12.5C13.0523 9 13.5 8.55228 13.5 8C13.5 7.44772 13.0523 7 12.5 7H9V3.5Z" fill="currentColor"/>
+              </svg>
+              New Document
+            </Button>
         </div>
       </div>
 
