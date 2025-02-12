@@ -174,33 +174,33 @@ describe("Streaming API", () => {
 
   describe.skip("allDocs", () => {
     it("test `snapshot` method", async () => {
-      const snapshot = lr.allDocs().snapshot();
+      const snapshot = lr.select().snapshot();
       await testSnapshot(snapshot, AMOUNT_OF_DOCS);
     });
 
     it("test `live` method", async () => {
-      const stream = lr.allDocs().live();
+      const stream = lr.select().live();
       await testLive(stream, AMOUNT_OF_DOCS, { prefix: "doc-", key: "name" });
     });
 
     it("test `snapshot` and `live` method with `since` parameter", async () => {
       await testSince({
-        snapshotCreator: (since) => lr.allDocs().snapshot({ since }),
-        streamCreator: (since) => lr.allDocs().live({ since }),
+        snapshotCreator: (since) => lr.select().snapshot({ since }),
+        streamCreator: (since) => lr.select().live({ since }),
       });
     });
 
     it("test `future` method", async () => {
-      const stream = lr.allDocs().future();
+      const stream = lr.select().future();
       await testFuture(stream, AMOUNT_OF_DOCS, { prefix: "doc-", key: "name" });
     });
 
     it("test `subscribe` method", async () => {
-      await testSubscribe(lr.allDocs());
+      await testSubscribe(lr.select());
     });
 
     it("test `toArray` method", async () => {
-      await testToArray(lr.allDocs(), AMOUNT_OF_DOCS);
+      await testToArray(lr.select(), AMOUNT_OF_DOCS);
     });
   });
 
@@ -212,33 +212,33 @@ describe("Streaming API", () => {
     // ALL
     describe("all", () => {
       it("test `snapshot` method", async () => {
-        const snapshot = lr.query("name").snapshot();
+        const snapshot = lr.select("name").snapshot();
         await testSnapshot(snapshot, AMOUNT_OF_DOCS);
       });
 
       it("test `live` method", async () => {
-        const stream = lr.query("name").live();
+        const stream = lr.select("name").live();
         await testLive(stream, AMOUNT_OF_DOCS, { prefix: "doc-", key: "name" });
       });
 
       it("test `snapshot` and `live` method with `since` parameter", async () => {
         await testSince({
-          snapshotCreator: (since) => lr.query("since").snapshot({ since }),
-          streamCreator: (since) => lr.query("since").live({ since }),
+          snapshotCreator: (since) => lr.select("since").snapshot({ since }),
+          streamCreator: (since) => lr.select("since").live({ since }),
         });
       });
 
       it("test `future` method", async () => {
-        const stream = lr.query("name").future();
+        const stream = lr.select("name").future();
         await testFuture(stream, AMOUNT_OF_DOCS, { prefix: "doc-", key: "name" });
       });
 
       it("test `subscribe` method", async () => {
-        await testSubscribe(lr.query<string, DocType>("name"));
+        await testSubscribe(lr.select<string, DocType>("name"));
       });
 
       it("test `toArray` method", async () => {
-        await testToArray(lr.query<string, DocType>("name"), AMOUNT_OF_DOCS);
+        await testToArray(lr.select<string, DocType>("name"), AMOUNT_OF_DOCS);
       });
     });
 
@@ -256,40 +256,40 @@ describe("Streaming API", () => {
       });
 
       it("test `snapshot` method", async () => {
-        const snapshot = lr.query("additional").snapshot();
+        const snapshot = lr.select("additional").snapshot();
         await testSnapshot(snapshot, AMOUNT_OF_ADDITIONAL_DOCS);
       });
 
       it("test `live` method", async () => {
-        const stream = lr.query("additional").live();
+        const stream = lr.select("additional").live();
         await testLive(stream, AMOUNT_OF_ADDITIONAL_DOCS, { prefix: "doc-add-future-", key: "additional" });
       });
 
       it("test `snapshot` and `live` method with `since` parameter", async () => {
         await testSince({
-          snapshotCreator: (since) => lr.query("since").snapshot({ since }),
-          streamCreator: (since) => lr.query("since").live({ since }),
+          snapshotCreator: (since) => lr.select("since").snapshot({ since }),
+          streamCreator: (since) => lr.select("since").live({ since }),
         });
       });
 
       it("test `future` method", async () => {
-        const stream = lr.query("additional").future();
+        const stream = lr.select("additional").future();
         await testFuture(stream, AMOUNT_OF_ADDITIONAL_DOCS, { prefix: "doc-add-", key: "additional" });
       });
 
       it("test `subscribe` method", async () => {
-        await testSubscribe(lr.query<string, DocType>("name"));
+        await testSubscribe(lr.select<string, DocType>("name"));
       });
 
       it("test `toArray` method", async () => {
-        await testToArray(lr.query<string, DocType>("additional"), AMOUNT_OF_ADDITIONAL_DOCS);
+        await testToArray(lr.select<string, DocType>("additional"), AMOUNT_OF_ADDITIONAL_DOCS);
       });
     });
 
     // EXCLUDE DOCS
     describe("excludeDocs", () => {
       it("inquiry", async () => {
-        const inquiry = lr.query("name", {
+        const inquiry = lr.select("name", {
           excludeDocs: true,
         });
 
