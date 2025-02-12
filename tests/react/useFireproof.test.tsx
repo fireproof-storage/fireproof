@@ -269,8 +269,8 @@ describe("HOOK: useFireproof useDocument has results reset sync", () => {
 
     const allDocs = await db.allDocs<{ input: string }>();
     expect(allDocs.rows.length).toBe(3);
-    const inputs = allDocs.rows.map(r => r.value.input);
-    expect(inputs).toEqual(expect.arrayContaining(['first', 'new', 'fresh']));
+    const inputs = allDocs.rows.map((r) => r.value.input);
+    expect(inputs).toEqual(expect.arrayContaining(["first", "new", "fresh"]));
   });
 
   afterEach(async () => {
