@@ -5,7 +5,7 @@ progName=$0
 projectRoot=$(pwd)
 cd $(dirname $progName)
 
-if [ $(which podman) -a "$FP_CI" != "fp_ci" ]
+if [ "$(which podman)" -a "$FP_CI" != "fp_ci" ]
 then
   dockerCompose="podman compose"
 elif which docker-compose
