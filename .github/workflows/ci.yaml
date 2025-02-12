@@ -52,6 +52,8 @@ jobs:
         run: pnpm run build
       - name: test
         run: pnpm run test
+      - name: test:deno
+        run: pnpm run test:deno
       - name: smoke
         run: pnpm run smoke
       - name: publish

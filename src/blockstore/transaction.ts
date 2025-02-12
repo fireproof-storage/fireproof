@@ -226,7 +226,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
     if (!this.loader) {
       return;
     }
-    return falsyToUndef(await this.loader.getBlock(cid)) as Block<T, C, A, V>;
+    return falsyToUndef(await this.loader.getBlock(cid, this.loader.attachedStores.local())) as Block<T, C, A, V>;
   }
 
   async transaction<M extends TransactionMeta>(
@@ -251,7 +251,7 @@ export class EncryptedBlockstore extends BaseBlockstoreImpl {
   async getFile(car: AnyLink, cid: AnyLink /*, isPublic = false*/): Promise<Uint8Array> {
     await this.ready();
     if (!this.loader) throw this.logger.Error().Msg("loader required to get file, ledger must be named").AsError();
-    const reader = await this.loader.loadFileCar(car /*, isPublic */);
+    const reader = await this.loader.loadFileCar(car /*, isPublic */, this.loader.attachedStores.local());
     const block = await reader.get(cid as CID);
     if (!block) throw this.logger.Error().Str("cid", cid.toString()).Msg(`Missing block`).AsError();
     return block.bytes;

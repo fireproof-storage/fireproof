@@ -6,11 +6,11 @@ import { Index, index } from "@fireproof/core";
 describe("Fresh crdt", function () {
   let crdt: CRDT;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -20,17 +20,18 @@ describe("Fresh crdt", function () {
       storeEnDe: bs.ensureStoreEnDeFile({}),
     };
     crdt = new CRDTImpl(sthis, dbOpts);
+    await crdt.ready();
   });
-  it("should have an empty head", async function () {
+  it("should have an empty head", async () =>{
     const head = crdt.clock.head;
     expect(head.length).toBe(0);
   });
-  it("should accept put and return results", async function () {
+  it("should accept put and return results", async () =>{
     const didPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
     const head = didPut.head;
     expect(head.length).toBe(1);
   });
-  it("should accept multi-put and return results", async function () {
+  it("should accept multi-put and return results", async () =>{
     const didPut = await crdt.bulk([
       { id: "ace", value: { points: 11 } },
       { id: "king", value: { points: 10 } },
@@ -49,12 +50,12 @@ describe("CRDT with one record", function () {
   let firstPut: CRDTMeta;
   const sthis = ensureSuperThis();
 
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -66,32 +67,32 @@ describe("CRDT with one record", function () {
     crdt = new CRDTImpl(sthis, dbOpts);
     firstPut = await crdt.bulk([{ id: "hello", value: { hello: "world" } }]);
   });
-  it("should have a one-element head", async function () {
+  it("should have a one-element head", async () =>{
     const head = crdt.clock.head;
     expect(head.length).toBe(1);
   });
-  it("should return the head", async function () {
+  it("should return the head", async () =>{
     expect(firstPut.head.length).toBe(1);
   });
-  it("return the record on get", async function () {
+  it("return the record on get", async () =>{
     const got = (await crdt.get("hello")) as DocValue<CRDTTestType>;
     expect(got).toBeTruthy();
     expect(got.doc.hello).toBe("world");
   });
-  it("should accept another put and return results", async function () {
+  it("should accept another put and return results", async () =>{
     const didPut = await crdt.bulk([{ id: "nice", value: { nice: "data" } }]);
     const head = didPut.head;
     expect(head.length).toBe(1);
     const { doc } = (await crdt.get("nice")) as DocValue<CRDTTestType>;
     expect(doc.nice).toBe("data");
   });
-  it("should allow for a delete", async function () {
+  it("should allow for a delete", async () =>{
     const didDel = await crdt.bulk([{ id: "hello", del: true }]);
     expect(didDel.head).toBeTruthy();
     const got = await crdt.get("hello");
     expect(got).toBeFalsy();
   });
-  it("should offer changes", async function () {
+  it("should offer changes", async () =>{
     const { result } = await crdt.changes<Partial<CRDTTestType>>([]);
     expect(result.length).toBe(1);
     expect(result[0].id).toBe("hello");
@@ -107,11 +108,11 @@ describe("CRDT with a multi-write", function () {
   let firstPut: CRDTMeta;
   const sthis = ensureSuperThis();
 
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -126,12 +127,12 @@ describe("CRDT with a multi-write", function () {
       { id: "king", value: { points: 10 } },
     ]);
   });
-  it("should have a one-element head", async function () {
+  it("should have a one-element head", async () =>{
     const head = crdt.clock.head;
     expect(head.length).toBe(1);
     expect(firstPut.head.length).toBe(1);
   });
-  it("return the records on get", async function () {
+  it("return the records on get", async () =>{
     const { doc } = (await crdt.get("ace")) as DocValue<CRDTTestType>;
     expect(doc.points).toBe(11);
 
@@ -139,7 +140,7 @@ describe("CRDT with a multi-write", function () {
     expect(got2).toBeTruthy();
     expect(got2.doc.points).toBe(10);
   });
-  it("should accept another put and return results", async function () {
+  it("should accept another put and return results", async () =>{
     const didPut = await crdt.bulk([{ id: "queen", value: { points: 10 } }]);
     const head = didPut.head;
     expect(head.length).toBe(1);
@@ -147,14 +148,14 @@ describe("CRDT with a multi-write", function () {
     expect(got).toBeTruthy();
     expect(got.doc.points).toBe(10);
   });
-  it("should offer changes", async function () {
+  it("should offer changes", async () =>{
     const { result } = await crdt.changes<CRDTTestType>([]);
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
     expect(result[0].value?.points).toBe(11);
     expect(result[1].id).toBe("king");
   });
-  it("should offer changes since", async function () {
+  it("should offer changes since", async () =>{
     /** @type {CRDTMeta} */
     const secondPut = await crdt.bulk([
       { id: "queen", value: { points: 10 } },
@@ -178,7 +179,7 @@ describe("CRDT with two multi-writes", function () {
   let firstPut: CRDTMeta;
   let secondPut: CRDTMeta;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
@@ -201,14 +202,14 @@ describe("CRDT with two multi-writes", function () {
       { id: "jack", value: { points: 10 } },
     ]);
   });
-  it("should have a one-element head", async function () {
+  it("should have a one-element head", async () =>{
     const head = crdt.clock.head;
     expect(head.length).toBe(1);
     expect(firstPut.head.length).toBe(1);
     expect(secondPut.head.length).toBe(1);
     expect(firstPut.head[0]).not.toBe(secondPut.head[0]);
   });
-  it("return the records on get", async function () {
+  it("return the records on get", async () =>{
     const ret = await crdt.get("ace");
     expect(ret).not.toBeNull();
     const { doc } = ret as DocValue<CRDTTestType>;
@@ -219,7 +220,7 @@ describe("CRDT with two multi-writes", function () {
       expect(doc.points).toBe(10);
     }
   });
-  it("should offer changes", async function () {
+  it("should offer changes", async () =>{
     const { result } = await crdt.changes<CRDTTestType>();
     expect(result.length).toBe(4);
     expect(result[0].id).toBe("ace");
@@ -233,11 +234,11 @@ describe("CRDT with two multi-writes", function () {
 describe("Compact a named CRDT with writes", function () {
   let crdt: CRDT;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -255,24 +256,24 @@ describe("Compact a named CRDT with writes", function () {
       await crdt.bulk(bulk);
     }
   });
-  it("has data", async function () {
+  it("has data", async () =>{
     const got = (await crdt.get("ace")) as DocValue<CRDTTestType>;
     expect(got.doc).toBeTruthy();
     expect(got.doc.points).toBe(11);
   });
-  it("should start with blocks", async function () {
+  it("should start with blocks", async () =>{
     const blz: bs.AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
       blz.push(blk);
     }
     expect(blz.length).toBe(13);
   });
-  it("should start with changes", async function () {
+  it("should start with changes", async () =>{
     const { result } = await crdt.changes();
     expect(result.length).toBe(2);
     expect(result[0].id).toBe("ace");
   });
-  it.skip("should have fewer blocks after compact", async function () {
+  it.skip("should have fewer blocks after compact", async () =>{
     await crdt.compact();
     const blz: bs.AnyBlock[] = [];
     for await (const blk of crdt.blockstore.entries()) {
@@ -280,13 +281,13 @@ describe("Compact a named CRDT with writes", function () {
     }
     expect(blz.length).toBe(23);
   });
-  it("should have data after compact", async function () {
+  it("should have data after compact", async () =>{
     await crdt.compact();
     const got = (await crdt.get("ace")) as DocValue<CRDTTestType>;
     expect(got.doc).toBeTruthy();
     expect(got.doc.points).toBe(11);
   });
-  it("should have changes after compact", async function () {
+  it("should have changes after compact", async () =>{
     const chs = await crdt.changes();
     expect(chs.result[0].id).toBe("ace");
   });
@@ -296,11 +297,11 @@ describe("CRDT with an index", function () {
   let crdt: CRDT;
   let idx: Index<number, CRDTTestType>;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -316,13 +317,13 @@ describe("CRDT with an index", function () {
     ]);
     idx = await index<number, CRDTTestType>(crdt, "points");
   });
-  it("should query the data", async function () {
+  it("should query the data", async () =>{
     const got = await idx.query({ range: [9, 12] });
     expect(got.rows.length).toBe(2);
     expect(got.rows[0].id).toBe("king");
     expect(got.rows[0].key).toBe(10);
   });
-  it("should register the index", async function () {
+  it("should register the index", async () =>{
     const rIdx = await index<number, CRDTTestType>(crdt, "points");
     expect(rIdx).toBeTruthy();
     expect(rIdx.name).toBe("points");
@@ -331,7 +332,7 @@ describe("CRDT with an index", function () {
     expect(got.rows[0].id).toBe("king");
     expect(got.rows[0].key).toBe(10);
   });
-  it("creating a different index with same name should not work", async function () {
+  it("creating a different index with same name should not work", async () =>{
     const e = await index(crdt, "points", (doc) => doc._id)
       .query()
       .catch((err) => err);
@@ -346,11 +347,11 @@ describe("Loader with a committed transaction", function () {
   let done: CRDTMeta;
   const dbname = "test-loader";
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -381,7 +382,7 @@ describe("Loader with a committed transaction", function () {
   it("can load the car", async () => {
     const blk = loader.carLog[0][0];
     expect(blk).toBeTruthy();
-    const reader = await loader.loadCar(blk);
+    const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -398,11 +399,11 @@ describe("Loader with two committed transactions", function () {
   let done1: CRDTMeta;
   let done2: CRDTMeta;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -432,10 +433,10 @@ describe("Loader with two committed transactions", function () {
     // expect(loader.carLog.indexOf(done2.cars)).toBe(0);
     // expect(loader.carLog.map((cs) => cs.toString()).indexOf(done2.cars.toString())).toBe(0);
   });
-  it("can load the car", async function () {
+  it("can load the car", async () =>{
     const blk = loader.carLog[0][0];
     expect(blk).toBeTruthy();
-    const reader = await loader.loadCar(blk);
+    const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -452,11 +453,11 @@ describe("Loader with many committed transactions", function () {
   let dones: CRDTMeta[];
   const count = 10;
   const sthis = ensureSuperThis();
-  afterEach(async function () {
+  afterEach(async () =>{
     await crdt.close();
     await crdt.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     const dbOpts: LedgerOpts = {
       name: "test-crdt",
@@ -483,10 +484,10 @@ describe("Loader with many committed transactions", function () {
     expect(blockstore.transactions.size).toBe(0); // cleaned up on commit
     expect(loader.carLog.length).toBe(count);
   });
-  it("can load the car", async function () {
+  it("can load the car", async () =>{
     const blk = loader.carLog[2][0];
     // expect(dones[5].cars).toBeTruthy();
-    const reader = await loader.loadCar(blk);
+    const reader = await loader.loadCar(blk, loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();

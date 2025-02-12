@@ -1,6 +1,6 @@
 import type { CID, Link, Version } from "multiformats";
 import type { BlockCodec } from "../runtime/wait-pr-multiformats/codec-interface.js";
-import { Attachable, Attached, CarTransaction, DocFileMeta, Falsy, StoreType, SuperThis } from "../types.js";
+import { Attachable, Attached, CarTransaction, DocFileMeta, Falsy, GatewayUrls, StoreType, SuperThis } from "../types.js";
 import { BlockFetcher } from "./transaction.js";
 import { CommitQueue } from "./commit-queue.js";
 import { KeyBag, KeyBagRuntime, KeysItem } from "../runtime/key-bag.js";
@@ -212,7 +212,7 @@ export interface StoreUrlsOpts {
 
 export interface StoreURIs {
   readonly meta: URI;
-  readonly data: URI;
+  readonly car: URI;
   readonly file: URI;
   readonly wal: URI;
 }
@@ -222,10 +222,13 @@ export interface StoreURIRuntime {
   readonly idx: StoreURIs;
 }
 
-export interface StoreFactoryItem {
-  // readonly sthis: SuperThis;
+export interface UrlAndInterceptor {
   readonly url: URI;
   readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+}
+export interface StoreFactoryItem {
+  // readonly sthis: SuperThis;
+  readonly byStore: GatewayUrls;
   // readonly keybag: KeyBag;
   readonly loader: Loadable;
 }
@@ -238,9 +241,12 @@ export interface StoreRuntime {
   // to fullfill lifecycle requirements
   // to release resources, like one ledger connection
   // for all stores a refcount on close() should be used
-  makeMetaStore(sfi: StoreFactoryItem): Promise<MetaStore>;
-  makeDataStore(sfi: StoreFactoryItem): Promise<DataStore>;
-  makeWALStore(sfi: StoreFactoryItem): Promise<WALStore>;
+  // makeMetaStore(sfi: StoreFactoryItem): Promise<MetaStore>;
+  // makeDataStore(sfi: StoreFactoryItem): Promise<DataStore>;
+  // makeWALStore(sfi: StoreFactoryItem): Promise<WALStore>;
+
+  makeStores(sfi: StoreFactoryItem): Promise<DataAndMetaAndWalStore>;
+
   encodeFile(blob: BlobLike): Promise<{ cid: AnyLink; blocks: AnyBlock[] }>;
   decodeFile(blocks: unknown, cid: AnyLink, meta: DocFileMeta): Promise<File>;
 }
@@ -250,6 +256,38 @@ export interface CommitOpts {
   readonly compact?: boolean;
   // readonly public?: boolean;
 }
+
+// export interface DbMetaWithSource extends DbMeta {
+//   readonly srcUrls: {
+//     readonly car: string
+//     readonly file: string
+//     readonly meta: string
+//     readonly local?: string
+//   }[]
+// }
+
+export interface WriteableDataAndMetaStore {
+  file: DataStore;
+  car: DataStore;
+  meta: MetaStore;
+}
+
+export type DataAndMetaStore = Readonly<WriteableDataAndMetaStore>;
+
+export interface WriteableDataAndMetaAndWalStore extends WriteableDataAndMetaStore {
+  wal?: WALStore;
+}
+
+export type DataAndMetaAndWalStore = Readonly<WriteableDataAndMetaAndWalStore>;
+
+export type LocalDataAndMetaAndWalStore = Readonly<Omit<WriteableDataAndMetaAndWalStore, "wal">> & { readonly wal: WALStore };
+
+// export interface DbMetaLocalRemoteStores extends DbMeta {
+//   readonly store: {
+//     readonly local: DataAndMetaStore;
+//     readonly remotes: DataAndMetaStore[];
+//   };
+// }
 
 export interface DbMeta {
   readonly cars: CarGroup;
@@ -308,18 +346,19 @@ export interface Connection {
 export interface BaseStore {
   readonly storeType: StoreType;
   readonly realGateway: SerdeGateway;
+  readonly logger: Logger;
   // readonly url: URI
   url(): URI;
   // readonly name: string;
-  onStarted(fn: () => void): void;
-  onClosed(fn: () => void): void;
+  // onStarted(fn: () => void): void;
+  // onClosed(fn: () => void): void;
 
   keyedCrypto(): Promise<CryptoAction>;
 
   close(): Promise<Result<void>>;
   destroy(): Promise<Result<void>>;
   readonly ready?: () => Promise<void>;
-  start(): Promise<Result<URI>>;
+  start(dam: DataAndMetaStore): Promise<Result<URI>>;
 }
 
 export interface DbMetaEvent {
@@ -437,13 +476,62 @@ export interface BlockstoreRuntime {
   readonly threshold: number;
 }
 
-export interface AttachedRemotes {
-  fileStore(): Promise<DataStore>;
-  carStore(): Promise<DataStore>;
-  metaStore(): Promise<MetaStore>;
+export type LocalActiveStore = Omit<ActiveStore, "active"> & { readonly active: LocalDataAndMetaAndWalStore };
+export interface AttachedStores {
+  // fileStore(): Promise<DataStore>;
+  // carStore(): Promise<DataStore>;
+  // metaStore(): Promise<MetaStore>;
 
+  local(): LocalActiveStore;
+  forRemotes(actionFn: (store: ActiveStore) => Promise<unknown>): Promise<void>;
+  remotes(): ActiveStore[];
+  activate(store: DataAndMetaStore): ActiveStore;
   attach(attached: Attachable): Promise<Attached>;
   detach(): Promise<void>;
+}
+
+export interface DataAttachedStores {
+  local(): DataStore;
+  // without local and active
+  remotes(): DataStore[];
+}
+
+export interface DataActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: DataStore;
+  readonly attached: DataAttachedStores;
+}
+
+export interface MetaAttachedStores {
+  local(): MetaStore;
+  remotes(): MetaStore[];
+}
+
+export interface MetaActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: MetaStore;
+  readonly attached: MetaAttachedStores;
+}
+
+export interface WALAttachedStores {
+  local(): WALStore;
+  remotes(): WALStore[];
+}
+
+export interface WALActiveStore {
+  readonly ref: ActiveStore;
+  readonly active: WALStore;
+  readonly attached: WALAttachedStores;
+}
+
+export interface ActiveStore {
+  readonly active: DataAndMetaAndWalStore;
+  baseStores(): BaseStore[];
+  carStore(): DataActiveStore;
+  fileStore(): DataActiveStore;
+  metaStore(): MetaActiveStore;
+  walStore(): WALActiveStore;
+  readonly attached: AttachedStores;
 }
 
 export interface Loadable {
@@ -456,7 +544,7 @@ export interface Loadable {
   // xremoteFileStore?: DataStore;
   // xremoteCarStore?: DataStore;
 
-  readonly attachedRemotes: AttachedRemotes;
+  readonly attachedStores: AttachedStores;
 
   attach(attached: Attachable): Promise<Attached>;
 
@@ -466,18 +554,18 @@ export interface Loadable {
   close(): Promise<void>;
 
   keyBag(): Promise<KeyBag>;
-  metaStore(): Promise<MetaStore>;
-  fileStore(): Promise<DataStore>;
-  WALStore(): Promise<WALStore>;
-  carStore(): Promise<DataStore>;
+  // metaStore(): Promise<MetaStore>;
+  // fileStore(): Promise<DataStore>;
+  // WALStore(): Promise<WALStore>;
+  // carStore(): Promise<DataStore>;
 
-  handleDbMetasFromStore(metas: DbMeta[]): Promise<void>;
+  handleDbMetasFromStore(metas: DbMeta[], store: ActiveStore): Promise<void>;
 
   commit<T = TransactionMeta>(t: CarTransaction, done: T, opts: CommitOpts): Promise<CarGroup>;
   destroy(): Promise<void>;
-  getBlock(cid: AnyLink): Promise<AnyBlock | Falsy>;
-  loadFileCar(cid: AnyLink /*, isPublic = false*/): Promise<CarReader>;
-  loadCar(cid: AnyLink): Promise<CarReader>;
+  getBlock(cid: AnyLink, store: ActiveStore): Promise<AnyBlock | Falsy>;
+  loadFileCar(cid: AnyLink /*, isPublic = false*/, store: ActiveStore): Promise<CarReader>;
+  loadCar(cid: AnyLink, store: ActiveStore): Promise<CarReader>;
   commitFiles(
     t: CarTransaction,
     done: TransactionMeta /* opts: CommitOpts = { noLoader: false, compact: false } */,
