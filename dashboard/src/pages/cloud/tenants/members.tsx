@@ -58,6 +58,7 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
   });
   const { register } = useForm();
   const [queryValue, setQueryValue] = useState("");
+  const listInvites = cloud.getListInvitesByTenant(tenant.tenantId);
 
   async function queryExistingUserOrNick(e: React.ChangeEvent<HTMLInputElement>) {
     setQueryValue(e.target.value);
@@ -107,6 +108,8 @@ function InviteMembers({ tenant, userId }: { tenant: UserTenant; userId: string 
         query: {},
         results: [],
       });
+      // Refresh the invite list after adding a new invite
+      listInvites.refetch();
     };
   }
 
@@ -176,7 +179,7 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
     return <div>Not found</div>;
   }
 
-  function delInvite(inviteId: string) {
+  function handleRemoveInvite(inviteId: string) {
     return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       e.preventDefault();
       const res = await cloud.api.deleteInvite({ inviteId });
@@ -194,22 +197,40 @@ function CurrentInvites({ tenant }: { tenant: UserTenant }) {
       {listInvites.data.tickets.length === 0 ? (
         <p className="text-[--muted-foreground]">No pending invites</p>
       ) : (
-        <ul className="space-y-4">
-          {listInvites.data.tickets.map((ticket) => (
-            <li key={ticket.invitedParams.tenant?.id}>
-              <ul className="space-y-2">
-                <li key={ticket.inviteId} className="flex items-center justify-between bg-[--background] p-3 rounded-md">
-                  <pre className="text-sm text-[--foreground]">{JSON.stringify(ticket, null, 2)}</pre>
+        <ul className="divide-y divide-[--border]">
+          {listInvites.data.tickets.map((ticket) => {
+            const email = ticket.query.byEmail || "Unknown email";
+            const status =
+              ticket.status === "pending" ? (
+                <span className="text-xs px-2 py-1 bg-[--accent]/10 text-[--accent] rounded">Pending</span>
+              ) : (
+                <span className="text-xs px-2 py-1 bg-[--muted-foreground]/10 text-[--muted-foreground] rounded">
+                  {ticket.status}
+                </span>
+              );
+
+            return (
+              <li key={ticket.inviteId} className="flex items-center justify-between py-3">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-[--foreground]">{email}</span>
+                    {status}
+                  </div>
+                  {ticket.invitedUserId && <span className="text-xs text-[--muted-foreground]">ID: {ticket.invitedUserId}</span>}
+                </div>
+                {ticket.status === "pending" && (
                   <button
-                    onClick={delInvite(ticket.inviteId)}
+                    type="button"
+                    onClick={handleRemoveInvite(ticket.inviteId)}
                     className="p-1 hover:bg-[--destructive]/10 rounded text-[--destructive]"
+                    aria-label="Remove invite"
                   >
                     <Minus />
                   </button>
-                </li>
-              </ul>
-            </li>
-          ))}
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

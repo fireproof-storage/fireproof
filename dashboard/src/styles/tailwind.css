@@ -117,8 +117,9 @@
 .dark .language-javascript code {
   filter: brightness(2.5) contrast(0.6);
 }
+
 body {
-  font-family: var(--font-family-body), "Inter", sans-serif;
+  font-family: var(--font-family-body), "Inter", "sans-serif;";
   font-weight: 500;
   letter-spacing: 0.02em;
   font-size: 14px;
@@ -130,7 +131,7 @@ body {
 
 code,
 pre {
-  font-family: "Geist Mono", monospace;
+  font-family: "Geist Mono";
 }
 
 ::-webkit-scrollbar {
