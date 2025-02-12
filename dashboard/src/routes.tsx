@@ -1,10 +1,10 @@
 import ReactDOM from "react-dom/client";
 
-import "./styles/tailwind.css";
 import { ClerkProvider } from "@clerk/clerk-react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppContextProvider } from "./app-context.tsx";
 import { App } from "./components/App.tsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import "./styles/tailwind.css";
 
 const rootElement = import.meta.env.VITE_CHROME_EXTENSION
   ? document.getElementById("fireproof-overlay")?.shadowRoot?.getElementById("root")

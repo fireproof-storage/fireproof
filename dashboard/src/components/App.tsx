@@ -10,7 +10,7 @@ import {
 import { AppContext } from "../app-context.tsx";
 import { WithoutSidebar } from "../layouts/without-sidebar.tsx";
 import { Better } from "../pages/better.tsx";
-import { Cloud } from "../pages/cloud.tsx";
+import { Cloud, cloudLoader } from "../pages/cloud.tsx";
 import CloudIndex from "../pages/cloud/index.tsx";
 import { CloudTenantAdmin } from "../pages/cloud/tenants/admin.tsx";
 import { CloudTenantDelete } from "../pages/cloud/tenants/delete.tsx";
@@ -40,13 +40,14 @@ export function App() {
   const ctx = useContext(AppContext);
   const routes = createRoutesFromElements(
     <Route>
+      <Route path="/login" element={<Login />} loader={loginLoader} />
       <Route path="/" element={<WithoutSidebar />}>
         <Route index element={<Index />} loader={indexLoader} />
-        <Route path="/login" element={<Login />} loader={loginLoader} />
       </Route>
-      <Route path="/fp/cloud" element={<Cloud />}>
+      <Route path="/fp/cloud" element={<Cloud />} loader={cloudLoader(ctx)}>
         <Route index element={<CloudIndex />} />
         <Route path="tenants">
+          <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
           <Route path=":tenantId">
             <Route element={<CloudTenantShow />}>
               <Route index element={<Navigate to="overview" replace />} />
@@ -69,7 +70,6 @@ export function App() {
               </Route>
             </Route>
           </Route>
-          <Route path="new" element={<CloudNew />} action={newCloudAction(ctx)} />
         </Route>
         <Route path="better" element={<Better />} />
       </Route>
