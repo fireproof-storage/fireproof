@@ -12,18 +12,21 @@ hljs.registerLanguage("javascript", javascript);
 function HighlightedCode({ code, language }: { code: string; language: string }) {
   const highlightedCode = hljs.highlight(code, { language }).value;
   return (
-    <pre className={`language-${language}`}>
+    <pre className={`language-${language} overflow-x-auto text-code`}>
       <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
     </pre>
   );
 }
 const codeStyle = {
-  fontFamily: '"Fira code", "Fira Mono", monospace',
-  fontSize: 14,
+  backgroundColor: "var(--fp-color-background-00)",
+  border: "1px solid var(--fp-color-decorative-00)",
+  borderRadius: "4px",
+  overflowX: "auto",
 };
+
 export function CodeHighlight({ code, language = "json" }: { code: string; language?: string }): JSX.Element {
   return (
-    <div className="p-2" style={codeStyle}>
+    <div className="p-2 text-code" style={codeStyle}>
       <HighlightedCode code={code} language={language} />
     </div>
   );
@@ -62,15 +65,14 @@ export function EditableCodeHighlight({
   }, [code]);
 
   return (
-    <div className="p-2">
-      <Editor
-        value={liveCode}
-        onValueChange={onEditableChange}
-        highlight={(code) => <HighlightedCode code={code} language={language} />}
-        padding={10}
-        style={codeStyle}
-        autoFocus
-      />
-    </div>
+    <Editor
+      value={liveCode}
+      onValueChange={onEditableChange}
+      highlight={(code) => <HighlightedCode code={code} language={language} />}
+      padding={10}
+      style={codeStyle}
+      autoFocus
+      className="text-code"
+    />
   );
 }
