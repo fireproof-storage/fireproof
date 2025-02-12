@@ -1,24 +1,22 @@
 import { Clerk } from "@clerk/clerk-js";
 import { useContext } from "react";
 import { NavLink, redirect, useLocation, useParams } from "react-router-dom";
-import { AppContext, type AppContextType } from "../app-context.tsx";
+import { AppContext } from "../app-context.tsx";
 import { Plus } from "../components/Plus.tsx";
 import { WithSidebar } from "../layouts/with-sidebar.tsx";
 
 // TODO: This is a temporary loader to ensure the user is logged in with Clerk.
 // TODO: We should move this to a provider agnostic loader
-export function cloudLoader(ctx: AppContextType) {
-  return async ({ request }: { request: Request }) => {
-    const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+export async function cloudLoader({ request }) {
+  const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-    const clerk = new Clerk(publishableKey);
-    await clerk.load({});
-    if (!clerk.user) {
-      const url = new URL(request.url);
-      return redirect(`/login?next_url=${encodeURIComponent(url.pathname)}`);
-    }
-    return null;
-  };
+  const clerk = new Clerk(publishableKey);
+  await clerk.load({});
+  if (!clerk.user) {
+    const url = new URL(request.url);
+    return redirect(`/login?next_url=${encodeURIComponent(url.pathname)}`);
+  }
+  return null;
 }
 
 export function Cloud() {
