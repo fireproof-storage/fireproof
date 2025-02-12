@@ -59,19 +59,19 @@ describe("basic Ledger with record", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("factory-name");
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
-  it("should get", async () =>{
+  it("should get", async () => {
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("world");
   });
-  it("should update", async () =>{
+  it("should update", async () => {
     const ok = await db.put({ _id: "hello", value: "universe" });
     expect(ok.id).toBe("hello");
     const doc = await db.get<Doc>("hello");
@@ -79,20 +79,20 @@ describe("basic Ledger with record", function () {
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("universe");
   });
-  it("should del last record", async () =>{
+  it("should del last record", async () => {
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
 
     const e = await db.get("hello").catch((e) => e);
     expect(e.message).toMatch(/Not found/);
   });
-  it("has changes", async () =>{
+  it("has changes", async () => {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     expect(rows[0].key).toBe("hello");
     expect(rows[0].value._id).toBe("hello");
   });
-  it("is not persisted", async () =>{
+  it("is not persisted", async () => {
     const db2 = fireproof("factory-name");
     const { rows } = await db2.changes([]);
     expect(rows.length).toBe(1);
@@ -114,7 +114,7 @@ describe("named Ledger with record", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-db-name");
     /** @type {Doc} */
@@ -122,13 +122,13 @@ describe("named Ledger with record", function () {
     const ok = await db.put(doc);
     expect(ok.id).toBe("hello");
   });
-  it("should get", async () =>{
+  it("should get", async () => {
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("world");
   });
-  it("should update", async () =>{
+  it("should update", async () => {
     const ok = await db.put({ _id: "hello", value: "universe" });
     expect(ok.id).toBe("hello");
     const doc = await db.get<Doc>("hello");
@@ -136,20 +136,20 @@ describe("named Ledger with record", function () {
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("universe");
   });
-  it("should del last record", async () =>{
+  it("should del last record", async () => {
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
 
     const e = await db.get("hello").catch((e) => e);
     expect(e.message).toMatch(/Not found/);
   });
-  it("has changes", async () =>{
+  it("has changes", async () => {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     expect(rows[0].key).toBe("hello");
     expect(rows[0].value._id).toBe("hello");
   });
-  it("should have a key", async () =>{
+  it("should have a key", async () => {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
@@ -161,7 +161,7 @@ describe("named Ledger with record", function () {
     // expect(loader.keyId?.length).toBe(64);
     // expect(loader.key).not.toBe(loader.keyId);
   });
-  it("should work right with a sequence of changes", async () =>{
+  it("should work right with a sequence of changes", async () => {
     const numDocs = 10;
     for (let i = 0; i < numDocs; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -198,7 +198,7 @@ describe("named Ledger with record", function () {
     expect(rows4.length).toBe(5);
   });
 
-  it("should work right after compaction", async () =>{
+  it("should work right after compaction", async () => {
     const numDocs = 10;
     for (let i = 0; i < numDocs; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -256,7 +256,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
     expect(crdt.clock.head.length).toBe(1);
   });
 
-  it("has changes ordered", async () =>{
+  it("has changes ordered", async () => {
     const { rows, clock } = await db.changes([]);
     expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
@@ -299,7 +299,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(doc.hello).toBe("world");
     }
   });
-  it("should del all", async () =>{
+  it("should del all", async () => {
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
       const ok = await db.del(id);
@@ -309,7 +309,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(e.message).toMatch(/Not found/);
     }
   });
-  it("should delete all in parallel", async () =>{
+  it("should delete all in parallel", async () => {
     const deletes: Promise<DocResponse>[] = [];
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
@@ -322,7 +322,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(e.message).toMatch(/Not found/);
     }
   });
-  it("has changes not ordered", async () =>{
+  it("has changes not ordered", async () => {
     const { rows, clock } = await db.changes([]);
     expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
@@ -333,7 +333,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(rows[i].clock).toBeTruthy();
     }
   });
-  it("should not have a key", async () =>{
+  it("should not have a key", async () => {
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(10);
     // expect(db.opts.public).toBeTruthy();
@@ -358,7 +358,7 @@ describe("basic Ledger with subscription", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("factory-name");
     didRun = 0;
@@ -371,7 +371,7 @@ describe("basic Ledger with subscription", function () {
       }, true);
     });
   });
-  it("should run on put", async () =>{
+  it("should run on put", async () => {
     const all = await db.allDocs();
     expect(all.rows.length).toBe(0);
     const doc = { _id: "hello", message: "world" };
@@ -384,7 +384,7 @@ describe("basic Ledger with subscription", function () {
     expect(ok.id).toBe("hello");
     expect(didRun).toBe(1);
   });
-  it("should unsubscribe", async () =>{
+  it("should unsubscribe", async () => {
     unsubscribe();
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
@@ -402,14 +402,14 @@ describe("basic Ledger with no update subscription", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     db = fireproof("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
       didRun++;
     });
   });
-  it("should run on put", async () =>{
+  it("should run on put", async () => {
     const all = await db.allDocs();
     expect(all.rows.length).toBe(0);
     /** @type {Doc} */
@@ -419,7 +419,7 @@ describe("basic Ledger with no update subscription", function () {
     expect(ok.id).toBe("hello");
     expect(didRun).toBe(1);
   });
-  it("should unsubscribe", async () =>{
+  it("should unsubscribe", async () => {
     unsubscribe();
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
@@ -438,7 +438,7 @@ describe("ledger with files input", () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     imagefiles = await buildBlobFiles();
     db = fireproof("fireproof-with-images");
@@ -453,11 +453,11 @@ describe("ledger with files input", () => {
     result = await db.put(doc);
   });
 
-  it("Should upload images", async () =>{
+  it("Should upload images", async () => {
     expect(result.id).toBe("images-main");
   });
 
-  it("Should fetch the images", async () =>{
+  it("Should fetch the images", async () => {
     const doc = await db.get(result.id);
     const files = doc._files as DocFiles;
     expect(files).toBeTruthy();
@@ -488,7 +488,7 @@ describe("ledger with files input", () => {
     // expect(file.name).toBe('fireproof.png') // see https://github.com/fireproof-storage/fireproof/issues/70
   });
 
-  it("should update the file document data without changing the files", async () =>{
+  it("should update the file document data without changing the files", async () => {
     interface Doc {
       type: string;
     }
