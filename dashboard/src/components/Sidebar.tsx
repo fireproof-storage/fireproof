@@ -9,9 +9,9 @@ export function Sidebar({ sideBarComponent, title, newUrl }: { sideBarComponent:
   const { isSidebarOpen, setIsSidebarOpen } = useContext(AppContext).sideBar;
   return (
     <div
-      className={`fixed md:static inset-0 z-40 w-[280px] transform transition-transform duration-300 ease-in-out ${
+      className={`fixed md:static inset-0 bg-fp-bg-00 z-40 w-[280px] transform transition-transform duration-300 ease-in-out ${
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-      } md:translate-x-0 flex flex-col border-r bg-[--muted] overflow-hidden`}
+      } md:translate-x-0 flex flex-col border-r border-fp-dec-00 overflow-hidden`}
     >
       <div className="flex h-[60px] items-center px-5 flex-shrink-0 justify-between">
         <div className="flex items-center gap-2 font-semibold">
