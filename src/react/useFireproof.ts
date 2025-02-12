@@ -66,10 +66,10 @@ interface UseDocumentResultObject<T extends DocTypes> {
   merge: (newDoc: Partial<T>) => void;
   replace: (newDoc: T) => void;
   reset: () => void;
-  refresh: () => void;
+  refresh: () => Promise<void>;
   save: StoreDocFn<T>;
   remove: DeleteDocFn<T>;
-  submit: (e?: Event) => void;
+  submit: (e?: Event) => Promise<void>;
 }
 
 export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
@@ -222,7 +222,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const [doc, setDoc] = useState(initialDoc);
 
-    const refreshDoc = useCallback(async () => {
+    const refresh = useCallback(async () => {
       const gotDoc = doc._id ? await database.get<T>(doc._id).catch(() => initialDoc) : initialDoc;
       setDoc(gotDoc);
     }, [doc._id]);
@@ -275,11 +275,11 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
     const updateDoc = useCallback(
       (newDoc?: DocSet<T>, opts = { replace: false, reset: false }) => {
         if (!newDoc) {
-          return opts.reset ? reset() : refreshDoc();
+          return opts.reset ? reset() : refresh();
         }
         return opts.replace ? replace(newDoc as T) : merge(newDoc);
       },
-      [refreshDoc, reset, replace, merge],
+      [refresh, reset, replace, merge],
     );
 
     useEffect(() => {
@@ -289,16 +289,14 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
           return;
         }
         if (changes.find((c) => c._id === doc._id)) {
-          void refreshDoc();
+          void refresh();
         }
       }, true);
-    }, [doc._id, refreshDoc]);
+    }, [doc._id, refresh]);
 
     useEffect(() => {
-      void refreshDoc();
-    }, [refreshDoc]);
-
-    const refresh = useCallback(() => void refreshDoc(), [refreshDoc]);
+      void refresh();
+    }, [refresh]);
 
     const submit = useCallback(
       async (e?: Event) => {
