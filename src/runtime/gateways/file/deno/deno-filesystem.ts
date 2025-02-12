@@ -3,12 +3,12 @@ import type { FPStats, SysFileSystem } from "@fireproof/core";
 export class DenoFileSystem implements SysFileSystem {
   fs?: {
     mkdir: typeof Deno.mkdir;
-    readdir: typeof Deno.readDir;
+    readDir: typeof Deno.readDir;
     rm: typeof Deno.remove;
     copyFile: typeof Deno.copyFile;
     readFile: typeof Deno.readFile;
     stat: typeof Deno.stat;
-    unlink: typeof Deno.remove;
+    remove: typeof Deno.remove;
     writeFile: typeof Deno.writeFile;
   };
 
@@ -22,7 +22,7 @@ export class DenoFileSystem implements SysFileSystem {
   async readdir(path: string): Promise<string[]> {
     const ret = [];
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    for await (const dirEntry of this.fs!.readdir(path)) {
+    for await (const dirEntry of this.fs!.readDir(path)) {
       ret.push(dirEntry.name);
     }
     return ret;
@@ -58,7 +58,7 @@ export class DenoFileSystem implements SysFileSystem {
     };
   }
   async unlink(path: string): Promise<void> {
-    return this.fs?.unlink(path);
+    return this.fs?.remove(path);
   }
   async writefile(path: string, data: Uint8Array | string): Promise<void> {
     return this.fs?.writeFile(path, Buffer.from(data));

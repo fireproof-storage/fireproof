@@ -59,19 +59,19 @@ describe("basic Ledger with record", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     db = fireproof("factory-name");
     const ok = await db.put<Doc>({ _id: "hello", value: "world" });
     expect(ok.id).toBe("hello");
   });
-  it("should get", async function () {
+  it("should get", async () =>{
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("world");
   });
-  it("should update", async function () {
+  it("should update", async () =>{
     const ok = await db.put({ _id: "hello", value: "universe" });
     expect(ok.id).toBe("hello");
     const doc = await db.get<Doc>("hello");
@@ -79,20 +79,20 @@ describe("basic Ledger with record", function () {
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("universe");
   });
-  it("should del last record", async function () {
+  it("should del last record", async () =>{
     const ok = await db.del("hello");
     expect(ok.id).toBe("hello");
 
     const e = await db.get("hello").catch((e) => e);
     expect(e.message).toMatch(/Not found/);
   });
-  it("has changes", async function () {
+  it("has changes", async () =>{
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     expect(rows[0].key).toBe("hello");
     expect(rows[0].value._id).toBe("hello");
   });
-  it("is not persisted", async function () {
+  it("is not persisted", async () =>{
     const db2 = fireproof("factory-name");
     const { rows } = await db2.changes([]);
     expect(rows.length).toBe(1);
@@ -114,7 +114,7 @@ describe("named Ledger with record", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     db = fireproof("test-db-name");
     /** @type {Doc} */
@@ -122,13 +122,13 @@ describe("named Ledger with record", function () {
     const ok = await db.put(doc);
     expect(ok.id).toBe("hello");
   });
-  it("should get", async function () {
+  it("should get", async () =>{
     const doc = await db.get<Doc>("hello");
     expect(doc).toBeTruthy();
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("world");
   });
-  it("should update", async function () {
+  it("should update", async () =>{
     const ok = await db.put({ _id: "hello", value: "universe" });
     expect(ok.id).toBe("hello");
     const doc = await db.get<Doc>("hello");
@@ -136,6 +136,7 @@ describe("named Ledger with record", function () {
     expect(doc._id).toBe("hello");
     expect(doc.value).toBe("universe");
   });
+<<<<<<< HEAD
   it("should update with null value", async function () {
     const ok = await db.put({ _id: "hello", value: null });
     expect(ok.id).toBe("hello");
@@ -184,13 +185,13 @@ describe("named Ledger with record", function () {
     const e = await db.get("hello").catch((e) => e);
     expect(e.message).toMatch(/Not found/);
   });
-  it("has changes", async function () {
+  it("has changes", async () =>{
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     expect(rows[0].key).toBe("hello");
     expect(rows[0].value._id).toBe("hello");
   });
-  it("should have a key", async function () {
+  it("should have a key", async () =>{
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(1);
     const blocks = db.ledger.crdt.blockstore as bs.EncryptedBlockstore;
@@ -202,7 +203,7 @@ describe("named Ledger with record", function () {
     // expect(loader.keyId?.length).toBe(64);
     // expect(loader.key).not.toBe(loader.keyId);
   });
-  it("should work right with a sequence of changes", async function () {
+  it("should work right with a sequence of changes", async () =>{
     const numDocs = 10;
     for (let i = 0; i < numDocs; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -239,7 +240,7 @@ describe("named Ledger with record", function () {
     expect(rows4.length).toBe(5);
   });
 
-  it("should work right after compaction", async function () {
+  it("should work right after compaction", async () =>{
     const numDocs = 10;
     for (let i = 0; i < numDocs; i++) {
       const doc = { _id: `id-${i}`, hello: "world" };
@@ -263,7 +264,7 @@ describe("named Ledger with record", function () {
 //   /** @type {Ledger} */
 //   let db
 //   const writes = []
-//   beforeEach(async function () {
+//   beforeEach(async () =>{
 //     await resetDirectory(dataDir, 'test-parallel-writes')
 //     db = new Ledger('test-parallel-writes', { public: true })
 //     /** @type {Doc} */
@@ -297,7 +298,7 @@ describe("basic Ledger parallel writes / public ordered", () => {
     expect(crdt.clock.head.length).toBe(1);
   });
 
-  it("has changes ordered", async function () {
+  it("has changes ordered", async () =>{
     const { rows, clock } = await db.changes([]);
     expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
@@ -340,7 +341,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(doc.hello).toBe("world");
     }
   });
-  it("should del all", async function () {
+  it("should del all", async () =>{
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
       const ok = await db.del(id);
@@ -350,7 +351,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(e.message).toMatch(/Not found/);
     }
   });
-  it("should delete all in parallel", async function () {
+  it("should delete all in parallel", async () =>{
     const deletes: Promise<DocResponse>[] = [];
     for (let i = 0; i < 10; i++) {
       const id = `id-${i}`;
@@ -363,7 +364,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(e.message).toMatch(/Not found/);
     }
   });
-  it("has changes not ordered", async function () {
+  it("has changes not ordered", async () =>{
     const { rows, clock } = await db.changes([]);
     expect(clock[0]).toBe(db.ledger.crdt.clock.head[0]);
     expect(rows.length).toBe(10);
@@ -374,7 +375,7 @@ describe("basic Ledger parallel writes / public", () => {
       expect(rows[i].clock).toBeTruthy();
     }
   });
-  it("should not have a key", async function () {
+  it("should not have a key", async () =>{
     const { rows } = await db.changes([]);
     expect(rows.length).toBe(10);
     // expect(db.opts.public).toBeTruthy();
@@ -399,7 +400,7 @@ describe("basic Ledger with subscription", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     db = fireproof("factory-name");
     didRun = 0;
@@ -412,7 +413,7 @@ describe("basic Ledger with subscription", function () {
       }, true);
     });
   });
-  it("should run on put", async function () {
+  it("should run on put", async () =>{
     const all = await db.allDocs();
     expect(all.rows.length).toBe(0);
     const doc = { _id: "hello", message: "world" };
@@ -425,7 +426,7 @@ describe("basic Ledger with subscription", function () {
     expect(ok.id).toBe("hello");
     expect(didRun).toBe(1);
   });
-  it("should unsubscribe", async function () {
+  it("should unsubscribe", async () =>{
     unsubscribe();
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
@@ -443,14 +444,14 @@ describe("basic Ledger with no update subscription", function () {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     db = fireproof("factory-name");
     didRun = 0;
     unsubscribe = db.subscribe(() => {
       didRun++;
     });
   });
-  it("should run on put", async function () {
+  it("should run on put", async () =>{
     const all = await db.allDocs();
     expect(all.rows.length).toBe(0);
     /** @type {Doc} */
@@ -460,7 +461,7 @@ describe("basic Ledger with no update subscription", function () {
     expect(ok.id).toBe("hello");
     expect(didRun).toBe(1);
   });
-  it("should unsubscribe", async function () {
+  it("should unsubscribe", async () =>{
     unsubscribe();
     const doc = { _id: "hello", message: "again" };
     const ok = await db.put(doc);
@@ -479,7 +480,7 @@ describe("ledger with files input", () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async function () {
+  beforeEach(async () =>{
     await sthis.start();
     imagefiles = await buildBlobFiles();
     db = fireproof("fireproof-with-images");
@@ -494,11 +495,11 @@ describe("ledger with files input", () => {
     result = await db.put(doc);
   });
 
-  it("Should upload images", async function () {
+  it("Should upload images", async () =>{
     expect(result.id).toBe("images-main");
   });
 
-  it("Should fetch the images", async function () {
+  it("Should fetch the images", async () =>{
     const doc = await db.get(result.id);
     const files = doc._files as DocFiles;
     expect(files).toBeTruthy();
@@ -529,7 +530,7 @@ describe("ledger with files input", () => {
     // expect(file.name).toBe('fireproof.png') // see https://github.com/fireproof-storage/fireproof/issues/70
   });
 
-  it("should update the file document data without changing the files", async function () {
+  it("should update the file document data without changing the files", async () =>{
     interface Doc {
       type: string;
     }
@@ -592,13 +593,13 @@ describe("StoreURIRuntime", () => {
   it("default toStoreURIRuntime", () => {
     expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "test")))).toEqual({
       data: {
-        data: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
+        car: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
         file: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&urlGen=fromEnv",
         meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
         wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
       },
       idx: {
-        data: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
+        car: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
         file: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&urlGen=fromEnv",
         meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
         wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",
@@ -609,13 +610,13 @@ describe("StoreURIRuntime", () => {
   it("no name toStoreURIRuntime(not more)", () => {
     expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "gogo")))).toEqual({
       data: {
-        data: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&suffix=.car&urlGen=fromEnv",
+        car: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&suffix=.car&urlGen=fromEnv",
         file: "my://bla/storage?name=gogo&store=data&storekey=%40gogo-data%40&urlGen=fromEnv",
         meta: "my://bla/storage?name=gogo&store=meta&storekey=%40gogo-meta%40&urlGen=fromEnv",
         wal: "my://bla/storage?name=gogo&store=wal&storekey=%40gogo-wal%40&urlGen=fromEnv",
       },
       idx: {
-        data: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&suffix=.car&urlGen=fromEnv",
+        car: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&suffix=.car&urlGen=fromEnv",
         file: "my://bla/storage?index=idx&name=gogo&store=data&storekey=%40gogo-data-idx%40&urlGen=fromEnv",
         meta: "my://bla/storage?index=idx&name=gogo&store=meta&storekey=%40gogo-meta-idx%40&urlGen=fromEnv",
         wal: "my://bla/storage?index=idx&name=gogo&store=wal&storekey=%40gogo-wal-idx%40&urlGen=fromEnv",
@@ -642,13 +643,13 @@ describe("StoreURIRuntime", () => {
       ),
     ).toEqual({
       data: {
-        data: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40&suffix=.car",
+        car: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40&suffix=.car",
         file: "my://storage-data?name=yyy&store=data&storekey=%40yyy-data%40",
         meta: "my://storage-meta?name=xxx&store=meta&storekey=%40xxx-meta%40",
         wal: "my://storage-base?name=xxx&store=wal&storekey=%40xxx-wal%40",
       },
       idx: {
-        data: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40&suffix=.car",
+        car: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40&suffix=.car",
         file: "my://storage-idx-data?index=bla&name=yyy&store=data&storekey=%40yyy-data-idx%40",
         meta: "my://storage-idx-meta?index=idx&name=xxx&store=meta&storekey=%40xxx-meta-idx%40",
         wal: "my://storage-base?index=idx&name=xxx&store=wal&storekey=%40xxx-wal-idx%40",
@@ -660,13 +661,13 @@ describe("StoreURIRuntime", () => {
     sthis.env.delete("FP_STORAGE_URL");
     expect(JSON.parse(JSON.stringify(toStoreURIRuntime(sthis, "maxi")))).toEqual({
       data: {
-        data: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&suffix=.car&urlGen=default",
+        car: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&suffix=.car&urlGen=default",
         file: "murks://fp?name=maxi&store=data&storekey=%40maxi-data%40&urlGen=default",
         meta: "murks://fp?name=maxi&store=meta&storekey=%40maxi-meta%40&urlGen=default",
         wal: "murks://fp?name=maxi&store=wal&storekey=%40maxi-wal%40&urlGen=default",
       },
       idx: {
-        data: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&suffix=.car&urlGen=default",
+        car: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&suffix=.car&urlGen=default",
         file: "murks://fp?index=idx&name=maxi&store=data&storekey=%40maxi-data-idx%40&urlGen=default",
         meta: "murks://fp?index=idx&name=maxi&store=meta&storekey=%40maxi-meta-idx%40&urlGen=default",
         wal: "murks://fp?index=idx&name=maxi&store=wal&storekey=%40maxi-wal-idx%40&urlGen=default",
@@ -683,7 +684,7 @@ describe("StoreURIRuntime", () => {
         stores: [
           {
             data: {
-              data: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
+              car: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&suffix=.car&urlGen=fromEnv",
               file: "my://bla/storage?name=test&store=data&storekey=%40test-data%40&urlGen=fromEnv",
               meta: "my://bla/storage?name=test&store=meta&storekey=%40test-meta%40&urlGen=fromEnv",
               wal: "my://bla/storage?name=test&store=wal&storekey=%40test-wal%40&urlGen=fromEnv",
@@ -691,7 +692,7 @@ describe("StoreURIRuntime", () => {
           },
           {
             idx: {
-              data: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
+              car: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&suffix=.car&urlGen=fromEnv",
               file: "my://bla/storage?index=idx&name=test&store=data&storekey=%40test-data-idx%40&urlGen=fromEnv",
               meta: "my://bla/storage?index=idx&name=test&store=meta&storekey=%40test-meta-idx%40&urlGen=fromEnv",
               wal: "my://bla/storage?index=idx&name=test&store=wal&storekey=%40test-wal-idx%40&urlGen=fromEnv",

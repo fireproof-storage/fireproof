@@ -9,7 +9,7 @@
 
 ### Build first, sync later: perfect for AI-generated apps and rapid prototypes
 
-Fireproof is an embedded document ledger that lets you build full-stack apps in a single file. This makes it ideal for AI code generation and rapid prototyping - just write your features and access your data anywhere. 
+Fireproof is an embedded document ledger that lets you build full-stack apps in a single file. This makes it ideal for AI code generation and rapid prototyping - just write your features and access your data anywhere.
 
 [Point AI coders to these docs.](https://use-fireproof.com/llms-full.txt)
 

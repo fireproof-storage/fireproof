@@ -2,7 +2,15 @@ import { Logger, KeyedResolvOnce, URI, Result } from "@adviser/cement";
 
 import { decodeFile, encodeFile } from "../runtime/files.js";
 import { DataStoreImpl, MetaStoreImpl, WALStoreImpl } from "./store.js";
-import { StoreEnDeFile, StoreFactoryItem, StoreRuntime } from "./types.js";
+import {
+  BaseStore,
+  DataAndMetaAndWalStore,
+  StoreEnDeFile,
+  StoreFactoryItem,
+  StoreRuntime,
+  UrlAndInterceptor,
+  WriteableDataAndMetaAndWalStore,
+} from "./types.js";
 import { PARAM, SuperThis } from "../types.js";
 import { getGatewayFactoryItem } from "./register-store-protocol.js";
 import { SerdeGateway, SerdeGatewayCtx } from "./serde-gateway.js";
@@ -36,17 +44,17 @@ export async function getStartedGateway(ctx: SerdeGatewayCtx, url: URI): Promise
   });
 }
 
-async function dataStoreFactory(sfi: StoreFactoryItem): Promise<DataStoreImpl> {
-  const storeUrl = sfi.url.build().setParam(PARAM.STORE, "data").URI();
-  const rgateway = await getStartedGateway(sfi, storeUrl);
+async function dataStoreFactory(ctx: SerdeGatewayCtx, uai: UrlAndInterceptor): Promise<DataStoreImpl> {
+  const storeUrl = uai.url.build().setParam(PARAM.STORE, "data").URI();
+  const rgateway = await getStartedGateway(ctx, storeUrl);
   if (rgateway.isErr()) {
-    throw sfi.loader.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
+    throw ctx.loader.sthis.logger.Error().Result("err", rgateway).Url(uai.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new DataStoreImpl(sfi.loader.sthis, gateway.url, {
+  const store = new DataStoreImpl(ctx.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
-    gatewayInterceptor: sfi.gatewayInterceptor,
-    loader: sfi.loader,
+    gatewayInterceptor: uai.gatewayInterceptor,
+    loader: ctx.loader,
   });
   return store;
 }
@@ -64,17 +72,17 @@ async function dataStoreFactory(sfi: StoreFactoryItem): Promise<DataStoreImpl> {
 // }
 
 // const onceMetaStoreFactory = new KeyedResolvOnce<MetaStoreImpl>();
-async function metaStoreFactory(sfi: StoreFactoryItem): Promise<MetaStoreImpl> {
-  const storeUrl = sfi.url.build().setParam(PARAM.STORE, "meta").URI();
-  const rgateway = await getStartedGateway(sfi, storeUrl);
+async function metaStoreFactory(ctx: SerdeGatewayCtx, uai: UrlAndInterceptor): Promise<MetaStoreImpl> {
+  const storeUrl = uai.url.build().setParam(PARAM.STORE, "meta").URI();
+  const rgateway = await getStartedGateway(ctx, storeUrl);
   if (rgateway.isErr()) {
-    throw sfi.loader.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
+    throw ctx.loader.sthis.logger.Error().Result("err", rgateway).Url(uai.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new MetaStoreImpl(sfi.loader.sthis, gateway.url, {
+  const store = new MetaStoreImpl(ctx.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
-    gatewayInterceptor: sfi.gatewayInterceptor,
-    loader: sfi.loader,
+    gatewayInterceptor: uai.gatewayInterceptor,
+    loader: ctx.loader,
   });
   return store;
 }
@@ -92,23 +100,26 @@ async function metaStoreFactory(sfi: StoreFactoryItem): Promise<MetaStoreImpl> {
 // }
 
 // const onceRemoteWalFactory = new KeyedResolvOnce<WALStoreImpl>();
-async function WALStoreFactory(sfi: StoreFactoryItem): Promise<WALStoreImpl> {
-  const storeUrl = sfi.url.build().setParam(PARAM.STORE, "wal").URI();
-  const rgateway = await getStartedGateway(sfi, storeUrl);
+async function WALStoreFactory(ctx: SerdeGatewayCtx, uai: UrlAndInterceptor): Promise<WALStoreImpl> {
+  const storeUrl = uai.url.build().setParam(PARAM.STORE, "wal").URI();
+  const rgateway = await getStartedGateway(ctx, storeUrl);
   if (rgateway.isErr()) {
-    throw sfi.loader.sthis.logger.Error().Result("err", rgateway).Url(sfi.url).Msg("notfound").AsError();
+    throw ctx.loader.sthis.logger.Error().Result("err", rgateway).Url(uai.url).Msg("notfound").AsError();
   }
   const gateway = rgateway.Ok();
-  const store = new WALStoreImpl(sfi.loader.sthis, gateway.url, {
+  const store = new WALStoreImpl(ctx.loader.sthis, gateway.url, {
     gateway: gateway.gateway,
-    gatewayInterceptor: sfi.gatewayInterceptor,
-    loader: sfi.loader,
+    gatewayInterceptor: uai.gatewayInterceptor,
+    loader: ctx.loader,
   });
   return store;
 }
 
-async function ensureStart<T>(store: T & { start: () => Promise<Result<URI>>; logger: Logger }): Promise<T> {
-  const ret = await store.start();
+async function ensureStart<T extends Pick<BaseStore, "start"> & { logger: Logger }>(
+  store: T,
+  damaw: DataAndMetaAndWalStore,
+): Promise<T> {
+  const ret = await store.start(damaw);
   if (ret.isErr()) {
     throw store.logger.Error().Result("start", ret).Msg("start failed").AsError();
   }
@@ -127,30 +138,31 @@ export function ensureStoreEnDeFile(ende?: Partial<StoreEnDeFile>): StoreEnDeFil
 export function toStoreRuntime(sthis: SuperThis, endeOpts: Partial<StoreEnDeFile> = {}): StoreRuntime {
   // const logger = ensureLogger(sthis, "toStoreRuntime", {});
   return {
-    makeMetaStore: async (sfi: StoreFactoryItem) => ensureStart(await metaStoreFactory(sfi)),
-    // async (loader: Loadable) => {
-    //   logger
-    //     .Debug()
-    //     .Str("fromOpts", "" + !!endeOpts.func?.makeMetaStore)
-    //     .Msg("makeMetaStore");
-    //   return ensureStart(await (endeOpts.func?.makeMetaStore || metaStoreFactory)(loader), logger);
-    // },
-    makeDataStore: async (sfi: StoreFactoryItem) => ensureStart(await dataStoreFactory(sfi)),
-    // async (loader: Loadable) => {
-    //   logger
-    //     .Debug()
-    //     .Str("fromOpts", "" + !!endeOpts.func?.makeDataStore)
-    //     .Msg("makeDataStore");
-    //   return ensureStart(await (endeOpts.func?.makeDataStore || dataStoreFactory)(loader), logger);
-    // },
-    makeWALStore: async (sfi: StoreFactoryItem) => ensureStart(await WALStoreFactory(sfi)),
-    // async (loader: Loadable) => {
-    //   logger
-    //     .Debug()
-    //     .Str("fromOpts", "" + !!endeOpts.func?.makeWALStore)
-    //     .Msg("makeRemoteWAL");
-    //   return ensureStart(await (endeOpts.func?.makeWALStore || remoteWalFactory)(loader), logger);
-    // },
+    makeStores: async (sfi: StoreFactoryItem) => {
+      const ctx: SerdeGatewayCtx = {
+        loader: sfi.loader,
+      };
+      const storeSet: WriteableDataAndMetaAndWalStore = {} as DataAndMetaAndWalStore;
+      storeSet.meta = await metaStoreFactory(ctx, sfi.byStore.meta);
+      storeSet.car = await dataStoreFactory(ctx, sfi.byStore.car);
+      storeSet.file = await dataStoreFactory(ctx, sfi.byStore.file);
+      if (sfi.byStore.wal) {
+        storeSet.wal = await WALStoreFactory(ctx, sfi.byStore.wal);
+      }
+
+      await ensureStart(storeSet.meta, storeSet);
+      await ensureStart(storeSet.car, storeSet);
+      await ensureStart(storeSet.file, storeSet);
+      if (storeSet.wal) {
+        await ensureStart(storeSet.wal, storeSet);
+      }
+
+      return storeSet;
+    },
+
+    // makeMetaStore: async (sfi: StoreFactoryItem) => ensureStart(await metaStoreFactory(sfi)),
+    // makeDataStore: async (sfi: StoreFactoryItem) => ensureStart(await dataStoreFactory(sfi)),
+    // makeWALStore: async (sfi: StoreFactoryItem) => ensureStart(await WALStoreFactory(sfi)),
 
     ...ensureStoreEnDeFile(endeOpts),
   };

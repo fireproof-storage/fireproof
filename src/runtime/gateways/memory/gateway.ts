@@ -41,7 +41,7 @@ export class MemoryGateway implements Gateway {
     // ensureLogger(sthis, "MemoryGateway").Debug().Str("url", url.toString()).Msg("put");
     const x = this.memorys.get(url.toString());
     if (!x) {
-      return Promise.resolve(Result.Err(new NotFoundError("not found")));
+      return Promise.resolve(Result.Err(new NotFoundError(`not found: ${url.getParam(PARAM.STORE)}`)));
     }
     return Promise.resolve(Result.Ok(x));
   }

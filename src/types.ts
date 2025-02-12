@@ -1,7 +1,7 @@
 import type { EventLink } from "@fireproof/vendor/@web3-storage/pail/clock/api";
 import type { Operation } from "@fireproof/vendor/@web3-storage/pail/crdt/api";
 import type { Block, UnknownLink, Version } from "multiformats";
-import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, URI, CoerceURI } from "@adviser/cement";
+import type { EnvFactoryOpts, Env, Logger, CryptoRuntime, Result, CoerceURI } from "@adviser/cement";
 
 import type {
   CarTransactionOpts,
@@ -16,8 +16,12 @@ import type {
   TransactionWrapper,
   BlockstoreRuntime,
   StoreURIRuntime,
+  DataAndMetaAndWalStore,
+  UrlAndInterceptor,
   DataStore,
   MetaStore,
+  WALStore,
+  BaseStore,
 } from "./blockstore/index.js";
 
 // import type { MakeDirectoryOptions, PathLike, Stats } from "fs";
@@ -453,19 +457,27 @@ export interface ReadyCloseDestroy {
   ready(): Promise<void>;
 }
 
+export interface CoerceURIandInterceptor {
+  readonly url: CoerceURI;
+  readonly gatewayInterceptor?: SerdeGatewayInterceptor;
+}
+
 /**
  * @description used by an attachable do define the urls of the attached gateways
  */
 export interface GatewayUrlsParam {
-  readonly carUrl: CoerceURI;
-  readonly filesUrl: CoerceURI;
-  readonly metaUrl: CoerceURI;
+  readonly car: CoerceURIandInterceptor;
+  readonly file: CoerceURIandInterceptor;
+  readonly meta: CoerceURIandInterceptor;
+  // if set this is a local Attachment
+  readonly wal?: CoerceURIandInterceptor;
 }
 
 export interface GatewayUrls {
-  readonly carUrl: URI;
-  readonly filesUrl: URI;
-  readonly metaUrl: URI;
+  readonly car: UrlAndInterceptor;
+  readonly file: UrlAndInterceptor;
+  readonly meta: UrlAndInterceptor;
+  readonly wal?: UrlAndInterceptor;
 }
 
 export interface Attachable {
@@ -477,14 +489,29 @@ export interface Attachable {
   prepare(): Promise<GatewayUrlsParam>;
 }
 
+export class DataAndMetaAndWalAndBaseStore implements DataAndMetaAndWalStore {
+  readonly wal?: WALStore | undefined;
+  readonly file: DataStore;
+  readonly car: DataStore;
+  readonly meta: MetaStore;
+  readonly baseStores: BaseStore[];
+
+  constructor(dam: DataAndMetaAndWalStore) {
+    this.wal = dam.wal;
+    this.file = dam.file;
+    this.car = dam.car;
+    this.meta = dam.meta;
+    this.baseStores = [this.file, this.car, this.meta];
+    if (this.wal) {
+      this.baseStores.push(this.wal);
+    }
+  }
+}
+
 export interface Attached {
   readonly gatewayUrls: GatewayUrls;
 
-  readonly stores: {
-    readonly car: DataStore;
-    readonly file: DataStore;
-    readonly meta: MetaStore;
-  };
+  readonly stores: DataAndMetaAndWalAndBaseStore;
 
   detach(): Promise<void>;
   status(): "attached" | "loading" | "loaded" | "error" | "detached" | "syncing" | "idle";

@@ -210,7 +210,6 @@ class LedgerImpl implements Ledger {
     this.crdt.clock.onTock(() => this._no_update_notify());
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   attach(a: Attachable): Promise<Attached> {
     return this.crdt.blockstore.loader.attach(a);
   }
@@ -321,13 +320,13 @@ export function toStoreURIRuntime(sthis: SuperThis, name: string, sopts?: StoreU
   // readonly threshold?: number;
   return {
     idx: {
-      data: defaultURI(sthis, name, sopts.idx?.data, base, "data", { idx: true }),
+      car: defaultURI(sthis, name, sopts.idx?.data, base, "data", { idx: true }),
       file: defaultURI(sthis, name, sopts.idx?.data, base, "data", { file: true, idx: true }),
       meta: defaultURI(sthis, name, sopts.idx?.meta, base, "meta", { idx: true }),
       wal: defaultURI(sthis, name, sopts.idx?.wal, base, "wal", { idx: true }),
     },
     data: {
-      data: defaultURI(sthis, name, sopts.data?.data, base, "data"),
+      car: defaultURI(sthis, name, sopts.data?.data, base, "data"),
       file: defaultURI(sthis, name, sopts.data?.data, base, "data", { file: true }),
       meta: defaultURI(sthis, name, sopts.data?.meta, base, "meta"),
       wal: defaultURI(sthis, name, sopts.data?.wal, base, "wal"),

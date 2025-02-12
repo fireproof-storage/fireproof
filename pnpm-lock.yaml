@@ -96,9 +96,6 @@ importers:
       esbuild:
         specifier: ^0.24.2
         version: 0.24.2
-      esbuild-plugin-resolve:
-        specifier: ^2.0.0
-        version: 2.0.0
       eslint:
         specifier: ^9.18.0
         version: 9.28.0(jiti@1.21.7)
