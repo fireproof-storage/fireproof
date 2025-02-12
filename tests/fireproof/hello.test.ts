@@ -49,23 +49,23 @@ describe("hello public API", () => {
 
 describe("Simplified Reopening a ledger", function () {
   let db: Database;
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     db = fireproof("test-reopen-simple");
     const ok = await db.put({ _id: "test", foo: "bar" });
     expect(ok).toBeTruthy();
     expect(ok.id).toBe("test");
   });
 
-  it("should persist data", async () =>{
+  it("should persist data", async () => {
     const doc = await db.get<{ foo: string }>("test");
     expect(doc.foo).toBe("bar");
   });
 
-  it("should have the same data on reopen", async () =>{
+  it("should have the same data on reopen", async () => {
     const db2 = fireproof("test-reopen-simple");
     const doc = await db2.get<{ foo: string }>("test");
     expect(doc.foo).toBe("bar");

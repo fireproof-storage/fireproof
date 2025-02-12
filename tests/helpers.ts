@@ -1,5 +1,16 @@
 import { BuildURI, MockLogger, runtimeFn, toCryptoRuntime, URI, utils, LogCollector } from "@adviser/cement";
-import { ensureSuperThis, rt, SuperThis, SuperThisOpts, bs, PARAM, Attachable, Attached, CarTransaction, Falsy } from "@fireproof/core";
+import {
+  ensureSuperThis,
+  rt,
+  SuperThis,
+  SuperThisOpts,
+  bs,
+  PARAM,
+  Attachable,
+  Attached,
+  CarTransaction,
+  Falsy,
+} from "@fireproof/core";
 import { CID } from "multiformats";
 import { sha256 } from "multiformats/hashes/sha2";
 import * as json from "multiformats/codecs/json";
@@ -80,7 +91,6 @@ export async function simpleCID(sthis: SuperThis) {
   return CID.create(1, json.code, hash);
 }
 
-
 class MockLoader implements bs.Loadable {
   readonly sthis: SuperThis;
   readonly ebOpts: bs.BlockstoreRuntime;
@@ -90,8 +100,8 @@ class MockLoader implements bs.Loadable {
 
   constructor(sthis: SuperThis) {
     this.sthis = sthis;
-    this.ebOpts = { } as bs.BlockstoreRuntime;
-    this.carLog = []
+    this.ebOpts = {} as bs.BlockstoreRuntime;
+    this.carLog = [];
     this.taskManager = new TaskManager(sthis, () => Promise.resolve());
     this.attachedStores = new bs.AttachedRemotesImpl(this);
   }

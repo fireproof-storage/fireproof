@@ -265,11 +265,13 @@ class WALAttachedStoresImpl implements WALAttachedStores {
     return this.attached.local().active.wal;
   }
   remotes(): WALStore[] {
-    return this.attached
-      .remotes()
-      .filter(({ active }) => active.wal)
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      .map(({ active }) => active.wal!);
+    return (
+      this.attached
+        .remotes()
+        .filter(({ active }) => active.wal)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        .map(({ active }) => active.wal!)
+    );
   }
 }
 
