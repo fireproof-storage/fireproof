@@ -257,7 +257,6 @@ describe("KeyedCryptoStore", () => {
     baseUrl = baseUrl.build().setParam(PARAM.NAME, "test").URI();
     kb = await rt.kb.getKeyBag(sthis, {});
     loader = mockLoader(sthis);
-
   });
   it("no crypto", async () => {
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();

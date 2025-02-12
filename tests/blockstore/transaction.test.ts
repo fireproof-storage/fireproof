@@ -15,12 +15,12 @@ describe("Fresh TransactionBlockstore", function () {
   // it("should not have a loader", function () {
   //   expect(blocks.loader).toBeFalsy();
   // });
-  it("should not put", async () =>{
+  it("should not put", async () => {
     const value = sthis.txt.encode("value");
     const e = await blocks.put("key" as unknown as bs.AnyLink, value).catch((e) => e);
     expect(e.message).toMatch(/transaction/g);
   });
-  it("should yield a transaction", async () =>{
+  it("should yield a transaction", async () => {
     const txR = await blocks.transaction(async (tblocks) => {
       expect(tblocks).toBeTruthy();
       expect(tblocks instanceof bs.CarTransactionImpl).toBeTruthy();
@@ -45,7 +45,7 @@ describe("TransactionBlockstore with name", function () {
   it("should have a loader", function () {
     expect(blocks.loader).toBeTruthy();
   });
-  it("should get from loader", async () =>{
+  it("should get from loader", async () => {
     const bytes = sthis.txt.encode("bytes");
     expect(blocks.loader).toBeTruthy();
     blocks.loader.getBlock = async (cid) => {
@@ -60,12 +60,12 @@ describe("A transaction", function () {
   let tblocks: CarTransaction;
   let blocks: bs.EncryptedBlockstore;
   const sthis = ensureSuperThis();
-  beforeEach(async () =>{
+  beforeEach(async () => {
     blocks = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, "test"));
     tblocks = new bs.CarTransactionImpl(blocks);
     blocks.transactions.add(tblocks);
   });
-  it("should put and get", async () =>{
+  it("should put and get", async () => {
     const cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     const bytes = sthis.txt.encode("bytes");
     await tblocks.put(cid, bytes);
@@ -87,7 +87,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
   let cid2: CID;
   const sthis = ensureSuperThis();
 
-  beforeEach(async () =>{
+  beforeEach(async () => {
     cid = CID.parse("bafybeia4luuns6dgymy5kau5rm7r4qzrrzg6cglpzpogussprpy42cmcn4");
     cid2 = CID.parse("bafybeibgouhn5ktecpjuovt52zamzvm4dlve5ak7x6d5smms3itkhplnhm");
 
@@ -103,11 +103,11 @@ describe("TransactionBlockstore with a completed transaction", function () {
       return { head: [] };
     });
   });
-  it("should have transactions", async () =>{
+  it("should have transactions", async () => {
     const ts = blocks.transactions;
     expect(ts.size).toEqual(2);
   });
-  it("should get", async () =>{
+  it("should get", async () => {
     const value = (await blocks.get(cid)) as bs.AnyBlock;
     expect(value.cid).toEqual(cid);
     expect(value.bytes.toString()).toEqual(asUInt8Array("value", sthis).toString());
@@ -115,7 +115,7 @@ describe("TransactionBlockstore with a completed transaction", function () {
     const value2 = (await blocks.get(cid2)) as bs.AnyBlock;
     expect(value2.bytes.toString()).toEqual(asUInt8Array("value2", sthis).toString());
   });
-  it("should yield entries", async () =>{
+  it("should yield entries", async () => {
     const blz = [];
     for await (const blk of blocks.entries()) {
       blz.push(blk);
