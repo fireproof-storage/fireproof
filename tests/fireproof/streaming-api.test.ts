@@ -285,5 +285,20 @@ describe("Streaming API", () => {
         await testToArray(lr.query<string, DocType>("additional"), AMOUNT_OF_ADDITIONAL_DOCS);
       });
     });
+
+    // EXCLUDE DOCS
+    describe("excludeDocs", () => {
+      it("inquiry", async () => {
+        const inquiry = lr.query("name", {
+          excludeDocs: true,
+        });
+
+        const arr = await inquiry.toArray();
+        const doc = arr[0];
+
+        expect(doc).toBeTruthy();
+        expect(doc).not.toHaveProperty("doc");
+      });
+    });
   });
 });
