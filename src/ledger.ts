@@ -20,6 +20,7 @@ import {
   PARAM,
   QueryResponse,
   ClockHead,
+  InquiryResponse,
 } from "./types.js";
 import { DbMeta, SerdeGatewayInterceptor, StoreEnDeFile, StoreURIRuntime, StoreUrlsOpts } from "./blockstore/index.js";
 import { ensureLogger, ensureSuperThis, NotFoundError, toSortedArray } from "./utils.js";
@@ -79,8 +80,17 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
 
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T, R>,
+    opts: QueryOpts<K> & { excludeDocs: true },
+  ): InquiryResponse<K, R>;
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
     opts?: QueryOpts<K>,
   ): QueryResponse<K, T, R>;
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
+    opts?: QueryOpts<K>,
+  ): InquiryResponse<K, R> | QueryResponse<K, T, R>;
+
   compact(): Promise<void>;
 }
 
@@ -168,12 +178,22 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
   allDocuments<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R> {
     return this.ref.allDocuments();
   }
+
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
+    opts: QueryOpts<K> & { excludeDocs: true },
+  ): InquiryResponse<K, R>;
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T, R>,
     opts?: QueryOpts<K>,
-  ): QueryResponse<K, T, R> {
+  ): QueryResponse<K, T, R>;
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
+    opts?: QueryOpts<K>,
+  ): InquiryResponse<K, R> | QueryResponse<K, T, R> {
     return this.ref.query(field, opts);
   }
+
   compact(): Promise<void> {
     return this.ref.compact();
   }
@@ -323,8 +343,16 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
     field: string | MapFn<T, R>,
+    opts: QueryOpts<K> & { excludeDocs: true },
+  ): InquiryResponse<K, R>;
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
+    opts?: QueryOpts<K>,
+  ): QueryResponse<K, T, R>;
+  query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
+    field: string | MapFn<T, R>,
     opts: QueryOpts<K> = {},
-  ): QueryResponse<K, T, R> {
+  ): InquiryResponse<K, R> | QueryResponse<K, T, R> {
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
     const _crdt = this.crdt as unknown as CRDT<T>;
     const idx =
