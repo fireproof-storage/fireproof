@@ -78,7 +78,7 @@ export interface Ledger<DT extends DocTypes = NonNullable<unknown>> extends HasC
   allDocuments<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(): QueryResponse<K, T, R>;
 
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
+    field: string | MapFn<T, R>,
     opts?: QueryOpts<K>,
   ): QueryResponse<K, T, R>;
   compact(): Promise<void>;
@@ -169,7 +169,7 @@ export class LedgerShell<DT extends DocTypes = NonNullable<unknown>> implements 
     return this.ref.allDocuments();
   }
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
+    field: string | MapFn<T, R>,
     opts?: QueryOpts<K>,
   ): QueryResponse<K, T, R> {
     return this.ref.query(field, opts);
@@ -322,7 +322,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
 
   // todo if we add this onto dbs in fireproof.ts then we can make index.ts a separate package
   query<K extends IndexKeyType, T extends DocTypes, R extends DocFragment = T>(
-    field: string | MapFn<T>,
+    field: string | MapFn<T, R>,
     opts: QueryOpts<K> = {},
   ): QueryResponse<K, T, R> {
     this.logger.Debug().Any("field", field).Any("opts", opts).Msg("query");
@@ -331,7 +331,7 @@ class LedgerImpl<DT extends DocTypes = NonNullable<unknown>> implements Ledger<D
       typeof field === "string"
         ? index<K, T, R>({ crdt: _crdt }, field)
         : index<K, T, R>({ crdt: _crdt }, makeName(field.toString()), field);
-    return idx.query<K, T, R>(opts, { waitFor: this.ready() });
+    return idx.query(opts, { waitFor: this.ready() });
   }
 
   async compact() {
