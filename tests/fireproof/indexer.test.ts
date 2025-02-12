@@ -24,13 +24,13 @@ describe("basic Index", () => {
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ title: "amazing" });
@@ -48,41 +48,41 @@ describe("basic Index", () => {
     expect(indexer.name).toBe("hello");
     expect(indexer.mapFn).toBeTruthy();
   });
-  it("should call the map function on first query", async () =>{
+  it("should call the map function on first query", async () => {
     didMap = false;
     await indexer.query();
     expect(didMap).toBeTruthy();
   });
-  it("should not call the map function on second query", async () =>{
+  it("should not call the map function on second query", async () => {
     await indexer.query();
     didMap = false;
     await indexer.query();
     expect(didMap).toBeFalsy();
   });
-  it("should get results", async () =>{
+  it("should get results", async () => {
     const result = await indexer.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toBe(3);
   });
-  it("should be in order", async () =>{
+  it("should be in order", async () => {
     const { rows } = await indexer.query();
     expect(rows[0].key).toBe("amazing");
   });
-  it("should work with limit", async () =>{
+  it("should work with limit", async () => {
     const { rows } = await indexer.query({ limit: 1 });
     expect(rows.length).toBe(1);
   });
-  it("should work with descending", async () =>{
+  it("should work with descending", async () => {
     const { rows } = await indexer.query({ descending: true });
     expect(rows[0].key).toBe("creative");
   });
-  it("should range query all", async () =>{
+  it("should range query all", async () => {
     const { rows } = await indexer.query({ range: ["a", "z"] });
     expect(rows.length).toBe(3);
     expect(rows[0].key).toBe("amazing");
   });
-  it("should range query all twice", async () =>{
+  it("should range query all twice", async () => {
     const { rows } = await indexer.query({ range: ["a", "z"] });
     expect(rows.length).toBe(3);
     expect(rows[0].key).toBe("amazing");
@@ -90,15 +90,15 @@ describe("basic Index", () => {
     expect(rows2.length).toBe(3);
     expect(rows2[0].key).toBe("amazing");
   });
-  it("should range query", async () =>{
+  it("should range query", async () => {
     const { rows } = await indexer.query({ range: ["b", "d"] });
     expect(rows[0].key).toBe("bazillas");
   });
-  it("should key query", async () =>{
+  it("should key query", async () => {
     const { rows } = await indexer.query({ key: "bazillas" });
     expect(rows.length).toBe(1);
   });
-  it("should include docs", async () =>{
+  it("should include docs", async () => {
     const { rows } = await indexer.query({ includeDocs: true });
     expect(rows[0]).toBeTruthy();
     expect(rows[0].id).toBeTruthy();
@@ -111,13 +111,13 @@ describe("Index query with compound key", function () {
   let db: Database;
   let indexer: Index<[string, number], TestType>;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ title: "amazing", score: 1 });
@@ -129,7 +129,7 @@ describe("Index query with compound key", function () {
     });
     await indexer.ready();
   });
-  it("should prefix query", async () =>{
+  it("should prefix query", async () => {
     const { rows } = await indexer.query({ prefix: "creative" });
     expect(rows.length).toBe(2);
     expect(rows[0].key).toEqual(["creative", 2]);
@@ -141,13 +141,13 @@ describe("basic Index with map fun", function () {
   let db: Database;
   let indexer: Index<string, TestType>;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ title: "amazing" });
@@ -158,7 +158,7 @@ describe("basic Index with map fun", function () {
     });
     await indexer.ready();
   });
-  it("should get results", async () =>{
+  it("should get results", async () => {
     const result = await indexer.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -171,11 +171,11 @@ describe("basic Index with map fun with value", function () {
   let db: Database;
   let indexer: Index<string, TestType, number>;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ title: "amazing" });
@@ -185,7 +185,7 @@ describe("basic Index with map fun with value", function () {
       map(doc.title, doc.title.length);
     });
   });
-  it("should get results", async () =>{
+  it("should get results", async () => {
     const result = await indexer.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
@@ -194,7 +194,7 @@ describe("basic Index with map fun with value", function () {
     // @jchris why is this not a object?
     expect(result.rows[0].value).toBe(7);
   });
-  it("should include docs", async () =>{
+  it("should include docs", async () => {
     const { rows } = await indexer.query({ includeDocs: true });
     expect(rows[0].doc).toBeTruthy();
     expect(rows[0].doc?._id).toBe(rows[0].id);
@@ -209,13 +209,13 @@ describe("Index query with map and compound key", function () {
   let db: Database;
   let indexer: Index<[string, number], TestType>;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ title: "amazing", score: 1 });
@@ -227,7 +227,7 @@ describe("Index query with map and compound key", function () {
     });
     await indexer.ready();
   });
-  it("should prefix query", async () =>{
+  it("should prefix query", async () => {
     const { rows } = await indexer.query({ prefix: "creative" });
     expect(rows.length).toBe(2);
     expect(rows[0].key).toEqual(["creative", 2]);
@@ -239,13 +239,13 @@ describe("basic Index with string fun", function () {
   let db: Database;
   let indexer: Index<string, TestType>;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ title: "amazing" });
@@ -254,13 +254,13 @@ describe("basic Index with string fun", function () {
     indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "title");
     await indexer.ready();
   });
-  it("should get results", async () =>{
+  it("should get results", async () => {
     const result = await indexer.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toBe(3);
   });
-  it("should include docs", async () =>{
+  it("should include docs", async () => {
     const { rows } = await indexer.query();
     expect(rows.length).toBeTruthy();
     expect(rows[0].doc).toBeTruthy();
@@ -271,13 +271,13 @@ describe("basic Index with string fun and numeric keys", function () {
   let db: Database;
   let indexer: Index<string, TestType>;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     await db.put({ points: 0 });
@@ -287,13 +287,13 @@ describe("basic Index with string fun and numeric keys", function () {
     indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "points");
     await indexer.ready();
   });
-  it("should get results", async () =>{
+  it("should get results", async () => {
     const result = await indexer.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toBe(4);
   });
-  it("should include docs", async () =>{
+  it("should include docs", async () => {
     const { rows } = await indexer.query();
     expect(rows.length).toBeTruthy();
     expect(rows[0].doc).toBeTruthy();
@@ -313,13 +313,13 @@ describe("basic Index upon cold start", function () {
   const sthis = ensureSuperThis();
   let dbOpts: LedgerOpts;
   // result, mapFn;
-  afterEach(async () =>{
+  afterEach(async () => {
     await crdt.close();
     await crdt.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     const logger = sthis.logger.With().Module("IndexerTest").Logger();
     logger.Debug().Msg("enter beforeEach");
@@ -361,7 +361,7 @@ describe("basic Index upon cold start", function () {
     expect(result.rows).toBeTruthy();
     expect(result.rows.length).toEqual(3);
   });
-  it("should work on cold load", async () =>{
+  it("should work on cold load", async () => {
     const crdt2 = new CRDTImpl(sthis, dbOpts);
     await crdt2.ready();
     const { result, head } = await crdt2.changes();
@@ -375,7 +375,7 @@ describe("basic Index upon cold start", function () {
     expect(result2.rows.length).toEqual(3);
     expect(indexer2.indexHead).toEqual(head);
   });
-  it.skip("should not rerun the map function on seen changes", async () =>{
+  it.skip("should not rerun the map function on seen changes", async () => {
     didMap = 0;
     const crdt2 = new CRDTImpl(sthis, dbOpts);
     const indexer2 = await index(crdt2, "hello", mapFn);
@@ -401,7 +401,7 @@ describe("basic Index upon cold start", function () {
     expect(result3.rows.length).toEqual(4);
     expect(didMap).toEqual(1);
   });
-  it("should ignore meta when map function definiton changes", async () =>{
+  it("should ignore meta when map function definiton changes", async () => {
     const crdt2 = new CRDTImpl(sthis, dbOpts);
     const result = await index<string, TestType>(crdt2, "hello", (doc) => doc.title.split("").reverse().join("")).query();
     expect(result.rows.length).toEqual(3);
@@ -414,13 +414,13 @@ describe("basic Index with no data", function () {
   let indexer: Index<string, TestType>;
   let didMap: boolean;
   const sthis = ensureSuperThis();
-  afterEach(async () =>{
+  afterEach(async () => {
     await db.close();
     await db.destroy();
     // await indexer.close();
     // await indexer.destroy();
   });
-  beforeEach(async () =>{
+  beforeEach(async () => {
     await sthis.start();
     db = fireproof("test-indexer");
     indexer = new Index<string, TestType>(sthis, db.ledger.crdt, "hello", (doc) => {
@@ -434,18 +434,18 @@ describe("basic Index with no data", function () {
     expect(indexer.name).toEqual("hello");
     expect(indexer.mapFn).toBeTruthy();
   });
-  it("should not call the map function on first query", async () =>{
+  it("should not call the map function on first query", async () => {
     didMap = false;
     await indexer.query();
     expect(didMap).toBeFalsy();
   });
-  it("should not call the map function on second query", async () =>{
+  it("should not call the map function on second query", async () => {
     await indexer.query();
     didMap = false;
     await indexer.query();
     expect(didMap).toBeFalsy();
   });
-  it("should get results", async () =>{
+  it("should get results", async () => {
     const result = await indexer.query();
     expect(result).toBeTruthy();
     expect(result.rows).toBeTruthy();
