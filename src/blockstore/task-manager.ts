@@ -1,11 +1,12 @@
 import { Logger } from "@adviser/cement";
-import type { CarClockHead, CarClockLink, DbMeta } from "./types.js";
+import type { ActiveStore, CarClockHead, CarClockLink, DbMeta } from "./types.js";
 import { ensureLogger } from "../utils.js";
 import { SuperThis } from "../types.js";
 
 interface TaskItem {
   readonly cid: string;
   readonly dbMeta: DbMeta;
+  readonly store: ActiveStore;
   retries: number;
 }
 
@@ -17,17 +18,17 @@ export class TaskManager {
   private isProcessing = false;
 
   readonly logger: Logger;
-  readonly callback: (dbMeta: DbMeta) => Promise<void>;
-  constructor(sthis: SuperThis, callback: (dbMeta: DbMeta) => Promise<void>) {
+  readonly callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>;
+  constructor(sthis: SuperThis, callback: (dbMeta: DbMeta, store: ActiveStore) => Promise<void>) {
     this.logger = ensureLogger(sthis, "TaskManager");
     this.callback = callback;
   }
 
-  async handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta) {
+  async handleEvent(cid: CarClockLink, parents: CarClockHead, dbMeta: DbMeta, store: ActiveStore) {
     for (const parent of parents) {
       this.eventsWeHandled.add(parent.toString());
     }
-    this.queue.push({ cid: cid.toString(), dbMeta, retries: 0 });
+    this.queue.push({ cid: cid.toString(), dbMeta, retries: 0, store });
     this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     void this.processQueue();
   }
@@ -42,7 +43,7 @@ export class TaskManager {
       return;
     }
     try {
-      await this.callback(first.dbMeta);
+      await this.callback(first.dbMeta, first.store);
       this.eventsWeHandled.add(first.cid);
       this.queue = this.queue.filter(({ cid }) => !this.eventsWeHandled.has(cid));
     } catch (err) {

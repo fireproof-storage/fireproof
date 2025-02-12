@@ -4,7 +4,7 @@ import { base58btc } from "multiformats/bases/base58";
 import { sha256 as hasher } from "multiformats/hashes/sha2";
 import * as dagCodec from "@ipld/dag-cbor";
 import type { KeyBagProviderIndexedDB } from "@fireproof/core/indexeddb";
-import { MockSuperThis, mockSuperThis } from "../helpers.js";
+import { mockLoader, MockSuperThis, mockSuperThis } from "../helpers.js";
 import { KeyWithFingerPrint } from "../../src/blockstore/types.js";
 import { toKeyWithFingerPrint } from "../../src/runtime/key-bag.js";
 
@@ -230,11 +230,11 @@ describe("KeyBag", () => {
 });
 
 describe("KeyedCryptoStore", () => {
-  let loader: bs.Loadable;
   let kb: rt.kb.KeyBag;
   // let logger: Logger;
   let baseUrl: URI;
   const sthis = ensureSuperThis();
+  let loader: bs.Loadable;
   beforeEach(async () => {
     await sthis.start();
     // logger = MockLogger().logger;
@@ -256,20 +256,13 @@ describe("KeyedCryptoStore", () => {
     }
     baseUrl = baseUrl.build().setParam(PARAM.NAME, "test").URI();
     kb = await rt.kb.getKeyBag(sthis, {});
-    loader = {
-      sthis,
-      keyBag: async () => kb,
-    } as bs.Loadable;
+    loader = mockLoader(sthis);
+
   });
   it("no crypto", async () => {
-    const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "insecure").URI();
 
-    for (const pstore of [
-      strt.makeDataStore({ url, loader }),
-      strt.makeMetaStore({ url, loader }),
-      strt.makeWALStore({ url, loader }),
-    ]) {
+    for (const pstore of (await bs.createAttachedStores(url, loader, "insecure")).stores.baseStores) {
       const store = await pstore;
       // await store.start();
       const kc = await store.keyedCrypto();
@@ -281,12 +274,7 @@ describe("KeyedCryptoStore", () => {
   });
 
   it("create key", async () => {
-    const strt = bs.toStoreRuntime(sthis);
-    for (const pstore of [
-      strt.makeDataStore({ url: baseUrl, loader }),
-      strt.makeMetaStore({ url: baseUrl, loader }),
-      strt.makeWALStore({ url: baseUrl, loader }),
-    ]) {
+    for (const pstore of (await bs.createAttachedStores(baseUrl, loader, "insecure")).stores.baseStores) {
       const store = await pstore; // await bs.ensureStart(await pstore, logger);
       const kc = await store.keyedCrypto();
       expect(kc.constructor.name).toBe("cryptoAction");
@@ -299,12 +287,7 @@ describe("KeyedCryptoStore", () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
     const genKey = await kb.getNamedKey("@heute@", false, key);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, "@heute@").URI();
-    const strt = bs.toStoreRuntime(sthis);
-    for (const pstore of [
-      strt.makeDataStore({ url, loader }),
-      strt.makeMetaStore({ url, loader }),
-      strt.makeWALStore({ url, loader }),
-    ]) {
+    for (const pstore of (await bs.createAttachedStores(url, loader, "insecure")).stores.baseStores) {
       const store = await pstore;
       // await store.start();
       expect(store.url().getParam(PARAM.STORE_KEY)).toBe(`@heute@`);
@@ -324,13 +307,8 @@ describe("KeyedCryptoStore", () => {
 
   it("key", async () => {
     const key = base58btc.encode(kb.rt.crypto.randomBytes(kb.rt.keyLength));
-    const strt = bs.toStoreRuntime(sthis);
     const url = baseUrl.build().setParam(PARAM.STORE_KEY, key).URI();
-    for (const pstore of [
-      strt.makeDataStore({ url, loader }),
-      strt.makeMetaStore({ url, loader }),
-      strt.makeWALStore({ url, loader }),
-    ]) {
+    for (const pstore of (await bs.createAttachedStores(url, loader, "insecure")).stores.baseStores) {
       // for (const pstore of [strt.makeDataStore(loader), strt.makeMetaStore(loader), strt.makeWALStore(loader)]) {
       const store = await pstore;
       // await store.start();

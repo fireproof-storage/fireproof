@@ -112,11 +112,12 @@ describe("utils", () => {
 
 describe("runtime", () => {
   it("runtime", () => {
-    const isNode = !!(typeof process === "object" && process.versions?.node);
+    const isDeno = !!(typeof process === "object" && process.versions?.deno);
+    const isNode = !isDeno && !!(typeof process === "object" && process.versions?.node);
     expect(runtimeFn()).toEqual({
-      isBrowser: !isNode,
+      isBrowser: !(isNode || isDeno),
       isCFWorker: false,
-      isDeno: false,
+      isDeno: isDeno,
       isNodeIsh: isNode,
       isReactNative: false,
     });
