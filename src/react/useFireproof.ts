@@ -69,6 +69,7 @@ interface UseDocumentResultObject<T extends DocTypes> {
   refresh: () => void;
   save: StoreDocFn<T>;
   remove: DeleteDocFn<T>;
+  submit: (e?: Event) => void;
 }
 
 export type UseDocumentResult<T extends DocTypes> = UseDocumentResultObject<T> & UseDocumentResultTuple<T>;
@@ -299,6 +300,15 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
 
     const refresh = useCallback(() => void refreshDoc(), [refreshDoc]);
 
+    const submit = useCallback(
+      async (e?: Event) => {
+        if (e?.preventDefault) e.preventDefault();
+        await save();
+        reset();
+      },
+      [save, reset],
+    );
+
     // Primary Object API with both new and legacy methods
     const apiObject = {
       doc: { ...doc } as DocWithId<T>,
@@ -308,6 +318,7 @@ export function useFireproof(name: string | Database = "useFireproof", config: C
       refresh,
       save,
       remove,
+      submit,
     };
 
     // Make the object properly iterable

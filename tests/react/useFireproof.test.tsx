@@ -20,7 +20,7 @@ describe("HOOK: useFireproof", () => {
 });
 
 describe("HOOK: useFireproof useLiveQuery has results", () => {
-  const dbName = "dbnameuseFP";
+  const dbName = "useLiveQueryHasResults";
   let db: Database,
     query: LiveQueryResult<{ foo: string }, string>,
     database: ReturnType<typeof useFireproof>["database"],
@@ -494,6 +494,43 @@ describe("HOOK: useFireproof race condition: calling save() without await overwr
     // Call save() but DO NOT await it, then immediately reset().
     docResult.save();
     docResult.reset();
+
+    // Let the async subscription produce a new doc in case the doc is reloaded with an _id
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // If the reset worked, doc._id should STILL be undefined.
+    // If the subscription wins, doc._id will be defined => test fails.
+    await waitFor(() => {
+      expect(docResult.doc._id).toBeUndefined();
+      expect(docResult.doc.input).toBe("");
+    });
+  });
+
+  afterEach(async () => {
+    await db.close();
+    await db.destroy();
+  });
+});
+
+describe("useFireproo calling submit()", () => {
+  const dbName = "submitDb";
+  let db: Database, docResult: UseDocumentResult<{ input: string }>;
+
+  beforeEach(async () => {
+    db = fireproof(dbName);
+
+    // Render a new hook instance
+    renderHook(() => {
+      const { useDocument } = useFireproof(dbName);
+      docResult = useDocument<{ input: string }>({ input: "" });
+    });
+  });
+
+  it("demonstrates that calling docResult.save() and docResult.reset() in the same tick can overwrite reset", async () => {
+    // Merge some changes into doc
+    docResult.merge({ input: "some data" });
+
+    docResult.submit();
 
     // Let the async subscription produce a new doc in case the doc is reloaded with an _id
     await new Promise((resolve) => setTimeout(resolve, 500));
