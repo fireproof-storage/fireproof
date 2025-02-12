@@ -54,12 +54,12 @@ describe("basic Loader simple", function () {
   let t: CarTransaction;
   const sthis = ensureSuperThis();
 
-  afterEach(async function () {
+  afterEach(async () =>{
     await loader.close();
     await loader.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () =>{
     const testDbName = "test-loader-commit";
     await sthis.start();
     const mockM = new MyMemoryBlockStore(sthis);
@@ -80,10 +80,10 @@ describe("basic Loader simple", function () {
   it("should have an empty car log", function () {
     expect(loader.carLog.length).toBe(0);
   });
-  it("should commit", async function () {
+  it("should commit", async () =>{
     const carGroup = await loader.commit(t, { head: [block.cid] });
     expect(loader.carLog.length).toBe(1);
-    const reader = await loader.loadCar(carGroup[0]);
+    const reader = await loader.loadCar(carGroup[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -105,7 +105,7 @@ describe("basic Loader with two commits", function () {
 
   const sthis = ensureSuperThis();
 
-  afterEach(async function () {
+  afterEach(async () =>{
     await loader.close();
     await loader.destroy();
   });
@@ -118,6 +118,7 @@ describe("basic Loader with two commits", function () {
       ...simpleBlockOpts(sthis, "test-loader-two-commit"),
       public: true,
     });
+    await loader.ready();
 
     block = await rt.mf.block.encode({
       value: { hello: "world" },
@@ -157,8 +158,8 @@ describe("basic Loader with two commits", function () {
     expect(loader.carLog[1].toString()).toBe(carCid0.toString());
   });
 
-  it("should commit", async function () {
-    const reader = await loader.loadCar(carCid[0]);
+  it("should commit", async () =>{
+    const reader = await loader.loadCar(carCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -168,11 +169,11 @@ describe("basic Loader with two commits", function () {
     expect(parsed.meta.head).toBeTruthy();
   });
 
-  it("should compact", async function () {
+  it("should compact", async () =>{
     const compactCid = await loader.commit(t, { head: [block2.cid] }, { compact: true });
     expect(loader.carLog.length).toBe(1);
 
-    const reader = await loader.loadCar(compactCid[0]);
+    const reader = await loader.loadCar(compactCid[0], loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<CRDTMeta>(reader, loader.logger);
     expect(parsed.cars).toBeTruthy();
@@ -182,8 +183,8 @@ describe("basic Loader with two commits", function () {
     expect(parsed.meta.head).toBeTruthy();
   });
 
-  it("compact should erase old files", async function () {
-    const cs = await loader.carStore();
+  it("compact should erase old files", async () =>{
+    const cs = await loader.attachedStores.local().active.car;
     await loader.commit(t, { head: [block2.cid] }, { compact: true });
     expect(loader.carLog.length).toBe(1);
     await loader.commit(t, { head: [block3.cid] }, { compact: false });
@@ -196,10 +197,10 @@ describe("basic Loader with two commits", function () {
     await loader.commit(t, { head: [block4.cid] }, { compact: false });
     expect(loader.carLog.length).toBe(2);
 
-    const e = await loader.loadCar(carCid[0]).catch((e) => e);
+    const e = await loader.loadCar(carCid[0], loader.attachedStores.local()).catch((e) => e);
     expect(e).toBeTruthy();
     expect(e instanceof Error).toBeTruthy();
-    expect(e.message).toMatch("missing car file");
+    expect(e.message).toMatch(/(missing car file)|(not found)/);
   }, 10000);
 });
 
@@ -211,16 +212,17 @@ describe("basic Loader with index commits", function () {
   // let indexMap: Map<string, CID>;
   const sthis = ensureSuperThis();
 
-  afterEach(async function () {
+  afterEach(async () =>{
     await ib.close();
     await ib.destroy();
   });
 
-  beforeEach(async function () {
+  beforeEach(async () =>{
     const name = "test-loader-index" + Math.random();
     await sthis.start();
     // t = new CarTransaction()
     ib = new bs.EncryptedBlockstore(sthis, simpleBlockOpts(sthis, name));
+    await ib.ready();
     block = await rt.mf.block.encode({
       value: { hello: "world" },
       hasher,
@@ -248,7 +250,7 @@ describe("basic Loader with index commits", function () {
     expect(ib.loader.carLog.length).toBe(0);
   });
 
-  it("should commit the index metadata", async function () {
+  it("should commit the index metadata", async () =>{
     const { cars: carCid } = await ib.transaction<IndexTransactionMeta>(
       async (t) => {
         await t.put(block.cid, block.bytes);
@@ -262,7 +264,7 @@ describe("basic Loader with index commits", function () {
 
     expect(carLog.length).toBe(1);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const reader = await ib.loader.loadCar(carCid![0]);
+    const reader = await ib.loader.loadCar(carCid![0], ib.loader.attachedStores.local());
     expect(reader).toBeTruthy();
     const parsed = await bs.parseCarFile<IndexTransactionMeta>(reader, sthis.logger);
     expect(parsed.cars).toBeTruthy();
